@@ -1,0 +1,436 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                 String                 @id @default(uuid())
+  email              String                 @unique
+  password           String
+  role               Role                   @default(USER)
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  lastActive         DateTime               @default(now())
+  binaryPositions    BinaryOptionPosition[]
+  kyc                KYC?
+  loans              LoanApplication[]
+  wallet             Wallet?
+  withdrawalRequests WithdrawalRequest[]
+  forceOutcome       String                 @default("NORMAL")
+  contractPositions  ContractPosition[]
+}
+
+model KYC {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  firstName    String
+  lastName     String
+  dob          DateTime
+  country      String
+  documentType String
+  documentUrl  String
+  status       String   @default("PENDING")
+  idFront      String?
+  idBack       String?
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+}
+
+model Wallet {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  balance       Float    @default(0)
+  frozenBalance Float    @default(0)
+  balances      Json     @default("{}")
+  ledgers       Ledger[]
+  user          User     @relation(fields: [userId], references: [id])
+}
+
+model Ledger {
+  id              String            @id @default(uuid())
+  walletId        String
+  type            LedgerType
+  amount          Float
+  currency        String
+  referenceId     String?
+  transactionType TransactionType   @default(DEPOSIT)
+  status          TransactionStatus @default(CONFIRMED)
+  createdAt       DateTime          @default(now())
+  wallet          Wallet            @relation(fields: [walletId], references: [id])
+
+  @@index([walletId])
+}
+
+model SpotOrder {
+  id        String      @id @default(uuid())
+  userId    String
+  symbol    String
+  pair      String
+  side      OrderSide
+  type      OrderType
+  price     Float
+  amount    Float
+  filled    Float       @default(0)
+  remaining Float       @default(0)
+  status    OrderStatus @default(OPEN)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model SpotTrade {
+  id          String    @id @default(uuid())
+  orderId     String
+  userId      String
+  pair        String
+  side        OrderSide
+  price       Float
+  amount      Float
+  fee         Float     @default(0)
+  feeCurrency String    @default("USDT")
+  createdAt   DateTime  @default(now())
+}
+
+model BinaryOptionPosition {
+  id             String       @id @default(uuid())
+  userId         String
+  symbol         String
+  side           BinarySide
+  amount         Float
+  entryPrice     Float
+  timeframe      Int
+  payoutRate     Float
+  profitRatio    Int          @default(85)
+  lossRatio      Int          @default(0)
+  targetPayout   Float?
+  closePrice     Float?
+  realizedProfit Float?
+  status         BinaryStatus @default(OPEN)
+  expiresAt      DateTime
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  user           User         @relation(fields: [userId], references: [id])
+
+  @@index([status])
+  @@index([userId])
+}
+
+model ContractPosition {
+  id               String   @id @default(uuid())
+  userId           String
+  symbol           String // e.g. BTC/USDT
+  side             String // BUY (Long) or SELL (Short)
+  amount           Float // Margin Amount (Collateral)
+  leverage         Int // e.g. 100
+  entryPrice       Float
+  currentPrice     Float? // Last updated price
+  liquidationPrice Float
+  tpPrice          Float? // Take Profit
+  slPrice          Float? // Stop Loss
+  status           String // OPEN, CLOSED, LIQUIDATED
+  pnl              Float    @default(0)
+  fee              Float    @default(0)
+  marginMode       String   @default("ISOLATED") // CROSS or ISOLATED
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  user             User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+}
+
+model ContractPair {
+  id          String  @id @default(uuid())
+  symbol      String  @unique
+  minLeverage Int     @default(1)
+  maxLeverage Int     @default(100)
+  makerFee    Float   @default(0.0004)
+  takerFee    Float   @default(0.0006)
+  minAmount   Float   @default(10)
+  isActive    Boolean @default(true)
+}
+
+model ConversionTransaction {
+  id        String   @id @default(uuid())
+  userId    String
+  fromCoin  String
+  toCoin    String
+  amount    Float
+  rate      Float
+  received  Float
+  createdAt DateTime @default(now())
+}
+
+model LoanApplication {
+  id             String     @id @default(uuid())
+  userId         String
+  amount         Float
+  currency       String     @default("USDT")
+  term           Int
+  durationDays   Int        @default(30)
+  interestRate   Float      @default(0.1)
+  totalRepayment Float      @default(0)
+  collateral     String?
+  collateralImg  String?
+  status         LoanStatus @default(PENDING)
+  approvedAt     DateTime?
+  dueDate        DateTime?
+  createdAt      DateTime   @default(now())
+  user           User       @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model MiningPlan {
+  id            String               @id @default(uuid())
+  name          String
+  currency      String               @default("USDT")
+  lockupPeriod  Int
+  dailyYield    Float
+  minDeposit    Float
+  maxDeposit    Float
+  isActive      Boolean              @default(true)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  subscriptions MiningSubscription[]
+}
+
+model MiningSubscription {
+  id             String       @id @default(uuid())
+  userId         String
+  planId         String
+  amount         Float
+  status         MiningStatus @default(ACTIVE)
+  startDate      DateTime     @default(now())
+  endDate        DateTime?
+  totalRewards   Float        @default(0)
+  lastRewardPaid DateTime?
+  createdAt      DateTime     @default(now())
+  plan           MiningPlan   @relation(fields: [planId], references: [id])
+
+  @@index([planId])
+}
+
+model Currency {
+  id                Int              @id @default(autoincrement())
+  symbol            String           @unique
+  name              String
+  logo              String?
+  rate              Float            @default(1.0)
+  minDeposit        Float            @default(10.0)
+  maxDeposit        Float            @default(10000.0)
+  minWithdrawal     Float            @default(10.0)
+  maxWithdrawal     Float            @default(10000.0)
+  withdrawalFee     Float            @default(1.0)
+  depositEnabled    Boolean          @default(true)
+  withdrawEnabled   Boolean          @default(true)
+  confirmationCount Int              @default(3)
+  decimals          Int              @default(18)
+  isActive          Boolean          @default(true)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  depositAddresses  DepositAddress[]
+}
+
+model DepositAddress {
+  id         String   @id @default(uuid())
+  currencyId Int
+  currency   Currency @relation(fields: [currencyId], references: [id])
+  network    String // e.g., "ERC20", "TRC20", "BTC"
+  address    String
+  label      String? // e.g., "Main Wallet"
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([currencyId])
+}
+
+model LoanPlan {
+  id           String   @id @default(uuid())
+  name         String
+  durationDays Int
+  interestRate Float // e.g., 0.05 for 5%
+  minAmount    Float
+  maxAmount    Float
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model SystemConfig {
+  id          String   @id @default(uuid())
+  key         String   @unique // e.g., "banner_text", "maintenance_mode"
+  value       String // JSON string or plain text
+  description String?
+  updatedAt   DateTime @updatedAt
+}
+
+model AdminAuditLog {
+  id        String   @id @default(uuid())
+  adminId   String
+  action    String
+  target    String?
+  details   Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([adminId])
+}
+
+model BinaryPair {
+  id            Int     @id @default(autoincrement())
+  symbol        String  @unique // e.g., "BTC/USDT"
+  baseAsset     String // e.g., "BTC"
+  quoteAsset    String // e.g., "USDT"
+  rate          Float   @default(1.85) // Payout Rate e.g., 1.85 for 85%
+  category      String  @default("crypto") // crypto, forex, metal, stock
+  logo          String? // Added logo field
+  isActive      Boolean @default(true)
+  houseWinRatio Int     @default(50) // Global Risk: Win Ratio for the house (e.g., 60 means 60% chance user loses)
+
+  // Real API mapping fields
+  realId     Int?
+  matchId    Int?
+  currencyId Int?
+  coinType   Int? @default(0) // 0=Crypto, 1=Stock, 2=Forex, 3=Metal
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BinaryTimeframe {
+  id          Int     @id @default(autoincrement())
+  name        String // e.g., "30s", "1m"
+  seconds     Int     @unique
+  payoutRate  Float // e.g., 0.85
+  profitRatio Int     @default(85)
+  lossRatio   Int     @default(0)
+  isActive    Boolean @default(true)
+}
+
+model WithdrawalRequest {
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  currency  String
+  amount    Float
+  address   String
+  status    WithdrawalStatus @default(PENDING)
+  txHash    String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+}
+
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum LedgerType {
+  DEPOSIT
+  WITHDRAWAL
+  SPOT
+  BINARY
+  MAIN
+  MINING
+  LOAN
+  MINING_REWARD
+  TRADE_SPOT
+}
+
+enum OrderSide {
+  BUY
+  SELL
+}
+
+enum OrderType {
+  LIMIT
+  MARKET
+}
+
+enum OrderStatus {
+  OPEN
+  FILLED
+  PARTIALLY_FILLED
+  CANCELED
+}
+
+enum BinarySide {
+  CALL
+  PUT
+}
+
+enum BinaryStatus {
+  OPEN
+  WIN
+  LOSS
+  DRAW
+}
+
+enum LoanStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  ACTIVE
+  PAID
+  OVERDUE
+}
+
+enum MiningStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum TransactionStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+  REJECTED
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  TRADE_SPOT
+  TRADE_BINARY
+  MINING_PAYOUT
+  LOAN_DISBURSEMENT
+  LOAN_REPAYMENT
+  TRANSFER
+}
+
+model OptionGameSettings {
+  id         String   @id @default(uuid())
+  currencyId Int
+  matchId    Int
+  status     Int
+  symbol     String?
+  payoutRate Float?
+  duration   Int?
+  rawData    Json?
+  dummy      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model MarketData {
+  id        String   @id @default(uuid())
+  symbol    String   @unique
+  price     Float
+  change    Float
+  vol       Float
+  high      Float
+  low       Float
+  rawData   Json?
+  updatedAt DateTime @updatedAt
+}

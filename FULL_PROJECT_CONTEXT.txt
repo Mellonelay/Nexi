@@ -1,0 +1,4355 @@
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\prisma\schema.prisma
+--------------------------------
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum KycStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  NOT_SUBMITTED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      UserRole @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  kyc       KYC?
+  wallet    Wallet?
+  affiliate Affiliate?
+  
+  spotOrders        SpotOrder[]
+  spotTrades        SpotTrade[]
+  binaryPositions   BinaryOptionPosition[]
+  loans             LoanApplication[]
+  miningSubscriptions MiningSubscription[]
+  conversions       ConversionTransaction[]
+  rewards           Reward[]
+}
+
+model KYC {
+  id        String    @id @default(uuid())
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id])
+  firstName String
+  lastName  String
+  dob       DateTime
+  country   String
+  documentType String
+  documentUrl String
+  status    KycStatus @default(PENDING)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Wallet {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  
+  balances  Json     @default("{}")
+  
+  ledgers   Ledger[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum LedgerType {
+  DEPOSIT
+  WITHDRAWAL
+  TRADE_SPOT
+  TRADE_BINARY
+  LOAN_DISBURSED
+  LOAN_REPAID
+  MINING_REWARD
+  CONVERSION
+  AFFILIATE_REWARD
+}
+
+model Ledger {
+  id        String     @id @default(uuid())
+  walletId  String
+  wallet    Wallet     @relation(fields: [walletId], references: [id])
+  currency  String
+  amount    Float
+  type      LedgerType
+  referenceId String?
+  createdAt DateTime   @default(now())
+}
+
+enum OrderSide {
+  BUY
+  SELL
+}
+
+enum OrderType {
+  LIMIT
+  MARKET
+}
+
+enum OrderStatus {
+  OPEN
+  FILLED
+  PARTIALLY_FILLED
+  CANCELLED
+}
+
+model SpotOrder {
+  id        String      @id @default(uuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id])
+  pair      String
+  side      OrderSide
+  type      OrderType
+  price     Float?
+  amount    Float
+  filled    Float       @default(0)
+  remaining Float
+  status    OrderStatus @default(OPEN)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  
+  trades    SpotTrade[]
+}
+
+model SpotTrade {
+  id          String    @id @default(uuid())
+  orderId     String
+  order       SpotOrder @relation(fields: [orderId], references: [id])
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  pair        String
+  price       Float
+  amount      Float
+  side        OrderSide
+  fee         Float
+  feeCurrency String
+  createdAt   DateTime  @default(now())
+}
+
+enum BinarySide {
+  CALL
+  PUT
+}
+
+enum BinaryStatus {
+  OPEN
+  WON
+  LOST
+  DRAW
+}
+
+model BinaryOptionPosition {
+  id          String       @id @default(uuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id])
+  pair        String
+  amount      Float
+  side        BinarySide
+  entryPrice  Float
+  strikePrice Float?
+  payout      Float
+  duration    Int
+  expiresAt   DateTime
+  status      BinaryStatus @default(OPEN)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  result      BinaryOptionResult?
+}
+
+model BinaryOptionResult {
+  id         String               @id @default(uuid())
+  positionId String               @unique
+  position   BinaryOptionPosition @relation(fields: [positionId], references: [id])
+  closePrice Float
+  profit     Float
+  createdAt  DateTime             @default(now())
+}
+
+model ConversionTransaction {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  fromCoin  String
+  toCoin    String
+  amount    Float
+  rate      Float
+  received  Float
+  createdAt DateTime @default(now())
+}
+
+enum LoanStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  ACTIVE
+  PAID
+  DEFAULTED
+}
+
+model LoanApplication {
+  id             String          @id @default(uuid())
+  userId         String
+  user           User            @relation(fields: [userId], references: [id])
+  amount         Float
+  currency       String
+  durationDays   Int
+  interestRate   Float
+  totalRepayment Float
+  collateral     String?
+  collateralImg  String?
+  status         LoanStatus      @default(PENDING)
+  approvedAt     DateTime?
+  dueDate        DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  
+  repayments     LoanRepayment[]
+}
+
+model LoanRepayment {
+  id        String          @id @default(uuid())
+  loanId    String
+  loan      LoanApplication @relation(fields: [loanId], references: [id])
+  amount    Float
+  currency  String
+  paidAt    DateTime        @default(now())
+}
+
+model MiningPlan {
+  id            String   @id @default(uuid())
+  name          String
+  currency      String   @default("USDT")
+  lockupPeriod  Int
+  dailyYield    Float
+  minDeposit    Float
+  maxDeposit    Float
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  subscriptions MiningSubscription[]
+}
+
+enum MiningStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+model MiningSubscription {
+  id        String       @id @default(uuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id])
+  planId    String
+  plan      MiningPlan   @relation(fields: [planId], references: [id])
+  amount    Float
+  startDate DateTime     @default(now())
+  endDate   DateTime
+  status    MiningStatus @default(ACTIVE)
+  lastRewardPaid DateTime?
+  totalRewards Float     @default(0)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model Affiliate {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id])
+  referralCode String   @unique
+  referredBy   String?
+  totalEarnings Float   @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Reward {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  amount    Float
+  currency  String
+  reason    String
+  createdAt DateTime @default(now())
+}
+
+model Settings {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Admin {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\prisma\seed.ts
+--------------------------------
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+async function main() {
+  console.log('--- Seeding Database ---');
+
+  // 1. Create Default Mining Plans
+  const plans = [
+    { name: 'Basic Plan', dailyYield: 0.5, lockupPeriod: 7, minDeposit: 10, maxDeposit: 1000 },
+    { name: 'Pro Plan', dailyYield: 1.0, lockupPeriod: 30, minDeposit: 500, maxDeposit: 5000 },
+    { name: 'Whale Plan', dailyYield: 1.5, lockupPeriod: 90, minDeposit: 5000, maxDeposit: 50000 },
+  ];
+
+  for (const p of plans) {
+    const exists = await prisma.miningPlan.findFirst({ where: { name: p.name } });
+    if (!exists) {
+      await prisma.miningPlan.create({
+        data: { ...p, currency: 'USDT' }
+      });
+      console.log(`Created Plan: ${p.name}`);
+    }
+  }
+
+  // 2. Create Admin User (Optional)
+  // ...
+
+  console.log('--- Seed Complete ---');
+}
+
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\auth\auth.controller.ts
+--------------------------------
+import { Controller, Request, Post, UseGuards, Body, Get, Param } from '@nestjs/common';
+import { AuthService } from './auth.service';
+import { AuthGuard } from '@nestjs/passport';
+import { PrismaService } from '../prisma/prisma.service';
+
+@Controller('auth')
+export class AuthController {
+  constructor(
+      private authService: AuthService,
+      private prisma: PrismaService
+  ) {}
+
+  @Post('login')
+  async login(@Body() req) {
+    const user = await this.authService.validateUser(req.email, req.password);
+    if (!user) {
+        throw new Error('Invalid credentials');
+    }
+    return this.authService.login(user);
+  }
+
+  @Post('signup')
+  async signup(@Body() req) {
+    return this.authService.signup(req);
+  }
+  
+  // Basic KYC Submission (For MVP, just taking details)
+  @Post('kyc')
+  async submitKyc(@Body() body: { userId: string; firstName: string; lastName: string; dob: string; country: string; documentType: string; documentUrl: string }) {
+      // In a real app, verify the user making the request is the userId (via Guard)
+      return this.prisma.kYC.create({
+          data: {
+              userId: body.userId,
+              firstName: body.firstName,
+              lastName: body.lastName,
+              dob: new Date(body.dob),
+              country: body.country,
+              documentType: body.documentType,
+              documentUrl: body.documentUrl, // In real app, this is S3 URL
+              status: 'PENDING'
+          }
+      });
+  }
+
+  // @UseGuards(AuthGuard('jwt'))
+  // @Get('profile')
+  // getProfile(@Request() req) {
+  //   return req.user;
+  // }
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\auth\auth.module.ts
+--------------------------------
+import { Module } from '@nestjs/common';
+import { AuthService } from './auth.service';
+import { UsersModule } from '../users/users.module';
+import { PassportModule } from '@nestjs/passport';
+import { JwtModule } from '@nestjs/jwt';
+import { JwtStrategy } from './jwt.strategy';
+import { AuthController } from './auth.controller';
+
+@Module({
+  imports: [
+    UsersModule,
+    PassportModule,
+    JwtModule.register({
+      secret: process.env.JWT_SECRET || 'supersecretkey',
+      signOptions: { expiresIn: '1d' },
+    }),
+  ],
+  providers: [AuthService, JwtStrategy],
+  controllers: [AuthController],
+  exports: [AuthService],
+})
+export class AuthModule {}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\auth\auth.service.ts
+--------------------------------
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { UsersService } from '../users/users.service';
+import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
+
+@Injectable()
+export class AuthService {
+  constructor(
+    private usersService: UsersService,
+    private jwtService: JwtService
+  ) {}
+
+  async validateUser(email: string, pass: string): Promise<any> {
+    const user = await this.usersService.findOne(email);
+    if (user && (await bcrypt.compare(pass, user.password))) {
+      const { password, ...result } = user;
+      return result;
+    }
+    return null;
+  }
+
+  async login(user: any) {
+    const payload = { email: user.email, sub: user.id, role: user.role };
+    return {
+      access_token: this.jwtService.sign(payload),
+      user: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          kycStatus: user.kyc?.status || 'NOT_SUBMITTED'
+      }
+    };
+  }
+
+  async signup(data: any) {
+    const user = await this.usersService.createUser(data);
+    return this.login(user);
+  }
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\auth\jwt.strategy.ts
+--------------------------------
+import { ExtractJwt, Strategy } from 'passport-jwt';
+import { PassportStrategy } from '@nestjs/passport';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+
+@Injectable()
+export class JwtStrategy extends PassportStrategy(Strategy) {
+  constructor() {
+    super({
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ignoreExpiration: false,
+      secretOrKey: process.env.JWT_SECRET || 'supersecretkey',
+    });
+  }
+
+  async validate(payload: any) {
+    return { userId: payload.sub, email: payload.email, role: payload.role };
+  }
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\binary\binary.controller.ts
+--------------------------------
+import { Controller, Post, Body, Get, Param, UseGuards } from '@nestjs/common';
+import { BinaryService } from './binary.service';
+import { BinarySide } from '@prisma/client';
+
+@Controller('binary')
+export class BinaryController {
+  constructor(private readonly binaryService: BinaryService) {}
+
+  @Post('position')
+  async openPosition(@Body() body: { userId: string; pair: string; amount: number; side: BinarySide; duration: number }) {
+    return this.binaryService.openPosition(body.userId, body.pair, body.amount, body.side, body.duration);
+  }
+
+  // Admin Override
+  @Post('admin/force-result')
+  async forceResult(@Body() body: { positionId: string; outcome: 'WIN' | 'LOSE' }) {
+    return this.binaryService.adminForceResult(body.positionId, body.outcome);
+  }
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\binary\binary.gateway.ts
+--------------------------------
+import { WebSocketGateway, WebSocketServer, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
+import { Server, Socket } from 'socket.io';
+
+@WebSocketGateway({
+  cors: {
+    origin: '*',
+  },
+})
+export class BinaryGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  @WebSocketServer()
+  server: Server;
+
+  handleConnection(client: Socket) {
+    // console.log(`Client connected: ${client.id}`);
+    // Ideally extract userId from token and join room
+    const userId = client.handshake.query.userId as string;
+    if (userId) {
+        client.join(userId);
+    }
+  }
+
+  handleDisconnect(client: Socket) {
+    // console.log(`Client disconnected: ${client.id}`);
+  }
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\binary\binary.module.ts
+--------------------------------
+import { Module } from '@nestjs/common';
+import { BinaryService } from './binary.service';
+import { BinaryController } from './binary.controller';
+import { BinaryGateway } from './binary.gateway';
+import { WalletModule } from '../wallet/wallet.module';
+import { ScheduleModule } from '@nestjs/schedule';
+
+@Module({
+  imports: [
+      WalletModule,
+      ScheduleModule.forRoot()
+  ],
+  providers: [BinaryService, BinaryGateway],
+  controllers: [BinaryController],
+  exports: [BinaryService],
+})
+export class BinaryModule {}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\binary\binary.service.ts
+--------------------------------
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { WalletService } from '../wallet/wallet.service';
+import { BinarySide, BinaryStatus, LedgerType } from '@prisma/client';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { BinaryGateway } from './binary.gateway';
+
+@Injectable()
+export class BinaryService {
+  private readonly logger = new Logger(BinaryService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private walletService: WalletService,
+    private binaryGateway: BinaryGateway,
+  ) {}
+
+  // Open a new position
+  async openPosition(userId: string, pair: string, amount: number, side: BinarySide, duration: number) {
+    if (amount <= 0) throw new BadRequestException('Amount must be positive');
+    if (![30, 60, 120, 300].includes(duration)) throw new BadRequestException('Invalid duration');
+
+    // 1. Lock Funds (Investment Amount)
+    // Binary locks the investment. If you lose, it's gone. If you win, you get Amount + Profit.
+    // We lock 'USDT' (Quote currency usually)
+    const currency = 'USDT'; 
+    await this.walletService.lockFunds(userId, currency, amount);
+
+    // 2. Get Current Price (Mock for now, real implementation needs Live Price Service)
+    const entryPrice = await this.getCurrentPrice(pair);
+
+    // 3. Create Position
+    const expiresAt = new Date(Date.now() + duration * 1000);
+    const payoutRate = 0.85; // 85% profit example
+    const payout = amount * payoutRate;
+
+    const position = await this.prisma.binaryOptionPosition.create({
+      data: {
+        userId,
+        pair,
+        amount,
+        side,
+        entryPrice,
+        payout,
+        duration,
+        expiresAt,
+        status: BinaryStatus.OPEN,
+      },
+    });
+
+    // Notify User via WS
+    this.binaryGateway.server.to(userId).emit('binary_position_opened', position);
+
+    return position;
+  }
+
+  // Check for expired positions (Runs every second)
+  @Cron(CronExpression.EVERY_SECOND)
+  async checkExpiredPositions() {
+    const now = new Date();
+    
+    // Find open positions that have expired
+    const expiredPositions = await this.prisma.binaryOptionPosition.findMany({
+      where: {
+        status: BinaryStatus.OPEN,
+        expiresAt: { lte: now },
+      },
+    });
+
+    for (const position of expiredPositions) {
+      await this.settlePosition(position);
+    }
+  }
+
+  async settlePosition(position: any) {
+    // Get Close Price
+    const closePrice = await this.getCurrentPrice(position.pair);
+    
+    // Determine Outcome
+    let status: BinaryStatus = BinaryStatus.LOST;
+    let profit = -position.amount; // Default Loss
+    
+    if (position.side === BinarySide.CALL) {
+      if (closePrice > position.entryPrice) status = BinaryStatus.WON;
+      else if (closePrice === position.entryPrice) status = BinaryStatus.DRAW;
+    } else { // PUT
+      if (closePrice < position.entryPrice) status = BinaryStatus.WON;
+      else if (closePrice === position.entryPrice) status = BinaryStatus.DRAW;
+    }
+
+    // Payout Logic
+    if (status === BinaryStatus.WON) {
+      profit = position.payout;
+      // Return Investment + Profit
+      const totalReturn = position.amount + position.payout;
+      
+      // 1. Deduct Locked (The investment is currently locked)
+      await this.walletService.deductLockedFunds(position.userId, 'USDT', position.amount, LedgerType.TRADE_BINARY, `BINARY-UNLOCK-${position.id}`);
+      // 2. Add Total Return (Investment + Profit)
+      // Actually, cleaner: Deduct locked (burn it), then Add Total Return as Deposit?
+      // Or: Unlock investment, Add Profit?
+      // Let's stick to: Deduct Locked (Investment used), Add Winnings.
+      // Wait, if I deduct locked, the user loses the investment from their balance.
+      // So I need to add back: Investment + Profit.
+      await this.walletService.deposit(position.userId, 'USDT', totalReturn, `BINARY-WIN-${position.id}`);
+      
+    } else if (status === BinaryStatus.DRAW) {
+      profit = 0;
+      // Return Investment
+      await this.walletService.unlockFunds(position.userId, 'USDT', position.amount);
+      
+    } else {
+      // LOST
+      // Deduct Locked Funds (User loses investment)
+      await this.walletService.deductLockedFunds(position.userId, 'USDT', position.amount, LedgerType.TRADE_BINARY, `BINARY-LOSS-${position.id}`);
+    }
+
+    // Update DB
+    await this.prisma.$transaction([
+      this.prisma.binaryOptionPosition.update({
+        where: { id: position.id },
+        data: { status, strikePrice: closePrice },
+      }),
+      this.prisma.binaryOptionResult.create({
+        data: {
+          positionId: position.id,
+          closePrice,
+          profit,
+        },
+      }),
+    ]);
+
+    // Notify User via WS
+    this.binaryGateway.server.to(position.userId).emit('binary_position_closed', {
+      id: position.id,
+      status,
+      closePrice,
+      profit,
+    });
+    
+    this.logger.log(`Position ${position.id} settled: ${status}`);
+  }
+
+  // Admin Override Outcome
+  async adminForceResult(positionId: string, outcome: 'WIN' | 'LOSE') {
+      const position = await this.prisma.binaryOptionPosition.findUnique({ where: { id: positionId } });
+      if (!position || position.status !== BinaryStatus.OPEN) throw new BadRequestException('Invalid position');
+
+      // Mock price to force outcome
+      // If force WIN and CALL -> price = entry + 1
+      // If force LOSE and CALL -> price = entry - 1
+      let forcedPrice = position.entryPrice;
+      if (outcome === 'WIN') {
+          forcedPrice = position.side === BinarySide.CALL ? position.entryPrice + 100 : position.entryPrice - 100;
+      } else {
+          forcedPrice = position.side === BinarySide.CALL ? position.entryPrice - 100 : position.entryPrice + 100;
+      }
+
+      // We need to pass this price to settlePosition. 
+      // But settlePosition fetches price internally.
+      // Refactor: Allow passing price to settlePosition or creating a separate method.
+      // For now, let's just duplicate logic slightly or update the implementation.
+      
+      // Hack for MVP: Update `getCurrentPrice` to check for overrides? No, that's messy.
+      // Better: Create `settlePositionWithPrice`.
+      
+      await this.settlePositionWithPrice(position, forcedPrice);
+      return { message: `Position forced to ${outcome}` };
+  }
+
+  async settlePositionWithPrice(position: any, closePrice: number) {
+      // ... Copy logic from settlePosition but use provided closePrice ...
+      // For DRY, I'll extract the core logic later. 
+      // For this step, I'll just implement the logic directly to ensure it works.
+      
+      let status: BinaryStatus = BinaryStatus.LOST;
+      let profit = -position.amount;
+      
+      if (position.side === BinarySide.CALL) {
+        if (closePrice > position.entryPrice) status = BinaryStatus.WON;
+        else if (closePrice === position.entryPrice) status = BinaryStatus.DRAW;
+      } else {
+        if (closePrice < position.entryPrice) status = BinaryStatus.WON;
+        else if (closePrice === position.entryPrice) status = BinaryStatus.DRAW;
+      }
+      
+      if (status === BinaryStatus.WON) {
+          profit = position.payout;
+          const totalReturn = position.amount + position.payout;
+          await this.walletService.deductLockedFunds(position.userId, 'USDT', position.amount, LedgerType.TRADE_BINARY, `BINARY-UNLOCK-${position.id}`);
+          await this.walletService.deposit(position.userId, 'USDT', totalReturn, `BINARY-WIN-${position.id}`);
+      } else if (status === BinaryStatus.DRAW) {
+          profit = 0;
+          await this.walletService.unlockFunds(position.userId, 'USDT', position.amount);
+      } else {
+          await this.walletService.deductLockedFunds(position.userId, 'USDT', position.amount, LedgerType.TRADE_BINARY, `BINARY-LOSS-${position.id}`);
+      }
+
+      await this.prisma.$transaction([
+        this.prisma.binaryOptionPosition.update({
+          where: { id: position.id },
+          data: { status, strikePrice: closePrice },
+        }),
+        this.prisma.binaryOptionResult.create({
+          data: {
+            positionId: position.id,
+            closePrice,
+            profit,
+          },
+        }),
+      ]);
+      
+      this.binaryGateway.server.to(position.userId).emit('binary_position_closed', { id: position.id, status, closePrice, profit });
+  }
+
+  // Mock Price Service
+  async getCurrentPrice(pair: string): Promise<number> {
+    // Random price for BTC/USDT around 40000
+    return 40000 + Math.random() * 100;
+  }
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\conversion\conversion.controller.ts
+--------------------------------
+import { Controller, Post, Body, Get, Query, UseGuards } from '@nestjs/common';
+import { ConversionService } from './conversion.service';
+
+@Controller('conversion')
+export class ConversionController {
+  constructor(private readonly conversionService: ConversionService) {}
+
+  @Get('rate')
+  async getRate(@Query('from') from: string, @Query('to') to: string) {
+    const rate = await this.conversionService.getRate(from, to);
+    return { rate };
+  }
+
+  @Post('convert')
+  async convert(@Body() body: { userId: string; from: string; to: string; amount: number }) {
+    return this.conversionService.convert(body.userId, body.from, body.to, body.amount);
+  }
+
+  // Admin: Set Rate
+  @Post('admin/rate')
+  async setRate(@Body() body: { pair: string; rate: number }) {
+    return this.conversionService.updateRate(body.pair, body.rate);
+  }
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\conversion\conversion.module.ts
+--------------------------------
+import { Module } from '@nestjs/common';
+import { ConversionService } from './conversion.service';
+import { ConversionController } from './conversion.controller';
+import { WalletModule } from '../wallet/wallet.module';
+
+@Module({
+  imports: [WalletModule],
+  providers: [ConversionService],
+  controllers: [ConversionController],
+  exports: [ConversionService],
+})
+export class ConversionModule {}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\conversion\conversion.service.ts
+--------------------------------
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { WalletService } from '../wallet/wallet.service';
+import { LedgerType } from '@prisma/client';
+
+@Injectable()
+export class ConversionService {
+  // Mock rates for MVP. In prod, fetch from live API or DB settings.
+  private rates: Record<string, number> = {
+    'USDT:BTC': 0.000025, // 1 USDT = 0.000025 BTC
+    'BTC:USDT': 40000,    // 1 BTC = 40000 USDT
+    'USDT:ETH': 0.0005,
+    'ETH:USDT': 2000,
+  };
+
+  constructor(
+    private prisma: PrismaService,
+    private walletService: WalletService,
+  ) {}
+
+  async getRate(from: string, to: string): Promise<number> {
+    const key = `${from}:${to}`;
+    return this.rates[key] || 0;
+  }
+
+  async convert(userId: string, fromCoin: string, toCoin: string, amount: number) {
+    if (amount <= 0) throw new BadRequestException('Amount must be positive');
+    
+    const rate = await this.getRate(fromCoin, toCoin);
+    if (!rate || rate === 0) throw new BadRequestException(`Conversion from ${fromCoin} to ${toCoin} not supported`);
+
+    const receiveAmount = amount * rate;
+
+    // Transactional Conversion
+    // 1. Withdraw 'fromCoin'
+    await this.walletService.withdraw(userId, fromCoin, amount, `CONVERT-OUT-${Date.now()}`);
+    
+    // 2. Deposit 'toCoin'
+    await this.walletService.deposit(userId, toCoin, receiveAmount, `CONVERT-IN-${Date.now()}`);
+
+    // 3. Log Transaction
+    return this.prisma.conversionTransaction.create({
+      data: {
+        userId,
+        fromCoin,
+        toCoin,
+        amount,
+        rate,
+        received: receiveAmount,
+      },
+    });
+  }
+
+  // Admin: Update Rate
+  async updateRate(pair: string, newRate: number) {
+      this.rates[pair] = newRate;
+      return { message: `Rate for ${pair} updated to ${newRate}` };
+  }
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\loans\loans.controller.ts
+--------------------------------
+import { Controller, Post, Body, Get, Param, UseGuards } from '@nestjs/common';
+import { LoanService } from './loans.service';
+
+@Controller('loans')
+export class LoansController {
+  constructor(private readonly loanService: LoanService) {}
+
+  @Post('apply')
+  async apply(@Body() body: { userId: string; amount: number; duration: number; collateralImg: string; collateral: string }) {
+    return this.loanService.applyForLoan(body.userId, body.amount, body.duration, body.collateralImg, body.collateral);
+  }
+
+  @Get('my/:userId')
+  async getMyLoans(@Param('userId') userId: string) {
+    return this.loanService.getUserLoans(userId);
+  }
+
+  // Admin Endpoints
+  @Get('admin/all')
+  async getAllLoans() {
+    return this.loanService.getAllLoans();
+  }
+
+  @Post('admin/approve')
+  async approve(@Body() body: { loanId: string }) {
+    return this.loanService.approveLoan(body.loanId);
+  }
+
+  @Post('admin/reject')
+  async reject(@Body() body: { loanId: string }) {
+    return this.loanService.rejectLoan(body.loanId);
+  }
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\loans\loans.module.ts
+--------------------------------
+import { Module } from '@nestjs/common';
+import { LoanService } from './loans.service';
+import { LoansController } from './loans.controller';
+import { WalletModule } from '../wallet/wallet.module';
+
+@Module({
+  imports: [WalletModule],
+  providers: [LoanService],
+  controllers: [LoansController],
+  exports: [LoanService],
+})
+export class LoansModule {}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\loans\loans.service.ts
+--------------------------------
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { WalletService } from '../wallet/wallet.service';
+import { LoanStatus, LedgerType } from '@prisma/client';
+
+@Injectable()
+export class LoanService {
+  constructor(
+    private prisma: PrismaService,
+    private walletService: WalletService,
+  ) {}
+
+  // Apply for a loan
+  async applyForLoan(userId: string, amount: number, durationDays: number, collateralImg: string, collateralDesc: string) {
+    if (amount <= 0) throw new BadRequestException('Amount must be positive');
+
+    // Simple logic: Interest is 1% per day for MVP
+    const interestRate = 0.01;
+    const totalRepayment = amount + (amount * interestRate * durationDays);
+
+    return this.prisma.loanApplication.create({
+      data: {
+        userId,
+        amount,
+        currency: 'USDT', // Default to USDT loans
+        durationDays,
+        interestRate,
+        totalRepayment,
+        collateral: collateralDesc,
+        collateralImg,
+        status: LoanStatus.PENDING,
+      },
+    });
+  }
+
+  // Admin: Approve Loan
+  async approveLoan(loanId: string) {
+    const loan = await this.prisma.loanApplication.findUnique({ where: { id: loanId } });
+    if (!loan) throw new NotFoundException('Loan not found');
+    if (loan.status !== LoanStatus.PENDING) throw new BadRequestException('Loan is not pending');
+
+    // 1. Credit User Wallet with Loan Amount
+    await this.walletService.deposit(loan.userId, loan.currency, loan.amount, `LOAN-DISBURSE-${loan.id}`);
+
+    // 2. Update Loan Status
+    return this.prisma.loanApplication.update({
+      where: { id: loanId },
+      data: {
+        status: LoanStatus.ACTIVE,
+        approvedAt: new Date(),
+        dueDate: new Date(Date.now() + loan.durationDays * 24 * 60 * 60 * 1000),
+      },
+    });
+  }
+
+  // Admin: Reject Loan
+  async rejectLoan(loanId: string) {
+    const loan = await this.prisma.loanApplication.findUnique({ where: { id: loanId } });
+    if (!loan) throw new NotFoundException('Loan not found');
+    if (loan.status !== LoanStatus.PENDING) throw new BadRequestException('Loan is not pending');
+
+    return this.prisma.loanApplication.update({
+      where: { id: loanId },
+      data: { status: LoanStatus.REJECTED },
+    });
+  }
+
+  // Get User Loans
+  async getUserLoans(userId: string) {
+    return this.prisma.loanApplication.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  // Get All Loans (Admin)
+  async getAllLoans() {
+    return this.prisma.loanApplication.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: { user: { select: { email: true } } }
+    });
+  }
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\mining\mining.controller.ts
+--------------------------------
+import { Controller, Post, Body, Get, Param, UseGuards } from '@nestjs/common';
+import { MiningService } from './mining.service';
+
+@Controller('mining')
+export class MiningController {
+  constructor(private readonly miningService: MiningService) {}
+
+  @Get('plans')
+  async getPlans() {
+    return this.miningService.getPlans();
+  }
+
+  @Post('subscribe')
+  async subscribe(@Body() body: { userId: string; planId: string; amount: number }) {
+    return this.miningService.subscribe(body.userId, body.planId, body.amount);
+  }
+
+  @Get('my/:userId')
+  async getMySubs(@Param('userId') userId: string) {
+    return this.miningService.getUserSubscriptions(userId);
+  }
+
+  // Admin: Create Plan
+  @Post('admin/plan')
+  async createPlan(@Body() body: { name: string; dailyYield: number; lockupPeriod: number; min: number; max: number }) {
+    return this.miningService.createPlan(body.name, body.dailyYield, body.lockupPeriod, body.min, body.max);
+  }
+  
+  // Dev: Force Yield Distribution
+  @Post('admin/distribute')
+  async forceDistribute() {
+      await this.miningService.distributeRewards();
+      return { message: 'Yield distribution triggered' };
+  }
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\mining\mining.module.ts
+--------------------------------
+import { Module } from '@nestjs/common';
+import { MiningService } from './mining.service';
+import { MiningController } from './mining.controller';
+import { WalletModule } from '../wallet/wallet.module';
+
+@Module({
+  imports: [WalletModule],
+  providers: [MiningService],
+  controllers: [MiningController],
+  exports: [MiningService],
+})
+export class MiningModule {}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\mining\mining.service.ts
+--------------------------------
+import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { WalletService } from '../wallet/wallet.service';
+import { MiningStatus, LedgerType } from '@prisma/client';
+import { Cron, CronExpression } from '@nestjs/schedule';
+
+@Injectable()
+export class MiningService {
+  private readonly logger = new Logger(MiningService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private walletService: WalletService,
+  ) {}
+
+  // Admin: Create Plan
+  async createPlan(name: string, dailyYield: number, lockupPeriod: number, minDeposit: number, maxDeposit: number) {
+    return this.prisma.miningPlan.create({
+      data: {
+        name,
+        dailyYield,
+        lockupPeriod,
+        minDeposit,
+        maxDeposit,
+        currency: 'USDT',
+      },
+    });
+  }
+  
+  async getPlans() {
+      return this.prisma.miningPlan.findMany({ where: { isActive: true } });
+  }
+
+  // User: Subscribe
+  async subscribe(userId: string, planId: string, amount: number) {
+    const plan = await this.prisma.miningPlan.findUnique({ where: { id: planId } });
+    if (!plan) throw new NotFoundException('Plan not found');
+    if (!plan.isActive) throw new BadRequestException('Plan is inactive');
+    if (amount < plan.minDeposit || amount > plan.maxDeposit) {
+      throw new BadRequestException(`Amount must be between ${plan.minDeposit} and ${plan.maxDeposit}`);
+    }
+
+    // Lock Funds
+    await this.walletService.lockFunds(userId, 'USDT', amount);
+
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + plan.lockupPeriod);
+
+    return this.prisma.miningSubscription.create({
+      data: {
+        userId,
+        planId,
+        amount,
+        startDate: new Date(),
+        endDate,
+        status: MiningStatus.ACTIVE,
+      },
+    });
+  }
+
+  // Cron: Distribute Daily Yield
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async distributeRewards() {
+    this.logger.log('Starting daily yield distribution...');
+    const activeSubs = await this.prisma.miningSubscription.findMany({
+      where: { status: MiningStatus.ACTIVE },
+      include: { plan: true },
+    });
+
+    for (const sub of activeSubs) {
+      // Check if expired
+      if (new Date() > sub.endDate) {
+        await this.completeSubscription(sub);
+        continue;
+      }
+
+      // Calculate Reward
+      const reward = sub.amount * (sub.plan.dailyYield / 100);
+      
+      // Credit Reward to Wallet
+      await this.walletService.deposit(sub.userId, 'USDT', reward, `MINING-YIELD-${sub.id}`);
+
+      // Update Subscription Stats
+      await this.prisma.miningSubscription.update({
+        where: { id: sub.id },
+        data: {
+          totalRewards: { increment: reward },
+          lastRewardPaid: new Date(),
+        },
+      });
+    }
+    this.logger.log(`Distributed rewards to ${activeSubs.length} subscriptions.`);
+  }
+
+  async completeSubscription(sub: any) {
+    // Return Principal
+    // The principal was locked. We need to unlock it.
+    // Or better: Deduct Locked, Credit Available (like a transfer back).
+    
+    // Step 1: Deduct from Locked (Burn the reservation)
+    await this.walletService.deductLockedFunds(sub.userId, 'USDT', sub.amount, LedgerType.MINING_REWARD, `MINING-UNLOCK-${sub.id}`);
+    
+    // Step 2: Credit Principal back to Available
+    await this.walletService.deposit(sub.userId, 'USDT', sub.amount, `MINING-RETURN-${sub.id}`);
+
+    await this.prisma.miningSubscription.update({
+      where: { id: sub.id },
+      data: { status: MiningStatus.COMPLETED },
+    });
+    
+    this.logger.log(`Subscription ${sub.id} completed.`);
+  }
+
+  async getUserSubscriptions(userId: string) {
+      return this.prisma.miningSubscription.findMany({
+          where: { userId },
+          include: { plan: true }
+      });
+  }
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\prisma\prisma.module.ts
+--------------------------------
+import { Module } from '@nestjs/common';
+import { PrismaService } from './prisma.service';
+
+@Module({
+  providers: [PrismaService],
+  exports: [PrismaService],
+})
+export class PrismaModule {}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\prisma\prisma.service.ts
+--------------------------------
+import { Injectable, OnModuleInit } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
+
+@Injectable()
+export class PrismaService extends PrismaClient implements OnModuleInit {
+  async onModuleInit() {
+    await this.$connect();
+  }
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\spot\spot.controller.ts
+--------------------------------
+import { Controller, Post, Body, Get, Query, Param } from '@nestjs/common';
+import { SpotService } from './spot.service';
+import { OrderSide, OrderType } from '@prisma/client';
+
+@Controller('spot')
+export class SpotController {
+  constructor(private readonly spotService: SpotService) {}
+
+  @Post('order')
+  async placeOrder(@Body() body: { userId: string; pair: string; side: OrderSide; type: OrderType; amount: number; price?: number }) {
+    return this.spotService.placeOrder(body.userId, body.pair, body.side, body.type, body.amount, body.price);
+  }
+
+  @Post('cancel')
+  async cancelOrder(@Body() body: { userId: string; orderId: string }) {
+    return this.spotService.cancelOrder(body.userId, body.orderId);
+  }
+
+  @Get('orderbook')
+  async getOrderBook(@Query('pair') pair: string) {
+    return this.spotService.getOrderBook(pair);
+  }
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\spot\spot.module.ts
+--------------------------------
+import { Module } from '@nestjs/common';
+import { SpotService } from './spot.service';
+import { SpotController } from './spot.controller';
+import { WalletModule } from '../wallet/wallet.module';
+
+@Module({
+  imports: [WalletModule],
+  providers: [SpotService],
+  controllers: [SpotController],
+  exports: [SpotService],
+})
+export class SpotModule {}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\spot\spot.service.ts
+--------------------------------
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { WalletService } from '../wallet/wallet.service';
+import { OrderSide, OrderType, OrderStatus, LedgerType } from '@prisma/client';
+
+@Injectable()
+export class SpotService {
+  constructor(
+    private prisma: PrismaService,
+    private walletService: WalletService,
+  ) {}
+
+  async placeOrder(userId: string, pair: string, side: OrderSide, type: OrderType, amount: number, price?: number) {
+    if (amount <= 0) throw new BadRequestException('Amount must be positive');
+    if (type === OrderType.LIMIT && (!price || price <= 0)) throw new BadRequestException('Price is required for Limit orders');
+
+    // 1. Calculate required funds to lock
+    let requiredFunds = 0;
+    let currencyToLock = '';
+
+    const [base, quote] = pair.split('/'); // e.g., BTC/USDT -> Base: BTC, Quote: USDT
+
+    if (side === OrderSide.BUY) {
+      // Buying BTC with USDT
+      currencyToLock = quote;
+      if (type === OrderType.LIMIT) {
+        requiredFunds = amount * price!;
+      } else {
+        // Market Buy: For simplicity in this MVP, we might require an estimated amount or lock a large chunk.
+        // Better approach for Market Buy is "Spend X USDT" rather than "Buy Y BTC" to avoid calculation issues.
+        // Assuming 'amount' for Market Buy is 'quote currency amount' (Spend 100 USDT).
+        // However, standard is usually "Buy 1 BTC".
+        // Let's assume Limit orders for MVP core or estimate market price.
+        // For robustness, let's stick to LIMIT orders primarily or strictly defined Market logic.
+        // Let's implement LIMIT first for safety.
+        if (!price) throw new BadRequestException('Market orders require current price estimation (not fully implemented in MVP step 1)');
+        requiredFunds = amount * price; 
+      }
+    } else {
+      // Selling BTC for USDT
+      currencyToLock = base;
+      requiredFunds = amount;
+    }
+
+    // 2. Lock Funds
+    await this.walletService.lockFunds(userId, currencyToLock, requiredFunds);
+
+    // 3. Create Order
+    const order = await this.prisma.spotOrder.create({
+      data: {
+        userId,
+        pair,
+        side,
+        type,
+        price,
+        amount,
+        remaining: amount,
+        status: OrderStatus.OPEN,
+      },
+    });
+
+    // 4. Trigger Matching (Async)
+    this.matchOrders(pair);
+
+    return order;
+  }
+
+  async matchOrders(pair: string) {
+    // Simple matching engine for MVP
+    // Match Buy Limit vs Sell Limit
+    
+    // Fetch open buy orders sorted by Price DESC (Highest bid first)
+    const buyOrders = await this.prisma.spotOrder.findMany({
+      where: { pair, side: OrderSide.BUY, status: { in: [OrderStatus.OPEN, OrderStatus.PARTIALLY_FILLED] } },
+      orderBy: { price: 'desc' },
+    });
+
+    // Fetch open sell orders sorted by Price ASC (Lowest ask first)
+    const sellOrders = await this.prisma.spotOrder.findMany({
+      where: { pair, side: OrderSide.SELL, status: { in: [OrderStatus.OPEN, OrderStatus.PARTIALLY_FILLED] } },
+      orderBy: { price: 'asc' },
+    });
+
+    for (const buyOrder of buyOrders) {
+      for (const sellOrder of sellOrders) {
+        if (!buyOrder.price || !sellOrder.price) continue; // Skip market orders for now
+        
+        // Check if match is possible
+        if (buyOrder.price >= sellOrder.price) {
+          // Match found!
+          const matchPrice = sellOrder.price; // Usually executes at maker price
+          const matchAmount = Math.min(buyOrder.remaining, sellOrder.remaining);
+
+          if (matchAmount <= 0) continue;
+
+          // Execute Trade
+          await this.executeTrade(buyOrder, sellOrder, matchPrice, matchAmount);
+
+          // Update local remaining for loop continuity
+          buyOrder.remaining -= matchAmount;
+          sellOrder.remaining -= matchAmount;
+
+          if (buyOrder.remaining === 0) break; // Buy order filled, move to next buy order
+        }
+      }
+    }
+  }
+
+  async executeTrade(buyOrder: any, sellOrder: any, price: number, amount: number) {
+    await this.prisma.$transaction(async (tx) => {
+      // 1. Create Trade Record
+      const trade = await tx.spotTrade.create({
+        data: {
+          orderId: buyOrder.id, // Linking to buy order for now, theoretically should link both or have 2 entries
+          userId: buyOrder.userId, // Buyer
+          pair: buyOrder.pair,
+          price,
+          amount,
+          side: OrderSide.BUY,
+          fee: 0, // 0 fee for now
+          feeCurrency: 'USDT',
+        }
+      });
+      // Need a second trade record for the seller? 
+      // Typically an exchange creates one "Trade" entity linking maker and taker, or two records.
+      // Our schema has `orderId` and `userId`. Let's create two records for clarity.
+      await tx.spotTrade.create({
+        data: {
+          orderId: sellOrder.id,
+          userId: sellOrder.userId, // Seller
+          pair: sellOrder.pair,
+          price,
+          amount,
+          side: OrderSide.SELL,
+          fee: 0,
+          feeCurrency: 'USDT',
+        }
+      });
+
+      // 2. Update Orders
+      await this.updateOrderStatus(tx, buyOrder.id, amount);
+      await this.updateOrderStatus(tx, sellOrder.id, amount);
+
+      // 3. Settlement
+      const [base, quote] = buyOrder.pair.split('/');
+      const totalQuote = amount * price;
+
+      // Buyer:
+      // Locked USDT was `amount * buyOrder.price` (max willingness).
+      // Actual cost is `amount * price`.
+      // If buyOrder.price > price, refund the difference.
+      const lockedQuote = amount * buyOrder.price;
+      const actualCost = totalQuote;
+      
+      // Deduct used USDT from locked
+      // We need to access WalletService from within transaction... 
+      // Ideally WalletService methods should accept a prisma transaction client.
+      // For MVP, we will use the injected service which uses a new transaction.
+      // This breaks atomicity of the whole trade execution slightly but is acceptable for this level.
+      // TODO: Refactor WalletService to accept `tx`.
+
+      // BUYER Settlement:
+      // Deduct Cost from Locked USDT
+      // If partial fill, we only deduct for the amount filled.
+      // NOTE: WalletService `deductLockedFunds` assumes we deduct what we used.
+      // But wait, we locked `buyOrder.price * amount`. We spent `price * amount`.
+      // We should deduct `price * amount` from LOCKED? No, that leaves dust in locked.
+      // We should deduct `buyOrder.price * amount` from LOCKED, and credit back `(buyOrder.price - price) * amount` to AVAILABLE?
+      // Or simply: Unlock everything for this portion, then Deduct actual cost.
+      
+      // Simpler approach for MVP:
+      // Buyer gets BASE currency (creditUser)
+      // Seller gets QUOTE currency (creditUser)
+      // Buyer loses QUOTE currency (deductLocked)
+      // Seller loses BASE currency (deductLocked)
+      
+      // BUYER: Receives Base
+      // We can't call this.walletService.creditUser inside tx easily without refactor.
+      // Let's do it after or use `prisma` directly here for speed.
+      
+      // Update Wallets manually in this TX for atomicity
+      
+      // BUYER:
+      // 1. Unlock the portion of USDT reserved for this fill
+      // 2. Deduct the actual USDT cost
+      // 3. Add the BTC bought
+      
+      // SELLER:
+      // 1. Deduct the BTC locked
+      // 2. Add the USDT earned
+    });
+    
+    // Execute Wallet Changes (Sequential for safety if not in same TX, or refactor)
+    // For this MVP, I will call WalletService methods sequentially.
+    // Ideally these should be in the transaction above.
+    
+    const [base, quote] = buyOrder.pair.split('/');
+    const totalQuote = amount * price;
+
+    // BUYER Settlement
+    // 1. Deduct USDT (Cost)
+    // We locked `amount * buyOrder.price`.
+    // We need to deduct `amount * buyOrder.price` from locked to clear the reservation
+    // But we only actually spent `amount * price`.
+    // So we credit back `amount * (buyOrder.price - price)` to available?
+    // Let's simplify:
+    // Deduct full reserved amount for this chunk from Locked.
+    // Credit difference to Available.
+    // Credit Bought Asset to Available.
+    
+    // Deduction: 
+    // We locked funds based on Order Price.
+    await this.walletService.deductLockedFunds(buyOrder.userId, quote, amount * buyOrder.price, LedgerType.TRADE_SPOT, `TRADE-${buyOrder.id}`);
+    // Refund difference (if bought cheaper)
+    if (buyOrder.price > price) {
+        const refund = amount * (buyOrder.price - price);
+        if (refund > 0) {
+             await this.walletService.deposit(buyOrder.userId, quote, refund, `REFUND-${buyOrder.id}`);
+        }
+    }
+    // Credit Asset
+    await this.walletService.deposit(buyOrder.userId, base, amount, `TRADE-RECV-${buyOrder.id}`);
+
+
+    // SELLER Settlement
+    // 1. Deduct Locked Base (BTC)
+    await this.walletService.deductLockedFunds(sellOrder.userId, base, amount, LedgerType.TRADE_SPOT, `TRADE-${sellOrder.id}`);
+    // 2. Credit Quote (USDT)
+    await this.walletService.deposit(sellOrder.userId, quote, totalQuote, `TRADE-RECV-${sellOrder.id}`);
+  }
+
+  async updateOrderStatus(tx: any, orderId: string, amountFilled: number) {
+    const order = await tx.spotOrder.findUnique({ where: { id: orderId } });
+    const newFilled = order.filled + amountFilled;
+    const newRemaining = order.remaining - amountFilled;
+    const status = newRemaining <= 0.00000001 ? OrderStatus.FILLED : OrderStatus.PARTIALLY_FILLED;
+
+    await tx.spotOrder.update({
+      where: { id: orderId },
+      data: {
+        filled: newFilled,
+        remaining: newRemaining,
+        status,
+      },
+    });
+  }
+
+  async cancelOrder(userId: string, orderId: string) {
+    const order = await this.prisma.spotOrder.findUnique({ where: { id: orderId } });
+    if (!order) throw new NotFoundException('Order not found');
+    if (order.userId !== userId) throw new BadRequestException('Not your order');
+    if (order.status === OrderStatus.FILLED || order.status === OrderStatus.CANCELLED) {
+      throw new BadRequestException('Order cannot be cancelled');
+    }
+
+    // Update Status
+    await this.prisma.spotOrder.update({
+      where: { id: orderId },
+      data: { status: OrderStatus.CANCELLED },
+    });
+
+    // Unlock Remaining Funds
+    const [base, quote] = order.pair.split('/');
+    if (order.side === OrderSide.BUY) {
+      // Unlock USDT
+      // Locked amount was remaining * price
+      const lockedAmount = order.remaining * (order.price || 0);
+      await this.walletService.unlockFunds(userId, quote, lockedAmount);
+    } else {
+      // Unlock BTC
+      await this.walletService.unlockFunds(userId, base, order.remaining);
+    }
+
+    return { message: 'Order cancelled' };
+  }
+
+  async getOrderBook(pair: string) {
+      const buys = await this.prisma.spotOrder.findMany({
+          where: { pair, side: OrderSide.BUY, status: { in: [OrderStatus.OPEN, OrderStatus.PARTIALLY_FILLED] } },
+          orderBy: { price: 'desc' },
+          take: 50
+      });
+      const sells = await this.prisma.spotOrder.findMany({
+          where: { pair, side: OrderSide.SELL, status: { in: [OrderStatus.OPEN, OrderStatus.PARTIALLY_FILLED] } },
+          orderBy: { price: 'asc' },
+          take: 50
+      });
+      return { buys, sells };
+  }
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\users\users.module.ts
+--------------------------------
+import { Module } from '@nestjs/common';
+import { UsersService } from './users.service';
+import { WalletModule } from '../wallet/wallet.module';
+
+@Module({
+  imports: [WalletModule],
+  providers: [UsersService],
+  exports: [UsersService],
+})
+export class UsersModule {}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\users\users.service.ts
+--------------------------------
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { User, Prisma } from '@prisma/client';
+import { WalletService } from '../wallet/wallet.service';
+import * as bcrypt from 'bcrypt';
+
+@Injectable()
+export class UsersService {
+  constructor(
+    private prisma: PrismaService,
+    private walletService: WalletService
+  ) {}
+
+  async findOne(email: string): Promise<User | null> {
+    return this.prisma.user.findUnique({
+      where: { email },
+    });
+  }
+  
+  async findById(id: string): Promise<User | null> {
+      return this.prisma.user.findUnique({
+          where: { id }
+      });
+  }
+
+  async createUser(data: Prisma.UserCreateInput): Promise<User> {
+    // Hash password
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+    
+    // Create user
+    const user = await this.prisma.user.create({
+      data: {
+        ...data,
+        password: hashedPassword,
+      },
+    });
+
+    // Create wallet for the new user
+    await this.walletService.createWallet(user.id);
+
+    return user;
+  }
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\wallet\wallet.controller.ts
+--------------------------------
+import { Controller, Get, Post, Body, Param, UseGuards, Query } from '@nestjs/common';
+import { WalletService } from './wallet.service';
+// import { JwtAuthGuard } from '../auth/jwt-auth.guard'; // Will implement later
+
+@Controller('wallet')
+export class WalletController {
+  constructor(private readonly walletService: WalletService) {}
+
+  // @UseGuards(JwtAuthGuard)
+  @Get(':userId')
+  async getWallet(@Param('userId') userId: string) {
+    return this.walletService.getAllBalances(userId);
+  }
+  
+  // @UseGuards(JwtAuthGuard)
+  @Get(':userId/ledger')
+  async getLedger(@Param('userId') userId: string) {
+    return this.walletService.getLedger(userId);
+  }
+
+  // Admin or Dev Testing Endpoints
+  @Post('deposit')
+  async deposit(@Body() body: { userId: string; currency: string; amount: number }) {
+    return this.walletService.deposit(body.userId, body.currency, body.amount);
+  }
+
+  @Post('withdraw')
+  async withdraw(@Body() body: { userId: string; currency: string; amount: number }) {
+    return this.walletService.withdraw(body.userId, body.currency, body.amount);
+  }
+
+  // Admin Endpoints
+  @Post('admin/credit')
+  async adminCredit(@Body() body: { userId: string; currency: string; amount: number; reason: string }) {
+    // In real app, add @UseGuards(AdminGuard)
+    return this.walletService.deposit(body.userId, body.currency, body.amount, `ADMIN-CREDIT-${Date.now()}`);
+  }
+
+  @Post('admin/debit')
+  async adminDebit(@Body() body: { userId: string; currency: string; amount: number; reason: string }) {
+    // In real app, add @UseGuards(AdminGuard)
+    // Reusing withdraw for debit, or we could implement specific debit logic
+    return this.walletService.withdraw(body.userId, body.currency, body.amount, `ADMIN-DEBIT-${Date.now()}`);
+  }
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\wallet\wallet.module.ts
+--------------------------------
+import { Module } from '@nestjs/common';
+import { WalletService } from './wallet.service';
+import { WalletController } from './wallet.controller';
+
+@Module({
+  providers: [WalletService],
+  controllers: [WalletController],
+  exports: [WalletService],
+})
+export class WalletModule {}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\wallet\wallet.service.ts
+--------------------------------
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { LedgerType } from '@prisma/client';
+
+@Injectable()
+export class WalletService {
+  constructor(private prisma: PrismaService) {}
+
+  // Initialize wallet for a new user
+  async createWallet(userId: string) {
+    return this.prisma.wallet.create({
+      data: {
+        userId,
+        balances: {}, // Initialize empty JSON object
+      },
+    });
+  }
+
+  // Get user balance for a specific currency
+  async getBalance(userId: string, currency: string) {
+    const wallet = await this.prisma.wallet.findUnique({
+      where: { userId },
+    });
+
+    if (!wallet) throw new NotFoundException('Wallet not found');
+
+    const balances = wallet.balances as Record<string, { available: number; locked: number }>;
+    return balances[currency] || { available: 0, locked: 0 };
+  }
+
+  // Get all balances
+  async getAllBalances(userId: string) {
+    const wallet = await this.prisma.wallet.findUnique({
+      where: { userId },
+    });
+    if (!wallet) throw new NotFoundException('Wallet not found');
+    return wallet.balances;
+  }
+
+  // Deposit funds (Admin or Simulated)
+  async deposit(userId: string, currency: string, amount: number, referenceId?: string) {
+    if (amount <= 0) throw new BadRequestException('Amount must be positive');
+
+    return this.prisma.$transaction(async (tx) => {
+      const wallet = await tx.wallet.findUnique({ where: { userId } });
+      if (!wallet) throw new NotFoundException('Wallet not found');
+
+      const balances = wallet.balances as Record<string, { available: number; locked: number }>;
+      const current = balances[currency] || { available: 0, locked: 0 };
+
+      // Update balance
+      current.available += amount;
+      balances[currency] = current;
+
+      // Update wallet
+      await tx.wallet.update({
+        where: { userId },
+        data: { balances },
+      });
+
+      // Create Ledger Entry
+      await tx.ledger.create({
+        data: {
+          walletId: wallet.id,
+          currency,
+          amount,
+          type: LedgerType.DEPOSIT,
+          referenceId: referenceId || `DEP-${Date.now()}`,
+        },
+      });
+
+      return balances[currency];
+    });
+  }
+
+  // Withdraw funds
+  async withdraw(userId: string, currency: string, amount: number, referenceId?: string) {
+    if (amount <= 0) throw new BadRequestException('Amount must be positive');
+
+    return this.prisma.$transaction(async (tx) => {
+      const wallet = await tx.wallet.findUnique({ where: { userId } });
+      if (!wallet) throw new NotFoundException('Wallet not found');
+
+      const balances = wallet.balances as Record<string, { available: number; locked: number }>;
+      const current = balances[currency] || { available: 0, locked: 0 };
+
+      if (current.available < amount) {
+        throw new BadRequestException('Insufficient funds');
+      }
+
+      // Update balance
+      current.available -= amount;
+      balances[currency] = current;
+
+      await tx.wallet.update({
+        where: { userId },
+        data: { balances },
+      });
+
+      // Create Ledger Entry
+      await tx.ledger.create({
+        data: {
+          walletId: wallet.id,
+          currency,
+          amount: -amount, // Negative for withdrawal
+          type: LedgerType.WITHDRAWAL,
+          referenceId: referenceId || `WTH-${Date.now()}`,
+        },
+      });
+
+      return balances[currency];
+    });
+  }
+
+  // Lock funds (for trading)
+  async lockFunds(userId: string, currency: string, amount: number) {
+    if (amount <= 0) throw new BadRequestException('Amount must be positive');
+
+    return this.prisma.$transaction(async (tx) => {
+      const wallet = await tx.wallet.findUnique({ where: { userId } });
+      if (!wallet) throw new NotFoundException('Wallet not found');
+
+      const balances = wallet.balances as Record<string, { available: number; locked: number }>;
+      const current = balances[currency] || { available: 0, locked: 0 };
+
+      if (current.available < amount) {
+        throw new BadRequestException('Insufficient available funds to lock');
+      }
+
+      current.available -= amount;
+      current.locked += amount;
+      balances[currency] = current;
+
+      await tx.wallet.update({
+        where: { userId },
+        data: { balances },
+      });
+
+      return true;
+    });
+  }
+
+  // Unlock funds (e.g. order cancelled)
+  async unlockFunds(userId: string, currency: string, amount: number) {
+    if (amount <= 0) throw new BadRequestException('Amount must be positive');
+
+    return this.prisma.$transaction(async (tx) => {
+      const wallet = await tx.wallet.findUnique({ where: { userId } });
+      if (!wallet) throw new NotFoundException('Wallet not found');
+
+      const balances = wallet.balances as Record<string, { available: number; locked: number }>;
+      const current = balances[currency] || { available: 0, locked: 0 };
+
+      if (current.locked < amount) {
+        throw new BadRequestException('Insufficient locked funds to unlock');
+      }
+
+      current.locked -= amount;
+      current.available += amount;
+      balances[currency] = current;
+
+      await tx.wallet.update({
+        where: { userId },
+        data: { balances },
+      });
+
+      return true;
+    });
+  }
+
+  // Deduct locked funds (e.g. order filled or trade lost)
+  async deductLockedFunds(userId: string, currency: string, amount: number, type: LedgerType, refId: string) {
+     return this.prisma.$transaction(async (tx) => {
+      const wallet = await tx.wallet.findUnique({ where: { userId } });
+      if (!wallet) throw new NotFoundException('Wallet not found');
+
+      const balances = wallet.balances as Record<string, { available: number; locked: number }>;
+      const current = balances[currency] || { available: 0, locked: 0 };
+
+      if (current.locked < amount) {
+         // Fallback if something went wrong, but ideally shouldn't happen
+         if (current.available + current.locked >= amount) {
+             // Deduct from available if locked is missing (edge case)
+             const remaining = amount - current.locked;
+             current.locked = 0;
+             current.available -= remaining;
+         } else {
+             throw new BadRequestException('Insufficient funds');
+         }
+      } else {
+          current.locked -= amount;
+      }
+      
+      balances[currency] = current;
+
+      await tx.wallet.update({
+        where: { userId },
+        data: { balances },
+      });
+
+      await tx.ledger.create({
+        data: {
+          walletId: wallet.id,
+          currency,
+          amount: -amount,
+          type: type,
+          referenceId: refId,
+        },
+      });
+
+      return true;
+    });
+  }
+  
+  // Add funds (e.g. trade won, loan received)
+  async addFunds(userId: string, currency: string, amount: number, type: LedgerType, refId: string) {
+      return this.deposit(userId, currency, amount, refId);
+      // We can reuse deposit logic but specify the LedgerType. 
+      // Actually, deposit hardcodes LedgerType.DEPOSIT. Let's make a generic internal method or just update deposit to accept type.
+      // For now, I'll copy the logic to be safe and explicit.
+  }
+  
+  // Internal method to add funds with specific ledger type
+  async creditUser(userId: string, currency: string, amount: number, type: LedgerType, refId: string) {
+       return this.prisma.$transaction(async (tx) => {
+      const wallet = await tx.wallet.findUnique({ where: { userId } });
+      if (!wallet) throw new NotFoundException('Wallet not found');
+
+      const balances = wallet.balances as Record<string, { available: number; locked: number }>;
+      const current = balances[currency] || { available: 0, locked: 0 };
+
+      current.available += amount;
+      balances[currency] = current;
+
+      await tx.wallet.update({
+        where: { userId },
+        data: { balances },
+      });
+
+      await tx.ledger.create({
+        data: {
+          walletId: wallet.id,
+          currency,
+          amount,
+          type: type,
+          referenceId: refId,
+        },
+      });
+      
+      return balances[currency];
+    });
+  }
+
+  async getLedger(userId: string) {
+    const wallet = await this.prisma.wallet.findUnique({ where: { userId } });
+    if (!wallet) throw new NotFoundException('Wallet not found');
+    
+    return this.prisma.ledger.findMany({
+        where: { walletId: wallet.id },
+        orderBy: { createdAt: 'desc' }
+    });
+  }
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\app.controller.ts
+--------------------------------
+import { Controller, Get } from '@nestjs/common';
+import { AppService } from './app.service';
+
+@Controller()
+export class AppController {
+  constructor(private readonly appService: AppService) {}
+
+  @Get()
+  getHello(): string {
+    return this.appService.getHello();
+  }
+
+  @Get('health')
+  getHealth() {
+    return {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      service: 'Dexi Trading Platform',
+    };
+  }
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\app.module.ts
+--------------------------------
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { PrismaModule } from './prisma/prisma.module';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    PrismaModule,
+  ],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\app.service.ts
+--------------------------------
+import { Injectable } from '@nestjs/common';
+
+@Injectable()
+export class AppService {
+  getHello(): string {
+    return 'Dexi Trading Platform API is running!';
+  }
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\src\main.ts
+--------------------------------
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { ValidationPipe } from '@nestjs/common';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  
+  app.enableCors({
+    origin: 'http://localhost:3000',
+    credentials: true,
+  });
+  
+  app.useGlobalPipes(new ValidationPipe());
+  
+  const port = process.env.PORT || 3001;
+  await app.listen(port);
+  console.log(`🚀 Backend server running on http://localhost:${port}`);
+}
+bootstrap();
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\Dockerfile
+--------------------------------
+# Backend Dockerfile (Production Optimized)
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+
+COPY package*.json ./
+COPY prisma ./prisma/
+
+RUN npm install
+
+COPY . .
+
+RUN npx prisma generate
+RUN npm run build
+
+# Production Image
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
+
+EXPOSE 3001
+
+CMD ["npm", "run", "start:prod"]
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\package.json
+--------------------------------
+{
+  "name": "backend",
+  "version": "0.0.1",
+  "description": "",
+  "author": "",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "nest build",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "start": "nest start",
+    "start:dev": "nest start --watch",
+    "start:debug": "nest start --debug --watch",
+    "start:prod": "node dist/main",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage",
+    "test:debug": "node --inspect-brk -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "seed": "ts-node prisma/seed.ts"
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/config": "^3.3.0",
+    "@nestjs/core": "^10.0.0",
+    "@nestjs/jwt": "^10.2.0",
+    "@nestjs/mapped-types": "*",
+    "@nestjs/passport": "^10.0.3",
+    "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/schedule": "^3.0.4",
+    "@nestjs/swagger": "^7.1.17",
+    "@nestjs/websockets": "^10.4.22",
+    "@prisma/client": "^5.7.1",
+    "bcrypt": "^6.0.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.0",
+    "passport-jwt": "^4.0.1",
+    "reflect-metadata": "^0.1.13",
+    "rxjs": "^7.8.1",
+    "socket.io": "^4.8.3"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^10.0.0",
+    "@nestjs/schematics": "^10.0.0",
+    "@nestjs/testing": "^10.0.0",
+    "@types/express": "^4.17.17",
+    "@types/jest": "^29.5.2",
+    "@types/node": "^20.3.1",
+    "@types/supertest": "^2.0.12",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.42.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "jest": "^29.5.0",
+    "prettier": "^3.0.0",
+    "prisma": "^5.7.1",
+    "source-map-support": "^0.5.21",
+    "supertest": "^6.3.3",
+    "ts-jest": "^29.1.0",
+    "ts-loader": "^9.4.3",
+    "ts-node": "^10.9.1",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.1.3"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
+    "rootDir": "src",
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "collectCoverageFrom": [
+      "**/*.(t|j)s"
+    ],
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node"
+  }
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\backend\test-wallet.ts
+--------------------------------
+
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+async function main() {
+  console.log('--- Wallet Logic Test ---');
+
+  // 1. Create Dummy User
+  const email = `testuser_${Date.now()}@example.com`;
+  console.log(`Creating user: ${email}`);
+  const user = await prisma.user.create({
+    data: {
+      email,
+      password: 'hashed_password',
+      wallet: {
+        create: {
+          balances: {},
+        }
+      }
+    },
+    include: { wallet: true }
+  });
+  console.log('User created:', user.id);
+  console.log('Wallet created:', user.wallet?.id);
+
+  if (!user.wallet) throw new Error('Wallet creation failed');
+  const walletId = user.wallet.id;
+
+  // 2. Deposit Funds
+  console.log('\n--- Testing Deposit ---');
+  // Simulating Service Logic
+  let wallet = await prisma.wallet.findUnique({ where: { id: walletId } });
+  let balances = wallet?.balances as any || {};
+  
+  const amount = 1000;
+  const currency = 'USDT';
+  
+  balances[currency] = { available: (balances[currency]?.available || 0) + amount, locked: 0 };
+  
+  await prisma.wallet.update({
+    where: { id: walletId },
+    data: { balances }
+  });
+  
+  await prisma.ledger.create({
+    data: {
+      walletId,
+      currency,
+      amount,
+      type: 'DEPOSIT',
+      referenceId: 'TEST-DEP-1'
+    }
+  });
+  console.log(`Deposited ${amount} ${currency}`);
+
+  // 3. Lock Funds
+  console.log('\n--- Testing Lock ---');
+  const lockAmount = 100;
+  balances[currency].available -= lockAmount;
+  balances[currency].locked += lockAmount;
+  
+  await prisma.wallet.update({
+    where: { id: walletId },
+    data: { balances }
+  });
+  console.log(`Locked ${lockAmount} ${currency}`);
+
+  // 4. Verify Final State
+  const finalWallet = await prisma.wallet.findUnique({ where: { id: walletId } });
+  console.log('Final Balances:', finalWallet?.balances);
+  
+  const ledger = await prisma.ledger.findMany({ where: { walletId } });
+  console.log('Ledger Entries:', ledger.length);
+
+  console.log('\n--- Test Complete ---');
+}
+
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\frontend\app\components\BottomNav.tsx
+--------------------------------
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { Home, Wallet, LineChart, TrendingUp, Settings } from 'lucide-react';
+
+const navItems = [
+  { name: 'Home', href: '/dashboard', icon: Home },
+  { name: 'Spot', href: '/dashboard/spot', icon: LineChart },
+  { name: 'Binary', href: '/dashboard/binary', icon: TrendingUp },
+  { name: 'Wallet', href: '/dashboard/wallet', icon: Wallet },
+  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+];
+
+export default function BottomNav() {
+  const pathname = usePathname();
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 h-16 bg-dexi-darker border-t border-dexi-purple/20 flex items-center justify-around z-50 md:hidden pb-safe">
+      {navItems.map((item) => {
+        const Icon = item.icon;
+        const isActive = pathname === item.href;
+        return (
+          <Link
+            key={item.name}
+            href={item.href}
+            className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${
+              isActive ? 'text-dexi-cyan' : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <Icon className={`w-6 h-6 ${isActive ? 'drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]' : ''}`} />
+            <span className="text-[10px] font-medium">{item.name}</span>
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\frontend\app\components\Sidebar.tsx
+--------------------------------
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { Home, Wallet, LineChart, TrendingUp, Settings, LogOut } from 'lucide-react';
+
+const navItems = [
+  { name: 'Dashboard', href: '/dashboard', icon: Home },
+  { name: 'Spot Trading', href: '/dashboard/spot', icon: LineChart },
+  { name: 'Binary Options', href: '/dashboard/binary', icon: TrendingUp },
+  { name: 'Wallet', href: '/dashboard/wallet', icon: Wallet },
+  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+];
+
+export default function Sidebar() {
+  const pathname = usePathname();
+
+  return (
+    <div className="hidden md:flex flex-col h-screen w-64 bg-dexi-darker border-r border-dexi-purple/20">
+      <div className="flex items-center justify-center h-16 border-b border-dexi-purple/20">
+        <h1 className="text-2xl font-bold gradient-text">DEXI</h1>
+      </div>
+      <nav className="flex-1 px-4 py-6 space-y-2">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all ${
+                isActive
+                  ? 'bg-dexi-purple/20 text-dexi-cyan border border-dexi-cyan/20 shadow-neon-blue'
+                  : 'text-gray-400 hover:bg-white/5 hover:text-white'
+              }`}
+            >
+              <Icon className={`w-5 h-5 mr-3 ${isActive ? 'text-dexi-cyan' : ''}`} />
+              {item.name}
+            </Link>
+          );
+        })}
+      </nav>
+      <div className="p-4 border-t border-dexi-purple/20">
+        <button
+          onClick={() => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+          }}
+          className="flex items-center w-full px-4 py-2 text-sm font-medium text-red-500 hover:bg-white/5 rounded-lg transition-colors"
+        >
+          <LogOut className="w-5 h-5 mr-3" />
+          Logout
+        </button>
+      </div>
+    </div>
+  );
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\frontend\app\components\TradingChart.tsx
+--------------------------------
+'use client';
+
+import { useEffect, useRef } from 'react';
+import { createChart, ColorType, IChartApi } from 'lightweight-charts';
+
+interface TradingChartProps {
+  symbol: string;
+  type: 'binary' | 'spot';
+}
+
+export default function TradingChart({ symbol, type }: TradingChartProps) {
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const chartRef = useRef<IChartApi | null>(null);
+
+  useEffect(() => {
+    if (!chartContainerRef.current) return;
+
+    const chart = createChart(chartContainerRef.current, {
+      layout: {
+        background: { type: ColorType.Solid, color: '#060918' },
+        textColor: '#d1d4dc',
+      },
+      grid: {
+        vertLines: { color: '#1e293b' },
+        horzLines: { color: '#1e293b' },
+      },
+      width: chartContainerRef.current.clientWidth,
+      height: chartContainerRef.current.clientHeight,
+      timeScale: {
+        timeVisible: true,
+        secondsVisible: false,
+      },
+    });
+
+    chartRef.current = chart;
+
+    const candlestickSeries = chart.addCandlestickSeries({
+      upColor: '#10b981',
+      downColor: '#ef4444',
+      borderVisible: false,
+      wickUpColor: '#10b981',
+      wickDownColor: '#ef4444',
+    });
+
+    const generateMockData = () => {
+      const data = [];
+      let basePrice = 45000;
+      const now = Math.floor(Date.now() / 1000);
+
+      for (let i = 100; i >= 0; i--) {
+        const time = now - i * 60;
+        const open = basePrice + (Math.random() - 0.5) * 1000;
+        const close = open + (Math.random() - 0.5) * 500;
+        const high = Math.max(open, close) + Math.random() * 200;
+        const low = Math.min(open, close) - Math.random() * 200;
+
+        data.push({
+          time: time as any,
+          open,
+          high,
+          low,
+          close,
+        });
+
+        basePrice = close;
+      }
+
+      return data;
+    };
+
+    candlestickSeries.setData(generateMockData());
+
+    chart.timeScale().fitContent();
+
+    const handleResize = () => {
+      if (chartContainerRef.current && chartRef.current) {
+        chartRef.current.applyOptions({
+          width: chartContainerRef.current.clientWidth,
+          height: chartContainerRef.current.clientHeight,
+        });
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      chart.remove();
+    };
+  }, [symbol, type]);
+
+  return (
+    <div className="relative w-full h-full">
+      <div ref={chartContainerRef} className="w-full h-full rounded-lg overflow-hidden" />
+    </div>
+  );
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\frontend\app\dashboard\admin\page.tsx
+--------------------------------
+'use client';
+
+import { useEffect, useState } from 'react';
+import api from '../../lib/api';
+
+export default function AdminPage() {
+  const [userId, setUserId] = useState('');
+  const [amount, setAmount] = useState('');
+  const [currency, setCurrency] = useState('USDT');
+  const [positionId, setPositionId] = useState('');
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      const u = JSON.parse(userStr);
+      setUser(u);
+      // In real app, check if u.role === 'ADMIN'
+    }
+  }, []);
+
+  const handleCredit = async () => {
+    try {
+      await api.post('/wallet/admin/credit', {
+        userId,
+        currency,
+        amount: parseFloat(amount),
+        reason: 'Manual Credit',
+      });
+      alert('Credit Successful');
+    } catch (err) {
+      alert('Failed');
+    }
+  };
+
+  const handleForceResult = async (outcome: 'WIN' | 'LOSE') => {
+    try {
+      await api.post('/binary/admin/force-result', {
+        positionId,
+        outcome,
+      });
+      alert(`Position forced to ${outcome}`);
+    } catch (err) {
+      alert('Failed');
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+
+      {/* Wallet Management */}
+      <div className="bg-gray-900 rounded-lg border border-gray-800 p-6">
+        <h2 className="text-xl font-bold mb-4">Wallet Management</h2>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">User ID</label>
+            <input
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+              className="w-full p-2 bg-gray-800 rounded border border-gray-700 text-white"
+              placeholder="UUID"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">Amount</label>
+            <input
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="w-full p-2 bg-gray-800 rounded border border-gray-700 text-white"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">Currency</label>
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              className="w-full p-2 bg-gray-800 rounded border border-gray-700 text-white"
+            >
+              <option value="USDT">USDT</option>
+              <option value="BTC">BTC</option>
+            </select>
+          </div>
+          <button
+            onClick={handleCredit}
+            className="w-full py-2 bg-blue-600 hover:bg-blue-700 rounded font-bold"
+          >
+            Credit User
+          </button>
+        </div>
+      </div>
+
+      {/* Binary Management */}
+      <div className="bg-gray-900 rounded-lg border border-gray-800 p-6">
+        <h2 className="text-xl font-bold mb-4">Binary Options Override</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">Position ID</label>
+            <input
+              value={positionId}
+              onChange={(e) => setPositionId(e.target.value)}
+              className="w-full p-2 bg-gray-800 rounded border border-gray-700 text-white"
+              placeholder="UUID"
+            />
+          </div>
+          <button
+            onClick={() => handleForceResult('WIN')}
+            className="w-full py-2 bg-green-600 hover:bg-green-700 rounded font-bold"
+          >
+            Force WIN
+          </button>
+          <button
+            onClick={() => handleForceResult('LOSE')}
+            className="w-full py-2 bg-red-600 hover:bg-red-700 rounded font-bold"
+          >
+            Force LOSE
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\frontend\app\dashboard\binary\page.tsx
+--------------------------------
+'use client';
+
+import { useEffect, useState, useRef } from 'react';
+import api from '../../lib/api';
+import { createChart, ColorType, CrosshairMode } from 'lightweight-charts';
+import io from 'socket.io-client';
+
+export default function BinaryPage() {
+  const [duration, setDuration] = useState(30);
+  const [amount, setAmount] = useState('');
+  const [pair, setPair] = useState('BTC/USDT');
+  const [user, setUser] = useState<any>(null);
+  const [currentPrice, setCurrentPrice] = useState<number>(0);
+  const [activePositions, setActivePositions] = useState<any[]>([]);
+  
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const chartRef = useRef<any>(null);
+  const seriesRef = useRef<any>(null);
+  const socketRef = useRef<any>(null);
+  const markersRef = useRef<any>([]); // Keep track of chart markers
+
+  // Mock initial data
+  const initialData = Array.from({ length: 100 }, (_, i) => ({
+    time: Math.floor(Date.now() / 1000) - (100 - i) * 60,
+    value: 40000 + Math.random() * 100,
+  }));
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) setUser(JSON.parse(userStr));
+
+    // Initialize Chart
+    if (chartContainerRef.current) {
+      const chart = createChart(chartContainerRef.current, {
+        layout: { background: { type: ColorType.Solid, color: '#111827' }, textColor: '#D1D5DB' },
+        grid: { vertLines: { color: '#374151' }, horzLines: { color: '#374151' } },
+        width: chartContainerRef.current.clientWidth,
+        height: 400,
+        crosshair: { mode: CrosshairMode.Normal },
+        timeScale: { timeVisible: true, secondsVisible: true },
+      });
+
+      const series = chart.addAreaSeries({
+        lineColor: '#2563EB',
+        topColor: '#2563EB',
+        bottomColor: 'rgba(37, 99, 235, 0.04)',
+      });
+      
+      series.setData(initialData);
+      chartRef.current = chart;
+      seriesRef.current = series;
+
+      // Handle Resize
+      const handleResize = () => {
+        chart.applyOptions({ width: chartContainerRef.current?.clientWidth });
+      };
+      window.addEventListener('resize', handleResize);
+
+      // Connect Socket
+      const socket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001');
+      socketRef.current = socket;
+
+      // Mock Real-time Price Updates (In prod, backend emits this)
+      const priceInterval = setInterval(() => {
+        const lastTime = seriesRef.current.dataByIndex(seriesRef.current.data().length - 1)?.time || Math.floor(Date.now() / 1000);
+        const newTime = Math.floor(Date.now() / 1000);
+        
+        if (newTime > lastTime) {
+            const newPrice = 40000 + Math.random() * 100; // Mock fluctuation
+            setCurrentPrice(newPrice);
+            seriesRef.current.update({ time: newTime, value: newPrice });
+        }
+      }, 1000);
+
+      socket.on('binary_position_opened', (position) => {
+          setActivePositions(prev => [...prev, position]);
+          addMarker(position);
+      });
+
+      socket.on('binary_position_closed', (data) => {
+          alert(`Position Closed: ${data.status} | Profit: ${data.profit}`);
+          setActivePositions(prev => prev.filter(p => p.id !== data.id));
+          // Could update marker color here
+      });
+
+      return () => {
+        window.removeEventListener('resize', handleResize);
+        clearInterval(priceInterval);
+        socket.disconnect();
+        chart.remove();
+      };
+    }
+  }, []);
+
+  const addMarker = (position: any) => {
+      if (!seriesRef.current) return;
+      
+      const newMarker = {
+          time: Math.floor(Date.now() / 1000), // Approximate entry time
+          position: 'inBar',
+          color: position.side === 'CALL' ? '#10B981' : '#EF4444',
+          shape: position.side === 'CALL' ? 'arrowUp' : 'arrowDown',
+          text: `${position.side} @ ${position.entryPrice.toFixed(2)}`,
+          size: 2
+      };
+      
+      const currentMarkers = seriesRef.current.markers();
+      seriesRef.current.setMarkers([...currentMarkers, newMarker]);
+  };
+
+  const openPosition = async (side: 'CALL' | 'PUT') => {
+    if (!user || !amount) return alert('Please enter amount');
+    try {
+      await api.post('/binary/position', {
+        userId: user.id,
+        pair,
+        amount: parseFloat(amount),
+        side,
+        duration,
+      });
+      alert('Position Opened!');
+      setAmount('');
+    } catch (err) {
+      alert('Failed to open position');
+    }
+  };
+
+  const handleExportCSV = () => {
+    if (!user) return;
+    const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/binary/export/${user.id}/csv`;
+    window.open(url, '_blank');
+  };
+
+  const handleExportJSON = () => {
+    if (!user) return;
+    const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/binary/export/${user.id}/json`;
+    window.open(url, '_blank');
+  };
+
+  return (
+    <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-100px)]">
+      {/* Chart */}
+      <div className="flex-1 bg-gray-900 rounded-lg border border-gray-800 p-4 flex flex-col">
+        <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold flex items-center gap-2">
+                <span className="text-white">{pair}</span>
+                <span className="text-green-500 text-lg">${currentPrice.toFixed(2)}</span>
+            </h2>
+            <div className="text-sm text-gray-400">Timeframe: 1s</div>
+        </div>
+        <div ref={chartContainerRef} className="flex-1 w-full" />
+      </div>
+
+      {/* Controls */}
+      <div className="w-full lg:w-80 flex flex-col gap-6">
+        <div className="bg-gray-900 rounded-lg border border-gray-800 p-6 space-y-6">
+          
+          <div>
+            <label className="block text-xs text-gray-400 mb-2 font-bold uppercase">Time</label>
+            <div className="grid grid-cols-4 gap-2">
+              {[30, 60, 120, 300].map((sec) => (
+                <button
+                  key={sec}
+                  onClick={() => setDuration(sec)}
+                  className={`py-2 rounded-md text-sm font-bold transition-all ${
+                    duration === sec 
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' 
+                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                  }`}
+                >
+                  {sec}s
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs text-gray-400 mb-2 font-bold uppercase">Investment</label>
+            <div className="relative">
+                <input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="w-full p-3 bg-gray-800 rounded-md border border-gray-700 text-white font-mono focus:border-blue-500 focus:outline-none"
+                placeholder="0.00"
+                />
+                <span className="absolute right-3 top-3 text-gray-500 text-sm">USDT</span>
+            </div>
+          </div>
+          
+          <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-800">
+              <div className="flex justify-between text-sm mb-1">
+                  <span className="text-gray-400">Payout</span>
+                  <span className="text-green-400 font-bold">85%</span>
+              </div>
+              <div className="flex justify-between text-lg font-bold">
+                  <span className="text-gray-300">Profit</span>
+                  <span className="text-green-500">+{amount ? (parseFloat(amount) * 0.85).toFixed(2) : '0.00'}</span>
+              </div>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => openPosition('CALL')}
+              className="w-full py-4 bg-green-500 hover:bg-green-600 rounded-lg font-bold text-lg text-white shadow-lg shadow-green-900/20 transition-all flex justify-between px-6 items-center group"
+            >
+              <span>CALL</span>
+              <span className="opacity-50 group-hover:opacity-100">▲</span>
+            </button>
+            <button
+              onClick={() => openPosition('PUT')}
+              className="w-full py-4 bg-red-500 hover:bg-red-600 rounded-lg font-bold text-lg text-white shadow-lg shadow-red-900/20 transition-all flex justify-between px-6 items-center group"
+            >
+              <span>PUT</span>
+              <span className="opacity-50 group-hover:opacity-100">▼</span>
+            </button>
+          </div>
+        </div>
+        
+        {/* Active Positions List */}
+        <div className="bg-gray-900 rounded-lg border border-gray-800 p-4 flex-1 overflow-auto max-h-48">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-sm font-bold text-gray-400">Active Positions ({activePositions.length})</h3>
+              <div className="flex gap-1">
+                <button
+                  onClick={handleExportCSV}
+                  className="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs font-semibold transition"
+                  title="Export CSV"
+                >
+                  CSV
+                </button>
+                <button
+                  onClick={handleExportJSON}
+                  className="px-2 py-1 bg-purple-600 hover:bg-purple-700 rounded text-xs font-semibold transition"
+                  title="Export JSON"
+                >
+                  JSON
+                </button>
+              </div>
+            </div>
+            <div className="space-y-2">
+                {activePositions.map((pos, idx) => (
+                    <div key={idx} className="flex justify-between items-center text-xs p-2 bg-gray-800 rounded">
+                        <span className={pos.side === 'CALL' ? 'text-green-500' : 'text-red-500 font-bold'}>{pos.side}</span>
+                        <span className="text-gray-300">${pos.amount}</span>
+                        <span className="text-gray-500">Expires in {pos.duration}s</span>
+                    </div>
+                ))}
+                {activePositions.length === 0 && <div className="text-center text-gray-600 text-xs">No active trades</div>}
+            </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\frontend\app\dashboard\conversion\page.tsx
+--------------------------------
+'use client';
+
+import { useEffect, useState } from 'react';
+import api from '../../lib/api';
+import { ArrowDownUp } from 'lucide-react';
+
+export default function ConversionPage() {
+  const [fromCoin, setFromCoin] = useState('USDT');
+  const [toCoin, setToCoin] = useState('BTC');
+  const [amount, setAmount] = useState('');
+  const [rate, setRate] = useState(0);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) setUser(JSON.parse(userStr));
+    fetchRate();
+  }, [fromCoin, toCoin]);
+
+  const fetchRate = async () => {
+    try {
+      const res = await api.get(`/conversion/rate?from=${fromCoin}&to=${toCoin}`);
+      setRate(res.data.rate);
+    } catch (err) {
+      console.error(err);
+      setRate(0);
+    }
+  };
+
+  const handleSwap = () => {
+    const temp = fromCoin;
+    setFromCoin(toCoin);
+    setToCoin(temp);
+  };
+
+  const convert = async () => {
+    try {
+      await api.post('/conversion/convert', {
+        userId: user.id,
+        from: fromCoin,
+        to: toCoin,
+        amount: parseFloat(amount),
+      });
+      alert('Conversion Successful');
+      setAmount('');
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Conversion Failed');
+    }
+  };
+
+  const estimatedReceive = amount && rate ? (parseFloat(amount) * rate).toFixed(6) : '0.00';
+
+  return (
+    <div className="flex justify-center items-center h-[calc(100vh-100px)]">
+      <div className="w-full max-w-md bg-gray-900 rounded-lg border border-gray-800 p-8 space-y-6">
+        <h1 className="text-2xl font-bold text-center">Convert</h1>
+        
+        {/* From */}
+        <div className="bg-gray-800 p-4 rounded-lg">
+          <label className="text-xs text-gray-400 mb-1 block">From</label>
+          <div className="flex gap-4">
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="bg-transparent text-2xl font-bold focus:outline-none w-full"
+              placeholder="0.00"
+            />
+            <select
+              value={fromCoin}
+              onChange={(e) => setFromCoin(e.target.value)}
+              className="bg-gray-700 rounded px-2 font-bold"
+            >
+              <option value="USDT">USDT</option>
+              <option value="BTC">BTC</option>
+              <option value="ETH">ETH</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Swap Icon */}
+        <div className="flex justify-center -my-3 relative z-10">
+          <button onClick={handleSwap} className="bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition">
+            <ArrowDownUp className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* To */}
+        <div className="bg-gray-800 p-4 rounded-lg">
+          <label className="text-xs text-gray-400 mb-1 block">To</label>
+          <div className="flex gap-4">
+            <input
+              type="text"
+              value={estimatedReceive}
+              readOnly
+              className="bg-transparent text-2xl font-bold focus:outline-none w-full text-gray-400"
+            />
+            <select
+              value={toCoin}
+              onChange={(e) => setToCoin(e.target.value)}
+              className="bg-gray-700 rounded px-2 font-bold"
+            >
+              <option value="USDT">USDT</option>
+              <option value="BTC">BTC</option>
+              <option value="ETH">ETH</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="text-sm text-gray-500 flex justify-between px-2">
+          <span>Rate</span>
+          <span>1 {fromCoin} ≈ {rate} {toCoin}</span>
+        </div>
+
+        <button
+          onClick={convert}
+          className="w-full py-4 bg-blue-600 hover:bg-blue-700 rounded-lg font-bold text-lg transition"
+        >
+          Convert Now
+        </button>
+      </div>
+    </div>
+  );
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\frontend\app\dashboard\settings\page.tsx
+--------------------------------
+'use client';
+
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+
+export default function SettingsPage() {
+  const [activeTab, setActiveTab] = useState('profile');
+
+  return (
+    <div className="min-h-screen bg-dexi-dark text-white p-6">
+      <div className="max-w-6xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h1 className="text-4xl font-bold mb-8 gradient-text">Settings</h1>
+
+          <div className="flex gap-4 mb-8 border-b border-dexi-purple/20">
+            {['profile', 'security', 'notifications', 'preferences'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-6 py-3 font-semibold capitalize transition-all ${
+                  activeTab === tab
+                    ? 'border-b-2 border-dexi-cyan text-dexi-cyan'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          {activeTab === 'profile' && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="space-y-6"
+            >
+              <div className="card-dark p-6">
+                <h2 className="text-2xl font-bold mb-6 text-dexi-cyan">Profile Information</h2>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold mb-2 text-gray-300">
+                      Username
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 bg-dexi-darker border border-dexi-purple/20 rounded-lg focus:border-dexi-cyan focus:outline-none transition-colors"
+                      placeholder="Enter username"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-2 text-gray-300">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      className="w-full px-4 py-3 bg-dexi-darker border border-dexi-purple/20 rounded-lg focus:border-dexi-cyan focus:outline-none transition-colors"
+                      placeholder="Enter email"
+                    />
+                  </div>
+                  <button className="px-6 py-3 bg-gradient-dexi text-white font-semibold rounded-lg hover:shadow-neon-blue transition-all">
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'security' && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="space-y-6"
+            >
+              <div className="card-dark p-6">
+                <h2 className="text-2xl font-bold mb-6 text-dexi-purple">Security Settings</h2>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold mb-2 text-gray-300">
+                      Current Password
+                    </label>
+                    <input
+                      type="password"
+                      className="w-full px-4 py-3 bg-dexi-darker border border-dexi-purple/20 rounded-lg focus:border-dexi-purple focus:outline-none transition-colors"
+                      placeholder="Enter current password"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-2 text-gray-300">
+                      New Password
+                    </label>
+                    <input
+                      type="password"
+                      className="w-full px-4 py-3 bg-dexi-darker border border-dexi-purple/20 rounded-lg focus:border-dexi-purple focus:outline-none transition-colors"
+                      placeholder="Enter new password"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-2 text-gray-300">
+                      Confirm New Password
+                    </label>
+                    <input
+                      type="password"
+                      className="w-full px-4 py-3 bg-dexi-darker border border-dexi-purple/20 rounded-lg focus:border-dexi-purple focus:outline-none transition-colors"
+                      placeholder="Confirm new password"
+                    />
+                  </div>
+                  <button className="px-6 py-3 bg-dexi-purple text-white font-semibold rounded-lg hover:shadow-neon-purple transition-all">
+                    Update Password
+                  </button>
+                </div>
+              </div>
+
+              <div className="card-dark p-6">
+                <h3 className="text-xl font-bold mb-4 text-dexi-cyan">Two-Factor Authentication</h3>
+                <p className="text-gray-400 mb-4">
+                  Add an extra layer of security to your account
+                </p>
+                <button className="px-6 py-3 bg-dexi-cyan text-dexi-dark font-semibold rounded-lg hover:bg-dexi-blue transition-colors">
+                  Enable 2FA
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'notifications' && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="space-y-6"
+            >
+              <div className="card-dark p-6">
+                <h2 className="text-2xl font-bold mb-6 text-dexi-blue">Notification Preferences</h2>
+                <div className="space-y-4">
+                  {[
+                    { label: 'Trade Notifications', desc: 'Get notified when your trades are executed' },
+                    { label: 'Price Alerts', desc: 'Receive alerts for significant price changes' },
+                    { label: 'Account Activity', desc: 'Notifications for login and security events' },
+                    { label: 'Marketing Emails', desc: 'Receive updates about new features and promotions' },
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      className="flex items-center justify-between p-4 bg-dexi-darker rounded-lg"
+                    >
+                      <div>
+                        <div className="font-semibold">{item.label}</div>
+                        <div className="text-sm text-gray-400">{item.desc}</div>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" className="sr-only peer" />
+                        <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-dexi-blue rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-dexi-blue"></div>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'preferences' && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="space-y-6"
+            >
+              <div className="card-dark p-6">
+                <h2 className="text-2xl font-bold mb-6 text-dexi-pink">Trading Preferences</h2>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold mb-2 text-gray-300">
+                      Default Trading Pair
+                    </label>
+                    <select className="w-full px-4 py-3 bg-dexi-darker border border-dexi-purple/20 rounded-lg focus:border-dexi-pink focus:outline-none transition-colors">
+                      <option>BTC/USDT</option>
+                      <option>ETH/USDT</option>
+                      <option>LTC/USDT</option>
+                      <option>XRP/USDT</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-2 text-gray-300">
+                      Chart Theme
+                    </label>
+                    <select className="w-full px-4 py-3 bg-dexi-darker border border-dexi-purple/20 rounded-lg focus:border-dexi-pink focus:outline-none transition-colors">
+                      <option>Dark</option>
+                      <option>Light</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-2 text-gray-300">
+                      Language
+                    </label>
+                    <select className="w-full px-4 py-3 bg-dexi-darker border border-dexi-purple/20 rounded-lg focus:border-dexi-pink focus:outline-none transition-colors">
+                      <option>English</option>
+                      <option>Spanish</option>
+                      <option>French</option>
+                      <option>Chinese</option>
+                    </select>
+                  </div>
+                  <button className="px-6 py-3 bg-dexi-pink text-white font-semibold rounded-lg hover:shadow-neon-purple transition-all">
+                    Save Preferences
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\frontend\app\dashboard\spot\page.tsx
+--------------------------------
+'use client';
+
+import { useEffect, useState } from 'react';
+import api from '../../lib/api';
+
+export default function SpotPage() {
+  const [orderBook, setOrderBook] = useState<{ buys: any[]; sells: any[] }>({ buys: [], sells: [] });
+  const [pair, setPair] = useState('BTC/USDT');
+  const [price, setPrice] = useState('');
+  const [amount, setAmount] = useState('');
+  const [side, setSide] = useState<'BUY' | 'SELL'>('BUY');
+  const [type, setType] = useState<'LIMIT' | 'MARKET'>('LIMIT');
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) setUser(JSON.parse(userStr));
+    fetchOrderBook();
+    const interval = setInterval(fetchOrderBook, 2000); // Poll every 2s
+    return () => clearInterval(interval);
+  }, [pair]);
+
+  const fetchOrderBook = async () => {
+    try {
+      const res = await api.get(`/spot/orderbook?pair=${pair}`);
+      setOrderBook(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const placeOrder = async () => {
+    try {
+      await api.post('/spot/order', {
+        userId: user.id,
+        pair,
+        side,
+        type,
+        amount: parseFloat(amount),
+        price: type === 'LIMIT' ? parseFloat(price) : undefined,
+      });
+      alert('Order Placed');
+      setAmount('');
+      fetchOrderBook();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Order Failed');
+    }
+  };
+
+  const handleExportCSV = () => {
+    if (!user) return;
+    const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/spot/export/${user.id}/csv`;
+    window.open(url, '_blank');
+  };
+
+  const handleExportJSON = () => {
+    if (!user) return;
+    const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/spot/export/${user.id}/json`;
+    window.open(url, '_blank');
+  };
+
+  return (
+    <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-100px)]">
+      {/* Chart Area (Placeholder) */}
+      <div className="flex-1 bg-gray-900 rounded-lg border border-gray-800 p-4 flex items-center justify-center">
+        <p className="text-gray-500">TradingView Chart Placeholder ({pair})</p>
+      </div>
+
+      {/* Order Book & Form */}
+      <div className="w-full lg:w-96 flex flex-col gap-6">
+        
+        {/* Order Form */}
+        <div className="bg-gray-900 rounded-lg border border-gray-800 p-6">
+          <div className="flex gap-2 mb-4">
+            <button
+              onClick={() => setSide('BUY')}
+              className={`flex-1 py-2 rounded font-bold ${side === 'BUY' ? 'bg-green-600 text-white' : 'bg-gray-800 text-gray-400'}`}
+            >
+              Buy
+            </button>
+            <button
+              onClick={() => setSide('SELL')}
+              className={`flex-1 py-2 rounded font-bold ${side === 'SELL' ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400'}`}
+            >
+              Sell
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Type</label>
+              <select
+                value={type}
+                onChange={(e) => setType(e.target.value as any)}
+                className="w-full p-2 bg-gray-800 rounded border border-gray-700 text-white"
+              >
+                <option value="LIMIT">Limit</option>
+                <option value="MARKET">Market</option>
+              </select>
+            </div>
+
+            {type === 'LIMIT' && (
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Price</label>
+                <input
+                  type="number"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  className="w-full p-2 bg-gray-800 rounded border border-gray-700 text-white"
+                />
+              </div>
+            )}
+
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Amount</label>
+              <input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="w-full p-2 bg-gray-800 rounded border border-gray-700 text-white"
+              />
+            </div>
+
+            <button
+              onClick={placeOrder}
+              className={`w-full py-3 rounded font-bold mt-2 ${side === 'BUY' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}
+            >
+              {side} {pair.split('/')[0]}
+            </button>
+          </div>
+        </div>
+
+        {/* Order Book */}
+        <div className="flex-1 bg-gray-900 rounded-lg border border-gray-800 p-4 overflow-auto">
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-sm font-bold text-gray-400">Order Book</h3>
+            <div className="flex gap-1">
+              <button
+                onClick={handleExportCSV}
+                className="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs font-semibold transition"
+                title="Export Orders CSV"
+              >
+                CSV
+              </button>
+              <button
+                onClick={handleExportJSON}
+                className="px-2 py-1 bg-purple-600 hover:bg-purple-700 rounded text-xs font-semibold transition"
+                title="Export Orders JSON"
+              >
+                JSON
+              </button>
+            </div>
+          </div>
+          <div className="flex justify-between text-xs text-gray-500 mb-1">
+            <span>Price</span>
+            <span>Amount</span>
+          </div>
+          
+          {/* Sells (Red) */}
+          <div className="flex flex-col-reverse gap-1 mb-2">
+            {orderBook.sells.map((order: any) => (
+              <div key={order.id} className="flex justify-between text-xs text-red-500">
+                <span>{order.price}</span>
+                <span>{order.remaining}</span>
+              </div>
+            ))}
+          </div>
+          
+          <div className="text-center py-2 border-y border-gray-800 text-lg font-bold">
+            {orderBook.sells[0]?.price || orderBook.buys[0]?.price || '---'}
+          </div>
+
+          {/* Buys (Green) */}
+          <div className="flex flex-col gap-1 mt-2">
+            {orderBook.buys.map((order: any) => (
+              <div key={order.id} className="flex justify-between text-xs text-green-500">
+                <span>{order.price}</span>
+                <span>{order.remaining}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\frontend\app\dashboard\wallet\page.tsx
+--------------------------------
+'use client';
+
+import { useEffect, useState } from 'react';
+import api from '../../lib/api';
+
+export default function WalletPage() {
+  const [balances, setBalances] = useState<any>({});
+  const [ledger, setLedger] = useState<any[]>([]);
+  const [amount, setAmount] = useState('');
+  const [currency, setCurrency] = useState('USDT');
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      const u = JSON.parse(userStr);
+      setUser(u);
+      fetchWallet(u.id);
+      fetchLedger(u.id);
+    }
+  }, []);
+
+  const fetchWallet = async (userId: string) => {
+    try {
+      const res = await api.get(`/wallet/${userId}`);
+      setBalances(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchLedger = async (userId: string) => {
+    try {
+      const res = await api.get(`/wallet/${userId}/ledger`);
+      setLedger(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeposit = async () => {
+    try {
+      // In prod, this would integrate Stripe/Coinbase. 
+      // For MVP/Admin Testing: We call the test endpoint (simulated deposit)
+      await api.post('/wallet/deposit', {
+        userId: user.id,
+        currency,
+        amount: parseFloat(amount),
+      });
+      fetchWallet(user.id);
+      fetchLedger(user.id);
+      setAmount('');
+      alert('Deposit Successful');
+    } catch (err) {
+      alert('Deposit Failed');
+    }
+  };
+  
+  const handleWithdraw = async () => {
+      try {
+          await api.post('/wallet/withdraw', {
+              userId: user.id,
+              currency,
+              amount: parseFloat(amount)
+          });
+          fetchWallet(user.id);
+          fetchLedger(user.id);
+          setAmount('');
+          alert('Withdrawal Successful');
+      } catch (err) {
+          alert('Withdrawal Failed (Insufficient Funds?)');
+      }
+  }
+
+  const handleExportCSV = () => {
+    if (!user) return;
+    const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/wallet/${user.id}/export/csv`;
+    window.open(url, '_blank');
+  };
+
+  const handleExportJSON = () => {
+    if (!user) return;
+    const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/wallet/${user.id}/export/json`;
+    window.open(url, '_blank');
+  };
+
+  return (
+    <div className="space-y-6">
+      <h1 className="text-3xl font-bold">Wallet</h1>
+      
+      {/* Balances */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {Object.entries(balances).map(([coin, bal]: [string, any]) => (
+          <div key={coin} className="p-6 bg-gray-900 rounded-lg border border-gray-800">
+            <h3 className="text-gray-400 text-sm">{coin} Balance</h3>
+            <p className="text-2xl font-bold mt-2">{bal.available.toFixed(4)}</p>
+            <p className="text-sm text-gray-500">Locked: {bal.locked.toFixed(4)}</p>
+          </div>
+        ))}
+        {Object.keys(balances).length === 0 && (
+           <div className="p-6 bg-gray-900 rounded-lg border border-gray-800">
+               <h3 className="text-gray-400 text-sm">No Balances Yet</h3>
+               <p className="text-sm text-gray-500 mt-2">Deposit funds to get started.</p>
+           </div>
+        )}
+      </div>
+
+      {/* Actions */}
+      <div className="p-6 bg-gray-900 rounded-lg border border-gray-800">
+        <h2 className="text-xl font-bold mb-4">Manage Funds</h2>
+        <div className="flex gap-4 items-end">
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Currency</label>
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              className="p-2 bg-gray-800 rounded border border-gray-700 text-white"
+            >
+              <option value="USDT">USDT</option>
+              <option value="BTC">BTC</option>
+              <option value="ETH">ETH</option>
+            </select>
+          </div>
+          <div className="flex-1">
+            <label className="block text-sm text-gray-400 mb-1">Amount</label>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="w-full p-2 bg-gray-800 rounded border border-gray-700 text-white"
+              placeholder="0.00"
+            />
+          </div>
+          <button
+            onClick={handleDeposit}
+            className="px-6 py-2 bg-green-600 hover:bg-green-700 rounded font-bold transition"
+          >
+            Deposit
+          </button>
+           <button
+            onClick={handleWithdraw}
+            className="px-6 py-2 bg-red-600 hover:bg-red-700 rounded font-bold transition"
+          >
+            Withdraw
+          </button>
+        </div>
+      </div>
+
+      {/* Ledger */}
+      <div className="p-6 bg-gray-900 rounded-lg border border-gray-800">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">Transaction History</h2>
+          <div className="flex gap-2">
+            <button
+              onClick={handleExportCSV}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded font-semibold text-sm transition flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Export CSV
+            </button>
+            <button
+              onClick={handleExportJSON}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded font-semibold text-sm transition flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Export JSON
+            </button>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-gray-800">
+                <th className="pb-2">Type</th>
+                <th className="pb-2">Currency</th>
+                <th className="pb-2">Amount</th>
+                <th className="pb-2">Reference</th>
+                <th className="pb-2">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ledger.map((tx) => (
+                <tr key={tx.id} className="border-b border-gray-800/50">
+                  <td className="py-2 text-sm">{tx.type}</td>
+                  <td className="py-2 text-sm">{tx.currency}</td>
+                  <td className={`py-2 text-sm ${tx.amount > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {tx.amount > 0 ? '+' : ''}{tx.amount}
+                  </td>
+                  <td className="py-2 text-sm text-gray-500">{tx.referenceId}</td>
+                  <td className="py-2 text-sm text-gray-500">{new Date(tx.createdAt).toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {ledger.length === 0 && <p className="text-gray-500 mt-4 text-center">No transactions found.</p>}
+        </div>
+      </div>
+    </div>
+  );
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\frontend\app\dashboard\layout.tsx
+--------------------------------
+import Sidebar from '../components/Sidebar';
+import BottomNav from '../components/BottomNav';
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <div className="flex min-h-screen bg-dexi-dark text-white">
+      <Sidebar />
+      <main className="flex-1 overflow-auto pb-16 md:pb-0">
+        <div className="container mx-auto p-4 md:p-6">
+          {children}
+        </div>
+      </main>
+      <BottomNav />
+    </div>
+  );
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\frontend\app\dashboard\page.tsx
+--------------------------------
+'use client';
+
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import dynamic from 'next/dynamic';
+import { useCryptoPrices } from '../hooks/useCryptoPrices';
+
+const TradingChart = dynamic(() => import('../components/TradingChart'), {
+  ssr: false,
+});
+
+export default function Dashboard() {
+  const [activeTab, setActiveTab] = useState('Quotes');
+  const [walletConnected, setWalletConnected] = useState(false);
+  const { prices: cryptoPrices, loading } = useCryptoPrices();
+
+  return (
+    <div className="min-h-screen bg-dexi-dark text-white">
+      <div className="flex flex-col md:flex-row h-[calc(100vh-64px)] md:h-screen">
+        {/* Left Sidebar - Hidden on mobile, controlled by Layout */}
+        
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Mobile Header */}
+          <div className="h-16 bg-dexi-darker border-b border-dexi-purple/20 flex items-center justify-between px-4 md:px-6">
+            <div className="flex items-center gap-4">
+              <h1 className="text-xl font-bold gradient-text">DEXI</h1>
+            </div>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setWalletConnected(!walletConnected)}
+                className={`px-4 py-2 text-sm md:text-base rounded-lg font-semibold transition-all ${
+                  walletConnected
+                    ? 'bg-dexi-green text-white'
+                    : 'bg-gradient-dexi text-white hover:shadow-neon-blue'
+                }`}
+              >
+                {walletConnected ? 'Connected' : 'Connect'}
+              </button>
+            </div>
+          </div>
+
+          {/* Tab Navigation - Mobile Friendly */}
+          <div className="flex overflow-x-auto border-b border-dexi-purple/20 bg-dexi-darker scrollbar-hide">
+            {['Favorites', 'Quotes', 'Metal', 'Stones', 'Forex'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`flex-none px-4 py-3 text-sm font-semibold transition-colors whitespace-nowrap ${
+                  activeTab === tab
+                    ? 'text-dexi-cyan border-b-2 border-dexi-cyan'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4 md:p-6 pb-20 md:pb-6">
+            {/* Active Tab Content */}
+            {activeTab === 'Quotes' && (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
+                {loading ? (
+                  <div className="col-span-full text-center py-8 text-gray-400">
+                    <div className="text-4xl mb-2 animate-spin">⏳</div>
+                    <p>Loading prices...</p>
+                  </div>
+                ) : (
+                  cryptoPrices.map((crypto) => (
+                    <motion.div
+                      key={crypto.symbol}
+                      whileTap={{ scale: 0.98 }}
+                      className="card-dark p-3 cursor-pointer hover:border-dexi-blue/50 transition-all"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">{crypto.icon}</span>
+                          <div>
+                            <div className="font-bold text-sm">{crypto.symbol}</div>
+                            <div className="text-[10px] text-gray-400">{crypto.name}</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <div className="text-base font-bold">
+                          ${crypto.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </div>
+                        <div
+                          className={`self-start px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                            crypto.change < 0
+                              ? 'bg-dexi-red/20 text-dexi-red'
+                              : 'bg-dexi-green/20 text-dexi-green'
+                          }`}
+                        >
+                          {crypto.change > 0 ? '+' : ''}
+                          {crypto.change.toFixed(2)}%
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))
+                )}
+              </div>
+            )}
+
+            {/* Trading Charts Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              <div className="card-dark p-4 md:p-6">
+                <h3 className="text-lg md:text-xl font-bold mb-4 text-dexi-cyan">Binary Options</h3>
+                <div className="h-[300px] md:h-[400px] bg-dexi-darker/50 rounded-lg overflow-hidden">
+                  <TradingChart symbol="BTC/USD" type="binary" />
+                </div>
+              </div>
+
+              <div className="card-dark p-4 md:p-6">
+                <h3 className="text-lg md:text-xl font-bold mb-4 text-dexi-purple">Spot Trading</h3>
+                <div className="h-[300px] md:h-[400px] bg-dexi-darker/50 rounded-lg overflow-hidden">
+                  <TradingChart symbol="BTC/USD" type="spot" />
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Stats Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+              <div className="card-dark p-4 md:p-6">
+                <h4 className="font-bold mb-4 text-dexi-cyan">Quick Stats</h4>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Total Balance:</span>
+                    <span className="font-bold">$0.00</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Today's P/L:</span>
+                    <span className="font-bold text-dexi-green">+$0.00</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Open Positions:</span>
+                    <span className="font-bold">0</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Sidebar - Hidden on mobile, visible on large screens */}
+        <div className="hidden lg:flex w-80 bg-dexi-darker border-l border-dexi-purple/20 flex-col">
+          <div className="p-4 border-b border-dexi-purple/20">
+            <div className="flex items-center justify-between mb-4">
+              <span className="font-semibold">Account</span>
+              <button className="text-dexi-cyan hover:text-dexi-blue transition-colors">
+                ▼
+              </button>
+            </div>
+          </div>
+
+          <div className="p-4">
+            <div className="card-dark p-6 mb-4">
+              <div className="text-center mb-4">
+                <div className="text-6xl mb-4">💼</div>
+                <h3 className="text-lg font-bold mb-2">Fund your wallet</h3>
+                <p className="text-sm text-gray-400 mb-4">
+                  Get your wallet ready to use web3
+                </p>
+                <button className="w-full px-4 py-3 bg-white text-dexi-dark font-semibold rounded-lg hover:bg-gray-100 transition-colors">
+                  Add funds
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              {/* Actions */}
+              <button className="card-dark p-4 text-center hover:border-dexi-blue/50 transition-all">
+                <div className="text-2xl mb-2">💰</div>
+                <div className="text-sm font-semibold">Buy</div>
+              </button>
+              <button className="card-dark p-4 text-center hover:border-dexi-purple/50 transition-all">
+                <div className="text-2xl mb-2">🔄</div>
+                <div className="text-sm font-semibold">Swap</div>
+              </button>
+              <button className="card-dark p-4 text-center hover:border-dexi-cyan/50 transition-all">
+                <div className="text-2xl mb-2">📤</div>
+                <div className="text-sm font-semibold">Send</div>
+              </button>
+              <button className="card-dark p-4 text-center hover:border-dexi-green/50 transition-all">
+                <div className="text-2xl mb-2">📥</div>
+                <div className="text-sm font-semibold">Receive</div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\frontend\app\hooks\useCryptoPrices.ts
+--------------------------------
+'use client';
+
+import { useState, useEffect } from 'react';
+
+interface CryptoPrice {
+  symbol: string;
+  name: string;
+  price: number;
+  change: number;
+  icon: string;
+}
+
+export function useCryptoPrices() {
+  const [prices, setPrices] = useState<CryptoPrice[]>([
+    { symbol: 'BTC', name: 'Bitcoin', price: 0, change: 0, icon: '₿' },
+    { symbol: 'ETH', name: 'Ethereum', price: 0, change: 0, icon: 'Ξ' },
+    { symbol: 'LTC', name: 'Litecoin', price: 0, change: 0, icon: 'Ł' },
+    { symbol: 'XRP', name: 'Ripple', price: 0, change: 0, icon: '✕' },
+    { symbol: 'BCH', name: 'Bitcoin Cash', price: 0, change: 0, icon: '฿' },
+  ]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPrices = async () => {
+      try {
+        const symbols = [
+          { symbol: 'BTCUSDT', name: 'Bitcoin', displaySymbol: 'BTC', icon: '₿' },
+          { symbol: 'ETHUSDT', name: 'Ethereum', displaySymbol: 'ETH', icon: 'Ξ' },
+          { symbol: 'LTCUSDT', name: 'Litecoin', displaySymbol: 'LTC', icon: 'Ł' },
+          { symbol: 'XRPUSDT', name: 'Ripple', displaySymbol: 'XRP', icon: '✕' },
+          { symbol: 'BCHUSDT', name: 'Bitcoin Cash', displaySymbol: 'BCH', icon: '฿' },
+        ];
+
+        const pricePromises = symbols.map(async (crypto) => {
+          try {
+            const tickerResponse = await fetch(
+              `https://api.binance.com/api/v3/ticker/24hr?symbol=${crypto.symbol}`
+            );
+            
+            if (!tickerResponse.ok) {
+              throw new Error(`Failed to fetch ${crypto.symbol}`);
+            }
+
+            const tickerData = await tickerResponse.json();
+            
+            return {
+              symbol: crypto.displaySymbol,
+              name: crypto.name,
+              price: parseFloat(tickerData.lastPrice),
+              change: parseFloat(tickerData.priceChangePercent),
+              icon: crypto.icon,
+            };
+          } catch (error) {
+            console.error(`Error fetching ${crypto.symbol}:`, error);
+            return null;
+          }
+        });
+
+        const results = await Promise.all(pricePromises);
+        const validPrices = results.filter((p): p is CryptoPrice => p !== null);
+
+        if (validPrices.length > 0) {
+          console.log('Binance API prices:', validPrices);
+          setPrices(validPrices);
+          setLoading(false);
+        } else {
+          throw new Error('No valid prices fetched');
+        }
+      } catch (error) {
+        console.error('Error fetching crypto prices:', error);
+        const fallbackPrices: CryptoPrice[] = [
+          { symbol: 'BTC', name: 'Bitcoin', price: 102500, change: 2.5, icon: '₿' },
+          { symbol: 'ETH', name: 'Ethereum', price: 3850, change: 1.8, icon: 'Ξ' },
+          { symbol: 'LTC', name: 'Litecoin', price: 125, change: -0.5, icon: 'Ł' },
+          { symbol: 'XRP', name: 'Ripple', price: 2.85, change: 3.2, icon: '✕' },
+          { symbol: 'BCH', name: 'Bitcoin Cash', price: 485, change: -1.2, icon: '฿' },
+        ];
+        setPrices(fallbackPrices);
+        setLoading(false);
+      }
+    };
+
+    fetchPrices();
+    const interval = setInterval(fetchPrices, 10000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return { prices, loading };
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\frontend\app\lib\api.ts
+--------------------------------
+import axios from 'axios';
+
+const api = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
+});
+
+// Add a request interceptor to include the token
+api.interceptors.request.use((config) => {
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
+  return config;
+});
+
+export default api;
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\frontend\app\login\page.tsx
+--------------------------------
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import api from '../lib/api';
+import Link from 'next/link';
+
+export default function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const router = useRouter();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await api.post('/auth/login', { email, password });
+      localStorage.setItem('token', res.data.access_token);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+      router.push('/dashboard');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Login failed');
+    }
+  };
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gray-900">
+      <div className="w-full max-w-md p-8 space-y-6 bg-gray-800 rounded-lg shadow-lg">
+        <h1 className="text-3xl font-bold text-center text-white">Login to Dexixz</h1>
+        {error && <p className="text-red-500 text-center">{error}</p>}
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <label className="block text-gray-300">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full p-2 mt-1 bg-gray-700 text-white rounded border border-gray-600 focus:outline-none focus:border-blue-500"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-gray-300">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full p-2 mt-1 bg-gray-700 text-white rounded border border-gray-600 focus:outline-none focus:border-blue-500"
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full py-2 font-bold text-white bg-blue-600 rounded hover:bg-blue-700 transition"
+          >
+            Login
+          </button>
+        </form>
+        <p className="text-center text-gray-400">
+          Don't have an account? <Link href="/signup" className="text-blue-400 hover:underline">Sign up</Link>
+        </p>
+      </div>
+    </div>
+  );
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\frontend\app\signup\page.tsx
+--------------------------------
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import api from '../lib/api';
+import Link from 'next/link';
+
+export default function SignupPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const router = useRouter();
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await api.post('/auth/signup', { email, password });
+      localStorage.setItem('token', res.data.access_token);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+      router.push('/dashboard');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Signup failed');
+    }
+  };
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gray-900">
+      <div className="w-full max-w-md p-8 space-y-6 bg-gray-800 rounded-lg shadow-lg">
+        <h1 className="text-3xl font-bold text-center text-white">Create Account</h1>
+        {error && <p className="text-red-500 text-center">{error}</p>}
+        <form onSubmit={handleSignup} className="space-y-4">
+          <div>
+            <label className="block text-gray-300">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full p-2 mt-1 bg-gray-700 text-white rounded border border-gray-600 focus:outline-none focus:border-blue-500"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-gray-300">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full p-2 mt-1 bg-gray-700 text-white rounded border border-gray-600 focus:outline-none focus:border-blue-500"
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full py-2 font-bold text-white bg-blue-600 rounded hover:bg-blue-700 transition"
+          >
+            Sign Up
+          </button>
+        </form>
+        <p className="text-center text-gray-400">
+          Already have an account? <Link href="/login" className="text-blue-400 hover:underline">Login</Link>
+        </p>
+      </div>
+    </div>
+  );
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\frontend\app\globals.css
+--------------------------------
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #0a0e27;
+  color: #ffffff;
+  overflow-x: hidden;
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, #00d4ff 0%, #6366f1 50%, #ec4899 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.neon-glow {
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+}
+
+.card-dark {
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 12px;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0e27;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #6366f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00d4ff;
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\frontend\app\layout.tsx
+--------------------------------
+import './globals.css'
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+
+const inter = Inter({ subsets: ['latin'] })
+
+export const metadata: Metadata = {
+  title: 'Dexixz-Style Crypto Platform',
+  description: 'Complete Crypto Trading Solution',
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body className={inter.className}>{children}</body>
+    </html>
+  )
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\frontend\app\page.tsx
+--------------------------------
+'use client';
+
+import { motion } from 'framer-motion';
+import Link from 'next/link';
+
+export default function Home() {
+  return (
+    <div className="min-h-screen bg-dexi-dark overflow-hidden">
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-br from-dexi-blue/10 via-dexi-purple/10 to-dexi-pink/10"></div>
+        
+        <div className="relative z-10 container mx-auto px-4 py-16">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-16"
+          >
+            <h1 className="text-7xl font-bold mb-6 gradient-text uppercase tracking-wider">
+              WELCOME TO THE
+              <br />
+              DEXI EXCHANGE
+            </h1>
+            <p className="text-2xl text-gray-300 mb-4">
+              Futures-Forex-Cryptocurrency
+            </p>
+            <p className="text-xl text-dexi-cyan">
+              Start your trading today
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="relative max-w-4xl mx-auto mb-16"
+          >
+            <div className="relative h-96 flex items-center justify-center">
+              <div className="absolute inset-0 bg-gradient-dexi opacity-20 blur-3xl rounded-full"></div>
+              <div className="relative text-center">
+                <div className="text-9xl mb-4">🚀</div>
+                <p className="text-2xl text-dexi-cyan font-semibold">
+                  Advanced Trading Platform
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-6xl mx-auto"
+          >
+            <Link
+              href="/dashboard"
+              className="card-dark p-8 text-center hover:shadow-neon-blue transition-all duration-300 group"
+            >
+              <div className="text-5xl mb-4">📊</div>
+              <h3 className="text-xl font-bold mb-2 text-dexi-cyan group-hover:text-dexi-blue transition-colors">
+                Crypto
+              </h3>
+              <p className="text-gray-400 text-sm">
+                Trade Bitcoin, Ethereum, and more
+              </p>
+            </Link>
+
+            <Link
+              href="/dashboard"
+              className="card-dark p-8 text-center hover:shadow-neon-purple transition-all duration-300 group"
+            >
+              <div className="text-5xl mb-4">🥇</div>
+              <h3 className="text-xl font-bold mb-2 text-dexi-purple group-hover:text-dexi-pink transition-colors">
+                Metal
+              </h3>
+              <p className="text-gray-400 text-sm">
+                Gold, Silver, Platinum trading
+              </p>
+            </Link>
+
+            <Link
+              href="/dashboard"
+              className="card-dark p-8 text-center hover:shadow-neon-cyan transition-all duration-300 group"
+            >
+              <div className="text-5xl mb-4">💎</div>
+              <h3 className="text-xl font-bold mb-2 text-dexi-cyan group-hover:text-dexi-blue transition-colors">
+                Stones
+              </h3>
+              <p className="text-gray-400 text-sm">
+                Diamond and precious stones
+              </p>
+            </Link>
+
+            <Link
+              href="/dashboard"
+              className="card-dark p-8 text-center hover:shadow-neon-blue transition-all duration-300 group"
+            >
+              <div className="text-5xl mb-4">💱</div>
+              <h3 className="text-xl font-bold mb-2 text-dexi-blue group-hover:text-dexi-cyan transition-colors">
+                Forex
+              </h3>
+              <p className="text-gray-400 text-sm">
+                Currency pairs trading
+              </p>
+            </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+            className="text-center mt-16"
+          >
+            <Link
+              href="/dashboard"
+              className="inline-block px-12 py-4 bg-gradient-dexi text-white font-bold text-lg rounded-lg hover:shadow-neon-blue transition-all duration-300 transform hover:scale-105"
+            >
+              Start Trading Now
+            </Link>
+          </motion.div>
+        </div>
+      </div>
+    </div>
+  );
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\frontend\Dockerfile
+--------------------------------
+# Frontend Dockerfile (Production Optimized)
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+RUN npm run build
+
+# Production Image
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/node_modules ./node_modules
+
+EXPOSE 3000
+
+CMD ["npm", "start"]
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\frontend\next-env.d.ts
+--------------------------------
+/// <reference types="next" />
+/// <reference types="next/image-types/global" />
+
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/basic-features/typescript for more information.
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\frontend\package.json
+--------------------------------
+{
+  "name": "frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@rainbow-me/rainbowkit": "^2.2.10",
+    "@tanstack/react-query": "^5.90.19",
+    "axios": "^1.13.2",
+    "ethers": "^6.16.0",
+    "framer-motion": "^11.18.2",
+    "lightweight-charts": "^4.1.0",
+    "lucide-react": "^0.294.0",
+    "next": "14.0.4",
+    "react": "^18",
+    "react-dom": "^18",
+    "recharts": "^2.15.4",
+    "socket.io-client": "^4.7.0",
+    "viem": "^2.44.4",
+    "wagmi": "^2.19.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.30",
+    "@types/react": "^18.3.27",
+    "@types/react-dom": "^18.3.7",
+    "autoprefixer": "^10.0.1",
+    "eslint": "^8",
+    "eslint-config-next": "14.0.4",
+    "postcss": "^8",
+    "tailwindcss": "^3.3.0",
+    "typescript": "^5"
+  }
+}
+================================
+FILE: C:\Users\Mr Thomas\Documents\trae_projects\Dexi style\frontend\tailwind.config.ts
+--------------------------------
+import type { Config } from 'tailwindcss'
+
+const config: Config = {
+  content: [
+    './pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        dexi: {
+          dark: '#0a0e27',
+          darker: '#060918',
+          blue: '#00d4ff',
+          purple: '#6366f1',
+          cyan: '#22d3ee',
+          pink: '#ec4899',
+          green: '#10b981',
+          red: '#ef4444',
+        },
+      },
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+        'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+        'gradient-dexi': 'linear-gradient(135deg, #00d4ff 0%, #6366f1 100%)',
+        'gradient-dexi-text': 'linear-gradient(90deg, #00d4ff 0%, #6366f1 50%, #ec4899 100%)',
+      },
+      boxShadow: {
+        'neon-blue': '0 0 20px rgba(0, 212, 255, 0.5)',
+        'neon-purple': '0 0 20px rgba(99, 102, 241, 0.5)',
+        'neon-cyan': '0 0 20px rgba(34, 211, 238, 0.5)',
+      },
+    },
+  },
+  plugins: [],
+}
+export default config
+================================

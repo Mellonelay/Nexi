@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dexi Project Status & Trae Protocol</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0e27; /* Dexi Dark Base */
+            color: #e2e8f0;
+        }
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            height: 300px;
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0a0e27; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
+    <!-- Chosen Palette: Dexi Dark Theme (#0a0e27 Base, #00C076 Success, #FF4D4F Danger, #3b82f6 Primary) -->
+    <!-- Application Structure Plan:
+         1. Header: Status Summary.
+         2. Progress Dashboard: Charts showing completion of Backend vs Frontend.
+         3. Trae AI Protocol Section:
+            - Implementation Plan (Markdown view).
+            - Project Rules (Copyable code block).
+         This structure allows the user to quickly assess status AND get the text they need for the AI agent.
+    -->
+    <!-- Visualization & Content Choices:
+         1. Phase Completion (Bar Chart): Goal: Compare. Shows progress of Phase 1-5.
+         2. Copy-Paste Blocks (HTML/JS): Goal: Action. One-click copy for the Trae prompts.
+         CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="min-h-screen flex flex-col p-4 md:p-8">
+
+    <!-- Header -->
+    <header class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-800 pb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-white tracking-tight">Dexi<span class="text-[#00C076]">Project</span> Command Center</h1>
+            <p class="text-sm text-gray-400 mt-2">Status Report & Trae AI Context Hub</p>
+        </div>
+        <div class="mt-4 md:mt-0 flex gap-3">
+            <span class="px-3 py-1 rounded-full text-xs font-bold bg-[#00C076]/20 text-[#00C076] border border-[#00C076]/30">Backend: Active</span>
+            <span class="px-3 py-1 rounded-full text-xs font-bold bg-[#3b82f6]/20 text-[#3b82f6] border border-[#3b82f6]/30">Frontend: Polishing</span>
+        </div>
+    </header>
+
+    <main class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+        <!-- Left Column: Status & Visuals -->
+        <div class="space-y-8">
+            
+            <!-- Progress Section -->
+            <section class="glass-panel rounded-xl p-6">
+                <h2 class="text-xl font-bold text-white mb-4 border-l-4 border-[#3b82f6] pl-3">Mission Progress</h2>
+                <div class="chart-container">
+                    <canvas id="phaseChart"></canvas>
+                </div>
+                <div class="mt-6 grid grid-cols-2 gap-4">
+                    <div class="bg-[#0f172a] p-3 rounded-lg border border-gray-700">
+                        <p class="text-xs text-gray-500 uppercase">Binary Engine</p>
+                        <p class="text-lg font-bold text-[#00C076]">100%</p>
+                    </div>
+                    <div class="bg-[#0f172a] p-3 rounded-lg border border-gray-700">
+                        <p class="text-xs text-gray-500 uppercase">Spot Engine</p>
+                        <p class="text-lg font-bold text-yellow-500">Pending UI</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Implementation Plan Viewer -->
+            <section class="glass-panel rounded-xl p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-white border-l-4 border-purple-500 pl-3">Implementation Plan</h2>
+                    <button onclick="copyToClipboard('planText')" class="text-xs bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded transition">Copy for Trae</button>
+                </div>
+                <div class="bg-[#0f172a] p-4 rounded-lg border border-gray-700 h-64 overflow-y-auto font-mono text-xs text-gray-300 whitespace-pre-wrap" id="planText"># Project Implementation Plan: Dexixz-Style Crypto Platform
+
+## ✅ Phase 1: Core Architecture (Completed)
+- [x] **Infrastructure**: Docker Compose (Postgres, Redis, Backend, Frontend).
+- [x] **Backend Monolith**: NestJS Setup with Prisma ORM.
+- [x] **Database**: Schema designed (Users, Wallets, SpotOrders, BinaryPositions).
+- [x] **Auth System**: JWT Authentication & Guards.
+
+## ✅ Phase 2: Core Trading Engines (Completed)
+- [x] **Wallet Module**: Deposit, Withdraw, Transfer, Locking logic.
+- [x] **Spot Engine**: Order Book logic, Matching Engine (Basic).
+- [x] **Binary Engine**: Time-based logic, Payout calculation, Cron jobs.
+- [x] **Game Config Engine**: Database-driven settings (Admin Control).
+
+## 🔄 Phase 3: Frontend Implementation (Current Focus)
+
+### 3.1 Mobile-First Layout (Done)
+- [x] **App Shell**: Bottom Navigation, "Dexi Dark" Theme (#0a0e27).
+- [x] **Responsive**: Fixed mobile viewport.
+
+### 3.2 Binary Options Interface (95% Done)
+- [x] **Chart**: TradingView Candlesticks + Volume.
+- [x] **Controls**: 5-Box Time Selector (Dynamic).
+- [x] **Betting**: Sticky Call/Put Buttons.
+- [x] **Real Data**: Binance WebSocket.
+- [ ] **Tabs**: "Current Entrust" & "History" list integration.
+
+### 3.3 Spot Trading Interface (Next Up)
+- [ ] **Chart**: Reuse TradingView component.
+- [ ] **Order Book**: Visual Bids/Asks list.
+- [ ] **Trade Form**: Limit/Market inputs.
+
+## 🚀 Phase 4: Production Polish
+- [ ] **Cloudflare Tunnel**: Public demo link.
+- [ ] **Error Boundaries**: Polish crash screens.</div>
+            </section>
+
+        </div>
+
+        <!-- Right Column: Trae AI Protocol -->
+        <div class="space-y-8">
+
+            <!-- Context Rules Section -->
+            <section class="glass-panel rounded-xl p-6 border border-[#00C076]/30">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-white border-l-4 border-[#00C076] pl-3">Trae AI Rules</h2>
+                        <p class="text-xs text-gray-400 mt-1">Paste this into Trae's "Project Rules" settings.</p>
+                    </div>
+                    <button onclick="copyToClipboard('rulesText')" class="text-xs bg-[#00C076] hover:bg-[#00a062] text-black font-bold px-3 py-1.5 rounded transition">Copy Rules</button>
+                </div>
+                <div class="bg-[#0f172a] p-4 rounded-lg border border-gray-700 h-96 overflow-y-auto font-mono text-xs text-[#00C076] whitespace-pre-wrap" id="rulesText"># Project Context: Dexi-Style Crypto Exchange
+
+## 1. Tech Stack (Strict)
+* **Backend:** NestJS (Node.js), Prisma ORM, PostgreSQL, Socket.io.
+* **Frontend:** Next.js 14 (App Router), Tailwind CSS, Framer Motion, Lucide Icons.
+* **Charting:** `lightweight-charts` (TradingView).
+* **State:** React Hooks (useState/useEffect) - Keep it simple.
+
+## 2. Design System ("Dexixz Mobile")
+* **Philosophy:** "Mobile-First H5 App". Native app feel in browser.
+* **Colors:**
+    * Background: `#0a0e27` (Deep Navy)
+    * Surface: `#121836` (Light Navy)
+    * Success/Up: `#00C076` (Neon Green)
+    * Danger/Down: `#FF4D4F` (Neon Red)
+    * Text: White (`#ffffff`) or Muted (`#9ca3af`)
+* **Layout:**
+    * NO Sidebar on mobile. Use fixed `BottomNav`.
+    * Inputs: Large touch targets (48px+ height).
+    * Buttons: Full width, sticky at bottom.
+
+## 3. Architecture Rules
+* **Data Fetching:** Always use `process.env.NEXT_PUBLIC_API_URL` for endpoints.
+* **Real-time:** Use `socket.io-client` for Price/OrderBook updates.
+* **Configuration:** Never hardcode Game Settings. Fetch from `/api/binary/config`.
+* **Prisma:** When modifying DB, run `npx prisma db push` & `generate` immediately.
+
+## 4. Specific "Don'ts"
+* Never use `alert()`. Use a custom Toast.
+* Never use generic CSS files. Use Tailwind utility classes.</div>
+            </section>
+
+            <!-- Quick Actions -->
+            <section class="glass-panel rounded-xl p-6">
+                <h3 class="font-bold text-white mb-4">Next Step Strategy</h3>
+                <div class="flex flex-col gap-3">
+                    <div class="flex items-center gap-3 text-sm text-gray-300">
+                        <span class="w-6 h-6 rounded-full bg-purple-900 text-purple-300 flex items-center justify-center text-xs font-bold">1</span>
+                        <span>Copy <strong>Rules</strong> -> Paste into Trae Settings.</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-sm text-gray-300">
+                        <span class="w-6 h-6 rounded-full bg-blue-900 text-blue-300 flex items-center justify-center text-xs font-bold">2</span>
+                        <span>Copy <strong>Plan</strong> -> Paste into Trae Context.</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-sm text-gray-300">
+                        <span class="w-6 h-6 rounded-full bg-green-900 text-green-300 flex items-center justify-center text-xs font-bold">3</span>
+                        <span>Prompt: "Start Phase 3.3 (Spot Trading) based on the rules."</span>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+
+    </main>
+
+    <script>
+        // --- Copy to Clipboard Function ---
+        function copyToClipboard(elementId) {
+            const text = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Copied to clipboard!");
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        }
+
+        // --- Chart Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const ctx = document.getElementById('phaseChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Phase 1: Core', 'Phase 2: Engines', 'Phase 3: Frontend', 'Phase 4: Polish'],
+                    datasets: [{
+                        label: 'Completion %',
+                        data: [100, 100, 70, 10],
+                        backgroundColor: [
+                            '#10b981', // Green (Done)
+                            '#10b981', // Green (Done)
+                            '#3b82f6', // Blue (Active)
+                            '#6b7280'  // Gray (Pending)
+                        ],
+                        borderRadius: 4,
+                        barThickness: 40
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleColor: '#fff',
+                            bodyColor: '#cbd5e1',
+                            borderColor: '#475569',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: { color: '#334155' },
+                            ticks: { color: '#9ca3af' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#9ca3af' }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
