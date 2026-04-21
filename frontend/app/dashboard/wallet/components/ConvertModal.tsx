@@ -30,7 +30,7 @@ export default function ConvertModal({ isOpen, onClose }: ConvertModalProps) {
                     {/* Header */}
                     <div className="p-6 border-b border-gray-800 flex justify-between items-center">
                         <h2 className="text-xl font-bold text-white">Convert</h2>
-                        <button onClick={onClose} className="text-gray-400 hover:text-white">
+                        <button onClick={onClose} className="text-gray-400 hover:text-white" aria-label="Close modal">
                             <X size={24} />
                         </button>
                     </div>

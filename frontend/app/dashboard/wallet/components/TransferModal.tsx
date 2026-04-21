@@ -70,7 +70,7 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
                     {/* Header */}
                     <div className="p-6 border-b border-gray-800 flex justify-between items-center bg-[#0a0e27]/50">
                         <h2 className="text-xl font-bold text-white">Transfer</h2>
-                        <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+                        <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors" aria-label="Close transfer modal">
                             <X size={24} />
                         </button>
                     </div>
