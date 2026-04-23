@@ -167,14 +167,13 @@ export class AdminService {
     const markets = data.message || [];
     const categoryMap: Record<number, string> = { 0: 'crypto', 1: 'stock', 2: 'forex', 3: 'metal' };
 
-    let synced = 0;
-    for (const m of markets) {
+    const upsertPromises = markets.map((m: any) => {
       const category = categoryMap[m.coin_type] || 'other';
       const symbol = `${m.currency_name}/${m.legal_name}`;
       let logo = m.logo;
       if (logo && logo.startsWith('/')) logo = `https://www.coindefgie15eg.qpon${logo}`;
 
-      await this.prisma.binaryPair.upsert({
+      return this.prisma.binaryPair.upsert({
         where: { symbol },
         update: {
           rate: 1.85,
@@ -200,8 +199,10 @@ export class AdminService {
           coinType: m.coin_type,
         },
       });
-      synced++;
-    }
+    });
+
+    await Promise.all(upsertPromises);
+    const synced = markets.length;
     await this.seedDefaults();
     return { status: 'ok', message: `Synced ${synced} markets.` };
   }
@@ -220,12 +221,14 @@ export class AdminService {
       { name: '1h', seconds: 3600, payoutRate: 2.00 },
     ];
 
-    for (const tf of timeframes) {
-      await this.prisma.binaryTimeframe.upsert({
-        where: { seconds: tf.seconds },
-        update: { name: tf.name, payoutRate: tf.payoutRate },
-        create: tf,
-      });
-    }
+    await Promise.all(
+      timeframes.map((tf) =>
+        this.prisma.binaryTimeframe.upsert({
+          where: { seconds: tf.seconds },
+          update: { name: tf.name, payoutRate: tf.payoutRate },
+          create: tf,
+        }),
+      ),
+    );
   }
 }
