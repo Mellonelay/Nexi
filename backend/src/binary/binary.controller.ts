@@ -1,14 +1,17 @@
 import { Controller, Post, Body, Get, Param, UseGuards, Query } from '@nestjs/common';
 import { BinaryService } from './binary.service';
 import { BinarySide } from '@prisma/client';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { GetUser } from '../auth/get-user.decorator';
 
 @Controller('microtrade')
 export class BinaryController {
   constructor(private readonly binaryService: BinaryService) {}
 
   // Matches /microtrade/seconds_order
+  @UseGuards(JwtAuthGuard)
   @Post('seconds_order')
-  async openPosition(@Body() body: any) {
+  async openPosition(@Body() body: any, @GetUser() user: any) {
     // Map Frontend Payload
     // match_id -> symbol (Need a lookup or just assume match_id is passed as ID, but service expects symbol)
     // For now, let's assume body.symbol is passed or we look it up.
@@ -22,7 +25,7 @@ export class BinaryController {
     const symbol = body.symbol || "BTC/USDT"; 
 
     return this.binaryService.openPosition(
-      body.userId || "test-user", // TODO: Auth
+      user.userId,
       symbol,
       Number(body.number), // Amount
       side,
