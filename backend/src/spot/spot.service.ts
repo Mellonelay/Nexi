@@ -113,21 +113,18 @@ export class SpotService {
   async executeTrade(buyOrder: any, sellOrder: any, price: number, amount: number) {
     await this.prisma.$transaction(async (tx) => {
       // 1. Create Trade Record
-      const trade = await tx.spotTrade.create({
+      await tx.spotTrade.create({
         data: {
-          orderId: buyOrder.id, // Linking to buy order for now, theoretically should link both or have 2 entries
+          orderId: buyOrder.id,
           userId: buyOrder.userId, // Buyer
           pair: buyOrder.pair,
           price,
           amount,
           side: OrderSide.BUY,
-          fee: 0, // 0 fee for now
+          fee: 0,
           feeCurrency: 'USDT',
         }
       });
-      // Need a second trade record for the seller? 
-      // Typically an exchange creates one "Trade" entity linking maker and taker, or two records.
-      // Our schema has `orderId` and `userId`. Let's create two records for clarity.
       await tx.spotTrade.create({
         data: {
           orderId: sellOrder.id,
@@ -149,88 +146,39 @@ export class SpotService {
       const [base, quote] = buyOrder.pair.split('/');
       const totalQuote = amount * price;
 
-      // Buyer:
-      // Locked USDT was `amount * buyOrder.price` (max willingness).
-      // Actual cost is `amount * price`.
-      // If buyOrder.price > price, refund the difference.
-      const lockedQuote = amount * buyOrder.price;
-      const actualCost = totalQuote;
-      
-      // Deduct used USDT from locked
-      // We need to access WalletService from within transaction... 
-      // Ideally WalletService methods should accept a prisma transaction client.
-      // For MVP, we will use the injected service which uses a new transaction.
-      // This breaks atomicity of the whole trade execution slightly but is acceptable for this level.
-      // TODO: Refactor WalletService to accept `tx`.
-
-      // BUYER Settlement:
-      // Deduct Cost from Locked USDT
-      // If partial fill, we only deduct for the amount filled.
-      // NOTE: WalletService `deductLockedFunds` assumes we deduct what we used.
-      // But wait, we locked `buyOrder.price * amount`. We spent `price * amount`.
-      // We should deduct `price * amount` from LOCKED? No, that leaves dust in locked.
-      // We should deduct `buyOrder.price * amount` from LOCKED, and credit back `(buyOrder.price - price) * amount` to AVAILABLE?
-      // Or simply: Unlock everything for this portion, then Deduct actual cost.
-      
-      // Simpler approach for MVP:
-      // Buyer gets BASE currency (creditUser)
-      // Seller gets QUOTE currency (creditUser)
-      // Buyer loses QUOTE currency (deductLocked)
-      // Seller loses BASE currency (deductLocked)
-      
-      // BUYER: Receives Base
-      // We can't call this.walletService.creditUser inside tx easily without refactor.
-      // Let's do it after or use `prisma` directly here for speed.
-      
-      // Update Wallets manually in this TX for atomicity
-      
-      // BUYER:
-      // 1. Unlock the portion of USDT reserved for this fill
-      // 2. Deduct the actual USDT cost
-      // 3. Add the BTC bought
-      
-      // SELLER:
-      // 1. Deduct the BTC locked
-      // 2. Add the USDT earned
-    });
-    
-    // Execute Wallet Changes (Sequential for safety if not in same TX, or refactor)
-    // For this MVP, I will call WalletService methods sequentially.
-    // Ideally these should be in the transaction above.
-    
-    const [base, quote] = buyOrder.pair.split('/');
-    const totalQuote = amount * price;
-
-    // BUYER Settlement
-    // 1. Deduct USDT (Cost)
-    // We locked `amount * buyOrder.price`.
-    // We need to deduct `amount * buyOrder.price` from locked to clear the reservation
-    // But we only actually spent `amount * price`.
-    // So we credit back `amount * (buyOrder.price - price)` to available?
-    // Let's simplify:
-    // Deduct full reserved amount for this chunk from Locked.
-    // Credit difference to Available.
-    // Credit Bought Asset to Available.
-    
-    // Deduction: 
-    // We locked funds based on Order Price.
-    await this.walletService.deductLockedFunds(buyOrder.userId, quote, amount * buyOrder.price, LedgerType.TRADE_SPOT, `TRADE-${buyOrder.id}`);
-    // Refund difference (if bought cheaper)
-    if (buyOrder.price > price) {
+      // BUYER Settlement
+      // 1. Deduct full reserved amount for this chunk from Locked (USDT)
+      await this.walletService.deductLockedFunds(
+        buyOrder.userId,
+        quote,
+        amount * buyOrder.price,
+        LedgerType.TRADE_SPOT,
+        `TRADE-${buyOrder.id}`,
+        tx,
+      );
+      // 2. Refund difference (if bought cheaper)
+      if (buyOrder.price > price) {
         const refund = amount * (buyOrder.price - price);
         if (refund > 0) {
-             await this.walletService.deposit(buyOrder.userId, quote, refund, `REFUND-${buyOrder.id}`);
+          await this.walletService.deposit(buyOrder.userId, quote, refund, `REFUND-${buyOrder.id}`, tx);
         }
-    }
-    // Credit Asset
-    await this.walletService.deposit(buyOrder.userId, base, amount, `TRADE-RECV-${buyOrder.id}`);
+      }
+      // 3. Credit Bought Asset (Base)
+      await this.walletService.deposit(buyOrder.userId, base, amount, `TRADE-RECV-${buyOrder.id}`, tx);
 
-
-    // SELLER Settlement
-    // 1. Deduct Locked Base (BTC)
-    await this.walletService.deductLockedFunds(sellOrder.userId, base, amount, LedgerType.TRADE_SPOT, `TRADE-${sellOrder.id}`);
-    // 2. Credit Quote (USDT)
-    await this.walletService.deposit(sellOrder.userId, quote, totalQuote, `TRADE-RECV-${sellOrder.id}`);
+      // SELLER Settlement
+      // 1. Deduct Locked Base Asset
+      await this.walletService.deductLockedFunds(
+        sellOrder.userId,
+        base,
+        amount,
+        LedgerType.TRADE_SPOT,
+        `TRADE-${sellOrder.id}`,
+        tx,
+      );
+      // 2. Credit Quote Asset (USDT) earned
+      await this.walletService.deposit(sellOrder.userId, quote, totalQuote, `TRADE-RECV-${sellOrder.id}`, tx);
+    });
   }
 
   async updateOrderStatus(tx: any, orderId: string, amountFilled: number) {

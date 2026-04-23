@@ -1,14 +1,15 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { LedgerType, WithdrawalStatus } from '@prisma/client';
+import { LedgerType, WithdrawalStatus, Prisma } from '@prisma/client';
 
 @Injectable()
 export class WalletService {
   constructor(private readonly prisma: PrismaService) { }
 
   // Initialize wallet for a new user
-  async createWallet(userId: string) {
-    return this.prisma.wallet.create({
+  async createWallet(userId: string, tx?: Prisma.TransactionClient) {
+    const client = tx || this.prisma;
+    return client.wallet.create({
       data: {
         userId,
         balances: {}, // Initialize empty JSON object
@@ -46,11 +47,11 @@ export class WalletService {
   }
 
   // Deposit funds (Admin or Simulated)
-  async deposit(userId: string, currency: string, amount: number, referenceId?: string) {
+  async deposit(userId: string, currency: string, amount: number, referenceId?: string, tx?: Prisma.TransactionClient) {
     if (amount <= 0) throw new BadRequestException('Amount must be positive');
 
-    return this.prisma.$transaction(async (tx) => {
-      const wallet = await tx.wallet.findUnique({ where: { userId } });
+    const action = async (transaction: Prisma.TransactionClient) => {
+      const wallet = await transaction.wallet.findUnique({ where: { userId } });
       if (!wallet) throw new NotFoundException('Wallet not found');
 
       const balances = wallet.balances as Record<string, { available: number; locked: number }>;
@@ -61,13 +62,13 @@ export class WalletService {
       balances[currency] = current;
 
       // Update wallet
-      await tx.wallet.update({
+      await transaction.wallet.update({
         where: { userId },
         data: { balances },
       });
 
       // Create Ledger Entry
-      await tx.ledger.create({
+      await transaction.ledger.create({
         data: {
           walletId: wallet.id,
           currency,
@@ -78,15 +79,17 @@ export class WalletService {
       });
 
       return balances[currency];
-    });
+    };
+
+    return tx ? action(tx) : this.prisma.$transaction(action);
   }
 
   // Withdraw funds
-  async withdraw(userId: string, currency: string, amount: number, referenceId?: string) {
+  async withdraw(userId: string, currency: string, amount: number, referenceId?: string, tx?: Prisma.TransactionClient) {
     if (amount <= 0) throw new BadRequestException('Amount must be positive');
 
-    return this.prisma.$transaction(async (tx) => {
-      const wallet = await tx.wallet.findUnique({ where: { userId } });
+    const action = async (transaction: Prisma.TransactionClient) => {
+      const wallet = await transaction.wallet.findUnique({ where: { userId } });
       if (!wallet) throw new NotFoundException('Wallet not found');
 
       const balances = wallet.balances as Record<string, { available: number; locked: number }>;
@@ -100,13 +103,13 @@ export class WalletService {
       current.available -= amount;
       balances[currency] = current;
 
-      await tx.wallet.update({
+      await transaction.wallet.update({
         where: { userId },
         data: { balances },
       });
 
       // Create Ledger Entry
-      await tx.ledger.create({
+      await transaction.ledger.create({
         data: {
           walletId: wallet.id,
           currency,
@@ -117,15 +120,17 @@ export class WalletService {
       });
 
       return balances[currency];
-    });
+    };
+
+    return tx ? action(tx) : this.prisma.$transaction(action);
   }
 
   // Lock funds (for trading)
-  async lockFunds(userId: string, currency: string, amount: number) {
+  async lockFunds(userId: string, currency: string, amount: number, tx?: Prisma.TransactionClient) {
     if (amount <= 0) throw new BadRequestException('Amount must be positive');
 
-    return this.prisma.$transaction(async (tx) => {
-      const wallet = await tx.wallet.findUnique({ where: { userId } });
+    const action = async (transaction: Prisma.TransactionClient) => {
+      const wallet = await transaction.wallet.findUnique({ where: { userId } });
       if (!wallet) throw new NotFoundException('Wallet not found');
 
       // 1. Handle Main Balance (for USDT/Demo trading mostly)
@@ -133,7 +138,7 @@ export class WalletService {
         if (wallet.balance < amount) {
           throw new BadRequestException('Insufficient main balance');
         }
-        await tx.wallet.update({
+        await transaction.wallet.update({
           where: { userId },
           data: {
             balance: { decrement: amount },
@@ -155,22 +160,24 @@ export class WalletService {
         current.locked += amount;
         balances[currency] = current;
 
-        await tx.wallet.update({
+        await transaction.wallet.update({
           where: { userId },
           data: { balances },
         });
       }
 
       return true;
-    });
+    };
+
+    return tx ? action(tx) : this.prisma.$transaction(action);
   }
 
   // Unlock funds (e.g. order cancelled)
-  async unlockFunds(userId: string, currency: string, amount: number) {
+  async unlockFunds(userId: string, currency: string, amount: number, tx?: Prisma.TransactionClient) {
     if (amount <= 0) throw new BadRequestException('Amount must be positive');
 
-    return this.prisma.$transaction(async (tx) => {
-      const wallet = await tx.wallet.findUnique({ where: { userId } });
+    const action = async (transaction: Prisma.TransactionClient) => {
+      const wallet = await transaction.wallet.findUnique({ where: { userId } });
       if (!wallet) throw new NotFoundException('Wallet not found');
 
       // 1. Handle Main Balance (USDT)
@@ -178,7 +185,7 @@ export class WalletService {
         if (wallet.frozenBalance < amount) {
           // Log warning?
         }
-        await tx.wallet.update({
+        await transaction.wallet.update({
           where: { userId },
           data: {
             frozenBalance: { decrement: amount },
@@ -195,31 +202,33 @@ export class WalletService {
         current.available += amount;
         balances[currency] = current;
 
-        await tx.wallet.update({
+        await transaction.wallet.update({
           where: { userId },
           data: { balances }
         });
       }
       return true;
-    });
+    };
+
+    return tx ? action(tx) : this.prisma.$transaction(action);
   }
 
   // Deduct locked funds (e.g. order filled or trade lost)
-  async deductLockedFunds(userId: string, currency: string, amount: number, type: LedgerType, refId: string) {
-    return this.prisma.$transaction(async (tx) => {
-      const wallet = await tx.wallet.findUnique({ where: { userId } });
+  async deductLockedFunds(userId: string, currency: string, amount: number, type: LedgerType, refId: string, tx?: Prisma.TransactionClient) {
+    const action = async (transaction: Prisma.TransactionClient) => {
+      const wallet = await transaction.wallet.findUnique({ where: { userId } });
       if (!wallet) throw new NotFoundException('Wallet not found');
 
       // 1. Handle Main Balance (USDT)
       if (currency === 'USDT' || currency === 'DEMO') {
-        await tx.wallet.update({
+        await transaction.wallet.update({
           where: { userId },
           data: {
             frozenBalance: { decrement: amount }
           }
         });
 
-        await tx.ledger.create({
+        await transaction.ledger.create({
           data: {
             walletId: wallet.id,
             currency,
@@ -238,12 +247,12 @@ export class WalletService {
         current.locked = Math.max(0, current.locked - amount);
         balances[currency] = current;
 
-        await tx.wallet.update({
+        await transaction.wallet.update({
           where: { userId },
           data: { balances },
         });
 
-        await tx.ledger.create({
+        await transaction.ledger.create({
           data: {
             walletId: wallet.id,
             currency,
@@ -256,18 +265,20 @@ export class WalletService {
       }
 
       return true;
-    });
+    };
+
+    return tx ? action(tx) : this.prisma.$transaction(action);
   }
 
   // Resolve Locked Funds (Win/Loss Settlement)
-  async resolveLockedFunds(userId: string, currency: string, lockedAmount: number, profitAmount: number, type: LedgerType, refId: string) {
-    return this.prisma.$transaction(async (tx) => {
-      const wallet = await tx.wallet.findUnique({ where: { userId } });
+  async resolveLockedFunds(userId: string, currency: string, lockedAmount: number, profitAmount: number, type: LedgerType, refId: string, tx?: Prisma.TransactionClient) {
+    const action = async (transaction: Prisma.TransactionClient) => {
+      const wallet = await transaction.wallet.findUnique({ where: { userId } });
       if (!wallet) throw new NotFoundException('Wallet not found');
 
       // 1. Handle Main Balance (USDT)
       if (currency === 'USDT' || currency === 'DEMO') {
-        await tx.wallet.update({
+        await transaction.wallet.update({
           where: { userId },
           data: {
             frozenBalance: { decrement: lockedAmount },
@@ -276,7 +287,7 @@ export class WalletService {
         });
 
         // Ledger
-        await tx.ledger.create({
+        await transaction.ledger.create({
           data: {
             walletId: wallet.id,
             currency,
@@ -298,12 +309,12 @@ export class WalletService {
 
         balances[currency] = current;
 
-        await tx.wallet.update({
+        await transaction.wallet.update({
           where: { userId },
           data: { balances }
         });
 
-        await tx.ledger.create({
+        await transaction.ledger.create({
           data: {
             walletId: wallet.id,
             currency,
@@ -316,7 +327,9 @@ export class WalletService {
       }
 
       return true;
-    });
+    };
+
+    return tx ? action(tx) : this.prisma.$transaction(action);
   }
 
   async getLedger(userId: string) {
@@ -329,11 +342,11 @@ export class WalletService {
     });
   }
 
-  async requestWithdrawal(userId: string, currency: string, amount: number, address: string) {
+  async requestWithdrawal(userId: string, currency: string, amount: number, address: string, tx?: Prisma.TransactionClient) {
     if (amount <= 0) throw new BadRequestException('Amount must be positive');
 
-    return this.prisma.$transaction(async (tx) => {
-      const wallet = await tx.wallet.findUnique({ where: { userId } });
+    const action = async (transaction: Prisma.TransactionClient) => {
+      const wallet = await transaction.wallet.findUnique({ where: { userId } });
       if (!wallet) throw new NotFoundException('Wallet not found');
 
       const balances = wallet.balances as Record<string, { available: number; locked: number }>;
@@ -348,12 +361,12 @@ export class WalletService {
       current.locked += amount;
       balances[currency] = current;
 
-      await tx.wallet.update({
+      await transaction.wallet.update({
         where: { userId },
         data: { balances },
       });
 
-      return tx.withdrawalRequest.create({
+      return transaction.withdrawalRequest.create({
         data: {
           userId,
           currency,
@@ -361,7 +374,9 @@ export class WalletService {
           address,
         },
       });
-    });
+    };
+
+    return tx ? action(tx) : this.prisma.$transaction(action);
   }
 
   // Admin: Get Pending Withdrawals
@@ -374,14 +389,14 @@ export class WalletService {
   }
 
   // Admin: Approve Withdrawal
-  async approveWithdrawal(requestId: string, txHash: string) {
-    return this.prisma.$transaction(async (tx) => {
-      const request = await tx.withdrawalRequest.findUnique({ where: { id: requestId } });
+  async approveWithdrawal(requestId: string, txHash: string, tx?: Prisma.TransactionClient) {
+    const action = async (transaction: Prisma.TransactionClient) => {
+      const request = await transaction.withdrawalRequest.findUnique({ where: { id: requestId } });
       if (!request) throw new NotFoundException('Request not found');
       if (request.status !== WithdrawalStatus.PENDING) throw new BadRequestException('Request not pending');
 
       // 1. Update Request Status
-      await tx.withdrawalRequest.update({
+      await transaction.withdrawalRequest.update({
         where: { id: requestId },
         data: {
           status: WithdrawalStatus.APPROVED,
@@ -391,7 +406,7 @@ export class WalletService {
 
       // 2. Deduct Locked Funds (Finalize Withdrawal)
       // We already moved funds to 'locked' when requesting. Now we simply remove them.
-      const wallet = await tx.wallet.findUnique({ where: { userId: request.userId } });
+      const wallet = await transaction.wallet.findUnique({ where: { userId: request.userId } });
       if (!wallet) throw new NotFoundException('Wallet not found');
 
       const balances = wallet.balances as Record<string, { available: number; locked: number }>;
@@ -405,13 +420,13 @@ export class WalletService {
       current.locked -= request.amount;
       balances[request.currency] = current;
 
-      await tx.wallet.update({
+      await transaction.wallet.update({
         where: { userId: request.userId },
         data: { balances }
       });
 
       // 3. Create Ledger Entry
-      await tx.ledger.create({
+      await transaction.ledger.create({
         data: {
           walletId: wallet.id,
           currency: request.currency,
@@ -423,18 +438,20 @@ export class WalletService {
       });
 
       return { success: true };
-    });
+    };
+
+    return tx ? action(tx) : this.prisma.$transaction(action);
   }
 
   // Admin: Reject Withdrawal
-  async rejectWithdrawal(requestId: string, reason: string) {
-    return this.prisma.$transaction(async (tx) => {
-      const request = await tx.withdrawalRequest.findUnique({ where: { id: requestId } });
+  async rejectWithdrawal(requestId: string, reason: string, tx?: Prisma.TransactionClient) {
+    const action = async (transaction: Prisma.TransactionClient) => {
+      const request = await transaction.withdrawalRequest.findUnique({ where: { id: requestId } });
       if (!request) throw new NotFoundException('Request not found');
       if (request.status !== WithdrawalStatus.PENDING) throw new BadRequestException('Request not pending');
 
       // 1. Update Request Status
-      await tx.withdrawalRequest.update({
+      await transaction.withdrawalRequest.update({
         where: { id: requestId },
         data: {
           status: WithdrawalStatus.REJECTED,
@@ -443,7 +460,7 @@ export class WalletService {
       });
 
       // 2. Refund Locked Funds (Move back to Available)
-      const wallet = await tx.wallet.findUnique({ where: { userId: request.userId } });
+      const wallet = await transaction.wallet.findUnique({ where: { userId: request.userId } });
       const balances = wallet.balances as Record<string, { available: number; locked: number }>;
       const current = balances[request.currency] || { available: 0, locked: 0 };
 
@@ -451,12 +468,14 @@ export class WalletService {
       current.available += request.amount;
       balances[request.currency] = current;
 
-      await tx.wallet.update({
+      await transaction.wallet.update({
         where: { userId: request.userId },
         data: { balances }
       });
 
       return { success: true };
-    });
+    };
+
+    return tx ? action(tx) : this.prisma.$transaction(action);
   }
 }
