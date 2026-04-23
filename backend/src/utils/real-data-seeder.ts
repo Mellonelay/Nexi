@@ -31,15 +31,14 @@ export class RealDataSeeder {
 
             if (Array.isArray(items)) {
                 console.log(`Received ${items.length} market items.`);
-                for (const item of items) {
-                    const symbol = item.symbol || item.name;
-                    if (!symbol) continue;
+                const parse = (val: any) => {
+                    const f = Number.parseFloat(val);
+                    return Number.isNaN(f) ? 0 : f;
+                };
 
-                    // Helper to parse float safely
-                    const parse = (val: any) => {
-                        const f = Number.parseFloat(val);
-                        return Number.isNaN(f) ? 0 : f;
-                    };
+                await Promise.all(items.map(async (item) => {
+                    const symbol = item.symbol || item.name;
+                    if (!symbol) return;
 
                     await prisma.marketData.upsert({
                         where: { symbol },
@@ -61,7 +60,7 @@ export class RealDataSeeder {
                             rawData: item
                         }
                     });
-                }
+                }));
             } else {
                 console.log("Market Data format unknown:", data);
             }
@@ -100,8 +99,8 @@ export class RealDataSeeder {
                     where: { currencyId: 32, matchId: 61 }
                 });
 
-                for (const item of list) {
-                    await prisma.optionGameSettings.create({
+                await Promise.all(list.map((item: any) =>
+                    prisma.optionGameSettings.create({
                         data: {
                             currencyId: item.currency_id || 32,
                             matchId: item.match_id || 61,
@@ -111,8 +110,8 @@ export class RealDataSeeder {
                             duration: Number.parseInt(item.seconds || 0),
                             rawData: item
                         }
-                    });
-                }
+                    })
+                ));
             } else {
                 console.log("No binary configs found (or API failed). Seeding MOCK data.");
                 // Clear existing
@@ -127,8 +126,8 @@ export class RealDataSeeder {
                     { seconds: 300, profit_ratio: 0.9 }
                 ];
 
-                for (const m of mocks) {
-                    await prisma.optionGameSettings.create({
+                await Promise.all(mocks.map((m) =>
+                    prisma.optionGameSettings.create({
                         data: {
                             currencyId: 32,
                             matchId: 61,
@@ -138,8 +137,8 @@ export class RealDataSeeder {
                             duration: m.seconds,
                             rawData: { mock: true }
                         }
-                    });
-                }
+                    })
+                ));
                 console.log("Mock binary configs seeded.");
             }
         } catch (error) {
