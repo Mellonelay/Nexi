@@ -85,27 +85,44 @@ export class SpotService {
       orderBy: { price: 'asc' },
     });
 
-    for (const buyOrder of buyOrders) {
-      for (const sellOrder of sellOrders) {
-        if (!buyOrder.price || !sellOrder.price) continue; // Skip market orders for now
-        
-        // Check if match is possible
-        if (buyOrder.price >= sellOrder.price) {
-          // Match found!
-          const matchPrice = sellOrder.price; // Usually executes at maker price
-          const matchAmount = Math.min(buyOrder.remaining, sellOrder.remaining);
+    let i = 0;
+    let j = 0;
 
-          if (matchAmount <= 0) continue;
+    while (i < buyOrders.length && j < sellOrders.length) {
+      const buyOrder = buyOrders[i];
+      const sellOrder = sellOrders[j];
 
+      if (!buyOrder.price) {
+        i++;
+        continue;
+      }
+      if (!sellOrder.price) {
+        j++;
+        continue;
+      }
+
+      // Check if match is possible
+      if (buyOrder.price >= sellOrder.price) {
+        // Match found!
+        const matchPrice = sellOrder.price; // Usually executes at maker price
+        const matchAmount = Math.min(buyOrder.remaining, sellOrder.remaining);
+
+        if (matchAmount > 0) {
           // Execute Trade
           await this.executeTrade(buyOrder, sellOrder, matchPrice, matchAmount);
 
           // Update local remaining for loop continuity
           buyOrder.remaining -= matchAmount;
           sellOrder.remaining -= matchAmount;
-
-          if (buyOrder.remaining === 0) break; // Buy order filled, move to next buy order
         }
+
+        if (buyOrder.remaining === 0) i++;
+        if (sellOrder.remaining === 0) j++;
+      } else {
+        // Since buyOrders are sorted desc and sellOrders are sorted asc,
+        // if the current highest bid is lower than the current lowest ask,
+        // no further matches are possible.
+        break;
       }
     }
   }
