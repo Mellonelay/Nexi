@@ -2,7 +2,7 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { WalletService } from '../wallet/wallet.service';
 import { SpotGateway } from './spot.gateway';
-import { OrderSide, OrderType, OrderStatus, LedgerType } from '@prisma/client';
+import { OrderSide, OrderType, OrderStatus, LedgerType, Prisma } from '@prisma/client';
 
 @Injectable()
 export class SpotService {
@@ -127,97 +127,38 @@ export class SpotService {
     }
   }
 
-  async executeTrade(buyOrder: any, sellOrder: any, price: number, amount: number) {
-    await this.prisma.$transaction(async (tx) => {
-      // 1. Create Trade Record
-      const trade = await tx.spotTrade.create({
-        data: {
-          orderId: buyOrder.id, // Linking to buy order for now, theoretically should link both or have 2 entries
-          userId: buyOrder.userId, // Buyer
-          pair: buyOrder.pair,
-          price,
-          amount,
-          side: OrderSide.BUY,
-          fee: 0, // 0 fee for now
-          feeCurrency: 'USDT',
-        }
-      });
-      // Need a second trade record for the seller? 
-      // Typically an exchange creates one "Trade" entity linking maker and taker, or two records.
-      // Our schema has `orderId` and `userId`. Let's create two records for clarity.
-      await tx.spotTrade.create({
-        data: {
-          orderId: sellOrder.id,
-          userId: sellOrder.userId, // Seller
-          pair: sellOrder.pair,
-          price,
-          amount,
-          side: OrderSide.SELL,
-          fee: 0,
-          feeCurrency: 'USDT',
-        }
-      });
-
-      // 2. Update Orders
-      await this.updateOrderStatus(tx, buyOrder.id, amount);
-      await this.updateOrderStatus(tx, sellOrder.id, amount);
-
-      // 3. Settlement
-      const [base, quote] = buyOrder.pair.split('/');
-      const totalQuote = amount * price;
-
-      // Buyer:
-      // Locked USDT was `amount * buyOrder.price` (max willingness).
-      // Actual cost is `amount * price`.
-      // If buyOrder.price > price, refund the difference.
-      const lockedQuote = amount * buyOrder.price;
-      const actualCost = totalQuote;
-      
-      // Deduct used USDT from locked
-      // We need to access WalletService from within transaction... 
-      // Ideally WalletService methods should accept a prisma transaction client.
-      // For MVP, we will use the injected service which uses a new transaction.
-      // This breaks atomicity of the whole trade execution slightly but is acceptable for this level.
-      // TODO: Refactor WalletService to accept `tx`.
-
-      // BUYER Settlement:
-      // Deduct Cost from Locked USDT
-      // If partial fill, we only deduct for the amount filled.
-      // NOTE: WalletService `deductLockedFunds` assumes we deduct what we used.
-      // But wait, we locked `buyOrder.price * amount`. We spent `price * amount`.
-      // We should deduct `price * amount` from LOCKED? No, that leaves dust in locked.
-      // We should deduct `buyOrder.price * amount` from LOCKED, and credit back `(buyOrder.price - price) * amount` to AVAILABLE?
-      // Or simply: Unlock everything for this portion, then Deduct actual cost.
-      
-      // Simpler approach for MVP:
-      // Buyer gets BASE currency (creditUser)
-      // Seller gets QUOTE currency (creditUser)
-      // Buyer loses QUOTE currency (deductLocked)
-      // Seller loses BASE currency (deductLocked)
-      
-      // BUYER: Receives Base
-      // We can't call this.walletService.creditUser inside tx easily without refactor.
-      // Let's do it after or use `prisma` directly here for speed.
-      
-      // Update Wallets manually in this TX for atomicity
-      
-      // BUYER:
-      // 1. Unlock the portion of USDT reserved for this fill
-      // 2. Deduct the actual USDT cost
-      // 3. Add the BTC bought
-      
-      // SELLER:
-      // 1. Deduct the BTC locked
-      // 2. Add the USDT earned
+  private async createTradeRecords(tx: Prisma.TransactionClient, buyOrder: any, sellOrder: any, price: number, amount: number) {
+    // 1. Create Trade Record
+    await tx.spotTrade.create({
+      data: {
+        orderId: buyOrder.id, // Linking to buy order for now, theoretically should link both or have 2 entries
+        userId: buyOrder.userId, // Buyer
+        pair: buyOrder.pair,
+        price,
+        amount,
+        side: OrderSide.BUY,
+        fee: 0, // 0 fee for now
+        feeCurrency: 'USDT',
+      }
     });
-    
-    // Execute Wallet Changes (Sequential for safety if not in same TX, or refactor)
-    // For this MVP, I will call WalletService methods sequentially.
-    // Ideally these should be in the transaction above.
-    
-    const [base, quote] = buyOrder.pair.split('/');
-    const totalQuote = amount * price;
+    // Need a second trade record for the seller?
+    // Typically an exchange creates one "Trade" entity linking maker and taker, or two records.
+    // Our schema has `orderId` and `userId`. Let's create two records for clarity.
+    await tx.spotTrade.create({
+      data: {
+        orderId: sellOrder.id,
+        userId: sellOrder.userId, // Seller
+        pair: sellOrder.pair,
+        price,
+        amount,
+        side: OrderSide.SELL,
+        fee: 0,
+        feeCurrency: 'USDT',
+      }
+    });
+  }
 
+  private async settleBuyerFunds(buyOrder: any, base: string, quote: string, price: number, amount: number) {
     // BUYER Settlement
     // 1. Deduct USDT (Cost)
     // We locked `amount * buyOrder.price`.
@@ -241,13 +182,34 @@ export class SpotService {
     }
     // Credit Asset
     await this.walletService.deposit(buyOrder.userId, base, amount, `TRADE-RECV-${buyOrder.id}`);
+  }
 
-
+  private async settleSellerFunds(sellOrder: any, base: string, quote: string, totalQuote: number, amount: number) {
     // SELLER Settlement
     // 1. Deduct Locked Base (BTC)
     await this.walletService.deductLockedFunds(sellOrder.userId, base, amount, LedgerType.TRADE_SPOT, `TRADE-${sellOrder.id}`);
     // 2. Credit Quote (USDT)
     await this.walletService.deposit(sellOrder.userId, quote, totalQuote, `TRADE-RECV-${sellOrder.id}`);
+  }
+
+  async executeTrade(buyOrder: any, sellOrder: any, price: number, amount: number) {
+    await this.prisma.$transaction(async (tx) => {
+      await this.createTradeRecords(tx, buyOrder, sellOrder, price, amount);
+
+      // 2. Update Orders
+      await this.updateOrderStatus(tx, buyOrder.id, amount);
+      await this.updateOrderStatus(tx, sellOrder.id, amount);
+    });
+
+    // Execute Wallet Changes (Sequential for safety if not in same TX, or refactor)
+    // For this MVP, I will call WalletService methods sequentially.
+    // Ideally these should be in the transaction above.
+
+    const [base, quote] = buyOrder.pair.split('/');
+    const totalQuote = amount * price;
+
+    await this.settleBuyerFunds(buyOrder, base, quote, price, amount);
+    await this.settleSellerFunds(sellOrder, base, quote, totalQuote, amount);
   }
 
   async updateOrderStatus(tx: any, orderId: string, amountFilled: number) {
