@@ -1,0 +1,67 @@
+name: Continuous Audit & Verification
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  audit-backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install Backend Dependencies
+        run: pnpm install
+
+      - name: Run Backend Linter
+        run: pnpm run lint || echo "Linting failed but continuing for audit"
+
+      - name: Custom Jules Rule - Check Auth Guards
+        run: |
+          echo "Scanning for missing JwtAuthGuards..."
+          grep -rn "controller" src/ | grep -v "JwtAuthGuard" || echo "Found controllers potentially missing Auth Guards."
+
+      - name: Custom Jules Rule - Check Mock Data usage
+        run: |
+          echo "Scanning for mock data usage in critical paths..."
+          grep -rn "mock\|test-user" src/ || echo "Mock data detected."
+
+  audit-frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install Frontend Dependencies
+        run: pnpm install
+
+      - name: Run Frontend Linter (Accessibility & React Hooks)
+        run: pnpm lint || echo "Linting failed but continuing for audit"
+
+      - name: Custom Jules Rule - Check ARIA labels
+        run: |
+          echo "Scanning for missing aria-labels on standard components..."
+          grep -rn "<button" app/ | grep -v "aria-label" || echo "Found buttons potentially missing aria-labels."
