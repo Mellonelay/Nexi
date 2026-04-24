@@ -1,6 +1,6 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Query, Request, ForbiddenException } from '@nestjs/common';
 import { WalletService } from './wallet.service';
-// import { JwtAuthGuard } from '../auth/jwt-auth.guard'; // Will implement later
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('wallet')
 export class WalletController {
@@ -11,26 +11,40 @@ export class WalletController {
     return this.walletService.getSupportedCurrencies();
   }
 
-  // @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Get(':userId')
-  async getWallet(@Param('userId') userId: string) {
+  async getWallet(@Param('userId') userId: string, @Request() req) {
+    if (req.user.userId !== userId) {
+      throw new ForbiddenException('You can only access your own wallet');
+    }
     return this.walletService.getAllBalances(userId);
   }
-  
-  // @UseGuards(JwtAuthGuard)
+
+  @UseGuards(JwtAuthGuard)
   @Get(':userId/ledger')
-  async getLedger(@Param('userId') userId: string) {
+  async getLedger(@Param('userId') userId: string, @Request() req) {
+    if (req.user.userId !== userId) {
+      throw new ForbiddenException('You can only access your own ledger');
+    }
     return this.walletService.getLedger(userId);
   }
 
   // Admin or Dev Testing Endpoints
+  @UseGuards(JwtAuthGuard)
   @Post('deposit')
-  async deposit(@Body() body: { userId: string; currency: string; amount: number }) {
+  async deposit(@Body() body: { userId: string; currency: string; amount: number }, @Request() req) {
+    if (req.user.userId !== body.userId) {
+      throw new ForbiddenException('You can only deposit to your own wallet');
+    }
     return this.walletService.deposit(body.userId, body.currency, body.amount);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('withdraw')
-  async withdraw(@Body() body: { userId: string; currency: string; amount: number; address: string }) {
+  async withdraw(@Body() body: { userId: string; currency: string; amount: number; address: string }, @Request() req) {
+    if (req.user.userId !== body.userId) {
+      throw new ForbiddenException('You can only withdraw from your own wallet');
+    }
     return this.walletService.requestWithdrawal(body.userId, body.currency, body.amount, body.address);
   }
 
