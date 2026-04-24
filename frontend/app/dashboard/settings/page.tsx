@@ -212,7 +212,7 @@ export default function SettingsPage() {
                             >
                                 <option value="PASSPORT">Passport</option>
                                 <option value="ID_CARD">National ID</option>
-                                <option value="DRIVERS_LICENSE">Driver's License</option>
+                                <option value="DRIVERS_LICENSE">Driver&apos;s License</option>
                             </select>
                         </div>
                         <div>

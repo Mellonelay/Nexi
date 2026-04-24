@@ -158,7 +158,7 @@ export default function Dashboard() {
           <div className="p-4 border-b border-dexi-purple/20">
             <div className="flex items-center justify-between mb-4">
               <span className="font-semibold">Account</span>
-              <button className="text-dexi-cyan hover:text-dexi-blue transition-colors">
+              <button className="text-dexi-cyan hover:text-dexi-blue transition-colors" aria-label="Account details">
                 ▼
               </button>
             </div>
