@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { useMarketData, MarketPair } from '../hooks/useMarketData';
+import { useActivePair } from '../providers/ActivePairProvider';
 
 interface SymbolSelectorProps {
   readonly currentSymbol: string;
@@ -13,7 +14,7 @@ export default function SymbolSelector({ currentSymbol, onSelect }: SymbolSelect
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'Crypto' | 'Metal' | 'Shares' | 'Forex'>('Crypto');
   const dropdownRef = useRef<HTMLDivElement>(null);
-
+  const { setActivePairBySymbol } = useActivePair();
   const { marketPairs, metal, shares, forex } = useMarketData();
 
   const getList = (): MarketPair[] => {
@@ -36,9 +37,14 @@ export default function SymbolSelector({ currentSymbol, onSelect }: SymbolSelect
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const selectSymbol = (symbol: string) => {
+    setActivePairBySymbol(symbol);
+    onSelect(symbol);
+    setIsOpen(false);
+  };
+
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* Trigger */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -47,16 +53,13 @@ export default function SymbolSelector({ currentSymbol, onSelect }: SymbolSelect
         aria-expanded={isOpen}
       >
         <span>
-          {/* If it's a simple ticker like BTC, ETH, etc (no dots/slashes), append /USDT for display */}
           {/^[A-Z0-9]+$/.test(currentSymbol) && currentSymbol.length <= 5 ? `${currentSymbol}/USDT` : currentSymbol}
         </span>
         <ChevronDown size={20} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
-      {/* Dropdown Content */}
       {isOpen && (
         <div className="absolute top-full left-0 mt-2 w-[320px] bg-[#121836] border border-white/10 rounded-lg shadow-xl z-[100] overflow-hidden">
-          {/* Tabs */}
           <div className="flex border-b border-white/10" role="tablist">
             {['Crypto', 'Metal', 'Shares', 'Forex'].map((tab) => (
               <button
@@ -64,7 +67,7 @@ export default function SymbolSelector({ currentSymbol, onSelect }: SymbolSelect
                 type="button"
                 role="tab"
                 aria-selected={activeTab === tab}
-                onClick={() => setActiveTab(tab as any)}
+                onClick={() => setActiveTab(tab as 'Crypto' | 'Metal' | 'Shares' | 'Forex')}
                 className={`flex-1 py-2 text-xs font-bold transition-colors ${activeTab === tab
                     ? 'text-white bg-white/5 border-b-2 border-[#00C076]'
                     : 'text-gray-500 hover:text-gray-300'
@@ -75,7 +78,6 @@ export default function SymbolSelector({ currentSymbol, onSelect }: SymbolSelect
             ))}
           </div>
 
-          {/* List */}
           <div className="max-h-[300px] overflow-y-auto" role="listbox">
             {getList().map((item: MarketPair) => (
               <button
@@ -83,10 +85,7 @@ export default function SymbolSelector({ currentSymbol, onSelect }: SymbolSelect
                 type="button"
                 role="option"
                 aria-selected={currentSymbol === item.symbol}
-                onClick={() => {
-                  onSelect(item.symbol);
-                  setIsOpen(false);
-                }}
+                onClick={() => selectSymbol(item.symbol)}
                 className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/5 cursor-pointer transition-colors text-left"
               >
                 <div className="flex items-center gap-3">
@@ -99,7 +98,7 @@ export default function SymbolSelector({ currentSymbol, onSelect }: SymbolSelect
                   </div>
                 </div>
                 <div className={`text-sm font-bold ${item.change >= 0 ? 'text-[#00C076]' : 'text-[#FF4D4F]'}`}>
-                  {item.price.toLocaleString()}
+                  {item.price > 0 ? item.price.toLocaleString() : '—'}
                 </div>
               </button>
             ))}
