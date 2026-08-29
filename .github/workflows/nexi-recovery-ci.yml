@@ -22,7 +22,7 @@ jobs:
           node-version: 24
           cache: npm
           cache-dependency-path: backend/package-lock.json
-      - run: npm ci
+      - run: npm ci --legacy-peer-deps
       - run: npm test -- --runInBand test/market/biquote-market.adapter.spec.ts test/market/binance-spot.adapter.spec.ts test/market/non-crypto-market.adapters.spec.ts
       - run: NODE_OPTIONS=--max-old-space-size=8192 npm run build
 
@@ -37,11 +37,6 @@ jobs:
       - run: pip install 'graphifyy[sql]'
       - run: graphify --version
       - run: graphify update backend --no-cluster
-      - uses: actions/upload-artifact@v4
-        with:
-          name: backend-graphify
-          path: backend/graphify-out
-          if-no-files-found: error
 
   frontend:
     runs-on: ubuntu-latest
