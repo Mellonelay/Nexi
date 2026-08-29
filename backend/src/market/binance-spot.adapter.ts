@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { RawData, WebSocket } from 'ws';
 import { CANONICAL_MARKET_CATALOG } from './market-catalog';
-import { MarketProviderAdapter, MarketProviderEvent } from './market-provider.adapter';
+import { MarketProviderAdapter, MarketProviderEvent, MarketProviderRuntimeSymbol } from './market-provider.adapter';
 
 export type BinanceSpotMarketEvent =
   | { kind: 'ticker'; symbol: string; provider: 'binance-spot'; source: 'websocket'; providerInstrument: string; priceType: 'LAST'; eventTime: number; price: string; change24h: string; volume24h: string; high24h: string; low24h: string }
@@ -39,22 +39,19 @@ export class BinanceSpotAdapter implements OnModuleDestroy, MarketProviderAdapte
   private reconnectAttempt = 0;
   private eventHandler?: (event: MarketProviderEvent) => void;
   private stopping = false;
-  private readonly enabled = process.env.MARKET_PROVIDER_ENABLED === 'true'
-    && (this.configuredProviders().length === 0 || this.configuredProviders().includes('binance-spot'));
+  private readonly enabled = process.env.MARKET_PROVIDER_ENABLED === 'true';
   private readonly httpUrl = process.env.MARKET_PROVIDER_HTTP_URL?.trim() || 'https://data-api.binance.vision';
   private symbols = ((process.env.MARKET_PROVIDER_SYMBOLS_BINANCE_SPOT ?? process.env.MARKET_PROVIDER_SYMBOLS)?.split(',') ?? ['BTCUSDT'])
     .map((symbol) => symbol.trim().replaceAll('/', '').toLowerCase())
     .filter(Boolean);
 
+  configure(symbols: readonly MarketProviderRuntimeSymbol[]): void {
+    this.symbols = [...new Set(symbols.map((entry) => entry.symbol.trim().replaceAll('/', '').toLowerCase()).filter(Boolean))];
+  }
+
   isEnabled(): boolean { return this.enabled; }
 
   configuredSymbols(): string[] { return [...this.symbols].map((symbol) => symbol.toUpperCase()); }
-
-  private configuredProviders(): string[] {
-    const multi = process.env.MARKET_PROVIDER_NAMES?.split(',').map((value) => value.trim().toLowerCase()).filter(Boolean) ?? [];
-    const legacy = process.env.MARKET_PROVIDER_NAME?.trim().toLowerCase();
-    return [...new Set(multi.length ? multi : legacy ? [legacy] : [])];
-  }
 
   supports(pair: string): boolean {
     return this.symbols.includes(pair.replaceAll('/', '').toLowerCase());

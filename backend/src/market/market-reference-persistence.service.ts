@@ -2,6 +2,7 @@ import { Injectable, Logger, Optional } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { MarketDepthSide, MarketTradeSide, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { D1PrismaService } from '../d1/d1-prisma.service';
 import { ProviderDepthEvent, ProviderTradeEvent } from './market-provider.adapter';
 import { MarketArchiveService } from './market-archive.service';
 
@@ -21,10 +22,12 @@ export class MarketReferencePersistenceService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly d1: D1PrismaService,
     @Optional() private readonly archive?: MarketArchiveService,
   ) {}
 
   async persistTrade(event: ProviderTradeEvent): Promise<MarketReferencePersistenceResult> {
+    if (this.d1.isEnabled()) return this.archiveD1(event);
     const archived = this.archive ? await this.archive.archive(event) : false;
     if (this.archive?.isRequired()) {
       return archived
@@ -58,6 +61,7 @@ export class MarketReferencePersistenceService {
   }
 
   async persistDepth(event: ProviderDepthEvent): Promise<MarketReferencePersistenceResult> {
+    if (this.d1.isEnabled()) return this.archiveD1(event);
     const archived = this.archive ? await this.archive.archive(event) : false;
     if (this.archive?.isRequired()) {
       return archived
@@ -105,6 +109,11 @@ export class MarketReferencePersistenceService {
     }
   }
 
+  private async archiveD1(event: ProviderTradeEvent | ProviderDepthEvent): Promise<MarketReferencePersistenceResult> {
+    const archived = this.archive ? await this.archive.archive(event) : false;
+    return archived ? { accepted: true, reason: 'ARCHIVED' } : { accepted: false, reason: 'ARCHIVE_UNAVAILABLE' };
+  }
+
   private async resolvePair(symbol: string) {
     const normalized = symbol.trim().toUpperCase().replaceAll('/', '');
     return this.prisma.marketPair.findUnique({ where: { symbol: normalized }, select: { id: true, symbol: true } });
@@ -137,8 +146,9 @@ export class MarketReferencePersistenceService {
     const retentionSeconds = Number(process.env.MARKET_REFERENCE_RETENTION_SECONDS ?? '3600');
     if (!Number.isFinite(retentionSeconds) || retentionSeconds <= 0) return;
     const cutoff = new Date(Date.now() - retentionSeconds * 1000);
-    await this.prisma.marketTrade.deleteMany({ where: { observedAt: { lt: cutoff } } });
-    await this.prisma.marketDepthSnapshot.deleteMany({ where: { observedAt: { lt: cutoff } } });
-    await this.prisma.marketQuoteSnapshot.deleteMany({ where: { receivedAt: { lt: cutoff } } });
+    const db: any = this.d1.isEnabled() ? this.d1 : this.prisma;
+    await db.marketTrade.deleteMany({ where: { observedAt: { lt: cutoff } } });
+    await db.marketDepthSnapshot.deleteMany({ where: { observedAt: { lt: cutoff } } });
+    await db.marketQuoteSnapshot.deleteMany({ where: { receivedAt: { lt: cutoff } } });
   }
 }

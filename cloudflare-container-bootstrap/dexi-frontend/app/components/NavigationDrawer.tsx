@@ -138,14 +138,14 @@ export default function NavigationDrawer({
             ref={drawerRef}
             role="dialog"
             aria-modal="true"
-            className="nexi-navigation-drawer nexi-drawer relative flex h-full w-[84vw] max-w-[320px] flex-col overflow-y-auto border-r border-violet-300/20 px-4 pb-6 pt-[calc(1rem+var(--nexi-safe-top))] shadow-2xl"
+            className="nexi-drawer relative flex h-full w-[84vw] max-w-[320px] flex-col overflow-y-auto border-r border-violet-300/20 px-4 pb-6 pt-4 shadow-2xl"
           >
             <div className="mb-5 flex justify-end">
               <button
                 type="button"
                 onClick={close}
                 aria-label={t("closeApplicationMenu")}
-                className="nexi-interactive nexi-ripple inline-flex h-11 w-11 items-center justify-center rounded-lg text-[#C3BBD0] hover:bg-white/5 hover:text-white"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-[#C3BBD0] hover:bg-white/5 hover:text-white"
               >
                 <X className="h-5 w-5" aria-hidden="true" />
               </button>
@@ -200,7 +200,7 @@ export default function NavigationDrawer({
                             aria-current={
                               isActive(pathname, href) ? "page" : undefined
                             }
-                            className={`nexi-interactive nexi-ripple flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm ${isActive(pathname, href) ? "border border-violet-300/25 bg-[#2A1742] text-white" : "text-[#C3BBD0] hover:bg-white/5 hover:text-white"}`}
+                            className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm ${isActive(pathname, href) ? "border border-violet-300/25 bg-[#2A1742] text-white" : "text-[#C3BBD0] hover:bg-white/5 hover:text-white"}`}
                           >
                             <Icon
                               className="h-4 w-4 text-[#A995FF]"

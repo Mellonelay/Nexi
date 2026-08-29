@@ -1,7 +1,7 @@
 import { Logger } from '@nestjs/common';
 import { CANONICAL_MARKET_CATALOG } from './market-catalog';
 import { getProviderMapping, getMarketSourcePolicy } from './market-source-registry';
-import { MarketProviderAdapter, ProviderQuoteEvent } from './market-provider.adapter';
+import { MarketProviderAdapter, MarketProviderRuntimeSymbol, ProviderQuoteEvent } from './market-provider.adapter';
 
 /**
  * Common disabled-by-default REST polling base. A provider starts only when it
@@ -12,6 +12,11 @@ export abstract class PollingMarketProviderAdapter implements MarketProviderAdap
   abstract readonly provider: string;
   protected readonly logger = new Logger(this.constructor.name);
   private timer?: NodeJS.Timeout;
+  private runtimeSymbols?: string[];
+
+  configure(symbols: readonly MarketProviderRuntimeSymbol[]): void {
+    this.runtimeSymbols = [...new Set(symbols.map((entry) => entry.symbol.trim().toUpperCase()).filter(Boolean))];
+  }
 
   protected abstract requiredEnvironmentKeys(): readonly string[];
   protected abstract fetchQuote(symbol: string): Promise<ProviderQuoteEvent | null>;
@@ -19,7 +24,6 @@ export abstract class PollingMarketProviderAdapter implements MarketProviderAdap
 
   isEnabled(): boolean {
     return process.env.MARKET_PROVIDER_ENABLED === 'true'
-      && (this.configuredProviders().length === 0 || this.configuredProviders().includes(this.provider))
       && this.requiredEnvironmentKeys().every((key) => Boolean(process.env[key]?.trim()));
   }
 
@@ -67,6 +71,7 @@ export abstract class PollingMarketProviderAdapter implements MarketProviderAdap
   }
 
   private configuredSymbols(): string[] {
+    if (this.runtimeSymbols) return this.runtimeSymbols;
     const providerKey = this.provider.toUpperCase().replace(/[^A-Z0-9]/g, '_');
     const configured = process.env[`MARKET_PROVIDER_SYMBOLS_${providerKey}`] ?? process.env.MARKET_PROVIDER_SYMBOLS;
     const raw = configured?.split(',').map((value) => value.trim().toUpperCase()).filter(Boolean) ?? [];

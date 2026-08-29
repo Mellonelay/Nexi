@@ -3,7 +3,6 @@
 import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { Clock3, Coins, History, RefreshCw, ShieldCheck, Sparkles } from 'lucide-react';
 import api from '../../lib/api';
-import { sessionPrincipalId } from '../../lib/wallet-auth';
 import { actionCanSubmit, authoritativeValue, EARN_STATES, normalizeProductState, resolveEndpointTemplate } from '../../lib/product-states';
 import { DataStatePanel, Field, inputClass, Metric, PageHeader, PageShell, Panel, PanelHeading, PrimaryButton, SecondaryButton, StatusBadge } from '../wallet/components/ProductPrimitives';
 
@@ -31,7 +30,8 @@ export default function MiningPage() {
 
   useEffect(() => {
     try {
-      setUserId(sessionPrincipalId());
+      const stored = JSON.parse(localStorage.getItem('user') ?? 'null') as { id?: unknown } | null;
+      setUserId(typeof stored?.id === 'string' ? stored.id : null);
     } catch {
       setUserId(null);
     } finally {

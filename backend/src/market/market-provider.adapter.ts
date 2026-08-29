@@ -58,8 +58,14 @@ export type ProviderTradeEvent = {
 
 export type MarketProviderEvent = ProviderQuoteEvent | ProviderKlineEvent | ProviderDepthEvent | ProviderTradeEvent;
 
+export interface MarketProviderRuntimeSymbol {
+  symbol: string;
+  providerInstrument: string;
+}
+
 export interface MarketProviderAdapter {
   readonly provider: string;
+  configure?(symbols: readonly MarketProviderRuntimeSymbol[]): void;
   isEnabled(): boolean;
   start(onEvent: (event: MarketProviderEvent) => void): Promise<void>;
   stop(): void;

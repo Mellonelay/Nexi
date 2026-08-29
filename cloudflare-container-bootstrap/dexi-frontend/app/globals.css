@@ -84,25 +84,11 @@ body {
     border-radius: 999px;
     color: var(--nexi-text-secondary);
     background: transparent;
-    transition: color var(--nexi-motion-feedback) var(--nexi-ease-standard), background-color var(--nexi-motion-feedback) var(--nexi-ease-standard), transform var(--nexi-motion-press) var(--nexi-ease-standard);
   }
 
   .nexi-header-icon:hover {
     color: white;
     background: rgba(255, 255, 255, 0.035);
-  }
-
-  .nexi-header-icon:active {
-    transform: scale(0.97);
-  }
-
-  .nexi-navigation-drawer {
-    animation: nexi-drawer-enter var(--nexi-motion-drawer) var(--nexi-ease-enter) both;
-  }
-
-  @keyframes nexi-drawer-enter {
-    from { opacity: 0; transform: translateX(-100%); }
-    to { opacity: 1; transform: translateX(0); }
   }
 
   @media (min-width: 768px) {

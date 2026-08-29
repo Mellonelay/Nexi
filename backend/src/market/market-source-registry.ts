@@ -205,6 +205,26 @@ function buildPolicy(entry: CanonicalMarketPair): AssetSourcePolicy {
 export const MARKET_SOURCE_POLICIES: readonly AssetSourcePolicy[] = CANONICAL_MARKET_CATALOG.map(buildPolicy);
 
 const byInternalSymbol = new Map(MARKET_SOURCE_POLICIES.map((policy) => [policy.internalSymbol, policy]));
+const runtimeProviderMappings = new Map<string, ProviderMapping>();
+
+function runtimeMappingKey(symbol: string, provider: string): string {
+  return `${symbol.trim().toUpperCase().replaceAll('/', '').replaceAll('.', '')}:${provider.trim().toLowerCase()}`;
+}
+
+export function installRuntimeProviderMappings(
+  mappings: readonly { symbol: string; provider: string; providerInstrument: string }[],
+): void {
+  runtimeProviderMappings.clear();
+  for (const mapping of mappings) {
+    const fallback = getMarketSourcePolicy(mapping.symbol)?.providerMappings
+      .find((candidate) => candidate.provider === mapping.provider.trim().toLowerCase());
+    if (!fallback) continue;
+    runtimeProviderMappings.set(runtimeMappingKey(mapping.symbol, mapping.provider), {
+      ...fallback,
+      instrument: mapping.providerInstrument,
+    });
+  }
+}
 
 export function getMarketSourcePolicy(symbol: string): AssetSourcePolicy | undefined {
   const normalized = symbol.trim().toUpperCase().replaceAll('/', '').replaceAll('.', '');
@@ -212,7 +232,8 @@ export function getMarketSourcePolicy(symbol: string): AssetSourcePolicy | undef
 }
 
 export function getProviderMapping(symbol: string, provider: string): ProviderMapping | undefined {
-  return getMarketSourcePolicy(symbol)?.providerMappings.find((mapping) => mapping.provider === provider.trim().toLowerCase());
+  return runtimeProviderMappings.get(runtimeMappingKey(symbol, provider))
+    ?? getMarketSourcePolicy(symbol)?.providerMappings.find((mapping) => mapping.provider === provider.trim().toLowerCase());
 }
 
 export function resolveProviderInstrument(symbol: string, provider: string): string | undefined {

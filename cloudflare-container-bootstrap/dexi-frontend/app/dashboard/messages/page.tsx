@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Archive,
-  ArrowLeft,
   CheckCheck,
   Inbox,
   MessageSquare,
@@ -11,7 +10,6 @@ import {
   Send,
 } from 'lucide-react';
 import api from '../../lib/api';
-import { sessionPrincipalId } from '../../lib/wallet-auth';
 import {
   authoritativeValue,
   normalizeMessageDeliveryState,
@@ -105,7 +103,8 @@ export default function MessagesPage() {
 
   useEffect(() => {
     try {
-      setUserId(sessionPrincipalId());
+      const stored = JSON.parse(localStorage.getItem('user') ?? 'null') as { id?: unknown } | null;
+      setUserId(typeof stored?.id === 'string' ? stored.id : null);
     } catch {
       setUserId(null);
     } finally {
@@ -188,7 +187,7 @@ export default function MessagesPage() {
           <Metric label="Attachments" value="—" hint="Unavailable" />
         </section>
         <div className="grid gap-5 lg:grid-cols-[minmax(280px,0.72fr)_minmax(0,1.28fr)] lg:items-start">
-          <Panel className={selected ? 'hidden lg:block' : 'block'}>
+          <Panel>
             <PanelHeading title="Conversations" action={<Inbox size={18} className="text-[#48C0CC]" />} />
             <div className="relative">
               <Search size={17} className="absolute left-3 top-3 text-[#8C8299]" />
@@ -208,14 +207,11 @@ export default function MessagesPage() {
               ))}
             </div>
           </Panel>
-          <Panel className={selected ? 'block min-h-[520px]' : 'hidden min-h-[520px] lg:block'}>
+          <Panel className="min-h-[520px]">
             <PanelHeading title="Conversation detail" action={<CheckCheck size={18} className="text-[#8C8299]" />} />
              {!selected && <DataStatePanel state="UNAVAILABLE" title="Choose a conversation" message="Select a conversation to view its messages." />}
             {selected && (
               <div className="flex min-h-[430px] flex-col">
-                <button type="button" onClick={() => setSelected(null)} className="nexi-interactive nexi-ripple mb-3 inline-flex min-h-11 w-fit items-center gap-2 rounded-lg px-2 text-sm font-semibold text-[#A995FF] hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF] lg:hidden" aria-label="Back to conversations">
-                  <ArrowLeft size={16} /> Back to conversations
-                </button>
                 <div className="rounded-xl border border-[#2B2037] bg-[#171022] p-4">
                   <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
                      <div className="min-w-0"><h2 className="break-words font-semibold">{threadTitle(selected)}</h2><p className="mt-1 text-xs text-[#8C8299]">Conversation messages and delivery status.</p></div>

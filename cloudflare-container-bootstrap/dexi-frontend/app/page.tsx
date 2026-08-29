@@ -29,7 +29,7 @@ export default function Home() {
           <div className="pointer-events-none absolute right-0 top-1/2 h-80 w-80 -translate-y-1/2 rounded-full bg-violet-500/15 blur-[110px]" />
           <div className="relative max-w-3xl">
             <p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-[#A995FF]">Precision for moving markets</p>
-            <h1 className="max-w-3xl text-[clamp(2.5rem,13vw,6rem)] font-semibold tracking-[-0.055em] lg:text-8xl">Discover the market with clarity.</h1>
+            <h1 className="max-w-3xl text-5xl font-semibold tracking-[-0.055em] sm:text-6xl lg:text-8xl">Discover the market with clarity.</h1>
             <p className="mt-6 max-w-xl text-base leading-7 text-[#C3BBD0] sm:text-lg">NEXI brings approved instruments, market context, and focused decision surfaces into one Deep Liquid Violet workspace.</p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/dashboard" className="inline-flex min-h-12 items-center gap-2 rounded-lg bg-[#8B5CF6] px-5 text-sm font-semibold text-white transition hover:bg-[#A375FF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF]">Open Quotes Hub <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>

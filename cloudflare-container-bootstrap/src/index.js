@@ -241,9 +241,11 @@ async function invokeWorkflowCommand(
     idempotencyKey,
   );
   const container = getContainer(env.NEXI_API_CONTAINER, "nexi-api");
+  if (!container.running) {
+    await container.start({ env: containerEnv(env) });
+  }
   await container.startAndWaitForPorts({
     ports: [3000],
-    startOptions: { envVars: containerEnv(env) },
     cancellationOptions: { portReadyTimeoutMS: 30_000 },
   });
   const response = await container.fetch(
@@ -701,9 +703,11 @@ export default {
     if (!signingSecret)
       throw new Error("JWT_SECRET is required for authenticated Queue ingress");
     const container = getContainer(env.NEXI_API_CONTAINER, "nexi-api");
+  if (!container.running) {
+    await container.start({ env: containerEnv(env) });
+  }
   await container.startAndWaitForPorts({
     ports: [3000],
-    startOptions: { envVars: containerEnv(env) },
     cancellationOptions: { portReadyTimeoutMS: 30_000 },
   });
 
@@ -760,9 +764,11 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const container = getContainer(env.NEXI_API_CONTAINER, "nexi-api");
+  if (!container.running) {
+    await container.start({ env: containerEnv(env) });
+  }
   await container.startAndWaitForPorts({
     ports: [3000],
-    startOptions: { envVars: containerEnv(env) },
     cancellationOptions: { portReadyTimeoutMS: 30_000 },
   });
 

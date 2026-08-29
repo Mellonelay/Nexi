@@ -6,14 +6,14 @@ import { Crown, ShieldCheck, UserRound } from 'lucide-react';
 import api from '../../lib/api';
 import { authoritativeValue, resolveEndpointTemplate } from '../../lib/product-states';
 import { DataStatePanel, Metric, PageHeader, PageShell, Panel, PanelHeading, StatusBadge } from '../wallet/components/ProductPrimitives';
-import { loadCurrentUser, sessionPrincipalId, type WalletProfile } from '../../lib/wallet-auth';
+import { loadCurrentUser, type WalletProfile } from '../../lib/wallet-auth';
 
 export default function ProfilePage() {
   const [kyc, setKyc] = useState<Record<string, unknown> | null>(null);
   const [wallet, setWallet] = useState<Record<string, unknown> | null>(null);
   const [state, setState] = useState<'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR'>('LOADING');
   const sessionQuery = useQuery<WalletProfile>({ queryKey: ['user', 'me'], queryFn: loadCurrentUser, enabled: typeof window !== 'undefined' && Boolean(window.localStorage.getItem('token')), retry: false, staleTime: 30_000 });
-  const userId = sessionPrincipalId();
+  const userId = sessionQuery.data?.id ?? null;
   const vipState = 'UNAVAILABLE' as const;
   const kycEndpoint = userId
     ? resolveEndpointTemplate(process.env.NEXT_PUBLIC_PROFILE_KYC_ENDPOINT, { userId })

@@ -76,7 +76,7 @@ export default function AccountIdentityHeader({
       href="/dashboard/profile"
       onClick={onNavigate}
       aria-label={t("profile")}
-      className={`${compact ? "mb-3 rounded-xl p-2.5" : "mb-5 rounded-2xl p-4"} block border border-violet-300/15 bg-[#171022] transition-colors hover:border-violet-300/30 hover:bg-[#1C142A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)]`}
+      className={`${compact ? "mb-4 rounded-xl p-3" : "mb-5 rounded-2xl p-4"} block border border-violet-300/15 bg-[#171022] transition-colors hover:border-violet-300/30 hover:bg-[#1C142A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)]`}
     >
       <div className="flex items-start justify-between gap-3">
         <span className="origin-left scale-[0.85] transform">
@@ -87,7 +87,7 @@ export default function AccountIdentityHeader({
           aria-hidden="true"
         />
       </div>
-      <div className={`${compact ? "mt-1.5" : "mt-4"} min-w-0`}>
+      <div className={`${compact ? "mt-2" : "mt-4"} min-w-0`}>
         <p className="truncate text-sm font-semibold text-white">
           {displayName !== "—" ? displayName : t("profile")}
         </p>
@@ -96,19 +96,19 @@ export default function AccountIdentityHeader({
         </p>
       </div>
       {!compact && (
-        <div className={`${compact ? "mt-2" : "mt-4"} grid grid-cols-2 gap-1.5 text-[11px]`}>
-          <div className="rounded-xl border border-violet-300/10 bg-black/15 px-2 py-1.5">
+        <div className="mt-4 grid grid-cols-2 gap-2 text-[11px]">
+          <div className="rounded-xl border border-violet-300/10 bg-black/15 px-2.5 py-2">
             <p className="text-[#8C8299]">{t("score")}</p>
             <p className="mt-1 font-medium text-[#F8F6FF]">—</p>
           </div>
-          <div className="rounded-xl border border-violet-300/10 bg-black/15 px-2 py-1.5">
+          <div className="rounded-xl border border-violet-300/10 bg-black/15 px-2.5 py-2">
             <p className="text-[#8C8299]">{t("vipLevel")}</p>
             <p className="mt-1 font-medium text-[#F8F6FF]">—</p>
           </div>
         </div>
       )}
       <div
-        className={`${compact ? "mt-1.5" : "mt-3"} flex items-center gap-2 text-[11px] text-[#C3BBD0]`}
+        className={`${compact ? "mt-2" : "mt-3"} flex items-center gap-2 text-[11px] text-[#C3BBD0]`}
         aria-live="polite"
       >
         <span

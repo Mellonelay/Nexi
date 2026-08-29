@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { D1PrismaService } from '../d1/d1-prisma.service';
 import { MarketKlineInput, normalizeMarketKline } from './market-kline.contract';
 
 export interface MarketQuoteCandleInput {
@@ -13,13 +14,15 @@ export interface MarketQuoteCandleInput {
 
 @Injectable()
 export class MarketKlineService {
-  constructor(private readonly prisma: PrismaService) {}
+  private get db(): any { return this.d1.isEnabled() ? this.d1 : this.prisma; }
+
+  constructor(private readonly prisma: PrismaService, private readonly d1: D1PrismaService) {}
 
   async list(symbol: string, interval: string, limit: number, from?: Date, to?: Date) {
     const normalizedSymbol = symbol.trim().toUpperCase().replaceAll('/', '');
-    const pair = await this.prisma.marketPair.findUnique({ where: { symbol: normalizedSymbol } });
+    const pair = await this.db.marketPair.findUnique({ where: { symbol: normalizedSymbol } });
     if (!pair) return [];
-    const rows = await this.prisma.marketKline.findMany({
+    const rows = await this.db.marketKline.findMany({
       where: {
         pairId: pair.id,
         interval,
@@ -36,13 +39,13 @@ export class MarketKlineService {
 
   async persist(input: MarketKlineInput) {
     const normalized = normalizeMarketKline(input);
-    const pair = await this.prisma.marketPair.findUnique({ where: { symbol: normalized.symbol } });
+    const pair = await this.db.marketPair.findUnique({ where: { symbol: normalized.symbol } });
     if (!pair) throw new NotFoundException(`Market pair ${normalized.symbol} is not configured`);
-    const existing = await this.prisma.marketKline.findUnique({
+    const existing = await this.db.marketKline.findUnique({
       where: { pairId_interval_openTime: { pairId: pair.id, interval: normalized.interval, openTime: normalized.openTime } },
     });
     if (existing && existing.observedAt.getTime() > normalized.observedAt.getTime()) return this.toContract(existing);
-    const row = await this.prisma.marketKline.upsert({
+    const row = await this.db.marketKline.upsert({
       where: { pairId_interval_openTime: { pairId: pair.id, interval: normalized.interval, openTime: normalized.openTime } },
       update: {
         closeTime: normalized.closeTime,
@@ -97,14 +100,14 @@ export class MarketKlineService {
       source: `${source}:quote-aggregation`,
       observedAt: input.observedAt,
     });
-    const pair = await this.prisma.marketPair.findUnique({ where: { symbol: candidate.symbol } });
+    const pair = await this.db.marketPair.findUnique({ where: { symbol: candidate.symbol } });
     if (!pair) throw new NotFoundException(`Market pair ${candidate.symbol} is not configured`);
 
-    const existing = await this.prisma.marketKline.findUnique({
+    const existing = await this.db.marketKline.findUnique({
       where: { pairId_interval_openTime: { pairId: pair.id, interval: candidate.interval, openTime } },
     });
     if (!existing) {
-      return this.prisma.marketKline.create({
+      return this.db.marketKline.create({
         data: {
           pairId: pair.id,
           symbol: candidate.symbol,
@@ -125,7 +128,7 @@ export class MarketKlineService {
 
     // A late provider message must not regress the current close or freshness.
     if (existing.observedAt.getTime() > candidate.observedAt.getTime()) return existing;
-    return this.prisma.marketKline.update({
+    return this.db.marketKline.update({
       where: { id: existing.id },
       data: {
         closeTime: candidate.closeTime,

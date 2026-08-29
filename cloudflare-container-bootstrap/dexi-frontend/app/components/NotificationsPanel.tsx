@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useEffect, useState } from 'react'
-import { X, Bell, CheckCircle, AlertTriangle, Info, RefreshCw, TrendingUp } from 'lucide-react'
+import { X, Bell, CheckCircle, AlertTriangle, Info, TrendingUp } from 'lucide-react'
 import { cn } from '../lib/cn'
 import api from '../lib/api'
 
@@ -32,7 +32,6 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(false)
   const [failed, setFailed] = useState(false)
-  const [reloadKey, setReloadKey] = useState(0)
   const unreadCount = notifications.filter(n => !n.read).length
 
   useEffect(() => {
@@ -56,7 +55,7 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
       .catch(() => { if (active) { setNotifications([]); setFailed(true) } })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [open, reloadKey])
+  }, [open])
 
   const markRead = async (id: string) => {
     try {
@@ -81,11 +80,7 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
 
           {/* Panel — slides in from right */}
           <motion.aside
-            id="nexi-notifications-panel"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="nexi-notifications-title"
-            className="fixed right-0 top-0 bottom-0 z-[71] w-[320px] max-w-[90vw] nexi-drawer flex flex-col pt-[var(--nexi-safe-top)]"
+            className="fixed right-0 top-0 bottom-0 z-[71] w-[320px] max-w-[90vw] nexi-drawer flex flex-col"
             initial={shouldReduceMotion ? { opacity: 0 } : { x: '100%' }}
             animate={{ x: 0, opacity: 1 }}
             exit={shouldReduceMotion ? { opacity: 0 } : { x: '100%' }}
@@ -95,7 +90,7 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
             <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--nexi-border-subtle)]">
               <div className="flex items-center gap-2">
                 <Bell size={16} className="text-[#6d41ff]" />
-                <span id="nexi-notifications-title" className="font-semibold text-[#F8F6FF]">Notifications</span>
+                <span className="font-semibold text-[#F8F6FF]">Notifications</span>
                 {unreadCount > 0 && (
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#6d41ff] text-white">
                     {unreadCount}
@@ -104,7 +99,7 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
               </div>
               <button
                 onClick={onClose}
-                className="nexi-interactive nexi-ripple w-8 h-8 rounded-lg flex items-center justify-center text-[#8C8299] hover:text-[#F8F6FF] hover:bg-white/10"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#8C8299] hover:text-[#F8F6FF] hover:bg-white/10 transition-colors"
                 aria-label="Close notifications"
               >
                 <X size={16} />
@@ -114,7 +109,7 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
             {/* Notification list */}
             <div className="flex-1 overflow-y-auto py-2">
               {loading && <p className="px-4 py-6 text-sm text-[#8C8299]">Loading notifications…</p>}
-              {!loading && failed && <div className="px-4 py-6"><p className="text-sm text-[#8C8299]">Notifications unavailable.</p><button type="button" onClick={() => setReloadKey((value) => value + 1)} className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-lg border border-[#49335E] px-3 text-xs font-semibold text-[#C8FCFF] hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF]"><RefreshCw size={14} /> Retry</button></div>}
+              {!loading && failed && <p className="px-4 py-6 text-sm text-[#8C8299]">Notifications unavailable.</p>}
               {!loading && !failed && notifications.length === 0 && <p className="px-4 py-6 text-sm text-[#8C8299]">No notifications available.</p>}
               {!loading && !failed && notifications.map(notif => {
                 const cfg = TYPE_CONFIG[notif.type]
@@ -125,7 +120,7 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
                     type="button"
                     onClick={() => { if (!notif.read) void markRead(notif.id) }}
                     className={cn(
-                      'nexi-interactive nexi-ripple flex gap-3 px-4 py-3 border-b border-[#2B2037]/60 last:border-0',
+                      'flex gap-3 px-4 py-3 border-b border-[#2B2037]/60 last:border-0 transition-colors',
                       !notif.read && 'bg-[#6d41ff]/5'
                     )}
                   >

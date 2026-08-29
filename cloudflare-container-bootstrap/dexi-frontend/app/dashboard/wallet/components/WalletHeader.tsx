@@ -93,7 +93,7 @@ export default function WalletHeader({ totalBalance, activeTab, onTabChange, onD
             </div>
 
             {/* Action Grid */}
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-4">
+            <div className="grid grid-cols-4 gap-4">
                 <ActionButton label="Deposit" icon={ArrowDownCircle} color="text-[#00C076]" onClick={onDeposit} />
                 <ActionButton label="Withdraw" icon={ArrowUpCircle} color="text-[#FF4D4F]" onClick={onWithdraw} />
                 <ActionButton label="Transfer" icon={ArrowRightLeft} color="text-[#3B82F6]" onClick={onTransfer} />
