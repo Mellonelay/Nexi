@@ -1,0 +1,198 @@
+{
+  "$extensions": {
+    "nexi": {
+      "source": "REFERENCE / Quotes Hub Mobile / 941x1672",
+      "authority": "visual appearance only",
+      "generatedAt": "2026-07-29",
+      "notes": "Image-derived cold black-purple liquid-glass system. Product behavior remains governed by NEXI contracts."
+    }
+  },
+  "color": {
+    "primitive": {
+      "canvas": {
+        "abyss": { "$value": "#01010E", "$type": "color" },
+        "base": { "$value": "#06041A", "$type": "color" },
+        "ambient": { "$value": "#0B0924", "$type": "color" }
+      },
+      "surface": {
+        "glass": { "$value": "#0C0A26", "$type": "color" },
+        "raised": { "$value": "#161239", "$type": "color" },
+        "active": { "$value": "#221259", "$type": "color" },
+        "execution": { "$value": "#080720", "$type": "color" }
+      },      "border": {
+        "subtle": { "$value": "#21204C", "$type": "color" },
+        "default": { "$value": "#353153", "$type": "color" },
+        "active": { "$value": "#8E5BE2", "$type": "color" }
+      },
+      "violet": {
+        "electric": { "$value": "#6D41FF", "$type": "color" },
+        "secondary": { "$value": "#8E5BE2", "$type": "color" },
+        "deep": { "$value": "#542FA4", "$type": "color" },
+        "rim": { "$value": "#351B7C", "$type": "color" }
+      },
+      "cyan": {
+        "data": { "$value": "#74F2F7", "$type": "color" },
+        "strong": { "$value": "#42F2F6", "$type": "color" },
+        "soft": { "$value": "#5BD3DD", "$type": "color" }
+      },
+      "text": {
+        "primary": { "$value": "#FDFCFC", "$type": "color" },
+        "secondary": { "$value": "#BDBDD0", "$type": "color" },
+        "muted": { "$value": "#9493CA", "$type": "color" }
+      },      "status": {
+        "positive": { "$value": "#22C55E", "$type": "color" },
+        "negative": { "$value": "#EF4444", "$type": "color" },
+        "warning": { "$value": "#F59E0B", "$type": "color" }
+      }
+    },
+    "semantic": {
+      "background": {
+        "canvas": { "$value": "{color.primitive.canvas.abyss}", "$type": "color" },
+        "base": { "$value": "{color.primitive.canvas.base}", "$type": "color" },
+        "ambient": { "$value": "{color.primitive.canvas.ambient}", "$type": "color" }
+      },
+      "surface": {
+        "shell": { "$value": "{color.primitive.surface.glass}", "$type": "color" },
+        "elevated": { "$value": "{color.primitive.surface.raised}", "$type": "color" },
+        "active": { "$value": "{color.primitive.surface.active}", "$type": "color" },
+        "execution": { "$value": "{color.primitive.surface.execution}", "$type": "color" }
+      },
+      "border": {
+        "subtle": { "$value": "{color.primitive.border.subtle}", "$type": "color" },
+        "default": { "$value": "{color.primitive.border.default}", "$type": "color" },
+        "active": { "$value": "{color.primitive.violet.electric}", "$type": "color" }
+      },      "action": {
+        "primary": { "$value": "{color.primitive.violet.electric}", "$type": "color" },
+        "secondary": { "$value": "{color.primitive.violet.secondary}", "$type": "color" }
+      },
+      "information": {
+        "primary": { "$value": "{color.primitive.cyan.data}", "$type": "color" },
+        "strong": { "$value": "{color.primitive.cyan.strong}", "$type": "color" },
+        "soft": { "$value": "{color.primitive.cyan.soft}", "$type": "color" }
+      },
+      "text": {
+        "primary": { "$value": "{color.primitive.text.primary}", "$type": "color" },
+        "secondary": { "$value": "{color.primitive.text.secondary}", "$type": "color" },
+        "muted": { "$value": "{color.primitive.text.muted}", "$type": "color" }
+      },
+      "status": {
+        "positive": { "$value": "{color.primitive.status.positive}", "$type": "color" },
+        "negative": { "$value": "{color.primitive.status.negative}", "$type": "color" },
+        "warning": { "$value": "{color.primitive.status.warning}", "$type": "color" }
+      }
+    }
+  },
+  "material": {
+    "glass": {
+      "shell": {
+        "background": { "$value": "#0B092494", "$type": "color" },
+        "blur": { "$value": "24px", "$type": "dimension" },
+        "saturation": { "$value": 1.6, "$type": "number" }
+      },      "panel": {
+        "background": { "$value": "#0C0A2670", "$type": "color" },
+        "blur": { "$value": "20px", "$type": "dimension" },
+        "saturation": { "$value": 1.5, "$type": "number" }
+      },
+      "raised": {
+        "background": { "$value": "#1612398F", "$type": "color" },
+        "blur": { "$value": "22px", "$type": "dimension" },
+        "saturation": { "$value": 1.55, "$type": "number" }
+      },
+      "execution": {
+        "background": { "$value": "#080720DB", "$type": "color" },
+        "blur": { "$value": "12px", "$type": "dimension" },
+        "saturation": { "$value": 1.25, "$type": "number" }
+      },
+      "row": {
+        "background": { "$value": "#0C0A26B8", "$type": "color" },
+        "hover": { "$value": "#161239C7", "$type": "color" },
+        "active": { "$value": "#221259B0", "$type": "color" }
+      },
+      "overlay": { "$value": "#01010ECC", "$type": "color" },
+      "noiseOpacity": { "$value": 0.025, "$type": "number" }
+    },
+    "edge": {
+      "specular": { "$value": "#FFFFFF1F", "$type": "color" },
+      "violetRim": { "$value": "#6D41FF70", "$type": "color" },
+      "cyanRim": { "$value": "#74F2F72E", "$type": "color" }
+    }
+  },  "shadow": {
+    "panel": {
+      "$value": [
+        { "color": "#01010EB8", "type": "dropShadow", "x": "0px", "y": "20px", "blur": "60px", "spread": "-18px" },
+        { "color": "#FFFFFF1F", "type": "innerShadow", "x": "0px", "y": "1px", "blur": "0px", "spread": "0px" },
+        { "color": "#6D41FF2E", "type": "innerShadow", "x": "0px", "y": "-1px", "blur": "0px", "spread": "0px" }
+      ],
+      "$type": "shadow"
+    },
+    "active": {
+      "$value": [
+        { "color": "#01010ECC", "type": "dropShadow", "x": "0px", "y": "22px", "blur": "70px", "spread": "-20px" },
+        { "color": "#6D41FF47", "type": "dropShadow", "x": "0px", "y": "0px", "blur": "30px", "spread": "-6px" },
+        { "color": "#FFFFFF24", "type": "innerShadow", "x": "0px", "y": "1px", "blur": "0px", "spread": "0px" }
+      ],
+      "$type": "shadow"
+    }
+  },
+  "glow": {
+    "violet": {
+      "color": { "$value": "#6D41FF", "$type": "color" },
+      "opacity": { "$value": 0.28, "$type": "number" },
+      "blur": { "$value": "30px", "$type": "dimension" }
+    },
+    "cyan": {
+      "color": { "$value": "#74F2F7", "$type": "color" },
+      "opacity": { "$value": 0.16, "$type": "number" },
+      "blur": { "$value": "22px", "$type": "dimension" }
+    }
+  },  "radius": {
+    "xs": { "$value": "8px", "$type": "dimension" },
+    "sm": { "$value": "12px", "$type": "dimension" },
+    "md": { "$value": "16px", "$type": "dimension" },
+    "lg": { "$value": "20px", "$type": "dimension" },
+    "xl": { "$value": "24px", "$type": "dimension" },
+    "pill": { "$value": "999px", "$type": "dimension" }
+  },
+  "spacing": {
+    "1": { "$value": "4px", "$type": "dimension" },
+    "2": { "$value": "8px", "$type": "dimension" },
+    "3": { "$value": "12px", "$type": "dimension" },
+    "4": { "$value": "16px", "$type": "dimension" },
+    "5": { "$value": "20px", "$type": "dimension" },
+    "6": { "$value": "24px", "$type": "dimension" },
+    "8": { "$value": "32px", "$type": "dimension" },
+    "10": { "$value": "40px", "$type": "dimension" }
+  },
+  "density": {
+    "marketRowHeight": { "$value": "56px", "$type": "dimension" },
+    "compactRowHeight": { "$value": "44px", "$type": "dimension" },
+    "controlHeight": { "$value": "44px", "$type": "dimension" },
+    "tableHeaderHeight": { "$value": "36px", "$type": "dimension" },
+    "mobileDockHeight": { "$value": "72px", "$type": "dimension" },
+    "contentGap": { "$value": "12px", "$type": "dimension" }
+  },  "typography": {
+    "family": {
+      "interface": { "$value": "Geist", "$type": "fontFamily" },
+      "data": { "$value": "IBM Plex Mono", "$type": "fontFamily" }
+    },
+    "weight": {
+      "regular": { "$value": 400, "$type": "fontWeight" },
+      "medium": { "$value": 500, "$type": "fontWeight" },
+      "semibold": { "$value": 600, "$type": "fontWeight" }
+    },
+    "size": {
+      "label": { "$value": "12px", "$type": "dimension" },
+      "body": { "$value": "14px", "$type": "dimension" },
+      "value": { "$value": "16px", "$type": "dimension" },
+      "heading": { "$value": "32px", "$type": "dimension" },
+      "display": { "$value": "48px", "$type": "dimension" }
+    }
+  },
+  "motion": {
+    "duration": {
+      "fast": { "$value": "120ms", "$type": "duration" },
+      "standard": { "$value": "180ms", "$type": "duration" },
+      "emphasis": { "$value": "240ms", "$type": "duration" }
+    }
+  }
+}

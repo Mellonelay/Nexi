@@ -1,0 +1,144 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* NEXI Admin Control Plane — Deep Liquid Violet operations console.
+ * Dark-only for v1. Tokens are oklch. Never hardcode colors in components. */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --font-mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+}
+
+:root {
+  --radius: 0.5rem;
+
+  /* Near-black violet foundation */
+  --background: oklch(0.14 0.035 295);
+  --foreground: oklch(0.96 0.01 295);
+
+  /* Layered opaque dark-violet working surfaces */
+  --surface-1: oklch(0.18 0.04 295);
+  --surface-2: oklch(0.22 0.045 295);
+  --surface-3: oklch(0.26 0.05 295);
+
+  --card: oklch(0.18 0.04 295);
+  --card-foreground: oklch(0.96 0.01 295);
+  --popover: oklch(0.20 0.045 295);
+  --popover-foreground: oklch(0.96 0.01 295);
+
+  /* Electric violet primary + active */
+  --primary: oklch(0.68 0.24 300);
+  --primary-foreground: oklch(0.14 0.035 295);
+
+  --secondary: oklch(0.26 0.05 295);
+  --secondary-foreground: oklch(0.96 0.01 295);
+  --muted: oklch(0.24 0.04 295);
+  --muted-foreground: oklch(0.70 0.03 295);
+  --accent: oklch(0.30 0.08 300);
+  --accent-foreground: oklch(0.98 0.01 295);
+
+  /* Status */
+  --destructive: oklch(0.63 0.22 25);
+  --destructive-foreground: oklch(0.98 0.01 25);
+  --success: oklch(0.72 0.18 152);
+  --success-foreground: oklch(0.14 0.03 152);
+  --warning: oklch(0.80 0.16 80);
+  --warning-foreground: oklch(0.20 0.05 80);
+  --info: oklch(0.75 0.13 210);
+  --info-foreground: oklch(0.14 0.03 210);
+
+  --border: oklch(0.30 0.04 295 / 55%);
+  --input: oklch(0.30 0.04 295 / 45%);
+  --ring: oklch(0.68 0.24 300);
+
+  --chart-1: oklch(0.68 0.24 300);
+  --chart-2: oklch(0.75 0.13 210);
+  --chart-3: oklch(0.72 0.18 152);
+  --chart-4: oklch(0.80 0.16 80);
+  --chart-5: oklch(0.63 0.22 25);
+
+  --sidebar: oklch(0.16 0.038 295);
+  --sidebar-foreground: oklch(0.90 0.02 295);
+  --sidebar-primary: oklch(0.68 0.24 300);
+  --sidebar-primary-foreground: oklch(0.14 0.035 295);
+  --sidebar-accent: oklch(0.24 0.05 300);
+  --sidebar-accent-foreground: oklch(0.98 0.01 295);
+  --sidebar-border: oklch(0.28 0.04 295 / 60%);
+  --sidebar-ring: oklch(0.68 0.24 300);
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html, body, #root {
+    height: 100%;
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@utility mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+@utility surface-1 { background-color: var(--surface-1); }
+@utility surface-2 { background-color: var(--surface-2); }
+@utility surface-3 { background-color: var(--surface-3); }

@@ -1,0 +1,18 @@
+{
+  "name": "NEXI Market Workspace",
+  "short_name": "NEXI",
+  "description": "NEXI market discovery and trading workspace",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#050508",
+  "theme_color": "#050508",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    }
+  ]
+}

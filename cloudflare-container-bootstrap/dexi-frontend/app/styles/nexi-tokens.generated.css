@@ -1,0 +1,160 @@
+:root {
+  color-scheme: dark;
+
+  --nexi-ref-canvas-abyss: #01010e;
+  --nexi-ref-canvas-base: #06041a;
+  --nexi-ref-canvas-ambient: #0b0924;
+  --nexi-ref-surface-glass: #0c0a26;
+  --nexi-ref-surface-raised: #161239;
+  --nexi-ref-surface-active: #221259;
+  --nexi-ref-surface-execution: #080720;
+  --nexi-ref-border-subtle: #21204c;
+  --nexi-ref-border-default: #353153;
+  --nexi-ref-violet-electric: #6d41ff;
+  --nexi-ref-violet-secondary: #8b5cf6;
+  --nexi-ref-violet-deep: #542fa4;
+  --nexi-ref-violet-rim: #351b7c;
+--nexi-ref-cyan-data: #48c0cc;
+--nexi-ref-cyan-strong: #22d3ee;
+  --nexi-ref-cyan-soft: #98fce4;
+  --nexi-ref-text-primary: #f5f7fb;
+  --nexi-ref-text-secondary: #93a4bd;
+  --nexi-ref-text-muted: #93a4bd;
+  --nexi-ref-positive: #22c55e;
+  --nexi-ref-negative: #ef4444;
+  --nexi-ref-warning: #f59e0b;
+
+  /* Pixel-calibrated optical targets from the accepted 941×1672 reference. */
+  --nexi-cal-canvas: #050508;
+  --nexi-cal-canvas-deep: #0b0a0e;
+  --nexi-cal-card: #1a0c24;
+  --nexi-cal-surface: #08041c;
+  --nexi-cal-active: #2c146c;
+  --nexi-cal-violet: #7353dd;
+  --nexi-cal-violet-bright: #7c3aed;
+  --nexi-cal-cyan: #48c0cc;
+  --nexi-cal-border: #181838;
+
+  --nexi-foundation-background-void: #050508;
+  --nexi-foundation-main-surface: #100b16;
+  --nexi-foundation-elevated-surface: #1a1024;
+  --nexi-foundation-border-divider: #2a1c3d;
+
+  --nexi-type-display-size: 48px;
+  --nexi-type-display-line: 52px;
+  --nexi-type-display-tracking: -1.6px;
+  --nexi-type-heading-large-size: 24px;
+  --nexi-type-heading-large-line: 30px;
+  --nexi-type-heading-large-tracking: -0.4px;
+  --nexi-type-heading-medium-size: 20px;
+  --nexi-type-heading-medium-line: 26px;
+  --nexi-type-heading-medium-tracking: -0.2px;
+  --nexi-type-body-size: 14px;
+  --nexi-type-body-line: 21px;
+  --nexi-type-label-size: 11px;
+  --nexi-type-label-line: 16px;
+  --nexi-type-label-tracking: 0.8px;
+  --nexi-type-data-size: 14px;
+  --nexi-type-data-line: 20px;
+}
+
+:root {
+  --background-void: var(--nexi-ref-canvas-abyss);
+  --main-surface: var(--nexi-ref-surface-glass);
+  --elevated-surface: var(--nexi-ref-surface-raised);
+  --border-divider: var(--nexi-ref-border-default);
+  --glow-violet: var(--nexi-ref-violet-electric);
+  --secondary-violet: var(--nexi-ref-violet-secondary);
+  --cyan-accent: var(--nexi-ref-cyan-data);
+  --aqua-accent: var(--nexi-ref-cyan-soft);
+  --primary-text: var(--nexi-ref-text-primary);
+  --secondary-text: var(--nexi-ref-text-secondary);
+  --positive: var(--nexi-ref-positive);
+  --negative: var(--nexi-ref-negative);
+
+  --nexi-canvas: var(--nexi-ref-canvas-abyss);
+  --nexi-background: var(--nexi-ref-canvas-base);
+  --nexi-surface: var(--nexi-ref-surface-glass);
+  --nexi-surface-raised: var(--nexi-ref-surface-raised);
+  --nexi-surface-high: var(--nexi-ref-surface-active);
+  --nexi-primary: var(--nexi-ref-violet-electric);
+  --nexi-primary-secondary: var(--nexi-ref-violet-secondary);
+  --nexi-focus: #b996ff;
+  --nexi-cyan: var(--nexi-ref-cyan-data);
+  --nexi-aqua: var(--nexi-ref-cyan-soft);
+  --nexi-text: var(--nexi-ref-text-primary);
+  --nexi-text-secondary: var(--nexi-ref-text-secondary);
+  --nexi-text-muted: var(--nexi-ref-text-muted);
+  --nexi-positive: var(--nexi-ref-positive);
+  --nexi-negative: var(--nexi-ref-negative);
+}
+:root {
+  --nexi-border: rgba(53, 49, 83, 0.78);
+  --nexi-border-subtle: rgba(33, 32, 76, 0.62);
+  --nexi-border-strong: rgba(109, 65, 255, 0.66);
+  --nexi-specular-edge: rgba(255, 255, 255, 0.12);
+  --nexi-violet-rim: rgba(109, 65, 255, 0.44);
+  --nexi-cyan-rim: rgba(116, 242, 247, 0.18);
+
+  --nexi-glass-shell-bg: rgba(11, 9, 36, 0.58);
+  --nexi-glass-panel-bg: rgba(12, 10, 38, 0.44);
+  --nexi-glass-raised-bg: rgba(22, 18, 57, 0.56);
+  --nexi-glass-execution-bg: rgba(8, 7, 32, 0.86);
+  --nexi-glass-row-bg: rgba(12, 10, 38, 0.72);
+  --nexi-glass-row-hover: rgba(22, 18, 57, 0.78);
+  --nexi-glass-row-active: rgba(34, 18, 89, 0.69);
+  --nexi-glass-overlay: rgba(1, 1, 14, 0.8);
+
+  --nexi-glass-blur-shell: 24px;
+  --nexi-glass-blur-panel: 20px;
+  --nexi-glass-blur-raised: 22px;
+  --nexi-glass-blur-execution: 12px;
+  --nexi-glass-saturation-shell: 160%;
+  --nexi-glass-saturation-panel: 150%;
+  --nexi-noise-opacity: 0.025;
+}
+:root {
+  --nexi-violet-glow: rgba(109, 65, 255, 0.28);
+  --nexi-cyan-glow: rgba(116, 242, 247, 0.16);
+  --nexi-shadow-panel:
+    inset 0 1px 0 var(--nexi-specular-edge),
+    inset 0 -1px 0 rgba(109, 65, 255, 0.18),
+    0 20px 60px -18px rgba(1, 1, 14, 0.72);
+  --nexi-shadow-active:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 22px 70px -20px rgba(1, 1, 14, 0.8),
+    0 0 30px -6px rgba(109, 65, 255, 0.28);
+
+  --nexi-radius-xs: 8px;
+  --nexi-radius-sm: 12px;
+  --nexi-radius-md: 16px;
+  --nexi-radius-lg: 20px;
+  --nexi-radius-xl: 24px;
+  --nexi-radius-pill: 999px;
+
+  --nexi-row-height-market: 56px;
+  --nexi-row-height-compact: 44px;
+  --nexi-control-height: 44px;
+  --nexi-table-header-height: 36px;
+  --nexi-mobile-dock-height: 72px;
+  --nexi-density-gap: 12px;
+}
+:root {
+  --nexi-surface-deep: #0b0711;
+  --nexi-surface-elevated: #171022;
+  --nexi-surface-execution: rgba(8, 7, 20, 0.94);
+  --nexi-border-raised: rgba(74, 31, 111, 0.72);
+  --nexi-border-data: rgba(72, 192, 204, 0.28);
+  --nexi-negative-soft: #ff9cb0;
+  --nexi-shadow-cta: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 26px rgba(109, 65, 255, 0.3);
+  --nexi-motion-immediate: 80ms;
+  --nexi-motion-press: 100ms;
+  --nexi-motion-tab: 140ms;
+  --nexi-motion-feedback: 180ms;
+  --nexi-motion-modal: 220ms;
+  --nexi-motion-drawer: 250ms;
+  --nexi-ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --nexi-ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --nexi-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --nexi-safe-top: env(safe-area-inset-top, 0px);
+}

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "$extensions": {
+    "nexi": {
+      "source": "Figma NEXI Foundations Canvas CSS export",
+      "authority": "editable foundation values",
+      "excluded": ["documentation wrapper #FFFFFF fills"]
+    }
+  },
+  "color": {
+    "backgroundVoid": { "$value": "#050508", "$type": "color" },
+    "mainSurface": { "$value": "#100B16", "$type": "color" },
+    "elevatedSurface": { "$value": "#1A1024", "$type": "color" },
+    "borderDivider": { "$value": "#2A1C3D", "$type": "color" },
+    "glowViolet": { "$value": "#6D41FF", "$type": "color" },
+    "secondaryViolet": { "$value": "#8B5CF6", "$type": "color" },
+    "cyanAccent": { "$value": "#7DF9FF", "$type": "color" },
+    "aquaAccent": { "$value": "#98FCE4", "$type": "color" },
+    "primaryText": { "$value": "#F5F7FB", "$type": "color" },
+    "secondaryText": { "$value": "#93A4BD", "$type": "color" },
+    "positive": { "$value": "#22C55E", "$type": "color" },
+    "negative": { "$value": "#EF4444", "$type": "color" }
+  },  "typography": {
+    "displayLarge": {
+      "$type": "typography",
+      "$value": { "fontFamily": "Geist", "fontWeight": 600, "fontSize": "48px", "lineHeight": "52px", "letterSpacing": "-1.6px" }
+    },
+    "headingLarge": {
+      "$type": "typography",
+      "$value": { "fontFamily": "Geist", "fontWeight": 600, "fontSize": "24px", "lineHeight": "30px", "letterSpacing": "-0.4px" }
+    },
+    "headingMedium": {
+      "$type": "typography",
+      "$value": { "fontFamily": "Geist", "fontWeight": 600, "fontSize": "20px", "lineHeight": "26px", "letterSpacing": "-0.2px" }
+    },
+    "bodyDefault": {
+      "$type": "typography",
+      "$value": { "fontFamily": "Geist", "fontWeight": 400, "fontSize": "14px", "lineHeight": "21px", "letterSpacing": "0px" }
+    },
+    "labelCompact": {
+      "$type": "typography",
+      "$value": { "fontFamily": "Geist", "fontWeight": 600, "fontSize": "11px", "lineHeight": "16px", "letterSpacing": "0.8px" }
+    },    "dataDefault": {
+      "$type": "typography",
+      "$value": { "fontFamily": "IBM Plex Mono", "fontWeight": 400, "fontSize": "14px", "lineHeight": "20px", "letterSpacing": "0px" }
+    }
+  },
+  "surface": {
+    "basePanel": {
+      "$value": { "background": "#100B16", "border": "1px solid #2A1C3D", "radius": "16px", "shadow": "0 24px 70px rgba(0,0,0,0.24)" }
+    },
+    "elevatedPanel": {
+      "$value": { "background": "#1A1024", "border": "1px solid #6D41FF", "radius": "16px", "shadow": "0 18px 54px rgba(0,0,0,0.28), 0 0 24px rgba(109,65,255,0.18)" }
+    },
+    "topBar": {
+      "$value": { "background": "#100B16", "border": "1px solid #2A1C3D", "radius": "16px", "shadow": "0 14px 42px rgba(0,0,0,0.2)" }
+    }
+  }
+}

@@ -1,0 +1,516 @@
+@import './styles/nexi-tokens.generated.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #050508;
+  background-image:
+    radial-gradient(circle at 78% -8%, rgba(109, 65, 255, 0.2), transparent 30rem),
+    radial-gradient(circle at 10% 18%, rgba(116, 242, 247, 0.06), transparent 26rem),
+    linear-gradient(180deg, #050508 0%, #0b0a0e 54%, #050508 100%);
+  background-attachment: fixed;
+  color: var(--nexi-text);
+  overflow-x: hidden;
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, var(--nexi-text) 0%, var(--nexi-focus) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.neon-glow {
+  box-shadow: 0 0 30px var(--nexi-violet-glow);
+}
+
+.card-dark {
+  background: var(--nexi-glass-panel-bg);
+  border: 1px solid var(--nexi-border);
+  border-radius: var(--nexi-radius-sm);
+  backdrop-filter: blur(var(--nexi-glass-blur-panel)) saturate(var(--nexi-glass-saturation-panel));
+  box-shadow: var(--nexi-shadow-panel);
+}
+
+@layer components {
+  .nexi-page-shell {
+    background:
+      radial-gradient(circle at 82% -4%, rgba(115, 83, 221, 0.16), transparent 26rem),
+      radial-gradient(circle at 8% 20%, rgba(72, 192, 204, 0.035), transparent 22rem),
+      linear-gradient(180deg, var(--nexi-cal-canvas) 0%, var(--nexi-cal-canvas-deep) 58%, #02020b 100%);
+  }
+
+  .nexi-topbar,
+  .nexi-station-header {
+    border-color: var(--nexi-border-subtle);
+    background:
+      linear-gradient(180deg, rgba(12, 10, 38, 0.72), rgba(1, 1, 14, 0.7));
+    backdrop-filter: blur(var(--nexi-glass-blur-shell)) saturate(var(--nexi-glass-saturation-shell));
+    box-shadow:
+      inset 0 1px 0 var(--nexi-specular-edge),
+      inset 0 -1px 0 rgba(109, 65, 255, 0.16),
+      0 16px 46px rgba(1, 1, 14, 0.42);
+  }
+
+  .nexi-dashboard-topbar {
+    border-color: transparent;
+    background: transparent;
+    backdrop-filter: none;
+    box-shadow: none;
+  }
+
+  .nexi-header-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 999px;
+    color: var(--nexi-text-secondary);
+    background: transparent;
+    transition: color var(--nexi-motion-feedback) var(--nexi-ease-standard), background-color var(--nexi-motion-feedback) var(--nexi-ease-standard), transform var(--nexi-motion-press) var(--nexi-ease-standard);
+  }
+
+  .nexi-header-icon:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.035);
+  }
+
+  .nexi-header-icon:active {
+    transform: scale(0.97);
+  }
+
+  .nexi-navigation-drawer {
+    animation: nexi-drawer-enter var(--nexi-motion-drawer) var(--nexi-ease-enter) both;
+  }
+
+  @keyframes nexi-drawer-enter {
+    from { opacity: 0; transform: translateX(-100%); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @media (min-width: 768px) {
+    .nexi-dashboard-topbar {
+      border-color: var(--nexi-border-subtle);
+      background: linear-gradient(180deg, rgba(12, 10, 38, 0.66), rgba(4, 3, 21, 0.54));
+      backdrop-filter: blur(var(--nexi-glass-blur-shell)) saturate(var(--nexi-glass-saturation-shell));
+      box-shadow: inset 0 -1px 0 rgba(115, 83, 221, 0.12);
+    }
+  }
+
+  .nexi-panel,
+  .nexi-station-card {
+    border: 1px solid var(--nexi-border-raised);
+    background:
+      radial-gradient(circle at 100% 0%, rgba(109, 65, 255, 0.16), transparent 48%),
+      linear-gradient(135deg, var(--nexi-glass-raised-bg), var(--nexi-glass-panel-bg));
+    backdrop-filter: blur(var(--nexi-glass-blur-panel)) saturate(var(--nexi-glass-saturation-panel));
+    box-shadow: var(--nexi-shadow-panel);
+  }
+
+  .nexi-panel-strong {
+    border: 1px solid var(--nexi-border-strong);
+    background:
+      radial-gradient(circle at 92% 8%, rgba(109, 65, 255, 0.28), transparent 44%),
+      linear-gradient(120deg, rgba(34, 18, 89, 0.76), rgba(12, 10, 38, 0.64) 58%, rgba(6, 4, 26, 0.72));
+    backdrop-filter: blur(var(--nexi-glass-blur-raised)) saturate(var(--nexi-glass-saturation-shell));
+    box-shadow: var(--nexi-shadow-active);
+  }
+
+  .nexi-tabs-shell {
+    border: 1px solid rgba(24, 24, 56, 0.92);
+    background: linear-gradient(180deg, rgba(11, 9, 38, 0.88), rgba(8, 4, 28, 0.9));
+    backdrop-filter: blur(var(--nexi-glass-blur-panel)) saturate(var(--nexi-glass-saturation-panel));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 10px 28px rgba(0,0,0,.24);
+  }
+
+  .nexi-quote-row {
+    border-color: var(--nexi-border-subtle);
+    background:
+      radial-gradient(circle at 100% 50%, rgba(109, 65, 255, 0.08), transparent 42%),
+      linear-gradient(90deg, var(--nexi-glass-row-bg), rgba(8, 7, 32, 0.76));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  }
+
+  .nexi-quote-row:hover,
+  .nexi-quote-row:focus-visible {
+    border-color: rgba(74, 31, 111, 0.7);
+    background: linear-gradient(90deg, var(--nexi-glass-row-active), var(--nexi-glass-row-hover));
+    box-shadow: 0 0 24px -8px var(--nexi-violet-glow), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .nexi-promo {
+    border: 1px solid rgba(115, 83, 221, 0.46);
+    background:
+      radial-gradient(circle at 14% 50%, rgba(115, 83, 221, 0.28), transparent 16rem),
+      radial-gradient(circle at 88% 24%, rgba(72, 192, 204, 0.06), transparent 14rem),
+      linear-gradient(115deg, rgba(24, 8, 72, 0.82) 0%, rgba(11, 9, 38, 0.76) 58%, rgba(4, 3, 21, 0.88) 100%);
+    backdrop-filter: blur(var(--nexi-glass-blur-raised)) saturate(var(--nexi-glass-saturation-shell));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.055), 0 18px 46px rgba(0,0,0,.34), 0 0 24px rgba(115,83,221,.16);
+  }
+
+  .nexi-bottom-nav {
+    border-color: rgba(115, 83, 221, 0.34);
+    background: linear-gradient(180deg, rgba(11, 9, 38, 0.82), rgba(4, 4, 24, 0.9));
+    backdrop-filter: blur(var(--nexi-glass-blur-shell)) saturate(var(--nexi-glass-saturation-shell));
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.055),
+      0 -10px 30px rgba(0, 0, 0, 0.38),
+      0 0 18px -10px rgba(115, 83, 221, 0.34);
+  }
+
+  .nexi-sidebar,
+  .nexi-drawer {
+    background:
+      radial-gradient(circle at 100% 0%, rgba(109, 65, 255, 0.18), transparent 18rem),
+      linear-gradient(180deg, rgba(11, 9, 36, 0.92) 0%, rgba(1, 1, 14, 0.98) 100%);
+    backdrop-filter: blur(var(--nexi-glass-blur-shell)) saturate(var(--nexi-glass-saturation-panel));
+    box-shadow: 16px 0 58px rgba(1, 1, 14, 0.48), inset -1px 0 0 rgba(109, 65, 255, 0.12);
+  }
+
+  .nexi-data {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1, "zero" 1;
+  }
+
+  .nexi-atmosphere {
+    background:
+      radial-gradient(circle at 78% 0%, rgba(109, 65, 255, 0.2), transparent 24rem),
+      radial-gradient(circle at 8% 26%, rgba(116, 242, 247, 0.055), transparent 22rem),
+      radial-gradient(circle at 50% 58%, rgba(38, 19, 102, 0.14), transparent 34rem);
+  }
+
+  .nexi-icon-button {
+    display: inline-flex;
+    height: 44px;
+    width: 44px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(142, 91, 226, 0.28);
+    border-radius: 14px;
+    color: var(--nexi-text-secondary);
+    background: linear-gradient(180deg, rgba(22, 18, 57, 0.72), rgba(6, 4, 26, 0.78));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 12px 32px rgba(1, 1, 14, 0.28);
+    backdrop-filter: blur(18px) saturate(150%);
+  }
+
+  .nexi-icon-button:hover {
+    color: white;
+    border-color: rgba(109, 65, 255, 0.62);
+    box-shadow: var(--nexi-shadow-active);
+  }
+
+  .nexi-avatar-button {
+    display: inline-flex;
+    height: 44px;
+    width: 44px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(142, 91, 226, 0.48);
+    border-radius: 999px;
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 600;
+    background: radial-gradient(circle at 35% 28%, rgba(255,255,255,.28), transparent 22%), linear-gradient(145deg, #6d41ff, #25105f 70%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 0 24px rgba(109,65,255,.28);
+  }
+
+  .nexi-logo-mark {
+    border: 1px solid rgba(142, 91, 226, 0.46);
+    background: linear-gradient(145deg, #8e5be2 0%, #6d41ff 48%, #24105f 100%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 0 24px rgba(109,65,255,.28);
+  }
+
+  .nexi-active-pair {
+    border: 1px solid rgba(115, 83, 221, 0.7);
+    background:
+      radial-gradient(circle at 88% 118%, rgba(115, 83, 221, 0.3), transparent 40%),
+      linear-gradient(135deg, rgba(44, 20, 108, 0.68), rgba(11, 9, 38, 0.82));
+    backdrop-filter: blur(22px) saturate(158%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.09), 0 0 24px rgba(115,83,221,.2), 0 18px 48px rgba(0,0,0,.4);
+  }
+
+  .nexi-token-mark {
+    border: 1px solid rgba(255,255,255,.09);
+    background: radial-gradient(circle at 30% 20%, rgba(255,255,255,.12), transparent 32%), rgba(11,9,38,.88);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 0 16px rgba(115,83,221,.12);
+  }
+
+  .nexi-search-compact,
+  .nexi-secondary-button {
+    border: 1px solid rgba(142, 91, 226, 0.28);
+    background: rgba(6, 4, 26, 0.76);
+    backdrop-filter: blur(18px) saturate(145%);
+  }
+
+  .nexi-secondary-button {
+    border-radius: 14px;
+    color: var(--nexi-text-secondary);
+  }
+
+  .nexi-market-row {
+    border: 1px solid rgba(24, 24, 56, 0.92);
+    background:
+      radial-gradient(circle at 82% 30%, rgba(115, 83, 221, 0.075), transparent 42%),
+      linear-gradient(105deg, rgba(12, 8, 36, 0.92), rgba(8, 4, 28, 0.94));
+    backdrop-filter: blur(16px) saturate(145%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 10px 24px rgba(0,0,0,.2);
+  }
+
+  .nexi-market-row:hover,
+  .nexi-market-row:focus-visible {
+    border-color: rgba(115, 83, 221, 0.56);
+    background: linear-gradient(105deg, rgba(44,20,108,.74), rgba(11,9,38,.92));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.065), 0 0 20px rgba(115,83,221,.16);
+  }
+
+  .nexi-primary-button {
+    color: white;
+    background: linear-gradient(135deg, #6d41ff, #9b55ff);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 0 26px rgba(109,65,255,.34);
+  }
+
+  .nexi-primary-button:hover {
+    filter: brightness(1.08);
+  }
+
+  .nexi-promo-button {
+    color: #b995ff;
+    border: 1px solid rgba(142, 91, 226, 0.65);
+    background: rgba(6, 4, 26, 0.34);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 0 22px rgba(109,65,255,.12);
+    backdrop-filter: blur(16px) saturate(145%);
+  }
+
+  .nexi-promo-button:hover {
+    color: white;
+    border-color: rgba(116,242,247,.48);
+    box-shadow: 0 0 24px rgba(109,65,255,.22);
+  }
+}
+
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--nexi-background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--nexi-ref-violet-rim);
+  border-radius: var(--nexi-radius-xs);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--nexi-cyan);
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+html {
+  min-height: 100%;
+  background: #050508;
+  scroll-padding-bottom: calc(var(--nexi-mobile-dock-height) + var(--nexi-safe-bottom) + 24px);
+}
+
+body {
+  min-height: 100dvh;
+}
+
+@layer components {
+  .nexi-shell-glass {
+    background: linear-gradient(180deg, rgba(11, 9, 36, 0.78), rgba(4, 4, 24, 0.9));
+    backdrop-filter: blur(var(--nexi-glass-blur-shell)) saturate(var(--nexi-glass-saturation-shell));
+    box-shadow: inset 0 1px 0 var(--nexi-specular-edge), 0 18px 48px rgba(1, 1, 14, 0.38);
+  }
+
+  .nexi-raised-panel {
+    background: radial-gradient(circle at 100% 0%, rgba(109, 65, 255, 0.18), transparent 48%), linear-gradient(135deg, rgba(26, 12, 36, 0.90), rgba(12, 10, 38, 0.80));
+    backdrop-filter: blur(var(--nexi-glass-blur-raised)) saturate(var(--nexi-glass-saturation-panel));
+    box-shadow: var(--nexi-shadow-panel), inset 0 0 0 1px rgba(139, 92, 246, 0.08);
+  }
+
+  .nexi-execution-surface {
+    background: linear-gradient(180deg, rgba(8, 5, 14, 0.98), rgba(6, 4, 20, 0.97));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035), 0 14px 36px rgba(0, 0, 0, 0.28);
+  }
+
+  .nexi-interactive {
+    touch-action: manipulation;
+    transition-property: transform, border-color, background-color, color, box-shadow, opacity;
+    transition-duration: var(--nexi-motion-feedback);
+    transition-timing-function: var(--nexi-ease-standard);
+  }
+
+  .nexi-interactive:hover {
+    border-color: rgba(139, 92, 246, 0.52);
+  }
+
+  .nexi-interactive:active {
+    transform: scale(0.97);
+    transition-duration: var(--nexi-motion-press);
+  }
+
+  .nexi-ripple {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+  }
+
+  .nexi-ripple::after {
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: 140%;
+    aspect-ratio: 1;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(248, 246, 255, 0.18) 0%, rgba(248, 246, 255, 0) 66%);
+    content: '';
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(0.2);
+    transition: opacity 150ms var(--nexi-ease-standard), transform 150ms var(--nexi-ease-standard);
+    z-index: 0;
+  }
+
+  .nexi-ripple > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .nexi-ripple:active::after {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  .nexi-tab-edge {
+    transition: transform var(--nexi-motion-tab) var(--nexi-ease-standard), opacity var(--nexi-motion-tab) var(--nexi-ease-standard);
+    transform-origin: left center;
+  }
+
+  .nexi-input {
+    min-height: var(--nexi-control-height);
+    width: 100%;
+    border: 1px solid var(--nexi-border-raised);
+    border-radius: var(--nexi-radius-sm);
+    background: var(--nexi-surface-execution);
+    color: var(--nexi-text);
+    outline: none;
+    transition: border-color var(--nexi-motion-feedback) var(--nexi-ease-standard), box-shadow var(--nexi-motion-feedback) var(--nexi-ease-standard);
+  }
+
+  .nexi-input:focus-visible {
+    border-color: var(--nexi-focus);
+    box-shadow: 0 0 0 2px rgba(185, 150, 255, 0.18);
+  }
+
+  .nexi-safe-page {
+    scroll-padding-bottom: calc(var(--nexi-mobile-dock-height) + var(--nexi-safe-bottom) + 28px);
+  }
+
+  .nexi-scroll-rail {
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+    overscroll-behavior-inline: contain;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, black 18px, black calc(100% - 18px), transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, black 18px, black calc(100% - 18px), transparent 100%);
+  }
+
+  .nexi-scroll-rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nexi-scroll-rail > * {
+    scroll-snap-align: start;
+  }
+}
+
+@media (max-width: 349px) {
+  .nexi-dashboard-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .nexi-dashboard-title {
+    white-space: normal;
+    font-size: 1.75rem;
+  }
+
+  .nexi-dashboard-hero .nexi-active-pair {
+    width: 100%;
+  }
+}
+
+@media (max-height: 700px) and (max-width: 767px) {
+  :root {
+    --nexi-mobile-dock-height: 64px;
+  }
+
+  .nexi-bottom-nav {
+    height: 58px !important;
+    border-radius: 16px !important;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .nexi-shell-glass,
+  .nexi-raised-panel,
+  .nexi-panel,
+  .nexi-station-card,
+  .nexi-topbar,
+  .nexi-station-header,
+  .nexi-bottom-nav,
+  .nexi-sidebar,
+  .nexi-drawer {
+    background: #0b0711;
+    backdrop-filter: none;
+    border-color: rgba(185, 150, 255, 0.62);
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .nexi-shell-glass,
+  .nexi-raised-panel,
+  .nexi-panel,
+  .nexi-station-card,
+  .nexi-topbar,
+  .nexi-bottom-nav,
+  .nexi-sidebar,
+  .nexi-drawer {
+    background: #0b0711;
+  }
+}

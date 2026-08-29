@@ -1,0 +1,37 @@
+# Dependencies and generated builds
+node_modules/
+.next/
+dist/
+build/
+coverage/
+.output/
+.cache/
+.turbo/
+*.tsbuildinfo
+
+# Engineering/runtime generated state
+graphify-out/
+.codebase-memory/
+.trigger-tree/
+.agents/
+.codex/
+work/
+.wrangler/
+
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Logs and OS/editor noise
+*.log
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
