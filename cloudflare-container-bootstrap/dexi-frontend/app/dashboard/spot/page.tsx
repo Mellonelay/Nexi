@@ -419,12 +419,12 @@ export default function SpotPage() {
     setFeedback(null);
     try {
       const response = await api.post('/spot/order', {
+        userId,
         pair: displayPair,
         side,
-        type: orderType,
-        amount: amount.trim(),
-        price: price.trim(),
-        idempotencyKey: `spot:order:${normalizedSymbol}:${Date.now()}`,
+        type: 'LIMIT',
+        amount: Number(amount),
+        price: Number(price),
       });
       setOrderState(normalizeSpotOrderState((response.data as { status?: unknown })?.status ?? 'OPEN'));
       setConfirmationOpen(false);

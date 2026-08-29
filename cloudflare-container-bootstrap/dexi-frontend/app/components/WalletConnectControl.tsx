@@ -25,21 +25,9 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
-  const [sessionPresent, setSessionPresent] = useState(false);
   const previousAddress = useRef<string | null>(null);
   const previousChainId = useRef<number | null>(null);
-  const sessionQuery = useQuery({ queryKey: ['user', 'me'], queryFn: loadCurrentUser, enabled: sessionPresent, retry: false, staleTime: 30_000 });
-
-  useEffect(() => {
-    const syncSession = () => {
-      const hasSession = Boolean(window.localStorage.getItem('token'));
-      setSessionPresent(hasSession);
-      if (hasSession) void queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
-    };
-    syncSession();
-    window.addEventListener('nexi:wallet-session', syncSession);
-    return () => window.removeEventListener('nexi:wallet-session', syncSession);
-  }, [queryClient]);
+  const sessionQuery = useQuery({ queryKey: ['user', 'me'], queryFn: loadCurrentUser, enabled: typeof window !== 'undefined' && Boolean(window.localStorage.getItem('token')), retry: false, staleTime: 30_000 });
 
   useEffect(() => {
     const addressChanged = Boolean(address && previousAddress.current && previousAddress.current.toLowerCase() !== address.toLowerCase());
@@ -114,11 +102,11 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
       address &&
       sessionWalletAddress.toLowerCase() === address.toLowerCase()
     ) {
-      return <button type="button" onClick={() => void disconnectWallet()} disabled={busy} className={`${compact ? 'max-w-[7rem] truncate px-2 text-xs sm:max-w-none sm:px-3 sm:text-sm' : 'px-3 text-sm'} min-h-11 rounded-xl border border-violet-300/25 bg-[#2A1742] text-left text-[#F8F6FF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF]`} title="Disconnect wallet">{truncateAddress(sessionWalletAddress)}</button>;
+      return <button type="button" onClick={() => void disconnectWallet()} disabled={busy} className="min-h-11 rounded-xl border border-violet-300/25 bg-[#2A1742] px-3 text-left text-sm text-[#F8F6FF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF]" title="Disconnect wallet">{truncateAddress(sessionWalletAddress)}</button>;
   }
 
-   return <div className="relative">
-     <button type="button" onClick={() => isConnected && address && chainId ? void connect(activeConnector ?? connectors[0]) : setOpen((value) => !value)} disabled={busy} className={`${compact ? 'w-full px-2 text-xs sm:px-3 sm:text-sm' : 'px-3 text-sm'} min-h-11 rounded-xl border border-violet-300/25 bg-[#171022] font-semibold text-[#F8F6FF] transition hover:border-violet-300/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF]`}>{busy ? 'Verifying…' : isConnected && address ? 'Verify wallet' : 'Connect'}</button>
+  return <div className="relative">
+    <button type="button" onClick={() => isConnected && address && chainId ? void connect(activeConnector ?? connectors[0]) : setOpen((value) => !value)} disabled={busy} className={`${compact ? 'w-full' : ''} min-h-11 rounded-xl border border-violet-300/25 bg-[#171022] px-3 text-sm font-semibold text-[#F8F6FF] transition hover:border-violet-300/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF]`}>{busy ? 'Verifying…' : isConnected && address ? 'Verify wallet' : 'Connect'}</button>
     {open && <div className="absolute left-0 top-full z-[90] mt-2 min-w-56 rounded-xl border border-violet-300/25 bg-[#0B0A0E] p-2 shadow-2xl" role="dialog" aria-label="Choose a wallet">
       <p className="px-2 py-2 text-xs text-[#8C8299]">Choose a wallet</p>
       {connectors.map((connector) => <button type="button" key={connector.uid} onClick={() => void connect(connector)} className="block min-h-11 w-full rounded-lg px-2 text-left text-sm text-[#F8F6FF] hover:bg-[#2A1742]">{connector.name}</button>)}

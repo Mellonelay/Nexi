@@ -318,11 +318,11 @@ export default function AdminPage() {
     <div className="flex flex-col min-h-screen bg-[#0a0e27] text-white pb-24">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-[#121836] border-b border-white/5 sticky top-0 z-10">
-      <div className="flex min-w-0 items-center gap-3 px-3 sm:gap-4 sm:px-0">
+        <div className="flex items-center gap-4">
           <Link href="/dashboard">
             <ArrowLeft size={24} className="text-gray-400" />
           </Link>
-          <h1 className="truncate text-base font-bold text-[#00C076] sm:text-lg">Admin Panel</h1>
+          <h1 className="text-lg font-bold text-[#00C076]">Admin Panel</h1>
         </div>
         <button onClick={fetchData} className="p-2 bg-white/5 rounded-full hover:bg-white/10">
           <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
@@ -330,7 +330,7 @@ export default function AdminPage() {
       </div>
 
       {/* Stats Summary */}
-      <div className="grid grid-cols-2 gap-2 p-4 sm:grid-cols-4 bg-[#0a0e27]">
+      <div className="grid grid-cols-4 gap-2 p-4 bg-[#0a0e27]">
         <div className="bg-[#121836] p-3 rounded-lg border border-white/5 text-center">
           <div className="text-[10px] text-gray-400 flex items-center justify-center gap-1">
             <Activity size={10} className="text-[#00C076] animate-pulse" />
@@ -358,7 +358,7 @@ export default function AdminPage() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex min-h-9 shrink-0 items-center gap-2 rounded-full px-3 py-2 text-xs font-bold whitespace-nowrap transition-colors sm:px-4 sm:text-sm ${activeTab === tab.id ? 'bg-[#00C076] text-black' : 'bg-[#121836] text-gray-400 border border-white/5'
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${activeTab === tab.id ? 'bg-[#00C076] text-black' : 'bg-[#121836] text-gray-400 border border-white/5'
               }`}
           >
             <tab.icon size={14} />

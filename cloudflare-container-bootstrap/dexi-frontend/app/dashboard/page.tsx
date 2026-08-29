@@ -21,14 +21,14 @@ import { useLocale } from '../state/LocaleProvider';
 import { AssetMark, MarketSparkline, OpportunityArtwork } from './components/QuotesHubVisuals';
 
 const tabs = [
-  { key: 'favorites', icon: Star },
-  { key: 'crypto', icon: Bitcoin },
-  { key: 'metals', icon: Gem },
-  { key: 'forex', icon: CircleDollarSign },
-  { key: 'stocks', icon: BarChart3 },
+  { label: 'Favorites', icon: Star },
+  { label: 'Crypto', icon: Bitcoin },
+  { label: 'Metals', icon: Gem },
+  { label: 'Forex', icon: CircleDollarSign },
+  { label: 'Stocks', icon: BarChart3 },
 ] as const;
 
-type Tab = (typeof tabs)[number]['key'];
+type Tab = (typeof tabs)[number]['label'];
 
 function formatValue(item: MarketPair, value: 'price' | 'change' | 'volume') {
   if (item.source === 'fallback') return value === 'change' ? '—.— %' : value === 'volume' ? '—.—M' : '—,——.—';
@@ -40,17 +40,17 @@ export default function Dashboard() {
   const router = useRouter();
   const { setActivePair } = useActivePair();
   const { t } = useLocale();
-  const [activeTab, setActiveTab] = useState<Tab>('crypto');
+  const [activeTab, setActiveTab] = useState<Tab>('Crypto');
   const [query, setQuery] = useState('');
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const { marketPairs, metal, shares, forex, loading } = useMarketData();
 
   const activeData = useMemo(() => {
-    const source = activeTab === 'metals'
+    const source = activeTab === 'Metals'
       ? metal
-      : activeTab === 'forex'
+      : activeTab === 'Forex'
         ? forex
-        : activeTab === 'stocks'
+        : activeTab === 'Stocks'
           ? shares
           : marketPairs;
     const normalizedQuery = query.trim().toLowerCase();
@@ -81,26 +81,26 @@ export default function Dashboard() {
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder={t('marketSearchPlaceholder')}
+              placeholder="Search markets, assets, or pairs"
               className="w-full bg-transparent text-white outline-none placeholder:text-[var(--nexi-text-muted)]"
             />
           </label>
           <div className="flex items-center gap-2">
-            <button type="button" aria-label={t('searchMarkets')} aria-expanded={mobileSearchOpen} onClick={() => setMobileSearchOpen((value) => !value)} className="nexi-header-icon nexi-interactive h-9 w-9 md:hidden"><Search className="h-[18px] w-[18px]" aria-hidden="true" /></button>
+            <button type="button" aria-label="Search markets" aria-expanded={mobileSearchOpen} onClick={() => setMobileSearchOpen((value) => !value)} className="nexi-header-icon nexi-interactive h-9 w-9 md:hidden"><Search className="h-[18px] w-[18px]" aria-hidden="true" /></button>
           </div>
         </header>
         {mobileSearchOpen && (
           <label className="nexi-shell-glass mt-2 flex min-h-12 items-center gap-2 rounded-xl border border-violet-300/20 px-3 text-sm md:hidden">
             <Search className="h-4 w-4 shrink-0 text-[var(--nexi-cyan)]" aria-hidden="true" />
             <span className="sr-only">{t('filter')}</span>
-            <input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t('marketSearchPlaceholder')} className="min-w-0 flex-1 bg-transparent text-white outline-none placeholder:text-[var(--nexi-text-muted)]" />
+            <input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search markets, assets, or pairs" className="min-w-0 flex-1 bg-transparent text-white outline-none placeholder:text-[var(--nexi-text-muted)]" />
           </label>
         )}
         <section className="nexi-dashboard-hero mt-3 grid grid-cols-[minmax(0,1fr)_164px] items-start gap-2 md:mt-8 md:grid-cols-[minmax(0,1fr)_320px] md:items-end md:gap-3 lg:grid-cols-[minmax(0,1fr)_360px]">
           <div className="min-w-0 pt-1">
-            <h1 className="nexi-dashboard-title text-[clamp(1.875rem,8vw,3rem)] font-semibold leading-[1.02] tracking-[var(--nexi-type-display-tracking)] gradient-text">{t('quotesHub')}</h1>
+            <h1 className="nexi-dashboard-title whitespace-nowrap text-[clamp(1.875rem,8vw,3rem)] font-semibold leading-[1.02] tracking-[var(--nexi-type-display-tracking)] gradient-text">Quotes Hub</h1>
             <div className="mt-1.5 flex flex-wrap items-center gap-2 md:mt-3">
-              <p className="max-w-2xl text-xs leading-[18px] text-[var(--nexi-text-secondary)] md:text-base">{t('discoveryDescription')}</p>
+              <p className="text-xs leading-[18px] text-[var(--nexi-text-secondary)] md:text-base">Real-time markets. Precision insights.</p>
             </div>
           </div>
 
@@ -126,20 +126,20 @@ export default function Dashboard() {
 
         <section className="nexi-tabs-shell mt-3 overflow-hidden rounded-[10px] md:mt-5 md:rounded-[22px]">
           <div className="grid grid-cols-5 gap-0 p-1 md:gap-1 md:p-1.5" role="tablist" aria-label="Market categories">
-            {tabs.map(({ key, icon: Icon }, index) => {
-              const active = activeTab === key;
+            {tabs.map(({ label, icon: Icon }, index) => {
+              const active = activeTab === label;
               return (
                 <button
-                  key={key}
+                  key={label}
                   type="button"
                   role="tab"
                   aria-selected={active}
-                  onClick={() => selectTab(key)}
+                  onClick={() => selectTab(label)}
                   className={`relative flex min-h-[42px] min-w-0 flex-col items-center justify-center gap-0.5 overflow-hidden rounded-[8px] px-1 text-[9px] font-medium transition md:min-h-14 md:flex-row md:gap-2 md:rounded-[16px] md:text-sm ${index < tabs.length - 1 ? 'border-r border-white/[0.05] md:border-r-0' : ''} ${active ? 'text-white' : 'text-[var(--nexi-text-secondary)] hover:bg-white/[0.04] hover:text-white'}`}
                 >
                   {active && <motion.span layoutId="quotes-tab" className="nexi-tab-edge absolute inset-0 rounded-[8px] border border-[color:var(--nexi-cal-violet-bright)]/55 bg-[linear-gradient(180deg,rgba(44,20,108,.88),rgba(24,8,72,.8))] shadow-[0_0_20px_rgba(115,83,221,.28)] md:rounded-[16px]" transition={{ type: 'tween', ...nexiTransition.tab }} />}
                   <Icon className={`relative h-[17px] w-[17px] md:h-5 md:w-5 ${active ? 'text-violet-300' : ''}`} strokeWidth={1.7} aria-hidden="true" />
-                  <span className="relative truncate">{t(key)}</span>
+                  <span className="relative truncate">{label}</span>
                 </button>
               );
             })}
@@ -148,8 +148,8 @@ export default function Dashboard() {
         <section className="mt-2 md:mt-5">
           <div className="hidden items-center justify-between gap-3 px-1 md:flex">
             <div>
-              <h2 className="text-xl font-semibold text-white">{t(activeTab)}</h2>
-              <p className="mt-1 text-xs text-[var(--nexi-text-muted)]">{loading ? t('loadingMarketCatalog') : `${activeData.length} ${t('instrumentsAvailable')}`}</p>
+              <h2 className="text-xl font-semibold text-white">{activeTab}</h2>
+              <p className="mt-1 text-xs text-[var(--nexi-text-muted)]">{loading ? t('loadingMarketCatalog') : `${activeData.length} instruments available`}</p>
             </div>
           </div>
 
@@ -195,7 +195,7 @@ export default function Dashboard() {
         <section className="nexi-promo relative mt-auto min-h-[108px] overflow-hidden rounded-[18px] px-3 py-3 md:mt-6 md:min-h-[220px] md:rounded-[24px] md:px-7 md:py-8">
           <OpportunityArtwork />
           <div className="relative ml-[34%] max-w-[470px] md:ml-[26%]">
-            <h2 className="max-w-full text-[15px] font-semibold tracking-[-0.025em] text-white md:text-3xl">Markets move fast.</h2>
+            <h2 className="whitespace-nowrap text-[15px] font-semibold tracking-[-0.025em] text-white md:text-3xl">Markets move fast.</h2>
             <p className="mt-0.5 text-[11px] font-medium text-[var(--nexi-text-secondary)] md:mt-1 md:text-2xl">Act with precision.</p>
             <button type="button" onClick={() => router.push('/dashboard/learn')} className="nexi-promo-button nexi-interactive mt-2 inline-flex min-h-8 items-center gap-1.5 rounded-lg px-2.5 text-[10px] font-medium md:mt-5 md:min-h-11 md:rounded-xl md:px-4 md:text-sm">Explore Opportunities <ArrowUpRight className="h-3 w-3 md:h-4 md:w-4" aria-hidden="true" /></button>
           </div>

@@ -5,13 +5,12 @@ import { Bell, Globe2, KeyRound, LogOut, MonitorSmartphone, Palette, ShieldCheck
 import api from '../../lib/api';
 import { SUPPORTED_LOCALES, type LocaleCode } from '../../state/locale';
 import { useLocale } from '../../state/LocaleProvider';
-import { sessionPrincipalId } from '../../lib/wallet-auth';
 import { authoritativeValue, resolveEndpointTemplate } from '../../lib/product-states';
 import { DataStatePanel, Field, inputClass, PageHeader, PageShell, Panel, PanelHeading, PrimaryButton, TabButton } from '../wallet/components/ProductPrimitives';
 
 const tabs = ['profile', 'security', 'notifications', 'language', 'wallet', 'session', 'appearance', 'about'] as const;
 type Tab = typeof tabs[number];
-function sessionUserId() { return sessionPrincipalId() ?? undefined; }
+function sessionUserId() { try { return JSON.parse(localStorage.getItem('user') || 'null')?.id as string | undefined; } catch { return undefined; } }
 
 export default function SettingsPage() {
   const [tab, setTab] = useState<Tab>('profile');

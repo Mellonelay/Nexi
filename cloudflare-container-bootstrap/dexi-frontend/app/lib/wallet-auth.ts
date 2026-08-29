@@ -32,25 +32,6 @@ export function clearWalletSession() {
   window.dispatchEvent(new CustomEvent('nexi:wallet-session'));
 }
 
-/**
- * The public profile exposes the six-digit user code, while ownership-guarded
- * resource routes use the authenticated JWT subject. Keep that transport
- * detail in the session adapter instead of leaking it into page components.
- */
-export function sessionPrincipalId(): string | null {
-  if (typeof window === 'undefined') return null;
-  const token = window.localStorage.getItem('token');
-  if (!token) return null;
-  try {
-    const encodedPayload = token.split('.')[1];
-    if (!encodedPayload) return null;
-    const payload = JSON.parse(window.atob(encodedPayload.replace(/-/g, '+').replace(/_/g, '/'))) as { sub?: unknown };
-    return typeof payload.sub === 'string' && payload.sub.trim() ? payload.sub : null;
-  } catch {
-    return null;
-  }
-}
-
 export async function requestWalletChallenge(address: string, chainId: number) {
   const response = await api.post<WalletChallenge>('/auth/wallet/challenge', { address, chainId });
   return response.data;

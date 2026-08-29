@@ -17,6 +17,13 @@ export interface ProviderMapping {
 // Catalog probes are capability evidence, not identity substitution. Keep
 // unsupported combinations mapped for registry completeness, but do not poll
 // them until a provider catalog/quote probe proves the instrument callable.
+const BIQUOTE_QUOTE_COVERAGE = new Set([
+  'AAPLUSDT', 'NVDAUSDT', 'MSFTUSDT', 'GOOGUSDT', 'AMZNUSDT', 'METAUSDT', 'TSLAUSDT', 'WMTUSDT',
+  'JNJUSDT', 'NFLXUSDT', 'KOUSDT', 'AMDUSDT', 'MCDUSDT', 'WFCUSDT', 'NKEUSDT', 'BAUSDT',
+  'GBPUSD', 'EURUSD', 'USDCNH', 'USDHKD', 'USDJPY', 'USDTHB', 'AUDUSD', 'USDCHF',
+  'XAUUSD', 'XAGUSD', 'XPDUSD', 'XPTUSD', 'XALUSD', 'XCUUSD', 'XZNUSD',
+]);
+
 const EXCHANGE_QUOTE_COVERAGE: Record<string, ReadonlySet<string>> = {
   okx: new Set(['AAPLUSDT', 'AMDUSDT', 'AMZNUSDT', 'JNJUSDT', 'KOUSDT', 'METAUSDT', 'MSFTUSDT', 'NFLXUSDT', 'NVDAUSDT', 'SONYUSDT', 'TSLAUSDT', 'XAUUSD', 'XAGUSD', 'XCUUSD', 'XPDUSD', 'XPTUSD']),
   bitget: new Set(['AAPLUSDT', 'AMDUSDT', 'AMZNUSDT', 'BAUSDT', 'GOOGUSDT', 'KOUSDT', 'MCDUSDT', 'METAUSDT', 'MSFTUSDT', 'NFLXUSDT', 'NKEUSDT', 'NVDAUSDT', 'SONYUSDT', 'TSLAUSDT', 'UBERUSDT', 'WMTUSDT', 'XAUUSD', 'XAGUSD', 'XPDUSD', 'XPTUSD', 'XCUUSD']),
@@ -29,6 +36,7 @@ const EXCHANGE_QUOTE_COVERAGE: Record<string, ReadonlySet<string>> = {
 };
 
 function providerQuoteSupported(entry: CanonicalMarketPair, provider: string): boolean {
+  if (provider === 'biquote') return BIQUOTE_QUOTE_COVERAGE.has(entry.symbol);
   if (provider === 'yahoo') return true;
   const coverage = EXCHANGE_QUOTE_COVERAGE[provider];
   return coverage ? coverage.has(entry.symbol) : true;
@@ -72,10 +80,10 @@ export interface AssetSourcePolicy {
 }
 
 const CRYPTO_PROVIDERS = ['binance-spot', 'coingecko', 'coinmarketcap'];
-const STOCK_PROVIDERS = ['yahoo', 'okx', 'bitget', 'htx', 'bybit', 'gate', 'tickdb', 'alltick', 'massive', 'finnhub', 'alpha-vantage'];
-const FOREX_PROVIDERS = ['yahoo', 'bybit', 'gate', 'htx', 'okx', 'bitget', 'tickdb', 'alltick', 'live-rates', 'massive', 'finnhub', 'oanda', 'alpha-vantage', 'fawaz-currency'];
-const PRECIOUS_METAL_PROVIDERS = ['yahoo', 'okx', 'htx', 'bitget', 'bybit', 'gate', 'tickdb', 'alltick', 'live-rates', 'oanda', 'metals-api', 'alpha-vantage', 'fawaz-currency'];
-const INDUSTRIAL_METAL_PROVIDERS = ['yahoo', 'okx', 'htx', 'bitget', 'bybit', 'gate', 'tickdb', 'alltick', 'metals-api', 'metalprice-api', 'alpha-vantage', 'rzzro-industrial-metals'];
+const STOCK_PROVIDERS = ['biquote', 'yahoo', 'okx', 'bitget', 'htx', 'bybit', 'gate', 'tickdb', 'alltick', 'massive', 'finnhub', 'alpha-vantage'];
+const FOREX_PROVIDERS = ['biquote', 'yahoo', 'bybit', 'gate', 'htx', 'okx', 'bitget', 'tickdb', 'alltick', 'live-rates', 'massive', 'finnhub', 'oanda', 'alpha-vantage', 'fawaz-currency'];
+const PRECIOUS_METAL_PROVIDERS = ['biquote', 'yahoo', 'okx', 'htx', 'bitget', 'bybit', 'gate', 'tickdb', 'alltick', 'live-rates', 'oanda', 'metals-api', 'alpha-vantage', 'fawaz-currency'];
+const INDUSTRIAL_METAL_PROVIDERS = ['biquote', 'yahoo', 'okx', 'htx', 'bitget', 'bybit', 'gate', 'tickdb', 'alltick', 'metals-api', 'metalprice-api', 'alpha-vantage', 'rzzro-industrial-metals'];
 
 function baseSymbol(entry: CanonicalMarketPair): string {
   if (entry.category === 'crypto' || entry.category === 'stock') return entry.symbol.replace(/USDT$/, '');
@@ -125,6 +133,15 @@ function providerInstrument(entry: CanonicalMarketPair, provider: string): strin
     const symbols: Record<string, string> = { XALUSD: 'aluminum', XCUUSD: 'copper', XZNUSD: 'zinc' };
     return symbols[entry.symbol] ?? entry.symbol;
   }
+  if (provider === 'biquote') {
+    if (entry.category === 'forex' || entry.category === 'metal') return entry.symbol;
+    const aliases: Record<string, string> = {
+      GOOGUSDT: 'GOOGL',
+      DISUSDT: 'DISNEY',
+      AXPUSDT: 'AMERICANEXPRESS',
+    };
+    return aliases[entry.symbol] ?? entry.providerSymbol;
+  }
   if (provider === 'yahoo') {
     const yahooSymbols: Record<string, string> = {
       USDCNH: 'CNH=X', USDHKD: 'HKD=X', USDJPY: 'JPY=X', USDTHB: 'THB=X',
@@ -146,7 +163,7 @@ function providerInstrument(entry: CanonicalMarketPair, provider: string): strin
 
 function supportsWebsocket(provider: string, entry: CanonicalMarketPair): boolean {
   if (entry.category === 'crypto') return provider === 'binance-spot';
-  return ['tickdb', 'alltick', 'live-rates', 'massive', 'oanda', 'okx', 'bitget', 'htx', 'bybit'].includes(provider);
+  return ['biquote', 'tickdb', 'alltick', 'live-rates', 'massive', 'oanda', 'okx', 'bitget', 'htx', 'bybit'].includes(provider);
 }
 
 function supportsAlphaVantageQuote(entry: CanonicalMarketPair): boolean {
@@ -205,6 +222,26 @@ function buildPolicy(entry: CanonicalMarketPair): AssetSourcePolicy {
 export const MARKET_SOURCE_POLICIES: readonly AssetSourcePolicy[] = CANONICAL_MARKET_CATALOG.map(buildPolicy);
 
 const byInternalSymbol = new Map(MARKET_SOURCE_POLICIES.map((policy) => [policy.internalSymbol, policy]));
+const runtimeProviderMappings = new Map<string, ProviderMapping>();
+
+function runtimeMappingKey(symbol: string, provider: string): string {
+  return `${symbol.trim().toUpperCase().replaceAll('/', '').replaceAll('.', '')}:${provider.trim().toLowerCase()}`;
+}
+
+export function installRuntimeProviderMappings(
+  mappings: readonly { symbol: string; provider: string; providerInstrument: string }[],
+): void {
+  runtimeProviderMappings.clear();
+  for (const mapping of mappings) {
+    const fallback = getMarketSourcePolicy(mapping.symbol)?.providerMappings
+      .find((candidate) => candidate.provider === mapping.provider.trim().toLowerCase());
+    if (!fallback) continue;
+    runtimeProviderMappings.set(runtimeMappingKey(mapping.symbol, mapping.provider), {
+      ...fallback,
+      instrument: mapping.providerInstrument,
+    });
+  }
+}
 
 export function getMarketSourcePolicy(symbol: string): AssetSourcePolicy | undefined {
   const normalized = symbol.trim().toUpperCase().replaceAll('/', '').replaceAll('.', '');
@@ -212,7 +249,8 @@ export function getMarketSourcePolicy(symbol: string): AssetSourcePolicy | undef
 }
 
 export function getProviderMapping(symbol: string, provider: string): ProviderMapping | undefined {
-  return getMarketSourcePolicy(symbol)?.providerMappings.find((mapping) => mapping.provider === provider.trim().toLowerCase());
+  return runtimeProviderMappings.get(runtimeMappingKey(symbol, provider))
+    ?? getMarketSourcePolicy(symbol)?.providerMappings.find((mapping) => mapping.provider === provider.trim().toLowerCase());
 }
 
 export function resolveProviderInstrument(symbol: string, provider: string): string | undefined {

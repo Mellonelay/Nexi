@@ -12,7 +12,6 @@ import {
   WalletCards,
 } from 'lucide-react';
 import api from '../../lib/api';
-import { sessionPrincipalId } from '../../lib/wallet-auth';
 import {
   authoritativeValue,
   LoanState,
@@ -109,7 +108,8 @@ export default function LoansPage() {
   const backendConfigured = true;
   useEffect(() => {
     try {
-      setUserId(sessionPrincipalId());
+      const stored = JSON.parse(localStorage.getItem('user') ?? 'null') as { id?: unknown } | null;
+      setUserId(typeof stored?.id === 'string' ? stored.id : null);
     } catch {
       setUserId(null);
     } finally {

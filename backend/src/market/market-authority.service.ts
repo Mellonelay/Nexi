@@ -1,9 +1,11 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { AssetLifecycleStatus, MarketQuoteState, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { D1PrismaService } from '../d1/d1-prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { MARKET_QUOTES_CHANNEL } from './market.types';
 import { CANONICAL_MARKET_CATALOG, canonicalMarketPair } from './market-catalog';
+import { MarketProviderRouterService } from './market-provider-router.service';
 import {
   getMarketSourcePolicy,
   getProviderMapping,
@@ -56,12 +58,16 @@ const DEFAULT_MARKET_SYMBOLS = CANONICAL_MARKET_CATALOG.map((entry) => entry.sym
 
 @Injectable()
 export class MarketAuthorityService implements OnModuleInit {
+  private get db(): any { return this.d1.isEnabled() ? this.d1 : this.prisma; }
+
   private readonly logger = new Logger(MarketAuthorityService.name);
   private readonly staleAfterMs = this.readStaleAfterMs();
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
+    private readonly d1: D1PrismaService,
+    private readonly providerRouter: MarketProviderRouterService,
   ) {}
 
   onModuleInit(): void {
@@ -72,11 +78,15 @@ export class MarketAuthorityService implements OnModuleInit {
   }
 
   async ensureCatalog(symbols = DEFAULT_MARKET_SYMBOLS): Promise<void> {
+    if (this.d1.isEnabled()) {
+      await this.ensureCatalogD1(symbols);
+      return;
+    }
     for (const rawSymbol of symbols) {
       const symbol = this.normalizeSymbol(rawSymbol);
       const { base, quote } = this.splitSymbol(symbol);
       const catalogEntry = canonicalMarketPair.get(symbol);
-      const baseAsset = await this.prisma.marketAsset.upsert({
+      const baseAsset = await this.db.marketAsset.upsert({
         where: { symbol: base },
         update: {
           status: AssetLifecycleStatus.ACTIVE,
@@ -93,13 +103,13 @@ export class MarketAuthorityService implements OnModuleInit {
           providerSymbol: base,
         },
       });
-      const quoteAsset = await this.prisma.marketAsset.upsert({
+      const quoteAsset = await this.db.marketAsset.upsert({
         where: { symbol: quote },
         update: { status: AssetLifecycleStatus.ACTIVE, providerSymbol: quote },
         create: { symbol: quote, displayName: quote, category: 'crypto', providerSymbol: quote },
       });
       for (const asset of [baseAsset, quoteAsset]) {
-        await this.prisma.marketAssetCapability.upsert({
+        await this.db.marketAssetCapability.upsert({
           where: { capabilityKey: `${asset.id}:market` },
           update: { status: AssetLifecycleStatus.ACTIVE, tradingEnabled: true },
           create: {
@@ -110,7 +120,7 @@ export class MarketAuthorityService implements OnModuleInit {
           },
         });
       }
-      await this.prisma.marketPair.upsert({
+      await this.db.marketPair.upsert({
         where: { symbol },
         update: {
           baseAssetId: baseAsset.id,
@@ -129,7 +139,7 @@ export class MarketAuthorityService implements OnModuleInit {
   }
 
   async getPrices(): Promise<Array<Record<string, unknown>>> {
-    const pairs = await this.prisma.marketPair.findMany({
+    const pairs = await this.db.marketPair.findMany({
       // Catalog reconciliation is startup/explicit-path work. This public
       // read must remain side-effect free and must not expose legacy pairs.
       where: { status: AssetLifecycleStatus.ACTIVE, symbol: { in: DEFAULT_MARKET_SYMBOLS } },
@@ -140,9 +150,9 @@ export class MarketAuthorityService implements OnModuleInit {
       // the bounded latest row.
       include: { latest: true },
     });
-    const klineRows = pairs.length === 0 || !this.prisma.marketKline
+    const klineRows = pairs.length === 0 || !this.db.marketKline
       ? []
-      : await this.prisma.marketKline.findMany({
+      : await this.db.marketKline.findMany({
         where: { pairId: { in: pairs.map((pair) => pair.id) }, interval: '1m' },
         orderBy: { openTime: 'desc' },
         take: pairs.length * 16,
@@ -194,6 +204,7 @@ export class MarketAuthorityService implements OnModuleInit {
   }
 
   async ingestQuote(input: NormalizedMarketQuoteInput): Promise<{ accepted: boolean; event?: MarketQuoteEvent; reason?: string }> {
+    if (this.d1.isEnabled()) return this.ingestQuoteD1(input);
     const symbol = this.normalizeSymbol(input.symbol);
     const provider = this.requiredText(input.provider, 'provider');
     const source = this.requiredText(input.source, 'source');
@@ -215,7 +226,7 @@ export class MarketAuthorityService implements OnModuleInit {
     }
 
     const pair = await this.getOrCreatePair(symbol);
-    const result = await this.prisma.$transaction(async (tx) => {
+    const result = await this.db.$transaction(async (tx) => {
       // Serialize writers for this canonical pair before deriving the next
       // sequence. Multiple provider pollers can otherwise read the same latest
       // row concurrently and collide on (pairId, sequence).
@@ -294,7 +305,7 @@ export class MarketAuthorityService implements OnModuleInit {
 
   async markUnavailable(symbol: string, provider = 'none', source = 'runtime'): Promise<void> {
     const pair = await this.getOrCreatePair(this.normalizeSymbol(symbol));
-    await this.prisma.marketQuoteLatest.upsert({
+    await this.db.marketQuoteLatest.upsert({
       where: { pairId: pair.id },
       update: {
         provider,
@@ -314,30 +325,31 @@ export class MarketAuthorityService implements OnModuleInit {
   }
 
   async setAssetMaintenance(symbol: string, status: AssetLifecycleStatus, maintenanceNote?: string): Promise<void> {
-    await this.prisma.marketAsset.update({
+    await this.db.marketAsset.update({
       where: { symbol: this.normalizeSymbol(symbol) },
       data: { status, maintenanceNote },
     });
   }
 
   async setPairMaintenance(symbol: string, status: AssetLifecycleStatus, maintenanceNote?: string): Promise<void> {
-    await this.prisma.marketPair.update({
+    await this.db.marketPair.update({
       where: { symbol: this.normalizeSymbol(symbol) },
       data: { status, maintenanceNote },
     });
   }
 
   async getSnapshot(symbol: string): Promise<MarketQuoteEvent['quote'] | null> {
-    const latest = await this.prisma.marketQuoteLatest.findFirst({ where: { symbol: this.normalizeSymbol(symbol) } });
+    const latest = await this.db.marketQuoteLatest.findFirst({ where: { symbol: this.normalizeSymbol(symbol) } });
     if (!latest) return null;
-    const snapshot = await this.prisma.marketQuoteSnapshot.findFirst({ where: { pairId: latest.pairId }, orderBy: { sequence: 'desc' } });
+    const snapshot = await this.db.marketQuoteSnapshot.findFirst({ where: { pairId: latest.pairId }, orderBy: { sequence: 'desc' } });
     return this.toQuote(latest, this.snapshotLineage(snapshot?.rawData));
   }
 
   private async getOrCreatePair(symbol: string) {
+    if (this.d1.isEnabled()) return this.getOrCreatePairD1(symbol);
     const { base, quote } = this.splitSymbol(symbol);
     const catalogEntry = canonicalMarketPair.get(symbol);
-    const baseAsset = await this.prisma.marketAsset.upsert({
+    const baseAsset = await this.db.marketAsset.upsert({
       where: { symbol: base },
       update: { providerSymbol: base },
       create: {
@@ -347,12 +359,12 @@ export class MarketAuthorityService implements OnModuleInit {
         providerSymbol: base,
       },
     });
-    const quoteAsset = await this.prisma.marketAsset.upsert({
+    const quoteAsset = await this.db.marketAsset.upsert({
       where: { symbol: quote },
       update: { providerSymbol: quote },
       create: { symbol: quote, displayName: quote, category: 'crypto', providerSymbol: quote },
     });
-    return this.prisma.marketPair.upsert({
+    return this.db.marketPair.upsert({
       where: { symbol },
       update: { baseAssetId: baseAsset.id, quoteAssetId: quoteAsset.id },
       create: {
@@ -362,6 +374,100 @@ export class MarketAuthorityService implements OnModuleInit {
         category: catalogEntry?.category ?? 'crypto',
       },
     });
+  }
+
+
+  private async ensureCatalogD1(symbols: readonly string[]): Promise<void> {
+    const db = this.d1 as any;
+    for (const rawSymbol of symbols) {
+      const symbol = this.normalizeSymbol(rawSymbol);
+      const { base, quote } = this.splitSymbol(symbol);
+      const entry = canonicalMarketPair.get(symbol);
+      const baseAsset = await db.marketAsset.upsert({
+        where: { symbol: base },
+        update: { status: 'ACTIVE', displayName: entry?.displayName ?? base, providerSymbol: base },
+        create: { symbol: base, displayName: entry?.displayName ?? base, category: entry?.category ?? 'crypto', providerSymbol: base },
+      });
+      const quoteAsset = await db.marketAsset.upsert({
+        where: { symbol: quote },
+        update: { status: 'ACTIVE', providerSymbol: quote },
+        create: { symbol: quote, displayName: quote, category: 'crypto', providerSymbol: quote },
+      });
+      for (const asset of [baseAsset, quoteAsset]) {
+        const capabilityKey = String(asset.id) + ':market';
+        await db.marketAssetCapability.upsert({
+          where: { capabilityKey },
+          update: { status: 'ACTIVE', tradingEnabled: true },
+          create: { assetId: asset.id, capabilityKey, tradingEnabled: true, status: 'ACTIVE' },
+        });
+      }
+      await db.marketPair.upsert({
+        where: { symbol },
+        update: { baseAssetId: baseAsset.id, quoteAssetId: quoteAsset.id, category: entry?.category ?? 'crypto', status: 'ACTIVE' },
+        create: { symbol, baseAssetId: baseAsset.id, quoteAssetId: quoteAsset.id, category: entry?.category ?? 'crypto', status: 'ACTIVE' },
+      });
+    }
+  }
+
+  private async getOrCreatePairD1(symbol: string): Promise<any> {
+    const db = this.d1 as any;
+    const { base, quote } = this.splitSymbol(symbol);
+    const entry = canonicalMarketPair.get(symbol);
+    const baseAsset = await db.marketAsset.upsert({
+      where: { symbol: base },
+      update: { status: 'ACTIVE', providerSymbol: base },
+      create: { symbol: base, displayName: entry?.displayName ?? base, category: entry?.category ?? 'crypto', providerSymbol: base },
+    });
+    const quoteAsset = await db.marketAsset.upsert({
+      where: { symbol: quote },
+      update: { status: 'ACTIVE', providerSymbol: quote },
+      create: { symbol: quote, displayName: quote, category: 'crypto', providerSymbol: quote },
+    });
+    return db.marketPair.upsert({
+      where: { symbol },
+      update: { baseAssetId: baseAsset.id, quoteAssetId: quoteAsset.id, category: entry?.category ?? 'crypto', status: 'ACTIVE' },
+      create: { symbol, baseAssetId: baseAsset.id, quoteAssetId: quoteAsset.id, category: entry?.category ?? 'crypto', status: 'ACTIVE' },
+    });
+  }
+
+  private async ingestQuoteD1(input: NormalizedMarketQuoteInput): Promise<{ accepted: boolean; event?: MarketQuoteEvent; reason?: string }> {
+    const symbol = this.normalizeSymbol(input.symbol);
+    const provider = this.requiredText(input.provider, 'provider');
+    const source = this.requiredText(input.source, 'source');
+    const policy = getMarketSourcePolicy(symbol);
+    const mapping = getProviderMapping(symbol, provider);
+    if (!policy && !isDeterministicTestProvider(provider)) throw new Error('Market symbol is not in the canonical source registry: ' + symbol);
+    if (!mapping && !isDeterministicTestProvider(provider)) throw new Error('Market provider is not mapped for ' + symbol + ': ' + provider);
+    const providerInstrument = input.providerInstrument?.trim() || mapping?.instrument || symbol;
+    const priceType = input.priceType ?? 'LAST';
+    const price = this.decimal(input.price, 'price');
+    if (price.isNegative() || price.isZero()) throw new Error('Market quote price must be positive');
+    const pair = await this.getOrCreatePairD1(symbol);
+    const db = this.d1 as any;
+    const latest = await db.marketQuoteLatest.findUnique({ where: { pairId: pair.id } });
+    if (latest?.observedAt && input.observedAt.getTime() < new Date(latest.observedAt).getTime()) return { accepted: false, reason: 'OBSERVATION_OLDER_THAN_LATEST' };
+    const providerSequence = input.sequence === undefined ? undefined : BigInt(input.sequence);
+    const sequence = isDeterministicTestProvider(provider) && providerSequence !== undefined ? providerSequence : BigInt(latest?.sequence ?? 0) + 1n;
+    const receivedAt = new Date();
+    const lineage = { providerInstrument, priceType, canonicalAssetId: policy?.canonicalAssetId ?? null, assetClass: policy?.assetClass ?? null };
+    const data = {
+      symbol, provider, source, sequence: sequence.toString(), price: price.toString(),
+      change24h: this.optionalDecimal(input.change24h)?.toString() ?? null,
+      volume24h: this.optionalDecimal(input.volume24h)?.toString() ?? null,
+      high24h: this.optionalDecimal(input.high24h)?.toString() ?? null,
+      low24h: this.optionalDecimal(input.low24h)?.toString() ?? null,
+      observedAt: input.observedAt, receivedAt, rawData: JSON.stringify(this.withLineage(input.rawData, lineage)),
+    };
+    await db.marketQuoteSnapshot.create({ data: { pairId: pair.id, ...data } });
+    const latestData: any = { ...data };
+    delete latestData.rawData;
+    await db.marketQuoteLatest.upsert({ where: { pairId: pair.id }, update: { ...latestData, state: 'LIVE' }, create: { pairId: pair.id, ...latestData, state: 'LIVE' } });
+    const event = this.toEvent({ ...latestData, sequence, state: MarketQuoteState.LIVE, price, change24h: data.change24h ? new Prisma.Decimal(data.change24h) : null, volume24h: data.volume24h ? new Prisma.Decimal(data.volume24h) : null, high24h: data.high24h ? new Prisma.Decimal(data.high24h) : null, low24h: data.low24h ? new Prisma.Decimal(data.low24h) : null } as any, { providerInstrument, priceType });
+    try {
+      if (this.redis.isAvailable()) await this.redis.publish(MARKET_QUOTES_CHANNEL, JSON.stringify(event));
+      else return { accepted: true, event, reason: 'PERSISTED_NOT_PUBLISHED' };
+    } catch { return { accepted: true, event, reason: 'PERSISTED_NOT_PUBLISHED' }; }
+    return { accepted: true, event };
   }
 
   private toEvent(latest: { symbol: string; sequence: bigint; price: Prisma.Decimal; change24h?: Prisma.Decimal | null; volume24h?: Prisma.Decimal | null; high24h?: Prisma.Decimal | null; low24h?: Prisma.Decimal | null; state?: MarketQuoteState; provider: string; source: string; observedAt: Date; receivedAt: Date }, lineage?: { providerInstrument?: string; priceType?: MarketPriceType }): MarketQuoteEvent {
@@ -405,12 +511,8 @@ export class MarketAuthorityService implements OnModuleInit {
   }
 
   private isRuntimeProviderEnabled(provider?: string | null): boolean {
-    if (!provider) return false;
-    const configured = (process.env.MARKET_PROVIDER_NAMES ?? process.env.MARKET_PROVIDER_NAME ?? '')
-      .split(',')
-      .map((value) => value.trim().toLowerCase())
-      .filter(Boolean);
-    return process.env.MARKET_PROVIDER_ENABLED === 'true' && configured.includes(provider.toLowerCase());
+    return process.env.MARKET_PROVIDER_ENABLED === 'true'
+      && this.providerRouter.isProviderEnabled(provider);
   }
 
   private readStaleAfterMs(): number {

@@ -30,6 +30,10 @@ export class D1PrismaService extends D1PrismaClient implements OnModuleInit, OnM
     await this.$disconnect();
   }
 
+  isEnabled(): boolean {
+    return this.enabled;
+  }
+
   async isReady(): Promise<boolean> {
     if (!this.enabled) return false;
     try {
