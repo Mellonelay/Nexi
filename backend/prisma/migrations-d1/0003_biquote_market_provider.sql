@@ -24,3 +24,8 @@ WHERE c."key"='biquote' AND p."category" IN ('stock','forex','metal')
 ON CONFLICT("providerId","pairId") DO UPDATE SET
   "providerSymbol"=excluded."providerSymbol", "enabled"=1, "priority"=10,
   "capabilityPolicy"=excluded."capabilityPolicy", "updatedAt"=CURRENT_TIMESTAMP;
+
+UPDATE "MarketProviderSymbol"
+SET "priority"=5, "updatedAt"=CURRENT_TIMESTAMP
+WHERE "providerId"=(SELECT "id" FROM "MarketProviderConfig" WHERE "key"='gate')
+  AND "pairId" IN (SELECT "id" FROM "MarketPair" WHERE "symbol" IN ('AXPUSDT','DISUSDT','UBERUSDT','SONYUSDT'));

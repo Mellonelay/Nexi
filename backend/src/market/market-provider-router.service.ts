@@ -102,7 +102,7 @@ export class MarketProviderRouterService {
         },
       });
       const allMappings: Array<{ symbol: string; provider: string; providerInstrument: string }> = [];
-      const bySymbol = new Map<string, Array<{ provider: string; symbol: string; providerInstrument: string }>>();
+      const bySymbol = new Map<string, Array<{ provider: string; symbol: string; providerInstrument: string; mappingPriority: number; providerPriority: number }>>();
       for (const provider of providers) {
         for (const mapping of provider.symbols) {
           if (mapping.pair.status !== 'ACTIVE') continue;
@@ -113,6 +113,8 @@ export class MarketProviderRouterService {
             provider: provider.key,
             symbol: mapping.pair.symbol,
             providerInstrument: mapping.providerSymbol,
+            mappingPriority: mapping.priority,
+            providerPriority: provider.priority,
           };
           allMappings.push(entry);
           const existing = bySymbol.get(entry.symbol) ?? [];
@@ -124,6 +126,7 @@ export class MarketProviderRouterService {
 
       const selected = new Map<string, MarketProviderRuntimeSymbol[]>();
       for (const entries of bySymbol.values()) {
+        entries.sort((a, b) => a.mappingPriority - b.mappingPriority || a.providerPriority - b.providerPriority || a.provider.localeCompare(b.provider));
         for (const entry of entries.slice(0, 2)) {
           const symbols = selected.get(entry.provider) ?? [];
           symbols.push({ symbol: entry.symbol, providerInstrument: entry.providerInstrument });

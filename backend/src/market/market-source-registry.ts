@@ -17,6 +17,13 @@ export interface ProviderMapping {
 // Catalog probes are capability evidence, not identity substitution. Keep
 // unsupported combinations mapped for registry completeness, but do not poll
 // them until a provider catalog/quote probe proves the instrument callable.
+const BIQUOTE_QUOTE_COVERAGE = new Set([
+  'AAPLUSDT', 'NVDAUSDT', 'MSFTUSDT', 'GOOGUSDT', 'AMZNUSDT', 'METAUSDT', 'TSLAUSDT', 'WMTUSDT',
+  'JNJUSDT', 'NFLXUSDT', 'KOUSDT', 'AMDUSDT', 'MCDUSDT', 'WFCUSDT', 'NKEUSDT', 'BAUSDT',
+  'GBPUSD', 'EURUSD', 'USDCNH', 'USDHKD', 'USDJPY', 'USDTHB', 'AUDUSD', 'USDCHF',
+  'XAUUSD', 'XAGUSD', 'XPDUSD', 'XPTUSD', 'XALUSD', 'XCUUSD', 'XZNUSD',
+]);
+
 const EXCHANGE_QUOTE_COVERAGE: Record<string, ReadonlySet<string>> = {
   okx: new Set(['AAPLUSDT', 'AMDUSDT', 'AMZNUSDT', 'JNJUSDT', 'KOUSDT', 'METAUSDT', 'MSFTUSDT', 'NFLXUSDT', 'NVDAUSDT', 'SONYUSDT', 'TSLAUSDT', 'XAUUSD', 'XAGUSD', 'XCUUSD', 'XPDUSD', 'XPTUSD']),
   bitget: new Set(['AAPLUSDT', 'AMDUSDT', 'AMZNUSDT', 'BAUSDT', 'GOOGUSDT', 'KOUSDT', 'MCDUSDT', 'METAUSDT', 'MSFTUSDT', 'NFLXUSDT', 'NKEUSDT', 'NVDAUSDT', 'SONYUSDT', 'TSLAUSDT', 'UBERUSDT', 'WMTUSDT', 'XAUUSD', 'XAGUSD', 'XPDUSD', 'XPTUSD', 'XCUUSD']),
@@ -29,6 +36,7 @@ const EXCHANGE_QUOTE_COVERAGE: Record<string, ReadonlySet<string>> = {
 };
 
 function providerQuoteSupported(entry: CanonicalMarketPair, provider: string): boolean {
+  if (provider === 'biquote') return BIQUOTE_QUOTE_COVERAGE.has(entry.symbol);
   if (provider === 'yahoo') return true;
   const coverage = EXCHANGE_QUOTE_COVERAGE[provider];
   return coverage ? coverage.has(entry.symbol) : true;
