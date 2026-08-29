@@ -1,0 +1,1813 @@
+generator client {
+  provider = "prisma-client-js"
+  output = "../src/prisma/d1-client"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id                    String                  @id @default(uuid())
+  userCode              Int                     @unique
+  email                 String?                 @unique
+  password              String?
+  displayName           String?
+  role                  Role                    @default(USER)
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  lastActive            DateTime                @default(now())
+  binaryPositions       BinaryOptionPosition[]
+  kyc                   KYC?
+  loans                 LoanApplication[]
+  wallet                Wallet?
+  withdrawalRequests    WithdrawalRequest[]
+  forceOutcome          String                  @default("NORMAL")
+  contractPositions     ContractPosition[]
+  authSessions          AuthSession[]
+  spotOrders            SpotOrder[]
+  spotTrades            SpotTrade[]
+  conversions           ConversionTransaction[]
+  miningSubscriptions   MiningSubscription[]
+  affiliate             LegacyAffiliate?
+  rewards               LegacyReward[]
+  ledgerAccounts        LedgerAccount[]
+  miningRewardAccruals  MiningRewardAccrual[]
+  gate2SpotOrders       Gate2SpotOrder[]
+  gate2BinaryPositions  Gate2BinaryPosition[]
+  gate2Deposits         Gate2Deposit[]
+  depositClaims         DepositClaim[]          @relation("DepositClaimOwner")
+  reviewedDepositClaims DepositClaim[]          @relation("DepositClaimReviewer")
+  gate2Withdrawals      Gate2Withdrawal[]
+  gate2ConversionQuotes Gate2ConversionQuote[]
+  gate2OperationAudits  Gate2OperationAudit[]
+  gate2TransfersFrom    Gate2InternalTransfer[] @relation("Gate2TransferFrom")
+  gate2TransfersTo      Gate2InternalTransfer[] @relation("Gate2TransferTo")
+  adminRoleAssignment   AdminRoleAssignment?
+  walletIdentity        WalletIdentity?
+  spotMarginAccounts    SpotMarginAccount[]
+  spotMarginActivities  SpotMarginActivity[]
+  activities            Activity[]
+  preference            UserPreference?
+}
+
+model WalletIdentity {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  address   String   @unique
+  chainId   Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([address, chainId])
+}
+
+enum AuthSessionSurface {
+  PUBLIC
+  ADMIN
+}
+
+model AuthSession {
+  id                String             @id @default(uuid())
+  userId            String
+  surface           AuthSessionSurface
+  tokenFamilyId     String
+  refreshTokenHash  String             @unique
+  createdAt         DateTime           @default(now())
+  lastUsedAt        DateTime           @default(now())
+  absoluteExpiresAt DateTime
+  idleExpiresAt     DateTime
+  revokedAt         DateTime?
+  revokeReason      String?
+  replacedById      String?
+  userAgentHash     String?
+  ipHash            String?
+  user              User               @relation(fields: [userId], references: [id])
+
+  @@index([userId, surface, revokedAt])
+  @@index([tokenFamilyId, revokedAt])
+  @@index([absoluteExpiresAt])
+  @@index([idleExpiresAt])
+}
+
+model KYC {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  firstName    String
+  lastName     String
+  dob          DateTime
+  country      String
+  documentType String
+  documentUrl  String
+  status       String   @default("PENDING")
+  idFront      String?
+  idBack       String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+}
+
+model Wallet {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  balance       String    @default("0")
+  frozenBalance String    @default("0")
+  balances      String     @default("{}")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now())
+  ledgers       Ledger[]
+  user          User     @relation(fields: [userId], references: [id])
+}
+
+model Ledger {
+  id              String            @id @default(uuid())
+  walletId        String
+  type            LedgerType
+  amount          String
+  currency        String
+  referenceId     String?
+  transactionType TransactionType   @default(DEPOSIT)
+  status          TransactionStatus @default(CONFIRMED)
+  createdAt       DateTime          @default(now())
+  wallet          Wallet            @relation(fields: [walletId], references: [id])
+
+  @@index([walletId])
+}
+
+model SpotOrder {
+  id        String      @id @default(uuid())
+  userId    String
+  symbol    String
+  pair      String
+  side      OrderSide
+  type      OrderType
+  price     String?
+  amount    String
+  filled    String       @default("0")
+  remaining String       @default("0")
+  status    OrderStatus @default(OPEN)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  user      User        @relation(fields: [userId], references: [id])
+  trades    SpotTrade[]
+}
+
+model SpotTrade {
+  id          String    @id @default(uuid())
+  orderId     String
+  userId      String
+  pair        String
+  side        OrderSide
+  price       String
+  amount      String
+  fee         String     @default("0")
+  feeCurrency String    @default("USDT")
+  createdAt   DateTime  @default(now())
+  order       SpotOrder @relation(fields: [orderId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+}
+
+model BinaryOptionPosition {
+  id             String                     @id @default(uuid())
+  userId         String
+  symbol         String
+  pair           String?
+  side           BinarySide
+  amount         String
+  entryPrice     String
+  timeframe      Int
+  payoutRate     String?
+  profitRatio    Int?
+  lossRatio      Int?
+  targetPayout   String?
+  closePrice     String?
+  realizedProfit String?
+  strikePrice    String?
+  payout         String?
+  duration       Int?
+  status         BinaryStatus               @default(OPEN)
+  expiresAt      DateTime
+  createdAt      DateTime                   @default(now())
+  updatedAt      DateTime                   @updatedAt
+  user           User                       @relation(fields: [userId], references: [id])
+  legacyResults  LegacyBinaryOptionResult[]
+
+  @@index([status])
+  @@index([userId])
+}
+
+model ContractPosition {
+  id               String   @id @default(uuid())
+  userId           String
+  symbol           String // e.g. BTC/USDT
+  side             String // BUY (Long) or SELL (Short)
+  amount           String // Margin Amount (Collateral)
+  leverage         Int // e.g. 100
+  entryPrice       String
+  currentPrice     String? // Last updated price
+  liquidationPrice String
+  tpPrice          String? // Take Profit
+  slPrice          String? // Stop Loss
+  status           String // OPEN, CLOSED, LIQUIDATED
+  pnl              String    @default("0")
+  fee              String    @default("0")
+  marginMode       String   @default("ISOLATED") // CROSS or ISOLATED
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  user             User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+}
+
+model ContractPair {
+  id          String  @id @default(uuid())
+  symbol      String  @unique
+  minLeverage Int     @default(1)
+  maxLeverage Int     @default(100)
+  makerFee    String   @default("0.0004")
+  takerFee    String   @default("0.0006")
+  minAmount   String   @default("10")
+  isActive    Boolean @default(true)
+}
+
+model ConversionTransaction {
+  id        String   @id @default(uuid())
+  userId    String
+  fromCoin  String
+  toCoin    String
+  amount    String
+  rate      String
+  received  String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model LoanApplication {
+  id                    String                @id @default(uuid())
+  userId                String
+  amount                String
+  amountDecimal         String               @default("0")
+  currency              String                @default("USDT")
+  term                  Int
+  durationDays          Int                   @default(30)
+  interestRate          String                 @default("0.1")
+  interestRateDecimal   String               @default("0.1")
+  totalRepayment        String                 @default("0")
+  totalRepaymentDecimal String               @default("0")
+  collateral            String?
+  collateralImg         String?
+  status                LoanStatus            @default(PENDING)
+  approvedAt            DateTime?
+  dueDate               DateTime?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @default(now())
+  productSnapshot       String?
+  user                  User                  @relation(fields: [userId], references: [id])
+  repayments            LegacyLoanRepayment[]
+
+  @@index([userId])
+}
+
+model MiningPlan {
+  id                String               @id @default(uuid())
+  name              String
+  currency          String               @default("USDT")
+  lockupPeriod      Int
+  dailyYield        String
+  dailyYieldDecimal String              @default("0")
+  minDeposit        String
+  minDepositDecimal String              @default("0")
+  maxDeposit        String
+  maxDepositDecimal String              @default("0")
+  isActive          Boolean              @default(true)
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  subscriptions     MiningSubscription[]
+}
+
+model MiningSubscription {
+  id                  String                @id @default(uuid())
+  userId              String
+  planId              String
+  amount              String
+  amountDecimal       String               @default("0")
+  status              MiningStatus          @default(ACTIVE)
+  startDate           DateTime              @default(now())
+  endDate             DateTime?
+  totalRewards        String                 @default("0")
+  totalRewardsDecimal String               @default("0")
+  lastRewardPaid      DateTime?
+  planSnapshot        String?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @default(now())
+  user                User                  @relation(fields: [userId], references: [id])
+  plan                MiningPlan            @relation(fields: [planId], references: [id])
+  accruals            MiningRewardAccrual[]
+
+  @@index([planId])
+}
+
+// Durable reward evidence. LedgerPosting and Activity remain authoritative;
+// this row is the mining-domain projection that links the reward event back to
+// both authorities without duplicating balance truth.
+model MiningRewardAccrual {
+  id              String             @id @default(uuid())
+  subscriptionId  String
+  userId          String
+  ledgerPostingId String             @unique
+  activityId      String             @unique
+  idempotencyKey  String             @unique
+  amount          String
+  currency        String
+  rewardedAt      DateTime           @default(now())
+  subscription    MiningSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  user            User               @relation(fields: [userId], references: [id])
+  ledgerPosting   LedgerPosting      @relation(fields: [ledgerPostingId], references: [id])
+  activity        Activity           @relation(fields: [activityId], references: [id])
+
+  @@index([subscriptionId, rewardedAt])
+  @@index([userId, rewardedAt])
+}
+
+model Currency {
+  id                Int              @id @default(autoincrement())
+  symbol            String           @unique
+  name              String
+  logo              String?
+  rate              String            @default("1.0")
+  minDeposit        String            @default("10.0")
+  maxDeposit        String            @default("10000.0")
+  minWithdrawal     String            @default("10.0")
+  maxWithdrawal     String            @default("10000.0")
+  withdrawalFee     String            @default("1.0")
+  depositEnabled    Boolean          @default(true)
+  withdrawEnabled   Boolean          @default(true)
+  confirmationCount Int              @default(3)
+  decimals          Int              @default(18)
+  isActive          Boolean          @default(true)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  depositAddresses  DepositAddress[]
+}
+
+model DepositAddress {
+  id           String         @id @default(uuid())
+  currencyId   Int
+  currency     Currency       @relation(fields: [currencyId], references: [id])
+  network      String // e.g., "ERC20", "TRC20", "BTC"
+  address      String
+  label        String? // e.g., "Main Wallet"
+  isActive     Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  manualClaims DepositClaim[]
+
+  @@index([currencyId])
+}
+
+enum DepositClaimState {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  CREDITED
+  FAILED
+}
+
+// Manual user-submitted funding evidence is intentionally separate from
+// Gate2Deposit, whose semantics remain blockchain/provider observation.
+model DepositClaim {
+  id                         String            @id @default(uuid())
+  userId                     String
+  asset                      String
+  network                    String
+  depositAddressId           String?
+  destinationAddressSnapshot String
+  claimedAmount              String
+  proofObjectKey             String
+  proofContentType           String?
+  proofByteSize              Int?
+  txHash                     String?
+  state                      DepositClaimState @default(PENDING_REVIEW)
+  idempotencyKey             String            @unique
+  submittedAt                DateTime          @default(now())
+  reviewedAt                 DateTime?
+  reviewedBy                 String?
+  reviewReason               String?
+  creditedLedgerPostingId    String?
+  linkedObservedDepositId    String?
+  user                       User              @relation("DepositClaimOwner", fields: [userId], references: [id])
+  reviewer                   User?             @relation("DepositClaimReviewer", fields: [reviewedBy], references: [id])
+  depositAddress             DepositAddress?   @relation(fields: [depositAddressId], references: [id], onDelete: SetNull)
+
+  @@index([userId, state, submittedAt])
+  @@index([state, submittedAt])
+  @@index([txHash])
+}
+
+model LoanPlan {
+  id           String   @id @default(uuid())
+  name         String
+  durationDays Int
+  interestRate String // e.g., 0.05 for 5%
+  minAmount    String
+  maxAmount    String
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model SystemConfig {
+  id          String   @id @default(uuid())
+  key         String   @unique // e.g., "banner_text", "maintenance_mode"
+  value       String // JSON string or plain text
+  description String?
+  updatedAt   DateTime @updatedAt
+}
+
+model AdminAuditLog {
+  id        String   @id @default(uuid())
+  adminId   String
+  action    String
+  target    String?
+  details   String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([adminId])
+}
+
+enum AdminRoleId {
+  readonly_operator
+  support_agent
+  kyc_reviewer
+  finance_operator
+  market_operator
+  content_manager
+  security_auditor
+  sandbox_operator
+  super_admin
+}
+
+model AdminRoleAssignment {
+  id         String      @id @default(uuid())
+  userId     String      @unique
+  roleId     AdminRoleId
+  assignedBy String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([roleId])
+}
+
+enum AdminCommandStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXECUTED
+}
+
+enum AdminApprovalDecision {
+  APPROVED
+  REJECTED
+}
+
+model AdminGovernanceCommand {
+  id             String                    @id @default(uuid())
+  idempotencyKey String                    @unique
+  commandType    String
+  target         String?
+  reason         String
+  payload        String?
+  requestedBy    String
+  status         AdminCommandStatus        @default(PENDING)
+  approvedBy     String?
+  approvedAt     DateTime?
+  executedAt     DateTime?
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @updatedAt
+  approvals      AdminGovernanceApproval[]
+
+  @@index([status, createdAt])
+  @@index([requestedBy, createdAt])
+}
+
+model AdminGovernanceApproval {
+  id         String                 @id @default(uuid())
+  commandId  String
+  approverId String
+  decision   AdminApprovalDecision
+  reason     String
+  createdAt  DateTime               @default(now())
+  command    AdminGovernanceCommand @relation(fields: [commandId], references: [id], onDelete: Cascade)
+
+  @@unique([commandId, approverId])
+  @@index([approverId, createdAt])
+}
+
+enum AdminIncidentSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+model AdminIncident {
+  id                            String                @id @default(uuid())
+  title                         String
+  body                          String
+  severity                      AdminIncidentSeverity @default(INFO)
+  active                        Boolean               @default(true)
+  environment                   String
+  postedAt                      DateTime              @default(now())
+  acknowledgedAt                DateTime?
+  acknowledgedBy                String?
+  acknowledgementReason         String?
+  acknowledgementIdempotencyKey String?               @unique
+  correlationId                 String?
+  createdAt                     DateTime              @default(now())
+  updatedAt                     DateTime              @updatedAt
+
+  @@index([active, postedAt])
+  @@index([environment, postedAt])
+}
+
+enum AdminMaintenanceScope {
+  GLOBAL
+  ROUTE
+  MARKET
+  PAIR
+}
+
+enum AdminMaintenanceStatus {
+  SCHEDULED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+model AdminMaintenanceWindow {
+  id                   String                 @id @default(uuid())
+  scope                AdminMaintenanceScope
+  target               String
+  status               AdminMaintenanceStatus @default(SCHEDULED)
+  scheduledAt          DateTime
+  endsAt               DateTime
+  reason               String
+  environment          String
+  createdBy            String
+  createdAt            DateTime               @default(now())
+  cancelledAt          DateTime?
+  cancelledBy          String?
+  cancelReason         String?
+  cancelIdempotencyKey String?                @unique
+  idempotencyKey       String                 @unique
+  correlationId        String?
+  updatedAt            DateTime               @updatedAt
+
+  @@index([status, scheduledAt])
+  @@index([scope, target])
+  @@index([environment, scheduledAt])
+}
+
+model AdminFeatureFlag {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  enabled     Boolean  @default(false)
+  environment String   @default("sandbox")
+  reason      String
+  updatedBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model BinaryPair {
+  id            Int     @id @default(autoincrement())
+  symbol        String  @unique // e.g., "BTC/USDT"
+  baseAsset     String // e.g., "BTC"
+  quoteAsset    String // e.g., "USDT"
+  rate          String   @default("1.85") // Payout Rate e.g., 1.85 for 85%
+  category      String  @default("crypto") // crypto, forex, metal, stock
+  logo          String? // Added logo field
+  isActive      Boolean @default(true)
+  houseWinRatio Int     @default(50) // Global Risk: Win Ratio for the house (e.g., 60 means 60% chance user loses)
+
+  // Real API mapping fields
+  realId     Int?
+  matchId    Int?
+  currencyId Int?
+  coinType   Int? @default(0) // 0=Crypto, 1=Stock, 2=Forex, 3=Metal
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BinaryTimeframe {
+  id          Int     @id @default(autoincrement())
+  name        String // e.g., "30s", "1m"
+  seconds     Int     @unique
+  payoutRate  String // e.g., 0.85
+  profitRatio Int     @default(85)
+  lossRatio   Int     @default(0)
+  isActive    Boolean @default(true)
+}
+
+model WithdrawalRequest {
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  currency  String
+  amount    String
+  address   String
+  status    WithdrawalStatus @default(PENDING)
+  txHash    String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+}
+
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum LedgerType {
+  DEPOSIT
+  WITHDRAWAL
+  TRADE_BINARY
+  LOAN_DISBURSED
+  LOAN_REPAID
+  CONVERSION
+  AFFILIATE_REWARD
+  SPOT
+  BINARY
+  MAIN
+  MINING
+  LOAN
+  MINING_REWARD
+  TRADE_SPOT
+}
+
+enum OrderSide {
+  BUY
+  SELL
+}
+
+enum OrderType {
+  LIMIT
+  MARKET
+}
+
+enum OrderStatus {
+  OPEN
+  FILLED
+  PARTIALLY_FILLED
+  CANCELED
+  CANCELLED
+}
+
+enum BinarySide {
+  CALL
+  PUT
+}
+
+enum BinaryStatus {
+  OPEN
+  WIN
+  LOSS
+}
+
+enum LoanStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  ACTIVE
+  PAID
+  OVERDUE
+  DEFAULTED
+}
+
+enum MiningStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum TransactionStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+  REJECTED
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  TRADE_SPOT
+  TRADE_BINARY
+  MINING_PAYOUT
+  LOAN_DISBURSEMENT
+  LOAN_REPAYMENT
+  TRANSFER
+}
+
+// Historical enum types retained so the reconciled schema does not imply
+// that applied enum definitions or their data were discarded.
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum KycStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  NOT_SUBMITTED
+}
+
+model OptionGameSettings {
+  id         String   @id @default(uuid())
+  currencyId Int
+  matchId    Int
+  status     Int
+  symbol     String?
+  payoutRate String?
+  duration   Int?
+  rawData    String?
+  dummy      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model MarketData {
+  id        String   @id @default(uuid())
+  symbol    String   @unique
+  price     String
+  change    String
+  vol       String
+  high      String
+  low       String
+  rawData   String?
+  updatedAt DateTime @updatedAt
+}
+
+enum AssetLifecycleStatus {
+  ACTIVE
+  MAINTENANCE
+  INACTIVE
+}
+
+enum MarketQuoteState {
+  LOADING
+  LIVE
+  STALE
+  ERROR
+  UNAVAILABLE
+}
+
+enum LedgerAccountStatus {
+  ACTIVE
+  SUSPENDED
+  CLOSED
+}
+
+enum LedgerAccountScope {
+  MAIN
+  MARGIN
+}
+
+enum LedgerPostingKind {
+  CREDIT
+  DEBIT
+  RESERVE
+  RELEASE
+  SETTLEMENT
+  COMPENSATION
+  TRANSFER
+}
+
+enum SpotMarginAccountStatus {
+  ACTIVE
+  SUSPENDED
+  CLOSED
+}
+
+enum SpotMarginPositionDirection {
+  LONG
+  SHORT
+}
+
+enum SpotMarginPositionStatus {
+  PENDING
+  OPEN
+  CLOSING
+  CLOSED
+  LIQUIDATED
+}
+
+enum SpotMarginEventType {
+  TRANSFER_IN
+  TRANSFER_OUT
+  OPEN
+  MARK
+  INTEREST
+  PNL
+  FEE
+  CLOSE
+  LIQUIDATION
+  COLLATERAL_RESERVE
+  COLLATERAL_RELEASE
+  REPAYMENT
+}
+
+enum SpotMarginActivityStatus {
+  ACCEPTED
+  COMPLETED
+  REJECTED
+}
+
+model MarketAsset {
+  id              String                  @id @default(uuid())
+  symbol          String                  @unique
+  displayName     String
+  category        String                  @default("crypto")
+  providerSymbol  String?
+  status          AssetLifecycleStatus    @default(ACTIVE)
+  maintenanceNote String?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  networks        MarketNetwork[]
+  capabilities    MarketAssetCapability[]
+  basePairs       MarketPair[]            @relation("MarketPairBaseAsset")
+  quotePairs      MarketPair[]            @relation("MarketPairQuoteAsset")
+
+  @@index([category, status])
+}
+
+model MarketNetwork {
+  id              String                  @id @default(uuid())
+  assetId         String
+  code            String
+  name            String
+  status          AssetLifecycleStatus    @default(ACTIVE)
+  maintenanceNote String?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  asset           MarketAsset             @relation(fields: [assetId], references: [id])
+  capabilities    MarketAssetCapability[]
+
+  @@unique([assetId, code])
+  @@index([code, status])
+}
+
+model MarketAssetCapability {
+  id              String               @id @default(uuid())
+  assetId         String
+  networkId       String?
+  capabilityKey   String               @unique
+  depositEnabled  Boolean              @default(false)
+  withdrawEnabled Boolean              @default(false)
+  tradingEnabled  Boolean              @default(false)
+  status          AssetLifecycleStatus @default(ACTIVE)
+  maintenanceNote String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  asset           MarketAsset          @relation(fields: [assetId], references: [id])
+  network         MarketNetwork?       @relation(fields: [networkId], references: [id])
+
+  @@index([assetId, status])
+  @@index([networkId])
+}
+
+model MarketPair {
+  id              String                 @id @default(uuid())
+  symbol          String                 @unique
+  baseAssetId     String
+  quoteAssetId    String
+  category        String                 @default("crypto")
+  status          AssetLifecycleStatus   @default(ACTIVE)
+  maintenanceNote String?
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  baseAsset       MarketAsset            @relation("MarketPairBaseAsset", fields: [baseAssetId], references: [id])
+  quoteAsset      MarketAsset            @relation("MarketPairQuoteAsset", fields: [quoteAssetId], references: [id])
+  snapshots       MarketQuoteSnapshot[]
+  latest          MarketQuoteLatest?
+  klines          MarketKline[]
+  providerSymbols MarketProviderSymbol[]
+  trades          MarketTrade[]
+  depthSnapshots  MarketDepthSnapshot[]
+
+  @@unique([baseAssetId, quoteAssetId])
+  @@index([category, status])
+}
+
+enum MarketProviderLifecycleStatus {
+  ACTIVE
+  DISABLED
+  MAINTENANCE
+}
+
+model MarketProviderConfig {
+  id               String                        @id @default(uuid())
+  key              String                        @unique
+  displayName      String
+  status           MarketProviderLifecycleStatus @default(ACTIVE)
+  priority         Int                           @default(100)
+  restBaseUrl      String?
+  websocketBaseUrl String?
+  supportsQuotes   Boolean                       @default(true)
+  supportsKlines   Boolean                       @default(true)
+  supportsTrades   Boolean                       @default(false)
+  supportsDepth    Boolean                       @default(false)
+  createdAt        DateTime                      @default(now())
+  updatedAt        DateTime                      @updatedAt
+  symbols          MarketProviderSymbol[]
+
+  @@index([status, priority])
+}
+
+model MarketProviderSymbol {
+  id             String               @id @default(uuid())
+  providerId     String
+  pairId         String
+  providerSymbol String
+  enabled        Boolean              @default(true)
+  priority       Int                  @default(100)
+  capabilityPolicy String?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  provider       MarketProviderConfig @relation(fields: [providerId], references: [id])
+  pair           MarketPair           @relation(fields: [pairId], references: [id])
+
+  @@unique([providerId, pairId])
+  @@unique([providerId, providerSymbol])
+  @@index([pairId, enabled])
+}
+
+enum MarketTradeSide {
+  BUY
+  SELL
+  UNKNOWN
+}
+
+model MarketTrade {
+  id              String          @id @default(uuid())
+  pairId          String
+  symbol          String
+  provider        String
+  source          String
+  providerTradeId String?
+  sequence        String?
+  side            MarketTradeSide @default(UNKNOWN)
+  price           String
+  quantity        String
+  observedAt      DateTime
+  receivedAt      DateTime        @default(now())
+  rawData         String?
+  pair            MarketPair      @relation(fields: [pairId], references: [id])
+
+  @@unique([pairId, provider, providerTradeId])
+  @@unique([pairId, provider, sequence])
+  @@index([symbol, observedAt])
+  @@index([pairId, observedAt])
+}
+
+enum MarketDepthSide {
+  BID
+  ASK
+}
+
+model MarketDepthSnapshot {
+  id                 String             @id @default(uuid())
+  pairId             String
+  symbol             String
+  provider           String
+  source             String
+  providerSnapshotId String?
+  sequence           String?
+  checksum           String?
+  observedAt         DateTime
+  receivedAt         DateTime           @default(now())
+  rawData            String?
+  pair               MarketPair         @relation(fields: [pairId], references: [id])
+  levels             MarketDepthLevel[]
+
+  @@unique([pairId, provider, providerSnapshotId])
+  @@unique([pairId, provider, sequence])
+  @@index([symbol, observedAt])
+  @@index([pairId, observedAt])
+}
+
+model MarketDepthLevel {
+  id         String              @id @default(uuid())
+  snapshotId String
+  side       MarketDepthSide
+  levelIndex Int
+  price      String
+  quantity   String
+  snapshot   MarketDepthSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+
+  @@unique([snapshotId, side, levelIndex])
+  @@index([snapshotId, side, price])
+}
+
+model MarketQuoteSnapshot {
+  id         String     @id @default(uuid())
+  pairId     String
+  symbol     String
+  provider   String
+  source     String
+  sequence   String
+  price      String
+  change24h  String?
+  volume24h  String?
+  high24h    String?
+  low24h     String?
+  observedAt DateTime
+  receivedAt DateTime   @default(now())
+  rawData    String?
+  pair       MarketPair @relation(fields: [pairId], references: [id])
+
+  @@unique([pairId, sequence])
+  @@index([symbol, sequence])
+  @@index([receivedAt])
+}
+
+model MarketQuoteLatest {
+  id         String           @id @default(uuid())
+  pairId     String           @unique
+  symbol     String
+  provider   String
+  source     String
+  sequence   String
+  price      String?
+  change24h  String?
+  volume24h  String?
+  high24h    String?
+  low24h     String?
+  state      MarketQuoteState @default(UNAVAILABLE)
+  observedAt DateTime?
+  receivedAt DateTime         @default(now())
+  pair       MarketPair       @relation(fields: [pairId], references: [id])
+
+  @@index([symbol, state])
+}
+
+// Backend-owned persistent OHLCV candles. The API validates the interval
+// vocabulary; text storage preserves provider-neutral interval labels.
+model MarketKline {
+  id         String     @id @default(uuid())
+  pairId     String
+  symbol     String
+  interval   String
+  openTime   DateTime
+  closeTime  DateTime?
+  open       String
+  high       String
+  low        String
+  close      String
+  volume     String?
+  provider   String
+  source     String
+  observedAt DateTime
+  receivedAt DateTime   @default(now())
+  pair       MarketPair @relation(fields: [pairId], references: [id])
+
+  @@unique([pairId, interval, openTime])
+  @@index([symbol, interval, openTime])
+  @@index([receivedAt])
+}
+
+model LedgerAccount {
+  id          String              @id @default(uuid())
+  userId      String
+  asset       String
+  scope       LedgerAccountScope  @default(MAIN)
+  status      LedgerAccountStatus @default(ACTIVE)
+  available   String             @default("0")
+  locked      String             @default("0")
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  user        User                @relation(fields: [userId], references: [id])
+  postings    LedgerPosting[]
+  auditEvents LedgerAuditEvent[]
+
+  @@unique([userId, asset, scope])
+  @@index([userId, status])
+}
+
+// Scope/ownership records only. Available and locked balances remain owned by
+// LedgerAccount/LedgerPosting and are never duplicated here.
+model SpotMarginAccount {
+  id         String                  @id @default(uuid())
+  userId     String
+  pair       String
+  baseAsset  String
+  quoteAsset String
+  status     SpotMarginAccountStatus @default(ACTIVE)
+  createdAt  DateTime                @default(now())
+  updatedAt  DateTime                @updatedAt
+  user       User                    @relation(fields: [userId], references: [id])
+  positions  SpotMarginPosition[]
+  activities SpotMarginActivity[]
+
+  @@unique([userId, pair])
+  @@index([userId, status])
+}
+
+model SpotMarginPosition {
+  id                 String                      @id @default(uuid())
+  accountId          String
+  direction          SpotMarginPositionDirection
+  leverage           Int
+  collateral         String
+  quantity           String                     @default("0")
+  entryPrice         String
+  markPrice          String?
+  debtAsset          String                      @default("")
+  debtPrincipal      String                     @default("0")
+  interestAccrued    String                     @default("0")
+  realizedPnl        String                     @default("0")
+  unrealizedPnl      String                     @default("0")
+  status             SpotMarginPositionStatus    @default(OPEN)
+  openIdempotencyKey String                      @unique
+  entryOrderId       String?                     @unique
+  closeOrderId       String?                     @unique
+  openedAt           DateTime                    @default(now())
+  closedAt           DateTime?
+  updatedAt          DateTime                    @updatedAt
+  account            SpotMarginAccount           @relation(fields: [accountId], references: [id])
+  events             SpotMarginPositionEvent[]
+  activities         SpotMarginActivity[]
+
+  @@index([accountId, status, openedAt])
+  @@index([status, markPrice])
+}
+
+model SpotMarginPositionEvent {
+  id             String              @id @default(uuid())
+  positionId     String
+  type           SpotMarginEventType
+  asset          String?
+  amount         String?
+  price          String?
+  idempotencyKey String              @unique
+  metadata       String?
+  createdAt      DateTime            @default(now())
+  position       SpotMarginPosition  @relation(fields: [positionId], references: [id])
+
+  @@index([positionId, createdAt])
+  @@index([type, createdAt])
+}
+
+model SpotMarginActivity {
+  id             String                   @id @default(uuid())
+  userId         String
+  accountId      String?
+  positionId     String?
+  type           SpotMarginEventType
+  status         SpotMarginActivityStatus @default(COMPLETED)
+  idempotencyKey String                   @unique
+  details        String?
+  createdAt      DateTime                 @default(now())
+  user           User                     @relation(fields: [userId], references: [id])
+  account        SpotMarginAccount?       @relation(fields: [accountId], references: [id])
+  position       SpotMarginPosition?      @relation(fields: [positionId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([accountId, createdAt])
+  @@index([positionId, createdAt])
+}
+
+model LedgerPosting {
+  id                  String               @id @default(uuid())
+  accountId           String
+  asset               String
+  kind                LedgerPostingKind
+  amount              String
+  availableDelta      String
+  lockedDelta         String
+  referenceType       String
+  referenceId         String
+  idempotencyKey      String
+  correlationId       String
+  economicGroup       String?
+  createdAt           DateTime             @default(now())
+  metadata            String?
+  account             LedgerAccount        @relation(fields: [accountId], references: [id])
+  auditEvents         LedgerAuditEvent[]
+  miningRewardAccrual MiningRewardAccrual?
+  loanRepayment       LegacyLoanRepayment?
+
+  @@unique([accountId, idempotencyKey])
+  @@index([referenceType, referenceId])
+  @@index([economicGroup])
+  @@index([accountId, createdAt])
+}
+
+model LedgerIdempotency {
+  id              String   @id @default(uuid())
+  idempotencyKey  String   @unique
+  operation       String
+  accountId       String?
+  debitPostingId  String?
+  creditPostingId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([accountId, createdAt])
+}
+
+model LedgerAuditEvent {
+  id             String         @id @default(uuid())
+  accountId      String
+  postingId      String?
+  eventType      String
+  idempotencyKey String
+  correlationId  String
+  details        String?
+  createdAt      DateTime       @default(now())
+  account        LedgerAccount  @relation(fields: [accountId], references: [id])
+  posting        LedgerPosting? @relation(fields: [postingId], references: [id])
+
+  @@index([accountId, createdAt])
+  @@index([idempotencyKey])
+}
+
+// Historical tables are explicitly represented and mapped so D0 preserves
+// their rows and constraints without promoting them to current authority.
+model LegacyAdmin {
+  id        String   @id
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+
+  @@map("Admin")
+}
+
+model LegacyAffiliate {
+  id            String   @id
+  userId        String   @unique
+  referralCode  String   @unique
+  referredBy    String?
+  totalEarnings String    @default("0")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime
+  user          User     @relation(fields: [userId], references: [id])
+
+  @@map("Affiliate")
+}
+
+model LegacyBinaryOptionResult {
+  id         String               @id
+  positionId String               @unique
+  closePrice String
+  profit     String
+  createdAt  DateTime             @default(now())
+  position   BinaryOptionPosition @relation(fields: [positionId], references: [id])
+
+  @@map("BinaryOptionResult")
+}
+
+model LegacyLoanRepayment {
+  id              String          @id
+  loanId          String
+  amount          String
+  amountDecimal   String         @default("0")
+  currency        String
+  paidAt          DateTime        @default(now())
+  ledgerPostingId String?         @unique
+  activityId      String?         @unique
+  loan            LoanApplication @relation(fields: [loanId], references: [id])
+  ledgerPosting   LedgerPosting?  @relation(fields: [ledgerPostingId], references: [id])
+  activity        Activity?       @relation(fields: [activityId], references: [id])
+
+  @@map("LoanRepayment")
+}
+
+model LegacyReward {
+  id        String   @id
+  userId    String
+  amount    String
+  currency  String
+  reason    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("Reward")
+}
+
+model SupportTicket {
+  id           String               @id @default(uuid())
+  userId       String
+  subject      String
+  status       String               @default("OPEN")
+  priority     String               @default("NORMAL")
+  assignedToId String?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  replies      SupportTicketReply[]
+
+  @@index([userId, createdAt])
+  @@index([status, priority, updatedAt])
+}
+
+model SupportTicketReply {
+  id          String        @id @default(uuid())
+  ticketId    String
+  authorId    String
+  body        String
+  internal    Boolean       @default(false)
+  attachments String?
+  createdAt   DateTime      @default(now())
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId, createdAt])
+}
+
+model PersistentMessage {
+  id            String    @id @default(uuid())
+  senderId      String
+  recipientId   String
+  body          String
+  deliveryState String    @default("SENT")
+  sequence      Int       @default(0)
+  readAt        DateTime?
+  attachments   String?
+  createdAt     DateTime  @default(now())
+
+  @@index([recipientId, createdAt])
+  @@index([senderId, recipientId, sequence])
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String
+  type      String
+  title     String
+  body      String
+  readAt    DateTime?
+  metadata  String?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, readAt, createdAt])
+}
+
+model Announcement {
+  id        String    @id @default(uuid())
+  title     String
+  body      String
+  targeting String?
+  startsAt  DateTime?
+  endsAt    DateTime?
+  published Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([published, startsAt, endsAt])
+}
+
+model Activity {
+  id                  String               @id @default(uuid())
+  userId              String
+  type                String
+  status              String               @default("COMPLETED")
+  referenceType       String
+  referenceId         String
+  idempotencyKey      String               @unique
+  ledgerCorrelationId String
+  ledgerPostingId     String?
+  asset               String?
+  amount              String?
+  details             String?
+  createdAt           DateTime             @default(now())
+  user                User                 @relation(fields: [userId], references: [id])
+  miningRewardAccrual MiningRewardAccrual?
+  loanRepayment       LegacyLoanRepayment?
+
+  @@index([userId, createdAt])
+  @@index([userId, type, createdAt])
+  @@index([referenceType, referenceId])
+  @@index([ledgerCorrelationId])
+}
+
+enum OutboxDeliveryState {
+  PENDING
+  PUBLISHED
+  RETRY
+  DEAD_LETTERED
+}
+
+model EventOutbox {
+  id             String              @id @default(uuid())
+  idempotencyKey String              @unique
+  aggregateType  String
+  aggregateId    String
+  eventType      String
+  eventVersion   Int                 @default(1)
+  correlationId  String?
+  payload        String
+  state          OutboxDeliveryState @default(PENDING)
+  availableAt    DateTime            @default(now())
+  claimedAt      DateTime?
+  leaseToken     String?
+  attempts       Int                 @default(0)
+  lastErrorCode  String?
+  lastErrorAt    DateTime?
+  publishedAt    DateTime?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@index([state, availableAt])
+  @@index([aggregateType, aggregateId, createdAt])
+  @@index([correlationId, createdAt])
+}
+
+model LearnArticle {
+  id          String                 @id @default(uuid())
+  slug        String                 @unique
+  title       String
+  body        String
+  summary     String?
+  status      String                 @default("DRAFT")
+  attachments String?
+  categoryId  String?
+  scheduledAt DateTime?
+  publishedAt DateTime?
+  archivedAt  DateTime?
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  category    LearnCategory?         @relation(fields: [categoryId], references: [id])
+  revisions   LearnArticleRevision[]
+  tags        LearnArticleTag[]
+  media       LearnMediaAsset[]      @relation("ArticleMedia")
+
+  @@index([status, publishedAt])
+  @@index([categoryId, status])
+  @@map("LearnContent")
+}
+
+model LearnCategory {
+  id          String         @id @default(uuid())
+  slug        String         @unique
+  name        String
+  description String?
+  sortOrder   Int            @default(0)
+  status      String         @default("ACTIVE")
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  articles    LearnArticle[]
+}
+
+model LearnArticleRevision {
+  id          String            @id @default(uuid())
+  articleId   String
+  revision    Int
+  title       String
+  body        String
+  summary     String?
+  status      String            @default("DRAFT")
+  attachments String?
+  scheduledAt DateTime?
+  publishedAt DateTime?
+  archivedAt  DateTime?
+  createdBy   String?
+  createdAt   DateTime          @default(now())
+  article     LearnArticle      @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  media       LearnMediaAsset[] @relation("RevisionMedia")
+
+  @@unique([articleId, revision])
+  @@index([articleId, createdAt])
+}
+
+model LearnTag {
+  id        String            @id @default(uuid())
+  slug      String            @unique
+  name      String
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  articles  LearnArticleTag[]
+}
+
+model LearnArticleTag {
+  articleId String
+  tagId     String
+  article   LearnArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  tag       LearnTag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, tagId])
+  @@index([tagId])
+}
+
+model LearnMediaAsset {
+  id         String                @id @default(uuid())
+  articleId  String?
+  revisionId String?
+  url        String
+  altText    String?
+  provider   String?
+  metadata   String?
+  createdAt  DateTime              @default(now())
+  article    LearnArticle?         @relation("ArticleMedia", fields: [articleId], references: [id], onDelete: Cascade)
+  revision   LearnArticleRevision? @relation("RevisionMedia", fields: [revisionId], references: [id], onDelete: Cascade)
+
+  @@index([articleId, createdAt])
+  @@index([revisionId, createdAt])
+}
+
+model LegacySettings {
+  id        String   @id
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+
+  @@map("Settings")
+}
+
+model UserPreference {
+  id                   String   @id @default(uuid())
+  userId               String   @unique
+  locale               String   @default("en")
+  timezone             String   @default("UTC")
+  theme                String   @default("dark")
+  notificationSettings String?
+  tradingSettings      String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Gate 2 authority models. These coexist with historical Float-backed
+// projections so B4-B6 can adopt exact NUMERIC arithmetic without rewriting
+// legacy rows or changing the completed B1-B3 lineage.
+enum Gate2SpotOrderType {
+  LIMIT
+  MARKET
+  STOP
+}
+
+enum Gate2SpotOrderStatus {
+  OPEN
+  PARTIALLY_FILLED
+  FILLED
+  CANCELED
+  REJECTED
+}
+
+model Gate2SpotOrder {
+  id                String               @id @default(uuid())
+  userId            String
+  pair              String
+  baseAsset         String
+  quoteAsset        String
+  side              OrderSide
+  type              Gate2SpotOrderType
+  status            Gate2SpotOrderStatus @default(OPEN)
+  amount            String
+  filled            String              @default("0")
+  remaining         String
+  price             String?
+  stopPrice         String?
+  triggeredAt       DateTime?
+  triggerQuoteId    String?
+  triggerProvider   String?
+  triggerSource     String?
+  triggerObservedAt DateTime?
+  triggerSequence   String?
+  reserveAsset      String
+  reserveScope      LedgerAccountScope   @default(MAIN)
+  reservedAmount    String
+  feeRate           String              @default("0")
+  idempotencyKey    String
+  correlationId     String
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  user              User                 @relation(fields: [userId], references: [id])
+  tradesAsBuyer     Gate2SpotTrade[]     @relation("Gate2TradeBuyerOrder")
+  tradesAsSeller    Gate2SpotTrade[]     @relation("Gate2TradeSellerOrder")
+
+  @@unique([userId, idempotencyKey])
+  @@index([pair, status, side, price, createdAt])
+  @@index([userId, status, createdAt])
+}
+
+model Gate2SpotTrade {
+  id             String         @id @default(uuid())
+  buyerOrderId   String
+  sellerOrderId  String
+  pair           String
+  baseAsset      String
+  quoteAsset     String
+  price          String
+  amount         String
+  buyerFee       String        @default("0")
+  sellerFee      String        @default("0")
+  idempotencyKey String         @unique
+  createdAt      DateTime       @default(now())
+  buyerOrder     Gate2SpotOrder @relation("Gate2TradeBuyerOrder", fields: [buyerOrderId], references: [id])
+  sellerOrder    Gate2SpotOrder @relation("Gate2TradeSellerOrder", fields: [sellerOrderId], references: [id])
+
+  @@index([pair, createdAt])
+  @@index([buyerOrderId, createdAt])
+  @@index([sellerOrderId, createdAt])
+}
+
+model Gate2BinaryConfiguration {
+  id                     String   @id @default(uuid())
+  pair                   String
+  durationSeconds        Int
+  payoutRate             String
+  lossRate               String  @default("0")
+  minStake               String
+  maxStake               String
+  settlementDelaySeconds Int      @default(0)
+  version                Int      @default(1)
+  enabled                Boolean  @default(true)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@unique([pair, durationSeconds, version])
+  @@index([pair, enabled])
+}
+
+enum Gate2BinaryState {
+  ACTIVE
+  SETTLING
+  SETTLEMENT_DELAYED
+  WIN
+  LOSS
+  ERROR
+}
+
+model Gate2BinaryPosition {
+  id                   String           @id @default(uuid())
+  userId               String
+  pair                 String
+  side                 BinarySide
+  stake                String
+  entryPrice           String
+  expiryPrice          String?
+  payoutAmount         String          @default("0")
+  realizedProfit       String          @default("0")
+  durationSeconds      Int
+  expiresAt            DateTime
+  state                Gate2BinaryState @default(ACTIVE)
+  entryQuoteId         String
+  entryProvider        String
+  entrySource          String
+  entryObservedAt      DateTime
+  entryReceivedAt      DateTime
+  entrySequence        String
+  expiryQuoteId        String?
+  expiryProvider       String?
+  expirySource         String?
+  expiryObservedAt     DateTime?
+  expiryReceivedAt     DateTime?
+  expirySequence       String?
+  quoteFreshnessMs     Int
+  configurationVersion Int
+  settlementReceiptId  String?          @unique
+  idempotencyKey       String
+  correlationId        String
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  user                 User             @relation(fields: [userId], references: [id])
+
+  @@unique([userId, idempotencyKey])
+  @@index([userId, state, createdAt])
+  @@index([pair, state, createdAt])
+}
+
+enum Gate2DepositState {
+  OBSERVED
+  CONFIRMING
+  CREDITED
+  REJECTED
+  UNAVAILABLE
+}
+
+model Gate2Deposit {
+  id                    String            @id @default(uuid())
+  userId                String
+  asset                 String
+  network               String
+  address               String
+  txHash                String
+  amount                String
+  confirmations         Int               @default(0)
+  requiredConfirmations Int
+  state                 Gate2DepositState @default(OBSERVED)
+  observationKey        String            @unique
+  creditPostingId       String?
+  observedAt            DateTime          @default(now())
+  creditedAt            DateTime?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  user                  User              @relation(fields: [userId], references: [id])
+
+  @@unique([network, txHash, address])
+  @@index([userId, state, createdAt])
+}
+
+enum Gate2WithdrawalState {
+  PENDING_REVIEW
+  REJECTED
+  APPROVED
+  SETTLED
+  FAILED
+}
+
+model Gate2Withdrawal {
+  id             String               @id @default(uuid())
+  userId         String
+  asset          String
+  network        String
+  address        String
+  amount         String
+  fee            String
+  reservedAmount String
+  state          Gate2WithdrawalState @default(PENDING_REVIEW)
+  requestKey     String               @unique
+  reserveKey     String               @unique
+  reviewReason   String?
+  txHash         String?
+  providerState  String?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  user           User                 @relation(fields: [userId], references: [id])
+
+  @@index([userId, state, createdAt])
+}
+
+model Gate2InternalTransfer {
+  id              String   @id @default(uuid())
+  fromUserId      String
+  toUserId        String
+  asset           String
+  amount          String
+  idempotencyKey  String   @unique
+  debitPostingId  String
+  creditPostingId String
+  createdAt       DateTime @default(now())
+  fromUser        User     @relation("Gate2TransferFrom", fields: [fromUserId], references: [id])
+  toUser          User     @relation("Gate2TransferTo", fields: [toUserId], references: [id])
+
+  @@index([fromUserId, createdAt])
+  @@index([toUserId, createdAt])
+}
+
+enum Gate2ConversionQuoteState {
+  OPEN
+  ACCEPTED
+  EXPIRED
+  REJECTED
+}
+
+model Gate2ConversionQuote {
+  id                   String                    @id @default(uuid())
+  userId               String
+  fromAsset            String
+  toAsset              String
+  inputAmount          String
+  rate                 String
+  outputAmount         String
+  provider             String
+  source               String
+  evidenceId           String
+  configurationVersion Int
+  expiresAt            DateTime
+  state                Gate2ConversionQuoteState @default(OPEN)
+  quoteKey             String                    @unique
+  acceptanceKey        String?                   @unique
+  conversionRef        String?
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+  user                 User                      @relation(fields: [userId], references: [id])
+
+  @@index([userId, state, expiresAt])
+}
+
+model Gate2OperationAudit {
+  id             String   @id @default(uuid())
+  userId         String
+  operationType  String
+  operationId    String
+  eventType      String
+  idempotencyKey String
+  details        String?
+  createdAt      DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [id])
+
+  @@index([operationType, operationId, createdAt])
+  @@index([userId, createdAt])
+  @@index([idempotencyKey])
+}

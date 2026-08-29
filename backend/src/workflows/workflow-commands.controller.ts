@@ -1,0 +1,33 @@
+import { Body, Controller, Headers, Post, Param } from "@nestjs/common";
+import { ApiOperation, ApiParam, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { WorkflowCommandsService } from "./workflow-commands.service";
+
+@ApiTags("Internal Workflows")
+@Controller("_internal/workflows")
+export class WorkflowCommandsController {
+  constructor(private readonly commands: WorkflowCommandsService) {}
+
+  @Post(":workflow/:action")
+  @ApiOperation({ summary: "Execute an authenticated Workflow-facing NestJS command" })
+  @ApiParam({ name: "workflow", enum: ["withdrawal", "mining", "loan"] })
+  @ApiParam({ name: "action", description: "Workflow-specific action" })
+  @ApiResponse({ status: 200, description: "D1-authoritative command result" })
+  async execute(
+    @Param("workflow") workflow: string,
+    @Param("action") action: string,
+    @Body() body: Record<string, unknown>,
+    @Headers("x-nexi-workflow-signature") signature?: string,
+    @Headers("x-nexi-workflow-timestamp") timestamp?: string,
+  ) {
+    const input = {
+      workflow,
+      action,
+      instanceId: typeof body?.instanceId === "string" ? body.instanceId : "",
+      entityId: typeof body?.entityId === "string" ? body.entityId : "",
+      idempotencyKey: typeof body?.idempotencyKey === "string" ? body.idempotencyKey : "",
+      payload: body?.payload && typeof body.payload === "object" && !Array.isArray(body.payload) ? body.payload as Record<string, unknown> : {},
+    };
+    this.commands.assertSignature(input, signature, timestamp);
+    return this.commands.execute(input);
+  }
+}

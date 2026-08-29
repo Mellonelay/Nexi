@@ -1,0 +1,189 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nexi-staging",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-19",
+  "compatibility_flags": ["nodejs_compat"],
+  "account_id": "95f40eab0f2ba20aff96f8979e45ab71",
+  "observability": {
+    "enabled": true,
+  },
+  "vars": {
+    "NODE_ENV": "production",
+    "PORT": "3000",
+    "CORS_ORIGINS": "http://127.0.0.1:3000",
+    "WALLET_AUTH_DOMAIN": "127.0.0.1:3000",
+    "WALLET_AUTH_URI": "http://127.0.0.1:3000",
+    "WALLET_AUTH_SUPPORTED_CHAIN_IDS": "1",
+    "DATABASE_POOL_MAX": "4",
+    "D1_BRIDGE_ENABLED": "true",
+    "D1_BRIDGE_HOST": "nexi-core-d1",
+    "QUEUE_BRIDGE_HOST": "nexi.queue",
+    "WORKFLOW_BRIDGE_HOST": "nexi.workflow",
+    "D1_RUNTIME_ENABLED": "true",
+    "MARKET_PROVIDER_ENABLED": "true",
+    "MARKET_PROVIDER_NAME": "binance-spot",
+    "MARKET_PROVIDER_NAMES": "binance-spot",
+    "MARKET_PROVIDER_SYMBOLS": "canonical_crypto",
+    "MARKET_PROVIDER_POLL_INTERVAL_MS": "5000",
+    "MARKET_QUOTE_STALE_AFTER_MS": "30000",
+    "NEXI_MARKET_STALE_AFTER_MS": "30000",
+    "NEXI_CONVERSION_QUOTE_TTL_MS": "30000",
+    "MARKET_BACKFILL_ON_STARTUP": "false",
+    "NEXI_SCHEDULER_ENABLED": "false",
+    "NEXI_B7_ENABLED": "false",
+    "MARKET_ARCHIVE_PIPELINE_URL": "https://de518faafc9c42f1bdeb344041249a49.ingest.cloudflare.com",
+    "MARKET_ARCHIVE_PIPELINE_FORMAT": "structured",
+    "MARKET_ARCHIVE_REQUIRED": "true",
+    "MARKET_ARCHIVE_RETENTION_ENABLED": "false",
+    "MARKET_ARCHIVE_CHECKPOINT_CONFIRMED": "false",
+    "NEXI_HEALTH_URL": "https://nexi-staging.melloenfrwrk.workers.dev/readyz",
+  },
+  "secrets": {
+    "required": [
+      "DATABASE_URL",
+      "REDIS_URL",
+      "JWT_SECRET",
+      "MARKET_ARCHIVE_PIPELINE_TOKEN",
+    ],
+  },
+  "r2_buckets": [
+    {
+      "binding": "DEPOSIT_PROOFS",
+      "bucket_name": "nexi-deposit-proofs-staging",
+      "preview_bucket_name": "nexi-deposit-proofs-staging",
+    },
+    {
+      "binding": "MARKET_ARCHIVE",
+      "bucket_name": "nexi-market-archive-staging",
+    },
+  ],
+  "d1_databases": [
+    {
+      "binding": "CORE_DB",
+      "database_name": "nexi-core-staging",
+      "database_id": "522177fa-ac42-4d8f-a6a8-b34eed262f15",
+      "preview_database_id": "522177fa-ac42-4d8f-a6a8-b34eed262f15",
+      "migrations_dir": "../backend/prisma/migrations-d1",
+    },
+  ],
+  "containers": [
+    {
+      "class_name": "NexiApiContainer",
+      "name": "nexi-api-staging",
+      "image": "../backend/Dockerfile",
+      "image_build_context": "../backend",
+      "instance_type": "basic",
+      "max_instances": 1,
+      "ssh": {
+        "enabled": true,
+      },
+      "authorized_keys": [
+        {
+          "name": "mellonelay-codex-runtime",
+          "public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBT3V8GvDXI5BP5FnBP6bFyIOF0AF45fals94iICkZ0n nexi-wrangler-sg-edge-01",
+        },
+        {
+          "name": "mellonelay-windows-operator",
+          "public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEDRrfjnbErxe9EH/1HMlWbNqdLAmNQuXolFZzTIypmF mellonelay-codex-runtime",
+        },
+      ],
+    },
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "class_name": "NexiApiContainer",
+        "name": "NEXI_API_CONTAINER",
+      },
+    ],
+  },
+  "migrations": [
+    {
+      "new_sqlite_classes": ["NexiApiContainer"],
+      "tag": "v2-api-container",
+    },
+  ],
+  "analytics_engine_datasets": [
+    {
+      "binding": "NEXI_ANALYTICS",
+      "dataset": "nexi_runtime_staging",
+    },
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "NEXI_CONFIG",
+      "id": "bc9f4b8c2cca4fbfac94e1ba47339fe1",
+    },
+  ],
+  "queues": {
+    "producers": [
+      {
+        "binding": "DOMAIN_EVENTS_QUEUE",
+        "queue": "nexi-domain-events-staging",
+      },
+      {
+        "binding": "NOTIFICATIONS_QUEUE",
+        "queue": "nexi-notifications-staging",
+      },
+      {
+        "binding": "INTEGRATION_JOBS_QUEUE",
+        "queue": "nexi-integration-jobs-staging",
+      },
+    ],
+    "consumers": [
+      {
+        "queue": "nexi-domain-events-staging",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 5,
+        "retry_delay": 15,
+        "dead_letter_queue": "nexi-domain-events-staging-dlq",
+      },
+    ],
+  },
+  "pipelines": [
+    {
+      "binding": "MARKET_STRUCTURED_STREAM",
+      "stream": "de518faafc9c42f1bdeb344041249a49",
+    },
+    {
+      "binding": "MARKET_ARCHIVE_STREAM",
+      "stream": "177510a4918647fb8ccf7c5c796ff882",
+    },
+  ],
+  "workflows": [
+    {
+      "binding": "WITHDRAWAL_WORKFLOW",
+      "name": "nexi-withdrawal-staging",
+      "class_name": "NexiWithdrawalWorkflow",
+    },
+    {
+      "binding": "MINING_WORKFLOW",
+      "name": "nexi-mining-staging",
+      "class_name": "NexiMiningWorkflow",
+    },
+    {
+      "binding": "LOAN_WORKFLOW",
+      "name": "nexi-loan-staging",
+      "class_name": "NexiLoanWorkflow",
+    },
+  ],
+  "secrets_store_secrets": [
+    {
+      "binding": "NEXI_PLATFORM_VALIDATION",
+      "store_id": "b4e4124ef4134d7a94e1e7f97e93b73c",
+      "secret_name": "NEXI_PLATFORM_VALIDATION",
+    },
+  ],
+  "ratelimits": [
+    {
+      "name": "NEXI_AUTH_RATE_LIMITER",
+      "namespace_id": "2026082801",
+      "simple": {
+        "limit": 30,
+        "period": 60,
+      },
+    },
+  ],
+}
