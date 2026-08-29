@@ -13,6 +13,7 @@ import { TickDbMarketAdapter } from './tickdb-market.adapter';
 import { FawazCurrencyMarketAdapter } from './fawaz-currency-market.adapter';
 import { RzzroIndustrialMetalsMarketAdapter } from './rzzro-industrial-metals-market.adapter';
 import { YahooMarketAdapter } from './yahoo-market.adapter';
+import { BiquoteMarketAdapter } from './biquote-market.adapter';
 import { CoinGeckoMarketAdapter } from './coingecko-market.adapter';
 import { CoinMarketCapMarketAdapter } from './coinmarketcap-market.adapter';
 import { OkxMarketAdapter, BitgetMarketAdapter, HtxMarketAdapter, BybitMarketAdapter, GateMarketAdapter } from './public-exchange-market.adapter';
@@ -35,6 +36,7 @@ export class MarketProviderRouterService {
     fawazCurrency: FawazCurrencyMarketAdapter,
     rzzroIndustrialMetals: RzzroIndustrialMetalsMarketAdapter,
     yahoo: YahooMarketAdapter,
+    biquote: BiquoteMarketAdapter,
     coingecko: CoinGeckoMarketAdapter,
     coinmarketcap: CoinMarketCapMarketAdapter,
     okx: OkxMarketAdapter,
@@ -44,7 +46,7 @@ export class MarketProviderRouterService {
     gate: GateMarketAdapter,
     private readonly d1: D1PrismaService,
   ) {
-    this.adapters = [binance, yahoo, coingecko, coinmarketcap, massive, finnhub, oanda, metalsApi, metalpriceApi, alphaVantage, tickdb, fawazCurrency, rzzroIndustrialMetals, okx, bitget, htx, bybit, gate];
+    this.adapters = [binance, biquote, yahoo, coingecko, coinmarketcap, massive, finnhub, oanda, metalsApi, metalpriceApi, alphaVantage, tickdb, fawazCurrency, rzzroIndustrialMetals, okx, bitget, htx, bybit, gate];
   }
 
   async start(onEvent: (event: MarketProviderEvent) => void): Promise<boolean> {

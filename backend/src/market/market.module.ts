@@ -21,6 +21,7 @@ import { TickDbMarketAdapter } from './tickdb-market.adapter';
 import { FawazCurrencyMarketAdapter } from './fawaz-currency-market.adapter';
 import { RzzroIndustrialMetalsMarketAdapter } from './rzzro-industrial-metals-market.adapter';
 import { YahooMarketAdapter } from './yahoo-market.adapter';
+import { BiquoteMarketAdapter } from './biquote-market.adapter';
 import { CoinGeckoMarketAdapter } from './coingecko-market.adapter';
 import { CoinMarketCapMarketAdapter } from './coinmarketcap-market.adapter';
 import { OkxMarketAdapter, BitgetMarketAdapter, HtxMarketAdapter, BybitMarketAdapter, GateMarketAdapter } from './public-exchange-market.adapter';
@@ -30,7 +31,7 @@ import { MarketArchiveService } from './market-archive.service';
 @Module({
   imports: [PrismaModule, RedisModule, BinaryModule],
   controllers: [MarketKlineController],
-  providers: [MarketAuthorityService, MarketIngestService, MarketReferencePersistenceService, MarketArchiveService, MarketGateway, MarketSeederService, MarketSubscriberService, MarketKlineService, BinanceSpotAdapter, YahooMarketAdapter, CoinGeckoMarketAdapter, CoinMarketCapMarketAdapter, MassiveMarketAdapter, FinnhubMarketAdapter, OandaMarketAdapter, MetalsApiMarketAdapter, MetalpriceApiMarketAdapter, AlphaVantageMarketAdapter, TickDbMarketAdapter, FawazCurrencyMarketAdapter, RzzroIndustrialMetalsMarketAdapter, OkxMarketAdapter, BitgetMarketAdapter, HtxMarketAdapter, BybitMarketAdapter, GateMarketAdapter, MarketProviderRouterService],
-  exports: [MarketAuthorityService, MarketIngestService, MarketGateway, MarketSeederService, MarketSubscriberService, BinanceSpotAdapter, YahooMarketAdapter, CoinGeckoMarketAdapter, CoinMarketCapMarketAdapter, MassiveMarketAdapter, FinnhubMarketAdapter, OandaMarketAdapter, MetalsApiMarketAdapter, MetalpriceApiMarketAdapter, AlphaVantageMarketAdapter, TickDbMarketAdapter, FawazCurrencyMarketAdapter, RzzroIndustrialMetalsMarketAdapter, OkxMarketAdapter, BitgetMarketAdapter, HtxMarketAdapter, BybitMarketAdapter, GateMarketAdapter, MarketProviderRouterService],
+  providers: [MarketAuthorityService, MarketIngestService, MarketReferencePersistenceService, MarketArchiveService, MarketGateway, MarketSeederService, MarketSubscriberService, MarketKlineService, BinanceSpotAdapter, BiquoteMarketAdapter, YahooMarketAdapter, CoinGeckoMarketAdapter, CoinMarketCapMarketAdapter, MassiveMarketAdapter, FinnhubMarketAdapter, OandaMarketAdapter, MetalsApiMarketAdapter, MetalpriceApiMarketAdapter, AlphaVantageMarketAdapter, TickDbMarketAdapter, FawazCurrencyMarketAdapter, RzzroIndustrialMetalsMarketAdapter, OkxMarketAdapter, BitgetMarketAdapter, HtxMarketAdapter, BybitMarketAdapter, GateMarketAdapter, MarketProviderRouterService],
+  exports: [MarketAuthorityService, MarketIngestService, MarketGateway, MarketSeederService, MarketSubscriberService, BinanceSpotAdapter, BiquoteMarketAdapter, YahooMarketAdapter, CoinGeckoMarketAdapter, CoinMarketCapMarketAdapter, MassiveMarketAdapter, FinnhubMarketAdapter, OandaMarketAdapter, MetalsApiMarketAdapter, MetalpriceApiMarketAdapter, AlphaVantageMarketAdapter, TickDbMarketAdapter, FawazCurrencyMarketAdapter, RzzroIndustrialMetalsMarketAdapter, OkxMarketAdapter, BitgetMarketAdapter, HtxMarketAdapter, BybitMarketAdapter, GateMarketAdapter, MarketProviderRouterService],
 })
 export class MarketModule {}

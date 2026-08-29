@@ -72,10 +72,10 @@ export interface AssetSourcePolicy {
 }
 
 const CRYPTO_PROVIDERS = ['binance-spot', 'coingecko', 'coinmarketcap'];
-const STOCK_PROVIDERS = ['yahoo', 'okx', 'bitget', 'htx', 'bybit', 'gate', 'tickdb', 'alltick', 'massive', 'finnhub', 'alpha-vantage'];
-const FOREX_PROVIDERS = ['yahoo', 'bybit', 'gate', 'htx', 'okx', 'bitget', 'tickdb', 'alltick', 'live-rates', 'massive', 'finnhub', 'oanda', 'alpha-vantage', 'fawaz-currency'];
-const PRECIOUS_METAL_PROVIDERS = ['yahoo', 'okx', 'htx', 'bitget', 'bybit', 'gate', 'tickdb', 'alltick', 'live-rates', 'oanda', 'metals-api', 'alpha-vantage', 'fawaz-currency'];
-const INDUSTRIAL_METAL_PROVIDERS = ['yahoo', 'okx', 'htx', 'bitget', 'bybit', 'gate', 'tickdb', 'alltick', 'metals-api', 'metalprice-api', 'alpha-vantage', 'rzzro-industrial-metals'];
+const STOCK_PROVIDERS = ['biquote', 'yahoo', 'okx', 'bitget', 'htx', 'bybit', 'gate', 'tickdb', 'alltick', 'massive', 'finnhub', 'alpha-vantage'];
+const FOREX_PROVIDERS = ['biquote', 'yahoo', 'bybit', 'gate', 'htx', 'okx', 'bitget', 'tickdb', 'alltick', 'live-rates', 'massive', 'finnhub', 'oanda', 'alpha-vantage', 'fawaz-currency'];
+const PRECIOUS_METAL_PROVIDERS = ['biquote', 'yahoo', 'okx', 'htx', 'bitget', 'bybit', 'gate', 'tickdb', 'alltick', 'live-rates', 'oanda', 'metals-api', 'alpha-vantage', 'fawaz-currency'];
+const INDUSTRIAL_METAL_PROVIDERS = ['biquote', 'yahoo', 'okx', 'htx', 'bitget', 'bybit', 'gate', 'tickdb', 'alltick', 'metals-api', 'metalprice-api', 'alpha-vantage', 'rzzro-industrial-metals'];
 
 function baseSymbol(entry: CanonicalMarketPair): string {
   if (entry.category === 'crypto' || entry.category === 'stock') return entry.symbol.replace(/USDT$/, '');
@@ -125,6 +125,15 @@ function providerInstrument(entry: CanonicalMarketPair, provider: string): strin
     const symbols: Record<string, string> = { XALUSD: 'aluminum', XCUUSD: 'copper', XZNUSD: 'zinc' };
     return symbols[entry.symbol] ?? entry.symbol;
   }
+  if (provider === 'biquote') {
+    if (entry.category === 'forex' || entry.category === 'metal') return entry.symbol;
+    const aliases: Record<string, string> = {
+      GOOGUSDT: 'GOOGL',
+      DISUSDT: 'DISNEY',
+      AXPUSDT: 'AMERICANEXPRESS',
+    };
+    return aliases[entry.symbol] ?? entry.providerSymbol;
+  }
   if (provider === 'yahoo') {
     const yahooSymbols: Record<string, string> = {
       USDCNH: 'CNH=X', USDHKD: 'HKD=X', USDJPY: 'JPY=X', USDTHB: 'THB=X',
@@ -146,7 +155,7 @@ function providerInstrument(entry: CanonicalMarketPair, provider: string): strin
 
 function supportsWebsocket(provider: string, entry: CanonicalMarketPair): boolean {
   if (entry.category === 'crypto') return provider === 'binance-spot';
-  return ['tickdb', 'alltick', 'live-rates', 'massive', 'oanda', 'okx', 'bitget', 'htx', 'bybit'].includes(provider);
+  return ['biquote', 'tickdb', 'alltick', 'live-rates', 'massive', 'oanda', 'okx', 'bitget', 'htx', 'bybit'].includes(provider);
 }
 
 function supportsAlphaVantageQuote(entry: CanonicalMarketPair): boolean {
