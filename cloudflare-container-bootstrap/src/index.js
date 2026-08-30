@@ -242,7 +242,7 @@ async function invokeWorkflowCommand(
   );
   const container = getContainer(env.NEXI_API_CONTAINER, "nexi-api");
   if (!container.running) {
-    await container.start({ env: containerEnv(env) });
+    await container.start({ envVars: containerEnv(env) });
   }
   await container.startAndWaitForPorts({
     ports: [3000],
@@ -704,7 +704,7 @@ export default {
       throw new Error("JWT_SECRET is required for authenticated Queue ingress");
     const container = getContainer(env.NEXI_API_CONTAINER, "nexi-api");
   if (!container.running) {
-    await container.start({ env: containerEnv(env) });
+    await container.start({ envVars: containerEnv(env) });
   }
   await container.startAndWaitForPorts({
     ports: [3000],
@@ -765,7 +765,7 @@ export default {
     const url = new URL(request.url);
     const container = getContainer(env.NEXI_API_CONTAINER, "nexi-api");
   if (!container.running) {
-    await container.start({ env: containerEnv(env) });
+    await container.start({ envVars: containerEnv(env) });
   }
   await container.startAndWaitForPorts({
     ports: [3000],
