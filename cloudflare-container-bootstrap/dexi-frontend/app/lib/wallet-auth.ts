@@ -38,6 +38,19 @@ export interface WalletChallenge {
   expirationTime: string;
 }
 
+const REFERRAL_STORAGE_KEY = 'nexi:referral-code';
+
+export function captureReferralCode() {
+  if (typeof window === 'undefined') return null;
+  const fromUrl = new URLSearchParams(window.location.search).get('ref')?.trim();
+  if (fromUrl) window.localStorage.setItem(REFERRAL_STORAGE_KEY, fromUrl);
+  return fromUrl || window.localStorage.getItem(REFERRAL_STORAGE_KEY);
+}
+
+export function clearReferralCode() {
+  if (typeof window !== 'undefined') window.localStorage.removeItem(REFERRAL_STORAGE_KEY);
+}
+
 export function setWalletSession(payload: { access_token: string; user?: unknown; profile?: WalletProfile }) {
   window.localStorage.setItem('token', payload.access_token);
   const sessionUser = payload.user ?? payload.profile;
