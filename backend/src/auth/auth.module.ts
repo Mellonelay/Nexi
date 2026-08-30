@@ -19,6 +19,7 @@ import { AuthSessionService } from './auth-session.service';
 import { AuthSecurityEventsService } from './auth-security-events.service';
 import { WalletAuthService } from './wallet-auth.service';
 import { D1PrismaModule } from '../d1/d1-prisma.module';
+import { ReferralVipModule } from '../referral-vip/referral-vip.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { D1PrismaModule } from '../d1/d1-prisma.module';
     PrismaModule,
     ConfigModule,
     D1PrismaModule,
+    ReferralVipModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -38,6 +40,6 @@ import { D1PrismaModule } from '../d1/d1-prisma.module';
   ],
   providers: [AuthService, WalletAuthService, JwtStrategy, RolesGuard, JwtAuthGuard, OwnershipGuard, DevelopmentOnlyGuard, RefreshTokenCryptoService, AuthSecurityEventsService, AuthSessionService, RedisRateLimitService, AuthRateLimitGuard, AuthSurfaceGuard],
   controllers: [AuthController],
-  exports: [AuthService, RolesGuard, JwtAuthGuard, OwnershipGuard, DevelopmentOnlyGuard, RefreshTokenCryptoService, AuthSecurityEventsService, AuthSessionService, RedisRateLimitService, AuthRateLimitGuard, AuthSurfaceGuard, JwtModule],
+  exports: [AuthService, WalletAuthService, RolesGuard, JwtAuthGuard, OwnershipGuard, DevelopmentOnlyGuard, RefreshTokenCryptoService, AuthSecurityEventsService, AuthSessionService, RedisRateLimitService, AuthRateLimitGuard, AuthSurfaceGuard, JwtModule],
 })
 export class AuthModule {}

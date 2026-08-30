@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAccount, useConnect, useDisconnect, useSignMessage } from 'wagmi';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { clearWalletSession, loadCurrentUser, logoutWallet, requestWalletChallenge, setWalletSession, verifyWalletChallenge } from '../lib/wallet-auth';
+import { captureReferralCode, clearReferralCode, clearWalletSession, loadCurrentUser, logoutWallet, requestWalletChallenge, setWalletSession, verifyWalletChallenge } from '../lib/wallet-auth';
 import { config as wagmiConfig } from '../lib/wagmi';
 
 function truncateAddress(address: string) { return `${address.slice(0, 6)}…${address.slice(-4)}`; }
@@ -29,6 +29,8 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
   const previousChainId = useRef<number | null>(null);
   const sessionQuery = useQuery({ queryKey: ['user', 'me'], queryFn: loadCurrentUser, enabled: typeof window !== 'undefined' && Boolean(window.localStorage.getItem('token')), retry: false, staleTime: 30_000 });
 
+  useEffect(() => { captureReferralCode(); }, []);
+
   useEffect(() => {
     const addressChanged = Boolean(address && previousAddress.current && previousAddress.current.toLowerCase() !== address.toLowerCase());
     const chainChanged = Boolean(chainId && previousChainId.current && previousChainId.current !== chainId);
@@ -50,8 +52,10 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
   const authenticateConnectedWallet = useCallback(async (selectedAddress: string, selectedChainId: number) => {
     const challenge = await requestWalletChallenge(selectedAddress, selectedChainId);
     const signature = await signMessageAsync({ message: challenge.message });
-    const verified = await verifyWalletChallenge(challenge.message, signature);
+    const referralCode = captureReferralCode();
+    const verified = await verifyWalletChallenge(challenge.message, signature, referralCode);
     setWalletSession(verified);
+    clearReferralCode();
     await queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
     setOpen(false);
     setMessage('Connected');
@@ -62,7 +66,6 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
     try {
       let selectedAddress = address;
       let selectedChainId = chainId;
-
       if (!isConnected || !selectedAddress || !selectedChainId) {
         if (!connector) throw new Error('No compatible wallet was discovered.');
         const result = await connectAsync({ connector });
@@ -74,12 +77,10 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
         selectedAddress = result.accounts[0];
         selectedChainId = result.chainId;
       }
-
       if (!selectedAddress || !selectedChainId) throw new Error('The wallet did not provide an account.');
       await authenticateConnectedWallet(selectedAddress, selectedChainId);
-    } catch (error) {
-      setMessage(walletErrorMessage(error));
-    } finally { setBusy(false); }
+    } catch (error) { setMessage(walletErrorMessage(error)); }
+    finally { setBusy(false); }
   }, [activeConnector, address, authenticateConnectedWallet, chainId, connectAsync, disconnect, isConnected]);
 
   useEffect(() => {
@@ -95,14 +96,9 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
     try { await logoutWallet(); } finally { disconnect(); queryClient.removeQueries({ queryKey: ['user', 'me'] }); setBusy(false); }
   };
 
-    const sessionWalletAddress = sessionQuery.data?.walletAddress;
-    if (
-      isConnected &&
-      sessionWalletAddress &&
-      address &&
-      sessionWalletAddress.toLowerCase() === address.toLowerCase()
-    ) {
-      return <button type="button" onClick={() => void disconnectWallet()} disabled={busy} className="min-h-11 rounded-xl border border-violet-300/25 bg-[#2A1742] px-3 text-left text-sm text-[#F8F6FF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF]" title="Disconnect wallet">{truncateAddress(sessionWalletAddress)}</button>;
+  const sessionWalletAddress = sessionQuery.data?.walletAddress;
+  if (isConnected && sessionWalletAddress && address && sessionWalletAddress.toLowerCase() === address.toLowerCase()) {
+    return <button type="button" onClick={() => void disconnectWallet()} disabled={busy} className="min-h-11 rounded-xl border border-violet-300/25 bg-[#2A1742] px-3 text-left text-sm text-[#F8F6FF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF]" title="Disconnect wallet">{truncateAddress(sessionWalletAddress)}</button>;
   }
 
   return <div className="relative">
@@ -116,8 +112,6 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
 }
 
 export default function WalletConnectControl(props: { compact?: boolean }) {
-  if (!wagmiConfig) {
-    return <span className="text-xs text-[#8C8299]" role="status">Wallet connection is not configured.</span>;
-  }
+  if (!wagmiConfig) return <span className="text-xs text-[#8C8299]" role="status">Wallet connection is not configured.</span>;
   return <WalletConnectControlInner {...props} />;
 }

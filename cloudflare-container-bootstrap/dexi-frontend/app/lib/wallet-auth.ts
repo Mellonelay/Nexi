@@ -1,5 +1,22 @@
 import api from './api';
 
+export interface ReferralProfile {
+  referralCode: string;
+  referralCount: number;
+  totalEarnings: string;
+  referredByUserCode: number | null;
+}
+
+export interface VipProfile {
+  level: number;
+  name: string;
+  progress: string;
+  threshold: string;
+  benefits: unknown;
+  evaluatedAt: string;
+  qualifiedAt: string | null;
+}
+
 export interface WalletProfile {
   id: string;
   email: string | null;
@@ -7,6 +24,8 @@ export interface WalletProfile {
   walletAddress: string | null;
   chainId: number | null;
   kycStatus: string;
+  referral?: ReferralProfile | null;
+  vip?: VipProfile | null;
 }
 
 export interface WalletChallenge {
@@ -17,6 +36,19 @@ export interface WalletChallenge {
   chainId: number;
   issuedAt: string;
   expirationTime: string;
+}
+
+const REFERRAL_STORAGE_KEY = 'nexi:referral-code';
+
+export function captureReferralCode() {
+  if (typeof window === 'undefined') return null;
+  const fromUrl = new URLSearchParams(window.location.search).get('ref')?.trim();
+  if (fromUrl) window.localStorage.setItem(REFERRAL_STORAGE_KEY, fromUrl);
+  return fromUrl || window.localStorage.getItem(REFERRAL_STORAGE_KEY);
+}
+
+export function clearReferralCode() {
+  if (typeof window !== 'undefined') window.localStorage.removeItem(REFERRAL_STORAGE_KEY);
 }
 
 export function setWalletSession(payload: { access_token: string; user?: unknown; profile?: WalletProfile }) {
@@ -37,8 +69,12 @@ export async function requestWalletChallenge(address: string, chainId: number) {
   return response.data;
 }
 
-export async function verifyWalletChallenge(message: string, signature: string) {
-  const response = await api.post<{ access_token: string; refresh_token?: string; user?: unknown; profile: WalletProfile }>('/auth/wallet/verify', { message, signature });
+export async function verifyWalletChallenge(message: string, signature: string, referralCode?: string | null) {
+  const response = await api.post<{ access_token: string; refresh_token?: string; user?: unknown; profile: WalletProfile }>('/auth/wallet/verify', {
+    message,
+    signature,
+    ...(referralCode?.trim() ? { referralCode: referralCode.trim() } : {}),
+  });
   return response.data;
 }
 

@@ -34,6 +34,8 @@ import { ObservabilityModule } from "./observability/observability.module";
 import { D1WorkerBridgeModule } from "./d1/d1-worker-bridge.module";
 import { D1PrismaModule } from "./d1/d1-prisma.module";
 import { WorkflowCommandsModule } from "./workflows/workflow-commands.module";
+import { ReferralVipModule } from "./referral-vip/referral-vip.module";
+import { ProfileModule } from "./profile/profile.module";
 
 @Module({
   imports: [
@@ -72,6 +74,8 @@ import { WorkflowCommandsModule } from "./workflows/workflow-commands.module";
     D1WorkerBridgeModule,
     D1PrismaModule,
     WorkflowCommandsModule,
+    ReferralVipModule,
+    ProfileModule,
   ],
   controllers: [AppController, FeedbackController],
   providers: [AppService, RuntimeLifecycleService],
