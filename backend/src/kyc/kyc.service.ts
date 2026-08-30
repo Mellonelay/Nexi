@@ -29,7 +29,7 @@ export class KycService {
       data: {
         userId,
         ...data,
-        dob: new Date(data.dob)
+        dob: new Date(data.dob),
         status: 'PENDING',
       },
     });

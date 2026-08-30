@@ -312,7 +312,7 @@ export class D1FinancialCommandGateway {
   async updateUserProfile(userId: string, patch: { displayName?: string; email?: string }): Promise<Record<string, unknown>> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const assignments: string[] = [];
-    const params: unknown[] = [];
+    const params: D1BridgeParameter[] = [];
     if (patch.displayName !== undefined) { assignments.push(`"displayName"=?`); params.push(patch.displayName.trim()); }
     if (patch.email !== undefined) { assignments.push(`"email"=?`); params.push(patch.email.trim().toLowerCase()); }
     if (assignments.length > 0) {
@@ -340,8 +340,18 @@ export class D1FinancialCommandGateway {
     const locale = patch.locale ?? String(current.locale ?? 'en');
     const timezone = patch.timezone ?? String(current.timezone ?? 'UTC');
     const theme = patch.theme ?? String(current.theme ?? 'dark');
-    const notificationSettings = patch.notificationSettings === undefined ? current.notificationSettings ?? null : JSON.stringify(patch.notificationSettings);
-    const tradingSettings = patch.tradingSettings === undefined ? current.tradingSettings ?? null : JSON.stringify(patch.tradingSettings);
+    const serialize = (value: unknown): D1BridgeParameter => {
+      if (value === null || value === undefined) return null;
+      return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'
+        ? value
+        : JSON.stringify(value);
+    };
+    const notificationSettings = patch.notificationSettings === undefined
+      ? serialize(current.notificationSettings)
+      : JSON.stringify(patch.notificationSettings);
+    const tradingSettings = patch.tradingSettings === undefined
+      ? serialize(current.tradingSettings)
+      : JSON.stringify(patch.tradingSettings);
     await this.bridge.batch([{
       sql: `INSERT INTO "UserPreference" ("id","userId","locale","timezone","theme","notificationSettings","tradingSettings","createdAt","updatedAt") VALUES (?,?,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ON CONFLICT("userId") DO UPDATE SET "locale"=excluded."locale","timezone"=excluded."timezone","theme"=excluded."theme","notificationSettings"=excluded."notificationSettings","tradingSettings"=excluded."tradingSettings","updatedAt"=CURRENT_TIMESTAMP`,
       params: [randomUUID(), userId, locale, timezone, theme, notificationSettings, tradingSettings],

@@ -69,8 +69,8 @@ export class UsersService {
     if (this.d1?.isEnabled()) return this.normalizePreference(await this.d1.updateUserPreference(userId, patch));
     return this.prisma.userPreference.upsert({
       where: { userId },
-      update: patch,
-      create: { userId, ...patch },
+      update: patch as Prisma.UserPreferenceUncheckedUpdateInput,
+      create: { userId, ...(patch as Prisma.UserPreferenceUncheckedCreateInput) },
     });
   }
 
