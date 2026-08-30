@@ -9,6 +9,7 @@ import { AuthSessionMetadata } from './auth-session.service';
 import { AuthService } from './auth.service';
 import { WalletChallengeDto, WalletVerifyDto } from './auth.dto';
 import { D1FinancialCommandGateway } from '../d1/d1-financial-command.gateway';
+import { ReferralVipService } from '../referral-vip/referral-vip.service';
 
 const CHALLENGE_TTL_SECONDS = 5 * 60;
 const CHALLENGE_PREFIX = 'nexi:wallet-auth:challenge:';
@@ -46,7 +47,14 @@ export function buildSiweMessage(input: { scheme: string; domain: string; addres
 
 @Injectable()
 export class WalletAuthService {
-  constructor(private readonly config: ConfigService, private readonly prisma: PrismaService, private readonly redis: RedisService, private readonly auth: AuthService, @Optional() private readonly d1?: D1FinancialCommandGateway) {}
+  constructor(
+    private readonly config: ConfigService,
+    private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
+    private readonly auth: AuthService,
+    private readonly referralVip: ReferralVipService,
+    @Optional() private readonly d1?: D1FinancialCommandGateway,
+  ) {}
 
   private policy() {
     const chainIds = (this.config.get<string>('WALLET_AUTH_SUPPORTED_CHAIN_IDS') ?? '').split(',').map((value) => Number(value.trim())).filter((value) => Number.isSafeInteger(value) && value > 0);
@@ -88,22 +96,41 @@ export class WalletAuthService {
     if (!validSignature) throw new UnauthorizedException('Wallet signature is invalid');
     const consumed = await this.redis.getClient().eval("local value = redis.call('GET', KEYS[1]); if value then redis.call('DEL', KEYS[1]); end; return value", 1, key);
     if (typeof consumed !== 'string' || consumed !== raw) throw new UnauthorizedException('Wallet challenge is expired or already consumed');
+
     const user = this.d1?.isEnabled()
       ? await this.getOrCreateUserOnD1(address, message.chainId)
       : await this.prisma.$transaction(async (tx) => {
-      const existing = await tx.walletIdentity.findUnique({ where: { address } });
-      if (existing) return tx.user.findUniqueOrThrow({ where: { id: existing.userId }, include: { walletIdentity: true, kyc: { select: { status: true } } } });
-      return tx.user.create({ data: { userCode: randomInt(USER_CODE_MIN, USER_CODE_MAX), walletIdentity: { create: { address, chainId: message.chainId } }, wallet: { create: { balances: {} } } }, include: { walletIdentity: true, kyc: { select: { status: true } } } });
-    });
+          const existing = await tx.walletIdentity.findUnique({ where: { address } });
+          if (existing) return tx.user.findUniqueOrThrow({ where: { id: existing.userId }, include: { walletIdentity: true, kyc: { select: { status: true } } } });
+          return tx.user.create({ data: { userCode: randomInt(USER_CODE_MIN, USER_CODE_MAX), walletIdentity: { create: { address, chainId: message.chainId } }, wallet: { create: { balances: {} } } }, include: { walletIdentity: true, kyc: { select: { status: true } } } });
+        });
+
+    const account = this.d1?.isEnabled()
+      ? await this.referralVip.ensureAccountState(user.id, Number(user.userCode), input.referralCode)
+      : null;
     const session = await this.auth.login({ id: user.id, publicId: user.userCode.toString(), email: user.email, role: user.role, kycStatus: user.kyc?.status ?? 'NOT_SUBMITTED' }, 'PUBLIC', metadata);
-    return { ...session, profile: { id: user.userCode.toString(), email: user.email, displayName: user.displayName, walletAddress: user.walletIdentity?.address ?? address, chainId: user.walletIdentity?.chainId ?? message.chainId, kycStatus: user.kyc?.status ?? 'NOT_SUBMITTED' }, metadata: { sessionSurface: 'PUBLIC' } };
+    return {
+      ...session,
+      profile: {
+        id: user.userCode.toString(),
+        email: user.email,
+        displayName: user.displayName,
+        walletAddress: user.walletIdentity?.address ?? address,
+        chainId: user.walletIdentity?.chainId ?? message.chainId,
+        kycStatus: user.kyc?.status ?? 'NOT_SUBMITTED',
+        referral: account?.referral ?? null,
+        vip: account?.vip ?? null,
+      },
+      metadata: { sessionSurface: 'PUBLIC' },
+    };
   }
 
   async getCurrentUser(userId: string) {
     if (this.d1?.isEnabled()) {
       const user = await this.d1.getUserById(userId);
       if (!user || String(user.id) !== userId) throw new UnauthorizedException('Authenticated user is unavailable');
-      return { id: String(user.userCode), email: user.email ?? null, displayName: user.displayName ?? null, walletAddress: user.walletAddress ?? null, chainId: user.walletChainId ?? null, kycStatus: user.kycStatus ?? 'NOT_SUBMITTED' };
+      const account = await this.referralVip.ensureAccountState(userId, Number(user.userCode));
+      return { id: String(user.userCode), email: user.email ?? null, displayName: user.displayName ?? null, walletAddress: user.walletAddress ?? null, chainId: user.walletChainId ?? null, kycStatus: user.kycStatus ?? 'NOT_SUBMITTED', referral: account.referral, vip: account.vip };
     }
     const user = await this.prisma.user.findUnique({ where: { id: userId }, include: { walletIdentity: true, kyc: { select: { status: true } } } });
     if (!user) throw new UnauthorizedException('Authenticated user is unavailable');
