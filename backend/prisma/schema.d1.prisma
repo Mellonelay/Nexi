@@ -1030,6 +1030,9 @@ model MarketQuoteSnapshot {
   volume24h  String?
   high24h    String?
   low24h     String?
+  bid        String?
+  ask        String?
+  spread     String?
   observedAt DateTime
   receivedAt DateTime   @default(now())
   rawData    String?
@@ -1052,6 +1055,9 @@ model MarketQuoteLatest {
   volume24h  String?
   high24h    String?
   low24h     String?
+  bid        String?
+  ask        String?
+  spread     String?
   state      MarketQuoteState @default(UNAVAILABLE)
   observedAt DateTime?
   receivedAt DateTime         @default(now())

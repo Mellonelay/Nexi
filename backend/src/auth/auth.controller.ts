@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  Param,
+  Patch,
   Post,
   Request,
   ServiceUnavailableException,
@@ -10,14 +12,14 @@ import {
 } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { AuthService } from "./auth.service";
-import { PrismaService } from "../prisma/prisma.service";
 import { JwtAuthGuard } from "./jwt-auth.guard";
 import { AuthenticatedRequest } from "./auth.types";
 import {
-  KycSubmissionDto,
   LoginDto,
   RefreshTokenDto,
   SignupDto,
+  UpdatePreferencesDto,
+  UpdateProfileDto,
   WalletChallengeDto,
   WalletVerifyDto,
 } from "./auth.dto";
@@ -32,7 +34,6 @@ import { WalletAuthService } from "./wallet-auth.service";
 export class AuthController {
   constructor(
     private authService: AuthService,
-    private prisma: PrismaService,
     private walletAuthService?: WalletAuthService,
   ) {}
 
@@ -90,6 +91,43 @@ export class AuthController {
     return this.walletAuthService.getCurrentUser(request.user.userId);
   }
 
+  @Patch("me")
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
+  async updateMe(@Request() request: AuthenticatedRequest, @Body() body: UpdateProfileDto) {
+    await this.authService.updateProfile(request.user.userId, body);
+    if (!this.walletAuthService) throw new ServiceUnavailableException("Wallet authentication is unavailable");
+    return this.walletAuthService.getCurrentUser(request.user.userId);
+  }
+
+  @Get("preferences")
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
+  async preferences(@Request() request: AuthenticatedRequest) {
+    return this.authService.getPreferences(request.user.userId);
+  }
+
+  @Patch("preferences")
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
+  async updatePreferences(@Request() request: AuthenticatedRequest, @Body() body: UpdatePreferencesDto) {
+    return this.authService.updatePreferences(request.user.userId, body);
+  }
+
+  @Get("sessions")
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
+  async sessions(@Request() request: AuthenticatedRequest) {
+    return this.authService.listSessions(request.user);
+  }
+
+  @Post("sessions/:sessionId/revoke")
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
+  async revokeSession(@Request() request: AuthenticatedRequest, @Param("sessionId") sessionId: string) {
+    return this.authService.revokeSession(request.user, sessionId);
+  }
+
   @Post("refresh")
   @AuthRateLimit("refresh")
   @UseGuards(AuthRateLimitGuard)
@@ -109,26 +147,6 @@ export class AuthController {
   @RequireAuthSurface("PUBLIC")
   async logoutAll(@Request() request: AuthenticatedRequest) {
     return this.authService.logoutAll(request.user);
-  }
-
-  @Post("kyc")
-  @UseGuards(JwtAuthGuard)
-  async submitKyc(
-    @Request() request: AuthenticatedRequest,
-    @Body() body: KycSubmissionDto,
-  ) {
-    return this.prisma.kYC.create({
-      data: {
-        userId: request.user.userId,
-        firstName: body.firstName,
-        lastName: body.lastName,
-        dob: new Date(body.dob),
-        country: body.country,
-        documentType: body.documentType,
-        documentUrl: body.documentUrl, // In real app, this is S3 URL
-        status: "PENDING",
-      },
-    });
   }
 
   // @UseGuards(AuthGuard('jwt'))

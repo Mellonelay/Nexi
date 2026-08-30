@@ -7,7 +7,7 @@ export class KycService {
   constructor(private prisma: PrismaService, @Optional() private readonly d1?: D1FinancialCommandGateway) {}
 
   // Submit KYC
-  async submitKyc(userId: string, data: { firstName: string; lastName: string; country: string; documentType: string; documentUrl: string }) {
+  async submitKyc(userId: string, data: { firstName: string; lastName: string; dob: string; country: string; documentType: string; documentUrl: string }) {
     if (this.d1?.isEnabled()) return this.d1.submitKyc({ userId, ...data });
     const existing = await this.prisma.kYC.findUnique({ where: { userId } });
     if (existing) {
@@ -20,7 +20,7 @@ export class KycService {
         data: {
           ...data,
           status: 'PENDING',
-          dob: new Date(), // Mock DOB for now as it wasn't in input
+          dob: new Date(data.dob)
         },
       });
     }
@@ -29,7 +29,7 @@ export class KycService {
       data: {
         userId,
         ...data,
-        dob: new Date(), // Mock DOB
+        dob: new Date(data.dob)
         status: 'PENDING',
       },
     });

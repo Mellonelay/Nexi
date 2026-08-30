@@ -32,6 +32,12 @@ export class KycController {
     return this.kycService.submitKyc(request.user.userId, body);
   }
 
+  @Get("status")
+  @UseGuards(JwtAuthGuard)
+  async getMyStatus(@Req() request: AuthenticatedRequest) {
+    return this.kycService.getKycStatus(request.user.userId);
+  }
+
   @Get("status/:userId")
   @UseGuards(JwtAuthGuard, OwnershipGuard)
   async getStatus(

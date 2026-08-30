@@ -249,6 +249,15 @@ export class D1FinancialCommandGateway {
     return result.results[0] ?? null;
   }
 
+  async listUserAuthSessions(userId: string, surface: string): Promise<D1AuthSessionRow[]> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const result = await this.bridge.select<D1AuthSessionRow>(
+      `SELECT "id","userId","surface","tokenFamilyId","refreshTokenHash","createdAt","lastUsedAt","absoluteExpiresAt","idleExpiresAt","revokedAt","revokeReason","replacedById","userAgentHash","ipHash" FROM "AuthSession" WHERE "userId"=? AND "surface"=? ORDER BY "lastUsedAt" DESC LIMIT 100`,
+      [userId, surface],
+    );
+    return result.results;
+  }
+
   async getAuthSessionById(
     sessionId: string,
   ): Promise<D1AuthSessionRow | null> {
@@ -289,6 +298,55 @@ export class D1FinancialCommandGateway {
       [userId],
     );
     return result.results[0] ?? null;
+  }
+
+  async getUserByUserCode(userCode: number): Promise<Record<string, unknown> | null> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const result = await this.bridge.select<Record<string, unknown>>(
+      `SELECT "id","userCode","email","displayName","role" FROM "User" WHERE "userCode"=? LIMIT 1`,
+      [userCode],
+    );
+    return result.results[0] ?? null;
+  }
+
+  async updateUserProfile(userId: string, patch: { displayName?: string; email?: string }): Promise<Record<string, unknown>> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const assignments: string[] = [];
+    const params: unknown[] = [];
+    if (patch.displayName !== undefined) { assignments.push(`"displayName"=?`); params.push(patch.displayName.trim()); }
+    if (patch.email !== undefined) { assignments.push(`"email"=?`); params.push(patch.email.trim().toLowerCase()); }
+    if (assignments.length > 0) {
+      assignments.push(`"updatedAt"=CURRENT_TIMESTAMP`);
+      params.push(userId);
+      await this.bridge.batch([{ sql: `UPDATE "User" SET ${assignments.join(',')} WHERE "id"=?`, params }]);
+    }
+    const row = await this.getUserById(userId);
+    if (!row) throw new NotFoundException("User not found");
+    return row;
+  }
+
+  async getUserPreference(userId: string): Promise<Record<string, unknown>> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const result = await this.bridge.select<Record<string, unknown>>(
+      `SELECT * FROM "UserPreference" WHERE "userId"=? LIMIT 1`,
+      [userId],
+    );
+    return result.results[0] ?? { userId, locale: 'en', timezone: 'UTC', theme: 'dark', notificationSettings: null, tradingSettings: null };
+  }
+
+  async updateUserPreference(userId: string, patch: { locale?: string; timezone?: string; theme?: string; notificationSettings?: Record<string, boolean>; tradingSettings?: Record<string, unknown> }): Promise<Record<string, unknown>> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const current = await this.getUserPreference(userId);
+    const locale = patch.locale ?? String(current.locale ?? 'en');
+    const timezone = patch.timezone ?? String(current.timezone ?? 'UTC');
+    const theme = patch.theme ?? String(current.theme ?? 'dark');
+    const notificationSettings = patch.notificationSettings === undefined ? current.notificationSettings ?? null : JSON.stringify(patch.notificationSettings);
+    const tradingSettings = patch.tradingSettings === undefined ? current.tradingSettings ?? null : JSON.stringify(patch.tradingSettings);
+    await this.bridge.batch([{
+      sql: `INSERT INTO "UserPreference" ("id","userId","locale","timezone","theme","notificationSettings","tradingSettings","createdAt","updatedAt") VALUES (?,?,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ON CONFLICT("userId") DO UPDATE SET "locale"=excluded."locale","timezone"=excluded."timezone","theme"=excluded."theme","notificationSettings"=excluded."notificationSettings","tradingSettings"=excluded."tradingSettings","updatedAt"=CURRENT_TIMESTAMP`,
+      params: [randomUUID(), userId, locale, timezone, theme, notificationSettings, tradingSettings],
+    }]);
+    return this.getUserPreference(userId);
   }
 
   async createWalletUser(command: {
@@ -3340,6 +3398,7 @@ export class D1FinancialCommandGateway {
     userId: string;
     firstName: string;
     lastName: string;
+    dob: string;
     country: string;
     documentType: string;
     documentUrl: string;
@@ -3352,12 +3411,13 @@ export class D1FinancialCommandGateway {
       throw new BadRequestException("KYC already pending");
     const result = await this.bridge.batch([
       {
-        sql: `INSERT INTO "KYC" ("id","userId","firstName","lastName","dob","country","documentType","documentUrl","status","createdAt","updatedAt") VALUES (?,?,?,?,CURRENT_TIMESTAMP,?,?,?,'PENDING',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ON CONFLICT("userId") DO UPDATE SET "firstName"=excluded."firstName","lastName"=excluded."lastName","country"=excluded."country","documentType"=excluded."documentType","documentUrl"=excluded."documentUrl","status"='PENDING',"updatedAt"=CURRENT_TIMESTAMP`,
+        sql: `INSERT INTO "KYC" ("id","userId","firstName","lastName","dob","country","documentType","documentUrl","status","createdAt","updatedAt") VALUES (?,?,?,?,?,?,?,?,'PENDING',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ON CONFLICT("userId") DO UPDATE SET "firstName"=excluded."firstName","lastName"=excluded."lastName","dob"=excluded."dob","country"=excluded."country","documentType"=excluded."documentType","documentUrl"=excluded."documentUrl","status"='PENDING',"updatedAt"=CURRENT_TIMESTAMP`,
         params: [
           randomUUID(),
           command.userId,
           command.firstName,
           command.lastName,
+          command.dob,
           command.country,
           command.documentType,
           command.documentUrl,

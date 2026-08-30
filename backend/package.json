@@ -22,6 +22,7 @@
     "seed:real": "ts-node scripts/seed-real.ts"
   },
   "dependencies": {
+    "@microsoft/signalr": "^10.0.11",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.3.0",
     "@nestjs/core": "^10.0.0",

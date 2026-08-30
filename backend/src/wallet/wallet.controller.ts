@@ -46,6 +46,18 @@ export class WalletController {
     return this.walletService.getActivity(request.user.userId);
   }
 
+  @Get("me")
+  @UseGuards(JwtAuthGuard)
+  async getMyWallet(@Req() request: AuthenticatedRequest) {
+    return this.walletService.getAllBalances(request.user.userId);
+  }
+
+  @Get("me/ledger")
+  @UseGuards(JwtAuthGuard)
+  async getMyLedger(@Req() request: AuthenticatedRequest) {
+    return this.walletService.getLedger(request.user.userId);
+  }
+
   @Get(":userId")
   @UseGuards(JwtAuthGuard, OwnershipGuard)
   async getWallet(
