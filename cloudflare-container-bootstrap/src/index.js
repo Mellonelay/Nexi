@@ -1,7 +1,6 @@
 import { Container, getContainer } from "@cloudflare/containers";
 import { WorkflowEntrypoint } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
-import { env as workerEnv } from "cloudflare:workers";
 export { ContainerProxy } from "@cloudflare/containers";
 
 const CONTAINER_ENV_KEYS = [
@@ -75,6 +74,10 @@ function containerEnv(env) {
  * permitted here.
  */
 export class NexiApiContainer extends Container {
+  constructor(ctx, env) {
+    super(ctx, env);
+    this.envVars = containerEnv(env);
+  }
   defaultPort = 3000;
   requiredPorts = [3000];
   // Continuous NEXI runtime: do not stop the canonical instance on inactivity.
@@ -87,7 +90,6 @@ export class NexiApiContainer extends Container {
       policy: "continuous-runtime",
     });
   }
-  envVars = containerEnv(workerEnv);
   pingEndpoint = "localhost/ops/live";
 
   async onStart() {
