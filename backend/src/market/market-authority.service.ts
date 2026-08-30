@@ -447,6 +447,10 @@ export class MarketAuthorityService implements OnModuleInit {
     const latest = await db.marketQuoteLatest.findUnique({ where: { pairId: pair.id } });
     if (latest?.observedAt && input.observedAt.getTime() < new Date(latest.observedAt).getTime()) return { accepted: false, reason: 'OBSERVATION_OLDER_THAN_LATEST' };
     const providerSequence = input.sequence === undefined ? undefined : BigInt(input.sequence);
+    if (providerSequence !== undefined && isDeterministicTestProvider(provider)
+      && providerSequence <= BigInt(latest?.sequence ?? -1)) {
+      return { accepted: false, reason: 'DUPLICATE_OR_STALE' };
+    }
     const sequence = isDeterministicTestProvider(provider) && providerSequence !== undefined ? providerSequence : BigInt(latest?.sequence ?? 0) + 1n;
     const receivedAt = new Date();
     const lineage = { providerInstrument, priceType, canonicalAssetId: policy?.canonicalAssetId ?? null, assetClass: policy?.assetClass ?? null };

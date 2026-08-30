@@ -1,6 +1,10 @@
+jest.mock('../../src/d1/d1-prisma.service', () => ({ D1PrismaService: class D1PrismaService {} }));
+
 import { MarketKlineService } from '../../src/market/market-kline.service';
 
 describe('MarketKlineService quote aggregation', () => {
+  const disabledD1 = () => ({ isEnabled: jest.fn().mockReturnValue(false) });
+
   const createService = () => {
     const rows = new Map<string, any>();
     const keyFor = (where: any) => {
@@ -24,7 +28,7 @@ describe('MarketKlineService quote aggregation', () => {
         }),
       },
     };
-    return { service: new MarketKlineService(prisma), prisma };
+    return { service: new MarketKlineService(prisma, disabledD1() as never), prisma };
   };
 
   it('creates a 1m candle from a provider quote with explicit derived lineage and no fabricated volume', async () => {
@@ -73,7 +77,7 @@ describe('MarketKlineService quote aggregation', () => {
       marketPair: { findUnique: jest.fn(async () => ({ id: 'pair-btcusdt', symbol: 'BTCUSDT' })) },
       marketKline: { findMany: jest.fn(async () => [...rows].reverse()) },
     };
-    const service = new MarketKlineService(prisma);
+    const service = new MarketKlineService(prisma, disabledD1() as never);
 
     const candles = await service.list('BTCUSDT', '1m', 2);
 

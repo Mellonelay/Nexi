@@ -1,7 +1,10 @@
+jest.mock('../../src/d1/d1-prisma.service', () => ({ D1PrismaService: class D1PrismaService {} }));
+
 import { Prisma } from '@prisma/client';
 import { MarketReferencePersistenceService } from '../../src/market/market-reference-persistence.service';
 
 describe('MarketReferencePersistenceService', () => {
+  const disabledD1 = () => ({ isEnabled: jest.fn().mockReturnValue(false) });
   const pair = { id: 'pair-1', symbol: 'BTCUSDT' };
   const trade = {
     kind: 'trade' as const,
@@ -18,7 +21,7 @@ describe('MarketReferencePersistenceService', () => {
     const create = jest.fn().mockResolvedValue({});
     const service = new MarketReferencePersistenceService({
       marketPair: { findUnique: jest.fn().mockResolvedValue(pair) }, marketTrade: { create },
-    } as never);
+    } as never, disabledD1() as never);
 
     await expect(service.persistTrade(trade)).resolves.toEqual({ accepted: true, reason: 'PERSISTED' });
     expect(create).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ pairId: 'pair-1', side: 'BUY', sequence: 42n }) }));
@@ -28,7 +31,7 @@ describe('MarketReferencePersistenceService', () => {
     const create = jest.fn();
     const service = new MarketReferencePersistenceService({
       marketPair: { findUnique: jest.fn() }, marketTrade: { create },
-    } as never, { archive: jest.fn().mockResolvedValue(true), isRequired: () => true } as never);
+    } as never, disabledD1() as never, { archive: jest.fn().mockResolvedValue(true), isRequired: () => true } as never);
 
     await expect(service.persistTrade(trade)).resolves.toEqual({ accepted: true, reason: 'ARCHIVED' });
     expect(create).not.toHaveBeenCalled();
@@ -38,7 +41,7 @@ describe('MarketReferencePersistenceService', () => {
     const duplicate = new Prisma.PrismaClientKnownRequestError('duplicate', { code: 'P2002', clientVersion: '7.3.0' });
     const service = new MarketReferencePersistenceService({
       marketPair: { findUnique: jest.fn().mockResolvedValue(pair) }, marketTrade: { create: jest.fn().mockRejectedValue(duplicate) },
-    } as never);
+    } as never, disabledD1() as never);
 
     await expect(service.persistTrade(trade)).resolves.toEqual({ accepted: false, reason: 'DUPLICATE' });
   });
@@ -48,7 +51,7 @@ describe('MarketReferencePersistenceService', () => {
     const transaction = jest.fn(async (callback: (tx: unknown) => Promise<unknown>) => callback({ marketDepthSnapshot: { create } }));
     const service = new MarketReferencePersistenceService({
       marketPair: { findUnique: jest.fn().mockResolvedValue(pair) }, $transaction: transaction,
-    } as never);
+    } as never, disabledD1() as never);
 
     await expect(service.persistDepth(depth)).resolves.toEqual({ accepted: true, reason: 'PERSISTED' });
     expect(create).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ pairId: 'pair-1', sequence: 7n, levels: expect.objectContaining({ create: expect.arrayContaining([expect.objectContaining({ side: 'BID' }), expect.objectContaining({ side: 'ASK' })]) }) }) }));
@@ -59,7 +62,7 @@ describe('MarketReferencePersistenceService', () => {
     const create = jest.fn();
     const service = new MarketReferencePersistenceService({
       marketPair: { findUnique: jest.fn().mockResolvedValue(null) }, marketTrade: { create },
-    } as never);
+    } as never, disabledD1() as never);
 
     await expect(service.persistTrade(trade)).resolves.toEqual({ accepted: false, reason: 'PAIR_UNAVAILABLE' });
     expect(create).not.toHaveBeenCalled();
@@ -74,7 +77,7 @@ describe('MarketReferencePersistenceService', () => {
     delete process.env.MARKET_ARCHIVE_CHECKPOINT_ID;
     const service = new MarketReferencePersistenceService({
       marketTrade: { deleteMany }, marketDepthSnapshot: { deleteMany }, marketQuoteSnapshot: { deleteMany },
-    } as never, { isRequired: () => true, isConfigured: () => true } as never);
+    } as never, disabledD1() as never, { isRequired: () => true, isConfigured: () => true } as never);
 
     await service.enforceBoundedRetention();
     expect(deleteMany).not.toHaveBeenCalled();

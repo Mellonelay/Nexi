@@ -1,3 +1,10 @@
+// The D1 service imports the remote adapter, which is outside this unit's
+// boundary and ships as ESM. Its behavior is represented by the local fixture
+// below instead.
+jest.mock('../../src/d1/d1-prisma.service', () => ({
+  D1PrismaService: class D1PrismaService {},
+}));
+
 import { MarketAuthorityService } from '../../src/market/market-authority.service';
 import { CANONICAL_MARKET_CATALOG, CANONICAL_MARKET_CATALOG_COUNT } from '../../src/market/market-catalog';
 
@@ -31,12 +38,27 @@ describe('MarketAuthorityService', () => {
       },
       marketQuoteSnapshot: { create: jest.fn(async ({ data }: any) => data) },
     };
+    // The production authority chooses D1 before the legacy Prisma adapter.
+    // Keep this fixture on that path so its persistence assertions exercise the
+    // D1 serialization boundary (decimal/sequence strings and JSON raw data).
+    const d1: any = {
+      ...prisma,
+      isEnabled: jest.fn().mockReturnValue(true),
+      marketKline: { findMany: jest.fn().mockResolvedValue([]) },
+    };
+    const providerRouter = { isProviderEnabled: jest.fn().mockReturnValue(true) };
     const redis = { isAvailable: jest.fn().mockReturnValue(true), publish: jest.fn().mockResolvedValue(1) };
-    return { service: new MarketAuthorityService(prisma, redis as any), prisma, redis };
+    return {
+      service: new MarketAuthorityService(prisma, redis as any, d1, providerRouter as any),
+      prisma,
+      d1,
+      providerRouter,
+      redis,
+    };
   };
 
   it('persists exact normalized quote data and publishes one ordered event', async () => {
-    const { service, prisma, redis } = createService();
+    const { service, d1, redis } = createService();
     const result = await service.ingestQuote({
       symbol: 'BTC/USDT',
       provider: 'deterministic-test',
@@ -48,44 +70,44 @@ describe('MarketAuthorityService', () => {
       observedAt: new Date('2026-08-02T00:00:00.000Z'),
     });
     expect(result.accepted).toBe(true);
-    const snapshotData = prisma.marketQuoteSnapshot.create.mock.calls[0][0].data;
-    expect(snapshotData.sequence).toBe(7n);
-    expect(snapshotData.price.toString()).toBe('12345.670000000000000001');
-    expect(snapshotData.rawData._nexi).toMatchObject({ providerInstrument: 'BTCUSDT', priceType: 'LAST', canonicalAssetId: 'crypto:btc' });
+    const snapshotData = d1.marketQuoteSnapshot.create.mock.calls[0][0].data;
+    expect(snapshotData.sequence).toBe('7');
+    expect(snapshotData.price).toBe('12345.670000000000000001');
+    expect(JSON.parse(snapshotData.rawData)._nexi).toMatchObject({ providerInstrument: 'BTCUSDT', priceType: 'LAST', canonicalAssetId: 'crypto:btc' });
     expect(redis.publish).toHaveBeenCalledTimes(1);
     expect(JSON.parse(redis.publish.mock.calls[0][1]).sequence).toBe('7');
     expect(JSON.parse(redis.publish.mock.calls[0][1]).quote).toMatchObject({ providerInstrument: 'BTCUSDT', priceType: 'LAST', canonicalAssetId: 'crypto:btc' });
   });
 
   it('rejects duplicate or out-of-order provider sequences without a second snapshot', async () => {
-    const { service, prisma } = createService();
+    const { service, d1 } = createService();
     await service.ingestQuote({ symbol: 'BTCUSDT', provider: 'test', source: 'fixture', price: '10', sequence: 2, observedAt: new Date() });
     const duplicate = await service.ingestQuote({ symbol: 'BTCUSDT', provider: 'test', source: 'fixture', price: '11', sequence: 2, observedAt: new Date() });
     expect(duplicate).toEqual({ accepted: false, reason: 'DUPLICATE_OR_STALE' });
-    expect(prisma.marketQuoteSnapshot.create).toHaveBeenCalledTimes(1);
+    expect(d1.marketQuoteSnapshot.create).toHaveBeenCalledTimes(1);
   });
 
   it('splits catalog forex pairs using their canonical provider symbol', async () => {
-    const { service, prisma } = createService();
+    const { service, d1 } = createService();
     await expect(service.ensureCatalog(['USDCNH'])).resolves.toBeUndefined();
-    expect(prisma.marketPair.upsert).toHaveBeenCalledWith(expect.objectContaining({
+    expect(d1.marketPair.upsert).toHaveBeenCalledWith(expect.objectContaining({
       where: { symbol: 'USDCNH' },
       create: expect.objectContaining({ baseAssetId: 'asset-USD', quoteAssetId: 'asset-CNH' }),
     }));
   });
 
   it('keeps GET prices read-only, canonical-only, and limited to 53 pairs', async () => {
-    const { service, prisma } = createService();
+    const { service, d1 } = createService();
 
     const result = await service.getPrices();
 
     expect(CANONICAL_MARKET_CATALOG_COUNT).toBe(53);
     expect(result).toHaveLength(53);
     expect(result.some((row) => String(row.symbol).startsWith('G2MSHO'))).toBe(false);
-    expect(prisma.marketAsset.upsert).not.toHaveBeenCalled();
-    expect(prisma.marketAssetCapability.upsert).not.toHaveBeenCalled();
-    expect(prisma.marketPair.upsert).not.toHaveBeenCalled();
-    expect(prisma.marketPair.findMany).toHaveBeenCalledWith(expect.objectContaining({
+    expect(d1.marketAsset.upsert).not.toHaveBeenCalled();
+    expect(d1.marketAssetCapability.upsert).not.toHaveBeenCalled();
+    expect(d1.marketPair.upsert).not.toHaveBeenCalled();
+    expect(d1.marketPair.findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: {
         status: 'ACTIVE',
         symbol: { in: CANONICAL_MARKET_CATALOG.map(({ symbol }) => symbol) },
@@ -94,11 +116,11 @@ describe('MarketAuthorityService', () => {
   });
 
   it('stores asset-level provider symbols without pair-specific USD overwrites', async () => {
-    const { service, prisma } = createService();
+    const { service, d1 } = createService();
 
     await service.ensureCatalog(['EURUSD', 'USDCNH', 'USDRUB']);
 
-    const usdUpserts = prisma.marketAsset.upsert.mock.calls
+    const usdUpserts = d1.marketAsset.upsert.mock.calls
       .filter(([args]: any[]) => args.where.symbol === 'USD')
       .map(([args]: any[]) => args);
     expect(usdUpserts.length).toBeGreaterThan(0);
@@ -107,8 +129,8 @@ describe('MarketAuthorityService', () => {
   });
 
   it('normalizes stock display symbols to the canonical backend pair', async () => {
-    const { service, prisma } = createService();
+    const { service, d1 } = createService();
     await service.ingestQuote({ symbol: 'AAPL.US/USDT', provider: 'massive', source: 'websocket', price: '100', observedAt: new Date() });
-    expect(prisma.marketPair.upsert).toHaveBeenCalledWith(expect.objectContaining({ where: { symbol: 'AAPLUSDT' } }));
+    expect(d1.marketPair.upsert).toHaveBeenCalledWith(expect.objectContaining({ where: { symbol: 'AAPLUSDT' } }));
   });
 });
