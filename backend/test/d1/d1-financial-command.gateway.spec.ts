@@ -123,10 +123,11 @@ describe('D1FinancialCommandGateway', () => {
     });
 
     const statements = (bridge.batch as jest.Mock).mock.calls[0][0] as D1BridgeBatchStatement[];
-    expect(statements).toHaveLength(14);
+    expect(statements).toHaveLength(15);
     expect(statements[11].sql).toContain('Gate2InternalTransfer');
     expect(statements[12].sql).toContain('TRANSFER_PAIRED');
     expect(statements[13].sql).toContain('TRANSFER_RECEIVED');
+    expect(statements[14].sql).toContain('EventOutbox');
   });
 
   it('reserves funds and creates a Spot order in the same D1 batch', async () => {
@@ -156,10 +157,11 @@ describe('D1FinancialCommandGateway', () => {
 
     expect(result).toEqual(expect.objectContaining({ id: 'order-1', status: 'OPEN' }));
     const statements = (bridge.batch as jest.Mock).mock.calls[0][0] as D1BridgeBatchStatement[];
-    expect(statements).toHaveLength(8);
+    expect(statements).toHaveLength(9);
     expect(statements[1].sql).toContain('LedgerAccount');
     expect(statements[7].sql).toContain('Gate2SpotOrder');
     expect(statements[7].params).toContain('BTCUSDT');
+    expect(statements[8].sql).toContain('EventOutbox');
   });
 
   it('matches crossing Spot orders with one atomic D1 batch and no PostgreSQL locking syntax', async () => {
