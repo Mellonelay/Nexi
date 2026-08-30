@@ -160,6 +160,8 @@ export class BinanceSpotAdapter implements OnModuleDestroy, MarketProviderAdapte
   private isSpotTradable(entry: { permissions?: string[]; permissionSets?: string[][] }): boolean {
     if (entry.permissions?.includes('SPOT')) return true;
     if (entry.permissionSets?.some((set) => set.includes('SPOT'))) return true;
+    // Older exchangeInfo payloads may omit both fields. The caller already
+    // requested permissions=SPOT, so absence is not evidence of exclusion.
     return entry.permissions === undefined && entry.permissionSets === undefined;
   }
 
