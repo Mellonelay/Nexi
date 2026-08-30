@@ -1,0 +1,48 @@
+name: Recover remaining VM source v2
+
+on:
+  push:
+    branches:
+      - codex/vm-unpushed-recovery-20260830
+
+permissions:
+  contents: write
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/vm-unpushed-recovery-20260830
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Stop after recovery commit
+        id: guard
+        shell: bash
+        run: |
+          msg="$(git log -1 --pretty=%s)"
+          if [[ "$msg" == "recover VM: finish market wallet financial source" ]]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Apply recovered source
+        if: steps.guard.outputs.skip != 'true'
+        run: python3 .github/recovery/apply_remaining_vm.py
+      - name: Refresh backend lockfile
+        if: steps.guard.outputs.skip != 'true'
+        working-directory: backend
+        run: npm install --package-lock-only --legacy-peer-deps
+      - name: Commit recovered source
+        if: steps.guard.outputs.skip != 'true'
+        shell: bash
+        run: |
+          git config user.name "NEXI Recovery Bot"
+          git config user.email "nexi-recovery@users.noreply.github.com"
+          git add backend/prisma/schema.prisma backend/package-lock.json backend/src/d1/d1-financial-command.gateway.ts backend/src/financial/financial-operations.dto.ts backend/src/financial/financial-operations.service.ts cloudflare-container-bootstrap/dexi-frontend/app/dashboard/wallet/page.tsx cloudflare-container-bootstrap/dexi-frontend/app/dashboard/wallet/components/ConvertModal.tsx
+          git diff --cached --check
+          git commit -m "recover VM: finish market wallet financial source"
+          git push origin HEAD:codex/vm-unpushed-recovery-20260830
