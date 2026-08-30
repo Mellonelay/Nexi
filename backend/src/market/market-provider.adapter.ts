@@ -1,3 +1,5 @@
+import type { MarketKlineInput, MarketKlineInterval } from './market-kline.contract';
+
 export type ProviderQuoteEvent = {
   kind: 'ticker';
   symbol: string;
@@ -11,6 +13,9 @@ export type ProviderQuoteEvent = {
   volume24h?: string;
   high24h?: string;
   low24h?: string;
+  bid?: string;
+  ask?: string;
+  spread?: string;
 };
 
 export type ProviderKlineEvent = {
@@ -22,7 +27,7 @@ export type ProviderKlineEvent = {
   eventTime: number;
   openTime: number;
   closeTime: number;
-  interval: '1m';
+  interval: MarketKlineInterval;
   open: string;
   high: string;
   low: string;
@@ -69,4 +74,5 @@ export interface MarketProviderAdapter {
   isEnabled(): boolean;
   start(onEvent: (event: MarketProviderEvent) => void): Promise<void>;
   stop(): void;
+  fetchHistory?(symbol: string, interval: MarketKlineInterval, limit: number): Promise<MarketKlineInput[]>;
 }
