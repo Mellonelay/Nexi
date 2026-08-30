@@ -1,4 +1,4 @@
-import { IsString, Length, Matches } from 'class-validator';
+import { IsInt, IsOptional, IsString, Length, Matches, Max, Min } from 'class-validator';
 
 const DECIMAL = /^(?:0|[1-9]\d*)(?:\.\d{1,18})?$/;
 
@@ -11,7 +11,8 @@ export class Gate2WithdrawalDto {
 }
 
 export class Gate2TransferDto {
-  @IsString() @Length(1, 128) toUserId!: string;
+  @IsOptional() @IsString() @Length(1, 128) toUserId?: string;
+  @IsOptional() @IsInt() @Min(100000) @Max(999999) toUserCode?: number;
   @IsString() @Length(2, 32) asset!: string;
   @IsString() @Matches(DECIMAL) amount!: string;
   @IsString() @Length(8, 160) idempotencyKey!: string;

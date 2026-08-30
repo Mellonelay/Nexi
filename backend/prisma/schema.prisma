@@ -1029,6 +1029,9 @@ model MarketQuoteSnapshot {
   volume24h  Decimal?   @db.Decimal(38, 18)
   high24h    Decimal?   @db.Decimal(38, 18)
   low24h     Decimal?   @db.Decimal(38, 18)
+  bid        Decimal?   @db.Decimal(38, 18)
+  ask        Decimal?   @db.Decimal(38, 18)
+  spread     Decimal?   @db.Decimal(38, 18)
   observedAt DateTime
   receivedAt DateTime   @default(now())
   rawData    Json?
@@ -1051,6 +1054,9 @@ model MarketQuoteLatest {
   volume24h  Decimal?         @db.Decimal(38, 18)
   high24h    Decimal?         @db.Decimal(38, 18)
   low24h     Decimal?         @db.Decimal(38, 18)
+  bid        Decimal?         @db.Decimal(38, 18)
+  ask        Decimal?         @db.Decimal(38, 18)
+  spread     Decimal?         @db.Decimal(38, 18)
   state      MarketQuoteState @default(UNAVAILABLE)
   observedAt DateTime?
   receivedAt DateTime         @default(now())

@@ -4,14 +4,15 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowDownToLine, ArrowLeftRight, ArrowUpFromLine, Clock3, History, RefreshCw, WalletCards } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../lib/api';
-import { actionCanSubmit, authoritativeValue, resolveEndpointTemplate } from '../../lib/product-states';
+import { authoritativeValue } from '../../lib/product-states';
 import { ASSET_REGISTRY, findAsset, type AssetCategory } from '../../lib/asset-registry';
 import AssetIcon from '../../components/AssetIcon';
 import WalletConnectControl from '../../components/WalletConnectControl';
 import DepositModal from './components/DepositModal';
 import TransferModal from './components/TransferModal';
 import WithdrawModal from './components/WithdrawModal';
-import { DataStatePanel, Field, inputClass, Metric, PageShell, Panel, PanelHeading, PrimaryButton, SecondaryButton, StatusBadge, TabButton } from './components/ProductPrimitives';
+import ConvertModal from './components/ConvertModal';
+import { DataStatePanel, Metric, PageShell, Panel, PanelHeading, SecondaryButton, StatusBadge, TabButton } from './components/ProductPrimitives';
 import WalletDashboardLayout from './components/WalletDashboardLayout';
 
 type Tab = 'Overview' | 'Funding' | 'Spot' | 'Margin' | 'Binary' | 'Finance';
@@ -70,22 +71,14 @@ export default function WalletPage() {
   const [error, setError] = useState('');
   const [action, setAction] = useState<Action | null>(null);
   const [currency, setCurrency] = useState('');
-  const [amount, setAmount] = useState('');
-
-  const readEndpoint = userId ? resolveEndpointTemplate(process.env.NEXT_PUBLIC_WALLET_READ_ENDPOINT || '/wallet/{userId}', { userId }) : null;
-  const activityEndpoint = userId ? resolveEndpointTemplate(process.env.NEXT_PUBLIC_WALLET_ACTIVITY_ENDPOINT || '/wallet/activity', { userId }) : null;
-  const depositEndpoint = process.env.NEXT_PUBLIC_WALLET_DEPOSIT_ENDPOINT;
-  const withdrawEndpoint = process.env.NEXT_PUBLIC_WALLET_WITHDRAW_ENDPOINT;
-  const convertEndpoint = process.env.NEXT_PUBLIC_CONVERSION_SUBMIT_ENDPOINT;
-  const actionEndpoint = action === 'Deposit' ? depositEndpoint : action === 'Withdraw' ? withdrawEndpoint : action === 'Convert' ? convertEndpoint : undefined;
+  const readEndpoint = userId ? '/wallet/me' : null;
+  const activityEndpoint = userId ? '/wallet/activity' : null;
   const root = record(payload);
   const accounts = record(root.accounts);
   const accountPayload = tab === 'Overview' ? payload : accounts[accountLabels[tab]] ?? accounts[tab.toUpperCase()];
   const assets = useMemo(() => readAssets(accountPayload), [accountPayload]);
   const visibleAssets = useMemo(() => assets.filter((item) => category === 'All' || assetMeta(item.name)?.category === category), [assets, category]);
   const authenticated = Boolean(userId);
-  const validAction = Boolean(currency.trim() && Number.isFinite(Number(amount)) && Number(amount) > 0);
-  const canSubmit = actionCanSubmit({ authenticated, valid: validAction, backendAvailable: state === 'LIVE' && Boolean(actionEndpoint) });
   const currencies = useMemo(() => assets.map((asset) => ({ symbol: asset.name })), [assets]);
 
   const clearPrivateState = useCallback(() => { setUserId(null); setPayload(null); setActivities([]); setState('UNAVAILABLE'); setError('Connect and verify a wallet to load private wallet data.'); }, []);
@@ -107,30 +100,6 @@ export default function WalletPage() {
   }, [activityEndpoint, readEndpoint, sessionChecked, userId]);
   useEffect(() => { void loadWallet(); }, [loadWallet]);
 
-  const submitAction = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (action !== 'Convert' || !canSubmit || !convertEndpoint) return;
-    try {
-      const body = { userId, currency: currency.trim(), amount: Number(amount) };
-      await api.post(convertEndpoint, body); toast.success('Conversion request sent.'); await loadWallet();
-    } catch { toast.error('This request could not be accepted.'); }
-  };
-
-  const submitWithdraw = async (withdrawAmount: string, withdrawAddress: string) => {
-    if (!userId || state !== 'LIVE' || !withdrawEndpoint) {
-      toast.error('Withdraw is unavailable until the backend contract is ready.');
-      return;
-    }
-    try {
-      await api.post(withdrawEndpoint, { userId, currency: currency.trim(), amount: Number(withdrawAmount), address: withdrawAddress.trim() });
-      toast.success('Withdrawal request sent.');
-      setAction(null);
-      await loadWallet();
-    } catch {
-      toast.error('This withdrawal could not be accepted.');
-    }
-  };
-
   const accountSummary = (name: Exclude<Tab, 'Overview'>) => { const item = record(accounts[accountLabels[name]] ?? accounts[name.toUpperCase()]); return { available: item.available, locked: item.locked, total: item.total, state: item.status ?? (Object.keys(item).length ? 'LIVE' : 'UNAVAILABLE') }; };
   const scrollToHistory = () => document.getElementById('wallet-activity')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   const overviewTotal = root.total ?? root.available;
@@ -144,16 +113,17 @@ export default function WalletPage() {
     </header>
     <WalletDashboardLayout>
       <section aria-label="Portfolio summary"><Panel className="p-3 sm:p-4"><div className="flex items-start justify-between gap-3"><div><div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#C3BBD0]"><WalletCards size={16} className="text-[#48C0CC]" /> Total assets</div><p className="mt-2 truncate font-mono text-2xl font-semibold tabular-nums sm:text-3xl">{state === 'LIVE' ? text(overviewTotal) : 'UNAVAILABLE'}</p></div>{state !== 'LIVE' && <StatusBadge state={state} />}</div><p className="mt-1 text-xs text-[#8C8299]">Aggregate value only when supplied by the backend.</p><div className={`mt-3 grid gap-2 ${authoritativePnl !== undefined ? 'grid-cols-3' : 'grid-cols-2'}`}><Metric label="Available" value={state === 'LIVE' ? text(root.available) : 'UNAVAILABLE'} /><Metric label="Locked" value={state === 'LIVE' ? text(root.locked) : 'UNAVAILABLE'} />{authoritativePnl !== undefined && <Metric label="P/L" value={state === 'LIVE' ? text(authoritativePnl) : 'UNAVAILABLE'} />}</div></Panel></section>
-      <section aria-label="Wallet actions"><Panel className="p-3 sm:p-4"><PanelHeading title="Quick actions" description="Choose an available wallet action." /><div className="grid grid-cols-4 gap-2">{(['Deposit', 'Withdraw', 'Transfer', 'Convert'] as Action[]).map((item) => { const Icon = actionIcons[item]; const enabled = item === 'Transfer' || Boolean(item === 'Deposit' ? depositEndpoint : item === 'Withdraw' ? withdrawEndpoint : convertEndpoint); return <button key={item} type="button" disabled={!enabled} onClick={() => { setAction(item); if (item !== 'Convert') setCurrency(currencies[0]?.symbol ?? ''); }} aria-label={`${item}${enabled ? '' : ' unavailable'}`} className={`flex min-h-16 min-w-0 flex-col items-center justify-center gap-1 rounded-xl border p-1 text-center text-[11px] font-semibold sm:min-h-14 sm:flex-row sm:gap-2 sm:text-xs ${action === item ? 'border-[#8B5CF6] bg-[#2A1742]' : 'border-[#2B2037] bg-[#171022]'} disabled:cursor-not-allowed disabled:opacity-50`}><Icon size={16} className="shrink-0 text-[#48C0CC]" /><span className="truncate">{item}</span></button>; })}</div><button type="button" onClick={scrollToHistory} className="mt-2 flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-[#2B2037] bg-[#171022] text-xs font-semibold text-[#C3BBD0]"><Clock3 size={15} />View activity</button>{action === 'Convert' && <form onSubmit={submitAction} className="mt-4 space-y-3 border-t border-[#2B2037] pt-4"><Field label="Pair (FROM/TO)"><input className={inputClass} value={currency} onChange={(event) => setCurrency(event.target.value)} placeholder="Backend-supported pair" /></Field><Field label="Amount"><input className={inputClass} inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="Enter amount" /></Field><PrimaryButton type="submit" disabled={!canSubmit}>{state === 'LIVE' && convertEndpoint ? 'Submit Convert' : 'Convert unavailable'}</PrimaryButton><p className="text-xs text-[#8C8299]">{convertEndpoint ? 'Submission requires wallet verification.' : 'This action is unavailable right now.'}</p></form>}</Panel></section>
+      <section aria-label="Wallet actions"><Panel className="p-3 sm:p-4"><PanelHeading title="Quick actions" description="Choose an available wallet action." /><div className="grid grid-cols-4 gap-2">{(['Deposit', 'Withdraw', 'Transfer', 'Convert'] as Action[]).map((item) => { const Icon = actionIcons[item]; const enabled = authenticated && state === 'LIVE'; return <button key={item} type="button" disabled={!enabled} onClick={() => { setAction(item); if (item !== 'Convert') setCurrency(currencies[0]?.symbol ?? ''); }} aria-label={`${item}${enabled ? '' : ' unavailable'}`} className={`flex min-h-16 min-w-0 flex-col items-center justify-center gap-1 rounded-xl border p-1 text-center text-[11px] font-semibold sm:min-h-14 sm:flex-row sm:gap-2 sm:text-xs ${action === item ? 'border-[#8B5CF6] bg-[#2A1742]' : 'border-[#2B2037] bg-[#171022]'} disabled:cursor-not-allowed disabled:opacity-50`}><Icon size={16} className="shrink-0 text-[#48C0CC]" /><span className="truncate">{item}</span></button>; })}</div><button type="button" onClick={scrollToHistory} className="mt-2 flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-[#2B2037] bg-[#171022] text-xs font-semibold text-[#C3BBD0]"><Clock3 size={15} />View activity</button></Panel></section>
       <section aria-label="Wallet account tabs"><Panel className="p-2 sm:p-3"><div className="nexi-scroll-rail flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Wallet account tabs">{tabs.map((item) => <TabButton key={item} active={tab === item} onClick={() => setTab(item)}>{item === 'Binary' ? 'Options' : item}</TabButton>)}</div></Panel></section>
       <section className="min-w-0"><div className="min-w-0 space-y-3">
         {tab !== 'Overview' && <Panel className="p-4"><PanelHeading title={`${tab} account`} description={tab === 'Finance' ? 'This projection stays unavailable until the authoritative account contract is exposed.' : 'Account-level values are shown only when returned by the backend.'} />{tab === 'Finance' && !Object.keys(record(accountPayload)).length ? <DataStatePanel state="UNAVAILABLE" title={`${tab} account unavailable`} message="No authoritative balance or activity contract is available yet. No balance is fabricated." /> : <div className="grid gap-3 sm:grid-cols-3">{(['available', 'locked', 'total'] as const).map((key) => <Metric key={key} label={key} value={text(accountSummary(tab as Exclude<Tab, 'Overview'>)[key])} />)}</div>}</Panel>}
         <Panel className="p-3 sm:p-4"><div className="flex flex-wrap items-center justify-between gap-3"><PanelHeading title={tab === 'Overview' ? 'All account assets' : `${tab} assets`} description="Available, reserved and total amounts from the configured wallet contract." /><label className="shrink-0 text-xs text-[#C3BBD0]">Asset filter <select aria-label="Asset category" value={category} onChange={(event) => setCategory(event.target.value as Category)} className="nexi-input ml-2 min-h-9 px-2 text-xs"><option>All</option><option>Crypto</option><option>Stocks</option><option>Metals</option><option>Forex</option></select></label></div>{state !== 'LIVE' ? <DataStatePanel state={state} title={userId ? 'Wallet data unavailable' : 'Wallet is locked'} message={error || 'No authenticated wallet session is available.'} /> : visibleAssets.length === 0 ? <DataStatePanel state="UNAVAILABLE" title="No asset data for this filter" message="The backend returned no matching authoritative assets. This view does not create zero balances." /> : <div className="overflow-hidden rounded-xl border border-[#2B2037]"><div className="grid grid-cols-[minmax(0,1fr)_minmax(4.5rem,auto)_minmax(4.5rem,auto)] gap-3 bg-[#171022] px-3 py-2 text-[9px] uppercase tracking-[0.08em] text-[#8C8299] sm:grid-cols-[minmax(0,1fr)_repeat(3,minmax(5rem,auto))] sm:px-4 sm:text-[10px] sm:tracking-[0.12em]"><span>Asset</span><span className="text-right">Available</span><span className="hidden text-right sm:block">Locked</span><span className="text-right">Total</span></div><div className="divide-y divide-[#2B2037]">{visibleAssets.map((item) => { const asset = assetMeta(item.name); const iconItem = { assetId: asset?.id ?? item.name, symbol: asset?.symbol ?? item.name, displaySymbol: asset?.displaySymbol ?? item.name, name: asset?.name ?? item.name }; return <div key={item.name} className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(4.5rem,auto)_minmax(4.5rem,auto)] items-center gap-3 bg-[#171022] px-3 py-2.5 sm:grid-cols-[minmax(0,1fr)_repeat(3,minmax(5rem,auto))] sm:px-4"><div className="flex min-w-0 items-center gap-2"><AssetIcon item={iconItem} /><span className="min-w-0"><span className="block truncate text-xs font-semibold sm:text-sm">{asset?.name ?? item.name}</span><span className="block truncate text-[10px] text-[#8C8299] sm:text-xs">{asset?.displaySymbol ?? item.name}</span></span></div><span className="truncate text-right font-mono text-xs tabular-nums">{text(item.available)}</span><span className="hidden truncate text-right font-mono text-xs tabular-nums sm:block">{text(item.locked)}</span><span className="truncate text-right font-mono text-xs font-semibold tabular-nums">{text(item.total)}</span></div>; })}</div></div>}</Panel>
         <div id="wallet-activity"><Panel className="p-3 sm:p-4"><PanelHeading title="Activity History" action={<History size={18} className="text-[#8C8299]" />} />{state !== 'LIVE' || activities.length === 0 ? <DataStatePanel state={state === 'LIVE' ? 'UNAVAILABLE' : state} title="Activity authority unavailable" message="Activity IDs and ledger linkage appear only when the backend returns both identifiers. No browser-generated activity IDs are created." /> : <div className="divide-y divide-[#2B2037] overflow-hidden rounded-xl border border-[#2B2037]">{activities.map((item) => <article key={item.id} className="grid gap-2 bg-[#171022] p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-sm font-semibold">{text(item.type)} · {text(item.asset)}</p><StatusBadge state={text(item.status)} /></div><p className="mt-1 truncate text-xs text-[#8C8299]">{text(item.createdAt)} · Activity {item.id} · Ledger {text(item.ledgerId)}</p></div><div className="flex gap-4 text-xs text-[#C3BBD0] sm:text-right"><span>Amount <strong className="font-mono">{text(item.amount)}</strong></span><span className="hidden sm:inline">{text(item.source)}{text(item.destination) !== '—' ? ` → ${text(item.destination)}` : ''}</span></div></article>)}</div>}</Panel></div>
       </div></section>
-      <DepositModal isOpen={action === 'Deposit'} onClose={() => setAction(null)} currencies={currencies} selectedCurrency={currency} onSelectCurrency={setCurrency} />
-      <WithdrawModal isOpen={action === 'Withdraw'} onClose={() => setAction(null)} currencies={currencies} selectedCurrency={currency} onSelectCurrency={setCurrency} onWithdraw={submitWithdraw} />
-      <TransferModal isOpen={action === 'Transfer'} onClose={() => setAction(null)} />
+      <DepositModal isOpen={action === 'Deposit'} onClose={() => setAction(null)} currencies={currencies} selectedCurrency={currency} onSelectCurrency={setCurrency} onCompleted={loadWallet} />
+      <WithdrawModal isOpen={action === 'Withdraw'} onClose={() => setAction(null)} currencies={currencies} selectedCurrency={currency} onSelectCurrency={setCurrency} onCompleted={loadWallet} />
+      <TransferModal isOpen={action === 'Transfer'} onClose={() => setAction(null)} currencies={currencies} selectedCurrency={currency} onSelectCurrency={setCurrency} onCompleted={loadWallet} />
+      <ConvertModal isOpen={action === 'Convert'} onClose={() => setAction(null)} currencies={currencies} selectedCurrency={currency} onCompleted={loadWallet} />
     </WalletDashboardLayout>
   </PageShell>;
 }
