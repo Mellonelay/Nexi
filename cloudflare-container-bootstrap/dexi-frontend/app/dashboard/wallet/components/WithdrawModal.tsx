@@ -1,101 +1,45 @@
 'use client';
+
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
+import { toast } from 'sonner';
+import api from '../../../lib/api';
 
 interface WithdrawModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    currencies: any[];
-    selectedCurrency: string;
-    onSelectCurrency: (symbol: string) => void;
-    onWithdraw: (amount: string, address: string) => void;
+  isOpen: boolean;
+  onClose: () => void;
+  currencies: Array<{ symbol: string }>;
+  selectedCurrency: string;
+  onSelectCurrency: (symbol: string) => void;
+  onCompleted?: () => void | Promise<void>;
 }
 
-export default function WithdrawModal({ isOpen, onClose, currencies, selectedCurrency, onSelectCurrency, onWithdraw }: WithdrawModalProps) {
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        const form = e.target as HTMLFormElement;
-        const amount = (form.elements.namedItem('amount') as HTMLInputElement).value;
-        const address = (form.elements.namedItem('address') as HTMLInputElement).value;
-        onWithdraw(amount, address);
-    };
+export default function WithdrawModal({ isOpen, onClose, currencies, selectedCurrency, onSelectCurrency, onCompleted }: WithdrawModalProps) {
+  const [network, setNetwork] = useState('');
+  const [address, setAddress] = useState('');
+  const [amount, setAmount] = useState('');
+  const [busy, setBusy] = useState(false);
 
-    if (!isOpen) return null;
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!network.trim() || !address.trim() || !amount || Number(amount) <= 0) return;
+    setBusy(true);
+    try {
+      await api.post('/financial/withdrawals', {
+        asset: selectedCurrency,
+        network: network.trim(),
+        address: address.trim(),
+        amount,
+        idempotencyKey: `withdrawal:${crypto.randomUUID()}`,
+      });
+      toast.success('Withdrawal submitted for review.');
+      await onCompleted?.();
+      onClose();
+    } catch { toast.error('This withdrawal could not be accepted.'); }
+    finally { setBusy(false); }
+  };
 
-    return (
-        <AnimatePresence>
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                <motion.div 
-                    initial={{ opacity: 0 }} 
-                    animate={{ opacity: 1 }} 
-                    exit={{ opacity: 0 }}
-                    onClick={onClose}
-                    className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-                />
-                <motion.div 
-                    initial={{ scale: 0.95, opacity: 0 }} 
-                    animate={{ scale: 1, opacity: 1 }} 
-                    exit={{ scale: 0.95, opacity: 0 }}
-                    className="relative bg-[#121836] w-full max-w-md rounded-2xl border border-gray-700 shadow-2xl overflow-hidden"
-                >
-                    <div className="p-6 border-b border-gray-800 flex justify-between items-center">
-                        <h2 className="text-xl font-bold text-white">Withdraw Funds</h2>
-                        <button onClick={onClose} className="text-gray-400 hover:text-white">
-                            <X size={24} />
-                        </button>
-                    </div>
-
-                    <div className="p-6">
-                        <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-hide">
-                            {currencies.map(c => (
-                                <button 
-                                    key={c.symbol}
-                                    onClick={() => onSelectCurrency(c.symbol)}
-                                    className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-colors border ${
-                                        selectedCurrency === c.symbol 
-                                        ? 'bg-[#FF4D4F]/10 border-[#FF4D4F] text-[#FF4D4F]' 
-                                        : 'bg-gray-900 border-gray-800 text-gray-400 hover:bg-gray-800'
-                                    }`}
-                                >
-                                    {c.symbol}
-                                </button>
-                            ))}
-                        </div>
-
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div>
-                                <label className="text-xs text-gray-400 ml-1">Destination Address</label>
-                                <input 
-                                    name="address"
-                                    className="w-full bg-gray-900 border border-gray-800 rounded-xl p-4 mt-1 outline-none focus:border-blue-500 font-mono text-sm text-white transition-colors"
-                                    placeholder="0x..."
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="text-xs text-gray-400 ml-1">Amount</label>
-                                <div className="relative">
-                                    <input 
-                                        name="amount"
-                                        type="number"
-                                        className="w-full bg-gray-900 border border-gray-800 rounded-xl p-4 mt-1 outline-none focus:border-blue-500 font-mono text-sm text-white transition-colors"
-                                        placeholder="0.00"
-                                        required
-                                    />
-                                    <span className="absolute right-4 top-[22px] text-xs font-bold text-gray-500">{selectedCurrency}</span>
-                                </div>
-                            </div>
-
-                            <button 
-                                type="submit"
-                                className="w-full mt-4 py-4 bg-[#FF4D4F] hover:bg-red-600 rounded-xl font-bold text-white transition-all active:scale-[0.98]"
-                            >
-                                Confirm Withdrawal
-                            </button>
-                        </form>
-                    </div>
-                </motion.div>
-            </div>
-        </AnimatePresence>
-    );
+  if (!isOpen) return null;
+  return <AnimatePresence><div className="fixed inset-0 z-50 flex items-center justify-center p-4"><motion.button type="button" aria-label="Close withdrawal dialog" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={onClose} className="absolute inset-0 bg-black/80 backdrop-blur-sm"/><motion.section role="dialog" aria-modal="true" aria-labelledby="withdraw-title" initial={{scale:.95,opacity:0}} animate={{scale:1,opacity:1}} exit={{scale:.95,opacity:0}} className="relative w-full max-w-md overflow-hidden rounded-2xl border border-violet-300/20 bg-[#121022] shadow-2xl"><div className="flex items-center justify-between border-b border-violet-300/10 p-6"><h2 id="withdraw-title" className="text-xl font-bold text-white">Withdraw {selectedCurrency}</h2><button type="button" onClick={onClose} aria-label="Close withdrawal dialog" className="inline-flex h-11 w-11 items-center justify-center text-[#C3BBD0]"><X size={22}/></button></div><form onSubmit={submit} className="space-y-4 p-6"><div className="flex gap-2 overflow-x-auto">{currencies.map((c)=><button key={c.symbol} type="button" onClick={()=>onSelectCurrency(c.symbol)} className={`min-h-11 shrink-0 rounded-lg border px-4 text-sm font-semibold ${selectedCurrency===c.symbol?'border-[#FF7A8A] bg-[#3A1821] text-white':'border-violet-300/15 bg-[#171022] text-[#C3BBD0]'}`}>{c.symbol}</button>)}</div><label className="block text-xs text-[#C3BBD0]">Network<input className="nexi-input mt-1 w-full" value={network} onChange={(e)=>setNetwork(e.target.value)} placeholder="e.g. ERC20, TRC20" required/></label><label className="block text-xs text-[#C3BBD0]">Destination address<input className="nexi-input mt-1 w-full font-mono" value={address} onChange={(e)=>setAddress(e.target.value)} required/></label><label className="block text-xs text-[#C3BBD0]">Amount<input className="nexi-input mt-1 w-full" inputMode="decimal" value={amount} onChange={(e)=>setAmount(e.target.value)} required/></label><button type="submit" disabled={busy} className="min-h-11 w-full rounded-xl bg-[#FF4D5F] px-4 font-semibold text-white disabled:opacity-50">{busy?'Submitting…':'Confirm withdrawal'}</button></form></motion.section></div></AnimatePresence>;
 }
