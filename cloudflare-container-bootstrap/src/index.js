@@ -79,6 +79,7 @@ export class NexiApiContainer extends Container {
     this.envVars = containerEnv(env);
   }
   defaultPort = 3000;
+  enableInternet = true;
   requiredPorts = [3000];
   // Continuous NEXI runtime: do not stop the canonical instance on inactivity.
   // Cloudflare has no fixed maximum instance lifetime; platform rollouts and
