@@ -36,6 +36,7 @@ const EXCHANGE_QUOTE_COVERAGE: Record<string, ReadonlySet<string>> = {
 };
 
 function providerQuoteSupported(entry: CanonicalMarketPair, provider: string): boolean {
+  if (provider === 'moex') return entry.symbol === 'USDRUB';
   if (provider === 'biquote') return BIQUOTE_QUOTE_COVERAGE.has(entry.symbol);
   if (provider === 'yahoo') return true;
   const coverage = EXCHANGE_QUOTE_COVERAGE[provider];
@@ -81,7 +82,7 @@ export interface AssetSourcePolicy {
 
 const CRYPTO_PROVIDERS = ['binance-spot', 'coingecko', 'coinmarketcap'];
 const STOCK_PROVIDERS = ['biquote', 'yahoo', 'okx', 'bitget', 'htx', 'bybit', 'gate', 'tickdb', 'alltick', 'massive', 'finnhub', 'alpha-vantage'];
-const FOREX_PROVIDERS = ['biquote', 'yahoo', 'bybit', 'gate', 'htx', 'okx', 'bitget', 'tickdb', 'alltick', 'live-rates', 'massive', 'finnhub', 'oanda', 'alpha-vantage', 'fawaz-currency'];
+const FOREX_PROVIDERS = ['moex', 'biquote', 'yahoo', 'bybit', 'gate', 'htx', 'okx', 'bitget', 'tickdb', 'alltick', 'live-rates', 'massive', 'finnhub', 'oanda', 'alpha-vantage', 'fawaz-currency'];
 const PRECIOUS_METAL_PROVIDERS = ['biquote', 'yahoo', 'okx', 'htx', 'bitget', 'bybit', 'gate', 'tickdb', 'alltick', 'live-rates', 'oanda', 'metals-api', 'alpha-vantage', 'fawaz-currency'];
 const INDUSTRIAL_METAL_PROVIDERS = ['biquote', 'yahoo', 'okx', 'htx', 'bitget', 'bybit', 'gate', 'tickdb', 'alltick', 'metals-api', 'metalprice-api', 'alpha-vantage', 'rzzro-industrial-metals'];
 
@@ -133,6 +134,7 @@ function providerInstrument(entry: CanonicalMarketPair, provider: string): strin
     const symbols: Record<string, string> = { XALUSD: 'aluminum', XCUUSD: 'copper', XZNUSD: 'zinc' };
     return symbols[entry.symbol] ?? entry.symbol;
   }
+  if (provider === 'moex') return entry.symbol === 'USDRUB' ? 'USD000UTSTOM' : entry.symbol;
   if (provider === 'biquote') {
     if (entry.category === 'forex' || entry.category === 'metal') return entry.symbol;
     const aliases: Record<string, string> = {
