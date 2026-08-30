@@ -131,7 +131,7 @@ export class ReferralVipService {
     this.assertD1();
     const bounded = Math.min(Math.max(Math.trunc(limit), 1), 250);
     const result = await this.d1.select<Record<string, unknown>>(
-      `SELECT a."userId",u."userCode",u."walletAddress",a."referralCode",a."referredBy",ru."userCode" AS "referredByUserCode",a."totalEarnings",(SELECT COUNT(*) FROM "Affiliate" r WHERE r."referredBy"=a."userId") AS "referralCount",a."createdAt" FROM "Affiliate" a JOIN "User" u ON u."id"=a."userId" LEFT JOIN "User" ru ON ru."id"=a."referredBy" ORDER BY a."createdAt" DESC LIMIT ?`,
+      `SELECT a."userId",u."userCode",wi."address" AS "walletAddress",a."referralCode",a."referredBy",ru."userCode" AS "referredByUserCode",a."totalEarnings",(SELECT COUNT(*) FROM "Affiliate" r WHERE r."referredBy"=a."userId") AS "referralCount",a."createdAt" FROM "Affiliate" a JOIN "User" u ON u."id"=a."userId" LEFT JOIN "WalletIdentity" wi ON wi."userId"=a."userId" LEFT JOIN "User" ru ON ru."id"=a."referredBy" ORDER BY a."createdAt" DESC LIMIT ?`,
       [bounded],
     );
     return result.results;
@@ -141,7 +141,7 @@ export class ReferralVipService {
     this.assertD1();
     const bounded = Math.min(Math.max(Math.trunc(limit), 1), 250);
     const result = await this.d1.select<Record<string, unknown>>(
-      `SELECT s."userId",u."userCode",u."walletAddress",v."level",v."name",s."progress",v."threshold",s."evaluatedAt",s."qualifiedAt" FROM "UserVipState" s JOIN "VipLevel" v ON v."id"=s."vipLevelId" JOIN "User" u ON u."id"=s."userId" ORDER BY v."level" DESC,s."progress" DESC LIMIT ?`,
+      `SELECT s."userId",u."userCode",wi."address" AS "walletAddress",v."level",v."name",s."progress",v."threshold",s."evaluatedAt",s."qualifiedAt" FROM "UserVipState" s JOIN "VipLevel" v ON v."id"=s."vipLevelId" JOIN "User" u ON u."id"=s."userId" LEFT JOIN "WalletIdentity" wi ON wi."userId"=s."userId" ORDER BY v."level" DESC,s."progress" DESC LIMIT ?`,
       [bounded],
     );
     return result.results;
