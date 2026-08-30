@@ -13,6 +13,8 @@ import { SandboxModule } from "../sandbox/sandbox.module";
 import { MiningModule } from "../mining/mining.module";
 import { LoansModule } from "../loans/loans.module";
 import { D1PrismaModule } from "../d1/d1-prisma.module";
+import { ReferralVipModule } from "../referral-vip/referral-vip.module";
+import { ReferralVipAdminController } from "../referral-vip/referral-vip-admin.controller";
 
 @Module({
   imports: [
@@ -26,8 +28,9 @@ import { D1PrismaModule } from "../d1/d1-prisma.module";
     MiningModule,
     LoansModule,
     D1PrismaModule,
+    ReferralVipModule,
   ],
-  controllers: [AdminController, AdminAuthController],
+  controllers: [AdminController, AdminAuthController, ReferralVipAdminController],
   providers: [AdminService, AdminPermissionGuard],
 })
 export class AdminModule {}
