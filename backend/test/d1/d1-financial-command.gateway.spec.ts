@@ -37,6 +37,18 @@ describe('D1FinancialCommandGateway', () => {
     delete process.env.D1_RUNTIME_ENABLED;
   });
 
+  it('resolves a six-digit NEXI recipient code through D1 without loading a full user record', async () => {
+    const bridge = createBridge({
+      select: jest.fn().mockResolvedValue({
+        results: [{ id: 'user-2', userCode: 123456, email: 'recipient@example.test', displayName: 'Recipient', role: 'USER' }],
+      }),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+
+    await expect(gateway.getUserByUserCode(123456)).resolves.toMatchObject({ id: 'user-2', userCode: 123456 });
+    expect(bridge.select).toHaveBeenCalledWith(expect.stringContaining('WHERE "userCode"=?'), [123456]);
+  });
+
   it('uses exact decimal strings and an atomic D1 batch for credit', async () => {
     const bridge = createBridge();
     const gateway = new D1FinancialCommandGateway(bridge);
