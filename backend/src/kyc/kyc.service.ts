@@ -28,7 +28,7 @@ export class KycService {
           sql: `INSERT INTO "EventOutbox" ("id","idempotencyKey","aggregateType","aggregateId","eventType","eventVersion","payload","state","availableAt","attempts","createdAt","updatedAt") VALUES (?,?,?,?,?,1,?,'PENDING',CURRENT_TIMESTAMP,0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`,
           params: [eventId, `event:kyc:submit:${userId}:${eventId}`, 'KYC', userId, 'KYC_SUBMITTED', JSON.stringify({ userId })],
         },
-      ], { transactional: true });
+      ]);
       return this.d1.getKyc(userId);
     }
 

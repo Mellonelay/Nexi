@@ -121,7 +121,7 @@ export class ReferralVipService {
         sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`,
         params: [auditId, adminId, 'VIP_LEVEL_UPSERT', `VIP:${input.level}`, JSON.stringify({ reason: input.reason, name: input.name, threshold: input.threshold, enabled: input.enabled ?? true })],
       },
-    ], { transactional: true });
+    ]);
     return { auditId, levels: await this.listAllVipLevels() };
   }
 
@@ -144,7 +144,7 @@ export class ReferralVipService {
         sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`,
         params: [auditId, adminId, 'VIP_ASSIGN', `USER:${input.userCode}`, JSON.stringify({ reason: input.reason, level: input.level, progress: input.progress ?? '0' })],
       },
-    ], { transactional: true });
+    ]);
     return { auditId, userCode: input.userCode, vip: await this.getVip(userId) };
   }
 

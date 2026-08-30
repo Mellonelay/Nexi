@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { D1WorkerBridgeService } from '../d1/d1-worker-bridge.service';
+import { D1BridgeParameter } from '../d1/d1-worker-bridge.service';
 import { ReferralVipService } from '../referral-vip/referral-vip.service';
 import { UpdatePreferencesDto, UpdateProfileDto } from './profile.dto';
 
@@ -51,7 +52,7 @@ export class ProfileService {
   async updateProfile(userId: string, patch: UpdateProfileDto) {
     this.assertD1();
     const assignments: string[] = [];
-    const params: unknown[] = [];
+    const params: D1BridgeParameter[] = [];
     if (patch.displayName !== undefined) { assignments.push(`"displayName"=?`); params.push(patch.displayName.trim()); }
     if (patch.email !== undefined) { assignments.push(`"email"=?`); params.push(patch.email.trim().toLowerCase()); }
     if (assignments.length) {
@@ -76,9 +77,9 @@ export class ProfileService {
       sql: `INSERT INTO "UserPreference" ("id","userId","locale","timezone","theme","notificationSettings","tradingSettings","createdAt","updatedAt") VALUES (?,?,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ON CONFLICT("userId") DO UPDATE SET "locale"=excluded."locale","timezone"=excluded."timezone","theme"=excluded."theme","notificationSettings"=excluded."notificationSettings","tradingSettings"=excluded."tradingSettings","updatedAt"=CURRENT_TIMESTAMP`,
       params: [
         randomUUID(), userId,
-        patch.locale ?? current.locale ?? 'en',
-        patch.timezone ?? current.timezone ?? 'UTC',
-        patch.theme ?? current.theme ?? 'dark',
+        String(patch.locale ?? current.locale ?? 'en'),
+        String(patch.timezone ?? current.timezone ?? 'UTC'),
+        String(patch.theme ?? current.theme ?? 'dark'),
         notificationSettings == null ? null : JSON.stringify(notificationSettings),
         tradingSettings == null ? null : JSON.stringify(tradingSettings),
       ],
