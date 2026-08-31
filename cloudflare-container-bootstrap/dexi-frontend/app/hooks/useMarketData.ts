@@ -20,7 +20,7 @@ export interface MarketPair {
   low?: number | null;
   precision?: number;
   source?: 'fallback' | 'tick' | 'external';
-  provider?: 'FALLBACK' | 'NEXI_BACKEND' | 'COINGECKO';
+  provider?: string;
   observedAt?: string;
   dataState?: 'LIVE' | 'STALE' | 'UNAVAILABLE' | 'ERROR';
   sparkline?: number[];
@@ -49,13 +49,15 @@ const pairsFromPriceRows = (rows: unknown, providerHeader?: unknown): MarketPair
     const parsedPrice = ticker.lastPrice === null || ticker.lastPrice === undefined || ticker.lastPrice === '' ? null : Number(ticker.lastPrice);
     const lastPrice = Number.isFinite(parsedPrice) && parsedPrice! > 0 ? parsedPrice : null;
     if (!symbol) return [];
-    const provider = String(ticker.source ?? providerHeader ?? '').toUpperCase() === 'COINGECKO' ? 'COINGECKO' as const : 'NEXI_BACKEND' as const;
+    const provider = typeof ticker.provider === 'string' && ticker.provider.trim()
+      ? ticker.provider.trim()
+      : String(ticker.source ?? providerHeader ?? '').trim() || 'NEXI_BACKEND';
     const base = asset ? pairFor(asset) : { assetId: `unmapped:${symbol}`, category: 'Crypto' as const, symbol, pair: `${toDisplaySymbol(symbol)}/USDT`, displaySymbol: toDisplaySymbol(symbol), name: typeof ticker.name === 'string' ? ticker.name : symbol, price: null, change: null, icon: toDisplaySymbol(symbol), source: 'fallback' as const, provider: 'FALLBACK' as const, dataState: 'UNAVAILABLE' as const };
     const sparkline = Array.isArray(ticker.sparkline) ? ticker.sparkline.map(Number).filter(Number.isFinite) : [];
     const changeValue = Number(ticker.priceChangePercent);
     const volumeValue = Number(ticker.volume);
     const dataState = typeof ticker.dataState === 'string' ? ticker.dataState as MarketPair['dataState'] : lastPrice === null ? 'UNAVAILABLE' : 'LIVE';
-    return [{ ...base, name: typeof ticker.name === 'string' ? ticker.name : base.name, price: lastPrice, change: Number.isFinite(changeValue) ? changeValue : null, vol: Number.isFinite(volumeValue) ? volumeValue : null, high: Number.isFinite(Number(ticker.high)) ? Number(ticker.high) : null, low: Number.isFinite(Number(ticker.low)) ? Number(ticker.low) : null, marketCap: Number.isFinite(Number(ticker.marketCap)) ? Number(ticker.marketCap) : null, icon: typeof ticker.icon === 'string' ? ticker.icon : base.icon, source: provider === 'COINGECKO' ? 'external' as const : 'tick' as const, provider, dataState, observedAt: typeof ticker.observedAt === 'string' ? ticker.observedAt : undefined, sparkline }];
+    return [{ ...base, name: typeof ticker.name === 'string' ? ticker.name : base.name, price: lastPrice, change: Number.isFinite(changeValue) ? changeValue : null, vol: Number.isFinite(volumeValue) ? volumeValue : null, high: Number.isFinite(Number(ticker.high)) ? Number(ticker.high) : null, low: Number.isFinite(Number(ticker.low)) ? Number(ticker.low) : null, marketCap: Number.isFinite(Number(ticker.marketCap)) ? Number(ticker.marketCap) : null, icon: typeof ticker.icon === 'string' ? ticker.icon : base.icon, source: provider.toUpperCase() === 'COINGECKO' ? 'external' as const : 'tick' as const, provider, dataState, observedAt: typeof ticker.observedAt === 'string' ? ticker.observedAt : undefined, sparkline }];
   });
 };
 

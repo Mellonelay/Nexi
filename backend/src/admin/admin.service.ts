@@ -1405,7 +1405,10 @@ export class AdminService {
       select: { id: true, key: true },
     });
     if (!provider) throw new NotFoundException("Market provider not found");
-    const status = input.status === "DISABLED" ? "DISABLED" : "MAINTENANCE";
+    // Runtime states (LIVE/STALE/UNAVAILABLE) are observed by the market
+    // pollers. The admin action only changes the lifecycle gate: DISABLED
+    // turns polling off; every other accepted action re-enables the provider.
+    const status = input.status === "DISABLED" ? "DISABLED" : "ACTIVE";
     const updated = await this.prisma.marketProviderConfig.update({
       where: { id: provider.id },
       data: { status },

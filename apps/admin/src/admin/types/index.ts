@@ -201,7 +201,7 @@ export interface Session {
   active: boolean;
 }
 
-export type AssetCategory = "crypto" | "stablecoin" | "fiat_proxy";
+export type AssetCategory = "crypto" | "stablecoin" | "fiat_proxy" | "stock" | "forex" | "metal";
 
 export interface Asset {
   id: string;

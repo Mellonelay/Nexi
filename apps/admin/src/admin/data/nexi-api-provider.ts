@@ -437,7 +437,9 @@ export class NexiAdminApiProvider implements AdminDataProvider {
         });
       const categoryValue = stringValue(row.category, "crypto");
       const category: AssetCategory =
-        categoryValue === "stablecoin" || categoryValue === "fiat_proxy" ? categoryValue : "crypto";
+        (["crypto", "stablecoin", "fiat_proxy", "stock", "forex", "metal"] as const).includes(categoryValue as AssetCategory)
+          ? categoryValue as AssetCategory
+          : "crypto";
       return {
         id: stringValue(row.id, symbol),
         symbol,

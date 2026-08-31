@@ -168,7 +168,7 @@ function Inner() {
                 size="sm"
                 data-testid={`feed-enable-${f.id}`}
                 disabled={!canEdit}
-                onClick={() => setPending({ kind: "status", row: f, next: "LIVE" })}
+                onClick={() => setPending({ kind: "status", row: f, next: "UNAVAILABLE" })}
               >
                 <Zap className="mr-1 h-3.5 w-3.5" /> Re-enable
               </Button>
@@ -231,7 +231,7 @@ function Inner() {
                   size="sm"
                   data-testid="feed-detail-enable"
                   disabled={!canEdit}
-                  onClick={() => setPending({ kind: "status", row: selected, next: "LIVE" })}
+                  onClick={() => setPending({ kind: "status", row: selected, next: "UNAVAILABLE" })}
                 >
                   <Zap className="mr-1 h-3.5 w-3.5" /> Re-enable
                 </Button>

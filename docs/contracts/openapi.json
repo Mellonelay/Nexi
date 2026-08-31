@@ -1,0 +1,4993 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/": {
+      "get": {
+        "operationId": "AppController_getHello",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Application"
+        ]
+      }
+    },
+    "/market/proxy": {
+      "get": {
+        "operationId": "AppController_getMarketData",
+        "parameters": [
+          {
+            "name": "symbol",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Application"
+        ]
+      }
+    },
+    "/market/prices": {
+      "get": {
+        "operationId": "AppController_getAllPrices",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Application"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "AppController_getHealth",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Application"
+        ]
+      }
+    },
+    "/healthz": {
+      "get": {
+        "operationId": "AppController_getLiveness",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Application"
+        ]
+      }
+    },
+    "/readyz": {
+      "get": {
+        "operationId": "AppController_getReadiness",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Application"
+        ]
+      }
+    },
+    "/feedback/upload": {
+      "post": {
+        "operationId": "FeedbackController_uploadFeedback",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadFeedbackDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Feedback"
+        ]
+      }
+    },
+    "/communications/tickets": {
+      "post": {
+        "operationId": "CommunicationsController_createTicket",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTicketDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      },
+      "get": {
+        "operationId": "CommunicationsController_tickets",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
+    "/communications/tickets/{id}/replies": {
+      "post": {
+        "operationId": "CommunicationsController_reply",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplyTicketDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
+    "/communications/tickets/{id}/assign": {
+      "post": {
+        "operationId": "CommunicationsController_assign",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignTicketDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
+    "/communications/messages": {
+      "post": {
+        "operationId": "CommunicationsController_message",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendMessageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      },
+      "get": {
+        "operationId": "CommunicationsController_messages",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
+    "/communications/notifications": {
+      "get": {
+        "operationId": "CommunicationsController_notifications",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
+    "/communications/notifications/{id}/read": {
+      "post": {
+        "operationId": "CommunicationsController_read",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
+    "/communications/announcements": {
+      "get": {
+        "operationId": "CommunicationsController_announcements",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
+    "/communications/learn": {
+      "get": {
+        "operationId": "CommunicationsController_learn",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
+    "/communications/learn/categories": {
+      "get": {
+        "operationId": "CommunicationsController_learnCategories",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
+    "/communications/learn/{slug}": {
+      "get": {
+        "operationId": "CommunicationsController_learnDetail",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
+    "/communications/admin/announcements": {
+      "post": {
+        "operationId": "CommunicationsController_createAnnouncement",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAnnouncementDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
+    "/communications/admin/learn/articles": {
+      "get": {
+        "operationId": "CommunicationsController_adminLearnArticles",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
+    "/communications/admin/learn/categories": {
+      "post": {
+        "operationId": "CommunicationsController_createLearnCategory",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLearnCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
+    "/communications/admin/learn": {
+      "post": {
+        "operationId": "CommunicationsController_createLearn",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLearnContentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
+    "/communications/admin/learn/{id}": {
+      "patch": {
+        "operationId": "CommunicationsController_updateLearn",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLearnContentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
+    "/communications/admin/learn/{id}/publish": {
+      "post": {
+        "operationId": "CommunicationsController_publishLearn",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/auth/signup": {
+      "post": {
+        "operationId": "AuthController_signup",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignupDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/auth/wallet/challenge": {
+      "post": {
+        "operationId": "AuthController_walletChallenge",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WalletChallengeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/auth/wallet/verify": {
+      "post": {
+        "operationId": "AuthController_walletVerify",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WalletVerifyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "operationId": "AuthController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refresh",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/auth/logout-all": {
+      "post": {
+        "operationId": "AuthController_logoutAll",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/auth/kyc": {
+      "post": {
+        "operationId": "AuthController_submitKyc",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KycSubmissionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/wallet/currencies/list": {
+      "get": {
+        "operationId": "WalletController_getCurrencies",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Wallet"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/wallet/activity": {
+      "get": {
+        "operationId": "WalletController_getActivity",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Wallet"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/wallet/me": {
+      "get": {
+        "operationId": "WalletController_getMyWallet",
+        "summary": "Return balances for the authenticated wallet user.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Wallet"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/wallet/me/ledger": {
+      "get": {
+        "operationId": "WalletController_getMyLedger",
+        "summary": "Return ledger history for the authenticated wallet user.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Wallet"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/wallet/{userId}": {
+      "get": {
+        "operationId": "WalletController_getWallet",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Wallet"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/wallet/{userId}/ledger": {
+      "get": {
+        "operationId": "WalletController_getLedger",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Wallet"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/wallet/deposit": {
+      "post": {
+        "operationId": "WalletController_deposit",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Wallet"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/wallet/withdraw": {
+      "post": {
+        "operationId": "WalletController_withdraw",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Wallet"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/wallet/admin/credit": {
+      "post": {
+        "operationId": "WalletController_adminCredit",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Wallet"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/wallet/admin/debit": {
+      "post": {
+        "operationId": "WalletController_adminDebit",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Wallet"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/wallet/admin/withdrawals": {
+      "get": {
+        "operationId": "WalletController_getPendingWithdrawals",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Wallet"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/wallet/admin/withdrawals/approve": {
+      "post": {
+        "operationId": "WalletController_approveWithdrawal",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Wallet"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/wallet/admin/withdrawals/reject": {
+      "post": {
+        "operationId": "WalletController_rejectWithdrawal",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Wallet"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/referral/me": {
+      "get": {
+        "operationId": "ReferralVipController_referral",
+        "summary": "Return the authenticated user referral identity and referral totals.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Referral and VIP"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/referral/claim": {
+      "post": {
+        "operationId": "ReferralVipController_claim",
+        "summary": "Apply a referral code once to the authenticated account.",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClaimReferralDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Referral and VIP"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/vip/me": {
+      "get": {
+        "operationId": "ReferralVipController_vip",
+        "summary": "Return the authenticated user VIP level, progress and benefits.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Referral and VIP"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/vip/levels": {
+      "get": {
+        "operationId": "ReferralVipController_levels",
+        "summary": "List enabled VIP levels and public benefit metadata.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Referral and VIP"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/_internal/events/queue": {
+      "post": {
+        "operationId": "EventsController_ingestQueue",
+        "parameters": [
+          {
+            "name": "x-nexi-event-signature",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-nexi-event-timestamp",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Internal Events"
+        ]
+      }
+    },
+    "/binary/config": {
+      "get": {
+        "operationId": "BinaryController_getConfig",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Binary Options"
+        ]
+      }
+    },
+    "/binary/position": {
+      "post": {
+        "operationId": "BinaryController_openPosition",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpenBinaryPositionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Binary Options"
+        ]
+      }
+    },
+    "/binary/settle": {
+      "post": {
+        "operationId": "BinaryController_settlePosition",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettleBinaryPositionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Binary Options"
+        ]
+      }
+    },
+    "/binary/positions/current": {
+      "get": {
+        "operationId": "BinaryController_currentPositions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Binary Options"
+        ]
+      }
+    },
+    "/binary/positions/history": {
+      "get": {
+        "operationId": "BinaryController_history",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Binary Options"
+        ]
+      }
+    },
+    "/spot/order": {
+      "post": {
+        "operationId": "SpotController_placeOrder",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlaceOrderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Spot Trading"
+        ]
+      }
+    },
+    "/spot/cancel": {
+      "post": {
+        "operationId": "SpotController_cancelOrder",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelOrderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Spot Trading"
+        ]
+      }
+    },
+    "/spot/orderbook": {
+      "get": {
+        "operationId": "SpotController_getOrderBook",
+        "parameters": [
+          {
+            "name": "pair",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Spot Trading"
+        ]
+      }
+    },
+    "/spot/market-trades": {
+      "get": {
+        "operationId": "SpotController_getMarketTrades",
+        "parameters": [
+          {
+            "name": "pair",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Spot Trading"
+        ]
+      }
+    },
+    "/spot/orders/open": {
+      "get": {
+        "operationId": "SpotController_getOpenOrders",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Spot Trading"
+        ]
+      }
+    },
+    "/spot/orders/history": {
+      "get": {
+        "operationId": "SpotController_getOrderHistory",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Spot Trading"
+        ]
+      }
+    },
+    "/spot/trades/history": {
+      "get": {
+        "operationId": "SpotController_getTradeHistory",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Spot Trading"
+        ]
+      }
+    },
+    "/spot/margin/quote": {
+      "get": {
+        "operationId": "MarginController_getQuote",
+        "parameters": [
+          {
+            "name": "pair",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Margin Trading"
+        ]
+      }
+    },
+    "/spot/margin/positions": {
+      "get": {
+        "operationId": "MarginController_listPositions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Margin Trading"
+        ]
+      },
+      "post": {
+        "operationId": "MarginController_openPosition",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpenMarginPositionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Margin Trading"
+        ]
+      }
+    },
+    "/spot/margin/positions/{positionId}/close": {
+      "post": {
+        "operationId": "MarginController_closePosition",
+        "parameters": [
+          {
+            "name": "positionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloseMarginPositionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Margin Trading"
+        ]
+      }
+    },
+    "/spot/margin/positions/mark": {
+      "post": {
+        "operationId": "MarginController_markPosition",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Margin Trading"
+        ]
+      }
+    },
+    "/spot/margin/positions/{positionId}/liquidate": {
+      "post": {
+        "operationId": "MarginController_liquidatePosition",
+        "parameters": [
+          {
+            "name": "positionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LiquidateMarginPositionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Margin Trading"
+        ]
+      }
+    },
+    "/spot/margin/transfer": {
+      "post": {
+        "operationId": "MarginController_transfer",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarginTransferDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Margin Trading"
+        ]
+      }
+    },
+    "/spot/margin/activity": {
+      "get": {
+        "operationId": "MarginController_history",
+        "parameters": [
+          {
+            "name": "take",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Margin Trading"
+        ]
+      }
+    },
+    "/market/klines": {
+      "get": {
+        "operationId": "MarketKlineController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Market Data"
+        ]
+      }
+    },
+    "/mining/plans": {
+      "get": {
+        "operationId": "MiningController_getPlans",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Mining"
+        ]
+      }
+    },
+    "/mining/summary": {
+      "get": {
+        "operationId": "MiningController_getSummary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Mining"
+        ]
+      }
+    },
+    "/mining/rewards/{userId}": {
+      "get": {
+        "operationId": "MiningController_getRewards",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Mining"
+        ]
+      }
+    },
+    "/mining/subscribe": {
+      "post": {
+        "operationId": "MiningController_subscribe",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MiningSubscribeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Mining"
+        ]
+      }
+    },
+    "/mining/my/{userId}": {
+      "get": {
+        "operationId": "MiningController_getMySubs",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Mining"
+        ]
+      }
+    },
+    "/mining/redeem": {
+      "post": {
+        "operationId": "MiningController_redeem",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MiningSubscriptionActionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Mining"
+        ]
+      }
+    },
+    "/mining/cancel": {
+      "post": {
+        "operationId": "MiningController_cancel",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MiningSubscriptionActionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Mining"
+        ]
+      }
+    },
+    "/mining/admin/plan": {
+      "post": {
+        "operationId": "MiningController_createPlan",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMiningPlanRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Mining"
+        ]
+      }
+    },
+    "/mining/admin/distribute": {
+      "post": {
+        "operationId": "MiningController_forceDistribute",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Mining"
+        ]
+      }
+    },
+    "/loans/plans": {
+      "get": {
+        "operationId": "LoansController_getPlans",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Loans"
+        ]
+      }
+    },
+    "/loans/apply": {
+      "post": {
+        "operationId": "LoansController_apply",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplyLoanDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Loans"
+        ]
+      }
+    },
+    "/loans/my/{userId}": {
+      "get": {
+        "operationId": "LoansController_getMyLoans",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Loans"
+        ]
+      }
+    },
+    "/loans/admin/all": {
+      "get": {
+        "operationId": "LoansController_getAllLoans",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Loans"
+        ]
+      }
+    },
+    "/loans/admin/approve": {
+      "post": {
+        "operationId": "LoansController_approve",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoanLegacyAdminDecisionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Loans"
+        ]
+      }
+    },
+    "/loans/admin/reject": {
+      "post": {
+        "operationId": "LoansController_reject",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoanLegacyAdminDecisionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Loans"
+        ]
+      }
+    },
+    "/loans/repay": {
+      "post": {
+        "operationId": "LoansController_repay",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoanRepaymentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Loans"
+        ]
+      }
+    },
+    "/kyc/submit": {
+      "post": {
+        "operationId": "KycController_submitKyc",
+        "summary": "Submit or resubmit the authenticated wallet user's KYC profile.",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KycSubmissionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "KYC"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/kyc/status": {
+      "get": {
+        "operationId": "KycController_getMyStatus",
+        "summary": "Return KYC state for the authenticated wallet user.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "KYC"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/kyc/status/{userId}": {
+      "get": {
+        "operationId": "KycController_getStatus",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "KYC"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/kyc/admin/approve": {
+      "post": {
+        "operationId": "KycController_approve",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KycAdminTargetDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "KYC"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/kyc/admin/reject": {
+      "post": {
+        "operationId": "KycController_reject",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KycAdminTargetDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "KYC"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/conversion/rate": {
+      "get": {
+        "operationId": "ConversionController_getRate",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Conversion"
+        ]
+      }
+    },
+    "/conversion/convert": {
+      "post": {
+        "operationId": "ConversionController_convert",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConvertDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Conversion"
+        ]
+      }
+    },
+    "/conversion/admin/rate": {
+      "post": {
+        "operationId": "ConversionController_setRate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetConversionRateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Conversion"
+        ]
+      }
+    },
+    "/admin/me": {
+      "get": {
+        "operationId": "AdminController_getAdminIdentity",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/roles": {
+      "get": {
+        "operationId": "AdminController_listAdminRoleDefinitions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/admins": {
+      "get": {
+        "operationId": "AdminController_listAdminAccounts",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/admins/{id}": {
+      "get": {
+        "operationId": "AdminController_getAdminAccount",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/audit": {
+      "get": {
+        "operationId": "AdminController_listAdminAudit",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/incidents": {
+      "get": {
+        "operationId": "AdminController_listIncidents",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/incidents/{id}/acknowledge": {
+      "post": {
+        "operationId": "AdminController_acknowledgeIncident",
+        "summary": "Acknowledge an operational incident",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminIncidentAcknowledgeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Incident acknowledgement result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid acknowledgement request"
+          },
+          "404": {
+            "description": "Incident not found"
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/tickets/{id}/reply": {
+      "post": {
+        "operationId": "AdminController_replyAdminTicket",
+        "summary": "Reply to a support ticket",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminSupportReplyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Support reply result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok",
+                    "auditId",
+                    "replayed"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "auditId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "replayed": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid support reply request"
+          },
+          "404": {
+            "description": "Support ticket not found"
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/tickets/{id}/status": {
+      "post": {
+        "operationId": "AdminController_setAdminTicketStatus",
+        "summary": "Change support ticket status",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminSupportStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Support status result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok",
+                    "auditId",
+                    "replayed",
+                    "status"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "auditId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "replayed": {
+                      "type": "boolean"
+                    },
+                    "status": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid support status request"
+          },
+          "404": {
+            "description": "Support ticket not found"
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/maintenance-windows": {
+      "get": {
+        "operationId": "AdminController_listMaintenanceWindows",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      },
+      "post": {
+        "operationId": "AdminController_createMaintenanceWindow",
+        "summary": "Schedule a maintenance window",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMaintenanceWindowDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Maintenance window result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid maintenance window request"
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/maintenance-windows/{id}/cancel": {
+      "post": {
+        "operationId": "AdminController_cancelMaintenanceWindow",
+        "summary": "Cancel a maintenance window",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelMaintenanceWindowDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Maintenance cancellation result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid maintenance cancellation request"
+          },
+          "404": {
+            "description": "Maintenance window not found"
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/stats": {
+      "get": {
+        "operationId": "AdminController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/system-config": {
+      "get": {
+        "operationId": "AdminController_getSystemConfig",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      },
+      "post": {
+        "operationId": "AdminController_updateSystemConfig",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSystemConfigDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/governance/commands": {
+      "get": {
+        "operationId": "AdminController_listGovernanceCommands",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      },
+      "post": {
+        "operationId": "AdminController_createGovernanceCommand",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGovernanceCommandDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/governance/commands/{id}/approve": {
+      "post": {
+        "operationId": "AdminController_approveGovernanceCommand",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GovernanceDecisionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/governance/commands/{id}/reject": {
+      "post": {
+        "operationId": "AdminController_rejectGovernanceCommand",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GovernanceDecisionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/feature-flags": {
+      "get": {
+        "operationId": "AdminController_listFeatureFlags",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      },
+      "post": {
+        "operationId": "AdminController_updateFeatureFlag",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFeatureFlagDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/financial-corrections": {
+      "post": {
+        "operationId": "AdminController_applyFinancialCorrection",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinancialCorrectionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/sandbox/controls": {
+      "post": {
+        "operationId": "AdminController_requestSandboxControl",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SandboxControlDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/sandbox/controls/{id}/execute": {
+      "post": {
+        "operationId": "AdminController_executeSandboxControl",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/users": {
+      "get": {
+        "operationId": "AdminController_getUsers",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/kyc": {
+      "get": {
+        "operationId": "AdminController_getKycReviews",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/kyc/decision": {
+      "post": {
+        "operationId": "AdminController_decideKyc",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminKycDecisionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/sessions": {
+      "get": {
+        "operationId": "AdminController_getAuthSessions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/sessions/{id}/revoke": {
+      "post": {
+        "operationId": "AdminController_revokeAuthSession",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminIncidentAcknowledgeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/users/{id}/sessions/revoke": {
+      "post": {
+        "operationId": "AdminController_revokeUserSessions",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminIncidentAcknowledgeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/currencies": {
+      "get": {
+        "operationId": "AdminController_getCurrencies",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      },
+      "post": {
+        "operationId": "AdminController_createCurrency",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCurrencyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/market/assets": {
+      "get": {
+        "operationId": "AdminController_getMarketAssets",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/market/assets/visibility": {
+      "post": {
+        "operationId": "AdminController_setMarketAssetVisibility",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminAssetVisibilityDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/market/networks": {
+      "get": {
+        "operationId": "AdminController_getMarketNetworks",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/market/networks/visibility": {
+      "post": {
+        "operationId": "AdminController_setMarketNetworkVisibility",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminNetworkVisibilityDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/market/feeds": {
+      "get": {
+        "operationId": "AdminController_getMarketFeeds",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/market/feeds/status": {
+      "post": {
+        "operationId": "AdminController_setMarketFeedStatus",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminFeedStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/spot/pairs": {
+      "get": {
+        "operationId": "AdminController_getSpotPairs",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/spot/orders": {
+      "get": {
+        "operationId": "AdminController_getSpotOrders",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/spot/orders/{id}/cancel": {
+      "post": {
+        "operationId": "AdminController_cancelAdminSpotOrder",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminIncidentAcknowledgeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/spot/pairs/maintenance": {
+      "post": {
+        "operationId": "AdminController_setSpotPairMaintenance",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminPairMaintenanceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/binary/positions": {
+      "get": {
+        "operationId": "AdminController_getBinaryPositions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/binary/settlements": {
+      "get": {
+        "operationId": "AdminController_getBinarySettlements",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/binary/positions/{id}/settle": {
+      "post": {
+        "operationId": "AdminController_settleBinaryPosition",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminIncidentAcknowledgeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/binary/pairs/maintenance": {
+      "post": {
+        "operationId": "AdminController_setBinaryPairMaintenance",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminPairMaintenanceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/wallets": {
+      "get": {
+        "operationId": "AdminController_getAdminWallets",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/ledger": {
+      "get": {
+        "operationId": "AdminController_getAdminLedger",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/deposits": {
+      "get": {
+        "operationId": "AdminController_getAdminDeposits",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/deposit-claims": {
+      "get": {
+        "operationId": "AdminController_getAdminDepositClaims",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/deposit-claims/{id}/confirm": {
+      "post": {
+        "operationId": "AdminController_confirmDepositClaim",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminIncidentAcknowledgeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/deposit-claims/{id}/credit": {
+      "post": {
+        "operationId": "AdminController_creditDepositClaim",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminIncidentAcknowledgeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/deposit-claims/{id}/reject": {
+      "post": {
+        "operationId": "AdminController_rejectDepositClaim",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminIncidentAcknowledgeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/deposits/{id}/confirm": {
+      "post": {
+        "operationId": "AdminController_confirmAdminDeposit",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminIncidentAcknowledgeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/deposits/{id}/credit": {
+      "post": {
+        "operationId": "AdminController_creditAdminDeposit",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminIncidentAcknowledgeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/deposits/{id}/fail": {
+      "post": {
+        "operationId": "AdminController_failAdminDeposit",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminIncidentAcknowledgeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/withdrawals": {
+      "get": {
+        "operationId": "AdminController_getAdminWithdrawals",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/withdrawals/{id}/approve": {
+      "post": {
+        "operationId": "AdminController_approveAdminWithdrawal",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminIncidentAcknowledgeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/withdrawals/{id}/reject": {
+      "post": {
+        "operationId": "AdminController_rejectAdminWithdrawal",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminIncidentAcknowledgeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/withdrawals/{id}/review": {
+      "post": {
+        "operationId": "AdminController_requestAdminWithdrawalReview",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminIncidentAcknowledgeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/withdrawals/{id}/fail": {
+      "post": {
+        "operationId": "AdminController_failAdminWithdrawal",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminIncidentAcknowledgeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/tickets": {
+      "get": {
+        "operationId": "AdminController_getAdminTickets",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/announcements": {
+      "get": {
+        "operationId": "AdminController_getAdminAnnouncements",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/currencies/{id}": {
+      "patch": {
+        "operationId": "AdminController_updateCurrency",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCurrencyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/currencies/{id}/address": {
+      "post": {
+        "operationId": "AdminController_addDepositAddress",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDepositAddressDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/address/{id}": {
+      "delete": {
+        "operationId": "AdminController_deleteDepositAddress",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/mining-plans": {
+      "get": {
+        "operationId": "AdminController_getMiningPlans",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      },
+      "post": {
+        "operationId": "AdminController_createMiningPlan",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMiningPlanDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/mining-plans/{id}": {
+      "patch": {
+        "operationId": "AdminController_updateMiningPlan",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMiningPlanDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/loan-plans": {
+      "get": {
+        "operationId": "AdminController_getLoanPlans",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      },
+      "post": {
+        "operationId": "AdminController_createLoanPlan",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLoanPlanDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/loan-plans/{id}": {
+      "patch": {
+        "operationId": "AdminController_updateLoanPlan",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLoanPlanDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/mining/subscriptions": {
+      "get": {
+        "operationId": "AdminController_getMiningSubscriptions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/loans/applications": {
+      "get": {
+        "operationId": "AdminController_getLoanApplications",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/loans/applications/{id}/approve": {
+      "post": {
+        "operationId": "AdminController_approveLoanApplication",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoanAdminDecisionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/loans/applications/{id}/reject": {
+      "post": {
+        "operationId": "AdminController_rejectLoanApplication",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoanAdminDecisionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/risk/pairs": {
+      "get": {
+        "operationId": "AdminController_getBinaryPairs",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/binary/config": {
+      "get": {
+        "operationId": "AdminController_getBinaryConfiguration",
+        "parameters": [
+          {
+            "name": "pair",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      },
+      "post": {
+        "operationId": "AdminController_updateBinaryConfiguration",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBinaryConfigurationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/auth/login": {
+      "post": {
+        "operationId": "AdminAuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Authentication"
+        ]
+      }
+    },
+    "/admin/auth/refresh": {
+      "post": {
+        "operationId": "AdminAuthController_refresh",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Authentication"
+        ]
+      }
+    },
+    "/admin/auth/logout": {
+      "post": {
+        "operationId": "AdminAuthController_logout",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Authentication"
+        ]
+      }
+    },
+    "/admin/auth/logout-all": {
+      "post": {
+        "operationId": "AdminAuthController_logoutAll",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Authentication"
+        ]
+      }
+    },
+    "/admin/referrals": {
+      "get": {
+        "operationId": "ReferralVipAdminController_referrals",
+        "summary": "List referral identities and referral totals.",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Referral and VIP"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/admin/vip/users": {
+      "get": {
+        "operationId": "ReferralVipAdminController_users",
+        "summary": "List user VIP state.",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Referral and VIP"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/admin/vip/levels": {
+      "get": {
+        "operationId": "ReferralVipAdminController_levels",
+        "summary": "List all VIP levels, including disabled levels.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Referral and VIP"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "ReferralVipAdminController_upsertLevel",
+        "summary": "Create or update a VIP level with an Admin audit record.",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVipLevelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Referral and VIP"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/admin/vip/assign": {
+      "post": {
+        "operationId": "ReferralVipAdminController_assign",
+        "summary": "Assign a VIP level to a NEXI User ID with an Admin audit record.",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignVipDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Referral and VIP"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/financial/withdrawals": {
+      "post": {
+        "operationId": "FinancialOperationsController_requestWithdrawal",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Gate2WithdrawalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Financial Operations"
+        ]
+      },
+      "get": {
+        "operationId": "FinancialOperationsController_withdrawals",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Financial Operations"
+        ]
+      }
+    },
+    "/financial/transfers": {
+      "post": {
+        "operationId": "FinancialOperationsController_transfer",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Gate2TransferDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Financial Operations"
+        ]
+      },
+      "get": {
+        "operationId": "FinancialOperationsController_transfers",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Financial Operations"
+        ]
+      }
+    },
+    "/financial/conversion/quote": {
+      "post": {
+        "operationId": "FinancialOperationsController_quote",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Gate2ConversionQuoteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Financial Operations"
+        ]
+      }
+    },
+    "/financial/conversion/accept": {
+      "post": {
+        "operationId": "FinancialOperationsController_accept",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Gate2ConversionAcceptDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Financial Operations"
+        ]
+      }
+    },
+    "/financial/deposits": {
+      "get": {
+        "operationId": "FinancialOperationsController_deposits",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Financial Operations"
+        ]
+      }
+    },
+    "/financial/deposit-destinations": {
+      "get": {
+        "operationId": "FinancialOperationsController_getDepositDestinations",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Financial Operations"
+        ]
+      }
+    },
+    "/financial/deposit-proof-intents": {
+      "post": {
+        "operationId": "FinancialOperationsController_createDepositProofIntent",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DepositProofIntentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Financial Operations"
+        ]
+      }
+    },
+    "/financial/deposit-proof-upload/authorize": {
+      "post": {
+        "operationId": "FinancialOperationsController_authorizeDepositProofUpload",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DepositProofAuthorizationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Financial Operations"
+        ]
+      }
+    },
+    "/financial/deposit-claims": {
+      "post": {
+        "operationId": "FinancialOperationsController_submitDepositClaim",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DepositClaimDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Financial Operations"
+        ]
+      },
+      "get": {
+        "operationId": "FinancialOperationsController_getDepositClaims",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Financial Operations"
+        ]
+      }
+    },
+    "/financial/admin/withdrawals/approve": {
+      "post": {
+        "operationId": "FinancialOperationsController_approve",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Gate2WithdrawalReviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Financial Operations"
+        ]
+      }
+    },
+    "/financial/admin/withdrawals/reject": {
+      "post": {
+        "operationId": "FinancialOperationsController_reject",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Gate2WithdrawalReviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Financial Operations"
+        ]
+      }
+    },
+    "/financial/admin/withdrawals/settle": {
+      "post": {
+        "operationId": "FinancialOperationsController_settle",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Gate2WithdrawalSettleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Financial Operations"
+        ]
+      }
+    },
+    "/ops/live": {
+      "get": {
+        "operationId": "HealthController_live",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Operations"
+        ]
+      }
+    },
+    "/ops/ready": {
+      "get": {
+        "operationId": "HealthController_ready",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Operations"
+        ]
+      }
+    },
+    "/_internal/workflows/{workflow}/{action}": {
+      "post": {
+        "operationId": "WorkflowCommandsController_execute",
+        "summary": "Execute an authenticated Workflow-facing NestJS command",
+        "parameters": [
+          {
+            "name": "workflow",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": [
+                "withdrawal",
+                "mining",
+                "loan"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "required": true,
+            "in": "path",
+            "description": "Workflow-specific action",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-nexi-workflow-signature",
+            "required": true,
+            "in": "header",
+            "description": "HMAC-SHA256 workflow command signature",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-nexi-workflow-timestamp",
+            "required": true,
+            "in": "header",
+            "description": "Unix timestamp in milliseconds; maximum age five minutes",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowCommandDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "D1-authoritative command result"
+          },
+          "400": {
+            "description": "Invalid workflow, action, entity, or idempotency input"
+          },
+          "401": {
+            "description": "Missing, expired, or invalid workflow signature"
+          },
+          "404": {
+            "description": "Workflow entity was not found"
+          }
+        },
+        "tags": [
+          "Internal Workflows"
+        ]
+      }
+    },
+    "/profile/me": {
+      "get": {
+        "operationId": "ProfileController_getMe",
+        "summary": "Return the complete wallet-native public profile.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Profile"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "ProfileController_updateMe",
+        "summary": "Update optional public profile metadata. Wallet identity remains immutable.",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Profile"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/profile/preferences": {
+      "get": {
+        "operationId": "ProfileController_preferences",
+        "summary": "Return public account preferences.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Profile"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "ProfileController_updatePreferences",
+        "summary": "Update public account preferences.",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePreferencesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Profile"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "NEXI API",
+    "description": "NEXI application and Admin API contract",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "UploadFeedbackDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateTicketDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ReplyTicketDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AssignTicketDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "SendMessageDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateAnnouncementDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateLearnCategoryDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateLearnContentDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateLearnContentDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "SignupDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "WalletChallengeDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "WalletVerifyDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "RefreshTokenDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "KycSubmissionDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ClaimReferralDto": {
+        "type": "object",
+        "properties": {
+          "referralCode": {
+            "type": "string",
+            "description": "Referral code captured before first wallet sign-in."
+          }
+        }
+      },
+      "OpenBinaryPositionDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "SettleBinaryPositionDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "PlaceOrderDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CancelOrderDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "OpenMarginPositionDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CloseMarginPositionDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "LiquidateMarginPositionDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "MarginTransferDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "MiningSubscribeDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "MiningSubscriptionActionDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateMiningPlanRequestDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ApplyLoanDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "LoanLegacyAdminDecisionDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "LoanRepaymentDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "KycAdminTargetDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ConvertDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "SetConversionRateDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AdminIncidentAcknowledgeDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AdminSupportReplyDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AdminSupportStatusDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateMaintenanceWindowDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CancelMaintenanceWindowDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateSystemConfigDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateGovernanceCommandDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "GovernanceDecisionDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateFeatureFlagDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "FinancialCorrectionDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "SandboxControlDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AdminKycDecisionDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AdminAssetVisibilityDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AdminNetworkVisibilityDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AdminFeedStatusDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AdminPairMaintenanceDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateCurrencyDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateCurrencyDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateDepositAddressDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateMiningPlanDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateMiningPlanDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateLoanPlanDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateLoanPlanDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "LoanAdminDecisionDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateBinaryConfigurationDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateVipLevelDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AssignVipDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "Gate2WithdrawalDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "Gate2TransferDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "Gate2ConversionQuoteDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "Gate2ConversionAcceptDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "DepositProofIntentDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "DepositProofAuthorizationDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "DepositClaimDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "Gate2WithdrawalReviewDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "Gate2WithdrawalSettleDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "WorkflowCommandDto": {
+        "type": "object",
+        "properties": {
+          "instanceId": {
+            "type": "string",
+            "description": "Cloudflare Workflow instance identifier"
+          },
+          "entityId": {
+            "type": "string",
+            "description": "D1 aggregate identifier"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "description": "Idempotency key for the Workflow command"
+          },
+          "payload": {
+            "type": "object",
+            "default": {}
+          }
+        },
+        "required": [
+          "instanceId",
+          "entityId",
+          "idempotencyKey"
+        ]
+      },
+      "UpdateProfileDto": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdatePreferencesDto": {
+        "type": "object",
+        "properties": {
+          "locale": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "theme": {
+            "type": "string"
+          },
+          "notificationSettings": {
+            "type": "object"
+          },
+          "tradingSettings": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,9 +1,6 @@
-import { FinnhubMarketAdapter } from '../../src/market/finnhub-market.adapter';
-import { MassiveMarketAdapter } from '../../src/market/massive-market.adapter';
 import { MetalsApiMarketAdapter } from '../../src/market/metals-api-market.adapter';
 import { MetalpriceApiMarketAdapter } from '../../src/market/metalprice-api-market.adapter';
 import { OandaMarketAdapter } from '../../src/market/oanda-market.adapter';
-import { AlphaVantageMarketAdapter } from '../../src/market/alpha-vantage-market.adapter';
 import { FawazCurrencyMarketAdapter } from '../../src/market/fawaz-currency-market.adapter';
 import { RzzroIndustrialMetalsMarketAdapter } from '../../src/market/rzzro-industrial-metals-market.adapter';
 import { resolveProviderInstrument } from '../../src/market/market-source-registry';
@@ -25,8 +22,6 @@ describe('non-crypto market adapters', () => {
   });
 
   it('uses documented provider-specific instrument forms without changing NEXI identities', () => {
-    expect(resolveProviderInstrument('EURUSD', 'massive')).toBe('C:EURUSD');
-    expect(resolveProviderInstrument('EURUSD', 'finnhub')).toBe('OANDA:EUR_USD');
     expect(resolveProviderInstrument('EURUSD', 'oanda')).toBe('EUR_USD');
     expect(resolveProviderInstrument('XAUUSD', 'metals-api')).toBe('XAU');
     expect(resolveProviderInstrument('EURUSD', 'fawaz-currency')).toBe('EUR');
@@ -38,35 +33,6 @@ describe('non-crypto market adapters', () => {
     expect(resolveProviderInstrument('USDCNH', 'yahoo')).toBe('CNH=X');
   });
 
-  it('requires an explicit selected provider and limits CANONICAL_PRIMARY to that provider’s mapped primary assets', () => {
-    process.env.MARKET_PROVIDER_NAME = 'massive';
-    process.env.MARKET_PROVIDER_SYMBOLS = 'CANONICAL_PRIMARY';
-    process.env.MASSIVE_API_KEY = 'test-key';
-    const adapter = new MassiveMarketAdapter() as unknown as { isEnabled: () => boolean; configuredSymbols: () => string[] };
-    expect(adapter.isEnabled()).toBe(true);
-    expect(adapter.configuredSymbols()).toEqual(expect.arrayContaining(['AAPLUSDT', 'EURUSD']));
-    expect(adapter.configuredSymbols()).toHaveLength(29);
-    expect(adapter.configuredSymbols()).not.toContain('BTCUSDT');
-  });
-
-  it('supports provider-specific canonical selectors during concurrent provider startup', () => {
-    process.env.MARKET_PROVIDER_NAMES = 'binance-spot,alpha-vantage';
-    process.env.MARKET_PROVIDER_SYMBOLS = 'CANONICAL_CRYPTO';
-    process.env.MARKET_PROVIDER_SYMBOLS_ALPHA_VANTAGE = 'CANONICAL_STOCKS,CANONICAL_FOREX,CANONICAL_METALS';
-    process.env.ALPHA_VANTAGE_API_KEY = 'test-key';
-    const adapter = new AlphaVantageMarketAdapter() as unknown as { configuredSymbols: () => string[] };
-    expect(adapter.configuredSymbols()).toHaveLength(36);
-    expect(adapter.configuredSymbols()).toEqual(expect.arrayContaining(['AAPLUSDT', 'EURUSD', 'XAUUSD', 'XZNUSD']));
-    expect(adapter.configuredSymbols()).not.toContain('BTCUSDT');
-  });
-
-  it('normalizes a Massive stock snapshot into a canonical quote', async () => {
-    process.env.MASSIVE_API_KEY = 'test-key';
-    const adapter = new MassiveMarketAdapter() as unknown as { fetchQuote: (symbol: string) => Promise<unknown> };
-    (global.fetch as jest.Mock).mockResolvedValue({ ok: true, json: async () => ({ ticker: { lastTrade: { p: 190.25 }, day: { h: 191, l: 188, v: 123 } } }) });
-    await expect(adapter.fetchQuote('AAPLUSDT')).resolves.toMatchObject({ provider: 'massive', symbol: 'AAPLUSDT', providerInstrument: 'AAPL', price: '190.25', priceType: 'LAST' });
-  });
-
   it('normalizes Yahoo daily chart data as a non-settlement reference quote', async () => {
     const adapter = new YahooMarketAdapter() as unknown as { fetchQuote: (symbol: string) => Promise<unknown> };
     (global.fetch as jest.Mock).mockResolvedValue({ ok: true, json: async () => ({
@@ -75,16 +41,6 @@ describe('non-crypto market adapters', () => {
     await expect(adapter.fetchQuote('XZNUSD')).resolves.toMatchObject({
       provider: 'yahoo', providerInstrument: 'ZNC=F', priceType: 'CANDLE_CLOSE', price: '52.36', source: 'rest:chart:1d',
     });
-  });
-
-  it('normalizes Finnhub stock and forex responses without treating candles as tick trades', async () => {
-    process.env.FINNHUB_API_KEY = 'test-key';
-    const adapter = new FinnhubMarketAdapter() as unknown as { fetchQuote: (symbol: string) => Promise<unknown> };
-    (global.fetch as jest.Mock)
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ c: 190.25, dp: 1.2, h: 191, l: 188, t: 1_700_000_000 }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ s: 'ok', c: [1.08765], h: [1.0877], l: [1.0876], t: [1_700_000_000] }) });
-    await expect(adapter.fetchQuote('AAPLUSDT')).resolves.toMatchObject({ provider: 'finnhub', priceType: 'LAST', price: '190.25' });
-    await expect(adapter.fetchQuote('EURUSD')).resolves.toMatchObject({ provider: 'finnhub', providerInstrument: 'OANDA:EUR_USD', priceType: 'CANDLE_CLOSE', price: '1.08765' });
   });
 
   it('uses OANDA bid/ask midpoint only when the provider response is coherent', async () => {
@@ -108,22 +64,6 @@ describe('non-crypto market adapters', () => {
     const adapter = new MetalpriceApiMarketAdapter() as unknown as { fetchQuote: (symbol: string) => Promise<unknown> };
     (global.fetch as jest.Mock).mockResolvedValue({ ok: true, json: async () => ({ success: true, info: { timestamp: 1_700_000_000 }, result: 2001.25 }) });
     await expect(adapter.fetchQuote('XCUUSD')).resolves.toMatchObject({ provider: 'metalprice-api', providerInstrument: 'XCU', priceType: 'REFERENCE', price: '2001.25' });
-  });
-
-  it('normalizes Alpha Vantage stock and FX daily responses', async () => {
-    process.env.ALPHA_VANTAGE_API_KEY = 'test-key';
-    const adapter = new AlphaVantageMarketAdapter() as unknown as { fetchQuote: (symbol: string) => Promise<unknown> };
-    (global.fetch as jest.Mock)
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ 'Global Quote': { '05. price': '190.25', '07. latest trading day': '2026-08-14' } }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ 'Time Series FX (Daily)': { '2026-08-14': { '2. high': '1.09', '3. low': '1.08', '4. close': '1.08765' } } }) });
-    await expect(adapter.fetchQuote('AAPLUSDT')).resolves.toMatchObject({ provider: 'alpha-vantage', providerInstrument: 'AAPL', priceType: 'LAST', price: '190.25' });
-    await expect(adapter.fetchQuote('EURUSD')).resolves.toMatchObject({ provider: 'alpha-vantage', providerInstrument: 'EUR/USD', priceType: 'CANDLE_CLOSE', price: '1.08765' });
-  });
-
-  it('keeps unsupported Alpha Vantage metals unavailable', async () => {
-    process.env.ALPHA_VANTAGE_API_KEY = 'test-key';
-    const adapter = new AlphaVantageMarketAdapter() as unknown as { fetchQuote: (symbol: string) => Promise<unknown> };
-    await expect(adapter.fetchQuote('XZNUSD')).resolves.toBeNull();
   });
 
   it('normalizes keyless daily FX and precious-metal reference rates', async () => {

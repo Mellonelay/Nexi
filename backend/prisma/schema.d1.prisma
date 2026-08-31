@@ -49,6 +49,7 @@ model User {
   spotMarginActivities  SpotMarginActivity[]
   activities            Activity[]
   preference            UserPreference?
+  vipState              UserVipState?
 }
 
 model WalletIdentity {
@@ -1026,6 +1027,9 @@ model MarketQuoteSnapshot {
   source     String
   sequence   String
   price      String
+  bid        String?
+  ask        String?
+  spread     String?
   change24h  String?
   volume24h  String?
   high24h    String?
@@ -1048,6 +1052,9 @@ model MarketQuoteLatest {
   source     String
   sequence   String
   price      String?
+  bid        String?
+  ask        String?
+  spread     String?
   change24h  String?
   volume24h  String?
   high24h    String?
@@ -1431,6 +1438,25 @@ model EventOutbox {
   @@index([correlationId, createdAt])
 }
 
+model EventInbox {
+  messageId      String   @id
+  queue          String
+  attempts       Int
+  eventType      String
+  eventVersion   Int
+  idempotencyKey String
+  correlationId  String
+  payload        String
+  state          String   @default("RECEIVED")
+  receivedAt     DateTime @default(now())
+  processedAt    DateTime?
+  lastErrorCode  String?
+  updatedAt      DateTime @default(now())
+
+  @@unique([queue, idempotencyKey])
+  @@index([state, receivedAt])
+}
+
 model LearnArticle {
   id          String                 @id @default(uuid())
   slug        String                 @unique
@@ -1544,6 +1570,35 @@ model UserPreference {
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
   user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VipLevel {
+  id         String         @id
+  level      Int            @unique
+  name       String
+  threshold  String         @default("0")
+  benefits   String?
+  enabled    Boolean        @default(true)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @default(now())
+  userStates UserVipState[]
+
+  @@index([enabled, level])
+}
+
+model UserVipState {
+  id           String   @id
+  userId       String   @unique
+  vipLevelId   String
+  progress     String   @default("0")
+  evaluatedAt  DateTime @default(now())
+  qualifiedAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vipLevel     VipLevel @relation(fields: [vipLevelId], references: [id], onDelete: Restrict)
+
+  @@index([vipLevelId, progress])
 }
 
 // Gate 2 authority models. These coexist with historical Float-backed

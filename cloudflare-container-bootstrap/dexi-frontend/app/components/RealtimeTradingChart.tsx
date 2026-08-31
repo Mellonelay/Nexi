@@ -27,5 +27,5 @@ export default function RealtimeTradingChart({
     onStatusChange?.(status);
   }, [onStatusChange, status]);
 
-  return <TradingChart symbol={symbol} type={type} interval={interval} candles={status === 'LIVE' ? stream.candles : []} status={status} />;
+  return <TradingChart symbol={symbol} type={type} interval={interval} candles={status === 'LIVE' || status === 'STALE' ? stream.candles : []} status={status} />;
 }

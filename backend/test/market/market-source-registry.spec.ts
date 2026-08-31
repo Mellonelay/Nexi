@@ -12,12 +12,15 @@ describe('Market source registry', () => {
 
   it('resolves provider instruments by asset class', () => {
     expect(resolveProviderInstrument('BTCUSDT', 'binance-spot')).toBe('BTCUSDT');
-    expect(resolveProviderInstrument('AAPLUSDT', 'massive')).toBe('AAPL');
+    expect(resolveProviderInstrument('AAPLUSDT', 'biquote')).toBe('AAPL');
     expect(resolveProviderInstrument('EURUSD', 'oanda')).toBe('EUR_USD');
     expect(resolveProviderInstrument('XAUUSD', 'oanda')).toBe('XAU_USD');
     expect(resolveProviderInstrument('GOOGUSDT', 'bitget')).toBe('GOOGLUSDT');
-    expect(getProviderMapping('AAPLUSDT', 'massive')?.quoteSupported).toBe(true);
+    expect(getProviderMapping('AAPLUSDT', 'biquote')?.quoteSupported).toBe(true);
     expect(getProviderMapping('DISUSDT', 'bitget')?.quoteSupported).toBe(false);
+    expect(getProviderMapping('AXPUSDT', 'gate')?.klineSupported).toBe(false);
+    expect(getProviderMapping('USDRUB', 'yahoo')?.klineSupported).toBe(false);
+    expect(getProviderMapping('USDRUB', 'moex')?.klineSupported).toBe(true);
   });
 
   it('fails closed for Binary settlement until policy approval exists', () => {

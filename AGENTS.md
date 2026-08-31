@@ -1,12 +1,11 @@
-# NEXI VM Authoritative Operating Contract
+# NEXI Work Authoritative Operating Contract
 
 ## Authority
-This workspace is the authoritative source for NEXI backend, Cloudflare Worker/Container, D1 integration, runtime, and deployment-sensitive engineering.
+This Work checkout is the current engineering authority for NEXI Public Frontend, Admin, backend, Cloudflare Worker/Container configuration, D1 integration, and deployment-sensitive engineering.
 
-- VM authority: `/root/workspaces/nexi-authoritative-20260823`
-- Windows `C:\trae_projects\Dexi_style_TraeWV` owns Public Frontend and Admin source only.
-- Windows backend files are checkpoint/reference mirrors, never backend implementation authority.
-- Do not continuously sync backend edits to Windows during active implementation. Sync only at an explicit verified checkpoint/final join.
+- VM/RDC is limited to explicitly requested Cloudflare/runtime/browser evidence.
+- GitHub and historical VM workspaces are reference history, not execution authority for this run.
+- Do not replace current Work source with an older VM or Windows snapshot.
 
 Current owner/product decisions and current approved NEXI architecture outrank historical DEXI/Neon assumptions.
 Current VM source and fresh runtime evidence outrank stale receipts or chat summaries about technical state.
@@ -94,3 +93,16 @@ Before a completion claim, verify the exact changed boundary with fresh evidence
 Report compactly: outcome, decisive evidence, changed files/resources, remaining unverified surfaces, production-changed status, next dependency-ready action.
 ## Historical artifact policy
 Windows `work/` receipts and VM backup artifacts are evidence/history only, not current execution authority. Consult them only when the current baton, fresh source/runtime evidence, or the owner explicitly requires them. Never let an old receipt or prompt override current authoritative VM source/runtime.
+
+## graphify
+
+This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+
+When the user types `/graphify`, use the installed graphify skill or instructions before doing anything else.
+
+Rules:
+- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- Dirty graphify-out/ files are expected after hooks or incremental updates; dirty graph files are not a reason to skip graphify. Only skip graphify if the task is about stale or incorrect graph output, or the user explicitly says not to use it.
+- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
