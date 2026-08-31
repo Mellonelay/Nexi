@@ -3,6 +3,7 @@ import { CANONICAL_MARKET_CATALOG } from './market-catalog';
 import { getProviderMapping } from './market-source-registry';
 import { PollingMarketProviderAdapter } from './polling-market-provider.adapter';
 import { ProviderQuoteEvent } from './market-provider.adapter';
+import type { MarketKlineInput, MarketKlineInterval } from './market-kline.contract';
 
 type Exchange = 'okx' | 'bitget' | 'htx' | 'bybit' | 'gate';
 type Quote = { price?: string; indexPrice?: string; markPrice?: string; change?: string; volume?: string; high?: string; low?: string; time?: number };
@@ -116,7 +117,45 @@ export class GateMarketAdapter extends PublicExchangeMarketAdapter {
       low24h: quote.lowest_price,
     });
   }
+  async fetchHistory(symbol: string, interval: MarketKlineInterval, limit: number): Promise<MarketKlineInput[]> {
+    const mapping = getProviderMapping(symbol, this.provider);
+    if (!mapping?.klineSupported || !GATE_INTERVALS.has(interval)) return [];
+    const response = await this.requestJson<unknown>(this.baseUrl, '/api/v4/stock/candlesticks', {
+      symbol: mapping.instrument,
+      interval,
+      limit: String(Math.min(1000, Math.max(40, limit))),
+    });
+    if (!Array.isArray(response)) return [];
+    const now = Date.now();
+    return response.flatMap((row): MarketKlineInput[] => {
+      if (!Array.isArray(row) || row.length < 6) return [];
+      const openTimeMs = Number(row[0]) * 1000;
+      const values = [row[1], row[2], row[3], row[4]].map(Number);
+      const volume = Number(row[5]);
+      if (!Number.isFinite(openTimeMs) || values.some((value) => !Number.isFinite(value) || value <= 0)) return [];
+      const closeTimeMs = openTimeMs + gateIntervalMs(interval) - 1;
+      return [{
+        symbol, interval,
+        openTime: new Date(openTimeMs), closeTime: new Date(closeTimeMs),
+        open: String(row[1]), high: String(row[2]), low: String(row[3]), close: String(row[4]),
+        volume: Number.isFinite(volume) && volume >= 0 ? String(row[5]) : null,
+        provider: this.provider, source: 'gate:rest:stock-candlesticks',
+        observedAt: new Date(Math.min(now, closeTimeMs)),
+      }];
+    }).sort((a, b) => a.openTime.getTime() - b.openTime.getTime());
+  }
   protected path() { return '/api/v4/futures/usdt/tickers'; }
   protected params(instrument: string) { return { contract: instrument }; }
   protected extract(response: any) { const x = Array.isArray(response) ? response[0] : null; return x && { price: x.last, indexPrice: x.index_price, markPrice: x.mark_price, change: x.change_percentage, volume: x.volume_24h_quote, high: x.high_24h, low: x.low_24h, time: Number(x.funding_next_apply) * 1000 }; }
+}
+
+const GATE_INTERVALS = new Set<MarketKlineInterval>(['5m', '15m', '30m', '1h', '2h', '4h', '6h', '12h', '1d', '3d', '1w', '1M']);
+
+function gateIntervalMs(interval: MarketKlineInterval): number {
+  const values: Partial<Record<MarketKlineInterval, number>> = {
+    '5m': 300_000, '15m': 900_000, '30m': 1_800_000, '1h': 3_600_000,
+    '2h': 7_200_000, '4h': 14_400_000, '6h': 21_600_000, '12h': 43_200_000,
+    '1d': 86_400_000, '3d': 259_200_000, '1w': 604_800_000, '1M': 2_592_000_000,
+  };
+  return values[interval] ?? 60_000;
 }

@@ -5,7 +5,7 @@ describe('CommunicationsService', () => {
     const ticket = { id: 'ticket-1', userId: 'user-1', replies: [{ id: 'reply-1' }] };
     const tx: any = { supportTicket: { upsert: jest.fn(async () => ticket) } };
     const prisma: any = { $transaction: async (fn: any) => fn(tx) };
-    const service = new CommunicationsService(prisma);
+    const service = new CommunicationsService(prisma, {} as any, {} as any);
     const result = await service.createTicket('user-1', 'Help', 'Body', 'key-1');
     expect(result).toBe(ticket);
     expect(tx.supportTicket.upsert).toHaveBeenCalledWith(expect.objectContaining({ where: expect.anything(), include: { replies: true } }));
@@ -20,7 +20,7 @@ describe('CommunicationsService', () => {
       },
     };
     const prisma: any = { $transaction: async (fn: any) => fn(tx) };
-    const service = new CommunicationsService(prisma);
+    const service = new CommunicationsService(prisma, {} as any, {} as any);
     const result = await service.sendMessage('user-1', 'user-2', 'Hello', 'key-1');
     expect(result.sequence).toBe(4);
     expect(tx.persistentMessage.upsert).toHaveBeenCalledWith(expect.objectContaining({ create: expect.objectContaining({ sequence: 4 }) }));

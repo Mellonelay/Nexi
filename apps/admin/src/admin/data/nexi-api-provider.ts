@@ -501,15 +501,22 @@ export class NexiAdminApiProvider implements AdminDataProvider {
         return (symbols.length ? symbols : [null]).map((item) => {
           const symbol = record(item);
           const pair = record(symbol.pair);
-          const active = stringValue(row.status) === "ACTIVE";
+          const latest = record(pair.latest);
+          const active = stringValue(row.status) === "ACTIVE" && symbol.enabled !== false;
+          const observedAt = Date.parse(stringValue(latest.observedAt));
+          const receivedAt = Date.parse(stringValue(latest.receivedAt));
+          const latestState = stringValue(latest.state);
+          const state = latestState === "LIVE" || latestState === "STALE" ? latestState : "UNAVAILABLE";
+          const provider = stringValue(row.key);
+          const latestProvider = stringValue(latest.provider);
           return {
             id: stringValue(symbol.id, stringValue(row.id)),
             pair: stringValue(pair.symbol, "UNKNOWN"),
-            provider: stringValue(row.key),
+            provider,
             fallback: undefined,
-            latencyMs: 0,
-            ageMs: 0,
-            status: active ? "UNAVAILABLE" : "DISABLED",
+            latencyMs: Number.isFinite(receivedAt) && Number.isFinite(observedAt) ? Math.max(0, receivedAt - observedAt) : 0,
+            ageMs: Number.isFinite(observedAt) ? Math.max(0, Date.now() - observedAt) : 0,
+            status: !active ? "DISABLED" : latestProvider !== provider ? "UNAVAILABLE" : state,
           } as MarketFeed;
         });
       }),

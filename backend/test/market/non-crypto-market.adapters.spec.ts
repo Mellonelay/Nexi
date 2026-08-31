@@ -100,4 +100,29 @@ describe('non-crypto market adapters', () => {
     await expect(adapter.fetchQuote('AAPLUSDT')).resolves.toMatchObject({ providerInstrument: instrument, priceType, price });
     if (_provider === 'gate') expect((global.fetch as jest.Mock).mock.calls[0][0].toString()).toContain('/api/v4/tradfi/symbols/AAPL/tickers');
   });
+
+  it('normalizes Gate stock candlesticks for the shared Kline contract', async () => {
+    const adapter = new GateMarketAdapter() as unknown as { fetchHistory: (symbol: string, interval: string, limit: number) => Promise<any[]> };
+    (global.fetch as jest.Mock).mockResolvedValue({ ok: true, json: async () => [
+      ['1700000000', '100', '110', '95', '105', '42'],
+    ] });
+    await expect(adapter.fetchHistory('AXPUSDT', '1h', 40)).resolves.toMatchObject([
+      { symbol: 'AXPUSDT', interval: '1h', provider: 'gate', source: 'gate:rest:stock-candlesticks', open: '100', high: '110', low: '95', close: '105', volume: '42' },
+    ]);
+    expect((global.fetch as jest.Mock).mock.calls[0][0].toString()).toContain('/api/v4/stock/candlesticks');
+  });
+
+  it('normalizes Yahoo chart history and aggregates 4h candles', async () => {
+    const adapter = new YahooMarketAdapter() as unknown as { fetchHistory: (symbol: string, interval: string, limit: number) => Promise<any[]> };
+    const timestamps = [1700006400, 1700010000, 1700013600, 1700017200];
+    (global.fetch as jest.Mock).mockResolvedValue({ ok: true, json: async () => ({
+      chart: { result: [{ timestamp: timestamps, indicators: { quote: [{
+        open: [10, 11, 12, 13], high: [11, 12, 13, 14], low: [9, 10, 11, 12], close: [10.5, 11.5, 12.5, 13.5], volume: [1, 2, 3, 4],
+      }] } }] },
+    }) });
+    await expect(adapter.fetchHistory('XZNUSD', '4h', 40)).resolves.toMatchObject([
+      { symbol: 'XZNUSD', interval: '4h', provider: 'yahoo', open: '10', high: '14', low: '9', close: '13.5', volume: '10' },
+    ]);
+    expect((global.fetch as jest.Mock).mock.calls[0][0].toString()).toContain('/v8/finance/chart/ZNC%3DF');
+  });
 });

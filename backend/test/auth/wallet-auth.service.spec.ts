@@ -57,14 +57,14 @@ function makeService() {
   };
   const auth = { login: jest.fn().mockResolvedValue({ access_token: 'opaque-test-token' }) };
   const config = { get: (key: string) => ({ WALLET_AUTH_SUPPORTED_CHAIN_IDS: '1', WALLET_AUTH_DOMAIN: 'nexi.local', WALLET_AUTH_URI: 'http://nexi.local' } as Record<string, string>)[key] };
-  return { service: new WalletAuthService(config as any, prisma as any, redis as any, auth as any), redis, prisma, auth };
+  return { service: new WalletAuthService(config as any, prisma as any, redis as any, auth as any, {} as any), redis, prisma, auth };
 }
 
 describe('WalletAuthService', () => {
   beforeEach(() => verifyMessage.mockClear());
 
   it('fails closed when the wallet policy is not configured', async () => {
-    const service = new WalletAuthService({ get: () => undefined } as any, {} as any, {} as any, {} as any);
+    const service = new WalletAuthService({ get: () => undefined } as any, {} as any, {} as any, {} as any, {} as any);
     await expect(service.createChallenge({ address: '0xabc', chainId: 1 })).rejects.toBeInstanceOf(ServiceUnavailableException);
   });
 

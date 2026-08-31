@@ -166,6 +166,14 @@ function providerKlineSupported(entry: CanonicalMarketPair, provider: string): b
   if (provider === 'binance-spot') return entry.category === 'crypto';
   if (provider === 'biquote') return !BIQUOTE_KLINE_DISABLED.has(entry.symbol) && providerQuoteSupported(entry, provider);
   if (provider === 'moex') return entry.symbol === 'USDRUB';
+  // Gate's public Stock API supplies bounded OHLC history for NEXI stocks.
+  // Its documented intervals do not include 1m; the router can fall through
+  // to Yahoo for that interval.
+  if (provider === 'gate') return entry.category === 'stock' && providerQuoteSupported(entry, provider);
+  // Yahoo's chart endpoint is the non-crypto history fallback. USDRUB stays
+  // on the dedicated MOEX path so a secondary reference feed cannot replace
+  // the canonical FX source.
+  if (provider === 'yahoo') return entry.category !== 'crypto' && entry.symbol !== 'USDRUB';
   return false;
 }
 

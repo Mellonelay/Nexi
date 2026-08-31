@@ -6,7 +6,7 @@ import { ArrowLeft, ArrowUpRight, BarChart3, ChevronRight, Info, Star } from 'lu
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import RealtimeTradingChart from '../../../components/RealtimeTradingChart';
-import { useActiveInstrument, useActivePair } from '../../../state/ActivePairProvider';
+import { useActiveInstrument } from '../../../state/ActivePairProvider';
 import { useMarketData } from '../../../hooks/useMarketData';
 import { instrumentFromMarketPair, normalizePair } from '../../../state/active-instrument';
 import { assetIconPath, findAsset } from '../../../lib/asset-registry';
@@ -18,9 +18,9 @@ export default function AssetDetailPage() {
   const router = useRouter();
   const routeSymbol = decodeURIComponent(params.symbol ?? 'BTCUSDT');
   const { activeInstrument, setActiveInstrument } = useActiveInstrument();
-  const { setActivePair } = useActivePair();
   const { marketPairs, metal, shares, forex } = useMarketData();
   const [timeframe, setTimeframe] = useState('1h');
+  const [routeReady, setRouteReady] = useState(false);
   const timeframeOptions = ['1m', '5m', '15m', '1h', '1d'] as const;
 
   useEffect(() => {
@@ -31,10 +31,20 @@ export default function AssetDetailPage() {
 
     if (match) {
       setActiveInstrument(instrumentFromMarketPair(match));
+      setRouteReady(true);
       return;
     }
-    setActivePair(routeSymbol);
-  }, [forex, marketPairs, metal, routeSymbol, setActiveInstrument, setActivePair, shares]);
+    setRouteReady(false);
+    router.replace('/dashboard');
+  }, [forex, marketPairs, metal, routeSymbol, router, setActiveInstrument, shares]);
+
+  if (!routeReady) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#050508] px-6 text-center text-sm text-[#C3BBD0]">
+        Resolving approved market asset…
+      </div>
+    );
+  }
 
   const instrument = activeInstrument;
   const matchedItem = [...marketPairs, ...metal, ...shares, ...forex].find((item) => normalizePair(item.symbol) === normalizePair(routeSymbol));

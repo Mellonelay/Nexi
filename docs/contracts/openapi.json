@@ -1489,10 +1489,72 @@
     "/market/klines": {
       "get": {
         "operationId": "MarketKlineController_list",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "symbol",
+            "required": true,
+            "in": "query",
+            "description": "Canonical market pair, with or without a slash.",
+            "schema": {
+              "example": "BTCUSDT",
+              "type": "string"
+            }
+          },
+          {
+            "name": "interval",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "1m",
+              "enum": [
+                "1m",
+                "3m",
+                "5m",
+                "15m",
+                "30m",
+                "1h",
+                "2h",
+                "4h",
+                "6h",
+                "8h",
+                "12h",
+                "1d",
+                "3d",
+                "1w",
+                "1M"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketKlineResponseDto"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -4750,6 +4812,154 @@
       "MarginTransferDto": {
         "type": "object",
         "properties": {}
+      },
+      "MarketKlineCandleDto": {
+        "type": "object",
+        "properties": {
+          "time": {
+            "type": "number",
+            "example": 1720000000
+          },
+          "open": {
+            "type": "string",
+            "example": "100.00"
+          },
+          "high": {
+            "type": "string",
+            "example": "110.00"
+          },
+          "low": {
+            "type": "string",
+            "example": "95.00"
+          },
+          "close": {
+            "type": "string",
+            "example": "105.00"
+          },
+          "volume": {
+            "type": "string",
+            "nullable": true,
+            "example": "42.5"
+          },
+          "symbol": {
+            "type": "string",
+            "example": "BTCUSDT"
+          },
+          "interval": {
+            "type": "string",
+            "enum": [
+              "1m",
+              "3m",
+              "5m",
+              "15m",
+              "30m",
+              "1h",
+              "2h",
+              "4h",
+              "6h",
+              "8h",
+              "12h",
+              "1d",
+              "3d",
+              "1w",
+              "1M"
+            ],
+            "example": "1m"
+          },
+          "closeTime": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "provider": {
+            "type": "string",
+            "example": "binance-spot"
+          },
+          "source": {
+            "type": "string",
+            "example": "rest:klines"
+          },
+          "observedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "receivedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "time",
+          "open",
+          "high",
+          "low",
+          "close",
+          "symbol",
+          "interval",
+          "provider",
+          "source",
+          "observedAt",
+          "receivedAt"
+        ]
+      },
+      "MarketKlineResponseDto": {
+        "type": "object",
+        "properties": {
+          "dataState": {
+            "type": "string",
+            "enum": [
+              "LIVE",
+              "STALE",
+              "ERROR",
+              "UNAVAILABLE"
+            ]
+          },
+          "symbol": {
+            "type": "string",
+            "example": "BTCUSDT"
+          },
+          "interval": {
+            "type": "string",
+            "enum": [
+              "1m",
+              "3m",
+              "5m",
+              "15m",
+              "30m",
+              "1h",
+              "2h",
+              "4h",
+              "6h",
+              "8h",
+              "12h",
+              "1d",
+              "3d",
+              "1w",
+              "1M"
+            ],
+            "example": "1m"
+          },
+          "candles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MarketKlineCandleDto"
+            }
+          },
+          "observedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "dataState",
+          "symbol",
+          "interval",
+          "candles"
+        ]
       },
       "MiningSubscribeDto": {
         "type": "object",

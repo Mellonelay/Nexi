@@ -18,9 +18,20 @@ describe('Market source registry', () => {
     expect(resolveProviderInstrument('GOOGUSDT', 'bitget')).toBe('GOOGLUSDT');
     expect(getProviderMapping('AAPLUSDT', 'biquote')?.quoteSupported).toBe(true);
     expect(getProviderMapping('DISUSDT', 'bitget')?.quoteSupported).toBe(false);
-    expect(getProviderMapping('AXPUSDT', 'gate')?.klineSupported).toBe(false);
+    expect(getProviderMapping('AXPUSDT', 'gate')?.klineSupported).toBe(true);
     expect(getProviderMapping('USDRUB', 'yahoo')?.klineSupported).toBe(false);
     expect(getProviderMapping('USDRUB', 'moex')?.klineSupported).toBe(true);
+  });
+
+  it('gives every canonical asset a quote and Kline source path', () => {
+    const missing = CANONICAL_MARKET_CATALOG
+      .filter((entry) => {
+        const mappings = getMarketSourcePolicy(entry.symbol)?.providerMappings ?? [];
+        return !mappings.some((mapping) => mapping.quoteSupported)
+          || !mappings.some((mapping) => mapping.klineSupported);
+      })
+      .map((entry) => entry.symbol);
+    expect(missing).toEqual([]);
   });
 
   it('fails closed for Binary settlement until policy approval exists', () => {
