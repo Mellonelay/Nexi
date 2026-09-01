@@ -110,6 +110,62 @@ describe('D1FinancialCommandGateway', () => {
     expect(bridge.batch).not.toHaveBeenCalled();
   });
 
+  it('marks overdue loans and emits one idempotent outbox event per transition', async () => {
+    const bridge = createBridge({
+      select: jest.fn().mockResolvedValue({
+        results: [
+          { id: 'loan-1', dueDate: '2026-08-01T00:00:00.000Z' },
+          { id: 'loan-2', dueDate: '2026-08-02T00:00:00.000Z' },
+        ],
+      }),
+      batch: jest.fn().mockImplementation(async (statements: D1BridgeBatchStatement[]) => ({
+        results: statements.map((_, index) => ({
+          success: true,
+          meta: { changes: index % 2 === 0 ? 1 : 1 },
+        })),
+      })),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+
+    await expect(gateway.markOverdueLoans('2026-09-01T00:00:00.000Z')).resolves.toEqual({ count: 2 });
+
+    expect(bridge.select).toHaveBeenCalledWith(expect.stringContaining('FROM "LoanApplication"'), ['2026-09-01T00:00:00.000Z']);
+    const statements = (bridge.batch as jest.Mock).mock.calls[0][0] as D1BridgeBatchStatement[];
+    expect(statements).toHaveLength(4);
+    expect(statements[0].sql).toContain("SET \"status\"='OVERDUE'");
+    expect(statements[1].sql).toContain('EventOutbox');
+    expect(statements[1].sql).toContain("WHERE EXISTS (SELECT 1 FROM \"LoanApplication\"");
+    expect(statements[1].params).toContain('LOAN_OVERDUE');
+    expect(statements[3].params).toContain('event:loan:overdue:loan-2:2026-08-02T00:00:00.000Z');
+  });
+
+  it('creates a D1 loan application with a guarded submission outbox event', async () => {
+    const bridge = createBridge({
+      select: jest.fn().mockResolvedValue({
+        results: [{ id: 'loan-apply-1', userId: 'user-1', status: 'PENDING' }],
+      }),
+      batch: jest.fn().mockResolvedValue({
+        results: [
+          { success: true, meta: { changes: 1 } },
+          { success: true, meta: { changes: 1 } },
+        ],
+      }),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+
+    await expect(gateway.applyLoan({
+      id: 'loan-apply-1', userId: 'user-1', amount: '10', currency: 'USDT',
+      term: 30, durationDays: 30, interestRate: '0.1', totalRepayment: '11',
+      productSnapshot: { currency: 'USDT', durationDays: 30 },
+    })).resolves.toMatchObject({ id: 'loan-apply-1' });
+
+    const statements = (bridge.batch as jest.Mock).mock.calls[0][0] as D1BridgeBatchStatement[];
+    expect(statements).toHaveLength(2);
+    expect(statements[0].sql).toContain('LoanApplication');
+    expect(statements[1].sql).toContain('EventOutbox');
+    expect(statements[1].params).toContain('LOAN_APPLICATION_SUBMITTED');
+  });
+
   it('keeps the internal transfer record and audit in the same D1 batch', async () => {
     const bridge = createBridge({
       select: jest.fn().mockImplementation(async (sql: string) => {
