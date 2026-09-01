@@ -12,6 +12,6 @@ assert.match(market, /setMarketPairs\(\[\]\)/);
 assert.match(market, /setMetal\(\[\]\)/);
 assert.match(market, /setShares\(\[\]\)/);
 assert.match(market, /setForex\(\[\]\)/);
-assert.match(registry, /cdn\.simpleicons\.org/);
+assert.match(registry, /\/assets\/market\/\$\{asset\.iconKey\}\.svg/);
 assert.match(icon, /onError=\{\(\) => setSourceAvailable\(false\)\}/);
 console.log('Market authority and canonical icon source conformance: PASS');

@@ -1,4 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
+import * as signalR from '@microsoft/signalr';
+import { getProviderMapping } from './market-source-registry';
+import type { MarketKlineInput, MarketKlineInterval } from './market-kline.contract';
 import {
   MarketProviderAdapter,
   MarketProviderEvent,
@@ -20,12 +23,26 @@ type BiquoteTick = {
   stale?: boolean;
 };
 
+type BiquoteBar = {
+  openTime?: string;
+  open?: number;
+  high?: number;
+  low?: number;
+  close?: number;
+  volume?: number;
+  tickVolume?: number;
+  isOpen?: boolean;
+};
+
+const BIQUOTE_INTERVALS = new Set<MarketKlineInterval>(['1m', '5m', '15m', '30m', '1h', '4h', '1d']);
+
 @Injectable()
 export class BiquoteMarketAdapter implements MarketProviderAdapter {
   readonly provider = 'biquote';
   private readonly logger = new Logger(BiquoteMarketAdapter.name);
   private runtimeSymbols: MarketProviderRuntimeSymbol[] = [];
-  private timer?: NodeJS.Timeout;
+  private fallbackTimer?: NodeJS.Timeout;
+  private connection?: signalR.HubConnection;
 
   configure(symbols: readonly MarketProviderRuntimeSymbol[]): void {
     this.runtimeSymbols = [...symbols]
@@ -39,20 +56,87 @@ export class BiquoteMarketAdapter implements MarketProviderAdapter {
   async start(onEvent: (event: MarketProviderEvent) => void): Promise<void> {
     if (!this.isEnabled() || this.runtimeSymbols.length === 0) return;
     await this.poll(onEvent);
-    const interval = this.pollIntervalMs();
-    this.timer = setInterval(() => { void this.poll(onEvent); }, interval);
-    this.timer.unref?.();
-    this.logger.log(`BiQuote batch polling started for ${this.runtimeSymbols.length} canonical symbol(s) every ${interval}ms.`);
+    try {
+      await this.startSignalR(onEvent);
+    } catch (error) {
+      this.logger.warn(`BiQuote SignalR unavailable; using bounded REST fallback: ${error instanceof Error ? error.message : 'unknown error'}`);
+      this.startFallbackPolling(onEvent);
+    }
   }
 
   stop(): void {
-    if (this.timer) clearInterval(this.timer);
-    this.timer = undefined;
+    if (this.fallbackTimer) clearInterval(this.fallbackTimer);
+    this.fallbackTimer = undefined;
+    if (this.connection) void this.connection.stop();
+    this.connection = undefined;
+  }
+
+  async fetchHistory(symbol: string, interval: MarketKlineInterval, limit: number): Promise<MarketKlineInput[]> {
+    if (!BIQUOTE_INTERVALS.has(interval)) return [];
+    const mapping = getProviderMapping(symbol, this.provider);
+    if (!mapping?.klineSupported) return [];
+    const url = new URL(`/api/${encodeURIComponent(mapping.instrument)}/ohlc`, this.baseUrl());
+    url.searchParams.set('interval', interval);
+    url.searchParams.set('limit', String(Math.min(500, Math.max(40, limit))));
+    const response = await this.fetchWithTimeout(url);
+    if (!response.ok) throw new Error(`BiQuote OHLC ${response.status}`);
+    const payload = await response.json() as { bars?: BiquoteBar[] };
+    const now = new Date();
+    return (payload.bars ?? []).flatMap((bar) => {
+      const openTime = bar.openTime ? new Date(bar.openTime) : null;
+      if (!openTime || Number.isNaN(openTime.getTime())) return [];
+      const values = [bar.open, bar.high, bar.low, bar.close].map(Number);
+      if (values.some((value) => !Number.isFinite(value) || value <= 0)) return [];
+      return [{
+        symbol,
+        interval,
+        openTime,
+        closeTime: new Date(openTime.getTime() + this.intervalMs(interval) - 1),
+        open: String(values[0]), high: String(values[1]), low: String(values[2]), close: String(values[3]),
+        volume: Number.isFinite(Number(bar.volume)) ? String(bar.volume) : null,
+        provider: this.provider,
+        source: 'biquote:rest:ohlc',
+        observedAt: bar.isOpen ? now : new Date(openTime.getTime() + this.intervalMs(interval) - 1),
+      } satisfies MarketKlineInput];
+    });
+  }
+
+  private async startSignalR(onEvent: (event: MarketProviderEvent) => void): Promise<void> {
+    const byInstrument = new Map(this.runtimeSymbols.map((entry) => [entry.providerInstrument.toUpperCase(), entry]));
+    const instruments = [...byInstrument.keys()];
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl(`${this.baseUrl().replace(/\/$/, '')}/hubs/tick`)
+      .withAutomaticReconnect([0, 1_000, 5_000, 15_000, 30_000])
+      .build();
+    connection.on('ReceiveTick', (tick: BiquoteTick) => {
+      const instrument = String(tick.symbol ?? '').toUpperCase();
+      const mapping = byInstrument.get(instrument);
+      if (!mapping) return;
+      const event = this.toEvent(mapping, tick, 'biquote:signalr');
+      if (event) onEvent(event);
+    });
+    connection.onreconnected(() => {
+      void connection.invoke('Subscribe', instruments).catch((error) => this.logger.warn(`BiQuote resubscribe failed: ${String(error)}`));
+    });
+    await connection.start();
+    await connection.invoke('Subscribe', instruments);
+    this.connection = connection;
+    this.logger.log(`BiQuote SignalR subscribed to ${instruments.length} canonical symbol(s).`);
+  }
+
+  private startFallbackPolling(onEvent: (event: MarketProviderEvent) => void): void {
+    const interval = this.pollIntervalMs();
+    this.fallbackTimer = setInterval(() => { void this.poll(onEvent); }, interval);
+    this.fallbackTimer.unref?.();
   }
 
   private pollIntervalMs(): number {
-    const parsed = Number(process.env.BIQUOTE_POLL_INTERVAL_MS ?? process.env.MARKET_PROVIDER_POLL_INTERVAL_MS ?? '15000');
-    return Number.isFinite(parsed) ? Math.max(5_000, Math.min(parsed, 300_000)) : 15_000;
+    const parsed = Number(process.env.BIQUOTE_POLL_INTERVAL_MS ?? '60000');
+    return Number.isFinite(parsed) ? Math.max(15_000, Math.min(parsed, 300_000)) : 60_000;
+  }
+
+  private baseUrl(): string {
+    return process.env.BIQUOTE_API_BASE_URL?.trim() || 'https://biquote.io';
   }
 
   private async poll(onEvent: (event: MarketProviderEvent) => void): Promise<void> {
@@ -61,23 +145,16 @@ export class BiquoteMarketAdapter implements MarketProviderAdapter {
     for (let offset = 0; offset < instruments.length; offset += 100) {
       const batch = instruments.slice(offset, offset + 100);
       try {
-        const url = new URL('/api/latest', process.env.BIQUOTE_API_BASE_URL?.trim() || 'https://biquote.io');
+        const url = new URL('/api/latest', this.baseUrl());
         for (const instrument of batch) url.searchParams.append('symbols', instrument);
         url.searchParams.set('allowStale', 'true');
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 10_000);
-        let response: Response;
-        try {
-          response = await fetch(url, { signal: controller.signal });
-        } finally {
-          clearTimeout(timeout);
-        }
+        const response = await this.fetchWithTimeout(url);
         if (!response.ok) throw new Error(`BiQuote REST ${response.status}`);
         const ticks = await response.json() as Record<string, BiquoteTick>;
         for (const [instrument, tick] of Object.entries(ticks)) {
           const mapping = byInstrument.get(instrument.toUpperCase());
           if (!mapping) continue;
-          const event = this.toEvent(mapping, tick);
+          const event = this.toEvent(mapping, tick, tick.marketState === 'closed' ? 'biquote:rest:closed-market' : 'biquote:rest:batch');
           if (event) onEvent(event);
         }
       } catch (error) {
@@ -86,7 +163,7 @@ export class BiquoteMarketAdapter implements MarketProviderAdapter {
     }
   }
 
-  private toEvent(mapping: MarketProviderRuntimeSymbol, tick: BiquoteTick): ProviderQuoteEvent | null {
+  private toEvent(mapping: MarketProviderRuntimeSymbol, tick: BiquoteTick, source: string): ProviderQuoteEvent | null {
     const mid = Number(tick.mid);
     const bid = Number(tick.bid);
     const ask = Number(tick.ask);
@@ -98,18 +175,32 @@ export class BiquoteMarketAdapter implements MarketProviderAdapter {
         : last;
     if (!Number.isFinite(price) || price <= 0) return null;
     const eventTime = tick.timestamp ? Date.parse(tick.timestamp) : Date.now();
+    const spread = Number.isFinite(bid) && Number.isFinite(ask) && ask >= bid ? ask - bid : undefined;
     return {
-      kind: 'ticker',
-      symbol: mapping.symbol,
-      provider: this.provider,
-      source: tick.marketState === 'closed' ? 'biquote:rest:closed-market' : 'biquote:rest:batch',
-      providerInstrument: mapping.providerInstrument,
-      priceType: 'MID',
-      eventTime: Number.isFinite(eventTime) ? eventTime : Date.now(),
-      price: String(price),
+      kind: 'ticker', symbol: mapping.symbol, provider: this.provider, source,
+      providerInstrument: mapping.providerInstrument, priceType: 'MID',
+      eventTime: Number.isFinite(eventTime) ? eventTime : Date.now(), price: String(price),
       change24h: tick.dayDiffPercent == null ? undefined : String(tick.dayDiffPercent),
-      high24h: tick.high == null ? undefined : String(tick.high),
-      low24h: tick.low == null ? undefined : String(tick.low),
+      high24h: tick.high == null ? undefined : String(tick.high), low24h: tick.low == null ? undefined : String(tick.low),
+      bid: Number.isFinite(bid) && bid > 0 ? String(bid) : undefined,
+      ask: Number.isFinite(ask) && ask > 0 ? String(ask) : undefined,
+      spread: spread === undefined ? undefined : String(spread),
     };
+  }
+
+  private async fetchWithTimeout(url: URL): Promise<Response> {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10_000);
+    try { return await fetch(url, { signal: controller.signal }); }
+    finally { clearTimeout(timeout); }
+  }
+
+  private intervalMs(interval: MarketKlineInterval): number {
+    const units: Record<MarketKlineInterval, number> = {
+      '1m': 60_000, '3m': 180_000, '5m': 300_000, '15m': 900_000, '30m': 1_800_000,
+      '1h': 3_600_000, '2h': 7_200_000, '4h': 14_400_000, '6h': 21_600_000, '8h': 28_800_000,
+      '12h': 43_200_000, '1d': 86_400_000, '3d': 259_200_000, '1w': 604_800_000, '1M': 2_592_000_000,
+    };
+    return units[interval];
   }
 }

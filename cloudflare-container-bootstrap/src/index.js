@@ -1,7 +1,6 @@
 import { Container, getContainer } from "@cloudflare/containers";
 import { WorkflowEntrypoint } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
-import { env as workerEnv } from "cloudflare:workers";
 export { ContainerProxy } from "@cloudflare/containers";
 
 const CONTAINER_ENV_KEYS = [
@@ -38,13 +37,7 @@ const CONTAINER_ENV_KEYS = [
   "MARKET_ARCHIVE_PIPELINE_TOKEN",
   "MARKET_ARCHIVE_REQUIRED",
   "MARKET_REFERENCE_RETENTION_SECONDS",
-  "ALPHA_VANTAGE_API_BASE_URL",
-  "ALPHA_VANTAGE_API_KEY",
   "FAWAZ_CURRENCY_API_BASE_URL",
-  "FINNHUB_API_BASE_URL",
-  "FINNHUB_API_KEY",
-  "MASSIVE_API_BASE_URL",
-  "MASSIVE_API_KEY",
   "METALPRICE_API_BASE_URL",
   "METALPRICE_API_KEY",
   "METALS_API_BASE_URL",
@@ -54,9 +47,6 @@ const CONTAINER_ENV_KEYS = [
   "OANDA_ACCESS_TOKEN",
   "OANDA_ACCOUNT_ID",
   "RZZRO_API_BASE_URL",
-  "TICKDB_API_KEY",
-  "TICKDB_HTTP_URL",
-  "TICKDB_WS_URL",
 ];
 
 function containerEnv(env) {
@@ -75,7 +65,12 @@ function containerEnv(env) {
  * permitted here.
  */
 export class NexiApiContainer extends Container {
+  constructor(ctx, env) {
+    super(ctx, env);
+    this.envVars = containerEnv(env);
+  }
   defaultPort = 3000;
+  enableInternet = true;
   requiredPorts = [3000];
   // Continuous NEXI runtime: do not stop the canonical instance on inactivity.
   // Cloudflare has no fixed maximum instance lifetime; platform rollouts and
@@ -87,7 +82,6 @@ export class NexiApiContainer extends Container {
       policy: "continuous-runtime",
     });
   }
-  envVars = containerEnv(workerEnv);
   pingEndpoint = "localhost/ops/live";
 
   async onStart() {
@@ -242,7 +236,7 @@ async function invokeWorkflowCommand(
   );
   const container = getContainer(env.NEXI_API_CONTAINER, "nexi-api");
   if (!container.running) {
-    await container.start({ env: containerEnv(env) });
+    await container.start({ envVars: containerEnv(env) });
   }
   await container.startAndWaitForPorts({
     ports: [3000],
@@ -704,7 +698,7 @@ export default {
       throw new Error("JWT_SECRET is required for authenticated Queue ingress");
     const container = getContainer(env.NEXI_API_CONTAINER, "nexi-api");
   if (!container.running) {
-    await container.start({ env: containerEnv(env) });
+    await container.start({ envVars: containerEnv(env) });
   }
   await container.startAndWaitForPorts({
     ports: [3000],
@@ -765,7 +759,7 @@ export default {
     const url = new URL(request.url);
     const container = getContainer(env.NEXI_API_CONTAINER, "nexi-api");
   if (!container.running) {
-    await container.start({ env: containerEnv(env) });
+    await container.start({ envVars: containerEnv(env) });
   }
   await container.startAndWaitForPorts({
     ports: [3000],

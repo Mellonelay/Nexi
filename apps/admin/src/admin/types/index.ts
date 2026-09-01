@@ -1,5 +1,5 @@
 // NEXI Admin Control Plane — shared domain types.
-// All values in this app are mock/demo. See README.
+// Shared Admin domain types; the live provider maps these from the canonical API.
 
 export type Environment = "DEVELOPMENT" | "SANDBOX" | "PRODUCTION";
 
@@ -201,7 +201,7 @@ export interface Session {
   active: boolean;
 }
 
-export type AssetCategory = "crypto" | "stablecoin" | "fiat_proxy";
+export type AssetCategory = "crypto" | "stablecoin" | "fiat_proxy" | "stock" | "forex" | "metal";
 
 export interface Asset {
   id: string;

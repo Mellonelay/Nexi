@@ -89,7 +89,8 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
           providerInstrument: event.providerInstrument,
           priceType: event.priceType,
           price: event.price, change24h: event.change24h, volume24h: event.volume24h,
-          high24h: event.high24h, low24h: event.low24h, observedAt: new Date(event.eventTime),
+          high24h: event.high24h, low24h: event.low24h, bid: event.bid, ask: event.ask, spread: event.spread,
+          observedAt: new Date(event.eventTime),
         });
         if (quote.accepted) {
           await this.marketKlines.accumulateQuote({

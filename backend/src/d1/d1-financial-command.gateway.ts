@@ -282,6 +282,15 @@ export class D1FinancialCommandGateway {
     return result.results[0] ?? null;
   }
 
+  async getUserByUserCode(userCode: number): Promise<Record<string, unknown> | null> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const result = await this.bridge.select<Record<string, unknown>>(
+      `SELECT "id","userCode","email","displayName","role" FROM "User" WHERE "userCode"=? LIMIT 1`,
+      [userCode],
+    );
+    return result.results[0] ?? null;
+  }
+
   async getUserById(userId: string): Promise<Record<string, unknown> | null> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const result = await this.bridge.select<Record<string, unknown>>(

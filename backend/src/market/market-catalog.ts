@@ -43,11 +43,11 @@ export const CANONICAL_MARKET_CATALOG: readonly CanonicalMarketPair[] = [
   })),
   ...stocks.map(([symbol, displayName]) => ({
     symbol: `${symbol}USDT`, category: 'stock' as const, displayName,
-    providerSymbol: symbol, metadataProvider: 'Massive',
+    providerSymbol: symbol, metadataProvider: 'BiQuote',
   })),
   ...forex.map(([symbol, displayName]) => ({
     symbol, category: 'forex' as const, displayName,
-    providerSymbol: `${symbol.slice(0, 3)}/${symbol.slice(3)}`, metadataProvider: 'Massive/Finnhub',
+    providerSymbol: `${symbol.slice(0, 3)}/${symbol.slice(3)}`, metadataProvider: 'BiQuote/MOEX',
   })),
   ...metals.map(([symbol, displayName, providerSymbol]) => ({
     symbol, category: 'metal' as const, displayName, providerSymbol, metadataProvider: 'Metals-API/MetalpriceAPI',

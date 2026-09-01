@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { RawData, WebSocket } from 'ws';
 import { CANONICAL_MARKET_CATALOG } from './market-catalog';
 import { MarketProviderAdapter, MarketProviderEvent, MarketProviderRuntimeSymbol } from './market-provider.adapter';
+import type { MarketKlineInput, MarketKlineInterval } from './market-kline.contract';
 
 export type BinanceSpotMarketEvent =
   | { kind: 'ticker'; symbol: string; provider: 'binance-spot'; source: 'websocket'; providerInstrument: string; priceType: 'LAST'; eventTime: number; price: string; change24h: string; volume24h: string; high24h: string; low24h: string }
@@ -121,6 +122,24 @@ export class BinanceSpotAdapter implements OnModuleDestroy, MarketProviderAdapte
   async fetchKlines(pair: string, interval = '1m', limit = 240): Promise<unknown[][]> {
     const symbol = this.assertSupported(pair);
     return this.request<unknown[][]>('/api/v3/klines', { symbol, interval, limit: String(limit) });
+  }
+
+  async fetchHistory(pair: string, interval: MarketKlineInterval, limit: number): Promise<MarketKlineInput[]> {
+    const rows = await this.fetchKlines(pair, interval, Math.min(500, Math.max(40, limit)));
+    const symbol = pair.replaceAll('/', '').toUpperCase();
+    return rows.flatMap((row) => {
+      const openTimeMs = Number(row[0]);
+      const closeTimeMs = Number(row[6]);
+      const values = [row[1], row[2], row[3], row[4]].map(Number);
+      if (!Number.isFinite(openTimeMs) || !Number.isFinite(closeTimeMs) || values.some((value) => !Number.isFinite(value) || value <= 0)) return [];
+      const volume = Number(row[5]);
+      return [{
+        symbol, interval, openTime: new Date(openTimeMs), closeTime: new Date(closeTimeMs),
+        open: String(row[1]), high: String(row[2]), low: String(row[3]), close: String(row[4]),
+        volume: Number.isFinite(volume) && volume >= 0 ? String(row[5]) : null,
+        provider: this.provider, source: 'binance:rest:kline', observedAt: new Date(Math.min(Date.now(), closeTimeMs)),
+      } satisfies MarketKlineInput];
+    });
   }
 
   async discoverCanonicalCryptoSymbols(): Promise<string[]> {

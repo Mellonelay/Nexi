@@ -62,12 +62,12 @@ const cryptoDefinitions: AssetDefinition[] = crypto.map(([symbol, coingeckoId, c
 
 const stockDefinitions: AssetDefinition[] = stocks.map((symbol) => ({
   id: `stock:${symbol.toLowerCase()}`, category: 'Stocks', symbol: `${symbol}.US`, pair: `${symbol}.US/USDT`, displaySymbol: symbol, name: stockNames[symbol], baseAsset: `${symbol}.US`, quoteAsset: 'USDT', precision: 4,
-  iconKey: symbol.toLowerCase(), iconSlug: simpleIconSources[symbol]?.[0], iconColor: simpleIconSources[symbol]?.[1], providerSymbol: symbol, metadataProvider: 'Massive (candidate)', availability: 'UNAVAILABLE', description: `${stockNames[symbol]} equity reference information.`,
+  iconKey: symbol.toLowerCase(), iconSlug: simpleIconSources[symbol]?.[0], iconColor: simpleIconSources[symbol]?.[1], providerSymbol: symbol, metadataProvider: 'BiQuote', availability: 'UNAVAILABLE', description: `${stockNames[symbol]} equity reference information.`,
 }));
 
 const forexDefinitions: AssetDefinition[] = forex.map((symbol) => ({
   id: `forex:${symbol.toLowerCase()}`, category: 'Forex', symbol, pair: `${symbol}/USDT`, displaySymbol: symbol, name: `${symbol.slice(0, 3)}/${symbol.slice(3)}`, baseAsset: symbol.slice(0, 3), quoteAsset: symbol.slice(3), precision: 6,
-  iconKey: symbol.toLowerCase(), iconColor: fallbackIconColors[symbol], providerSymbol: `${symbol.slice(0, 3)}/${symbol.slice(3)}`, metadataProvider: 'Massive/Finnhub (candidate)', availability: symbol === 'USDRUB' ? 'UNVERIFIED' : 'UNAVAILABLE', description: `${symbol.slice(0, 3)}/${symbol.slice(3)} currency pair reference information.`,
+  iconKey: symbol.toLowerCase(), iconColor: fallbackIconColors[symbol], providerSymbol: `${symbol.slice(0, 3)}/${symbol.slice(3)}`, metadataProvider: 'BiQuote/MOEX', availability: symbol === 'USDRUB' ? 'UNVERIFIED' : 'UNAVAILABLE', description: `${symbol.slice(0, 3)}/${symbol.slice(3)} currency pair reference information.`,
 }));
 
 const metalDefinitions: AssetDefinition[] = metals.map(([symbol, name, providerSymbol]) => ({

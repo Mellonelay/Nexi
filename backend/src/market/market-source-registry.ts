@@ -24,6 +24,8 @@ const BIQUOTE_QUOTE_COVERAGE = new Set([
   'XAUUSD', 'XAGUSD', 'XPDUSD', 'XPTUSD', 'XALUSD', 'XCUUSD', 'XZNUSD',
 ]);
 
+const BIQUOTE_KLINE_DISABLED = new Set(['AXPUSDT', 'DISUSDT', 'UBERUSDT', 'SONYUSDT', 'USDRUB']);
+
 const EXCHANGE_QUOTE_COVERAGE: Record<string, ReadonlySet<string>> = {
   okx: new Set(['AAPLUSDT', 'AMDUSDT', 'AMZNUSDT', 'JNJUSDT', 'KOUSDT', 'METAUSDT', 'MSFTUSDT', 'NFLXUSDT', 'NVDAUSDT', 'SONYUSDT', 'TSLAUSDT', 'XAUUSD', 'XAGUSD', 'XCUUSD', 'XPDUSD', 'XPTUSD']),
   bitget: new Set(['AAPLUSDT', 'AMDUSDT', 'AMZNUSDT', 'BAUSDT', 'GOOGUSDT', 'KOUSDT', 'MCDUSDT', 'METAUSDT', 'MSFTUSDT', 'NFLXUSDT', 'NKEUSDT', 'NVDAUSDT', 'SONYUSDT', 'TSLAUSDT', 'UBERUSDT', 'WMTUSDT', 'XAUUSD', 'XAGUSD', 'XPDUSD', 'XPTUSD', 'XCUUSD']),
@@ -36,6 +38,7 @@ const EXCHANGE_QUOTE_COVERAGE: Record<string, ReadonlySet<string>> = {
 };
 
 function providerQuoteSupported(entry: CanonicalMarketPair, provider: string): boolean {
+  if (provider === 'moex') return entry.symbol === 'USDRUB';
   if (provider === 'biquote') return BIQUOTE_QUOTE_COVERAGE.has(entry.symbol);
   if (provider === 'yahoo') return true;
   const coverage = EXCHANGE_QUOTE_COVERAGE[provider];
@@ -80,10 +83,10 @@ export interface AssetSourcePolicy {
 }
 
 const CRYPTO_PROVIDERS = ['binance-spot', 'coingecko', 'coinmarketcap'];
-const STOCK_PROVIDERS = ['biquote', 'yahoo', 'okx', 'bitget', 'htx', 'bybit', 'gate', 'tickdb', 'alltick', 'massive', 'finnhub', 'alpha-vantage'];
-const FOREX_PROVIDERS = ['biquote', 'yahoo', 'bybit', 'gate', 'htx', 'okx', 'bitget', 'tickdb', 'alltick', 'live-rates', 'massive', 'finnhub', 'oanda', 'alpha-vantage', 'fawaz-currency'];
-const PRECIOUS_METAL_PROVIDERS = ['biquote', 'yahoo', 'okx', 'htx', 'bitget', 'bybit', 'gate', 'tickdb', 'alltick', 'live-rates', 'oanda', 'metals-api', 'alpha-vantage', 'fawaz-currency'];
-const INDUSTRIAL_METAL_PROVIDERS = ['biquote', 'yahoo', 'okx', 'htx', 'bitget', 'bybit', 'gate', 'tickdb', 'alltick', 'metals-api', 'metalprice-api', 'alpha-vantage', 'rzzro-industrial-metals'];
+const STOCK_PROVIDERS = ['biquote', 'gate', 'yahoo', 'okx', 'bitget', 'htx', 'bybit'];
+const FOREX_PROVIDERS = ['biquote', 'yahoo', 'moex', 'bybit', 'gate', 'htx', 'okx', 'bitget', 'oanda', 'fawaz-currency'];
+const PRECIOUS_METAL_PROVIDERS = ['biquote', 'oanda', 'yahoo', 'okx', 'htx', 'bitget', 'bybit', 'gate', 'metals-api', 'fawaz-currency'];
+const INDUSTRIAL_METAL_PROVIDERS = ['biquote', 'metals-api', 'metalprice-api', 'yahoo', 'okx', 'htx', 'bitget', 'bybit', 'gate', 'rzzro-industrial-metals'];
 
 function baseSymbol(entry: CanonicalMarketPair): string {
   if (entry.category === 'crypto' || entry.category === 'stock') return entry.symbol.replace(/USDT$/, '');
@@ -115,16 +118,12 @@ function providerInstrument(entry: CanonicalMarketPair, provider: string): strin
   if (entry.category === 'crypto') return entry.symbol;
   const compact = entry.providerSymbol.replaceAll('/', '');
   const exchangeBase = provider === 'bitget' && entry.symbol === 'GOOGUSDT' ? 'GOOGL' : compact;
-  if (provider === 'massive' && entry.category === 'forex') return `C:${compact}`;
-  if (provider === 'finnhub' && entry.category === 'forex') return `OANDA:${compact.slice(0, 3)}_${compact.slice(3)}`;
   if (provider === 'oanda') return `${compact.slice(0, 3)}_${compact.slice(3)}`;
-  if (provider === 'alpha-vantage' && entry.category === 'forex') return entry.providerSymbol;
   if (provider === 'fawaz-currency') {
     const compactCode = entry.symbol.replace(/USDT$/, '');
     if (entry.category === 'metal') return compactCode.slice(0, 3);
     return compactCode.slice(0, 3) === 'USD' ? compactCode.slice(3) : compactCode.slice(0, 3);
   }
-  if (provider === 'tickdb' || provider === 'alltick' || provider === 'live-rates') return compact;
   if (provider === 'metals-api' || provider === 'metalprice-api') {
     const industrialCodes: Record<string, string> = { XALUSD: 'ALU', XCUUSD: 'XCU', XZNUSD: 'ZNC' };
     return industrialCodes[entry.symbol] ?? compact.replace(/USD$/, '');
@@ -133,6 +132,7 @@ function providerInstrument(entry: CanonicalMarketPair, provider: string): strin
     const symbols: Record<string, string> = { XALUSD: 'aluminum', XCUUSD: 'copper', XZNUSD: 'zinc' };
     return symbols[entry.symbol] ?? entry.symbol;
   }
+  if (provider === 'moex') return entry.symbol === 'USDRUB' ? 'USD000UTSTOM' : entry.symbol;
   if (provider === 'biquote') {
     if (entry.category === 'forex' || entry.category === 'metal') return entry.symbol;
     const aliases: Record<string, string> = {
@@ -154,21 +154,27 @@ function providerInstrument(entry: CanonicalMarketPair, provider: string): strin
   if (provider === 'htx') return `${exchangeBase.replace(/USD$/, '')}-USDT`;
   if (provider === 'gate') return entry.category === 'stock' ? entry.symbol.replace(/USDT$/, '') : entry.symbol;
   if (provider === 'bitget' || provider === 'bybit') return `${exchangeBase.replace(/USD$/, '')}USDT`;
-  if (provider === 'alpha-vantage' && entry.category === 'metal') {
-    const symbols: Record<string, string> = { XAUUSD: 'XAU', XAGUSD: 'XAG', XCUUSD: 'COPPER', XALUSD: 'ALUMINUM' };
-    return symbols[entry.symbol] ?? entry.symbol;
-  }
   return entry.providerSymbol;
 }
 
 function supportsWebsocket(provider: string, entry: CanonicalMarketPair): boolean {
   if (entry.category === 'crypto') return provider === 'binance-spot';
-  return ['biquote', 'tickdb', 'alltick', 'live-rates', 'massive', 'oanda', 'okx', 'bitget', 'htx', 'bybit'].includes(provider);
+  return ['biquote', 'oanda', 'okx', 'bitget', 'htx', 'bybit'].includes(provider);
 }
 
-function supportsAlphaVantageQuote(entry: CanonicalMarketPair): boolean {
-  return entry.category === 'stock' || entry.category === 'forex'
-    || ['XAUUSD', 'XAGUSD', 'XCUUSD', 'XALUSD'].includes(entry.symbol);
+function providerKlineSupported(entry: CanonicalMarketPair, provider: string): boolean {
+  if (provider === 'binance-spot') return entry.category === 'crypto';
+  if (provider === 'biquote') return !BIQUOTE_KLINE_DISABLED.has(entry.symbol) && providerQuoteSupported(entry, provider);
+  if (provider === 'moex') return entry.symbol === 'USDRUB';
+  // Gate's public Stock API supplies bounded OHLC history for NEXI stocks.
+  // Its documented intervals do not include 1m; the router can fall through
+  // to Yahoo for that interval.
+  if (provider === 'gate') return entry.category === 'stock' && providerQuoteSupported(entry, provider);
+  // Yahoo's chart endpoint is the non-crypto history fallback. USDRUB stays
+  // on the dedicated MOEX path so a secondary reference feed cannot replace
+  // the canonical FX source.
+  if (provider === 'yahoo') return entry.category !== 'crypto' && entry.symbol !== 'USDRUB';
+  return false;
 }
 
 function buildPolicy(entry: CanonicalMarketPair): AssetSourcePolicy {
@@ -176,12 +182,8 @@ function buildPolicy(entry: CanonicalMarketPair): AssetSourcePolicy {
   const mappings = providers.map((provider): ProviderMapping => ({
     provider,
     instrument: providerInstrument(entry, provider),
-    quoteSupported: provider === 'alpha-vantage' ? supportsAlphaVantageQuote(entry) : providerQuoteSupported(entry, provider),
-    // Alpha Vantage daily/monthly history is not an ingestible 1m ProviderKlineEvent.
-    // Keep this false until a timeframe-aware candle contract is added.
-    klineSupported: provider === 'alpha-vantage' || provider === 'fawaz-currency' || provider === 'rzzro-industrial-metals' || provider === 'yahoo' || provider === 'coingecko' || provider === 'coinmarketcap'
-      ? false
-      : entry.category !== 'metal' || provider !== 'metalprice-api',
+    quoteSupported: providerQuoteSupported(entry, provider),
+    klineSupported: providerKlineSupported(entry, provider),
     websocketSupported: supportsWebsocket(provider, entry),
     metadataSupported: provider !== 'binance-spot' || entry.category === 'crypto',
     settlementCandidate: false,
@@ -195,8 +197,10 @@ function buildPolicy(entry: CanonicalMarketPair): AssetSourcePolicy {
     precision: entry.category === 'crypto' ? 8 : entry.category === 'forex' ? 5 : 4,
     providerMappings: mappings,
     displayPolicy: {
-      primaryProvider: entry.category === 'crypto' ? 'binance-spot' : entry.category === 'stock' || entry.category === 'forex' ? 'massive' : entry.symbol === 'XAUUSD' || entry.symbol === 'XAGUSD' || entry.symbol === 'XPDUSD' || entry.symbol === 'XPTUSD' ? 'oanda' : 'metals-api',
-      fallbackProviders: providers.slice(1),
+      primaryProvider: entry.category === 'crypto' ? 'binance-spot' : entry.category === 'stock' && !BIQUOTE_QUOTE_COVERAGE.has(entry.symbol) ? 'gate' : entry.category === 'forex' && !BIQUOTE_QUOTE_COVERAGE.has(entry.symbol) ? 'yahoo' : 'biquote',
+      fallbackProviders: mappings
+        .filter((mapping) => mapping.provider !== (entry.category === 'crypto' ? 'binance-spot' : entry.category === 'stock' && !BIQUOTE_QUOTE_COVERAGE.has(entry.symbol) ? 'gate' : entry.category === 'forex' && !BIQUOTE_QUOTE_COVERAGE.has(entry.symbol) ? 'yahoo' : 'biquote') && mapping.quoteSupported)
+        .map((mapping) => mapping.provider),
       maxStalenessMs: 30_000,
       delayedDataAllowed: true,
     },

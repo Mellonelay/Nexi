@@ -6,7 +6,8 @@ import { NexiAdminApiProvider } from "./nexi-api-provider";
 export type AdminProviderMode = "mock" | "live";
 
 function configuredMode(): AdminProviderMode {
-  return import.meta.env.VITE_ADMIN_PROVIDER_MODE === "live" ? "live" : "mock";
+  // Live is the safe default for deployed Admin. Mock data must be explicit.
+  return import.meta.env.VITE_ADMIN_PROVIDER_MODE === "mock" ? "mock" : "live";
 }
 
 export function createConfiguredAdminProvider(

@@ -96,7 +96,12 @@ export function instrumentFromMarketPair(row: MarketPairLike): ActiveInstrument 
   const symbol = normalizePair(row.symbol);
   const registered = findAsset(row.assetId ?? row.symbol);
   const category: InstrumentCategory = registered ? (registered.category === 'Metals' ? 'Metal' : registered.category === 'Stocks' ? 'Shares' : registered.category) : categoryForSymbol(symbol);
-  const isLive = row.dataState === 'LIVE';
+  const hasUsableMarketData = row.dataState === 'LIVE' || row.dataState === 'STALE';
+  const provenance: MarketProvenance = row.dataState === 'LIVE'
+    ? 'LIVE'
+    : row.dataState === 'STALE'
+      ? 'STALE'
+      : 'UNAVAILABLE';
   return createActiveInstrument({
     assetId: registered?.id ?? row.assetId ?? (row.displaySymbol || symbol),
     symbol: row.displaySymbol || symbol,
@@ -104,12 +109,12 @@ export function instrumentFromMarketPair(row: MarketPairLike): ActiveInstrument 
     name: row.name,
     category,
     logo: row.icon.startsWith('http') ? row.icon : null,
-    provenance: isLive ? 'LIVE' : 'UNAVAILABLE',
+    provenance,
     spotAvailable: category === 'Crypto',
     binaryAvailable: true,
-    price: isLive ? row.price : null,
-    change24h: isLive ? row.change : null,
-    volume24h: isLive && Number.isFinite(row.vol) ? row.vol ?? null : null,
+    price: hasUsableMarketData ? row.price : null,
+    change24h: hasUsableMarketData ? row.change : null,
+    volume24h: hasUsableMarketData && Number.isFinite(row.vol) ? row.vol ?? null : null,
     displayMetadata: { displaySymbol: row.displaySymbol },
   });
 }

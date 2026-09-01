@@ -1,3 +1,10 @@
+// This gateway unit test supplies MarketAuthorityService itself. Mocking its
+// module keeps the test unit-scoped and avoids loading the production D1
+// adapter (which pulls ESM-only `ky`) through Jest's CommonJS runtime.
+jest.mock('../../src/market/market-authority.service', () => ({
+  MarketAuthorityService: class MarketAuthorityService {},
+}));
+
 import { MarketGateway } from '../../src/market/market.gateway';
 
 describe('MarketGateway ordering and deduplication', () => {

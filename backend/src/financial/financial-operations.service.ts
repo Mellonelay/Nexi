@@ -20,7 +20,7 @@ export interface DepositObservation {
 }
 
 export interface WithdrawalInput { asset: string; network: string; address: string; amount: string; idempotencyKey: string; }
-export interface TransferInput { toUserId: string; asset: string; amount: string; idempotencyKey: string; }
+export interface TransferInput { toUserId?: string; toUserCode?: number; asset: string; amount: string; idempotencyKey: string; }
 export interface ConversionQuoteInput { fromAsset: string; toAsset: string; amount: string; quoteKey: string; }
 export interface DepositClaimInput { asset: string; network: string; depositAddressId: string; claimedAmount: string; proofObjectKey: string; txHash?: string; idempotencyKey: string; }
 
@@ -333,7 +333,15 @@ export class FinancialOperationsService {
 
   async transfer(userId: string, input: TransferInput) {
     this.assertIdempotencyKey(input.idempotencyKey);
-    if (userId === input.toUserId) throw new BadRequestException('Internal transfer accounts must differ');
+    let toUserId = input.toUserId?.trim();
+    if (!toUserId && input.toUserCode !== undefined) {
+      const recipient = this.d1?.isEnabled()
+        ? await this.d1.getUserByUserCode(input.toUserCode)
+        : await this.prisma.user.findUnique({ where: { userCode: input.toUserCode }, select: { id: true } });
+      toUserId = recipient?.id ? String(recipient.id) : undefined;
+    }
+    if (!toUserId) throw new NotFoundException('Transfer recipient not found');
+    if (userId === toUserId) throw new BadRequestException('Internal transfer accounts must differ');
     const amount = assertPositiveDecimal(input.amount);
     if (this.d1?.isEnabled()) {
       const d1Existing = await this.d1.getInternalTransfer(input.idempotencyKey);
@@ -348,10 +356,10 @@ export class FinancialOperationsService {
       return { transfer: existing, replayed: true };
     }
     if (this.d1?.isEnabled()) {
-      const [from, to] = await Promise.all([this.d1.getUserById(userId), this.d1.getUserById(input.toUserId)]);
+      const [from, to] = await Promise.all([this.d1.getUserById(userId), this.d1.getUserById(toUserId)]);
       if (!from || !to) throw new NotFoundException('Transfer user not found');
       const debit = await this.d1.getAccountForUser(userId, input.asset);
-      const credit = await this.d1.getAccountForUser(input.toUserId, input.asset);
+      const credit = await this.d1.getAccountForUser(toUserId, input.asset);
       const postings = await this.d1.pairedTransfer({
         debitAccountId: debit.id,
         creditAccountId: credit.id,
@@ -362,7 +370,7 @@ export class FinancialOperationsService {
         idempotencyKey: input.idempotencyKey,
         correlationId: input.idempotencyKey,
         economicGroup: input.idempotencyKey,
-        internalTransfer: { transferId: randomUUID(), fromUserId: userId, toUserId: input.toUserId },
+        internalTransfer: { transferId: randomUUID(), fromUserId: userId, toUserId: toUserId },
       });
       const transfer = await this.d1.getInternalTransfer(input.idempotencyKey);
       if (!transfer) throw new ServiceUnavailableException('D1 transfer record was not materialized');
@@ -375,14 +383,14 @@ export class FinancialOperationsService {
         if (current.fromUserId !== userId) throw new BadRequestException('Transfer ownership mismatch');
         return { transfer: current, replayed: true };
       }
-      const [from, to] = await Promise.all([tx.user.findUnique({ where: { id: userId }, select: { id: true } }), tx.user.findUnique({ where: { id: input.toUserId }, select: { id: true } })]);
+      const [from, to] = await Promise.all([tx.user.findUnique({ where: { id: userId }, select: { id: true } }), tx.user.findUnique({ where: { id: toUserId }, select: { id: true } })]);
       if (!from || !to) throw new NotFoundException('Transfer user not found');
       const debit = await this.ledgerAuthority.getAccountForUser(userId, input.asset, tx);
-      const credit = await this.ledgerAuthority.getAccountForUser(input.toUserId, input.asset, tx);
+      const credit = await this.ledgerAuthority.getAccountForUser(toUserId, input.asset, tx);
       const postings = await this.ledgerAuthority.pairedTransfer({ debitAccountId: debit.id, creditAccountId: credit.id, asset: input.asset, amount: amount.toString(), referenceType: 'GATE2_INTERNAL_TRANSFER', referenceId: input.idempotencyKey, idempotencyKey: `gate2:transfer:${input.idempotencyKey}`, correlationId: input.idempotencyKey, economicGroup: input.idempotencyKey }, tx);
-      const transfer = await tx.gate2InternalTransfer.create({ data: { id: randomUUID(), fromUserId: userId, toUserId: input.toUserId, asset: input.asset.toUpperCase(), amount, idempotencyKey: input.idempotencyKey, debitPostingId: postings.debitPostingId, creditPostingId: postings.creditPostingId } });
-      await this.audit(tx, userId, 'TRANSFER', transfer.id, 'TRANSFER_PAIRED', input.idempotencyKey, { debitPostingId: postings.debitPostingId, creditPostingId: postings.creditPostingId, toUserId: input.toUserId });
-      await this.audit(tx, input.toUserId, 'TRANSFER', transfer.id, 'TRANSFER_RECEIVED', input.idempotencyKey, { debitPostingId: postings.debitPostingId, creditPostingId: postings.creditPostingId, fromUserId: userId });
+      const transfer = await tx.gate2InternalTransfer.create({ data: { id: randomUUID(), fromUserId: userId, toUserId: toUserId, asset: input.asset.toUpperCase(), amount, idempotencyKey: input.idempotencyKey, debitPostingId: postings.debitPostingId, creditPostingId: postings.creditPostingId } });
+      await this.audit(tx, userId, 'TRANSFER', transfer.id, 'TRANSFER_PAIRED', input.idempotencyKey, { debitPostingId: postings.debitPostingId, creditPostingId: postings.creditPostingId, toUserId: toUserId });
+      await this.audit(tx, toUserId, 'TRANSFER', transfer.id, 'TRANSFER_RECEIVED', input.idempotencyKey, { debitPostingId: postings.debitPostingId, creditPostingId: postings.creditPostingId, fromUserId: userId });
       return { transfer, replayed: false };
     });
   }

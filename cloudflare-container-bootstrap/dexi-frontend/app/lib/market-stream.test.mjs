@@ -31,4 +31,5 @@ test('marks quiet live streams stale and parses intervals', () => {
   const snapshot = { ...EMPTY_STREAM_SNAPSHOT, status: 'LIVE', lastTimestamp: 1_000 };
   assert.equal(streamStatusAt(snapshot, 20_000, 15_000), 'STALE');
   assert.equal(timeframeToSeconds('4h'), 14_400);
+  assert.equal(timeframeToSeconds('1M'), 2_592_000);
 });

@@ -23,6 +23,9 @@ export interface NormalizedMarketQuoteInput {
   volume24h?: string | number | null;
   high24h?: string | number | null;
   low24h?: string | number | null;
+  bid?: string | number | null;
+  ask?: string | number | null;
+  spread?: string | number | null;
   sequence?: string | number | bigint;
   observedAt: Date;
   providerInstrument?: string;
@@ -42,6 +45,9 @@ export interface MarketQuoteEvent {
     volume24h: string | null;
     high24h: string | null;
     low24h: string | null;
+    bid: string | null;
+    ask: string | null;
+    spread: string | null;
     state: MarketQuoteState;
     provider: string;
     source: string;
@@ -55,6 +61,38 @@ export interface MarketQuoteEvent {
 }
 
 const DEFAULT_MARKET_SYMBOLS = CANONICAL_MARKET_CATALOG.map((entry) => entry.symbol);
+
+const D1_MARKET_PROVIDER_SPECS = {
+  'binance-spot': {
+    id: 'provider-binance-spot', displayName: 'Binance Spot', priority: 10,
+    restBaseUrl: 'https://data-api.binance.vision', websocketBaseUrl: 'wss://stream.binance.com:9443',
+    supportsQuotes: true, supportsKlines: true, supportsTrades: true, supportsDepth: true,
+  },
+  biquote: {
+    id: 'provider-biquote', displayName: 'BiQuote', priority: 15,
+    restBaseUrl: 'https://biquote.io', websocketBaseUrl: 'https://biquote.io/hubs/tick',
+    supportsQuotes: true, supportsKlines: true, supportsTrades: false, supportsDepth: false,
+  },
+  gate: {
+    id: 'provider-gate', displayName: 'Gate', priority: 20,
+    restBaseUrl: 'https://api.gateio.ws', websocketBaseUrl: null,
+    supportsQuotes: true, supportsKlines: false, supportsTrades: false, supportsDepth: false,
+  },
+  yahoo: {
+    id: 'provider-yahoo', displayName: 'Yahoo Finance', priority: 30,
+    restBaseUrl: 'https://query1.finance.yahoo.com', websocketBaseUrl: null,
+    supportsQuotes: true, supportsKlines: false, supportsTrades: false, supportsDepth: false,
+  },
+  moex: {
+    id: 'provider-moex', displayName: 'Moscow Exchange ISS', priority: 5,
+    restBaseUrl: 'https://iss.moex.com', websocketBaseUrl: null,
+    supportsQuotes: true, supportsKlines: true, supportsTrades: false, supportsDepth: false,
+  },
+} as const;
+
+function policyPrimaryProvider(symbol: string): string {
+  return getMarketSourcePolicy(symbol)?.displayPolicy.primaryProvider ?? '';
+}
 
 @Injectable()
 export class MarketAuthorityService implements OnModuleInit {
@@ -267,6 +305,9 @@ export class MarketAuthorityService implements OnModuleInit {
         volume24h: this.optionalDecimal(input.volume24h),
         high24h: this.optionalDecimal(input.high24h),
         low24h: this.optionalDecimal(input.low24h),
+        bid: this.optionalDecimal(input.bid),
+        ask: this.optionalDecimal(input.ask),
+        spread: this.optionalDecimal(input.spread),
         observedAt: input.observedAt,
         receivedAt,
         rawData: this.withLineage(input.rawData, lineage),
@@ -379,6 +420,7 @@ export class MarketAuthorityService implements OnModuleInit {
 
   private async ensureCatalogD1(symbols: readonly string[]): Promise<void> {
     const db = this.d1 as any;
+    const pairs = new Map<string, any>();
     for (const rawSymbol of symbols) {
       const symbol = this.normalizeSymbol(rawSymbol);
       const { base, quote } = this.splitSymbol(symbol);
@@ -401,11 +443,83 @@ export class MarketAuthorityService implements OnModuleInit {
           create: { assetId: asset.id, capabilityKey, tradingEnabled: true, status: 'ACTIVE' },
         });
       }
-      await db.marketPair.upsert({
+      const pair = await db.marketPair.upsert({
         where: { symbol },
         update: { baseAssetId: baseAsset.id, quoteAssetId: quoteAsset.id, category: entry?.category ?? 'crypto', status: 'ACTIVE' },
         create: { symbol, baseAssetId: baseAsset.id, quoteAssetId: quoteAsset.id, category: entry?.category ?? 'crypto', status: 'ACTIVE' },
       });
+      pairs.set(symbol, pair);
+    }
+
+    // Older unit fixtures model catalog reconciliation without provider tables;
+    // keep those isolated tests focused while the D1 client performs the full
+    // provider sync in production.
+    if (!db.marketProviderConfig?.upsert || !db.marketProviderSymbol?.upsert) return;
+
+    const required = new Map<string, Array<{ symbol: string; providerSymbol: string; kline: boolean; websocket: boolean }>>();
+    for (const [symbol] of pairs) {
+      const policy = getMarketSourcePolicy(symbol);
+      if (!policy) continue;
+      const providers = new Set([policy.displayPolicy.primaryProvider]);
+      // MOEX is the live Kline-capable alternate for the Yahoo-owned USD/RUB
+      // quote and must remain available to the history router.
+      if (symbol === 'USDRUB') providers.add('moex');
+      for (const provider of providers) {
+        const mapping = getProviderMapping(symbol, provider);
+        if (!mapping || !(provider in D1_MARKET_PROVIDER_SPECS)) continue;
+        const rows = required.get(provider) ?? [];
+        rows.push({ symbol, providerSymbol: mapping.instrument, kline: mapping.klineSupported, websocket: mapping.websocketSupported });
+        required.set(provider, rows);
+      }
+    }
+
+    const configs = new Map<string, any>();
+    for (const provider of required.keys()) {
+      const spec = D1_MARKET_PROVIDER_SPECS[provider as keyof typeof D1_MARKET_PROVIDER_SPECS];
+      const config = await db.marketProviderConfig.upsert({
+        where: { key: provider },
+        update: {
+          displayName: spec.displayName, status: 'ACTIVE', priority: spec.priority,
+          restBaseUrl: spec.restBaseUrl, websocketBaseUrl: spec.websocketBaseUrl,
+          supportsQuotes: spec.supportsQuotes, supportsKlines: spec.supportsKlines,
+          supportsTrades: spec.supportsTrades, supportsDepth: spec.supportsDepth,
+        },
+        create: {
+          id: spec.id, key: provider, displayName: spec.displayName, status: 'ACTIVE', priority: spec.priority,
+          restBaseUrl: spec.restBaseUrl, websocketBaseUrl: spec.websocketBaseUrl,
+          supportsQuotes: spec.supportsQuotes, supportsKlines: spec.supportsKlines,
+          supportsTrades: spec.supportsTrades, supportsDepth: spec.supportsDepth,
+        },
+      });
+      configs.set(provider, config);
+      for (const row of required.get(provider) ?? []) {
+        const pair = pairs.get(row.symbol);
+        if (!pair) continue;
+        await db.marketProviderSymbol.upsert({
+          where: { providerId_pairId: { providerId: config.id, pairId: pair.id } },
+          update: {
+            providerSymbol: row.providerSymbol, enabled: true, priority: provider === policyPrimaryProvider(row.symbol) ? 1 : 5,
+            capabilityPolicy: JSON.stringify({ quote: true, kline: row.kline, bidAsk: provider === 'moex', websocket: row.websocket, depth: false, trades: false }),
+          },
+          create: {
+            id: `${provider}-${pair.id}`, providerId: config.id, pairId: pair.id, providerSymbol: row.providerSymbol,
+            enabled: true, priority: provider === policyPrimaryProvider(row.symbol) ? 1 : 5,
+            capabilityPolicy: JSON.stringify({ quote: true, kline: row.kline, bidAsk: provider === 'moex', websocket: row.websocket, depth: false, trades: false }),
+          },
+        });
+      }
+    }
+
+    const biquote = configs.get('biquote');
+    if (biquote) {
+      for (const symbol of ['AXPUSDT', 'DISUSDT', 'UBERUSDT', 'SONYUSDT', 'USDRUB']) {
+        const pair = pairs.get(symbol);
+        if (!pair) continue;
+        await db.marketProviderSymbol.updateMany({
+          where: { providerId: biquote.id, pairId: pair.id },
+          data: { enabled: false, priority: 100, capabilityPolicy: JSON.stringify({ quote: false, kline: false, bidAsk: false, websocket: false, depth: false, trades: false }) },
+        });
+      }
     }
   }
 
@@ -447,6 +561,10 @@ export class MarketAuthorityService implements OnModuleInit {
     const latest = await db.marketQuoteLatest.findUnique({ where: { pairId: pair.id } });
     if (latest?.observedAt && input.observedAt.getTime() < new Date(latest.observedAt).getTime()) return { accepted: false, reason: 'OBSERVATION_OLDER_THAN_LATEST' };
     const providerSequence = input.sequence === undefined ? undefined : BigInt(input.sequence);
+    if (providerSequence !== undefined && isDeterministicTestProvider(provider)
+      && providerSequence <= BigInt(latest?.sequence ?? -1)) {
+      return { accepted: false, reason: 'DUPLICATE_OR_STALE' };
+    }
     const sequence = isDeterministicTestProvider(provider) && providerSequence !== undefined ? providerSequence : BigInt(latest?.sequence ?? 0) + 1n;
     const receivedAt = new Date();
     const lineage = { providerInstrument, priceType, canonicalAssetId: policy?.canonicalAssetId ?? null, assetClass: policy?.assetClass ?? null };
@@ -456,6 +574,9 @@ export class MarketAuthorityService implements OnModuleInit {
       volume24h: this.optionalDecimal(input.volume24h)?.toString() ?? null,
       high24h: this.optionalDecimal(input.high24h)?.toString() ?? null,
       low24h: this.optionalDecimal(input.low24h)?.toString() ?? null,
+      bid: this.optionalDecimal(input.bid)?.toString() ?? null,
+      ask: this.optionalDecimal(input.ask)?.toString() ?? null,
+      spread: this.optionalDecimal(input.spread)?.toString() ?? null,
       observedAt: input.observedAt, receivedAt, rawData: JSON.stringify(this.withLineage(input.rawData, lineage)),
     };
     await db.marketQuoteSnapshot.create({ data: { pairId: pair.id, ...data } });
@@ -470,7 +591,7 @@ export class MarketAuthorityService implements OnModuleInit {
     return { accepted: true, event };
   }
 
-  private toEvent(latest: { symbol: string; sequence: bigint; price: Prisma.Decimal; change24h?: Prisma.Decimal | null; volume24h?: Prisma.Decimal | null; high24h?: Prisma.Decimal | null; low24h?: Prisma.Decimal | null; state?: MarketQuoteState; provider: string; source: string; observedAt: Date; receivedAt: Date }, lineage?: { providerInstrument?: string; priceType?: MarketPriceType }): MarketQuoteEvent {
+  private toEvent(latest: { symbol: string; sequence: bigint; price: Prisma.Decimal; change24h?: Prisma.Decimal | null; volume24h?: Prisma.Decimal | null; high24h?: Prisma.Decimal | null; low24h?: Prisma.Decimal | null; bid?: Prisma.Decimal | null; ask?: Prisma.Decimal | null; spread?: Prisma.Decimal | null; state?: MarketQuoteState; provider: string; source: string; observedAt: Date; receivedAt: Date }, lineage?: { providerInstrument?: string; priceType?: MarketPriceType }): MarketQuoteEvent {
     return {
       version: 'v1',
       event: 'market.quote',
@@ -480,7 +601,7 @@ export class MarketAuthorityService implements OnModuleInit {
     };
   }
 
-  private toQuote(latest: { symbol: string; sequence: bigint; price?: Prisma.Decimal | null; change24h?: Prisma.Decimal | null; volume24h?: Prisma.Decimal | null; high24h?: Prisma.Decimal | null; low24h?: Prisma.Decimal | null; state?: MarketQuoteState; provider: string; source: string; observedAt?: Date | null; receivedAt: Date }, lineage?: { providerInstrument?: string; priceType?: MarketPriceType }): MarketQuoteEvent['quote'] {
+  private toQuote(latest: { symbol: string; sequence: bigint; price?: Prisma.Decimal | null; change24h?: Prisma.Decimal | null; volume24h?: Prisma.Decimal | null; high24h?: Prisma.Decimal | null; low24h?: Prisma.Decimal | null; bid?: Prisma.Decimal | null; ask?: Prisma.Decimal | null; spread?: Prisma.Decimal | null; state?: MarketQuoteState; provider: string; source: string; observedAt?: Date | null; receivedAt: Date }, lineage?: { providerInstrument?: string; priceType?: MarketPriceType }): MarketQuoteEvent['quote'] {
     const policy = getMarketSourcePolicy(latest.symbol);
     return {
       symbol: latest.symbol,
@@ -489,6 +610,9 @@ export class MarketAuthorityService implements OnModuleInit {
       volume24h: this.decimalString(latest.volume24h),
       high24h: this.decimalString(latest.high24h),
       low24h: this.decimalString(latest.low24h),
+      bid: this.decimalString(latest.bid),
+      ask: this.decimalString(latest.ask),
+      spread: this.decimalString(latest.spread),
       state: this.effectiveState(latest),
       provider: latest.provider,
       source: latest.source,
