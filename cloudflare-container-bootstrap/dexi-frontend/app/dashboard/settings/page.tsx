@@ -9,17 +9,7 @@ import { useLocale } from '../../state/LocaleProvider';
 import { loadCurrentUser, type WalletProfile, clearWalletSession } from '../../lib/wallet-auth';
 import { DataStatePanel, Field, inputClass, PageHeader, PageShell, Panel, PanelHeading, PrimaryButton, TabButton } from '../wallet/components/ProductPrimitives';
 
-type Profile = {
-  id: string;
-  displayName: string | null;
-  email: string | null;
-  walletAddress: string | null;
-  chainId: number | null;
-  kycStatus: string;
-  preferences: Preferences;
-};
-type Preferences = { locale: string; timezone: string; theme: string; notificationSettings: Record<string, boolean> | null; tradingSettings: Record<string, unknown> | null };
-const tabs = ['profile', 'security', 'notifications', 'language', 'wallet', 'appearance', 'about'] as const;
+const tabs = ['profile', 'security', 'notifications', 'language', 'wallet', 'session', 'appearance', 'about'] as const;
 type Tab = typeof tabs[number];
 type Preferences = { locale: string; timezone: string; theme: string; notificationSettings: Record<string, boolean> | null; tradingSettings: Record<string, unknown> | null };
 type Session = { id: string; createdAt: string; lastUsedAt: string; absoluteExpiresAt: string; idleExpiresAt: string; revokedAt?: string | null; revokeReason?: string | null };
