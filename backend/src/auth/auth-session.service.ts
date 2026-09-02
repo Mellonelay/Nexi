@@ -209,6 +209,23 @@ export class AuthSessionService {
     return outcome.value;
   }
 
+  async listSessions(userId: string, surface: AuthSurface) {
+    if (this.d1?.isEnabled()) {
+      const rows = await this.d1.listUserAuthSessions(userId, surface);
+      return rows.map((row) => ({
+        id: row.id, surface: row.surface, createdAt: row.createdAt, lastUsedAt: row.lastUsedAt,
+        absoluteExpiresAt: row.absoluteExpiresAt, idleExpiresAt: row.idleExpiresAt, revokedAt: row.revokedAt,
+        revokeReason: row.revokeReason, userAgentHash: row.userAgentHash, ipHash: row.ipHash,
+      }));
+    }
+    return this.prisma.authSession.findMany({
+      where: { userId, surface: toPrismaSurface(surface) },
+      orderBy: { lastUsedAt: 'desc' },
+      take: 100,
+      select: { id: true, surface: true, createdAt: true, lastUsedAt: true, absoluteExpiresAt: true, idleExpiresAt: true, revokedAt: true, revokeReason: true, userAgentHash: true, ipHash: true },
+    });
+  }
+
   async revokeSession(userId: string, surface: AuthSurface, sessionId: string, reason: AuthSessionRevokeReason = 'LOGOUT', now = new Date()): Promise<{ revoked: boolean }> {
     if (!sessionId) {
       throw new UnauthorizedException('Session identity is missing');

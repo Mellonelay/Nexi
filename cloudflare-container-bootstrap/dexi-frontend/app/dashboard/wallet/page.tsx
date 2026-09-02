@@ -71,6 +71,10 @@ export default function WalletPage() {
   const [error, setError] = useState('');
   const [action, setAction] = useState<Action | null>(null);
   const [currency, setCurrency] = useState('');
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/codex/vm-dirty-recovery-20260830
   const readEndpoint = userId ? '/wallet/me' : null;
   const activityEndpoint = userId ? '/wallet/activity' : null;
   const root = record(payload);

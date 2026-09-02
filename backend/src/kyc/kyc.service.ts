@@ -32,17 +32,40 @@ export class KycService {
       return this.d1.getKyc(userId);
     }
 
+<<<<<<< HEAD
+=======
+  // Submit KYC
+  async submitKyc(userId: string, data: { firstName: string; lastName: string; dob: string; country: string; documentType: string; documentUrl: string }) {
+    if (this.d1?.isEnabled()) return this.d1.submitKyc({ userId, ...data });
+>>>>>>> origin/codex/vm-dirty-recovery-20260830
     const existing = await this.prisma.kYC.findUnique({ where: { userId } });
     if (existing) {
       if (existing.status === 'APPROVED') throw new BadRequestException('KYC already approved');
       if (existing.status === 'PENDING') throw new BadRequestException('KYC already pending');
       return this.prisma.kYC.update({
         where: { userId },
+<<<<<<< HEAD
         data: { ...data, dob: new Date(data.dob), status: 'PENDING' },
+=======
+        data: {
+          ...data,
+          status: 'PENDING',
+          dob: new Date(data.dob)
+        },
+>>>>>>> origin/codex/vm-dirty-recovery-20260830
       });
     }
     return this.prisma.kYC.create({
+<<<<<<< HEAD
       data: { userId, ...data, dob: new Date(data.dob), status: 'PENDING' },
+=======
+      data: {
+        userId,
+        ...data,
+        dob: new Date(data.dob)
+        status: 'PENDING',
+      },
+>>>>>>> origin/codex/vm-dirty-recovery-20260830
     });
   }
 
