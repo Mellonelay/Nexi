@@ -291,15 +291,6 @@ export class D1FinancialCommandGateway {
     return result.results[0] ?? null;
   }
 
-  async getUserByUserCode(userCode: number): Promise<Record<string, unknown> | null> {
-    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
-    const result = await this.bridge.select<Record<string, unknown>>(
-      `SELECT "id","userCode","email","displayName","role" FROM "User" WHERE "userCode"=? LIMIT 1`,
-      [userCode],
-    );
-    return result.results[0] ?? null;
-  }
-
   async getUserById(userId: string): Promise<Record<string, unknown> | null> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const result = await this.bridge.select<Record<string, unknown>>(
@@ -2330,10 +2321,12 @@ export class D1FinancialCommandGateway {
 
   async rejectLoan(
     loanId: string,
+    idempotencyKey: string,
     adminId?: string,
     reason?: string,
   ): Promise<Record<string, unknown>> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    if (!idempotencyKey?.trim()) throw new BadRequestException("Idempotency key is required");
     const statements: D1BridgeBatchStatement[] = [
       {
         sql: `UPDATE "LoanApplication" SET "status"='REJECTED',"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "status"='PENDING'`,
@@ -2353,7 +2346,7 @@ export class D1FinancialCommandGateway {
       });
     statements.push(
       this.eventOutboxStatement({
-        idempotencyKey: `event:loan:reject:${loanId}:${reason ?? "no-reason"}`,
+        idempotencyKey: `event:loan:reject:${loanId}:${idempotencyKey}`,
         aggregateType: "LOAN_APPLICATION",
         aggregateId: loanId,
         eventType: "LOAN_REJECTED",
@@ -4031,10 +4024,9 @@ export class D1FinancialCommandGateway {
   ): Promise<Record<string, unknown>> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const asset = this.normalizeAsset(command.asset);
-    const state =
-      command.confirmations >= command.requiredConfirmations
-        ? "CREDITED"
-        : "CONFIRMING";
+    // A deposit is not CREDITED until the ledger posting and state transition
+    // commit together in creditDepositAtomic().
+    const state = "CONFIRMING";
     const id = randomUUID();
     const result = await this.bridge.batch([
       {
@@ -4054,7 +4046,7 @@ export class D1FinancialCommandGateway {
         ],
       },
       {
-        sql: `UPDATE "Gate2Deposit" SET "confirmations"=CASE WHEN "confirmations" < ? THEN ? ELSE "confirmations" END,"state"=CASE WHEN "state"='CREDITED' OR "creditPostingId" IS NOT NULL THEN "state" WHEN ? >= "requiredConfirmations" THEN 'CREDITED' ELSE 'CONFIRMING' END,"updatedAt"=CURRENT_TIMESTAMP WHERE "network"=? AND "txHash"=? AND "address"=? AND "userId"=?`,
+        sql: `UPDATE "Gate2Deposit" SET "confirmations"=CASE WHEN "confirmations" < ? THEN ? ELSE "confirmations" END,"state"=CASE WHEN "state"='CREDITED' OR "creditPostingId" IS NOT NULL THEN "state" ELSE 'CONFIRMING' END,"updatedAt"=CURRENT_TIMESTAMP WHERE "network"=? AND "txHash"=? AND "address"=? AND "userId"=?`,
         params: [
           command.confirmations,
           command.confirmations,
@@ -4096,6 +4088,68 @@ export class D1FinancialCommandGateway {
     if (!row.results[0])
       throw new BadRequestException("D1 credited deposit was not materialized");
     return row.results[0];
+  }
+
+  /** Credits a confirmed deposit and records ledger/audit/outbox in one D1 batch. */
+  async creditDepositAtomic(
+    depositId: string,
+    reason: string,
+    adminId?: string,
+    idempotencyKey = `gate2:deposit:credit:${depositId}`,
+  ): Promise<Record<string, unknown>> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const deposit: any = await this.getDeposit(depositId);
+    if (!deposit) throw new NotFoundException("Deposit not found");
+    if (String(deposit.state) === "CREDITED" && deposit.creditPostingId) return deposit;
+    if (String(deposit.state) === "REJECTED") throw new BadRequestException("Rejected deposit cannot be credited");
+    if (Number(deposit.confirmations) < Number(deposit.requiredConfirmations)) throw new BadRequestException("Deposit confirmation threshold has not been reached");
+    const account = await this.getAccountForUser(String(deposit.userId), String(deposit.asset));
+    const current = await this.findAccount(account.id);
+    const amount = this.decimal(String(deposit.amount));
+    const idemId = randomUUID();
+    const postingId = randomUUID();
+    const correlationId = depositId;
+    const statements: D1BridgeBatchStatement[] = [
+      { sql: `INSERT OR IGNORE INTO "LedgerIdempotency" ("id","idempotencyKey","operation","accountId","createdAt","updatedAt") SELECT ?,?,'CREDIT',?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP WHERE NOT EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=?) AND EXISTS (SELECT 1 FROM "Gate2Deposit" WHERE "id"=? AND "state"<>'REJECTED' AND "creditPostingId" IS NULL)`, params: [idemId, idempotencyKey, account.id, idempotencyKey, depositId] },
+      { sql: `UPDATE "LedgerAccount" SET "available"=? ,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "asset"=? AND "status"='ACTIVE' AND "available"=? AND "locked"=? AND EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "debitPostingId" IS NULL)`, params: [this.nonNegativeDecimal(current.available).plus(amount).toString(), account.id, this.normalizeAsset(String(deposit.asset)), current.available, current.locked, idempotencyKey] },
+      this.rollbackIfNoChanges(idempotencyKey, "DEPOSIT_CREDIT"),
+      { sql: `INSERT INTO "LedgerPosting" ("id","accountId","asset","kind","amount","availableDelta","lockedDelta","referenceType","referenceId","idempotencyKey","correlationId","economicGroup","createdAt","metadata") SELECT ?,?,?, 'CREDIT',?,?, '0','GATE2_DEPOSIT_CREDIT',?,?,?,?,CURRENT_TIMESTAMP,? WHERE EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "debitPostingId" IS NULL)`, params: [postingId, account.id, this.normalizeAsset(String(deposit.asset)), amount.toString(), amount.toString(), depositId, idempotencyKey, correlationId, depositId, JSON.stringify({ reason, adminId: adminId ?? null }), idempotencyKey] },
+      { sql: `UPDATE "LedgerIdempotency" SET "debitPostingId"=? ,"updatedAt"=CURRENT_TIMESTAMP WHERE "idempotencyKey"=? AND "debitPostingId" IS NULL AND EXISTS (SELECT 1 FROM "LedgerPosting" WHERE "id"=?)`, params: [postingId, idempotencyKey, postingId] },
+      this.auditStatement(account.id, postingId, "DEPOSIT_CREDIT_POSTED", idempotencyKey, correlationId, "GATE2_DEPOSIT_CREDIT", depositId),
+      { sql: `UPDATE "Gate2Deposit" SET "state"='CREDITED',"creditPostingId"=? ,"creditedAt"=CURRENT_TIMESTAMP,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "state"<>'REJECTED' AND "creditPostingId" IS NULL AND "confirmations">="requiredConfirmations" AND EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "debitPostingId"=?)`, params: [postingId, depositId, idempotencyKey, postingId] },
+      this.rollbackIfNoChanges(idempotencyKey, "DEPOSIT_CREDIT_STATE"),
+      { sql: `INSERT INTO "Gate2OperationAudit" ("id","userId","operationType","operationId","eventType","idempotencyKey","details","createdAt") SELECT ?,?, 'DEPOSIT',?,'DEPOSIT_CREDITED',?,?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "Gate2Deposit" WHERE "id"=? AND "creditPostingId"=?)`, params: [randomUUID(), String(deposit.userId), depositId, idempotencyKey, JSON.stringify({ reason, adminId: adminId ?? null, postingId }), depositId, postingId] },
+      ...(adminId ? [{ sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") SELECT ?,?,'DEPOSIT_CREDITED',?,?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "Gate2Deposit" WHERE "id"=? AND "creditPostingId"=?)`, params: [randomUUID(), adminId, depositId, JSON.stringify({ reason, idempotencyKey, postingId }), depositId, postingId] } as D1BridgeBatchStatement] : []),
+      this.eventOutboxStatement({ idempotencyKey: `event:deposit:credit:${depositId}:${idempotencyKey}`, aggregateType: "DEPOSIT", aggregateId: depositId, eventType: "DEPOSIT_CREDITED", correlationId, payload: { userId: String(deposit.userId), asset: String(deposit.asset), amount: String(deposit.amount), postingId } }),
+    ];
+    const result = await this.bridge.batch(statements);
+    this.requireChanges(result, 1, "D1 deposit credit account transition");
+    this.requireChanges(result, 3, "D1 deposit credit posting");
+    this.requireChanges(result, 6, "D1 deposit credit state");
+    const row = await this.getDeposit(depositId);
+    if (!row) throw new BadRequestException("D1 deposit credit was not materialized");
+    return row;
+  }
+
+  /** Rejects a non-credited deposit with audit and durable publication atomically. */
+  async rejectDepositAtomic(depositId: string, reason: string, adminId: string, idempotencyKey: string): Promise<Record<string, unknown>> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const deposit: any = await this.getDeposit(depositId);
+    if (!deposit) throw new NotFoundException("Deposit not found");
+    if (String(deposit.state) === "REJECTED") return deposit;
+    if (String(deposit.state) === "CREDITED") throw new BadRequestException("Credited deposit cannot be rejected");
+    const statements: D1BridgeBatchStatement[] = [
+      { sql: `UPDATE "Gate2Deposit" SET "state"='REJECTED',"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "state" NOT IN ('CREDITED','REJECTED')`, params: [depositId] },
+      this.rollbackIfNoChanges(idempotencyKey, "DEPOSIT_REJECTION_STATE"),
+      { sql: `INSERT INTO "Gate2OperationAudit" ("id","userId","operationType","operationId","eventType","idempotencyKey","details","createdAt") SELECT ?,?, 'DEPOSIT',?,'DEPOSIT_REJECTED',?,?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "Gate2Deposit" WHERE "id"=? AND "state"='REJECTED')`, params: [randomUUID(), String(deposit.userId), depositId, idempotencyKey, JSON.stringify({ reason, adminId }), depositId] },
+      { sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`, params: [randomUUID(), adminId, "DEPOSIT_REJECTED", depositId, JSON.stringify({ reason, idempotencyKey })] },
+      this.eventOutboxStatement({ idempotencyKey: `event:deposit:reject:${depositId}`, aggregateType: "DEPOSIT", aggregateId: depositId, eventType: "DEPOSIT_REJECTED", correlationId: idempotencyKey, payload: { userId: String(deposit.userId), reason, adminId } }),
+    ];
+    const result = await this.bridge.batch(statements);
+    this.requireChanges(result, 0, "D1 deposit rejection state");
+    const row = await this.getDeposit(depositId);
+    if (!row) throw new BadRequestException("D1 deposit rejection was not materialized");
+    return row;
   }
 
   async getDeposit(depositId: string): Promise<Record<string, unknown> | null> {
@@ -4538,6 +4592,7 @@ export class D1FinancialCommandGateway {
     reason: string,
     actorId: string,
     terminalState: "REJECTED" | "FAILED",
+    requestedIdempotencyKey?: string,
   ): Promise<Record<string, unknown>> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const withdrawal: any = await this.getWithdrawalById(requestId);
@@ -4553,7 +4608,8 @@ export class D1FinancialCommandGateway {
     );
     const current = await this.findAccount(account.id);
     const amount = this.decimal(String(withdrawal.reservedAmount));
-    const key = `gate2:withdrawal:${terminalState.toLowerCase()}:${requestId}`;
+    if (this.nonNegativeDecimal(current.locked).lt(amount)) throw new BadRequestException("Withdrawal locked funds are insufficient");
+    const key = requestedIdempotencyKey?.trim() || `gate2:withdrawal:${terminalState.toLowerCase()}:${requestId}`;
     const idemId = randomUUID();
     const postingId = randomUUID();
     const result = await this.bridge.batch([
@@ -4618,6 +4674,14 @@ export class D1FinancialCommandGateway {
           JSON.stringify({ reason, idempotencyKey: key }),
         ],
       },
+      this.eventOutboxStatement({
+        idempotencyKey: `event:withdrawal:${terminalState.toLowerCase()}:${requestId}`,
+        aggregateType: "WITHDRAWAL",
+        aggregateId: requestId,
+        eventType: `WITHDRAWAL_${terminalState}`,
+        correlationId: requestId,
+        payload: { userId: String(withdrawal.userId), asset: String(withdrawal.asset), reason, actorId, idempotencyKey: key },
+      }),
     ]);
     this.requireChanges(result, 1, "D1 withdrawal release account transition");
     this.requireChanges(result, 3, "D1 withdrawal release posting");
@@ -4637,10 +4701,12 @@ export class D1FinancialCommandGateway {
     txHash?: string,
   ): Promise<Record<string, unknown>> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const allowedFrom = state === "APPROVED" ? "PENDING_REVIEW" : state === "SETTLED" ? "APPROVED" : null;
+    if (!allowedFrom) throw new BadRequestException("Unsupported withdrawal state transition");
     const result = await this.bridge.batch([
       {
-        sql: `UPDATE "Gate2Withdrawal" SET "state"=?,"reviewReason"=COALESCE(?,"reviewReason"),"txHash"=COALESCE(?,"txHash"),"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=?`,
-        params: [state, reason ?? null, txHash ?? null, requestId],
+        sql: `UPDATE "Gate2Withdrawal" SET "state"=?,"reviewReason"=COALESCE(?,"reviewReason"),"txHash"=COALESCE(?,"txHash"),"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "state"=?`,
+        params: [state, reason ?? null, txHash ?? null, requestId, allowedFrom],
       },
     ]);
     this.requireChanges(result, 0, "D1 withdrawal state transition");
@@ -4651,6 +4717,78 @@ export class D1FinancialCommandGateway {
     if (!row.results[0])
       throw new BadRequestException("D1 withdrawal was not materialized");
     return row.results[0];
+  }
+
+  /** Settles an approved withdrawal, ledger release and publication atomically. */
+  async settleWithdrawalAtomic(
+    requestId: string,
+    providerReceipt: string,
+    adminId?: string,
+    reason?: string,
+  ): Promise<Record<string, unknown>> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const withdrawal: any = await this.getWithdrawalById(requestId);
+    if (!withdrawal) throw new NotFoundException("Withdrawal not found");
+    if (String(withdrawal.state) === "SETTLED") return withdrawal;
+    if (String(withdrawal.state) !== "APPROVED") throw new BadRequestException("Withdrawal is not approved");
+    const account = await this.getAccountForUser(String(withdrawal.userId), String(withdrawal.asset));
+    const current = await this.findAccount(account.id);
+    const amount = this.decimal(String(withdrawal.reservedAmount));
+    const key = `gate2:withdrawal:settle:${requestId}`;
+    const idemId = randomUUID();
+    const postingId = randomUUID();
+    const statements: D1BridgeBatchStatement[] = [
+      { sql: `INSERT OR IGNORE INTO "LedgerIdempotency" ("id","idempotencyKey","operation","accountId","createdAt","updatedAt") SELECT ?,?,'SETTLEMENT',?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP WHERE NOT EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=?) AND EXISTS (SELECT 1 FROM "Gate2Withdrawal" WHERE "id"=? AND "state"='APPROVED')`, params: [idemId, key, account.id, key, requestId] },
+      { sql: `UPDATE "LedgerAccount" SET "locked"=? ,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "asset"=? AND "status"='ACTIVE' AND "available"=? AND "locked"=? AND EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "debitPostingId" IS NULL)`, params: [this.nonNegativeDecimal(current.locked).minus(amount).toString(), account.id, this.normalizeAsset(String(withdrawal.asset)), current.available, current.locked, key] },
+      this.rollbackIfNoChanges(key, "WITHDRAWAL_SETTLEMENT"),
+      { sql: `INSERT INTO "LedgerPosting" ("id","accountId","asset","kind","amount","availableDelta","lockedDelta","referenceType","referenceId","idempotencyKey","correlationId","economicGroup","createdAt","metadata") SELECT ?,?,?, 'SETTLEMENT',?,?, 'GATE2_WITHDRAWAL_SETTLEMENT',?,?,?,?,CURRENT_TIMESTAMP,? WHERE EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "debitPostingId" IS NULL)`, params: [postingId, account.id, this.normalizeAsset(String(withdrawal.asset)), amount.toString(), '0', requestId, key, requestId, requestId, JSON.stringify({ providerReceipt, adminId: adminId ?? null, reason: reason ?? null }), key] },
+      { sql: `UPDATE "LedgerIdempotency" SET "debitPostingId"=? ,"updatedAt"=CURRENT_TIMESTAMP WHERE "idempotencyKey"=? AND "debitPostingId" IS NULL AND EXISTS (SELECT 1 FROM "LedgerPosting" WHERE "id"=?)`, params: [postingId, key, postingId] },
+      this.auditStatement(account.id, postingId, "WITHDRAWAL_SETTLEMENT_POSTED", key, requestId, "GATE2_WITHDRAWAL_SETTLEMENT", requestId),
+      { sql: `UPDATE "Gate2Withdrawal" SET "state"='SETTLED',"txHash"=? ,"providerState"='DETERMINISTIC_TEST_NON_LIVE',"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "state"='APPROVED' AND EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "debitPostingId"=?)`, params: [providerReceipt, requestId, key, postingId] },
+      this.rollbackIfNoChanges(key, "WITHDRAWAL_SETTLEMENT_STATE"),
+      { sql: `INSERT OR IGNORE INTO "Activity" ("id","userId","type","status","referenceType","referenceId","idempotencyKey","ledgerCorrelationId","ledgerPostingId","asset","amount","details","createdAt") SELECT ?,?,'WITHDRAWAL','COMPLETED','GATE2_WITHDRAWAL_SETTLEMENT',?,?,?,?,?,?,?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "Gate2Withdrawal" WHERE "id"=? AND "state"='SETTLED')`, params: [randomUUID(), String(withdrawal.userId), requestId, key, requestId, postingId, this.normalizeAsset(String(withdrawal.asset)), amount.toString(), JSON.stringify({ providerReceipt }), requestId] },
+      ...(adminId ? [{ sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") SELECT ?,?,'WITHDRAWAL_SETTLED',?,?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "Gate2Withdrawal" WHERE "id"=? AND "state"='SETTLED')`, params: [randomUUID(), adminId, requestId, JSON.stringify({ providerReceipt, reason }), requestId] } as D1BridgeBatchStatement] : []),
+      this.eventOutboxStatement({ idempotencyKey: `event:withdrawal:settle:${requestId}`, aggregateType: "WITHDRAWAL", aggregateId: requestId, eventType: "WITHDRAWAL_SETTLED", correlationId: requestId, payload: { userId: String(withdrawal.userId), asset: String(withdrawal.asset), amount: String(withdrawal.amount), providerReceipt } }),
+    ];
+    const result = await this.bridge.batch(statements);
+    this.requireChanges(result, 1, "D1 withdrawal settlement account transition");
+    this.requireChanges(result, 3, "D1 withdrawal settlement posting");
+    this.requireChanges(result, 6, "D1 withdrawal settlement state");
+    const row = await this.getWithdrawalById(requestId);
+    if (!row) throw new BadRequestException("D1 withdrawal settlement was not materialized");
+    return row;
+  }
+
+  async approveWithdrawal(
+    requestId: string,
+    reason: string,
+    adminId: string,
+    idempotencyKey: string,
+  ): Promise<Record<string, unknown>> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    if (!idempotencyKey?.trim()) throw new BadRequestException("Idempotency key is required");
+    const result = await this.bridge.batch([
+      {
+        sql: `UPDATE "Gate2Withdrawal" SET "state"='APPROVED',"reviewReason"=?,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "state"='PENDING_REVIEW'`,
+        params: [reason, requestId],
+      },
+      {
+        sql: `INSERT OR IGNORE INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") SELECT ?,?, 'WITHDRAWAL_APPROVED',?,?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "Gate2Withdrawal" WHERE "id"=? AND "state"='APPROVED')`,
+        params: [randomUUID(), adminId, requestId, JSON.stringify({ reason, idempotencyKey }), requestId],
+      },
+      this.eventOutboxStatement({
+        idempotencyKey: `event:withdrawal:approve:${requestId}:${idempotencyKey}`,
+        aggregateType: "WITHDRAWAL",
+        aggregateId: requestId,
+        eventType: "WITHDRAWAL_APPROVED",
+        correlationId: idempotencyKey,
+        payload: { adminId, reason },
+      }),
+    ]);
+    this.requireChanges(result, 0, "D1 withdrawal approval");
+    const row = await this.getWithdrawalById(requestId);
+    if (!row) throw new NotFoundException("Withdrawal not found");
+    return row;
   }
 
   async settleBinaryPosition(

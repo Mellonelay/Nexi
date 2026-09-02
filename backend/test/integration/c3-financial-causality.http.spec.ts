@@ -1,0 +1,175 @@
+import axios from "axios";
+import { INestApplication, ValidationPipe } from "@nestjs/common";
+import { Test } from "@nestjs/testing";
+import { FinancialOperationsController } from "../../src/financial/financial-operations.controller";
+import { FinancialOperationsService } from "../../src/financial/financial-operations.service";
+import { WalletController } from "../../src/wallet/wallet.controller";
+import { WalletService } from "../../src/wallet/wallet.service";
+import { AdminController } from "../../src/admin/admin.controller";
+import { AdminService } from "../../src/admin/admin.service";
+import { MiningService } from "../../src/mining/mining.service";
+import { LoanService } from "../../src/loans/loans.service";
+import { JwtAuthGuard } from "../../src/auth/jwt-auth.guard";
+import { AuthSurfaceGuard } from "../../src/auth/auth-surface.guard";
+import { RolesGuard } from "../../src/auth/roles.guard";
+import { AdminPermissionGuard } from "../../src/admin/admin-permission.guard";
+import { D1FinancialCommandGateway } from "../../src/d1/d1-financial-command.gateway";
+import { PrismaService } from "../../src/prisma/prisma.service";
+import { LedgerAuthorityService } from "../../src/ledger/ledger-authority.service";
+
+/**
+ * C3 proof: Public and Admin HTTP surfaces operate on one D1-shaped durable
+ * state and observe the same withdrawal transition.  This deliberately keeps
+ * the transport, DTO validation and guards real while replacing only the
+ * external D1 control-plane boundary with a deterministic transaction model.
+ */
+class SharedFinancialState {
+  private readonly accounts = new Map([
+    ["user-1:USDT", { id: "acct-user-1-usdt", userId: "user-1", asset: "USDT", available: "100", locked: "0", status: "ACTIVE" }],
+  ]);
+  readonly withdrawals: Array<Record<string, any>> = [];
+  readonly activities: Array<Record<string, any>> = [];
+  readonly audit: Array<Record<string, any>> = [];
+  readonly outbox: Array<Record<string, any>> = [];
+
+  isEnabled() { return true; }
+  async hasAssetCapability(asset: string, _network: string, capability: string) {
+    return asset.toUpperCase() === "USDT" && capability === "withdraw";
+  }
+  async getSystemConfigValue(key: string) {
+    return key === "gate2.withdrawal.fee.USDT.TRC20" ? "0.2" : null;
+  }
+  async getWithdrawal(requestKey: string) {
+    return this.withdrawals.find((row) => row.requestKey === requestKey) ?? null;
+  }
+  async getWithdrawalById(id: string) {
+    return this.withdrawals.find((row) => row.id === id) ?? null;
+  }
+  async reserveWithdrawal(input: Record<string, string>) {
+    const account = this.accounts.get(`${input.userId}:${input.asset.toUpperCase()}`);
+    if (!account) throw new Error("D1 account missing");
+    const reserved = Number(input.reservedAmount);
+    if (Number(account.available) < reserved) throw new Error("insufficient funds");
+    account.available = String(Number(account.available) - reserved);
+    account.locked = String(Number(account.locked) + reserved);
+    const withdrawal = {
+      id: "00000000-0000-4000-8000-000000000001",
+      userId: input.userId,
+      asset: input.asset.toUpperCase(),
+      network: input.network,
+      address: input.address,
+      amount: input.amount,
+      fee: input.fee,
+      reservedAmount: input.reservedAmount,
+      state: "PENDING_REVIEW",
+      requestKey: input.requestKey,
+    };
+    this.withdrawals.push(withdrawal);
+    this.activities.push({
+      id: "activity-withdrawal-1",
+      type: "WITHDRAWAL",
+      status: "PENDING_REVIEW",
+      asset: withdrawal.asset,
+      amount: withdrawal.amount,
+      referenceId: withdrawal.id,
+      ledgerCorrelationId: input.requestKey,
+      ledgerPostingId: "posting-reserve-1",
+    });
+    return withdrawal;
+  }
+  async approveWithdrawal(id: string, reason: string, adminId: string, idempotencyKey: string) {
+    const withdrawal = await this.getWithdrawalById(id);
+    if (!withdrawal) throw new Error("withdrawal missing");
+    if (withdrawal.state === "APPROVED") return withdrawal;
+    if (withdrawal.state !== "PENDING_REVIEW") throw new Error("illegal predecessor state");
+    withdrawal.state = "APPROVED";
+    withdrawal.reviewReason = reason;
+    withdrawal.reviewedBy = adminId;
+    this.audit.push({ action: "WITHDRAWAL_APPROVED", target: id, adminId, idempotencyKey });
+    this.outbox.push({ eventKey: `event:withdrawal:approve:${id}`, target: id });
+    return withdrawal;
+  }
+  async listWithdrawals(userId: string) {
+    return this.withdrawals.filter((row) => row.userId === userId);
+  }
+  async listAdminWithdrawals() { return [...this.withdrawals]; }
+  async listLedgerAccounts(userId: string) {
+    return [...this.accounts.values()].filter((account) => account.userId === userId);
+  }
+  async listUserActivity(userId: string) {
+    return userId === "user-1" ? [...this.activities] : [];
+  }
+}
+
+describe("C3 Public ↔ Backend ↔ Admin financial causality", () => {
+  let app: INestApplication;
+  let state: SharedFinancialState;
+
+  beforeAll(async () => {
+    state = new SharedFinancialState();
+    const financial = new FinancialOperationsService({} as any, {} as any, state as any);
+    const adminFacade = {
+      getAdminWithdrawals: () => state.listAdminWithdrawals(),
+      decideAdminWithdrawal: (id: string, decision: "approved" | "rejected", adminId: string, reason: string, key: string) =>
+        decision === "approved" ? financial.approveWithdrawal(id, reason, adminId, key) : financial.rejectWithdrawal(id, reason, adminId, key),
+    };
+    const module = await Test.createTestingModule({
+      controllers: [FinancialOperationsController, WalletController, AdminController],
+      providers: [
+        { provide: FinancialOperationsService, useValue: financial },
+        { provide: WalletService, useFactory: () => new WalletService({} as any, {} as any, state as any) },
+        { provide: AdminService, useValue: adminFacade },
+        { provide: MiningService, useValue: {} },
+        { provide: LoanService, useValue: {} },
+        { provide: D1FinancialCommandGateway, useValue: state },
+        { provide: PrismaService, useValue: {} },
+        { provide: LedgerAuthorityService, useValue: {} },
+      ],
+    })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: (context: any) => {
+        const request = context.switchToHttp().getRequest();
+        request.user = request.url.startsWith("/admin")
+          ? { userId: "admin-1", role: "ADMIN", surface: "ADMIN" }
+          : { userId: "user-1", role: "USER", surface: "PUBLIC" };
+        return true;
+      } })
+      .overrideGuard(AuthSurfaceGuard).useValue({ canActivate: () => true })
+      .overrideGuard(RolesGuard).useValue({ canActivate: () => true })
+      .overrideGuard(AdminPermissionGuard).useValue({ canActivate: () => true })
+      .compile();
+    app = module.createNestApplication();
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
+    await app.init();
+    await app.listen(0, "127.0.0.1");
+  });
+
+  afterAll(async () => { await app.close(); });
+
+  it("keeps Public-created withdrawal, Admin decision, and Public read-back causally continuous", async () => {
+    const address = app.getHttpServer().address();
+    if (!address || typeof address === "string") throw new Error("Test server did not expose a TCP address");
+    const baseURL = `http://127.0.0.1:${address.port}`;
+
+    const created = await axios.post(`${baseURL}/financial/withdrawals`, {
+      asset: "USDT", network: "TRC20", address: "T-c3-destination", amount: "10", idempotencyKey: "c3-public-withdrawal-001",
+    });
+    expect(created.status).toBe(201);
+    expect(created.data.withdrawal.state).toBe("PENDING_REVIEW");
+
+    const adminQueue = await axios.get(`${baseURL}/admin/withdrawals`);
+    expect(adminQueue.data).toEqual([expect.objectContaining({ id: created.data.withdrawal.id, state: "PENDING_REVIEW" })]);
+
+    const approved = await axios.post(`${baseURL}/admin/withdrawals/${created.data.withdrawal.id}/approve`, {
+      reason: "C3 approval", idempotencyKey: "c3-admin-approval-001",
+    });
+    expect(approved.data.withdrawal).toMatchObject({ id: created.data.withdrawal.id, state: "APPROVED", reviewedBy: "admin-1" });
+    expect(state.audit).toEqual([expect.objectContaining({ action: "WITHDRAWAL_APPROVED", idempotencyKey: "c3-admin-approval-001" })]);
+    expect(state.outbox).toEqual([expect.objectContaining({ eventKey: `event:withdrawal:approve:${created.data.withdrawal.id}` })]);
+
+    const publicReadBack = await axios.get(`${baseURL}/financial/withdrawals`);
+    expect(publicReadBack.data).toEqual([expect.objectContaining({ id: created.data.withdrawal.id, state: "APPROVED" })]);
+    const walletReadBack = await axios.get(`${baseURL}/wallet/me`);
+    expect(walletReadBack.data.USDT).toMatchObject({ available: "89.8", locked: "10.2", total: "100" });
+  });
+});

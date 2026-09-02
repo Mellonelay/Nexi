@@ -698,6 +698,7 @@ export class AdminController {
       "approved",
       request.user.userId,
       body.reason,
+      body.idempotencyKey,
     );
   }
 
@@ -713,6 +714,7 @@ export class AdminController {
       "rejected",
       request.user.userId,
       body.reason,
+      body.idempotencyKey,
     );
   }
 

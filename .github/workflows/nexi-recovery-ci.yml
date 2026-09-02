@@ -3,7 +3,10 @@ name: NEXI Recovery CI
 on:
   push:
     branches:
-      - codex/vm-authoritative-sync-20260829
+      - main
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:

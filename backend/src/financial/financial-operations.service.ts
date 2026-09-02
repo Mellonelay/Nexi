@@ -40,10 +40,9 @@ export class FinancialOperationsService {
       if (!await this.d1.hasAssetCapability(observation.asset, observation.network, 'deposit')) throw new BadRequestException('deposit capability is unavailable');
       const deposit: any = await this.d1.upsertDepositObservation(observation);
       if (deposit.userId !== observation.userId) throw new BadRequestException('Deposit ownership mismatch');
-      if (deposit.state !== Gate2DepositState.CREDITED || deposit.creditPostingId) return { deposit, credited: false, providerLive: false };
+      if (deposit.state === Gate2DepositState.CREDITED && deposit.creditPostingId) return { deposit, credited: false, providerLive: false };
       const account = await this.d1.getAccountForUser(observation.userId, observation.asset);
-      const posting = await this.d1.credit({ accountId: account.id, asset: observation.asset, amount: String(deposit.amount), referenceType: 'GATE2_DEPOSIT_CREDIT', referenceId: String(deposit.id), idempotencyKey: `gate2:deposit:credit:${deposit.id}`, correlationId: String(deposit.id), economicGroup: String(deposit.id), metadata: { provider: 'deterministic-test', live: false } });
-      const credited = await this.d1.markDepositCredited(String(deposit.id), posting.postingId);
+      const credited = await this.d1.creditDepositAtomic(String(deposit.id), 'Deposit observation reached confirmation threshold', undefined, `gate2:deposit:credit:${deposit.id}`);
       return { deposit: credited, credited: true, providerLive: false };
     }
     await this.requireCapability(observation.asset, observation.network, 'deposit');
@@ -111,14 +110,16 @@ export class FinancialOperationsService {
     return { ...result, providerLive: false };
   }
 
-  async approveWithdrawal(requestId: string, reviewReason: string, adminId?: string): Promise<any> {
+  async approveWithdrawal(requestId: string, reviewReason: string, adminId?: string, idempotencyKey?: string): Promise<any> {
     if (!reviewReason?.trim()) throw new BadRequestException('Review reason is required');
     if (this.d1?.isEnabled()) {
       const withdrawal: any = await this.d1.getWithdrawalById(requestId);
       if (!withdrawal) throw new NotFoundException('Withdrawal not found');
       if (withdrawal.state === Gate2WithdrawalState.APPROVED) return { withdrawal, replayed: true, providerLive: false };
       if (withdrawal.state !== Gate2WithdrawalState.PENDING_REVIEW) throw new BadRequestException('Withdrawal is not pending review');
-      return { withdrawal: await this.d1.updateWithdrawalState(requestId, Gate2WithdrawalState.APPROVED, reviewReason), replayed: false, providerLive: false };
+      const key = idempotencyKey?.trim() || `approve:${requestId}`;
+      const approved = await this.d1.approveWithdrawal(requestId, reviewReason, adminId ?? 'system', key);
+      return { withdrawal: approved, replayed: false, providerLive: false };
     }
     return this.prisma.$transaction(async (tx) => {
       await this.lockWithdrawal(tx, requestId);
@@ -133,14 +134,14 @@ export class FinancialOperationsService {
     });
   }
 
-  async rejectWithdrawal(requestId: string, reason: string, adminId?: string): Promise<any> {
+  async rejectWithdrawal(requestId: string, reason: string, adminId?: string, idempotencyKey?: string): Promise<any> {
     if (!reason?.trim()) throw new BadRequestException('Rejection reason is required');
     if (this.d1?.isEnabled()) {
       const withdrawal: any = await this.d1.getWithdrawalById(requestId);
       if (!withdrawal) throw new NotFoundException('Withdrawal not found');
       if (withdrawal.state === Gate2WithdrawalState.REJECTED) return { withdrawal, replayed: true, providerLive: false };
       if (withdrawal.state !== Gate2WithdrawalState.PENDING_REVIEW) throw new BadRequestException('Withdrawal is not pending review');
-      return { withdrawal: await this.d1.releaseWithdrawal(requestId, reason, adminId ?? String(withdrawal.userId), 'REJECTED'), providerLive: false };
+      return { withdrawal: await this.d1.releaseWithdrawal(requestId, reason, adminId ?? String(withdrawal.userId), 'REJECTED', idempotencyKey), providerLive: false };
     }
     return this.prisma.$transaction(async (tx) => {
       await this.lockWithdrawal(tx, requestId);
@@ -223,9 +224,7 @@ export class FinancialOperationsService {
       if (!deposit) throw new NotFoundException('Deposit not found');
       if (deposit.state === Gate2DepositState.CREDITED) return { deposit, replayed: true, providerLive: false };
       if (deposit.state === Gate2DepositState.REJECTED) throw new BadRequestException('Rejected deposit cannot be confirmed');
-      const account = await this.d1.getAccountForUser(String(deposit.userId), String(deposit.asset));
-      const posting = await this.d1.credit({ accountId: account.id, asset: String(deposit.asset), amount: String(deposit.amount), referenceType: 'GATE2_DEPOSIT_CREDIT', referenceId: requestId, idempotencyKey: `gate2:deposit:credit:${requestId}`, correlationId: requestId, economicGroup: requestId });
-      return { deposit: await this.d1.markDepositCredited(requestId, posting.postingId), replayed: false, providerLive: false };
+      return { deposit: await this.d1.creditDepositAtomic(requestId, reason, adminId, `gate2:deposit:credit:${requestId}`), replayed: false, providerLive: false };
     }
     return this.prisma.$transaction(async (tx) => {
       await this.lockDeposit(tx, requestId);
@@ -248,9 +247,7 @@ export class FinancialOperationsService {
       if (!deposit) throw new NotFoundException('Deposit not found');
       if (deposit.state === Gate2DepositState.CREDITED) return { deposit, replayed: true, providerLive: false };
       if (Number(deposit.confirmations) < Number(deposit.requiredConfirmations)) throw new BadRequestException('Deposit confirmation threshold has not been reached');
-      const account = await this.d1.getAccountForUser(String(deposit.userId), String(deposit.asset));
-      const posting = await this.d1.credit({ accountId: account.id, asset: String(deposit.asset), amount: String(deposit.amount), referenceType: 'GATE2_DEPOSIT_CREDIT', referenceId: requestId, idempotencyKey: `gate2:deposit:credit:${requestId}`, correlationId: requestId, economicGroup: requestId });
-      return { deposit: await this.d1.markDepositCredited(requestId, posting.postingId), replayed: false, providerLive: false };
+      return { deposit: await this.d1.creditDepositAtomic(requestId, reason, adminId, `gate2:deposit:credit:${requestId}`), replayed: false, providerLive: false };
     }
     return this.prisma.$transaction(async (tx) => {
       await this.lockDeposit(tx, requestId);
@@ -269,7 +266,7 @@ export class FinancialOperationsService {
       if (!deposit) throw new NotFoundException('Deposit not found');
       if (deposit.state === Gate2DepositState.REJECTED) return { deposit, replayed: true, providerLive: false };
       if (deposit.state === Gate2DepositState.CREDITED) throw new BadRequestException('Credited deposit cannot be rejected');
-      return { deposit: await this.d1.updateDepositState(requestId, Gate2DepositState.REJECTED, reason), replayed: false, providerLive: false };
+      return { deposit: await this.d1.rejectDepositAtomic(requestId, reason, adminId, idempotencyKey), replayed: false, providerLive: false };
     }
     return this.prisma.$transaction(async (tx) => {
       await this.lockDeposit(tx, requestId);
@@ -312,9 +309,7 @@ export class FinancialOperationsService {
       if (!withdrawal) throw new NotFoundException('Withdrawal not found');
       if (withdrawal.state === Gate2WithdrawalState.SETTLED) return { withdrawal, replayed: true, providerLive: false };
       if (withdrawal.state !== Gate2WithdrawalState.APPROVED) throw new BadRequestException('Withdrawal is not approved');
-      const account = await this.d1.getAccountForUser(String(withdrawal.userId), String(withdrawal.asset));
-      await this.d1.settle({ accountId: account.id, asset: String(withdrawal.asset), amount: String(withdrawal.reservedAmount), referenceType: 'GATE2_WITHDRAWAL_SETTLEMENT', referenceId: requestId, idempotencyKey: `gate2:withdrawal:settle:${requestId}`, correlationId: requestId, economicGroup: requestId });
-      return { withdrawal: await this.d1.updateWithdrawalState(requestId, Gate2WithdrawalState.SETTLED, reason, providerReceipt), replayed: false, providerLive: false };
+      return { withdrawal: await this.d1.settleWithdrawalAtomic(requestId, providerReceipt, adminId, reason), replayed: false, providerLive: false };
     }
     return this.prisma.$transaction(async (tx) => {
       await this.lockWithdrawal(tx, requestId);

@@ -85,72 +85,21 @@ export class LoanService {
 
   async approveLoan(loanId: string, idempotencyKey: string, adminContext?: LoanAdminContext) {
     if (!idempotencyKey?.trim()) throw new BadRequestException('Idempotency key is required');
-    if (this.d1?.isEnabled()) return this.d1.approveLoan({ loanId, idempotencyKey, adminId: adminContext?.adminId, reason: adminContext?.reason });
-    const result = await this.prisma.$transaction(async (tx) => {
-      const loan = await tx.loanApplication.findUnique({ where: { id: loanId } });
-      if (!loan) throw new NotFoundException('Loan application not found');
-      if (loan.status === LoanStatus.ACTIVE || loan.status === LoanStatus.APPROVED) return loan;
-      if (loan.status !== LoanStatus.PENDING) throw new BadRequestException('Loan is not pending review');
-      const account = await this.ledger.getAccountForUser(loan.userId, loan.currency, tx);
-      await this.ledger.credit({ accountId: account.id, asset: loan.currency, amount: loan.amountDecimal.toString(), referenceType: 'LOAN_DISBURSEMENT', referenceId: loan.id, idempotencyKey: `loan-disbursement:${loan.id}:${idempotencyKey}`, economicGroup: loan.id }, tx);
-      const approvedAt = new Date();
-      const dueDate = new Date(approvedAt.getTime() + loan.durationDays * 86400000);
-      const approved = await tx.loanApplication.update({ where: { id: loan.id }, data: { status: LoanStatus.ACTIVE, approvedAt, dueDate } });
-      if (adminContext) {
-        await tx.adminAuditLog.create({ data: { adminId: adminContext.adminId, action: 'LOAN_APPLICATION_APPROVED', target: loan.id, details: { reason: adminContext.reason, idempotencyKey, before: loan.status, after: approved.status } } });
-      }
-      return approved;
-    });
-    await this.publish('LOAN_DISBURSED', loanId, {});
-    return result;
+    if (!this.d1?.isEnabled()) throw new Error('D1 financial authority is unavailable');
+    return this.d1.approveLoan({ loanId, idempotencyKey, adminId: adminContext?.adminId, reason: adminContext?.reason });
   }
 
-  async rejectLoan(loanId: string, _idempotencyKey?: string, adminContext?: LoanAdminContext) {
-    if (this.d1?.isEnabled()) return this.d1.rejectLoan(loanId, adminContext?.adminId, adminContext?.reason);
-    const rejected = await this.prisma.$transaction(async (tx) => {
-      const loan = await tx.loanApplication.findUnique({ where: { id: loanId } });
-      if (!loan) throw new NotFoundException('Loan application not found');
-      if (loan.status === LoanStatus.REJECTED) return loan;
-      if (loan.status !== LoanStatus.PENDING) throw new BadRequestException('Loan is not pending review');
-      const row = await tx.loanApplication.update({ where: { id: loanId }, data: { status: LoanStatus.REJECTED } });
-      if (adminContext) await tx.adminAuditLog.create({ data: { adminId: adminContext.adminId, action: 'LOAN_APPLICATION_REJECTED', target: loanId, details: { reason: adminContext.reason, idempotencyKey: _idempotencyKey ?? null, before: loan.status, after: row.status } } });
-      return row;
-    });
-    await this.publish('LOAN_REJECTED', loanId, {});
-    return rejected;
+  async rejectLoan(loanId: string, idempotencyKey: string, adminContext?: LoanAdminContext) {
+    if (!idempotencyKey?.trim()) throw new BadRequestException('Idempotency key is required');
+    if (!this.d1?.isEnabled()) throw new Error('D1 financial authority is unavailable');
+    return this.d1.rejectLoan(loanId, idempotencyKey, adminContext?.adminId, adminContext?.reason);
   }
 
   async repay(userId: string, loanId: string, amountText: string, idempotencyKey: string) {
     if (!idempotencyKey?.trim()) throw new BadRequestException('Idempotency key is required');
     const amount = this.decimal(amountText, 'repayment');
-    if (this.d1?.isEnabled()) return this.d1.repayLoan({ userId, loanId, amount: amount.toString(), idempotencyKey });
-    const result = await this.prisma.$transaction(async (tx) => {
-      const loan = await tx.loanApplication.findUnique({ where: { id: loanId } });
-      if (!loan || loan.userId !== userId) throw new NotFoundException('Loan not found');
-      if (loan.status !== LoanStatus.ACTIVE && loan.status !== LoanStatus.OVERDUE) throw new BadRequestException('Loan is not repayable');
-      const account = await this.ledger.getAccountForUser(userId, loan.currency, tx);
-      const ledgerIdempotencyKey = `loan-repayment:${loan.id}:${idempotencyKey}`;
-      const posting = await this.ledger.debit({ accountId: account.id, asset: loan.currency, amount: amount.toString(), referenceType: 'LOAN_REPAYMENT', referenceId: loan.id, idempotencyKey: ledgerIdempotencyKey, economicGroup: loan.id }, tx);
-      const activity = await tx.activity.findUnique({ where: { idempotencyKey: ledgerIdempotencyKey }, select: { id: true } });
-      if (!activity) throw new BadRequestException('Loan repayment ledger activity was not created');
-      const repaymentId = this.idempotentId(`repayment:${loan.id}`, idempotencyKey);
-      const existing = await tx.legacyLoanRepayment.findUnique({ where: { id: repaymentId } });
-      if (existing) {
-        if (!existing.ledgerPostingId || !existing.activityId) {
-          await tx.legacyLoanRepayment.update({ where: { id: repaymentId }, data: { ledgerPostingId: posting.postingId, activityId: activity.id } });
-        }
-        return loan;
-      }
-      const paidAggregate = await tx.legacyLoanRepayment.aggregate({ where: { loanId: loan.id }, _sum: { amountDecimal: true } });
-      const paid = new Prisma.Decimal((paidAggregate._sum.amountDecimal ?? 0).toString());
-      const remaining = new Prisma.Decimal(loan.totalRepaymentDecimal.toString()).sub(paid).sub(amount);
-      if (remaining.isNegative()) throw new BadRequestException('Repayment exceeds outstanding balance');
-      await tx.legacyLoanRepayment.create({ data: { id: repaymentId, loanId: loan.id, amount: Number(amount.toString()), amountDecimal: amount.toString(), currency: loan.currency, ledgerPostingId: posting.postingId, activityId: activity.id } });
-      const updated = await tx.loanApplication.update({ where: { id: loan.id }, data: { status: remaining.isZero() ? LoanStatus.PAID : loan.status } });
-      return updated;
-    });
-    await this.publish('LOAN_REPAYMENT_POSTED', loanId, { amount: amount.toString() });
-    return result;
+    if (!this.d1?.isEnabled()) throw new Error('D1 financial authority is unavailable');
+    return this.d1.repayLoan({ userId, loanId, amount: amount.toString(), idempotencyKey });
   }
 
   async markOverdue() {
