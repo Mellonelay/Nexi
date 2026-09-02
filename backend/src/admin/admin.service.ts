@@ -4,6 +4,7 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  Optional,
 } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import * as fs from "node:fs";
@@ -22,6 +23,7 @@ import { FinancialOperationsService } from "../financial/financial-operations.se
 import { SandboxExecutionService } from "../sandbox/sandbox-execution.service";
 import { ADMIN_ROLE_DEFINITIONS } from "./admin-rbac";
 import { D1FinancialCommandGateway } from "../d1/d1-financial-command.gateway";
+import { D1PrismaService } from "../d1/d1-prisma.service";
 import { randomUUID } from "node:crypto";
 
 const ADMIN_ACCOUNT_SELECT = {
@@ -74,7 +76,12 @@ export class AdminService {
     private readonly financialOperations: FinancialOperationsService,
     private readonly sandboxExecution: SandboxExecutionService,
     private readonly d1?: D1FinancialCommandGateway,
+    @Optional() private readonly d1Db?: D1PrismaService,
   ) {}
+
+  private marketDatabase(): any {
+    return this.d1Db?.isEnabled() ? this.d1Db : this.prisma;
+  }
 
   async getAdminIdentity(request: {
     userId: string;
@@ -1282,7 +1289,7 @@ export class AdminService {
   }
 
   async getMarketAssets() {
-    return this.prisma.marketAsset.findMany({
+    return this.marketDatabase().marketAsset.findMany({
       include: { networks: true, capabilities: true },
       orderBy: { symbol: "asc" },
     });
@@ -1299,19 +1306,20 @@ export class AdminService {
       throw new BadRequestException(
         "A reason is required to change asset visibility",
       );
-    const asset = await this.prisma.marketAsset.findUnique({
+    const db = this.marketDatabase();
+    const asset = await db.marketAsset.findUnique({
       where: { id: input.id },
       select: { id: true, symbol: true },
     });
     if (!asset) throw new NotFoundException("Market asset not found");
-    const updated = await this.prisma.marketAsset.update({
+    const updated = await db.marketAsset.update({
       where: { id: asset.id },
       data: {
         status: input.visible ? "ACTIVE" : "MAINTENANCE",
         maintenanceNote: input.visible ? null : input.reason,
       },
     });
-    const audit = await this.prisma.adminAuditLog.create({
+    const audit = await db.adminAuditLog.create({
       data: {
         adminId: input.adminId,
         action: "MARKET_ASSET_VISIBILITY_UPDATED",
@@ -1328,7 +1336,7 @@ export class AdminService {
   }
 
   async getMarketNetworks() {
-    return this.prisma.marketNetwork.findMany({
+    return this.marketDatabase().marketNetwork.findMany({
       include: { asset: true, capabilities: true },
       orderBy: [{ assetId: "asc" }, { code: "asc" }],
     });
@@ -1345,19 +1353,20 @@ export class AdminService {
       throw new BadRequestException(
         "A reason is required to change network visibility",
       );
-    const network = await this.prisma.marketNetwork.findUnique({
+    const db = this.marketDatabase();
+    const network = await db.marketNetwork.findUnique({
       where: { id: input.id },
       select: { id: true, code: true },
     });
     if (!network) throw new NotFoundException("Market network not found");
-    const updated = await this.prisma.marketNetwork.update({
+    const updated = await db.marketNetwork.update({
       where: { id: network.id },
       data: {
         status: input.enabled ? "ACTIVE" : "MAINTENANCE",
         maintenanceNote: input.enabled ? null : input.reason,
       },
     });
-    const audit = await this.prisma.adminAuditLog.create({
+    const audit = await db.adminAuditLog.create({
       data: {
         adminId: input.adminId,
         action: "MARKET_NETWORK_VISIBILITY_UPDATED",
@@ -1374,8 +1383,14 @@ export class AdminService {
   }
 
   async getMarketFeeds() {
-    return this.prisma.marketProviderConfig.findMany({
-      include: { symbols: { include: { pair: true } } },
+    return this.marketDatabase().marketProviderConfig.findMany({
+      include: {
+        symbols: {
+          include: {
+            pair: { include: { latest: true } },
+          },
+        },
+      },
       orderBy: [{ priority: "asc" }, { key: "asc" }],
     });
   }
@@ -1395,22 +1410,26 @@ export class AdminService {
       throw new BadRequestException(
         "LIVE and STALE are runtime-derived states, not admin configuration",
       );
-    const symbol = await this.prisma.marketProviderSymbol.findFirst({
+    const db = this.marketDatabase();
+    const symbol = await db.marketProviderSymbol.findFirst({
       where: { OR: [{ id: input.id }, { providerId: input.id }] },
       select: { providerId: true, provider: { select: { key: true } } },
     });
     const providerId = symbol?.providerId ?? input.id;
-    const provider = await this.prisma.marketProviderConfig.findUnique({
+    const provider = await db.marketProviderConfig.findUnique({
       where: { id: providerId },
       select: { id: true, key: true },
     });
     if (!provider) throw new NotFoundException("Market provider not found");
-    const status = input.status === "DISABLED" ? "DISABLED" : "MAINTENANCE";
-    const updated = await this.prisma.marketProviderConfig.update({
+    // Runtime states (LIVE/STALE/UNAVAILABLE) are observed by the market
+    // pollers. The admin action only changes the lifecycle gate: DISABLED
+    // turns polling off; every other accepted action re-enables the provider.
+    const status = input.status === "DISABLED" ? "DISABLED" : "ACTIVE";
+    const updated = await db.marketProviderConfig.update({
       where: { id: provider.id },
       data: { status },
     });
-    const audit = await this.prisma.adminAuditLog.create({
+    const audit = await db.adminAuditLog.create({
       data: {
         adminId: input.adminId,
         action: "MARKET_PROVIDER_STATUS_UPDATED",
@@ -1427,7 +1446,7 @@ export class AdminService {
   }
 
   async getSpotPairs() {
-    return this.prisma.marketPair.findMany({
+    return this.marketDatabase().marketPair.findMany({
       include: {
         baseAsset: true,
         quoteAsset: true,

@@ -34,6 +34,11 @@ describe('MiningService', () => {
   });
 
   it('uses the D1 scheduler query and D1 admin listing when D1 is enabled', async () => {
+    const previousB7 = process.env.NEXI_B7_ENABLED;
+    const previousScheduler = process.env.NEXI_SCHEDULER_ENABLED;
+    process.env.NEXI_B7_ENABLED = 'true';
+    process.env.NEXI_SCHEDULER_ENABLED = 'true';
+
     const d1: any = {
       isEnabled: jest.fn(() => true),
       getMiningSubscription: jest.fn(async () => ({ id: 'subscription-1', userId: 'user-1', status: 'ACTIVE', endDate: null })),
@@ -50,13 +55,20 @@ describe('MiningService', () => {
     const prisma: any = { miningSubscription: { findMany: jest.fn() } };
     const service = new MiningService(prisma, {} as any, redis, d1);
 
-    await expect(service.distributeRewards()).resolves.toEqual({ processed: 1 });
-    await expect(service.getAllSubscriptions()).resolves.toEqual([{ id: 'subscription-2' }]);
+    try {
+      await expect(service.distributeRewards()).resolves.toEqual({ processed: 1 });
+      await expect(service.getAllSubscriptions()).resolves.toEqual([{ id: 'subscription-2' }]);
 
-    expect(d1.listMiningSubscriptionsForScheduler).toHaveBeenCalledTimes(1);
-    expect(d1.accrueMiningReward).toHaveBeenCalledWith('subscription-1');
-    expect(d1.listAllMiningSubscriptions).toHaveBeenCalledTimes(1);
-    expect(prisma.miningSubscription.findMany).not.toHaveBeenCalled();
+      expect(d1.listMiningSubscriptionsForScheduler).toHaveBeenCalledTimes(1);
+      expect(d1.accrueMiningReward).toHaveBeenCalledWith('subscription-1');
+      expect(d1.listAllMiningSubscriptions).toHaveBeenCalledTimes(1);
+      expect(prisma.miningSubscription.findMany).not.toHaveBeenCalled();
+    } finally {
+      if (previousB7 === undefined) delete process.env.NEXI_B7_ENABLED;
+      else process.env.NEXI_B7_ENABLED = previousB7;
+      if (previousScheduler === undefined) delete process.env.NEXI_SCHEDULER_ENABLED;
+      else process.env.NEXI_SCHEDULER_ENABLED = previousScheduler;
+    }
   });
 
 });

@@ -12,12 +12,26 @@ describe('Market source registry', () => {
 
   it('resolves provider instruments by asset class', () => {
     expect(resolveProviderInstrument('BTCUSDT', 'binance-spot')).toBe('BTCUSDT');
-    expect(resolveProviderInstrument('AAPLUSDT', 'massive')).toBe('AAPL');
+    expect(resolveProviderInstrument('AAPLUSDT', 'biquote')).toBe('AAPL');
     expect(resolveProviderInstrument('EURUSD', 'oanda')).toBe('EUR_USD');
     expect(resolveProviderInstrument('XAUUSD', 'oanda')).toBe('XAU_USD');
     expect(resolveProviderInstrument('GOOGUSDT', 'bitget')).toBe('GOOGLUSDT');
-    expect(getProviderMapping('AAPLUSDT', 'massive')?.quoteSupported).toBe(true);
+    expect(getProviderMapping('AAPLUSDT', 'biquote')?.quoteSupported).toBe(true);
     expect(getProviderMapping('DISUSDT', 'bitget')?.quoteSupported).toBe(false);
+    expect(getProviderMapping('AXPUSDT', 'gate')?.klineSupported).toBe(true);
+    expect(getProviderMapping('USDRUB', 'yahoo')?.klineSupported).toBe(false);
+    expect(getProviderMapping('USDRUB', 'moex')?.klineSupported).toBe(true);
+  });
+
+  it('gives every canonical asset a quote and Kline source path', () => {
+    const missing = CANONICAL_MARKET_CATALOG
+      .filter((entry) => {
+        const mappings = getMarketSourcePolicy(entry.symbol)?.providerMappings ?? [];
+        return !mappings.some((mapping) => mapping.quoteSupported)
+          || !mappings.some((mapping) => mapping.klineSupported);
+      })
+      .map((entry) => entry.symbol);
+    expect(missing).toEqual([]);
   });
 
   it('fails closed for Binary settlement until policy approval exists', () => {

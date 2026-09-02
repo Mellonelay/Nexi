@@ -19,7 +19,7 @@ integrationDescribe('Approach A persistence smoke campaign', () => {
 
   beforeAll(async () => {
     prisma = new PrismaService();
-    communications = new CommunicationsService(prisma);
+    communications = new CommunicationsService(prisma, {} as any, {} as any);
     await prisma.$connect();
   });
 

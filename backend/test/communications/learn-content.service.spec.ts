@@ -5,7 +5,7 @@ describe('CommunicationsService Learn authority', () => {
     const prisma: any = {
       learnArticle: { findMany: jest.fn(async () => []) },
     };
-    const service = new CommunicationsService(prisma);
+    const service = new CommunicationsService(prisma, {} as any, {} as any);
     await service.learn();
     expect(prisma.learnArticle.findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: expect.objectContaining({
@@ -18,7 +18,7 @@ describe('CommunicationsService Learn authority', () => {
   });
 
   it('rejects a scheduled article without a schedule', async () => {
-    const service = new CommunicationsService({} as any);
+    const service = new CommunicationsService({} as any, {} as any, {} as any);
     await expect(service.createLearn({ slug: 'scheduled', title: 'Scheduled', body: 'Body', status: 'SCHEDULED' })).rejects.toThrow('scheduledAt');
   });
 });

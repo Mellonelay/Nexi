@@ -1,3 +1,6 @@
+// Import instrumentation before Nest and application modules.
+import "./instrument";
+
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { ValidationPipe } from "@nestjs/common";

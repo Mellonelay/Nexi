@@ -37,6 +37,13 @@ describe('MarketAuthorityService', () => {
         }),
       },
       marketQuoteSnapshot: { create: jest.fn(async ({ data }: any) => data) },
+      marketProviderConfig: {
+        upsert: jest.fn(async ({ create, update }: any) => ({ ...create, ...update })),
+      },
+      marketProviderSymbol: {
+        upsert: jest.fn(async ({ create, update }: any) => ({ ...create, ...update })),
+        updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+      },
     };
     // The production authority chooses D1 before the legacy Prisma adapter.
     // Keep this fixture on that path so its persistence assertions exercise the
@@ -66,6 +73,9 @@ describe('MarketAuthorityService', () => {
       price: '12345.670000000000000001',
       change24h: '-1.25',
       volume24h: '10.5',
+      bid: '12345.5',
+      ask: '12345.8',
+      spread: '0.3',
       sequence: 7,
       observedAt: new Date('2026-08-02T00:00:00.000Z'),
     });
@@ -73,10 +83,13 @@ describe('MarketAuthorityService', () => {
     const snapshotData = d1.marketQuoteSnapshot.create.mock.calls[0][0].data;
     expect(snapshotData.sequence).toBe('7');
     expect(snapshotData.price).toBe('12345.670000000000000001');
+    expect(snapshotData.bid.toString()).toBe('12345.5');
+    expect(snapshotData.ask.toString()).toBe('12345.8');
+    expect(snapshotData.spread.toString()).toBe('0.3');
     expect(JSON.parse(snapshotData.rawData)._nexi).toMatchObject({ providerInstrument: 'BTCUSDT', priceType: 'LAST', canonicalAssetId: 'crypto:btc' });
     expect(redis.publish).toHaveBeenCalledTimes(1);
     expect(JSON.parse(redis.publish.mock.calls[0][1]).sequence).toBe('7');
-    expect(JSON.parse(redis.publish.mock.calls[0][1]).quote).toMatchObject({ providerInstrument: 'BTCUSDT', priceType: 'LAST', canonicalAssetId: 'crypto:btc' });
+    expect(JSON.parse(redis.publish.mock.calls[0][1]).quote).toMatchObject({ providerInstrument: 'BTCUSDT', priceType: 'LAST', canonicalAssetId: 'crypto:btc', bid: '12345.5', ask: '12345.8', spread: '0.3' });
   });
 
   it('rejects duplicate or out-of-order provider sequences without a second snapshot', async () => {
@@ -115,6 +128,25 @@ describe('MarketAuthorityService', () => {
     }));
   });
 
+  it('reconciles D1 provider mappings for every canonical pair', async () => {
+    const { service, d1 } = createService();
+
+    await service.ensureCatalog();
+
+    expect(d1.marketProviderConfig.upsert).toHaveBeenCalledTimes(5);
+    expect(d1.marketProviderSymbol.upsert).toHaveBeenCalledTimes(54);
+    const mappingCalls = d1.marketProviderSymbol.upsert.mock.calls.map(([args]: any[]) => args);
+    expect(mappingCalls.filter((args: any) => args.create.providerId === 'provider-binance-spot')).toHaveLength(17);
+    expect(mappingCalls.filter((args: any) => args.create.providerId === 'provider-biquote')).toHaveLength(31);
+    expect(mappingCalls.filter((args: any) => args.create.providerId === 'provider-gate')).toHaveLength(4);
+    expect(mappingCalls.filter((args: any) => args.create.providerId === 'provider-yahoo')).toHaveLength(1);
+    expect(mappingCalls.filter((args: any) => args.create.providerId === 'provider-moex')).toHaveLength(1);
+    expect(d1.marketProviderSymbol.updateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { providerId: 'provider-biquote', pairId: 'pair-USDRUB' },
+      data: expect.objectContaining({ enabled: false }),
+    }));
+  });
+
   it('stores asset-level provider symbols without pair-specific USD overwrites', async () => {
     const { service, d1 } = createService();
 
@@ -130,7 +162,7 @@ describe('MarketAuthorityService', () => {
 
   it('normalizes stock display symbols to the canonical backend pair', async () => {
     const { service, d1 } = createService();
-    await service.ingestQuote({ symbol: 'AAPL.US/USDT', provider: 'massive', source: 'websocket', price: '100', observedAt: new Date() });
+    await service.ingestQuote({ symbol: 'AAPL.US/USDT', provider: 'biquote', source: 'websocket', price: '100', observedAt: new Date() });
     expect(d1.marketPair.upsert).toHaveBeenCalledWith(expect.objectContaining({ where: { symbol: 'AAPLUSDT' } }));
   });
 });

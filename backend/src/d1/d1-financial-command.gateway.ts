@@ -321,7 +321,7 @@ export class D1FinancialCommandGateway {
   async updateUserProfile(userId: string, patch: { displayName?: string; email?: string }): Promise<Record<string, unknown>> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const assignments: string[] = [];
-    const params: unknown[] = [];
+    const params: D1BridgeParameter[] = [];
     if (patch.displayName !== undefined) { assignments.push(`"displayName"=?`); params.push(patch.displayName.trim()); }
     if (patch.email !== undefined) { assignments.push(`"email"=?`); params.push(patch.email.trim().toLowerCase()); }
     if (assignments.length > 0) {
@@ -349,8 +349,18 @@ export class D1FinancialCommandGateway {
     const locale = patch.locale ?? String(current.locale ?? 'en');
     const timezone = patch.timezone ?? String(current.timezone ?? 'UTC');
     const theme = patch.theme ?? String(current.theme ?? 'dark');
-    const notificationSettings = patch.notificationSettings === undefined ? current.notificationSettings ?? null : JSON.stringify(patch.notificationSettings);
-    const tradingSettings = patch.tradingSettings === undefined ? current.tradingSettings ?? null : JSON.stringify(patch.tradingSettings);
+    const serialize = (value: unknown): D1BridgeParameter => {
+      if (value === null || value === undefined) return null;
+      return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'
+        ? value
+        : JSON.stringify(value);
+    };
+    const notificationSettings = patch.notificationSettings === undefined
+      ? serialize(current.notificationSettings)
+      : JSON.stringify(patch.notificationSettings);
+    const tradingSettings = patch.tradingSettings === undefined
+      ? serialize(current.tradingSettings)
+      : JSON.stringify(patch.tradingSettings);
     await this.bridge.batch([{
       sql: `INSERT INTO "UserPreference" ("id","userId","locale","timezone","theme","notificationSettings","tradingSettings","createdAt","updatedAt") VALUES (?,?,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ON CONFLICT("userId") DO UPDATE SET "locale"=excluded."locale","timezone"=excluded."timezone","theme"=excluded."theme","notificationSettings"=excluded."notificationSettings","tradingSettings"=excluded."tradingSettings","updatedAt"=CURRENT_TIMESTAMP`,
       params: [randomUUID(), userId, locale, timezone, theme, notificationSettings, tradingSettings],
@@ -1533,9 +1543,12 @@ export class D1FinancialCommandGateway {
     eventType: string;
     correlationId?: string | null;
     payload: Record<string, unknown>;
+    guard?: { sql: string; params: D1BridgeParameter[] };
   }): D1BridgeBatchStatement {
+    const prefix = `INSERT OR IGNORE INTO "EventOutbox" ("id","idempotencyKey","aggregateType","aggregateId","eventType","eventVersion","correlationId","payload","state","availableAt","attempts","createdAt","updatedAt")`;
+    const values = `?,?,?, ?,1,?,?,'PENDING',CURRENT_TIMESTAMP,0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP`;
     return {
-      sql: `INSERT OR IGNORE INTO "EventOutbox" ("id","idempotencyKey","aggregateType","aggregateId","eventType","eventVersion","correlationId","payload","state","availableAt","attempts","createdAt","updatedAt") VALUES (?,?,?,?,?,1,?,?,'PENDING',CURRENT_TIMESTAMP,0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`,
+      sql: `${prefix} ${command.guard ? "SELECT" : "VALUES"} (${values})${command.guard ? ` WHERE ${command.guard.sql}` : ""}`,
       params: [
         randomUUID(),
         command.idempotencyKey,
@@ -1544,6 +1557,7 @@ export class D1FinancialCommandGateway {
         command.eventType,
         command.correlationId ?? command.aggregateId,
         JSON.stringify(command.payload),
+        ...(command.guard?.params ?? []),
       ],
     };
   }
@@ -2150,6 +2164,18 @@ export class D1FinancialCommandGateway {
           JSON.stringify(command.productSnapshot),
         ],
       },
+      this.eventOutboxStatement({
+        idempotencyKey: `event:loan:apply:${command.id}`,
+        aggregateType: "LOAN_APPLICATION",
+        aggregateId: command.id,
+        eventType: "LOAN_APPLICATION_SUBMITTED",
+        correlationId: command.id,
+        payload: { loanId: command.id, userId: command.userId },
+        guard: {
+          sql: `EXISTS (SELECT 1 FROM "LoanApplication" WHERE "id"=? AND "status"='PENDING')`,
+          params: [command.id],
+        },
+      }),
     ]);
     const changes = Number(
       (result.results[0] as BatchResult | undefined)?.meta?.changes ?? 0,
@@ -2508,18 +2534,51 @@ export class D1FinancialCommandGateway {
     now = new Date().toISOString(),
   ): Promise<{ count: number }> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
-    const result = await this.bridge.batch([
-      {
-        sql: `UPDATE "LoanApplication"
-        SET "status"='OVERDUE',"updatedAt"=CURRENT_TIMESTAMP
-        WHERE "status"='ACTIVE' AND "dueDate" IS NOT NULL AND "dueDate" < ?`,
-        params: [now],
-      },
-    ]);
-    const changes = Number(
-      (result.results[0] as BatchResult | undefined)?.meta?.changes ?? 0,
+    const dueLoans = await this.bridge.select<{
+      id: string;
+      dueDate: string | null;
+    }>(
+      `SELECT "id","dueDate" FROM "LoanApplication" WHERE "status"='ACTIVE' AND "dueDate" IS NOT NULL AND "dueDate" < ? ORDER BY "dueDate" ASC`,
+      [now],
     );
-    return { count: Number.isFinite(changes) ? changes : 0 };
+    let count = 0;
+    // D1 batches are bounded by the bridge contract. Pair each guarded state
+    // transition with its durable event and process at most eight loans per
+    // batch so no overdue transition can bypass EventOutbox.
+    for (let offset = 0; offset < dueLoans.results.length; offset += 8) {
+      const chunk = dueLoans.results.slice(offset, offset + 8);
+      const statements: D1BridgeBatchStatement[] = [];
+      for (const loan of chunk) {
+        statements.push({
+          sql: `UPDATE "LoanApplication"
+          SET "status"='OVERDUE',"updatedAt"=CURRENT_TIMESTAMP
+          WHERE "id"=? AND "status"='ACTIVE' AND "dueDate" IS NOT NULL AND "dueDate" < ?`,
+          params: [loan.id, now],
+        });
+        statements.push(
+          this.eventOutboxStatement({
+            idempotencyKey: `event:loan:overdue:${loan.id}:${loan.dueDate}`,
+            aggregateType: "LOAN_APPLICATION",
+            aggregateId: loan.id,
+            eventType: "LOAN_OVERDUE",
+            correlationId: loan.id,
+            payload: { loanId: loan.id, dueDate: loan.dueDate },
+            guard: {
+              sql: `EXISTS (SELECT 1 FROM "LoanApplication" WHERE "id"=? AND "status"='OVERDUE')`,
+              params: [loan.id],
+            },
+          }),
+        );
+      }
+      const result = await this.bridge.batch(statements);
+      for (let index = 0; index < result.results.length; index += 2) {
+        const changes = Number(
+          (result.results[index] as BatchResult | undefined)?.meta?.changes ?? 0,
+        );
+        if (Number.isFinite(changes)) count += changes;
+      }
+    }
+    return { count };
   }
 
   async recordEventOutbox(command: {

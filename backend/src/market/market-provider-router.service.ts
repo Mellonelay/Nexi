@@ -1,7 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { BinanceSpotAdapter } from './binance-spot.adapter';
-import { FinnhubMarketAdapter } from './finnhub-market.adapter';
-import { MassiveMarketAdapter } from './massive-market.adapter';
 import { MarketProviderAdapter, MarketProviderEvent, MarketProviderRuntimeSymbol } from './market-provider.adapter';
 import type { MarketKlineInput, MarketKlineInterval } from './market-kline.contract';
 import { D1PrismaService } from '../d1/d1-prisma.service';
@@ -9,8 +7,6 @@ import { getMarketSourcePolicy, getProviderMapping, installRuntimeProviderMappin
 import { MetalsApiMarketAdapter } from './metals-api-market.adapter';
 import { MetalpriceApiMarketAdapter } from './metalprice-api-market.adapter';
 import { OandaMarketAdapter } from './oanda-market.adapter';
-import { AlphaVantageMarketAdapter } from './alpha-vantage-market.adapter';
-import { TickDbMarketAdapter } from './tickdb-market.adapter';
 import { FawazCurrencyMarketAdapter } from './fawaz-currency-market.adapter';
 import { RzzroIndustrialMetalsMarketAdapter } from './rzzro-industrial-metals-market.adapter';
 import { YahooMarketAdapter } from './yahoo-market.adapter';
@@ -28,13 +24,9 @@ export class MarketProviderRouterService {
 
   constructor(
     binance: BinanceSpotAdapter,
-    massive: MassiveMarketAdapter,
-    finnhub: FinnhubMarketAdapter,
     oanda: OandaMarketAdapter,
     metalsApi: MetalsApiMarketAdapter,
     metalpriceApi: MetalpriceApiMarketAdapter,
-    alphaVantage: AlphaVantageMarketAdapter,
-    tickdb: TickDbMarketAdapter,
     fawazCurrency: FawazCurrencyMarketAdapter,
     rzzroIndustrialMetals: RzzroIndustrialMetalsMarketAdapter,
     yahoo: YahooMarketAdapter,

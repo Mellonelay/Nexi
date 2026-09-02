@@ -106,7 +106,7 @@ export function streamStatusAt(snapshot: MarketStreamSnapshot, now: number, stal
 }
 
 export function timeframeToSeconds(interval: string) {
-  const units: Record<string, number> = { s: 1, m: 60, h: 3600, d: 86400 };
-  const match = /^(\d+)([smhd])$/.exec(interval);
+  const units: Record<string, number> = { s: 1, m: 60, h: 3600, d: 86400, w: 604800, M: 2592000 };
+  const match = /^(\d+)([smhdwM])$/.exec(interval);
   return match ? Number(match[1]) * units[match[2]] : 60;
 }

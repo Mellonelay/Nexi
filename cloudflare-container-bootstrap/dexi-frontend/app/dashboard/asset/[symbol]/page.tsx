@@ -6,7 +6,7 @@ import { ArrowLeft, ArrowUpRight, BarChart3, ChevronRight, Info, Star } from 'lu
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import RealtimeTradingChart from '../../../components/RealtimeTradingChart';
-import { useActiveInstrument, useActivePair } from '../../../state/ActivePairProvider';
+import { useActiveInstrument } from '../../../state/ActivePairProvider';
 import { useMarketData } from '../../../hooks/useMarketData';
 import { instrumentFromMarketPair, normalizePair } from '../../../state/active-instrument';
 import { assetIconPath, findAsset } from '../../../lib/asset-registry';
@@ -18,9 +18,10 @@ export default function AssetDetailPage() {
   const router = useRouter();
   const routeSymbol = decodeURIComponent(params.symbol ?? 'BTCUSDT');
   const { activeInstrument, setActiveInstrument } = useActiveInstrument();
-  const { setActivePair } = useActivePair();
   const { marketPairs, metal, shares, forex } = useMarketData();
   const [timeframe, setTimeframe] = useState('1h');
+  const [routeReady, setRouteReady] = useState(false);
+  const timeframeOptions = ['1m', '5m', '15m', '1h', '1d'] as const;
 
   useEffect(() => {
     const normalizedRoute = normalizePair(routeSymbol);
@@ -30,10 +31,20 @@ export default function AssetDetailPage() {
 
     if (match) {
       setActiveInstrument(instrumentFromMarketPair(match));
+      setRouteReady(true);
       return;
     }
-    setActivePair(routeSymbol);
-  }, [forex, marketPairs, metal, routeSymbol, setActiveInstrument, setActivePair, shares]);
+    setRouteReady(false);
+    router.replace('/dashboard');
+  }, [forex, marketPairs, metal, routeSymbol, router, setActiveInstrument, shares]);
+
+  if (!routeReady) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#050508] px-6 text-center text-sm text-[#C3BBD0]">
+        Resolving approved market asset…
+      </div>
+    );
+  }
 
   const instrument = activeInstrument;
   const matchedItem = [...marketPairs, ...metal, ...shares, ...forex].find((item) => normalizePair(item.symbol) === normalizePair(routeSymbol));
@@ -91,7 +102,7 @@ export default function AssetDetailPage() {
             <RealtimeTradingChart symbol={normalizePair(instrument.pair)} type="spot" interval={timeframe} />
           </div>
           <div className="grid min-w-0 grid-cols-5 border-t border-violet-300/10 p-2">
-            {['1m', '5m', '15m', '1h', '1D'].map((option) => <button key={option} type="button" onClick={() => setTimeframe(option)} aria-pressed={timeframe === option} className={`min-w-0 min-h-11 rounded-md text-xs font-semibold ${timeframe === option ? 'bg-[#2A1742] text-[#F8F6FF]' : 'text-[#8C8299] hover:bg-white/5 hover:text-white'}`}>{option}</button>)}
+            {timeframeOptions.map((option) => <button key={option} type="button" onClick={() => setTimeframe(option)} aria-pressed={timeframe === option} className={`min-w-0 min-h-11 rounded-md text-xs font-semibold ${timeframe === option ? 'bg-[#2A1742] text-[#F8F6FF]' : 'text-[#8C8299] hover:bg-white/5 hover:text-white'}`}>{option === '1d' ? '1D' : option}</button>)}
           </div>
         </section>
 

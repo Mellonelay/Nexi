@@ -1,9 +1,5 @@
 import { Transform, Type } from 'class-transformer';
-<<<<<<< HEAD
-import { IsEmail, IsISO8601, IsInt, IsOptional, IsString, IsUrl, Length, Matches, MaxLength, Min, MinLength } from 'class-validator';
-=======
 import { IsEmail, IsISO8601, IsInt, IsObject, IsOptional, IsString, IsUrl, Length, Matches, MaxLength, Min, MinLength } from 'class-validator';
->>>>>>> origin/codex/vm-dirty-recovery-20260830
 
 const normalizeEmail = ({ value }: { value: unknown }): unknown =>
   typeof value === 'string' ? value.trim().toLowerCase() : value;
@@ -77,11 +73,6 @@ export class WalletVerifyDto {
   @IsString()
   @Matches(/^0x[0-9a-fA-F]+$/)
   signature!: string;
-
-  @IsOptional()
-  @IsString()
-  @Length(4, 64)
-  referralCode?: string;
 }
 
 export class UpdateProfileDto {
