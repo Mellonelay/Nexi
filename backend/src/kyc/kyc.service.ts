@@ -32,17 +32,29 @@ export class KycService {
       return this.d1.getKyc(userId);
     }
 
+  // Submit KYC
+  async submitKyc(userId: string, data: { firstName: string; lastName: string; dob: string; country: string; documentType: string; documentUrl: string }) {
+    if (this.d1?.isEnabled()) return this.d1.submitKyc({ userId, ...data });
     const existing = await this.prisma.kYC.findUnique({ where: { userId } });
     if (existing) {
       if (existing.status === 'APPROVED') throw new BadRequestException('KYC already approved');
       if (existing.status === 'PENDING') throw new BadRequestException('KYC already pending');
       return this.prisma.kYC.update({
         where: { userId },
-        data: { ...data, dob: new Date(data.dob), status: 'PENDING' },
+        data: {
+          ...data,
+          status: 'PENDING',
+          dob: new Date(data.dob)
+        },
       });
     }
     return this.prisma.kYC.create({
-      data: { userId, ...data, dob: new Date(data.dob), status: 'PENDING' },
+      data: {
+        userId,
+        ...data,
+        dob: new Date(data.dob),
+        status: 'PENDING',
+      },
     });
   }
 

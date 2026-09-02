@@ -97,7 +97,7 @@ export class GateMarketAdapter extends PublicExchangeMarketAdapter {
   protected async fetchQuote(symbol: string): Promise<ProviderQuoteEvent | null> {
     const mapping = getProviderMapping(symbol, this.provider);
     if (!mapping?.quoteSupported) return null;
-    const response = await this.requestJson<{ data?: { last_price?: string; price_change?: string; highest_price?: string; lowest_price?: string } }>(
+    const response = await this.requestJson<{ data?: { last_price?: string; bid_price?: string; ask_price?: string; price_change?: string; highest_price?: string; lowest_price?: string } }>(
       this.baseUrl,
       `/api/v4/tradfi/symbols/${encodeURIComponent(mapping.instrument)}/tickers`,
       {},
@@ -115,35 +115,44 @@ export class GateMarketAdapter extends PublicExchangeMarketAdapter {
       change24h: quote.price_change,
       high24h: quote.highest_price,
       low24h: quote.lowest_price,
+      bid: quote.bid_price,
+      ask: quote.ask_price,
+      spread: quote.bid_price && quote.ask_price && Number(quote.ask_price) >= Number(quote.bid_price)
+        ? String(Number(quote.ask_price) - Number(quote.bid_price))
+        : undefined,
     });
   }
+
   async fetchHistory(symbol: string, interval: MarketKlineInterval, limit: number): Promise<MarketKlineInput[]> {
+    const supported = new Set<MarketKlineInterval>(['1m', '3m', '5m', '15m', '30m', '1h', '4h', '1d']);
+    if (!supported.has(interval)) return [];
     const mapping = getProviderMapping(symbol, this.provider);
-    if (!mapping?.klineSupported || !GATE_INTERVALS.has(interval)) return [];
-    const response = await this.requestJson<unknown>(this.baseUrl, '/api/v4/stock/candlesticks', {
-      symbol: mapping.instrument,
-      interval,
-      limit: String(Math.min(1000, Math.max(40, limit))),
-    });
-    if (!Array.isArray(response)) return [];
-    const now = Date.now();
-    return response.flatMap((row): MarketKlineInput[] => {
-      if (!Array.isArray(row) || row.length < 6) return [];
-      const openTimeMs = Number(row[0]) * 1000;
-      const values = [row[1], row[2], row[3], row[4]].map(Number);
-      const volume = Number(row[5]);
+    if (!mapping?.klineSupported) return [];
+    const response = await this.requestJson<{ data?: { list?: Array<{ o?: string; c?: string; h?: string; l?: string; t?: number }> } }>(
+      this.baseUrl,
+      `/api/v4/tradfi/symbols/${encodeURIComponent(mapping.instrument)}/klines`,
+      { kline_type: interval, limit: String(Math.min(500, Math.max(40, limit))) },
+    );
+    const rows = response.data?.list ?? [];
+    const durationMs = this.intervalMs(interval);
+    return rows.flatMap((row) => {
+      const openTimeMs = Number(row.t) * 1000;
+      const values = [row.o, row.h, row.l, row.c].map(Number);
       if (!Number.isFinite(openTimeMs) || values.some((value) => !Number.isFinite(value) || value <= 0)) return [];
-      const closeTimeMs = openTimeMs + gateIntervalMs(interval) - 1;
+      const openTime = new Date(openTimeMs);
       return [{
-        symbol, interval,
-        openTime: new Date(openTimeMs), closeTime: new Date(closeTimeMs),
-        open: String(row[1]), high: String(row[2]), low: String(row[3]), close: String(row[4]),
-        volume: Number.isFinite(volume) && volume >= 0 ? String(row[5]) : null,
-        provider: this.provider, source: 'gate:rest:stock-candlesticks',
-        observedAt: new Date(Math.min(now, closeTimeMs)),
-      }];
-    }).sort((a, b) => a.openTime.getTime() - b.openTime.getTime());
+        symbol, interval, openTime, closeTime: new Date(openTimeMs + durationMs - 1),
+        open: String(values[0]), high: String(values[1]), low: String(values[2]), close: String(values[3]), volume: null,
+        provider: this.provider, source: 'gate:tradfi-reference:kline', observedAt: new Date(openTimeMs + durationMs - 1),
+      } satisfies MarketKlineInput];
+    });
   }
+
+  private intervalMs(interval: MarketKlineInterval): number {
+    const minutes: Partial<Record<MarketKlineInterval, number>> = { '1m': 1, '3m': 3, '5m': 5, '15m': 15, '30m': 30, '1h': 60, '4h': 240, '1d': 1440 };
+    return (minutes[interval] ?? 1) * 60_000;
+  }
+
   protected path() { return '/api/v4/futures/usdt/tickers'; }
   protected params(instrument: string) { return { contract: instrument }; }
   protected extract(response: any) { const x = Array.isArray(response) ? response[0] : null; return x && { price: x.last, indexPrice: x.index_price, markPrice: x.mark_price, change: x.change_percentage, volume: x.volume_24h_quote, high: x.high_24h, low: x.low_24h, time: Number(x.funding_next_apply) * 1000 }; }

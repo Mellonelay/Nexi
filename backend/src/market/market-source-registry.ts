@@ -83,10 +83,10 @@ export interface AssetSourcePolicy {
 }
 
 const CRYPTO_PROVIDERS = ['binance-spot', 'coingecko', 'coinmarketcap'];
-const STOCK_PROVIDERS = ['biquote', 'gate', 'yahoo', 'okx', 'bitget', 'htx', 'bybit'];
-const FOREX_PROVIDERS = ['biquote', 'yahoo', 'moex', 'bybit', 'gate', 'htx', 'okx', 'bitget', 'oanda', 'fawaz-currency'];
-const PRECIOUS_METAL_PROVIDERS = ['biquote', 'oanda', 'yahoo', 'okx', 'htx', 'bitget', 'bybit', 'gate', 'metals-api', 'fawaz-currency'];
-const INDUSTRIAL_METAL_PROVIDERS = ['biquote', 'metals-api', 'metalprice-api', 'yahoo', 'okx', 'htx', 'bitget', 'bybit', 'gate', 'rzzro-industrial-metals'];
+const STOCK_PROVIDERS = ['biquote', 'yahoo', 'okx', 'bitget', 'htx', 'bybit', 'gate', 'tickdb', 'alltick', 'massive', 'finnhub', 'alpha-vantage'];
+const FOREX_PROVIDERS = ['moex', 'biquote', 'yahoo', 'bybit', 'gate', 'htx', 'okx', 'bitget', 'tickdb', 'alltick', 'live-rates', 'massive', 'finnhub', 'oanda', 'alpha-vantage', 'fawaz-currency'];
+const PRECIOUS_METAL_PROVIDERS = ['biquote', 'yahoo', 'okx', 'htx', 'bitget', 'bybit', 'gate', 'tickdb', 'alltick', 'live-rates', 'oanda', 'metals-api', 'alpha-vantage', 'fawaz-currency'];
+const INDUSTRIAL_METAL_PROVIDERS = ['biquote', 'yahoo', 'okx', 'htx', 'bitget', 'bybit', 'gate', 'tickdb', 'alltick', 'metals-api', 'metalprice-api', 'alpha-vantage', 'rzzro-industrial-metals'];
 
 function baseSymbol(entry: CanonicalMarketPair): string {
   if (entry.category === 'crypto' || entry.category === 'stock') return entry.symbol.replace(/USDT$/, '');

@@ -35,9 +35,7 @@ export class KycController {
   }
 
   @Get("status")
-  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
-  @RequireAuthSurface("PUBLIC")
-  @ApiOperation({ summary: "Return KYC state for the authenticated wallet user." })
+  @UseGuards(JwtAuthGuard)
   async getMyStatus(@Req() request: AuthenticatedRequest) {
     return this.kycService.getKycStatus(request.user.userId);
   }

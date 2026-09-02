@@ -91,6 +91,31 @@ export class AuthService {
     };
   }
 
+  async updateProfile(userId: string, patch: { displayName?: string; email?: string }) {
+    await this.usersService.updateProfile(userId, patch);
+    const user = await this.usersService.findById(userId);
+    if (!user) throw new UnauthorizedException('Authentication principal is unavailable');
+    return this.usersService.findById(userId);
+  }
+
+  async getPreferences(userId: string) {
+    return this.usersService.getPreferences(userId);
+  }
+
+  async updatePreferences(userId: string, patch: { locale?: string; timezone?: string; theme?: string; notificationSettings?: Record<string, boolean>; tradingSettings?: Record<string, unknown> }) {
+    return this.usersService.updatePreferences(userId, patch);
+  }
+
+  async listSessions(user: { userId: string; surface?: AuthSurface }) {
+    if (!this.authSessionService || !user.surface) throw new UnauthorizedException('Authentication session is missing');
+    return this.authSessionService.listSessions(user.userId, user.surface);
+  }
+
+  async revokeSession(user: { userId: string; surface?: AuthSurface }, sessionId: string) {
+    if (!this.authSessionService || !user.surface) throw new UnauthorizedException('Authentication session is missing');
+    return this.authSessionService.revokeSession(user.userId, user.surface, sessionId, 'SECURITY_ACTION');
+  }
+
   async logout(user: { userId: string; surface?: AuthSurface; sessionId?: string }) {
     if (!this.authSessionService || !user.surface || !user.sessionId) {
       throw new UnauthorizedException('Authentication session is missing');

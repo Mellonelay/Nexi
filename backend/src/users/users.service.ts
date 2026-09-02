@@ -40,6 +40,52 @@ export class UsersService {
       });
   }
 
+  async findByUserCode(userCode: number): Promise<Record<string, unknown> | null> {
+    if (this.d1?.isEnabled()) return this.d1.getUserByUserCode(userCode);
+    return this.prisma.user.findUnique({
+      where: { userCode },
+      select: { id: true, userCode: true, email: true, displayName: true, role: true },
+    }) as unknown as Promise<Record<string, unknown> | null>;
+  }
+
+  async updateProfile(userId: string, patch: { displayName?: string; email?: string }) {
+    if (this.d1?.isEnabled()) return this.d1.updateUserProfile(userId, patch);
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(patch.displayName !== undefined ? { displayName: patch.displayName.trim() } : {}),
+        ...(patch.email !== undefined ? { email: patch.email.trim().toLowerCase() } : {}),
+      },
+    });
+  }
+
+  async getPreferences(userId: string) {
+    if (this.d1?.isEnabled()) return this.normalizePreference(await this.d1.getUserPreference(userId));
+    const row = await this.prisma.userPreference.findUnique({ where: { userId } });
+    return row ?? { userId, locale: 'en', timezone: 'UTC', theme: 'dark', notificationSettings: null, tradingSettings: null };
+  }
+
+  async updatePreferences(userId: string, patch: { locale?: string; timezone?: string; theme?: string; notificationSettings?: Record<string, boolean>; tradingSettings?: Record<string, unknown> }) {
+    if (this.d1?.isEnabled()) return this.normalizePreference(await this.d1.updateUserPreference(userId, patch));
+    return this.prisma.userPreference.upsert({
+      where: { userId },
+      update: patch as Prisma.UserPreferenceUncheckedUpdateInput,
+      create: { userId, ...(patch as Prisma.UserPreferenceUncheckedCreateInput) },
+    });
+  }
+
+  private normalizePreference(row: Record<string, unknown>) {
+    const decode = (value: unknown) => {
+      if (typeof value !== 'string') return value ?? null;
+      try { return JSON.parse(value); } catch { return null; }
+    };
+    return {
+      ...row,
+      notificationSettings: decode(row.notificationSettings),
+      tradingSettings: decode(row.tradingSettings),
+    };
+  }
+
   async createUser(data: SignupDto): Promise<User> {
     // Hash password
     const hashedPassword = await bcrypt.hash(data.password, PASSWORD_HASH_ROUNDS);

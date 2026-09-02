@@ -41,7 +41,7 @@ export class MarketProviderRouterService {
     gate: GateMarketAdapter,
     private readonly d1: D1PrismaService,
   ) {
-    this.adapters = [binance, moex, biquote, yahoo, coingecko, coinmarketcap, oanda, metalsApi, metalpriceApi, fawazCurrency, rzzroIndustrialMetals, okx, bitget, htx, bybit, gate];
+    this.adapters = [binance, moex, biquote, yahoo, coingecko, coinmarketcap, massive, finnhub, oanda, metalsApi, metalpriceApi, alphaVantage, tickdb, fawazCurrency, rzzroIndustrialMetals, okx, bitget, htx, bybit, gate];
   }
 
   async start(onEvent: (event: MarketProviderEvent) => void): Promise<boolean> {

@@ -51,17 +51,13 @@ export class WalletController {
   }
 
   @Get("me")
-  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
-  @RequireAuthSurface("PUBLIC")
-  @ApiOperation({ summary: "Return balances for the authenticated wallet user." })
+  @UseGuards(JwtAuthGuard)
   async getMyWallet(@Req() request: AuthenticatedRequest) {
     return this.walletService.getAllBalances(request.user.userId);
   }
 
   @Get("me/ledger")
-  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
-  @RequireAuthSurface("PUBLIC")
-  @ApiOperation({ summary: "Return ledger history for the authenticated wallet user." })
+  @UseGuards(JwtAuthGuard)
   async getMyLedger(@Req() request: AuthenticatedRequest) {
     return this.walletService.getLedger(request.user.userId);
   }
