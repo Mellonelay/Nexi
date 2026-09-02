@@ -1,4 +1,6 @@
 import { Module } from "@nestjs/common";
+import { APP_FILTER } from "@nestjs/core";
+import { SentryGlobalFilter, SentryModule } from "@sentry/nestjs/setup";
 import { ServeStaticModule } from "@nestjs/serve-static";
 import { join } from "path";
 import { AppController } from "./app.controller";
@@ -39,6 +41,7 @@ import { ProfileModule } from "./profile/profile.module";
 
 @Module({
   imports: [
+    SentryModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       validate: validateRuntimeEnvironment,
@@ -78,6 +81,13 @@ import { ProfileModule } from "./profile/profile.module";
     ProfileModule,
   ],
   controllers: [AppController, FeedbackController],
-  providers: [AppService, RuntimeLifecycleService],
+  providers: [
+    {
+      provide: APP_FILTER,
+      useClass: SentryGlobalFilter,
+    },
+    AppService,
+    RuntimeLifecycleService,
+  ],
 })
 export class AppModule {}
