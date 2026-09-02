@@ -71,6 +71,7 @@ export default function WalletPage() {
   const [error, setError] = useState('');
   const [action, setAction] = useState<Action | null>(null);
   const [currency, setCurrency] = useState('');
+
   const readEndpoint = userId ? '/wallet/me' : null;
   const activityEndpoint = userId ? '/wallet/activity' : null;
   const root = record(payload);

@@ -8,11 +8,9 @@ import {
   Req,
   GoneException,
 } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
+import { ApiTags } from "@nestjs/swagger";
 import { Role } from "@prisma/client";
 import { AuthenticatedRequest } from "../auth/auth.types";
-import { AuthSurfaceGuard } from "../auth/auth-surface.guard";
-import { RequireAuthSurface } from "../auth/auth-surface.decorator";
 import { DevelopmentOnlyGuard } from "../auth/development-only.guard";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { OwnershipGuard } from "../auth/ownership.guard";
@@ -27,7 +25,6 @@ import {
 } from "./wallet.dto";
 
 @ApiTags("Wallet")
-@ApiBearerAuth()
 @Controller("wallet")
 export class WalletController {
   constructor(private readonly walletService: WalletService) {}
@@ -44,24 +41,19 @@ export class WalletController {
   }
 
   @Get("activity")
-  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
-  @RequireAuthSurface("PUBLIC")
+  @UseGuards(JwtAuthGuard)
   async getActivity(@Req() request: AuthenticatedRequest) {
     return this.walletService.getActivity(request.user.userId);
   }
 
   @Get("me")
-  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
-  @RequireAuthSurface("PUBLIC")
-  @ApiOperation({ summary: "Return balances for the authenticated wallet user." })
+  @UseGuards(JwtAuthGuard)
   async getMyWallet(@Req() request: AuthenticatedRequest) {
     return this.walletService.getAllBalances(request.user.userId);
   }
 
   @Get("me/ledger")
-  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
-  @RequireAuthSurface("PUBLIC")
-  @ApiOperation({ summary: "Return ledger history for the authenticated wallet user." })
+  @UseGuards(JwtAuthGuard)
   async getMyLedger(@Req() request: AuthenticatedRequest) {
     return this.walletService.getLedger(request.user.userId);
   }
@@ -84,6 +76,7 @@ export class WalletController {
     return this.walletService.getLedger(request.user.userId);
   }
 
+  // Admin or Dev Testing Endpoints
   @Post("deposit")
   @UseGuards(JwtAuthGuard, RolesGuard, DevelopmentOnlyGuard)
   @Roles(Role.ADMIN)
@@ -98,6 +91,7 @@ export class WalletController {
     return this.legacyFinancialRouteDisabled();
   }
 
+  // Admin Endpoints
   @Post("admin/credit")
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
