@@ -110,6 +110,19 @@ describe('D1FinancialCommandGateway', () => {
     expect(bridge.batch).not.toHaveBeenCalled();
   });
 
+  it('guards withdrawal approval to the pending state and emits audit/outbox statements', async () => {
+    const bridge = createBridge({
+      batch: jest.fn().mockResolvedValue({ results: [{ meta: { changes: 1 } }, { meta: { changes: 1 } }, { meta: { changes: 1 } }] }),
+      select: jest.fn().mockResolvedValue({ results: [{ id: 'withdrawal-1', state: 'APPROVED' }] }),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+    await expect(gateway.approveWithdrawal('withdrawal-1', 'ok', 'admin-1', 'approval-key-1')).resolves.toMatchObject({ id: 'withdrawal-1' });
+    const statements = (bridge.batch as jest.Mock).mock.calls[0][0] as D1BridgeBatchStatement[];
+    expect(statements[0].sql).toContain(`AND "state"='PENDING_REVIEW'`);
+    expect(statements[1].sql).toContain('AdminAuditLog');
+    expect(statements[2].sql).toContain('EventOutbox');
+  });
+
   it('marks overdue loans and emits one idempotent outbox event per transition', async () => {
     const bridge = createBridge({
       select: jest.fn().mockResolvedValue({
@@ -285,5 +298,117 @@ describe('D1FinancialCommandGateway', () => {
     expect(statements).toHaveLength(16);
     expect(statements.every((statement) => !statement.sql.includes('FOR UPDATE'))).toBe(true);
     expect(statements[15].sql).toContain('Gate2SpotOrder');
+  });
+
+  it('credits a deposit with ledger, guarded state, audit, and outbox in one batch', async () => {
+    const deposit = {
+      id: 'deposit-atomic-1', userId: 'user-1', asset: 'USDT', amount: '2.50',
+      confirmations: 12, requiredConfirmations: 6, state: 'CONFIRMING', creditPostingId: null,
+    };
+    const bridge = createBridge({
+      select: jest.fn().mockImplementation(async (sql: string) => {
+        if (sql.includes('Gate2Deposit')) return { results: [deposit] };
+        if (sql.includes('LedgerAccount')) return { results: [account] };
+        return { results: [] };
+      }),
+      batch: jest.fn().mockImplementation(async (statements: D1BridgeBatchStatement[]) => ({
+        results: statements.map((_, index) => ({ success: true, meta: { changes: [1, 3, 6].includes(index) ? 1 : 0 } })),
+      })),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+
+    await expect(gateway.creditDepositAtomic('deposit-atomic-1', 'operator-confirmed'))
+      .resolves.toMatchObject({ id: 'deposit-atomic-1' });
+
+    expect(bridge.batch).toHaveBeenCalledTimes(1);
+    const statements = (bridge.batch as jest.Mock).mock.calls[0][0] as D1BridgeBatchStatement[];
+    expect(statements).toHaveLength(10);
+    expect(statements[1].sql).toContain('"available"=?');
+    expect(statements[6].sql).toContain("SET \"state\"='CREDITED'");
+    expect(statements[8].sql).toContain('Gate2OperationAudit');
+    expect(statements[9].sql).toContain('EventOutbox');
+  });
+
+  it('rejects a deposit atomically and publishes a replay-safe outbox event', async () => {
+    const deposit = {
+      id: 'deposit-reject-1', userId: 'user-1', asset: 'USDT', amount: '2.50',
+      confirmations: 1, requiredConfirmations: 6, state: 'CONFIRMING', creditPostingId: null,
+    };
+    const bridge = createBridge({
+      select: jest.fn().mockImplementation(async (sql: string) => sql.includes('Gate2Deposit') ? { results: [deposit] } : { results: [] }),
+      batch: jest.fn().mockResolvedValue({ results: [
+        { success: true, meta: { changes: 1 } },
+        { success: true, meta: { changes: 0 } },
+        { success: true, meta: { changes: 1 } },
+        { success: true, meta: { changes: 1 } },
+        { success: true, meta: { changes: 1 } },
+      ] }),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+
+    await expect(gateway.rejectDepositAtomic('deposit-reject-1', 'invalid proof', 'admin-1', 'reject-key-1'))
+      .resolves.toMatchObject({ id: 'deposit-reject-1' });
+
+    const statements = (bridge.batch as jest.Mock).mock.calls[0][0] as D1BridgeBatchStatement[];
+    expect(statements).toHaveLength(5);
+    expect(statements[0].sql).toContain("SET \"state\"='REJECTED'");
+    expect(statements[2].sql).toContain('Gate2OperationAudit');
+    expect(statements[4].sql).toContain('EventOutbox');
+    expect(statements[4].params).toContain('event:deposit:reject:deposit-reject-1');
+  });
+
+  it('accepts only one concurrent withdrawal settlement and rejects a lost guarded transition', async () => {
+    const withdrawal = {
+      id: 'withdrawal-concurrent-1', requestKey: 'withdrawal-concurrent-1', userId: 'user-1',
+      asset: 'USDT', amount: '3.00', reservedAmount: '3.00', state: 'APPROVED',
+    };
+    let batches = 0;
+    const bridge = createBridge({
+      select: jest.fn().mockImplementation(async (sql: string) => {
+        if (sql.includes('Gate2Withdrawal')) return { results: [withdrawal] };
+        if (sql.includes('LedgerAccount')) return { results: [account] };
+        return { results: [] };
+      }),
+      batch: jest.fn().mockImplementation(async (statements: D1BridgeBatchStatement[]) => {
+        batches += 1;
+        const won = batches === 1;
+        return { results: statements.map((_, index) => ({
+          success: true,
+          meta: { changes: won && [1, 3, 6].includes(index) ? 1 : 0 },
+        })) };
+      }),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+
+    const results = await Promise.allSettled([
+      gateway.settleWithdrawalAtomic('withdrawal-concurrent-1', 'tx-receipt-1'),
+      gateway.settleWithdrawalAtomic('withdrawal-concurrent-1', 'tx-receipt-2'),
+    ]);
+
+    expect(results.filter((result) => result.status === 'fulfilled')).toHaveLength(1);
+    expect(results.filter((result) => result.status === 'rejected')).toHaveLength(1);
+    expect(bridge.batch).toHaveBeenCalledTimes(2);
+  });
+
+  it('fails closed when a guarded settlement statement reports no account change', async () => {
+    const withdrawal = {
+      id: 'withdrawal-partial-1', requestKey: 'withdrawal-partial-1', userId: 'user-1',
+      asset: 'USDT', amount: '3.00', reservedAmount: '3.00', state: 'APPROVED',
+    };
+    const bridge = createBridge({
+      select: jest.fn().mockImplementation(async (sql: string) => {
+        if (sql.includes('Gate2Withdrawal')) return { results: [withdrawal] };
+        if (sql.includes('LedgerAccount')) return { results: [{ ...account, locked: '1.00' }] };
+        return { results: [] };
+      }),
+      batch: jest.fn().mockImplementation(async (statements: D1BridgeBatchStatement[]) => ({
+        results: statements.map(() => ({ success: true, meta: { changes: 0 } })),
+      })),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+
+    await expect(gateway.settleWithdrawalAtomic('withdrawal-partial-1', 'tx-receipt-fail'))
+      .rejects.toThrow('D1 withdrawal settlement account transition');
+    expect(bridge.batch).toHaveBeenCalledTimes(1);
   });
 });

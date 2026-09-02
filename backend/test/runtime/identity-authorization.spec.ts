@@ -3,6 +3,7 @@ import { ExecutionContext, ForbiddenException, ServiceUnavailableException, Unau
 import { Reflector } from '@nestjs/core';
 import { Role } from '@prisma/client';
 import { AuthController } from '../../src/auth/auth.controller';
+import { KycController } from '../../src/kyc/kyc.controller';
 import { KycSubmissionDto, SignupDto } from '../../src/auth/auth.dto';
 import { AUTH_RATE_LIMIT_OPERATION } from '../../src/auth/auth-rate-limit.decorator';
 import { AuthRateLimitExceededException, AuthRateLimitGuard } from '../../src/auth/auth-rate-limit.guard';
@@ -140,14 +141,10 @@ describe('B1 identity and authorization foundation', () => {
   });
 
   it('derives KYC ownership from the authenticated request instead of the body', async () => {
-    const create = jest.fn().mockResolvedValue({ id: 'kyc-1' });
-    const controller = new AuthController(
-      {} as never,
-      { kYC: { create } } as never,
-    );
+    const submitKyc = jest.fn().mockResolvedValue({ id: 'kyc-1' });
+    const controller = new KycController({ submitKyc } as never);
 
     await controller.submitKyc(
-      { user: { userId: 'authenticated-user', email: 'u@example.test', role: Role.USER } },
       {
         firstName: 'Ada',
         lastName: 'Lovelace',
@@ -156,12 +153,13 @@ describe('B1 identity and authorization foundation', () => {
         documentType: 'passport',
         documentUrl: 'https://files.example.test/document.png',
       },
+      { user: { userId: 'authenticated-user', email: 'u@example.test', role: Role.USER } },
     );
 
-    expect(create).toHaveBeenCalledWith(expect.objectContaining({
-      data: expect.objectContaining({ userId: 'authenticated-user' }),
+    expect(submitKyc).toHaveBeenCalledWith('authenticated-user', expect.objectContaining({
+      firstName: 'Ada', lastName: 'Lovelace',
     }));
-    expect(create.mock.calls[0][0].data).not.toHaveProperty('clientUserId');
+    expect(submitKyc.mock.calls[0][1]).not.toHaveProperty('clientUserId');
   });
 
   it('rejects client-supplied identity and signup role injection at the validation boundary', async () => {

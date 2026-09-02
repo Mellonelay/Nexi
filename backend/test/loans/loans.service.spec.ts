@@ -36,4 +36,32 @@ describe('LoanService', () => {
     expect(prisma.loanApplication.updateMany).not.toHaveBeenCalled();
   });
 
+  it('fails closed for financial loan approval when D1 is unavailable', async () => {
+    const prisma: any = { $transaction: jest.fn() };
+    const service = new LoanService(prisma, {} as any);
+    await expect(service.approveLoan('loan-1', 'key-1')).rejects.toThrow('D1 financial authority is unavailable');
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('fails closed for financial loan repayment when D1 is unavailable', async () => {
+    const prisma: any = { $transaction: jest.fn() };
+    const service = new LoanService(prisma, {} as any);
+    await expect(service.repay('user-1', 'loan-1', '1', 'key-1')).rejects.toThrow('D1 financial authority is unavailable');
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('fails closed for financial loan rejection when D1 is unavailable', async () => {
+    const prisma: any = { $transaction: jest.fn() };
+    const service = new LoanService(prisma, {} as any);
+    await expect(service.rejectLoan('loan-1', 'key-1')).rejects.toThrow('D1 financial authority is unavailable');
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('requires idempotency for D1 loan rejection', async () => {
+    const d1: any = { isEnabled: jest.fn(() => true), rejectLoan: jest.fn() };
+    const service = new LoanService({} as any, {} as any, undefined, d1);
+    await expect(service.rejectLoan('loan-1', '')).rejects.toThrow('Idempotency key is required');
+    expect(d1.rejectLoan).not.toHaveBeenCalled();
+  });
+
 });

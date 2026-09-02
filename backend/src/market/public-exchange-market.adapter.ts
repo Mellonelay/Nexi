@@ -128,12 +128,18 @@ export class GateMarketAdapter extends PublicExchangeMarketAdapter {
     if (!supported.has(interval)) return [];
     const mapping = getProviderMapping(symbol, this.provider);
     if (!mapping?.klineSupported) return [];
-    const response = await this.requestJson<{ data?: { list?: Array<{ o?: string; c?: string; h?: string; l?: string; t?: number }> } }>(
+    const isStock = CANONICAL_MARKET_CATALOG.find((item) => item.symbol === symbol)?.category === 'stock';
+    const response = await this.requestJson<
+      | Array<[string, string, string, string, string, string]>
+      | { data?: { list?: Array<{ o?: string; c?: string; h?: string; l?: string; t?: number }> } }
+    >(
       this.baseUrl,
-      `/api/v4/tradfi/symbols/${encodeURIComponent(mapping.instrument)}/klines`,
-      { kline_type: interval, limit: String(Math.min(500, Math.max(40, limit))) },
+      isStock ? '/api/v4/stock/candlesticks' : `/api/v4/tradfi/symbols/${encodeURIComponent(mapping.instrument)}/klines`,
+      isStock ? { currency_pair: mapping.instrument, interval, limit: String(Math.min(500, Math.max(40, limit))) } : { kline_type: interval, limit: String(Math.min(500, Math.max(40, limit))) },
     );
-    const rows = response.data?.list ?? [];
+    const rows = isStock
+      ? (Array.isArray(response) ? response : []).map(([t, o, h, l, c, volume]) => ({ t: Number(t), o, h, l, c, volume }))
+      : (response as { data?: { list?: Array<{ o?: string; c?: string; h?: string; l?: string; t?: number }> } }).data?.list ?? [];
     const durationMs = this.intervalMs(interval);
     return rows.flatMap((row) => {
       const openTimeMs = Number(row.t) * 1000;
@@ -142,8 +148,8 @@ export class GateMarketAdapter extends PublicExchangeMarketAdapter {
       const openTime = new Date(openTimeMs);
       return [{
         symbol, interval, openTime, closeTime: new Date(openTimeMs + durationMs - 1),
-        open: String(values[0]), high: String(values[1]), low: String(values[2]), close: String(values[3]), volume: null,
-        provider: this.provider, source: 'gate:tradfi-reference:kline', observedAt: new Date(openTimeMs + durationMs - 1),
+        open: String(values[0]), high: String(values[1]), low: String(values[2]), close: String(values[3]), volume: 'volume' in row && row.volume != null ? String(row.volume) : null,
+        provider: this.provider, source: isStock ? 'gate:rest:stock-candlesticks' : 'gate:tradfi-reference:kline', observedAt: new Date(openTimeMs + durationMs - 1),
       } satisfies MarketKlineInput];
     });
   }

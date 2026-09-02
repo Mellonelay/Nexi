@@ -73,6 +73,11 @@ export class WalletVerifyDto {
   @IsString()
   @Matches(/^0x[0-9a-fA-F]+$/)
   signature!: string;
+
+  @IsOptional()
+  @IsString()
+  @Length(1, 32)
+  referralCode?: string;
 }
 
 export class UpdateProfileDto {

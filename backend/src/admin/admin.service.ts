@@ -64,6 +64,13 @@ type AdminPlanMutationContext = {
   idempotencyKey: string;
 };
 
+type AdminWithdrawalDecision = (
+  requestId: string,
+  reason: string,
+  adminId: string,
+  idempotencyKey: string,
+) => Promise<unknown>;
+
 @Injectable()
 export class AdminService {
   private readonly logger = new Logger(AdminService.name);
@@ -1728,10 +1735,17 @@ export class AdminService {
     decision: "approved" | "rejected",
     adminId: string,
     reason: string,
+    idempotencyKey: string,
   ) {
-    return decision === "approved"
-      ? this.financialOperations.approveWithdrawal(id, reason, adminId)
-      : this.financialOperations.rejectWithdrawal(id, reason, adminId);
+    if (!idempotencyKey?.trim()) {
+      throw new BadRequestException("Withdrawal idempotency key is required");
+    }
+    const operation = (
+      decision === "approved"
+        ? this.financialOperations.approveWithdrawal
+        : this.financialOperations.rejectWithdrawal
+    ).bind(this.financialOperations) as AdminWithdrawalDecision;
+    return operation(id, reason, adminId, idempotencyKey);
   }
 
   async requestAdminWithdrawalReview(
