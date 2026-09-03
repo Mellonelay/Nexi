@@ -2,7 +2,7 @@
 
 Date: 2026-09-03
 Repository: `Mellonelay/Dexi_Style`
-Revision: `e7ffbc1` at receipt start; validated source repairs are committed through `e7ffbc1`
+Revision: `733d000` at receipt update; validated source repairs are committed through `733d000`
 
 ## Gate
 
@@ -12,7 +12,7 @@ The source gate is not closed. Open critical rows remain in API/OpenAPI parity, 
 
 ## Lane status
 
-- A — API / Contract / Identity: `PARTIAL`; normalized scan found 10 source routes absent from the current OpenAPI artifact and 2 stale artifact routes.
+- A — API / Contract / Identity: `SOURCE_CLOSED_FOR_ROUTE_PARITY`; normalized scan now represents all 214 active controller operations; the no-argument root `GET /` is valid.
 - B — Market / Provider / Kline / Realtime: `PARTIAL`; Kline source path is repaired and tested, but 53/53 live provider truth, freshness, fallback, replay, and runtime evidence remain open.
 - C — Financial Authority: `OPEN`; D1-disabled Prisma fallback branches and duplicate Prisma/D1 authority require domain-by-domain closure.
 - D — Public / Admin Synchronization: `PARTIAL`; communications and Admin fallback repairs are source-tested, but complete opposite-surface read-back remains open.
