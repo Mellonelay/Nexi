@@ -1,5 +1,23 @@
 import type { Candle, MarketDataStatus } from './market-data';
 
+function normalizeStreamCandle(value: {
+  time?: unknown; open?: unknown; high?: unknown; low?: unknown; close?: unknown; volume?: unknown;
+}): Candle | null {
+  const number = (candidate: unknown) => {
+    const parsed = typeof candidate === 'number' ? candidate : Number(candidate);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+  const time = number(value.time);
+  const open = number(value.open);
+  const high = number(value.high);
+  const low = number(value.low);
+  const close = number(value.close);
+  const volume = value.volume === undefined ? undefined : number(value.volume);
+  if (time === null || open === null || high === null || low === null || close === null || (value.volume !== undefined && volume === null)) return null;
+  if (high < Math.max(open, close) || low > Math.min(open, close) || high < low) return null;
+  return { time, open, high, low, close, ...(volume === undefined ? {} : { volume }) };
+}
+
 export type StreamState = MarketDataStatus | 'CONNECTING' | 'RECONNECTING';
 
 export interface MarketTickEvent {
@@ -8,6 +26,14 @@ export interface MarketTickEvent {
   timestamp: number;
   sequence?: number;
   volume?: number;
+}
+
+export interface MarketKlineEvent {
+  symbol: string;
+  interval: string;
+  candle: Candle;
+  observedAt: number;
+  sequence?: number;
 }
 
 export interface MarketStreamSnapshot {
@@ -53,6 +79,46 @@ export function normalizeMarketTick(value: unknown, expectedSymbol: string): Mar
     timestamp,
     sequence,
     volume: Number.isFinite(volume) && (volume ?? 0) >= 0 ? volume : undefined,
+  };
+}
+
+export function normalizeMarketKline(value: unknown, expectedSymbol: string, expectedInterval: string): MarketKlineEvent | null {
+  if (!value || typeof value !== 'object') return null;
+  const row = value as Record<string, unknown>;
+  const symbol = String(row.symbol ?? '').replaceAll('/', '').toUpperCase();
+  const interval = String(row.interval ?? '');
+  if (symbol !== expectedSymbol.replaceAll('/', '').toUpperCase() || interval !== expectedInterval) return null;
+  const openTime = Number(row.openTime ?? row.time);
+  // The backend market_kline contract uses epoch milliseconds for openTime.
+  const numericOpenTime = Number.isFinite(openTime) ? openTime : Number.NaN;
+  const rawObservedAt = row.observedAt ?? row.receivedAt ?? row.closeTime ?? numericOpenTime;
+  const observedAt = typeof rawObservedAt === 'string' ? Date.parse(rawObservedAt) : Number(rawObservedAt);
+  const rawVolume = row.volume;
+  const candle = normalizeStreamCandle({
+    time: Math.floor(numericOpenTime / 1000),
+    open: row.open,
+    high: row.high,
+    low: row.low,
+    close: row.close,
+    ...(rawVolume === undefined || rawVolume === null ? {} : { volume: rawVolume }),
+  });
+  const sequence = row.sequence === undefined ? undefined : Number(row.sequence);
+  if (!candle || !Number.isFinite(observedAt) || observedAt <= 0 || (sequence !== undefined && !Number.isFinite(sequence))) return null;
+  return { symbol, interval, candle, observedAt, sequence };
+}
+
+export function applyMarketKline(snapshot: MarketStreamSnapshot, event: MarketKlineEvent, maxCandles = 500): MarketStreamSnapshot {
+  const candles = [...snapshot.candles];
+  const index = candles.findIndex((candle) => candle.time === event.candle.time);
+  if (index >= 0) candles[index] = event.candle;
+  else candles.push(event.candle);
+  candles.sort((left, right) => left.time - right.time);
+  return {
+    status: 'LIVE',
+    lastSequence: snapshot.lastSequence,
+    lastTimestamp: Math.max(snapshot.lastTimestamp ?? 0, event.observedAt),
+    price: event.candle.close,
+    candles: candles.slice(-Math.max(1, maxCandles)),
   };
 }
 

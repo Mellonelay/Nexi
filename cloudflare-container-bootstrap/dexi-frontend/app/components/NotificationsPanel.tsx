@@ -32,6 +32,7 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(false)
   const [failed, setFailed] = useState(false)
+  const [retryNonce, setRetryNonce] = useState(0)
   const unreadCount = notifications.filter(n => !n.read).length
 
   useEffect(() => {
@@ -55,7 +56,7 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
       .catch(() => { if (active) { setNotifications([]); setFailed(true) } })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [open])
+  }, [open, retryNonce])
 
   const markRead = async (id: string) => {
     try {
@@ -80,6 +81,9 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
 
           {/* Panel — slides in from right */}
           <motion.aside
+            role="dialog"
+            aria-modal="true"
+            aria-label="Notifications"
             className="fixed right-0 top-0 bottom-0 z-[71] w-[320px] max-w-[90vw] nexi-drawer flex flex-col"
             initial={shouldReduceMotion ? { opacity: 0 } : { x: '100%' }}
             animate={{ x: 0, opacity: 1 }}
@@ -109,7 +113,7 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
             {/* Notification list */}
             <div className="flex-1 overflow-y-auto py-2">
               {loading && <p className="px-4 py-6 text-sm text-[#8C8299]">Loading notifications…</p>}
-              {!loading && failed && <p className="px-4 py-6 text-sm text-[#8C8299]">Notifications unavailable.</p>}
+              {!loading && failed && <div className="px-4 py-6 text-sm text-[#8C8299]"><p>Notifications unavailable.</p><button type="button" onClick={() => setRetryNonce((value) => value + 1)} className="mt-3 min-h-11 font-semibold text-[#A995FF] underline-offset-4 hover:underline">Retry</button></div>}
               {!loading && !failed && notifications.length === 0 && <p className="px-4 py-6 text-sm text-[#8C8299]">No notifications available.</p>}
               {!loading && !failed && notifications.map(notif => {
                 const cfg = TYPE_CONFIG[notif.type]

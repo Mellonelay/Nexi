@@ -5,7 +5,7 @@ import { Redis } from 'ioredis';
 import { RedisService } from '../redis/redis.service';
 import { isCorsOriginAllowed } from '../runtime/runtime.config';
 import { MarketAuthorityService, MarketQuoteEvent } from './market-authority.service';
-import { MARKET_QUOTES_CHANNEL, MARKET_REFERENCE_CHANNEL, MarketReferenceEvent } from './market.types';
+import { MARKET_KLINES_CHANNEL, MARKET_QUOTES_CHANNEL, MARKET_REFERENCE_CHANNEL, MarketKlineRealtimeEvent, MarketReferenceEvent } from './market.types';
 import { MARKET_REALTIME_CONTRACT } from './market-realtime.contract';
 
 @Injectable()
@@ -22,6 +22,7 @@ export class MarketGateway implements OnGatewayConnection, OnGatewayDisconnect, 
   private readonly logger = new Logger(MarketGateway.name);
   private subscriber?: Redis;
   private readonly lastSequenceBySymbol = new Map<string, bigint>();
+  private readonly lastKlineSequenceByKey = new Map<string, number>();
 
   constructor(
     private readonly redisService: RedisService,
@@ -31,7 +32,7 @@ export class MarketGateway implements OnGatewayConnection, OnGatewayDisconnect, 
   async onModuleInit(): Promise<void> {
     try {
       this.subscriber = await this.redisService.createSubscriber();
-      await this.subscriber.subscribe(MARKET_QUOTES_CHANNEL, MARKET_REFERENCE_CHANNEL);
+      await this.subscriber.subscribe(MARKET_QUOTES_CHANNEL, MARKET_KLINES_CHANNEL, MARKET_REFERENCE_CHANNEL);
     } catch {
       this.subscriber = undefined;
       this.logger.warn('Market Redis subscription deferred; readiness remains false until Redis is available.');
@@ -41,6 +42,8 @@ export class MarketGateway implements OnGatewayConnection, OnGatewayDisconnect, 
       try {
         if (channel === MARKET_QUOTES_CHANNEL) {
           this.broadcastMarketQuote(JSON.parse(message) as MarketQuoteEvent);
+        } else if (channel === MARKET_KLINES_CHANNEL) {
+          this.broadcastMarketKline(JSON.parse(message) as MarketKlineRealtimeEvent);
         } else if (channel === MARKET_REFERENCE_CHANNEL) {
           this.broadcastMarketReference(JSON.parse(message) as MarketReferenceEvent);
         }
@@ -56,6 +59,7 @@ export class MarketGateway implements OnGatewayConnection, OnGatewayDisconnect, 
       this.subscriber = undefined;
     }
     this.lastSequenceBySymbol.clear();
+    this.lastKlineSequenceByKey.clear();
   }
 
   handleConnection(client: Socket): void {
@@ -120,6 +124,17 @@ export class MarketGateway implements OnGatewayConnection, OnGatewayDisconnect, 
   private broadcastMarketReference(event: MarketReferenceEvent): void {
     if (!this.redisService.isAvailable() || !this.server) return;
     this.emitMarketEvent(event.event, event);
+  }
+
+  private broadcastMarketKline(event: MarketKlineRealtimeEvent): void {
+    const key = `${event.symbol}:${event.interval}`;
+    const sequence = Number(event.sequence);
+    if (!Number.isFinite(sequence)) return;
+    const previous = this.lastKlineSequenceByKey.get(key);
+    if (previous !== undefined && sequence <= previous) return;
+    this.lastKlineSequenceByKey.set(key, sequence);
+    if (!this.redisService.isAvailable() || !this.server) return;
+    this.emitMarketEvent('market_kline', event);
   }
 
   /**

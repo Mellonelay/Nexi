@@ -5,7 +5,7 @@ import { MarketProviderEvent, ProviderDepthEvent, ProviderTradeEvent } from './m
 import { MarketProviderRouterService } from './market-provider-router.service';
 import { RedisService } from '../redis/redis.service';
 import { MarketReferencePersistenceService } from './market-reference-persistence.service';
-import { MARKET_REFERENCE_CHANNEL } from './market.types';
+import { MARKET_KLINES_CHANNEL, MARKET_REFERENCE_CHANNEL, MarketKlineRealtimeEvent } from './market.types';
 
 @Injectable()
 export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
@@ -99,12 +99,13 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
             observedAt: new Date(event.eventTime),
           });
         }
-      } else if (event.kind === 'kline' && event.closed) {
-        await this.marketKlines.persist({
+      } else if (event.kind === 'kline') {
+        const persisted = await this.marketKlines.persist({
           symbol: event.symbol, interval: event.interval, openTime: new Date(event.openTime), closeTime: new Date(event.closeTime),
            open: event.open, high: event.high, low: event.low, close: event.close, volume: event.volume,
            provider: event.provider, source: event.source, observedAt: new Date(event.eventTime),
         });
+        await this.publishMarketKlineEvent(persisted);
       } else if (event.kind === 'depth' || event.kind === 'trade') {
         const result = event.kind === 'depth'
           ? await this.referencePersistence.persistDepth(event)
@@ -125,5 +126,21 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
       ? { version: 'v1' as const, event: 'market.reference.depth' as const, ...event }
       : { version: 'v1' as const, event: 'market.reference.trade' as const, ...event };
     await this.redis.publish(MARKET_REFERENCE_CHANNEL, JSON.stringify(payload));
+  }
+
+  private async publishMarketKlineEvent(candle: {
+    symbol: string; interval: string; time: number; closeTime: string | null;
+    open: string; high: string; low: string; close: string; volume: string | null;
+    provider: string; source: string; observedAt: string; receivedAt: string;
+  }): Promise<void> {
+    if (!this.redis.isAvailable()) return;
+    const payload: MarketKlineRealtimeEvent = {
+      version: 'v1', event: 'market_kline', symbol: candle.symbol, interval: candle.interval,
+      openTime: candle.time * 1000, closeTime: candle.closeTime ? Date.parse(candle.closeTime) : null,
+      open: candle.open, high: candle.high, low: candle.low, close: candle.close, volume: candle.volume,
+      provider: candle.provider, source: candle.source, observedAt: candle.observedAt,
+      receivedAt: candle.receivedAt, sequence: Date.parse(candle.observedAt),
+    };
+    await this.redis.publish(MARKET_KLINES_CHANNEL, JSON.stringify(payload));
   }
 }
