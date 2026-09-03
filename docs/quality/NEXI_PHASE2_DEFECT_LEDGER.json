@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-09-03",
+  "repository": "Mellonelay/Dexi_Style",
+  "authority": "current Work source",
+  "gate": "FAIL",
+  "rows": [
+    {"id":"P2-A-001","domain":"api-identity","classification":"OPENAPI_DRIFT","status":"OPEN","evidence":"normalized controller/OpenAPI scan","nextAction":"reconcile active auth routes and security metadata"},
+    {"id":"P2-A-002","domain":"leveraged-contracts","classification":"OPENAPI_DRIFT","status":"OPEN","evidence":"active /lever controller routes absent from artifact","nextAction":"reconcile route, DTO, auth, and OpenAPI operations"},
+    {"id":"P2-A-003","domain":"api-legacy","classification":"LEGACY_PATH","status":"OPEN","evidence":"/auth/kyc exists in artifact but not active AuthController","nextAction":"consumer-impact check before removal/replacement"},
+    {"id":"P2-B-001","domain":"market-provider","classification":"PROVIDER_GAP","status":"OPEN","evidence":"live 53/53 capability/freshness/fallback proof absent","nextAction":"build provider truth matrix and tests"},
+    {"id":"P2-B-002","domain":"realtime-recovery","classification":"RECOVERY_GAP","status":"OPEN","evidence":"exact missed-event replay deferred by current contract","nextAction":"prove sequence recovery or REST convergence"},
+    {"id":"P2-C-001","domain":"financial-authority","classification":"FINANCIAL_AUTHORITY_GAP","status":"OPEN","evidence":"D1-disabled fallback branches in financial services","nextAction":"serial domain-by-domain fail-closed closure"},
+    {"id":"P2-C-002","domain":"financial-authority","classification":"SHADOW_AUTHORITY","status":"OPEN","evidence":"Prisma service initializes beside D1 authority","nextAction":"prove production authority boundary"},
+    {"id":"P2-D-001","domain":"public-support","classification":"PROVEN_UNCHANGED","status":"CLOSED_SOURCE","evidence":"6/6 communications and market contract tests","nextAction":null},
+    {"id":"P2-E-001","domain":"async","classification":"ASYNC_GAP","status":"OPEN","evidence":"retry/redelivery/deduplication end-to-end proof incomplete","nextAction":"test actual consumers and retry contracts"},
+    {"id":"P2-F-001","domain":"graphify","classification":"UNKNOWN","status":"OPEN","evidence":"MCP targets archived VM graph; local artifact stale","nextAction":"rebind current Work graph or use verified fallback"},
+    {"id":"P2-F-002","domain":"fallow","classification":"UNKNOWN","status":"OPEN","evidence":"current Work Fallow invocation unavailable","nextAction":"run against canonical Work source when callable"}
+  ]
+}

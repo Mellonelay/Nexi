@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "controller": "mellonelay-engineering-skill-router",
+  "repository": "/workspace/scratch/bb7c11818f19/Dexi_Style",
+  "revision": "55598bd",
+  "parallelPolicy": "read-heavy lanes parallel; shared authority mutations serial",
+  "lanes": {
+    "A": {"state":"READY_NEXT","mutation":"SERIAL_ONLY","owner":"parent"},
+    "B": {"state":"PARTIAL","mutation":"disjoint market files only","owner":"market lane"},
+    "C": {"state":"BLOCKED_BY_SHARED_AUTHORITY","mutation":"SERIAL_ONLY","owner":"parent"},
+    "D": {"state":"PARTIAL","mutation":"disjoint consumer files only","owner":"public-admin lane"},
+    "E": {"state":"READY_READ_ONLY","mutation":"shared outbox/realtime serial","owner":"async lane"},
+    "F": {"state":"FALLBACK","mutation":"no graph writes","owner":"evidence lane"}
+  },
+  "forbiddenConcurrentMutations": ["D1","ledger","DTO","OpenAPI","auth/session","EventOutbox","shared realtime schema","Wrangler config","git"]
+}
