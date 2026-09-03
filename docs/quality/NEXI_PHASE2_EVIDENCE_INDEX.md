@@ -11,6 +11,7 @@
 | Backend tests | command receipt | 68 suites / 260 tests passed; 5 skipped |
 | Frontend contract tests | command receipt | 6/6 passed |
 | Wrangler types | command receipt | passed; `@types/node` advisory |
+| OpenAPI/controller parity | normalized current-source scan | 214 active operations represented; root `GET /` is valid no-argument controller route |
 | Graphify local artifact | `graphify-out/graph.json` | stale; 9,324 nodes / 20,793 links / 1,090 dangling |
 | Graphify MCP | callable connector | unavailable: archived VM graph path |
 | Fallow | historical VM receipt | not current Work-source proof |

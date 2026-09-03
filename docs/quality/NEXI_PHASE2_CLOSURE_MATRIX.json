@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "gate": "CODE_TO_CODE_CLOSED: FAIL",
   "lanes": {
-    "A": "PARTIAL",
+    "A": "SOURCE_CLOSED_FOR_ROUTE_PARITY",
     "B": "PARTIAL",
     "C": "OPEN",
     "D": "PARTIAL",
