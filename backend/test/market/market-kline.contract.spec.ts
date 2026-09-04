@@ -1,4 +1,5 @@
 import { normalizeMarketKline } from '../../src/market/market-kline.contract';
+import { MARKET_REALTIME_CONTRACT } from '../../src/market/market-realtime.contract';
 
 const base = {
   symbol: 'BTC/USDT',
@@ -15,6 +16,13 @@ const base = {
 };
 
 describe('market kline contract', () => {
+  it('declares the canonical realtime event vocabulary', () => {
+    expect(MARKET_REALTIME_CONTRACT).toMatchObject({
+      snapshotEvent: 'market_snapshot', quoteEvent: 'market_quote', tickEvent: 'market_tick',
+      klineEvent: 'market_kline', depthEvent: 'market.reference.depth', tradeEvent: 'market.reference.trade',
+    });
+  });
+
   it('normalizes symbols and preserves decimal OHLCV values', () => {
     const result = normalizeMarketKline(base);
     expect(result.symbol).toBe('BTCUSDT');

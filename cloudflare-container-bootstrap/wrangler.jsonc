@@ -5,15 +5,21 @@
   "compatibility_date": "2026-08-19",
   "compatibility_flags": ["nodejs_compat"],
   "account_id": "95f40eab0f2ba20aff96f8979e45ab71",
+  "routes": [
+    {
+      "pattern": "api.nexitrading.app",
+      "custom_domain": true,
+    },
+  ],
   "observability": {
     "enabled": true,
   },
   "vars": {
     "NODE_ENV": "production",
     "PORT": "3000",
-    "CORS_ORIGINS": "http://127.0.0.1:3000",
-    "WALLET_AUTH_DOMAIN": "127.0.0.1:3000",
-    "WALLET_AUTH_URI": "http://127.0.0.1:3000",
+    "CORS_ORIGINS": "https://app.nexitrading.app,https://admin.nexitrading.app",
+    "WALLET_AUTH_DOMAIN": "app.nexitrading.app",
+    "WALLET_AUTH_URI": "https://app.nexitrading.app",
     "WALLET_AUTH_SUPPORTED_CHAIN_IDS": "1",
     "DATABASE_POOL_MAX": "4",
     "D1_BRIDGE_ENABLED": "true",

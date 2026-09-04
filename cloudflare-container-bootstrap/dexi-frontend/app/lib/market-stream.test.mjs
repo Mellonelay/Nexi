@@ -2,7 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   applyMarketTick,
+  applyMarketKline,
   EMPTY_STREAM_SNAPSHOT,
+  normalizeMarketKline,
   normalizeMarketTick,
   streamStatusAt,
   timeframeToSeconds,
@@ -32,4 +34,17 @@ test('marks quiet live streams stale and parses intervals', () => {
   assert.equal(streamStatusAt(snapshot, 20_000, 15_000), 'STALE');
   assert.equal(timeframeToSeconds('4h'), 14_400);
   assert.equal(timeframeToSeconds('1M'), 2_592_000);
+});
+
+test('normalizes and applies a backend Kline event to the selected chart', () => {
+  const kline = normalizeMarketKline({
+    symbol: 'BTC/USDT', interval: '1m', openTime: 60_000, closeTime: 120_000,
+    open: '10', high: '12', low: '9', close: '11', volume: '3',
+    observedAt: '1970-01-01T00:02:00.000Z', sequence: 2,
+  }, 'BTCUSDT', '1m');
+  assert.ok(kline);
+  const updated = applyMarketKline(EMPTY_STREAM_SNAPSHOT, kline);
+  assert.deepEqual(updated.candles, [{ time: 60, open: 10, high: 12, low: 9, close: 11, volume: 3 }]);
+  assert.equal(updated.price, 11);
+  assert.equal(normalizeMarketKline({ symbol: 'ETHUSDT', interval: '1m', openTime: 60_000, open: 1, high: 1, low: 1, close: 1 }, 'BTCUSDT', '1m'), null);
 });

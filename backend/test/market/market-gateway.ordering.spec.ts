@@ -51,4 +51,24 @@ describe('MarketGateway ordering and deduplication', () => {
 
     expect(() => (gateway as any).broadcastMarketReference({ event: 'market_depth', sequence: '1' })).not.toThrow();
   });
+
+  it('publishes normalized Kline events and ignores older updates for the same pair and interval', () => {
+    const emit = jest.fn();
+    const gateway = new MarketGateway(
+      { isAvailable: jest.fn().mockReturnValue(true) } as any,
+      { getPrices: jest.fn() } as any,
+    );
+    (gateway as any).server = { emit };
+    const event = (sequence: number) => ({
+      version: 'v1', event: 'market_kline', symbol: 'BTCUSDT', interval: '1m', sequence,
+      openTime: 1_000, closeTime: 60_999, open: '10', high: '12', low: '9', close: '11', volume: null,
+      provider: 'fixture', source: 'websocket:kline', observedAt: new Date(sequence * 1_000).toISOString(), receivedAt: new Date(sequence * 1_000).toISOString(),
+    });
+
+    (gateway as any).broadcastMarketKline(event(2));
+    (gateway as any).broadcastMarketKline(event(1));
+
+    expect(emit).toHaveBeenCalledTimes(1);
+    expect(emit).toHaveBeenCalledWith('market_kline', expect.objectContaining({ sequence: 2 }));
+  });
 });

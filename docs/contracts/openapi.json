@@ -608,6 +608,49 @@
         "tags": [
           "Authentication"
         ]
+      },
+      "patch": {
+        "operationId": "AuthController_updateMe",
+        "parameters": [],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/UpdateProfileDto"}}}},
+        "responses": {"200": {"description": ""}},
+        "tags": ["Authentication"],
+        "security": [{"bearer": []}]
+      }
+    },
+    "/auth/preferences": {
+      "get": {
+        "operationId": "AuthController_preferences",
+        "parameters": [],
+        "responses": {"200": {"description": ""}},
+        "tags": ["Authentication"],
+        "security": [{"bearer": []}]
+      },
+      "patch": {
+        "operationId": "AuthController_updatePreferences",
+        "parameters": [],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/UpdatePreferencesDto"}}}},
+        "responses": {"200": {"description": ""}},
+        "tags": ["Authentication"],
+        "security": [{"bearer": []}]
+      }
+    },
+    "/auth/sessions": {
+      "get": {
+        "operationId": "AuthController_sessions",
+        "parameters": [],
+        "responses": {"200": {"description": ""}},
+        "tags": ["Authentication"],
+        "security": [{"bearer": []}]
+      }
+    },
+    "/auth/sessions/{sessionId}/revoke": {
+      "post": {
+        "operationId": "AuthController_revokeSession",
+        "parameters": [{"name": "sessionId", "required": true, "in": "path", "schema": {"type": "string"}}],
+        "responses": {"201": {"description": ""}},
+        "tags": ["Authentication"],
+        "security": [{"bearer": []}]
       }
     },
     "/auth/refresh": {
@@ -652,30 +695,6 @@
       "post": {
         "operationId": "AuthController_logoutAll",
         "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Authentication"
-        ]
-      }
-    },
-    "/auth/kyc": {
-      "post": {
-        "operationId": "AuthController_submitKyc",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/KycSubmissionDto"
-              }
-            }
-          }
-        },
         "responses": {
           "201": {
             "description": ""
@@ -4692,6 +4711,45 @@
             "bearer": []
           }
         ]
+      }
+    },
+    "/lever/deal": {
+      "post": {
+        "operationId": "ContractController_deal",
+        "parameters": [],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object"}}}},
+        "responses": {"201": {"description": ""}},
+        "tags": ["Leveraged Contracts"],
+        "security": [{"bearer": []}]
+      }
+    },
+    "/lever/setstop": {
+      "post": {
+        "operationId": "ContractController_setStop",
+        "parameters": [],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object"}}}},
+        "responses": {"201": {"description": ""}},
+        "tags": ["Leveraged Contracts"],
+        "security": [{"bearer": []}]
+      }
+    },
+    "/lever/close": {
+      "post": {
+        "operationId": "ContractController_close",
+        "parameters": [],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object"}}}},
+        "responses": {"201": {"description": ""}},
+        "tags": ["Leveraged Contracts"],
+        "security": [{"bearer": []}]
+      }
+    },
+    "/lever/my_trade": {
+      "get": {
+        "operationId": "ContractController_myTrade",
+        "parameters": [],
+        "responses": {"200": {"description": ""}},
+        "tags": ["Leveraged Contracts"],
+        "security": [{"bearer": []}]
       }
     }
   },

@@ -9,6 +9,9 @@ export const MARKET_REALTIME_CONTRACT = {
   snapshotEvent: 'market_snapshot',
   quoteEvent: 'market_quote',
   tickEvent: 'market_tick',
+  klineEvent: 'market_kline',
+  depthEvent: 'market.reference.depth',
+  tradeEvent: 'market.reference.trade',
   sequence: 'monotonic-per-symbol',
   recovery: 'snapshot-on-connect-exact-replay-deferred',
 } as const;

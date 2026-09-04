@@ -15,7 +15,9 @@ export function createConfiguredAdminProvider(
 ): AdminDataProvider {
   if (mode === "mock") return localProvider;
   return new NexiAdminApiProvider({
-    baseUrl: import.meta.env.VITE_ADMIN_API_BASE_URL ?? "http://127.0.0.1:3200",
+    baseUrl:
+      import.meta.env.VITE_ADMIN_API_BASE_URL ??
+      (import.meta.env.DEV ? "http://127.0.0.1:3200" : "https://api.nexitrading.app"),
     getToken: async () => sessionStorage.getItem("nexi.admin.access_token") ?? "",
   });
 }

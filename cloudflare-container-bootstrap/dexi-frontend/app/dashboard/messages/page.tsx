@@ -171,6 +171,7 @@ export default function MessagesPage() {
   const unreadCount = state === 'LIVE'
     ? threads.filter((thread) => threadState(thread) === 'UNREAD').length
     : null;
+  const conversationListClass = selected ? 'hidden lg:block' : 'block';
   return (
     <PageShell>
       <PageHeader
@@ -187,7 +188,7 @@ export default function MessagesPage() {
           <Metric label="Attachments" value="—" hint="Unavailable" />
         </section>
         <div className="grid gap-5 lg:grid-cols-[minmax(280px,0.72fr)_minmax(0,1.28fr)] lg:items-start">
-          <Panel>
+          <Panel className={conversationListClass}>
             <PanelHeading title="Conversations" action={<Inbox size={18} className="text-[#48C0CC]" />} />
             <div className="relative">
               <Search size={17} className="absolute left-3 top-3 text-[#8C8299]" />
@@ -209,6 +210,7 @@ export default function MessagesPage() {
           </Panel>
           <Panel className="min-h-[520px]">
             <PanelHeading title="Conversation detail" action={<CheckCheck size={18} className="text-[#8C8299]" />} />
+            {selected && <button type="button" onClick={() => setSelected(null)} className="mb-3 min-h-11 text-sm font-semibold text-[#A995FF] underline-offset-4 hover:underline lg:hidden">Back to conversations</button>}
              {!selected && <DataStatePanel state="UNAVAILABLE" title="Choose a conversation" message="Select a conversation to view its messages." />}
             {selected && (
               <div className="flex min-h-[430px] flex-col">

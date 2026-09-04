@@ -6,9 +6,11 @@ import { normalizeCandle } from "../lib/market-data";
 import { apiBaseUrl } from "../lib/api";
 import {
   applyMarketTick,
+  applyMarketKline,
   EMPTY_STREAM_SNAPSHOT,
   type MarketStreamSnapshot,
   normalizeMarketTick,
+  normalizeMarketKline,
   streamStatusAt,
   timeframeToSeconds,
 } from "../lib/market-stream";
@@ -152,6 +154,14 @@ export function useRealtimeMarket(symbol: string, interval = "1m") {
         }));
       };
 
+      const handleKline = (raw: unknown) => {
+        if (disposed) return;
+        const kline = normalizeMarketKline(raw, symbol, interval);
+        if (!kline) return;
+        if (worker) worker.postMessage({ type: "KLINE", kline });
+        else setSnapshot((current) => applyMarketKline(current, kline));
+      };
+
       socket.on("connect", () => {
         setSnapshot((current) => ({
           ...current,
@@ -175,6 +185,7 @@ export function useRealtimeMarket(symbol: string, interval = "1m") {
       );
       socket.on("market_tick", handleTick);
       socket.on("market_snapshot", handleSnapshot);
+      socket.on("market_kline", handleKline);
 
       staleTimer = setInterval(() => {
         setSnapshot((current) => ({

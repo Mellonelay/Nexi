@@ -24,6 +24,25 @@ self.onmessage = (event) => {
     return;
   }
 
+  if (event.data?.type === 'KLINE') {
+    const kline = event.data.kline;
+    if (!kline?.candle || !Number.isFinite(kline.observedAt)) return;
+    const candles = [...snapshot.candles];
+    const index = candles.findIndex((candle) => candle.time === kline.candle.time);
+    if (index >= 0) candles[index] = kline.candle;
+    else candles.push(kline.candle);
+    candles.sort((left, right) => left.time - right.time);
+    snapshot = {
+      status: 'LIVE',
+      lastSequence: snapshot.lastSequence,
+      lastTimestamp: Math.max(snapshot.lastTimestamp || 0, kline.observedAt),
+      price: kline.candle.close,
+      candles: candles.slice(-500),
+    };
+    self.postMessage(snapshot);
+    return;
+  }
+
   if (event.data?.type !== 'TICK') return;
   const tick = event.data.tick;
   if (tick.sequence !== undefined && snapshot.lastSequence !== null && tick.sequence <= snapshot.lastSequence) return;
