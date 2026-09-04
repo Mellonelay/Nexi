@@ -56,7 +56,7 @@ Public domains remain Dashboard/Quotes, Spot with isolated Margin, Options/Binar
 | Backend full regression | DONE_UNVERIFIED_ON_FINAL_SHA | Full suites passed on the later Work source; only focused 27-test authority set was rerun after the final six-file handoff change. |
 | Admin build | PROVEN_UNCHANGED | Admin build passed before final handoff; final six-file handoff did not modify Admin. |
 | Public build | DONE_UNVERIFIED_ON_FINAL_SHA | Historical/later Work builds passed; not rerun after the final merge/handoff SHA. |
-| Sentry | OPEN | Research/CLI/privacy groundwork exists; current end-to-end runtime telemetry acceptance is not complete. |
+| Sentry | SOURCE/CONFIG MERGED; RUNTIME ACCEPTANCE OPEN | Sentry bootstrap work from 2026-09-02 is present in current source/config across Backend, Public and Admin. The old bootstrap branch is fully behind current main. Runtime telemetry/event acceptance is not yet proven. |
 | C4 platform causality | PARTIAL | Representative/local platform contract and C3 causality evidence exist; complete platform chain is not closed. |
 | C5 deployed staging | PARTIAL | Historical staging is substantial; final reconciled branch has not completed the full staging acceptance matrix. |
 | C6 browser/mobile/manual | PARTIAL | Many historical browser slices exist; final-source whole-product C6 acceptance is still open. |
@@ -69,6 +69,9 @@ Therefore the current authoritative state is:
 `CODE_TO_CODE_CLOSED = NOT_YET_PROVEN`
 
 This is not a restart. Previously proven, unchanged slices remain reusable. Only the unresolved current rows require future execution.
+
+## Part A reconciliation closure
+Work snapshot + VM archive + GitHub branch/data reconciliation was completed by content/hash, timestamps and Git history. Work-only pnpm files were classified generated/uncommitted; VM-only agent configs, handovers and `.dev.vars` were classified generated/superseded/local-secret residue. Obsolete remote branches were proven fully behind or identical to `main`. After cleanup, `main` plus this file is the sole current project authority.
 
 ## Job A completion boundary
 Job A is complete when future sessions use this report as the current information authority, preserve historical evidence only as provenance, and do not promote an older `NEXT`, `OPEN`, `PASS`, source-authority split, Graphify count, or runtime statement over this reconciliation without newer direct evidence.
