@@ -235,13 +235,6 @@ async function invokeWorkflowCommand(
     idempotencyKey,
   );
   const container = getContainer(env.NEXI_API_CONTAINER, "nexi-api");
-  if (!container.running) {
-    await container.start({ envVars: containerEnv(env) });
-  }
-  await container.startAndWaitForPorts({
-    ports: [3000],
-    cancellationOptions: { portReadyTimeoutMS: 30_000 },
-  });
   const response = await container.fetch(
     new Request(`https://nexi.internal/_internal/workflows/${workflow}/${action}`, {
       method: "POST",
@@ -697,13 +690,6 @@ export default {
     if (!signingSecret)
       throw new Error("JWT_SECRET is required for authenticated Queue ingress");
     const container = getContainer(env.NEXI_API_CONTAINER, "nexi-api");
-  if (!container.running) {
-    await container.start({ envVars: containerEnv(env) });
-  }
-  await container.startAndWaitForPorts({
-    ports: [3000],
-    cancellationOptions: { portReadyTimeoutMS: 30_000 },
-  });
 
     for (const message of batch.messages) {
       if (!validQueueEnvelope(message.body)) {
@@ -758,13 +744,6 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const container = getContainer(env.NEXI_API_CONTAINER, "nexi-api");
-  if (!container.running) {
-    await container.start({ envVars: containerEnv(env) });
-  }
-  await container.startAndWaitForPorts({
-    ports: [3000],
-    cancellationOptions: { portReadyTimeoutMS: 30_000 },
-  });
 
     if (url.pathname === "/healthz") {
       const response = Response.json({

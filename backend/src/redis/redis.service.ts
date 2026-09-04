@@ -39,8 +39,14 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   async createSubscriber(): Promise<Redis> {
     const subscriber = this.createClient();
     this.subscribers.add(subscriber);
-    void subscriber.connect().catch(() => undefined);
-    return subscriber;
+    try {
+      await subscriber.connect();
+      return subscriber;
+    } catch (error) {
+      this.subscribers.delete(subscriber);
+      subscriber.disconnect();
+      throw error;
+    }
   }
 
   async releaseSubscriber(subscriber: Redis): Promise<void> {
@@ -119,8 +125,10 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     const { redisUrl } = resolveRuntimeConfig();
     const client = new Redis(redisUrl, {
       lazyConnect: true,
-      connectTimeout: 5_000,
-      maxRetriesPerRequest: 1,
+      connectTimeout: 15_000,
+      // Long-lived readiness/subscriber clients must survive transient TLS
+      // reconnects without flushing queued commands and crashing NestJS.
+      maxRetriesPerRequest: null,
       retryStrategy: (attempt) => Math.min(attempt * 100, 2_000),
     });
     client.on('ready', () => {

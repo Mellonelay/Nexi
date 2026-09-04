@@ -84,6 +84,7 @@ describe('Gate 2 financial operations', () => {
       idempotencyKey: 'transfer-key-1',
       internalTransfer: expect.objectContaining({ fromUserId: 'user-1', toUserId: 'user-2' }),
     }));
+    expect(prisma.gate2InternalTransfer.findUnique).not.toHaveBeenCalled();
     expect(prisma.$transaction).not.toHaveBeenCalled();
     expect(result.replayed).toBe(false);
   });

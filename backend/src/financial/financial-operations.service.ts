@@ -345,7 +345,7 @@ export class FinancialOperationsService {
         return { transfer: d1Existing, replayed: true };
       }
     }
-    const existing = await this.prisma.gate2InternalTransfer.findUnique({ where: { idempotencyKey: input.idempotencyKey } });
+    const existing = this.d1?.isEnabled() ? null : await this.prisma.gate2InternalTransfer.findUnique({ where: { idempotencyKey: input.idempotencyKey } });
     if (existing) {
       if (existing.fromUserId !== userId) throw new BadRequestException('Transfer ownership mismatch');
       return { transfer: existing, replayed: true };

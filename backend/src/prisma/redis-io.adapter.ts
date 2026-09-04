@@ -12,8 +12,8 @@ export class RedisIoAdapter extends IoAdapter {
     const { redisUrl } = resolveRuntimeConfig();
     const options = {
       lazyConnect: true,
-      connectTimeout: 5_000,
-      maxRetriesPerRequest: 1,
+      connectTimeout: 15_000,
+      maxRetriesPerRequest: null,
       retryStrategy: (attempt: number) => Math.min(attempt * 100, 2_000),
     };
     const redisClient = new Redis(redisUrl, options);
@@ -29,7 +29,6 @@ export class RedisIoAdapter extends IoAdapter {
       onlyPlaintext: true,
     });
     this.redisClient = redisClient;
-    void redisClient.connect().catch(() => undefined);
   }
 
   createIOServer(port: number, options?: ServerOptions): any {
