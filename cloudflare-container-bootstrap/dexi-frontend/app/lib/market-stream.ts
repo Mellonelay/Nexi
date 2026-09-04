@@ -15,7 +15,8 @@ function normalizeStreamCandle(value: {
   const volume = value.volume === undefined ? undefined : number(value.volume);
   if (time === null || open === null || high === null || low === null || close === null || (value.volume !== undefined && volume === null)) return null;
   if (high < Math.max(open, close) || low > Math.min(open, close) || high < low) return null;
-  return { time, open, high, low, close, ...(volume === undefined ? {} : { volume }) };
+  const normalizedVolume = volume ?? undefined;
+  return { time, open, high, low, close, ...(normalizedVolume === undefined ? {} : { volume: normalizedVolume }) };
 }
 
 export type StreamState = MarketDataStatus | 'CONNECTING' | 'RECONNECTING';
