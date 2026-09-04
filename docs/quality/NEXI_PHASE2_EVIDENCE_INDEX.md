@@ -2,12 +2,12 @@
 
 | Evidence | Location | Result |
 |---|---|---|
-| Defect ledger | `docs/quality/NEXI_PHASE2_DEFECT_LEDGER.json` | 11 tracked rows; gate FAIL |
+| Current state authority | `NEXI_CURRENT_STATE.md` | Canonical reconciled current state; supersedes historical defect/status artifacts |
 | Closure matrix | `docs/quality/NEXI_PHASE2_CLOSURE_MATRIX.json` | A–F states recorded |
 | Lane/collision state | `docs/quality/NEXI_PHASE2_LANE_STATE.json` | shared mutations serialized |
-| Execution receipt | `docs/quality/PHASE2_EXECUTION_RECEIPT.md` | Graphify fallback and test evidence |
+| Execution receipt | `NEXI_CURRENT_STATE.md` | Graphify fallback and test evidence |
 | Repository map | `docs/quality/NEXI_OMNIPOTENT_REPO_MAP_2026-09-03.md` | source inventory and prior findings |
-| Prior reconciliation | `docs/quality/NEXI_PHASE2_REAUDIT_2026-09-03.md` | historical/current checkpoint |
+| Prior reconciliation | `NEXI_CURRENT_STATE.md` | historical/current checkpoint |
 | Backend tests | command receipt | 68 suites / 260 tests passed; 5 skipped |
 | Frontend contract tests | command receipt | 6/6 passed |
 | Wrangler types | command receipt | passed; `@types/node` advisory |
