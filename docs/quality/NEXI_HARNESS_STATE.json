@@ -51,5 +51,19 @@
     "sentry_network": "HOST_BLOCKED; HTTP(S)_PROXY and npm https-proxy target unreachable browser-proxy:8889; direct HTTPS DNS also fails",
     "sentry_auth": "BLOCKED_EXTERNAL; authentication not retried after network diagnosis",
     "sentry_dev_telemetry": "HOST_BLOCKED"
+  },
+  "git_checkpoint": {
+    "local_checkpoint_sha": "c74dbbd",
+    "checkpoint_sha": "69059b0b26064a7e4fe2601fe41064f96746a3c7",
+    "branch": "main",
+    "remote": "origin -> https://github.com/Mellonelay/Dexi_Style.git (canonical Mellonelay/Nexi)",
+    "push_status": "PASS; GitHub connector fast-forwarded canonical main and independently verified remote ref",
+    "worktree_status": "INTENTIONALLY_DIRTY; excluded pnpm artifacts and local bytecode remain; checkpoint metadata updated locally after remote commit",
+    "excluded_files": [
+      "backend/pnpm-lock.yaml",
+      "backend/pnpm-workspace.yaml",
+      "tools/nexi/__pycache__/continue_ready_slices.cpython-312.pyc"
+    ],
+    "next_ready": "continue full code-to-code closure, targeted Graphify repair/recheck, then container-capable C4B, Sentry runtime integration, C5 staging, and C6 acceptance"
   }
 }

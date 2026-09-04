@@ -1,0 +1,27 @@
+{
+  "scope": "supplied project source files used for this re-audit",
+  "status": "READ_COMPLETE_FOR_LISTED_FILES",
+  "files": [
+    {
+      "path": "project_sources/01-Codex-prompting-guide.txt",
+      "bytes": 41535,
+      "lines": 686,
+      "sha256": "f2ef839c53514eecf1b4e6eacb630b92ad0b091f4fce691ee80a5d63f70b9969",
+      "read": true
+    },
+    {
+      "path": "project_sources/02-NEXI_CHATGPT_DESKTOP_WORKFLOW_SOURCE.md",
+      "bytes": 6534,
+      "lines": 177,
+      "sha256": "3bdfa9369d92704df4441eca5af11d19698256064d0cbaf572f771fabdad4b79",
+      "read": true
+    }
+  ],
+  "unavailable_supplied_files": [
+    "NEXI-GRAPHIFY-FULL-USAGE-GUIDE.docx"
+  ],
+  "limitations": [
+    "The Data Analytics connector was not callable in the current runtime.",
+    "The exported conversation context was supplied in-chat rather than as a separately hashable file."
+  ]
+}
