@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -u
+export PATH="$HOME/.local/bin:$HOME/.npm-global/bin:$HOME/.cargo/bin:$PATH"
 cd "${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 
 printf 'NEXI_CODESPACE_CAPABILITY_RECEIPT\n'
@@ -29,19 +30,22 @@ probe python python3 --version
 probe uv uv --version
 probe docker docker --version
 probe codex codex --version
+probe kilo kilo --version
 probe graphify graphify --version
 probe fallow fallow --version
 probe codescene cs version
 probe wrangler wrangler --version
 probe sentry sentry --version
 probe sentry-cli sentry-cli --version
-if command -v aiven >/dev/null 2>&1; then probe aiven aiven --version; elif command -v avn >/dev/null 2>&1; then probe aiven avn --version; else printf '%-18s MISSING\n' aiven; fi
+if command -v avn >/dev/null 2>&1; then probe aiven avn --version; elif command -v aiven >/dev/null 2>&1; then probe aiven aiven --version; else printf '%-18s MISSING\n' aiven; fi
 probe redis-cli redis-cli --version
 probe psql psql --version
 
 printf '\nAUTH/CALLABILITY (no secrets printed)\n'
 if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then echo 'github             AUTHENTICATED'; else echo 'github             UNVERIFIED'; fi
 if command -v codex >/dev/null 2>&1 && codex login status >/dev/null 2>&1; then echo 'codex              AUTHENTICATED'; else echo 'codex              UNVERIFIED'; fi
+if command -v kilo >/dev/null 2>&1 && kilo auth list >/dev/null 2>&1; then echo 'kilo               AUTH_CONFIG_PRESENT'; else echo 'kilo               UNVERIFIED'; fi
+if command -v wrangler >/dev/null 2>&1 && wrangler whoami >/dev/null 2>&1; then echo 'cloudflare         AUTHENTICATED'; else echo 'cloudflare         UNVERIFIED'; fi
 [ -n "${OPENROUTER_API_KEY:-}" ] && echo 'openrouter         SECRET_PRESENT' || echo 'openrouter         UNCONFIGURED'
 if [ -f "$HOME/.codex/config.toml" ]; then
   if grep -Eq '^model_provider\s*=\s*"openrouter"' "$HOME/.codex/config.toml" && grep -Eq '^model\s*=\s*"openrouter/free"' "$HOME/.codex/config.toml"; then
@@ -55,7 +59,7 @@ fi
 if command -v sentry >/dev/null 2>&1; then echo 'sentry             CLI_PRESENT_AUTH_USER_MANAGED'; else echo 'sentry             CLI_MISSING'; fi
 if command -v cs >/dev/null 2>&1; then echo 'codescene          CLI_PRESENT_AUTH_USER_MANAGED'; else echo 'codescene          CLI_MISSING'; fi
 [ -n "${SENTRY_AUTH_TOKEN:-}" ] && echo 'sentry-cli         SECRET_PRESENT' || echo 'sentry-cli         UNCONFIGURED'
-[ -n "${CLOUDFLARE_API_TOKEN:-}" ] && echo 'cloudflare         SECRET_PRESENT' || echo 'cloudflare         UNCONFIGURED'
+[ -n "${CLOUDFLARE_API_TOKEN:-}" ] && echo 'cloudflare_token   SECRET_PRESENT' || true
 [ -n "${AIVEN_TOKEN:-${AIVEN_AUTH_TOKEN:-}}" ] && echo 'aiven              SECRET_PRESENT' || echo 'aiven              UNCONFIGURED'
 
 printf '\nPARALLEL FABRIC\n'
@@ -66,11 +70,12 @@ echo 'scheduler          CHATGPT_WORK_PARENT'
 echo 'rdc_worker         MULTI_PROCESS_MULTI_WORKTREE'
 
 printf '\nRDC\n'
-if pgrep -af 'desktop-commander|desktopcommander' >/dev/null 2>&1; then
+if pgrep -af '@wonderwhy-er/desktop-commander.*remote|desktop-commander.*remote|desktopcommander.*remote' >/dev/null 2>&1; then
   echo 'rdc                PROCESS_PRESENT'
 else
-  echo 'rdc                NOT_RUNNING_OR_NOT_INSTALLED'
+  echo 'rdc                NOT_RUNNING'
 fi
+[ -f "$HOME/.local/share/rdc/remote.log" ] && echo "rdc_log            $HOME/.local/share/rdc/remote.log"
 
 printf '\nPROJECT\n'
 [ -d node_modules ] && echo 'public_deps        PRESENT' || echo 'public_deps        MISSING'
