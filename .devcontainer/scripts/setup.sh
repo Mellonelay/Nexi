@@ -27,8 +27,6 @@ fi
 corepack enable || true
 corepack prepare pnpm@latest --activate || true
 
-# npm 11 blocks unapproved lifecycle scripts in global/one-off contexts.
-# Approve only the packages required by these trusted CLI installers.
 install_npm_cli() {
   local pkg="$1"
   local allow_scripts="${2:-}"
@@ -48,28 +46,19 @@ install_npm_cli '@kilocode/cli@latest' '@kilocode/cli'
 install_npm_cli '@wonderwhy-er/desktop-commander@latest' '@wonderwhy-er/desktop-commander,sharp,puppeteer'
 hash -r
 
-# Graphify official PyPI package is graphifyy (double-y); the executable is graphify.
 uv tool uninstall graphify-cli >/dev/null 2>&1 || true
-uv tool install --force graphifyy || echo 'WARN: Graphify installation needs follow-up; capability receipt will report it.' >&2
-
-# Aiven CLI is provided by the aiven-client package; the official executable is avn.
+uv tool install --force graphifyy || echo 'WARN: Graphify installation needs follow-up.' >&2
 uv tool install --force aiven-client || echo 'WARN: Aiven CLI installation needs follow-up.' >&2
 
-# New interactive Sentry developer CLI (distinct from legacy sentry-cli above).
 if ! command -v sentry >/dev/null 2>&1; then
   curl https://cli.sentry.dev/install -fsS | bash || echo 'WARN: Sentry developer CLI installation needs follow-up.' >&2
 fi
 
-# CodeScene CLI official Linux installer. Run the downloaded script from a file so
-# its stdin remains available for the installer's PATH confirmation prompt.
+# IMPORTANT: CodeScene's official installer can prompt for shell/PATH confirmation.
+# Never run that interactive installer from a devcontainer lifecycle hook because it can
+# deadlock Codespace create/rebuild. Install/repair CodeScene after startup through RDC.
 if ! command -v cs >/dev/null 2>&1; then
-  tmp_cs_installer="$(mktemp)"
-  if curl -fsSL https://downloads.codescene.io/enterprise/cli/install-cs-tool.sh -o "$tmp_cs_installer"; then
-    printf '\n' | bash "$tmp_cs_installer" || echo 'WARN: CodeScene CLI installation needs follow-up.' >&2
-  else
-    echo 'WARN: CodeScene CLI installer download failed.' >&2
-  fi
-  rm -f "$tmp_cs_installer"
+  echo 'INFO: CodeScene CLI deferred until post-start RDC bootstrap (prevents rebuild deadlock).'
 fi
 
 if [ ! -f "$HOME/.codex/config.toml" ]; then
