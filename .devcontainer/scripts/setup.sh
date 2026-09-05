@@ -2,8 +2,9 @@
 set -Eeuo pipefail
 
 export DEBIAN_FRONTEND=noninteractive
-mkdir -p "$HOME/.local/bin" "$HOME/.local/share/nexi" "$HOME/.codex"
-export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+mkdir -p "$HOME/.local/bin" "$HOME/.local/share/nexi" "$HOME/.codex" "$HOME/.npm-global"
+export PATH="$HOME/.local/bin:$HOME/.npm-global/bin:$HOME/.cargo/bin:$PATH"
+export NPM_CONFIG_PREFIX="$HOME/.npm-global"
 
 sudo apt-get update
 sudo apt-get install -y --no-install-recommends curl ca-certificates jq ripgrep fd-find git git-lfs unzip zip zstd build-essential pkg-config libssl-dev redis-tools postgresql-client
@@ -35,19 +36,14 @@ if ! command -v aiven >/dev/null 2>&1 && ! command -v avn >/dev/null 2>&1; then
   uv tool install aiven-client || echo 'WARN: Aiven CLI installation needs follow-up.' >&2
 fi
 
-# New interactive Sentry CLI used for issues/traces/logs/releases.
 if ! command -v sentry >/dev/null 2>&1; then
   curl https://cli.sentry.dev/install -fsS | bash || echo 'WARN: Sentry developer CLI installation needs follow-up.' >&2
 fi
 
-# CodeScene CLI installation is intentionally guarded because authentication is user-managed.
-# Prefer an existing preinstalled `cs` binary; otherwise use CodeScene's installer when available.
 if ! command -v cs >/dev/null 2>&1; then
   echo 'INFO: CodeScene CLI (cs) not installed. Install from official CodeScene CLI instructions, then run `cs auth login` yourself.' >&2
 fi
 
-# Write a user-editable Codex/OpenRouter template only when no config exists.
-# OpenRouter-authenticated Codex workers are FREE-ONLY and use the free-model router.
 if [ ! -f "$HOME/.codex/config.toml" ]; then
   cat > "$HOME/.codex/config.toml" <<'EOF'
 model = "openrouter/free"
