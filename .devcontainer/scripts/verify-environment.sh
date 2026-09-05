@@ -31,7 +31,9 @@ probe docker docker --version
 probe codex codex --version
 probe graphify graphify --version
 probe fallow fallow --version
+probe codescene cs version
 probe wrangler wrangler --version
+probe sentry sentry --version
 probe sentry-cli sentry-cli --version
 if command -v aiven >/dev/null 2>&1; then probe aiven aiven --version; elif command -v avn >/dev/null 2>&1; then probe aiven avn --version; else printf '%-18s MISSING\n' aiven; fi
 probe redis-cli redis-cli --version
@@ -41,9 +43,27 @@ printf '\nAUTH/CALLABILITY (no secrets printed)\n'
 if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then echo 'github             AUTHENTICATED'; else echo 'github             UNVERIFIED'; fi
 if command -v codex >/dev/null 2>&1 && codex login status >/dev/null 2>&1; then echo 'codex              AUTHENTICATED'; else echo 'codex              UNVERIFIED'; fi
 [ -n "${OPENROUTER_API_KEY:-}" ] && echo 'openrouter         SECRET_PRESENT' || echo 'openrouter         UNCONFIGURED'
-[ -n "${SENTRY_AUTH_TOKEN:-}" ] && echo 'sentry             SECRET_PRESENT' || echo 'sentry             UNCONFIGURED'
+if [ -f "$HOME/.codex/config.toml" ]; then
+  if grep -Eq '^model_provider\s*=\s*"openrouter"' "$HOME/.codex/config.toml" && grep -Eq '^model\s*=\s*"openrouter/free"' "$HOME/.codex/config.toml"; then
+    echo 'openrouter_policy  FREE_ONLY_CONFIGURED'
+  else
+    echo 'openrouter_policy  REVIEW_REQUIRED'
+  fi
+else
+  echo 'openrouter_policy  CONFIG_MISSING'
+fi
+if command -v sentry >/dev/null 2>&1; then echo 'sentry             CLI_PRESENT_AUTH_USER_MANAGED'; else echo 'sentry             CLI_MISSING'; fi
+if command -v cs >/dev/null 2>&1; then echo 'codescene          CLI_PRESENT_AUTH_USER_MANAGED'; else echo 'codescene          CLI_MISSING'; fi
+[ -n "${SENTRY_AUTH_TOKEN:-}" ] && echo 'sentry-cli         SECRET_PRESENT' || echo 'sentry-cli         UNCONFIGURED'
 [ -n "${CLOUDFLARE_API_TOKEN:-}" ] && echo 'cloudflare         SECRET_PRESENT' || echo 'cloudflare         UNCONFIGURED'
 [ -n "${AIVEN_TOKEN:-${AIVEN_AUTH_TOKEN:-}}" ] && echo 'aiven              SECRET_PRESENT' || echo 'aiven              UNCONFIGURED'
+
+printf '\nPARALLEL FABRIC\n'
+echo 'lane_capacity      6'
+echo 'lane_policy        HETEROGENEOUS_EXECUTORS'
+echo 'codex_openrouter   FREE_ONLY'
+echo 'scheduler          CHATGPT_WORK_PARENT'
+echo 'rdc_worker         MULTI_PROCESS_MULTI_WORKTREE'
 
 printf '\nRDC\n'
 if pgrep -af 'desktop-commander|desktopcommander' >/dev/null 2>&1; then
