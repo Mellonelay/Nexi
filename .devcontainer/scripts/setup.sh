@@ -2,45 +2,75 @@
 set -Eeuo pipefail
 
 export DEBIAN_FRONTEND=noninteractive
-mkdir -p "$HOME/.local/bin" "$HOME/.local/share/nexi"
+mkdir -p "$HOME/.local/bin" "$HOME/.local/share/nexi" "$HOME/.codex"
 export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 
 sudo apt-get update
 sudo apt-get install -y --no-install-recommends curl ca-certificates jq ripgrep fd-find git git-lfs unzip zip zstd build-essential pkg-config libssl-dev redis-tools postgresql-client
 sudo ln -sf "$(command -v fdfind)" /usr/local/bin/fd 2>/dev/null || true
 
-# uv: Python tool/runtime manager.
 if ! command -v uv >/dev/null 2>&1; then
   curl -LsSf https://astral.sh/uv/install.sh | sh
 fi
 
-# pnpm through the Node-bundled Corepack.
 corepack enable || true
 corepack prepare pnpm@latest --activate || true
 
-# Engineering CLIs. Install independently so one optional package cannot block the Codespace.
 install_npm_cli() {
   local pkg="$1"
   echo "==> npm global: $pkg"
   npm install -g "$pkg" || echo "WARN: optional npm CLI failed: $pkg" >&2
 }
+
 install_npm_cli '@openai/codex@latest'
 install_npm_cli 'wrangler@latest'
 install_npm_cli '@sentry/cli@latest'
 install_npm_cli 'fallow@latest'
 
-# Graphify is installed through uv when the package is available for this platform.
 if ! command -v graphify >/dev/null 2>&1; then
   uv tool install graphify || echo 'WARN: Graphify installation needs follow-up; capability receipt will report it.' >&2
 fi
 
-# Aiven CLI. Prefer the isolated Python tool installation.
 if ! command -v aiven >/dev/null 2>&1 && ! command -v avn >/dev/null 2>&1; then
   uv tool install aiven-client || echo 'WARN: Aiven CLI installation needs follow-up.' >&2
 fi
 
-# GitHub CLI is supplied by the devcontainer Feature. Authenticate via the Codespace/GitHub environment.
+# New interactive Sentry CLI used for issues/traces/logs/releases.
+if ! command -v sentry >/dev/null 2>&1; then
+  curl https://cli.sentry.dev/install -fsS | bash || echo 'WARN: Sentry developer CLI installation needs follow-up.' >&2
+fi
+
+# CodeScene CLI installation is intentionally guarded because authentication is user-managed.
+# Prefer an existing preinstalled `cs` binary; otherwise use CodeScene's installer when available.
+if ! command -v cs >/dev/null 2>&1; then
+  echo 'INFO: CodeScene CLI (cs) not installed. Install from official CodeScene CLI instructions, then run `cs auth login` yourself.' >&2
+fi
+
+# Write a user-editable Codex/OpenRouter template only when no config exists.
+# OpenRouter-authenticated Codex workers are FREE-ONLY and use the free-model router.
+if [ ! -f "$HOME/.codex/config.toml" ]; then
+  cat > "$HOME/.codex/config.toml" <<'EOF'
+model = "openrouter/free"
+model_provider = "openrouter"
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+
+[model_providers.openrouter]
+name = "OpenRouter"
+base_url = "https://openrouter.ai/api/v1"
+env_key = "OPENROUTER_API_KEY"
+wire_api = "responses"
+request_max_retries = 4
+stream_max_retries = 10
+stream_idle_timeout_ms = 300000
+
+[sandbox_workspace_write]
+network_access = true
+EOF
+else
+  echo 'INFO: ~/.codex/config.toml already exists; not overwriting user configuration.'
+fi
+
 git lfs install --skip-repo || true
 
-# Never install credentials here. Codex/OpenRouter/Sentry/Aiven/Cloudflare secrets are user/Codespaces secrets.
 echo 'NEXI base engineering toolchain setup complete.'
