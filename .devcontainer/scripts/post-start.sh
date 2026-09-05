@@ -1,10 +1,16 @@
 #!/usr/bin/env bash
 set -u
+export PATH="$HOME/.local/bin:$HOME/.npm-global/bin:$HOME/.cargo/bin:$PATH"
 cd "${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 
 # postStart must remain cheap and idempotent. It does not install dependencies,
 # mutate application source, run migrations, deploy, or start public ports.
 git status --short --branch || true
+
+# RDC is the parent ChatGPT execution bridge. Start it in the background on every
+# Codespace start; the helper is idempotent and writes logs/pid under ~/.local/share/rdc.
+bash .devcontainer/scripts/start-rdc.sh || true
+
 bash .devcontainer/scripts/verify-environment.sh || true
 
 cat <<'EOF'
@@ -14,5 +20,6 @@ ChatGPT-RDC is Worker 0 and may drive multiple concurrent processes/worktrees.
 Codex CLI is one subordinate worker type; when routed through OpenRouter it must use FREE models only.
 Graphify + Fallow + CodeScene determine dependency/coupling safety before parallel mutation.
 Sentry is runtime evidence only; it does not replace source, D1, ledger, or acceptance authority.
-Authenticate OpenRouter, CodeScene, Sentry, Aiven, Cloudflare, and other user-owned services yourself.
+Authenticate OpenRouter, Kilo, CodeScene, Sentry, Aiven, Cloudflare, and other user-owned services yourself.
+RDC log: ~/.local/share/rdc/remote.log
 EOF
