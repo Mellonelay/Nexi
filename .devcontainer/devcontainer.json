@@ -1,0 +1,44 @@
+{
+  "name": "NEXI Engineering Codespace",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-24-bookworm",
+  "hostRequirements": {
+    "cpus": 8,
+    "memory": "16gb",
+    "storage": "32gb"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.12"
+    },
+    "ghcr.io/devcontainers/features/rust:1": {}
+  },
+  "containerEnv": {
+    "NEXI_CODESPACE": "1",
+    "PYTHONUNBUFFERED": "1"
+  },
+  "onCreateCommand": "bash .devcontainer/scripts/setup.sh",
+  "updateContentCommand": "bash .devcontainer/scripts/install-project-deps.sh",
+  "postCreateCommand": "bash .devcontainer/scripts/verify-environment.sh",
+  "postStartCommand": "bash .devcontainer/scripts/post-start.sh",
+  "forwardPorts": [3000, 3001, 4173, 5173, 8787],
+  "portsAttributes": {
+    "3000": { "label": "NEXI Backend", "onAutoForward": "silent" },
+    "3001": { "label": "NEXI Admin", "onAutoForward": "silent" },
+    "4173": { "label": "Vite Preview", "onAutoForward": "silent" },
+    "5173": { "label": "NEXI Public", "onAutoForward": "silent" },
+    "8787": { "label": "Cloudflare Wrangler", "onAutoForward": "silent" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "Prisma.prisma",
+        "ms-azuretools.vscode-docker"
+      ]
+    }
+  },
+  "remoteUser": "node"
+}
