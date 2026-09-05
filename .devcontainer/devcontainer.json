@@ -21,6 +21,9 @@
     "NEXI_CODESPACE": "1",
     "PYTHONUNBUFFERED": "1"
   },
+  "remoteEnv": {
+    "PATH": "/home/vscode/.local/bin:/home/vscode/.npm-global/bin:/home/vscode/.cargo/bin:${containerEnv:PATH}"
+  },
   "onCreateCommand": "bash .devcontainer/scripts/setup.sh",
   "updateContentCommand": "bash .devcontainer/scripts/install-project-deps.sh",
   "postCreateCommand": "bash .devcontainer/scripts/verify-environment.sh",
