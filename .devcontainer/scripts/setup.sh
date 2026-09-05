@@ -6,10 +6,13 @@ mkdir -p "$HOME/.local/bin" "$HOME/.local/share/nexi" "$HOME/.local/share/rdc" "
 export PATH="$HOME/.local/bin:$HOME/.npm-global/bin:$HOME/.cargo/bin:$PATH"
 export NPM_CONFIG_PREFIX="$HOME/.npm-global"
 
-# Persist user-local CLI paths for future terminals and lifecycle scripts.
+# Persist user-local CLI paths for both login and interactive VS Code shells.
 npm config set prefix "$HOME/.npm-global" >/dev/null 2>&1 || true
 PROFILE_LINE='export PATH="$HOME/.local/bin:$HOME/.npm-global/bin:$HOME/.cargo/bin:$PATH"'
-grep -Fqx "$PROFILE_LINE" "$HOME/.profile" 2>/dev/null || printf '%s\n' "$PROFILE_LINE" >> "$HOME/.profile"
+for shell_rc in "$HOME/.profile" "$HOME/.bashrc"; do
+  touch "$shell_rc"
+  grep -Fqx "$PROFILE_LINE" "$shell_rc" 2>/dev/null || printf '%s\n' "$PROFILE_LINE" >> "$shell_rc"
+done
 
 sudo apt-get update
 sudo apt-get install -y --no-install-recommends \
