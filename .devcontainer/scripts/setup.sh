@@ -57,10 +57,16 @@ if ! command -v sentry >/dev/null 2>&1; then
   curl https://cli.sentry.dev/install -fsS | bash || echo 'WARN: Sentry developer CLI installation needs follow-up.' >&2
 fi
 
-# CodeScene CLI official Linux installer. Feed the PATH-confirmation newline so
-# Codespace lifecycle execution remains non-interactive.
+# CodeScene CLI official Linux installer. Run the downloaded script from a file so
+# its stdin remains available for the installer's PATH confirmation prompt.
 if ! command -v cs >/dev/null 2>&1; then
-  curl -fsSL https://downloads.codescene.io/enterprise/cli/install-cs-tool.sh | { printf '\n'; cat; } | sh || echo 'WARN: CodeScene CLI installation needs follow-up.' >&2
+  tmp_cs_installer="$(mktemp)"
+  if curl -fsSL https://downloads.codescene.io/enterprise/cli/install-cs-tool.sh -o "$tmp_cs_installer"; then
+    printf '\n' | bash "$tmp_cs_installer" || echo 'WARN: CodeScene CLI installation needs follow-up.' >&2
+  else
+    echo 'WARN: CodeScene CLI installer download failed.' >&2
+  fi
+  rm -f "$tmp_cs_installer"
 fi
 
 if [ ! -f "$HOME/.codex/config.toml" ]; then
