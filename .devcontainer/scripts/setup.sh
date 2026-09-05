@@ -2,12 +2,19 @@
 set -Eeuo pipefail
 
 export DEBIAN_FRONTEND=noninteractive
-mkdir -p "$HOME/.local/bin" "$HOME/.local/share/nexi" "$HOME/.codex" "$HOME/.npm-global"
+mkdir -p "$HOME/.local/bin" "$HOME/.local/share/nexi" "$HOME/.local/share/rdc" "$HOME/.codex" "$HOME/.npm-global"
 export PATH="$HOME/.local/bin:$HOME/.npm-global/bin:$HOME/.cargo/bin:$PATH"
 export NPM_CONFIG_PREFIX="$HOME/.npm-global"
 
+# Persist user-local CLI paths for future terminals and lifecycle scripts.
+npm config set prefix "$HOME/.npm-global" >/dev/null 2>&1 || true
+PROFILE_LINE='export PATH="$HOME/.local/bin:$HOME/.npm-global/bin:$HOME/.cargo/bin:$PATH"'
+grep -Fqx "$PROFILE_LINE" "$HOME/.profile" 2>/dev/null || printf '%s\n' "$PROFILE_LINE" >> "$HOME/.profile"
+
 sudo apt-get update
-sudo apt-get install -y --no-install-recommends curl ca-certificates jq ripgrep fd-find git git-lfs unzip zip zstd build-essential pkg-config libssl-dev redis-tools postgresql-client
+sudo apt-get install -y --no-install-recommends \
+  curl ca-certificates jq ripgrep fd-find git git-lfs unzip zip zstd \
+  build-essential pkg-config libssl-dev redis-tools postgresql-client
 sudo ln -sf "$(command -v fdfind)" /usr/local/bin/fd 2>/dev/null || true
 
 if ! command -v uv >/dev/null 2>&1; then
@@ -27,21 +34,24 @@ install_npm_cli '@openai/codex@latest'
 install_npm_cli 'wrangler@latest'
 install_npm_cli '@sentry/cli@latest'
 install_npm_cli 'fallow@latest'
+install_npm_cli '@kilocode/cli@latest'
+install_npm_cli '@wonderwhy-er/desktop-commander@latest'
 
-if ! command -v graphify >/dev/null 2>&1; then
-  uv tool install graphify || echo 'WARN: Graphify installation needs follow-up; capability receipt will report it.' >&2
-fi
+# Graphify official PyPI package is graphifyy (double-y); the executable is graphify.
+uv tool uninstall graphify-cli >/dev/null 2>&1 || true
+uv tool install --force graphifyy || echo 'WARN: Graphify installation needs follow-up; capability receipt will report it.' >&2
 
-if ! command -v aiven >/dev/null 2>&1 && ! command -v avn >/dev/null 2>&1; then
-  uv tool install aiven-client || echo 'WARN: Aiven CLI installation needs follow-up.' >&2
-fi
+# Aiven CLI is provided by the aiven-client package; the official executable is avn.
+uv tool install --force aiven-client || echo 'WARN: Aiven CLI installation needs follow-up.' >&2
 
+# New interactive Sentry developer CLI (distinct from legacy sentry-cli above).
 if ! command -v sentry >/dev/null 2>&1; then
   curl https://cli.sentry.dev/install -fsS | bash || echo 'WARN: Sentry developer CLI installation needs follow-up.' >&2
 fi
 
+# CodeScene CLI official Linux installer.
 if ! command -v cs >/dev/null 2>&1; then
-  echo 'INFO: CodeScene CLI (cs) not installed. Install from official CodeScene CLI instructions, then run `cs auth login` yourself.' >&2
+  curl -fsSL https://downloads.codescene.io/enterprise/cli/install-cs-tool.sh | sh || echo 'WARN: CodeScene CLI installation needs follow-up.' >&2
 fi
 
 if [ ! -f "$HOME/.codex/config.toml" ]; then
@@ -70,3 +80,4 @@ fi
 git lfs install --skip-repo || true
 
 echo 'NEXI base engineering toolchain setup complete.'
+echo 'User auth remains intentionally separate: gh, wrangler, kilo, Sentry, CodeScene, Aiven, OpenRouter.'
