@@ -24,18 +24,26 @@ fi
 corepack enable || true
 corepack prepare pnpm@latest --activate || true
 
+# npm 11 blocks unapproved lifecycle scripts in global/one-off contexts.
+# Approve only the packages required by these trusted CLI installers.
 install_npm_cli() {
   local pkg="$1"
+  local allow_scripts="${2:-}"
   echo "==> npm global: $pkg"
-  npm install -g "$pkg" || echo "WARN: optional npm CLI failed: $pkg" >&2
+  if [ -n "$allow_scripts" ]; then
+    npm install -g --allow-scripts="$allow_scripts" "$pkg" || echo "WARN: optional npm CLI failed: $pkg" >&2
+  else
+    npm install -g "$pkg" || echo "WARN: optional npm CLI failed: $pkg" >&2
+  fi
 }
 
 install_npm_cli '@openai/codex@latest'
-install_npm_cli 'wrangler@latest'
-install_npm_cli '@sentry/cli@latest'
+install_npm_cli 'wrangler@latest' 'esbuild,workerd'
+install_npm_cli '@sentry/cli@latest' '@sentry/cli'
 install_npm_cli 'fallow@latest'
-install_npm_cli '@kilocode/cli@latest'
-install_npm_cli '@wonderwhy-er/desktop-commander@latest'
+install_npm_cli '@kilocode/cli@latest' '@kilocode/cli'
+install_npm_cli '@wonderwhy-er/desktop-commander@latest' '@wonderwhy-er/desktop-commander,sharp,puppeteer'
+hash -r
 
 # Graphify official PyPI package is graphifyy (double-y); the executable is graphify.
 uv tool uninstall graphify-cli >/dev/null 2>&1 || true
@@ -49,9 +57,10 @@ if ! command -v sentry >/dev/null 2>&1; then
   curl https://cli.sentry.dev/install -fsS | bash || echo 'WARN: Sentry developer CLI installation needs follow-up.' >&2
 fi
 
-# CodeScene CLI official Linux installer.
+# CodeScene CLI official Linux installer. Feed the PATH-confirmation newline so
+# Codespace lifecycle execution remains non-interactive.
 if ! command -v cs >/dev/null 2>&1; then
-  curl -fsSL https://downloads.codescene.io/enterprise/cli/install-cs-tool.sh | sh || echo 'WARN: CodeScene CLI installation needs follow-up.' >&2
+  curl -fsSL https://downloads.codescene.io/enterprise/cli/install-cs-tool.sh | { printf '\n'; cat; } | sh || echo 'WARN: CodeScene CLI installation needs follow-up.' >&2
 fi
 
 if [ ! -f "$HOME/.codex/config.toml" ]; then
