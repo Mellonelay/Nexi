@@ -3,11 +3,19 @@ set -Eeuo pipefail
 
 export DEBIAN_FRONTEND=noninteractive
 mkdir -p "$HOME/.local/bin" "$HOME/.local/share/nexi" "$HOME/.local/share/rdc" "$HOME/.codex" "$HOME/.npm-global"
+
+# NVM rejects a persistent `prefix`/`globalconfig` in ~/.npmrc. Remove stale values
+# first, then use NPM_CONFIG_PREFIX only inside this bootstrap process.
+npm config delete prefix --location=user >/dev/null 2>&1 || true
+npm config delete globalconfig --location=user >/dev/null 2>&1 || true
+if [ -f "$HOME/.npmrc" ]; then
+  sed -i '/^[[:space:]]*prefix[[:space:]]*=/d;/^[[:space:]]*globalconfig[[:space:]]*=/d' "$HOME/.npmrc"
+fi
+
 export PATH="$HOME/.local/bin:$HOME/.npm-global/bin:$HOME/.cargo/bin:$PATH"
 export NPM_CONFIG_PREFIX="$HOME/.npm-global"
 
-# Persist user-local CLI paths for both login and interactive VS Code shells.
-npm config set prefix "$HOME/.npm-global" >/dev/null 2>&1 || true
+# Persist executable PATH only; never persist npm prefix/globalconfig because NVM owns Node.
 PROFILE_LINE='export PATH="$HOME/.local/bin:$HOME/.npm-global/bin:$HOME/.cargo/bin:$PATH"'
 for shell_rc in "$HOME/.profile" "$HOME/.bashrc"; do
   touch "$shell_rc"
@@ -54,11 +62,9 @@ if ! command -v sentry >/dev/null 2>&1; then
   curl https://cli.sentry.dev/install -fsS | bash || echo 'WARN: Sentry developer CLI installation needs follow-up.' >&2
 fi
 
-# IMPORTANT: CodeScene's official installer can prompt for shell/PATH confirmation.
-# Never run that interactive installer from a devcontainer lifecycle hook because it can
-# deadlock Codespace create/rebuild. Install/repair CodeScene after startup through RDC.
+# CodeScene installer is interactive; keep it out of devcontainer lifecycle hooks.
 if ! command -v cs >/dev/null 2>&1; then
-  echo 'INFO: CodeScene CLI deferred until post-start RDC bootstrap (prevents rebuild deadlock).'
+  echo 'INFO: CodeScene CLI deferred until post-start RDC bootstrap.'
 fi
 
 if [ ! -f "$HOME/.codex/config.toml" ]; then
