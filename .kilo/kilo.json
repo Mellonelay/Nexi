@@ -1,0 +1,75 @@
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  "plugin": [
+    "file:///workspaces/Nexi/.kilo/plugins/graphify.js"
+  ],
+  "mcp": {
+    "graphify": {
+      "type": "local",
+      "command": [
+        "graphify-mcp",
+        "/workspaces/Nexi/graphify-out/graph.json"
+      ],
+      "cwd": "/workspaces/Nexi",
+      "enabled": true,
+      "timeout": 120000
+    },
+    "fallow": {
+      "type": "local",
+      "command": [
+        "fallow-mcp"
+      ],
+      "cwd": "/workspaces/Nexi",
+      "environment": {
+        "FALLOW_BIN": "/home/vscode/.npm-global/bin/fallow"
+      },
+      "enabled": true,
+      "timeout": 120000
+    },
+    "cloudflare-api": {
+      "type": "remote",
+      "url": "https://mcp.cloudflare.com/mcp",
+      "enabled": true,
+      "timeout": 120000
+    },
+    "cloudflare-docs": {
+      "type": "remote",
+      "url": "https://docs.mcp.cloudflare.com/mcp",
+      "enabled": true,
+      "timeout": 120000
+    },
+    "cloudflare-bindings": {
+      "type": "remote",
+      "url": "https://bindings.mcp.cloudflare.com/mcp",
+      "enabled": true,
+      "timeout": 120000
+    },
+    "cloudflare-builds": {
+      "type": "remote",
+      "url": "https://builds.mcp.cloudflare.com/mcp",
+      "enabled": true,
+      "timeout": 120000
+    },
+    "cloudflare-observability": {
+      "type": "remote",
+      "url": "https://observability.mcp.cloudflare.com/mcp",
+      "enabled": true,
+      "timeout": 120000
+    },
+    "sentry": {
+      "type": "remote",
+      "url": "https://mcp.sentry.dev/mcp?utm_source=kilo",
+      "enabled": true,
+      "timeout": 120000
+    },
+    "codescene": {
+      "type": "local",
+      "command": [
+        "cs-mcp"
+      ],
+      "cwd": "/workspaces/Nexi",
+      "enabled": true,
+      "timeout": 120000
+    }
+  }
+}
