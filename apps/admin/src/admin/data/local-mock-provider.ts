@@ -463,11 +463,7 @@ export class LocalMockAdminProvider implements AdminDataProvider {
       maintenance: paused,
     });
   }
-  async settleBinaryPosition(
-    id: string,
-    outcome: "won" | "lost" | "draw_refund" | "cancelled",
-    ctx: ConsequentialContext,
-  ) {
+  async settleBinaryPosition(id: string, ctx: ConsequentialContext) {
     await wait();
     const p = this.binaryPositions.find((x) => x.id === id);
     if (!p) return { ok: false, auditId: "" };
@@ -1028,7 +1024,7 @@ export class LocalMockAdminProvider implements AdminDataProvider {
     patch: Partial<
       Pick<
         BinaryPair,
-        "enabled" | "minStake" | "maxStake" | "exposureCap" | "settlementDelayMs" | "drawPolicy"
+        "enabled" | "minStake" | "maxStake" | "exposureCap" | "settlementDelayMs"
       >
     > & { payoutBps?: Partial<Record<BinaryDuration, number>> },
     ctx: ConsequentialContext,
@@ -1042,7 +1038,6 @@ export class LocalMockAdminProvider implements AdminDataProvider {
       maxStake: p.maxStake,
       exposureCap: p.exposureCap,
       settlementDelayMs: p.settlementDelayMs,
-      drawPolicy: p.drawPolicy,
       payoutBps: { ...p.payoutBps },
     };
     if (patch.payoutBps) {

@@ -26,10 +26,7 @@ import { Pause, Play } from "lucide-react";
 
 export const Route = createFileRoute("/binary")({ component: Page });
 
-type PendingSettle = {
-  pos: BinaryPosition;
-  outcome: "won" | "lost" | "draw_refund" | "cancelled";
-};
+type PendingSettle = { pos: BinaryPosition };
 
 function Page() {
   return (
@@ -208,15 +205,6 @@ function PairsPanel({ pairs }: { pairs: BinaryPair[] }) {
         </div>
       ),
     },
-    {
-      key: "draw",
-      header: "Draw policy",
-      cell: (p) => (
-        <StatusBadge tone="neutral" dot={false}>
-          {p.drawPolicy}
-        </StatusBadge>
-      ),
-    },
   ];
 
   const filters: DataTableFilter<BinaryPair>[] = [
@@ -320,7 +308,6 @@ function PairsPanel({ pairs }: { pairs: BinaryPair[] }) {
                       value: `${selected.settlementDelayMs} ms`,
                       mono: true,
                     },
-                    { label: "Draw policy", value: selected.drawPolicy, mono: true },
                     {
                       label: "Price source rule",
                       value:
@@ -503,8 +490,7 @@ function PositionsPanel({ positions }: { positions: BinaryPosition[] }) {
         { value: "open", label: "Open" },
         { value: "won", label: "Won" },
         { value: "lost", label: "Lost" },
-        { value: "draw_refund", label: "Draw / refund" },
-        { value: "cancelled", label: "Cancelled" },
+        { value: "error", label: "Error" },
       ],
       match: (p, v) => p.status === v,
     },
@@ -532,13 +518,13 @@ function PositionsPanel({ positions }: { positions: BinaryPosition[] }) {
             </Button>
             {p.status === "open" ? (
               <Button
-                variant="destructive"
+                variant="outline"
                 size="sm"
-                data-testid={`bpos-cancel-${p.id}`}
+                data-testid={`bpos-settle-${p.id}`}
                 disabled={!canSettle}
-                onClick={() => setPending({ pos: p, outcome: "cancelled" })}
+                onClick={() => setPending({ pos: p })}
               >
-                Cancel
+                Settle now
               </Button>
             ) : null}
           </div>
@@ -593,43 +579,14 @@ function PositionsPanel({ positions }: { positions: BinaryPosition[] }) {
         }
         actions={
           selected && selected.status === "open" ? (
-            <>
-              <Button
-                size="sm"
-                data-testid="bpos-detail-won"
-                disabled={!canSettle}
-                onClick={() => setPending({ pos: selected, outcome: "won" })}
-              >
-                Mark won
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                data-testid="bpos-detail-lost"
-                disabled={!canSettle}
-                onClick={() => setPending({ pos: selected, outcome: "lost" })}
-              >
-                Mark lost
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                data-testid="bpos-detail-refund"
-                disabled={!canSettle}
-                onClick={() => setPending({ pos: selected, outcome: "draw_refund" })}
-              >
-                Draw / refund
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                data-testid="bpos-detail-cancel"
-                disabled={!canSettle}
-                onClick={() => setPending({ pos: selected, outcome: "cancelled" })}
-              >
-                Cancel
-              </Button>
-            </>
+            <Button
+              size="sm"
+              data-testid="bpos-detail-settle"
+              disabled={!canSettle}
+              onClick={() => setPending({ pos: selected })}
+            >
+              Settle now
+            </Button>
           ) : null
         }
       />
@@ -640,25 +597,22 @@ function PositionsPanel({ positions }: { positions: BinaryPosition[] }) {
           onOpenChange={(o) => {
             if (!o) setPending(null);
           }}
-          title={`Settle position — ${pending.outcome}`}
-          description="Settles the open position with the chosen outcome. This is auditable and cannot be undone from this route (see Settlements for corrections)."
+          title="Settle position"
+          description="Runs canonical Binary settlement from the authoritative market quote. The Admin does not choose the trade outcome."
           target={
             <span className="mono">
               {pending.pos.id} · {pending.pos.pair}
             </span>
           }
           targetId={pending.pos.id}
-          action={`binary.settle_position:${pending.outcome}`}
+          action="binary.settle_position"
           permission="binary.settle"
           currentState={<StatusBadge tone="info">open</StatusBadge>}
-          proposedState={
-            <StatusBadge tone={posTone(pending.outcome)}>{pending.outcome}</StatusBadge>
-          }
-          destructive={pending.outcome === "lost" || pending.outcome === "cancelled"}
+          proposedState={<StatusBadge tone="info">canonical settlement</StatusBadge>}
           submitLabel="Settle"
           successMessage="Position settled"
           onConfirm={(reason) =>
-            provider.settleBinaryPosition(pending.pos.id, pending.outcome, {
+            provider.settleBinaryPosition(pending.pos.id, {
               actor: session.actorName,
               role: session.roleId,
               environment: session.environment,
@@ -683,7 +637,7 @@ function BinaryPairEditForm({
     patch: Partial<
       Pick<
         BinaryPair,
-        "enabled" | "minStake" | "maxStake" | "exposureCap" | "settlementDelayMs" | "drawPolicy"
+        "enabled" | "minStake" | "maxStake" | "exposureCap" | "settlementDelayMs"
       >
     > & { payoutBps?: Partial<Record<BinaryDuration, number>> },
     reason: string,
@@ -695,7 +649,6 @@ function BinaryPairEditForm({
     maxStake: "1000",
     exposureCap: "50000",
     settlementDelayMs: 500,
-    drawPolicy: "refund" as "refund" | "cancel" | "loss",
     payoutBps: {} as Record<BinaryDuration, number>,
   });
   const [reason, setReason] = useState("");
@@ -708,7 +661,6 @@ function BinaryPairEditForm({
         maxStake: pair.maxStake,
         exposureCap: pair.exposureCap,
         settlementDelayMs: pair.settlementDelayMs,
-        drawPolicy: pair.drawPolicy,
         payoutBps: { ...pair.payoutBps },
       });
       setReason("");
@@ -724,7 +676,7 @@ function BinaryPairEditForm({
         if (!o) onClose();
       }}
       title={pair ? `Edit — ${pair.symbol}` : ""}
-      description="Update stakes, exposure cap, settlement delay, draw policy, and the payout matrix."
+      description="Update stakes, exposure cap, settlement delay, and the payout matrix."
       submitLabel="Save pair"
       submitDisabled={!reasonOk}
       onSubmit={async () => {
@@ -735,7 +687,6 @@ function BinaryPairEditForm({
             maxStake: state.maxStake,
             exposureCap: state.exposureCap,
             settlementDelayMs: state.settlementDelayMs,
-            drawPolicy: state.drawPolicy,
             payoutBps: state.payoutBps,
           },
           reason.trim(),
@@ -779,7 +730,7 @@ function BinaryPairEditForm({
           />
         </Field>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3">
         <Field label="Settlement delay (ms)">
           <Input
             data-testid="bin-delay"
@@ -787,23 +738,6 @@ function BinaryPairEditForm({
             value={state.settlementDelayMs}
             onChange={(e) => setState((s) => ({ ...s, settlementDelayMs: Number(e.target.value) }))}
           />
-        </Field>
-        <Field label="Draw policy">
-          <select
-            data-testid="bin-draw"
-            value={state.drawPolicy}
-            onChange={(e) =>
-              setState((s) => ({
-                ...s,
-                drawPolicy: e.target.value as "refund" | "cancel" | "loss",
-              }))
-            }
-            className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
-          >
-            <option value="refund">refund</option>
-            <option value="cancel">cancel</option>
-            <option value="loss">loss</option>
-          </select>
         </Field>
       </div>
       <Field label="Payout matrix (bps)">
@@ -848,7 +782,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function posTone(s: BinaryPosition["status"] | "won" | "lost" | "draw_refund" | "cancelled") {
+function posTone(s: BinaryPosition["status"]) {
   switch (s) {
     case "open":
       return "info" as const;
@@ -856,10 +790,8 @@ function posTone(s: BinaryPosition["status"] | "won" | "lost" | "draw_refund" | 
       return "success" as const;
     case "lost":
       return "destructive" as const;
-    case "draw_refund":
-      return "warning" as const;
-    case "cancelled":
-      return "neutral" as const;
+    case "error":
+      return "destructive" as const;
     default:
       return "neutral" as const;
   }

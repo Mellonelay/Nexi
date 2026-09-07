@@ -28,7 +28,7 @@ describe("AdminService sandbox source contract", () => {
       subject.requestSandboxControl({
         scope: "binary",
         target: "production-account",
-        mode: "deterministic",
+        mode: "forced_win",
         expiresAt: new Date(Date.now() + 60_000).toISOString(),
         reason: "test",
         idempotencyKey: "sandbox-contract-1",
@@ -44,7 +44,7 @@ describe("AdminService sandbox source contract", () => {
       subject.requestSandboxControl({
         scope: "binary",
         target: "sandbox-account",
-        mode: "deterministic",
+        mode: "forced_win",
         expiresAt: new Date(Date.now() - 1).toISOString(),
         reason: "test",
         idempotencyKey: "sandbox-contract-2",
@@ -63,7 +63,7 @@ describe("AdminService sandbox source contract", () => {
     await subject.requestSandboxControl({
       scope: "binary",
       target: "sandbox-account",
-      mode: "deterministic",
+      mode: "forced_win",
       expiresAt,
       reason: "controlled test",
       idempotencyKey: "sandbox-contract-3",

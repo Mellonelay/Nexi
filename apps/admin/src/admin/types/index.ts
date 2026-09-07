@@ -342,7 +342,6 @@ export interface BinaryPair {
   exposureCap: string;
   exposureUsed: string;
   settlementDelayMs: number;
-  drawPolicy: "refund" | "cancel" | "loss";
   maintenance: boolean;
 }
 
@@ -356,7 +355,7 @@ export interface BinaryPosition {
   stake: string;
   openPrice: string;
   strikeAt: string;
-  status: "open" | "won" | "lost" | "draw_refund" | "cancelled";
+  status: "open" | "won" | "lost" | "error";
   payout?: string;
 }
 
@@ -638,15 +637,7 @@ export interface TranslationKey {
   editor?: string;
 }
 
-export type SettlementState =
-  | "open"
-  | "settling"
-  | "win"
-  | "loss"
-  | "draw"
-  | "refund"
-  | "failed"
-  | "cancelled";
+export type SettlementState = "open" | "settling" | "win" | "loss" | "error";
 
 export interface SettlementRecord {
   id: string;

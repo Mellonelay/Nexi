@@ -51,7 +51,7 @@ describe("SandboxExecutionService", () => {
         ROLE_GATED: true,
         ACCOUNT_SCOPED: true,
         target: "sandbox-account",
-        mode: "deterministic",
+        mode: "forced_win",
         expiresAt: future,
       },
     });
@@ -102,7 +102,7 @@ describe("SandboxExecutionService", () => {
         ROLE_GATED: true,
         ACCOUNT_SCOPED: true,
         target: "sandbox-account",
-        mode: "deterministic",
+        mode: "forced_win",
         expiresAt: new Date(Date.now() - 1).toISOString(),
       },
     });
@@ -119,7 +119,7 @@ describe("SandboxExecutionService", () => {
         ROLE_GATED: true,
         ACCOUNT_SCOPED: true,
         target: "production-account",
-        mode: "deterministic",
+        mode: "forced_win",
         expiresAt: future,
       },
     });

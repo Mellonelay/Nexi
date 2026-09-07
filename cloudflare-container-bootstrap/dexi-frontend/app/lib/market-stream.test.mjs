@@ -6,6 +6,8 @@ import {
   EMPTY_STREAM_SNAPSHOT,
   normalizeMarketKline,
   normalizeMarketTick,
+  reconnectRecoveryStatus,
+  shouldApplyRecovery,
   streamStatusAt,
   timeframeToSeconds,
 } from './market-stream.ts';
@@ -47,4 +49,13 @@ test('normalizes and applies a backend Kline event to the selected chart', () =>
   assert.deepEqual(updated.candles, [{ time: 60, open: 10, high: 12, low: 9, close: 11, volume: 3 }]);
   assert.equal(updated.price, 11);
   assert.equal(normalizeMarketKline({ symbol: 'ETHUSDT', interval: '1m', openTime: 60_000, open: 1, high: 1, low: 1, close: 1 }, 'BTCUSDT', '1m'), null);
+});
+
+
+test('models reconnect read-back failure and stale recovery generations deterministically', () => {
+  assert.equal(reconnectRecoveryStatus(EMPTY_STREAM_SNAPSHOT), 'UNAVAILABLE');
+  assert.equal(reconnectRecoveryStatus({ ...EMPTY_STREAM_SNAPSHOT, candles: [{ time: 60, open: 1, high: 1, low: 1, close: 1 }] }), 'STALE');
+  assert.equal(shouldApplyRecovery(2, 2, false), true);
+  assert.equal(shouldApplyRecovery(1, 2, false), false);
+  assert.equal(shouldApplyRecovery(2, 2, true), false);
 });

@@ -76,12 +76,12 @@ const D1_MARKET_PROVIDER_SPECS = {
   gate: {
     id: 'provider-gate', displayName: 'Gate', priority: 20,
     restBaseUrl: 'https://api.gateio.ws', websocketBaseUrl: null,
-    supportsQuotes: true, supportsKlines: false, supportsTrades: false, supportsDepth: false,
+    supportsQuotes: true, supportsKlines: true, supportsTrades: false, supportsDepth: false,
   },
   yahoo: {
     id: 'provider-yahoo', displayName: 'Yahoo Finance', priority: 30,
     restBaseUrl: 'https://query1.finance.yahoo.com', websocketBaseUrl: null,
-    supportsQuotes: true, supportsKlines: false, supportsTrades: false, supportsDepth: false,
+    supportsQuotes: true, supportsKlines: true, supportsTrades: false, supportsDepth: false,
   },
   moex: {
     id: 'provider-moex', displayName: 'Moscow Exchange ISS', priority: 5,
@@ -460,10 +460,14 @@ export class MarketAuthorityService implements OnModuleInit {
     for (const [symbol] of pairs) {
       const policy = getMarketSourcePolicy(symbol);
       if (!policy) continue;
-      const providers = new Set([policy.displayPolicy.primaryProvider]);
-      // MOEX is the live Kline-capable alternate for the Yahoo-owned USD/RUB
-      // quote and must remain available to the history router.
-      if (symbol === 'USDRUB') providers.add('moex');
+      // D1 is the runtime routing authority. Persist every implemented provider
+      // mapping that can serve either quotes or Klines; otherwise a quote-only
+      // primary can make a valid history fallback unreachable at runtime.
+      const providers = new Set(
+        policy.providerMappings
+          .filter((mapping) => (mapping.quoteSupported || mapping.klineSupported) && mapping.provider in D1_MARKET_PROVIDER_SPECS)
+          .map((mapping) => mapping.provider),
+      );
       for (const provider of providers) {
         const mapping = getProviderMapping(symbol, provider);
         if (!mapping || !(provider in D1_MARKET_PROVIDER_SPECS)) continue;

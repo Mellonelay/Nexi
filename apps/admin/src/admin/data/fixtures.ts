@@ -728,7 +728,6 @@ export const BINARY_PAIRS: BinaryPair[] = [
     exposureCap: "50000",
     exposureUsed: "12480",
     settlementDelayMs: 500,
-    drawPolicy: "refund",
     maintenance: false,
   },
   {
@@ -741,7 +740,6 @@ export const BINARY_PAIRS: BinaryPair[] = [
     exposureCap: "40000",
     exposureUsed: "9210",
     settlementDelayMs: 500,
-    drawPolicy: "refund",
     maintenance: false,
   },
   {
@@ -754,7 +752,6 @@ export const BINARY_PAIRS: BinaryPair[] = [
     exposureCap: "20000",
     exposureUsed: "3140",
     settlementDelayMs: 700,
-    drawPolicy: "cancel",
     maintenance: false,
   },
   {
@@ -767,7 +764,6 @@ export const BINARY_PAIRS: BinaryPair[] = [
     exposureCap: "10000",
     exposureUsed: "0",
     settlementDelayMs: 700,
-    drawPolicy: "cancel",
     maintenance: true,
   },
 ];
@@ -827,7 +823,7 @@ export const BINARY_POSITIONS: BinaryPosition[] = [
     stake: "25",
     openPrice: "3115.02",
     strikeAt: iso(60),
-    status: "draw_refund",
+    status: "lost",
     payout: "25.00",
   },
 ];

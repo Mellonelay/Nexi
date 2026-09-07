@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { GovernanceShell, ReceiptBanner, JsonState } from "@/admin/components/GovernancePrimitives";
 import { useReceipt } from "@/admin/components/governance-hooks";
 import { RouteGuard } from "@/admin/components/RouteGuard";
@@ -21,16 +21,7 @@ type Scenario = {
   seed: string;
   duration: string;
   expectedResult: string;
-  mode:
-    | "normal"
-    | "forced_win"
-    | "forced_loss"
-    | "win_ratio"
-    | "hazard_rate"
-    | "payout_override"
-    | "mock_movement"
-    | "balance_override"
-    | "deterministic";
+  mode: "normal" | "forced_win" | "forced_loss";
   expiresAt: string;
   result?: string;
   auditId?: string;
@@ -52,21 +43,17 @@ function Inner() {
   const [pending, setPending] = useState<Scenario | null>(null);
   const [form, setForm] = useState<Scenario>({
     id: "draft",
-    name: "Deterministic QA scenario",
+    name: "Options sandbox scenario",
     scope: "binary",
     target: "bin_ethusdt",
     seed: "QA-001",
     duration: "15 minutes",
-    expectedResult: "stable deterministic outcome",
-    mode: "deterministic",
+    expectedResult: "",
+    mode: "normal",
     expiresAt: isoInput(30),
   });
   const update = <K extends keyof Scenario>(key: K, value: Scenario[K]) =>
     setForm((v) => ({ ...v, [key]: value }));
-  const deterministic = useMemo(
-    () => deterministicResult(form.seed, form.name, form.target),
-    [form.seed, form.name, form.target],
-  );
   return (
     <GovernanceShell
       title="Sandbox Controls"
@@ -137,16 +124,7 @@ function Inner() {
                 value={form.mode}
                 onChange={(e) => update("mode", e.target.value as Scenario["mode"])}
               >
-                {[
-                  "deterministic",
-                  "forced_win",
-                  "forced_loss",
-                  "win_ratio",
-                  "hazard_rate",
-                  "payout_override",
-                  "mock_movement",
-                  "balance_override",
-                ].map((m) => (
+                {["normal", "forced_win", "forced_loss"].map((m) => (
                   <option key={m} value={m}>
                     {m}
                   </option>
@@ -162,18 +140,12 @@ function Inner() {
                 onChange={(e) => update("expiresAt", e.target.value)}
               />
             </div>
-            <div className="rounded border border-border/50 bg-background/40 p-2 text-xs">
-              <div className="text-[10px] uppercase text-muted-foreground">
-                Expected deterministic result
-              </div>
-              <div className="mono mt-1 text-primary">{form.expectedResult || deterministic}</div>
-            </div>
             <div className="flex items-end">
               <Button
                 className="w-full"
                 disabled={!form.name.trim() || !form.target.trim() || !form.seed.trim()}
                 onClick={() =>
-                  setPending({ ...form, expectedResult: form.expectedResult || deterministic })
+                  setPending({ ...form })
                 }
               >
                 Request scenario
@@ -262,11 +234,6 @@ function Inner() {
       )}
     </GovernanceShell>
   );
-}
-function deterministicResult(seed: string, name: string, target: string) {
-  let n = 0;
-  for (const c of `${seed}:${name}:${target}`) n = (n * 31 + c.charCodeAt(0)) % 997;
-  return n % 2 === 0 ? "deterministic-pass" : "deterministic-review";
 }
 function isoInput(minutes: number) {
   const d = new Date(Date.now() + minutes * 60_000);

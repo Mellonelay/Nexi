@@ -8,17 +8,7 @@ import { AdminCommandStatus, Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { SandboxScenarioService } from "./sandbox-scenario.service";
 
-const SANDBOX_MODES = new Set([
-  "normal",
-  "forced_win",
-  "forced_loss",
-  "win_ratio",
-  "hazard_rate",
-  "payout_override",
-  "mock_movement",
-  "balance_override",
-  "deterministic",
-]);
+const SANDBOX_MODES = new Set(["normal", "forced_win", "forced_loss"]);
 
 @Injectable()
 export class SandboxExecutionService {

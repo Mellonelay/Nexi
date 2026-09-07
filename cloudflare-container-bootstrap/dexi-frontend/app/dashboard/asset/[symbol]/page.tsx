@@ -54,12 +54,12 @@ export default function AssetDetailPage() {
     ? `${instrument.name} market context and project information.`
     : `${instrument.category} reference information for this approved instrument.`;
   const aboutFacts = isCrypto
-    ? [['Protocol / network', definition?.protocol ?? 'Additional asset information is currently unavailable.'], ['Supply model', 'Additional asset information is currently unavailable.'], ['Metadata source', definition?.metadataProvider ?? 'Additional asset information is currently unavailable.']]
+    ? [['Protocol / network', definition?.protocol ?? placeholder], ['Supply model', placeholder], ['Metadata source', definition?.metadataProvider ?? placeholder]]
     : instrument.category === 'Metal'
-      ? [['Reference instrument', 'Unavailable'], ['Market session', 'Unavailable'], ['Contract details', 'Unavailable']]
+      ? [['Reference instrument', placeholder], ['Market session', placeholder], ['Contract details', placeholder]]
       : instrument.category === 'Forex'
-        ? [['Base / quote', instrument.pair || placeholder], ['Market session', 'Unavailable'], ['Lot details', 'Unavailable']]
-        : [['Issuer', 'Unavailable'], ['Exchange', 'Unavailable'], ['Corporate actions', 'Unavailable']];
+        ? [['Base / quote', instrument.pair || placeholder], ['Market session', placeholder], ['Lot details', placeholder]]
+        : [['Issuer', placeholder], ['Exchange', placeholder], ['Corporate actions', placeholder]];
 
   return (
     <div className="min-h-screen w-full min-w-0 overflow-x-clip bg-[#050508] px-4 pb-28 pt-4 text-[#F8F6FF] md:px-8 md:pb-10 md:pt-8">
@@ -83,7 +83,7 @@ export default function AssetDetailPage() {
               <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border border-violet-300/20 bg-[#21152F] text-lg font-semibold text-[#E8D9FF]">{definition?.iconKey ? <Image src={assetIconPath(definition) ?? ''} alt="" width={56} height={56} className="h-full w-full object-cover" /> : instrument.symbol.slice(0, 3)}</div>
               <div>
                 <p className="text-lg font-semibold">{instrument.name}</p>
-                <p className="text-sm text-[#8C8299]">{instrument.category} · {instrument.provenance}</p>
+                <p className="text-sm text-[#8C8299]">{instrument.category}</p>
               </div>
             </div>
             <div className="text-left sm:text-right">
@@ -96,7 +96,7 @@ export default function AssetDetailPage() {
         <section className="mb-5 min-w-0 overflow-hidden rounded-xl border border-violet-300/15 bg-[#0B0711]">
           <div className="flex items-center justify-between border-b border-violet-300/10 px-4 py-3">
             <div className="flex items-center gap-2"><BarChart3 className="h-4 w-4 text-[#A995FF]" aria-hidden="true" /><h2 className="font-semibold">Market chart</h2></div>
-            <span className="text-xs text-[#8C8299]">{instrument.provenance}</span>
+            <span className="text-xs text-[#8C8299]">{timeframe === '1d' ? '1D' : timeframe}</span>
           </div>
           <div className="min-w-0 min-h-[260px]">
             <RealtimeTradingChart symbol={normalizePair(instrument.pair)} type="spot" interval={timeframe} />
@@ -114,8 +114,8 @@ export default function AssetDetailPage() {
               <div><dt className="text-[#8C8299]">24h change</dt><dd className="mt-1 font-mono">{instrument.change24h ?? placeholder}</dd></div>
               <div><dt className="text-[#8C8299]">Volume (24h)</dt><dd className="mt-1 font-mono">{instrument.volume24h ?? placeholder}</dd></div>
               <div><dt className="text-[#8C8299]">Precision</dt><dd className="mt-1 font-mono">{instrument.precision ?? placeholder}</dd></div>
-              <div><dt className="text-[#8C8299]">Source</dt><dd className="mt-1 font-mono">{matchedItem?.provider ?? 'UNAVAILABLE'}</dd></div>
-              <div><dt className="text-[#8C8299]">Updated</dt><dd className="mt-1 font-mono">{matchedItem?.observedAt ? new Date(matchedItem.observedAt).toLocaleTimeString() : 'UNAVAILABLE'}</dd></div>
+              <div><dt className="text-[#8C8299]">Source</dt><dd className="mt-1 font-mono">{matchedItem?.provider ?? placeholder}</dd></div>
+              <div><dt className="text-[#8C8299]">Updated</dt><dd className="mt-1 font-mono">{matchedItem?.observedAt ? new Date(matchedItem.observedAt).toLocaleTimeString() : placeholder}</dd></div>
             </dl>
           </div>
           <div className="min-w-0 rounded-xl border border-violet-300/15 bg-[#100A18] p-4">
@@ -124,7 +124,7 @@ export default function AssetDetailPage() {
             <dl className="mt-4 grid grid-cols-1 gap-3 border-t border-violet-300/10 pt-4 text-xs sm:grid-cols-3">
               {aboutFacts.map(([label, value]) => <div key={label}><dt className="text-[#8C8299]">{label}</dt><dd className="mt-1 break-words font-mono text-[#C3BBD0]">{value}</dd></div>)}
             </dl>
-            <div className="mt-4 flex items-center justify-between border-t border-violet-300/10 pt-3 text-xs text-[#8C8299]"><span>Source</span><span>{instrument.provenance}</span></div>
+
           </div>
         </section>
 

@@ -165,18 +165,8 @@ export class SandboxControlDto {
     | "balance";
   @IsString() @Length(1, 256) target!: string;
   @IsString()
-  @IsIn([
-    "normal",
-    "forced_win",
-    "forced_loss",
-    "win_ratio",
-    "hazard_rate",
-    "payout_override",
-    "mock_movement",
-    "balance_override",
-    "deterministic",
-  ])
-  mode!: string;
+  @IsIn(["normal", "forced_win", "forced_loss"])
+  mode!: "normal" | "forced_win" | "forced_loss";
   @IsOptional() @IsString() @Length(1, 256) seed?: string;
   @IsOptional() @IsString() @Length(1, 256) expectedResult?: string;
   @IsDateString() expiresAt!: string;

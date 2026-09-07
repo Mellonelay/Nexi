@@ -35,7 +35,7 @@ export default function SpotTradeForm({ onBuy, onSell, currentPrice, selectedPri
     e.preventDefault();
     const p = Number.parseFloat(price);
     const a = Number.parseFloat(amount);
-    
+
     if (isNaN(a) || a <= 0) return;
     if (type === 'LIMIT' && (isNaN(p) || p <= 0)) return;
 
@@ -49,7 +49,7 @@ export default function SpotTradeForm({ onBuy, onSell, currentPrice, selectedPri
   const handlePercentageClick = (pct: number) => {
     if (!balance || balance <= 0) return;
     const p = Number.parseFloat(price) || currentPrice || 0;
-    
+
     // This legacy form receives only one authoritative balance. It can derive
     // a buy amount, but must not infer a sell-side base-asset balance.
     if (side === 'BUY') {
@@ -66,7 +66,7 @@ export default function SpotTradeForm({ onBuy, onSell, currentPrice, selectedPri
       {/* Big Price Display */}
       <div className="text-center mb-6">
           <h2 className={`text-2xl font-bold font-mono ${currentPrice === null ? 'text-gray-400' : currentPrice >= (Number.parseFloat(price) || 0) ? 'text-[#00C076]' : 'text-[#FF4D4F]'}`}>
-            {currentPrice === null ? 'Unavailable' : currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            {currentPrice === null ? '—' : currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}
           </h2>
       </div>
 
@@ -135,15 +135,15 @@ export default function SpotTradeForm({ onBuy, onSell, currentPrice, selectedPri
 
         {/* Balance */}
         <div className="flex justify-end text-[10px] text-gray-400 mb-2">
-            <span>Avbl: <span className="text-white font-mono">{balance === null ? 'Unavailable' : `${balance.toFixed(2)} USDT`}</span></span>
+            <span>Avbl: <span className="text-white font-mono">{balance === null ? '—' : `${balance.toFixed(2)} USDT`}</span></span>
         </div>
 
         {/* Percentage Slider */}
         <div className="mb-4">
-            <input 
-                type="range" 
-                min="0" 
-                max="100" 
+            <input
+                type="range"
+                min="0"
+                max="100"
                 step="1"
                 className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
                 onChange={(e) => handlePercentageClick(parseInt(e.target.value))}
@@ -161,8 +161,8 @@ export default function SpotTradeForm({ onBuy, onSell, currentPrice, selectedPri
           type="submit"
           disabled={balance === null || currentPrice === null || !amount}
           className={`w-full py-3 rounded-lg font-bold text-lg mt-auto shadow-lg disabled:cursor-not-allowed disabled:opacity-50 ${
-            side === 'BUY' 
-                ? 'bg-[#00C076] text-gray-900 shadow-[#00C076]/20' 
+            side === 'BUY'
+                ? 'bg-[#00C076] text-gray-900 shadow-[#00C076]/20'
                 : 'bg-[#FF4D4F] text-white shadow-[#FF4D4F]/20'
           }`}
         >
