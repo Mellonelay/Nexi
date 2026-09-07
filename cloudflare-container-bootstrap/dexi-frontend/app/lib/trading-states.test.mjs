@@ -21,12 +21,11 @@ test('binary lifecycle exposes governed result and recovery states', () => {
   assert.equal(canTransitionBinary('CONFIRMATION', 'SUBMITTING'), true);
   assert.equal(canTransitionBinary('OPEN', 'SETTLING'), true);
   assert.equal(canTransitionBinary('SETTLING', 'SETTLEMENT_DELAYED'), true);
-  assert.equal(canTransitionBinary('SETTLEMENT_DELAYED', 'REFUND'), true);
-  assert.equal(canTransitionBinary('REFUND', 'HISTORY'), true);
+  assert.equal(canTransitionBinary('SETTLEMENT_DELAYED', 'WIN'), true);
   assert.equal(canTransitionBinary('LOSS', 'HISTORY'), true);
   assert.equal(canTransitionBinary('LOSS', 'OPEN'), false);
   assert.equal(normalizeBinaryPositionState('price_stale'), 'PRICE_STALE');
-  assert.equal(normalizeBinaryPositionState('refund'), 'REFUND');
+  assert.equal(normalizeBinaryPositionState('refund'), 'ERROR');
   assert.equal(normalizeBinaryPositionState('failed'), 'ERROR');
 });
 

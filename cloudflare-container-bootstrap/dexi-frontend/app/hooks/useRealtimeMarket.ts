@@ -11,6 +11,8 @@ import {
   type MarketStreamSnapshot,
   normalizeMarketTick,
   normalizeMarketKline,
+  reconnectRecoveryStatus,
+  shouldApplyRecovery,
   streamStatusAt,
   timeframeToSeconds,
 } from "../lib/market-stream";
@@ -74,6 +76,8 @@ export function useRealtimeMarket(symbol: string, interval = "1m") {
     let worker: Worker | null = null;
     let socket: ReturnType<typeof io> | null = null;
     let acceptedRealtime = false;
+    let connectedOnce = false;
+    let recoveryGeneration = 0;
 
     setSnapshot({ ...EMPTY_STREAM_SNAPSHOT, status: "CONNECTING" });
 
@@ -163,10 +167,40 @@ export function useRealtimeMarket(symbol: string, interval = "1m") {
       };
 
       socket.on("connect", () => {
+        const isReconnect = connectedOnce;
+        connectedOnce = true;
         setSnapshot((current) => ({
           ...current,
           status: acceptedRealtime ? "LIVE" : current.status,
         }));
+        if (!isReconnect) return;
+
+        // Socket.IO does not guarantee missed-event replay unless connection-state
+        // recovery or an application cursor is enabled. Re-anchor every recovered
+        // transport to the authoritative REST Kline history instead of inventing
+        // events that may have been missed while disconnected.
+        const generation = ++recoveryGeneration;
+        void loadBaseline(symbol, interval)
+          .then((baseline) => {
+            if (!shouldApplyRecovery(generation, recoveryGeneration, disposed)) return;
+            acceptedRealtime = false;
+            if (worker) {
+              worker.postMessage({
+                type: "INIT",
+                intervalSeconds,
+                snapshot: baseline,
+              });
+            } else {
+              setSnapshot(baseline);
+            }
+          })
+          .catch(() => {
+            if (!shouldApplyRecovery(generation, recoveryGeneration, disposed)) return;
+            setSnapshot((current) => ({
+              ...current,
+              status: reconnectRecoveryStatus(current),
+            }));
+          });
       });
       socket.io.on("reconnect_attempt", () =>
         setSnapshot((current) => ({ ...current, status: "RECONNECTING" })),
@@ -174,13 +208,13 @@ export function useRealtimeMarket(symbol: string, interval = "1m") {
       socket.on("disconnect", () =>
         setSnapshot((current) => ({
           ...current,
-          status: current.candles.length ? "STALE" : "UNAVAILABLE",
+          status: reconnectRecoveryStatus(current),
         })),
       );
       socket.on("connect_error", () =>
         setSnapshot((current) => ({
           ...current,
-          status: current.candles.length ? "STALE" : "UNAVAILABLE",
+          status: reconnectRecoveryStatus(current),
         })),
       );
       socket.on("market_tick", handleTick);

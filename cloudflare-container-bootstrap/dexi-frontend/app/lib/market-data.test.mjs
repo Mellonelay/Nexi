@@ -9,9 +9,11 @@ test('normalizes only finite OHLCV candles', () => {
   assert.equal(normalizeCandle({ time: 'bad', open: 1, high: 2, low: 0, close: 1 }), null);
 });
 
-test('keeps unavailable and interrupted market states explicit', () => {
-  assert.equal(marketDataStatusLabel('UNAVAILABLE'), 'Market data unavailable');
-  assert.equal(marketDataStatusLabel('STALE'), 'Market data stale');
-  assert.equal(marketDataStatusLabel('ERROR'), 'Market data error');
-  assert.equal(marketDataStatusLabel('CONNECTION_LOST'), 'Market connection lost');
+test('keeps internal market states out of user-facing labels', () => {
+  assert.equal(marketDataStatusLabel('UNAVAILABLE'), 'Market data');
+  assert.equal(marketDataStatusLabel('STALE'), 'Market data');
+  assert.equal(marketDataStatusLabel('DISABLED'), 'Market data');
+  assert.equal(marketDataStatusLabel('ERROR'), 'Market data');
+  assert.equal(marketDataStatusLabel('CONNECTION_LOST'), 'Market data');
+  assert.equal(marketDataStatusLabel('LOADING'), 'Loading market data');
 });

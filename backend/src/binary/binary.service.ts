@@ -107,10 +107,7 @@ export class BinaryService {
       }
       const sandbox = await this.sandboxScenarios.findBinaryDirective(tx, position.userId, position.id);
       const state = (sandbox?.result ?? this.outcome(position.side, position.entryPrice, quote.price)) as 'WIN' | 'LOSS';
-      const effectiveConfiguration = sandbox?.payoutRate
-        ? { ...configuration, payoutRate: sandbox.payoutRate }
-        : configuration;
-      const payout = this.payoutFor(state, position.stake, effectiveConfiguration);
+      const payout = this.payoutFor(state, position.stake, configuration);
       const account = await this.ledgerAuthority.getAccountForUser(position.userId, quote.quoteAsset, tx);
       const receipt = `gate2:binary:settlement:${position.id}`;
       await this.ledgerAuthority.settle({
@@ -137,7 +134,6 @@ export class BinaryService {
             governanceCommandId: sandbox.commandId,
             mode: sandbox.mode,
             result: state,
-            payoutRateOverride: sandbox.payoutRate?.toString() ?? null,
             expiryPrice: quote.price.toString(),
             expiryProvider: quote.provider,
             receipt,

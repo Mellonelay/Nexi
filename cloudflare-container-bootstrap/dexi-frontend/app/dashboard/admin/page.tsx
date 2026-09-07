@@ -203,15 +203,6 @@ function RiskManagement() {
     api.get('/admin/risk/pairs').then(res => setPairs(res.data)).catch(console.error);
   }, []);
 
-  const updateRisk = async (symbol: string, houseWinRatio: number) => {
-    try {
-      await api.post('/admin/risk/update', { symbol, houseWinRatio });
-      alert('Risk Updated');
-    } catch (e) {
-      alert('Failed');
-    }
-  };
-
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -228,7 +219,8 @@ function RiskManagement() {
             <input
               type="number"
               defaultValue={p.houseWinRatio}
-              onBlur={(e) => updateRisk(p.symbol, parseInt(e.target.value))}
+              disabled
+              aria-label={`${p.symbol} sandbox outcome ratio (read only)`}
               className="w-16 bg-[#0a0e27] border border-white/10 rounded px-2 py-1 text-sm font-bold text-center text-[#FF4D4F]"
             />
             <span className="text-xs text-gray-500">%</span>

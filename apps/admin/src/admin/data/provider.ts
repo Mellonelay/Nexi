@@ -179,17 +179,13 @@ export interface AdminDataProvider {
   listBinaryPairs(): Promise<BinaryPair[]>;
   listBinaryPositions(): Promise<BinaryPosition[]>;
   pauseBinaryPair(id: string, paused: boolean, ctx: ConsequentialContext): Promise<MutationResult>;
-  settleBinaryPosition(
-    id: string,
-    outcome: "won" | "lost" | "draw_refund" | "cancelled",
-    ctx: ConsequentialContext,
-  ): Promise<MutationResult>;
+  settleBinaryPosition(id: string, ctx: ConsequentialContext): Promise<MutationResult>;
   updateBinaryPair(
     id: string,
     patch: Partial<
       Pick<
         BinaryPair,
-        "enabled" | "minStake" | "maxStake" | "exposureCap" | "settlementDelayMs" | "drawPolicy"
+        "enabled" | "minStake" | "maxStake" | "exposureCap" | "settlementDelayMs"
       >
     > & { payoutBps?: Partial<Record<BinaryDuration, number>> },
     ctx: ConsequentialContext,
@@ -404,16 +400,7 @@ export interface AdminDataProvider {
     payload: {
       scope: "binary" | "spot" | "balance";
       target: string;
-      mode:
-        | "normal"
-        | "forced_win"
-        | "forced_loss"
-        | "win_ratio"
-        | "hazard_rate"
-        | "payout_override"
-        | "mock_movement"
-        | "balance_override"
-        | "deterministic";
+      mode: "normal" | "forced_win" | "forced_loss";
       seed?: string;
       expectedResult?: string;
       expiresAt?: string;

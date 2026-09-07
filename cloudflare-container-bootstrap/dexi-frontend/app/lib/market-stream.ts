@@ -167,6 +167,14 @@ export function applyMarketTick(
   };
 }
 
+export function reconnectRecoveryStatus(snapshot: MarketStreamSnapshot): StreamState {
+  return snapshot.candles.length ? 'STALE' : 'UNAVAILABLE';
+}
+
+export function shouldApplyRecovery(generation: number, activeGeneration: number, disposed: boolean): boolean {
+  return !disposed && generation === activeGeneration;
+}
+
 export function streamStatusAt(snapshot: MarketStreamSnapshot, now: number, staleAfterMs = 15_000): StreamState {
   if (snapshot.status !== 'LIVE' || snapshot.lastTimestamp === null) return snapshot.status;
   return now - snapshot.lastTimestamp > staleAfterMs ? 'STALE' : 'LIVE';

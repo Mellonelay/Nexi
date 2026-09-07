@@ -1,21 +1,15 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
-import { AdminCommandStatus, Prisma } from "@prisma/client";
+import { AdminCommandStatus } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 
 export type BinarySandboxDirective = {
   commandId: string;
-  mode: "forced_win" | "forced_loss" | "deterministic" | "payout_override";
-  result?: "WIN" | "LOSS" | "DRAW" | "REFUND";
-  payoutRate?: Prisma.Decimal;
+  mode: "forced_win" | "forced_loss";
+  result: "WIN" | "LOSS";
   expiresAt: Date;
 };
 
-const SUPPORTED_BINARY_MODES = new Set([
-  "forced_win",
-  "forced_loss",
-  "deterministic",
-  "payout_override",
-]);
+const SUPPORTED_BINARY_MODES = new Set(["forced_win", "forced_loss"]);
 
 @Injectable()
 export class SandboxScenarioService {
@@ -73,34 +67,7 @@ export class SandboxScenarioService {
         continue;
       if (!SUPPORTED_BINARY_MODES.has(mode)) continue;
 
-      if (mode === "payout_override") {
-        if (typeof payload.payoutRate !== "string")
-          throw new BadRequestException(
-            "Payout override requires an explicit payoutRate",
-          );
-        let payoutRate: Prisma.Decimal;
-        try {
-          payoutRate = new Prisma.Decimal(payload.payoutRate);
-        } catch {
-          throw new BadRequestException("Payout override is not numeric");
-        }
-        if (payoutRate.isNegative())
-          throw new BadRequestException("Payout override cannot be negative");
-        return { commandId: command.id, mode, payoutRate, expiresAt };
-      }
-
-      const result =
-        mode === "forced_win"
-          ? "WIN"
-          : mode === "forced_loss"
-            ? "LOSS"
-            : typeof payload.expectedResult === "string"
-              ? payload.expectedResult.toUpperCase()
-              : "";
-      if (!["WIN", "LOSS", "DRAW", "REFUND"].includes(result))
-        throw new BadRequestException(
-          "Deterministic sandbox mode requires WIN, LOSS, DRAW, or REFUND",
-        );
+      const result: "WIN" | "LOSS" = mode === "forced_win" ? "WIN" : "LOSS";
       return { commandId: command.id, mode, result, expiresAt };
     }
     return null;

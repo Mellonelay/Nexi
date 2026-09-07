@@ -493,32 +493,34 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       enabled: !network.enabled,
     });
   }
+  private marketFeedFromRow(providerRow: JsonRecord, symbolValue: unknown): MarketFeed {
+    const symbol = record(symbolValue);
+    const pair = record(symbol.pair);
+    const latest = record(pair.latest);
+    const provider = stringValue(providerRow.key);
+    const active = stringValue(providerRow.status) === "ACTIVE" && symbol.enabled !== false;
+    const observedAt = Date.parse(stringValue(latest.observedAt));
+    const receivedAt = Date.parse(stringValue(latest.receivedAt));
+    const latestState = stringValue(latest.state);
+    const state: MarketFeed["status"] =
+      latestState === "LIVE" || latestState === "STALE" ? latestState : "UNAVAILABLE";
+    return {
+      id: stringValue(symbol.id, stringValue(providerRow.id)),
+      pair: stringValue(pair.symbol, "UNKNOWN"),
+      provider,
+      fallback: undefined,
+      latencyMs: Number.isFinite(receivedAt) && Number.isFinite(observedAt) ? Math.max(0, receivedAt - observedAt) : 0,
+      ageMs: Number.isFinite(observedAt) ? Math.max(0, Date.now() - observedAt) : 0,
+      status: !active ? "DISABLED" : stringValue(latest.provider) !== provider ? "UNAVAILABLE" : state,
+    };
+  }
+
   listFeeds(): Promise<MarketFeed[]> {
     return this.request<unknown[]>("/admin/market/feeds").then((rows) =>
       rows.flatMap((value) => {
         const row = record(value);
-        const symbols = Array.isArray(row.symbols) ? row.symbols : [];
-        return (symbols.length ? symbols : [null]).map((item) => {
-          const symbol = record(item);
-          const pair = record(symbol.pair);
-          const latest = record(pair.latest);
-          const active = stringValue(row.status) === "ACTIVE" && symbol.enabled !== false;
-          const observedAt = Date.parse(stringValue(latest.observedAt));
-          const receivedAt = Date.parse(stringValue(latest.receivedAt));
-          const latestState = stringValue(latest.state);
-          const state = latestState === "LIVE" || latestState === "STALE" ? latestState : "UNAVAILABLE";
-          const provider = stringValue(row.key);
-          const latestProvider = stringValue(latest.provider);
-          return {
-            id: stringValue(symbol.id, stringValue(row.id)),
-            pair: stringValue(pair.symbol, "UNKNOWN"),
-            provider,
-            fallback: undefined,
-            latencyMs: Number.isFinite(receivedAt) && Number.isFinite(observedAt) ? Math.max(0, receivedAt - observedAt) : 0,
-            ageMs: Number.isFinite(observedAt) ? Math.max(0, Date.now() - observedAt) : 0,
-            status: !active ? "DISABLED" : latestProvider !== provider ? "UNAVAILABLE" : state,
-          } as MarketFeed;
-        });
+        const symbols = Array.isArray(row.symbols) && row.symbols.length ? row.symbols : [null];
+        return symbols.map((item) => this.marketFeedFromRow(row, item));
       }),
     );
   }
@@ -627,7 +629,6 @@ export class NexiAdminApiProvider implements AdminDataProvider {
         exposureCap: "UNAVAILABLE",
         exposureUsed: "UNAVAILABLE",
         settlementDelayMs: Number(current.settlementDelaySeconds ?? 0) * 1000,
-        drawPolicy: current.tieMode === "CANCEL" ? "cancel" : "refund",
         maintenance: configs.every((row) => row.enabled === false),
       };
     });
@@ -639,15 +640,13 @@ export class NexiAdminApiProvider implements AdminDataProvider {
         const state = stringValue(row.state).toLowerCase();
         const side = stringValue(row.side);
         const status =
-          state === "active"
+          state === "active" || state === "settling" || state === "settlement_delayed"
             ? "open"
-            : state === "draw"
-              ? "draw_refund"
-              : state === "win"
-                ? "won"
-                : state === "loss"
-                  ? "lost"
-                  : "cancelled";
+            : state === "win"
+              ? "won"
+              : state === "loss"
+                ? "lost"
+                : "error";
         return {
           id: stringValue(row.id),
           userId: stringValue(row.userId),
@@ -676,7 +675,6 @@ export class NexiAdminApiProvider implements AdminDataProvider {
   }
   async settleBinaryPosition(
     id: string,
-    _outcome: Parameters<AdminDataProvider["settleBinaryPosition"]>[1],
     ctx: ConsequentialContext,
   ): Promise<MutationResult> {
     return this.requestMutation(`/admin/binary/positions/${encodeURIComponent(id)}/settle`, ctx);
@@ -1179,14 +1177,14 @@ export class NexiAdminApiProvider implements AdminDataProvider {
         const state = stringValue(row.state).toLowerCase();
         const settlementState =
           state === "win"
-            ? "won"
+            ? "win"
             : state === "loss"
-              ? "lost"
-              : state === "draw" || state === "refund"
-                ? "draw_refund"
-                : state === "error"
-                  ? "error"
-                  : "cancelled";
+              ? "loss"
+              : state === "error"
+                ? "error"
+                : state === "settling" || state === "settlement_delayed"
+                  ? "settling"
+                  : "open";
         return {
           id: stringValue(row.id),
           positionId: stringValue(row.id),

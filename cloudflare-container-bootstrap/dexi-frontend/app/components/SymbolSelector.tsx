@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { useMarketData, MarketPair } from '../hooks/useMarketData';
 import AssetIcon from './AssetIcon';
-import { findAsset, type AssetCategory, type AssetAvailability } from '../lib/asset-registry';
+import { findAsset, type AssetCategory } from '../lib/asset-registry';
 
 interface SymbolSelectorProps {
   readonly currentSymbol: string;
@@ -36,14 +36,6 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
       default: return marketPairs;
     }
   };
-
-  const availabilityFor = (item: MarketPair): AssetAvailability => {
-    if (item.dataState === 'LIVE') return 'LIVE';
-    if (findAsset(item.assetId)?.availability === 'UNVERIFIED') return 'UNVERIFIED';
-    return 'UNAVAILABLE';
-  };
-
-  const availabilityLabel = (availability: AssetAvailability) => availability === 'LIVE' ? 'Live' : availability === 'UNVERIFIED' ? 'Unverified' : 'Unavailable';
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -100,8 +92,7 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
           {/* List */}
           <div className="max-h-[min(55vh,360px)] overflow-y-auto overscroll-contain" role="listbox">
             {getList().map((item: MarketPair) => {
-              const availability = availabilityFor(item);
-              const available = availability === 'LIVE';
+              const hasPrice = item.price !== null && Number.isFinite(item.price);
               return (
                 <button
                   key={item.symbol}
@@ -123,9 +114,8 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
                       <div className="truncate text-[10px] text-gray-500">{item.name}</div>
                     </div>
                   </div>
-                  <div className={`shrink-0 pl-2 text-right text-[10px] font-bold uppercase tracking-[0.08em] ${available ? 'text-[#22D3A6]' : availability === 'UNVERIFIED' ? 'text-[#F0C674]' : 'text-[#8C8299]'}`}>
-                    <span className="block">{availabilityLabel(availability)}</span>
-                    {available && item.price !== null && <span className="mt-0.5 block text-xs normal-case tracking-normal text-white">{item.price.toLocaleString()}</span>}
+                  <div className="shrink-0 pl-2 text-right">
+                    <span className="block text-xs font-semibold text-white">{hasPrice ? item.price!.toLocaleString() : '—'}</span>
                   </div>
                 </button>
               );

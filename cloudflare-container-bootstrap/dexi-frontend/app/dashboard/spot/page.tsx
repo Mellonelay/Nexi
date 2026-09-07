@@ -575,7 +575,7 @@ export default function SpotPage() {
             <section className={`nexi-station-card min-w-0 overflow-hidden rounded-2xl md:block ${mobileMarketPanel === 'BOOK' ? 'block' : 'hidden'}`} aria-labelledby="order-book-heading">
               <div className="flex items-center justify-between border-b border-white/5 px-4 py-3">
                 <h2 id="order-book-heading" className="font-semibold">Order book</h2>
-                <span className="text-xs text-[#8C8299]">{orderBookStatusLabel(bookStatus)}</span>
+                {bookStatus === 'LIVE' ? <span className="text-xs text-[#8C8299]">Live</span> : bookStatus === 'LOADING' ? <span className="text-xs text-[#8C8299]">Loading</span> : bookStatus === 'ERROR' ? <span className="text-xs text-[#8C8299]">Request error</span> : null}
               </div>
               <div className="grid min-w-0 grid-cols-2 text-xs">
                 <div className="min-w-0 border-r border-white/5 p-3">
@@ -593,14 +593,14 @@ export default function SpotPage() {
                     ? 'Loading the authoritative order book…'
                     : bookStatus === 'ERROR'
                       ? 'The authoritative order-book request failed.'
-                      : 'No authoritative order-book rows are available.'}
+                      : 'No order-book data yet.'}
                 </p>
               )}
             </section>
 
             <section className={`nexi-station-card min-w-0 rounded-2xl md:block ${mobileMarketPanel === 'TRADES' ? 'block' : 'hidden'}`} aria-labelledby="recent-trades-heading">
-              <div className="flex items-center justify-between gap-2 border-b border-white/5 px-4 py-3"><h2 id="recent-trades-heading" className="font-semibold">Recent trades</h2><span className="text-xs text-[#8C8299]">{tradeStatus === 'LIVE' ? 'Live market records' : tradeStatus === 'LOADING' ? 'Loading' : tradeStatus === 'ERROR' ? 'Request error' : 'Unavailable'}</span></div>
-              {marketTrades.length > 0 ? <div className="divide-y divide-white/5 text-xs">{marketTrades.slice(0, 12).map((trade) => <div key={trade.id} className="grid grid-cols-3 gap-2 px-4 py-2 font-mono"><span>{trade.price.toLocaleString()}</span><span>{trade.amount}</span><span className="text-right text-[#8C8299]">{new Date(trade.executedAt).toLocaleTimeString()}</span></div>)}</div> : <div className="flex min-h-52 items-center justify-center p-6 text-center text-sm text-[#8C8299]">{tradeStatus === 'LOADING' ? 'Loading authoritative market trades…' : tradeStatus === 'ERROR' ? 'The authoritative trade request failed.' : 'No authoritative market trades are available.'}</div>}
+              <div className="flex items-center justify-between gap-2 border-b border-white/5 px-4 py-3"><h2 id="recent-trades-heading" className="font-semibold">Recent trades</h2>{tradeStatus === 'LIVE' ? <span className="text-xs text-[#8C8299]">Live market records</span> : tradeStatus === 'LOADING' ? <span className="text-xs text-[#8C8299]">Loading</span> : tradeStatus === 'ERROR' ? <span className="text-xs text-[#8C8299]">Request error</span> : null}</div>
+              {marketTrades.length > 0 ? <div className="divide-y divide-white/5 text-xs">{marketTrades.slice(0, 12).map((trade) => <div key={trade.id} className="grid grid-cols-3 gap-2 px-4 py-2 font-mono"><span>{trade.price.toLocaleString()}</span><span>{trade.amount}</span><span className="text-right text-[#8C8299]">{new Date(trade.executedAt).toLocaleTimeString()}</span></div>)}</div> : <div className="flex min-h-52 items-center justify-center p-6 text-center text-sm text-[#8C8299]">{tradeStatus === 'LOADING' ? 'Loading authoritative market trades…' : tradeStatus === 'ERROR' ? 'The authoritative trade request failed.' : 'No recent trades yet.'}</div>}
             </section>
           </div>
 
@@ -653,7 +653,7 @@ export default function SpotPage() {
               <input type="number" inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="0.00" className="min-h-9 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 text-right font-mono outline-none focus:border-[#8B5CF6] sm:mt-1 sm:min-h-11" />
             </label>
             <div className="grid min-w-0 grid-cols-4 gap-1.5">
-              {[25, 50, 75, 100].map((percentage) => <button key={percentage} type="button" disabled aria-label={`${percentage}% allocation unavailable without an authoritative balance`} className="min-h-8 min-w-0 rounded-lg border border-violet-300/10 px-0 text-[10px] text-[#8C8299] disabled:cursor-not-allowed sm:min-h-9">{percentage}%</button>)}
+              {[25, 50, 75, 100].map((percentage) => <button key={percentage} type="button" disabled aria-label={`${percentage}% allocation requires an authoritative balance`} className="min-h-8 min-w-0 rounded-lg border border-violet-300/10 px-0 text-[10px] text-[#8C8299] disabled:cursor-not-allowed sm:min-h-9">{percentage}%</button>)}
             </div>
             <label className="flex min-h-8 items-center gap-2 rounded-xl border border-violet-300/10 px-3 text-xs sm:min-h-9">
               <input type="checkbox" checked={tpSlState !== 'NOT_CONFIGURED'} onChange={(event) => configureTpSl(event.target.checked)} className="h-4 w-4 accent-violet-500" />
@@ -662,14 +662,14 @@ export default function SpotPage() {
             {tpSlState !== 'NOT_CONFIGURED' && <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
               <label className="min-w-0 text-xs text-[#C3BBD0]">Take profit<input type="number" inputMode="decimal" value={tp} onChange={(event) => setTp(event.target.value)} placeholder="—" className="mt-1 min-h-11 w-full min-w-0 rounded-lg border border-violet-300/15 bg-[#0B0711] px-2 text-right font-mono" /></label>
               <label className="min-w-0 text-xs text-[#C3BBD0]">Stop loss<input type="number" inputMode="decimal" value={sl} onChange={(event) => setSl(event.target.value)} placeholder="—" className="mt-1 min-h-11 w-full min-w-0 rounded-lg border border-violet-300/15 bg-[#0B0711] px-2 text-right font-mono" /></label>
-              <p className="text-xs text-amber-200/80 sm:col-span-2">TP/SL attachment remains unavailable until its backend contract is exposed.</p>
+              <p className="text-xs text-amber-200/80 sm:col-span-2">TP/SL attachment is not enabled until its backend contract is exposed.</p>
             </div>}
           </div>
 
           <dl className="mt-1.5 grid min-w-0 grid-cols-3 gap-2 rounded-xl border border-violet-300/10 bg-[#0B0711] p-1.5 text-[10px] sm:mt-3 sm:p-2 sm:text-[11px] md:grid-cols-4 md:p-3 md:text-xs">
             <div className="min-w-0"><dt className="text-[#8C8299]">Total</dt><dd className="mt-0.5 break-words font-mono">{total === null ? '—' : `${total.toFixed(2)} USDT`}</dd></div>
             <div className="min-w-0"><dt className="text-[#8C8299]">Fee</dt><dd className="mt-0.5 break-words font-mono">—</dd></div>
-            <div className="min-w-0"><dt className="text-[#8C8299]">Available</dt><dd className="mt-0.5 break-words font-mono">Unavailable</dd></div>
+            <div className="min-w-0"><dt className="text-[#8C8299]">Available</dt><dd className="mt-0.5 break-words font-mono">—</dd></div>
             <div className="hidden min-w-0 md:block"><dt className="text-[#8C8299]">State</dt><dd className="mt-0.5 break-words font-mono">{orderState}</dd></div>
           </dl>
 
@@ -716,11 +716,3 @@ function MarketMetric({ label, value, tone = 'muted' }: { label: string; value: 
     </div>
   );
 }
-
-function orderBookStatusLabel(status: 'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR') {
-  if (status === 'LIVE') return 'Live';
-  if (status === 'LOADING') return 'Loading';
-  if (status === 'ERROR') return 'Request error';
-  return 'Unavailable';
-}
-

@@ -960,6 +960,9 @@ export class AdminService {
       throw new BadRequestException(
         "A reason is required for financial corrections",
       );
+    if (this.d1?.isEnabled()) {
+      return this.d1.applyAdminFinancialCorrection(input);
+    }
     const command = await this.prisma.adminGovernanceCommand.findUnique({
       where: { id: input.governanceCommandId },
     });
@@ -1045,7 +1048,7 @@ export class AdminService {
   async requestSandboxControl(input: {
     scope: "binary" | "spot" | "balance";
     target: string;
-    mode: string;
+    mode: "normal" | "forced_win" | "forced_loss";
     seed?: string;
     expectedResult?: string;
     expiresAt?: string;
@@ -1061,6 +1064,8 @@ export class AdminService {
       throw new BadRequestException(
         "A reason is required for sandbox controls",
       );
+    if (!["normal", "forced_win", "forced_loss"].includes(input.mode))
+      throw new BadRequestException("Sandbox mode must be normal, forced_win, or forced_loss");
     if (!input.expiresAt) {
       throw new BadRequestException("Sandbox scenarios require an expiry");
     }
@@ -1418,6 +1423,14 @@ export class AdminService {
         "LIVE and STALE are runtime-derived states, not admin configuration",
       );
     const db = this.marketDatabase();
+    const replay = await db.adminAuditLog.findFirst({
+      where: {
+        action: "MARKET_PROVIDER_STATUS_UPDATED",
+        details: { path: ["idempotencyKey"], equals: input.idempotencyKey },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    if (replay) return { ok: true, auditId: replay.id, replayed: true };
     const symbol = await db.marketProviderSymbol.findFirst({
       where: { OR: [{ id: input.id }, { providerId: input.id }] },
       select: { providerId: true, provider: { select: { key: true } } },

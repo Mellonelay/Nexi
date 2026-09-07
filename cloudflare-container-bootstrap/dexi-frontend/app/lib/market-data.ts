@@ -37,13 +37,5 @@ export function normalizeCandle(value: UnknownCandle): Candle | null {
 }
 
 export function marketDataStatusLabel(status: MarketDataStatus) {
-  switch (status) {
-    case 'LIVE': return 'Live market data';
-    case 'STALE': return 'Market data stale';
-    case 'LOADING': return 'Loading market data';
-    case 'ERROR': return 'Market data error';
-    case 'CONNECTION_LOST': return 'Market connection lost';
-    case 'DISABLED': return 'Market data disabled';
-    default: return 'Market data unavailable';
-  }
+  return status === 'LOADING' ? 'Loading market data' : 'Market data';
 }

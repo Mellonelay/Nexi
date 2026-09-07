@@ -34,7 +34,7 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/platform-socket.io": "^10.4.22",
     "@nestjs/schedule": "^3.0.4",
-    "@nestjs/serve-static": "^5.0.5",
+    "@nestjs/serve-static": "^4.0.2",
     "@nestjs/swagger": "^7.1.17",
     "@nestjs/websockets": "^10.4.22",
     "@prisma/adapter-d1": "^7.3.0",

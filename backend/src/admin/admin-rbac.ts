@@ -32,7 +32,7 @@ export const ADMIN_ROLE_DEFINITIONS: Record<AdminRoleId, { label: string; descri
   market_operator: { label: 'Market Operator', description: 'Assets, networks, feeds, Spot, and Binary administration.', permissions: pick('overview.view', 'assets.view', 'assets.edit', 'networks.view', 'networks.edit', 'feeds.view', 'feeds.edit', 'spot.view', 'spot.edit', 'spot.pause', 'spot.cancel_order', 'binary.view', 'binary.edit', 'binary.settle', 'settlements.view', 'exposure.view', 'audit.view') },
   content_manager: { label: 'Content Manager', description: 'Frontend composition and content operations.', permissions: pick('overview.view', 'frontend.view', 'frontend.edit', 'navigation.view', 'navigation.edit', 'localization.view', 'localization.edit', 'flags.view', 'flags.edit', 'announcements.view', 'announcements.publish', 'learn.view', 'learn.publish', 'notifications.view', 'notifications.send', 'audit.view') },
   security_auditor: { label: 'Security Auditor', description: 'Read-only governance, health, and audit access.', permissions: viewPermissions },
-  sandbox_operator: { label: 'Sandbox Operator', description: 'Sandbox-only deterministic scenario controls.', permissions: pick('overview.view', 'sandbox.view', 'sandbox.force', 'spot.view', 'binary.view', 'wallets.view', 'ledger.view', 'audit.view') },
+  sandbox_operator: { label: 'Sandbox Operator', description: 'Sandbox-only normal/forced-win/forced-loss controls.', permissions: pick('overview.view', 'sandbox.view', 'sandbox.force', 'spot.view', 'binary.view', 'wallets.view', 'ledger.view', 'audit.view') },
   super_admin: { label: 'Super Admin', description: 'Full Admin authority with audit and environment gates.', permissions: ADMIN_PERMISSION_KEYS },
 };
 
