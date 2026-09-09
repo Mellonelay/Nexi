@@ -58,6 +58,12 @@ function containerEnv(env) {
   );
 }
 
+async function getRunningNexiContainer(env) {
+  const container = getContainer(env.NEXI_API_CONTAINER, "nexi-api");
+  await container.startAndWaitForPorts();
+  return container;
+}
+
 /**
  * The Worker is an edge gateway only. NestJS remains the API, market, wallet,
  * ledger, and Socket.IO authority. Container.fetch preserves HTTP polling and
@@ -234,7 +240,7 @@ async function invokeWorkflowCommand(
     entityId,
     idempotencyKey,
   );
-  const container = getContainer(env.NEXI_API_CONTAINER, "nexi-api");
+  const container = await getRunningNexiContainer(env);
   const response = await container.fetch(
     new Request(`https://nexi.internal/_internal/workflows/${workflow}/${action}`, {
       method: "POST",
@@ -889,7 +895,7 @@ export default {
       typeof env.JWT_SECRET === "string" ? env.JWT_SECRET : "";
     if (!signingSecret)
       throw new Error("JWT_SECRET is required for authenticated Queue ingress");
-    const container = getContainer(env.NEXI_API_CONTAINER, "nexi-api");
+    const container = await getRunningNexiContainer(env);
 
     for (const message of batch.messages) {
       if (!validQueueEnvelope(message.body)) {
@@ -943,7 +949,7 @@ export default {
 
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    const container = getContainer(env.NEXI_API_CONTAINER, "nexi-api");
+    const container = await getRunningNexiContainer(env);
 
     if (url.pathname === "/healthz") {
       const response = Response.json({

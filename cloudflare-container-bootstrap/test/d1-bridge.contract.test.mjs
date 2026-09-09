@@ -3,6 +3,15 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 const source = readFileSync(new URL("../src/index.js", import.meta.url), "utf8");
+
+test("all Container callers explicitly wait for cold-start readiness", () => {
+  assert.match(
+    source,
+    /async function getRunningNexiContainer\(env\)[\s\S]*?await container\.startAndWaitForPorts\(\)/,
+  );
+  assert.equal(source.match(/await getRunningNexiContainer\(env\)/g)?.length, 3);
+});
+
 const classifierStart = source.indexOf("function classifyD1Sql");
 const classifierEnd = source.indexOf(
   "NexiApiContainer.outboundByHost = {",
