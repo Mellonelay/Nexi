@@ -5,10 +5,13 @@ import test from "node:test";
 const source = readFileSync(new URL("../src/index.js", import.meta.url), "utf8");
 
 test("all Container callers explicitly wait for cold-start readiness", () => {
-  assert.match(
-    source,
-    /async function getRunningNexiContainer\(env\)[\s\S]*?await container\.startAndWaitForPorts\(\)/,
+  const helper = source.slice(
+    source.indexOf("async function getRunningNexiContainer"),
+    source.indexOf("export class NexiApiContainer"),
   );
+  assert.match(helper, /await container\.startAndWaitForPorts\(\{/);
+  assert.match(helper, /ports: \[3000\]/);
+  assert.match(helper, /portReadyTimeoutMS: 60_000/);
   assert.equal(source.match(/await getRunningNexiContainer\(env\)/g)?.length, 3);
 });
 

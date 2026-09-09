@@ -60,7 +60,10 @@ function containerEnv(env) {
 
 async function getRunningNexiContainer(env) {
   const container = getContainer(env.NEXI_API_CONTAINER, "nexi-api");
-  await container.startAndWaitForPorts();
+  await container.startAndWaitForPorts({
+    ports: [3000],
+    cancellationOptions: { portReadyTimeoutMS: 60_000 },
+  });
   return container;
 }
 
