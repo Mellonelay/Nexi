@@ -1,11 +1,11 @@
 # NEXI Work Authoritative Operating Contract
 
 ## Authority
-This Work checkout is the current engineering authority for NEXI Public Frontend, Admin, backend, Cloudflare Worker/Container configuration, D1 integration, and deployment-sensitive engineering.
+GitHub `main` is the durable NEXI source authority. This VM/RDC checkout is the current execution workspace only when it is verified synchronized to `origin/main`.
 
-- VM/RDC is limited to explicitly requested Cloudflare/runtime/browser evidence.
-- GitHub and historical VM workspaces are reference history, not execution authority for this run.
-- Do not replace current Work source with an older VM or Windows snapshot.
+- ChatGPT Work remains the parent/controller; VM/RDC is the direct engineering execution plane for the current task.
+- Historical Windows trees, Codespaces, old VM workspaces, branches, stashes, and receipts are reference/evidence only unless fresh verification proves they contain unique accepted work.
+- Do not replace synchronized current source with an older VM, Windows, Codespace, or archived snapshot.
 
 Current owner/product decisions and current approved NEXI architecture outrank historical DEXI/Neon assumptions.
 Current VM source and fresh runtime evidence outrank stale receipts or chat summaries about technical state.
@@ -84,7 +84,7 @@ Do not fabricate balances, prices, settlement, runtime success, or acceptance da
 Re-read files before consequential edits.
 Avoid broad formatting or unrelated rewrites.
 Format only files changed in the current batch.
-Do not overwrite the parallel Cloudflare/platform lane or Windows Frontend/Admin authority.
+Do not overwrite parallel work or another active lane; GitHub `main` remains the durable source frontier and any parallel lane must be reconciled before fan-in.
 
 ## Verification and reporting
 Keep `IMPLEMENTED`, `STATICALLY_VALIDATED`, `TESTED`, `INTEGRATED`, and `RUNTIME_VERIFIED` distinct.

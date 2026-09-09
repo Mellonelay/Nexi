@@ -1,6 +1,6 @@
 # NEXI Backend Instructions
 
-These rules extend `/root/workspaces/nexi-authoritative-20260823/AGENTS.md` and govern the authoritative NestJS backend.
+These rules extend the repository root `AGENTS.md` and govern the authoritative NestJS backend in the current synchronized NEXI checkout.
 
 ## Current backend authority
 - NestJS is the business/domain authority.

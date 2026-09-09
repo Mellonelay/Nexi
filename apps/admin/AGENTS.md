@@ -1,10 +1,10 @@
 # NEXI Admin Control Plane — Current Instructions
 
 ## Authority
-- Windows Admin source authority is `C:\trae_projects\Dexi_style_TraeWV\apps\admin`.
-- Backend/API/D1/Cloudflare/runtime authority is the VM workspace `/root/workspaces/nexi-authoritative-20260823` on `sg-edge-01`.
-- Do not implement backend fixes in this Windows tree and do not copy stale Windows backend files to the VM.
-- Never run Git unless the owner explicitly requests it.
+- GitHub `main` is the durable source authority for Admin and the rest of NEXI.
+- The current synchronized VM/RDC checkout is the execution workspace for this task; historical Windows/Codespace/old-VM trees are evidence only.
+- Backend/API/D1/Cloudflare contracts must be read from the same accepted source frontier rather than stale mirrors.
+- Preserve unrelated parallel work and reconcile any unique accepted changes before fan-in.
 - Production mutation requires explicit owner approval.
 
 ## Current architecture
@@ -16,8 +16,8 @@ Preserve the existing provider boundary:
 Methods without canonical backend authority must fail closed and surface the unsupported state until the backend contract exists.
 
 ## Parallel Admin lane
-Admin contract adaptation may proceed now in parallel with VM backend completion.
-Before changing a provider method, inspect the current Windows provider and the current VM controller/DTO/service or generated OpenAPI evidence. Do not infer a missing backend route from mock behavior.
+Admin contract work may proceed only from the current acceptance-matrix frontier; reuse proven unchanged work and close only unresolved dependencies.
+Before changing a provider method, inspect the current Admin provider and backend controller/DTO/service or generated OpenAPI evidence from the same synchronized checkout. Do not infer a missing backend route from mock behavior.
 Classify each AdminDataProvider method as `LIVE_COMPLETE`, `LIVE_PARTIAL`, `UNSUPPORTED_BACKEND`, `LOCAL_ONLY`, `CONTRACT_MISMATCH`, or `STALE`.
 Prioritize live parity for auth/identity, sessions, users/KYC, market controls, wallets/ledger, deposits/withdrawals, Mining, Loans, Support, Announcements, governance/audit, feature flags, maintenance, and health before adding new Admin concepts.
 Do not invent persistence for public routes, banners, localization, exposure, reconciliation, user entitlements, role mutations, or other currently unsupported authorities. Record an exact backend dependency instead.

@@ -1,16 +1,16 @@
 {
   "$schema": "https://app.kilo.ai/config.json",
   "plugin": [
-    "file:///workspaces/Nexi/.kilo/plugins/graphify.js"
+    "file:///home/mellonelay1999/workspaces/Nexi/.kilo/plugins/graphify.js"
   ],
   "mcp": {
     "graphify": {
       "type": "local",
       "command": [
         "graphify-mcp",
-        "/workspaces/Nexi/graphify-out/graph.json"
+        "/home/mellonelay1999/workspaces/Nexi/graphify-out/graph.json"
       ],
-      "cwd": "/workspaces/Nexi",
+      "cwd": "/home/mellonelay1999/workspaces/Nexi",
       "enabled": true,
       "timeout": 120000
     },
@@ -19,9 +19,9 @@
       "command": [
         "fallow-mcp"
       ],
-      "cwd": "/workspaces/Nexi",
+      "cwd": "/home/mellonelay1999/workspaces/Nexi",
       "environment": {
-        "FALLOW_BIN": "/home/vscode/.npm-global/bin/fallow"
+        "FALLOW_BIN": "/usr/local/bin/fallow"
       },
       "enabled": true,
       "timeout": 120000
@@ -67,7 +67,7 @@
       "command": [
         "cs-mcp"
       ],
-      "cwd": "/workspaces/Nexi",
+      "cwd": "/home/mellonelay1999/workspaces/Nexi",
       "enabled": true,
       "timeout": 120000
     }

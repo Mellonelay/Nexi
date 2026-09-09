@@ -1,15 +1,14 @@
 # NEXI Public Frontend — Current Instructions
 
 ## Authority
-- Windows Public Frontend source authority is this directory: `C:\trae_projects\Dexi_style_TraeWV\cloudflare-container-bootstrap\dexi-frontend`.
-- Backend/API/D1/Cloudflare/runtime authority is the VM workspace `/root/workspaces/nexi-authoritative-20260823` on `sg-edge-01`.
-- Do not edit backend/Cloudflare implementation from the frontend lane and do not use Windows backend mirrors as contract authority.
-- Never run Git unless the owner explicitly requests it. Production mutation requires explicit owner approval.
+- GitHub `main` is the durable source authority for Public Frontend and the rest of NEXI.
+- The current synchronized VM/RDC checkout is the execution workspace for this task; historical Windows/Codespace/old-VM trees are evidence only.
+- Backend/API/D1/Cloudflare contracts must be read from the same accepted source frontier; do not use stale mirrors as contract authority.
+- Preserve unrelated parallel work and reconcile unique accepted changes before fan-in. Production mutation requires explicit owner approval.
 
 ## Current stage
-`FRONTEND_ACTIVE_GATE=PARALLEL_CONTRACT_PREP`.
 The existing design and route surfaces are preserved; this is production-path integration work, not a redesign.
-Frontend work may proceed now while the VM backend lane finishes, using confirmed current controller/DTO/source behavior and recording unresolved dependencies. Final contract freeze waits for the joined staging `/docs-json` and runtime verification.
+Frontend work proceeds only from the current acceptance-matrix frontier, reusing proven unchanged contracts and closing only unresolved dependencies. Runtime/browser acceptance remains downstream of code-to-code closure.
 
 ## Preserve
 Preserve Next.js 14, React 18, TypeScript 5, Tailwind 3, the existing Deep Liquid Violet design authority, public route scope, Dashboard/Quotes Hub, Spot/Margin, Binary/Options, Wallet, Mining, Loans, Messages, Support, Learn, Settings, localization, and existing responsive behavior unless a verified contract defect requires a targeted change.
@@ -23,7 +22,7 @@ Keep wallet challenge/verify/me/logout contracts synchronized with backend auth.
 Keep Aiven/Socket.IO as realtime transport only; recover authoritative state from backend/D1-backed reads after reconnect.
 
 ## Graphify
-Windows Graphify is `0.9.51`. Current frontend graph is refreshed and reclustered: 873 nodes / 1,422 edges / 92 communities. Current hubs include `authoritativeValue()`, `api`, `useLocale()`, `findAsset()`, `SpotPage()`, `useMarketData()`, and `resolveEndpointTemplate()`.
+Use the currently installed VM Graphify against the current repository graph; historical frontend graph counts are evidence only and must not be treated as current topology without refresh. Current hubs previously included `authoritativeValue()`, `api`, `useLocale()`, `findAsset()`, `SpotPage()`, `useMarketData()`, and `resolveEndpointTemplate()`.
 After a coherent code batch run `graphify update . --no-cluster`; use `affected`, `path`, and `explain` for targeted impact. Reclustering is only needed when community/God-node analysis matters.
 
 ## Contract evidence
