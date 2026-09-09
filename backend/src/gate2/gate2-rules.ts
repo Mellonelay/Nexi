@@ -1,8 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
-export const ALLOWED_BINARY_DURATIONS = [30, 60, 180, 280, 420] as const;
-
 const DECIMAL_PATTERN = /^(?:0|[1-9]\d*)(?:\.\d{1,18})?$/;
 
 export function assertPositiveDecimal(value: string | number | Prisma.Decimal): Prisma.Decimal {
@@ -57,10 +55,4 @@ export function spotTransitionAllowed(from: string, to: string): boolean {
 
 export function binaryTransitionAllowed(from: string, to: string): boolean {
   return BINARY_TRANSITIONS[from]?.includes(to) ?? false;
-}
-
-export function assertBinaryDuration(duration: number): asserts duration is (typeof ALLOWED_BINARY_DURATIONS)[number] {
-  if (!ALLOWED_BINARY_DURATIONS.includes(duration as (typeof ALLOWED_BINARY_DURATIONS)[number])) {
-    throw new BadRequestException('Unsupported Binary duration');
-  }
 }

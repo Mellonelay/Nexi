@@ -2,6 +2,7 @@ import { Body, Controller, Get, Post, Req, UseGuards } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { Role } from "@prisma/client";
 import { AuthenticatedRequest } from "../auth/auth.types";
+import { AuthService } from "../auth/auth.service";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { Roles } from "../auth/roles.decorator";
 import { RolesGuard } from "../auth/roles.guard";
@@ -23,15 +24,30 @@ import {
 @ApiTags("Financial Operations")
 @Controller("financial")
 export class FinancialOperationsController {
-  constructor(private readonly financial: FinancialOperationsService) {}
+  constructor(
+    private readonly financial: FinancialOperationsService,
+    private readonly authService: AuthService,
+  ) {}
 
   @Post("withdrawals")
-  @UseGuards(JwtAuthGuard)
-  requestWithdrawal(
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
+  async requestWithdrawal(
     @Body() body: Gate2WithdrawalDto,
     @Req() request: AuthenticatedRequest,
   ) {
-    return this.financial.requestWithdrawal(request.user.userId, body);
+    await this.authService.verifySensitiveAction(
+      request.user.userId,
+      body.securityPassword,
+      body.mfaToken,
+    );
+    return this.financial.requestWithdrawal(request.user.userId, {
+      asset: body.asset,
+      network: body.network,
+      address: body.address,
+      amount: body.amount,
+      idempotencyKey: body.idempotencyKey,
+    });
   }
 
   @Post("transfers")

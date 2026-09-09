@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../../lib/api';
+import { getAccessToken } from '../../../lib/auth-session';
 
 interface DepositModalProps {
   isOpen: boolean;
@@ -44,7 +45,7 @@ export default function DepositModal({ isOpen, onClose, currencies, selectedCurr
     setBusy(true);
     try {
       const intent = await api.post<{ key: string }>('/financial/deposit-proof-intents', { contentType: proof.type, byteSize: String(proof.size) });
-      const token = localStorage.getItem('token');
+      const token = getAccessToken();
       const platformOrigin = (process.env.NEXT_PUBLIC_PLATFORM_URL || window.location.origin).replace(/\/$/, '');
       const upload = await fetch(`${platformOrigin}/storage/deposit-proof?key=${encodeURIComponent(intent.data.key)}`, {
         method: 'PUT', headers: { 'Content-Type': proof.type, ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: proof,

@@ -1,4 +1,10 @@
-import axios from 'axios';
+import axios, { type InternalAxiosRequestConfig } from 'axios';
+import {
+  clearAuthSession,
+  getAccessToken,
+  setAuthSession,
+  type AuthSessionPayload,
+} from './auth-session';
 
 // Local wallet-auth verification uses the existing non-production backend
 // tunnel. Keep explicit deployment configuration authoritative, but do not
@@ -8,29 +14,82 @@ const isLocalBrowser = typeof window !== 'undefined'
   && ['localhost', '127.0.0.1'].includes(window.location.hostname);
 const defaultApiBase = isLocalBrowser || process.env.NODE_ENV !== 'production'
   ? 'http://127.0.0.1:3200'
-  : '/api';
+  : 'https://api.nexitrading.app';
 
 export const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || defaultApiBase;
 
 const api = axios.create({
   baseURL: apiBaseUrl,
+  withCredentials: true,
   // Prevent reference panels and authenticated reloads from remaining in a
   // perpetual LOADING state when the staging tunnel drops a request.
   timeout: 15_000,
 });
 
-// Add a request interceptor to include the token
+const refreshClient = axios.create({
+  baseURL: apiBaseUrl,
+  withCredentials: true,
+  timeout: 15_000,
+});
+
+type RetriableRequestConfig = InternalAxiosRequestConfig & { _nexiAuthRetry?: boolean };
+
+let refreshPromise: Promise<boolean> | null = null;
+
+async function recoverPublicSession() {
+  if (getAccessToken()) return true;
+  if (!refreshPromise) {
+    refreshPromise = refreshClient.post<AuthSessionPayload>('/auth/refresh')
+      .then((response) => {
+        setAuthSession(response.data);
+        return true;
+      })
+      .catch(() => {
+        clearAuthSession();
+        return false;
+      })
+      .finally(() => { refreshPromise = null; });
+  }
+  return refreshPromise;
+}
+
+export { recoverPublicSession };
+
+// Public access tokens are held only by the in-memory session boundary.
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
     const requestPath = config.url ?? '';
     const token = requestPath.startsWith('/admin')
       ? localStorage.getItem('admin_token')
-      : localStorage.getItem('token');
+      : getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
   }
   return config;
+});
+
+api.interceptors.response.use(undefined, async (error: unknown) => {
+  if (!axios.isAxiosError(error)) return Promise.reject(error);
+  const config = error.config as RetriableRequestConfig | undefined;
+  const requestPath = config?.url ?? '';
+  const isPublicAuthEndpoint = /^\/auth\/(login|signup|refresh|wallet(?:\/|$))/.test(requestPath);
+  if (
+    error.response?.status !== 401
+    || !config
+    || config._nexiAuthRetry
+    || requestPath.startsWith('/admin')
+    || isPublicAuthEndpoint
+  ) {
+    return Promise.reject(error);
+  }
+
+  const recovered = await recoverPublicSession();
+  const token = getAccessToken();
+  if (!recovered || !token) return Promise.reject(error);
+  config._nexiAuthRetry = true;
+  config.headers.Authorization = `Bearer ${token}`;
+  return api(config);
 });
 
 export default api;

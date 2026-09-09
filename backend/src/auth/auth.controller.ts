@@ -6,6 +6,7 @@ import {
   Patch,
   Post,
   Request,
+  Res,
   ServiceUnavailableException,
   UnauthorizedException,
   UseGuards,
@@ -15,11 +16,13 @@ import { AuthService } from "./auth.service";
 import { JwtAuthGuard } from "./jwt-auth.guard";
 import { AuthenticatedRequest } from "./auth.types";
 import {
-  LoginDto,
-  RefreshTokenDto,
-  SignupDto,
+  DisableMfaDto,
+  GenerateBackupCodesDto,
+  SecurityPasswordChangeDto,
+  SetupMfaDto,
   UpdatePreferencesDto,
   UpdateProfileDto,
+  VerifyMfaDto,
   WalletChallengeDto,
   WalletVerifyDto,
 } from "./auth.dto";
@@ -28,6 +31,50 @@ import { AuthRateLimitGuard } from "./auth-rate-limit.guard";
 import { AuthSurfaceGuard } from "./auth-surface.guard";
 import { RequireAuthSurface } from "./auth-surface.decorator";
 import { WalletAuthService } from "./wallet-auth.service";
+import type { Response } from "express";
+
+const PUBLIC_REFRESH_COOKIE = "nexi_public_refresh";
+const PUBLIC_REFRESH_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: true,
+  sameSite: "lax" as const,
+  path: "/",
+  maxAge: 30 * 24 * 60 * 60 * 1000,
+};
+
+function readPublicRefreshCookie(request: { headers?: { cookie?: string | string[] } }): string | null {
+  const header = request.headers?.cookie;
+  const value = Array.isArray(header) ? header.join(";") : header;
+  if (!value) return null;
+  const encoded = value.split(";").map((part) => part.trim()).find((part) => part.startsWith(`${PUBLIC_REFRESH_COOKIE}=`))?.slice(PUBLIC_REFRESH_COOKIE.length + 1);
+  if (!encoded) return null;
+  try {
+    return decodeURIComponent(encoded);
+  } catch {
+    return null;
+  }
+}
+
+function publicSessionPayload(session: { refresh_token?: string; [key: string]: unknown }) {
+  const { refresh_token: _refreshToken, ...payload } = session;
+  return payload;
+}
+
+function setPublicRefreshCookie(response: Response, refreshToken: unknown) {
+  if (typeof refreshToken !== "string" || refreshToken.length === 0) {
+    throw new UnauthorizedException("Public session refresh token is unavailable");
+  }
+  response.cookie(PUBLIC_REFRESH_COOKIE, refreshToken, PUBLIC_REFRESH_COOKIE_OPTIONS);
+}
+
+function clearPublicRefreshCookie(response: Response) {
+  response.clearCookie(PUBLIC_REFRESH_COOKIE, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    path: "/",
+  });
+}
 
 @ApiTags("Authentication")
 @Controller("auth")
@@ -36,24 +83,6 @@ export class AuthController {
     private authService: AuthService,
     private walletAuthService?: WalletAuthService,
   ) {}
-
-  @Post("login")
-  @AuthRateLimit("login")
-  @UseGuards(AuthRateLimitGuard)
-  async login(@Body() credentials: LoginDto) {
-    const user = await this.authService.validateUser(credentials);
-    if (!user) {
-      throw new UnauthorizedException("Invalid credentials");
-    }
-    return this.authService.login(user);
-  }
-
-  @Post("signup")
-  @AuthRateLimit("signup")
-  @UseGuards(AuthRateLimitGuard)
-  async signup(@Body() data: SignupDto) {
-    return this.authService.signup(data);
-  }
 
   @Post("wallet/challenge")
   async walletChallenge(@Body() body: WalletChallengeDto) {
@@ -69,15 +98,18 @@ export class AuthController {
     @Body() body: WalletVerifyDto,
     @Request()
     request: { headers?: Record<string, string | undefined>; ip?: string },
+    @Res({ passthrough: true }) response: Response,
   ) {
     if (!this.walletAuthService)
       throw new ServiceUnavailableException(
         "Wallet authentication is unavailable",
       );
-    return this.walletAuthService.verifyChallenge(body, {
+    const session = await this.walletAuthService.verifyChallenge(body, {
       userAgent: request.headers?.["user-agent"],
       ip: request.ip,
     });
+    setPublicRefreshCookie(response, session.refresh_token);
+    return publicSessionPayload(session);
   }
 
   @Get("me")
@@ -131,22 +163,84 @@ export class AuthController {
   @Post("refresh")
   @AuthRateLimit("refresh")
   @UseGuards(AuthRateLimitGuard)
-  async refresh(@Body() body: RefreshTokenDto) {
-    return this.authService.refresh(body.refreshToken, "PUBLIC");
+  async refresh(@Request() request: { headers?: { cookie?: string | string[] } }, @Res({ passthrough: true }) response: Response) {
+    const refreshToken = readPublicRefreshCookie(request);
+    if (!refreshToken) throw new UnauthorizedException("Public refresh cookie is missing");
+    const session = await this.authService.refresh(refreshToken, "PUBLIC");
+    setPublicRefreshCookie(response, session.refresh_token);
+    return publicSessionPayload(session);
   }
 
   @Post("logout")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
-  async logout(@Request() request: AuthenticatedRequest) {
-    return this.authService.logout(request.user);
+  async logout(@Request() request: AuthenticatedRequest, @Res({ passthrough: true }) response: Response) {
+    try {
+      return await this.authService.logout(request.user);
+    } finally {
+      clearPublicRefreshCookie(response);
+    }
   }
 
   @Post("logout-all")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
-  async logoutAll(@Request() request: AuthenticatedRequest) {
-    return this.authService.logoutAll(request.user);
+  async logoutAll(@Request() request: AuthenticatedRequest, @Res({ passthrough: true }) response: Response) {
+    try {
+      return await this.authService.logoutAll(request.user);
+    } finally {
+      clearPublicRefreshCookie(response);
+    }
+  }
+
+  @Post("security/password/change")
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
+  async changeSecurityPassword(@Request() request: AuthenticatedRequest, @Body() body: SecurityPasswordChangeDto) {
+    await this.authService.changeSecurityPassword(request.user.userId, body.currentSecurityPassword, body.newSecurityPassword);
+    return { changed: true };
+  }
+
+  @Post("security/mfa/setup")
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
+  async setupMfa(@Request() request: AuthenticatedRequest, @Body() body: SetupMfaDto) {
+    return this.authService.setupMfa(request.user.userId, body.label);
+  }
+
+  @Post("security/mfa/verify")
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
+  async verifyMfa(@Request() request: AuthenticatedRequest, @Body() body: VerifyMfaDto) {
+    return this.authService.verifyMfaSetup(request.user.userId, body.token);
+  }
+
+  @Post("security/mfa/disable")
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
+  async disableMfa(@Request() request: AuthenticatedRequest, @Body() body: DisableMfaDto) {
+    return this.authService.disableMfa(request.user.userId, body.securityPassword, body.token);
+  }
+
+  @Post("security/mfa/backup-codes")
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
+  async generateBackupCodes(@Request() request: AuthenticatedRequest, @Body() _body: GenerateBackupCodesDto) {
+    return this.authService.generateBackupCodes(request.user.userId);
+  }
+
+  @Get("security/mfa/status")
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
+  async mfaStatus(@Request() request: AuthenticatedRequest) {
+    return this.authService.getMfaState(request.user.userId);
+  }
+
+  @Get("security/status")
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
+  async securityStatus(@Request() request: AuthenticatedRequest) {
+    return this.authService.getSecurityState(request.user.userId);
   }
 
   // @UseGuards(AuthGuard('jwt'))

@@ -8,6 +8,8 @@ import { useEffect } from 'react';
 import { io } from 'socket.io-client';
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
+import { sessionPrincipalId } from './lib/wallet-auth';
+import { recoverPublicSession } from './lib/api';
 
 const viewport: Viewport = {
   width: 'device-width',
@@ -24,14 +26,7 @@ function Heartbeat() {
 
     const socket = io(apiUrl, { autoConnect: true, transports: ['polling', 'websocket'], tryAllTransports: true });
     const interval = setInterval(() => {
-      const user = localStorage.getItem('user');
-      let userId: string | null = null;
-      try {
-        userId = user ? JSON.parse(user).id ?? null : null;
-      } catch {
-        userId = null;
-      }
-      socket.emit('heartbeat', { userId });
+      socket.emit('heartbeat', { userId: sessionPrincipalId() });
     }, 30000);
 
     return () => {
@@ -40,6 +35,13 @@ function Heartbeat() {
     };
   }, []);
 
+  return null;
+}
+
+function SessionRecovery() {
+  useEffect(() => {
+    void recoverPublicSession();
+  }, []);
   return null;
 }
 
@@ -59,6 +61,7 @@ export default function RootLayout({
       <body className="bg-[#050508] font-sans text-[#F5F7FB] antialiased">
         <Providers>
           <Heartbeat />
+          <SessionRecovery />
           {children}
         </Providers>
       </body>

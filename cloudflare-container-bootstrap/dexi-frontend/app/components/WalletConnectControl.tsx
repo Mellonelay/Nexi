@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAccount, useConnect, useDisconnect, useSignMessage } from 'wagmi';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { captureReferralCode, clearReferralCode, clearWalletSession, loadCurrentUser, logoutWallet, requestWalletChallenge, setWalletSession, verifyWalletChallenge } from '../lib/wallet-auth';
+import { hasAuthSession } from '../lib/auth-session';
 import { config as wagmiConfig } from '../lib/wagmi';
 
 function truncateAddress(address: string) { return `${address.slice(0, 6)}…${address.slice(-4)}`; }
@@ -27,7 +28,15 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
   const [message, setMessage] = useState('');
   const previousAddress = useRef<string | null>(null);
   const previousChainId = useRef<number | null>(null);
-  const sessionQuery = useQuery({ queryKey: ['user', 'me'], queryFn: loadCurrentUser, enabled: typeof window !== 'undefined' && Boolean(window.localStorage.getItem('token')), retry: false, staleTime: 30_000 });
+  const [sessionPresent, setSessionPresent] = useState(false);
+  const sessionQuery = useQuery({ queryKey: ['user', 'me'], queryFn: loadCurrentUser, enabled: sessionPresent, retry: false, staleTime: 30_000 });
+
+  useEffect(() => {
+    const syncSession = () => setSessionPresent(hasAuthSession());
+    syncSession();
+    window.addEventListener('nexi:wallet-session', syncSession);
+    return () => window.removeEventListener('nexi:wallet-session', syncSession);
+  }, []);
 
   useEffect(() => { captureReferralCode(); }, []);
 

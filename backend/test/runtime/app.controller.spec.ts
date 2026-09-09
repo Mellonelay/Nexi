@@ -1,5 +1,6 @@
 import { ServiceUnavailableException } from "@nestjs/common";
 import { AppController } from "../../src/app.controller";
+import { ReadinessService } from "../../src/observability/readiness.service";
 
 describe("AppController runtime probes", () => {
   const originalD1RuntimeEnabled = process.env.D1_RUNTIME_ENABLED;
@@ -7,9 +8,11 @@ describe("AppController runtime probes", () => {
   const createController = (postgres: boolean, d1: boolean, redis: boolean) =>
     new AppController(
       { getHello: jest.fn() } as any,
-      { isReady: jest.fn().mockResolvedValue(postgres) } as any,
-      { isReady: jest.fn().mockResolvedValue(d1) } as any,
-      { isReady: jest.fn().mockResolvedValue(redis) } as any,
+      new ReadinessService(
+        { isReady: jest.fn().mockResolvedValue(postgres) } as any,
+        { isReady: jest.fn().mockResolvedValue(d1) } as any,
+        { isReady: jest.fn().mockResolvedValue(redis) } as any,
+      ),
     );
 
   afterEach(() => {

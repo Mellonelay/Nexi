@@ -12,6 +12,7 @@ model User {
   userCode              Int                     @unique
   email                 String?                 @unique
   password              String?
+  securityPasswordHash  String?
   displayName           String?
   role                  Role                    @default(USER)
   createdAt             DateTime                @default(now())
@@ -49,6 +50,22 @@ model User {
   spotMarginActivities  SpotMarginActivity[]
   activities            Activity[]
   preference            UserPreference?
+  vipState              UserVipState?
+  mfa                   UserMfa?
+}
+
+model UserMfa {
+  id          String    @id @default(uuid())
+  userId      String    @unique
+  enabled     Boolean   @default(false)
+  secret      String?
+  backupCodes String?
+  lastUsedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model WalletIdentity {
@@ -111,8 +128,8 @@ model KYC {
 model Wallet {
   id            String   @id @default(uuid())
   userId        String   @unique
-  balance       Float    @default(0)
-  frozenBalance Float    @default(0)
+  balance       String   @default("0")
+  frozenBalance String   @default("0")
   balances      String   @default("{}")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @default(now())
@@ -124,7 +141,7 @@ model Ledger {
   id              String            @id @default(uuid())
   walletId        String
   type            LedgerType
-  amount          Float
+  amount          String
   currency        String
   referenceId     String?
   transactionType TransactionType   @default(DEPOSIT)
@@ -142,10 +159,10 @@ model SpotOrder {
   pair      String
   side      OrderSide
   type      OrderType
-  price     Float?
-  amount    Float
-  filled    Float       @default(0)
-  remaining Float       @default(0)
+  price     String?
+  amount    String
+  filled    String      @default("0")
+  remaining String      @default("0")
   status    OrderStatus @default(OPEN)
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
@@ -159,9 +176,9 @@ model SpotTrade {
   userId      String
   pair        String
   side        OrderSide
-  price       Float
-  amount      Float
-  fee         Float     @default(0)
+  price       String
+  amount      String
+  fee         String    @default("0")
   feeCurrency String    @default("USDT")
   createdAt   DateTime  @default(now())
   order       SpotOrder @relation(fields: [orderId], references: [id])
@@ -174,17 +191,17 @@ model BinaryOptionPosition {
   symbol         String
   pair           String?
   side           BinarySide
-  amount         Float
-  entryPrice     Float
+  amount         String
+  entryPrice     String
   timeframe      Int
-  payoutRate     Float?
+  payoutRate     String?
   profitRatio    Int?
   lossRatio      Int?
-  targetPayout   Float?
-  closePrice     Float?
-  realizedProfit Float?
-  strikePrice    Float?
-  payout         Float?
+  targetPayout   String?
+  closePrice     String?
+  realizedProfit String?
+  strikePrice    String?
+  payout         String?
   duration       Int?
   status         BinaryStatus               @default(OPEN)
   expiresAt      DateTime
@@ -202,16 +219,16 @@ model ContractPosition {
   userId           String
   symbol           String // e.g. BTC/USDT
   side             String // BUY (Long) or SELL (Short)
-  amount           Float // Margin Amount (Collateral)
+  amount           String // Margin Amount (Collateral)
   leverage         Int // e.g. 100
-  entryPrice       Float
-  currentPrice     Float? // Last updated price
-  liquidationPrice Float
-  tpPrice          Float? // Take Profit
-  slPrice          Float? // Stop Loss
+  entryPrice       String
+  currentPrice     String? // Last updated price
+  liquidationPrice String
+  tpPrice          String? // Take Profit
+  slPrice          String? // Stop Loss
   status           String // OPEN, CLOSED, LIQUIDATED
-  pnl              Float    @default(0)
-  fee              Float    @default(0)
+  pnl              String   @default("0")
+  fee              String   @default("0")
   marginMode       String   @default("ISOLATED") // CROSS or ISOLATED
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -226,9 +243,9 @@ model ContractPair {
   symbol      String  @unique
   minLeverage Int     @default(1)
   maxLeverage Int     @default(100)
-  makerFee    Float   @default(0.0004)
-  takerFee    Float   @default(0.0006)
-  minAmount   Float   @default(10)
+  makerFee    String  @default("0.0004")
+  takerFee    String  @default("0.0006")
+  minAmount   String  @default("10")
   isActive    Boolean @default(true)
 }
 
@@ -237,9 +254,9 @@ model ConversionTransaction {
   userId    String
   fromCoin  String
   toCoin    String
-  amount    Float
-  rate      Float
-  received  Float
+  amount    String
+  rate      String
+  received  String
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
 }
@@ -247,14 +264,14 @@ model ConversionTransaction {
 model LoanApplication {
   id                    String                @id @default(uuid())
   userId                String
-  amount                Float
+  amount                String
   amountDecimal         String                @default("0")
   currency              String                @default("USDT")
   term                  Int
   durationDays          Int                   @default(30)
-  interestRate          Float                 @default(0.1)
+  interestRate          String                @default("0.1")
   interestRateDecimal   String                @default("0.1")
-  totalRepayment        Float                 @default(0)
+  totalRepayment        String                @default("0")
   totalRepaymentDecimal String                @default("0")
   collateral            String?
   collateralImg         String?
@@ -263,7 +280,7 @@ model LoanApplication {
   dueDate               DateTime?
   createdAt             DateTime              @default(now())
   updatedAt             DateTime              @default(now())
-  productSnapshot       Json?
+  productSnapshot       String?
   user                  User                  @relation(fields: [userId], references: [id])
   repayments            LegacyLoanRepayment[]
 
@@ -275,11 +292,11 @@ model MiningPlan {
   name              String
   currency          String               @default("USDT")
   lockupPeriod      Int
-  dailyYield        Float
+  dailyYield        String
   dailyYieldDecimal String               @default("0")
-  minDeposit        Float
+  minDeposit        String
   minDepositDecimal String               @default("0")
-  maxDeposit        Float
+  maxDeposit        String
   maxDepositDecimal String               @default("0")
   isActive          Boolean              @default(true)
   createdAt         DateTime             @default(now())
@@ -291,15 +308,15 @@ model MiningSubscription {
   id                  String                @id @default(uuid())
   userId              String
   planId              String
-  amount              Float
+  amount              String
   amountDecimal       String                @default("0")
   status              MiningStatus          @default(ACTIVE)
   startDate           DateTime              @default(now())
   endDate             DateTime?
-  totalRewards        Float                 @default(0)
+  totalRewards        String                @default("0")
   totalRewardsDecimal String                @default("0")
   lastRewardPaid      DateTime?
-  planSnapshot        Json?
+  planSnapshot        String?
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @default(now())
   user                User                  @relation(fields: [userId], references: [id])
@@ -336,12 +353,12 @@ model Currency {
   symbol            String           @unique
   name              String
   logo              String?
-  rate              Float            @default(1.0)
-  minDeposit        Float            @default(10.0)
-  maxDeposit        Float            @default(10000.0)
-  minWithdrawal     Float            @default(10.0)
-  maxWithdrawal     Float            @default(10000.0)
-  withdrawalFee     Float            @default(1.0)
+  rate              String           @default("1.0")
+  minDeposit        String           @default("10.0")
+  maxDeposit        String           @default("10000.0")
+  minWithdrawal     String           @default("10.0")
+  maxWithdrawal     String           @default("10000.0")
+  withdrawalFee     String           @default("1.0")
   depositEnabled    Boolean          @default(true)
   withdrawEnabled   Boolean          @default(true)
   confirmationCount Int              @default(3)
@@ -410,9 +427,9 @@ model LoanPlan {
   id           String   @id @default(uuid())
   name         String
   durationDays Int
-  interestRate Float // e.g., 0.05 for 5%
-  minAmount    Float
-  maxAmount    Float
+  interestRate String // e.g., 0.05 for 5%
+  minAmount    String
+  maxAmount    String
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -431,7 +448,7 @@ model AdminAuditLog {
   adminId   String
   action    String
   target    String?
-  details   Json?
+  details   String?
   ipAddress String?
   createdAt DateTime @default(now())
 
@@ -480,7 +497,7 @@ model AdminGovernanceCommand {
   commandType    String
   target         String?
   reason         String
-  payload        Json?
+  payload        String?
   requestedBy    String
   status         AdminCommandStatus        @default(PENDING)
   approvedBy     String?
@@ -587,7 +604,7 @@ model BinaryPair {
   symbol        String  @unique // e.g., "BTC/USDT"
   baseAsset     String // e.g., "BTC"
   quoteAsset    String // e.g., "USDT"
-  rate          Float   @default(1.85) // Payout Rate e.g., 1.85 for 85%
+  rate          String  @default("1.85") // Payout Rate e.g., 1.85 for 85%
   category      String  @default("crypto") // crypto, forex, metal, stock
   logo          String? // Added logo field
   isActive      Boolean @default(true)
@@ -607,7 +624,7 @@ model BinaryTimeframe {
   id          Int     @id @default(autoincrement())
   name        String // e.g., "30s", "1m"
   seconds     Int     @unique
-  payoutRate  Float // e.g., 0.85
+  payoutRate  String // e.g., 0.85
   profitRatio Int     @default(85)
   lossRatio   Int     @default(0)
   isActive    Boolean @default(true)
@@ -618,7 +635,7 @@ model WithdrawalRequest {
   userId    String
   user      User             @relation(fields: [userId], references: [id])
   currency  String
-  amount    Float
+  amount    String
   address   String
   status    WithdrawalStatus @default(PENDING)
   txHash    String?
@@ -737,9 +754,9 @@ model OptionGameSettings {
   matchId    Int
   status     Int
   symbol     String?
-  payoutRate Float?
+  payoutRate String?
   duration   Int?
-  rawData    Json?
+  rawData    String?
   dummy      String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -748,12 +765,12 @@ model OptionGameSettings {
 model MarketData {
   id        String   @id @default(uuid())
   symbol    String   @unique
-  price     Float
-  change    Float
-  vol       Float
-  high      Float
-  low       Float
-  rawData   Json?
+  price     String
+  change    String
+  vol       String
+  high      String
+  low       String
+  rawData   String?
   updatedAt DateTime @updatedAt
 }
 
@@ -940,7 +957,7 @@ model MarketProviderSymbol {
   providerSymbol   String
   enabled          Boolean              @default(true)
   priority         Int                  @default(100)
-  capabilityPolicy Json?
+  capabilityPolicy String?
   createdAt        DateTime             @default(now())
   updatedAt        DateTime             @updatedAt
   provider         MarketProviderConfig @relation(fields: [providerId], references: [id])
@@ -964,13 +981,13 @@ model MarketTrade {
   provider        String
   source          String
   providerTradeId String?
-  sequence        BigInt?
+  sequence        String?
   side            MarketTradeSide @default(UNKNOWN)
   price           String
   quantity        String
   observedAt      DateTime
   receivedAt      DateTime        @default(now())
-  rawData         Json?
+  rawData         String?
   pair            MarketPair      @relation(fields: [pairId], references: [id])
 
   @@unique([pairId, provider, providerTradeId])
@@ -991,11 +1008,11 @@ model MarketDepthSnapshot {
   provider           String
   source             String
   providerSnapshotId String?
-  sequence           BigInt?
+  sequence           String?
   checksum           String?
   observedAt         DateTime
   receivedAt         DateTime           @default(now())
-  rawData            Json?
+  rawData            String?
   pair               MarketPair         @relation(fields: [pairId], references: [id])
   levels             MarketDepthLevel[]
 
@@ -1024,15 +1041,18 @@ model MarketQuoteSnapshot {
   symbol     String
   provider   String
   source     String
-  sequence   BigInt
+  sequence   String
   price      String
+  bid        String?
+  ask        String?
+  spread     String?
   change24h  String?
   volume24h  String?
   high24h    String?
   low24h     String?
   observedAt DateTime
   receivedAt DateTime   @default(now())
-  rawData    Json?
+  rawData    String?
   pair       MarketPair @relation(fields: [pairId], references: [id])
 
   @@unique([pairId, sequence])
@@ -1046,8 +1066,11 @@ model MarketQuoteLatest {
   symbol     String
   provider   String
   source     String
-  sequence   BigInt
+  sequence   String
   price      String?
+  bid        String?
+  ask        String?
+  spread     String?
   change24h  String?
   volume24h  String?
   high24h    String?
@@ -1159,7 +1182,7 @@ model SpotMarginPositionEvent {
   amount         String?
   price          String?
   idempotencyKey String              @unique
-  metadata       Json?
+  metadata       String?
   createdAt      DateTime            @default(now())
   position       SpotMarginPosition  @relation(fields: [positionId], references: [id])
 
@@ -1175,7 +1198,7 @@ model SpotMarginActivity {
   type           SpotMarginEventType
   status         SpotMarginActivityStatus @default(COMPLETED)
   idempotencyKey String                   @unique
-  details        Json?
+  details        String?
   createdAt      DateTime                 @default(now())
   user           User                     @relation(fields: [userId], references: [id])
   account        SpotMarginAccount?       @relation(fields: [accountId], references: [id])
@@ -1200,7 +1223,7 @@ model LedgerPosting {
   correlationId       String
   economicGroup       String?
   createdAt           DateTime             @default(now())
-  metadata            Json?
+  metadata            String?
   account             LedgerAccount        @relation(fields: [accountId], references: [id])
   auditEvents         LedgerAuditEvent[]
   miningRewardAccrual MiningRewardAccrual?
@@ -1232,7 +1255,7 @@ model LedgerAuditEvent {
   eventType      String
   idempotencyKey String
   correlationId  String
-  details        Json?
+  details        String?
   createdAt      DateTime       @default(now())
   account        LedgerAccount  @relation(fields: [accountId], references: [id])
   posting        LedgerPosting? @relation(fields: [postingId], references: [id])
@@ -1258,7 +1281,7 @@ model LegacyAffiliate {
   userId        String   @unique
   referralCode  String   @unique
   referredBy    String?
-  totalEarnings Float    @default(0)
+  totalEarnings String   @default("0")
   createdAt     DateTime @default(now())
   updatedAt     DateTime
   user          User     @relation(fields: [userId], references: [id])
@@ -1269,8 +1292,8 @@ model LegacyAffiliate {
 model LegacyBinaryOptionResult {
   id         String               @id
   positionId String               @unique
-  closePrice Float
-  profit     Float
+  closePrice String
+  profit     String
   createdAt  DateTime             @default(now())
   position   BinaryOptionPosition @relation(fields: [positionId], references: [id])
 
@@ -1280,7 +1303,7 @@ model LegacyBinaryOptionResult {
 model LegacyLoanRepayment {
   id              String          @id
   loanId          String
-  amount          Float
+  amount          String
   amountDecimal   String          @default("0")
   currency        String
   paidAt          DateTime        @default(now())
@@ -1296,7 +1319,7 @@ model LegacyLoanRepayment {
 model LegacyReward {
   id        String   @id
   userId    String
-  amount    Float
+  amount    String
   currency  String
   reason    String
   createdAt DateTime @default(now())
@@ -1326,7 +1349,7 @@ model SupportTicketReply {
   authorId    String
   body        String
   internal    Boolean       @default(false)
-  attachments Json?
+  attachments String?
   createdAt   DateTime      @default(now())
   ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
@@ -1341,7 +1364,7 @@ model PersistentMessage {
   deliveryState String    @default("SENT")
   sequence      Int       @default(0)
   readAt        DateTime?
-  attachments   Json?
+  attachments   String?
   createdAt     DateTime  @default(now())
 
   @@index([recipientId, createdAt])
@@ -1355,7 +1378,7 @@ model Notification {
   title     String
   body      String
   readAt    DateTime?
-  metadata  Json?
+  metadata  String?
   createdAt DateTime  @default(now())
 
   @@index([userId, readAt, createdAt])
@@ -1365,7 +1388,7 @@ model Announcement {
   id        String    @id @default(uuid())
   title     String
   body      String
-  targeting Json?
+  targeting String?
   startsAt  DateTime?
   endsAt    DateTime?
   published Boolean   @default(false)
@@ -1387,7 +1410,7 @@ model Activity {
   ledgerPostingId     String?
   asset               String?
   amount              String?
-  details             Json?
+  details             String?
   createdAt           DateTime             @default(now())
   user                User                 @relation(fields: [userId], references: [id])
   miningRewardAccrual MiningRewardAccrual?
@@ -1414,7 +1437,7 @@ model EventOutbox {
   eventType      String
   eventVersion   Int                 @default(1)
   correlationId  String?
-  payload        Json
+  payload        String
   state          OutboxDeliveryState @default(PENDING)
   availableAt    DateTime            @default(now())
   claimedAt      DateTime?
@@ -1431,6 +1454,25 @@ model EventOutbox {
   @@index([correlationId, createdAt])
 }
 
+model EventInbox {
+  messageId      String    @id
+  queue          String
+  attempts       Int
+  eventType      String
+  eventVersion   Int
+  idempotencyKey String
+  correlationId  String
+  payload        String
+  state          String    @default("RECEIVED")
+  receivedAt     DateTime  @default(now())
+  processedAt    DateTime?
+  lastErrorCode  String?
+  updatedAt      DateTime  @default(now())
+
+  @@unique([queue, idempotencyKey])
+  @@index([state, receivedAt])
+}
+
 model LearnArticle {
   id          String                 @id @default(uuid())
   slug        String                 @unique
@@ -1438,7 +1480,7 @@ model LearnArticle {
   body        String
   summary     String?
   status      String                 @default("DRAFT")
-  attachments Json?
+  attachments String?
   categoryId  String?
   scheduledAt DateTime?
   publishedAt DateTime?
@@ -1475,7 +1517,7 @@ model LearnArticleRevision {
   body        String
   summary     String?
   status      String            @default("DRAFT")
-  attachments Json?
+  attachments String?
   scheduledAt DateTime?
   publishedAt DateTime?
   archivedAt  DateTime?
@@ -1514,7 +1556,7 @@ model LearnMediaAsset {
   url        String
   altText    String?
   provider   String?
-  metadata   Json?
+  metadata   String?
   createdAt  DateTime              @default(now())
   article    LearnArticle?         @relation("ArticleMedia", fields: [articleId], references: [id], onDelete: Cascade)
   revision   LearnArticleRevision? @relation("RevisionMedia", fields: [revisionId], references: [id], onDelete: Cascade)
@@ -1539,11 +1581,40 @@ model UserPreference {
   locale               String   @default("en")
   timezone             String   @default("UTC")
   theme                String   @default("dark")
-  notificationSettings Json?
-  tradingSettings      Json?
+  notificationSettings String?
+  tradingSettings      String?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
   user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VipLevel {
+  id         String         @id
+  level      Int            @unique
+  name       String
+  threshold  String         @default("0")
+  benefits   String?
+  enabled    Boolean        @default(true)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @default(now())
+  userStates UserVipState[]
+
+  @@index([enabled, level])
+}
+
+model UserVipState {
+  id          String    @id
+  userId      String    @unique
+  vipLevelId  String
+  progress    String    @default("0")
+  evaluatedAt DateTime  @default(now())
+  qualifiedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vipLevel    VipLevel  @relation(fields: [vipLevelId], references: [id], onDelete: Restrict)
+
+  @@index([vipLevelId, progress])
 }
 
 // Gate 2 authority models. These coexist with historical Float-backed
@@ -1582,7 +1653,7 @@ model Gate2SpotOrder {
   triggerProvider   String?
   triggerSource     String?
   triggerObservedAt DateTime?
-  triggerSequence   BigInt?
+  triggerSequence   String?
   reserveAsset      String
   reserveScope      LedgerAccountScope   @default(MAIN)
   reservedAmount    String
@@ -1666,13 +1737,13 @@ model Gate2BinaryPosition {
   entrySource          String
   entryObservedAt      DateTime
   entryReceivedAt      DateTime
-  entrySequence        BigInt
+  entrySequence        String
   expiryQuoteId        String?
   expiryProvider       String?
   expirySource         String?
   expiryObservedAt     DateTime?
   expiryReceivedAt     DateTime?
-  expirySequence       BigInt?
+  expirySequence       String?
   quoteFreshnessMs     Int
   configurationVersion Int
   settlementReceiptId  String?          @unique
@@ -1803,7 +1874,7 @@ model Gate2OperationAudit {
   operationId    String
   eventType      String
   idempotencyKey String
-  details        Json?
+  details        String?
   createdAt      DateTime @default(now())
   user           User     @relation(fields: [userId], references: [id])
 

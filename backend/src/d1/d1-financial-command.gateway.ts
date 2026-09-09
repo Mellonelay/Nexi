@@ -3321,7 +3321,7 @@ export class D1FinancialCommandGateway {
   async listAdminUsers(): Promise<Record<string, unknown>[]> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const result = await this.bridge.select<Record<string, unknown>>(
-      `SELECT u."id",u."email",u."role",u."lastActive",r."roleId" FROM "User" u LEFT JOIN "AdminRoleAssignment" r ON r."userId"=u."id" WHERE u."role"='ADMIN' ORDER BY u."lastActive" DESC`,
+      `SELECT u."id",u."email",u."role",u."lastActive",r."roleId",m."enabled" AS "mfaEnabled" FROM "User" u LEFT JOIN "AdminRoleAssignment" r ON r."userId"=u."id" LEFT JOIN "UserMfa" m ON m."userId"=u."id" WHERE u."role"='ADMIN' ORDER BY u."lastActive" DESC`,
       [],
     );
     return result.results;
@@ -3447,6 +3447,69 @@ export class D1FinancialCommandGateway {
     return row;
   }
 
+  async updateUserPassword(
+    userId: string,
+    passwordHash: string,
+  ): Promise<Record<string, unknown>> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const result = await this.bridge.batch([
+      {
+        sql: `UPDATE "User" SET "password"=?, "updatedAt"=CURRENT_TIMESTAMP WHERE "id"=?`,
+        params: [passwordHash, userId],
+      },
+    ]);
+    this.requireChanges(result, 0, "D1 password update");
+    const row = await this.getUserById(userId);
+    if (!row) throw new BadRequestException("D1 user password was not materialized");
+    return row;
+  }
+
+  async updateUserSecurityPassword(
+    userId: string,
+    securityPasswordHash: string,
+  ): Promise<Record<string, unknown>> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const result = await this.bridge.batch([
+      {
+        sql: `UPDATE "User" SET "securityPasswordHash"=?, "updatedAt"=CURRENT_TIMESTAMP WHERE "id"=?`,
+        params: [securityPasswordHash, userId],
+      },
+    ]);
+    this.requireChanges(result, 0, "D1 security password update");
+    const row = await this.getUserById(userId);
+    if (!row) throw new BadRequestException("D1 user security password was not materialized");
+    return row;
+  }
+
+  async upsertUserMfa(
+    userId: string,
+    enabled: boolean,
+    secret: string | null,
+    backupCodes: string | null,
+  ): Promise<Record<string, unknown>> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const id = randomUUID();
+    const result = await this.bridge.batch([
+      {
+        sql: `INSERT INTO "UserMfa" ("id","userId","enabled","secret","backupCodes","createdAt","updatedAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ON CONFLICT("userId") DO UPDATE SET "enabled"=excluded."enabled","secret"=excluded."secret","backupCodes"=excluded."backupCodes","updatedAt"=CURRENT_TIMESTAMP`,
+        params: [id, userId, enabled ? 1 : 0, secret, backupCodes],
+      },
+    ]);
+    this.requireChanges(result, 0, "D1 MFA upsert");
+    const row = await this.getUserMfa(userId);
+    if (!row) throw new BadRequestException("D1 user MFA was not materialized");
+    return row;
+  }
+
+  async getUserMfa(userId: string): Promise<Record<string, unknown> | null> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const result = await this.bridge.select<Record<string, unknown>>(
+      `SELECT * FROM "UserMfa" WHERE "userId"=? LIMIT 1`,
+      [userId],
+    );
+    return result.results[0] ?? null;
+  }
+
   async listLedgerAccounts(userId: string): Promise<Record<string, unknown>[]> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const result = await this.bridge.select<Record<string, unknown>>(
@@ -3487,6 +3550,40 @@ export class D1FinancialCommandGateway {
       [],
     );
     return result.results;
+  }
+
+  async listAdminCurrencies(): Promise<Record<string, unknown>[]> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const result = await this.bridge.select<Record<string, unknown>>(
+      `SELECT "id","symbol","name","logo","rate","minDeposit","maxDeposit","minWithdrawal","maxWithdrawal","withdrawalFee","depositEnabled","withdrawEnabled","confirmationCount","decimals","isActive","createdAt","updatedAt" FROM "Currency" ORDER BY "id" ASC`,
+      [],
+    );
+    return result.results;
+  }
+
+  async updateAdminCurrency(command: {
+    id: number;
+    patch: Record<string, unknown>;
+    adminId: string;
+    reason: string;
+    idempotencyKey: string;
+  }): Promise<Record<string, unknown>> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const allowed = new Set(["name","logo","rate","minDeposit","maxDeposit","minWithdrawal","maxWithdrawal","withdrawalFee","depositEnabled","withdrawEnabled","confirmationCount","decimals","isActive"]);
+    const entries = Object.entries(command.patch).filter(([key, value]) => allowed.has(key) && value !== undefined);
+    if (!entries.length) throw new BadRequestException("No supported currency fields were supplied");
+    const assignments = entries.map(([key]) => `"${key}"=?`).join(',');
+    const params = entries.map(([key, value]) => ["depositEnabled","withdrawEnabled","isActive"].includes(key) ? (value ? 1 : 0) : value) as D1BridgeParameter[];
+    const before = await this.bridge.select<Record<string, unknown>>(`SELECT * FROM "Currency" WHERE "id"=? LIMIT 1`, [command.id]);
+    if (!before.results[0]) throw new BadRequestException("Currency not found");
+    const result = await this.bridge.batch([
+      { sql: `UPDATE "Currency" SET ${assignments},"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=?`, params: [...params, command.id] },
+      { sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`, params: [randomUUID(), command.adminId, "CURRENCY_CONFIGURATION_UPDATED", String(command.id), JSON.stringify({ fields: entries.map(([key]) => key), reason: command.reason, idempotencyKey: command.idempotencyKey })] },
+      this.eventOutboxStatement({ idempotencyKey: `event:${command.idempotencyKey}`, aggregateType: "Currency", aggregateId: String(command.id), eventType: "CURRENCY_CONFIGURATION_UPDATED", correlationId: command.idempotencyKey, payload: { currencyId: command.id, fields: entries.map(([key]) => key) } }),
+    ]);
+    this.requireChanges(result, 0, "D1 currency configuration update");
+    const row = await this.bridge.select<Record<string, unknown>>(`SELECT * FROM "Currency" WHERE "id"=? LIMIT 1`, [command.id]);
+    return row.results[0];
   }
 
   async touchUserLastActive(userId: string): Promise<void> {
@@ -4260,6 +4357,45 @@ export class D1FinancialCommandGateway {
       userId === undefined ? [] : [userId],
     );
     return result.results;
+  }
+
+  async updateBinaryConfiguration(command: {
+    pair: string;
+    sourceDurationSeconds: number;
+    durationSeconds: number;
+    payoutRate: number;
+    minStake: number;
+    maxStake: number;
+    enabled: boolean;
+    adminId: string;
+    reason: string;
+    idempotencyKey: string;
+  }): Promise<Record<string, unknown>> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const currentResult = await this.bridge.select<Record<string, unknown>>(
+      `SELECT * FROM "Gate2BinaryConfiguration" WHERE "pair"=? AND "durationSeconds"=? AND "enabled"=1 ORDER BY "version" DESC LIMIT 1`,
+      [command.pair, command.sourceDurationSeconds],
+    );
+    const current = currentResult.results[0];
+    if (!current) throw new BadRequestException("Active Binary configuration not found");
+    if (command.durationSeconds !== command.sourceDurationSeconds) {
+      const conflict = await this.bridge.select<Record<string, unknown>>(
+        `SELECT "id" FROM "Gate2BinaryConfiguration" WHERE "pair"=? AND "durationSeconds"=? AND "enabled"=1 LIMIT 1`,
+        [command.pair, command.durationSeconds],
+      );
+      if (conflict.results[0]) throw new BadRequestException("Binary duration already exists for this pair");
+    }
+    const nextVersion = Number(current.version ?? 0) + 1;
+    const nextId = randomUUID();
+    const result = await this.bridge.batch([
+      { sql: `UPDATE "Gate2BinaryConfiguration" SET "enabled"=0,"updatedAt"=CURRENT_TIMESTAMP WHERE "pair"=? AND "durationSeconds"=? AND "enabled"=1`, params: [command.pair, command.sourceDurationSeconds] },
+      { sql: `INSERT INTO "Gate2BinaryConfiguration" ("id","pair","durationSeconds","payoutRate","lossRate","minStake","maxStake","settlementDelaySeconds","version","enabled","createdAt","updatedAt") VALUES (?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`, params: [nextId, command.pair, command.durationSeconds, command.payoutRate, Number(current.lossRate ?? 0), command.minStake, command.maxStake, Number(current.settlementDelaySeconds ?? 0), nextVersion, command.enabled ? 1 : 0] },
+      { sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`, params: [randomUUID(), command.adminId, "BINARY_CONFIGURATION_UPDATED", `${command.pair}:${command.durationSeconds}`, JSON.stringify({ reason: command.reason, idempotencyKey: command.idempotencyKey, sourceDurationSeconds: command.sourceDurationSeconds, durationSeconds: command.durationSeconds, version: nextVersion })] },
+      this.eventOutboxStatement({ idempotencyKey: `event:${command.idempotencyKey}`, aggregateType: "Gate2BinaryConfiguration", aggregateId: nextId, eventType: "BINARY_CONFIGURATION_UPDATED", correlationId: command.idempotencyKey, payload: { pair: command.pair, sourceDurationSeconds: command.sourceDurationSeconds, durationSeconds: command.durationSeconds, version: nextVersion } }),
+    ]);
+    this.requireChanges(result, 0, "D1 Binary configuration update");
+    const row = await this.bridge.select<Record<string, unknown>>(`SELECT * FROM "Gate2BinaryConfiguration" WHERE "id"=? LIMIT 1`, [nextId]);
+    return row.results[0];
   }
 
   async listBinaryConfigurations(): Promise<Record<string, unknown>[]> {

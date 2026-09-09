@@ -12,6 +12,7 @@ model User {
   userCode              Int                     @unique
   email                 String?                 @unique
   password              String?
+  securityPasswordHash  String?
   displayName           String?
   role                  Role                    @default(USER)
   createdAt             DateTime                @default(now())
@@ -50,6 +51,21 @@ model User {
   activities            Activity[]
   preference            UserPreference?
   vipState              UserVipState?
+  mfa                   UserMfa?
+}
+
+model UserMfa {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  enabled        Boolean  @default(false)
+  secret         String?
+  backupCodes    String?
+  lastUsedAt     DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model WalletIdentity {
@@ -1034,9 +1050,6 @@ model MarketQuoteSnapshot {
   volume24h  String?
   high24h    String?
   low24h     String?
-  bid        String?
-  ask        String?
-  spread     String?
   observedAt DateTime
   receivedAt DateTime   @default(now())
   rawData    String?
@@ -1062,9 +1075,6 @@ model MarketQuoteLatest {
   volume24h  String?
   high24h    String?
   low24h     String?
-  bid        String?
-  ask        String?
-  spread     String?
   state      MarketQuoteState @default(UNAVAILABLE)
   observedAt DateTime?
   receivedAt DateTime         @default(now())

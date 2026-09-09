@@ -82,7 +82,8 @@ export class MarginService {
     const pair = await this.resolvePair(input.pair);
     const quote = await this.requireLiveQuote(pair.id, pair.symbol);
     const collateral = this.decimal(input.collateral);
-    const leverage = Number(input.leverage) as MarginLeverage;
+    const leverage = Number(input.leverage);
+    await this.assertConfiguredLeverage(leverage);
     const account = await this.ensureAccount(userId, pair, this.prisma);
 
     return this.prisma.$transaction(async (tx) => {
@@ -187,7 +188,8 @@ export class MarginService {
     const pair = await this.resolvePair(pairInput);
     const quote = await this.requireLiveQuote(pair.id, pair.symbol);
     const maintenanceRatio = await this.resolveMaintenanceRatio();
-    return { pair: pair.symbol, state: quote.state, price: quote.price!.toString(), quoteId: quote.id, provider: quote.provider, source: quote.source, observedAt: quote.observedAt, receivedAt: quote.receivedAt, maintenanceRatio: maintenanceRatio.toString() };
+    const leverageOptions = await this.resolveAllowedLeverages();
+    return { pair: pair.symbol, state: quote.state, price: quote.price!.toString(), quoteId: quote.id, provider: quote.provider, source: quote.source, observedAt: quote.observedAt, receivedAt: quote.receivedAt, maintenanceRatio: maintenanceRatio.toString(), leverageOptions };
   }
 
   async history(userId: string, take = 50) {
@@ -323,8 +325,8 @@ export class MarginService {
     const quote = await this.d1!.getLiveMarketQuote(pair.id);
     if (!quote) throw new ServiceUnavailableException(`Live market quote unavailable for ${pair.symbol}`);
     const collateral = this.decimal(input.collateral);
-    const leverage = Number(input.leverage) as MarginLeverage;
-    if (![MarginLeverage.TWO, MarginLeverage.THREE, MarginLeverage.FIVE].includes(leverage)) throw new BadRequestException('Margin leverage is not supported');
+    const leverage = Number(input.leverage);
+    await this.assertConfiguredLeverage(leverage);
     const notional = collateral.mul(leverage);
     const quantity = notional.div(new Prisma.Decimal(quote.price)).toDecimalPlaces(18, Prisma.Decimal.ROUND_DOWN);
     const debtAsset = input.direction === MarginPositionDirection.LONG ? pair.quoteAsset : pair.baseAsset;
@@ -380,9 +382,27 @@ export class MarginService {
     return quote;
   }
 
+  private async resolveAllowedLeverages(): Promise<number[]> {
+    const raw = this.d1?.isEnabled()
+      ? await this.d1.getSystemConfigValue('gate2.margin.leverages')
+      : (await this.prisma.systemConfig?.findUnique({ where: { key: 'gate2.margin.leverages' } }))?.value ?? null;
+    const values = String(raw ?? '2,3,5').split(',').map((value) => Number(value.trim())).filter((value) => Number.isInteger(value) && value >= 2 && value <= 20);
+    const unique = [...new Set(values)].sort((a, b) => a - b);
+    if (!unique.length) throw new BadRequestException('Margin leverage configuration is invalid');
+    return unique;
+  }
+
+  private async assertConfiguredLeverage(leverage: number): Promise<void> {
+    if (!(await this.resolveAllowedLeverages()).includes(leverage)) {
+      throw new BadRequestException('Margin leverage is not supported');
+    }
+  }
+
   private async resolveMaintenanceRatio() {
-    const config = await this.prisma.systemConfig?.findUnique({ where: { key: 'gate2.margin.maintenanceRatio' } });
-    const ratio = config ? new Prisma.Decimal(config.value) : new Prisma.Decimal('0.5');
+    const raw = this.d1?.isEnabled()
+      ? await this.d1.getSystemConfigValue('gate2.margin.maintenanceRatio')
+      : (await this.prisma.systemConfig?.findUnique({ where: { key: 'gate2.margin.maintenanceRatio' } }))?.value ?? null;
+    const ratio = new Prisma.Decimal(raw ?? '0.5');
     if (ratio.isNegative() || ratio.gte(1)) throw new BadRequestException('Margin maintenance configuration is invalid');
     return ratio;
   }

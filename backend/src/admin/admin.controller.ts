@@ -35,6 +35,7 @@ import {
   UpdateLoanPlanDto,
   UpdateMiningPlanDto,
   UpdateBinaryConfigurationDto,
+  UpdateMarginConfigurationDto,
   UpdateSystemConfigDto,
   CreateGovernanceCommandDto,
   GovernanceDecisionDto,
@@ -494,6 +495,21 @@ export class AdminController {
     return this.adminService.getSpotOrders();
   }
 
+  @Get("spot/margin/config")
+  @RequireAdminPermission("spot.view")
+  getMarginConfiguration() {
+    return this.adminService.getMarginConfiguration();
+  }
+
+  @Post("spot/margin/config")
+  @RequireAdminPermission("spot.edit")
+  updateMarginConfiguration(
+    @Body() body: UpdateMarginConfigurationDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.adminService.updateMarginConfiguration(body, request.user.userId);
+  }
+
   @Post("spot/orders/:id/cancel")
   @RequireAdminPermission("spot.cancel_order")
   cancelAdminSpotOrder(
@@ -762,8 +778,8 @@ export class AdminController {
 
   @Post("currencies")
   @RequireAdminPermission("assets.edit")
-  createCurrency(@Body() body: CreateCurrencyDto) {
-    return this.adminService.createCurrency(body);
+  createCurrency(@Body() body: CreateCurrencyDto, @Req() request: AuthenticatedRequest) {
+    return this.adminService.createCurrency(body, request.user.userId);
   }
 
   @Patch("currencies/:id")
@@ -771,8 +787,9 @@ export class AdminController {
   updateCurrency(
     @Param("id", ParseIntPipe) id: number,
     @Body() body: UpdateCurrencyDto,
+    @Req() request: AuthenticatedRequest,
   ) {
-    return this.adminService.updateCurrency(id, body);
+    return this.adminService.updateCurrency(id, body, request.user.userId);
   }
 
   @Post("currencies/:id/address")

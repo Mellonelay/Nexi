@@ -1,10 +1,12 @@
 'use client'
 
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { X, Bell, CheckCircle, AlertTriangle, Info, TrendingUp } from 'lucide-react'
 import { cn } from '../lib/cn'
-import api from '../lib/api'
+import { io } from 'socket.io-client'
+import api, { apiBaseUrl } from '../lib/api'
+import { getAccessToken } from '../lib/auth-session'
 
 interface Notification {
   id: string
@@ -35,28 +37,61 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
   const [retryNonce, setRetryNonce] = useState(0)
   const unreadCount = notifications.filter(n => !n.read).length
 
-  useEffect(() => {
-    if (!open) return
-    let active = true
+  const loadNotifications = useCallback(async () => {
     setLoading(true)
     setFailed(false)
-    api.get('/communications/notifications', { params: { page: 1, limit: 25 } })
-      .then(({ data }) => {
-        if (!active) return
-        const rows = Array.isArray(data) ? data : Array.isArray(data?.notifications) ? data.notifications : []
-        setNotifications(rows.map((item: Record<string, unknown>) => ({
-          id: String(item.id ?? ''),
-          type: item.type === 'success' || item.type === 'warning' || item.type === 'trade' ? item.type : 'info',
-          title: String(item.title ?? 'Notification'),
-          message: String(item.body ?? ''),
-          time: item.createdAt ? new Date(String(item.createdAt)).toLocaleString() : '—',
-          read: Boolean(item.readAt),
-        })))
-      })
-      .catch(() => { if (active) { setNotifications([]); setFailed(true) } })
-      .finally(() => { if (active) setLoading(false) })
-    return () => { active = false }
-  }, [open, retryNonce])
+    try {
+      const { data } = await api.get('/communications/notifications', { params: { page: 1, limit: 25 } })
+      const rows = Array.isArray(data) ? data : Array.isArray(data?.notifications) ? data.notifications : []
+      setNotifications(rows.map((item: Record<string, unknown>) => ({
+        id: String(item.id ?? ''),
+        type: item.type === 'success' || item.type === 'warning' || item.type === 'trade' ? item.type : 'info',
+        title: String(item.title ?? 'Notification'),
+        message: String(item.body ?? ''),
+        time: item.createdAt ? new Date(String(item.createdAt)).toLocaleString() : '—',
+        read: Boolean(item.readAt),
+      })))
+    } catch {
+      setNotifications([])
+      setFailed(true)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!open) return
+    void loadNotifications()
+  }, [loadNotifications, open, retryNonce])
+
+  useEffect(() => {
+    if (!open || typeof window === 'undefined') return
+    const token = getAccessToken()
+    if (!token) return
+    const socket = io(`${apiBaseUrl}/communications`, {
+      auth: { token },
+      transports: ['polling', 'websocket'],
+      tryAllTransports: true,
+      reconnection: true,
+      reconnectionAttempts: 8,
+      reconnectionDelay: 500,
+      reconnectionDelayMax: 8_000,
+    })
+    let connectedOnce = false
+    socket.on('connect', () => {
+      const recovered = connectedOnce
+      connectedOnce = true
+      if (recovered) void loadNotifications()
+    })
+    socket.on('communications.event', (message: unknown) => {
+      if (!message || typeof message !== 'object') return
+      const event = (message as { event?: unknown }).event
+      if (!event || typeof event !== 'object') return
+      const type = String((event as { type?: unknown }).type ?? '')
+      if (type === 'NOTIFICATION_SENT' || type === 'NOTIFICATION_READ') void loadNotifications()
+    })
+    return () => { socket.disconnect() }
+  }, [loadNotifications, open])
 
   const markRead = async (id: string) => {
     try {

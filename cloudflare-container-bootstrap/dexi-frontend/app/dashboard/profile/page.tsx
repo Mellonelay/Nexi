@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Copy, Crown, ShieldCheck, UserRound, UsersRound } from 'lucide-react';
 import { toast } from 'sonner';
@@ -8,6 +8,7 @@ import api from '../../lib/api';
 import { authoritativeValue } from '../../lib/product-states';
 import { DataStatePanel, Metric, PageHeader, PageShell, Panel, PanelHeading, StatusBadge } from '../wallet/components/ProductPrimitives';
 import type { ReferralProfile, VipProfile } from '../../lib/wallet-auth';
+import { sessionPrincipalId } from '../../lib/wallet-auth';
 
 type Profile = {
   id: string;
@@ -36,7 +37,13 @@ async function loadVipLevels() {
 }
 
 export default function ProfilePage() {
-  const authenticated = typeof window !== 'undefined' && Boolean(window.localStorage.getItem('token'));
+  const [authenticated, setAuthenticated] = useState(false);
+  useEffect(() => {
+    const sync = () => setAuthenticated(Boolean(sessionPrincipalId()));
+    sync();
+    window.addEventListener('nexi:wallet-session', sync);
+    return () => window.removeEventListener('nexi:wallet-session', sync);
+  }, []);
   const profileQuery = useQuery({ queryKey: ['profile', 'me'], queryFn: loadProfile, enabled: authenticated, retry: false, staleTime: 30_000 });
   const levelsQuery = useQuery({ queryKey: ['vip', 'levels'], queryFn: loadVipLevels, retry: false, staleTime: 60_000 });
   const profile = profileQuery.data;

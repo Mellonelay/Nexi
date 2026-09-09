@@ -3,6 +3,7 @@ import { INestApplication, ValidationPipe } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { D1PrismaService } from "../../src/d1/d1-prisma.service";
 import { MarketKlineController } from "../../src/market/market-kline.controller";
+import { MarketKlineQueryService } from "../../src/market/market-kline-query.service";
 import { MarketKlineService } from "../../src/market/market-kline.service";
 import { MarketProviderRouterService } from "../../src/market/market-provider-router.service";
 import { PrismaService } from "../../src/prisma/prisma.service";
@@ -132,6 +133,7 @@ describe("Public market C2 HTTP path", () => {
       controllers: [MarketKlineController],
       providers: [
         MarketKlineService,
+        MarketKlineQueryService,
         { provide: PrismaService, useValue: {} },
         { provide: D1PrismaService, useValue: d1 },
         { provide: MarketProviderRouterService, useValue: providers },

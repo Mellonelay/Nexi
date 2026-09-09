@@ -19,6 +19,9 @@ import type {
   AuditEvent,
   FeatureFlag,
   Announcement,
+  AdminMessage,
+  AdminNotification,
+  AdminLearnArticle,
   HealthCheck,
   AdminUser,
   Environment,
@@ -136,6 +139,10 @@ export interface AdminDataProvider {
         | "minWithdrawal"
         | "withdrawalFee"
         | "confirmations"
+        | "maxDeposit"
+        | "maxWithdrawal"
+        | "depositEnabled"
+        | "withdrawEnabled"
       >
     >,
     ctx: ConsequentialContext,
@@ -154,6 +161,11 @@ export interface AdminDataProvider {
   listSpotOrders(): Promise<SpotOrder[]>;
   pauseSpotPair(id: string, paused: boolean, ctx: ConsequentialContext): Promise<MutationResult>;
   cancelSpotOrder(id: string, ctx: ConsequentialContext): Promise<MutationResult>;
+  getMarginConfiguration(): Promise<{ maintenanceRatio: number; leverages: number[] }>;
+  updateMarginConfiguration(
+    config: { maintenanceRatio: number; leverages: number[] },
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult>;
   updateSpotPair(
     id: string,
     patch: Partial<
@@ -187,7 +199,17 @@ export interface AdminDataProvider {
         BinaryPair,
         "enabled" | "minStake" | "maxStake" | "exposureCap" | "settlementDelayMs"
       >
-    > & { payoutBps?: Partial<Record<BinaryDuration, number>> },
+    > & {
+      payoutBps?: Partial<Record<BinaryDuration, number>>;
+      durationConfigs?: Array<{
+        sourceDurationSeconds: number;
+        durationSeconds: number;
+        payoutBps: number;
+        minStake: string;
+        maxStake: string;
+        enabled: boolean;
+      }>;
+    },
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
 
@@ -351,6 +373,16 @@ export interface AdminDataProvider {
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
   listAnnouncements(): Promise<Announcement[]>;
+  createAnnouncement(payload: { title: string; body: string; published?: boolean }, ctx: ConsequentialContext): Promise<MutationResult>;
+  updateAnnouncement(id: string, payload: { title?: string; body?: string; published?: boolean }, ctx: ConsequentialContext): Promise<MutationResult>;
+  publishAnnouncement(id: string, ctx: ConsequentialContext): Promise<MutationResult>;
+  listMessages(): Promise<AdminMessage[]>;
+  listNotifications(): Promise<AdminNotification[]>;
+  sendNotification(payload: { userId: string; type: string; title: string; body: string }, ctx: ConsequentialContext): Promise<MutationResult>;
+  listLearnArticles(): Promise<AdminLearnArticle[]>;
+  createLearnArticle(payload: { slug: string; title: string; body: string; status?: string }, ctx: ConsequentialContext): Promise<MutationResult>;
+  updateLearnArticle(id: string, payload: { title?: string; body?: string; status?: string }, ctx: ConsequentialContext): Promise<MutationResult>;
+  publishLearnArticle(id: string, ctx: ConsequentialContext): Promise<MutationResult>;
   listHealth(): Promise<HealthCheck[]>;
 
   /** Governance — admin accounts */
@@ -405,6 +437,10 @@ export interface AdminDataProvider {
       expectedResult?: string;
       expiresAt?: string;
     },
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult>;
+  executeSandboxCommand(
+    commandId: string,
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
 

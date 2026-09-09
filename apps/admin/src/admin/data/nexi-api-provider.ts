@@ -37,6 +37,9 @@ import type {
   LoanPlan,
   MiningSubscriptionAdmin,
   LoanApplicationAdmin,
+  AdminMessage,
+  AdminNotification,
+  AdminLearnArticle,
 } from "../types";
 
 type ApiConfig = { baseUrl: string; getToken: () => Promise<string> };
@@ -284,6 +287,17 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     return { ok: result.ok !== false, auditId: stringValue(result.auditId ?? result.id) };
   }
 
+  async executeSandboxCommand(
+    commandId: string,
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult> {
+    const result = await this.request<JsonRecord>(
+      `/admin/sandbox/controls/${encodeURIComponent(commandId)}/execute`,
+      { method: "POST" },
+    );
+    return { ok: result.ok !== false, auditId: stringValue(result.auditId ?? result.id) };
+  }
+
   private mapUser(value: unknown): User {
     const row = record(value);
     const profile = record(row.profile);
@@ -463,26 +477,36 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       visible: !asset.visible,
     });
   }
-  listNetworks() {
-    return this.request<unknown[]>("/admin/market/networks").then((rows) =>
-      rows.map((value) => {
-        const row = record(value);
-        const asset = record(row.asset);
-        return {
-          id: stringValue(row.id),
-          name: stringValue(row.name),
-          assetSymbol: stringValue(asset.symbol),
-          chainId: stringValue(row.code),
-          decimals: 0,
-          explorer: "",
-          minDeposit: "0",
-          minWithdrawal: "0",
-          withdrawalFee: "0",
-          confirmations: 0,
-          enabled: stringValue(row.status) === "ACTIVE",
-        };
-      }),
-    );
+  async listNetworks() {
+    const [networkRows, currencyRows] = await Promise.all([
+      this.request<unknown[]>("/admin/market/networks"),
+      this.request<unknown[]>("/admin/currencies"),
+    ]);
+    const currencies = currencyRows.map(record);
+    return networkRows.map((value) => {
+      const row = record(value);
+      const asset = record(row.asset);
+      const assetSymbol = stringValue(asset.symbol);
+      const currency = currencies.find((item) => stringValue(item.symbol).toUpperCase() === assetSymbol.toUpperCase()) ?? {};
+      return {
+        id: stringValue(row.id),
+        name: stringValue(row.name),
+        assetSymbol,
+        chainId: stringValue(row.code),
+        decimals: Number(currency.decimals ?? 0),
+        explorer: "",
+        minDeposit: stringValue(currency.minDeposit, "0"),
+        maxDeposit: stringValue(currency.maxDeposit, "0"),
+        minWithdrawal: stringValue(currency.minWithdrawal, "0"),
+        maxWithdrawal: stringValue(currency.maxWithdrawal, "0"),
+        withdrawalFee: stringValue(currency.withdrawalFee, "0"),
+        confirmations: Number(currency.confirmationCount ?? 0),
+        depositEnabled: currency.depositEnabled === true || currency.depositEnabled === 1,
+        withdrawEnabled: currency.withdrawEnabled === true || currency.withdrawEnabled === 1,
+        currencyId: Number(currency.id),
+        enabled: stringValue(row.status) === "ACTIVE",
+      };
+    });
   }
   async toggleNetwork(id: string, ctx: ConsequentialContext): Promise<MutationResult> {
     const networks = await this.listNetworks();
@@ -602,6 +626,12 @@ export class NexiAdminApiProvider implements AdminDataProvider {
   async cancelSpotOrder(id: string, ctx: ConsequentialContext): Promise<MutationResult> {
     return this.requestMutation(`/admin/spot/orders/${encodeURIComponent(id)}/cancel`, ctx);
   }
+  getMarginConfiguration(): Promise<{ maintenanceRatio: number; leverages: number[] }> {
+    return this.request<{ maintenanceRatio: number; leverages: number[] }>("/admin/spot/margin/config");
+  }
+  updateMarginConfiguration(config: { maintenanceRatio: number; leverages: number[] }, ctx: ConsequentialContext): Promise<MutationResult> {
+    return this.requestMutation("/admin/spot/margin/config", ctx, { maintenanceRatio: config.maintenanceRatio, leverages: config.leverages.join(",") });
+  }
   async listBinaryPairs(): Promise<BinaryPair[]> {
     const rows = await this.request<unknown[]>("/admin/binary/config");
     const grouped = new Map<string, JsonRecord[]>();
@@ -612,18 +642,25 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       grouped.set(pair, [...(grouped.get(pair) ?? []), row]);
     }
     return [...grouped.entries()].map(([symbol, configs]) => {
-      const current = configs[0] ?? {};
+      const sortedConfigs = [...configs].sort((a, b) => Number(a.durationSeconds) - Number(b.durationSeconds));
+      const current = sortedConfigs[0] ?? {};
       const payoutBps = Object.fromEntries(
-        [30, 60, 180, 280, 420].map((duration) => {
-          const config = configs.find((row) => Number(row.durationSeconds) === duration) ?? current;
-          return [duration, Math.round(Number(config.payoutRate ?? 0) * 10000)];
-        }),
+        sortedConfigs.map((config) => [Number(config.durationSeconds), Math.round(Number(config.payoutRate ?? 0) * 10000)]),
       ) as BinaryPair["payoutBps"];
+      const durationConfigs = sortedConfigs.map((config) => ({
+        sourceDurationSeconds: Number(config.durationSeconds),
+        durationSeconds: Number(config.durationSeconds),
+        payoutBps: Math.round(Number(config.payoutRate ?? 0) * 10000),
+        minStake: stringValue(config.minStake, "0"),
+        maxStake: stringValue(config.maxStake, "0"),
+        enabled: config.enabled !== false,
+      }));
       return {
         id: symbol,
         symbol,
         enabled: configs.some((row) => row.enabled !== false),
         payoutBps,
+        durationConfigs,
         minStake: stringValue(current.minStake, "0"),
         maxStake: stringValue(current.maxStake, "0"),
         exposureCap: "UNAVAILABLE",
@@ -1080,15 +1117,25 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       "canonical MarketAsset has no ordering authority",
     );
   }
-  updateNetwork(
+  async updateNetwork(
     id: string,
-    _patch: Parameters<AdminDataProvider["updateNetwork"]>[1],
-    _ctx: ConsequentialContext,
+    patch: Parameters<AdminDataProvider["updateNetwork"]>[1],
+    ctx: ConsequentialContext,
   ) {
-    return this.unsupportedAuthority(
-      "updateNetwork",
-      `canonical MarketNetwork exposes lifecycle status only; requested fields for ${id} are not represented`,
-    );
+    const network = (await this.listNetworks()).find((item) => item.id === id);
+    if (!network?.currencyId) throw new NexiAdminApiError(404, "Canonical currency configuration not found for network");
+    const payload: JsonRecord = {};
+    if (patch.decimals !== undefined) payload.decimals = patch.decimals;
+    if (patch.minDeposit !== undefined) payload.minDeposit = Number(patch.minDeposit);
+    if (patch.maxDeposit !== undefined) payload.maxDeposit = Number(patch.maxDeposit);
+    if (patch.minWithdrawal !== undefined) payload.minWithdrawal = Number(patch.minWithdrawal);
+    if (patch.maxWithdrawal !== undefined) payload.maxWithdrawal = Number(patch.maxWithdrawal);
+    if (patch.withdrawalFee !== undefined) payload.withdrawalFee = Number(patch.withdrawalFee);
+    if (patch.confirmations !== undefined) payload.confirmationCount = patch.confirmations;
+    if (patch.depositEnabled !== undefined) payload.depositEnabled = patch.depositEnabled;
+    if (patch.withdrawEnabled !== undefined) payload.withdrawEnabled = patch.withdrawEnabled;
+    if (Object.keys(payload).length === 0) return { ok: true, auditId: "" };
+    return this.requestMutation(`/admin/currencies/${network.currencyId}`, ctx, payload, [network.assetSymbol], "PATCH");
   }
   failoverFeed(id: string, _ctx: ConsequentialContext) {
     return this.unsupportedAuthority(
@@ -1137,31 +1184,38 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     const configRows = await this.request<unknown[]>(
       `/admin/binary/config?pair=${encodeURIComponent(symbol)}`,
     );
-    const durations = [30, 60, 180, 280, 420] as const;
+    const requestedConfigs = Array.isArray(configPatch.durationConfigs)
+      ? (configPatch.durationConfigs as Array<{ sourceDurationSeconds: number; durationSeconds: number; payoutBps: number; minStake: string; maxStake: string; enabled: boolean }>)
+      : configRows.map((row) => {
+          const current = record(row);
+          const duration = Number(current.durationSeconds);
+          const payout = configPatch.payoutBps && typeof configPatch.payoutBps === "object"
+            ? (configPatch.payoutBps as Record<string, unknown>)[String(duration)]
+            : undefined;
+          return {
+            sourceDurationSeconds: duration,
+            durationSeconds: duration,
+            payoutBps: typeof payout === "number" ? payout : Math.round(Number(current.payoutRate ?? 0) * 10000),
+            minStake: typeof configPatch.minStake === "string" ? configPatch.minStake : stringValue(current.minStake),
+            maxStake: typeof configPatch.maxStake === "string" ? configPatch.maxStake : stringValue(current.maxStake),
+            enabled: current.enabled !== false,
+          };
+        });
     let lastAuditId = "";
-    for (const duration of durations) {
-      const current = record(
-        configRows.find((row) => Number(record(row).durationSeconds) === duration),
-      );
-      if (!current || (Object.keys(configPatch).length === 1 && patch.enabled !== undefined))
-        continue;
-      const body: JsonRecord = { pair: symbol, durationSeconds: duration, reason: ctx.reason };
-      if (typeof configPatch.minStake === "string") body.minStake = Number(configPatch.minStake);
-      if (typeof configPatch.maxStake === "string") body.maxStake = Number(configPatch.maxStake);
-      if (configPatch.payoutBps && typeof configPatch.payoutBps === "object") {
-        const payout = (configPatch.payoutBps as Record<string, unknown>)[String(duration)];
-        if (typeof payout === "number") body.payoutRate = payout / 10000;
-      }
+    for (const config of requestedConfigs) {
+      if (!Number.isInteger(config.durationSeconds) || config.durationSeconds < 1) continue;
       const result = await this.request<JsonRecord>("/admin/binary/config", {
         method: "POST",
         body: JSON.stringify({
-          ...body,
-          idempotencyKey: boundedIdempotencyKey("binary", [
-            symbol,
-            String(duration),
-            ctx.actor,
-            ctx.reason,
-          ]),
+          pair: symbol,
+          sourceDurationSeconds: config.sourceDurationSeconds,
+          durationSeconds: config.durationSeconds,
+          payoutRate: config.payoutBps / 10000,
+          minStake: Number(config.minStake),
+          maxStake: Number(config.maxStake),
+          enabled: config.enabled,
+          reason: ctx.reason,
+          idempotencyKey: boundedIdempotencyKey("binary", [symbol, String(config.sourceDurationSeconds), String(config.durationSeconds), ctx.actor, ctx.reason]),
         }),
       });
       lastAuditId = stringValue(result.auditId ?? result.id, lastAuditId);
@@ -1413,6 +1467,7 @@ export class NexiAdminApiProvider implements AdminDataProvider {
         return {
           id: stringValue(row.id),
           title: stringValue(row.title),
+          body: stringValue(row.body),
           status,
           locale: "en",
           scheduledAt: typeof row.startsAt === "string" ? row.startsAt : undefined,
@@ -1422,6 +1477,22 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       }),
     );
   }
+  createAnnouncement(payload: { title: string; body: string; published?: boolean }, ctx: ConsequentialContext) {
+    return this.requestMutation("/communications/admin/announcements", ctx, payload);
+  }
+  updateAnnouncement(id: string, payload: { title?: string; body?: string; published?: boolean }, ctx: ConsequentialContext) {
+    return this.requestMutation(`/communications/admin/announcements/${encodeURIComponent(id)}`, ctx, payload, [id], "PATCH");
+  }
+  publishAnnouncement(id: string, ctx: ConsequentialContext) {
+    return this.requestMutation(`/communications/admin/announcements/${encodeURIComponent(id)}/publish`, ctx, {}, [id]);
+  }
+  listMessages(): Promise<AdminMessage[]> { return this.request<unknown[]>("/communications/admin/messages").then((rows) => rows.map((v) => { const r = record(v); return { id: stringValue(r.id), senderId: stringValue(r.senderId), recipientId: stringValue(r.recipientId), body: stringValue(r.body), deliveryState: stringValue(r.deliveryState), createdAt: stringValue(r.createdAt) }; })); }
+  listNotifications(): Promise<AdminNotification[]> { return this.request<unknown[]>("/communications/admin/notifications").then((rows) => rows.map((v) => { const r = record(v); return { id: stringValue(r.id), userId: stringValue(r.userId), type: stringValue(r.type), title: stringValue(r.title), body: stringValue(r.body), readAt: typeof r.readAt === "string" ? r.readAt : undefined, createdAt: stringValue(r.createdAt) }; })); }
+  sendNotification(payload: { userId: string; type: string; title: string; body: string }, ctx: ConsequentialContext) { return this.requestMutation("/communications/admin/notifications", ctx, payload, [payload.userId, payload.title]); }
+  listLearnArticles(): Promise<AdminLearnArticle[]> { return this.request<unknown[]>("/communications/admin/learn/articles").then((rows) => rows.map((v) => { const r = record(v); return { id: stringValue(r.id), slug: stringValue(r.slug), title: stringValue(r.title), body: stringValue(r.body), status: stringValue(r.status), updatedAt: stringValue(r.updatedAt) }; })); }
+  createLearnArticle(payload: { slug: string; title: string; body: string; status?: string }, ctx: ConsequentialContext) { return this.requestMutation("/communications/admin/learn", ctx, payload); }
+  updateLearnArticle(id: string, payload: { title?: string; body?: string; status?: string }, ctx: ConsequentialContext) { return this.requestMutation(`/communications/admin/learn/${encodeURIComponent(id)}`, ctx, payload, [id], "PATCH"); }
+  publishLearnArticle(id: string, ctx: ConsequentialContext) { return this.requestMutation(`/communications/admin/learn/${encodeURIComponent(id)}/publish`, ctx, {}, [id]); }
   async listHealth(): Promise<HealthCheck[]> {
     const started = performance.now();
     const health = await this.request<{ status?: string }>("/healthz");

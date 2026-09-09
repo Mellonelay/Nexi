@@ -88,7 +88,7 @@ export function normalizeSpotOrderState(value: unknown): SpotOrderState {
 
 export function normalizeBinaryPositionState(value: unknown): BinaryPositionState {
   const state = String(value ?? '').toUpperCase();
-  const normalized = state === 'FAILED' ? 'ERROR' : state;
+  const normalized = state === 'FAILED' ? 'ERROR' : state === 'ACTIVE' ? 'OPEN' : state;
   return (BINARY_POSITION_STATES as readonly string[]).includes(normalized)
     ? normalized as BinaryPositionState
     : 'ERROR';
@@ -103,13 +103,14 @@ export function spotOrderReady(input: {
   authenticated: boolean;
   backendConfigured: boolean;
   amount: unknown;
-  orderType: 'MARKET' | 'LIMIT' | 'STOP_LIMIT';
+  orderType: 'MARKET' | 'LIMIT' | 'STOP';
   price?: unknown;
   stopPrice?: unknown;
 }) {
   if (!input.authenticated || !input.backendConfigured || positiveNumber(input.amount) === null) return false;
   if (input.orderType === 'LIMIT') return positiveNumber(input.price) !== null;
-  if (input.orderType === 'STOP_LIMIT') {
+  if (input.orderType === 'MARKET') return positiveNumber(input.price) !== null;
+  if (input.orderType === 'STOP') {
     return positiveNumber(input.price) !== null && positiveNumber(input.stopPrice) !== null;
   }
   return false;

@@ -1,16 +1,19 @@
 import { HealthController } from '../../src/observability/health.controller';
+import { ReadinessService } from '../../src/observability/readiness.service';
 
 describe('HealthController', () => {
   it('reports liveness without dependency access', () => {
-    const controller = new HealthController({} as any, {} as any, {} as any);
+    const controller = new HealthController({} as ReadinessService);
     expect(controller.live()).toEqual({ status: 'ok', service: 'nexi-api' });
   });
 
   it('reports readiness when PostgreSQL and Redis are healthy', async () => {
     const controller = new HealthController(
-      { isReady: jest.fn().mockResolvedValue(true) } as any,
-      { isReady: jest.fn().mockResolvedValue(true) } as any,
-      { isReady: jest.fn().mockResolvedValue(true) } as any,
+      new ReadinessService(
+        { isReady: jest.fn().mockResolvedValue(true) } as any,
+        { isReady: jest.fn().mockResolvedValue(true) } as any,
+        { isReady: jest.fn().mockResolvedValue(true) } as any,
+      ),
     );
     await expect(controller.ready()).resolves.toEqual({
       status: 'ready',
@@ -20,9 +23,11 @@ describe('HealthController', () => {
 
   it('returns a service-unavailable error when a dependency is down', async () => {
     const controller = new HealthController(
-      { isReady: jest.fn().mockResolvedValue(false) } as any,
-      { isReady: jest.fn().mockResolvedValue(true) } as any,
-      { isReady: jest.fn().mockResolvedValue(true) } as any,
+      new ReadinessService(
+        { isReady: jest.fn().mockResolvedValue(false) } as any,
+        { isReady: jest.fn().mockResolvedValue(true) } as any,
+        { isReady: jest.fn().mockResolvedValue(true) } as any,
+      ),
     );
     await expect(controller.ready()).rejects.toMatchObject({
       status: 503,

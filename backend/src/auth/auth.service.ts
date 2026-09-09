@@ -2,12 +2,14 @@ import { Injectable, Optional, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { LoginDto, SignupDto } from './auth.dto';
+import { LoginDto } from './auth.dto';
 import { AuthSurface, LoginUser } from './auth.types';
 import { Role } from '@prisma/client';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, randomBytes } from 'node:crypto';
 import { AuthSessionService } from './auth-session.service';
 import type { AuthSessionMetadata } from './auth-session.service';
+import { AuthSecurityEventsService } from './auth-security-events.service';
+import { TOTP } from 'otpauth';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +17,7 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     @Optional() private readonly authSessionService?: AuthSessionService,
+    @Optional() private readonly securityEvents?: AuthSecurityEventsService,
   ) {}
 
   async validateUser(credentials: LoginDto): Promise<LoginUser | null> {
@@ -61,11 +64,6 @@ export class AuthService {
     };
   }
 
-  async signup(data: SignupDto) {
-    const user = await this.usersService.createUser(data);
-    return this.login({ id: user.id, publicId: user.userCode.toString(), email: user.email, role: user.role });
-  }
-
   async refresh(refreshToken: string, surface: AuthSurface) {
     if (!this.authSessionService) {
       throw new UnauthorizedException('Session persistence is unavailable');
@@ -104,6 +102,153 @@ export class AuthService {
 
   async updatePreferences(userId: string, patch: { locale?: string; timezone?: string; theme?: string; notificationSettings?: Record<string, boolean>; tradingSettings?: Record<string, unknown> }) {
     return this.usersService.updatePreferences(userId, patch);
+  }
+
+  async changeSecurityPassword(userId: string, currentSecurityPassword: string | undefined, newSecurityPassword: string) {
+    await this.usersService.changeSecurityPassword(userId, currentSecurityPassword, newSecurityPassword);
+    if (this.authSessionService) {
+      await this.authSessionService.revokeAll(userId, 'PUBLIC');
+    }
+    this.securityEvents?.emit({ type: 'SECURITY_PASSWORD_CHANGED', occurredAt: new Date(), userId });
+  }
+
+  async setupMfa(userId: string, label: string) {
+    const totp = new TOTP({
+      issuer: 'NEXI',
+      label: label || `user-${userId}`,
+      algorithm: 'SHA1',
+      digits: 6,
+      period: 30,
+    });
+    const secret = totp.secret.base32;
+    const uri = totp.toString();
+    await this.usersService.updateUserMfa(userId, false, secret, null);
+    return { secret, uri };
+  }
+
+  async verifyMfaSetup(userId: string, token: string) {
+    const mfa = await this.usersService.getUserMfa(userId);
+    if (!mfa?.secret) throw new Error('MFA setup not initiated');
+    const totp = new TOTP({
+      issuer: 'NEXI',
+      label: `user-${userId}`,
+      algorithm: 'SHA1',
+      digits: 6,
+      period: 30,
+      secret: mfa.secret as string,
+    });
+    const delta = totp.validate({ token, window: 1 });
+    if (delta === null) throw new Error('Invalid MFA token');
+    await this.usersService.updateUserMfa(userId, true, mfa.secret as string, null);
+    this.securityEvents?.emit({ type: 'MFA_ENABLED', occurredAt: new Date(), userId });
+    return { enabled: true };
+  }
+
+  async generateBackupCodes(userId: string) {
+    const mfa = await this.usersService.getUserMfa(userId);
+    if (!mfa || !mfa.enabled) throw new Error('MFA is not enabled');
+    const rawCodes: string[] = [];
+    for (let i = 0; i < 10; i++) {
+      rawCodes.push(randomBytes(8).toString('hex').slice(0, 10).toUpperCase());
+    }
+    const hashedCodes = await Promise.all(rawCodes.map((code) => bcrypt.hash(code, 10)));
+    await this.usersService.updateUserMfa(userId, true, mfa.secret as string, JSON.stringify(hashedCodes));
+    return { codes: rawCodes };
+  }
+
+  async consumeBackupCode(userId: string, code: string): Promise<boolean> {
+    const mfa = await this.usersService.getUserMfa(userId);
+    if (!mfa?.backupCodes) return false;
+    const codes: string[] = JSON.parse(mfa.backupCodes as string);
+    for (let i = 0; i < codes.length; i++) {
+      if (await bcrypt.compare(code, codes[i])) {
+        codes.splice(i, 1);
+        await this.usersService.updateUserMfa(userId, true, mfa.secret as string, JSON.stringify(codes));
+        return true;
+      }
+    }
+    return false;
+  }
+
+  async disableMfa(userId: string, securityPassword: string, token?: string) {
+    await this.verifySecurityPassword(userId, securityPassword);
+    const mfa = await this.usersService.getUserMfa(userId);
+    if (mfa?.enabled && typeof mfa.secret === 'string') {
+      if (!token) throw new Error('MFA token is required to disable');
+      await this.validateMfaToken(userId, token, mfa.secret, true);
+    }
+    await this.usersService.updateUserMfa(userId, false, null, null);
+    this.securityEvents?.emit({ type: 'MFA_DISABLED', occurredAt: new Date(), userId });
+    return { enabled: false };
+  }
+
+  private async verifySecurityPassword(userId: string, securityPassword: string) {
+    const user = await this.usersService.findById(userId);
+    if (!user?.securityPasswordHash) throw new UnauthorizedException('Security password is not set');
+    const passwordValid = await bcrypt.compare(securityPassword, user.securityPasswordHash);
+    if (!passwordValid) throw new UnauthorizedException('Security password is incorrect');
+  }
+
+  private async validateMfaToken(userId: string, token: string, secret: string, allowBackup = false) {
+    const totp = new TOTP({
+      issuer: 'NEXI',
+      label: `user-${userId}`,
+      algorithm: 'SHA1',
+      digits: 6,
+      period: 30,
+      secret,
+    });
+    const delta = totp.validate({ token, window: 1 });
+    if (delta === null) {
+      if (allowBackup && (await this.consumeBackupCode(userId, token))) return;
+      throw new Error('Invalid MFA token');
+    }
+  }
+
+  async verifySensitiveAction(userId: string, securityPassword: string, mfaToken?: string): Promise<void> {
+    const user = await this.usersService.findById(userId);
+    if (!user?.securityPasswordHash || typeof securityPassword !== 'string' || securityPassword.length === 0) {
+      throw new UnauthorizedException('Sensitive action confirmation failed');
+    }
+    if (!await bcrypt.compare(securityPassword, user.securityPasswordHash)) {
+      throw new UnauthorizedException('Sensitive action confirmation failed');
+    }
+
+    const mfa = await this.usersService.getUserMfa(userId);
+    if (!mfa?.enabled) return;
+    if (typeof mfaToken !== 'string' || mfaToken.length === 0) {
+      throw new UnauthorizedException('MFA token is required');
+    }
+    if (typeof mfa.secret !== 'string' || mfa.secret.length === 0) {
+      throw new UnauthorizedException('MFA confirmation is unavailable');
+    }
+    try {
+      await this.validateMfaToken(userId, mfaToken, mfa.secret, true);
+    } catch {
+      throw new UnauthorizedException('Invalid MFA token');
+    }
+  }
+
+  async getMfaState(userId: string) {
+    const mfa = await this.usersService.getUserMfa(userId);
+    if (!mfa) return { enabled: false };
+    return {
+      enabled: Boolean(mfa.enabled),
+      hasSecret: Boolean(mfa.secret),
+      hasBackupCodes: Boolean(mfa.backupCodes),
+    };
+  }
+
+  async getSecurityState(userId: string) {
+    const [user, mfa] = await Promise.all([this.usersService.findById(userId), this.usersService.getUserMfa(userId)]);
+    return {
+      passwordSet: Boolean(user?.securityPasswordHash),
+      mfa: {
+        enabled: Boolean(mfa?.enabled),
+        hasSecret: Boolean(mfa?.secret),
+        hasBackupCodes: Boolean(mfa?.backupCodes),
+      },
+    };
   }
 
   async listSessions(user: { userId: string; surface?: AuthSurface }) {

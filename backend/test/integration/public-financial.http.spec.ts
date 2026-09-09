@@ -6,6 +6,8 @@ import { FinancialOperationsService } from "../../src/financial/financial-operat
 import { WalletController } from "../../src/wallet/wallet.controller";
 import { WalletService } from "../../src/wallet/wallet.service";
 import { JwtAuthGuard } from "../../src/auth/jwt-auth.guard";
+import { AuthSurfaceGuard } from "../../src/auth/auth-surface.guard";
+import { AuthService } from "../../src/auth/auth.service";
 import { D1FinancialCommandGateway } from "../../src/d1/d1-financial-command.gateway";
 import { PrismaService } from "../../src/prisma/prisma.service";
 import { LedgerAuthorityService } from "../../src/ledger/ledger-authority.service";
@@ -95,6 +97,7 @@ describe("Public financial C2 HTTP path", () => {
         { provide: D1FinancialCommandGateway, useValue: d1 },
         { provide: PrismaService, useValue: {} },
         { provide: LedgerAuthorityService, useValue: {} },
+        { provide: AuthService, useValue: { verifySensitiveAction: jest.fn().mockResolvedValue(undefined) } },
       ],
     })
       .overrideGuard(JwtAuthGuard)
@@ -104,6 +107,8 @@ describe("Public financial C2 HTTP path", () => {
           return true;
         },
       })
+      .overrideGuard(AuthSurfaceGuard)
+      .useValue({ canActivate: () => true })
       .compile();
 
     app = module.createNestApplication();
@@ -130,6 +135,7 @@ describe("Public financial C2 HTTP path", () => {
       address: "T-public-c2-destination",
       amount: "10",
       idempotencyKey: "public-c2-withdrawal-001",
+      securityPassword: "test-security-password",
     }, { validateStatus: () => true });
 
     expect(withdrawal.status).toBe(201);
@@ -159,6 +165,7 @@ describe("Public financial C2 HTTP path", () => {
       address: "T-public-c2-destination",
       amount: "10",
       idempotencyKey: "public-c2-withdrawal-001",
+      securityPassword: "test-security-password",
     });
     expect(replay.data).toMatchObject({ replayed: true, withdrawal: { id: "withdrawal-1" } });
     expect(d1.withdrawals).toHaveLength(1);

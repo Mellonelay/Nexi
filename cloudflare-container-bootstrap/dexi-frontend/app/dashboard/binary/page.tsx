@@ -10,6 +10,8 @@ import SymbolSelector from '../../components/SymbolSelector';
 import TimeframeSelector from '../../components/TimeframeSelector';
 import { useMarketData } from '../../hooks/useMarketData';
 import { useActivePair } from '../../state/ActivePairProvider';
+import { getAccessToken } from '../../lib/auth-session';
+import { sessionPrincipalId } from '../../lib/wallet-auth';
 import {
   binaryOrderReady,
   BinaryPositionState,
@@ -59,12 +61,12 @@ const normalizePosition = (value: unknown): BinaryPosition | null => {
   return {
     id,
     symbol: String(row.symbol ?? row.pair ?? '—'),
-    direction: rawSide === 'SHORT' || rawSide === 'PUT' ? 'SHORT' : 'LONG',
+    direction: rawSide === 'SHORT' || rawSide === 'PUT' || rawSide === 'DOWN' ? 'SHORT' : 'LONG',
     amount: toPositive(row.amount ?? row.stake),
     entryPrice: toPositive(row.entryPrice),
-    closePrice: toPositive(row.closePrice ?? row.resultPrice),
-    duration: toPositive(row.duration ?? row.timeframe),
-    payout: toPositive(row.payout ?? row.targetPayout),
+    closePrice: toPositive(row.closePrice ?? row.resultPrice ?? row.expiryPrice),
+    duration: toPositive(row.duration ?? row.durationSeconds ?? row.timeframe),
+    payout: toPositive(row.payout ?? row.payoutAmount ?? row.targetPayout),
     realizedProfit: Number.isFinite(Number(row.realizedProfit ?? row.profit)) ? Number(row.realizedProfit ?? row.profit) : null,
     openedAt: typeof row.openedAt === 'string' ? row.openedAt : typeof row.createdAt === 'string' ? row.createdAt : null,
     expiresAt: typeof row.expiresAt === 'string' ? row.expiresAt : null,
@@ -120,7 +122,6 @@ export default function BinaryPage() {
   }, [initialSymbol, setActivePair]);
 
   useEffect(() => {
-    setDuration(60);
     setAmount('');
     setDirection('LONG');
     setTab('TRADE');
@@ -134,17 +135,15 @@ export default function BinaryPage() {
   }, [normalizedPair]);
 
   useEffect(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem('user') ?? 'null') as { id?: unknown } | null;
-      setUserId(typeof stored?.id === 'string' ? stored.id : null);
-    } catch {
-      setUserId(null);
-    }
+    const sync = () => setUserId(sessionPrincipalId());
+    sync();
+    window.addEventListener('nexi:wallet-session', sync);
+    return () => window.removeEventListener('nexi:wallet-session', sync);
   }, []);
 
   useEffect(() => {
     if (!userId || !apiBaseUrl) return;
-    const token = localStorage.getItem('token');
+    const token = getAccessToken();
     if (!token) return;
     const socket = io(apiBaseUrl, {
       auth: { token },
@@ -154,7 +153,8 @@ export default function BinaryPage() {
       reconnectionDelayMax: 8_000,
     });
     socket.on('binary_position_update', (raw) => {
-      const position = normalizePosition(raw);
+      const payload = raw as { event: string; position: unknown };
+      const position = normalizePosition(payload.position);
       if (!position) return;
       setActivePositions((current) => [position, ...current.filter((item) => item.id !== position.id)]);
       if (FINAL_BINARY_STATES.has(position.status)) {
@@ -229,6 +229,13 @@ export default function BinaryPage() {
       return { seconds, enabled: Boolean(item?.enabled && rate), rate, minimumAmount: item ? Number(item.minStake) : null, maximumAmount: item ? Number(item.maxStake) : null };
     });
   }, [binaryConfigurations, binaryDurations, normalizedPair]);
+  useEffect(() => {
+    if (durationOptions.length > 0 && !durationOptions.some((item) => item.seconds === duration && item.enabled)) {
+      const firstEnabled = durationOptions.find((item) => item.enabled);
+      if (firstEnabled) setDuration(firstEnabled.seconds);
+    }
+  }, [durationOptions, duration]);
+
   const selectedDuration = durationOptions.find((item) => item.seconds === duration);
   const payoutRate = selectedDuration?.rate ?? null;
   const minimumStake = selectedDuration?.minimumAmount !== null && selectedDuration?.minimumAmount !== undefined && Number.isFinite(selectedDuration.minimumAmount)

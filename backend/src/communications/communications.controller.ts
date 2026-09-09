@@ -17,6 +17,7 @@ import { Roles } from "../auth/roles.decorator";
 import { RolesGuard } from "../auth/roles.guard";
 import { CommunicationsService } from "./communications.service";
 import {
+  AdminMutationDto,
   AssignTicketDto,
   CreateAnnouncementDto,
   CreateLearnCategoryDto,
@@ -25,7 +26,9 @@ import {
   PageQueryDto,
   ReplyTicketDto,
   SendMessageDto,
+  UpdateAnnouncementDto,
   UpdateLearnContentDto,
+  SendNotificationDto,
 } from "./communications.dto";
 
 @ApiTags("Communications")
@@ -82,6 +85,12 @@ export class CommunicationsController {
       dto.attachments,
     );
   }
+  @Post("messages/:id/read") @UseGuards(JwtAuthGuard) readMessage(
+    @Req() req: AuthenticatedRequest,
+    @Param("id") id: string,
+  ) {
+    return this.service.markMessageRead(req.user.userId, id);
+  }
   @Get("messages") @UseGuards(JwtAuthGuard) messages(
     @Req() req: AuthenticatedRequest,
     @Query() q: PageQueryDto,
@@ -118,6 +127,24 @@ export class CommunicationsController {
   createAnnouncement(@Body() dto: CreateAnnouncementDto) {
     return this.service.createAnnouncement(dto);
   }
+  @Patch("admin/announcements/:id")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  updateAnnouncement(@Param("id") id: string, @Body() dto: UpdateAnnouncementDto) {
+    return this.service.updateAnnouncement(id, dto);
+  }
+  @Post("admin/announcements/:id/publish")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  publishAnnouncement(@Param("id") id: string, @Body() dto: AdminMutationDto) {
+    return this.service.publishAnnouncement(id, dto.idempotencyKey);
+  }
+  @Get("admin/messages") @UseGuards(JwtAuthGuard, RolesGuard) @Roles(Role.ADMIN)
+  adminMessages(@Query() q: PageQueryDto) { return this.service.adminMessages(q.page, q.limit); }
+  @Get("admin/notifications") @UseGuards(JwtAuthGuard, RolesGuard) @Roles(Role.ADMIN)
+  adminNotifications(@Query() q: PageQueryDto) { return this.service.adminNotifications(q.page, q.limit); }
+  @Post("admin/notifications") @UseGuards(JwtAuthGuard, RolesGuard) @Roles(Role.ADMIN)
+  sendAdminNotification(@Body() dto: SendNotificationDto) { return this.service.sendAdminNotification(dto); }
   @Get("admin/learn/articles")
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
@@ -145,7 +172,7 @@ export class CommunicationsController {
   @Post("admin/learn/:id/publish")
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
-  publishLearn(@Param("id") id: string) {
-    return this.service.publishLearn(id);
+  publishLearn(@Param("id") id: string, @Body() dto: AdminMutationDto) {
+    return this.service.publishLearn(id, dto.idempotencyKey);
   }
 }

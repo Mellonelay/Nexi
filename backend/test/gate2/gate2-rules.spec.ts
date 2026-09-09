@@ -1,6 +1,5 @@
 import { Prisma } from '@prisma/client';
 import {
-  ALLOWED_BINARY_DURATIONS,
   assertPositiveDecimal,
   binaryTransitionAllowed,
   decimalProduct,
@@ -8,11 +7,6 @@ import {
 } from '../../src/gate2/gate2-rules';
 
 describe('Gate 2 financial rules', () => {
-  it('accepts only the locked Binary durations', () => {
-    expect(ALLOWED_BINARY_DURATIONS).toEqual([30, 60, 180, 280, 420]);
-    expect(ALLOWED_BINARY_DURATIONS).not.toContain(90);
-  });
-
   it('does exact decimal multiplication with bounded scale', () => {
     expect(decimalProduct('0.1', '0.2').toString()).toBe('0.02');
     expect(decimalProduct('1.005', '2', 2).toString()).toBe('2.01');

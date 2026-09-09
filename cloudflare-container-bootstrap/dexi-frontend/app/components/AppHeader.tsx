@@ -1,14 +1,17 @@
 'use client';
 
 import { Bell, Languages } from 'lucide-react';
+import { useState } from 'react';
 import { useLocale } from '../state/LocaleProvider';
 import { localeLabel } from '../state/locale';
 import WalletConnectControl from './WalletConnectControl';
 import NavigationDrawer from './NavigationDrawer';
 import AssetIcon from './AssetIcon';
 import { NexiWordmark } from '../dashboard/components/QuotesHubVisuals';
+import { NotificationsPanel } from './NotificationsPanel';
 
 export default function AppHeader() {
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const { locale, setLocale, languages, t } = useLocale();
   return <header className="nexi-app-header relative z-40 flex h-16 min-w-0 items-center gap-2 border-b border-violet-300/15 px-3 md:px-6">
     <div className="lg:hidden min-w-0"><NavigationDrawer triggerContent={<NexiWordmark compact />} /></div>
@@ -23,7 +26,8 @@ export default function AppHeader() {
           {languages.map((item) => <option key={item.code} value={item.code}>{localeLabel(item.code)}</option>)}
         </select>
       </label>
-      <button type="button" aria-label={t('notifications')} className="nexi-header-icon relative h-10 w-10"><Bell className="h-[18px] w-[18px]" aria-hidden="true" /><span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-[var(--nexi-cal-violet-bright)]" /></button>
+      <button type="button" aria-label={t('notifications')} onClick={() => setNotificationsOpen(true)} className="nexi-header-icon relative h-10 w-10"><Bell className="h-[18px] w-[18px]" aria-hidden="true" /><span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-[var(--nexi-cal-violet-bright)]" /></button>
     </div>
+    <NotificationsPanel open={notificationsOpen} onClose={() => setNotificationsOpen(false)} />
   </header>;
 }

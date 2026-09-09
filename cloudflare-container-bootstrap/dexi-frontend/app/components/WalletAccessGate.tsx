@@ -4,14 +4,14 @@ import { useCallback, useEffect, useState } from 'react';
 import { Wallet } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { clearWalletSession, loadCurrentUser } from '../lib/wallet-auth';
+import { hasAuthSession } from '../lib/auth-session';
 
 export default function WalletAccessGate({ children }: { children: React.ReactNode }) {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const { address, isConnected, isReconnecting } = useAccount();
 
   const check = useCallback(async () => {
-    const token = window.localStorage.getItem('token');
-    if (!token || !isConnected || !address) { setAuthorized(false); return; }
+    if (!hasAuthSession() || !isConnected || !address) { setAuthorized(false); return; }
     try {
       const user = await loadCurrentUser();
       if (!user.walletAddress || user.walletAddress.toLowerCase() !== address.toLowerCase()) {
@@ -25,7 +25,7 @@ export default function WalletAccessGate({ children }: { children: React.ReactNo
     if (isReconnecting) { setAuthorized(null); return; }
     void check();
     const onSession = () => {
-      if (window.localStorage.getItem('token')) void check();
+      if (hasAuthSession()) void check();
       else setAuthorized(false);
     };
     window.addEventListener('nexi:wallet-session', onSession);

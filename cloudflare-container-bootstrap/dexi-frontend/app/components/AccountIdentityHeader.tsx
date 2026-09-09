@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useLocale } from "../state/LocaleProvider";
 import { authoritativeValue } from "../lib/product-states";
 import { loadCurrentUser, type WalletProfile } from "../lib/wallet-auth";
+import { hasAuthSession } from "../lib/auth-session";
 import { NexiWordmark } from "../dashboard/components/QuotesHubVisuals";
 
 type AccountIdentityHeaderProps = {
@@ -35,7 +36,7 @@ export default function AccountIdentityHeader({
 
   useEffect(() => {
     const syncSession = () => {
-      const hasSession = Boolean(window.localStorage.getItem("token"));
+      const hasSession = hasAuthSession();
       setSessionPresent(hasSession);
       if (hasSession)
         void queryClient.invalidateQueries({ queryKey: ["user", "me"] });

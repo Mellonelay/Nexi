@@ -52,6 +52,11 @@ const ADMIN_ACCOUNT_SELECT = {
       revokedAt: true,
     },
   },
+  mfa: {
+    select: {
+      enabled: true,
+    },
+  },
 } satisfies Prisma.UserSelect;
 
 type AdminAccountRecord = Prisma.UserGetPayload<{
@@ -160,13 +165,14 @@ export class AdminService {
 
   private toAdminAccountProjection(user: AdminAccountRecord) {
     const assignment = user.adminRoleAssignment;
+    const mfaState = user.mfa?.enabled ? "enabled" : "disabled";
     return {
       id: user.id,
       email: user.email,
       displayName: null,
       roleAssignments: assignment ? [assignment] : [],
       accountStatus: "unknown" as const,
-      mfaState: "unknown" as const,
+      mfaState: mfaState,
       lastActiveAt: user.lastActive.toISOString(),
       sessions: user.authSessions.map((session) => ({
         id: session.id,
@@ -192,7 +198,7 @@ export class AdminService {
         displayName: null,
         roleAssignments: row.roleId ? [{ roleId: row.roleId }] : [],
         accountStatus: "unknown",
-        mfaState: "unknown",
+        mfaState: row.mfaEnabled ? "enabled" : "disabled",
         lastActiveAt: row.lastActive,
         sessions: [],
       }));
@@ -216,7 +222,7 @@ export class AdminService {
         displayName: null,
         roleAssignments: row.roleId ? [{ roleId: row.roleId }] : [],
         accountStatus: "unknown",
-        mfaState: "unknown",
+        mfaState: row.mfaEnabled ? "enabled" : "disabled",
         lastActiveAt: row.lastActive,
         sessions: [],
       };
@@ -1066,6 +1072,8 @@ export class AdminService {
       );
     if (!["normal", "forced_win", "forced_loss"].includes(input.mode))
       throw new BadRequestException("Sandbox mode must be normal, forced_win, or forced_loss");
+    if (input.scope !== "binary")
+      throw new BadRequestException(`Unsupported sandbox scope: ${input.scope}. Only 'binary' scope is enforced`);
     if (!input.expiresAt) {
       throw new BadRequestException("Sandbox scenarios require an expiry");
     }
@@ -1293,7 +1301,7 @@ export class AdminService {
   // --- Crypto Management ---
 
   async getCurrencies() {
-    if (this.d1?.isEnabled()) return this.d1.listCurrencies();
+    if (this.d1?.isEnabled()) return this.d1.listAdminCurrencies();
     return this.prisma.currency.findMany({
       orderBy: { id: "asc" },
       include: { depositAddresses: true },
@@ -1864,14 +1872,45 @@ export class AdminService {
     return { ok: true, auditId: idempotencyKey, status: row.status };
   }
 
-  async updateCurrency(id: number, data: Prisma.CurrencyUpdateInput) {
-    return this.prisma.currency.update({
-      where: { id },
-      data,
-    });
+  async getMarginConfiguration() {
+    const read = async (key: string) => this.d1?.isEnabled()
+      ? this.d1.getSystemConfigValue(key)
+      : (await this.prisma.systemConfig.findUnique({ where: { key } }))?.value ?? null;
+    const [ratioRaw, leveragesRaw] = await Promise.all([read("gate2.margin.maintenanceRatio"), read("gate2.margin.leverages")]);
+    const leverages = String(leveragesRaw ?? "2,3,5").split(",").map((value) => Number(value.trim())).filter((value) => Number.isInteger(value) && value >= 2 && value <= 20);
+    return { maintenanceRatio: Number(ratioRaw ?? "0.5"), leverages: [...new Set(leverages)].sort((a, b) => a - b) };
   }
 
-  async createCurrency(data: Prisma.CurrencyCreateInput) {
+  async updateMarginConfiguration(input: { maintenanceRatio: number; leverages?: string; reason: string; idempotencyKey: string }, adminId: string) {
+    const leverageValues = String(input.leverages ?? "2,3,5").split(",").map((value) => Number(value.trim())).filter((value) => Number.isInteger(value) && value >= 2 && value <= 20);
+    const leverages = [...new Set(leverageValues)].sort((a, b) => a - b);
+    if (!leverages.length) throw new BadRequestException("At least one leverage between 2x and 20x is required");
+    if (input.maintenanceRatio <= 0 || input.maintenanceRatio >= 1) throw new BadRequestException("Maintenance ratio must be between 0 and 1");
+    if (this.d1?.isEnabled()) {
+      await this.d1.updateSystemConfig({ key: "gate2.margin.maintenanceRatio", value: String(input.maintenanceRatio), description: "Isolated margin maintenance ratio", adminId, reason: input.reason });
+      await this.d1.updateSystemConfig({ key: "gate2.margin.leverages", value: leverages.join(","), description: "Allowed isolated margin leverage multipliers", adminId, reason: input.reason });
+    } else {
+      await this.prisma.$transaction([
+        this.prisma.systemConfig.upsert({ where: { key: "gate2.margin.maintenanceRatio" }, update: { value: String(input.maintenanceRatio), description: "Isolated margin maintenance ratio" }, create: { key: "gate2.margin.maintenanceRatio", value: String(input.maintenanceRatio), description: "Isolated margin maintenance ratio" } }),
+        this.prisma.systemConfig.upsert({ where: { key: "gate2.margin.leverages" }, update: { value: leverages.join(","), description: "Allowed isolated margin leverage multipliers" }, create: { key: "gate2.margin.leverages", value: leverages.join(","), description: "Allowed isolated margin leverage multipliers" } }),
+        this.prisma.adminAuditLog.create({ data: { adminId, action: "MARGIN_CONFIGURATION_UPDATED", target: "isolated-margin", details: { reason: input.reason, idempotencyKey: input.idempotencyKey, maintenanceRatio: input.maintenanceRatio, leverages } } }),
+      ]);
+    }
+    return { maintenanceRatio: input.maintenanceRatio, leverages };
+  }
+
+  async updateCurrency(id: number, data: Prisma.CurrencyUpdateInput & { reason?: string; idempotencyKey?: string }, adminId: string) {
+    const { reason = "Admin currency configuration update", idempotencyKey = `currency:${id}:${Date.now()}`, ...patch } = data;
+    if (this.d1?.isEnabled()) return this.d1.updateAdminCurrency({ id, patch: patch as Record<string, unknown>, adminId, reason, idempotencyKey });
+    const updated = await this.prisma.currency.update({ where: { id }, data: patch });
+    await this.prisma.adminAuditLog.create({ data: { adminId, action: "CURRENCY_CONFIGURATION_UPDATED", target: String(id), details: { reason, idempotencyKey, fields: Object.keys(patch) } } });
+    return updated;
+  }
+
+  async createCurrency(data: Prisma.CurrencyCreateInput, adminId: string) {
+    if (this.d1?.isEnabled()) {
+      throw new BadRequestException("Creating a new currency through Admin requires the D1-native create path; update an existing canonical currency instead");
+    }
     return this.prisma.currency.create({ data });
   }
 
@@ -2172,6 +2211,7 @@ export class AdminService {
     input: {
       pair: string;
       durationSeconds: number;
+      sourceDurationSeconds?: number;
       payoutRate?: number;
       minStake?: number;
       maxStake?: number;
@@ -2186,7 +2226,17 @@ export class AdminService {
         "A reason is required for Binary configuration changes",
       );
     const pair = input.pair.trim().toUpperCase();
+    const sourceDurationSeconds = input.sourceDurationSeconds ?? input.durationSeconds;
     const target = `${pair}:${input.durationSeconds}`;
+    if (this.d1?.isEnabled()) {
+      const current = await this.d1.getBinaryConfiguration(pair, sourceDurationSeconds);
+      if (!current) throw new NotFoundException("Active Binary configuration not found");
+      const payoutRate = input.payoutRate ?? Number(current.payoutRate);
+      const minStake = input.minStake ?? Number(current.minStake);
+      const maxStake = input.maxStake ?? Number(current.maxStake);
+      if (!Number.isFinite(payoutRate) || payoutRate <= 0 || !Number.isFinite(minStake) || minStake <= 0 || !Number.isFinite(maxStake) || maxStake < minStake) throw new BadRequestException("Binary payout and stake limits are invalid");
+      return this.d1.updateBinaryConfiguration({ pair, sourceDurationSeconds, durationSeconds: input.durationSeconds, payoutRate, minStake, maxStake, enabled: input.enabled !== false, adminId, reason: input.reason, idempotencyKey: input.idempotencyKey });
+    }
     return this.prisma.$transaction(
       async (tx) => {
         const replay = await tx.adminAuditLog.findFirst({
@@ -2201,7 +2251,7 @@ export class AdminService {
         const current = await tx.gate2BinaryConfiguration.findFirst({
           where: {
             pair,
-            durationSeconds: input.durationSeconds,
+            durationSeconds: sourceDurationSeconds,
             enabled: true,
           },
           orderBy: { version: "desc" },
@@ -2223,10 +2273,14 @@ export class AdminService {
             "Binary payout and stake limits are invalid",
           );
         }
+        if (input.durationSeconds !== sourceDurationSeconds) {
+          const conflict = await tx.gate2BinaryConfiguration.findFirst({ where: { pair, durationSeconds: input.durationSeconds, enabled: true } });
+          if (conflict) throw new BadRequestException("Binary duration already exists for this pair");
+        }
         await tx.gate2BinaryConfiguration.updateMany({
           where: {
             pair,
-            durationSeconds: input.durationSeconds,
+            durationSeconds: sourceDurationSeconds,
             enabled: true,
           },
           data: { enabled: false },

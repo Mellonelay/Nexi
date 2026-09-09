@@ -8,7 +8,10 @@ export type AuthSecurityEventType =
   | 'REFRESH_REJECTED'
   | 'REFRESH_REUSE_DETECTED'
   | 'LOGOUT'
-  | 'LOGOUT_ALL';
+  | 'LOGOUT_ALL'
+  | 'SECURITY_PASSWORD_CHANGED'
+  | 'MFA_ENABLED'
+  | 'MFA_DISABLED';
 
 export interface AuthSecurityEvent {
   readonly type: AuthSecurityEventType;

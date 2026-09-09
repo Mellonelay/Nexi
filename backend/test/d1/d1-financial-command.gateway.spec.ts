@@ -732,4 +732,69 @@ describe("D1FinancialCommandGateway", () => {
     expect(sql).toContain('"AdminAuditLog"');
     expect(sql).toContain('"EventOutbox"');
   });
+
+  it("updates canonical D1 currency controls with audit and outbox evidence", async () => {
+    const bridge = createBridge({
+      select: jest.fn().mockImplementation(async (sql: string) => {
+        if (sql.includes('FROM "Currency" WHERE "id"=?')) {
+          return { results: [{ id: 1, symbol: "USDT", minDeposit: 10, maxDeposit: 10000, depositEnabled: 1, withdrawEnabled: 1 }] };
+        }
+        return { results: [] };
+      }),
+      batch: jest.fn().mockImplementation(async (statements: D1BridgeBatchStatement[]) => ({
+        results: statements.map(() => ({ success: true, meta: { changes: 1 } })),
+      })),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+
+    await expect(gateway.updateAdminCurrency({
+      id: 1,
+      patch: { minDeposit: 25, maxDeposit: 5000, depositEnabled: false },
+      adminId: "admin-1",
+      reason: "adjust wallet limits",
+      idempotencyKey: "currency-config-12345678",
+    })).resolves.toMatchObject({ id: 1, symbol: "USDT" });
+
+    const statements = (bridge.batch as jest.Mock).mock.calls[0][0] as D1BridgeBatchStatement[];
+    expect(statements.some((statement) => statement.sql.includes('UPDATE "Currency"'))).toBe(true);
+    expect(statements.some((statement) => statement.sql.includes('INSERT OR IGNORE INTO "EventOutbox"'))).toBe(true);
+    expect(statements.some((statement) => statement.sql.includes('INSERT INTO "AdminAuditLog"'))).toBe(true);
+  });
+
+  it("renames a Binary duration through a versioned D1 config update with audit and outbox", async () => {
+    const bridge = createBridge({
+      select: jest.fn().mockImplementation(async (sql: string) => {
+        if (sql.includes('FROM "Gate2BinaryConfiguration"') && sql.includes('ORDER BY "version" DESC')) {
+          return { results: [{ id: "cfg-60", pair: "BTCUSDT", durationSeconds: 60, payoutRate: "0.85", lossRate: "0", minStake: "1", maxStake: "1000", settlementDelaySeconds: 0, version: 3, enabled: 1 }] };
+        }
+        if (sql.includes('SELECT "id" FROM "Gate2BinaryConfiguration"')) return { results: [] };
+        if (sql.includes('WHERE "id"=?')) return { results: [{ id: "cfg-next", pair: "BTCUSDT", durationSeconds: 90, version: 4, enabled: 1 }] };
+        return { results: [] };
+      }),
+      batch: jest.fn().mockImplementation(async (statements: D1BridgeBatchStatement[]) => ({
+        results: statements.map(() => ({ success: true, meta: { changes: 1 } })),
+      })),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+
+    await expect(gateway.updateBinaryConfiguration({
+      pair: "BTCUSDT",
+      sourceDurationSeconds: 60,
+      durationSeconds: 90,
+      payoutRate: 0.88,
+      minStake: 5,
+      maxStake: 500,
+      enabled: true,
+      adminId: "admin-1",
+      reason: "edit option box",
+      idempotencyKey: "binary-config-12345678",
+    })).resolves.toMatchObject({ durationSeconds: 90, version: 4 });
+
+    const statements = (bridge.batch as jest.Mock).mock.calls[0][0] as D1BridgeBatchStatement[];
+    expect(statements[0].sql).toContain('UPDATE "Gate2BinaryConfiguration"');
+    expect(statements[1].sql).toContain('INSERT INTO "Gate2BinaryConfiguration"');
+    expect(statements.some((statement) => statement.sql.includes('AdminAuditLog'))).toBe(true);
+    expect(statements.some((statement) => statement.sql.includes('EventOutbox'))).toBe(true);
+  });
+
 });

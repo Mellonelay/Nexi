@@ -10,6 +10,7 @@ import { AdminService } from "../../src/admin/admin.service";
 import { MiningService } from "../../src/mining/mining.service";
 import { LoanService } from "../../src/loans/loans.service";
 import { JwtAuthGuard } from "../../src/auth/jwt-auth.guard";
+import { AuthService } from "../../src/auth/auth.service";
 import { AuthSurfaceGuard } from "../../src/auth/auth-surface.guard";
 import { RolesGuard } from "../../src/auth/roles.guard";
 import { AdminPermissionGuard } from "../../src/admin/admin-permission.guard";
@@ -124,6 +125,7 @@ describe("C3 Public ↔ Backend ↔ Admin financial causality", () => {
         { provide: D1FinancialCommandGateway, useValue: state },
         { provide: PrismaService, useValue: {} },
         { provide: LedgerAuthorityService, useValue: {} },
+        { provide: AuthService, useValue: { verifySensitiveAction: jest.fn().mockResolvedValue(undefined) } },
       ],
     })
       .overrideGuard(JwtAuthGuard)
@@ -152,7 +154,7 @@ describe("C3 Public ↔ Backend ↔ Admin financial causality", () => {
     const baseURL = `http://127.0.0.1:${address.port}`;
 
     const created = await axios.post(`${baseURL}/financial/withdrawals`, {
-      asset: "USDT", network: "TRC20", address: "T-c3-destination", amount: "10", idempotencyKey: "c3-public-withdrawal-001",
+      asset: "USDT", network: "TRC20", address: "T-c3-destination", amount: "10", idempotencyKey: "c3-public-withdrawal-001", securityPassword: "test-security-password",
     });
     expect(created.status).toBe(201);
     expect(created.data.withdrawal.state).toBe("PENDING_REVIEW");

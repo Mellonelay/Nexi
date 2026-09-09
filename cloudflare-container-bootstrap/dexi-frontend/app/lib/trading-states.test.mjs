@@ -29,9 +29,10 @@ test('binary lifecycle exposes governed result and recovery states', () => {
   assert.equal(normalizeBinaryPositionState('failed'), 'ERROR');
 });
 
-test('spot orders stay disabled without supported backend inputs', () => {
+test('spot orders follow supported backend order-type inputs', () => {
   assert.equal(spotOrderReady({ authenticated: true, backendConfigured: true, amount: 1, orderType: 'LIMIT', price: 20 }), true);
-  assert.equal(spotOrderReady({ authenticated: true, backendConfigured: true, amount: 1, orderType: 'MARKET' }), false);
+  assert.equal(spotOrderReady({ authenticated: true, backendConfigured: true, amount: 1, orderType: 'MARKET', price: 20 }), true);
+  assert.equal(spotOrderReady({ authenticated: true, backendConfigured: true, amount: 1, orderType: 'STOP', price: 20, stopPrice: 21 }), true);
   assert.equal(spotOrderReady({ authenticated: false, backendConfigured: true, amount: 1, orderType: 'LIMIT', price: 20 }), false);
 });
 
