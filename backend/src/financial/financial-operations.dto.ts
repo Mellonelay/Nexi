@@ -1,4 +1,4 @@
-import { IsInt, IsOptional, IsString, Length, Matches, Max, Min } from 'class-validator';
+import { IsInt, IsOptional, IsString, Length, Matches, Max, Min, MinLength } from 'class-validator';
 
 const DECIMAL = /^(?:0|[1-9]\d*)(?:\.\d{1,18})?$/;
 
@@ -8,6 +8,8 @@ export class Gate2WithdrawalDto {
   @IsString() @Length(1, 256) address!: string;
   @IsString() @Matches(DECIMAL) amount!: string;
   @IsString() @Length(8, 160) idempotencyKey!: string;
+  @IsString() @MinLength(1) securityPassword!: string;
+  @IsOptional() @IsString() @Length(6, 64) mfaToken?: string;
 }
 
 export class Gate2TransferDto {

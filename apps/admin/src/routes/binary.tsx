@@ -21,7 +21,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import type { BinaryPair, BinaryPosition, BinaryDuration } from "@/admin/types";
-import { BINARY_DURATIONS, mapBinaryInternal } from "@/admin/types";
+import { mapBinaryInternal } from "@/admin/types";
 import { Pause, Play } from "lucide-react";
 
 export const Route = createFileRoute("/binary")({ component: Page });
@@ -65,8 +65,7 @@ function Inner() {
         <span className="text-foreground">Long</span> and{" "}
         <span className="text-foreground">Short</span>; internally mapped to
         <span className="mono text-warning"> UP</span> and{" "}
-        <span className="mono text-warning">DOWN</span>. Canonical durations:
-        <span className="mono"> {BINARY_DURATIONS.join(" · ")} seconds</span>.
+        <span className="mono text-warning">DOWN</span>. Duration, payout and stake limits are backend-configured per pair.
       </div>
 
       <Tabs defaultValue="pairs">
@@ -110,10 +109,9 @@ function Shell({
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Binary Administration"
-        description="Payout matrix, stake and exposure limits, price-source rules, settlement delay, draw policy, and position inspection."
+        description="Backend-configured duration, payout and stake limits, price-source rules, settlement delay, and position inspection."
         badges={
           <>
-            <StatusBadge tone="warning">Mock data</StatusBadge>
             {total !== undefined ? (
               <StatusBadge tone="info" dot={false}>
                 {total} pairs
@@ -172,9 +170,9 @@ function PairsPanel({ pairs }: { pairs: BinaryPair[] }) {
       header: "Durations",
       cell: (p) => (
         <div className="flex flex-wrap gap-1">
-          {BINARY_DURATIONS.map((d) => (
-            <StatusBadge key={d} tone="info" dot={false}>
-              {d}s · {(p.payoutBps[d] / 100).toFixed(2)}%
+          {binaryConfigs(p).map((config) => (
+            <StatusBadge key={config.durationSeconds} tone="info" dot={false}>
+              {config.durationSeconds}s · {(config.payoutBps / 100).toFixed(2)}%
             </StatusBadge>
           ))}
         </div>
@@ -320,17 +318,11 @@ function PairsPanel({ pairs }: { pairs: BinaryPair[] }) {
                   title: "Payout matrix",
                   content: (
                     <div className="grid grid-cols-5 gap-2">
-                      {BINARY_DURATIONS.map((d) => (
-                        <div
-                          key={d}
-                          className="rounded-md border border-border/60 bg-background/40 p-2 text-center"
-                        >
-                          <div className="mono text-[10px] uppercase text-muted-foreground">
-                            {d}s
-                          </div>
-                          <div className="mono text-sm text-foreground">
-                            {(selected.payoutBps[d] / 100).toFixed(2)}%
-                          </div>
+                      {binaryConfigs(selected).map((config) => (
+                        <div key={config.durationSeconds} className="rounded-md border border-border/60 bg-background/40 p-2 text-center">
+                          <div className="mono text-[10px] uppercase text-muted-foreground">{config.durationSeconds}s</div>
+                          <div className="mono text-sm text-foreground">{(config.payoutBps / 100).toFixed(2)}%</div>
+                          <div className="mono text-[10px] text-muted-foreground">{config.minStake}–{config.maxStake}</div>
                         </div>
                       ))}
                     </div>
@@ -634,22 +626,31 @@ function BinaryPairEditForm({
   pair: BinaryPair | null;
   onClose: () => void;
   onSubmit: (
-    patch: Partial<
-      Pick<
-        BinaryPair,
-        "enabled" | "minStake" | "maxStake" | "exposureCap" | "settlementDelayMs"
-      >
-    > & { payoutBps?: Partial<Record<BinaryDuration, number>> },
+    patch: Partial<Pick<BinaryPair, "enabled" | "exposureCap" | "settlementDelayMs">> & {
+      durationConfigs?: Array<{
+        sourceDurationSeconds: number;
+        durationSeconds: number;
+        payoutBps: number;
+        minStake: string;
+        maxStake: string;
+        enabled: boolean;
+      }>;
+    },
     reason: string,
   ) => Promise<void>;
 }) {
   const [state, setState] = useState({
     enabled: true,
-    minStake: "1",
-    maxStake: "1000",
     exposureCap: "50000",
     settlementDelayMs: 500,
-    payoutBps: {} as Record<BinaryDuration, number>,
+    durationConfigs: [] as Array<{
+      sourceDurationSeconds: number;
+      durationSeconds: number;
+      payoutBps: number;
+      minStake: string;
+      maxStake: string;
+      enabled: boolean;
+    }>,
   });
   const [reason, setReason] = useState("");
 
@@ -657,120 +658,74 @@ function BinaryPairEditForm({
     if (pair) {
       setState({
         enabled: pair.enabled,
-        minStake: pair.minStake,
-        maxStake: pair.maxStake,
         exposureCap: pair.exposureCap,
         settlementDelayMs: pair.settlementDelayMs,
-        payoutBps: { ...pair.payoutBps },
+        durationConfigs: binaryConfigs(pair).map((config) => ({ ...config })),
       });
       setReason("");
     }
   }, [pair?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const reasonOk = reason.trim().length >= 6;
+  const configsValid = state.durationConfigs.length === 5 &&
+    new Set(state.durationConfigs.map((config) => config.durationSeconds)).size === 5 &&
+    state.durationConfigs.every((config) => Number.isInteger(config.durationSeconds) && config.durationSeconds > 0 && config.durationSeconds <= 86400 && config.payoutBps > 0 && Number(config.minStake) > 0 && Number(config.maxStake) >= Number(config.minStake));
 
   return (
     <FormDrawer
       open={!!pair}
-      onOpenChange={(o) => {
-        if (!o) onClose();
-      }}
+      onOpenChange={(o) => { if (!o) onClose(); }}
       title={pair ? `Edit — ${pair.symbol}` : ""}
-      description="Update stakes, exposure cap, settlement delay, and the payout matrix."
+      description="Edit all five user-facing Option boxes: duration seconds, payout, minimum and maximum stake."
       submitLabel="Save pair"
-      submitDisabled={!reasonOk}
+      submitDisabled={!reasonOk || !configsValid}
       onSubmit={async () => {
-        await onSubmit(
-          {
-            enabled: state.enabled,
-            minStake: state.minStake,
-            maxStake: state.maxStake,
-            exposureCap: state.exposureCap,
-            settlementDelayMs: state.settlementDelayMs,
-            payoutBps: state.payoutBps,
-          },
-          reason.trim(),
-        );
+        await onSubmit({ enabled: state.enabled, exposureCap: state.exposureCap, settlementDelayMs: state.settlementDelayMs, durationConfigs: state.durationConfigs }, reason.trim());
         onClose();
       }}
       testId="bin-edit-drawer"
     >
-      <label
-        htmlFor="bin-enabled"
-        className="flex items-center justify-between rounded-md border border-border/60 bg-background/40 px-3 py-2"
-      >
+      <label htmlFor="bin-enabled" className="flex items-center justify-between rounded-md border border-border/60 bg-background/40 px-3 py-2">
         <span className="text-sm">Enabled</span>
-        <Switch
-          id="bin-enabled"
-          data-testid="bin-enabled"
-          checked={state.enabled}
-          onCheckedChange={(v) => setState((s) => ({ ...s, enabled: !!v }))}
-        />
+        <Switch id="bin-enabled" data-testid="bin-enabled" checked={state.enabled} onCheckedChange={(v) => setState((s) => ({ ...s, enabled: !!v }))} />
       </label>
-      <div className="grid grid-cols-3 gap-3">
-        <Field label="Min stake">
-          <Input
-            data-testid="bin-min"
-            value={state.minStake}
-            onChange={(e) => setState((s) => ({ ...s, minStake: e.target.value }))}
-          />
-        </Field>
-        <Field label="Max stake">
-          <Input
-            data-testid="bin-max"
-            value={state.maxStake}
-            onChange={(e) => setState((s) => ({ ...s, maxStake: e.target.value }))}
-          />
-        </Field>
-        <Field label="Exposure cap">
-          <Input
-            data-testid="bin-cap"
-            value={state.exposureCap}
-            onChange={(e) => setState((s) => ({ ...s, exposureCap: e.target.value }))}
-          />
-        </Field>
+      <div className="grid gap-3 md:grid-cols-5">
+        {state.durationConfigs.map((config, index) => (
+          <div key={`${config.sourceDurationSeconds}-${index}`} className="space-y-2 rounded-md border border-border/60 bg-background/40 p-3">
+            <div className="text-xs font-medium">Box {index + 1}</div>
+            <Field label="Duration (seconds)">
+              <Input type="number" min={1} max={86400} value={config.durationSeconds} onChange={(e) => setState((s) => ({ ...s, durationConfigs: s.durationConfigs.map((item, i) => i === index ? { ...item, durationSeconds: Number(e.target.value) } : item) }))} />
+            </Field>
+            <Field label="Payout (bps)">
+              <Input type="number" min={1} value={config.payoutBps} onChange={(e) => setState((s) => ({ ...s, durationConfigs: s.durationConfigs.map((item, i) => i === index ? { ...item, payoutBps: Number(e.target.value) } : item) }))} />
+            </Field>
+            <Field label="Min stake">
+              <Input value={config.minStake} onChange={(e) => setState((s) => ({ ...s, durationConfigs: s.durationConfigs.map((item, i) => i === index ? { ...item, minStake: e.target.value } : item) }))} />
+            </Field>
+            <Field label="Max stake">
+              <Input value={config.maxStake} onChange={(e) => setState((s) => ({ ...s, durationConfigs: s.durationConfigs.map((item, i) => i === index ? { ...item, maxStake: e.target.value } : item) }))} />
+            </Field>
+          </div>
+        ))}
       </div>
-      <div className="grid grid-cols-1 gap-3">
-        <Field label="Settlement delay (ms)">
-          <Input
-            data-testid="bin-delay"
-            type="number"
-            value={state.settlementDelayMs}
-            onChange={(e) => setState((s) => ({ ...s, settlementDelayMs: Number(e.target.value) }))}
-          />
-        </Field>
-      </div>
-      <Field label="Payout matrix (bps)">
-        <div className="grid grid-cols-5 gap-2">
-          {BINARY_DURATIONS.map((d) => (
-            <div key={d} className="flex flex-col gap-1">
-              <span className="mono text-[10px] text-muted-foreground">{d}s</span>
-              <Input
-                data-testid={`bin-payout-${d}`}
-                type="number"
-                value={state.payoutBps[d] ?? 0}
-                onChange={(e) =>
-                  setState((s) => ({
-                    ...s,
-                    payoutBps: { ...s.payoutBps, [d]: Number(e.target.value) },
-                  }))
-                }
-              />
-            </div>
-          ))}
-        </div>
-      </Field>
+      {!configsValid ? <p className="text-xs text-destructive">Exactly five unique positive duration boxes are required; payout and stake limits must be valid.</p> : null}
       <Field label="Reason (auditable, ≥ 6 chars)">
-        <textarea
-          data-testid="bin-reason"
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-          rows={3}
-          className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
-        />
+        <textarea data-testid="bin-reason" value={reason} onChange={(e) => setReason(e.target.value)} rows={3} className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground" />
       </Field>
     </FormDrawer>
   );
+}
+
+function binaryConfigs(pair: BinaryPair) {
+  if (pair.durationConfigs?.length) return pair.durationConfigs;
+  return Object.entries(pair.payoutBps).map(([duration, payoutBps]) => ({
+    sourceDurationSeconds: Number(duration),
+    durationSeconds: Number(duration),
+    payoutBps,
+    minStake: pair.minStake,
+    maxStake: pair.maxStake,
+    enabled: pair.enabled,
+  })).sort((a, b) => a.durationSeconds - b.durationSeconds);
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {

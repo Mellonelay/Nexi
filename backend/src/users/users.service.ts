@@ -131,4 +131,42 @@ export class UsersService {
     });
     return user as unknown as User;
   }
+
+  async changeSecurityPassword(userId: string, currentSecurityPassword: string | undefined, newSecurityPassword: string): Promise<void> {
+    const user = await this.findById(userId);
+    if (!user) throw new Error('User is not available');
+    if (user.securityPasswordHash) {
+      if (!currentSecurityPassword) throw new Error('Current security password is required');
+      const matches = await bcrypt.compare(currentSecurityPassword, user.securityPasswordHash);
+      if (!matches) throw new Error('Current security password is incorrect');
+    }
+    const hashed = await bcrypt.hash(newSecurityPassword, PASSWORD_HASH_ROUNDS);
+    if (this.d1?.isEnabled()) {
+      await this.d1.updateUserSecurityPassword(userId, hashed);
+      return;
+    }
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { securityPasswordHash: hashed, updatedAt: new Date() },
+    });
+  }
+
+  async getUserMfa(userId: string): Promise<Record<string, unknown> | null> {
+    if (this.d1?.isEnabled()) return this.d1.getUserMfa(userId);
+    return this.prisma.userMfa.findUnique({ where: { userId } }) as unknown as Record<string, unknown> | null;
+  }
+
+  async updateUserMfa(userId: string, enabled: boolean, secret: string | null, backupCodes: string | null): Promise<Record<string, unknown>> {
+    if (this.d1?.isEnabled()) return this.d1.upsertUserMfa(userId, enabled, secret, backupCodes);
+    const existing = await this.prisma.userMfa.findUnique({ where: { userId } });
+    if (existing) {
+      return this.prisma.userMfa.update({
+        where: { userId },
+        data: { enabled, secret, backupCodes, updatedAt: new Date() },
+      }) as unknown as Record<string, unknown>;
+    }
+    return this.prisma.userMfa.create({
+      data: { userId, enabled, secret, backupCodes },
+    }) as unknown as Record<string, unknown>;
+  }
 }

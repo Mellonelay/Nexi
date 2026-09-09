@@ -116,3 +116,39 @@ export class UpdatePreferencesDto {
   @IsObject()
   tradingSettings?: Record<string, unknown>;
 }
+
+export class SecurityPasswordChangeDto {
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  currentSecurityPassword?: string;
+
+  @IsString()
+  @MinLength(12)
+  newSecurityPassword!: string;
+}
+
+export class SetupMfaDto {
+  @IsString()
+  @Length(1, 256)
+  label!: string;
+}
+
+export class VerifyMfaDto {
+  @IsString()
+  @Length(6, 6)
+  token!: string;
+}
+
+export class DisableMfaDto {
+  @IsString()
+  @MinLength(1)
+  securityPassword!: string;
+
+  @IsOptional()
+  @IsString()
+  @Length(6, 64)
+  token?: string;
+}
+
+export class GenerateBackupCodesDto {}

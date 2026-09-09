@@ -15,6 +15,7 @@ import {
   normalizeMessageDeliveryState,
   normalizeMessageThreadState,
 } from '../../lib/product-states';
+import { sessionPrincipalId } from '../../lib/wallet-auth';
 import {
   DataStatePanel,
   inputClass,
@@ -39,6 +40,7 @@ type MessageRecord = {
   recipientId?: unknown;
   sequence?: unknown;
   createdAt?: unknown;
+  readAt?: unknown;
   deliveryState?: unknown;
 };
 
@@ -81,6 +83,11 @@ function groupMessages(records: MessageRecord[], currentUserId: string | null): 
     };
     next.counterpartId = counterpartId ?? next.counterpartId;
     next.messages = [...(next.messages ?? []), record];
+    if (currentUserId && recipientId === currentUserId && !textValue(record.readAt)) {
+      next.readState = 'UNREAD';
+    } else if (next.readState !== 'UNREAD') {
+      next.readState = 'READ';
+    }
     const createdAt = textValue(record.createdAt);
     if (createdAt) next.updatedAt = createdAt;
     grouped.set(key, next);
@@ -102,14 +109,10 @@ export default function MessagesPage() {
   const messageEndpoint = process.env.NEXT_PUBLIC_MESSAGES_ENDPOINT?.trim() || '/communications/messages';
 
   useEffect(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem('user') ?? 'null') as { id?: unknown } | null;
-      setUserId(typeof stored?.id === 'string' ? stored.id : null);
-    } catch {
-      setUserId(null);
-    } finally {
-      setSessionChecked(true);
-    }
+    const sync = () => { setUserId(sessionPrincipalId()); setSessionChecked(true); };
+    sync();
+    window.addEventListener('nexi:wallet-session', sync);
+    return () => window.removeEventListener('nexi:wallet-session', sync);
   }, []);
 
   const load = useCallback(async () => {
@@ -134,6 +137,32 @@ export default function MessagesPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const openThread = async (thread: MessageThread) => {
+    setSelected(thread);
+    if (!userId || threadState(thread) !== 'UNREAD') return;
+    const unreadIds = (thread.messages ?? [])
+      .filter((record) => textValue(record.recipientId) === userId && !textValue(record.readAt))
+      .map((record) => textValue(record.id))
+      .filter((id): id is string => Boolean(id));
+    if (unreadIds.length === 0) return;
+    try {
+      await Promise.all(unreadIds.map((id) => api.post(`${messageEndpoint}/${encodeURIComponent(id)}/read`)));
+      const readThread: MessageThread = {
+        ...thread,
+        readState: 'READ',
+        messages: (thread.messages ?? []).map((record) =>
+          textValue(record.recipientId) === userId && unreadIds.includes(textValue(record.id) ?? '')
+            ? { ...record, readAt: new Date().toISOString() }
+            : record,
+        ),
+      };
+      setSelected(readThread);
+      setThreads((current) => current.map((item) => item.id === thread.id ? readThread : item));
+    } catch {
+      setFeedback('The message service could not mark this conversation as read.');
+    }
+  };
 
   const sendReply = async () => {
     const body = draft.trim();
@@ -204,7 +233,7 @@ export default function MessagesPage() {
               {state === 'ERROR' && <DataStatePanel state="ERROR" title="Message service error" />}
               {state === 'LIVE' && filtered.length === 0 && <DataStatePanel state="UNAVAILABLE" title="No conversations returned" />}
               {state === 'LIVE' && filtered.map((thread, index) => (
-                <ThreadButton key={String(thread.id ?? index)} thread={thread} active={selected?.id === thread.id} onClick={() => setSelected(thread)} />
+                <ThreadButton key={String(thread.id ?? index)} thread={thread} active={selected?.id === thread.id} onClick={() => void openThread(thread)} />
               ))}
             </div>
           </Panel>

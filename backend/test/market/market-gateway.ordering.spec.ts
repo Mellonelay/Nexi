@@ -71,4 +71,33 @@ describe('MarketGateway ordering and deduplication', () => {
     expect(emit).toHaveBeenCalledTimes(1);
     expect(emit).toHaveBeenCalledWith('market_kline', expect.objectContaining({ sequence: 2 }));
   });
+  it('subscribes to Valkey market channels and forwards quote events to Socket.IO clients', async () => {
+    let onMessage: ((channel: string, message: string) => void) | undefined;
+    const subscriber = {
+      subscribe: jest.fn().mockResolvedValue(3),
+      on: jest.fn((event: string, handler: (channel: string, message: string) => void) => {
+        if (event === 'message') onMessage = handler;
+      }),
+    };
+    const redis: any = {
+      createSubscriber: jest.fn().mockResolvedValue(subscriber),
+      releaseSubscriber: jest.fn().mockResolvedValue(undefined),
+      isAvailable: jest.fn().mockReturnValue(true),
+    };
+    const gateway = new MarketGateway(redis, { getPrices: jest.fn() } as any);
+    const emit = jest.fn();
+    (gateway as any).server = { emit };
+
+    await gateway.onModuleInit();
+    expect(subscriber.subscribe).toHaveBeenCalledWith('market:quotes:v1', 'market:klines:v1', 'market:reference:v1');
+    expect(onMessage).toBeDefined();
+    onMessage!('market:quotes:v1', JSON.stringify({
+      version: 'v1', event: 'market.quote', sequence: '9',
+      quote: { symbol: 'BTCUSDT', price: '10', change24h: null, volume24h: null, high24h: null, low24h: null, state: 'LIVE', provider: 'fixture', source: 'redis', observedAt: new Date().toISOString(), receivedAt: new Date().toISOString() },
+    }));
+    expect(emit).toHaveBeenCalledWith('market_tick', expect.objectContaining({ symbol: 'BTCUSDT', sequence: '9' }));
+    await gateway.onModuleDestroy();
+    expect(redis.releaseSubscriber).toHaveBeenCalledWith(subscriber);
+  });
+
 });

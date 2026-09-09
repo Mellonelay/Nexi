@@ -10,6 +10,8 @@ import SymbolSelector from '../../components/SymbolSelector';
 import { useMarketData } from '../../hooks/useMarketData';
 import { useActivePair } from '../../state/ActivePairProvider';
 import { type MarketDataStatus } from '../../lib/market-data';
+import { hasAuthSession } from '../../lib/auth-session';
+import { sessionPrincipalId } from '../../lib/wallet-auth';
 import {
   closeMarginPosition,
   getMarginQuote,
@@ -36,7 +38,7 @@ const RealtimeTradingChart = dynamic(() => import('../../components/RealtimeTrad
 
 type OrderBookRow = { id?: string; price: number; amount: number; remaining?: number };
 type MarketTradeRow = { id: string; price: number; amount: number; executedAt: string; side: 'MATCHED' };
-type OrderType = 'MARKET' | 'LIMIT' | 'STOP_LIMIT';
+type OrderType = 'MARKET' | 'LIMIT' | 'STOP';
 type HistoryTab = 'OPEN' | 'ORDERS' | 'TRADES';
 type ConfirmationMode = 'AUTHORITATIVE';
 type ChartInterval = '1m' | '5m' | '15m' | '1h';
@@ -115,7 +117,7 @@ export default function SpotPage() {
   const [historyTab, setHistoryTab] = useState<HistoryTab>('OPEN');
   const [feedback, setFeedback] = useState<string | null>(null);
   const [marginDirection, setMarginDirection] = useState<MarginDirection>('LONG');
-  const [marginLeverage, setMarginLeverage] = useState<MarginLeverage>(2);
+  const [marginLeverage, setMarginLeverage] = useState<MarginLeverage>(0);
   const [marginCollateral, setMarginCollateral] = useState('');
   const [marginQuote, setMarginQuote] = useState<MarginQuoteResponse | null>(null);
   const [marginPositions, setMarginPositions] = useState<MarginPositionResponse[]>([]);
@@ -129,12 +131,10 @@ export default function SpotPage() {
   }, [querySymbol, setActivePair]);
 
   useEffect(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem('user') ?? 'null') as { id?: unknown } | null;
-      setUserId(typeof stored?.id === 'string' ? stored.id : null);
-    } catch {
-      setUserId(null);
-    }
+    const sync = () => setUserId(sessionPrincipalId());
+    sync();
+    window.addEventListener('nexi:wallet-session', sync);
+    return () => window.removeEventListener('nexi:wallet-session', sync);
   }, []);
 
   useEffect(() => {
@@ -159,7 +159,7 @@ export default function SpotPage() {
 
   useEffect(() => {
     let cancelled = false;
-    const hasToken = typeof window !== 'undefined' && Boolean(localStorage.getItem('token'));
+    const hasToken = hasAuthSession();
     if (!userId || !hasToken) {
       setMarginQuote(null);
       setMarginPositions([]);
@@ -185,7 +185,8 @@ export default function SpotPage() {
   }, [displayPair, userId]);
 
   const marginCollateralValue = positiveNumber(marginCollateral);
-  const marginReady = Boolean(userId && marginQuote && marginCollateralValue !== null && !marginSubmitting);
+  const marginLeverageOptions = useMemo(() => marginQuote?.leverageOptions ?? [], [marginQuote]);
+  const marginReady = Boolean(userId && marginQuote && marginLeverageOptions.includes(marginLeverage) && marginCollateralValue !== null && !marginSubmitting);
 
   const refreshMarginPositions = async () => {
     try {
@@ -194,6 +195,12 @@ export default function SpotPage() {
       setMarginFeedback('Margin positions could not be refreshed from the authoritative API.');
     }
   };
+
+  useEffect(() => {
+    if (marginLeverageOptions.length > 0 && !marginLeverageOptions.includes(marginLeverage)) {
+      setMarginLeverage(marginLeverageOptions[0]);
+    }
+  }, [marginLeverageOptions, marginLeverage]);
 
   const handleOpenMargin = async () => {
     if (!marginReady || marginCollateralValue === null) {
@@ -372,7 +379,6 @@ export default function SpotPage() {
       : backendConfigured
         ? 'ERROR'
         : 'UNAVAILABLE';
-  const backendSupportsOrderType = orderType === 'LIMIT';
   const backendSupportsTpSl = tpSlState === 'NOT_CONFIGURED';
   const tpSlReady = tpSlState === 'NOT_CONFIGURED' || (
     (tp.trim() !== '' || sl.trim() !== '')
@@ -381,7 +387,7 @@ export default function SpotPage() {
   );
   const ready = backendSupportsTpSl && spotOrderReady({
     authenticated: Boolean(userId),
-    backendConfigured: backendConfigured && backendSupportsOrderType,
+    backendConfigured,
     amount,
     orderType,
     price,
@@ -404,13 +410,11 @@ export default function SpotPage() {
       ? 'Trading is unavailable until the authoritative NEXI API is configured.'
       : !userId
         ? 'Sign in to submit an order.'
-        : !backendSupportsOrderType
-          ? `${orderType === 'MARKET' ? 'Market' : 'Stop Limit'} execution is not exposed by the current backend contract.`
-          : !backendSupportsTpSl
-            ? 'TP/SL attachment is not exposed by the current backend contract. Disable TP/SL to submit an authoritative Limit order.'
-            : !tpSlReady
-              ? 'Enter a valid take-profit or stop-loss value.'
-              : 'Enter valid order values.');
+        : !backendSupportsTpSl
+          ? 'TP/SL attachment is not exposed by the current backend contract. Disable TP/SL to submit an authoritative order.'
+          : !tpSlReady
+            ? 'Enter a valid take-profit or stop-loss value.'
+            : 'Enter valid order values.');
   };
 
   const submitOrder = async () => {
@@ -419,12 +423,13 @@ export default function SpotPage() {
     setFeedback(null);
     try {
       const response = await api.post('/spot/order', {
-        userId,
         pair: displayPair,
         side,
-        type: 'LIMIT',
-        amount: Number(amount),
-        price: Number(price),
+        type: orderType,
+        amount: amount.trim(),
+        price: price.trim(),
+        ...(orderType === 'STOP' ? { stopPrice: stopPrice.trim() } : {}),
+        idempotencyKey: `spot:${normalizedSymbol}:${side}:${Date.now()}`,
       });
       setOrderState(normalizeSpotOrderState((response.data as { status?: unknown })?.status ?? 'OPEN'));
       setConfirmationOpen(false);
@@ -516,7 +521,7 @@ export default function SpotPage() {
               {(['LONG', 'SHORT'] as const).map((value) => <button key={value} type="button" role="tab" aria-selected={marginDirection === value} onClick={() => setMarginDirection(value)} className={`min-h-10 rounded-lg text-xs font-semibold ${marginDirection === value ? value === 'LONG' ? 'bg-emerald-400/15 text-[#22D3A6]' : 'bg-rose-400/15 text-[#FF5C7C]' : 'text-[#8C8299]'}`}>{value}</button>)}
             </div>
             <div className="grid min-w-0 grid-cols-3 gap-2" role="tablist" aria-label="Margin leverage">
-              {([2, 3, 5] as const).map((value) => <button key={value} type="button" role="tab" aria-selected={marginLeverage === value} onClick={() => setMarginLeverage(value)} className={`min-h-10 rounded-lg border text-xs font-semibold ${marginLeverage === value ? 'border-violet-300/35 bg-[#2A1742] text-white' : 'border-violet-300/10 text-[#8C8299]'}`}>{value}x</button>)}
+              {marginLeverageOptions.map((value) => <button key={value} type="button" role="tab" aria-selected={marginLeverage === value} onClick={() => setMarginLeverage(value)} className={`min-h-10 rounded-lg border text-xs font-semibold ${marginLeverage === value ? 'border-violet-300/35 bg-[#2A1742] text-white' : 'border-violet-300/10 text-[#8C8299]'}`}>{value}x</button>)}
             </div>
             <label className="block text-xs text-[#C3BBD0]">Collateral (USDT)
               <input type="number" inputMode="decimal" min="0" step="any" value={marginCollateral} onChange={(event) => setMarginCollateral(event.target.value)} placeholder="Enter positive collateral" className="mt-1 min-h-11 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 text-right font-mono outline-none focus:border-[#8B5CF6]" />
@@ -533,7 +538,7 @@ export default function SpotPage() {
           </div>
         </div>
         {marginFeedback && <p role="status" className="mt-3 text-xs text-[#C3BBD0]">{marginFeedback}</p>}
-        <p className="mt-3 text-[10px] text-[#8C8299]">Backend-authoritative isolated margin only: LONG/SHORT at 2x, 3x, or 5x. Cross margin, futures, perpetuals, portfolio margin, and C2C are not exposed.</p>
+        <p className="mt-3 text-[10px] text-[#8C8299]">Backend-authoritative isolated margin only: LONG/SHORT leverage options are Admin-configured. Cross margin, futures, perpetuals, portfolio margin, and C2C are not exposed.</p>
       </section>}
 
       {activeSurface === 'SPOT' && <div className="grid min-w-0 gap-3 p-3 sm:gap-4 sm:p-4 xl:grid-cols-[minmax(0,1fr)_400px] xl:items-start">
@@ -620,7 +625,7 @@ export default function SpotPage() {
             <div className="p-4">
               {orderState !== 'DRAFT' ? (
                 <article className="min-w-0 rounded-xl border border-violet-300/10 bg-[#0B0711] p-4">
-                  <div className="flex min-w-0 flex-wrap items-start justify-between gap-3"><div className="min-w-0 flex-1"><p className="text-xs uppercase tracking-[0.14em] text-[#8C8299]">{historyTab === 'OPEN' ? 'Active order' : historyTab === 'ORDERS' ? 'Order detail' : 'Execution detail'}</p><h3 className="mt-1 break-words font-semibold">{displayPair} · {side} {orderType.replace('_', ' ')}</h3></div><span className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-semibold ${orderState === 'FILLED' ? 'border-emerald-300/25 text-[#22D3A6]' : orderState === 'REJECTED' || orderState === 'FAILED' ? 'border-rose-300/25 text-[#FF5C7C]' : 'border-violet-300/25 text-[#C3BBD0]'}`}>{orderState.replaceAll('_', ' ')}</span></div>
+                  <div className="flex min-w-0 flex-wrap items-start justify-between gap-3"><div className="min-w-0 flex-1"><p className="text-xs uppercase tracking-[0.14em] text-[#8C8299]">{historyTab === 'OPEN' ? 'Active order' : historyTab === 'ORDERS' ? 'Order detail' : 'Execution detail'}</p><h3 className="mt-1 break-words font-semibold">{displayPair} · {side} {orderType === 'STOP' ? 'STOP LIMIT' : orderType}</h3></div><span className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-semibold ${orderState === 'FILLED' ? 'border-emerald-300/25 text-[#22D3A6]' : orderState === 'REJECTED' || orderState === 'FAILED' ? 'border-rose-300/25 text-[#FF5C7C]' : 'border-violet-300/25 text-[#C3BBD0]'}`}>{orderState.replaceAll('_', ' ')}</span></div>
                   <dl className="mt-4 grid min-w-0 grid-cols-1 gap-3 text-xs sm:grid-cols-2 md:grid-cols-4"><div className="min-w-0"><dt className="text-[#8C8299]">Amount</dt><dd className="mt-1 break-words font-mono">{amount || '—'} {baseSymbol}</dd></div><div className="min-w-0"><dt className="text-[#8C8299]">Price</dt><dd className="mt-1 break-words font-mono">{orderType === 'MARKET' ? 'Market' : price || '—'}</dd></div><div className="min-w-0"><dt className="text-[#8C8299]">TP / SL</dt><dd className="mt-1 break-words font-mono">{tpSlState === 'NOT_CONFIGURED' ? 'Not configured' : `${tp || '—'} / ${sl || '—'}`}</dd></div><div className="min-w-0"><dt className="text-[#8C8299]">Provenance</dt><dd className="mt-1 break-words">Authoritative API</dd></div></dl>
                 </article>
               ) : (
@@ -639,14 +644,14 @@ export default function SpotPage() {
             {(['BUY', 'SELL'] as const).map((value) => <button key={value} type="button" onClick={() => setSide(value)} className={`nexi-interactive min-h-9 min-w-0 rounded-lg px-1 text-xs font-semibold sm:min-h-11 sm:text-sm ${side === value ? value === 'BUY' ? 'bg-emerald-400/15 text-[#22D3A6]' : 'bg-rose-400/15 text-[#FF5C7C]' : 'text-[#8C8299]'}`}>{value === 'BUY' ? 'Buy' : 'Sell'}</button>)}
           </div>
           <div className="mt-2 grid min-w-0 grid-cols-3 gap-1 rounded-xl bg-[#0B0711] p-1" role="tablist" aria-label="Order type" data-testid="spot-order-type">
-            {(['MARKET', 'LIMIT', 'STOP_LIMIT'] as const).map((value) => <button key={value} type="button" role="tab" aria-selected={orderType === value} onClick={() => setOrderType(value)} className={`nexi-interactive min-h-9 min-w-0 whitespace-normal rounded-lg px-1 text-[10px] leading-tight sm:min-h-11 sm:text-xs ${orderType === value ? 'bg-[#2A1742] text-white' : 'text-[#8C8299]'}`}>{value === 'STOP_LIMIT' ? 'Stop Limit' : value[0] + value.slice(1).toLowerCase()}</button>)}
+            {(['MARKET', 'LIMIT', 'STOP'] as const).map((value) => <button key={value} type="button" role="tab" aria-selected={orderType === value} onClick={() => setOrderType(value)} className={`nexi-interactive min-h-9 min-w-0 whitespace-normal rounded-lg px-1 text-[10px] leading-tight sm:min-h-11 sm:text-xs ${orderType === value ? 'bg-[#2A1742] text-white' : 'text-[#8C8299]'}`}>{value === 'STOP' ? 'Stop Limit' : value[0] + value.slice(1).toLowerCase()}</button>)}
           </div>
 
           <div className="mt-2.5 space-y-2 sm:mt-3 sm:space-y-2.5" data-testid="spot-inputs">
             <label className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 text-xs text-[#C3BBD0] sm:block"><span>Price (USDT)</span>
               <input type="number" inputMode="decimal" value={price} onChange={(event) => setPrice(event.target.value)} disabled={orderType === 'MARKET'} placeholder={orderType === 'MARKET' ? 'Market price' : '—'} className="min-h-9 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 text-right font-mono outline-none focus:border-[#8B5CF6] sm:mt-1 sm:min-h-11" />
             </label>
-            {orderType === 'STOP_LIMIT' && <label className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 text-xs text-[#C3BBD0] sm:block"><span>Stop price (USDT)</span>
+            {orderType === 'STOP' && <label className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 text-xs text-[#C3BBD0] sm:block"><span>Stop price (USDT)</span>
               <input type="number" inputMode="decimal" value={stopPrice} onChange={(event) => setStopPrice(event.target.value)} placeholder="—" className="min-h-9 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 text-right font-mono outline-none focus:border-[#8B5CF6] sm:mt-1 sm:min-h-11" />
             </label>}
             <label className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 text-xs text-[#C3BBD0] sm:block"><span>Amount ({baseSymbol})</span>
@@ -685,10 +690,10 @@ export default function SpotPage() {
           <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#48C0CC]">Authoritative submission</p><h2 id="spot-confirm-title" className="mt-1 text-xl font-semibold">Confirm Spot order</h2></div></div>
           <dl className="mt-4 space-y-2 text-sm">
             <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-3"><dt className="text-[#8C8299]">Pair</dt><dd className="min-w-0 break-words text-right">{displayPair}</dd></div>
-            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-3"><dt className="text-[#8C8299]">Side / type</dt><dd className="min-w-0 break-words text-right">{side} · {orderType.replace('_', ' ')}</dd></div>
+            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-3"><dt className="text-[#8C8299]">Side / type</dt><dd className="min-w-0 break-words text-right">{side} · {orderType === 'STOP' ? 'STOP LIMIT' : orderType}</dd></div>
             <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-3"><dt className="text-[#8C8299]">Amount</dt><dd className="min-w-0 break-words text-right font-mono">{amount} {baseSymbol}</dd></div>
             <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-3"><dt className="text-[#8C8299]">Price</dt><dd className="min-w-0 break-words text-right font-mono">{orderType === 'MARKET' ? 'Market' : `${price} USDT`}</dd></div>
-            {orderType === 'STOP_LIMIT' && <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-3"><dt className="text-[#8C8299]">Stop price</dt><dd className="min-w-0 break-words text-right font-mono">{stopPrice} USDT</dd></div>}
+            {orderType === 'STOP' && <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-3"><dt className="text-[#8C8299]">Stop price</dt><dd className="min-w-0 break-words text-right font-mono">{stopPrice} USDT</dd></div>}
             {tpSlState !== 'NOT_CONFIGURED' && <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-3"><dt className="text-[#8C8299]">TP / SL</dt><dd className="min-w-0 break-words text-right font-mono">{tp || '—'} / {sl || '—'}</dd></div>}
           </dl>
           <div className="mt-5 grid grid-cols-2 gap-3">

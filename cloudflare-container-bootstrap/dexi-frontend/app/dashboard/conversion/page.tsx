@@ -4,10 +4,9 @@ import { ArrowDownUp } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import api from '../../lib/api';
 import { resolveEndpointTemplate } from '../../lib/product-states';
+import { sessionPrincipalId } from '../../lib/wallet-auth';
 
 type ConversionState = 'loading' | 'ready' | 'unavailable' | 'review' | 'submitting' | 'accepted' | 'failed';
-
-type StoredUser = { id?: string };
 
 export default function ConversionPage() {
   const conversionEnabled = process.env.NEXT_PUBLIC_CONVERSION_ENABLED === 'true';
@@ -25,13 +24,10 @@ export default function ConversionPage() {
   const submitEndpoint = process.env.NEXT_PUBLIC_CONVERSION_SUBMIT_ENDPOINT;
 
   useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem('user');
-      const user = stored ? JSON.parse(stored) as StoredUser : null;
-      setUserId(typeof user?.id === 'string' ? user.id : null);
-    } catch {
-      setUserId(null);
-    }
+    const sync = () => setUserId(sessionPrincipalId());
+    sync();
+    window.addEventListener('nexi:wallet-session', sync);
+    return () => window.removeEventListener('nexi:wallet-session', sync);
   }, []);
 
   useEffect(() => {

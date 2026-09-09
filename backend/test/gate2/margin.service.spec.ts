@@ -181,4 +181,20 @@ describe('Spot isolated margin authority', () => {
       data: expect.objectContaining({ type: 'LIQUIDATION', metadata: expect.objectContaining({ maintenanceRatio: '0.5' }) }),
     }));
   });
+
+  it('uses D1-backed Admin margin configuration for leverage and maintenance ratio', async () => {
+    const d1 = {
+      isEnabled: jest.fn().mockReturnValue(true),
+      getSystemConfigValue: jest.fn().mockImplementation(async (key: string) =>
+        key === 'gate2.margin.leverages' ? '2,4,8' : key === 'gate2.margin.maintenanceRatio' ? '0.35' : null,
+      ),
+    };
+    const service = new MarginService({} as any, {} as any, undefined, d1 as any);
+
+    await expect((service as any).resolveAllowedLeverages()).resolves.toEqual([2, 4, 8]);
+    await expect((service as any).resolveMaintenanceRatio()).resolves.toEqual(new Prisma.Decimal('0.35'));
+    await expect((service as any).assertConfiguredLeverage(4)).resolves.toBeUndefined();
+    await expect((service as any).assertConfiguredLeverage(5)).rejects.toThrow('Margin leverage is not supported');
+  });
+
 });

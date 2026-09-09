@@ -1,5 +1,5 @@
 export type InstrumentCategory = 'Crypto' | 'Metal' | 'Forex' | 'Shares';
-import { findAsset } from '../lib/asset-registry';
+import { findAsset } from '../lib/asset-registry.ts';
 
 export type MarketProvenance = 'LIVE' | 'STALE' | 'UNAVAILABLE' | 'DISABLED';
 

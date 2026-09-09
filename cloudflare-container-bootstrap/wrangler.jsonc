@@ -36,14 +36,14 @@
     "NEXI_MARKET_STALE_AFTER_MS": "30000",
     "NEXI_CONVERSION_QUOTE_TTL_MS": "30000",
     "MARKET_BACKFILL_ON_STARTUP": "false",
-    "NEXI_SCHEDULER_ENABLED": "false",
+    "NEXI_SCHEDULER_ENABLED": "true",
     "NEXI_B7_ENABLED": "false",
     "MARKET_ARCHIVE_PIPELINE_URL": "https://de518faafc9c42f1bdeb344041249a49.ingest.cloudflare.com",
     "MARKET_ARCHIVE_PIPELINE_FORMAT": "structured",
     "MARKET_ARCHIVE_REQUIRED": "true",
     "MARKET_ARCHIVE_RETENTION_ENABLED": "false",
     "MARKET_ARCHIVE_CHECKPOINT_CONFIRMED": "false",
-    "NEXI_HEALTH_URL": "https://nexi-staging.melloenfrwrk.workers.dev/readyz",
+    "NEXI_HEALTH_URL": "https://api.nexitrading.app/readyz",
   },
   "secrets": {
     "required": [
@@ -87,11 +87,15 @@
       "authorized_keys": [
         {
           "name": "mellonelay-codex-runtime",
-          "public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBT3V8GvDXI5BP5FnBP6bFyIOF0AF45fals94iICkZ0n nexi-wrangler-sg-edge-01",
+          "public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBT3V8GvDXI5BP5FnBP6bFyIOF0AF45fals94iICkZ0n nexi-wrangler-vm",
         },
         {
-          "name": "mellonelay-windows-operator",
+          "name": "mellonelay-operator",
           "public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEDRrfjnbErxe9EH/1HMlWbNqdLAmNQuXolFZzTIypmF mellonelay-codex-runtime",
+        },
+        {
+          "name": "nexi-cloudflare-staging-20260909",
+          "public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILvuJR/e2MyJwet6Gj/74x5UrTMv8FvQ8+KQ6pidZGxN nexi-cloudflare-staging-20260909",
         },
       ],
     },

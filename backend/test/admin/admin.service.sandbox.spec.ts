@@ -37,6 +37,25 @@ describe("AdminService sandbox source contract", () => {
     ).rejects.toThrow("approved sandbox account/entity");
   });
 
+  it.each(["spot", "balance"] as const)(
+    "fails closed for unsupported sandbox scope '%s'",
+    async (scope) => {
+      process.env.NEXI_SANDBOX_ACCOUNT_IDS = "sandbox-account";
+      const subject = service();
+      await expect(
+        subject.requestSandboxControl({
+          scope,
+          target: "sandbox-account",
+          mode: "forced_win",
+          expiresAt: new Date(Date.now() + 60_000).toISOString(),
+          reason: "test",
+          idempotencyKey: `sandbox-contract-${scope}`,
+          requestedBy: "admin-1",
+        }),
+      ).rejects.toThrow("Unsupported sandbox scope");
+    },
+  );
+
   it("rejects expired scenarios before creating a governance command", async () => {
     process.env.NEXI_SANDBOX_ACCOUNT_IDS = "sandbox-account";
     const subject = service();

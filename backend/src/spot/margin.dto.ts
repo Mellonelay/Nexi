@@ -1,7 +1,10 @@
 import { Transform, Type } from 'class-transformer';
 import {
   IsEnum,
+  IsInt,
   IsString,
+  Max,
+  Min,
   Length,
   Matches,
 } from 'class-validator';
@@ -38,8 +41,10 @@ export class OpenMarginPositionDto {
   direction!: MarginPositionDirection;
 
   @Type(() => Number)
-  @IsEnum(MarginLeverage)
-  leverage!: MarginLeverage;
+  @IsInt()
+  @Min(2)
+  @Max(20)
+  leverage!: number;
 
   @IsString()
   @Matches(POSITIVE_DECIMAL)
@@ -88,9 +93,3 @@ export class LiquidateMarginPositionDto {
   @Length(8, 160)
   idempotencyKey!: string;
 }
-
-export const MARGIN_LEVERAGES = [
-  MarginLeverage.TWO,
-  MarginLeverage.THREE,
-  MarginLeverage.FIVE,
-] as const;

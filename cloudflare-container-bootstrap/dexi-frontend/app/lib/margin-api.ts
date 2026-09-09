@@ -1,7 +1,7 @@
 import api from './api';
 
 export type MarginDirection = 'LONG' | 'SHORT';
-export type MarginLeverage = 2 | 3 | 5;
+export type MarginLeverage = number;
 
 export interface MarginPositionResponse {
   id: string;
@@ -30,6 +30,7 @@ export interface MarginQuoteResponse {
   observedAt: string | null;
   receivedAt: string;
   maintenanceRatio: string;
+  leverageOptions: number[];
 }
 
 export async function getMarginQuote(pair: string) {

@@ -39,6 +39,10 @@ import type {
   LoanPlan,
   MiningSubscriptionAdmin,
   LoanApplicationAdmin,
+  Announcement,
+  AdminMessage,
+  AdminNotification,
+  AdminLearnArticle,
 } from "../types";
 import { ROLES } from "../config/roles";
 import {
@@ -443,6 +447,17 @@ export class LocalMockAdminProvider implements AdminDataProvider {
     o.status = "cancelled";
     return this.audited("spot.cancel_order", id, ctx, before, { status: "cancelled" });
   }
+  async getMarginConfiguration() {
+    await wait();
+    return { maintenanceRatio: 0.5, leverages: [2, 3, 5] };
+  }
+  async updateMarginConfiguration(
+    config: { maintenanceRatio: number; leverages: number[] },
+    ctx: ConsequentialContext,
+  ) {
+    await wait();
+    return this.audited("spot.margin_config", "isolated-margin", ctx, {}, config);
+  }
 
   /* ---------- Binary ---------- */
   async listBinaryPairs() {
@@ -468,8 +483,10 @@ export class LocalMockAdminProvider implements AdminDataProvider {
     const p = this.binaryPositions.find((x) => x.id === id);
     if (!p) return { ok: false, auditId: "" };
     const before = { status: p.status };
-    p.status = outcome;
-    return this.audited("binary.settle_position", id, ctx, before, { status: outcome });
+    // The local mock has no market-quote authority; model a successful canonical
+    // settlement without exposing an outcome selector in the Admin contract.
+    p.status = "won";
+    return this.audited("binary.settle_position", id, ctx, before, { status: p.status });
   }
 
   /* ---------- Finance ---------- */
@@ -751,6 +768,79 @@ export class LocalMockAdminProvider implements AdminDataProvider {
     await wait();
     return clone(this.announcements);
   }
+  async createAnnouncement(
+    payload: { title: string; body: string; published?: boolean },
+    ctx: ConsequentialContext,
+  ) {
+    const item: Announcement = {
+      id: nextId("announcement"),
+      title: payload.title,
+      body: payload.body,
+      status: payload.published ? "published" : "draft",
+      locale: "en",
+      publishedAt: payload.published ? new Date().toISOString() : undefined,
+    };
+    this.announcements.unshift(item);
+    return this.audited("announcements.create", item.id, ctx, {}, item);
+  }
+  async updateAnnouncement(
+    id: string,
+    payload: { title?: string; body?: string; published?: boolean },
+    ctx: ConsequentialContext,
+  ) {
+    await wait();
+    const item = this.announcements.find((row) => row.id === id);
+    if (!item) return { ok: false, auditId: "" };
+    const before = clone(item);
+    if (payload.title !== undefined) item.title = payload.title;
+    if (payload.body !== undefined) item.body = payload.body;
+    if (payload.published !== undefined) {
+      item.status = payload.published ? "published" : "draft";
+      item.publishedAt = payload.published ? new Date().toISOString() : undefined;
+    }
+    return this.audited("announcements.update", id, ctx, before, item);
+  }
+  async publishAnnouncement(id: string, ctx: ConsequentialContext) {
+    return this.updateAnnouncement(id, { published: true }, ctx);
+  }
+  async listMessages(): Promise<AdminMessage[]> {
+    await wait();
+    return [];
+  }
+  async listNotifications(): Promise<AdminNotification[]> {
+    await wait();
+    return [];
+  }
+  async sendNotification(
+    payload: { userId: string; type: string; title: string; body: string },
+    ctx: ConsequentialContext,
+  ) {
+    await wait();
+    return this.audited("notifications.send", payload.userId, ctx, {}, payload);
+  }
+  async listLearnArticles(): Promise<AdminLearnArticle[]> {
+    await wait();
+    return [];
+  }
+  async createLearnArticle(
+    payload: { slug: string; title: string; body: string; status?: string },
+    ctx: ConsequentialContext,
+  ) {
+    await wait();
+    return this.audited("learn.create", payload.slug, ctx, {}, payload);
+  }
+  async updateLearnArticle(
+    id: string,
+    payload: { title?: string; body?: string; status?: string },
+    ctx: ConsequentialContext,
+  ) {
+    await wait();
+    return this.audited("learn.update", id, ctx, {}, payload);
+  }
+  async publishLearnArticle(id: string, ctx: ConsequentialContext) {
+    await wait();
+    return this.audited("learn.publish", id, ctx, {}, { status: "PUBLISHED" });
+  }
   async listHealth() {
     await wait();
     return clone(this.health);
@@ -1022,10 +1112,7 @@ export class LocalMockAdminProvider implements AdminDataProvider {
   async updateBinaryPair(
     id: string,
     patch: Partial<
-      Pick<
-        BinaryPair,
-        "enabled" | "minStake" | "maxStake" | "exposureCap" | "settlementDelayMs"
-      >
+      Pick<BinaryPair, "enabled" | "minStake" | "maxStake" | "exposureCap" | "settlementDelayMs">
     > & { payoutBps?: Partial<Record<BinaryDuration, number>> },
     ctx: ConsequentialContext,
   ) {
@@ -1041,7 +1128,11 @@ export class LocalMockAdminProvider implements AdminDataProvider {
       payoutBps: { ...p.payoutBps },
     };
     if (patch.payoutBps) {
-      p.payoutBps = { ...p.payoutBps, ...patch.payoutBps };
+      const payoutBps = { ...p.payoutBps };
+      for (const [duration, payout] of Object.entries(patch.payoutBps)) {
+        if (payout !== undefined) payoutBps[Number(duration)] = payout;
+      }
+      p.payoutBps = payoutBps;
     }
     const { payoutBps: _pb, ...rest } = patch;
     Object.assign(p, rest);
@@ -1275,6 +1366,17 @@ export class LocalMockAdminProvider implements AdminDataProvider {
       );
     }
     return this.audited("sandbox.force_result", payload.target, ctx, { mode: "normal" }, payload);
+  }
+
+  async executeSandboxCommand(commandId: string, ctx: ConsequentialContext) {
+    await wait();
+    return this.audited(
+      "sandbox.executed",
+      commandId,
+      ctx,
+      { commandId },
+      { commandId, status: "EXECUTED" },
+    );
   }
 }
 

@@ -17,6 +17,7 @@ import {
   LoanState,
   normalizeLoanState,
 } from '../../lib/product-states';
+import { sessionPrincipalId } from '../../lib/wallet-auth';
 import {
   DataStatePanel,
   Field,
@@ -107,14 +108,10 @@ export default function LoansPage() {
   const [message, setMessage] = useState<string | null>(null);
   const backendConfigured = true;
   useEffect(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem('user') ?? 'null') as { id?: unknown } | null;
-      setUserId(typeof stored?.id === 'string' ? stored.id : null);
-    } catch {
-      setUserId(null);
-    } finally {
-      setSessionChecked(true);
-    }
+    const sync = () => { setUserId(sessionPrincipalId()); setSessionChecked(true); };
+    sync();
+    window.addEventListener('nexi:wallet-session', sync);
+    return () => window.removeEventListener('nexi:wallet-session', sync);
   }, []);
 
   const load = useCallback(async () => {

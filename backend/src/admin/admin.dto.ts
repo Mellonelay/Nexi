@@ -63,7 +63,15 @@ export class CreateCurrencyDto {
   @IsOptional() @IsBoolean() isActive?: boolean;
 }
 
-export class UpdateCurrencyDto extends PartialType(CreateCurrencyDto) {}
+export class UpdateCurrencyDto extends PartialType(CreateCurrencyDto) {
+  @IsString()
+  @Length(3, 500)
+  reason!: string;
+
+  @IsString()
+  @Length(8, 128)
+  idempotencyKey!: string;
+}
 
 export class CreateDepositAddressDto {
   @IsString() @Length(2, 32) network!: string;
@@ -115,8 +123,15 @@ export class UpdateBinaryConfigurationDto {
   @IsString() @Length(3, 32) pair!: string;
   @Type(() => Number)
   @IsInt()
-  @IsIn([30, 60, 180, 280, 420])
+  @Min(1)
+  @Max(86400)
   durationSeconds!: number;
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(86400)
+  sourceDurationSeconds?: number;
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
@@ -127,6 +142,27 @@ export class UpdateBinaryConfigurationDto {
   @IsOptional() @IsBoolean() enabled?: boolean;
   @IsString() @Length(3, 500) reason!: string;
   @IsString() @Length(8, 128) idempotencyKey!: string;
+}
+
+export class UpdateMarginConfigurationDto {
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0.01)
+  @Max(0.99)
+  maintenanceRatio!: number;
+
+  @IsOptional()
+  @IsString()
+  @Length(1, 128)
+  leverages?: string;
+
+  @IsString()
+  @Length(3, 500)
+  reason!: string;
+
+  @IsString()
+  @Length(8, 128)
+  idempotencyKey!: string;
 }
 
 export class CreateGovernanceCommandDto {

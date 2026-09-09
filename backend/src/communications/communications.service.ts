@@ -11,6 +11,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { D1PrismaService } from "../d1/d1-prisma.service";
 import { RedisService } from "../redis/redis.service";
 import { EventOutboxService } from "../events/event-outbox.service";
+import { D1CommunicationsCommandGateway } from "../d1/d1-communications-command.gateway";
 
 @Injectable()
 export class CommunicationsService {
@@ -18,6 +19,7 @@ export class CommunicationsService {
     private readonly prisma: PrismaService,
     private readonly d1: D1PrismaService,
     private readonly outbox: EventOutboxService,
+    @Optional() private readonly d1Communications?: D1CommunicationsCommandGateway,
     @Optional() private readonly redis?: RedisService,
   ) {}
 
@@ -217,6 +219,25 @@ export class CommunicationsService {
     return message;
   }
 
+  async markMessageRead(userId: string, messageId: string) {
+    if (process.env.D1_RUNTIME_ENABLED === "true") {
+      const updated = await this.d1Communications!.markMessageRead(userId, messageId);
+      if (!updated) throw new NotFoundException("Message not found");
+      return this.d1.persistentMessage.findUnique({ where: { id: messageId } });
+    }
+    return this.database.$transaction(async (tx) => {
+      const message = await tx.persistentMessage.findFirst({
+        where: { id: messageId, recipientId: userId },
+      });
+      if (!message) throw new NotFoundException("Message not found");
+      await tx.persistentMessage.updateMany({
+        where: { id: messageId, recipientId: userId, readAt: null },
+        data: { readAt: new Date() },
+      });
+      return tx.persistentMessage.findUnique({ where: { id: messageId } });
+    });
+  }
+
   async listMessages(userId: string, page = 1, limit = 25) {
     const skip = (page - 1) * limit;
     return this.database.persistentMessage.findMany({
@@ -225,6 +246,45 @@ export class CommunicationsService {
       take: limit,
       orderBy: [{ createdAt: "desc" }, { sequence: "desc" }],
     });
+  }
+
+  async adminMessages(page = 1, limit = 100) {
+    return this.database.persistentMessage.findMany({
+      skip: (page - 1) * limit, take: limit,
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  async adminNotifications(page = 1, limit = 100) {
+    return this.database.notification.findMany({
+      skip: (page - 1) * limit, take: limit,
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  async sendAdminNotification(data: { userId: string; type: string; title: string; body: string; idempotencyKey: string; reason?: string }) {
+    const id = this.id("admin-notification", data.idempotencyKey);
+    let notification: any;
+    if (process.env.D1_RUNTIME_ENABLED === "true") {
+      await this.d1Communications!.createNotification({
+        id,
+        userId: data.userId,
+        type: data.type,
+        title: data.title,
+        body: data.body,
+        idempotencyKey: data.idempotencyKey,
+        eventType: "NOTIFICATION_SENT",
+      });
+      notification = await this.database.notification.findUnique({ where: { id } });
+    } else {
+      notification = await this.database.notification.upsert({
+        where: { id }, update: {}, create: { id, userId: data.userId, type: data.type, title: data.title, body: data.body },
+      });
+      await this.durableEvent("notification-send:" + id, "NOTIFICATION", id, "NOTIFICATION_SENT", { userId: data.userId, type: data.type });
+    }
+    if (!notification) throw new BadRequestException("Notification was not materialized");
+    await this.event("NOTIFICATION_SENT", id, { userId: data.userId, type: data.type });
+    return notification;
   }
 
   async snapshot(userId: string) {
@@ -250,6 +310,18 @@ export class CommunicationsService {
     });
   }
   async markNotificationRead(userId: string, id: string) {
+    if (process.env.D1_RUNTIME_ENABLED === "true") {
+      const changed = await this.d1Communications!.markNotificationRead(userId, id, {
+        idempotencyKey: "notification-read:" + id + ":" + userId,
+        aggregateId: id,
+        eventType: "NOTIFICATION_READ",
+        payload: { userId },
+      });
+      if (!changed) throw new NotFoundException("Notification not found");
+      const notification = await this.database.notification.findUnique({ where: { id } });
+      await this.event("NOTIFICATION_READ", id, { userId });
+      return notification;
+    }
     const result = await this.database.notification.updateMany({
       where: { id, userId },
       data: { readAt: new Date() },
@@ -266,8 +338,10 @@ export class CommunicationsService {
       "NOTIFICATION_READ",
       { userId },
     );
+    await this.event("NOTIFICATION_READ", id, { userId });
     return notification;
   }
+
   async announcements() {
     return this.database.announcement.findMany({
       where: {
@@ -283,10 +357,21 @@ export class CommunicationsService {
     body: string;
     targeting?: unknown;
     published?: boolean;
+    startsAt?: string;
+    endsAt?: string;
+    reason?: string;
+    idempotencyKey?: string;
   }) {
-    const announcement = await this.database.announcement.create({
-      data: {
-        ...data,
+    const id = data.idempotencyKey ? this.id("announcement", data.idempotencyKey) : undefined;
+    const { idempotencyKey: _idempotencyKey, reason: _reason, startsAt, endsAt, ...announcementData } = data;
+    const announcement = await this.database.announcement.upsert({
+      where: { id: id ?? this.id("announcement", `${data.title}:${data.body}`) },
+      update: {},
+      create: {
+        ...(id ? { id } : {}),
+        ...announcementData,
+        startsAt: startsAt ? new Date(startsAt) : undefined,
+        endsAt: endsAt ? new Date(endsAt) : undefined,
         targeting: data.targeting as Prisma.InputJsonValue | undefined,
       },
     });
@@ -298,6 +383,48 @@ export class CommunicationsService {
       { published: announcement.published },
     );
     return announcement;
+  }
+
+  async updateAnnouncement(
+    id: string,
+    data: {
+      title?: string;
+      body?: string;
+      targeting?: unknown;
+      published?: boolean;
+      startsAt?: string;
+      endsAt?: string;
+      reason?: string;
+      idempotencyKey: string;
+    },
+  ) {
+    const current = await this.database.announcement.findUnique({ where: { id } });
+    if (!current) throw new NotFoundException("Announcement not found");
+    const update: Record<string, unknown> = {};
+    if (data.title !== undefined) update.title = data.title;
+    if (data.body !== undefined) update.body = data.body;
+    if (data.targeting !== undefined) update.targeting = data.targeting as Prisma.InputJsonValue;
+    if (data.published !== undefined) update.published = data.published;
+    if (data.startsAt !== undefined) update.startsAt = data.startsAt ? new Date(data.startsAt) : null;
+    if (data.endsAt !== undefined) update.endsAt = data.endsAt ? new Date(data.endsAt) : null;
+    const announcement = await this.database.announcement.update({ where: { id }, data: update });
+    const eventType = !current.published && announcement.published
+      ? "ANNOUNCEMENT_PUBLISHED"
+      : current.published && !announcement.published
+        ? "ANNOUNCEMENT_UNPUBLISHED"
+        : "ANNOUNCEMENT_UPDATED";
+    await this.durableEvent(
+      `announcement:${id}:${data.idempotencyKey}`,
+      "ANNOUNCEMENT",
+      id,
+      eventType,
+      { published: announcement.published },
+    );
+    return announcement;
+  }
+
+  async publishAnnouncement(id: string, idempotencyKey: string) {
+    return this.updateAnnouncement(id, { published: true, idempotencyKey });
   }
   private readonly learnStatuses = new Set([
     "DRAFT",
@@ -562,8 +689,18 @@ export class CommunicationsService {
     return article;
   }
 
-  async publishLearn(id: string) {
-    return this.updateLearn(id, { status: "PUBLISHED" });
+  async publishLearn(id: string, idempotencyKey?: string) {
+    const article = await this.updateLearn(id, { status: "PUBLISHED" });
+    if (idempotencyKey) {
+      await this.durableEvent(
+        `learn-article:publish:${id}:${idempotencyKey}`,
+        "LEARN_ARTICLE",
+        id,
+        "LEARN_ARTICLE_PUBLISHED",
+        { status: article.status, slug: article.slug },
+      );
+    }
+    return article;
   }
 
   private async replaceLearnRelations(

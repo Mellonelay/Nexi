@@ -54,9 +54,10 @@ test('maps a market row into shared instrument state', () => {
     icon: 'https://example.test/eth.png',
     vol: 25,
     source: 'tick',
+    dataState: 'LIVE',
   });
 
-  assert.equal(instrument.assetId, 'ETH');
+  assert.equal(instrument.assetId, 'crypto:eth');
   assert.equal(instrument.pair, 'ETH/USDT');
   assert.equal(instrument.provenance, 'LIVE');
   assert.equal(instrument.price, 10);

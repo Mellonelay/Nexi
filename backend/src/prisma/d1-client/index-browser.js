@@ -122,12 +122,24 @@ exports.Prisma.UserScalarFieldEnum = {
   userCode: 'userCode',
   email: 'email',
   password: 'password',
+  securityPasswordHash: 'securityPasswordHash',
   displayName: 'displayName',
   role: 'role',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   lastActive: 'lastActive',
   forceOutcome: 'forceOutcome'
+};
+
+exports.Prisma.UserMfaScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  enabled: 'enabled',
+  secret: 'secret',
+  backupCodes: 'backupCodes',
+  lastUsedAt: 'lastUsedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.WalletIdentityScalarFieldEnum = {
@@ -711,6 +723,9 @@ exports.Prisma.MarketQuoteSnapshotScalarFieldEnum = {
   source: 'source',
   sequence: 'sequence',
   price: 'price',
+  bid: 'bid',
+  ask: 'ask',
+  spread: 'spread',
   change24h: 'change24h',
   volume24h: 'volume24h',
   high24h: 'high24h',
@@ -728,6 +743,9 @@ exports.Prisma.MarketQuoteLatestScalarFieldEnum = {
   source: 'source',
   sequence: 'sequence',
   price: 'price',
+  bid: 'bid',
+  ask: 'ask',
+  spread: 'spread',
   change24h: 'change24h',
   volume24h: 'volume24h',
   high24h: 'high24h',
@@ -1003,6 +1021,22 @@ exports.Prisma.EventOutboxScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.EventInboxScalarFieldEnum = {
+  messageId: 'messageId',
+  queue: 'queue',
+  attempts: 'attempts',
+  eventType: 'eventType',
+  eventVersion: 'eventVersion',
+  idempotencyKey: 'idempotencyKey',
+  correlationId: 'correlationId',
+  payload: 'payload',
+  state: 'state',
+  receivedAt: 'receivedAt',
+  processedAt: 'processedAt',
+  lastErrorCode: 'lastErrorCode',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.LearnArticleScalarFieldEnum = {
   id: 'id',
   slug: 'slug',
@@ -1086,6 +1120,28 @@ exports.Prisma.UserPreferenceScalarFieldEnum = {
   theme: 'theme',
   notificationSettings: 'notificationSettings',
   tradingSettings: 'tradingSettings',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.VipLevelScalarFieldEnum = {
+  id: 'id',
+  level: 'level',
+  name: 'name',
+  threshold: 'threshold',
+  benefits: 'benefits',
+  enabled: 'enabled',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.UserVipStateScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  vipLevelId: 'vipLevelId',
+  progress: 'progress',
+  evaluatedAt: 'evaluatedAt',
+  qualifiedAt: 'qualifiedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -1271,29 +1327,9 @@ exports.Prisma.SortOrder = {
   desc: 'desc'
 };
 
-exports.Prisma.NullableJsonNullValueInput = {
-  DbNull: Prisma.DbNull,
-  JsonNull: Prisma.JsonNull
-};
-
-exports.Prisma.JsonNullValueInput = {
-  JsonNull: Prisma.JsonNull
-};
-
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
-};
-
-exports.Prisma.JsonNullValueFilter = {
-  DbNull: Prisma.DbNull,
-  JsonNull: Prisma.JsonNull,
-  AnyNull: Prisma.AnyNull
-};
-
-exports.Prisma.QueryMode = {
-  default: 'default',
-  insensitive: 'insensitive'
 };
 exports.Role = exports.$Enums.Role = {
   USER: 'USER',
@@ -1590,6 +1626,7 @@ exports.Gate2ConversionQuoteState = exports.$Enums.Gate2ConversionQuoteState = {
 
 exports.Prisma.ModelName = {
   User: 'User',
+  UserMfa: 'UserMfa',
   WalletIdentity: 'WalletIdentity',
   AuthSession: 'AuthSession',
   KYC: 'KYC',
@@ -1654,6 +1691,7 @@ exports.Prisma.ModelName = {
   Announcement: 'Announcement',
   Activity: 'Activity',
   EventOutbox: 'EventOutbox',
+  EventInbox: 'EventInbox',
   LearnArticle: 'LearnArticle',
   LearnCategory: 'LearnCategory',
   LearnArticleRevision: 'LearnArticleRevision',
@@ -1662,6 +1700,8 @@ exports.Prisma.ModelName = {
   LearnMediaAsset: 'LearnMediaAsset',
   LegacySettings: 'LegacySettings',
   UserPreference: 'UserPreference',
+  VipLevel: 'VipLevel',
+  UserVipState: 'UserVipState',
   Gate2SpotOrder: 'Gate2SpotOrder',
   Gate2SpotTrade: 'Gate2SpotTrade',
   Gate2BinaryConfiguration: 'Gate2BinaryConfiguration',

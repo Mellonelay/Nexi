@@ -2,14 +2,13 @@ import 'reflect-metadata';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import {
-  MarginLeverage,
   MarginPositionDirection,
   LiquidateMarginPositionDto,
   OpenMarginPositionDto,
 } from '../../src/spot/margin.dto';
 
 describe('Spot isolated margin DTO contract', () => {
-  it('normalizes pair identifiers and accepts only approved leverage', async () => {
+  it('normalizes pair identifiers and accepts a leverage within the configurable safety range', async () => {
     const dto = plainToInstance(OpenMarginPositionDto, {
       pair: ' btc/usdt ',
       direction: MarginPositionDirection.LONG,
@@ -19,11 +18,11 @@ describe('Spot isolated margin DTO contract', () => {
     });
 
     expect(dto.pair).toBe('BTC/USDT');
-    expect(dto.leverage).toBe(MarginLeverage.THREE);
+    expect(dto.leverage).toBe(3);
     await expect(validate(dto)).resolves.toHaveLength(0);
   });
 
-  it.each([1, 4, 10])('rejects excluded leverage %d', async (leverage) => {
+  it.each([1, 21])('rejects leverage outside the configurable safety range %d', async (leverage) => {
     const dto = plainToInstance(OpenMarginPositionDto, {
       pair: 'BTC/USDT',
       direction: 'SHORT',

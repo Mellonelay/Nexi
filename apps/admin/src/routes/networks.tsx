@@ -18,6 +18,7 @@ import { useAdminSession } from "@/admin/session/session";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import type { Network } from "@/admin/types";
 
 export const Route = createFileRoute("/networks")({ component: Page });
@@ -389,45 +390,57 @@ function NetworkEditForm({
     patch: Partial<
       Pick<
         Network,
-        | "contract"
         | "decimals"
-        | "explorer"
         | "minDeposit"
+        | "maxDeposit"
         | "minWithdrawal"
+        | "maxWithdrawal"
         | "withdrawalFee"
         | "confirmations"
+        | "depositEnabled"
+        | "withdrawEnabled"
       >
     >,
     reason: string,
   ) => Promise<void>;
 }) {
   const [state, setState] = useState({
-    contract: "",
     decimals: 0,
-    explorer: "",
     minDeposit: "",
+    maxDeposit: "",
     minWithdrawal: "",
+    maxWithdrawal: "",
     withdrawalFee: "",
     confirmations: 0,
+    depositEnabled: true,
+    withdrawEnabled: true,
   });
   const [reason, setReason] = useState("");
 
   useEffect(() => {
     if (net) {
       setState({
-        contract: net.contract ?? "",
         decimals: net.decimals,
-        explorer: net.explorer,
         minDeposit: net.minDeposit,
+        maxDeposit: net.maxDeposit ?? "",
         minWithdrawal: net.minWithdrawal,
+        maxWithdrawal: net.maxWithdrawal ?? "",
         withdrawalFee: net.withdrawalFee,
         confirmations: net.confirmations,
+        depositEnabled: net.depositEnabled !== false,
+        withdrawEnabled: net.withdrawEnabled !== false,
       });
       setReason("");
     }
   }, [net?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const reasonOk = reason.trim().length >= 6;
+  const limitsValid =
+    Number(state.minDeposit) >= 0 &&
+    Number(state.maxDeposit) >= Number(state.minDeposit) &&
+    Number(state.minWithdrawal) >= 0 &&
+    Number(state.maxWithdrawal) >= Number(state.minWithdrawal) &&
+    Number(state.withdrawalFee) >= 0;
 
   return (
     <FormDrawer
@@ -435,20 +448,22 @@ function NetworkEditForm({
       onOpenChange={(o) => {
         if (!o) onClose();
       }}
-      title={net ? `Edit — ${net.name}` : ""}
-      description="Update contract, decimals, explorer, and confirmation/limit/fee parameters."
-      submitLabel="Save network"
-      submitDisabled={!reasonOk}
+      title={net ? `Wallet config — ${net.assetSymbol}` : ""}
+      description="Edit the user-facing deposit/withdraw limits, fee, confirmations, precision and enablement backed by the canonical Currency configuration."
+      submitLabel="Save wallet config"
+      submitDisabled={!reasonOk || !limitsValid}
       onSubmit={async () => {
         await onSubmit(
           {
-            contract: state.contract || undefined,
             decimals: state.decimals,
-            explorer: state.explorer,
             minDeposit: state.minDeposit,
+            maxDeposit: state.maxDeposit,
             minWithdrawal: state.minWithdrawal,
+            maxWithdrawal: state.maxWithdrawal,
             withdrawalFee: state.withdrawalFee,
             confirmations: state.confirmations,
+            depositEnabled: state.depositEnabled,
+            withdrawEnabled: state.withdrawEnabled,
           },
           reason.trim(),
         );
@@ -456,59 +471,75 @@ function NetworkEditForm({
       }}
       testId="net-edit-drawer"
     >
-      <Field label="Contract address">
-        <Input
-          data-testid="net-contract"
-          value={state.contract}
-          onChange={(e) => setState((s) => ({ ...s, contract: e.target.value }))}
-        />
-      </Field>
-      <Field label="Decimals">
-        <Input
-          data-testid="net-decimals"
-          type="number"
-          value={state.decimals}
-          onChange={(e) => setState((s) => ({ ...s, decimals: Number(e.target.value) }))}
-        />
-      </Field>
-      <Field label="Explorer URL">
-        <Input
-          data-testid="net-explorer"
-          value={state.explorer}
-          onChange={(e) => setState((s) => ({ ...s, explorer: e.target.value }))}
-        />
-      </Field>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="flex items-center justify-between rounded-md border border-border/60 bg-background/40 px-3 py-2">
+          <span className="text-sm">Deposits enabled</span>
+          <Switch
+            checked={state.depositEnabled}
+            onCheckedChange={(v) => setState((s) => ({ ...s, depositEnabled: !!v }))}
+          />
+        </label>
+        <label className="flex items-center justify-between rounded-md border border-border/60 bg-background/40 px-3 py-2">
+          <span className="text-sm">Withdrawals enabled</span>
+          <Switch
+            checked={state.withdrawEnabled}
+            onCheckedChange={(v) => setState((s) => ({ ...s, withdrawEnabled: !!v }))}
+          />
+        </label>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Min deposit">
           <Input
-            data-testid="net-min-deposit"
             value={state.minDeposit}
             onChange={(e) => setState((s) => ({ ...s, minDeposit: e.target.value }))}
           />
         </Field>
+        <Field label="Max deposit">
+          <Input
+            value={state.maxDeposit}
+            onChange={(e) => setState((s) => ({ ...s, maxDeposit: e.target.value }))}
+          />
+        </Field>
         <Field label="Min withdrawal">
           <Input
-            data-testid="net-min-withdrawal"
             value={state.minWithdrawal}
             onChange={(e) => setState((s) => ({ ...s, minWithdrawal: e.target.value }))}
           />
         </Field>
+        <Field label="Max withdrawal">
+          <Input
+            value={state.maxWithdrawal}
+            onChange={(e) => setState((s) => ({ ...s, maxWithdrawal: e.target.value }))}
+          />
+        </Field>
         <Field label="Withdrawal fee">
           <Input
-            data-testid="net-fee"
             value={state.withdrawalFee}
             onChange={(e) => setState((s) => ({ ...s, withdrawalFee: e.target.value }))}
           />
         </Field>
+        <Field label="Required confirmations">
+          <Input
+            type="number"
+            min={0}
+            value={state.confirmations}
+            onChange={(e) => setState((s) => ({ ...s, confirmations: Number(e.target.value) }))}
+          />
+        </Field>
+        <Field label="Decimals">
+          <Input
+            type="number"
+            min={0}
+            value={state.decimals}
+            onChange={(e) => setState((s) => ({ ...s, decimals: Number(e.target.value) }))}
+          />
+        </Field>
       </div>
-      <Field label="Required confirmations">
-        <Input
-          data-testid="net-confs"
-          type="number"
-          value={state.confirmations}
-          onChange={(e) => setState((s) => ({ ...s, confirmations: Number(e.target.value) }))}
-        />
-      </Field>
+      {!limitsValid ? (
+        <p className="text-xs text-destructive">
+          Maximum values must be greater than or equal to their minimums; fee cannot be negative.
+        </p>
+      ) : null}
       <Field label="Reason (auditable, ≥ 6 chars)">
         <textarea
           data-testid="net-reason"

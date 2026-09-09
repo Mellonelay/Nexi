@@ -512,7 +512,9 @@ export class FinancialOperationsService {
   }
 
   authorizeDepositProofUpload(userId: string, key: string) {
-    const valid = new RegExp(`^deposit-proofs/${userId}/[0-9a-f-]{36}$`).test(key);
+    const prefix = `deposit-proofs/${userId}/`;
+    const objectId = key.startsWith(prefix) ? key.slice(prefix.length) : '';
+    const valid = /^[0-9a-f-]{36}$/.test(objectId);
     if (!valid) throw new BadRequestException('Deposit proof key is invalid');
     return { authorized: true, key };
   }

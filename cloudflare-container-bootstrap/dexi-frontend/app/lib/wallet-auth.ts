@@ -1,4 +1,25 @@
 import api from './api';
+import {
+  clearAuthSession,
+  getAccessToken,
+  setAuthSession,
+  setSessionUser,
+  type AuthSessionPayload,
+} from './auth-session';
+
+export function sessionPrincipalId(): string | null {
+  const token = getAccessToken();
+  if (!token) return null;
+  try {
+    const encodedPayload = token.split('.')[1];
+    if (!encodedPayload) return null;
+    const json = atob(encodedPayload.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - encodedPayload.length % 4) % 4));
+    const payload = JSON.parse(json) as { sub?: unknown };
+    return typeof payload.sub === 'string' && payload.sub.length > 0 ? payload.sub : null;
+  } catch {
+    return null;
+  }
+}
 
 export interface ReferralProfile {
   referralCode: string;
@@ -51,17 +72,12 @@ export function clearReferralCode() {
   if (typeof window !== 'undefined') window.localStorage.removeItem(REFERRAL_STORAGE_KEY);
 }
 
-export function setWalletSession(payload: { access_token: string; user?: unknown; profile?: WalletProfile }) {
-  window.localStorage.setItem('token', payload.access_token);
-  const sessionUser = payload.user ?? payload.profile;
-  if (sessionUser) window.localStorage.setItem('user', JSON.stringify(sessionUser));
-  window.dispatchEvent(new CustomEvent('nexi:wallet-session'));
+export function setWalletSession(payload: AuthSessionPayload) {
+  setAuthSession(payload);
 }
 
 export function clearWalletSession() {
-  window.localStorage.removeItem('token');
-  window.localStorage.removeItem('user');
-  window.dispatchEvent(new CustomEvent('nexi:wallet-session'));
+  clearAuthSession();
 }
 
 export async function requestWalletChallenge(address: string, chainId: number) {
@@ -70,7 +86,7 @@ export async function requestWalletChallenge(address: string, chainId: number) {
 }
 
 export async function verifyWalletChallenge(message: string, signature: string, referralCode?: string | null) {
-  const response = await api.post<{ access_token: string; refresh_token?: string; user?: unknown; profile: WalletProfile }>('/auth/wallet/verify', {
+  const response = await api.post<AuthSessionPayload & { profile: WalletProfile }>('/auth/wallet/verify', {
     message,
     signature,
     ...(referralCode?.trim() ? { referralCode: referralCode.trim() } : {}),
@@ -80,6 +96,7 @@ export async function verifyWalletChallenge(message: string, signature: string, 
 
 export async function loadCurrentUser() {
   const response = await api.get<WalletProfile>('/auth/me');
+  setSessionUser(response.data);
   return response.data;
 }
 

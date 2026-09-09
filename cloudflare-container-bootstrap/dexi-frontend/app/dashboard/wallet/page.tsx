@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowDownToLine, ArrowLeftRight, ArrowUpFromLine, Clock3, History, RefreshCw, WalletCards } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../lib/api';
+import { sessionPrincipalId } from '../../lib/wallet-auth';
 import { authoritativeValue } from '../../lib/product-states';
 import { ASSET_REGISTRY, findAsset, type AssetCategory } from '../../lib/asset-registry';
 import AssetIcon from '../../components/AssetIcon';
@@ -84,7 +85,7 @@ export default function WalletPage() {
 
   const clearPrivateState = useCallback(() => { setUserId(null); setPayload(null); setActivities([]); setState('UNAVAILABLE'); setError('Connect and verify a wallet to load private wallet data.'); }, []);
   useEffect(() => {
-    const sync = () => { try { const stored = JSON.parse(localStorage.getItem('user') ?? 'null') as { id?: unknown } | null; const next = typeof stored?.id === 'string' ? stored.id : null; setUserId((previous) => { if (previous !== next) { setPayload(null); setActivities([]); setState(next ? 'LOADING' : 'UNAVAILABLE'); } return next; }); if (!next) clearPrivateState(); } catch { clearPrivateState(); } finally { setSessionChecked(true); } };
+    const sync = () => { const next = sessionPrincipalId(); setUserId((previous) => { if (previous !== next) { setPayload(null); setActivities([]); setState(next ? 'LOADING' : 'UNAVAILABLE'); } return next; }); if (!next) clearPrivateState(); setSessionChecked(true); };
     sync();
     window.addEventListener('nexi:wallet-session', sync);
     return () => window.removeEventListener('nexi:wallet-session', sync);
@@ -128,5 +129,3 @@ export default function WalletPage() {
     </WalletDashboardLayout>
   </PageShell>;
 }
-
-

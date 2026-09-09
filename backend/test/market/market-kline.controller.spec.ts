@@ -1,4 +1,5 @@
 import { MarketKlineController } from '../../src/market/market-kline.controller';
+import { MarketKlineQueryService } from '../../src/market/market-kline-query.service';
 
 describe('MarketKlineController', () => {
   it('hydrates a missing chart window through the provider router and persists it', async () => {
@@ -12,7 +13,8 @@ describe('MarketKlineController', () => {
       persist: jest.fn().mockResolvedValue(candle),
     };
     const providers = { fetchHistory: jest.fn().mockResolvedValue([candle]) };
-    const controller = new MarketKlineController(klines as never, providers as never);
+    const queryService = new MarketKlineQueryService(klines as never, providers as never);
+    const controller = new MarketKlineController(queryService);
 
     await expect(controller.list({ symbol: 'AXP/USDT', interval: '1h', limit: 40 } as never)).resolves.toMatchObject({
       dataState: 'LIVE', symbol: 'AXPUSDT', interval: '1h', candles: [candle],

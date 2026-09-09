@@ -3,7 +3,7 @@ import { BinarySide, Gate2BinaryState, Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { LedgerAuthorityService } from '../ledger/ledger-authority.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { ALLOWED_BINARY_DURATIONS, assertBinaryDuration, assertPositiveDecimal, binaryTransitionAllowed, decimalProduct } from '../gate2/gate2-rules';
+import { assertPositiveDecimal, binaryTransitionAllowed, decimalProduct } from '../gate2/gate2-rules';
 import { BinaryGateway } from './binary.gateway';
 import { SandboxScenarioService } from '../sandbox/sandbox-scenario.service';
 import { getMarketSourcePolicy, isDeterministicTestProvider, isSettlementApproved } from '../market/market-source-registry';
@@ -29,7 +29,6 @@ export class BinaryService {
 
   async openPosition(userId: string, input: OpenBinaryPositionInput) {
     this.assertIdempotencyKey(input.idempotencyKey);
-    assertBinaryDuration(input.durationSeconds);
     const stake = assertPositiveDecimal(input.stake);
     if (this.d1?.isEnabled()) return this.openPositionOnD1(userId, input, stake);
     const pair = await this.resolvePair(input.pair);
@@ -170,7 +169,8 @@ export class BinaryService {
     }
     const configuration: any = await this.d1!.getBinaryConfiguration(String(raw.pair), Number(raw.durationSeconds), Number(raw.configurationVersion));
     if (!configuration) return { position: raw, error: true };
-    const state = this.outcome(String(raw.side) as BinarySide, new Prisma.Decimal(String(raw.entryPrice)), new Prisma.Decimal(quote.price)) as 'WIN' | 'LOSS';
+    const sandbox = await this.sandboxScenarios.findBinaryDirective(this.prisma, String(raw.userId), String(raw.id));
+    const state = (sandbox?.result ?? this.outcome(String(raw.side) as BinarySide, new Prisma.Decimal(String(raw.entryPrice)), new Prisma.Decimal(quote.price))) as 'WIN' | 'LOSS';
     const payout = this.payoutFor(state, new Prisma.Decimal(String(raw.stake)), configuration);
     const position: any = await this.d1!.settleBinaryPositionAtomic({
       positionId, userId: String(raw.userId), asset: pair.quoteAsset, stake: String(raw.stake), payout: payout.toString(), state,
@@ -233,11 +233,13 @@ export class BinaryService {
 
   async getConfig() {
     if (this.d1?.isEnabled()) {
-      const configurations: any[] = await this.d1.listBinaryConfigurations();
-      return { durations: [...ALLOWED_BINARY_DURATIONS], configurations: configurations.filter((configuration) => this.isBinaryPairAvailable(String(configuration.pair))) };
+      const configurations: any[] = (await this.d1.listBinaryConfigurations()).filter((configuration) => this.isBinaryPairAvailable(String(configuration.pair)));
+      const durations = [...new Set(configurations.map((configuration) => Number(configuration.durationSeconds)).filter((value) => Number.isInteger(value) && value > 0))].sort((a, b) => a - b);
+      return { durations, configurations };
     }
-    const configurations = await this.prisma.gate2BinaryConfiguration.findMany({ where: { enabled: true }, orderBy: [{ pair: 'asc' }, { durationSeconds: 'asc' }] });
-    return { durations: [...ALLOWED_BINARY_DURATIONS], configurations: configurations.filter((configuration: { pair: string }) => this.isBinaryPairAvailable(configuration.pair)) };
+    const configurations = (await this.prisma.gate2BinaryConfiguration.findMany({ where: { enabled: true }, orderBy: [{ pair: 'asc' }, { durationSeconds: 'asc' }] })).filter((configuration: { pair: string }) => this.isBinaryPairAvailable(configuration.pair));
+    const durations = [...new Set(configurations.map((configuration) => Number(configuration.durationSeconds)))].sort((a, b) => a - b);
+    return { durations, configurations };
   }
 
   private outcome(side: BinarySide, entry: Prisma.Decimal, expiry: Prisma.Decimal): Gate2BinaryState {

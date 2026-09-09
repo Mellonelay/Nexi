@@ -58,6 +58,15 @@ function containerEnv(env) {
   );
 }
 
+async function getRunningNexiContainer(env) {
+  const container = getContainer(env.NEXI_API_CONTAINER, "nexi-api");
+  await container.startAndWaitForPorts({
+    ports: [3000],
+    cancellationOptions: { portReadyTimeoutMS: 60_000 },
+  });
+  return container;
+}
+
 /**
  * The Worker is an edge gateway only. NestJS remains the API, market, wallet,
  * ledger, and Socket.IO authority. Container.fetch preserves HTTP polling and
@@ -234,7 +243,7 @@ async function invokeWorkflowCommand(
     entityId,
     idempotencyKey,
   );
-  const container = getContainer(env.NEXI_API_CONTAINER, "nexi-api");
+  const container = await getRunningNexiContainer(env);
   const response = await container.fetch(
     new Request(`https://nexi.internal/_internal/workflows/${workflow}/${action}`, {
       method: "POST",
@@ -289,6 +298,205 @@ function keyFromPath(url, prefix) {
   return key && key.length <= 512 && !key.includes("..") ? key : "";
 }
 
+function classifyD1Sql(sql) {
+  const allowed = ["SELECT", "INSERT", "UPDATE", "DELETE", "REPLACE"];
+  const skipTrivia = (start) => {
+    let index = start;
+    while (index < sql.length) {
+      if (/\s/.test(sql[index])) {
+        index += 1;
+        continue;
+      }
+      if (sql.startsWith("--", index)) {
+        const newline = sql.indexOf("\n", index + 2);
+        index = newline === -1 ? sql.length : newline + 1;
+        continue;
+      }
+      if (sql.startsWith("/*", index)) {
+        const end = sql.indexOf("*/", index + 2);
+        index = end === -1 ? sql.length : end + 2;
+        continue;
+      }
+      break;
+    }
+    return index;
+  };
+  const skipQuoted = (start) => {
+    const opener = sql[start];
+    const closer = opener === "[" ? "]" : opener;
+    for (let index = start + 1; index < sql.length; index += 1) {
+      if (sql[index] !== closer) continue;
+      if (sql[index + 1] === closer) {
+        index += 1;
+        continue;
+      }
+      return index + 1;
+    }
+    return null;
+  };
+  const readWord = (start) => {
+    let index = skipTrivia(start);
+    const first = sql.charCodeAt(index);
+    if (
+      !(
+        (first >= 65 && first <= 90) ||
+        (first >= 97 && first <= 122) ||
+        first === 95
+      )
+    ) {
+      return null;
+    }
+    index += 1;
+    while (index < sql.length) {
+      const code = sql.charCodeAt(index);
+      if (
+        !(
+          (code >= 65 && code <= 90) ||
+          (code >= 97 && code <= 122) ||
+          (code >= 48 && code <= 57) ||
+          code === 95 ||
+          code === 36
+        )
+      ) {
+        break;
+      }
+      index += 1;
+    }
+    return {
+      value: sql.slice(skipTrivia(start), index).toUpperCase(),
+      next: index,
+    };
+  };
+  const skipIdentifier = (start) => {
+    const index = skipTrivia(start);
+    const opener = sql[index];
+    if (opener === '"' || opener === "`" || opener === "[") {
+      return skipQuoted(index);
+    }
+    return readWord(index)?.next ?? null;
+  };
+  const findClosingParen = (openIndex) => {
+    let depth = 0;
+    for (let index = openIndex; index < sql.length; index += 1) {
+      const character = sql[index];
+      if (
+        character === "'" ||
+        character === '"' ||
+        character === "`" ||
+        character === "["
+      ) {
+        const next = skipQuoted(index);
+        if (next === null) return null;
+        index = next - 1;
+        continue;
+      }
+      if (sql.startsWith("--", index)) {
+        const newline = sql.indexOf("\n", index + 2);
+        index = newline === -1 ? sql.length : newline;
+        continue;
+      }
+      if (sql.startsWith("/*", index)) {
+        const end = sql.indexOf("*/", index + 2);
+        if (end === -1) return null;
+        index = end + 1;
+        continue;
+      }
+      if (character === "(") depth += 1;
+      if (character === ")" && --depth === 0) return index + 1;
+    }
+    return null;
+  };
+
+  const first = readWord(0);
+  if (!first) return null;
+  if (first.value !== "WITH") {
+    return allowed.includes(first.value) ? first.value : null;
+  }
+
+  let index = first.next;
+  const recursive = readWord(index);
+  if (recursive?.value === "RECURSIVE") index = recursive.next;
+
+  while (true) {
+    const cteNameEnd = skipIdentifier(index);
+    if (cteNameEnd === null) return null;
+    index = cteNameEnd;
+    index = skipTrivia(index);
+    if (sql[index] === "(") {
+      const columnListEnd = findClosingParen(index);
+      if (columnListEnd === null) return null;
+      index = columnListEnd;
+    }
+
+    const as = readWord(index);
+    if (!as || as.value !== "AS") return null;
+    index = as.next;
+    const modifier = readWord(index);
+    if (modifier?.value === "NOT") {
+      const materialized = readWord(modifier.next);
+      if (!materialized || materialized.value !== "MATERIALIZED") return null;
+      index = materialized.next;
+    } else if (modifier?.value === "MATERIALIZED") {
+      index = modifier.next;
+    }
+
+    index = skipTrivia(index);
+    if (sql[index] !== "(") return null;
+    const cteBodyEnd = findClosingParen(index);
+    if (cteBodyEnd === null) return null;
+    index = skipTrivia(cteBodyEnd);
+    if (sql[index] === ",") {
+      index += 1;
+      continue;
+    }
+    const main = readWord(index);
+    return main && allowed.includes(main.value) ? main.value : null;
+  }
+}
+
+function hasTopLevelSqlSemicolon(sql) {
+  const skipQuoted = (start) => {
+    const opener = sql[start];
+    const closer = opener === "[" ? "]" : opener;
+    for (let index = start + 1; index < sql.length; index += 1) {
+      if (sql[index] !== closer) continue;
+      if (sql[index + 1] === closer) {
+        index += 1;
+        continue;
+      }
+      return index + 1;
+    }
+    return null;
+  };
+  for (let index = 0; index < sql.length; index += 1) {
+    const character = sql[index];
+    if (
+      character === "'" ||
+      character === '"' ||
+      character === "`" ||
+      character === "["
+    ) {
+      const next = skipQuoted(index);
+      if (next === null) return false;
+      index = next - 1;
+      continue;
+    }
+    if (sql.startsWith("--", index)) {
+      const newline = sql.indexOf("\n", index + 2);
+      index = newline === -1 ? sql.length : newline;
+      continue;
+    }
+    if (sql.startsWith("/*", index)) {
+      const end = sql.indexOf("*/", index + 2);
+      if (end === -1) return false;
+      index = end + 1;
+      continue;
+    }
+    if (character === ";") return true;
+  }
+  return false;
+}
+
 /**
  * Containers cannot receive D1 bindings directly. Cloudflare's documented
  * outbound Worker hook lets the container call this handler over the private
@@ -322,14 +530,15 @@ NexiApiContainer.outboundByHost = {
         if (
           !statement ||
           statement.length > 16_384 ||
-          statement.includes(";")
+          hasTopLevelSqlSemicolon(statement)
         ) {
           return Response.json(
             { error: "Only one bounded SQL statement is accepted per item" },
             { status: 400 },
           );
         }
-        if (!/^(SELECT|INSERT|UPDATE|DELETE|REPLACE)\b/i.test(statement)) {
+        const statementClass = classifyD1Sql(statement);
+        if (!statementClass) {
           return Response.json(
             { error: "Batch accepts only data statements" },
             { status: 403 },
@@ -361,13 +570,13 @@ NexiApiContainer.outboundByHost = {
     const body = await request.json().catch(() => null);
     const sql = body && typeof body.sql === "string" ? body.sql.trim() : "";
     const params = body && Array.isArray(body.params) ? body.params : [];
-    if (!sql || sql.length > 16_384 || sql.includes(";")) {
+    if (!sql || sql.length > 16_384 || hasTopLevelSqlSemicolon(sql)) {
       return Response.json(
         { error: "Only one bounded SQL statement is accepted" },
         { status: 400 },
       );
     }
-    if (!/^SELECT\b/i.test(sql)) {
+    if (classifyD1Sql(sql) !== "SELECT") {
       return Response.json(
         { error: "The bridge query endpoint is read-only" },
         { status: 403 },
@@ -689,7 +898,7 @@ export default {
       typeof env.JWT_SECRET === "string" ? env.JWT_SECRET : "";
     if (!signingSecret)
       throw new Error("JWT_SECRET is required for authenticated Queue ingress");
-    const container = getContainer(env.NEXI_API_CONTAINER, "nexi-api");
+    const container = await getRunningNexiContainer(env);
 
     for (const message of batch.messages) {
       if (!validQueueEnvelope(message.body)) {
@@ -743,7 +952,7 @@ export default {
 
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    const container = getContainer(env.NEXI_API_CONTAINER, "nexi-api");
+    const container = await getRunningNexiContainer(env);
 
     if (url.pathname === "/healthz") {
       const response = Response.json({
