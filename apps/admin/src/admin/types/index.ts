@@ -278,6 +278,11 @@ export interface Network {
   minWithdrawal: string;
   withdrawalFee: string;
   confirmations: number;
+  maxDeposit?: string;
+  maxWithdrawal?: string;
+  depositEnabled?: boolean;
+  withdrawEnabled?: boolean;
+  currencyId?: number;
   enabled: boolean;
 }
 
@@ -327,9 +332,17 @@ export interface SpotOrder {
   createdAt: string;
 }
 
-/** Binary durations (seconds). Canonical set only. */
-export const BINARY_DURATIONS = [30, 60, 180, 280, 420] as const;
-export type BinaryDuration = (typeof BINARY_DURATIONS)[number];
+/** Binary durations are backend-configured positive seconds. */
+export type BinaryDuration = number;
+
+export interface BinaryDurationConfiguration {
+  sourceDurationSeconds: number;
+  durationSeconds: number;
+  payoutBps: number;
+  minStake: string;
+  maxStake: string;
+  enabled: boolean;
+}
 
 export interface BinaryPair {
   id: string;
@@ -337,6 +350,7 @@ export interface BinaryPair {
   enabled: boolean;
   /** payout in bps by duration */
   payoutBps: Record<BinaryDuration, number>;
+  durationConfigs?: BinaryDurationConfiguration[];
   minStake: string;
   maxStake: string;
   exposureCap: string;
@@ -382,13 +396,7 @@ export interface WalletRow {
 }
 
 export type LedgerOperationType =
-  | "deposit"
-  | "withdrawal"
-  | "trade"
-  | "settlement"
-  | "adjustment"
-  | "fee"
-  | "reward";
+  "deposit" | "withdrawal" | "trade" | "settlement" | "adjustment" | "fee" | "reward";
 
 export type LedgerStatus = "posted" | "reversed" | "pending";
 
@@ -412,12 +420,7 @@ export interface LedgerEntry {
 }
 
 export type DepositStatus =
-  | "detected"
-  | "confirming"
-  | "confirmed"
-  | "credited"
-  | "failed"
-  | "orphaned";
+  "detected" | "confirming" | "confirmed" | "credited" | "failed" | "orphaned";
 
 export interface Deposit {
   id: string;
@@ -437,24 +440,11 @@ export interface Deposit {
 
 export type WithdrawalRiskState = "clean" | "review" | "flagged" | "blocked";
 export type WithdrawalApprovalState =
-  | "pending_review"
-  | "additional_review"
-  | "approved"
-  | "rejected";
+  "pending_review" | "additional_review" | "approved" | "rejected";
 export type WithdrawalProcessingState =
-  | "queued"
-  | "processing"
-  | "broadcast"
-  | "completed"
-  | "failed"
-  | "cancelled";
+  "queued" | "processing" | "broadcast" | "completed" | "failed" | "cancelled";
 export type WithdrawalStatus =
-  | "pending"
-  | "approved"
-  | "broadcast"
-  | "confirmed"
-  | "rejected"
-  | "cancelled";
+  "pending" | "approved" | "broadcast" | "confirmed" | "rejected" | "cancelled";
 
 export interface Withdrawal {
   id: string;
@@ -637,7 +627,8 @@ export interface TranslationKey {
   editor?: string;
 }
 
-export type SettlementState = "open" | "settling" | "win" | "loss" | "error";
+export type SettlementState =
+  "open" | "settling" | "win" | "loss" | "draw" | "refund" | "failed" | "cancelled" | "error";
 
 export interface SettlementRecord {
   id: string;
@@ -670,10 +661,39 @@ export interface ExposureRow {
 export interface Announcement {
   id: string;
   title: string;
+  body?: string;
   status: "draft" | "scheduled" | "published" | "archived";
   locale: string;
   scheduledAt?: string;
   publishedAt?: string;
+}
+
+export interface AdminMessage {
+  id: string;
+  senderId: string;
+  recipientId: string;
+  body: string;
+  deliveryState: string;
+  createdAt: string;
+}
+
+export interface AdminNotification {
+  id: string;
+  userId: string;
+  type: string;
+  title: string;
+  body: string;
+  readAt?: string;
+  createdAt: string;
+}
+
+export interface AdminLearnArticle {
+  id: string;
+  slug: string;
+  title: string;
+  body: string;
+  status: string;
+  updatedAt: string;
 }
 
 export interface HealthCheck {
