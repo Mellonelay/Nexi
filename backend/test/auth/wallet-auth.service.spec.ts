@@ -102,6 +102,7 @@ describe('WalletAuthService', () => {
     await expect((service as any).getOrCreateUserOnD1('0xdef', 1)).resolves.toMatchObject({ id: 'user-2', userCode: 100002 });
     expect(d1.createWalletUser).toHaveBeenCalledTimes(2);
     for (const call of d1.createWalletUser.mock.calls) {
+      expect(call[0].userId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
       expect(call[0].userCode).toBeGreaterThanOrEqual(100000);
       expect(call[0].userCode).toBeLessThan(1000000);
     }

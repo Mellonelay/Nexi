@@ -49,11 +49,11 @@ export class MarketKlineService {
       where: { pairId_interval_openTime: { pairId: pair.id, interval: normalized.interval, openTime: normalized.openTime } },
       update: {
         closeTime: normalized.closeTime,
-        open: normalized.open,
-        high: normalized.high,
-        low: normalized.low,
-        close: normalized.close,
-        volume: normalized.volume,
+        open: this.storageDecimal(normalized.open),
+        high: this.storageDecimal(normalized.high),
+        low: this.storageDecimal(normalized.low),
+        close: this.storageDecimal(normalized.close),
+        volume: this.storageDecimal(normalized.volume),
         provider: normalized.provider,
         source: normalized.source,
         observedAt: normalized.observedAt,
@@ -64,11 +64,11 @@ export class MarketKlineService {
         interval: normalized.interval,
         openTime: normalized.openTime,
         closeTime: normalized.closeTime,
-        open: normalized.open,
-        high: normalized.high,
-        low: normalized.low,
-        close: normalized.close,
-        volume: normalized.volume,
+        open: this.storageDecimal(normalized.open),
+        high: this.storageDecimal(normalized.high),
+        low: this.storageDecimal(normalized.low),
+        close: this.storageDecimal(normalized.close),
+        volume: this.storageDecimal(normalized.volume),
         provider: normalized.provider,
         source: normalized.source,
         observedAt: normalized.observedAt,
@@ -114,10 +114,10 @@ export class MarketKlineService {
           interval: candidate.interval,
           openTime,
           closeTime: candidate.closeTime,
-          open: candidate.open,
-          high: candidate.high,
-          low: candidate.low,
-          close: candidate.close,
+          open: this.storageDecimal(candidate.open),
+          high: this.storageDecimal(candidate.high),
+          low: this.storageDecimal(candidate.low),
+          close: this.storageDecimal(candidate.close),
           volume: null,
           provider: candidate.provider,
           source: candidate.source,
@@ -132,9 +132,9 @@ export class MarketKlineService {
       where: { id: existing.id },
       data: {
         closeTime: candidate.closeTime,
-        high: existing.high.gt(candidate.high) ? existing.high : candidate.high,
-        low: existing.low.lt(candidate.low) ? existing.low : candidate.low,
-        close: candidate.close,
+        high: this.storageDecimal(new Prisma.Decimal(existing.high).gt(candidate.high) ? new Prisma.Decimal(existing.high) : candidate.high),
+        low: this.storageDecimal(new Prisma.Decimal(existing.low).lt(candidate.low) ? new Prisma.Decimal(existing.low) : candidate.low),
+        close: this.storageDecimal(candidate.close),
         // Provider ticker volume is 24h aggregate data, not per-candle volume.
         volume: null,
         provider: candidate.provider,
@@ -144,10 +144,14 @@ export class MarketKlineService {
     });
   }
 
+  private storageDecimal(value: Prisma.Decimal | null): Prisma.Decimal | string | null {
+    return this.d1.isEnabled() ? value?.toString() ?? null : value;
+  }
+
   private toContract(row: {
     symbol: string; interval: string; openTime: Date; closeTime: Date | null;
-    open: Prisma.Decimal; high: Prisma.Decimal; low: Prisma.Decimal; close: Prisma.Decimal;
-    volume: Prisma.Decimal | null; provider: string; source: string; observedAt: Date; receivedAt: Date;
+    open: Prisma.Decimal | string; high: Prisma.Decimal | string; low: Prisma.Decimal | string; close: Prisma.Decimal | string;
+    volume: Prisma.Decimal | string | null; provider: string; source: string; observedAt: Date; receivedAt: Date;
   }) {
     return {
       time: Math.floor(row.openTime.getTime() / 1000),

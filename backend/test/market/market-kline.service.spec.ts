@@ -5,7 +5,7 @@ import { MarketKlineService } from '../../src/market/market-kline.service';
 describe('MarketKlineService quote aggregation', () => {
   const disabledD1 = () => ({ isEnabled: jest.fn().mockReturnValue(false) });
 
-  const createService = () => {
+  const createService = (d1Enabled = false) => {
     const rows = new Map<string, any>();
     const keyFor = (where: any) => {
       const key = where.pairId_interval_openTime;
@@ -28,7 +28,7 @@ describe('MarketKlineService quote aggregation', () => {
         }),
       },
     };
-    return { service: new MarketKlineService(prisma, disabledD1() as never), prisma };
+    return { service: new MarketKlineService(prisma, { isEnabled: jest.fn().mockReturnValue(d1Enabled), ...(d1Enabled ? prisma : {}) } as never), prisma };
   };
 
   it('creates a 1m candle from a provider quote with explicit derived lineage and no fabricated volume', async () => {
@@ -66,6 +66,17 @@ describe('MarketKlineService quote aggregation', () => {
     expect(data.low.toString()).toBe('29980');
     expect(data.close.toString()).toBe('29980');
     expect(data.volume).toBeNull();
+  });
+
+  it('writes string decimals through D1 and compares string-backed existing candles', async () => {
+    const { service, prisma } = createService(true);
+    const observedAt = new Date('2026-08-10T12:34:00.000Z');
+
+    await (service as any).accumulateQuote({ symbol: 'BTCUSDT', price: '30000', provider: 'provider-a', source: 'websocket', observedAt });
+    await (service as any).accumulateQuote({ symbol: 'BTCUSDT', price: '30120', provider: 'provider-a', source: 'websocket', observedAt: new Date('2026-08-10T12:34:30.000Z') });
+
+    expect(prisma.marketKline.create.mock.calls[0][0].data.open).toBe('30000');
+    expect(prisma.marketKline.update.mock.calls[0][0].data).toMatchObject({ high: '30120', low: '30000', close: '30120' });
   });
 
   it('limits the newest candles and returns them in ascending chart order', async () => {

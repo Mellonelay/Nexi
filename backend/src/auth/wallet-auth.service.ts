@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, Optional, ServiceUnavailableException,
 import { ConfigService } from '@nestjs/config';
 import { getAddress, verifyMessage } from 'viem';
 import { ParsedMessage } from '@spruceid/siwe-parser';
-import { randomBytes, randomInt } from 'node:crypto';
+import { randomBytes, randomInt, randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { AuthSessionMetadata } from './auth-session.service';
@@ -142,7 +142,7 @@ export class WalletAuthService {
       const existing = await this.d1!.getUserByWallet(address);
       if (existing) return { id: existing.id, userCode: existing.userCode, email: existing.email ?? null, displayName: existing.displayName ?? null, role: existing.role, walletIdentity: { address: existing.walletAddress, chainId: existing.walletChainId }, kyc: existing.kycStatus ? { status: existing.kycStatus } : null };
       try {
-        const created = await this.d1!.createWalletUser({ userId: randomBytes(16).toString('hex'), userCode: randomInt(USER_CODE_MIN, USER_CODE_MAX), address, chainId });
+        const created = await this.d1!.createWalletUser({ userId: randomUUID(), userCode: randomInt(USER_CODE_MIN, USER_CODE_MAX), address, chainId });
         return { id: created.id, userCode: created.userCode, email: created.email ?? null, displayName: created.displayName ?? null, role: created.role, walletIdentity: { address: created.walletAddress, chainId: created.walletChainId }, kyc: created.kycStatus ? { status: created.kycStatus } : null };
       } catch (error) {
         if (!(error instanceof BadRequestException) || !error.message.includes('D1 wallet user could not be created') || attempt === 7) throw error;

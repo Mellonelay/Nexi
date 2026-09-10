@@ -71,6 +71,7 @@
       "database_id": "522177fa-ac42-4d8f-a6a8-b34eed262f15",
       "preview_database_id": "522177fa-ac42-4d8f-a6a8-b34eed262f15",
       "migrations_dir": "../backend/prisma/migrations-d1",
+      "migrations_pattern": "../backend/prisma/migrations-d1/**/*.sql",
     },
   ],
   "containers": [

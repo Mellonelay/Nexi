@@ -9,6 +9,7 @@ test('Container class owns startup defaults and Worker delegates request startup
   assert.match(source, /requiredPorts\s*=\s*\[3000\]/);
   assert.match(source, /sleepAfter\s*=\s*["']168h["']/);
   assert.match(source, /async\s+onActivityExpired\s*\(\)\s*\{[\s\S]*?policy:\s*["']continuous-runtime["']/);
+  assert.doesNotMatch(source, /async fetch\(request, env, ctx\)[\s\S]*?await getRunningNexiContainer\(env\)/);
   assert.doesNotMatch(source, /async fetch\(request, env, ctx\)[\s\S]*?container\.startAndWaitForPorts\s*\(/);
   assert.doesNotMatch(source, /async fetch\(request, env, ctx\)[\s\S]*?container\.start\(\{\s*envVars:\s*containerEnv\(env\)/);
   assert.match(source, /return\s+(?:await\s+)?container\.fetch\(request\)/);

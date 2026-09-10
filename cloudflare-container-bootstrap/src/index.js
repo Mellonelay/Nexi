@@ -58,8 +58,12 @@ function containerEnv(env) {
   );
 }
 
+function getNexiContainer(env) {
+  return getContainer(env.NEXI_API_CONTAINER, "nexi-api");
+}
+
 async function getRunningNexiContainer(env) {
-  const container = getContainer(env.NEXI_API_CONTAINER, "nexi-api");
+  const container = getNexiContainer(env);
   await container.startAndWaitForPorts({
     ports: [3000],
     cancellationOptions: { portReadyTimeoutMS: 60_000 },
@@ -952,7 +956,7 @@ export default {
 
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    const container = await getRunningNexiContainer(env);
+    const container = getNexiContainer(env);
 
     if (url.pathname === "/healthz") {
       const response = Response.json({

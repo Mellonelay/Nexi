@@ -12,7 +12,7 @@ test("all Container callers explicitly wait for cold-start readiness", () => {
   assert.match(helper, /await container\.startAndWaitForPorts\(\{/);
   assert.match(helper, /ports: \[3000\]/);
   assert.match(helper, /portReadyTimeoutMS: 60_000/);
-  assert.equal(source.match(/await getRunningNexiContainer\(env\)/g)?.length, 3);
+  assert.equal(source.match(/await getRunningNexiContainer\(env\)/g)?.length, 2);
 });
 
 const classifierStart = source.indexOf("function classifyD1Sql");
