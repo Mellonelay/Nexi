@@ -21,7 +21,7 @@ export default function AssetDetailPage() {
   const { marketPairs, metal, shares, forex } = useMarketData();
   const [timeframe, setTimeframe] = useState('1h');
   const [routeReady, setRouteReady] = useState(false);
-  const timeframeOptions = ['1m', '5m', '15m', '1h', '1d'] as const;
+  const timeframeOptions = ['1m', '5m', '15m', '30m', '1h', '4h', '1d'] as const;
 
   useEffect(() => {
     const normalizedRoute = normalizePair(routeSymbol);

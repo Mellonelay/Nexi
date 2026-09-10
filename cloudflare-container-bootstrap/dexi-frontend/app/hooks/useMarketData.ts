@@ -30,7 +30,7 @@ export interface BinaryTimeframe { name: string; seconds: number; profit: number
 type MarketBuckets = { marketPairs: MarketPair[]; metal: MarketPair[]; shares: MarketPair[]; forex: MarketPair[] };
 
 const pairFor = (asset: AssetDefinition, values: Partial<MarketPair> = {}): MarketPair => ({
-  assetId: asset.id, category: asset.category, symbol: asset.symbol.replace('.US', '') + (asset.category === 'Crypto' ? 'USDT' : ''), pair: asset.pair,
+  assetId: asset.id, category: asset.category, symbol: asset.category === 'Stocks' ? `${asset.displaySymbol}USDT` : asset.symbol.replace('.US', '') + (asset.category === 'Crypto' ? 'USDT' : ''), pair: asset.pair,
   displaySymbol: asset.displaySymbol, name: asset.name, price: null, change: null, icon: asset.iconKey ?? asset.displaySymbol.slice(0, 3), vol: null, precision: asset.precision,
   source: 'fallback', provider: 'FALLBACK', dataState: 'UNAVAILABLE', ...values,
 });

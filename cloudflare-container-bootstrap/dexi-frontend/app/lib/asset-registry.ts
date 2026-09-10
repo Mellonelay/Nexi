@@ -80,7 +80,7 @@ export const ASSET_REGISTRY_COUNT = ASSET_REGISTRY.length;
 
 const aliases = new Map<string, AssetDefinition>();
 for (const asset of ASSET_REGISTRY) {
-  for (const value of [asset.id, asset.symbol, asset.pair, asset.displaySymbol, asset.symbol.replace('.US', ''), asset.pair.replace('/USDT', '')]) aliases.set(value.replaceAll('/', '').toUpperCase(), asset);
+  for (const value of [asset.id, asset.symbol, asset.pair, asset.displaySymbol, asset.symbol.replace('.US', ''), asset.pair.replace('/USDT', ''), asset.category === 'Stocks' ? `${asset.displaySymbol}USDT` : '']) aliases.set(value.replaceAll('/', '').toUpperCase(), asset);
 }
 
 export function findAsset(value: string | undefined | null): AssetDefinition | undefined {

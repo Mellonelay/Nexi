@@ -83,3 +83,20 @@ test('preserves stale market values while exposing the stale state', () => {
   assert.equal(instrument.change24h, -1.5);
   assert.equal(instrument.volume24h, 25);
 });
+
+
+test('maps canonical stock rows to the backend Kline symbol without provider suffix leakage', () => {
+  const instrument = instrumentFromMarketPair({
+    assetId: 'stock:aapl',
+    symbol: 'AAPLUSDT',
+    displaySymbol: 'AAPL',
+    name: 'Apple',
+    price: 190,
+    change: 0.5,
+    icon: 'aapl.svg',
+    dataState: 'LIVE',
+  });
+  assert.equal(instrument.category, 'Shares');
+  assert.equal(instrument.pair, 'AAPL/USDT');
+  assert.equal(normalizePair(instrument.pair), 'AAPLUSDT');
+});

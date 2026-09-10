@@ -116,6 +116,7 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
 
           {/* Panel — slides in from right */}
           <motion.aside
+            id="nexi-notifications-panel"
             role="dialog"
             aria-modal="true"
             aria-label="Notifications"

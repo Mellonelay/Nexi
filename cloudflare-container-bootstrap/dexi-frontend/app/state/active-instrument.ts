@@ -48,6 +48,10 @@ const pairForSymbol = (symbol: string, category: InstrumentCategory) => {
   if (symbol.includes('/')) return symbol.toUpperCase();
   if (category === 'Crypto' && symbol.endsWith('USDT')) return `${symbol.slice(0, -4)}/USDT`;
   if (category === 'Forex' && symbol.length === 6) return `${symbol.slice(0, 3)}/${symbol.slice(3)}`;
+  if (category === 'Shares') {
+    const canonical = symbol.toUpperCase().replace('.US', '');
+    return canonical.endsWith('USDT') ? `${canonical.slice(0, -4)}/USDT` : `${canonical}/USDT`;
+  }
   return symbol.toUpperCase();
 };
 
