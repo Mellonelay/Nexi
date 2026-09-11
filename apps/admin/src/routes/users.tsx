@@ -93,6 +93,12 @@ function Inner() {
   const canRestrict = session.can("users.restrict");
   const canEntitlements = session.can("users.entitlements");
   const canRevoke = session.can("sessions.revoke");
+  const canSetStatus = canRestrict && provider.supports?.("setUserStatus") !== false;
+  const canUpdateEntitlements =
+    canEntitlements && provider.supports?.("updateUserEntitlements") !== false;
+  const canUpdateRestrictions =
+    canRestrict && provider.supports?.("updateUserRestrictions") !== false;
+  const canSetSandbox = canEntitlements && provider.supports?.("setUserSandbox") !== false;
 
   const columns: DataTableColumn<User>[] = [
     {
@@ -311,7 +317,7 @@ function Inner() {
                 variant="outline"
                 size="sm"
                 data-testid="user-detail-entitlements"
-                disabled={!canEntitlements}
+                disabled={!canUpdateEntitlements}
                 onClick={() => {
                   setEntitlementUser(selected);
                 }}
@@ -323,7 +329,7 @@ function Inner() {
                 variant="outline"
                 size="sm"
                 data-testid="user-detail-restrictions"
-                disabled={!canRestrict}
+                disabled={!canUpdateRestrictions}
                 onClick={() => {
                   setRestrictionUser(selected);
                 }}
@@ -335,7 +341,7 @@ function Inner() {
                 variant="outline"
                 size="sm"
                 data-testid="user-detail-sandbox"
-                disabled={!canEntitlements}
+                disabled={!canSetSandbox}
                 onClick={() =>
                   setPending({ kind: "sandbox", user: selected, sandbox: !selected.sandbox })
                 }
@@ -365,7 +371,7 @@ function Inner() {
                     size="sm"
                     variant="outline"
                     data-testid="user-detail-restrict"
-                    disabled={!canRestrict}
+                    disabled={!canSetStatus}
                     onClick={() =>
                       setPending({ kind: "status", user: selected, status: "restricted" })
                     }
@@ -377,7 +383,7 @@ function Inner() {
                     size="sm"
                     variant="destructive"
                     data-testid="user-detail-suspend"
-                    disabled={!canRestrict}
+                    disabled={!canSetStatus}
                     onClick={() => setPending({ kind: "status", user: selected, status: "frozen" })}
                   >
                     <Ban className="mr-1 h-3.5 w-3.5" />
@@ -393,7 +399,7 @@ function Inner() {
                   size="sm"
                   variant="default"
                   data-testid="user-detail-reactivate"
-                  disabled={!canRestrict}
+                  disabled={!canSetStatus}
                   onClick={() => setPending({ kind: "status", user: selected, status: "active" })}
                 >
                   <ShieldCheck className="mr-1 h-3.5 w-3.5" />

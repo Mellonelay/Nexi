@@ -45,7 +45,8 @@ function Inner() {
     );
   const role = q.data?.find((r) => r.id === roleId);
   const current = new Set(role?.permissions ?? []);
-  const canEdit = session.can("roles.edit");
+  const canEdit =
+    session.can("roles.edit") && provider.supports?.("updateRolePermission") !== false;
   return (
     <GovernanceShell
       title="Roles & Permissions"

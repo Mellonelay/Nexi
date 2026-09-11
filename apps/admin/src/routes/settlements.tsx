@@ -60,7 +60,8 @@ function Inner() {
       </Shell>
     );
 
-  const canCorrect = session.can("binary.settle");
+  const canCorrect =
+    session.can("binary.settle") && provider.supports?.("correctSettlement") !== false;
 
   const counts = {
     open: rows.filter((r) => r.state === "open").length,

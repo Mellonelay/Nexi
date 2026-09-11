@@ -75,6 +75,8 @@ export interface AdminIdentity {
 }
 
 export interface AdminDataProvider {
+  /** Reports whether an optional Admin operation has a canonical live authority. */
+  supports?(operation: keyof AdminDataProvider): boolean;
   /** Live Admin identity boundary. Mock providers may omit this. */
   getAdminIdentity?(): Promise<AdminIdentity>;
   /** Users */

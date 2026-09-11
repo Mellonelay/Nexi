@@ -63,6 +63,8 @@ function Inner() {
     );
 
   const canEdit = session.can("assets.edit");
+  const canUpdate = canEdit && provider.supports?.("updateAsset") !== false;
+  const canReorder = canEdit && provider.supports?.("reorderAssets") !== false;
   const sorted = [...assets].sort((a, b) => a.order - b.order);
 
   async function move(id: string, dir: -1 | 1) {
@@ -202,7 +204,7 @@ function Inner() {
             <Button
               variant="ghost"
               size="icon"
-              disabled={!canEdit || sorted[0]?.id === a.id}
+              disabled={!canReorder || sorted[0]?.id === a.id}
               data-testid={`asset-up-${a.id}`}
               onClick={() => move(a.id, -1)}
             >
@@ -211,7 +213,7 @@ function Inner() {
             <Button
               variant="ghost"
               size="icon"
-              disabled={!canEdit || sorted[sorted.length - 1]?.id === a.id}
+              disabled={!canReorder || sorted[sorted.length - 1]?.id === a.id}
               data-testid={`asset-down-${a.id}`}
               onClick={() => move(a.id, 1)}
             >
@@ -333,7 +335,7 @@ function Inner() {
                 variant="outline"
                 size="sm"
                 data-testid="asset-detail-edit"
-                disabled={!canEdit}
+                disabled={!canUpdate}
                 onClick={() => setEditing(selected)}
               >
                 Edit

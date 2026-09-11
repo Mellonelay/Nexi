@@ -40,10 +40,40 @@ import type {
   AdminMessage,
   AdminNotification,
   AdminLearnArticle,
+  ExposureRow,
+  Locale,
+  NavItem,
+  NavSurface,
+  PublicBanner,
+  PublicRoute,
+  PublicRouteState,
+  QuotesCategory,
+  SupportEntryPoint,
+  TranslationKey,
 } from "../types";
 
 type ApiConfig = { baseUrl: string; getToken: () => Promise<string> };
 type JsonRecord = Record<string, unknown>;
+
+const UNSUPPORTED_OPERATIONS = new Set<keyof AdminDataProvider>([
+  "setUserStatus",
+  "updateUserEntitlements",
+  "updateUserRestrictions",
+  "setUserSandbox",
+  "assignKycReviewer",
+  "updateKycNotes",
+  "updateAsset",
+  "reorderAssets",
+  "failoverFeed",
+  "updateSpotPair",
+  "correctSettlement",
+  "listReconciliation",
+  "assignReconciliationOwner",
+  "setReconciliationStatus",
+  "addReconciliationNote",
+  "setAdminStatus",
+  "updateRolePermission",
+]);
 
 function boundedIdempotencyKey(prefix: string, values: string[]): string {
   const input = values.join(":");
@@ -189,6 +219,10 @@ function scope(commandType: string): ApprovalRequest["scope"] {
  */
 export class NexiAdminApiProvider implements AdminDataProvider {
   constructor(private readonly config: ApiConfig) {}
+
+  supports(operation: keyof AdminDataProvider): boolean {
+    return !UNSUPPORTED_OPERATIONS.has(operation);
+  }
 
   private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const token = await this.config.getToken();

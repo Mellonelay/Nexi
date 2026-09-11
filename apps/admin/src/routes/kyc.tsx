@@ -72,6 +72,9 @@ function Inner() {
     );
 
   const canDecide = session.can("kyc.decide");
+  const canAssignReviewer =
+    canDecide && provider.supports?.("assignKycReviewer") !== false;
+  const canUpdateNotes = canDecide && provider.supports?.("updateKycNotes") !== false;
 
   const userFor = (id: string): User | undefined => users.find((u) => u.id === id);
 
@@ -291,6 +294,7 @@ function Inner() {
                 variant="outline"
                 size="sm"
                 data-testid="kyc-assign"
+                disabled={!canAssignReviewer}
                 onClick={() => setAssignFor(selected)}
               >
                 <UserCog className="mr-1 h-3.5 w-3.5" />
@@ -300,6 +304,7 @@ function Inner() {
                 variant="outline"
                 size="sm"
                 data-testid="kyc-notes"
+                disabled={!canUpdateNotes}
                 onClick={() => setNotesFor(selected)}
               >
                 <MessageSquareWarning className="mr-1 h-3.5 w-3.5" />

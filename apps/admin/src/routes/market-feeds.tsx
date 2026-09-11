@@ -59,6 +59,7 @@ function Inner() {
     );
 
   const canEdit = session.can("feeds.edit");
+  const canFailover = canEdit && provider.supports?.("failoverFeed") !== false;
   const liveCount = feeds.filter((f) => f.status === "LIVE").length;
   const staleCount = feeds.filter((f) => f.status === "STALE").length;
   const downCount = feeds.filter((f) => f.status === "UNAVAILABLE").length;
@@ -147,7 +148,7 @@ function Inner() {
                     variant="outline"
                     size="sm"
                     data-testid={`feed-failover-${f.id}`}
-                    disabled={!canEdit}
+                    disabled={!canFailover}
                     onClick={() => setPending({ kind: "failover", row: f })}
                   >
                     <Radio className="mr-1 h-3.5 w-3.5" /> Failover
@@ -220,7 +221,7 @@ function Inner() {
                   variant="outline"
                   size="sm"
                   data-testid="feed-detail-failover"
-                  disabled={!canEdit}
+                  disabled={!canFailover}
                   onClick={() => setPending({ kind: "failover", row: selected })}
                 >
                   <Radio className="mr-1 h-3.5 w-3.5" /> Failover

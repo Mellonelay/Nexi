@@ -145,6 +145,7 @@ function PairsPanel({ pairs }: { pairs: SpotPair[] }) {
   const session = useAdminSession();
   const canEdit = session.can("spot.edit");
   const canPause = session.can("spot.pause");
+  const canUpdatePair = canEdit && provider.supports?.("updateSpotPair") !== false;
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editing, setEditing] = useState<SpotPair | null>(null);
@@ -280,7 +281,7 @@ function PairsPanel({ pairs }: { pairs: SpotPair[] }) {
               variant="outline"
               size="sm"
               data-testid={`pair-edit-${p.id}`}
-              disabled={!canEdit}
+              disabled={!canUpdatePair}
               onClick={() => setEditing(p)}
             >
               Edit
@@ -385,7 +386,7 @@ function PairsPanel({ pairs }: { pairs: SpotPair[] }) {
                 variant="outline"
                 size="sm"
                 data-testid="pair-detail-edit"
-                disabled={!canEdit}
+                disabled={!canUpdatePair}
                 onClick={() => setEditing(selected)}
               >
                 Edit

@@ -30,6 +30,8 @@ function Page() {
 function Inner() {
   const provider = useAdminData();
   const session = useAdminSession();
+  const canSetStatus =
+    session.can("admins.edit") && provider.supports?.("setAdminStatus") !== false;
   const receipt = useReceipt();
   const adminsQ = useAdminQuery((p) => p.listAdmins());
   const [selected, setSelected] = useState<AdminUser | null>(null);
@@ -161,7 +163,7 @@ function Inner() {
             </Button>
             <Button
               size="sm"
-              disabled={!session.can("admins.edit")}
+              disabled={!canSetStatus}
               onClick={() =>
                 setPending({
                   admin: a,
@@ -252,7 +254,7 @@ function Inner() {
               )}
               <Button
                 variant="outline"
-                disabled={!session.can("admins.edit")}
+                disabled={!canSetStatus}
                 onClick={() =>
                   setPending({
                     admin: selected,
