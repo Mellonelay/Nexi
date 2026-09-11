@@ -96,6 +96,10 @@
           "name": "nexi-cloudflare-staging-20260909",
           "public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILvuJR/e2MyJwet6Gj/74x5UrTMv8FvQ8+KQ6pidZGxN nexi-cloudflare-staging-20260909",
         },
+        {
+          "name": "nexi-codex-staging-20260911",
+          "public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKcbNvy2swYMg2wyX0hgwKOXCznao8bmt/QDaoSpbuCQ nexi-codex-staging-20260911",
+        },
       ],
     },
   ],
