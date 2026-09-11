@@ -237,6 +237,40 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     return { ok: result.ok !== false, auditId: stringValue(result.auditId ?? result.id) };
   }
 
+  private async getSystemConfigMap(): Promise<Record<string, string>> {
+    const payload = await this.request<{ config?: Record<string, unknown> }>("/admin/system-config");
+    const config = record(payload.config);
+    return Object.fromEntries(
+      Object.entries(config).flatMap(([key, value]) =>
+        typeof value === "string" ? [[key, value] as const] : [],
+      ),
+    );
+  }
+
+  private async readJsonConfig<T>(key: string, fallback: T): Promise<T> {
+    const config = await this.getSystemConfigMap();
+    const raw = config[key];
+    if (!raw) return fallback;
+    try {
+      return JSON.parse(raw) as T;
+    } catch {
+      throw new NexiAdminApiError(502, `Invalid JSON stored for system config ${key}`);
+    }
+  }
+
+  private async writeJsonConfig<T>(
+    key: string,
+    value: T,
+    description: string,
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult> {
+    const result = await this.request<JsonRecord>("/admin/system-config", {
+      method: "POST",
+      body: JSON.stringify({ key, value: JSON.stringify(value), description, reason: ctx.reason }),
+    });
+    return { ok: true, auditId: stringValue(result.auditId ?? result.id) };
+  }
+
   async login(email: string, password: string) {
     return this.request<{ access_token: string; refresh_token?: string; user: JsonRecord }>(
       "/admin/auth/login",
@@ -450,10 +484,11 @@ export class NexiAdminApiProvider implements AdminDataProvider {
           return stringValue(c.capabilityKey).endsWith(`:${name}`) && c.status === "ACTIVE";
         });
       const categoryValue = stringValue(row.category, "crypto");
-      const category: AssetCategory =
-        (["crypto", "stablecoin", "fiat_proxy", "stock", "forex", "metal"] as const).includes(categoryValue as AssetCategory)
-          ? categoryValue as AssetCategory
-          : "crypto";
+      const category: AssetCategory = (
+        ["crypto", "stablecoin", "fiat_proxy", "stock", "forex", "metal"] as const
+      ).includes(categoryValue as AssetCategory)
+        ? (categoryValue as AssetCategory)
+        : "crypto";
       return {
         id: stringValue(row.id, symbol),
         symbol,
@@ -487,7 +522,10 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       const row = record(value);
       const asset = record(row.asset);
       const assetSymbol = stringValue(asset.symbol);
-      const currency = currencies.find((item) => stringValue(item.symbol).toUpperCase() === assetSymbol.toUpperCase()) ?? {};
+      const currency =
+        currencies.find(
+          (item) => stringValue(item.symbol).toUpperCase() === assetSymbol.toUpperCase(),
+        ) ?? {};
       return {
         id: stringValue(row.id),
         name: stringValue(row.name),
@@ -533,9 +571,16 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       pair: stringValue(pair.symbol, "UNKNOWN"),
       provider,
       fallback: undefined,
-      latencyMs: Number.isFinite(receivedAt) && Number.isFinite(observedAt) ? Math.max(0, receivedAt - observedAt) : 0,
+      latencyMs:
+        Number.isFinite(receivedAt) && Number.isFinite(observedAt)
+          ? Math.max(0, receivedAt - observedAt)
+          : 0,
       ageMs: Number.isFinite(observedAt) ? Math.max(0, Date.now() - observedAt) : 0,
-      status: !active ? "DISABLED" : stringValue(latest.provider) !== provider ? "UNAVAILABLE" : state,
+      status: !active
+        ? "DISABLED"
+        : stringValue(latest.provider) !== provider
+          ? "UNAVAILABLE"
+          : state,
     };
   }
 
@@ -627,10 +672,18 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     return this.requestMutation(`/admin/spot/orders/${encodeURIComponent(id)}/cancel`, ctx);
   }
   getMarginConfiguration(): Promise<{ maintenanceRatio: number; leverages: number[] }> {
-    return this.request<{ maintenanceRatio: number; leverages: number[] }>("/admin/spot/margin/config");
+    return this.request<{ maintenanceRatio: number; leverages: number[] }>(
+      "/admin/spot/margin/config",
+    );
   }
-  updateMarginConfiguration(config: { maintenanceRatio: number; leverages: number[] }, ctx: ConsequentialContext): Promise<MutationResult> {
-    return this.requestMutation("/admin/spot/margin/config", ctx, { maintenanceRatio: config.maintenanceRatio, leverages: config.leverages.join(",") });
+  updateMarginConfiguration(
+    config: { maintenanceRatio: number; leverages: number[] },
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult> {
+    return this.requestMutation("/admin/spot/margin/config", ctx, {
+      maintenanceRatio: config.maintenanceRatio,
+      leverages: config.leverages.join(","),
+    });
   }
   async listBinaryPairs(): Promise<BinaryPair[]> {
     const rows = await this.request<unknown[]>("/admin/binary/config");
@@ -642,10 +695,15 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       grouped.set(pair, [...(grouped.get(pair) ?? []), row]);
     }
     return [...grouped.entries()].map(([symbol, configs]) => {
-      const sortedConfigs = [...configs].sort((a, b) => Number(a.durationSeconds) - Number(b.durationSeconds));
+      const sortedConfigs = [...configs].sort(
+        (a, b) => Number(a.durationSeconds) - Number(b.durationSeconds),
+      );
       const current = sortedConfigs[0] ?? {};
       const payoutBps = Object.fromEntries(
-        sortedConfigs.map((config) => [Number(config.durationSeconds), Math.round(Number(config.payoutRate ?? 0) * 10000)]),
+        sortedConfigs.map((config) => [
+          Number(config.durationSeconds),
+          Math.round(Number(config.payoutRate ?? 0) * 10000),
+        ]),
       ) as BinaryPair["payoutBps"];
       const durationConfigs = sortedConfigs.map((config) => ({
         sourceDurationSeconds: Number(config.durationSeconds),
@@ -710,10 +768,7 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       enabled: !paused,
     });
   }
-  async settleBinaryPosition(
-    id: string,
-    ctx: ConsequentialContext,
-  ): Promise<MutationResult> {
+  async settleBinaryPosition(id: string, ctx: ConsequentialContext): Promise<MutationResult> {
     return this.requestMutation(`/admin/binary/positions/${encodeURIComponent(id)}/settle`, ctx);
   }
   listWallets(): Promise<WalletRow[]> {
@@ -1123,7 +1178,8 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     ctx: ConsequentialContext,
   ) {
     const network = (await this.listNetworks()).find((item) => item.id === id);
-    if (!network?.currencyId) throw new NexiAdminApiError(404, "Canonical currency configuration not found for network");
+    if (!network?.currencyId)
+      throw new NexiAdminApiError(404, "Canonical currency configuration not found for network");
     const payload: JsonRecord = {};
     if (patch.decimals !== undefined) payload.decimals = patch.decimals;
     if (patch.minDeposit !== undefined) payload.minDeposit = Number(patch.minDeposit);
@@ -1135,7 +1191,13 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     if (patch.depositEnabled !== undefined) payload.depositEnabled = patch.depositEnabled;
     if (patch.withdrawEnabled !== undefined) payload.withdrawEnabled = patch.withdrawEnabled;
     if (Object.keys(payload).length === 0) return { ok: true, auditId: "" };
-    return this.requestMutation(`/admin/currencies/${network.currencyId}`, ctx, payload, [network.assetSymbol], "PATCH");
+    return this.requestMutation(
+      `/admin/currencies/${network.currencyId}`,
+      ctx,
+      payload,
+      [network.assetSymbol],
+      "PATCH",
+    );
   }
   failoverFeed(id: string, _ctx: ConsequentialContext) {
     return this.unsupportedAuthority(
@@ -1185,19 +1247,36 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       `/admin/binary/config?pair=${encodeURIComponent(symbol)}`,
     );
     const requestedConfigs = Array.isArray(configPatch.durationConfigs)
-      ? (configPatch.durationConfigs as Array<{ sourceDurationSeconds: number; durationSeconds: number; payoutBps: number; minStake: string; maxStake: string; enabled: boolean }>)
+      ? (configPatch.durationConfigs as Array<{
+          sourceDurationSeconds: number;
+          durationSeconds: number;
+          payoutBps: number;
+          minStake: string;
+          maxStake: string;
+          enabled: boolean;
+        }>)
       : configRows.map((row) => {
           const current = record(row);
           const duration = Number(current.durationSeconds);
-          const payout = configPatch.payoutBps && typeof configPatch.payoutBps === "object"
-            ? (configPatch.payoutBps as Record<string, unknown>)[String(duration)]
-            : undefined;
+          const payout =
+            configPatch.payoutBps && typeof configPatch.payoutBps === "object"
+              ? (configPatch.payoutBps as Record<string, unknown>)[String(duration)]
+              : undefined;
           return {
             sourceDurationSeconds: duration,
             durationSeconds: duration,
-            payoutBps: typeof payout === "number" ? payout : Math.round(Number(current.payoutRate ?? 0) * 10000),
-            minStake: typeof configPatch.minStake === "string" ? configPatch.minStake : stringValue(current.minStake),
-            maxStake: typeof configPatch.maxStake === "string" ? configPatch.maxStake : stringValue(current.maxStake),
+            payoutBps:
+              typeof payout === "number"
+                ? payout
+                : Math.round(Number(current.payoutRate ?? 0) * 10000),
+            minStake:
+              typeof configPatch.minStake === "string"
+                ? configPatch.minStake
+                : stringValue(current.minStake),
+            maxStake:
+              typeof configPatch.maxStake === "string"
+                ? configPatch.maxStake
+                : stringValue(current.maxStake),
             enabled: current.enabled !== false,
           };
         });
@@ -1215,7 +1294,13 @@ export class NexiAdminApiProvider implements AdminDataProvider {
           maxStake: Number(config.maxStake),
           enabled: config.enabled,
           reason: ctx.reason,
-          idempotencyKey: boundedIdempotencyKey("binary", [symbol, String(config.sourceDurationSeconds), String(config.durationSeconds), ctx.actor, ctx.reason]),
+          idempotencyKey: boundedIdempotencyKey("binary", [
+            symbol,
+            String(config.sourceDurationSeconds),
+            String(config.durationSeconds),
+            ctx.actor,
+            ctx.reason,
+          ]),
         }),
       });
       lastAuditId = stringValue(result.auditId ?? result.id, lastAuditId);
@@ -1266,65 +1351,108 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       `settlement correction authority is disabled for ${id}; BinaryService owns settlement outcomes`,
     );
   }
-  listExposure() {
-    return this.unsupportedAuthority(
-      "listExposure",
-      "no canonical exposure projection is currently persisted",
-    );
+  async listExposure(): Promise<ExposureRow[]> {
+    const [spotPairs, spotOrders, binaryPairs] = await Promise.all([
+      this.listSpotPairs(),
+      this.listSpotOrders(),
+      this.listBinaryPairs(),
+    ]);
+    const spot = spotPairs.map((pair) => {
+      const used = spotOrders
+        .filter((order) => order.pair === pair.symbol && order.status === "open")
+        .reduce((sum, order) => {
+          const remaining = Math.max(Number(order.size) - Number(order.filled), 0);
+          return sum + remaining * Number(order.price ?? 0);
+        }, 0);
+      const cap = Number(pair.maxNotional || 0);
+      const utilisation = cap > 0 ? used / cap : 0;
+      return {
+        id: `spot:${pair.id}`,
+        pair: pair.symbol,
+        product: "spot" as const,
+        used: String(used),
+        cap: pair.maxNotional,
+        utilisation,
+        status: utilisation >= 1 ? "over_limit" as const : utilisation >= 0.8 ? "warning" as const : "ok" as const,
+      };
+    });
+    const binary = binaryPairs.map((pair) => {
+      const used = Number(pair.exposureUsed || 0);
+      const cap = Number(pair.exposureCap || 0);
+      const utilisation = cap > 0 ? used / cap : 0;
+      return {
+        id: `binary:${pair.id}`,
+        pair: pair.symbol,
+        product: "binary" as const,
+        used: pair.exposureUsed,
+        cap: pair.exposureCap,
+        utilisation,
+        status: utilisation >= 1 ? "over_limit" as const : utilisation >= 0.8 ? "warning" as const : "ok" as const,
+      };
+    });
+    return [...spot, ...binary];
   }
-  listPublicRoutes() {
-    return this.unsupportedAuthority(
-      "listPublicRoutes",
-      "public route state has no backend persistence authority",
-    );
+  listPublicRoutes(): Promise<PublicRoute[]> {
+    return this.readJsonConfig<PublicRoute[]>("admin.frontend.routes", []);
   }
-  setPublicRouteState() {
-    return this.unsupportedAuthority(
-      "setPublicRouteState",
-      "public route state has no backend persistence authority",
-    );
+  async setPublicRouteState(
+    id: string,
+    state: PublicRouteState,
+    message: string | undefined,
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult> {
+    const routes = await this.listPublicRoutes();
+    const index = routes.findIndex((item) => item.id === id);
+    if (index < 0) throw new NexiAdminApiError(404, `Public route ${id} not found`);
+    routes[index] = { ...routes[index], state, unavailableMessage: message };
+    return this.writeJsonConfig("admin.frontend.routes", routes, "Public route visibility and maintenance state", ctx);
   }
-  reorderPublicRoutes() {
-    return this.unsupportedAuthority(
-      "reorderPublicRoutes",
-      "public route ordering has no backend persistence authority",
-    );
+  async reorderPublicRoutes(
+    orderMap: Record<string, number>,
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult> {
+    const routes = await this.listPublicRoutes();
+    const next = routes.map((item) => ({ ...item, order: orderMap[item.id] ?? item.order }));
+    return this.writeJsonConfig("admin.frontend.routes", next, "Public route ordering", ctx);
   }
-  listQuotesCategories() {
-    return this.unsupportedAuthority(
-      "listQuotesCategories",
-      "quotes categories have no backend persistence authority",
-    );
+  listQuotesCategories(): Promise<QuotesCategory[]> {
+    return this.readJsonConfig<QuotesCategory[]>("admin.frontend.quoteCategories", []);
   }
-  toggleQuotesCategory() {
-    return this.unsupportedAuthority(
-      "toggleQuotesCategory",
-      "quotes categories have no backend persistence authority",
-    );
+  async toggleQuotesCategory(id: string, ctx: ConsequentialContext): Promise<MutationResult> {
+    const categories = await this.listQuotesCategories();
+    const index = categories.findIndex((item) => item.id === id);
+    if (index < 0) throw new NexiAdminApiError(404, `Quote category ${id} not found`);
+    categories[index] = { ...categories[index], visible: !categories[index].visible };
+    return this.writeJsonConfig("admin.frontend.quoteCategories", categories, "Quotes category visibility", ctx);
   }
-  reorderQuotesCategories() {
-    return this.unsupportedAuthority(
-      "reorderQuotesCategories",
-      "quotes category ordering has no canonical backend authority",
-    );
+  async reorderQuotesCategories(
+    orderMap: Record<string, number>,
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult> {
+    const categories = await this.listQuotesCategories();
+    const next = categories.map((item) => ({ ...item, order: orderMap[item.id] ?? item.order }));
+    return this.writeJsonConfig("admin.frontend.quoteCategories", next, "Quotes category ordering", ctx);
   }
-  listBanners() {
-    return this.unsupportedAuthority(
-      "listBanners",
-      "banner persistence has no canonical backend authority",
-    );
+  listBanners(): Promise<PublicBanner[]> {
+    return this.readJsonConfig<PublicBanner[]>("admin.frontend.banners", []);
   }
-  setBannerActive() {
-    return this.unsupportedAuthority(
-      "setBannerActive",
-      "banner persistence has no canonical backend authority",
-    );
+  async setBannerActive(
+    id: string,
+    active: boolean,
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult> {
+    const banners = await this.listBanners();
+    const index = banners.findIndex((item) => item.id === id);
+    if (index < 0) throw new NexiAdminApiError(404, `Banner ${id} not found`);
+    banners[index] = { ...banners[index], active };
+    return this.writeJsonConfig("admin.frontend.banners", banners, "Public banner configuration", ctx);
   }
-  upsertBanner() {
-    return this.unsupportedAuthority(
-      "upsertBanner",
-      "banner persistence has no canonical backend authority",
-    );
+  async upsertBanner(banner: PublicBanner, ctx: ConsequentialContext): Promise<MutationResult> {
+    const banners = await this.listBanners();
+    const index = banners.findIndex((item) => item.id === banner.id);
+    if (index < 0) banners.push(banner);
+    else banners[index] = banner;
+    return this.writeJsonConfig("admin.frontend.banners", banners, "Public banner configuration", ctx);
   }
   async listIncidents(): Promise<IncidentMessage[]> {
     const rows = await this.request<unknown[]>("/admin/incidents");
@@ -1365,41 +1493,51 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     );
     return { ok: true, auditId: audit?.id ?? "" };
   }
-  listSupportEntryPoints() {
-    return this.unsupportedAuthority(
-      "listSupportEntryPoints",
-      "support entry-point configuration has no backend persistence authority",
-    );
+  listSupportEntryPoints(): Promise<SupportEntryPoint[]> {
+    return this.readJsonConfig<SupportEntryPoint[]>("admin.frontend.supportEntryPoints", []);
   }
-  updateSupportEntryPoint() {
-    return this.unsupportedAuthority(
-      "updateSupportEntryPoint",
-      "support entry-point configuration has no backend persistence authority",
-    );
+  async updateSupportEntryPoint(
+    id: string,
+    patch: Partial<Pick<SupportEntryPoint, "label" | "target" | "channel" | "visible" | "order">>,
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult> {
+    const items = await this.listSupportEntryPoints();
+    const index = items.findIndex((item) => item.id === id);
+    if (index < 0) throw new NexiAdminApiError(404, `Support entry point ${id} not found`);
+    items[index] = { ...items[index], ...patch };
+    return this.writeJsonConfig("admin.frontend.supportEntryPoints", items, "Public support entry-point configuration", ctx);
   }
-  listNavItems() {
-    return this.unsupportedAuthority(
-      "listNavItems",
-      "navigation configuration has no backend persistence authority",
-    );
+  listNavItems(): Promise<NavItem[]> {
+    return this.readJsonConfig<NavItem[]>("admin.navigation.items", []);
   }
-  updateNavItems() {
-    return this.unsupportedAuthority(
-      "updateNavItems",
-      "navigation configuration has no backend persistence authority",
-    );
+  async updateNavItems(
+    surface: NavSurface,
+    items: NavItem[],
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult> {
+    const current = await this.listNavItems();
+    const next = [...current.filter((item) => item.surface !== surface), ...items.map((item) => ({ ...item, surface }))];
+    return this.writeJsonConfig("admin.navigation.items", next, "Admin-controlled Public navigation configuration", ctx);
   }
-  listTranslationKeys() {
-    return this.unsupportedAuthority(
-      "listTranslationKeys",
-      "translation catalog has no backend persistence authority",
-    );
+  listTranslationKeys(): Promise<TranslationKey[]> {
+    return this.readJsonConfig<TranslationKey[]>("admin.localization.translations", []);
   }
-  updateTranslationValue() {
-    return this.unsupportedAuthority(
-      "updateTranslationValue",
-      "translation catalog has no backend persistence authority",
-    );
+  async updateTranslationValue(
+    id: string,
+    locale: Locale,
+    value: string,
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult> {
+    const keys = await this.listTranslationKeys();
+    const index = keys.findIndex((item) => item.id === id);
+    if (index < 0) throw new NexiAdminApiError(404, `Translation key ${id} not found`);
+    keys[index] = {
+      ...keys[index],
+      values: { ...keys[index].values, [locale]: value },
+      updatedAt: new Date().toISOString(),
+      editor: ctx.actor,
+    };
+    return this.writeJsonConfig("admin.localization.translations", keys, "Admin localization catalog", ctx);
   }
   creditDeposit(id: string, ctx: ConsequentialContext): Promise<MutationResult> {
     return this.requestMutation(`/admin/deposits/${encodeURIComponent(id)}/credit`, ctx, {}, [id]);
@@ -1477,22 +1615,115 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       }),
     );
   }
-  createAnnouncement(payload: { title: string; body: string; published?: boolean }, ctx: ConsequentialContext) {
+  createAnnouncement(
+    payload: { title: string; body: string; published?: boolean },
+    ctx: ConsequentialContext,
+  ) {
     return this.requestMutation("/communications/admin/announcements", ctx, payload);
   }
-  updateAnnouncement(id: string, payload: { title?: string; body?: string; published?: boolean }, ctx: ConsequentialContext) {
-    return this.requestMutation(`/communications/admin/announcements/${encodeURIComponent(id)}`, ctx, payload, [id], "PATCH");
+  updateAnnouncement(
+    id: string,
+    payload: { title?: string; body?: string; published?: boolean },
+    ctx: ConsequentialContext,
+  ) {
+    return this.requestMutation(
+      `/communications/admin/announcements/${encodeURIComponent(id)}`,
+      ctx,
+      payload,
+      [id],
+      "PATCH",
+    );
   }
   publishAnnouncement(id: string, ctx: ConsequentialContext) {
-    return this.requestMutation(`/communications/admin/announcements/${encodeURIComponent(id)}/publish`, ctx, {}, [id]);
+    return this.requestMutation(
+      `/communications/admin/announcements/${encodeURIComponent(id)}/publish`,
+      ctx,
+      {},
+      [id],
+    );
   }
-  listMessages(): Promise<AdminMessage[]> { return this.request<unknown[]>("/communications/admin/messages").then((rows) => rows.map((v) => { const r = record(v); return { id: stringValue(r.id), senderId: stringValue(r.senderId), recipientId: stringValue(r.recipientId), body: stringValue(r.body), deliveryState: stringValue(r.deliveryState), createdAt: stringValue(r.createdAt) }; })); }
-  listNotifications(): Promise<AdminNotification[]> { return this.request<unknown[]>("/communications/admin/notifications").then((rows) => rows.map((v) => { const r = record(v); return { id: stringValue(r.id), userId: stringValue(r.userId), type: stringValue(r.type), title: stringValue(r.title), body: stringValue(r.body), readAt: typeof r.readAt === "string" ? r.readAt : undefined, createdAt: stringValue(r.createdAt) }; })); }
-  sendNotification(payload: { userId: string; type: string; title: string; body: string }, ctx: ConsequentialContext) { return this.requestMutation("/communications/admin/notifications", ctx, payload, [payload.userId, payload.title]); }
-  listLearnArticles(): Promise<AdminLearnArticle[]> { return this.request<unknown[]>("/communications/admin/learn/articles").then((rows) => rows.map((v) => { const r = record(v); return { id: stringValue(r.id), slug: stringValue(r.slug), title: stringValue(r.title), body: stringValue(r.body), status: stringValue(r.status), updatedAt: stringValue(r.updatedAt) }; })); }
-  createLearnArticle(payload: { slug: string; title: string; body: string; status?: string }, ctx: ConsequentialContext) { return this.requestMutation("/communications/admin/learn", ctx, payload); }
-  updateLearnArticle(id: string, payload: { title?: string; body?: string; status?: string }, ctx: ConsequentialContext) { return this.requestMutation(`/communications/admin/learn/${encodeURIComponent(id)}`, ctx, payload, [id], "PATCH"); }
-  publishLearnArticle(id: string, ctx: ConsequentialContext) { return this.requestMutation(`/communications/admin/learn/${encodeURIComponent(id)}/publish`, ctx, {}, [id]); }
+  listMessages(): Promise<AdminMessage[]> {
+    return this.request<unknown[]>("/communications/admin/messages").then((rows) =>
+      rows.map((v) => {
+        const r = record(v);
+        return {
+          id: stringValue(r.id),
+          senderId: stringValue(r.senderId),
+          recipientId: stringValue(r.recipientId),
+          body: stringValue(r.body),
+          deliveryState: stringValue(r.deliveryState),
+          createdAt: stringValue(r.createdAt),
+        };
+      }),
+    );
+  }
+  listNotifications(): Promise<AdminNotification[]> {
+    return this.request<unknown[]>("/communications/admin/notifications").then((rows) =>
+      rows.map((v) => {
+        const r = record(v);
+        return {
+          id: stringValue(r.id),
+          userId: stringValue(r.userId),
+          type: stringValue(r.type),
+          title: stringValue(r.title),
+          body: stringValue(r.body),
+          readAt: typeof r.readAt === "string" ? r.readAt : undefined,
+          createdAt: stringValue(r.createdAt),
+        };
+      }),
+    );
+  }
+  sendNotification(
+    payload: { userId: string; type: string; title: string; body: string },
+    ctx: ConsequentialContext,
+  ) {
+    return this.requestMutation("/communications/admin/notifications", ctx, payload, [
+      payload.userId,
+      payload.title,
+    ]);
+  }
+  listLearnArticles(): Promise<AdminLearnArticle[]> {
+    return this.request<unknown[]>("/communications/admin/learn/articles").then((rows) =>
+      rows.map((v) => {
+        const r = record(v);
+        return {
+          id: stringValue(r.id),
+          slug: stringValue(r.slug),
+          title: stringValue(r.title),
+          body: stringValue(r.body),
+          status: stringValue(r.status),
+          updatedAt: stringValue(r.updatedAt),
+        };
+      }),
+    );
+  }
+  createLearnArticle(
+    payload: { slug: string; title: string; body: string; status?: string },
+    ctx: ConsequentialContext,
+  ) {
+    return this.requestMutation("/communications/admin/learn", ctx, payload);
+  }
+  updateLearnArticle(
+    id: string,
+    payload: { title?: string; body?: string; status?: string },
+    ctx: ConsequentialContext,
+  ) {
+    return this.requestMutation(
+      `/communications/admin/learn/${encodeURIComponent(id)}`,
+      ctx,
+      payload,
+      [id],
+      "PATCH",
+    );
+  }
+  publishLearnArticle(id: string, ctx: ConsequentialContext) {
+    return this.requestMutation(
+      `/communications/admin/learn/${encodeURIComponent(id)}/publish`,
+      ctx,
+      {},
+      [id],
+    );
+  }
   async listHealth(): Promise<HealthCheck[]> {
     const started = performance.now();
     const health = await this.request<{ status?: string }>("/healthz");
@@ -1516,15 +1747,15 @@ export class NexiAdminApiProvider implements AdminDataProvider {
         updatedAt,
       },
       {
-        id: "postgres",
-        name: "PostgreSQL",
+        id: "d1",
+        name: "D1 (durable relational)",
         status: dependencyStatus(ready.dependencies?.database),
         latencyMs: readyLatencyMs,
         updatedAt,
       },
       {
-        id: "redis",
-        name: "Redis",
+        id: "valkey",
+        name: "Aiven Valkey (cache/streams)",
         status: dependencyStatus(ready.dependencies?.redis),
         latencyMs: readyLatencyMs,
         updatedAt,

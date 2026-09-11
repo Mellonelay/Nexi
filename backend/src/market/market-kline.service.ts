@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '../prisma/d1-client';
 import { D1PrismaService } from '../d1/d1-prisma.service';
 import { MarketKlineInput, normalizeMarketKline } from './market-kline.contract';
 
@@ -14,9 +13,9 @@ export interface MarketQuoteCandleInput {
 
 @Injectable()
 export class MarketKlineService {
-  private get db(): any { return this.d1.isEnabled() ? this.d1 : this.prisma; }
+  private get db(): any { return this.d1; }
 
-  constructor(private readonly prisma: PrismaService, private readonly d1: D1PrismaService) {}
+  constructor(private readonly d1: D1PrismaService) {}
 
   async list(symbol: string, interval: string, limit: number, from?: Date, to?: Date) {
     const normalizedSymbol = symbol.trim().toUpperCase().replaceAll('/', '');

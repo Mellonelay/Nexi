@@ -89,7 +89,6 @@ describe("MarketAuthorityService", () => {
     };
     return {
       service: new MarketAuthorityService(
-        prisma,
         redis as any,
         d1,
         providerRouter as any,

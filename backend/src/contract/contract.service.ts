@@ -1,14 +1,14 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { D1PrismaService } from '../d1/d1-prisma.service';
 import { WalletService } from '../wallet/wallet.service';
-import { LedgerType } from '@prisma/client';
+import { LedgerType } from '../prisma/d1-client';
 
 @Injectable()
 export class ContractService {
   private readonly logger = new Logger(ContractService.name);
 
   constructor(
-    private prisma: PrismaService,
+    private prisma: any,
     private walletService: WalletService,
   ) {}
 

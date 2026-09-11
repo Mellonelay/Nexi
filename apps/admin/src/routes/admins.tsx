@@ -40,8 +40,9 @@ function Inner() {
   } | null>(null);
   const admins = adminsQ.data ?? [];
   const activeSessions = useMemo(
-    () => admins.flatMap((admin) => admin.sessions ?? []).filter((s) => s.active).length,
-    [admins],
+    () =>
+      (adminsQ.data ?? []).flatMap((admin) => admin.sessions ?? []).filter((s) => s.active).length,
+    [adminsQ.data],
   );
   const refresh = () => {
     adminsQ.refresh();
@@ -142,7 +143,7 @@ function Inner() {
   return (
     <GovernanceShell
       title="Admin Accounts"
-      description="Review operator status, role, MFA, and mock session visibility."
+      description="Review operator status, role, MFA, and session visibility."
     >
       <ReceiptBanner receipt={receipt.receipt} onDismiss={receipt.clear} />
       <DataTable
@@ -211,7 +212,7 @@ function Inner() {
                       label: "Last active",
                       value: new Date(selected.lastActiveAt).toLocaleString(),
                     },
-                    { label: "Active mock sessions", value: String(activeSessions) },
+                    { label: "Active sessions", value: String(activeSessions) },
                   ],
                 },
                 {
@@ -229,20 +230,26 @@ function Inner() {
         actions={
           selected ? (
             <div className="flex flex-wrap gap-2">
-              <select
-                className="h-9 rounded-md border border-input bg-background px-2 text-sm"
-                value={selected.role}
-                disabled={!session.can("admins.edit")}
-                onChange={(e) =>
-                  setPending({ admin: selected, kind: "role", value: e.target.value })
-                }
-              >
-                {ROLE_LIST.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.label}
-                  </option>
-                ))}
-              </select>
+              {provider.setAdminRole ? (
+                <select
+                  className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+                  value={selected.role}
+                  disabled={!session.can("admins.edit")}
+                  onChange={(e) =>
+                    setPending({ admin: selected, kind: "role", value: e.target.value })
+                  }
+                >
+                  {ROLE_LIST.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <span className="flex h-9 items-center rounded-md border border-border/60 px-2 text-xs text-muted-foreground">
+                  Role assignment unavailable
+                </span>
+              )}
               <Button
                 variant="outline"
                 disabled={!session.can("admins.edit")}
@@ -265,7 +272,7 @@ function Inner() {
           open
           onOpenChange={(o) => !o && setPending(null)}
           title={pending.kind === "role" ? "Assign admin role" : "Change account status"}
-          description="This mock governed action updates the local provider and creates an audit event."
+          description="Governed action updates the provider and creates an audit event."
           target={pending.admin.displayName}
           targetId={pending.admin.id}
           action={pending.kind === "role" ? "admins.set_role" : "admins.set_status"}
@@ -282,11 +289,12 @@ function Inner() {
               environment: session.environment,
               reason,
             };
+            if (pending.kind === "role" && !provider.setAdminRole) {
+              throw new Error("Role assignment is unavailable from the active provider.");
+            }
             const result =
               pending.kind === "role"
-                ? provider.setAdminRole
-                  ? await provider.setAdminRole(pending.admin.id, pending.value as RoleId, ctx)
-                  : { ok: false, auditId: "provider-not-connected" }
+                ? await provider.setAdminRole!(pending.admin.id, pending.value as RoleId, ctx)
                 : await provider.setAdminStatus(
                     pending.admin.id,
                     pending.value as "active" | "suspended",

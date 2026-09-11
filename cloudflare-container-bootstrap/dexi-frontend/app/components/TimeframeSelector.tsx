@@ -8,18 +8,16 @@ interface TimeframeSelectorProps {
   onChange: (interval: string) => void;
 }
 
+const favorites = ['1m', '5m', '15m', '1h', '4h'];
+const categories = [
+  { name: 'MINUTES', items: ['1m', '3m', '5m', '15m', '30m'] },
+  { name: 'HOURS', items: ['1h', '2h', '4h', '6h', '8h', '12h'] },
+  { name: 'DAYS', items: ['1d', '3d', '1w', '1M'] },
+];
+
 export default function TimeframeSelector({ interval, onChange }: TimeframeSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Favorites to show on the bar directly
-  const favorites = ['1m', '5m', '15m', '1h', '4h'];
-
-  const categories = [
-    { name: 'MINUTES', items: ['1m', '3m', '5m', '15m', '30m'] },
-    { name: 'HOURS', items: ['1h', '2h', '4h', '6h', '8h', '12h'] },
-    { name: 'DAYS', items: ['1d', '3d', '1w', '1M'] },
-  ];
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -39,6 +37,7 @@ export default function TimeframeSelector({ interval, onChange }: TimeframeSelec
       {favorites.map((tf) => (
         <button
           key={tf}
+          type="button"
           onClick={() => onChange(tf)}
           className={`px-2 py-1 rounded transition-colors ${
             interval === tf 
@@ -53,6 +52,9 @@ export default function TimeframeSelector({ interval, onChange }: TimeframeSelec
       {/* Dropdown Trigger */}
       <div className="relative ml-1">
         <button
+          type="button"
+          aria-label="Open timeframe menu"
+          aria-expanded={isOpen}
           onClick={() => setIsOpen(!isOpen)}
           className={`p-1 rounded transition-colors ${
             isOpen ? 'text-white bg-white/10' : 'text-gray-400 hover:text-white hover:bg-white/5'
@@ -72,6 +74,7 @@ export default function TimeframeSelector({ interval, onChange }: TimeframeSelec
                 {cat.items.map((item) => (
                   <button
                     key={item}
+                    type="button"
                     onClick={() => {
                       onChange(item);
                       setIsOpen(false);

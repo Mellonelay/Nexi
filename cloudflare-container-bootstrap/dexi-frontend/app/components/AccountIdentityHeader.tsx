@@ -74,7 +74,7 @@ export default function AccountIdentityHeader({
 
   return (
     <Link
-      href="/dashboard/profile"
+      href="/dashboard/settings?tab=profile"
       onClick={onNavigate}
       aria-label={t("profile")}
       className={`${compact ? "mb-4 rounded-xl p-3" : "mb-5 rounded-2xl p-4"} block border border-violet-300/15 bg-[#171022] transition-colors hover:border-violet-300/30 hover:bg-[#1C142A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)]`}

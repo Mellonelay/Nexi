@@ -1,4 +1,4 @@
-import { Role } from '@prisma/client';
+import { Role } from '../prisma/d1-client';
 
 export type AuthSurface = 'PUBLIC' | 'ADMIN';
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { X, Bell, CheckCircle, AlertTriangle, Info, TrendingUp } from 'lucide-react'
 import { cn } from '../lib/cn'
 import { io } from 'socket.io-client'
@@ -35,13 +35,17 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
   const [loading, setLoading] = useState(false)
   const [failed, setFailed] = useState(false)
   const [retryNonce, setRetryNonce] = useState(0)
+  const loadRequestRef = useRef(0)
+  const readRequestIds = useRef(new Set<string>())
   const unreadCount = notifications.filter(n => !n.read).length
 
   const loadNotifications = useCallback(async () => {
+    const requestId = ++loadRequestRef.current
     setLoading(true)
     setFailed(false)
     try {
       const { data } = await api.get('/communications/notifications', { params: { page: 1, limit: 25 } })
+      if (requestId !== loadRequestRef.current) return
       const rows = Array.isArray(data) ? data : Array.isArray(data?.notifications) ? data.notifications : []
       setNotifications(rows.map((item: Record<string, unknown>) => ({
         id: String(item.id ?? ''),
@@ -52,15 +56,19 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
         read: Boolean(item.readAt),
       })))
     } catch {
+      if (requestId !== loadRequestRef.current) return
       setNotifications([])
       setFailed(true)
     } finally {
-      setLoading(false)
+      if (requestId === loadRequestRef.current) setLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    if (!open) return
+    if (!open) {
+      loadRequestRef.current += 1
+      return
+    }
     void loadNotifications()
   }, [loadNotifications, open, retryNonce])
 
@@ -78,26 +86,35 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
       reconnectionDelayMax: 8_000,
     })
     let connectedOnce = false
-    socket.on('connect', () => {
+    const handleConnect = () => {
       const recovered = connectedOnce
       connectedOnce = true
       if (recovered) void loadNotifications()
-    })
-    socket.on('communications.event', (message: unknown) => {
+    }
+    const handleEvent = (message: unknown) => {
       if (!message || typeof message !== 'object') return
       const event = (message as { event?: unknown }).event
       if (!event || typeof event !== 'object') return
       const type = String((event as { type?: unknown }).type ?? '')
       if (type === 'NOTIFICATION_SENT' || type === 'NOTIFICATION_READ') void loadNotifications()
-    })
-    return () => { socket.disconnect() }
+    }
+    socket.on('connect', handleConnect)
+    socket.on('communications.event', handleEvent)
+    return () => {
+      socket.off('connect', handleConnect)
+      socket.off('communications.event', handleEvent)
+      socket.disconnect()
+    }
   }, [loadNotifications, open])
 
   const markRead = async (id: string) => {
+    if (readRequestIds.current.has(id)) return
+    readRequestIds.current.add(id)
     try {
       await api.post(`/communications/notifications/${id}/read`)
       setNotifications((items) => items.map((item) => item.id === id ? { ...item, read: true } : item))
     } catch { /* keep the authoritative unread state when the command fails */ }
+    finally { readRequestIds.current.delete(id) }
   }
 
   return (
@@ -105,7 +122,9 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
       {open && (
         <>
           {/* Backdrop */}
-          <motion.div
+          <motion.button
+            type="button"
+            aria-label="Close notifications"
             className="fixed inset-0 z-[70] bg-black/60"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

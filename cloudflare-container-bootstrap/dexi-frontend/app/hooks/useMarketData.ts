@@ -81,11 +81,13 @@ export function useMarketData() {
   const [forex, setForex] = useState<MarketPair[]>([]);
   const [timeframes, setTimeframes] = useState<BinaryTimeframe[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
+      setError(false);
       try {
         const [pricesRes, binaryConfig] = await Promise.allSettled([api.get('/market/prices'), api.get('/binary/config')]);
         if (pricesRes.status !== 'fulfilled') throw pricesRes.reason;
@@ -102,10 +104,10 @@ export function useMarketData() {
         setForex(forexRows);
         setTimeframes(binaryConfig.status === 'fulfilled' ? timeframesFromConfig(binaryConfig.value.data) : []);
       } catch (error) {
-        if (!cancelled) { setMarketPairs([]); setMetal([]); setShares([]); setForex([]); setTimeframes([]); }
+        if (!cancelled) { setMarketPairs([]); setMetal([]); setShares([]); setForex([]); setTimeframes([]); setError(true); }
       } finally { if (!cancelled) setLoading(false); }
     })();
     return () => { cancelled = true; };
   }, []);
-  return { marketPairs, metal, shares, forex, timeframes, loading };
+  return { marketPairs, metal, shares, forex, timeframes, loading, error };
 }

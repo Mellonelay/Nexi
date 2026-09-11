@@ -1,21 +1,23 @@
 import { isCorsOriginAllowed, resolveRuntimeConfig } from '../../src/runtime/runtime.config';
 
 const baseEnvironment = {
-  DATABASE_URL: 'postgresql://example.invalid/nexi',
+  D1_RUNTIME_ENABLED: 'true',
+  D1_BRIDGE_ENABLED: 'true',
   REDIS_URL: 'redis://example.invalid:6379',
   JWT_SECRET: 'test-only-jwt-secret-with-sufficient-length',
 };
 
 describe('runtime configuration', () => {
-  it('rejects missing required dependency URLs without using fallbacks', () => {
-    expect(() => resolveRuntimeConfig({ REDIS_URL: baseEnvironment.REDIS_URL })).toThrow('DATABASE_URL');
-    expect(() => resolveRuntimeConfig({ DATABASE_URL: baseEnvironment.DATABASE_URL })).toThrow('REDIS_URL');
+  it('rejects missing D1 runtime dependencies without using fallbacks', () => {
+    expect(() => resolveRuntimeConfig({ REDIS_URL: baseEnvironment.REDIS_URL })).toThrow('D1_RUNTIME_ENABLED');
+    expect(() => resolveRuntimeConfig({ ...baseEnvironment, D1_RUNTIME_ENABLED: 'false' })).toThrow('D1_RUNTIME_ENABLED must be true');
   });
 
   it('rejects a missing JWT secret instead of using a fallback', () => {
     expect(() => resolveRuntimeConfig({
-      DATABASE_URL: baseEnvironment.DATABASE_URL,
       REDIS_URL: baseEnvironment.REDIS_URL,
+      D1_RUNTIME_ENABLED: baseEnvironment.D1_RUNTIME_ENABLED,
+      D1_BRIDGE_ENABLED: baseEnvironment.D1_BRIDGE_ENABLED,
     })).toThrow('JWT_SECRET');
   });
 

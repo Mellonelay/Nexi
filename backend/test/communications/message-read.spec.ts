@@ -31,7 +31,7 @@ describe('recipient-owned message read', () => {
   it('does not read back another recipient message when the command rejects ownership', async () => {
     const findUnique = jest.fn();
     const gateway: any = { markMessageRead: jest.fn(async () => false) };
-    const service = new CommunicationsService({} as any, { persistentMessage: { findUnique } } as any, {} as any, gateway);
+    const service = new CommunicationsService({ persistentMessage: { findUnique } } as any, {} as any, gateway, { isAvailable: () => false } as any);
     await expect(service.markMessageRead('stranger', 'message')).rejects.toMatchObject({ status: 404 });
     expect(findUnique).not.toHaveBeenCalled();
   });
@@ -60,7 +60,7 @@ describe('recipient-owned message read', () => {
     const message = { id: 'message', recipientId: 'recipient', readAt: '2026-09-08T00:00:00Z' };
     const findUnique = jest.fn(async () => message);
     const gateway: any = { markMessageRead: jest.fn(async () => true) };
-    const service = new CommunicationsService({} as any, { persistentMessage: { findUnique } } as any, {} as any, gateway);
+    const service = new CommunicationsService({ persistentMessage: { findUnique } } as any, {} as any, gateway, { isAvailable: () => false } as any);
     expect(await service.markMessageRead('recipient', 'message')).toBe(message);
     expect(gateway.markMessageRead).toHaveBeenCalledWith('recipient', 'message');
     expect(findUnique).toHaveBeenCalledWith({ where: { id: 'message' } });

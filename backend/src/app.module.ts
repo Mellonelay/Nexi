@@ -7,7 +7,6 @@ import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { ConfigModule } from "@nestjs/config";
 import { ScheduleModule } from "@nestjs/schedule";
-import { PrismaModule } from "./prisma/prisma.module";
 import { KycModule } from "./kyc/kyc.module";
 import { WalletModule } from "./wallet/wallet.module";
 import { BinaryModule } from "./binary/binary.module";
@@ -51,7 +50,6 @@ import { ProfileModule } from "./profile/profile.module";
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, "..", "..", "..", "frontend", "out"),
     }),
-    PrismaModule,
     RedisModule,
     LedgerModule,
     SettlementModule,

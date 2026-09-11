@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/admin/components/PageHeader";
 import { RouteGuard } from "@/admin/components/RouteGuard";
 import { StatusBadge } from "@/admin/components/StatusBadge";
+import { ProviderBadge } from "@/admin/components/ProviderBadge";
 import {
   DataTable,
   type DataTableColumn,
@@ -61,7 +62,8 @@ function Inner() {
   return (
     <Shell total={pairs.length} maintenance={maintenance} openOrders={openOrders}>
       <p className="text-xs text-muted-foreground">
-        Spot and isolated margin are canonical. Futures, perpetuals, cross margin and portfolio margin are not exposed.
+        Spot and isolated margin are canonical. Futures, perpetuals, cross margin and portfolio
+        margin are not exposed.
       </p>
       <Tabs defaultValue="pairs">
         <TabsList className="mb-4">
@@ -110,10 +112,10 @@ function Shell({
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Spot Administration"
-        description="Pair enablement, order-type support, precision, limits, fees, provider source, and mock order cancellation."
+        description="Pair enablement, order-type support, precision, limits, fees, provider source, and order cancellation."
         badges={
           <>
-            <StatusBadge tone="warning">Mock data</StatusBadge>
+            <ProviderBadge />
             {total !== undefined ? (
               <StatusBadge tone="info" dot={false}>
                 {total} pairs
@@ -473,29 +475,95 @@ function MarginConfigurationPanel() {
   }, [query.data]);
 
   if (query.loading) return <LoadingSkeleton rows={3} />;
-  if (query.error) return <ErrorState title="Could not load isolated margin configuration" description={query.error.message} />;
+  if (query.error)
+    return (
+      <ErrorState
+        title="Could not load isolated margin configuration"
+        description={query.error.message}
+      />
+    );
 
   const parsedRatio = Number(ratio);
-  const parsedLeverages = leverages.split(",").map((value) => Number(value.trim())).filter((value) => Number.isInteger(value));
-  const valid = parsedRatio > 0 && parsedRatio < 1 && parsedLeverages.length > 0 && parsedLeverages.every((value) => value >= 2 && value <= 20) && reason.trim().length >= 6;
+  const parsedLeverages = leverages
+    .split(",")
+    .map((value) => Number(value.trim()))
+    .filter((value) => Number.isInteger(value));
+  const valid =
+    parsedRatio > 0 &&
+    parsedRatio < 1 &&
+    parsedLeverages.length > 0 &&
+    parsedLeverages.every((value) => value >= 2 && value <= 20) &&
+    reason.trim().length >= 6;
 
   return (
     <div className="max-w-2xl space-y-4 rounded-lg border border-border/60 bg-background/40 p-4">
       <div>
         <h3 className="font-medium">Isolated margin controls</h3>
-        <p className="mt-1 text-xs text-muted-foreground">These values drive the Public margin leverage buttons and liquidation maintenance threshold.</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          These values drive the Public margin leverage buttons and liquidation maintenance
+          threshold.
+        </p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
-        <div><Label>Allowed leverages</Label><Input value={leverages} onChange={(e) => setLeverages(e.target.value)} placeholder="2,3,5" /><p className="mt-1 text-[10px] text-muted-foreground">Comma-separated integers from 2x to 20x.</p></div>
-        <div><Label>Maintenance ratio</Label><Input type="number" step="0.01" min="0.01" max="0.99" value={ratio} onChange={(e) => setRatio(e.target.value)} /></div>
+        <div>
+          <Label>Allowed leverages</Label>
+          <Input
+            value={leverages}
+            onChange={(e) => setLeverages(e.target.value)}
+            placeholder="2,3,5"
+          />
+          <p className="mt-1 text-[10px] text-muted-foreground">
+            Comma-separated integers from 2x to 20x.
+          </p>
+        </div>
+        <div>
+          <Label>Maintenance ratio</Label>
+          <Input
+            type="number"
+            step="0.01"
+            min="0.01"
+            max="0.99"
+            value={ratio}
+            onChange={(e) => setRatio(e.target.value)}
+          />
+        </div>
       </div>
-      <div><Label>Reason (auditable, ≥ 6 chars)</Label><textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3} className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" /></div>
-      {message ? <p className="text-xs text-muted-foreground" role="status">{message}</p> : null}
-      <Button disabled={!valid || !session.can("spot.edit")} onClick={async () => {
-        setMessage(null);
-        await provider.updateMarginConfiguration({ maintenanceRatio: parsedRatio, leverages: [...new Set(parsedLeverages)].sort((a, b) => a - b) }, { actor: session.actorName, role: session.roleId, environment: session.environment, reason: reason.trim() });
-        setMessage("Margin configuration updated.");
-      }}>Save margin configuration</Button>
+      <div>
+        <Label>Reason (auditable, ≥ 6 chars)</Label>
+        <textarea
+          value={reason}
+          aria-label="Reason for margin configuration change"
+          onChange={(e) => setReason(e.target.value)}
+          rows={3}
+          className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+        />
+      </div>
+      {message ? (
+        <p className="text-xs text-muted-foreground" role="status">
+          {message}
+        </p>
+      ) : null}
+      <Button
+        disabled={!valid || !session.can("spot.edit")}
+        onClick={async () => {
+          setMessage(null);
+          await provider.updateMarginConfiguration(
+            {
+              maintenanceRatio: parsedRatio,
+              leverages: [...new Set(parsedLeverages)].sort((a, b) => a - b),
+            },
+            {
+              actor: session.actorName,
+              role: session.roleId,
+              environment: session.environment,
+              reason: reason.trim(),
+            },
+          );
+          setMessage("Margin configuration updated.");
+        }}
+      >
+        Save margin configuration
+      </Button>
     </div>
   );
 }

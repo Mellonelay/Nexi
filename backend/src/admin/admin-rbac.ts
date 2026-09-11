@@ -1,4 +1,4 @@
-import { AdminRoleId } from '@prisma/client';
+import { AdminRoleId } from '../prisma/d1-client';
 
 /** Canonical Admin vocabulary shared with the live Admin UI contract. */
 export const ADMIN_PERMISSION_KEYS = [

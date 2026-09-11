@@ -17,7 +17,7 @@ export default function AppHeader() {
     <div className="lg:hidden min-w-0"><NavigationDrawer triggerContent={<NexiWordmark compact />} /></div>
     <div className="hidden min-w-0 flex-1 lg:block" aria-hidden="true" />
     <div className="ml-auto flex min-w-0 items-center gap-1.5 md:gap-2">
-      <button type="button" aria-label="Ethereum network" title="Ethereum network" className="nexi-header-icon h-10 w-10"><AssetIcon item={{ assetId: 'ETH', symbol: 'ETH', displaySymbol: 'ETH', name: 'Ethereum' }} /></button>
+      <span aria-label="Ethereum network" title="Ethereum network" className="nexi-header-icon h-10 w-10"><AssetIcon item={{ assetId: 'ETH', symbol: 'ETH', displaySymbol: 'ETH', name: 'Ethereum' }} /></span>
       <WalletConnectControl compact />
       <label className="nexi-header-icon relative h-10 w-10 cursor-pointer" title={t('languageSelection')}>
         <Languages className="h-[18px] w-[18px]" aria-hidden="true" />

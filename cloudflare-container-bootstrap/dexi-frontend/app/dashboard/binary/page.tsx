@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowDown, ArrowLeft, ArrowUp, Clock3, Wallet } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { useRouter, useSearchParams } from 'next/navigation';
+import SafeBackButton from '../../components/SafeBackButton';
 import api, { apiBaseUrl } from '../../lib/api';
 import RealtimeTradingChart from '../../components/RealtimeTradingChart';
 import SymbolSelector from '../../components/SymbolSelector';
@@ -114,6 +115,7 @@ export default function BinaryPage() {
   const [now, setNow] = useState(Date.now());
   const [binaryConfigurations, setBinaryConfigurations] = useState<BinaryConfiguration[]>([]);
   const [binaryDurations, setBinaryDurations] = useState<number[]>([]);
+  const submissionLock = useRef(false);
   const { marketPairs, metal, shares, forex } = useMarketData();
 
   useEffect(() => {
@@ -152,7 +154,7 @@ export default function BinaryPage() {
       reconnectionAttempts: 8,
       reconnectionDelayMax: 8_000,
     });
-    socket.on('binary_position_update', (raw) => {
+    const handlePositionUpdate = (raw: unknown) => {
       const payload = raw as { event: string; position: unknown };
       const position = normalizePosition(payload.position);
       if (!position) return;
@@ -164,10 +166,19 @@ export default function BinaryPage() {
         setTab('HISTORY');
       }
       setState(position.status);
-    });
-    socket.on('disconnect', () => setState((current) => INTERRUPTIBLE_BINARY_STATES.has(current) ? 'CONNECTION_LOST' : current));
-    socket.on('connect_error', () => setState((current) => INTERRUPTIBLE_BINARY_STATES.has(current) ? 'CONNECTION_LOST' : current));
-    return () => { socket.disconnect(); };
+    };
+    const handleConnectionLoss = () => {
+      setState((current) => INTERRUPTIBLE_BINARY_STATES.has(current) ? 'CONNECTION_LOST' : current);
+    };
+    socket.on('binary_position_update', handlePositionUpdate);
+    socket.on('disconnect', handleConnectionLoss);
+    socket.on('connect_error', handleConnectionLoss);
+    return () => {
+      socket.off('binary_position_update', handlePositionUpdate);
+      socket.off('disconnect', handleConnectionLoss);
+      socket.off('connect_error', handleConnectionLoss);
+      socket.disconnect();
+    };
   }, [userId]);
 
   useEffect(() => {
@@ -294,7 +305,8 @@ export default function BinaryPage() {
   };
 
   const submitPosition = async () => {
-    if (!ready || !userId) return;
+    if (submissionLock.current || !ready || !userId) return;
+    submissionLock.current = true;
     setState('SUBMITTING');
     try {
       const response = await api.post('/binary/position', {
@@ -316,15 +328,15 @@ export default function BinaryPage() {
       setState('ERROR');
       setConfirmationOpen(false);
       setFeedback('The position request could not be accepted.');
+    } finally {
+      submissionLock.current = false;
     }
   };
 
   return (
     <main className="nexi-page-shell min-h-[100dvh] w-full min-w-0 overflow-x-clip pb-36 text-[#F8F6FF] lg:pb-8">
       <header className="nexi-station-header sticky top-0 z-20 flex min-w-0 items-center justify-between gap-2 border-b px-3 py-3 backdrop-blur sm:gap-3 sm:px-4">
-        <button type="button" aria-label="Go back" onClick={() => router.back()} className="nexi-interactive flex min-h-9 min-w-9 shrink-0 items-center justify-center rounded-lg border border-violet-300/15 text-[#C3BBD0] hover:border-violet-300/30">
-          <ArrowLeft size={16} aria-hidden="true" />
-        </button>
+        <SafeBackButton fallback="/dashboard" label="Back to Quotes Hub" />
         <div className="min-w-0 flex-1"><SymbolSelector currentSymbol={pair} onSelect={(next) => { setPair(next); setActivePair(next); router.push(`/dashboard/binary?symbol=${next}`); }} /></div>
         {currentPrice !== null && <div className="shrink-0 text-right" aria-label="Current market price"><p className="font-mono text-sm text-[#C3BBD0]">{currentPrice.toLocaleString()}</p>{marketChange !== null && <p className={`mt-0.5 font-mono text-[10px] ${marketChange >= 0 ? 'text-[#22D3A6]' : 'text-[#FF5C7C]'}`}>{marketChange > 0 ? '+' : ''}{marketChange.toFixed(2)}% 24h</p>}</div>}
       </header>

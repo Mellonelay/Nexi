@@ -58,10 +58,7 @@ export { recoverPublicSession };
 // Public access tokens are held only by the in-memory session boundary.
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
-    const requestPath = config.url ?? '';
-    const token = requestPath.startsWith('/admin')
-      ? localStorage.getItem('admin_token')
-      : getAccessToken();
+    const token = getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -78,7 +75,6 @@ api.interceptors.response.use(undefined, async (error: unknown) => {
     error.response?.status !== 401
     || !config
     || config._nexiAuthRetry
-    || requestPath.startsWith('/admin')
     || isPublicAuthEndpoint
   ) {
     return Promise.reject(error);

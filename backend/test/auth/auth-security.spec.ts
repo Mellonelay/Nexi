@@ -14,16 +14,14 @@ jest.mock('bcrypt', () => ({
 describe('A20 Security backend contract', () => {
   describe('UsersService.changeSecurityPassword', () => {
     const makePrisma = (user: any) => ({
-      user: {
-        findUnique: jest.fn().mockResolvedValue(user),
-        update: jest.fn().mockImplementation(async ({ data }: any) => ({ ...data })),
-      },
+      getUserById: jest.fn().mockResolvedValue(user),
+      updateUserSecurityPassword: jest.fn().mockResolvedValue({ id: user.id }),
     });
 
     it('rejects when the current security password is wrong', async () => {
       const { compare } = require('bcrypt');
       compare.mockResolvedValue(false);
-      const service = new UsersService(makePrisma({ id: 'user-1', securityPasswordHash: 'hashed' }) as any, {} as any);
+      const service = new UsersService(makePrisma({ id: 'user-1', securityPasswordHash: 'hashed' }) as any);
       await expect(service.changeSecurityPassword('user-1', 'wrong', 'newpassword123456')).rejects.toThrow('Current security password is incorrect');
       compare.mockResolvedValue(true);
     });
@@ -36,7 +34,7 @@ describe('A20 Security backend contract', () => {
         getUserById: jest.fn().mockResolvedValue({ id: 'user-1', securityPasswordHash: 'hashed', password: 'admin-login-hash' }),
         updateUserSecurityPassword: jest.fn().mockResolvedValue({ id: 'user-1' }),
       };
-      const service = new UsersService({} as any, {} as any, d1 as any);
+      const service = new UsersService(d1 as any);
       await expect(service.changeSecurityPassword('user-1', 'currentpassword123456', 'newpassword123456')).resolves.toBeUndefined();
       expect(d1.updateUserSecurityPassword).toHaveBeenCalledWith('user-1', expect.stringMatching(/^hashed-/));
       expect(hash).toHaveBeenCalledWith('newpassword123456', 12);
@@ -50,7 +48,7 @@ describe('A20 Security backend contract', () => {
         getUserById: jest.fn().mockResolvedValue({ id: 'wallet-user', password: null, securityPasswordHash: null }),
         updateUserSecurityPassword: jest.fn().mockResolvedValue({ id: 'wallet-user' }),
       };
-      const service = new UsersService({} as any, {} as any, d1 as any);
+      const service = new UsersService(d1 as any);
 
       await expect(service.changeSecurityPassword('wallet-user', undefined, 'newpassword123456')).resolves.toBeUndefined();
       expect(d1.updateUserSecurityPassword).toHaveBeenCalledWith('wallet-user', expect.stringMatching(/^hashed-/));
@@ -58,7 +56,7 @@ describe('A20 Security backend contract', () => {
     });
 
     it('requires the current security password when changing an existing security password', async () => {
-      const service = new UsersService({} as any, {} as any, {
+      const service = new UsersService({
         isEnabled: jest.fn().mockReturnValue(true),
         getUserById: jest.fn().mockResolvedValue({ id: 'user-1', securityPasswordHash: 'hashed' }),
       } as any);

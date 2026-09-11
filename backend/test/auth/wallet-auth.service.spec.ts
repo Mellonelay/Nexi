@@ -56,8 +56,13 @@ function makeService() {
     })),
   };
   const auth = { login: jest.fn().mockResolvedValue({ access_token: 'opaque-test-token' }) };
+  const referralVip = { ensureAccountState: jest.fn().mockResolvedValue({ referral: null, vip: null }) };
+  const d1 = {
+    getUserByWallet: jest.fn().mockResolvedValue(user),
+    createWalletUser: jest.fn().mockResolvedValue(user),
+  };
   const config = { get: (key: string) => ({ WALLET_AUTH_SUPPORTED_CHAIN_IDS: '1', WALLET_AUTH_DOMAIN: 'nexi.local', WALLET_AUTH_URI: 'http://nexi.local' } as Record<string, string>)[key] };
-  return { service: new WalletAuthService(config as any, prisma as any, redis as any, auth as any, {} as any), redis, prisma, auth };
+  return { service: new WalletAuthService(config as any, redis as any, auth as any, referralVip as any, d1 as any), redis, prisma, auth };
 }
 
 describe('WalletAuthService', () => {

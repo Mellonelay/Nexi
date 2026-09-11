@@ -19,7 +19,7 @@ import {
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
-import { Role } from "@prisma/client";
+import { Role } from "../prisma/d1-client";
 import { AdminService } from "./admin.service";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { Roles } from "../auth/roles.decorator";

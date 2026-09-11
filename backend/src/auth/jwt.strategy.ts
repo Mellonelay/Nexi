@@ -1,18 +1,16 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
-import { Injectable, Optional, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Role } from '@prisma/client';
+import { Role } from '../prisma/d1-client';
 import { AuthSurface, AuthenticatedUser, JwtPayload } from './auth.types';
-import { PrismaService } from '../prisma/prisma.service';
 import { D1FinancialCommandGateway } from '../d1/d1-financial-command.gateway';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     config: ConfigService,
-    @Optional() private readonly prisma?: PrismaService,
-    @Optional() private readonly d1?: D1FinancialCommandGateway,
+    private readonly d1: D1FinancialCommandGateway,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -35,26 +33,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Invalid authentication claims');
     }
 
-    if (payload.sid && (this.d1?.isEnabled() || this.prisma)) {
+    if (payload.sid) {
       try {
-        if (this.d1?.isEnabled()) {
-          const [session, user] = await Promise.all([
-            this.d1.getAuthSessionById(payload.sid),
-            this.d1.getUserById(payload.sub),
-          ]);
-          const now = new Date();
-          if (!session || !user || user.role !== payload.role || session.userId !== payload.sub || session.surface !== surface || session.revokedAt || now >= new Date(session.absoluteExpiresAt) || now >= new Date(session.idleExpiresAt)) {
-            throw new UnauthorizedException('Authentication session is not active');
-          }
-        } else if (this.prisma) {
-          const [session, user] = await Promise.all([
-            this.prisma.authSession.findUnique({ where: { id: payload.sid } }),
-            this.prisma.user.findUnique({ where: { id: payload.sub }, select: { role: true } }),
-          ]);
-          const now = new Date();
-          if (!session || !user || user.role !== payload.role || session.userId !== payload.sub || session.surface !== surface || session.revokedAt || now >= session.absoluteExpiresAt || now >= session.idleExpiresAt) {
-            throw new UnauthorizedException('Authentication session is not active');
-          }
+        const [session, user] = await Promise.all([
+          this.d1.getAuthSessionById(payload.sid),
+          this.d1.getUserById(payload.sub),
+        ]);
+        const now = new Date();
+        if (!session || !user || user.role !== payload.role || session.userId !== payload.sub || session.surface !== surface || session.revokedAt || now >= new Date(session.absoluteExpiresAt) || now >= new Date(session.idleExpiresAt)) {
+          throw new UnauthorizedException('Authentication session is not active');
         }
       } catch (error) {
         if (error instanceof UnauthorizedException) {

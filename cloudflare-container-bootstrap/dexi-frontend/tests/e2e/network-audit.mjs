@@ -7,7 +7,6 @@ const routes = [
   '/dashboard/wallet',
   '/dashboard/mining',
   '/dashboard/loans',
-  '/dashboard/profile',
   '/dashboard/settings',
   '/dashboard/support',
   '/dashboard/announcement',

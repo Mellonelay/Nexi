@@ -8,12 +8,11 @@ import {
 } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
 import { Injectable, Logger, OnModuleDestroy, Optional } from "@nestjs/common";
-import { PrismaService } from "../prisma/prisma.service";
 import { RedisService } from "../redis/redis.service";
 import { isCorsOriginAllowed } from "../runtime/runtime.config";
 import { JwtService } from "@nestjs/jwt";
 import { JwtPayload } from "../auth/auth.types";
-import { Role } from "@prisma/client";
+import { Role } from "../prisma/d1-client";
 import { D1FinancialCommandGateway } from "../d1/d1-financial-command.gateway";
 
 @Injectable()
@@ -37,10 +36,9 @@ export class EventsGateway
   private heartbeatTimer?: NodeJS.Timeout;
 
   constructor(
-    private readonly prisma: PrismaService,
     private readonly redisService: RedisService,
     private readonly jwt: JwtService,
-    @Optional() private readonly d1?: D1FinancialCommandGateway,
+    private readonly d1: D1FinancialCommandGateway,
   ) {}
 
   afterInit() {
@@ -75,12 +73,7 @@ export class EventsGateway
       this.connectedClients.set(client.id, userId);
 
       // Update Last Active in DB (Optimization: Don't await this to keep WS fast)
-      const activityWrite = this.d1?.isEnabled()
-        ? this.d1.touchUserLastActive(userId)
-        : this.prisma.user.update({
-            where: { id: userId },
-            data: { lastActive: new Date() },
-          });
+      const activityWrite = this.d1.touchUserLastActive(userId);
       activityWrite.catch(() => {}); // Fire and forget
     }
 

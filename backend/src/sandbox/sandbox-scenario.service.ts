@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
-import { AdminCommandStatus } from "@prisma/client";
-import { PrismaService } from "../prisma/prisma.service";
+import { AdminCommandStatus } from "../prisma/d1-client";
+import { D1PrismaService } from "../d1/d1-prisma.service";
 
 export type BinarySandboxDirective = {
   commandId: string;
@@ -13,7 +13,7 @@ const SUPPORTED_BINARY_MODES = new Set(["forced_win", "forced_loss"]);
 
 @Injectable()
 export class SandboxScenarioService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: D1PrismaService) {}
 
   assertSupportedMode(mode: string): void {
     if (!SUPPORTED_BINARY_MODES.has(mode)) {

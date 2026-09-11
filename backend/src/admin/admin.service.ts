@@ -1,21 +1,20 @@
 import {
   Injectable,
+  Inject,
   Logger,
   NotFoundException,
   BadRequestException,
   ForbiddenException,
   Optional,
 } from "@nestjs/common";
-import { PrismaService } from "../prisma/prisma.service";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { RealDataSeeder } from "../utils/real-data-seeder";
 import {
   AdminMaintenanceScope,
   AdminMaintenanceStatus,
   Prisma,
   AdminRoleId,
-} from "@prisma/client";
+} from "../prisma/d1-client";
 import { LedgerAuthorityService } from "../ledger/ledger-authority.service";
 import { SpotService } from "../spot/spot.service";
 import { BinaryService } from "../binary/binary.service";
@@ -81,18 +80,17 @@ export class AdminService {
   private readonly logger = new Logger(AdminService.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    @Inject(D1PrismaService) private readonly prisma: any,
     private readonly ledgerAuthority: LedgerAuthorityService,
     private readonly spotService: SpotService,
     private readonly binaryService: BinaryService,
     private readonly financialOperations: FinancialOperationsService,
     private readonly sandboxExecution: SandboxExecutionService,
-    private readonly d1?: D1FinancialCommandGateway,
-    @Optional() private readonly d1Db?: D1PrismaService,
+    private readonly d1: D1FinancialCommandGateway,
   ) {}
 
   private marketDatabase(): any {
-    return this.d1Db?.isEnabled() ? this.d1Db : this.prisma;
+    return this.prisma;
   }
 
   async getAdminIdentity(request: {
@@ -1899,7 +1897,7 @@ export class AdminService {
     return { maintenanceRatio: input.maintenanceRatio, leverages };
   }
 
-  async updateCurrency(id: number, data: Prisma.CurrencyUpdateInput & { reason?: string; idempotencyKey?: string }, adminId: string) {
+  async updateCurrency(id: number, data: any, adminId: string) {
     const { reason = "Admin currency configuration update", idempotencyKey = `currency:${id}:${Date.now()}`, ...patch } = data;
     if (this.d1?.isEnabled()) return this.d1.updateAdminCurrency({ id, patch: patch as Record<string, unknown>, adminId, reason, idempotencyKey });
     const updated = await this.prisma.currency.update({ where: { id }, data: patch });
@@ -1907,7 +1905,7 @@ export class AdminService {
     return updated;
   }
 
-  async createCurrency(data: Prisma.CurrencyCreateInput, adminId: string) {
+  async createCurrency(data: any, adminId: string) {
     if (this.d1?.isEnabled()) {
       throw new BadRequestException("Creating a new currency through Admin requires the D1-native create path; update an existing canonical currency instead");
     }
@@ -1944,7 +1942,7 @@ export class AdminService {
   }
 
   async createMiningPlan(
-    data: Prisma.MiningPlanCreateInput,
+    data: any,
     context?: AdminPlanMutationContext,
   ) {
     const dailyYield = new Prisma.Decimal(String(data.dailyYield));
@@ -1985,10 +1983,10 @@ export class AdminService {
 
   async updateMiningPlan(
     id: string,
-    data: Prisma.MiningPlanUpdateInput,
+    data: any,
     context?: AdminPlanMutationContext,
   ) {
-    const decimalPatch: Prisma.MiningPlanUpdateInput = { ...data };
+    const decimalPatch: any = { ...data };
     if (
       data.dailyYield !== undefined &&
       typeof data.dailyYield === "object" &&
@@ -2045,7 +2043,7 @@ export class AdminService {
   }
 
   async createLoanPlan(
-    data: Prisma.LoanPlanCreateInput,
+    data: any,
     context?: AdminPlanMutationContext,
   ) {
     return this.prisma.$transaction(async (tx) => {
@@ -2069,7 +2067,7 @@ export class AdminService {
 
   async updateLoanPlan(
     id: string,
-    data: Prisma.LoanPlanUpdateInput,
+    data: any,
     context?: AdminPlanMutationContext,
   ) {
     return this.prisma.$transaction(async (tx) => {
@@ -2102,13 +2100,6 @@ export class AdminService {
     throw new ForbiddenException(
       `Sandbox-only outcome control rejected for ${symbol}:${houseWinRatio}`,
     );
-  }
-
-  async syncReal() {
-    this.logger.log("Starting Live Sync...");
-    await RealDataSeeder.syncMarketData();
-    await RealDataSeeder.syncBinaryConfigs();
-    return { status: "ok", message: "Live Sync Completed" };
   }
 
   async syncMarkets() {

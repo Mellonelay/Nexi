@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { PageHeader } from "@/admin/components/PageHeader";
 import { RouteGuard } from "@/admin/components/RouteGuard";
 import { StatusBadge } from "@/admin/components/StatusBadge";
+import { ProviderBadge } from "@/admin/components/ProviderBadge";
 import {
   DataTable,
   type DataTableColumn,
@@ -21,8 +22,7 @@ import { Zap, ZapOff, Radio, ShieldOff } from "lucide-react";
 export const Route = createFileRoute("/market-feeds")({ component: Page });
 
 type PendingAction =
-  | { kind: "status"; row: MarketFeed; next: FeedStatus }
-  | { kind: "failover"; row: MarketFeed };
+  { kind: "status"; row: MarketFeed; next: FeedStatus } | { kind: "failover"; row: MarketFeed };
 
 function Page() {
   return (
@@ -200,7 +200,7 @@ function Inner() {
                     { label: "Primary provider", value: selected.provider, mono: true },
                     { label: "Fallback provider", value: selected.fallback ?? "—", mono: true },
                     { label: "Latency", value: `${selected.latencyMs} ms`, mono: true },
-                    { label: "Sample age", value: formatAge(selected.ageMs), mono: true },
+                    { label: "Age", value: formatAge(selected.ageMs), mono: true },
                     { label: "Status", value: selected.status, mono: true },
                   ],
                 },
@@ -343,7 +343,7 @@ function Shell({
         description="Provider mapping, latency, freshness, and manual failover/maintenance controls."
         badges={
           <>
-            <StatusBadge tone="warning">Mock data</StatusBadge>
+            <ProviderBadge />
             {total !== undefined ? (
               <StatusBadge tone="info" dot={false}>
                 {total} feeds

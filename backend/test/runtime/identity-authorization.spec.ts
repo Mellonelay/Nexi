@@ -83,8 +83,8 @@ describe('B1 identity and authorization foundation', () => {
       idleExpiresAt: new Date(Date.now() + 60_000),
     };
     const prisma = {
-      authSession: { findUnique: jest.fn().mockResolvedValue(session) },
-      user: { findUnique: jest.fn().mockResolvedValue({ role: Role.USER }) },
+      getAuthSessionById: jest.fn().mockResolvedValue(session),
+      getUserById: jest.fn().mockResolvedValue({ role: Role.USER }),
     };
     const strategy = new JwtStrategy(config as never, prisma as never);
 
@@ -99,7 +99,7 @@ describe('B1 identity and authorization foundation', () => {
     session.revokedAt = new Date();
     await expect(strategy.validate({ sub: 'user-1', email: 'u@example.test', role: Role.USER, surface: 'PUBLIC', sid: 'session-1' })).rejects.toThrow(UnauthorizedException);
     session.revokedAt = null;
-    prisma.user.findUnique.mockResolvedValue({ role: Role.ADMIN });
+    prisma.getUserById.mockResolvedValue({ role: Role.ADMIN });
     await expect(strategy.validate({ sub: 'user-1', email: 'u@example.test', role: Role.USER, surface: 'PUBLIC', sid: 'session-1' })).rejects.toThrow(UnauthorizedException);
   });
 

@@ -195,10 +195,7 @@ export interface AdminDataProvider {
   updateBinaryPair(
     id: string,
     patch: Partial<
-      Pick<
-        BinaryPair,
-        "enabled" | "minStake" | "maxStake" | "exposureCap" | "settlementDelayMs"
-      >
+      Pick<BinaryPair, "enabled" | "minStake" | "maxStake" | "exposureCap" | "settlementDelayMs">
     > & {
       payoutBps?: Partial<Record<BinaryDuration, number>>;
       durationConfigs?: Array<{
@@ -373,15 +370,32 @@ export interface AdminDataProvider {
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
   listAnnouncements(): Promise<Announcement[]>;
-  createAnnouncement(payload: { title: string; body: string; published?: boolean }, ctx: ConsequentialContext): Promise<MutationResult>;
-  updateAnnouncement(id: string, payload: { title?: string; body?: string; published?: boolean }, ctx: ConsequentialContext): Promise<MutationResult>;
+  createAnnouncement(
+    payload: { title: string; body: string; published?: boolean },
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult>;
+  updateAnnouncement(
+    id: string,
+    payload: { title?: string; body?: string; published?: boolean },
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult>;
   publishAnnouncement(id: string, ctx: ConsequentialContext): Promise<MutationResult>;
   listMessages(): Promise<AdminMessage[]>;
   listNotifications(): Promise<AdminNotification[]>;
-  sendNotification(payload: { userId: string; type: string; title: string; body: string }, ctx: ConsequentialContext): Promise<MutationResult>;
+  sendNotification(
+    payload: { userId: string; type: string; title: string; body: string },
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult>;
   listLearnArticles(): Promise<AdminLearnArticle[]>;
-  createLearnArticle(payload: { slug: string; title: string; body: string; status?: string }, ctx: ConsequentialContext): Promise<MutationResult>;
-  updateLearnArticle(id: string, payload: { title?: string; body?: string; status?: string }, ctx: ConsequentialContext): Promise<MutationResult>;
+  createLearnArticle(
+    payload: { slug: string; title: string; body: string; status?: string },
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult>;
+  updateLearnArticle(
+    id: string,
+    payload: { title?: string; body?: string; status?: string },
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult>;
   publishLearnArticle(id: string, ctx: ConsequentialContext): Promise<MutationResult>;
   listHealth(): Promise<HealthCheck[]>;
 
@@ -439,10 +453,7 @@ export interface AdminDataProvider {
     },
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
-  executeSandboxCommand(
-    commandId: string,
-    ctx: ConsequentialContext,
-  ): Promise<MutationResult>;
+  executeSandboxCommand(commandId: string, ctx: ConsequentialContext): Promise<MutationResult>;
 
   /** Subscription to audit stream (for UI refresh) */
   subscribe(fn: () => void): () => void;

@@ -35,7 +35,7 @@ describe('A18 Learn lifecycle closure', () => {
       $transaction: jest.fn(async (fn: (arg: any) => Promise<unknown>) => fn(tx)),
     };
     const outbox: any = { recordEvent: jest.fn(async () => ({})) };
-    const service = new CommunicationsService({} as any, d1, outbox);
+    const service = new CommunicationsService(d1, outbox, {} as any, { isAvailable: () => false } as any);
 
     expect(await service.publishLearn(current.id, 'learn-publish-1')).toEqual(published);
     expect(tx.learnArticle.update).toHaveBeenCalledWith(expect.objectContaining({

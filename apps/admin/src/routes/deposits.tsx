@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { PageHeader } from "@/admin/components/PageHeader";
 import { RouteGuard } from "@/admin/components/RouteGuard";
 import { StatusBadge } from "@/admin/components/StatusBadge";
+import { ProviderBadge } from "@/admin/components/ProviderBadge";
 import {
   DataTable,
   type DataTableColumn,
@@ -448,10 +449,10 @@ function Shell({
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Deposits"
-        description="Detected → Confirming → Confirmed → Credited pipeline with governed mock actions."
+        description="Detected → Confirming → Confirmed → Credited pipeline with governed actions."
         badges={
           <>
-            <StatusBadge tone="warning">Mock data</StatusBadge>
+            <ProviderBadge />
             {total !== undefined ? (
               <StatusBadge tone="info" dot={false}>
                 {total} rows

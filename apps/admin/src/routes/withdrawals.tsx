@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { PageHeader } from "@/admin/components/PageHeader";
 import { RouteGuard } from "@/admin/components/RouteGuard";
 import { StatusBadge } from "@/admin/components/StatusBadge";
+import { ProviderBadge } from "@/admin/components/ProviderBadge";
 import {
   DataTable,
   type DataTableColumn,
@@ -556,7 +557,7 @@ function ActionDialog({
     completed: {
       title: "Mark as completed",
       description:
-        "Records successful on-chain broadcast and confirmation. A mock transaction hash is attached.",
+        "Records the provider-reported completed state after broadcast and confirmation.",
       actionName: "withdrawals.mark_completed",
       submitLabel: "Mark completed",
       successMessage: "Marked completed",
@@ -643,7 +644,7 @@ function Shell({
         description="Governed review, approval, and processing queue with linked audit history."
         badges={
           <>
-            <StatusBadge tone="warning">Mock data</StatusBadge>
+            <ProviderBadge />
             {total !== undefined ? (
               <StatusBadge tone="info" dot={false}>
                 {total} total

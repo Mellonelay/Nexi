@@ -2,6 +2,8 @@ import Sidebar from '../components/Sidebar';
 import BottomNav from '../components/BottomNav';
 import AppHeader from '../components/AppHeader';
 import WalletAccessGate from '../components/WalletAccessGate';
+import { Suspense } from 'react';
+import { RouteHistoryTracker } from '../components/SafeBackButton';
 
 export default function DashboardLayout({
   children,
@@ -10,6 +12,7 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="relative flex min-h-[100dvh] min-w-0 bg-[#050508] text-white">
+      <Suspense fallback={null}><RouteHistoryTracker /></Suspense>
       {/* Sidebar - Desktop Only */}
       <div className="hidden lg:block">
         <Sidebar />

@@ -2,15 +2,16 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import type { Environment, RoleId } from "../types";
 import { hasPermission, ROLES } from "../config/roles";
 import type { Permission } from "../types";
-import { localProvider } from "../data/local-mock-provider";
 import type { AdminDataProvider } from "../data/provider";
 
 interface AdminSession {
   environment: Environment;
   setEnvironment: (e: Environment) => void;
   roleId: RoleId;
+  roleLabel: string;
   setRoleId: (r: RoleId) => void;
   actorName: string;
+  identityStatus: "local" | "loading" | "ready" | "unavailable";
   effectivePermissions: Permission[];
   can: (p: Permission) => boolean;
 }
@@ -19,40 +20,63 @@ const Ctx = createContext<AdminSession | null>(null);
 
 export function AdminSessionProvider({
   children,
-  provider = localProvider,
+  provider,
 }: {
   children: ReactNode;
-  provider?: AdminDataProvider;
+  provider: AdminDataProvider;
 }) {
+  const isLiveProvider = Boolean(provider.getAdminIdentity);
   const [environment, setEnvironment] = useState<Environment>("SANDBOX");
   const [roleId, setRoleId] = useState<RoleId>("super_admin");
-  const [actorName, setActorName] = useState(ROLES.super_admin.label);
+  const [roleLabel, setRoleLabel] = useState(
+    isLiveProvider ? "Loading identity…" : ROLES.super_admin.label,
+  );
+  const [actorName, setActorName] = useState(
+    isLiveProvider ? "Loading identity…" : ROLES.super_admin.label,
+  );
   const [effectivePermissions, setEffectivePermissions] = useState<Permission[]>([]);
-  const [identityReady, setIdentityReady] = useState(!provider.getAdminIdentity);
+  const [identityReady, setIdentityReady] = useState(!isLiveProvider);
+  const [identityStatus, setIdentityStatus] = useState<AdminSession["identityStatus"]>(
+    isLiveProvider ? "loading" : "local",
+  );
 
   useEffect(() => {
     let active = true;
     if (!provider.getAdminIdentity) {
       setEffectivePermissions([]);
       setIdentityReady(true);
+      setIdentityStatus("local");
       return () => {
         active = false;
       };
     }
     setIdentityReady(false);
+    setIdentityStatus("loading");
     provider
       .getAdminIdentity()
       .then((identity) => {
         if (!active) return;
         if (identity.roleId && identity.roleId in ROLES) {
           setRoleId(identity.roleId);
-          setActorName(identity.email || identity.roleLabel || identity.roleId);
         }
+        setActorName(identity.email || identity.roleLabel || "Unassigned admin");
+        setRoleLabel(
+          identity.roleLabel ??
+            (identity.roleId && identity.roleId in ROLES
+              ? ROLES[identity.roleId].label
+              : "Unassigned"),
+        );
         setEffectivePermissions(identity.effectivePermissions);
         setIdentityReady(true);
+        setIdentityStatus("ready");
       })
       .catch(() => {
-        if (active) setIdentityReady(true);
+        if (active) {
+          setActorName("Identity unavailable");
+          setRoleLabel("Identity unavailable");
+          setIdentityReady(true);
+          setIdentityStatus("unavailable");
+        }
       });
     return () => {
       active = false;
@@ -64,14 +88,26 @@ export function AdminSessionProvider({
       environment,
       setEnvironment,
       roleId,
+      roleLabel: isLiveProvider ? roleLabel : ROLES[roleId].label,
       setRoleId,
       actorName,
+      identityStatus,
       effectivePermissions,
       can: (p) =>
         identityReady &&
         (provider.getAdminIdentity ? effectivePermissions.includes(p) : hasPermission(roleId, p)),
     };
-  }, [actorName, effectivePermissions, environment, identityReady, provider, roleId]);
+  }, [
+    actorName,
+    effectivePermissions,
+    environment,
+    identityReady,
+    identityStatus,
+    isLiveProvider,
+    provider,
+    roleId,
+    roleLabel,
+  ]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

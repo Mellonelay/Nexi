@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { PageHeader } from "@/admin/components/PageHeader";
 import { RouteGuard } from "@/admin/components/RouteGuard";
 import { StatusBadge } from "@/admin/components/StatusBadge";
+import { ProviderBadge } from "@/admin/components/ProviderBadge";
 import {
   DataTable,
   type DataTableColumn,
@@ -240,7 +241,7 @@ function Shell({
         description="Pair-level and global exposure across Spot and Binary. Warning and limit states drive maintenance decisions."
         badges={
           <>
-            <StatusBadge tone="warning">Mock data</StatusBadge>
+            <ProviderBadge />
             {total !== undefined ? (
               <StatusBadge tone="info" dot={false}>
                 {total} pairs

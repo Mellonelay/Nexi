@@ -60,7 +60,10 @@ function Inner() {
 
   const approvals = useMemo(() => approvalsQuery.data ?? [], [approvalsQuery.data]);
   const pendingCommandIds = useMemo(
-    () => new Set(history.filter((s) => s.status === "requested" && s.commandId).map((s) => s.commandId!)),
+    () =>
+      new Set(
+        history.filter((s) => s.status === "requested" && s.commandId).map((s) => s.commandId!),
+      ),
     [history],
   );
   const hasPending = pendingCommandIds.size > 0;
@@ -128,7 +131,7 @@ function Inner() {
                 result: result.auditId ? `Executed (audit ${result.auditId})` : "Executed",
               }
             : item,
-        )
+        ),
       );
       receipt.record("sandbox.execute", result);
     } finally {
@@ -143,8 +146,7 @@ function Inner() {
   return (
     <GovernanceShell
       title="Sandbox Controls"
-      description="Deterministic mock scenarios only. No public or production authority."
-      badges={false}
+      description="Sandbox-only scenarios. No public or production authority."
     >
       <div className="grid gap-2 sm:grid-cols-3">
         <StatusBadge tone="destructive">SANDBOX_ONLY</StatusBadge>
@@ -172,6 +174,7 @@ function Inner() {
               <select
                 className="mt-1 h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
                 value={form.scope}
+                aria-label="Sandbox target scope"
                 onChange={(e) => update("scope", e.target.value as Scenario["scope"])}
               >
                 <option value="binary">Binary</option>
@@ -208,6 +211,7 @@ function Inner() {
               <select
                 className="mt-1 h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
                 value={form.mode}
+                aria-label="Sandbox forced outcome mode"
                 onChange={(e) => update("mode", e.target.value as Scenario["mode"])}
               >
                 {["normal", "forced_win", "forced_loss"].map((m) => (
@@ -230,9 +234,7 @@ function Inner() {
               <Button
                 className="w-full"
                 disabled={!form.name.trim() || !form.target.trim() || !form.seed.trim()}
-                onClick={() =>
-                  setPending({ ...form })
-                }
+                onClick={() => setPending({ ...form })}
               >
                 Request scenario
               </Button>
@@ -282,7 +284,7 @@ function Inner() {
                                 ? "rejected"
                                 : approvalStatus === "approved"
                                   ? "approved"
-                                  : s.status ?? "requested"}
+                                  : (s.status ?? "requested")}
                           </StatusBadge>
                         </div>
                       </div>
@@ -302,7 +304,7 @@ function Inner() {
             ) : (
               <EmptyState
                 title="No scenarios executed"
-                description="Executed mock scenarios remain visible here for this session."
+                description="Executed scenarios remain visible here for this session."
               />
             )}
           </div>

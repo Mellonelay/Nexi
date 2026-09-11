@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowDownToLine, ArrowLeftRight, ArrowUpFromLine, Clock3, History, RefreshCw, WalletCards } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../lib/api';
@@ -72,6 +72,7 @@ export default function WalletPage() {
   const [error, setError] = useState('');
   const [action, setAction] = useState<Action | null>(null);
   const [currency, setCurrency] = useState('');
+  const previousUserId = useRef<string | null | undefined>();
 
   const readEndpoint = userId ? '/wallet/me' : null;
   const activityEndpoint = userId ? '/wallet/activity' : null;
@@ -83,13 +84,23 @@ export default function WalletPage() {
   const authenticated = Boolean(userId);
   const currencies = useMemo(() => assets.map((asset) => ({ symbol: asset.name })), [assets]);
 
-  const clearPrivateState = useCallback(() => { setUserId(null); setPayload(null); setActivities([]); setState('UNAVAILABLE'); setError('Connect and verify a wallet to load private wallet data.'); }, []);
   useEffect(() => {
-    const sync = () => { const next = sessionPrincipalId(); setUserId((previous) => { if (previous !== next) { setPayload(null); setActivities([]); setState(next ? 'LOADING' : 'UNAVAILABLE'); } return next; }); if (!next) clearPrivateState(); setSessionChecked(true); };
+    const sync = () => {
+      const next = sessionPrincipalId();
+      if (previousUserId.current !== next) {
+        setPayload(null);
+        setActivities([]);
+        setState(next ? 'LOADING' : 'UNAVAILABLE');
+        setError(next ? '' : 'Connect and verify a wallet to load private wallet data.');
+        previousUserId.current = next;
+      }
+      setUserId(next);
+      setSessionChecked(true);
+    };
     sync();
     window.addEventListener('nexi:wallet-session', sync);
     return () => window.removeEventListener('nexi:wallet-session', sync);
-  }, [clearPrivateState]);
+  }, []);
 
   const loadWallet = useCallback(async () => {
     if (!sessionChecked || !userId) return;

@@ -22,13 +22,19 @@ function Inner() {
   const [incident, setIncident] = useState<IncidentMessage | null>(null);
   if (healthQ.loading || incidentsQ.loading)
     return (
-      <GovernanceShell title="System Health" description="Mock service and dependency telemetry.">
+      <GovernanceShell
+        title="System Health"
+        description="Service status, dependency freshness, latency, and incident context."
+      >
         <LoadingSkeleton rows={6} />
       </GovernanceShell>
     );
   if (healthQ.error)
     return (
-      <GovernanceShell title="System Health" description="Mock service and dependency telemetry.">
+      <GovernanceShell
+        title="System Health"
+        description="Service status, dependency freshness, latency, and incident context."
+      >
         <ErrorState
           title="Could not load health"
           description={(healthQ.error ?? incidentsQ.error)?.message ?? "Unknown error"}
@@ -44,13 +50,9 @@ function Inner() {
       description="Service status, dependency freshness, latency, and incident context."
     >
       <div className="grid gap-3 sm:grid-cols-3">
-        <Metric label="Services" value={String(checks.length)} tone="info" />
-        <Metric label="Healthy" value={String(checks.length - bad)} tone="success" />
-        <Metric
-          label="Degraded / unavailable"
-          value={String(bad)}
-          tone={bad ? "warning" : "success"}
-        />
+        <Metric label="Services" value={String(checks.length)} />
+        <Metric label="Healthy" value={String(checks.length - bad)} />
+        <Metric label="Degraded / unavailable" value={String(bad)} />
       </div>
       <div className="grid gap-3 md:grid-cols-2">
         {checks.map((c) => (
@@ -92,7 +94,7 @@ function Inner() {
         ) : (
           <EmptyState
             title="No active incidents"
-            description="Historical incident records will appear here when provided by the Admin authority."
+            description="Historical incident records will appear here when available from the active provider."
           />
         )}
       </section>
@@ -120,7 +122,7 @@ function Inner() {
                   content: (
                     <p className="text-xs text-muted-foreground">
                       Governed acknowledgement is unavailable in the current provider contract; no
-                      fake mutation control is shown.
+                      mutation control is shown.
                     </p>
                   ),
                 },
@@ -131,21 +133,12 @@ function Inner() {
     </GovernanceShell>
   );
 }
-function Metric({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: string;
-  tone: "info" | "success" | "warning";
-}) {
+function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div className="surface-1 rounded-lg border border-border/60 p-4">
       <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
       <div className="mt-2 flex items-center justify-between">
         <span className="mono text-2xl">{value}</span>
-        <StatusBadge tone={tone}>mock</StatusBadge>
       </div>
     </div>
   );

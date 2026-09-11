@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, Wallet } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
+import SafeBackButton from '../../components/SafeBackButton';
 import { io } from 'socket.io-client';
 import api, { apiBaseUrl } from '../../lib/api';
 import SymbolSelector from '../../components/SymbolSelector';
@@ -40,6 +41,7 @@ type OrderBookRow = { id?: string; price: number; amount: number; remaining?: nu
 type MarketTradeRow = { id: string; price: number; amount: number; executedAt: string; side: 'MATCHED' };
 type OrderType = 'MARKET' | 'LIMIT' | 'STOP';
 type HistoryTab = 'OPEN' | 'ORDERS' | 'TRADES';
+type SpotHistoryRow = Record<string, unknown>;
 type ConfirmationMode = 'AUTHORITATIVE';
 type ChartInterval = '1m' | '5m' | '15m' | '1h';
 type MobileMarketPanel = 'CHART' | 'BOOK' | 'TRADES';
@@ -115,6 +117,8 @@ export default function SpotPage() {
   const [confirmationOpen, setConfirmationOpen] = useState(false);
   const [confirmationMode, setConfirmationMode] = useState<ConfirmationMode>('AUTHORITATIVE');
   const [historyTab, setHistoryTab] = useState<HistoryTab>('OPEN');
+  const [historyRows, setHistoryRows] = useState<SpotHistoryRow[]>([]);
+  const [historyStatus, setHistoryStatus] = useState<'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR'>('UNAVAILABLE');
   const [feedback, setFeedback] = useState<string | null>(null);
   const [marginDirection, setMarginDirection] = useState<MarginDirection>('LONG');
   const [marginLeverage, setMarginLeverage] = useState<MarginLeverage>(0);
@@ -125,6 +129,8 @@ export default function SpotPage() {
   const [marginFeedback, setMarginFeedback] = useState<string | null>(null);
   const [marginSubmitting, setMarginSubmitting] = useState(false);
   const [activeSurface, setActiveSurface] = useState<SpotSurface>('SPOT');
+  const orderSubmissionLock = useRef(false);
+  const marginSubmissionLock = useRef(false);
 
   useEffect(() => {
     if (querySymbol) setActivePair(querySymbol);
@@ -202,11 +208,38 @@ export default function SpotPage() {
     }
   }, [marginLeverageOptions, marginLeverage]);
 
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!userId || !hasAuthSession()) {
+      setHistoryRows([]);
+      setHistoryStatus('UNAVAILABLE');
+      return () => { cancelled = true; };
+    }
+    const endpoint = historyTab === 'OPEN' ? '/spot/orders/open' : historyTab === 'ORDERS' ? '/spot/orders/history' : '/spot/trades/history';
+    setHistoryStatus('LOADING');
+    api.get(endpoint, { timeout: 15_000 })
+      .then((response) => {
+        if (cancelled) return;
+        const rows = Array.isArray(response.data) ? response.data.filter((row): row is SpotHistoryRow => Boolean(row && typeof row === 'object')) : [];
+        setHistoryRows(rows);
+        setHistoryStatus(rows.length > 0 ? 'LIVE' : 'UNAVAILABLE');
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setHistoryRows([]);
+        setHistoryStatus('ERROR');
+      });
+    return () => { cancelled = true; };
+  }, [historyTab, userId]);
+
   const handleOpenMargin = async () => {
+    if (marginSubmissionLock.current) return;
     if (!marginReady || marginCollateralValue === null) {
       setMarginFeedback(!userId ? 'Verify the wallet before opening an isolated-margin position.' : 'Enter positive collateral and wait for the authoritative margin quote.');
       return;
     }
+    marginSubmissionLock.current = true;
     setMarginSubmitting(true);
     setMarginFeedback(null);
     try {
@@ -223,11 +256,14 @@ export default function SpotPage() {
     } catch {
       setMarginFeedback('The authoritative margin API did not accept this position.');
     } finally {
+      marginSubmissionLock.current = false;
       setMarginSubmitting(false);
     }
   };
 
   const handleCloseMargin = async (positionId: string) => {
+    if (marginSubmissionLock.current) return;
+    marginSubmissionLock.current = true;
     setMarginSubmitting(true);
     setMarginFeedback(null);
     try {
@@ -237,11 +273,14 @@ export default function SpotPage() {
     } catch {
       setMarginFeedback('The authoritative margin close request failed.');
     } finally {
+      marginSubmissionLock.current = false;
       setMarginSubmitting(false);
     }
   };
 
   const handleMarkMargin = async (positionId: string) => {
+    if (marginSubmissionLock.current) return;
+    marginSubmissionLock.current = true;
     setMarginSubmitting(true);
     setMarginFeedback(null);
     try {
@@ -251,6 +290,7 @@ export default function SpotPage() {
     } catch {
       setMarginFeedback('The authoritative margin mark request failed.');
     } finally {
+      marginSubmissionLock.current = false;
       setMarginSubmitting(false);
     }
   };
@@ -338,14 +378,19 @@ export default function SpotPage() {
       refreshTrades();
     };
 
-    socket.on('connect', () => {
+    const handleConnect = () => {
       socket.emit('spot.subscribe', { pair: normalizedSymbol });
       refreshBook();
       refreshTrades();
-    });
+    };
+    socket.on('connect', handleConnect);
     socket.on('spot.orderbook', handleOrderBook);
 
-    return () => { socket.disconnect(); };
+    return () => {
+      socket.off('connect', handleConnect);
+      socket.off('spot.orderbook', handleOrderBook);
+      socket.disconnect();
+    };
   }, [backendConfigured, displayPair, normalizedSymbol]);
 
   useEffect(() => {
@@ -418,7 +463,8 @@ export default function SpotPage() {
   };
 
   const submitOrder = async () => {
-    if (!ready || !userId) return;
+    if (orderSubmissionLock.current || !ready || !userId) return;
+    orderSubmissionLock.current = true;
     setOrderState('SUBMITTING');
     setFeedback(null);
     try {
@@ -439,6 +485,8 @@ export default function SpotPage() {
       setOrderState('FAILED');
       setConfirmationOpen(false);
       setFeedback('The authoritative NEXI API did not accept this order.');
+    } finally {
+      orderSubmissionLock.current = false;
     }
   };
 
@@ -453,9 +501,7 @@ export default function SpotPage() {
   return (
     <main className="nexi-page-shell min-h-[100dvh] w-full min-w-0 overflow-x-clip pb-36 text-[#F8F6FF] lg:pb-8">
       <header className="nexi-station-header sticky top-0 z-20 flex min-w-0 items-center justify-between gap-2 border-b px-3 py-3 backdrop-blur sm:gap-3 sm:px-4">
-        <button type="button" aria-label="Go back" onClick={() => router.back()} className="nexi-interactive flex min-h-9 min-w-9 shrink-0 items-center justify-center rounded-lg border border-violet-300/15 text-[#C3BBD0] hover:border-violet-300/30">
-          <ArrowLeft size={16} aria-hidden="true" />
-        </button>
+        <SafeBackButton fallback="/dashboard" label="Back to Quotes Hub" />
         <div className="min-w-0 flex-1">
           <SymbolSelector
             currentSymbol={displayPair}
@@ -623,13 +669,19 @@ export default function SpotPage() {
               ))}
             </div>
             <div className="p-4">
-              {orderState !== 'DRAFT' ? (
-                <article className="min-w-0 rounded-xl border border-violet-300/10 bg-[#0B0711] p-4">
-                  <div className="flex min-w-0 flex-wrap items-start justify-between gap-3"><div className="min-w-0 flex-1"><p className="text-xs uppercase tracking-[0.14em] text-[#8C8299]">{historyTab === 'OPEN' ? 'Active order' : historyTab === 'ORDERS' ? 'Order detail' : 'Execution detail'}</p><h3 className="mt-1 break-words font-semibold">{displayPair} · {side} {orderType === 'STOP' ? 'STOP LIMIT' : orderType}</h3></div><span className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-semibold ${orderState === 'FILLED' ? 'border-emerald-300/25 text-[#22D3A6]' : orderState === 'REJECTED' || orderState === 'FAILED' ? 'border-rose-300/25 text-[#FF5C7C]' : 'border-violet-300/25 text-[#C3BBD0]'}`}>{orderState.replaceAll('_', ' ')}</span></div>
-                  <dl className="mt-4 grid min-w-0 grid-cols-1 gap-3 text-xs sm:grid-cols-2 md:grid-cols-4"><div className="min-w-0"><dt className="text-[#8C8299]">Amount</dt><dd className="mt-1 break-words font-mono">{amount || '—'} {baseSymbol}</dd></div><div className="min-w-0"><dt className="text-[#8C8299]">Price</dt><dd className="mt-1 break-words font-mono">{orderType === 'MARKET' ? 'Market' : price || '—'}</dd></div><div className="min-w-0"><dt className="text-[#8C8299]">TP / SL</dt><dd className="mt-1 break-words font-mono">{tpSlState === 'NOT_CONFIGURED' ? 'Not configured' : `${tp || '—'} / ${sl || '—'}`}</dd></div><div className="min-w-0"><dt className="text-[#8C8299]">Provenance</dt><dd className="mt-1 break-words">Authoritative API</dd></div></dl>
-                </article>
+              {historyRows.length > 0 ? (
+                <div className="space-y-2">{historyRows.slice(0, 30).map((row, index) => {
+                  const id = String(row.id ?? row.orderId ?? `${historyTab}-${index}`);
+                  const pair = String(row.pair ?? displayPair);
+                  const status = String(row.status ?? row.state ?? 'COMPLETED').replaceAll('_', ' ');
+                  const rowSide = row.side ? String(row.side) : '';
+                  const rowAmount = String(row.amount ?? row.quantity ?? row.filled ?? '—');
+                  const rowPrice = String(row.price ?? row.entryPrice ?? '—');
+                  const when = row.createdAt ?? row.executedAt ?? row.updatedAt;
+                  return <article key={id} className="rounded-xl border border-violet-300/10 bg-[#0B0711] p-3 text-xs"><div className="flex flex-wrap items-center justify-between gap-2"><span className="font-semibold">{pair}{rowSide ? ` · ${rowSide}` : ''}</span><span className="rounded-full border border-violet-300/20 px-2 py-1 uppercase text-[#C3BBD0]">{status}</span></div><div className="mt-2 grid grid-cols-2 gap-2 font-mono sm:grid-cols-4"><span>Amount {rowAmount}</span><span>Price {rowPrice}</span><span className="truncate">ID {id}</span><span>{when ? new Date(String(when)).toLocaleString() : '—'}</span></div></article>;
+                })}</div>
               ) : (
-                <div className="flex min-h-32 items-center justify-center text-center text-sm text-[#8C8299]">{historyTab === 'OPEN' ? 'No authoritative open orders are available.' : historyTab === 'ORDERS' ? 'Order history is unavailable.' : 'Trade history is unavailable.'}</div>
+                <div className="flex min-h-32 items-center justify-center text-center text-sm text-[#8C8299]">{historyStatus === 'LOADING' ? 'Loading activity…' : historyStatus === 'ERROR' ? 'Activity request failed.' : historyTab === 'OPEN' ? 'No open orders.' : historyTab === 'ORDERS' ? 'No order history.' : 'No trade history.'}</div>
               )}
             </div>
           </section>

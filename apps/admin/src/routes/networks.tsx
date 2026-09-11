@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/admin/components/PageHeader";
 import { RouteGuard } from "@/admin/components/RouteGuard";
 import { StatusBadge } from "@/admin/components/StatusBadge";
+import { ProviderBadge } from "@/admin/components/ProviderBadge";
 import {
   DataTable,
   type DataTableColumn,
@@ -360,7 +361,7 @@ function Shell({
         description="Chain identity, contract, decimals, explorer, confirmations, limits, and fees."
         badges={
           <>
-            <StatusBadge tone="warning">Mock data</StatusBadge>
+            <ProviderBadge />
             {total !== undefined ? (
               <StatusBadge tone="info" dot={false}>
                 {total} networks
@@ -449,7 +450,7 @@ function NetworkEditForm({
         if (!o) onClose();
       }}
       title={net ? `Wallet config — ${net.assetSymbol}` : ""}
-      description="Edit the user-facing deposit/withdraw limits, fee, confirmations, precision and enablement backed by the canonical Currency configuration."
+      description="Edit the user-facing deposit/withdraw limits, fee, confirmations, precision and enablement."
       submitLabel="Save wallet config"
       submitDisabled={!reasonOk || !limitsValid}
       onSubmit={async () => {

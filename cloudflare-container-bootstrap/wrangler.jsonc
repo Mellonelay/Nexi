@@ -21,7 +21,6 @@
     "WALLET_AUTH_DOMAIN": "app.nexitrading.app",
     "WALLET_AUTH_URI": "https://app.nexitrading.app",
     "WALLET_AUTH_SUPPORTED_CHAIN_IDS": "1",
-    "DATABASE_POOL_MAX": "4",
     "D1_BRIDGE_ENABLED": "true",
     "D1_BRIDGE_HOST": "nexi-core-d1",
     "QUEUE_BRIDGE_HOST": "nexi.queue",
@@ -47,7 +46,6 @@
   },
   "secrets": {
     "required": [
-      "DATABASE_URL",
       "REDIS_URL",
       "JWT_SECRET",
       "MARKET_ARCHIVE_PIPELINE_TOKEN",

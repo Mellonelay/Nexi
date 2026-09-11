@@ -4,11 +4,10 @@ import { PrismaClient as D1PrismaClient } from '../prisma/d1-client/index.js';
 import { D1RemoteDatabase } from './d1-remote-database';
 
 /**
- * SQLite/D1 Prisma client used for staging migration verification.
+ * D1 Prisma client for ordinary ORM-style access.
  *
- * This is intentionally separate from PrismaService until every financial
- * transaction site has a native D1 command implementation. The D1 adapter
- * does not make remote Prisma transactions atomic.
+ * Consequential financial mutations use D1FinancialCommandGateway because a
+ * remote Prisma adapter cannot make a transaction atomic at the Worker.
  */
 @Injectable()
 export class D1PrismaService extends D1PrismaClient implements OnModuleInit, OnModuleDestroy {

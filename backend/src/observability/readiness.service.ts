@@ -5,19 +5,17 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { D1PrismaService } from '../d1/d1-prisma.service';
-import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 
 export type ReadinessReport = {
   database: boolean;
   redis: boolean;
-  authority: 'D1' | 'PostgreSQL';
+  authority: 'D1';
 };
 
 @Injectable()
 export class ReadinessService {
   constructor(
-    private readonly prisma: PrismaService,
     private readonly d1: D1PrismaService,
     private readonly redis: RedisService,
   ) {}
@@ -61,19 +59,15 @@ export class ReadinessService {
   }
 
   private async getReport(): Promise<ReadinessReport> {
-    const d1Enabled = process.env.D1_RUNTIME_ENABLED === 'true';
     const [database, redis] = await Promise.all([
-      this.withTimeout(
-        d1Enabled ? this.d1.isReady() : this.prisma.isReady(),
-        3_000,
-      ),
+      this.withTimeout(this.d1.isReady(), 3_000),
       this.withTimeout(this.redis.isReady(), 3_000),
     ]);
 
     return {
       database,
       redis,
-      authority: d1Enabled ? 'D1' : 'PostgreSQL',
+      authority: 'D1',
     };
   }
 

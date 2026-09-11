@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 import { ROLE_LIST } from "@/admin/config/roles";
 import { ENVIRONMENTS } from "@/admin/config/environments";
 import { EnvironmentBadge } from "@/admin/components/EnvironmentBadge";
+import { ProviderBadge } from "@/admin/components/ProviderBadge";
+import { useAdminData } from "@/admin/data/context";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, ShieldAlert } from "lucide-react";
 import type { ReactNode } from "react";
@@ -69,10 +71,11 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
 
 function SessionControls() {
   const s = useAdminSession();
+  const provider = useAdminData();
   return (
     <div className="flex flex-col gap-2 border-t border-sidebar-border/60 p-3">
       <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        Mock session
+        Session
       </div>
       <label className="flex flex-col gap-1 text-[11px] text-muted-foreground">
         Environment
@@ -88,23 +91,46 @@ function SessionControls() {
           ))}
         </select>
       </label>
-      <label className="flex flex-col gap-1 text-[11px] text-muted-foreground">
-        Role
-        <select
-          value={s.roleId}
-          onChange={(e) => s.setRoleId(e.target.value as RoleId)}
-          className="h-8 rounded-md border border-input bg-background px-2 text-sm text-foreground"
-        >
-          {ROLE_LIST.map((r) => (
-            <option key={r.id} value={r.id}>
-              {r.label}
-            </option>
-          ))}
-        </select>
-      </label>
-      <div className="mt-1 flex items-center gap-2 rounded-md border border-warning/40 bg-warning/10 px-2 py-1.5 text-[10px] text-warning">
+      {provider.getAdminIdentity ? (
+        <div className="flex flex-col gap-1 text-[11px] text-muted-foreground">
+          Role
+          <div className="flex h-8 items-center rounded-md border border-input bg-background px-2 text-sm text-foreground">
+            {s.roleLabel}
+          </div>
+        </div>
+      ) : (
+        <label className="flex flex-col gap-1 text-[11px] text-muted-foreground">
+          Role
+          <select
+            value={s.roleId}
+            onChange={(e) => s.setRoleId(e.target.value as RoleId)}
+            className="h-8 rounded-md border border-input bg-background px-2 text-sm text-foreground"
+          >
+            {ROLE_LIST.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+      <div
+        className={cn(
+          "mt-1 flex items-center gap-2 rounded-md border px-2 py-1.5 text-[10px]",
+          provider.getAdminIdentity
+            ? "border-success/40 bg-success/10 text-success"
+            : "border-warning/40 bg-warning/10 text-warning",
+        )}
+      >
         <ShieldAlert className="h-3 w-3" />
-        <span>Mock data. No backend connected.</span>
+        <span>
+          {provider.getAdminIdentity
+            ? "Admin API identity and permissions are server-managed."
+            : "Local/demo data is explicit. Live mode uses the configured Admin API provider."}
+        </span>
+      </div>
+      <div className="mt-1">
+        <ProviderBadge />
       </div>
     </div>
   );
@@ -154,6 +180,7 @@ function TopBar({ mobileNav }: { mobileNav: ReactNode }) {
       </div>
       <input
         placeholder="Search users, tickets, orders…"
+        aria-label="Search admin records"
         className="hidden h-8 w-72 rounded-md border border-input bg-background px-3 text-sm text-foreground md:block"
       />
       <EnvironmentBadge env={s.environment} />
@@ -161,7 +188,13 @@ function TopBar({ mobileNav }: { mobileNav: ReactNode }) {
         <div className="text-right">
           <div className="text-xs font-medium text-foreground">{s.actorName}</div>
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-            Mock actor
+            {s.identityStatus === "local"
+              ? "local operator"
+              : s.identityStatus === "loading"
+                ? "loading identity"
+                : s.identityStatus === "ready"
+                  ? "authenticated"
+                  : "identity unavailable"}
           </div>
         </div>
         <div className="grid h-8 w-8 place-items-center rounded-full bg-accent text-xs font-semibold text-accent-foreground">
@@ -182,7 +215,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
           mobileNav={
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
-                <button className="grid h-8 w-8 place-items-center rounded-md border border-border/60">
+                <button
+                  aria-label="Open admin navigation"
+                  className="grid h-8 w-8 place-items-center rounded-md border border-border/60"
+                >
                   <Menu className="h-4 w-4" />
                 </button>
               </SheetTrigger>

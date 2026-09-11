@@ -2,18 +2,18 @@
 
 **Canonical cleanup branch:** `admin/canonical-clean`  
 **Source basis:** latest verified `replit/admin-completion` Finance fix (`c798e3bcd5c8b352f30e100209ea8b2ef1390a15`)  
-**Production integration:** not connected
+**Live provider:** connected in source for published Admin contracts; joined runtime verification is not established
 
 ## Executive summary
 
-The application has a working Admin shell, provider abstraction, mock RBAC/session model, shared workflow components, and functional mock workflows for Overview, Identity, Platform, Markets, and Finance.
+The application has a working Admin shell, explicit provider abstraction, server-backed live identity when selected, local/demo RBAC for local mode, shared workflow components, and provider-backed workflows for Overview, Identity, Platform, Markets, and Finance.
 
 The route registry currently defines **34 Admin destinations**. Of those:
 
 - **20 routes are functionally implemented**
 - **14 routes remain structural or minimal**
 
-The current implementation is a mock operations console, not a production control plane. Real authentication, server-enforced authorization, authoritative APIs, audit storage, financial services, and deployment hardening remain outside the current repository state.
+The local provider is a demo operations console. Live mode uses the Admin API adapter, fails closed for unsupported authorities, and still requires joined runtime verification, production authentication, and deployment hardening.
 
 ## Platform cleanup completed
 
@@ -37,7 +37,7 @@ Historical builder commits and branches remain in Git history for traceability. 
 ### Overview
 
 - `/overview`
-  - mock operational metrics
+  - provider-backed operational metrics (fixture-backed only in local mode)
   - system-health summary
   - recent Admin actions and audit stream
 
@@ -66,7 +66,7 @@ Historical builder commits and branches remain in Git history for traceability. 
 - `/localization`
 - `/feature-flags`
 
-Implemented capabilities include public-route configuration, navigation management, six-locale translation management, feature targeting, mock maintenance/incident controls, permissions, confirmations, and audit events.
+Implemented capabilities include public-route configuration, navigation management, six-locale translation management, feature targeting, provider-backed maintenance/incident controls, permissions, confirmations, and audit events.
 
 ### Markets
 
@@ -177,7 +177,7 @@ Required controls:
 - environment switching
 - `AdminDataProvider`
 - `LocalMockAdminProvider`
-- `NexiAdminApiProvider` placeholder
+- `NexiAdminApiProvider` live adapter for published contracts
 - linked fixtures
 - `DataTable`
 - `DetailDrawer`
@@ -228,7 +228,7 @@ A pre-existing TanStack Start development hydration/instrumentation note involvi
 
 - real Admin SSO
 - server-enforced RBAC and environment authorization
-- real `NexiAdminApiProvider`
+- joined runtime verification and production provider configuration
 - authoritative user/KYC/session services
 - market configuration and feed services
 - Spot/Binary operation and settlement services

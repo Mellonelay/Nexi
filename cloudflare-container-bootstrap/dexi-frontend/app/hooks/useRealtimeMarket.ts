@@ -78,6 +78,7 @@ export function useRealtimeMarket(symbol: string, interval = "1m") {
     let acceptedRealtime = false;
     let connectedOnce = false;
     let recoveryGeneration = 0;
+    let cleanupStream: (() => void) | null = null;
 
     setSnapshot({ ...EMPTY_STREAM_SNAPSHOT, status: "CONNECTING" });
 
@@ -166,7 +167,7 @@ export function useRealtimeMarket(symbol: string, interval = "1m") {
         else setSnapshot((current) => applyMarketKline(current, kline));
       };
 
-      socket.on("connect", () => {
+      const handleConnect = () => {
         const isReconnect = connectedOnce;
         connectedOnce = true;
         setSnapshot((current) => ({
@@ -201,25 +202,38 @@ export function useRealtimeMarket(symbol: string, interval = "1m") {
               status: reconnectRecoveryStatus(current),
             }));
           });
-      });
-      socket.io.on("reconnect_attempt", () =>
-        setSnapshot((current) => ({ ...current, status: "RECONNECTING" })),
-      );
-      socket.on("disconnect", () =>
+      };
+      const handleReconnectAttempt = () =>
+        setSnapshot((current) => ({ ...current, status: "RECONNECTING" }));
+      const handleDisconnect = () =>
         setSnapshot((current) => ({
           ...current,
           status: reconnectRecoveryStatus(current),
-        })),
-      );
-      socket.on("connect_error", () =>
+        }));
+      const handleConnectError = () =>
         setSnapshot((current) => ({
           ...current,
           status: reconnectRecoveryStatus(current),
-        })),
-      );
+        }));
+      socket.on("connect", handleConnect);
+      socket.io.on("reconnect_attempt", handleReconnectAttempt);
+      socket.on("disconnect", handleDisconnect);
+      socket.on("connect_error", handleConnectError);
       socket.on("market_tick", handleTick);
       socket.on("market_snapshot", handleSnapshot);
       socket.on("market_kline", handleKline);
+
+      cleanupStream = () => {
+        socket?.off("connect", handleConnect);
+        socket?.io.off("reconnect_attempt", handleReconnectAttempt);
+        socket?.off("disconnect", handleDisconnect);
+        socket?.off("connect_error", handleConnectError);
+        socket?.off("market_tick", handleTick);
+        socket?.off("market_snapshot", handleSnapshot);
+        socket?.off("market_kline", handleKline);
+        socket?.disconnect();
+        if (worker) worker.onmessage = null;
+      };
 
       staleTimer = setInterval(() => {
         setSnapshot((current) => ({
@@ -234,6 +248,7 @@ export function useRealtimeMarket(symbol: string, interval = "1m") {
     return () => {
       disposed = true;
       if (staleTimer) clearInterval(staleTimer);
+      cleanupStream?.();
       socket?.disconnect();
       worker?.terminate();
     };

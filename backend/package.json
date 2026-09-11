@@ -19,9 +19,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
-    "seed": "ts-node prisma/seed.ts",
-    "seed:real": "ts-node scripts/seed-real.ts"
+    "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
     "@microsoft/signalr": "^10.0.11",
@@ -38,7 +36,6 @@
     "@nestjs/swagger": "^7.1.17",
     "@nestjs/websockets": "^10.4.22",
     "@prisma/adapter-d1": "^7.3.0",
-    "@prisma/adapter-pg": "^7.3.0",
     "@prisma/config": "^7.3.0",
     "@sentry/nestjs": "10.73.0",
     "@socket.io/redis-adapter": "^8.3.0",
@@ -52,7 +49,6 @@
     "otpauth": "^9.5.2",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
-    "pg": "^8.17.2",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
     "siwe": "3.0.0",
@@ -86,9 +82,6 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.9.3"
-  },
-  "prisma": {
-    "seed": "ts-node prisma/seed.ts"
   },
   "jest": {
     "moduleFileExtensions": [

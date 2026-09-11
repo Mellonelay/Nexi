@@ -7,7 +7,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
-import { Role } from "@prisma/client";
+import { Role } from "../prisma/d1-client";
 import { AuthService } from "../auth/auth.service";
 import { AuthRateLimit } from "../auth/auth-rate-limit.decorator";
 import { AuthRateLimitGuard } from "../auth/auth-rate-limit.guard";

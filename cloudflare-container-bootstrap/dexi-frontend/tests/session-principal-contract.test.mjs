@@ -7,7 +7,6 @@ const ownershipConsumers = await Promise.all([
   'wallet',
   'mining',
   'loans',
-  'profile',
   'settings',
   'messages',
 ].map((name) => readFile(new URL(`../app/dashboard/${name}/page.tsx`, import.meta.url), 'utf8')));

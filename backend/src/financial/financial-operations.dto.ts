@@ -49,7 +49,7 @@ export class DepositClaimDto {
   @IsString() @Length(1, 128) depositAddressId!: string;
   @IsString() @Matches(DECIMAL) claimedAmount!: string;
   @IsString() @Length(1, 512) proofObjectKey!: string;
-  @IsString() @Length(1, 256) txHash?: string;
+  @IsOptional() @IsString() @Length(1, 256) txHash?: string;
   @IsString() @Length(8, 160) idempotencyKey!: string;
 }
 

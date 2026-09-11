@@ -15,8 +15,8 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { MarketPair, useMarketData } from '../hooks/useMarketData';
 import { nexiTransition } from '../lib/nexi-motion';
-import { instrumentFromMarketPair, pairToRouteSymbol } from '../state/active-instrument';
-import { useActivePair } from '../state/ActivePairProvider';
+import { instrumentFromMarketPair, normalizePair, pairToRouteSymbol } from '../state/active-instrument';
+import { useActiveInstrument } from '../state/ActivePairProvider';
 import { useLocale } from '../state/LocaleProvider';
 import { AssetMark, MarketSparkline, OpportunityArtwork } from './components/QuotesHubVisuals';
 
@@ -31,38 +31,40 @@ const tabs = [
 type Tab = (typeof tabs)[number]['label'];
 
 function formatValue(item: MarketPair, value: 'price' | 'change' | 'volume') {
-  if (item.source === 'fallback') return value === 'change' ? '—.— %' : value === 'volume' ? '—.—M' : '—,——.—';
+  if (item.source === 'fallback') return 'Unavailable';
   if (value === 'price') return item.price === null ? 'Unavailable' : item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 });
   if (value === 'change') return item.change === null ? 'Unavailable' : `${item.change > 0 ? '+' : ''}${item.change.toFixed(2)}%`;
-  return item.vol == null ? '—' : item.vol.toLocaleString('en-US', { maximumFractionDigits: 2 });
+  return item.vol == null ? 'Unavailable' : item.vol.toLocaleString('en-US', { maximumFractionDigits: 2 });
 }
 export default function Dashboard() {
   const router = useRouter();
-  const { setActivePair } = useActivePair();
+  const { activeInstrument, setActiveInstrument } = useActiveInstrument();
   const { t } = useLocale();
   const [activeTab, setActiveTab] = useState<Tab>('Crypto');
   const [query, setQuery] = useState('');
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const { marketPairs, metal, shares, forex, loading } = useMarketData();
+  const { marketPairs, metal, shares, forex, loading, error: marketError } = useMarketData();
 
   const activeData = useMemo(() => {
-    const source = activeTab === 'Metals'
-      ? metal
-      : activeTab === 'Forex'
-        ? forex
-        : activeTab === 'Stocks'
-          ? shares
-          : marketPairs;
+    const source = activeTab === 'Favorites'
+      ? []
+      : activeTab === 'Metals'
+        ? metal
+        : activeTab === 'Forex'
+          ? forex
+          : activeTab === 'Stocks'
+            ? shares
+            : marketPairs;
     const normalizedQuery = query.trim().toLowerCase();
     if (!normalizedQuery) return source;
     return source.filter((item) => `${item.displaySymbol} ${item.name} ${item.symbol}`.toLowerCase().includes(normalizedQuery));
   }, [activeTab, forex, marketPairs, metal, query, shares]);
 
-  const activePair = activeData[0] ?? marketPairs[0];
+  const activePair = activeData.find((item) => normalizePair(item.symbol) === normalizePair(activeInstrument.pair)) ?? (activeTab === 'Favorites' ? undefined : activeData[0] ?? marketPairs[0]);
 
   const openAsset = (item: MarketPair) => {
-    setActivePair(item.symbol);
     const instrument = instrumentFromMarketPair(item);
+    setActiveInstrument(instrument);
     router.push(`/dashboard/asset/${encodeURIComponent(pairToRouteSymbol(instrument.pair))}`);
   };
 
@@ -111,14 +113,13 @@ export default function Dashboard() {
                   <AssetMark item={activePair} large />
                   <span className="min-w-0 flex-1">
                     <span className="flex min-w-0 items-center gap-0.5 text-[14px] font-semibold leading-none md:gap-1.5 md:text-[1.35rem]">
-                      <span>{activePair.displaySymbol}</span>
-                      <span className="text-[10px] font-medium text-[var(--nexi-text-secondary)] md:text-[1.05rem]">/USDT</span>
+                      <span>{instrumentFromMarketPair(activePair).pair}</span>
                     </span>
-                    <span className="mt-1 inline-flex rounded border border-violet-300/20 bg-violet-500/20 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-[0.1em] text-violet-300 md:mt-2 md:rounded-md md:px-2 md:py-1 md:text-[10px]">SPOT</span>
+                    <span className="mt-1 inline-flex rounded border border-violet-300/20 bg-violet-500/20 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-[0.1em] text-violet-300 md:mt-2 md:rounded-md md:px-2 md:py-1 md:text-[10px]">{activePair.category === 'Crypto' ? 'SPOT' : 'MARKET'}</span>
                   </span>
                   <ChevronDown className="h-4 w-4 shrink-0 text-[var(--nexi-text-secondary)] md:h-5 md:w-5" aria-hidden="true" />
                 </button>
-                <button type="button" aria-label={`Favorite ${activePair.displaySymbol}`} className="nexi-icon-button nexi-interactive h-8 w-8 shrink-0 rounded-[12px] md:h-11 md:w-11 md:rounded-[14px]"><Star className="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" /></button>
+                <button type="button" disabled aria-label="Favorites unavailable" title="Favorites are unavailable until a saved-favorites contract is available" className="nexi-icon-button h-8 w-8 shrink-0 cursor-not-allowed rounded-[12px] opacity-50 md:h-11 md:w-11 md:rounded-[14px]"><Star className="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" /></button>
               </div>
             </section>
           )}
@@ -164,6 +165,10 @@ export default function Dashboard() {
           <div className="mt-1.5 space-y-1.5 md:mt-3 md:space-y-2.5">
             {loading ? (
               <div className="nexi-market-row px-4 py-14 text-center text-sm text-[var(--nexi-text-muted)]">{t('loadingMarketCatalog')}…</div>
+            ) : marketError ? (
+              <div className="nexi-market-row px-4 py-14 text-center text-sm text-[var(--nexi-text-muted)]">Market data is unavailable right now.</div>
+            ) : activeTab === 'Favorites' ? (
+              <div className="nexi-market-row px-4 py-14 text-center text-sm text-[var(--nexi-text-muted)]">Saved favorites are unavailable until the favorites service is connected.</div>
             ) : activeData.length === 0 ? (
               <div className="nexi-market-row px-4 py-14 text-center text-sm text-[var(--nexi-text-muted)]">{t('noInstrumentsAvailable')}</div>
             ) : activeData.map((item) => (
@@ -174,12 +179,9 @@ export default function Dashboard() {
                 className="nexi-market-row nexi-interactive group grid min-h-[56px] w-full grid-cols-[minmax(0,1.45fr)_50px_minmax(0,.74fr)_minmax(0,.68fr)_minmax(0,.58fr)] items-center gap-1 rounded-[8px] px-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)] md:min-h-[78px] md:grid-cols-[minmax(0,1.35fr)_140px_minmax(0,.82fr)_minmax(0,.72fr)_minmax(0,.72fr)] md:gap-3 md:rounded-[18px] md:px-4"
               >
                 <span className="flex min-w-0 items-center gap-2 md:gap-3">
-                  <span className="relative shrink-0">
-                    <AssetMark item={item} />
-                    <Star className="absolute -bottom-0.5 -left-0.5 h-3 w-3 fill-[var(--nexi-canvas)] text-violet-400 md:-bottom-1 md:-left-1 md:h-3.5 md:w-3.5" strokeWidth={1.8} aria-hidden="true" />
-                  </span>
+                  <span className="shrink-0"><AssetMark item={item} /></span>
                   <span className="min-w-0">
-                    <span className="block truncate text-[12px] font-semibold text-white group-hover:text-[var(--nexi-cyan)] md:text-[15px]">{item.displaySymbol}<span className="text-[9px] font-medium text-[var(--nexi-text-secondary)] md:text-xs">/USDT</span></span>
+                    <span className="block truncate text-[12px] font-semibold text-white group-hover:text-[var(--nexi-cyan)] md:text-[15px]">{instrumentFromMarketPair(item).pair}</span>
                     <span className="mt-0.5 block truncate text-[9px] text-[var(--nexi-text-muted)] md:mt-1 md:text-xs">{item.name}</span>
                   </span>
                 </span>

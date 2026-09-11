@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
 import { KycService } from './kyc.service';
 import { KycController } from './kyc.controller';
-import { PrismaModule } from '../prisma/prisma.module';
 import { AuthModule } from '../auth/auth.module';
 import { D1PrismaModule } from '../d1/d1-prisma.module';
 
 @Module({
-  imports: [PrismaModule, D1PrismaModule, AuthModule],
+  imports: [D1PrismaModule, AuthModule],
   providers: [KycService],
   controllers: [KycController],
   exports: [KycService],

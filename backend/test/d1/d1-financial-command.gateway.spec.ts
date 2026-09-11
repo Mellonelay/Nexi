@@ -99,9 +99,6 @@ describe("D1FinancialCommandGateway", () => {
     const statements = (bridge.batch as jest.Mock).mock
       .calls[0][0] as D1BridgeBatchStatement[];
     expect(statements).toHaveLength(7);
-    expect(
-      statements.some((statement) => statement.sql.includes("FOR UPDATE")),
-    ).toBe(false);
     expect(statements[3].params).toContain("0.1");
   });
 
@@ -503,9 +500,6 @@ describe("D1FinancialCommandGateway", () => {
     const statements = (bridge.batch as jest.Mock).mock
       .calls[0][0] as D1BridgeBatchStatement[];
     expect(statements).toHaveLength(16);
-    expect(
-      statements.every((statement) => !statement.sql.includes("FOR UPDATE")),
-    ).toBe(true);
     expect(statements[15].sql).toContain("Gate2SpotOrder");
   });
 

@@ -7,7 +7,6 @@
   "worker": "nexi-staging",
   "container": "nexi-api-staging",
   "required_worker_secrets": [
-    "DATABASE_URL",
     "REDIS_URL",
     "JWT_SECRET",
     "MARKET_ARCHIVE_PIPELINE_TOKEN"

@@ -71,6 +71,7 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
   }, [queryClient, signMessageAsync]);
 
   const connect = useCallback(async (connector?: (typeof connectors)[number]) => {
+    if (busy) return;
     setBusy(true); setMessage('');
     try {
       let selectedAddress = address;
@@ -90,7 +91,7 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
       await authenticateConnectedWallet(selectedAddress, selectedChainId);
     } catch (error) { setMessage(walletErrorMessage(error)); }
     finally { setBusy(false); }
-  }, [activeConnector, address, authenticateConnectedWallet, chainId, connectAsync, disconnect, isConnected]);
+  }, [activeConnector, address, authenticateConnectedWallet, busy, chainId, connectAsync, disconnect, isConnected]);
 
   useEffect(() => {
     const onVerifyRequest = () => {
@@ -101,6 +102,7 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
   }, [activeConnector, address, busy, chainId, connect, connectors, isConnected]);
 
   const disconnectWallet = async () => {
+    if (busy) return;
     setBusy(true);
     try { await logoutWallet(); } finally { disconnect(); queryClient.removeQueries({ queryKey: ['user', 'me'] }); setBusy(false); }
   };

@@ -3,6 +3,7 @@ import { FormEvent, useState } from "react";
 import { PageHeader } from "@/admin/components/PageHeader";
 import { RouteGuard } from "@/admin/components/RouteGuard";
 import { StatusBadge } from "@/admin/components/StatusBadge";
+import { ProviderBadge } from "@/admin/components/ProviderBadge";
 import { LoadingSkeleton, ErrorState } from "@/admin/components/states";
 import { useAdminData, useAdminQuery } from "@/admin/data/context";
 import { useAdminSession } from "@/admin/session/session";
@@ -73,7 +74,12 @@ function Inner() {
       <PageHeader
         title="Mining"
         description="Administer backend-defined mining products, lock terms, yield and limits."
-        badges={<StatusBadge tone="info">Ledger-backed product control</StatusBadge>}
+        badges={
+          <>
+            <ProviderBadge />
+            <StatusBadge tone="info">Ledger-backed product control</StatusBadge>
+          </>
+        }
       />
       <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
         <section className="space-y-3">

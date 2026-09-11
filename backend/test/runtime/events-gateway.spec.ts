@@ -6,8 +6,8 @@ describe('EventsGateway Redis outage handling', () => {
     const to = jest.fn().mockReturnValue({ emit });
     const isAvailable = jest.fn().mockReturnValue(false);
     const gateway = new EventsGateway(
-      {} as any,
       { isAvailable } as any,
+      {} as any,
       {} as any,
     );
     (gateway as any).server = { to };
@@ -24,8 +24,8 @@ describe('EventsGateway Redis outage handling', () => {
     const to = jest.fn().mockReturnValue({ emit });
     const isAvailable = jest.fn().mockReturnValue(true);
     const gateway = new EventsGateway(
-      {} as any,
       { isAvailable } as any,
+      {} as any,
       {} as any,
     );
     (gateway as any).server = { to };
@@ -40,9 +40,9 @@ describe('EventsGateway Redis outage handling', () => {
   it('rejects unauthenticated Admin room joins', async () => {
     const emit = jest.fn();
     const gateway = new EventsGateway(
-      {} as any,
       { isAvailable: jest.fn().mockReturnValue(true) } as any,
       { verifyAsync: jest.fn() } as any,
+      {} as any,
     );
     const client = { handshake: { auth: {} }, emit, join: jest.fn() } as any;
 
@@ -53,9 +53,9 @@ describe('EventsGateway Redis outage handling', () => {
 
   it('accepts only an authenticated Admin-surface Admin room join', async () => {
     const gateway = new EventsGateway(
-      {} as any,
       { isAvailable: jest.fn().mockReturnValue(false) } as any,
       { verifyAsync: jest.fn().mockResolvedValue({ sub: 'admin-1', role: 'ADMIN', surface: 'ADMIN' }) } as any,
+      {} as any,
     );
     const client = { handshake: { auth: { token: 'admin-token' } }, emit: jest.fn(), join: jest.fn(), data: {} } as any;
 

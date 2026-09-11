@@ -4,8 +4,8 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { AdminCommandStatus, Prisma } from "@prisma/client";
-import { PrismaService } from "../prisma/prisma.service";
+import { AdminCommandStatus } from "../prisma/d1-client";
+import { D1PrismaService } from "../d1/d1-prisma.service";
 import { SandboxScenarioService } from "./sandbox-scenario.service";
 
 const SANDBOX_MODES = new Set(["normal", "forced_win", "forced_loss"]);
@@ -13,7 +13,7 @@ const SANDBOX_MODES = new Set(["normal", "forced_win", "forced_loss"]);
 @Injectable()
 export class SandboxExecutionService {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly prisma: D1PrismaService,
     private readonly scenarios: SandboxScenarioService,
   ) {}
 
@@ -92,7 +92,7 @@ export class SandboxExecutionService {
           adminId: executorId,
           action: "SANDBOX_COMMAND_EXECUTED",
           target: commandId,
-          details: receipt as unknown as Prisma.InputJsonValue,
+          details: JSON.stringify(receipt),
         },
       });
       return { command: updated, replayed: false, receipt };

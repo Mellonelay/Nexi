@@ -1,19 +1,17 @@
 import { BadRequestException, Injectable, NotFoundException, Optional } from '@nestjs/common';
-import { MiningStatus, Prisma } from '@prisma/client';
+import { Prisma } from '../prisma/d1-client';
 import { createHash, randomUUID } from 'crypto';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { LedgerAuthorityService } from '../ledger/ledger-authority.service';
-import { PrismaService } from '../prisma/prisma.service';
+import { D1PrismaService } from '../d1/d1-prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { D1FinancialCommandGateway } from '../d1/d1-financial-command.gateway';
 
 @Injectable()
 export class MiningService {
   constructor(
-    private readonly prisma: PrismaService,
-    private readonly ledger: LedgerAuthorityService,
-    @Optional() private readonly redis?: RedisService,
-    @Optional() private readonly d1?: D1FinancialCommandGateway,
+    private readonly redis: RedisService,
+    private readonly d1: D1FinancialCommandGateway,
   ) {}
 
   private async publish(type: string, referenceId: string, payload: Record<string, unknown>): Promise<void> {
@@ -28,19 +26,12 @@ export class MiningService {
     return amount;
   }
 
-  private legacyNumber(value: Prisma.Decimal): number {
-    const numberValue = Number(value.toString());
-    if (!Number.isFinite(numberValue)) throw new BadRequestException('Amount is outside legacy storage range');
-    return numberValue;
-  }
-
   private idempotentId(prefix: string, key: string): string {
     const hex = createHash('sha256').update(`${prefix}:${key}`).digest('hex').slice(0, 32);
     return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-5${hex.slice(13, 16)}-${(parseInt(hex.slice(16, 18), 16) & 0x3f | 0x80).toString(16).padStart(2, '0')}${hex.slice(18, 20)}-${hex.slice(20)}`;
   }
 
   private requireD1FinancialAuthority(): D1FinancialCommandGateway {
-    if (!this.d1?.isEnabled()) throw new Error('D1 financial authority is unavailable');
     return this.d1;
   }
 
@@ -53,7 +44,7 @@ export class MiningService {
     return d1.createMiningPlan({ id: randomUUID(), name, currency, lockupPeriod, dailyYield: yieldRate.toString(), minDeposit: min.toString(), maxDeposit: max.toString() });
   }
 
-  async getPlans() { return this.d1?.isEnabled() ? this.d1.listMiningPlans() : this.prisma.miningPlan.findMany({ where: { isActive: true }, orderBy: { createdAt: 'desc' } }); }
+  async getPlans() { return this.d1.listMiningPlans(); }
 
   async subscribe(userId: string, planId: string, amountText: string, idempotencyKey: string) {
     if (!idempotencyKey?.trim()) throw new BadRequestException('Idempotency key is required');
@@ -118,18 +109,10 @@ export class MiningService {
     return result;
   }
 
-  async getUserSubscriptions(userId: string) { return this.d1?.isEnabled() ? this.d1.listMiningSubscriptions(userId) : this.prisma.miningSubscription.findMany({ where: { userId }, include: { plan: true }, orderBy: { createdAt: 'desc' } }); }
+  async getUserSubscriptions(userId: string) { return this.d1.listMiningSubscriptions(userId); }
 
   async getAllSubscriptions() {
-    if (this.d1?.isEnabled()) return this.d1.listAllMiningSubscriptions();
-    return this.prisma.miningSubscription.findMany({
-      include: {
-        plan: true,
-        user: { select: { id: true, email: true } },
-        accruals: { orderBy: { rewardedAt: 'desc' }, take: 10 },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    return this.d1.listAllMiningSubscriptions();
   }
 
   async redeemForUser(userId: string, subscriptionId: string, idempotencyKey: string) {
@@ -141,29 +124,10 @@ export class MiningService {
   }
 
   async getRewardHistory(userId: string) {
-    if (this.d1?.isEnabled()) return this.d1.listMiningRewards(userId);
-    const rows = await this.prisma.miningRewardAccrual.findMany({
-      where: { userId },
-      orderBy: { rewardedAt: 'desc' },
-      take: 100,
-      select: { id: true, subscriptionId: true, amount: true, currency: true, rewardedAt: true },
-    });
-    return rows.map((row) => ({ ...row, amount: row.amount.toString() }));
+    return this.d1.listMiningRewards(userId);
   }
 
   async getSummary(userId: string) {
-    if (this.d1?.isEnabled()) return this.d1.getMiningSummary(userId);
-    const [subscriptions, rewards] = await Promise.all([
-      this.prisma.miningSubscription.findMany({ where: { userId }, select: { status: true, amountDecimal: true, totalRewardsDecimal: true } }),
-      this.prisma.miningRewardAccrual.aggregate({ where: { userId }, _sum: { amount: true } }),
-    ]);
-    const sum = (values: Prisma.Decimal[]) => values.reduce((total, value) => total.add(value), new Prisma.Decimal(0)).toString();
-    return {
-      activeSubscriptions: subscriptions.filter((item) => item.status === MiningStatus.ACTIVE).length,
-      totalSubscriptions: subscriptions.length,
-      lockedPrincipal: sum(subscriptions.filter((item) => item.status === MiningStatus.ACTIVE).map((item) => item.amountDecimal)),
-      accruedRewards: sum(subscriptions.map((item) => item.totalRewardsDecimal)),
-      postedRewards: (rewards._sum.amount ?? new Prisma.Decimal(0)).toString(),
-    };
+    return this.d1.getMiningSummary(userId);
   }
 }

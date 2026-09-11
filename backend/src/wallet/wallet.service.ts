@@ -1,13 +1,13 @@
 import { GoneException, Injectable, Optional } from "@nestjs/common";
-import { LedgerType } from "@prisma/client";
+import { LedgerType } from "../prisma/d1-client";
 import { LedgerAuthorityService } from "../ledger/ledger-authority.service";
-import { PrismaService } from "../prisma/prisma.service";
+import { D1PrismaService } from "../d1/d1-prisma.service";
 import { D1FinancialCommandGateway } from "../d1/d1-financial-command.gateway";
 
 @Injectable()
 export class WalletService {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly prisma: D1PrismaService,
     private readonly ledgerAuthority: LedgerAuthorityService,
     @Optional() private readonly d1?: D1FinancialCommandGateway,
   ) {}

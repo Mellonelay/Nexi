@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../prisma/d1-client';
 
 export function marginPnl(direction: 'LONG' | 'SHORT', quantity: Prisma.Decimal, entryPrice: Prisma.Decimal, markPrice: Prisma.Decimal): Prisma.Decimal {
   const delta = direction === 'LONG' ? markPrice.sub(entryPrice) : entryPrice.sub(markPrice);

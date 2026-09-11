@@ -1,11 +1,11 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { verify } from 'crypto';
-import { PrismaService } from '../prisma/prisma.service';
+import { D1PrismaService } from '../d1/d1-prisma.service';
 
 @Injectable()
 export class WalletGateGuard implements CanActivate {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: D1PrismaService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();

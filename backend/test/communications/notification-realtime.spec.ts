@@ -36,7 +36,8 @@ describe('A19 notification durable realtime closure', () => {
       markNotificationRead: jest.fn(async () => true),
     };
     const redis: any = { isAvailable: () => true, publish: jest.fn(async () => 1) };
-    const service = new CommunicationsService({} as any, d1, {} as any, d1Gateway, redis);
+    const outbox = { recordEvent: jest.fn().mockResolvedValue(undefined) };
+    const service = new CommunicationsService(d1, outbox as any, d1Gateway, redis);
 
     expect(await service.sendAdminNotification({
       userId: notification.userId, type: 'info', title: 'Alert', body: 'Body', idempotencyKey: 'notification-send-1', reason: 'operator request',

@@ -1,5 +1,5 @@
 import { IsEnum, IsInt, IsString, Length, Matches, Min } from 'class-validator';
-import { BinarySide } from '@prisma/client';
+import { BinarySide } from '../prisma/d1-client';
 
 const DECIMAL = /^(?:0|[1-9]\d*)(?:\.\d{1,18})?$/;
 

@@ -22,19 +22,13 @@ function Inner() {
   const [selected, setSelected] = useState<AuditEvent | null>(null);
   if (q.loading)
     return (
-      <GovernanceShell
-        title="Audit Logs"
-        description="Immutable mock record of governed operations."
-      >
+      <GovernanceShell title="Audit Logs" description="Record of governed operations.">
         <LoadingSkeleton rows={8} />
       </GovernanceShell>
     );
   if (q.error)
     return (
-      <GovernanceShell
-        title="Audit Logs"
-        description="Immutable mock record of governed operations."
-      >
+      <GovernanceShell title="Audit Logs" description="Record of governed operations.">
         <ErrorState title="Could not load audit logs" description={q.error.message} />
       </GovernanceShell>
     );
@@ -102,7 +96,7 @@ function Inner() {
   return (
     <GovernanceShell
       title="Audit Logs"
-      description="Searchable actor, action, target, environment, result, correlation, and before/after evidence."
+      description="Search actor, action, target, environment, result, correlation, and before/after evidence."
     >
       <DataTable
         data={q.data ?? []}

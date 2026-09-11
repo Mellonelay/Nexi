@@ -2,7 +2,7 @@
 
 Internal, role-gated operations and governance console for the NEXI platform.
 
-> This repository is not the public NEXI trading product. Administrators configure, inspect, approve, pause, investigate, and audit. All current records and mutations are mock/demo data. Production integration is not connected.
+> This repository is not the public NEXI trading product. Administrators configure, inspect, approve, pause, investigate, and audit. The selected provider is explicit: live mode uses the configured Admin API, while local mode is demo-only.
 
 ## Current status
 
@@ -12,9 +12,9 @@ The Admin foundation and the first three implementation batches are complete:
 - centralized navigation and all 33 Admin routes
 - nine-role RBAC model and DEVELOPMENT/SANDBOX/PRODUCTION switching
 - typed `AdminDataProvider`
-- active `LocalMockAdminProvider`
-- placeholder `NexiAdminApiProvider`
-- audited mock mutation envelope
+- explicit local/demo `LocalMockAdminProvider`
+- live `NexiAdminApiProvider` for published Admin contracts
+- audited provider mutation envelope
 - shared `DataTable`, `DetailDrawer`, `FormDrawer`, `ConsequentialActionDialog`, `AuditTimeline`, route guards, and route-state components
 - Operations Overview
 - Identity: Users, KYC Reviews, Sessions
@@ -30,10 +30,10 @@ Remaining UI implementation:
 - Sandbox Controls
 - final accessibility, responsive, route, lint, test, and export hardening
 
-Remaining production integration:
+Remaining production integration and verification:
 
-- real `NexiAdminApiProvider`
 - Admin SSO and server-enforced RBAC
+- joined runtime verification for the live provider
 - authoritative audit, approvals, wallet, ledger, settlement, withdrawal, content, and notification services
 - backend contract and integration testing
 
@@ -67,8 +67,8 @@ Admin pages and components
         ↓
 AdminDataProvider
         ↓
-LocalMockAdminProvider      active now
-NexiAdminApiProvider        placeholder for later integration
+LocalMockAdminProvider      explicit local/demo mode
+NexiAdminApiProvider        live adapter for published contracts
 ```
 
 Pages must not access production services directly. Provider replacement is centralized in `src/admin/data/context.tsx`.
@@ -87,7 +87,7 @@ Binary Administration uses public Long/Short terminology with internal `Long →
 
 ## Roles
 
-The mock interface supports:
+The local/demo interface supports:
 
 - Read-only Operator
 - Support Agent
@@ -103,7 +103,7 @@ Route visibility and actions are permission-aware. Sandbox Controls must remain 
 
 ## Consequential actions
 
-Every consequential mock action must:
+Every consequential action must:
 
 - verify permission
 - require a meaningful reason
@@ -139,8 +139,8 @@ Before integration, migrate the remaining platform-specific Vite build preset to
 
 ## Truthful completion boundary
 
-Use this statement only after all remaining mock UI routes are functional and verified:
+Use this statement only when the selected provider and remaining unsupported surfaces are explicit:
 
 ```text
-UI and mock workflows complete; production integration not connected.
+Live Admin API contracts are selected explicitly; unsupported capabilities remain unavailable.
 ```

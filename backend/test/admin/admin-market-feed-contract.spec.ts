@@ -9,7 +9,6 @@ describe("AdminService market feed contract", () => {
       {} as never,
       {} as never,
       {} as never,
-      undefined,
       d1Db,
     );
   }
@@ -31,14 +30,10 @@ describe("AdminService market feed contract", () => {
     expect(prisma.marketProviderConfig.update).not.toHaveBeenCalled();
   });
 
-  it("uses D1 market authority when it is enabled", async () => {
-    const prisma = { marketProviderConfig: { findMany: jest.fn() } };
-    const d1Db = {
-      isEnabled: () => true,
-      marketProviderConfig: { findMany: jest.fn().mockResolvedValue([{ id: "provider-1" }]) },
-    };
-    await expect(service(prisma, d1Db).getMarketFeeds()).resolves.toEqual([{ id: "provider-1" }]);
-    expect(d1Db.marketProviderConfig.findMany).toHaveBeenCalledTimes(1);
-    expect(prisma.marketProviderConfig.findMany).not.toHaveBeenCalled();
+  it("reads market feeds from the current D1 database surface", async () => {
+    const findMany = jest.fn().mockResolvedValue([{ id: "provider-1" }]);
+    const prisma = { marketProviderConfig: { findMany } };
+    await expect(service(prisma).getMarketFeeds()).resolves.toEqual([{ id: "provider-1" }]);
+    expect(findMany).toHaveBeenCalledWith(expect.objectContaining({ orderBy: [{ priority: "asc" }, { key: "asc" }] }));
   });
 });

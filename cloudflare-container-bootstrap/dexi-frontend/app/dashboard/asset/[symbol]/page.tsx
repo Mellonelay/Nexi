@@ -2,23 +2,23 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, ArrowUpRight, BarChart3, ChevronRight, Info, Star } from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
+import { ArrowUpRight, BarChart3, ChevronRight, Info, Star } from 'lucide-react';
+import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import RealtimeTradingChart from '../../../components/RealtimeTradingChart';
 import { useActiveInstrument } from '../../../state/ActivePairProvider';
 import { useMarketData } from '../../../hooks/useMarketData';
 import { instrumentFromMarketPair, normalizePair } from '../../../state/active-instrument';
 import { assetIconPath, findAsset } from '../../../lib/asset-registry';
+import SafeBackButton from '../../../components/SafeBackButton';
 
 const placeholder = '—';
 
 export default function AssetDetailPage() {
   const params = useParams<{ symbol: string }>();
-  const router = useRouter();
   const routeSymbol = decodeURIComponent(params.symbol ?? 'BTCUSDT');
   const { activeInstrument, setActiveInstrument } = useActiveInstrument();
-  const { marketPairs, metal, shares, forex } = useMarketData();
+  const { marketPairs, metal, shares, forex, loading: marketLoading, error: marketError } = useMarketData();
   const [timeframe, setTimeframe] = useState('1h');
   const [routeReady, setRouteReady] = useState(false);
   const timeframeOptions = ['1m', '5m', '15m', '30m', '1h', '4h', '1d'] as const;
@@ -29,19 +29,20 @@ export default function AssetDetailPage() {
       normalizePair(item.symbol) === normalizedRoute
     ));
 
+    if (marketLoading) return;
     if (match) {
       setActiveInstrument(instrumentFromMarketPair(match));
       setRouteReady(true);
       return;
     }
     setRouteReady(false);
-    router.replace('/dashboard');
-  }, [forex, marketPairs, metal, routeSymbol, router, setActiveInstrument, shares]);
+  }, [forex, marketError, marketLoading, marketPairs, metal, routeSymbol, setActiveInstrument, shares]);
 
   if (!routeReady) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#050508] px-6 text-center text-sm text-[#C3BBD0]">
-        Resolving approved market asset…
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#050508] px-6 text-center text-sm text-[#C3BBD0]">
+        <SafeBackButton fallback="/dashboard" label="Back to Quotes Hub" />
+        <p>{marketLoading ? 'Resolving approved market asset…' : marketError ? 'Market data is unavailable. The approved asset cannot be resolved right now.' : 'This market asset is not approved.'}</p>
       </div>
     );
   }
@@ -65,14 +66,12 @@ export default function AssetDetailPage() {
     <div className="min-h-screen w-full min-w-0 overflow-x-clip bg-[#050508] px-4 pb-28 pt-4 text-[#F8F6FF] md:px-8 md:pb-10 md:pt-8">
       <div className="mx-auto max-w-6xl">
         <header className="mb-6 flex items-center justify-between gap-4">
-          <button type="button" onClick={() => router.back()} aria-label="Back to Quotes Hub" className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-violet-300/20 bg-[#100A18] text-[#C3BBD0] transition hover:border-violet-300/45 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF]">
-            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-          </button>
+          <SafeBackButton fallback="/dashboard" label="Back to Quotes Hub" className="border-violet-300/20 bg-[#100A18] hover:border-violet-300/45" />
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8C8299]">Asset Detail</p>
             <h1 className="truncate text-2xl font-semibold tracking-tight md:text-3xl">{instrument.pair}</h1>
           </div>
-          <button type="button" aria-label={`Add ${instrument.pair} to favorites`} className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-violet-300/20 bg-[#100A18] text-[#C3BBD0] hover:text-[#F8F6FF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF]">
+          <button type="button" disabled aria-label="Favorites unavailable" title="Favorites are unavailable until a saved-favorites contract is available" className="inline-flex h-11 w-11 cursor-not-allowed items-center justify-center rounded-lg border border-violet-300/20 bg-[#100A18] text-[#C3BBD0] opacity-50">
             <Star className="h-5 w-5" aria-hidden="true" />
           </button>
         </header>

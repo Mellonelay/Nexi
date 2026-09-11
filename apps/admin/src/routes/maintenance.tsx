@@ -57,7 +57,7 @@ function Inner() {
   return (
     <GovernanceShell
       title="Maintenance"
-      description="Schedule and cancel mock maintenance windows with exact target and timing."
+      description="Schedule and cancel maintenance windows with exact target and timing."
     >
       <ReceiptBanner receipt={receipt.receipt} onDismiss={receipt.clear} />
       <div className="surface-1 grid gap-3 rounded-lg border border-border/60 p-4 md:grid-cols-5">
@@ -65,6 +65,7 @@ function Inner() {
           <Label>Scope</Label>
           <select
             value={scope}
+            aria-label="Maintenance scope"
             onChange={(e) => setScope(e.target.value as MaintenanceScope)}
             className="mt-1 h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
           >

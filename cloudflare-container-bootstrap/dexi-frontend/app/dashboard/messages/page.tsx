@@ -28,6 +28,7 @@ import {
   StatusBadge,
   TabButton,
 } from '../wallet/components/ProductPrimitives';
+import SafeBackButton from '../../components/SafeBackButton';
 
 type LoadState = 'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR';
 type Filter = 'ALL' | 'UNREAD' | 'ARCHIVED';
@@ -239,7 +240,7 @@ export default function MessagesPage() {
           </Panel>
           <Panel className="min-h-[520px]">
             <PanelHeading title="Conversation detail" action={<CheckCheck size={18} className="text-[#8C8299]" />} />
-            {selected && <button type="button" onClick={() => setSelected(null)} className="mb-3 min-h-11 text-sm font-semibold text-[#A995FF] underline-offset-4 hover:underline lg:hidden">Back to conversations</button>}
+            {selected && <SafeBackButton onBack={() => setSelected(null)} label="Back to conversations" showLabel className="mb-3 border-transparent px-2 text-sm font-semibold text-[#A995FF]" />}
              {!selected && <DataStatePanel state="UNAVAILABLE" title="Choose a conversation" message="Select a conversation to view its messages." />}
             {selected && (
               <div className="flex min-h-[430px] flex-col">

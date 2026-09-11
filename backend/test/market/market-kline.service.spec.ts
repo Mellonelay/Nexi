@@ -3,8 +3,6 @@ jest.mock('../../src/d1/d1-prisma.service', () => ({ D1PrismaService: class D1Pr
 import { MarketKlineService } from '../../src/market/market-kline.service';
 
 describe('MarketKlineService quote aggregation', () => {
-  const disabledD1 = () => ({ isEnabled: jest.fn().mockReturnValue(false) });
-
   const createService = (d1Enabled = false) => {
     const rows = new Map<string, any>();
     const keyFor = (where: any) => {
@@ -12,6 +10,7 @@ describe('MarketKlineService quote aggregation', () => {
       return `${key.pairId}:${key.interval}:${key.openTime.toISOString()}`;
     };
     const prisma: any = {
+      isEnabled: jest.fn().mockReturnValue(d1Enabled),
       marketPair: { findUnique: jest.fn(async () => ({ id: 'pair-btcusdt', symbol: 'BTCUSDT' })) },
       marketKline: {
         findUnique: jest.fn(async ({ where }: any) => rows.get(keyFor(where)) ?? null),
@@ -28,7 +27,7 @@ describe('MarketKlineService quote aggregation', () => {
         }),
       },
     };
-    return { service: new MarketKlineService(prisma, { isEnabled: jest.fn().mockReturnValue(d1Enabled), ...(d1Enabled ? prisma : {}) } as never), prisma };
+    return { service: new MarketKlineService(prisma), prisma };
   };
 
   it('creates a 1m candle from a provider quote with explicit derived lineage and no fabricated volume', async () => {
@@ -85,10 +84,11 @@ describe('MarketKlineService quote aggregation', () => {
       { openTime: new Date('2026-08-17T12:03:00.000Z'), closeTime: new Date('2026-08-17T12:03:59.999Z'), open: '4', high: '5', low: '3', close: '4', volume: null, symbol: 'BTCUSDT', interval: '1m', provider: 'binance-spot', source: 'websocket:kline', observedAt: new Date('2026-08-17T12:04:00.000Z'), receivedAt: new Date('2026-08-17T12:04:00.000Z') },
     ];
     const prisma: any = {
+      isEnabled: jest.fn().mockReturnValue(false),
       marketPair: { findUnique: jest.fn(async () => ({ id: 'pair-btcusdt', symbol: 'BTCUSDT' })) },
       marketKline: { findMany: jest.fn(async () => [...rows].reverse()) },
     };
-    const service = new MarketKlineService(prisma, disabledD1() as never);
+    const service = new MarketKlineService(prisma);
 
     const candles = await service.list('BTCUSDT', '1m', 2);
 

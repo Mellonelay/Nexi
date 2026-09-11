@@ -1,5 +1,6 @@
 import { type ReactNode } from "react";
 import { PageHeader } from "@/admin/components/PageHeader";
+import { ProviderBadge } from "@/admin/components/ProviderBadge";
 import { StatusBadge } from "@/admin/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -27,7 +28,7 @@ export function GovernanceShell({
         badges={
           badges ? (
             <>
-              <StatusBadge tone="warning">Mock data</StatusBadge>
+              <ProviderBadge />
               <StatusBadge tone="info">Governance</StatusBadge>
             </>
           ) : undefined

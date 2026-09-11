@@ -25,7 +25,7 @@ describe('A17 announcement lifecycle closure', () => {
       },
     };
     const outbox: any = { recordEvent: jest.fn(async () => ({})) };
-    const service = new CommunicationsService({} as any, d1, outbox);
+    const service = new CommunicationsService(d1, outbox, {} as any, { isAvailable: () => false } as any);
 
     expect(await service.createAnnouncement({ title: 'Maintenance', body: 'Window', published: false, idempotencyKey: 'announcement-create-1' })).toBe(draft);
     expect(outbox.recordEvent).toHaveBeenNthCalledWith(1, expect.objectContaining({ eventType: 'ANNOUNCEMENT_CREATED', aggregateId: draft.id }));

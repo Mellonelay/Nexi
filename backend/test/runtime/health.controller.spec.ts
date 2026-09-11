@@ -7,10 +7,9 @@ describe('HealthController', () => {
     expect(controller.live()).toEqual({ status: 'ok', service: 'nexi-api' });
   });
 
-  it('reports readiness when PostgreSQL and Redis are healthy', async () => {
+  it('reports readiness when D1 and Redis are healthy', async () => {
     const controller = new HealthController(
       new ReadinessService(
-        { isReady: jest.fn().mockResolvedValue(true) } as any,
         { isReady: jest.fn().mockResolvedValue(true) } as any,
         { isReady: jest.fn().mockResolvedValue(true) } as any,
       ),
@@ -25,7 +24,6 @@ describe('HealthController', () => {
     const controller = new HealthController(
       new ReadinessService(
         { isReady: jest.fn().mockResolvedValue(false) } as any,
-        { isReady: jest.fn().mockResolvedValue(true) } as any,
         { isReady: jest.fn().mockResolvedValue(true) } as any,
       ),
     );

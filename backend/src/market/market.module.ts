@@ -4,7 +4,7 @@ import { MarketGateway } from './market.gateway';
 import { MarketSeederService } from './market-seeder.service';
 import { MarketSubscriberService } from './market-subscriber.service';
 import { RedisModule } from '../redis/redis.module';
-import { PrismaModule } from '../prisma/prisma.module';
+import { D1PrismaModule } from '../d1/d1-prisma.module';
 import { BinaryModule } from '../binary/binary.module';
 import { MarketAuthorityService } from './market-authority.service';
 import { MarketKlineController } from './market-kline.controller';
@@ -27,7 +27,7 @@ import { MarketReferencePersistenceService } from './market-reference-persistenc
 import { MarketArchiveService } from './market-archive.service';
 
 @Module({
-  imports: [PrismaModule, RedisModule, BinaryModule],
+  imports: [D1PrismaModule, RedisModule, BinaryModule],
   controllers: [MarketKlineController],
   providers: [MarketAuthorityService, MarketIngestService, MarketReferencePersistenceService, MarketArchiveService, MarketGateway, MarketSeederService, MarketSubscriberService, MarketKlineService, MarketKlineQueryService, BinanceSpotAdapter, MoexUsdRubAdapter, BiquoteMarketAdapter, YahooMarketAdapter, CoinGeckoMarketAdapter, CoinMarketCapMarketAdapter, OandaMarketAdapter, MetalsApiMarketAdapter, MetalpriceApiMarketAdapter, FawazCurrencyMarketAdapter, RzzroIndustrialMetalsMarketAdapter, OkxMarketAdapter, BitgetMarketAdapter, HtxMarketAdapter, BybitMarketAdapter, GateMarketAdapter, MarketProviderRouterService],
   exports: [MarketAuthorityService, MarketIngestService, MarketGateway, MarketSeederService, MarketSubscriberService, BinanceSpotAdapter, MoexUsdRubAdapter, BiquoteMarketAdapter, YahooMarketAdapter, CoinGeckoMarketAdapter, CoinMarketCapMarketAdapter, OandaMarketAdapter, MetalsApiMarketAdapter, MetalpriceApiMarketAdapter, FawazCurrencyMarketAdapter, RzzroIndustrialMetalsMarketAdapter, OkxMarketAdapter, BitgetMarketAdapter, HtxMarketAdapter, BybitMarketAdapter, GateMarketAdapter, MarketProviderRouterService],

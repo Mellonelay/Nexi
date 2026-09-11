@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/admin/components/PageHeader";
 import { RouteGuard } from "@/admin/components/RouteGuard";
 import { StatusBadge } from "@/admin/components/StatusBadge";
+import { ProviderBadge } from "@/admin/components/ProviderBadge";
 import { ConsequentialActionDialog } from "@/admin/components/ConsequentialActionDialog";
 import { AuditTimeline } from "@/admin/components/AuditTimeline";
 import { LoadingSkeleton, ErrorState, EmptyState } from "@/admin/components/states";
@@ -86,7 +87,7 @@ function Shell({ children, total }: { children: React.ReactNode; total?: number 
         description="Compose bottom navigation and the left drawer. Reorder, toggle visibility, and target by audience. Changes stage until saved."
         badges={
           <>
-            <StatusBadge tone="warning">Mock data</StatusBadge>
+            <ProviderBadge />
             {total !== undefined ? (
               <StatusBadge tone="info" dot={false}>
                 {total} items
@@ -201,6 +202,7 @@ function SurfaceEditor({ surface, items }: { surface: NavSurface; items: NavItem
             </div>
             <select
               value={it.audience}
+              aria-label={`Audience for ${it.label}`}
               onChange={(e) => setAudience(it.id, e.target.value as NavAudience)}
               disabled={!canEdit}
               data-testid={`nav-audience-${it.id}`}
@@ -234,6 +236,7 @@ function SurfaceEditor({ surface, items }: { surface: NavSurface; items: NavItem
                 variant="ghost"
                 size="icon"
                 data-testid={`nav-up-${it.id}`}
+                aria-label={`Move ${it.label} up`}
                 disabled={!canEdit || idx === 0}
                 onClick={() => move(it.id, -1)}
               >
@@ -243,6 +246,7 @@ function SurfaceEditor({ surface, items }: { surface: NavSurface; items: NavItem
                 variant="ghost"
                 size="icon"
                 data-testid={`nav-down-${it.id}`}
+                aria-label={`Move ${it.label} down`}
                 disabled={!canEdit || idx === staged.length - 1}
                 onClick={() => move(it.id, 1)}
               >

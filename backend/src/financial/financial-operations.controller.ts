@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, Req, UseGuards } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
-import { Role } from "@prisma/client";
+import { Role } from "../prisma/d1-client";
 import { AuthenticatedRequest } from "../auth/auth.types";
 import { AuthService } from "../auth/auth.service";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";

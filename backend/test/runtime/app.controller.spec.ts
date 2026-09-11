@@ -5,11 +5,10 @@ import { ReadinessService } from "../../src/observability/readiness.service";
 describe("AppController runtime probes", () => {
   const originalD1RuntimeEnabled = process.env.D1_RUNTIME_ENABLED;
 
-  const createController = (postgres: boolean, d1: boolean, redis: boolean) =>
+  const createController = (d1: boolean, redis: boolean) =>
     new AppController(
       { getHello: jest.fn() } as any,
       new ReadinessService(
-        { isReady: jest.fn().mockResolvedValue(postgres) } as any,
         { isReady: jest.fn().mockResolvedValue(d1) } as any,
         { isReady: jest.fn().mockResolvedValue(redis) } as any,
       ),
@@ -29,22 +28,11 @@ describe("AppController runtime probes", () => {
     });
   });
 
-  it("reports readiness from the PostgreSQL fallback only when it and Redis are ready", async () => {
-    process.env.D1_RUNTIME_ENABLED = "false";
-
-    await expect(
-      createController(true, false, true).getReadiness(),
-    ).resolves.toEqual({
-      status: "READY",
-      dependencies: { database: true, redis: true, authority: "PostgreSQL" },
-    });
-  });
-
   it("reports readiness from D1 only when it and Redis are ready", async () => {
     process.env.D1_RUNTIME_ENABLED = "true";
 
     await expect(
-      createController(false, true, true).getReadiness(),
+      createController(true, true).getReadiness(),
     ).resolves.toEqual({
       status: "READY",
       dependencies: { database: true, redis: true, authority: "D1" },
@@ -55,7 +43,7 @@ describe("AppController runtime probes", () => {
     process.env.D1_RUNTIME_ENABLED = "true";
 
     await expect(
-      createController(true, false, true).getReadiness(),
+      createController(false, true).getReadiness(),
     ).rejects.toBeInstanceOf(ServiceUnavailableException);
   });
 });

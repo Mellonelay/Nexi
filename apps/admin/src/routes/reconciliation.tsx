@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/admin/components/PageHeader";
 import { RouteGuard } from "@/admin/components/RouteGuard";
 import { StatusBadge } from "@/admin/components/StatusBadge";
+import { ProviderBadge } from "@/admin/components/ProviderBadge";
 import {
   DataTable,
   type DataTableColumn,
@@ -504,7 +505,7 @@ function Shell({
         description="Mismatch queue with severity, ownership, investigation notes, and governed resolution."
         badges={
           <>
-            <StatusBadge tone="warning">Mock data</StatusBadge>
+            <ProviderBadge />
             {total !== undefined ? (
               <StatusBadge tone="info" dot={false}>
                 {total} items
@@ -576,6 +577,7 @@ function AssignForm({
         <Label className="text-xs">Owner</Label>
         <select
           data-testid="rec-owner-select"
+          aria-label="Reconciliation owner"
           value={owner}
           onChange={(e) => setOwner(e.target.value)}
           className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
@@ -594,6 +596,7 @@ function AssignForm({
         </Label>
         <textarea
           data-testid="rec-assign-reason"
+          aria-label="Reason for reconciliation owner assignment"
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           rows={3}
@@ -645,6 +648,7 @@ function NoteForm({
         <Label className="text-xs">Note</Label>
         <textarea
           data-testid="rec-note-body"
+          aria-label="Reconciliation note"
           value={body}
           onChange={(e) => setBody(e.target.value)}
           rows={5}
@@ -658,6 +662,7 @@ function NoteForm({
         </Label>
         <textarea
           data-testid="rec-note-reason"
+          aria-label="Reason for reconciliation note"
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           rows={2}

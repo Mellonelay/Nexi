@@ -1,7 +1,5 @@
-import { Injectable, Optional } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { User, Prisma } from '@prisma/client';
-import { WalletService } from '../wallet/wallet.service';
+import { Injectable } from '@nestjs/common';
+import { User, Prisma } from '../prisma/d1-client';
 import * as bcrypt from 'bcrypt';
 import { SignupDto } from '../auth/auth.dto';
 import { randomInt } from 'node:crypto';
@@ -16,62 +14,33 @@ type UserWithKyc = Prisma.UserGetPayload<{ include: { kyc: { select: { status: t
 @Injectable()
 export class UsersService {
   constructor(
-    private prisma: PrismaService,
-    private walletService: WalletService,
-    @Optional() private readonly d1?: D1FinancialCommandGateway,
+    private readonly d1: D1FinancialCommandGateway,
   ) {}
 
   async findOne(email: string): Promise<UserWithKyc | null> {
-    if (this.d1?.isEnabled()) {
-      const user = await this.d1.getUserByEmail(email);
-      if (!user) return null;
-      return { ...user, kyc: user.kycStatus ? { status: user.kycStatus } : null } as unknown as UserWithKyc;
-    }
-    return this.prisma.user.findUnique({
-      where: { email },
-      include: { kyc: { select: { status: true } } },
-    });
+    const user = await this.d1.getUserByEmail(email);
+    if (!user) return null;
+    return { ...user, kyc: user.kycStatus ? { status: user.kycStatus } : null } as unknown as UserWithKyc;
   }
   
   async findById(id: string): Promise<User | null> {
-      if (this.d1?.isEnabled()) return (await this.d1.getUserById(id)) as unknown as User | null;
-      return this.prisma.user.findUnique({
-          where: { id }
-      });
+      return (await this.d1.getUserById(id)) as unknown as User | null;
   }
 
   async findByUserCode(userCode: number): Promise<Record<string, unknown> | null> {
-    if (this.d1?.isEnabled()) return this.d1.getUserByUserCode(userCode);
-    return this.prisma.user.findUnique({
-      where: { userCode },
-      select: { id: true, userCode: true, email: true, displayName: true, role: true },
-    }) as unknown as Promise<Record<string, unknown> | null>;
+    return this.d1.getUserByUserCode(userCode);
   }
 
   async updateProfile(userId: string, patch: { displayName?: string; email?: string }) {
-    if (this.d1?.isEnabled()) return this.d1.updateUserProfile(userId, patch);
-    return this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        ...(patch.displayName !== undefined ? { displayName: patch.displayName.trim() } : {}),
-        ...(patch.email !== undefined ? { email: patch.email.trim().toLowerCase() } : {}),
-      },
-    });
+    return this.d1.updateUserProfile(userId, patch);
   }
 
   async getPreferences(userId: string) {
-    if (this.d1?.isEnabled()) return this.normalizePreference(await this.d1.getUserPreference(userId));
-    const row = await this.prisma.userPreference.findUnique({ where: { userId } });
-    return row ?? { userId, locale: 'en', timezone: 'UTC', theme: 'dark', notificationSettings: null, tradingSettings: null };
+    return this.normalizePreference(await this.d1.getUserPreference(userId));
   }
 
   async updatePreferences(userId: string, patch: { locale?: string; timezone?: string; theme?: string; notificationSettings?: Record<string, boolean>; tradingSettings?: Record<string, unknown> }) {
-    if (this.d1?.isEnabled()) return this.normalizePreference(await this.d1.updateUserPreference(userId, patch));
-    return this.prisma.userPreference.upsert({
-      where: { userId },
-      update: patch as Prisma.UserPreferenceUncheckedUpdateInput,
-      create: { userId, ...(patch as Prisma.UserPreferenceUncheckedCreateInput) },
-    });
+    return this.normalizePreference(await this.d1.updateUserPreference(userId, patch));
   }
 
   private normalizePreference(row: Record<string, unknown>) {
@@ -90,39 +59,17 @@ export class UsersService {
     // Hash password
     const hashedPassword = await bcrypt.hash(data.password, PASSWORD_HASH_ROUNDS);
 
-    if (this.d1?.isEnabled()) {
-      const user = await this.d1.createPasswordUser({
-        id: randomUUID(),
-        userCode: randomInt(USER_CODE_MIN, USER_CODE_MAX),
-        email: data.email,
-        password: hashedPassword,
-      });
-      return user as unknown as User;
-    }
-    
-    // Create user
-    let user: User;
-    for (let attempt = 0; attempt < 5; attempt += 1) {
-      try {
-        user = await this.prisma.user.create({
-          data: { email: data.email, password: hashedPassword, userCode: randomInt(USER_CODE_MIN, USER_CODE_MAX) },
-        });
-        break;
-      } catch (error) {
-        if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== 'P2002' || attempt === 4) throw error;
-      }
-    }
-    if (!user!) throw new Error('User creation failed');
-
-    // Create wallet for the new user
-    await this.walletService.createWallet(user.id);
-
-    return user;
+    const user = await this.d1.createPasswordUser({
+      id: randomUUID(),
+      userCode: randomInt(USER_CODE_MIN, USER_CODE_MAX),
+      email: data.email,
+      password: hashedPassword,
+    });
+    return user as unknown as User;
   }
 
   async createAdminUser(data: SignupDto): Promise<User> {
     const hashedPassword = await bcrypt.hash(data.password, PASSWORD_HASH_ROUNDS);
-    if (!this.d1?.isEnabled()) throw new Error('Staging Admin fixture requires D1 runtime');
     const user = await this.d1.createPasswordAdminUser({
       id: randomUUID(),
       userCode: randomInt(USER_CODE_MIN, USER_CODE_MAX),
@@ -141,32 +88,14 @@ export class UsersService {
       if (!matches) throw new Error('Current security password is incorrect');
     }
     const hashed = await bcrypt.hash(newSecurityPassword, PASSWORD_HASH_ROUNDS);
-    if (this.d1?.isEnabled()) {
-      await this.d1.updateUserSecurityPassword(userId, hashed);
-      return;
-    }
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { securityPasswordHash: hashed, updatedAt: new Date() },
-    });
+    await this.d1.updateUserSecurityPassword(userId, hashed);
   }
 
   async getUserMfa(userId: string): Promise<Record<string, unknown> | null> {
-    if (this.d1?.isEnabled()) return this.d1.getUserMfa(userId);
-    return this.prisma.userMfa.findUnique({ where: { userId } }) as unknown as Record<string, unknown> | null;
+    return this.d1.getUserMfa(userId);
   }
 
   async updateUserMfa(userId: string, enabled: boolean, secret: string | null, backupCodes: string | null): Promise<Record<string, unknown>> {
-    if (this.d1?.isEnabled()) return this.d1.upsertUserMfa(userId, enabled, secret, backupCodes);
-    const existing = await this.prisma.userMfa.findUnique({ where: { userId } });
-    if (existing) {
-      return this.prisma.userMfa.update({
-        where: { userId },
-        data: { enabled, secret, backupCodes, updatedAt: new Date() },
-      }) as unknown as Record<string, unknown>;
-    }
-    return this.prisma.userMfa.create({
-      data: { userId, enabled, secret, backupCodes },
-    }) as unknown as Record<string, unknown>;
+    return this.d1.upsertUserMfa(userId, enabled, secret, backupCodes);
   }
 }

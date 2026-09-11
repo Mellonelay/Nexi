@@ -1,7 +1,8 @@
 export interface RuntimeConfig {
   nodeEnv: string;
   port: number;
-  databaseUrl: string;
+  d1RuntimeEnabled: boolean;
+  d1BridgeEnabled: boolean;
   redisUrl: string;
   jwtSecret: string;
   corsOrigins: string[];
@@ -53,11 +54,16 @@ function parseCorsOrigins(rawOrigins: string | undefined, isProduction: boolean)
 export function resolveRuntimeConfig(environment: NodeJS.ProcessEnv = process.env): RuntimeConfig {
   const nodeEnv = environment.NODE_ENV?.trim() || 'development';
   const isProduction = nodeEnv === 'production';
+  const d1RuntimeEnabled = requiredValue(environment, 'D1_RUNTIME_ENABLED');
+  const d1BridgeEnabled = requiredValue(environment, 'D1_BRIDGE_ENABLED');
+  if (d1RuntimeEnabled !== 'true') throw new Error('D1_RUNTIME_ENABLED must be true');
+  if (d1BridgeEnabled !== 'true') throw new Error('D1_BRIDGE_ENABLED must be true');
 
   return {
     nodeEnv,
     port: parsePort(environment.PORT),
-    databaseUrl: requiredValue(environment, 'DATABASE_URL'),
+    d1RuntimeEnabled: true,
+    d1BridgeEnabled: true,
     redisUrl: requiredValue(environment, 'REDIS_URL'),
     jwtSecret: requiredValue(environment, 'JWT_SECRET'),
     corsOrigins: parseCorsOrigins(environment.CORS_ORIGINS, isProduction),

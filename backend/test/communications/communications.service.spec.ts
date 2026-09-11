@@ -1,11 +1,15 @@
 import { CommunicationsService } from '../../src/communications/communications.service';
 
 describe('CommunicationsService', () => {
+  const outbox = { recordEvent: jest.fn().mockResolvedValue(undefined) };
+  const redis = { isAvailable: jest.fn().mockReturnValue(false), publish: jest.fn() };
+  const d1Communications = {};
+
   it('creates an idempotent ticket with its first reply', async () => {
     const ticket = { id: 'ticket-1', userId: 'user-1', replies: [{ id: 'reply-1' }] };
     const tx: any = { supportTicket: { upsert: jest.fn(async () => ticket) } };
     const prisma: any = { $transaction: async (fn: any) => fn(tx) };
-    const service = new CommunicationsService(prisma, {} as any, {} as any, {} as any);
+    const service = new CommunicationsService(prisma, outbox as any, d1Communications as any, redis as any);
     const result = await service.createTicket('user-1', 'Help', 'Body', 'key-1');
     expect(result).toBe(ticket);
     expect(tx.supportTicket.upsert).toHaveBeenCalledWith(expect.objectContaining({ where: expect.anything(), include: { replies: true } }));
@@ -20,7 +24,7 @@ describe('CommunicationsService', () => {
       },
     };
     const prisma: any = { $transaction: async (fn: any) => fn(tx) };
-    const service = new CommunicationsService(prisma, {} as any, {} as any, {} as any);
+    const service = new CommunicationsService(prisma, outbox as any, d1Communications as any, redis as any);
     const result = await service.sendMessage('user-1', 'user-2', 'Hello', 'key-1');
     expect(result.sequence).toBe(4);
     expect(tx.persistentMessage.upsert).toHaveBeenCalledWith(expect.objectContaining({ create: expect.objectContaining({ sequence: 4 }) }));
@@ -28,27 +32,27 @@ describe('CommunicationsService', () => {
 
   it('sends an idempotent admin notification through the canonical notification store', async () => {
     const notification = { id: 'notification-1', userId: 'user-1' };
-    const prisma: any = {
-      notification: { upsert: jest.fn(async () => notification) },
+    const d1: any = {
+      notification: {
+        findUnique: jest.fn(async () => notification),
+      },
     };
-    const service = new CommunicationsService(prisma, {} as any, {} as any);
+    const d1Gateway = { createNotification: jest.fn().mockResolvedValue(undefined) };
+    const service = new CommunicationsService(d1, outbox as any, d1Gateway as any, redis as any);
     const result = await service.sendAdminNotification({
       userId: 'user-1', type: 'info', title: 'Hello', body: 'Body', idempotencyKey: 'key-1',
     });
     expect(result).toBe(notification);
-    expect(prisma.notification.upsert).toHaveBeenCalledWith(expect.objectContaining({
-      where: { id: expect.any(String) },
-      create: expect.objectContaining({ userId: 'user-1', title: 'Hello', body: 'Body' }),
-    }));
+    expect(d1Gateway.createNotification).toHaveBeenCalledWith(expect.objectContaining({ userId: 'user-1', title: 'Hello', body: 'Body' }));
   });
 
   it('lists admin messages and notifications with bounded pagination', async () => {
     const findMany = jest.fn(async () => []);
-    const prisma: any = {
+    const d1: any = {
       persistentMessage: { findMany },
       notification: { findMany },
     };
-    const service = new CommunicationsService(prisma, {} as any, {} as any);
+    const service = new CommunicationsService(d1, outbox as any, d1Communications as any, redis as any);
     await service.adminMessages(2, 10);
     await service.adminNotifications(3, 5);
     expect(findMany).toHaveBeenNthCalledWith(1, expect.objectContaining({ skip: 10, take: 10 }));

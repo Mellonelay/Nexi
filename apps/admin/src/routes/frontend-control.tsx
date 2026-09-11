@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/admin/components/PageHeader";
 import { RouteGuard } from "@/admin/components/RouteGuard";
 import { StatusBadge } from "@/admin/components/StatusBadge";
+import { ProviderBadge } from "@/admin/components/ProviderBadge";
 import { DataTable, type DataTableColumn } from "@/admin/components/DataTable";
 import { FormDrawer } from "@/admin/components/FormDrawer";
 import { ConsequentialActionDialog } from "@/admin/components/ConsequentialActionDialog";
@@ -141,7 +142,7 @@ function Shell({
         description="Public route visibility, Quotes Hub, banners, incidents, and support entry points."
         badges={
           <>
-            <StatusBadge tone="warning">Mock data</StatusBadge>
+            <ProviderBadge />
             {badges?.map((b, i) => (
               <StatusBadge key={i} tone={b.tone} dot={false}>
                 {b.label}
@@ -318,6 +319,7 @@ function PublicRouteStateForm({
         <Label className="text-xs">State</Label>
         <select
           data-testid="route-state-select"
+          aria-label="Public route state"
           value={state}
           onChange={(e) => setState(e.target.value as PublicRouteState)}
           className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
@@ -345,6 +347,7 @@ function PublicRouteStateForm({
         </Label>
         <textarea
           data-testid="route-state-reason"
+          aria-label="Reason for public route state change"
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           rows={3}

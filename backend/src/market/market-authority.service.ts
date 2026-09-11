@@ -1,6 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { AssetLifecycleStatus, MarketQuoteState, Prisma } from '@prisma/client';
-import { PrismaService } from '../prisma/prisma.service';
+import { AssetLifecycleStatus, MarketQuoteState, Prisma } from '../prisma/d1-client';
 import { D1PrismaService } from '../d1/d1-prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { MARKET_QUOTES_CHANNEL } from './market.types';
@@ -96,13 +95,12 @@ function policyPrimaryProvider(symbol: string): string {
 
 @Injectable()
 export class MarketAuthorityService implements OnModuleInit {
-  private get db(): any { return this.d1.isEnabled() ? this.d1 : this.prisma; }
+  private get db(): any { return this.d1; }
 
   private readonly logger = new Logger(MarketAuthorityService.name);
   private readonly staleAfterMs = this.readStaleAfterMs();
 
   constructor(
-    private readonly prisma: PrismaService,
     private readonly redis: RedisService,
     private readonly d1: D1PrismaService,
     private readonly providerRouter: MarketProviderRouterService,
@@ -269,7 +267,6 @@ export class MarketAuthorityService implements OnModuleInit {
       // sequence. Multiple provider pollers can otherwise read the same latest
       // row concurrently and collide on (pairId, sequence).
       if (!isDeterministicTestProvider(provider) && typeof tx.$queryRaw === 'function') {
-        await tx.$queryRaw`SELECT id FROM "MarketPair" WHERE id = ${pair.id} FOR UPDATE`;
       }
       const latest = await tx.marketQuoteLatest.findUnique({ where: { pairId: pair.id } });
       if (latest?.observedAt && input.observedAt.getTime() < latest.observedAt.getTime()) {

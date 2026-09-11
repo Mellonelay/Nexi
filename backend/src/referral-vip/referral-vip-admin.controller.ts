@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Role } from '@prisma/client';
+import { Role } from '../prisma/d1-client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AuthSurfaceGuard } from '../auth/auth-surface.guard';
 import { RequireAuthSurface } from '../auth/auth-surface.decorator';

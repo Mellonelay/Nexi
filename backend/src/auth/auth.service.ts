@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './auth.dto';
 import { AuthSurface, LoginUser } from './auth.types';
-import { Role } from '@prisma/client';
+import { Role } from '../prisma/d1-client';
 import { randomUUID, randomBytes } from 'node:crypto';
 import { AuthSessionService } from './auth-session.service';
 import type { AuthSessionMetadata } from './auth-session.service';

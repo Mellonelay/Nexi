@@ -109,7 +109,7 @@ function Inner() {
           open
           onOpenChange={(o) => !o && setPending(null)}
           title="Edit role permission"
-          description="Privilege changes are mock-only, reason-required, and audited."
+          description="Privilege changes are reason-required and audited by the active provider."
           target={ROLE_LIST.find((r) => r.id === pending.role)?.label ?? pending.role}
           targetId={pending.role}
           action="roles.edit"

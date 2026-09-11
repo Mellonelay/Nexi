@@ -3,11 +3,9 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
-  Optional,
 } from "@nestjs/common";
-import { Role, Prisma } from "@prisma/client";
+import { Role, Prisma } from "../prisma/d1-client";
 import { createHash } from "crypto";
-import { PrismaService } from "../prisma/prisma.service";
 import { D1PrismaService } from "../d1/d1-prisma.service";
 import { RedisService } from "../redis/redis.service";
 import { EventOutboxService } from "../events/event-outbox.service";
@@ -16,15 +14,14 @@ import { D1CommunicationsCommandGateway } from "../d1/d1-communications-command.
 @Injectable()
 export class CommunicationsService {
   constructor(
-    private readonly prisma: PrismaService,
     private readonly d1: D1PrismaService,
     private readonly outbox: EventOutboxService,
-    @Optional() private readonly d1Communications?: D1CommunicationsCommandGateway,
-    @Optional() private readonly redis?: RedisService,
+    private readonly d1Communications: D1CommunicationsCommandGateway,
+    private readonly redis: RedisService,
   ) {}
 
   private get database(): any {
-    return process.env.D1_RUNTIME_ENABLED === "true" ? this.d1 : this.prisma;
+    return this.d1;
   }
 
   private id(prefix: string, key: string): string {
@@ -42,7 +39,6 @@ export class CommunicationsService {
     eventType: string,
     payload: Record<string, unknown>,
   ): Promise<void> {
-    if (process.env.D1_RUNTIME_ENABLED !== "true") return;
     await this.outbox.recordEvent({
       idempotencyKey,
       aggregateType,
@@ -58,7 +54,7 @@ export class CommunicationsService {
     referenceId: string,
     payload: Record<string, unknown>,
   ) {
-    if (!this.redis?.isAvailable()) return;
+    if (!this.redis.isAvailable()) return;
     await this.redis.publish(
       "nexi:b8:communications",
       JSON.stringify({
@@ -220,22 +216,9 @@ export class CommunicationsService {
   }
 
   async markMessageRead(userId: string, messageId: string) {
-    if (process.env.D1_RUNTIME_ENABLED === "true") {
-      const updated = await this.d1Communications!.markMessageRead(userId, messageId);
-      if (!updated) throw new NotFoundException("Message not found");
-      return this.d1.persistentMessage.findUnique({ where: { id: messageId } });
-    }
-    return this.database.$transaction(async (tx) => {
-      const message = await tx.persistentMessage.findFirst({
-        where: { id: messageId, recipientId: userId },
-      });
-      if (!message) throw new NotFoundException("Message not found");
-      await tx.persistentMessage.updateMany({
-        where: { id: messageId, recipientId: userId, readAt: null },
-        data: { readAt: new Date() },
-      });
-      return tx.persistentMessage.findUnique({ where: { id: messageId } });
-    });
+    const updated = await this.d1Communications.markMessageRead(userId, messageId);
+    if (!updated) throw new NotFoundException("Message not found");
+    return this.d1.persistentMessage.findUnique({ where: { id: messageId } });
   }
 
   async listMessages(userId: string, page = 1, limit = 25) {
@@ -265,8 +248,7 @@ export class CommunicationsService {
   async sendAdminNotification(data: { userId: string; type: string; title: string; body: string; idempotencyKey: string; reason?: string }) {
     const id = this.id("admin-notification", data.idempotencyKey);
     let notification: any;
-    if (process.env.D1_RUNTIME_ENABLED === "true") {
-      await this.d1Communications!.createNotification({
+    await this.d1Communications.createNotification({
         id,
         userId: data.userId,
         type: data.type,
@@ -274,14 +256,8 @@ export class CommunicationsService {
         body: data.body,
         idempotencyKey: data.idempotencyKey,
         eventType: "NOTIFICATION_SENT",
-      });
-      notification = await this.database.notification.findUnique({ where: { id } });
-    } else {
-      notification = await this.database.notification.upsert({
-        where: { id }, update: {}, create: { id, userId: data.userId, type: data.type, title: data.title, body: data.body },
-      });
-      await this.durableEvent("notification-send:" + id, "NOTIFICATION", id, "NOTIFICATION_SENT", { userId: data.userId, type: data.type });
-    }
+    });
+    notification = await this.database.notification.findUnique({ where: { id } });
     if (!notification) throw new BadRequestException("Notification was not materialized");
     await this.event("NOTIFICATION_SENT", id, { userId: data.userId, type: data.type });
     return notification;
@@ -310,34 +286,16 @@ export class CommunicationsService {
     });
   }
   async markNotificationRead(userId: string, id: string) {
-    if (process.env.D1_RUNTIME_ENABLED === "true") {
-      const changed = await this.d1Communications!.markNotificationRead(userId, id, {
+    const changed = await this.d1Communications.markNotificationRead(userId, id, {
         idempotencyKey: "notification-read:" + id + ":" + userId,
         aggregateId: id,
         eventType: "NOTIFICATION_READ",
         payload: { userId },
-      });
-      if (!changed) throw new NotFoundException("Notification not found");
-      const notification = await this.database.notification.findUnique({ where: { id } });
-      await this.event("NOTIFICATION_READ", id, { userId });
-      return notification;
-    }
-    const result = await this.database.notification.updateMany({
-      where: { id, userId },
-      data: { readAt: new Date() },
     });
-    if (result.count !== 1)
-      throw new NotFoundException("Notification not found");
+    if (!changed) throw new NotFoundException("Notification not found");
     const notification = await this.database.notification.findUnique({
       where: { id },
     });
-    await this.durableEvent(
-      "notification-read:" + id + ":" + userId,
-      "NOTIFICATION",
-      id,
-      "NOTIFICATION_READ",
-      { userId },
-    );
     await this.event("NOTIFICATION_READ", id, { userId });
     return notification;
   }

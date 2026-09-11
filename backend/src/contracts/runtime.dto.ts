@@ -1,6 +1,6 @@
 import { Type } from 'class-transformer';
 import { IsEnum, IsISO8601, IsNumber, IsPositive, IsString, Length, Matches, MinLength } from 'class-validator';
-import { BinarySide, LedgerType, OrderSide, OrderType } from '@prisma/client';
+import { BinarySide, LedgerType, OrderSide, OrderType } from '../prisma/d1-client';
 
 const amountOptions = { allowInfinity: false, allowNaN: false };
 

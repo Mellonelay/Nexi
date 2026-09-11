@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/admin/components/PageHeader";
 import { MetricCard } from "@/admin/components/MetricCard";
 import { StatusBadge } from "@/admin/components/StatusBadge";
+import { ProviderBadge } from "@/admin/components/ProviderBadge";
 import { RouteGuard } from "@/admin/components/RouteGuard";
 import { useAdminQuery } from "@/admin/data/context";
 import { LoadingSkeleton } from "@/admin/components/states";
@@ -33,8 +34,8 @@ function Inner() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Operations Overview"
-        description="Live mock snapshot of platform activity, health, and pending work."
-        badges={<StatusBadge tone="warning">Mock data</StatusBadge>}
+        description="Snapshot of platform activity, health, and pending work."
+        badges={<ProviderBadge />}
       />
 
       {loading ? (
@@ -86,7 +87,6 @@ function Inner() {
         <div className="surface-1 rounded-lg border border-border/60 p-4">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-foreground">System health</h2>
-            <StatusBadge tone="info">Mock</StatusBadge>
           </div>
           <ul className="divide-y divide-border/50">
             {(health.data ?? []).map((h) => (
@@ -114,7 +114,6 @@ function Inner() {
         <div className="surface-1 rounded-lg border border-border/60 p-4">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-foreground">Recent admin actions</h2>
-            <StatusBadge tone="info">Mock audit</StatusBadge>
           </div>
           <ul className="divide-y divide-border/50">
             {(audit.data ?? []).slice(0, 6).map((a) => (

@@ -18,7 +18,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "Internal administration console for the NEXI platform. Mock UI — not connected to production.",
+          "Internal administration console for the NEXI platform. Operator control plane; live mode uses the configured Admin API provider.",
       },
       { name: "robots", content: "noindex,nofollow" },
       { property: "og:title", content: "NEXI Admin Control Plane" },

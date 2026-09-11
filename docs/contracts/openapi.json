@@ -256,6 +256,29 @@
         ]
       }
     },
+    "/communications/messages/{id}/read": {
+      "post": {
+        "operationId": "CommunicationsController_readMessage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
     "/communications/notifications": {
       "get": {
         "operationId": "CommunicationsController_notifications",
@@ -382,6 +405,122 @@
         ]
       }
     },
+    "/communications/admin/announcements/{id}": {
+      "patch": {
+        "operationId": "CommunicationsController_updateAnnouncement",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAnnouncementDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
+    "/communications/admin/announcements/{id}/publish": {
+      "post": {
+        "operationId": "CommunicationsController_publishAnnouncement",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminMutationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
+    "/communications/admin/messages": {
+      "get": {
+        "operationId": "CommunicationsController_adminMessages",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
+    "/communications/admin/notifications": {
+      "get": {
+        "operationId": "CommunicationsController_adminNotifications",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      },
+      "post": {
+        "operationId": "CommunicationsController_sendAdminNotification",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendNotificationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
     "/communications/admin/learn/articles": {
       "get": {
         "operationId": "CommunicationsController_adminLearnArticles",
@@ -490,6 +629,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminMutationDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": ""
@@ -497,54 +646,6 @@
         },
         "tags": [
           "Communications"
-        ]
-      }
-    },
-    "/auth/login": {
-      "post": {
-        "operationId": "AuthController_login",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LoginDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Authentication"
-        ]
-      }
-    },
-    "/auth/signup": {
-      "post": {
-        "operationId": "AuthController_signup",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SignupDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Authentication"
         ]
       }
     },
@@ -612,61 +713,103 @@
       "patch": {
         "operationId": "AuthController_updateMe",
         "parameters": [],
-        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/UpdateProfileDto"}}}},
-        "responses": {"200": {"description": ""}},
-        "tags": ["Authentication"],
-        "security": [{"bearer": []}]
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/auth/preferences": {
       "get": {
         "operationId": "AuthController_preferences",
         "parameters": [],
-        "responses": {"200": {"description": ""}},
-        "tags": ["Authentication"],
-        "security": [{"bearer": []}]
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Authentication"
+        ]
       },
       "patch": {
         "operationId": "AuthController_updatePreferences",
-        "parameters": [],
-        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/UpdatePreferencesDto"}}}},
-        "responses": {"200": {"description": ""}},
-        "tags": ["Authentication"],
-        "security": [{"bearer": []}]
-      }
-    },
-    "/auth/sessions": {
-      "get": {
-        "operationId": "AuthController_sessions",
-        "parameters": [],
-        "responses": {"200": {"description": ""}},
-        "tags": ["Authentication"],
-        "security": [{"bearer": []}]
-      }
-    },
-    "/auth/sessions/{sessionId}/revoke": {
-      "post": {
-        "operationId": "AuthController_revokeSession",
-        "parameters": [{"name": "sessionId", "required": true, "in": "path", "schema": {"type": "string"}}],
-        "responses": {"201": {"description": ""}},
-        "tags": ["Authentication"],
-        "security": [{"bearer": []}]
-      }
-    },
-    "/auth/refresh": {
-      "post": {
-        "operationId": "AuthController_refresh",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RefreshTokenDto"
+                "$ref": "#/components/schemas/UpdatePreferencesDto"
               }
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/auth/sessions": {
+      "get": {
+        "operationId": "AuthController_sessions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/auth/sessions/{sessionId}/revoke": {
+      "post": {
+        "operationId": "AuthController_revokeSession",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refresh",
+        "parameters": [],
         "responses": {
           "201": {
             "description": ""
@@ -705,219 +848,129 @@
         ]
       }
     },
-    "/wallet/currencies/list": {
-      "get": {
-        "operationId": "WalletController_getCurrencies",
+    "/auth/security/password/change": {
+      "post": {
+        "operationId": "AuthController_changeSecurityPassword",
         "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Wallet"
-        ],
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/wallet/activity": {
-      "get": {
-        "operationId": "WalletController_getActivity",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Wallet"
-        ],
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/wallet/me": {
-      "get": {
-        "operationId": "WalletController_getMyWallet",
-        "summary": "Return balances for the authenticated wallet user.",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Wallet"
-        ],
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/wallet/me/ledger": {
-      "get": {
-        "operationId": "WalletController_getMyLedger",
-        "summary": "Return ledger history for the authenticated wallet user.",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Wallet"
-        ],
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/wallet/{userId}": {
-      "get": {
-        "operationId": "WalletController_getWallet",
-        "parameters": [
-          {
-            "name": "userId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SecurityPasswordChangeDto"
+              }
             }
           }
-        ],
+        },
         "responses": {
-          "200": {
+          "201": {
             "description": ""
           }
         },
         "tags": [
-          "Wallet"
-        ],
-        "security": [
-          {
-            "bearer": []
-          }
+          "Authentication"
         ]
       }
     },
-    "/wallet/{userId}/ledger": {
-      "get": {
-        "operationId": "WalletController_getLedger",
-        "parameters": [
-          {
-            "name": "userId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
+    "/auth/security/mfa/setup": {
+      "post": {
+        "operationId": "AuthController_setupMfa",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetupMfaDto"
+              }
             }
           }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
         },
-        "tags": [
-          "Wallet"
-        ],
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/wallet/deposit": {
-      "post": {
-        "operationId": "WalletController_deposit",
-        "parameters": [],
         "responses": {
           "201": {
             "description": ""
           }
         },
         "tags": [
-          "Wallet"
-        ],
-        "security": [
-          {
-            "bearer": []
-          }
+          "Authentication"
         ]
       }
     },
-    "/wallet/withdraw": {
+    "/auth/security/mfa/verify": {
       "post": {
-        "operationId": "WalletController_withdraw",
+        "operationId": "AuthController_verifyMfa",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyMfaDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": ""
           }
         },
         "tags": [
-          "Wallet"
-        ],
-        "security": [
-          {
-            "bearer": []
-          }
+          "Authentication"
         ]
       }
     },
-    "/wallet/admin/credit": {
+    "/auth/security/mfa/disable": {
       "post": {
-        "operationId": "WalletController_adminCredit",
+        "operationId": "AuthController_disableMfa",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisableMfaDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": ""
           }
         },
         "tags": [
-          "Wallet"
-        ],
-        "security": [
-          {
-            "bearer": []
-          }
+          "Authentication"
         ]
       }
     },
-    "/wallet/admin/debit": {
+    "/auth/security/mfa/backup-codes": {
       "post": {
-        "operationId": "WalletController_adminDebit",
+        "operationId": "AuthController_generateBackupCodes",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateBackupCodesDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": ""
           }
         },
         "tags": [
-          "Wallet"
-        ],
-        "security": [
-          {
-            "bearer": []
-          }
+          "Authentication"
         ]
       }
     },
-    "/wallet/admin/withdrawals": {
+    "/auth/security/mfa/status": {
       "get": {
-        "operationId": "WalletController_getPendingWithdrawals",
+        "operationId": "AuthController_mfaStatus",
         "parameters": [],
         "responses": {
           "200": {
@@ -925,50 +978,21 @@
           }
         },
         "tags": [
-          "Wallet"
-        ],
-        "security": [
-          {
-            "bearer": []
-          }
+          "Authentication"
         ]
       }
     },
-    "/wallet/admin/withdrawals/approve": {
-      "post": {
-        "operationId": "WalletController_approveWithdrawal",
+    "/auth/security/status": {
+      "get": {
+        "operationId": "AuthController_securityStatus",
         "parameters": [],
         "responses": {
-          "201": {
+          "200": {
             "description": ""
           }
         },
         "tags": [
-          "Wallet"
-        ],
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/wallet/admin/withdrawals/reject": {
-      "post": {
-        "operationId": "WalletController_rejectWithdrawal",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Wallet"
-        ],
-        "security": [
-          {
-            "bearer": []
-          }
+          "Authentication"
         ]
       }
     },
@@ -1090,6 +1114,206 @@
         },
         "tags": [
           "Internal Events"
+        ]
+      }
+    },
+    "/wallet/currencies/list": {
+      "get": {
+        "operationId": "WalletController_getCurrencies",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Wallet"
+        ]
+      }
+    },
+    "/wallet/activity": {
+      "get": {
+        "operationId": "WalletController_getActivity",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Wallet"
+        ]
+      }
+    },
+    "/wallet/me": {
+      "get": {
+        "operationId": "WalletController_getMyWallet",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Wallet"
+        ]
+      }
+    },
+    "/wallet/me/ledger": {
+      "get": {
+        "operationId": "WalletController_getMyLedger",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Wallet"
+        ]
+      }
+    },
+    "/wallet/{userId}": {
+      "get": {
+        "operationId": "WalletController_getWallet",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Wallet"
+        ]
+      }
+    },
+    "/wallet/{userId}/ledger": {
+      "get": {
+        "operationId": "WalletController_getLedger",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Wallet"
+        ]
+      }
+    },
+    "/wallet/deposit": {
+      "post": {
+        "operationId": "WalletController_deposit",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Wallet"
+        ]
+      }
+    },
+    "/wallet/withdraw": {
+      "post": {
+        "operationId": "WalletController_withdraw",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Wallet"
+        ]
+      }
+    },
+    "/wallet/admin/credit": {
+      "post": {
+        "operationId": "WalletController_adminCredit",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Wallet"
+        ]
+      }
+    },
+    "/wallet/admin/debit": {
+      "post": {
+        "operationId": "WalletController_adminDebit",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Wallet"
+        ]
+      }
+    },
+    "/wallet/admin/withdrawals": {
+      "get": {
+        "operationId": "WalletController_getPendingWithdrawals",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Wallet"
+        ]
+      }
+    },
+    "/wallet/admin/withdrawals/approve": {
+      "post": {
+        "operationId": "WalletController_approveWithdrawal",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Wallet"
+        ]
+      }
+    },
+    "/wallet/admin/withdrawals/reject": {
+      "post": {
+        "operationId": "WalletController_rejectWithdrawal",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Wallet"
         ]
       }
     },
@@ -1915,7 +2139,6 @@
     "/kyc/submit": {
       "post": {
         "operationId": "KycController_submitKyc",
-        "summary": "Submit or resubmit the authenticated wallet user's KYC profile.",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -1934,18 +2157,12 @@
         },
         "tags": [
           "KYC"
-        ],
-        "security": [
-          {
-            "bearer": []
-          }
         ]
       }
     },
     "/kyc/status": {
       "get": {
         "operationId": "KycController_getMyStatus",
-        "summary": "Return KYC state for the authenticated wallet user.",
         "parameters": [],
         "responses": {
           "200": {
@@ -1954,11 +2171,6 @@
         },
         "tags": [
           "KYC"
-        ],
-        "security": [
-          {
-            "bearer": []
-          }
         ]
       }
     },
@@ -1982,11 +2194,6 @@
         },
         "tags": [
           "KYC"
-        ],
-        "security": [
-          {
-            "bearer": []
-          }
         ]
       }
     },
@@ -2011,11 +2218,6 @@
         },
         "tags": [
           "KYC"
-        ],
-        "security": [
-          {
-            "bearer": []
-          }
         ]
       }
     },
@@ -2040,11 +2242,6 @@
         },
         "tags": [
           "KYC"
-        ],
-        "security": [
-          {
-            "bearer": []
-          }
         ]
       }
     },
@@ -3040,6 +3237,42 @@
         "parameters": [],
         "responses": {
           "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/spot/margin/config": {
+      "get": {
+        "operationId": "AdminController_getMarginConfiguration",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      },
+      "post": {
+        "operationId": "AdminController_updateMarginConfiguration",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMarginConfigurationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
             "description": ""
           }
         },
@@ -4712,45 +4945,6 @@
           }
         ]
       }
-    },
-    "/lever/deal": {
-      "post": {
-        "operationId": "ContractController_deal",
-        "parameters": [],
-        "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object"}}}},
-        "responses": {"201": {"description": ""}},
-        "tags": ["Leveraged Contracts"],
-        "security": [{"bearer": []}]
-      }
-    },
-    "/lever/setstop": {
-      "post": {
-        "operationId": "ContractController_setStop",
-        "parameters": [],
-        "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object"}}}},
-        "responses": {"201": {"description": ""}},
-        "tags": ["Leveraged Contracts"],
-        "security": [{"bearer": []}]
-      }
-    },
-    "/lever/close": {
-      "post": {
-        "operationId": "ContractController_close",
-        "parameters": [],
-        "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object"}}}},
-        "responses": {"201": {"description": ""}},
-        "tags": ["Leveraged Contracts"],
-        "security": [{"bearer": []}]
-      }
-    },
-    "/lever/my_trade": {
-      "get": {
-        "operationId": "ContractController_myTrade",
-        "parameters": [],
-        "responses": {"200": {"description": ""}},
-        "tags": ["Leveraged Contracts"],
-        "security": [{"bearer": []}]
-      }
     }
   },
   "info": {
@@ -4794,6 +4988,18 @@
         "type": "object",
         "properties": {}
       },
+      "UpdateAnnouncementDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AdminMutationDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "SendNotificationDto": {
+        "type": "object",
+        "properties": {}
+      },
       "CreateLearnCategoryDto": {
         "type": "object",
         "properties": {}
@@ -4806,14 +5012,6 @@
         "type": "object",
         "properties": {}
       },
-      "LoginDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "SignupDto": {
-        "type": "object",
-        "properties": {}
-      },
       "WalletChallengeDto": {
         "type": "object",
         "properties": {}
@@ -4822,11 +5020,54 @@
         "type": "object",
         "properties": {}
       },
-      "RefreshTokenDto": {
+      "UpdateProfileDto": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdatePreferencesDto": {
+        "type": "object",
+        "properties": {
+          "locale": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "theme": {
+            "type": "string"
+          },
+          "notificationSettings": {
+            "type": "object"
+          },
+          "tradingSettings": {
+            "type": "object"
+          }
+        }
+      },
+      "SecurityPasswordChangeDto": {
         "type": "object",
         "properties": {}
       },
-      "KycSubmissionDto": {
+      "SetupMfaDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "VerifyMfaDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "DisableMfaDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "GenerateBackupCodesDto": {
         "type": "object",
         "properties": {}
       },
@@ -5043,6 +5284,10 @@
         "type": "object",
         "properties": {}
       },
+      "KycSubmissionDto": {
+        "type": "object",
+        "properties": {}
+      },
       "KycAdminTargetDto": {
         "type": "object",
         "properties": {}
@@ -5115,6 +5360,10 @@
         "type": "object",
         "properties": {}
       },
+      "UpdateMarginConfigurationDto": {
+        "type": "object",
+        "properties": {}
+      },
       "AdminPairMaintenanceDto": {
         "type": "object",
         "properties": {}
@@ -5152,6 +5401,14 @@
         "properties": {}
       },
       "UpdateBinaryConfigurationDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "RefreshTokenDto": {
         "type": "object",
         "properties": {}
       },
@@ -5224,37 +5481,6 @@
           "entityId",
           "idempotencyKey"
         ]
-      },
-      "UpdateProfileDto": {
-        "type": "object",
-        "properties": {
-          "displayName": {
-            "type": "string"
-          },
-          "email": {
-            "type": "string"
-          }
-        }
-      },
-      "UpdatePreferencesDto": {
-        "type": "object",
-        "properties": {
-          "locale": {
-            "type": "string"
-          },
-          "timezone": {
-            "type": "string"
-          },
-          "theme": {
-            "type": "string"
-          },
-          "notificationSettings": {
-            "type": "object"
-          },
-          "tradingSettings": {
-            "type": "object"
-          }
-        }
       }
     }
   }

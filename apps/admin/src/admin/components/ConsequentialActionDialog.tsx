@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +15,6 @@ import { EnvironmentBadge } from "@/admin/components/EnvironmentBadge";
 import { StatusBadge } from "@/admin/components/StatusBadge";
 import { ShieldAlert, TriangleAlert } from "lucide-react";
 import { useAdminSession } from "@/admin/session/session";
-import { ROLES } from "@/admin/config/roles";
 import type { MutationResult } from "@/admin/data/provider";
 import type { Permission } from "@/admin/types";
 import { toast } from "sonner";
@@ -90,7 +89,7 @@ export function ConsequentialActionDialog({
   const reasonOk = reason.trim().length >= minReasonLength;
   const canSubmit = authorized && reasonOk && productionOk && !pending;
 
-  const roleLabel = useMemo(() => ROLES[session.roleId].label, [session.roleId]);
+  const roleLabel = session.roleLabel;
 
   async function submit() {
     if (!canSubmit) return;
@@ -99,7 +98,7 @@ export function ConsequentialActionDialog({
       const result = await onConfirm(reason.trim());
       if (result && typeof result === "object" && "ok" in result && !result.ok) {
         toast.error("Action failed", {
-          description: `Mock provider rejected ${action} on ${targetId}.`,
+          description: `Provider rejected ${action} on ${targetId}.`,
         });
         return;
       }

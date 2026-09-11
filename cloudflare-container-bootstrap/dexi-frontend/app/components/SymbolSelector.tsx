@@ -17,7 +17,7 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
   const [activeTab, setActiveTab] = useState<AssetCategory>('Crypto');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const { marketPairs, metal, shares, forex } = useMarketData();
+  const { marketPairs, metal, shares, forex, loading, error } = useMarketData();
   const normalizedCurrent = currentSymbol.replaceAll('/', '').toUpperCase();
   const currentAsset = findAsset(currentSymbol);
 
@@ -46,6 +46,8 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const options = getList();
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -91,7 +93,7 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
 
           {/* List */}
           <div className="max-h-[min(55vh,360px)] overflow-y-auto overscroll-contain" role="listbox">
-            {getList().map((item: MarketPair) => {
+            {loading ? <p className="p-4 text-sm text-[#8C8299]" role="status">Loading approved instruments</p> : error ? <p className="p-4 text-sm text-[#8C8299]" role="status">Market data unavailable</p> : options.length === 0 ? <p className="p-4 text-sm text-[#8C8299]" role="status">No approved instruments available</p> : options.map((item: MarketPair) => {
               const hasPrice = item.price !== null && Number.isFinite(item.price);
               return (
                 <button
@@ -115,7 +117,7 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
                     </div>
                   </div>
                   <div className="shrink-0 pl-2 text-right">
-                    <span className="block text-xs font-semibold text-white">{hasPrice ? item.price!.toLocaleString() : '—'}</span>
+                    <span className="block text-xs font-semibold text-white">{hasPrice ? item.price!.toLocaleString() : 'Unavailable'}</span>
                   </div>
                 </button>
               );

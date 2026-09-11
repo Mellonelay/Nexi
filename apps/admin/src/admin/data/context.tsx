@@ -1,19 +1,8 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { localProvider } from "./local-mock-provider";
 import type { AdminDataProvider } from "./provider";
 import { NexiAdminApiProvider } from "./nexi-api-provider";
 
-export type AdminProviderMode = "mock" | "live";
-
-function configuredMode(): AdminProviderMode {
-  // Live is the safe default for deployed Admin. Mock data must be explicit.
-  return import.meta.env.VITE_ADMIN_PROVIDER_MODE === "mock" ? "mock" : "live";
-}
-
-export function createConfiguredAdminProvider(
-  mode: AdminProviderMode = configuredMode(),
-): AdminDataProvider {
-  if (mode === "mock") return localProvider;
+export function createConfiguredAdminProvider(): AdminDataProvider {
   return new NexiAdminApiProvider({
     baseUrl:
       import.meta.env.VITE_ADMIN_API_BASE_URL ??

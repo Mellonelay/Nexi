@@ -138,8 +138,12 @@ export default function NavigationDrawer({
             ref={drawerRef}
             role="dialog"
             aria-modal="true"
+            aria-labelledby="nexi-application-drawer-title"
             className="nexi-drawer relative flex h-full w-[84vw] max-w-[320px] flex-col overflow-y-auto border-r border-violet-300/20 px-4 pb-6 pt-4 shadow-2xl"
           >
+            <h2 id="nexi-application-drawer-title" className="sr-only">
+              {t("openApplicationMenu")}
+            </h2>
             <div className="mb-5 flex justify-end">
               <button
                 type="button"

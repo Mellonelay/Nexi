@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "../prisma/d1-client";
 import { createHash, randomUUID } from "crypto";
 import {
   LedgerMutationResult,

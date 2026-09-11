@@ -17,6 +17,13 @@ export async function GET() {
       headers: { accept: 'application/json' },
       cache: 'no-store',
     });
+    if (!response.ok) {
+      return NextResponse.json({
+        status: 'ERROR',
+        data: [],
+        message: 'Authoritative NEXI Binary configuration is unavailable.',
+      }, { status: response.status });
+    }
     const body = await response.text();
     return new NextResponse(body, {
       status: response.status,
