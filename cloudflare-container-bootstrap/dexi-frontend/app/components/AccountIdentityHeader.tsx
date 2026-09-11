@@ -5,7 +5,7 @@ import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useLocale } from "../state/LocaleProvider";
-import { authoritativeValue } from "../lib/product-states";
+import { authoritativeValue, productStateLabel } from "../lib/product-states";
 import { loadCurrentUser, type WalletProfile } from "../lib/wallet-auth";
 import { hasAuthSession } from "../lib/auth-session";
 import { NexiWordmark } from "../dashboard/components/QuotesHubVisuals";
@@ -63,7 +63,7 @@ export default function AccountIdentityHeader({
     state === "LOADING"
       ? t("loadingAccount")
       : state === "LIVE"
-        ? "LIVE"
+        ? productStateLabel(state)
         : t("accountUnavailable");
   const statusClass =
     state === "LIVE"

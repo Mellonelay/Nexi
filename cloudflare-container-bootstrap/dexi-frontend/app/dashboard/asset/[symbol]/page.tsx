@@ -71,7 +71,7 @@ export default function AssetDetailPage() {
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8C8299]">Asset Detail</p>
             <h1 className="truncate text-2xl font-semibold tracking-tight md:text-3xl">{instrument.pair}</h1>
           </div>
-          <button type="button" disabled aria-label="Favorites unavailable" title="Favorites are unavailable until a saved-favorites contract is available" className="inline-flex h-11 w-11 cursor-not-allowed items-center justify-center rounded-lg border border-violet-300/20 bg-[#100A18] text-[#C3BBD0] opacity-50">
+          <button type="button" disabled aria-label="Favorites unavailable" title="Saved favorites are not available yet" className="inline-flex h-11 w-11 cursor-not-allowed items-center justify-center rounded-lg border border-violet-300/20 bg-[#100A18] text-[#C3BBD0] opacity-50">
             <Star className="h-5 w-5" aria-hidden="true" />
           </button>
         </header>

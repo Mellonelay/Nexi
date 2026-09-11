@@ -19,7 +19,7 @@ test('communications tranche preserves truthful UI and mobile navigation contrac
   assert.match(announcements, /Back to announcements/);
   assert.match(announcements, /selected \? 'hidden lg:block'/);
   assert.match(learn, /Back to lessons/);
-  assert.match(learn, /Media slot/);
+  assert.match(learn, /Media is not available for this lesson./);
   assert.match(notifications, /role="dialog"/);
   assert.match(notifications, /Retry/);
 });

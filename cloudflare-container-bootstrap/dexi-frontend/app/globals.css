@@ -472,6 +472,42 @@ body {
   }
 }
 
+@media (prefers-reduced-transparency: reduce) {
+  .nexi-shell-glass,
+  .nexi-raised-panel,
+  .nexi-panel,
+  .nexi-station-card,
+  .nexi-topbar,
+  .nexi-station-header,
+  .nexi-bottom-nav,
+  .nexi-sidebar,
+  .nexi-drawer {
+    background: #0b0711;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .nexi-shell-glass,
+  .nexi-raised-panel,
+  .nexi-panel,
+  .nexi-station-card,
+  .nexi-topbar,
+  .nexi-station-header,
+  .nexi-bottom-nav,
+  .nexi-sidebar,
+  .nexi-drawer,
+  .nexi-icon-button,
+  .nexi-search-compact,
+  .nexi-secondary-button,
+  .nexi-market-row,
+  .nexi-active-pair {
+    background: #0b0711;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
 @media (prefers-contrast: more) {
   .nexi-shell-glass,
   .nexi-raised-panel,
@@ -498,5 +534,14 @@ body {
   .nexi-sidebar,
   .nexi-drawer {
     background: #0b0711;
+  }
+}
+
+/* Mobile input sizing prevents focus zoom on iOS while preserving NEXI's responsive layout. */
+@media (max-width: 767px) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']),
+  select,
+  textarea {
+    font-size: 16px;
   }
 }

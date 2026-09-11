@@ -100,12 +100,8 @@ export function instrumentFromMarketPair(row: MarketPairLike): ActiveInstrument 
   const symbol = normalizePair(row.symbol);
   const registered = findAsset(row.assetId ?? row.symbol);
   const category: InstrumentCategory = registered ? (registered.category === 'Metals' ? 'Metal' : registered.category === 'Stocks' ? 'Shares' : registered.category) : categoryForSymbol(symbol);
-  const hasUsableMarketData = row.dataState === 'LIVE' || row.dataState === 'STALE';
-  const provenance: MarketProvenance = row.dataState === 'LIVE'
-    ? 'LIVE'
-    : row.dataState === 'STALE'
-      ? 'STALE'
-      : 'UNAVAILABLE';
+  const hasUsableMarketData = row.dataState === 'LIVE';
+  const provenance: MarketProvenance = row.dataState === 'LIVE' ? 'LIVE' : 'UNAVAILABLE';
   return createActiveInstrument({
     assetId: registered?.id ?? row.assetId ?? (row.displaySymbol || symbol),
     symbol: row.displaySymbol || symbol,

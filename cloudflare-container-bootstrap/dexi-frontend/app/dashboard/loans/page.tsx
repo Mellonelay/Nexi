@@ -257,8 +257,8 @@ export default function LoansPage() {
                 action={<ShieldCheck size={18} className="text-[#48C0CC]" />}
               />
               {plansState === 'LOADING' && <DataStatePanel state="LOADING" title="Loading loan products" />}
-              {plansState === 'ERROR' && <DataStatePanel state="ERROR" title="Loan product catalog unavailable" message="The backend did not return active loan plans." />}
-              {plansState === 'LIVE' && plans.length === 0 && <DataStatePanel state="UNAVAILABLE" title="No active loan products" message="The backend returned no active loan plans." />}
+              {plansState === 'ERROR' && <DataStatePanel state="ERROR" title="Loan product catalog unavailable" message="Loan products could not be loaded." />}
+              {plansState === 'LIVE' && plans.length === 0 && <DataStatePanel state="UNAVAILABLE" title="No active loan products" message="No active loan products are available." />}
               {plansState === 'LIVE' && plans.length > 0 && <div className="grid gap-3 sm:grid-cols-2">{plans.map((plan) => <article key={String(plan.id)} className="rounded-xl border border-[#2B2037] bg-[#171022] p-3 sm:p-4"><div className="flex items-center justify-between gap-3"><h3 className="font-semibold">{authoritativeValue(plan.name)}</h3><StatusBadge state="AVAILABLE" /></div><dl className="mt-3 grid grid-cols-2 gap-3 text-sm"><ReviewRow label="Term" value={`${authoritativeValue(plan.durationDays)} days`} stacked /><ReviewRow label="Rate" value={authoritativeValue(plan.interestRate)} stacked /><ReviewRow label="Limits" value={`${authoritativeValue(plan.minAmount)} – ${authoritativeValue(plan.maxAmount)}`} stacked /></dl></article>)}</div>}
               <div className="mt-3 grid gap-2 sm:grid-cols-3">
                 <ProductFact label="Principal and currency" value="—" />
@@ -311,7 +311,7 @@ export default function LoansPage() {
                 action={<FileText size={18} className="text-[#48C0CC]" />}
               />
               <form onSubmit={reviewApplication} className="space-y-4">
-                <Field label="Loan product" hint="Terms are selected from the backend product catalog.">
+                <Field label="Loan product" hint="Terms are based on the selected loan product.">
                   <select className={inputClass} value={selectedPlanId} onChange={(event) => { const planId = event.target.value; setSelectedPlanId(planId); const plan = plans.find((item) => String(item.id) === planId); if (plan) setDuration(String(plan.durationDays ?? '')); }}>
                     <option value="">Select a product</option>
                     {plans.map((plan) => <option key={String(plan.id)} value={String(plan.id)}>{authoritativeValue(plan.name)} · {authoritativeValue(plan.durationDays)} days</option>)}

@@ -17,15 +17,16 @@ export default function RealtimeTradingChart({
   onStatusChange?: (status: MarketDataStatus) => void;
 }) {
   const stream = useRealtimeMarket(symbol, interval);
-  const status: MarketDataStatus = stream.status === 'CONNECTING'
+  const rawStatus: MarketDataStatus = stream.status === 'CONNECTING'
     ? 'LOADING'
     : stream.status === 'RECONNECTING'
       ? 'CONNECTION_LOST'
       : stream.status;
+  const status: MarketDataStatus = rawStatus === 'LIVE' ? 'LIVE' : rawStatus === 'LOADING' ? 'LOADING' : 'ERROR';
 
   useEffect(() => {
     onStatusChange?.(status);
   }, [onStatusChange, status]);
 
-  return <TradingChart symbol={symbol} type={type} interval={interval} candles={status === 'LIVE' || status === 'STALE' ? stream.candles : []} status={status} />;
+  return <TradingChart symbol={symbol} type={type} interval={interval} candles={status === 'LIVE' ? stream.candles : []} status={status} />;
 }

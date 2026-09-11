@@ -12,6 +12,7 @@ import { useMarketData } from '../../hooks/useMarketData';
 import { useActivePair } from '../../state/ActivePairProvider';
 import { type MarketDataStatus } from '../../lib/market-data';
 import { hasAuthSession } from '../../lib/auth-session';
+import { productStateLabel } from '../../lib/product-states';
 import { sessionPrincipalId } from '../../lib/wallet-auth';
 import {
   closeMarginPosition,
@@ -198,7 +199,7 @@ export default function SpotPage() {
     try {
       setMarginPositions(await listMarginPositions());
     } catch {
-      setMarginFeedback('Margin positions could not be refreshed from the authoritative API.');
+      setMarginFeedback('Margin positions could not be refreshed.');
     }
   };
 
@@ -236,7 +237,7 @@ export default function SpotPage() {
   const handleOpenMargin = async () => {
     if (marginSubmissionLock.current) return;
     if (!marginReady || marginCollateralValue === null) {
-      setMarginFeedback(!userId ? 'Verify the wallet before opening an isolated-margin position.' : 'Enter positive collateral and wait for the authoritative margin quote.');
+      setMarginFeedback(!userId ? 'Verify the wallet before opening an isolated-margin position.' : 'Enter positive collateral and wait for the latest margin quote.');
       return;
     }
     marginSubmissionLock.current = true;
@@ -254,7 +255,7 @@ export default function SpotPage() {
       setMarginFeedback(`${marginDirection} ${marginLeverage}x position submitted to the authoritative API.`);
       await refreshMarginPositions();
     } catch {
-      setMarginFeedback('The authoritative margin API did not accept this position.');
+      setMarginFeedback('This margin position could not be opened.');
     } finally {
       marginSubmissionLock.current = false;
       setMarginSubmitting(false);
@@ -268,10 +269,10 @@ export default function SpotPage() {
     setMarginFeedback(null);
     try {
       await closeMarginPosition(positionId, `margin:close:${positionId}:${Date.now()}`);
-      setMarginFeedback('Margin close request accepted by the authoritative API.');
+      setMarginFeedback('Margin close request accepted.');
       await refreshMarginPositions();
     } catch {
-      setMarginFeedback('The authoritative margin close request failed.');
+      setMarginFeedback('The margin close request failed.');
     } finally {
       marginSubmissionLock.current = false;
       setMarginSubmitting(false);
@@ -285,10 +286,10 @@ export default function SpotPage() {
     setMarginFeedback(null);
     try {
       await markMarginPosition(positionId);
-      setMarginFeedback('Margin position marked with the authoritative quote.');
+      setMarginFeedback('Margin position refreshed with the latest quote.');
       await refreshMarginPositions();
     } catch {
-      setMarginFeedback('The authoritative margin mark request failed.');
+      setMarginFeedback('The margin quote refresh failed.');
     } finally {
       marginSubmissionLock.current = false;
       setMarginSubmitting(false);
@@ -452,11 +453,11 @@ export default function SpotPage() {
       return;
     }
     setFeedback(!backendConfigured
-      ? 'Trading is unavailable until the authoritative NEXI API is configured.'
+      ? 'Trading is not available right now.'
       : !userId
         ? 'Sign in to submit an order.'
         : !backendSupportsTpSl
-          ? 'TP/SL attachment is not exposed by the current backend contract. Disable TP/SL to submit an authoritative order.'
+          ? 'Take-profit and stop-loss are not available for this order yet. Disable them to continue.'
           : !tpSlReady
             ? 'Enter a valid take-profit or stop-loss value.'
             : 'Enter valid order values.');
@@ -480,11 +481,11 @@ export default function SpotPage() {
       setOrderState(normalizeSpotOrderState((response.data as { status?: unknown })?.status ?? 'OPEN'));
       setConfirmationOpen(false);
       setAmount('');
-      setFeedback('Order accepted by the authoritative NEXI API.');
+      setFeedback('Order accepted.');
     } catch {
       setOrderState('FAILED');
       setConfirmationOpen(false);
-      setFeedback('The authoritative NEXI API did not accept this order.');
+      setFeedback('The order could not be accepted.');
     } finally {
       orderSubmissionLock.current = false;
     }
@@ -580,7 +581,7 @@ export default function SpotPage() {
           </div>
           <div className="min-w-0 rounded-xl border border-violet-300/10 bg-[#0B0711] p-3">
             <div className="flex items-center justify-between gap-2"><h3 className="text-sm font-semibold">Positions</h3><span className="text-xs text-[#8C8299]">{marginPositions.length} loaded</span></div>
-            {marginPositions.length === 0 ? <p className="mt-5 text-center text-sm text-[#8C8299]">{userId ? 'No authoritative margin positions are available.' : 'Verify the wallet to load margin positions.'}</p> : <div className="mt-3 space-y-2">{marginPositions.map((position) => <article key={position.id} className="rounded-lg border border-violet-300/10 p-3 text-xs"><div className="flex flex-wrap items-center justify-between gap-2"><span className={position.direction === 'LONG' ? 'text-[#22D3A6]' : 'text-[#FF5C7C]'}>{position.direction} {position.leverage}x</span><span className="rounded-full border border-violet-300/15 px-2 py-1 uppercase text-[#C3BBD0]">{position.status}</span></div><p className="mt-2 font-mono">Collateral {position.collateral} · Entry {position.entryPrice} · Mark {position.markPrice ?? '—'}</p><div className="mt-2 flex flex-wrap gap-2">{position.status === 'OPEN' && <button type="button" disabled={marginSubmitting} onClick={() => void handleMarkMargin(position.id)} className="rounded border border-cyan-300/20 px-2 py-1 text-[#48C0CC] disabled:opacity-50">Mark</button>}{['PENDING', 'OPEN'].includes(position.status) && <button type="button" disabled={marginSubmitting} onClick={() => void handleCloseMargin(position.id)} className="rounded border border-rose-300/20 px-2 py-1 text-[#FF9CB0] disabled:opacity-50">Close</button>}</div></article>)}</div>}
+            {marginPositions.length === 0 ? <p className="mt-5 text-center text-sm text-[#8C8299]">{userId ? 'No margin positions are available.' : 'Verify the wallet to load margin positions.'}</p> : <div className="mt-3 space-y-2">{marginPositions.map((position) => <article key={position.id} className="rounded-lg border border-violet-300/10 p-3 text-xs"><div className="flex flex-wrap items-center justify-between gap-2"><span className={position.direction === 'LONG' ? 'text-[#22D3A6]' : 'text-[#FF5C7C]'}>{position.direction} {position.leverage}x</span><span className="rounded-full border border-violet-300/15 px-2 py-1 uppercase text-[#C3BBD0]">{position.status}</span></div><p className="mt-2 font-mono">Collateral {position.collateral} · Entry {position.entryPrice} · Mark {position.markPrice ?? '—'}</p><div className="mt-2 flex flex-wrap gap-2">{position.status === 'OPEN' && <button type="button" disabled={marginSubmitting} onClick={() => void handleMarkMargin(position.id)} className="rounded border border-cyan-300/20 px-2 py-1 text-[#48C0CC] disabled:opacity-50">Mark</button>}{['PENDING', 'OPEN'].includes(position.status) && <button type="button" disabled={marginSubmitting} onClick={() => void handleCloseMargin(position.id)} className="rounded border border-rose-300/20 px-2 py-1 text-[#FF9CB0] disabled:opacity-50">Close</button>}</div></article>)}</div>}
           </div>
         </div>
         {marginFeedback && <p role="status" className="mt-3 text-xs text-[#C3BBD0]">{marginFeedback}</p>}
@@ -641,9 +642,9 @@ export default function SpotPage() {
               {bids.length === 0 && asks.length === 0 && (
                 <p className="px-4 pb-6 text-center text-sm text-[#8C8299]">
                   {bookStatus === 'LOADING'
-                    ? 'Loading the authoritative order book…'
+                    ? 'Loading the order book…'
                     : bookStatus === 'ERROR'
-                      ? 'The authoritative order-book request failed.'
+                      ? 'The order book could not be loaded.'
                       : 'No order-book data yet.'}
                 </p>
               )}
@@ -651,7 +652,7 @@ export default function SpotPage() {
 
             <section className={`nexi-station-card min-w-0 rounded-2xl md:block ${mobileMarketPanel === 'TRADES' ? 'block' : 'hidden'}`} aria-labelledby="recent-trades-heading">
               <div className="flex items-center justify-between gap-2 border-b border-white/5 px-4 py-3"><h2 id="recent-trades-heading" className="font-semibold">Recent trades</h2>{tradeStatus === 'LIVE' ? <span className="text-xs text-[#8C8299]">Live market records</span> : tradeStatus === 'LOADING' ? <span className="text-xs text-[#8C8299]">Loading</span> : tradeStatus === 'ERROR' ? <span className="text-xs text-[#8C8299]">Request error</span> : null}</div>
-              {marketTrades.length > 0 ? <div className="divide-y divide-white/5 text-xs">{marketTrades.slice(0, 12).map((trade) => <div key={trade.id} className="grid grid-cols-3 gap-2 px-4 py-2 font-mono"><span>{trade.price.toLocaleString()}</span><span>{trade.amount}</span><span className="text-right text-[#8C8299]">{new Date(trade.executedAt).toLocaleTimeString()}</span></div>)}</div> : <div className="flex min-h-52 items-center justify-center p-6 text-center text-sm text-[#8C8299]">{tradeStatus === 'LOADING' ? 'Loading authoritative market trades…' : tradeStatus === 'ERROR' ? 'The authoritative trade request failed.' : 'No recent trades yet.'}</div>}
+              {marketTrades.length > 0 ? <div className="divide-y divide-white/5 text-xs">{marketTrades.slice(0, 12).map((trade) => <div key={trade.id} className="grid grid-cols-3 gap-2 px-4 py-2 font-mono"><span>{trade.price.toLocaleString()}</span><span>{trade.amount}</span><span className="text-right text-[#8C8299]">{new Date(trade.executedAt).toLocaleTimeString()}</span></div>)}</div> : <div className="flex min-h-52 items-center justify-center p-6 text-center text-sm text-[#8C8299]">{tradeStatus === 'LOADING' ? 'Loading recent trades…' : tradeStatus === 'ERROR' ? 'Recent trades could not be loaded.' : 'No recent trades yet.'}</div>}
             </section>
           </div>
 
@@ -710,7 +711,7 @@ export default function SpotPage() {
               <input type="number" inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="0.00" className="min-h-9 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 text-right font-mono outline-none focus:border-[#8B5CF6] sm:mt-1 sm:min-h-11" />
             </label>
             <div className="grid min-w-0 grid-cols-4 gap-1.5">
-              {[25, 50, 75, 100].map((percentage) => <button key={percentage} type="button" disabled aria-label={`${percentage}% allocation requires an authoritative balance`} className="min-h-8 min-w-0 rounded-lg border border-violet-300/10 px-0 text-[10px] text-[#8C8299] disabled:cursor-not-allowed sm:min-h-9">{percentage}%</button>)}
+              {[25, 50, 75, 100].map((percentage) => <button key={percentage} type="button" disabled aria-label={`${percentage}% allocation requires an available balance`} className="min-h-8 min-w-0 rounded-lg border border-violet-300/10 px-0 text-[10px] text-[#8C8299] disabled:cursor-not-allowed sm:min-h-9">{percentage}%</button>)}
             </div>
             <label className="flex min-h-8 items-center gap-2 rounded-xl border border-violet-300/10 px-3 text-xs sm:min-h-9">
               <input type="checkbox" checked={tpSlState !== 'NOT_CONFIGURED'} onChange={(event) => configureTpSl(event.target.checked)} className="h-4 w-4 accent-violet-500" />
@@ -719,7 +720,7 @@ export default function SpotPage() {
             {tpSlState !== 'NOT_CONFIGURED' && <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
               <label className="min-w-0 text-xs text-[#C3BBD0]">Take profit<input type="number" inputMode="decimal" value={tp} onChange={(event) => setTp(event.target.value)} placeholder="—" className="mt-1 min-h-11 w-full min-w-0 rounded-lg border border-violet-300/15 bg-[#0B0711] px-2 text-right font-mono" /></label>
               <label className="min-w-0 text-xs text-[#C3BBD0]">Stop loss<input type="number" inputMode="decimal" value={sl} onChange={(event) => setSl(event.target.value)} placeholder="—" className="mt-1 min-h-11 w-full min-w-0 rounded-lg border border-violet-300/15 bg-[#0B0711] px-2 text-right font-mono" /></label>
-              <p className="text-xs text-amber-200/80 sm:col-span-2">TP/SL attachment is not enabled until its backend contract is exposed.</p>
+              <p className="text-xs text-amber-200/80 sm:col-span-2">Take-profit and stop-loss are not available for this order yet.</p>
             </div>}
           </div>
 
@@ -727,7 +728,7 @@ export default function SpotPage() {
             <div className="min-w-0"><dt className="text-[#8C8299]">Total</dt><dd className="mt-0.5 break-words font-mono">{total === null ? '—' : `${total.toFixed(2)} USDT`}</dd></div>
             <div className="min-w-0"><dt className="text-[#8C8299]">Fee</dt><dd className="mt-0.5 break-words font-mono">—</dd></div>
             <div className="min-w-0"><dt className="text-[#8C8299]">Available</dt><dd className="mt-0.5 break-words font-mono">—</dd></div>
-            <div className="hidden min-w-0 md:block"><dt className="text-[#8C8299]">State</dt><dd className="mt-0.5 break-words font-mono">{orderState}</dd></div>
+            <div className="hidden min-w-0 md:block"><dt className="text-[#8C8299]">State</dt><dd className="mt-0.5 break-words font-mono">{productStateLabel(orderState)}</dd></div>
           </dl>
 
           {feedback && <p role="status" className="mt-3 text-sm text-[#C3BBD0]">{feedback}</p>}
@@ -739,7 +740,7 @@ export default function SpotPage() {
 
       {confirmationOpen && <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/70 p-4 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="spot-confirm-title">
         <div className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-violet-300/15 bg-[#100A18] p-5 shadow-2xl">
-          <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#48C0CC]">Authoritative submission</p><h2 id="spot-confirm-title" className="mt-1 text-xl font-semibold">Confirm Spot order</h2></div></div>
+          <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#48C0CC]">Review order</p><h2 id="spot-confirm-title" className="mt-1 text-xl font-semibold">Confirm Spot order</h2></div></div>
           <dl className="mt-4 space-y-2 text-sm">
             <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-3"><dt className="text-[#8C8299]">Pair</dt><dd className="min-w-0 break-words text-right">{displayPair}</dd></div>
             <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-3"><dt className="text-[#8C8299]">Side / type</dt><dd className="min-w-0 break-words text-right">{side} · {orderType === 'STOP' ? 'STOP LIMIT' : orderType}</dd></div>

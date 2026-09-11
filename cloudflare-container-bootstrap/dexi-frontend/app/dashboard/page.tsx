@@ -31,10 +31,10 @@ const tabs = [
 type Tab = (typeof tabs)[number]['label'];
 
 function formatValue(item: MarketPair, value: 'price' | 'change' | 'volume') {
-  if (item.source === 'fallback') return 'Unavailable';
-  if (value === 'price') return item.price === null ? 'Unavailable' : item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 });
-  if (value === 'change') return item.change === null ? 'Unavailable' : `${item.change > 0 ? '+' : ''}${item.change.toFixed(2)}%`;
-  return item.vol == null ? 'Unavailable' : item.vol.toLocaleString('en-US', { maximumFractionDigits: 2 });
+  if (item.dataState !== 'LIVE' || item.source === 'fallback') return '—';
+  if (value === 'price') return item.price === null ? '—' : item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 });
+  if (value === 'change') return item.change === null ? '—' : `${item.change > 0 ? '+' : ''}${item.change.toFixed(2)}%`;
+  return item.vol == null ? '—' : item.vol.toLocaleString('en-US', { maximumFractionDigits: 2 });
 }
 export default function Dashboard() {
   const router = useRouter();
@@ -88,7 +88,7 @@ export default function Dashboard() {
             />
           </label>
           <div className="flex items-center gap-2">
-            <button type="button" aria-label="Search markets" aria-expanded={mobileSearchOpen} onClick={() => setMobileSearchOpen((value) => !value)} className="nexi-header-icon nexi-interactive h-9 w-9 md:hidden"><Search className="h-[18px] w-[18px]" aria-hidden="true" /></button>
+            <button type="button" aria-label="Search markets" aria-expanded={mobileSearchOpen} onClick={() => setMobileSearchOpen((value) => !value)} className="nexi-header-icon nexi-interactive h-11 w-11 md:hidden"><Search className="h-[18px] w-[18px]" aria-hidden="true" /></button>
           </div>
         </header>
         {mobileSearchOpen && (
@@ -119,7 +119,7 @@ export default function Dashboard() {
                   </span>
                   <ChevronDown className="h-4 w-4 shrink-0 text-[var(--nexi-text-secondary)] md:h-5 md:w-5" aria-hidden="true" />
                 </button>
-                <button type="button" disabled aria-label="Favorites unavailable" title="Favorites are unavailable until a saved-favorites contract is available" className="nexi-icon-button h-8 w-8 shrink-0 cursor-not-allowed rounded-[12px] opacity-50 md:h-11 md:w-11 md:rounded-[14px]"><Star className="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" /></button>
+                <button type="button" disabled aria-label="Favorites unavailable" title="Saved favorites are not available yet" className="nexi-icon-button h-11 w-11 shrink-0 cursor-not-allowed rounded-[12px] opacity-50 md:rounded-[14px]"><Star className="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" /></button>
               </div>
             </section>
           )}
@@ -136,7 +136,7 @@ export default function Dashboard() {
                   role="tab"
                   aria-selected={active}
                   onClick={() => selectTab(label)}
-                  className={`relative flex min-h-[42px] min-w-0 flex-col items-center justify-center gap-0.5 overflow-hidden rounded-[8px] px-1 text-[9px] font-medium transition md:min-h-14 md:flex-row md:gap-2 md:rounded-[16px] md:text-sm ${index < tabs.length - 1 ? 'border-r border-white/[0.05] md:border-r-0' : ''} ${active ? 'text-white' : 'text-[var(--nexi-text-secondary)] hover:bg-white/[0.04] hover:text-white'}`}
+                  className={`relative flex min-h-11 min-w-0 flex-col items-center justify-center gap-0.5 overflow-hidden rounded-[8px] px-1 text-[10px] font-medium transition md:min-h-14 md:flex-row md:gap-2 md:rounded-[16px] md:text-sm ${index < tabs.length - 1 ? 'border-r border-white/[0.05] md:border-r-0' : ''} ${active ? 'text-white' : 'text-[var(--nexi-text-secondary)] hover:bg-white/[0.04] hover:text-white'}`}
                 >
                   {active && <motion.span layoutId="quotes-tab" className="nexi-tab-edge absolute inset-0 rounded-[8px] border border-[color:var(--nexi-cal-violet-bright)]/55 bg-[linear-gradient(180deg,rgba(44,20,108,.88),rgba(24,8,72,.8))] shadow-[0_0_20px_rgba(115,83,221,.28)] md:rounded-[16px]" transition={{ type: 'tween', ...nexiTransition.tab }} />}
                   <Icon className={`relative h-[17px] w-[17px] md:h-5 md:w-5 ${active ? 'text-violet-300' : ''}`} strokeWidth={1.7} aria-hidden="true" />
@@ -154,7 +154,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="grid grid-cols-[minmax(0,1.45fr)_50px_minmax(0,.74fr)_minmax(0,.68fr)_minmax(0,.58fr)] gap-1 px-2 text-[8px] font-medium uppercase tracking-[0.04em] text-[var(--nexi-text-muted)] md:mt-4 md:grid-cols-[minmax(0,1.35fr)_140px_minmax(0,.82fr)_minmax(0,.72fr)_minmax(0,.72fr)] md:gap-3 md:px-4 md:text-[10px]">
+          <div className="grid grid-cols-[minmax(0,1.45fr)_50px_minmax(0,.74fr)_minmax(0,.68fr)_minmax(0,.58fr)] gap-1 px-2 text-[10px] font-medium uppercase tracking-[0.04em] text-[var(--nexi-text-muted)] md:mt-4 md:grid-cols-[minmax(0,1.35fr)_140px_minmax(0,.82fr)_minmax(0,.72fr)_minmax(0,.72fr)] md:gap-3 md:px-4 md:text-[10px]">
             <span>{t('asset')}</span>
             <span aria-hidden="true" />
             <span className="min-w-0 truncate text-right">{t('lastPrice')}</span>
@@ -168,7 +168,7 @@ export default function Dashboard() {
             ) : marketError ? (
               <div className="nexi-market-row px-4 py-14 text-center text-sm text-[var(--nexi-text-muted)]">Market data is unavailable right now.</div>
             ) : activeTab === 'Favorites' ? (
-              <div className="nexi-market-row px-4 py-14 text-center text-sm text-[var(--nexi-text-muted)]">Saved favorites are unavailable until the favorites service is connected.</div>
+              <div className="nexi-market-row px-4 py-14 text-center text-sm text-[var(--nexi-text-muted)]">Saved favorites are not available yet.</div>
             ) : activeData.length === 0 ? (
               <div className="nexi-market-row px-4 py-14 text-center text-sm text-[var(--nexi-text-muted)]">{t('noInstrumentsAvailable')}</div>
             ) : activeData.map((item) => (
@@ -182,13 +182,13 @@ export default function Dashboard() {
                   <span className="shrink-0"><AssetMark item={item} /></span>
                   <span className="min-w-0">
                     <span className="block truncate text-[12px] font-semibold text-white group-hover:text-[var(--nexi-cyan)] md:text-[15px]">{instrumentFromMarketPair(item).pair}</span>
-                    <span className="mt-0.5 block truncate text-[9px] text-[var(--nexi-text-muted)] md:mt-1 md:text-xs">{item.name}</span>
+                    <span className="mt-0.5 block truncate text-[10px] text-[var(--nexi-text-muted)] md:mt-1 md:text-xs">{item.name}</span>
                   </span>
                 </span>
                 <span className="min-w-0 overflow-hidden"><span className="block origin-center scale-[0.78] md:scale-100"><MarketSparkline item={item} compact /></span></span>
-                <span className="min-w-0 truncate text-right font-mono text-[9px] tabular-nums text-white md:text-sm">{formatValue(item, 'price')}</span>
-                <span className={`min-w-0 truncate text-right font-mono text-[9px] tabular-nums md:text-sm ${item.dataState !== 'LIVE' ? 'text-[var(--nexi-cal-cyan)]' : item.change !== null && item.change >= 0 ? 'text-[var(--nexi-positive)]' : 'text-[var(--nexi-negative)]'}`}>{formatValue(item, 'change')}</span>
-                <span className="min-w-0 truncate text-right font-mono text-[9px] tabular-nums text-[var(--nexi-text-secondary)] md:text-sm">{formatValue(item, 'volume')}</span>
+                <span className="min-w-0 truncate text-right font-mono text-[10px] tabular-nums text-white md:text-sm">{formatValue(item, 'price')}</span>
+                <span className={`min-w-0 truncate text-right font-mono text-[10px] tabular-nums md:text-sm ${item.dataState !== 'LIVE' ? 'text-[var(--nexi-text-muted)]' : item.change !== null && item.change >= 0 ? 'text-[var(--nexi-positive)]' : 'text-[var(--nexi-negative)]'}`}>{formatValue(item, 'change')}</span>
+                <span className="min-w-0 truncate text-right font-mono text-[10px] tabular-nums text-[var(--nexi-text-secondary)] md:text-sm">{formatValue(item, 'volume')}</span>
               </button>
             ))}
           </div>
@@ -199,7 +199,7 @@ export default function Dashboard() {
           <div className="relative ml-[34%] max-w-[470px] md:ml-[26%]">
             <h2 className="whitespace-nowrap text-[15px] font-semibold tracking-[-0.025em] text-white md:text-3xl">Markets move fast.</h2>
             <p className="mt-0.5 text-[11px] font-medium text-[var(--nexi-text-secondary)] md:mt-1 md:text-2xl">Act with precision.</p>
-            <button type="button" onClick={() => router.push('/dashboard/learn')} className="nexi-promo-button nexi-interactive mt-2 inline-flex min-h-8 items-center gap-1.5 rounded-lg px-2.5 text-[10px] font-medium md:mt-5 md:min-h-11 md:rounded-xl md:px-4 md:text-sm">Explore Opportunities <ArrowUpRight className="h-3 w-3 md:h-4 md:w-4" aria-hidden="true" /></button>
+            <button type="button" onClick={() => router.push('/dashboard/learn')} className="nexi-promo-button nexi-interactive mt-2 inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2.5 text-[10px] font-medium md:mt-5 md:min-h-11 md:rounded-xl md:px-4 md:text-sm">Explore Opportunities <ArrowUpRight className="h-3 w-3 md:h-4 md:w-4" aria-hidden="true" /></button>
           </div>
           <div className="absolute right-3 top-3 flex items-center gap-1.5 md:right-5 md:top-5 md:gap-2" aria-label="Promotional panel pagination"><span className="h-1.5 w-1.5 rounded-full bg-[var(--nexi-cal-violet-bright)] shadow-[0_0_10px_var(--nexi-cal-violet-bright)] md:h-2 md:w-2" /><span className="h-1.5 w-1.5 rounded-full bg-violet-300/25 md:h-2 md:w-2" /><span className="h-1.5 w-1.5 rounded-full bg-violet-300/25 md:h-2 md:w-2" /><span className="h-1.5 w-1.5 rounded-full bg-violet-300/25 md:h-2 md:w-2" /></div>
         </section>

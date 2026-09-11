@@ -66,7 +66,7 @@ test('maps a market row into shared instrument state', () => {
   assert.equal(instrument.logo, 'https://example.test/eth.png');
 });
 
-test('preserves stale market values while exposing the stale state', () => {
+test('does not expose stale market values as usable public state', () => {
   const instrument = instrumentFromMarketPair({
     symbol: 'ETHUSDT',
     displaySymbol: 'ETH',
@@ -78,10 +78,10 @@ test('preserves stale market values while exposing the stale state', () => {
     dataState: 'STALE',
   });
 
-  assert.equal(instrument.provenance, 'STALE');
-  assert.equal(instrument.price, 10);
-  assert.equal(instrument.change24h, -1.5);
-  assert.equal(instrument.volume24h, 25);
+  assert.equal(instrument.provenance, 'UNAVAILABLE');
+  assert.equal(instrument.price, null);
+  assert.equal(instrument.change24h, null);
+  assert.equal(instrument.volume24h, null);
 });
 
 

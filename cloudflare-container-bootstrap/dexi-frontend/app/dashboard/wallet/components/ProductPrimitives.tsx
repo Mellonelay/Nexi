@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { controlVariants, NexiSurface } from '../../../components/NexiPrimitives';
 import { cn } from '../../../lib/cn';
+import { productStateLabel } from '../../../lib/product-states';
 
 const stateTone: Record<string, string> = {
   LIVE: 'border-[#48C0CC]/35 bg-[#48C0CC]/10 text-[#48C0CC]',
@@ -76,10 +77,11 @@ export function PanelHeading({ title, description, action }: { title: string; de
 }
 
 export function StatusBadge({ state }: { state: string }) {
-  return <span className={`inline-flex min-h-7 items-center rounded-full border px-2.5 text-[11px] font-semibold uppercase tracking-[0.1em] ${stateTone[state] ?? stateTone.UNAVAILABLE}`}>{state.replaceAll('_', ' ')}</span>;
+  const label = productStateLabel(state);
+  return <span className={`inline-flex min-h-7 items-center rounded-full border px-2.5 text-[11px] font-semibold tracking-[0.04em] ${stateTone[state] ?? stateTone.UNAVAILABLE}`}>{label}</span>;
 }
 
-export function DataStatePanel({ state, title = 'Backend data unavailable', message = 'This surface stays empty until an authoritative backend response is available.' }: { state: string; title?: string; message?: string }) {
+export function DataStatePanel({ state, title = 'Data is not available right now', message = 'Try again shortly.' }: { state: string; title?: string; message?: string }) {
   return (
     <div className="rounded-xl border border-dashed border-[#49335E] bg-[#0B0711] p-5" role="status" aria-live="polite">
       <div className="flex flex-wrap items-center gap-3"><StatusBadge state={state} /><h3 className="text-sm font-semibold text-[#F2ECFA]">{title}</h3></div>

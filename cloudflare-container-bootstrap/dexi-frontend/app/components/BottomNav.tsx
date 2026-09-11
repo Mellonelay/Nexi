@@ -24,7 +24,7 @@ export default function BottomNav() {
           const Icon = item.icon;
           const active = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(`${item.href}/`));
           return (
-            <Link key={item.href} href={item.href} aria-current={active ? 'page' : undefined} className={`relative flex min-h-[50px] flex-col items-center justify-center gap-0.5 rounded-[12px] px-1 text-[9px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)] ${active ? 'text-violet-300' : 'text-[var(--nexi-text-secondary)] hover:bg-white/[0.03] hover:text-white'}`}>
+            <Link key={item.href} href={item.href} aria-current={active ? 'page' : undefined} className={`relative flex min-h-[50px] flex-col items-center justify-center gap-0.5 rounded-[12px] px-1 text-[10px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)] ${active ? 'text-violet-300' : 'text-[var(--nexi-text-secondary)] hover:bg-white/[0.03] hover:text-white'}`}>
               {active && <span className="absolute left-1/2 top-0 h-0.5 w-8 -translate-x-1/2 rounded-full bg-[var(--nexi-cal-violet-bright)] shadow-[0_0_12px_rgba(124,58,237,.72)]" aria-hidden="true" />}
               <Icon className={`relative h-[19px] w-[19px] ${active ? 'text-violet-300 drop-shadow-[0_0_7px_rgba(115,83,221,.6)]' : ''}`} strokeWidth={1.7} aria-hidden="true" />
               <span className="relative">{t(item.key as Parameters<typeof t>[0])}</span>

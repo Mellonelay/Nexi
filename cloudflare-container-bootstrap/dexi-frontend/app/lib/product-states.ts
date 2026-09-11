@@ -9,6 +9,23 @@ export const AUTHORITATIVE_STATES = [
 
 export type AuthoritativeState = (typeof AUTHORITATIVE_STATES)[number];
 
+const PRODUCT_STATE_LABELS: Record<string, string> = {
+  LIVE: 'Current',
+  STALE: 'Updating',
+  UNAVAILABLE: 'Not available',
+  DISABLED: 'Not available',
+  ERROR: 'Try again',
+  LOADING: 'Loading',
+  CONNECTION_ERROR: 'Connection issue',
+};
+
+export function productStateLabel(state: string): string {
+  const mapped = PRODUCT_STATE_LABELS[state];
+  if (mapped) return mapped;
+  const normalized = state.replaceAll('_', ' ').toLowerCase();
+  return normalized ? normalized[0].toUpperCase() + normalized.slice(1) : 'Not available';
+}
+
 export const WALLET_DOMAINS = ['OVERVIEW', 'FUNDING', 'SPOT', 'BINARY', 'FINANCE'] as const;
 export type WalletDomain = (typeof WALLET_DOMAINS)[number];
 
