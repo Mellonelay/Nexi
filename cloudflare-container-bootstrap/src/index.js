@@ -957,7 +957,7 @@ export default {
 
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    const container = getNexiContainer(env);
+    const container = await getRunningNexiContainer(env);
 
     if (url.pathname === "/healthz") {
       const response = Response.json({
