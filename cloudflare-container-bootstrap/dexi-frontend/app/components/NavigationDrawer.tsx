@@ -126,7 +126,7 @@ export default function NavigationDrawer({
         )}
       </button>
       {open && (
-        <div className="fixed inset-0 z-[80] lg:hidden">
+        <div className="fixed inset-x-0 top-0 bottom-[calc(84px+env(safe-area-inset-bottom))] z-[80] lg:hidden">
           <button
             type="button"
             aria-label={t("closeApplicationMenu")}
@@ -139,7 +139,7 @@ export default function NavigationDrawer({
             role="dialog"
             aria-modal="true"
             aria-labelledby="nexi-application-drawer-title"
-            className="nexi-drawer relative flex h-full w-[84vw] max-w-[320px] flex-col overflow-y-auto border-r border-violet-300/20 px-4 pb-6 pt-4 shadow-2xl"
+            className="nexi-drawer relative flex h-full w-[84vw] max-w-[320px] flex-col overflow-y-auto overscroll-contain border-r border-violet-300/20 px-4 pb-[calc(20px+env(safe-area-inset-bottom))] pt-4 shadow-2xl"
           >
             <h2 id="nexi-application-drawer-title" className="sr-only">
               {t("openApplicationMenu")}

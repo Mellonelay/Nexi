@@ -3554,11 +3554,25 @@ export class D1FinancialCommandGateway {
 
   async listAdminCurrencies(): Promise<Record<string, unknown>[]> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
-    const result = await this.bridge.select<Record<string, unknown>>(
-      `SELECT "id","symbol","name","logo","rate","minDeposit","maxDeposit","minWithdrawal","maxWithdrawal","withdrawalFee","depositEnabled","withdrawEnabled","confirmationCount","decimals","isActive","createdAt","updatedAt" FROM "Currency" ORDER BY "id" ASC`,
-      [],
-    );
-    return result.results;
+    const [currencies, addresses] = await Promise.all([
+      this.bridge.select<Record<string, unknown>>(
+        `SELECT "id","symbol","name","logo","rate","minDeposit","maxDeposit","minWithdrawal","maxWithdrawal","withdrawalFee","depositEnabled","withdrawEnabled","confirmationCount","decimals","isActive","createdAt","updatedAt" FROM "Currency" ORDER BY "id" ASC`,
+        [],
+      ),
+      this.bridge.select<Record<string, unknown>>(
+        `SELECT "id","currencyId","network","address","label","isActive","createdAt","updatedAt" FROM "DepositAddress" ORDER BY "createdAt" DESC`,
+        [],
+      ),
+    ]);
+    const byCurrency = new Map<number, Record<string, unknown>[]>();
+    for (const address of addresses.results) {
+      const currencyId = Number(address.currencyId);
+      byCurrency.set(currencyId, [...(byCurrency.get(currencyId) ?? []), address]);
+    }
+    return currencies.results.map((currency) => ({
+      ...currency,
+      depositAddresses: byCurrency.get(Number(currency.id)) ?? [],
+    }));
   }
 
   async updateAdminCurrency(command: {
@@ -3584,6 +3598,62 @@ export class D1FinancialCommandGateway {
     this.requireChanges(result, 0, "D1 currency configuration update");
     const row = await this.bridge.select<Record<string, unknown>>(`SELECT * FROM "Currency" WHERE "id"=? LIMIT 1`, [command.id]);
     return row.results[0];
+  }
+
+  async createAdminDepositAddress(command: {
+    currencyId: number;
+    network: string;
+    address: string;
+    label?: string;
+    adminId: string;
+    reason: string;
+    idempotencyKey: string;
+  }): Promise<Record<string, unknown>> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const replay = await this.bridge.select<Record<string, unknown>>(
+      `SELECT d.* FROM "DepositAddress" d JOIN "AdminAuditLog" a ON a."target"=d."id" WHERE a."action"='DEPOSIT_ADDRESS_CREATED' AND json_extract(a."details",'$.idempotencyKey')=? ORDER BY a."createdAt" DESC LIMIT 1`,
+      [command.idempotencyKey],
+    );
+    if (replay.results[0]) return replay.results[0];
+    const currency = await this.bridge.select<Record<string, unknown>>(
+      `SELECT "id","symbol" FROM "Currency" WHERE "id"=? LIMIT 1`,
+      [command.currencyId],
+    );
+    if (!currency.results[0]) throw new BadRequestException("Currency not found");
+    const id = randomUUID();
+    const auditId = randomUUID();
+    const result = await this.bridge.batch([
+      {
+        sql: `INSERT INTO "DepositAddress" ("id","currencyId","network","address","label","isActive","createdAt","updatedAt") VALUES (?,?,?,?,?,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`,
+        params: [id, command.currencyId, command.network, command.address, command.label ?? null],
+      },
+      {
+        sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`,
+        params: [auditId, command.adminId, "DEPOSIT_ADDRESS_CREATED", id, JSON.stringify({ currencyId: command.currencyId, network: command.network, reason: command.reason, idempotencyKey: command.idempotencyKey })],
+      },
+      this.eventOutboxStatement({ idempotencyKey: `event:${command.idempotencyKey}`, aggregateType: "DepositAddress", aggregateId: id, eventType: "DEPOSIT_ADDRESS_CREATED", correlationId: command.idempotencyKey, payload: { depositAddressId: id, currencyId: command.currencyId, network: command.network } }),
+    ]);
+    this.requireChanges(result, 0, "D1 deposit address create");
+    const row = await this.bridge.select<Record<string, unknown>>(`SELECT * FROM "DepositAddress" WHERE "id"=? LIMIT 1`, [id]);
+    return { ...(row.results[0] ?? {}), auditId };
+  }
+
+  async deactivateAdminDepositAddress(command: {
+    id: string;
+    adminId: string;
+    reason: string;
+    idempotencyKey: string;
+  }): Promise<Record<string, unknown>> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const existing = await this.bridge.select<Record<string, unknown>>(`SELECT * FROM "DepositAddress" WHERE "id"=? LIMIT 1`, [command.id]);
+    if (!existing.results[0]) throw new NotFoundException("Deposit address not found");
+    const auditId = randomUUID();
+    const result = await this.bridge.batch([
+      { sql: `UPDATE "DepositAddress" SET "isActive"=0,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "isActive"=1`, params: [command.id] },
+      { sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`, params: [auditId, command.adminId, "DEPOSIT_ADDRESS_DISABLED", command.id, JSON.stringify({ reason: command.reason, idempotencyKey: command.idempotencyKey })] },
+      this.eventOutboxStatement({ idempotencyKey: `event:${command.idempotencyKey}`, aggregateType: "DepositAddress", aggregateId: command.id, eventType: "DEPOSIT_ADDRESS_DISABLED", correlationId: command.idempotencyKey, payload: { depositAddressId: command.id } }),
+    ]);
+    return { ok: true, auditId, changed: Number(result.results[0]?.meta?.changes ?? 0) === 1, id: command.id };
   }
 
   async touchUserLastActive(userId: string): Promise<void> {

@@ -39,6 +39,8 @@ function Inner() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editing, setEditing] = useState<Network | null>(null);
   const [toggling, setToggling] = useState<Network | null>(null);
+  const [addingAddress, setAddingAddress] = useState<Network | null>(null);
+  const [disablingAddress, setDisablingAddress] = useState<{ network: Network; addressId: string; address: string } | null>(null);
 
   const nets = useMemo(() => q.data ?? [], [q.data]);
   const selected = useMemo(
@@ -254,6 +256,27 @@ function Inner() {
                   ],
                 },
                 {
+                  id: "deposit-addresses",
+                  title: "Deposit destinations",
+                  content: (
+                    <div className="space-y-2">
+                      {(selected.depositAddresses ?? []).filter((item) => item.isActive).length === 0 ? (
+                        <p className="text-xs text-muted-foreground">No active deposit address is configured.</p>
+                      ) : (
+                        (selected.depositAddresses ?? []).filter((item) => item.isActive).map((item) => (
+                          <div key={item.id} className="flex items-start justify-between gap-3 rounded-md border border-border/60 bg-background/40 p-3">
+                            <div className="min-w-0">
+                              <p className="text-xs font-medium">{item.network}{item.label ? ` · ${item.label}` : ""}</p>
+                              <p className="mt-1 break-all font-mono text-[11px] text-muted-foreground">{item.address}</p>
+                            </div>
+                            <Button variant="outline" size="sm" disabled={!canEdit} onClick={() => setDisablingAddress({ network: selected, addressId: item.id, address: item.address })}>Disable</Button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  ),
+                },
+                {
                   id: "audit",
                   title: "Audit timeline",
                   content: <AuditTimeline targetId={selected.id} heading="" limit={15} />,
@@ -264,6 +287,14 @@ function Inner() {
         actions={
           selected ? (
             <>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!canEdit || !selected.currencyId}
+                onClick={() => setAddingAddress(selected)}
+              >
+                Add deposit address
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -286,6 +317,46 @@ function Inner() {
           ) : null
         }
       />
+
+      <DepositAddressForm
+        net={addingAddress}
+        onClose={() => setAddingAddress(null)}
+        onSubmit={async (input, reason) => {
+          if (!addingAddress?.currencyId) return;
+          await provider.addDepositAddress(addingAddress.currencyId, input, {
+            actor: session.actorName,
+            role: session.roleId,
+            environment: session.environment,
+            reason,
+          });
+          q.refresh();
+        }}
+      />
+
+      {disablingAddress ? (
+        <ConsequentialActionDialog
+          open
+          onOpenChange={(open) => { if (!open) setDisablingAddress(null); }}
+          title="Disable deposit address"
+          description="This removes the address from Public deposit destinations without deleting its audit history."
+          target={<span className="break-all font-mono text-xs">{disablingAddress.address}</span>}
+          targetId={disablingAddress.addressId}
+          action="networks.deposit-address.disable"
+          permission="networks.edit"
+          currentState={<StatusBadge tone="success">active</StatusBadge>}
+          proposedState={<StatusBadge tone="neutral">disabled</StatusBadge>}
+          destructive
+          submitLabel="Disable address"
+          successMessage="Deposit address disabled"
+          onConfirm={(reason) => provider.disableDepositAddress(disablingAddress.addressId, {
+            actor: session.actorName,
+            role: session.roleId,
+            environment: session.environment,
+            reason,
+          })}
+          onSuccess={() => { setDisablingAddress(null); q.refresh(); }}
+        />
+      ) : null}
 
       <NetworkEditForm
         net={editing}
@@ -550,6 +621,48 @@ function NetworkEditForm({
           className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
         />
       </Field>
+    </FormDrawer>
+  );
+}
+
+function DepositAddressForm({
+  net,
+  onClose,
+  onSubmit,
+}: {
+  net: Network | null;
+  onClose: () => void;
+  onSubmit: (input: { network: string; address: string; label?: string }, reason: string) => Promise<void>;
+}) {
+  const [network, setNetwork] = useState("");
+  const [address, setAddress] = useState("");
+  const [label, setLabel] = useState("");
+  const [reason, setReason] = useState("");
+  useEffect(() => {
+    if (!net) return;
+    setNetwork(net.name || net.chainId);
+    setAddress("");
+    setLabel("");
+    setReason("");
+  }, [net?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  const valid = network.trim().length >= 2 && address.trim().length >= 8 && reason.trim().length >= 6;
+  return (
+    <FormDrawer
+      open={!!net}
+      onOpenChange={(open) => { if (!open) onClose(); }}
+      title={net ? `Add deposit address — ${net.assetSymbol}` : ""}
+      description="Creates an audited D1-backed deposit destination exposed to the Public wallet only when the currency and destination are enabled."
+      submitLabel="Add deposit address"
+      submitDisabled={!valid}
+      onSubmit={async () => {
+        await onSubmit({ network: network.trim(), address: address.trim(), ...(label.trim() ? { label: label.trim() } : {}) }, reason.trim());
+        onClose();
+      }}
+    >
+      <Field label="Network"><Input value={network} onChange={(e) => setNetwork(e.target.value)} /></Field>
+      <Field label="Deposit address"><Input value={address} onChange={(e) => setAddress(e.target.value)} className="font-mono" /></Field>
+      <Field label="Label (optional)"><Input value={label} onChange={(e) => setLabel(e.target.value)} /></Field>
+      <Field label="Reason (auditable, ≥ 6 chars)"><textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3} className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground" /></Field>
     </FormDrawer>
   );
 }

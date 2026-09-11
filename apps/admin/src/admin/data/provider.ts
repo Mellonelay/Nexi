@@ -150,6 +150,13 @@ export interface AdminDataProvider {
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
 
+  addDepositAddress(
+    currencyId: number,
+    input: { network: string; address: string; label?: string },
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult>;
+  disableDepositAddress(id: string, ctx: ConsequentialContext): Promise<MutationResult>;
+
   listFeeds(): Promise<MarketFeed[]>;
   setFeedStatus(
     id: string,

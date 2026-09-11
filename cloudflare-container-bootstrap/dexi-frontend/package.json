@@ -11,12 +11,14 @@
     "test:ui": "playwright test"
   },
   "dependencies": {
+    "@coinbase/wallet-sdk": "^4.3.7",
     "@radix-ui/react-dialog": "^1.1.23",
     "@radix-ui/react-dropdown-menu": "^2.1.24",
     "@radix-ui/react-tooltip": "^1.2.16",
     "@rainbow-me/rainbowkit": "^2.2.10",
     "@sentry/nextjs": "10.73.0",
     "@tanstack/react-query": "^5.90.19",
+    "@walletconnect/ethereum-provider": "^2.24.0",
     "axios": "^1.13.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -26,6 +28,7 @@
     "lightweight-charts": "^4.1.0",
     "lucide-react": "^0.294.0",
     "next": "14.0.4",
+    "qrcode.react": "4.2.0",
     "react": "^18",
     "react-dom": "^18",
     "recharts": "^2.15.4",

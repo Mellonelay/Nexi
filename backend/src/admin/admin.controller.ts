@@ -797,19 +797,27 @@ export class AdminController {
   addDepositAddress(
     @Param("id", ParseIntPipe) id: number,
     @Body() body: CreateDepositAddressDto,
+    @Req() request: AuthenticatedRequest,
   ) {
     return this.adminService.addDepositAddress(
       id,
       body.network,
       body.address,
       body.label,
+      request.user.userId,
+      body.reason,
+      body.idempotencyKey,
     );
   }
 
-  @Delete("address/:id")
+  @Post("address/:id/disable")
   @RequireAdminPermission("assets.edit")
-  deleteDepositAddress(@Param("id", ParseUUIDPipe) id: string) {
-    return this.adminService.deleteDepositAddress(id);
+  deleteDepositAddress(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() body: AdminIncidentAcknowledgeDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.adminService.deleteDepositAddress(id, request.user.userId, body.reason, body.idempotencyKey);
   }
 
   // --- Mining Plans ---

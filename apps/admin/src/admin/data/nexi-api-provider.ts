@@ -576,10 +576,48 @@ export class NexiAdminApiProvider implements AdminDataProvider {
         depositEnabled: currency.depositEnabled === true || currency.depositEnabled === 1,
         withdrawEnabled: currency.withdrawEnabled === true || currency.withdrawEnabled === 1,
         currencyId: Number(currency.id),
+        depositAddresses: Array.isArray(currency.depositAddresses)
+          ? currency.depositAddresses.map((item) => {
+              const address = record(item);
+              return {
+                id: stringValue(address.id),
+                network: stringValue(address.network),
+                address: stringValue(address.address),
+                label: typeof address.label === "string" ? address.label : undefined,
+                isActive: address.isActive === true || address.isActive === 1,
+              };
+            })
+          : [],
         enabled: stringValue(row.status) === "ACTIVE",
       };
     });
   }
+  async addDepositAddress(
+    currencyId: number,
+    input: { network: string; address: string; label?: string },
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult> {
+    const result = await this.request<JsonRecord>(`/admin/currencies/${currencyId}/address`, {
+      method: "POST",
+      body: JSON.stringify({
+        ...input,
+        reason: ctx.reason,
+        idempotencyKey: boundedIdempotencyKey("deposit-address", [
+          String(currencyId),
+          input.network,
+          input.address,
+          ctx.actor,
+          ctx.reason,
+        ]),
+      }),
+    });
+    return { ok: result.ok !== false, auditId: stringValue(result.auditId ?? result.id) };
+  }
+
+  async disableDepositAddress(id: string, ctx: ConsequentialContext): Promise<MutationResult> {
+    return this.requestMutation(`/admin/address/${encodeURIComponent(id)}/disable`, ctx, {}, [id]);
+  }
+
   async toggleNetwork(id: string, ctx: ConsequentialContext): Promise<MutationResult> {
     const networks = await this.listNetworks();
     const network = networks.find((item) => item.id === id);

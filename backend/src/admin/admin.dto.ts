@@ -77,6 +77,8 @@ export class CreateDepositAddressDto {
   @IsString() @Length(2, 32) network!: string;
   @IsString() @Length(8, 256) address!: string;
   @IsOptional() @IsString() @Length(1, 128) label?: string;
+  @IsString() @Length(6, 256) reason!: string;
+  @IsString() @Length(8, 128) idempotencyKey!: string;
 }
 
 export class CreateMiningPlanDto {

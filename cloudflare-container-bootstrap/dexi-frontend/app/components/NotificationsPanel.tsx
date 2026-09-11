@@ -8,13 +8,27 @@ import { io } from 'socket.io-client'
 import api, { apiBaseUrl } from '../lib/api'
 import { getAccessToken } from '../lib/auth-session'
 
+type NotificationCategory = 'All' | 'Trading' | 'Wallet' | 'Account' | 'System'
+
 interface Notification {
   id: string
   type: 'success' | 'warning' | 'info' | 'trade'
+  sourceType: string
+  category: Exclude<NotificationCategory, 'All'>
   title: string
   message: string
   time: string
   read: boolean
+}
+
+const CATEGORIES: NotificationCategory[] = ['All', 'Trading', 'Wallet', 'Account', 'System']
+
+function categoryForType(type: string): Exclude<NotificationCategory, 'All'> {
+  const value = type.toUpperCase()
+  if (/(SPOT|ORDER|TRADE|MARGIN|BINARY|OPTION|POSITION|SETTLEMENT)/.test(value)) return 'Trading'
+  if (/(DEPOSIT|WITHDRAW|TRANSFER|CONVERT|WALLET|BALANCE|LEDGER)/.test(value)) return 'Wallet'
+  if (/(KYC|SESSION|PROFILE|AUTH|LOGIN|SECURITY|VERIF|REFERRAL|VIP)/.test(value)) return 'Account'
+  return 'System'
 }
 
 const TYPE_CONFIG = {
@@ -35,9 +49,13 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
   const [loading, setLoading] = useState(false)
   const [failed, setFailed] = useState(false)
   const [retryNonce, setRetryNonce] = useState(0)
+  const [category, setCategory] = useState<NotificationCategory>('All')
   const loadRequestRef = useRef(0)
   const readRequestIds = useRef(new Set<string>())
   const unreadCount = notifications.filter(n => !n.read).length
+  const visibleNotifications = category === 'All'
+    ? notifications
+    : notifications.filter((notification) => notification.category === category)
 
   const loadNotifications = useCallback(async () => {
     const requestId = ++loadRequestRef.current
@@ -47,14 +65,19 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
       const { data } = await api.get('/communications/notifications', { params: { page: 1, limit: 25 } })
       if (requestId !== loadRequestRef.current) return
       const rows = Array.isArray(data) ? data : Array.isArray(data?.notifications) ? data.notifications : []
-      setNotifications(rows.map((item: Record<string, unknown>) => ({
-        id: String(item.id ?? ''),
-        type: item.type === 'success' || item.type === 'warning' || item.type === 'trade' ? item.type : 'info',
-        title: String(item.title ?? 'Notification'),
-        message: String(item.body ?? ''),
-        time: item.createdAt ? new Date(String(item.createdAt)).toLocaleString() : '—',
-        read: Boolean(item.readAt),
-      })))
+      setNotifications(rows.map((item: Record<string, unknown>) => {
+        const sourceType = String(item.type ?? 'SYSTEM')
+        return {
+          id: String(item.id ?? ''),
+          type: item.type === 'success' || item.type === 'warning' || item.type === 'trade' ? item.type : 'info',
+          sourceType,
+          category: categoryForType(sourceType),
+          title: String(item.title ?? 'Notification'),
+          message: String(item.body ?? ''),
+          time: item.createdAt ? new Date(String(item.createdAt)).toLocaleString() : '—',
+          read: Boolean(item.readAt),
+        }
+      }))
     } catch {
       if (requestId !== loadRequestRef.current) return
       setNotifications([])
@@ -165,12 +188,34 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
               </button>
             </div>
 
+            <div className="border-b border-[var(--nexi-border-subtle)] px-3 py-2">
+              <div className="nexi-scroll-rail flex gap-1.5 overflow-x-auto pb-1" role="tablist" aria-label="Notification categories">
+                {CATEGORIES.map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    role="tab"
+                    aria-selected={category === item}
+                    onClick={() => setCategory(item)}
+                    className={cn(
+                      'min-h-9 shrink-0 rounded-lg border px-3 text-xs font-semibold transition-colors',
+                      category === item
+                        ? 'border-[#8B5CF6] bg-[#2A1742] text-white'
+                        : 'border-[#2B2037] bg-[#171022] text-[#A99DB8] hover:text-white',
+                    )}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Notification list */}
             <div className="flex-1 overflow-y-auto py-2">
               {loading && <p className="px-4 py-6 text-sm text-[#8C8299]">Loading notifications…</p>}
               {!loading && failed && <div className="px-4 py-6 text-sm text-[#8C8299]"><p>Notifications unavailable.</p><button type="button" onClick={() => setRetryNonce((value) => value + 1)} className="mt-3 min-h-11 font-semibold text-[#A995FF] underline-offset-4 hover:underline">Retry</button></div>}
-              {!loading && !failed && notifications.length === 0 && <p className="px-4 py-6 text-sm text-[#8C8299]">No notifications available.</p>}
-              {!loading && !failed && notifications.map(notif => {
+              {!loading && !failed && visibleNotifications.length === 0 && <p className="px-4 py-6 text-sm text-[#8C8299]">{notifications.length === 0 ? 'No notifications available.' : `No ${category.toLowerCase()} notifications.`}</p>}
+              {!loading && !failed && visibleNotifications.map(notif => {
                 const cfg = TYPE_CONFIG[notif.type]
                 const Icon = cfg.icon
                 return (
@@ -197,7 +242,7 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
                         )}
                       </div>
                       <p className="text-xs text-[#8C8299] leading-5 mt-0.5">{notif.message}</p>
-                      <p className="text-[10px] text-[#55546A] mt-1">{notif.time}</p>
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-[#55546A]"><span>{notif.time}</span><span className="uppercase tracking-[0.08em]">{notif.sourceType}</span></div>
                     </div>
                   </button>
                 )

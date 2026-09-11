@@ -283,6 +283,13 @@ export interface Network {
   depositEnabled?: boolean;
   withdrawEnabled?: boolean;
   currencyId?: number;
+  depositAddresses?: Array<{
+    id: string;
+    network: string;
+    address: string;
+    label?: string;
+    isActive: boolean;
+  }>;
   enabled: boolean;
 }
 

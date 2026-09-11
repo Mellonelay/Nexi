@@ -1916,20 +1916,22 @@ export class AdminService {
     currencyId: number,
     network: string,
     address: string,
-    label?: string,
+    label: string | undefined,
+    adminId: string,
+    reason: string,
+    idempotencyKey: string,
   ) {
-    return this.prisma.depositAddress.create({
-      data: {
-        currencyId,
-        network,
-        address,
-        label,
-      },
-    });
+    if (this.d1?.isEnabled()) return this.d1.createAdminDepositAddress({ currencyId, network, address, label, adminId, reason, idempotencyKey });
+    const created = await this.prisma.depositAddress.create({ data: { currencyId, network, address, label } });
+    await this.prisma.adminAuditLog.create({ data: { adminId, action: "DEPOSIT_ADDRESS_CREATED", target: created.id, details: { currencyId, network, reason, idempotencyKey } } });
+    return created;
   }
 
-  async deleteDepositAddress(id: string) {
-    return this.prisma.depositAddress.delete({ where: { id } });
+  async deleteDepositAddress(id: string, adminId: string, reason: string, idempotencyKey: string) {
+    if (this.d1?.isEnabled()) return this.d1.deactivateAdminDepositAddress({ id, adminId, reason, idempotencyKey });
+    const updated = await this.prisma.depositAddress.update({ where: { id }, data: { isActive: false } });
+    await this.prisma.adminAuditLog.create({ data: { adminId, action: "DEPOSIT_ADDRESS_DISABLED", target: id, details: { reason, idempotencyKey } } });
+    return updated;
   }
 
   // --- Mining Management ---
