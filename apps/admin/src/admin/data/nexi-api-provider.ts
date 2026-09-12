@@ -306,10 +306,22 @@ export class NexiAdminApiProvider implements AdminDataProvider {
   }
 
   async login(email: string, password: string) {
-    return this.request<{ access_token: string; refresh_token?: string; user: JsonRecord }>(
-      "/admin/auth/login",
-      { method: "POST", body: JSON.stringify({ email, password }) },
-    );
+    const response = await fetch(`${this.config.baseUrl.replace(/\/$/, "")}/admin/auth/login`, {
+      method: "POST",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    const body = await response.text();
+    let payload: unknown = undefined;
+    try { payload = body ? JSON.parse(body) : undefined; } catch { payload = undefined; }
+    if (!response.ok) {
+      const detail = record(payload).message;
+      throw new NexiAdminApiError(
+        response.status,
+        typeof detail === "string" ? detail : `Admin login failed (${response.status})`,
+      );
+    }
+    return payload as { access_token: string; refresh_token?: string; user: JsonRecord };
   }
   async getAdminIdentity(): Promise<AdminIdentity> {
     const row = await this.request<JsonRecord>("/admin/me");

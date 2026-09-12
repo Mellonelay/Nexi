@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import appCss from "../styles.css?url";
 import { AdminSessionProvider } from "@/admin/session/session";
+import { AdminAuthGate } from "@/admin/session/AdminAuthGate";
 import { AdminDataProviderScope, getConfiguredAdminProvider } from "@/admin/data/context";
 import { AdminShell } from "@/admin/components/shell/AdminShell";
 
@@ -59,9 +60,11 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AdminSessionProvider provider={provider}>
         <AdminDataProviderScope provider={provider}>
-          <AdminShell>
-            <Outlet />
-          </AdminShell>
+          <AdminAuthGate provider={provider}>
+            <AdminShell>
+              <Outlet />
+            </AdminShell>
+          </AdminAuthGate>
           <Toaster position="top-right" richColors />
         </AdminDataProviderScope>
       </AdminSessionProvider>
