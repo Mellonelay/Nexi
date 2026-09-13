@@ -334,7 +334,7 @@ export default function BinaryPage() {
   };
 
   return (
-    <main className="nexi-page-shell min-h-[100dvh] w-full min-w-0 overflow-x-clip pb-36 text-[#F8F6FF] lg:pb-8">
+    <main className="nexi-page-shell min-h-[100dvh] w-full min-w-0 overflow-x-clip pb-8 text-[#F8F6FF] lg:pb-8">
       <header className="nexi-station-header sticky top-0 z-20 flex min-w-0 items-center justify-between gap-2 border-b px-3 py-3 backdrop-blur sm:gap-3 sm:px-4">
         <SafeBackButton fallback="/dashboard" label="Back to Quotes Hub" />
         <div className="min-w-0 flex-1"><SymbolSelector currentSymbol={pair} onSelect={(next) => { setPair(next); setActivePair(next); router.push(`/dashboard/binary?symbol=${next}`); }} /></div>
@@ -349,7 +349,7 @@ export default function BinaryPage() {
           </div>
           <div className="nexi-station-card min-w-0 rounded-2xl p-2">
             <div className="border-b border-white/5 px-2 pb-2"><TimeframeSelector interval={interval} onChange={setInterval} /></div>
-            <div className="min-h-[340px] sm:min-h-[420px] xl:min-h-[500px]"><RealtimeTradingChart symbol={normalizedPair} type="binary" interval={interval} /></div>
+            <div className="h-[clamp(260px,58vw,420px)] sm:h-[420px] xl:h-[500px]"><RealtimeTradingChart symbol={normalizedPair} type="binary" interval={interval} /></div>
           </div>
 
         </section>

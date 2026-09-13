@@ -22,9 +22,9 @@ async function readAuthoritativeBackend(backendUrl: string) {
 }
 
 export async function GET() {
-  const backendUrl = process.env.NEXI_BACKEND_URL;
+  const backendUrl = process.env.NEXI_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
   try {
-    if (backendUrl && /^https?:\/\//i.test(backendUrl)) {
+    if (backendUrl && /^https?:\/\//i.test(backendUrl) && !backendUrl.endsWith('/api')) {
       return await readAuthoritativeBackend(backendUrl);
     }
     return unavailable('Authoritative NEXI market backend is not configured.');

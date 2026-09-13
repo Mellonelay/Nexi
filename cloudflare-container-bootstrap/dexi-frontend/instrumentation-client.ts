@@ -7,8 +7,8 @@ if (dsn) {
     environment: process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT ?? process.env.NODE_ENV ?? 'development',
     release: process.env.NEXT_PUBLIC_SENTRY_RELEASE,
     tracesSampleRate: 0.05,
-    replaysSessionSampleRate: 0,
-    replaysOnErrorSampleRate: 0,
     sendDefaultPii: false,
   });
 }
+
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

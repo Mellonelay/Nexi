@@ -8,7 +8,7 @@ test('realtime subscriptions own their cleanup handlers', () => {
   const notifications = read('app/components/NotificationsPanel.tsx');
   const market = read('app/hooks/useRealtimeMarket.ts');
 
-  assert.match(notifications, /socket\.off\('connect', handleConnect\)/);
+  assert.match(notifications, /socket\.off\(["']connect["'], handleConnect\)/);
   assert.match(market, /socket\??\.off\("connect", handleConnect\)/);
   assert.match(read('app/dashboard/binary/page.tsx'), /submissionLock\.current/);
   assert.match(read('app/dashboard/spot/page.tsx'), /orderSubmissionLock\.current/);
@@ -57,5 +57,5 @@ test('public product copy does not expose raw market-state enums', () => {
 
   assert.match(primitives, /productStateLabel\(state\)/);
   assert.match(account, /productStateLabel\(state\)/);
-  assert.match(quotes, /item\.source === 'fallback'\) return '—'/);
+  assert.match(quotes, /item\.source === ["']fallback["']\) return ["']—["']/);
 });

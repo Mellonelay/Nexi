@@ -38,7 +38,18 @@ const pairFor = (asset: AssetDefinition, values: Partial<MarketPair> = {}): Mark
 const normaliseSymbol = (symbol: string) => symbol.replaceAll('/', '').replace('.US', '').toUpperCase();
 const toDisplaySymbol = (symbol: string) => symbol.endsWith('USDT') && symbol.length > 4 ? symbol.slice(0, -4) : symbol;
 
-const pairsFromPriceRows = (rows: unknown, providerHeader?: unknown): MarketPair[] => {
+const pairsFromPriceRows = (payload: unknown, providerHeader?: unknown): MarketPair[] => {
+  const root = payload && typeof payload === 'object' ? payload as Record<string, unknown> : null;
+  const rows = Array.isArray(payload)
+    ? payload
+    : Array.isArray(root?.data)
+      ? root.data
+      : Array.isArray(root?.marketPairs)
+        ? root.marketPairs
+        : Array.isArray(root?.prices)
+          ? root.prices
+          : [];
+  const responseState = typeof root?.dataState === 'string' ? root.dataState : undefined;
   if (!Array.isArray(rows)) return [];
   return rows.flatMap((row) => {
     if (!row || typeof row !== 'object') return [];
@@ -56,7 +67,7 @@ const pairsFromPriceRows = (rows: unknown, providerHeader?: unknown): MarketPair
     const sparkline = Array.isArray(ticker.sparkline) ? ticker.sparkline.map(Number).filter(Number.isFinite) : [];
     const changeValue = Number(ticker.priceChangePercent);
     const volumeValue = Number(ticker.volume);
-    const dataState = typeof ticker.dataState === 'string' ? ticker.dataState as MarketPair['dataState'] : lastPrice === null ? 'UNAVAILABLE' : 'LIVE';
+    const dataState = typeof ticker.dataState === 'string' ? ticker.dataState as MarketPair['dataState'] : responseState as MarketPair['dataState'] ?? (lastPrice === null ? 'UNAVAILABLE' : 'LIVE');
     return [{ ...base, name: typeof ticker.name === 'string' ? ticker.name : base.name, price: lastPrice, change: Number.isFinite(changeValue) ? changeValue : null, vol: Number.isFinite(volumeValue) ? volumeValue : null, high: Number.isFinite(Number(ticker.high)) ? Number(ticker.high) : null, low: Number.isFinite(Number(ticker.low)) ? Number(ticker.low) : null, marketCap: Number.isFinite(Number(ticker.marketCap)) ? Number(ticker.marketCap) : null, icon: typeof ticker.icon === 'string' ? ticker.icon : base.icon, source: provider.toUpperCase() === 'COINGECKO' ? 'external' as const : 'tick' as const, provider, dataState, observedAt: typeof ticker.observedAt === 'string' ? ticker.observedAt : undefined, sparkline }];
   });
 };
@@ -89,9 +100,15 @@ export function useMarketData() {
       setLoading(true);
       setError(false);
       try {
-        const [pricesRes, binaryConfig] = await Promise.allSettled([api.get('/market/prices'), api.get('/binary/config')]);
+        const [pricesRes, binaryConfig] = await Promise.allSettled([
+          fetch('/api/market/prices', { cache: 'no-store' }).then(async (response) => {
+            if (!response.ok) throw new Error(`Market price response returned ${response.status}.`);
+            return { data: await response.json(), headers: response.headers };
+          }),
+          api.get('/binary/config'),
+        ]);
         if (pricesRes.status !== 'fulfilled') throw pricesRes.reason;
-        const prices = pairsFromPriceRows(pricesRes.value.data, pricesRes.value.headers['x-nexi-market-source']);
+        const prices = pairsFromPriceRows(pricesRes.value.data, pricesRes.value.headers.get('x-nexi-market-source'));
         if (!prices.length) throw new Error('Market price response contained no valid rows.');
         if (cancelled) return;
         const crypto = prices.filter((item) => item.category === 'Crypto');

@@ -78,7 +78,7 @@ test('A03 Asset Detail: canonical market state → chart → Spot/Binary navigat
 test('A04 Spot: Public command/readback + Nest/D1/outbox/realtime + Admin control are wired', () => {
   hasAll(spotPublic, ["api.post('/spot/order'", "api.get('/spot/orderbook'", "api.get('/spot/market-trades'", 'io(`${apiBaseUrl}/spot`']);
   hasAll(spotController, ['@Post("order")', '@Get("orderbook")', '@Get("market-trades")']);
-  hasAll(spotService, ['this.d1!.reserveSpotOrder', 'this.d1!.getSpotOrder', 'emitOrderBookUpdate']);
+  hasAll(spotService, ['this.d1.reserveSpotOrder', 'this.d1.getSpotOrder', 'emitOrderBookUpdate']);
   hasAll(d1, ['eventType: "SPOT_ORDER_RESERVED"', 'async reserveSpotOrder']);
   hasAll(adminProvider, ['/admin/spot/orders', '/admin/spot/pairs/maintenance']);
 });
