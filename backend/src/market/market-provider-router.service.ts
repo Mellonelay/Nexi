@@ -125,6 +125,73 @@ export class MarketProviderRouterService {
     return this.configuredProviders().includes(provider.trim().toLowerCase());
   }
 
+  async currentStatus(): Promise<Array<Record<string, unknown>>> {
+    const providers = await this.d1.marketProviderConfig.findMany({
+      orderBy: [{ priority: 'asc' }, { key: 'asc' }],
+      select: {
+        key: true, displayName: true, status: true, priority: true,
+        supportsQuotes: true, supportsKlines: true, supportsTrades: true, supportsDepth: true,
+        symbols: {
+          where: { enabled: true },
+          select: { providerSymbol: true, pair: { select: { symbol: true, status: true } } },
+        },
+      },
+    });
+    return providers.map((provider) => ({
+      key: provider.key,
+      displayName: provider.displayName,
+      status: provider.status,
+      priority: provider.priority,
+      runtimeActive: this.activeProviders.has(provider.key),
+      capabilities: {
+        quotes: provider.supportsQuotes,
+        klines: provider.supportsKlines,
+        trades: provider.supportsTrades,
+        depth: provider.supportsDepth,
+      },
+      symbols: provider.symbols
+        .filter((mapping) => mapping.pair.status === 'ACTIVE')
+        .map((mapping) => ({ symbol: mapping.pair.symbol, providerSymbol: mapping.providerSymbol })),
+    }));
+  }
+
+  async fetchDepth(symbolInput: string, limit = 20): Promise<unknown | null> {
+    return this.fetchMicrostructure(symbolInput, 'supportsDepth', 'fetchDepth', limit);
+  }
+
+  async fetchTrades(symbolInput: string, limit = 50): Promise<unknown | null> {
+    return this.fetchMicrostructure(symbolInput, 'supportsTrades', 'fetchTrades', limit);
+  }
+
+  private async fetchMicrostructure(
+    symbolInput: string,
+    capability: 'supportsDepth' | 'supportsTrades',
+    method: 'fetchDepth' | 'fetchTrades',
+    limit: number,
+  ): Promise<unknown | null> {
+    const symbol = symbolInput.trim().toUpperCase().replaceAll('/', '');
+    const providers = await this.d1.marketProviderConfig.findMany({
+      where: {
+        status: 'ACTIVE',
+        [capability]: true,
+        symbols: { some: { enabled: true, pair: { symbol, status: 'ACTIVE' } } },
+      },
+      orderBy: [{ priority: 'asc' }, { key: 'asc' }],
+      select: { key: true },
+    });
+    for (const provider of providers) {
+      const adapter = this.adapters.find((candidate) => candidate.provider === provider.key);
+      const operation = adapter?.[method];
+      if (!adapter?.isEnabled() || typeof operation !== 'function') continue;
+      try {
+        return await operation.call(adapter, symbol, limit);
+      } catch (error) {
+        this.logger.warn(`Market ${method} ${symbol} failed via ${provider.key}: ${error instanceof Error ? error.message : 'unknown error'}`);
+      }
+    }
+    return null;
+  }
+
   private configuredProviders(): string[] {
     const multi = process.env.MARKET_PROVIDER_NAMES?.split(',').map((value) => value.trim().toLowerCase()).filter(Boolean) ?? [];
     const legacy = process.env.MARKET_PROVIDER_NAME?.trim().toLowerCase();

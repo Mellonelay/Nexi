@@ -240,6 +240,40 @@ export class MarketAuthorityService implements OnModuleInit {
     });
   }
 
+  async getAssets(): Promise<Array<Record<string, unknown>>> {
+    const pairs = await this.db.marketPair.findMany({
+      where: { status: AssetLifecycleStatus.ACTIVE, symbol: { in: DEFAULT_MARKET_SYMBOLS } },
+      orderBy: { symbol: 'asc' },
+      include: {
+        baseAsset: { select: { symbol: true, displayName: true, status: true } },
+        quoteAsset: { select: { symbol: true, displayName: true, status: true } },
+      },
+    });
+    return pairs.map((pair) => {
+      const policy = getMarketSourcePolicy(pair.symbol);
+      const catalog = canonicalMarketPair.get(pair.symbol);
+      return {
+        id: pair.id,
+        symbol: pair.symbol,
+        displaySymbol: policy?.displaySymbol ?? pair.symbol,
+        displayName: catalog?.displayName ?? pair.baseAsset.displayName ?? pair.baseAsset.symbol,
+        category: pair.category,
+        status: pair.status,
+        baseAsset: pair.baseAsset.symbol,
+        quoteAsset: pair.quoteAsset.symbol,
+        canonicalAssetId: policy?.canonicalAssetId ?? null,
+        assetClass: policy?.assetClass ?? pair.category,
+      };
+    });
+  }
+
+  async getAsset(symbolInput: string): Promise<Record<string, unknown> | null> {
+    const symbol = this.normalizeSymbol(symbolInput);
+    if (!DEFAULT_MARKET_SYMBOLS.includes(symbol)) return null;
+    const assets = await this.getAssets();
+    return assets.find((asset) => asset.symbol === symbol) ?? null;
+  }
+
   async ingestQuote(input: NormalizedMarketQuoteInput): Promise<{ accepted: boolean; event?: MarketQuoteEvent; reason?: string }> {
     if (this.d1.isEnabled()) return this.ingestQuoteD1(input);
     const symbol = this.normalizeSymbol(input.symbol);
