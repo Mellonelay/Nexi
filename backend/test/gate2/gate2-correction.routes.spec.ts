@@ -1,5 +1,5 @@
 import { GoneException } from '@nestjs/common';
-import { Gate2SpotOrderType, OrderSide } from '@prisma/client';
+import { Gate2SpotOrderType, OrderSide } from '../../src/prisma/d1-client';
 import { ConversionController } from '../../src/conversion/conversion.controller';
 import { ConversionService } from '../../src/conversion/conversion.service';
 import { SpotController } from '../../src/spot/spot.controller';

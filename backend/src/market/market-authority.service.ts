@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { AssetLifecycleStatus, MarketQuoteState, Prisma } from '../prisma/d1-client';
 import { D1PrismaService } from '../d1/d1-prisma.service';
@@ -511,6 +512,22 @@ export class MarketAuthorityService implements OnModuleInit {
       }
     }
 
+    const gate = configs.get('gate');
+    if (gate) {
+      const supportedGateSymbols = new Set((required.get('gate') ?? []).map((row) => row.symbol));
+      for (const [symbol, pair] of pairs) {
+        if (supportedGateSymbols.has(symbol)) continue;
+        await db.marketProviderSymbol.updateMany({
+          where: { providerId: gate.id, pairId: pair.id },
+          data: {
+            enabled: false,
+            priority: 100,
+            capabilityPolicy: JSON.stringify({ quote: false, kline: false, bidAsk: false, websocket: false, depth: false, trades: false }),
+          },
+        });
+      }
+    }
+
     const biquote = configs.get('biquote');
     if (biquote) {
       for (const symbol of ['AXPUSDT', 'DISUSDT', 'UBERUSDT', 'SONYUSDT', 'USDRUB']) {
@@ -559,37 +576,141 @@ export class MarketAuthorityService implements OnModuleInit {
     if (price.isNegative() || price.isZero()) throw new Error('Market quote price must be positive');
     const pair = await this.getOrCreatePairD1(symbol);
     const db = this.d1 as any;
-    const latest = await db.marketQuoteLatest.findUnique({ where: { pairId: pair.id } });
-    if (latest?.observedAt && input.observedAt.getTime() < new Date(latest.observedAt).getTime()) return { accepted: false, reason: 'OBSERVATION_OLDER_THAN_LATEST' };
-    const providerSequence = input.sequence === undefined ? undefined : BigInt(input.sequence);
-    if (providerSequence !== undefined && isDeterministicTestProvider(provider)
-      && providerSequence <= BigInt(latest?.sequence ?? -1)) {
-      return { accepted: false, reason: 'DUPLICATE_OR_STALE' };
-    }
-    const sequence = isDeterministicTestProvider(provider) && providerSequence !== undefined ? providerSequence : BigInt(latest?.sequence ?? 0) + 1n;
     const receivedAt = new Date();
     const lineage = { providerInstrument, priceType, canonicalAssetId: policy?.canonicalAssetId ?? null, assetClass: policy?.assetClass ?? null };
-    const data = {
-      symbol, provider, source, sequence: sequence.toString(), price: price.toString(),
-      change24h: this.optionalDecimal(input.change24h)?.toString() ?? null,
-      volume24h: this.optionalDecimal(input.volume24h)?.toString() ?? null,
-      high24h: this.optionalDecimal(input.high24h)?.toString() ?? null,
-      low24h: this.optionalDecimal(input.low24h)?.toString() ?? null,
-      bid: this.optionalDecimal(input.bid)?.toString() ?? null,
-      ask: this.optionalDecimal(input.ask)?.toString() ?? null,
-      spread: this.optionalDecimal(input.spread)?.toString() ?? null,
-      observedAt: input.observedAt, receivedAt, rawData: JSON.stringify(this.withLineage(input.rawData, lineage)),
+    const change24h = this.optionalDecimal(input.change24h);
+    const volume24h = this.optionalDecimal(input.volume24h);
+    const high24h = this.optionalDecimal(input.high24h);
+    const low24h = this.optionalDecimal(input.low24h);
+    const bid = this.optionalDecimal(input.bid);
+    const ask = this.optionalDecimal(input.ask);
+    const spread = this.optionalDecimal(input.spread);
+
+    // Deterministic test providers intentionally control their sequence so the
+    // duplicate/out-of-order contract can be exercised without a live D1
+    // transaction. Production providers never allocate sequence in NestJS.
+    if (isDeterministicTestProvider(provider)) {
+      const latest = await db.marketQuoteLatest.findUnique({ where: { pairId: pair.id } });
+      if (latest?.observedAt && input.observedAt.getTime() < new Date(latest.observedAt).getTime()) {
+        return { accepted: false, reason: 'OBSERVATION_OLDER_THAN_LATEST' };
+      }
+      const providerSequence = input.sequence === undefined ? undefined : BigInt(input.sequence);
+      if (providerSequence !== undefined && providerSequence <= BigInt(latest?.sequence ?? -1)) {
+        return { accepted: false, reason: 'DUPLICATE_OR_STALE' };
+      }
+      const sequence = providerSequence ?? BigInt(latest?.sequence ?? 0) + 1n;
+      const data = {
+        symbol, provider, source, sequence: sequence.toString(), price: price.toString(),
+        change24h: change24h?.toString() ?? null,
+        volume24h: volume24h?.toString() ?? null,
+        high24h: high24h?.toString() ?? null,
+        low24h: low24h?.toString() ?? null,
+        bid: bid?.toString() ?? null,
+        ask: ask?.toString() ?? null,
+        spread: spread?.toString() ?? null,
+        observedAt: input.observedAt, receivedAt, rawData: JSON.stringify(this.withLineage(input.rawData, lineage)),
+      };
+      await db.marketQuoteSnapshot.create({ data: { pairId: pair.id, ...data } });
+      const latestData: any = { ...data };
+      delete latestData.rawData;
+      await db.marketQuoteLatest.upsert({ where: { pairId: pair.id }, update: { ...latestData, state: 'LIVE' }, create: { pairId: pair.id, ...latestData, state: 'LIVE' } });
+      const event = this.toEvent({ ...latestData, sequence, state: MarketQuoteState.LIVE, price, change24h, volume24h, high24h, low24h, bid, ask, spread } as any, { providerInstrument, priceType });
+      return this.publishD1QuoteEvent(event);
+    }
+
+    // The Container-side Prisma adapter cannot span an atomic transaction over
+    // multiple HTTP requests. Allocate the canonical sequence and persist both
+    // latest + snapshot through one Worker-side D1Database.batch transaction.
+    const observedAtSql = this.d1DateTime(input.observedAt);
+    const receivedAtSql = this.d1DateTime(receivedAt);
+    const rawData = JSON.stringify(this.withLineage(input.rawData, lineage));
+    const latestId = randomUUID();
+    const snapshotId = randomUUID();
+    const scalar = {
+      price: price.toString(),
+      change24h: change24h?.toString() ?? null,
+      volume24h: volume24h?.toString() ?? null,
+      high24h: high24h?.toString() ?? null,
+      low24h: low24h?.toString() ?? null,
+      bid: bid?.toString() ?? null,
+      ask: ask?.toString() ?? null,
+      spread: spread?.toString() ?? null,
     };
-    await db.marketQuoteSnapshot.create({ data: { pairId: pair.id, ...data } });
-    const latestData: any = { ...data };
-    delete latestData.rawData;
-    await db.marketQuoteLatest.upsert({ where: { pairId: pair.id }, update: { ...latestData, state: 'LIVE' }, create: { pairId: pair.id, ...latestData, state: 'LIVE' } });
-    const event = this.toEvent({ ...latestData, sequence, state: MarketQuoteState.LIVE, price, change24h: data.change24h ? new Prisma.Decimal(data.change24h) : null, volume24h: data.volume24h ? new Prisma.Decimal(data.volume24h) : null, high24h: data.high24h ? new Prisma.Decimal(data.high24h) : null, low24h: data.low24h ? new Prisma.Decimal(data.low24h) : null } as any, { providerInstrument, priceType });
+
+    const batch = await db.atomicBatch([
+      {
+        sql: `INSERT INTO "MarketQuoteLatest" (
+          "id","pairId","symbol","provider","source","sequence","price","change24h","volume24h","high24h","low24h","state","observedAt","receivedAt","bid","ask","spread"
+        ) VALUES (?,?,?,?,?,'1',?,?,?,?,?,'LIVE',?,?,?,?,?)
+        ON CONFLICT("pairId") DO UPDATE SET
+          "symbol"=excluded."symbol",
+          "provider"=excluded."provider",
+          "source"=excluded."source",
+          "sequence"=CAST("MarketQuoteLatest"."sequence" AS INTEGER) + 1,
+          "price"=excluded."price",
+          "change24h"=excluded."change24h",
+          "volume24h"=excluded."volume24h",
+          "high24h"=excluded."high24h",
+          "low24h"=excluded."low24h",
+          "state"='LIVE',
+          "observedAt"=excluded."observedAt",
+          "receivedAt"=excluded."receivedAt",
+          "bid"=excluded."bid",
+          "ask"=excluded."ask",
+          "spread"=excluded."spread"
+        WHERE "MarketQuoteLatest"."observedAt" IS NULL OR excluded."observedAt" >= "MarketQuoteLatest"."observedAt"
+        RETURNING "sequence"`,
+        params: [
+          latestId, pair.id, symbol, provider, source,
+          scalar.price, scalar.change24h, scalar.volume24h, scalar.high24h, scalar.low24h,
+          observedAtSql, receivedAtSql, scalar.bid, scalar.ask, scalar.spread,
+        ],
+      },
+      {
+        // A batch is constructed before it executes, so statement two cannot
+        // bind statement one's RETURNING value in application code. Instead it
+        // reads the just-updated row inside the same D1 transaction.
+        sql: `INSERT INTO "MarketQuoteSnapshot" (
+          "id","pairId","symbol","provider","source","sequence","price","change24h","volume24h","high24h","low24h","observedAt","receivedAt","rawData","bid","ask","spread"
+        )
+        SELECT ?,"pairId","symbol","provider","source","sequence","price","change24h","volume24h","high24h","low24h","observedAt","receivedAt",?,"bid","ask","spread"
+        FROM "MarketQuoteLatest"
+        WHERE "pairId"=? AND "provider"=? AND "source"=? AND "observedAt"=? AND "receivedAt"=? AND "price"=?`,
+        params: [snapshotId, rawData, pair.id, provider, source, observedAtSql, receivedAtSql, scalar.price],
+      },
+    ]);
+
+    const allocated = batch[0]?.results?.[0] as { sequence?: string | number } | undefined;
+    if (allocated?.sequence === undefined) {
+      return { accepted: false, reason: 'OBSERVATION_OLDER_THAN_LATEST' };
+    }
+    const snapshotChanges = Number(batch[1]?.meta?.changes ?? 0);
+    if (snapshotChanges !== 1) {
+      throw new Error(`D1 market quote atomic batch did not persist exactly one snapshot for ${symbol}`);
+    }
+    const sequence = BigInt(String(allocated.sequence));
+    const event = this.toEvent({
+      symbol, provider, source, sequence, state: MarketQuoteState.LIVE,
+      price, change24h, volume24h, high24h, low24h, bid, ask, spread,
+      observedAt: input.observedAt, receivedAt,
+    }, { providerInstrument, priceType });
+    return this.publishD1QuoteEvent(event);
+  }
+
+  private async publishD1QuoteEvent(event: MarketQuoteEvent): Promise<{ accepted: boolean; event: MarketQuoteEvent; reason?: string }> {
     try {
-      if (this.redis.isAvailable()) await this.redis.publish(MARKET_QUOTES_CHANNEL, JSON.stringify(event));
-      else return { accepted: true, event, reason: 'PERSISTED_NOT_PUBLISHED' };
-    } catch { return { accepted: true, event, reason: 'PERSISTED_NOT_PUBLISHED' }; }
-    return { accepted: true, event };
+      if (this.redis.isAvailable()) {
+        await this.redis.publish(MARKET_QUOTES_CHANNEL, JSON.stringify(event));
+        return { accepted: true, event };
+      }
+    } catch (error) {
+      this.logger.warn(`Market event publication deferred: ${error instanceof Error ? error.message : 'unknown error'}`);
+    }
+    return { accepted: true, event, reason: 'PERSISTED_NOT_PUBLISHED' };
+  }
+
+  private d1DateTime(value: Date): string {
+    return value.toISOString().replace('Z', '+00:00');
   }
 
   private toEvent(latest: { symbol: string; sequence: bigint; price: Prisma.Decimal; change24h?: Prisma.Decimal | null; volume24h?: Prisma.Decimal | null; high24h?: Prisma.Decimal | null; low24h?: Prisma.Decimal | null; bid?: Prisma.Decimal | null; ask?: Prisma.Decimal | null; spread?: Prisma.Decimal | null; state?: MarketQuoteState; provider: string; source: string; observedAt: Date; receivedAt: Date }, lineage?: { providerInstrument?: string; priceType?: MarketPriceType }): MarketQuoteEvent {

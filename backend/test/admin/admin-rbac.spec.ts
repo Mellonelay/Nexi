@@ -1,4 +1,4 @@
-import { AdminRoleId } from '@prisma/client';
+import { AdminRoleId } from '../../src/prisma/d1-client';
 import { ADMIN_PERMISSION_KEYS, ADMIN_ROLE_DEFINITIONS, hasAdminPermission } from '../../src/admin/admin-rbac';
 
 describe('Admin role authority', () => {

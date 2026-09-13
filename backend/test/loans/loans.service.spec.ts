@@ -1,4 +1,4 @@
-import { LoanStatus, Prisma } from '@prisma/client';
+import { LoanStatus, Prisma } from '../../src/prisma/d1-client';
 import { LoanService } from '../../src/loans/loans.service';
 
 describe('LoanService', () => {

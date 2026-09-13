@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../../src/prisma/d1-client';
 import { MiningService } from '../../src/mining/mining.service';
 
 describe('MiningService', () => {

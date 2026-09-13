@@ -5,9 +5,9 @@ import type {
   D1BridgeResult,
 } from './d1-worker-bridge.service';
 
-type D1Row = Record<string, unknown>;
+export type D1Row = Record<string, unknown>;
 
-type D1RunResult = {
+export type D1RunResult = {
   success: boolean;
   meta?: Record<string, unknown>;
   results?: D1Row[];

@@ -1,4 +1,4 @@
-import { Gate2SpotOrderType, LedgerAccountScope, OrderSide, Prisma } from '@prisma/client';
+import { Gate2SpotOrderType, LedgerAccountScope, OrderSide, Prisma } from '../../src/prisma/d1-client';
 import { SpotService } from '../../src/spot/spot.service';
 
 describe('Gate 2 Spot authority', () => {

@@ -1,4 +1,4 @@
-import { BinarySide, Gate2BinaryState, MarketQuoteState, Prisma } from '@prisma/client';
+import { BinarySide, Gate2BinaryState, MarketQuoteState, Prisma } from '../../src/prisma/d1-client';
 import { BinaryService } from '../../src/binary/binary.service';
 
 describe('Gate 2 binary settlement correction semantics', () => {

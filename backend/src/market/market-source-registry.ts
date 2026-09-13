@@ -31,10 +31,11 @@ const EXCHANGE_QUOTE_COVERAGE: Record<string, ReadonlySet<string>> = {
   bitget: new Set(['AAPLUSDT', 'AMDUSDT', 'AMZNUSDT', 'BAUSDT', 'GOOGUSDT', 'KOUSDT', 'MCDUSDT', 'METAUSDT', 'MSFTUSDT', 'NFLXUSDT', 'NKEUSDT', 'NVDAUSDT', 'SONYUSDT', 'TSLAUSDT', 'UBERUSDT', 'WMTUSDT', 'XAUUSD', 'XAGUSD', 'XPDUSD', 'XPTUSD', 'XCUUSD']),
   htx: new Set(['AAPLUSDT', 'AMDUSDT', 'DISUSDT', 'GOOGUSDT', 'JNJUSDT', 'KOUSDT', 'METAUSDT', 'MSFTUSDT', 'NFLXUSDT', 'NVDAUSDT', 'SONYUSDT', 'UBERUSDT', 'XAUUSD', 'XAGUSD', 'XPDUSD', 'XPTUSD', 'XCUUSD']),
   bybit: new Set(['AAPLUSDT', 'AMDUSDT', 'AMZNUSDT', 'DISUSDT', 'GOOGUSDT', 'JNJUSDT', 'KOUSDT', 'METAUSDT', 'MSFTUSDT', 'NFLXUSDT', 'NKEUSDT', 'NVDAUSDT', 'SONYUSDT', 'TSLAUSDT', 'UBERUSDT', 'WMTUSDT', 'XAUUSD', 'XAGUSD']),
-  // Gate's public TradFi catalog currently exposes all 20 NEXI stocks, eight
-  // of the nine NEXI FX pairs (USDRUB is absent), and four precious metals.
-  // Keep the remaining registry rows but do not poll unsupported instruments.
-  gate: new Set(['AAPLUSDT', 'AMDUSDT', 'AMZNUSDT', 'AXPUSDT', 'BAUSDT', 'DISUSDT', 'GOOGUSDT', 'JNJUSDT', 'KOUSDT', 'MCDUSDT', 'METAUSDT', 'MSFTUSDT', 'NFLXUSDT', 'NKEUSDT', 'NVDAUSDT', 'SONYUSDT', 'TSLAUSDT', 'UBERUSDT', 'WFCUSDT', 'WMTUSDT', 'EURUSD', 'GBPUSD', 'USDCNH', 'USDHKD', 'USDJPY', 'USDTHB', 'AUDUSD', 'USDCHF', 'XAUUSD', 'XAGUSD', 'XPDUSD', 'XPTUSD']),
+  // Gate's public TradFi per-symbol ticker route is proven callable for the
+  // NEXI stock symbols. FX/metals catalog membership is not callable quote
+  // capability: those names return SYMBOL_NOT_EXISTS on the ticker route, so
+  // they stay mapped for identity/fallback purposes but fail closed for polling.
+  gate: new Set(['AAPLUSDT', 'AMDUSDT', 'AMZNUSDT', 'AXPUSDT', 'BAUSDT', 'DISUSDT', 'GOOGUSDT', 'JNJUSDT', 'KOUSDT', 'MCDUSDT', 'METAUSDT', 'MSFTUSDT', 'NFLXUSDT', 'NKEUSDT', 'NVDAUSDT', 'SONYUSDT', 'TSLAUSDT', 'UBERUSDT', 'WFCUSDT', 'WMTUSDT']),
 };
 
 function providerQuoteSupported(entry: CanonicalMarketPair, provider: string): boolean {

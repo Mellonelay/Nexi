@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../../src/prisma/d1-client';
 import { isLiquidatable, marginPnl, simpleInterest } from '../../src/spot/margin.calculations';
 
 describe('Spot isolated margin calculations', () => {

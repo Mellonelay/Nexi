@@ -1,4 +1,4 @@
-import { BinarySide, Gate2BinaryState } from '@prisma/client';
+import { BinarySide, Gate2BinaryState } from '../../src/prisma/d1-client';
 import { BinaryService } from '../../src/binary/binary.service';
 
 describe('Gate 2 Binary authority', () => {

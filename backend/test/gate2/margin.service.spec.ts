@@ -1,4 +1,4 @@
-import { LedgerAccountScope, OrderSide, Prisma, SpotMarginPositionStatus } from '@prisma/client';
+import { LedgerAccountScope, OrderSide, Prisma, SpotMarginPositionStatus } from '../../src/prisma/d1-client';
 import { MarginService } from '../../src/spot/margin.service';
 import { MarginPositionDirection, MarginTransferDirection } from '../../src/spot/margin.dto';
 

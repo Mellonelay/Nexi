@@ -19,6 +19,8 @@ describe('Market source registry', () => {
     expect(getProviderMapping('AAPLUSDT', 'biquote')?.quoteSupported).toBe(true);
     expect(getProviderMapping('DISUSDT', 'bitget')?.quoteSupported).toBe(false);
     expect(getProviderMapping('AXPUSDT', 'gate')?.klineSupported).toBe(true);
+    expect(getProviderMapping('EURUSD', 'gate')?.quoteSupported).toBe(false);
+    expect(getProviderMapping('XAUUSD', 'gate')?.quoteSupported).toBe(false);
     expect(getProviderMapping('USDRUB', 'yahoo')?.klineSupported).toBe(false);
     expect(getProviderMapping('USDRUB', 'moex')?.klineSupported).toBe(true);
   });

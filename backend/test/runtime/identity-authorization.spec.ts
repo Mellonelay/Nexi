@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { ExecutionContext, ForbiddenException, ServiceUnavailableException, UnauthorizedException, ValidationPipe } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Role } from '@prisma/client';
+import { Role } from '../../src/prisma/d1-client';
 import { AuthController } from '../../src/auth/auth.controller';
 import { KycController } from '../../src/kyc/kyc.controller';
 import { KycSubmissionDto, SignupDto } from '../../src/auth/auth.dto';

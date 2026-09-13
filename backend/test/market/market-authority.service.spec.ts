@@ -80,6 +80,53 @@ describe("MarketAuthorityService", () => {
       isEnabled: jest.fn().mockReturnValue(true),
       marketKline: { findMany: jest.fn().mockResolvedValue([]) },
     };
+    d1.atomicBatch = jest.fn(async (statements: any[]) => {
+      const latestParams = statements[0]?.params ?? [];
+      const pairId = latestParams[1];
+      const observedAt = new Date(latestParams[10]);
+      const current = latest.get(pairId);
+      if (current?.observedAt && observedAt.getTime() < new Date(current.observedAt).getTime()) {
+        return [
+          { success: true, results: [], meta: { changes: 0 } },
+          { success: true, results: [], meta: { changes: 0 } },
+        ];
+      }
+      const sequence = (BigInt(current?.sequence ?? 0) + 1n).toString();
+      const value = {
+        id: latestParams[0],
+        pairId,
+        symbol: latestParams[2],
+        provider: latestParams[3],
+        source: latestParams[4],
+        sequence,
+        price: latestParams[5],
+        change24h: latestParams[6],
+        volume24h: latestParams[7],
+        high24h: latestParams[8],
+        low24h: latestParams[9],
+        observedAt,
+        receivedAt: new Date(latestParams[11]),
+        bid: latestParams[12],
+        ask: latestParams[13],
+        spread: latestParams[14],
+        state: "LIVE",
+      };
+      // Update the canonical latest row before the awaited snapshot mock so a
+      // concurrent test invocation observes the serialized D1 sequence.
+      latest.set(pairId, value);
+      const snapshotParams = statements[1]?.params ?? [];
+      await prisma.marketQuoteSnapshot.create({
+        data: {
+          id: snapshotParams[0],
+          ...value,
+          rawData: snapshotParams[1],
+        },
+      });
+      return [
+        { success: true, results: [{ sequence }], meta: { changes: 1 } },
+        { success: true, results: [], meta: { changes: 1 } },
+      ];
+    });
     const providerRouter = {
       isProviderEnabled: jest.fn().mockReturnValue(true),
     };
@@ -137,6 +184,28 @@ describe("MarketAuthorityService", () => {
       ask: "12345.8",
       spread: "0.3",
     });
+  });
+
+  it("serializes concurrent production quote writes per canonical symbol", async () => {
+    const { service, d1 } = createService();
+    const seen = new Set<string>();
+    d1.marketQuoteSnapshot.create.mockImplementation(async ({ data }: any) => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      const key = `${data.pairId}:${data.sequence}`;
+      if (seen.has(key)) throw new Error("UNIQUE constraint failed: MarketQuoteSnapshot.pairId, MarketQuoteSnapshot.sequence");
+      seen.add(key);
+      return data;
+    });
+
+    const observedAt = new Date("2026-09-13T01:33:29.000Z");
+    const [first, second] = await Promise.all([
+      service.ingestQuote({ symbol: "BTCUSDT", provider: "binance-spot", source: "websocket", price: "100", observedAt }),
+      service.ingestQuote({ symbol: "BTCUSDT", provider: "binance-spot", source: "websocket", price: "101", observedAt }),
+    ]);
+
+    expect(first.accepted).toBe(true);
+    expect(second.accepted).toBe(true);
+    expect(d1.marketQuoteSnapshot.create.mock.calls.map(([args]: any[]) => args.data.sequence)).toEqual(["1", "2"]);
   });
 
   it("rejects duplicate or out-of-order provider sequences without a second snapshot", async () => {

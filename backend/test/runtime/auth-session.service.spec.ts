@@ -1,4 +1,4 @@
-import { AuthSessionSurface } from '@prisma/client';
+import { AuthSessionSurface } from '../../src/prisma/d1-client';
 import { UnauthorizedException } from '@nestjs/common';
 import { AuthSecurityEventsService, AuthSecurityEvent } from '../../src/auth/auth-security-events.service';
 import {
