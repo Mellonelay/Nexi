@@ -17,6 +17,8 @@
   "vars": {
     "NODE_ENV": "production",
     "PORT": "3000",
+    "SENTRY_ENVIRONMENT": "staging",
+    "SENTRY_RELEASE": "nexi@97f75818d63569b65402690b659271be034901a4",
     "CORS_ORIGINS": "https://app.nexitrading.app,https://admin.nexitrading.app",
     "WALLET_AUTH_DOMAIN": "app.nexitrading.app",
     "WALLET_AUTH_URI": "https://app.nexitrading.app",
@@ -48,6 +50,7 @@
     "required": [
       "REDIS_URL",
       "JWT_SECRET",
+      "SENTRY_DSN",
       "MARKET_ARCHIVE_PIPELINE_TOKEN",
     ],
   },

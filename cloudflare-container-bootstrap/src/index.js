@@ -6,6 +6,9 @@ export { ContainerProxy } from "@cloudflare/containers";
 const CONTAINER_ENV_KEYS = [
   "NODE_ENV",
   "PORT",
+  "SENTRY_DSN",
+  "SENTRY_ENVIRONMENT",
+  "SENTRY_RELEASE",
   "REDIS_URL",
   "JWT_SECRET",
   "D1_RUNTIME_ENABLED",

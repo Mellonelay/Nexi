@@ -5,14 +5,34 @@
 //     React/TanStack dedupe, error logger plugins, and sandbox detection (port/host/strictPort).
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { sentryTanstackStart } from "@sentry/tanstackstart-react/vite";
 
 export default defineConfig({
+  plugins: [
+    sentryTanstackStart({
+      org: "mellonelay",
+      project: "nexi",
+      telemetry: false,
+      autoInstrumentMiddleware: false,
+      release: {
+        name: process.env.VITE_SENTRY_RELEASE,
+        create: false,
+        finalize: false,
+      },
+      sourcemaps: {
+        filesToDeleteAfterUpload: ["./.output/public/**/*.map"],
+      },
+    }),
+  ],
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
   },
   vite: {
+    build: {
+      sourcemap: "hidden",
+    },
     server: {
       host: "0.0.0.0",
       port: 5000,
