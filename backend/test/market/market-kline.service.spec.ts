@@ -95,4 +95,34 @@ describe('MarketKlineService quote aggregation', () => {
     expect(prisma.marketKline.findMany).toHaveBeenCalledWith(expect.objectContaining({ orderBy: { openTime: 'desc' }, take: 2 }));
     expect(candles.map((c) => c.close)).toEqual(['3', '4']);
   });
+
+  it('aggregates finalized 1m candles into all canonical higher intervals from D1 authority', async () => {
+    const oneMinuteRows = [
+      { openTime: new Date('2026-09-14T12:30:00.000Z'), closeTime: new Date('2026-09-14T12:30:59.999Z'), open: '100', high: '105', low: '99', close: '104', volume: '1', symbol: 'BTCUSDT', interval: '1m', provider: 'binance-spot', source: 'websocket:kline', observedAt: new Date('2026-09-14T12:31:00.010Z'), receivedAt: new Date('2026-09-14T12:31:00.020Z') },
+      { openTime: new Date('2026-09-14T12:31:00.000Z'), closeTime: new Date('2026-09-14T12:31:59.999Z'), open: '104', high: '110', low: '101', close: '102', volume: '2', symbol: 'BTCUSDT', interval: '1m', provider: 'binance-spot', source: 'websocket:kline', observedAt: new Date('2026-09-14T12:32:00.010Z'), receivedAt: new Date('2026-09-14T12:32:00.020Z') },
+      { openTime: new Date('2026-09-14T12:32:00.000Z'), closeTime: new Date('2026-09-14T12:32:59.999Z'), open: '102', high: '108', low: '98', close: '107', volume: '3', symbol: 'BTCUSDT', interval: '1m', provider: 'binance-spot', source: 'websocket:kline', observedAt: new Date('2026-09-14T12:33:00.010Z'), receivedAt: new Date('2026-09-14T12:33:00.020Z') },
+    ];
+    const prisma: any = {
+      isEnabled: jest.fn().mockReturnValue(false),
+      marketPair: { findUnique: jest.fn(async () => ({ id: 'pair-btcusdt', symbol: 'BTCUSDT' })) },
+      marketKline: {
+        findMany: jest.fn(async () => oneMinuteRows),
+        findUnique: jest.fn(async () => null),
+        upsert: jest.fn(async ({ create }: any) => ({ id: `derived-${create.interval}`, ...create, receivedAt: new Date('2026-09-14T12:33:00.030Z') })),
+      },
+    };
+    const service = new MarketKlineService(prisma);
+
+    const derived = await service.aggregateFromOneMinute('BTCUSDT', new Date('2026-09-14T12:32:00.000Z'));
+
+    expect(derived.map((c) => c.interval)).toEqual(['5m', '15m', '30m', '1h', '4h', '1d']);
+    const fiveMinute = derived[0];
+    expect(fiveMinute).toMatchObject({
+      symbol: 'BTCUSDT', interval: '5m', time: Date.parse('2026-09-14T12:30:00.000Z') / 1000,
+      open: '100', high: '110', low: '98', close: '107', volume: '6',
+      provider: 'binance-spot', source: 'derived:1m-aggregation',
+      observedAt: '2026-09-14T12:33:00.010Z',
+    });
+  });
+
 });

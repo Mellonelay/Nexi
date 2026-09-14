@@ -1,7 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '../prisma/d1-client';
 import { D1PrismaService } from '../d1/d1-prisma.service';
-import { MarketKlineInput, normalizeMarketKline } from './market-kline.contract';
+import { MarketKlineInput, MarketKlineInterval, normalizeMarketKline } from './market-kline.contract';
+
+const DERIVED_KLINE_INTERVALS = [
+  ['5m', 5 * 60_000],
+  ['15m', 15 * 60_000],
+  ['30m', 30 * 60_000],
+  ['1h', 60 * 60_000],
+  ['4h', 4 * 60 * 60_000],
+  ['1d', 24 * 60 * 60_000],
+] as const satisfies ReadonlyArray<readonly [MarketKlineInterval, number]>;
 
 export interface MarketQuoteCandleInput {
   symbol: string;
@@ -74,6 +83,56 @@ export class MarketKlineService {
       },
     });
     return this.toContract(row);
+  }
+
+  async aggregateFromOneMinute(symbol: string, oneMinuteOpenTime: Date) {
+    const normalizedSymbol = symbol.trim().toUpperCase().replaceAll('/', '');
+    const pair = await this.db.marketPair.findUnique({ where: { symbol: normalizedSymbol } });
+    if (!pair) throw new NotFoundException(`Market pair ${normalizedSymbol} is not configured`);
+    const eventTime = oneMinuteOpenTime.getTime();
+    if (Number.isNaN(eventTime)) throw new Error('Market kline openTime is invalid');
+
+    const derived = [];
+    for (const [interval, widthMs] of DERIVED_KLINE_INTERVALS) {
+      const bucketStartMs = Math.floor(eventTime / widthMs) * widthMs;
+      const bucketStart = new Date(bucketStartMs);
+      const bucketEnd = new Date(bucketStartMs + widthMs);
+      const rows = await this.db.marketKline.findMany({
+        where: { pairId: pair.id, interval: '1m', openTime: { gte: bucketStart, lt: bucketEnd } },
+        orderBy: { openTime: 'asc' },
+      });
+      if (rows.length === 0) continue;
+
+      const first = rows[0];
+      const last = rows.at(-1)!;
+      let high = new Prisma.Decimal(first.high);
+      let low = new Prisma.Decimal(first.low);
+      let volume: Prisma.Decimal | null = new Prisma.Decimal(0);
+      for (const row of rows) {
+        const rowHigh = new Prisma.Decimal(row.high);
+        const rowLow = new Prisma.Decimal(row.low);
+        if (rowHigh.gt(high)) high = rowHigh;
+        if (rowLow.lt(low)) low = rowLow;
+        if (row.volume === null || row.volume === undefined) volume = null;
+        else if (volume !== null) volume = volume.plus(new Prisma.Decimal(row.volume));
+      }
+
+      derived.push(await this.persist({
+        symbol: normalizedSymbol,
+        interval,
+        openTime: bucketStart,
+        closeTime: last.closeTime ?? undefined,
+        open: first.open.toString(),
+        high: high.toString(),
+        low: low.toString(),
+        close: last.close.toString(),
+        volume: volume?.toString() ?? null,
+        provider: last.provider,
+        source: 'derived:1m-aggregation',
+        observedAt: last.observedAt,
+      }));
+    }
+    return derived;
   }
 
   /**

@@ -50,9 +50,14 @@ export class MarketKlineQueryService {
     const newest = candles.at(-1)?.observedAt
       ? new Date(candles.at(-1)!.observedAt).getTime()
       : 0;
-    const staleAfterMs = Number(
+    const configuredStaleAfterMs = Number(
       process.env.MARKET_QUOTE_STALE_AFTER_MS ?? '30000',
     );
+    // Higher intervals are refreshed from each finalized 1m provider candle,
+    // so allow one full aggregation cadence plus jitter before declaring them stale.
+    const staleAfterMs = query.interval === '1m'
+      ? configuredStaleAfterMs
+      : Math.max(configuredStaleAfterMs, 90_000);
     const dataState =
       candles.length === 0
         ? 'UNAVAILABLE'

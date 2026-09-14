@@ -106,6 +106,10 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
            provider: event.provider, source: event.source, observedAt: new Date(event.eventTime),
         });
         await this.publishMarketKlineEvent(persisted);
+        if (event.interval === '1m' && event.closed) {
+          const derived = await this.marketKlines.aggregateFromOneMinute(event.symbol, new Date(event.openTime));
+          for (const candle of derived) await this.publishMarketKlineEvent(candle);
+        }
       } else if (event.kind === 'depth' || event.kind === 'trade') {
         const result = event.kind === 'depth'
           ? await this.referencePersistence.persistDepth(event)
