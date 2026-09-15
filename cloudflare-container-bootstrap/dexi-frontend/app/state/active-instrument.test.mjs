@@ -19,13 +19,22 @@ test('derives safe direct-route metadata without carrying the previous asset nam
 
   assert.equal(crypto.symbol, 'ETH');
   assert.equal(crypto.pair, 'ETH/USDT');
-  assert.equal(crypto.name, 'ETH');
+  assert.equal(crypto.name, 'Ethereum');
+  assert.equal(crypto.assetId, 'crypto:eth');
   assert.equal(crypto.category, 'Crypto');
   assert.equal(crypto.provenance, 'UNAVAILABLE');
 
-  assert.equal(forex.symbol, 'EUR');
+  assert.equal(forex.symbol, 'EURUSD');
   assert.equal(forex.pair, 'EUR/USD');
+  assert.equal(forex.assetId, 'forex:eurusd');
   assert.equal(forex.category, 'Forex');
+
+  const stock = instrumentFromPair('AAPLUSDT');
+  assert.equal(stock.assetId, 'stock:aapl');
+  assert.equal(stock.symbol, 'AAPL');
+  assert.equal(stock.pair, 'AAPL/USDT');
+  assert.equal(stock.name, 'Apple');
+  assert.equal(stock.category, 'Shares');
 });
 
 test('creates an unavailable instrument without inventing market values', () => {

@@ -5,6 +5,7 @@ import { ChevronDown } from 'lucide-react';
 import { useMarketData, MarketPair } from '../hooks/useMarketData';
 import AssetIcon from './AssetIcon';
 import { findAsset, type AssetCategory } from '../lib/asset-registry';
+import { normalizePair } from '../state/active-instrument';
 
 interface SymbolSelectorProps {
   readonly currentSymbol: string;
@@ -18,7 +19,7 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const { marketPairs, metal, shares, forex, loading, error } = useMarketData();
-  const normalizedCurrent = currentSymbol.replaceAll('/', '').toUpperCase();
+  const normalizedCurrent = normalizePair(currentSymbol);
   const currentAsset = findAsset(currentSymbol);
 
   useEffect(() => {
@@ -55,7 +56,7 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex min-w-0 items-center gap-2 text-lg font-bold transition-colors hover:text-gray-300"
+        className="nexi-interactive flex min-h-11 min-w-0 items-center gap-2 text-lg font-bold transition-colors hover:text-gray-300"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >
@@ -69,7 +70,7 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
 
       {/* Dropdown Content */}
       {isOpen && (
-        <div className="absolute left-0 top-full z-[100] mt-2 w-[min(320px,calc(100vw-32px))] overflow-hidden rounded-lg border border-white/10 bg-[#121836] shadow-xl">
+        <div onKeyDown={(event) => { if (event.key === 'Escape') { setIsOpen(false); dropdownRef.current?.querySelector('button')?.focus(); } }} className="absolute left-0 top-full z-[100] mt-2 w-[min(320px,calc(100vw-32px))] overflow-hidden rounded-lg border border-white/10 bg-[#100A18] shadow-xl">
           {/* Tabs */}
           {!cryptoOnly && (
             <div className="grid grid-cols-4 border-b border-white/10" role="tablist" aria-label="Asset categories">
@@ -80,7 +81,7 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
                   role="tab"
                   aria-selected={activeTab === tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`min-w-0 py-2 text-[10px] font-bold transition-colors ${activeTab === tab
+                  className={`min-h-11 min-w-0 py-2 text-[10px] font-bold transition-colors ${activeTab === tab
                       ? 'border-b-2 border-[#7353DD] bg-white/5 text-white'
                       : 'text-gray-500 hover:text-gray-300'
                     }`}
@@ -93,14 +94,15 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
 
           {/* List */}
           <div className="max-h-[min(55vh,360px)] overflow-y-auto overscroll-contain" role="listbox">
-            {loading ? <p className="p-4 text-sm text-[#8C8299]" role="status">Loading approved instruments</p> : error ? <p className="p-4 text-sm text-[#8C8299]" role="status">Market data unavailable</p> : options.length === 0 ? <p className="p-4 text-sm text-[#8C8299]" role="status">No approved instruments available</p> : options.map((item: MarketPair) => {
-              const hasPrice = item.price !== null && Number.isFinite(item.price);
+            {(loading || error) && <p className="p-4 text-sm text-[#8C8299]" role="status">{loading ? 'Loading prices…' : 'Prices unavailable. You can still explore instruments.'}</p>}
+            {options.map((item: MarketPair) => {
+              const hasPrice = item.dataState === 'LIVE' && item.source !== 'fallback' && item.price !== null && Number.isFinite(item.price);
               return (
                 <button
                   key={item.symbol}
                   type="button"
                   role="option"
-                  aria-selected={normalizedCurrent === item.symbol.replaceAll('/', '').toUpperCase()}
+                  aria-selected={normalizedCurrent === normalizePair(item.symbol)}
                   onClick={() => {
                     onSelect(item.symbol);
                     setIsOpen(false);

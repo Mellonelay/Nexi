@@ -4,6 +4,18 @@ export type IndicatorPoint = { time: number; value: number };
 
 const closeValues = (candles: Candle[]) => candles.map((candle) => candle.close);
 
+export function simpleMovingAverage(candles: Candle[], period: number): IndicatorPoint[] {
+  if (period <= 0 || candles.length < period) return [];
+  const points: IndicatorPoint[] = [];
+  let sum = 0;
+  for (let index = 0; index < candles.length; index += 1) {
+    sum += candles[index].close;
+    if (index >= period) sum -= candles[index - period].close;
+    if (index >= period - 1) points.push({ time: candles[index].time, value: sum / period });
+  }
+  return points;
+}
+
 export function exponentialMovingAverage(candles: Candle[], period: number): IndicatorPoint[] {
   if (period <= 0 || candles.length < period) return [];
   const multiplier = 2 / (period + 1);
@@ -38,7 +50,7 @@ export function relativeStrengthIndex(candles: Candle[], period = 14): number | 
     averageLoss = ((averageLoss * (period - 1)) + Math.max(-delta, 0)) / period;
   }
 
-  if (averageLoss === 0) return 100;
+  if (averageLoss === 0) return averageGain === 0 ? 50 : 100;
   const relativeStrength = averageGain / averageLoss;
   return 100 - (100 / (1 + relativeStrength));
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   X,
@@ -10,6 +10,7 @@ import {
   Info,
   TrendingUp,
 } from "lucide-react";
+import ModalSurface from "./ModalSurface";
 import { cn } from "../lib/cn";
 import { io } from "socket.io-client";
 import axios from "axios";
@@ -91,8 +92,6 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
   const [category, setCategory] = useState<NotificationCategory>("All");
   const loadRequestRef = useRef(0);
   const readRequestIds = useRef(new Set<string>());
-  const panelRef = useRef<HTMLElement>(null);
-  const previousFocusRef = useRef<HTMLElement | null>(null);
   const unreadCount = notifications.filter((n) => !n.read).length;
   const visibleNotifications =
     category === "All"
@@ -192,26 +191,6 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
     };
   }, [loadNotifications, open]);
 
-  useEffect(() => {
-    if (!open) return;
-    previousFocusRef.current =
-      document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null;
-    const frame = window.requestAnimationFrame(() =>
-      panelRef.current?.querySelector<HTMLElement>("button")?.focus(),
-    );
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", closeOnEscape);
-    return () => {
-      window.cancelAnimationFrame(frame);
-      window.removeEventListener("keydown", closeOnEscape);
-      previousFocusRef.current?.focus();
-    };
-  }, [onClose, open]);
-
   const markRead = async (id: string) => {
     if (readRequestIds.current.has(id)) return;
     readRequestIds.current.add(id);
@@ -228,31 +207,13 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
   };
 
   return (
-    <AnimatePresence>
-      {open && (
-        <>
-          {/* Backdrop */}
-          <motion.button
-            type="button"
-            aria-label="Close notifications"
-            className="fixed inset-0 z-[70] bg-black/60"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={
-              shouldReduceMotion ? { duration: 0 } : { duration: 0.15 }
-            }
-            onClick={onClose}
-          />
-
-          {/* Panel — slides in from right */}
+    <ModalSurface open={open} onClose={onClose} title="Notifications" align="right">
           <motion.aside
-            ref={panelRef}
             id="nexi-notifications-panel"
             role="dialog"
             aria-modal="true"
             aria-label="Notifications"
-            className="nexi-drawer fixed inset-x-2 bottom-[calc(8px+env(safe-area-inset-bottom))] z-[71] flex max-h-[78dvh] flex-col overflow-hidden rounded-2xl border border-violet-300/20 sm:inset-y-0 sm:left-auto sm:right-0 sm:w-[320px] sm:max-w-[90vw] sm:max-h-none sm:rounded-none sm:border-y-0 sm:border-r-0"
+            className="nexi-drawer flex w-full max-w-[360px] flex-col overflow-hidden rounded-2xl border border-violet-300/20"
             initial={shouldReduceMotion ? { opacity: 0 } : { x: "100%" }}
             animate={{ x: 0, opacity: 1 }}
             exit={shouldReduceMotion ? { opacity: 0 } : { x: "100%" }}
@@ -277,7 +238,7 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
               </div>
               <button
                 onClick={onClose}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#8C8299] hover:text-[#F8F6FF] hover:bg-white/10 transition-colors"
+                className="w-11 h-11 rounded-lg flex items-center justify-center text-[#8C8299] hover:text-[#F8F6FF] hover:bg-white/10 transition-colors"
                 aria-label="Close notifications"
               >
                 <X size={16} />
@@ -355,7 +316,7 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
                       )}
                     >
                       <div
-                        className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
+                        className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
                         style={{ background: cfg.bg }}
                       >
                         <Icon size={14} style={{ color: cfg.color }} />
@@ -399,8 +360,6 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
               </p>
             </div>
           </motion.aside>
-        </>
-      )}
-    </AnimatePresence>
+    </ModalSurface>
   );
 }

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useState } from "react";
 import {
   ArrowLeft,
   BookOpen,
@@ -25,6 +25,7 @@ import {
 import { localeLabel } from "../state/locale";
 import { useLocale } from "../state/LocaleProvider";
 import type { UiMessageKey } from "../state/messages";
+import ModalSurface from "./ModalSurface";
 import AccountIdentityHeader from "./AccountIdentityHeader";
 
 type DrawerItem = { key: UiMessageKey; href: string; icon: typeof Home };
@@ -71,25 +72,6 @@ export default function NavigationDrawer({
   const { locale, setLocale, languages, t } = useLocale();
   const [open, setOpen] = useState(false);
   const [language, setLanguage] = useState(false);
-  const drawerRef = useRef<HTMLElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    if (!open) return;
-    const old = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    drawerRef.current?.querySelector<HTMLElement>("button,a")?.focus();
-    const key = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setOpen(false);
-        triggerRef.current?.focus();
-      }
-    };
-    document.addEventListener("keydown", key);
-    return () => {
-      document.body.style.overflow = old;
-      document.removeEventListener("keydown", key);
-    };
-  }, [open]);
   const close = () => {
     setOpen(false);
     setLanguage(false);
@@ -97,7 +79,6 @@ export default function NavigationDrawer({
   return (
     <>
       <button
-        ref={triggerRef}
         type="button"
         aria-label={t("openApplicationMenu")}
         aria-controls="nexi-application-drawer"
@@ -126,16 +107,9 @@ export default function NavigationDrawer({
         )}
       </button>
       {open && (
-        <div className="fixed inset-x-0 top-0 bottom-[calc(84px+env(safe-area-inset-bottom))] z-[80] lg:hidden">
-          <button
-            type="button"
-            aria-label={t("closeApplicationMenu")}
-            onClick={close}
-            className="absolute inset-0 h-full w-full bg-[#050508]/75 backdrop-blur-[2px]"
-          />
+        <ModalSurface open={open} onClose={close} title={t("openApplicationMenu")} align="left">
           <aside
             id="nexi-application-drawer"
-            ref={drawerRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="nexi-application-drawer-title"
@@ -236,7 +210,7 @@ export default function NavigationDrawer({
               )}
             </nav>
           </aside>
-        </div>
+        </ModalSurface>
       )}
     </>
   );

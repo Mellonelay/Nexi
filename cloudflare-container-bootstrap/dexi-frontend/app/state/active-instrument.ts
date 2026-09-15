@@ -33,7 +33,11 @@ export interface MarketPairLike {
   dataState?: 'LIVE' | 'STALE' | 'UNAVAILABLE' | 'ERROR';
 }
 
-export const normalizePair = (pair: string) => pair.trim().replaceAll('/', '').toUpperCase();
+export const normalizePair = (pair: string) => {
+  const asset = findAsset(pair.trim());
+  if (asset) return asset.category === 'Crypto' || asset.category === 'Stocks' ? `${asset.displaySymbol}USDT` : asset.symbol;
+  return pair.trim().replaceAll('/', '').toUpperCase();
+};
 
 const categoryForSymbol = (symbol: string): InstrumentCategory => {
   if (['XAUUSD', 'XAGUSD', 'XPTUSD', 'XPDUSD', 'XALUSD', 'XCUUSD', 'XZNUSD'].includes(symbol)) {
@@ -59,22 +63,31 @@ export const pairToRouteSymbol = (pair: string) => normalizePair(pair);
 
 export function instrumentFromPair(pair: string): ActiveInstrument {
   const normalized = normalizePair(pair);
+  const registered = findAsset(pair) ?? findAsset(normalized);
+  if (registered) {
+    const category: InstrumentCategory = registered.category === 'Metals'
+      ? 'Metal'
+      : registered.category === 'Stocks'
+        ? 'Shares'
+        : registered.category;
+    return createActiveInstrument({
+      assetId: registered.id,
+      symbol: registered.displaySymbol,
+      pair: registered.pair,
+      name: registered.name,
+      category,
+      spotAvailable: category === 'Crypto',
+      binaryAvailable: true,
+      precision: registered.precision,
+    });
+  }
   const category = categoryForSymbol(normalized);
   const symbol = category === 'Crypto' && normalized.endsWith('USDT')
     ? normalized.slice(0, -4)
     : category === 'Forex' || category === 'Metal'
       ? normalized.slice(0, 3)
       : normalized;
-
-  return createActiveInstrument({
-    assetId: symbol,
-    symbol,
-    pair: pairForSymbol(normalized, category),
-    name: symbol,
-    category,
-    spotAvailable: category === 'Crypto',
-    binaryAvailable: true,
-  });
+  return createActiveInstrument({ assetId: symbol, symbol, pair: pairForSymbol(normalized, category), name: symbol, category, spotAvailable: category === 'Crypto', binaryAvailable: true });
 }
 
 export function createActiveInstrument(input: Partial<ActiveInstrument> & Pick<ActiveInstrument, 'assetId' | 'symbol' | 'pair' | 'name' | 'category'>): ActiveInstrument {
@@ -105,7 +118,7 @@ export function instrumentFromMarketPair(row: MarketPairLike): ActiveInstrument 
   return createActiveInstrument({
     assetId: registered?.id ?? row.assetId ?? (row.displaySymbol || symbol),
     symbol: row.displaySymbol || symbol,
-    pair: pairForSymbol(symbol, category),
+    pair: registered?.pair ?? pairForSymbol(symbol, category),
     name: row.name,
     category,
     logo: row.icon.startsWith('http') ? row.icon : null,
@@ -115,6 +128,7 @@ export function instrumentFromMarketPair(row: MarketPairLike): ActiveInstrument 
     price: hasUsableMarketData ? row.price : null,
     change24h: hasUsableMarketData ? row.change : null,
     volume24h: hasUsableMarketData && Number.isFinite(row.vol) ? row.vol ?? null : null,
+    precision: registered?.precision,
     displayMetadata: { displaySymbol: row.displaySymbol },
   });
 }

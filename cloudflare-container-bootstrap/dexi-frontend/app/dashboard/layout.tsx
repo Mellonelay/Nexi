@@ -12,7 +12,7 @@ export default function DashboardLayout({
 }) {
   return (
     <WalletAccessGate>
-      <div className="relative flex h-[100dvh] min-w-0 flex-col overflow-hidden bg-[#050508] text-white md:flex-row">
+      <div className="relative flex h-[100dvh] min-w-0 flex-col overflow-hidden bg-[#050508] text-white lg:flex-row">
         <Suspense fallback={null}>
           <RouteHistoryTracker />
         </Suspense>

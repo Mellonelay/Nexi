@@ -92,11 +92,10 @@ export default function Dashboard() {
   }, [activeTab, forex, marketPairs, metal, query, shares]);
 
   const activePair =
-    activeData.find(
+    [...marketPairs, ...metal, ...shares, ...forex].find(
       (item) =>
         normalizePair(item.symbol) === normalizePair(activeInstrument.pair),
-    ) ??
-    (activeTab === "Favorites" ? undefined : (activeData[0] ?? marketPairs[0]));
+    );
 
   const openAsset = (item: MarketPair) => {
     const instrument = instrumentFromMarketPair(item);
@@ -267,14 +266,11 @@ export default function Dashboard() {
             </span>
           </div>
 
+          {marketError && <p role="status" className="mt-3 text-xs text-[var(--nexi-text-muted)]">Prices unavailable. You can still explore all instruments.</p>}
           <div className="mt-1.5 space-y-1.5 md:mt-3 md:space-y-2.5">
             {loading ? (
               <div className="nexi-market-row px-4 py-14 text-center text-sm text-[var(--nexi-text-muted)]">
                 {t("loadingMarketCatalog")}…
-              </div>
-            ) : marketError ? (
-              <div className="nexi-market-row px-4 py-14 text-center text-sm text-[var(--nexi-text-muted)]">
-                Market data is unavailable right now.
               </div>
             ) : activeTab === "Favorites" ? (
               <div className="nexi-market-row px-4 py-14 text-center text-sm text-[var(--nexi-text-muted)]">

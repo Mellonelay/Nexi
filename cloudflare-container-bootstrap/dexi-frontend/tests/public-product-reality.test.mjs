@@ -23,7 +23,8 @@ test('mobile controls expose names to assistive technology', () => {
   const support = read('app/dashboard/support/page.tsx');
 
   assert.match(drawer, /aria-labelledby="nexi-application-drawer-title"/);
-  assert.match(timeframe, /aria-label="Open timeframe menu"/);
+  assert.match(timeframe, /aria-label="Chart timeframe"/);
+  assert.match(timeframe, /aria-pressed=\{interval === tf\}/);
   assert.match(support, /aria-label="Ticket subject"/);
   assert.match(support, /aria-label="Ticket message"/);
   assert.doesNotMatch(asset, /router\.replace\(/);
@@ -35,8 +36,8 @@ test('canonical market identity has all 53 local asset marks', () => {
   const icons = readdirSync(assetDir).filter((name) => name.endsWith('.svg')).sort();
   assert.equal(icons.length, 53);
   assert.match(read('app/lib/asset-registry.ts'), /ASSET_REGISTRY_COUNT = ASSET_REGISTRY\.length/);
-  assert.match(read('app/dashboard/components/QuotesHubVisuals.tsx'), /assetIconPath\(/);
-  assert.match(read('app/dashboard/asset/[symbol]/page.tsx'), /assetIconPath\(/);
+  assert.match(read('app/dashboard/components/QuotesHubVisuals.tsx'), /<AssetIcon/);
+  assert.match(read('app/dashboard/asset/[symbol]/page.tsx'), /<AssetIcon/);
 });
 
 test('product interaction feedback is progressive and accessibility-aware', () => {

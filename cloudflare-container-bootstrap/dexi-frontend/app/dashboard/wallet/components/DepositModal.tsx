@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { useEffect, useMemo, useState, useRef } from 'react';
+import ModalSurface from '../../../components/ModalSurface';
 import { ArrowLeft, Check, Copy, Image as ImageIcon, X } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
@@ -44,6 +44,7 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
   const [txHash, setTxHash] = useState('');
   const [proof, setProof] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  const submissionLock = useRef(false);
   const [loading, setLoading] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -120,7 +121,9 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!destination || !proof || !amount || Number(amount) <= 0) return;
+    if (submissionLock.current) return;
+    if (busy || !destination || !proof || !amount || !Number.isFinite(Number(amount)) || Number(amount) <= 0) return;
+    submissionLock.current = true;
     setBusy(true);
     try {
       const intent = await api.post<{ key: string }>('/financial/deposit-proof-intents', {
@@ -150,6 +153,7 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Deposit claim could not be submitted.');
     } finally {
+      submissionLock.current = false;
       setBusy(false);
     }
   };
@@ -157,22 +161,7 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
   if (!isOpen) return null;
 
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
-        <motion.button
-          type="button"
-          aria-label="Close deposit dialog"
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-        />
-        <motion.section
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="deposit-title"
-          initial={{ y: 24, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 24, opacity: 0 }}
-          className="relative flex max-h-[calc(100dvh-1rem)] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-violet-300/20 bg-[#0D0A16] shadow-2xl sm:max-h-[88dvh] sm:rounded-3xl"
-        >
+    <ModalSurface open={isOpen} onClose={onClose} title="Deposit"><section className="relative flex w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-violet-300/20 bg-[#0D0A16] shadow-2xl sm:rounded-3xl">
           <div className="flex items-center gap-3 border-b border-violet-300/10 px-4 py-4 sm:px-5">
             {step === 'details' && (
               <button type="button" onClick={() => setStep('asset')} aria-label="Back to deposit assets" className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#2B2037] bg-[#171022] text-[#C3BBD0]">
@@ -274,8 +263,6 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
               </div>
             )}
           </div>
-        </motion.section>
-      </div>
-    </AnimatePresence>
+        </section></ModalSurface>
   );
 }

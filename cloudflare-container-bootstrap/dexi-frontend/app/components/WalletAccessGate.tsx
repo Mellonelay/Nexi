@@ -8,6 +8,10 @@ import WalletConnectControl from './WalletConnectControl';
 type WalletEnvironmentState = 'CHECKING' | 'AVAILABLE' | 'UNAVAILABLE';
 
 export default function WalletAccessGate({ children }: { children: React.ReactNode }) {
+  const uiQaBypassWalletEnvironment =
+    process.env.NODE_ENV !== 'production' &&
+    process.env.NEXT_PUBLIC_NEXI_UI_QA_BYPASS_WALLET_ENVIRONMENT === '1';
+
   const { isConnected, isReconnecting } = useAccount();
   const [environment, setEnvironment] = useState<WalletEnvironmentState>('CHECKING');
 
@@ -33,6 +37,8 @@ export default function WalletAccessGate({ children }: { children: React.ReactNo
       window.removeEventListener('eip6963:announceProvider', onProvider as EventListener);
     };
   }, [isConnected]);
+
+  if (uiQaBypassWalletEnvironment) return <>{children}</>;
 
   if (isReconnecting || environment === 'CHECKING') {
     return <main className="flex min-h-[100dvh] items-center justify-center bg-[#050508] p-6 text-sm text-[var(--nexi-text-secondary)]">Detecting Web3 wallet environment…</main>;

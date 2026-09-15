@@ -1,29 +1,13 @@
 'use client';
 
-import Image from 'next/image';
 import { useId } from 'react';
 import type { MarketPair } from '../../hooks/useMarketData';
-import { assetIconPath, findAsset } from '../../lib/asset-registry';
+import AssetIcon from '../../components/AssetIcon';
 
 export function AssetMark({ item, large = false }: { item: MarketPair; large?: boolean }) {
-  const localIcon = assetIconPath(findAsset(item.assetId) ?? findAsset(item.symbol) ?? { iconKey: undefined });
-  const size = large ? 58 : 44;
-
   return (
-    <span
-      className={`nexi-token-mark relative flex shrink-0 items-center justify-center overflow-hidden rounded-full ${large ? 'h-8 w-8 md:h-[58px] md:w-[58px]' : 'h-8 w-8 md:h-11 md:w-11'}`}
-    >
-      {localIcon ? (
-        <Image
-          src={localIcon}
-          alt={`${item.name} token mark`}
-          width={size}
-          height={size}
-          className="h-full w-full object-cover"
-        />
-      ) : (
-        <span className="text-[11px] font-semibold tracking-wide text-white">{item.displaySymbol.slice(0, 3)}</span>
-      )}
+    <span className={`nexi-token-mark relative flex shrink-0 items-center justify-center overflow-hidden rounded-full ${large ? 'h-8 w-8 md:h-[58px] md:w-[58px]' : 'h-8 w-8 md:h-11 md:w-11'}`}>
+      <AssetIcon item={item} size={large ? 'md' : 'sm'} />
     </span>
   );
 }
@@ -32,7 +16,7 @@ export function MarketSparkline({ item, compact = false }: { item: MarketPair; c
   const gradientId = useId().replace(/:/g, '');
   const width = compact ? 108 : 136;
   const height = compact ? 36 : 44;
-  const hasLiveSeries = item.source !== 'fallback' && Boolean(item.sparkline && item.sparkline.length > 1);
+  const hasLiveSeries = item.dataState === 'LIVE' && item.source !== 'fallback' && Boolean(item.sparkline && item.sparkline.length > 1);
 
   if (!hasLiveSeries) {
     return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   type CandlestickData,
   ColorType,
@@ -17,6 +17,7 @@ import {
   bollingerBands,
   exponentialMovingAverage,
   latestChartMetrics,
+  simpleMovingAverage,
 } from "../lib/market-indicators";
 import { type Candle, type MarketDataStatus } from "../lib/market-data";
 
@@ -27,6 +28,9 @@ interface TradingChartProps {
   candles?: Candle[];
   status?: MarketDataStatus;
 }
+
+type IndicatorKey = "MA" | "EMA" | "BOLL" | "RSI" | "MACD" | "VOL";
+const INDICATORS: IndicatorKey[] = ["MA", "EMA", "BOLL", "RSI", "MACD", "VOL"];
 
 const lineData = (
   points: Array<{ time: number; value: number }>,
@@ -48,24 +52,24 @@ const marketStateCopy: Record<
 > = {
   LOADING: [
     "Loading market data",
-    "Waiting for the authoritative market feed.",
+    "The chart will appear shortly.",
   ],
-  STALE: ["Market data is stale", "Waiting for a fresh authoritative update."],
+  STALE: ["Chart updates paused", "Please wait while updates resume."],
   CONNECTION_LOST: [
     "Market connection interrupted",
-    "The last authoritative snapshot remains visible.",
+    "Reconnecting. The chart shows the last received data.",
   ],
   UNAVAILABLE: [
     "Market data unavailable",
-    "No authoritative chart data is available right now.",
+    "Please try again shortly.",
   ],
   DISABLED: [
-    "Market data disabled",
-    "Chart data is not enabled for this market.",
+    "Chart unavailable",
+    "Chart data is not available for this market.",
   ],
   ERROR: [
     "Market data unavailable",
-    "The authoritative market feed could not be loaded.",
+    "The chart could not be loaded. Please try again shortly.",
   ],
 };
 
@@ -80,6 +84,7 @@ export default function TradingChart({
   const chartRef = useRef<IChartApi | null>(null);
   const candleSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
   const volumeSeriesRef = useRef<ISeriesApi<"Histogram"> | null>(null);
+  const ma20SeriesRef = useRef<ISeriesApi<"Line"> | null>(null);
   const ema20SeriesRef = useRef<ISeriesApi<"Line"> | null>(null);
   const ema50SeriesRef = useRef<ISeriesApi<"Line"> | null>(null);
   const bollUpperSeriesRef = useRef<ISeriesApi<"Line"> | null>(null);
@@ -90,6 +95,15 @@ export default function TradingChart({
       ? "min-h-[220px] md:min-h-[360px] xl:min-h-[430px]"
       : "min-h-0";
   const metrics = useMemo(() => latestChartMetrics(candles), [candles]);
+  const [activeIndicators, setActiveIndicators] = useState<Set<IndicatorKey>>(() => new Set(INDICATORS));
+  const toggleIndicator = (indicator: IndicatorKey) => {
+    setActiveIndicators((current) => {
+      const next = new Set(current);
+      if (next.has(indicator)) next.delete(indicator);
+      else next.add(indicator);
+      return next;
+    });
+  };
 
   useEffect(() => {
     const container = chartContainerRef.current;
@@ -143,6 +157,13 @@ export default function TradingChart({
     volumeSeriesRef.current
       .priceScale()
       .applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } });
+    ma20SeriesRef.current = chart.addLineSeries({
+      color: "#F4D35E",
+      lineWidth: 1,
+      priceLineVisible: false,
+      lastValueVisible: false,
+      crosshairMarkerVisible: false,
+    });
     ema20SeriesRef.current = chart.addLineSeries({
       color: "#A995FF",
       lineWidth: 1,
@@ -188,12 +209,22 @@ export default function TradingChart({
       chartRef.current = null;
       candleSeriesRef.current = null;
       volumeSeriesRef.current = null;
+      ma20SeriesRef.current = null;
       ema20SeriesRef.current = null;
       ema50SeriesRef.current = null;
       bollUpperSeriesRef.current = null;
       bollLowerSeriesRef.current = null;
     };
   }, [interval]);
+
+  useEffect(() => {
+    ma20SeriesRef.current?.applyOptions({ visible: activeIndicators.has("MA") });
+    ema20SeriesRef.current?.applyOptions({ visible: activeIndicators.has("EMA") });
+    ema50SeriesRef.current?.applyOptions({ visible: activeIndicators.has("EMA") });
+    bollUpperSeriesRef.current?.applyOptions({ visible: activeIndicators.has("BOLL") });
+    bollLowerSeriesRef.current?.applyOptions({ visible: activeIndicators.has("BOLL") });
+    volumeSeriesRef.current?.applyOptions({ visible: activeIndicators.has("VOL") });
+  }, [activeIndicators, interval]);
 
   useEffect(() => {
     const candleSeries = candleSeriesRef.current;
@@ -219,6 +250,7 @@ export default function TradingChart({
       }));
     candleSeries.setData(candleData);
     volumeSeries.setData(volumeData);
+    ma20SeriesRef.current?.setData(lineData(simpleMovingAverage(candles, 20)));
     ema20SeriesRef.current?.setData(
       lineData(exponentialMovingAverage(candles, 20)),
     );
@@ -273,20 +305,26 @@ export default function TradingChart({
             {formatMetric(latest?.close)}
           </b>
         </span>
-        <span className="ml-auto text-[#8C8299]">
-          RSI 14{" "}
-          <b className="font-medium text-[#48C0CC]">
-            {metrics.rsi === null ? "—" : metrics.rsi.toFixed(1)}
-          </b>
-        </span>
-        <span className="text-[#8C8299]">
-          MACD{" "}
-          <b
-            className={`font-medium ${macdHistogram !== null && macdHistogram >= 0 ? "text-[#98FCE4]" : "text-[#FF9CB0]"}`}
-          >
-            {macdHistogram === null ? "—" : macdHistogram.toFixed(2)}
-          </b>
-        </span>
+        {activeIndicators.has("RSI") && <span className="ml-auto text-[#8C8299]">
+          RSI 14{" "}<b className="font-medium text-[#48C0CC]">{metrics.rsi === null ? "—" : metrics.rsi.toFixed(1)}</b>
+        </span>}
+        {activeIndicators.has("MA") && <span className="hidden text-[#F4D35E] md:inline">MA</span>}
+        {activeIndicators.has("EMA") && <span className="hidden text-[#A995FF] md:inline">EMA</span>}
+        {activeIndicators.has("BOLL") && <span className="hidden text-[#CFC4FF] md:inline">BOLL</span>}
+        {activeIndicators.has("VOL") && <span className="hidden text-[#8C8299] md:inline">VOL</span>}
+        {activeIndicators.has("MACD") && <span className="text-[#8C8299]">
+          MACD{" "}<b className={`font-medium ${macdHistogram !== null && macdHistogram >= 0 ? "text-[#98FCE4]" : "text-[#FF9CB0]"}`}>{macdHistogram === null ? "—" : macdHistogram.toFixed(2)}</b>
+        </span>}
+      </div>
+      <div className="nexi-scroll-rail flex min-w-0 gap-1 overflow-x-auto border-b border-violet-300/10 bg-black/10 px-2 py-1.5" aria-label="Chart indicators">
+        {INDICATORS.map((indicator) => {
+          const active = activeIndicators.has(indicator);
+          return (
+            <button key={indicator} type="button" aria-pressed={active} onClick={() => toggleIndicator(indicator)} className={`nexi-interactive min-h-11 min-w-11 shrink-0 rounded-md border px-2 text-[10px] font-semibold ${active ? "border-violet-300/30 bg-[#2A1742] text-white" : "border-transparent text-[#8C8299] hover:text-white"}`}>
+              {indicator}
+            </button>
+          );
+        })}
       </div>
       <div
         ref={chartContainerRef}

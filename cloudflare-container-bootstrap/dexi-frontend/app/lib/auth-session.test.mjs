@@ -115,3 +115,12 @@ test('public refresh uses the HttpOnly cookie contract and never accepts a brows
   assert.match(controller, /httpOnly:\s*true/);
   assert.match(controller, /secure:\s*true/);
 });
+
+
+test('wallet environment QA bypass is explicit and impossible in production builds', async () => {
+  const gate = await source('app/components/WalletAccessGate.tsx');
+  assert.match(gate, /NODE_ENV\s*!==\s*['"]production['"]/);
+  assert.match(gate, /NEXT_PUBLIC_NEXI_UI_QA_BYPASS_WALLET_ENVIRONMENT/);
+  assert.match(gate, /===\s*['"]1['"]/);
+  assert.match(gate, /uiQaBypassWalletEnvironment[\s\S]*return <>{children}<\/>/);
+});

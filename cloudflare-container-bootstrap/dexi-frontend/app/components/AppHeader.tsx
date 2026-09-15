@@ -63,7 +63,6 @@ export default function AppHeader() {
           className="nexi-header-icon relative h-11 w-11 shrink-0"
         >
           <Bell className="h-[18px] w-[18px]" aria-hidden="true" />
-          <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-[var(--nexi-cal-violet-bright)]" />
         </button>
       </div>
       <NotificationsPanel

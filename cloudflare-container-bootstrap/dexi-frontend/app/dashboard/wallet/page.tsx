@@ -40,7 +40,7 @@ function readAssets(payload: unknown): WalletAsset[] {
     const item = record(value);
     const available = typeof value === 'number' || typeof value === 'string' ? value : item.available;
     const locked = item.locked;
-    const total = item.total ?? (typeof available === 'number' && typeof locked === 'number' ? available + locked : undefined);
+    const total = item.total;
     if (text(available) === '—' && text(locked) === '—' && text(total) === '—') return [];
     return [{ name, available, locked, total }];
   });
@@ -108,16 +108,21 @@ export default function WalletPage() {
     setState('LOADING');
     try {
       const [walletResponse, activityResponse] = await Promise.all([api.get(readEndpoint), api.get(activityEndpoint)]);
+      if (sessionPrincipalId() !== userId) return;
       setPayload(walletResponse.data); setActivities(readActivities(activityResponse.data)); setState('LIVE'); setError('');
-    } catch { setPayload(null); setActivities([]); setState('ERROR'); setError('Wallet data could not be loaded.'); }
+    } catch { if (sessionPrincipalId() !== userId) return; setPayload(null); setActivities([]); setState('ERROR'); setError('Wallet data could not be loaded.'); }
   }, [activityEndpoint, readEndpoint, sessionChecked, userId]);
   useEffect(() => { void loadWallet(); }, [loadWallet]);
 
   const accountSummary = (name: Exclude<Tab, 'Overview'>) => { const item = record(accounts[accountLabels[name]] ?? accounts[name.toUpperCase()]); return { available: item.available, locked: item.locked, total: item.total, state: item.status ?? (Object.keys(item).length ? 'LIVE' : 'UNAVAILABLE') }; };
   const scrollToHistory = () => document.getElementById('wallet-activity')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  const overviewTotal = root.total ?? root.available;
+  const overviewTotal = root.total;
 
   const authoritativePnl = root.pnl ?? root.profitLoss ?? root.profitAndLoss;
+  const authoritativePnlPercent = root.pnlPercent ?? root.profitLossPercent ?? root.profitAndLossPercent;
+  const authoritativeTotalReturn = root.totalReturn ?? root.allTimeReturn;
+  const authoritativeTotalReturnPercent = root.totalReturnPercent ?? root.allTimeReturnPercent;
+  const hasPortfolioPerformance = authoritativePnl !== undefined || authoritativeTotalReturn !== undefined;
 
   if (sessionChecked && !authenticated) {
     return <PageShell><div className="mx-auto max-w-xl pt-8 sm:pt-14"><Panel className="p-5 text-center sm:p-7"><div className="mx-auto max-w-sm"><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#48C0CC]">Protected wallet</p><h1 className="mt-2 text-xl font-semibold text-white">Verify your Ethereum wallet</h1><p className="mt-2 text-sm leading-6 text-[#8C8299]">Market surfaces remain available without a NEXI session. Wallet balances and financial actions require wallet verification.</p><div className="mx-auto mt-5 max-w-xs"><WalletConnectControl compact /></div></div></Panel></div></PageShell>;
@@ -129,7 +134,26 @@ export default function WalletPage() {
       <div className="flex shrink-0 items-center gap-2"><WalletConnectControl /><SecondaryButton onClick={() => void loadWallet()}><RefreshCw size={15} className="sm:mr-2" /><span className="sr-only sm:not-sr-only">Refresh</span></SecondaryButton></div>
     </header>
     <WalletDashboardLayout>
-      <section aria-label="Portfolio summary"><Panel className="p-3 sm:p-4"><div className="flex items-start justify-between gap-3"><div><div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#C3BBD0]"><WalletCards size={16} className="text-[#48C0CC]" /> Total assets</div><p className="mt-2 truncate font-mono text-2xl font-semibold tabular-nums sm:text-3xl">{state === 'LIVE' ? text(overviewTotal) : 'UNAVAILABLE'}</p></div>{state !== 'LIVE' && <StatusBadge state={state} />}</div><p className="mt-1 text-xs text-[#8C8299]">Aggregate value only when supplied by the backend.</p><div className={`mt-3 grid gap-2 ${authoritativePnl !== undefined ? 'grid-cols-3' : 'grid-cols-2'}`}><Metric label="Available" value={state === 'LIVE' ? text(root.available) : 'UNAVAILABLE'} /><Metric label="Locked" value={state === 'LIVE' ? text(root.locked) : 'UNAVAILABLE'} />{authoritativePnl !== undefined && <Metric label="P/L" value={state === 'LIVE' ? text(authoritativePnl) : 'UNAVAILABLE'} />}</div></Panel></section>
+      <section aria-label="Total assets and portfolio summary">
+        <Panel className="overflow-hidden p-3 sm:p-4">
+          <div className="flex min-w-0 items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#C3BBD0] sm:text-xs"><WalletCards size={16} className="shrink-0 text-[#48C0CC]" /> Total assets</div>
+              <p className="mt-1.5 truncate font-mono text-[1.75rem] font-semibold leading-none tabular-nums sm:mt-2 sm:text-3xl">{state === 'LIVE' ? text(overviewTotal) : 'UNAVAILABLE'}</p>
+              <p className="mt-1.5 text-[10px] leading-4 text-[#8C8299] sm:text-xs">Backend-authoritative wallet value.</p>
+            </div>
+            {state !== 'LIVE' && <StatusBadge state={state} />}
+          </div>
+          <div className="mt-3 grid min-w-0 grid-cols-2 gap-2">
+            <Metric label="Available" value={state === 'LIVE' ? text(root.available) : 'UNAVAILABLE'} />
+            <Metric label="Locked / in orders" value={state === 'LIVE' ? text(root.locked) : 'UNAVAILABLE'} />
+          </div>
+          {hasPortfolioPerformance && <div className="mt-2 grid min-w-0 grid-cols-2 gap-2 border-t border-violet-300/10 pt-2" aria-label="Portfolio performance">
+            {authoritativePnl !== undefined && <Metric label="P/L" value={state === 'LIVE' ? `${text(authoritativePnl)}${authoritativePnlPercent !== undefined ? ` · ${text(authoritativePnlPercent)}` : ''}` : 'UNAVAILABLE'} />}
+            {authoritativeTotalReturn !== undefined && <Metric label="Total return" value={state === 'LIVE' ? `${text(authoritativeTotalReturn)}${authoritativeTotalReturnPercent !== undefined ? ` · ${text(authoritativeTotalReturnPercent)}` : ''}` : 'UNAVAILABLE'} />}
+          </div>}
+        </Panel>
+      </section>
       <section aria-label="Wallet actions"><Panel className="p-3 sm:p-4"><PanelHeading title="Quick actions" description="Choose an available wallet action." /><div className="grid grid-cols-4 gap-2">{(['Deposit', 'Withdraw', 'Transfer', 'Convert'] as Action[]).map((item) => { const Icon = actionIcons[item]; const enabled = authenticated && state === 'LIVE'; return <button key={item} type="button" disabled={!enabled} onClick={() => { setAction(item); if (item !== 'Convert') setCurrency(currencies[0]?.symbol ?? ''); }} aria-label={`${item}${enabled ? '' : ' unavailable'}`} className={`flex min-h-16 min-w-0 flex-col items-center justify-center gap-1 rounded-xl border p-1 text-center text-[11px] font-semibold sm:min-h-14 sm:flex-row sm:gap-2 sm:text-xs ${action === item ? 'border-[#8B5CF6] bg-[#2A1742]' : 'border-[#2B2037] bg-[#171022]'} disabled:cursor-not-allowed disabled:opacity-50`}><Icon size={16} className="shrink-0 text-[#48C0CC]" /><span className="truncate">{item}</span></button>; })}</div><button type="button" onClick={scrollToHistory} className="mt-2 flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-[#2B2037] bg-[#171022] text-xs font-semibold text-[#C3BBD0]"><Clock3 size={15} />View activity</button></Panel></section>
       <section aria-label="Wallet account tabs"><Panel className="p-2 sm:p-3"><div className="nexi-scroll-rail flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Wallet account tabs">{tabs.map((item) => <TabButton key={item} active={tab === item} onClick={() => setTab(item)}>{item === 'Binary' ? 'Options' : item}</TabButton>)}</div></Panel></section>
       <section className="min-w-0"><div className="min-w-0 space-y-3">

@@ -135,6 +135,7 @@ export function binaryOrderReady(input: {
     && positiveNumber(input.currentPrice) !== null
     && input.durationEnabled
     && positiveNumber(input.payoutRate) !== null
-    && (minimumAmount === null || amount >= minimumAmount)
-    && (maximumAmount === null || amount <= maximumAmount);
+    && minimumAmount !== null && maximumAmount !== null
+    && minimumAmount <= maximumAmount
+    && amount >= minimumAmount && amount <= maximumAmount;
 }

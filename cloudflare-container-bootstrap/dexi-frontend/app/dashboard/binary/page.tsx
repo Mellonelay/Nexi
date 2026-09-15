@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowDown, ArrowLeft, ArrowUp, Clock3, Wallet } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { useRouter, useSearchParams } from 'next/navigation';
+import ModalSurface from '../../components/ModalSurface';
 import SafeBackButton from '../../components/SafeBackButton';
 import api, { apiBaseUrl } from '../../lib/api';
 import RealtimeTradingChart from '../../components/RealtimeTradingChart';
@@ -13,6 +14,9 @@ import { useMarketData } from '../../hooks/useMarketData';
 import { useActivePair } from '../../state/ActivePairProvider';
 import { getAccessToken } from '../../lib/auth-session';
 import { sessionPrincipalId } from '../../lib/wallet-auth';
+import { normalizePair } from '../../state/active-instrument';
+import { findAsset } from '../../lib/asset-registry';
+import { finiteMarketNumber } from '../../lib/market-data';
 import {
   binaryOrderReady,
   BinaryPositionState,
@@ -35,7 +39,7 @@ type BinaryConfiguration = {
 type BinaryPosition = {
   id: string;
   symbol: string;
-  direction: Direction;
+  direction: Direction | 'UNKNOWN';
   amount: number | null;
   entryPrice: number | null;
   closePrice: number | null;
@@ -62,16 +66,16 @@ const normalizePosition = (value: unknown): BinaryPosition | null => {
   return {
     id,
     symbol: String(row.symbol ?? row.pair ?? '—'),
-    direction: rawSide === 'SHORT' || rawSide === 'PUT' || rawSide === 'DOWN' ? 'SHORT' : 'LONG',
+    direction: ['SHORT', 'PUT', 'DOWN'].includes(rawSide) ? 'SHORT' : ['LONG', 'CALL', 'UP'].includes(rawSide) ? 'LONG' : 'UNKNOWN',
     amount: toPositive(row.amount ?? row.stake),
     entryPrice: toPositive(row.entryPrice),
     closePrice: toPositive(row.closePrice ?? row.resultPrice ?? row.expiryPrice),
     duration: toPositive(row.duration ?? row.durationSeconds ?? row.timeframe),
-    payout: toPositive(row.payout ?? row.payoutAmount ?? row.targetPayout),
-    realizedProfit: Number.isFinite(Number(row.realizedProfit ?? row.profit)) ? Number(row.realizedProfit ?? row.profit) : null,
+    payout: finiteMarketNumber(row.payout ?? row.payoutAmount ?? row.targetPayout),
+    realizedProfit: finiteMarketNumber(row.realizedProfit ?? row.profit),
     openedAt: typeof row.openedAt === 'string' ? row.openedAt : typeof row.createdAt === 'string' ? row.createdAt : null,
     expiresAt: typeof row.expiresAt === 'string' ? row.expiresAt : null,
-    status: normalizeBinaryPositionState(row.status ?? 'OPEN'),
+    status: normalizeBinaryPositionState(row.status),
     referenceId: typeof row.referenceId === 'string' ? row.referenceId : id,
   };
 };
@@ -93,10 +97,10 @@ export default function BinaryPage() {
   const { activePair, setActivePair } = useActivePair();
   const initialSymbol = searchParams.get('symbol') || activePair;
   const [pair, setPair] = useState(initialSymbol);
-  const normalizedPair = pair.replaceAll('/', '').toUpperCase();
-  const displayPair = normalizedPair.endsWith('USDT')
+  const normalizedPair = normalizePair(pair);
+  const displayPair = findAsset(pair)?.pair ?? (normalizedPair.endsWith('USDT')
     ? `${normalizedPair.slice(0, -4)}/USDT`
-    : pair;
+    : pair);
   const submissionConfigured = Boolean(apiBaseUrl);
 
   const [interval, setInterval] = useState('1m');
@@ -201,7 +205,12 @@ export default function BinaryPage() {
   }, []);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      setActivePositions([]);
+      setHistory([]);
+      setSelectedResult(null);
+      return;
+    }
     let cancelled = false;
     Promise.allSettled([
       api.get('/binary/positions/current'),
@@ -225,18 +234,18 @@ export default function BinaryPage() {
   }, [activePositions.length]);
 
   const allMarkets = useMemo(() => [...marketPairs, ...metal, ...shares, ...forex], [marketPairs, metal, shares, forex]);
-  const market = allMarkets.find((item) => item.symbol === normalizedPair || item.displaySymbol === normalizedPair);
+  const market = allMarkets.find((item) => normalizePair(item.symbol) === normalizedPair);
   const currentPrice = market?.dataState === 'LIVE' ? market.price : null;
   const marketChange = market?.dataState === 'LIVE' ? market.change : null;
 
   const durationOptions = useMemo(() => {
     const configured = new Map(binaryConfigurations
-      .filter((item) => item.pair.replaceAll('/', '').toUpperCase() === normalizedPair)
+      .filter((item) => normalizePair(item.pair) === normalizedPair)
       .map((item) => [item.durationSeconds, item] as const));
-    return binaryDurations.map((seconds) => {
+    return binaryDurations.filter((seconds) => configured.get(seconds)?.enabled).map((seconds) => {
       const item = configured.get(seconds);
       const raw = item ? Number(item.payoutRate) : Number.NaN;
-      const rate = Number.isFinite(raw) && raw > 0 ? (raw > 1 ? raw / 100 : raw) : null;
+      const rate = Number.isFinite(raw) && raw > 0 ? raw : null;
       return { seconds, enabled: Boolean(item?.enabled && rate), rate, minimumAmount: item ? Number(item.minStake) : null, maximumAmount: item ? Number(item.maxStake) : null };
     });
   }, [binaryConfigurations, binaryDurations, normalizedPair]);
@@ -377,7 +386,7 @@ export default function BinaryPage() {
             <div><dt className="text-[#8C8299]">Option Wallet</dt><dd className="mt-1 font-mono">Unavailable</dd></div>
             <div><dt className="text-[#8C8299]">Payout rate</dt><dd className="mt-1 font-mono">{payoutRate === null ? '—' : `${(payoutRate * 100).toFixed(0)}%`}</dd></div>
             <div><dt className="text-[#8C8299]">Potential return</dt><dd className="mt-1 font-mono">{potentialReturn === null ? '—' : `${potentialReturn.toFixed(2)} USDT`}</dd></div>
-            <div><dt className="text-[#8C8299]">Duration</dt><dd className="mt-1 font-mono">{duration}s</dd></div>
+            <div><dt className="text-[#8C8299]">Duration</dt><dd className="mt-1 font-mono">{selectedDuration ? `${duration}s` : '—'}</dd></div>
           </dl>
           {feedback && <p role="status" className="mt-3 text-sm text-[#C3BBD0]">{feedback}</p>}
           <div className="mt-4 grid grid-cols-2 gap-3">
@@ -398,7 +407,7 @@ export default function BinaryPage() {
         </section>
       </div>
 
-      {confirmationOpen && <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/70 p-4 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="binary-confirm-heading">
+      {confirmationOpen && <ModalSurface open onClose={() => setConfirmationOpen(false)} title="Review Options position">
         <div className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-violet-300/15 bg-[#100A18] p-5">
           <h2 id="binary-confirm-heading" className="text-xl font-semibold">Confirm {direction} position</h2>
           <p className="mt-1 text-sm text-[#8C8299]">{direction === 'LONG' ? 'Higher' : 'Lower'} at expiry.</p>
@@ -407,7 +416,7 @@ export default function BinaryPage() {
           </dl>
           <div className="mt-5 grid grid-cols-2 gap-3"><button type="button" onClick={() => { setConfirmationOpen(false); setConfirmationMode('AUTHORITATIVE'); setState('DRAFT'); }} className="min-h-12 rounded-xl border border-violet-300/15">Back</button><button type="button" onClick={submitPosition} disabled={state === 'SUBMITTING'} className="min-h-12 rounded-xl bg-[#7C3AED] font-semibold disabled:opacity-50">{state === 'SUBMITTING' ? 'Submitting…' : 'Confirm'}</button></div>
         </div>
-      </div>}
+      </ModalSurface>}
 
       {selectedResult && <ResultDialog position={selectedResult} onClose={() => setSelectedResult(null)} />}
     </main>
@@ -434,16 +443,16 @@ function PositionList({ positions, now, empty, onSelect }: { positions: BinaryPo
 
 function ResultDialog({ position, onClose }: { position: BinaryPosition; onClose: () => void }) {
   const publicResult = ['WIN', 'LOSS'].includes(position.status);
-  return <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/70 p-4 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="binary-result-heading">
+  return <ModalSurface open onClose={onClose} title="Options result">
     <div className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-violet-300/15 bg-[#100A18] p-5">
       <p className="text-xs font-semibold uppercase tracking-[.2em] text-[#A78BFA]">{publicResult ? `Trade result — ${binaryStateLabel(position.status)}` : binaryStateLabel(position.status)}</p>
       <h2 id="binary-result-heading" className="mt-1 text-xl font-semibold">{position.symbol} · {position.direction}</h2>
       <dl className="mt-4 space-y-2 text-sm"><Row label="Stake" value={position.amount === null ? '—' : `${position.amount} USDT`} /><Row label="Entry price" value={position.entryPrice === null ? '—' : String(position.entryPrice)} /><Row label="Result price" value={position.closePrice === null ? '—' : String(position.closePrice)} /><Row label="Duration" value={position.duration === null ? '—' : `${position.duration}s`} /><Row label="Payout" value={position.payout === null ? '—' : `${position.payout} USDT`} /><Row label="Realized P/L" value={position.realizedProfit === null ? '—' : `${position.realizedProfit} USDT`} /><Row label="Open / expiry" value={`${position.openedAt ?? '—'} / ${position.expiresAt ?? '—'}`} /><Row label="Settlement" value={binaryStateLabel(position.status)} /><Row label="Reference ID" value={position.referenceId ?? '—'} /></dl>
       <button type="button" onClick={onClose} className="mt-5 min-h-12 w-full rounded-xl bg-[#7C3AED] font-semibold">Done</button>
     </div>
-  </div>;
+  </ModalSurface>;
 }
 
 function Row({ label, value }: { label: string; value: string }) {
-  return <div className="flex justify-between gap-4"><dt className="text-[#8C8299]">{label}</dt><dd className="text-right font-mono">{value}</dd></div>;
+  return <div className="flex min-w-0 justify-between gap-4"><dt className="text-[#8C8299]">{label}</dt><dd className="min-w-0 break-words text-right font-mono">{value}</dd></div>;
 }

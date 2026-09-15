@@ -4,12 +4,15 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, Wallet } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
+import ModalSurface from '../../components/ModalSurface';
 import SafeBackButton from '../../components/SafeBackButton';
 import { io } from 'socket.io-client';
 import api, { apiBaseUrl } from '../../lib/api';
 import SymbolSelector from '../../components/SymbolSelector';
 import { useMarketData } from '../../hooks/useMarketData';
 import { useActivePair } from '../../state/ActivePairProvider';
+import { normalizePair } from '../../state/active-instrument';
+import { findAsset } from '../../lib/asset-registry';
 import { type MarketDataStatus } from '../../lib/market-data';
 import { hasAuthSession } from '../../lib/auth-session';
 import { productStateLabel } from '../../lib/product-states';
@@ -44,11 +47,11 @@ type OrderType = 'MARKET' | 'LIMIT' | 'STOP';
 type HistoryTab = 'OPEN' | 'ORDERS' | 'TRADES';
 type SpotHistoryRow = Record<string, unknown>;
 type ConfirmationMode = 'AUTHORITATIVE';
-type ChartInterval = '1m' | '5m' | '15m' | '1h';
+type ChartInterval = '1m' | '5m' | '15m' | '30m' | '1h' | '4h' | '1d';
 type MobileMarketPanel = 'CHART' | 'BOOK' | 'TRADES';
 type SpotSurface = 'SPOT' | 'MARGIN';
 
-const CHART_INTERVALS: ChartInterval[] = ['1m', '5m', '15m', '1h'];
+const CHART_INTERVALS: ChartInterval[] = ['1m', '5m', '15m', '30m', '1h', '4h', '1d'];
 
 const finiteRows = (value: unknown): OrderBookRow[] => {
   if (!Array.isArray(value)) return [];
@@ -84,13 +87,13 @@ export default function SpotPage() {
   const { activePair, setActivePair } = useActivePair();
   const querySymbol = searchParams.get('symbol');
   const symbol = querySymbol || activePair;
-  const normalizedSymbol = symbol.replaceAll('/', '').toUpperCase();
+  const normalizedSymbol = normalizePair(symbol);
   const baseSymbol = normalizedSymbol.endsWith('USDT') ? normalizedSymbol.slice(0, -4) : normalizedSymbol;
-  const displayPair = normalizedSymbol.endsWith('USDT') ? `${baseSymbol}/USDT` : symbol;
+  const displayPair = findAsset(symbol)?.pair ?? (normalizedSymbol.endsWith('USDT') ? `${baseSymbol}/USDT` : symbol);
   const backendConfigured = Boolean(apiBaseUrl);
 
-  const { marketPairs, loading: marketLoading } = useMarketData();
-  const market = marketPairs.find((row) => row.symbol === normalizedSymbol || row.displaySymbol === baseSymbol);
+  const { marketPairs, metal, shares, forex, loading: marketLoading } = useMarketData();
+  const market = [...marketPairs, metal, shares, forex].flat().find((row) => normalizePair(row.symbol) === normalizedSymbol);
   const currentPrice = market?.dataState === 'LIVE' ? market.price : null;
   const marketChange = market?.dataState === 'LIVE' ? market.change : null;
   const marketVolume = market?.dataState === 'LIVE' && market.vol != null ? market.vol : null;
@@ -101,8 +104,8 @@ export default function SpotPage() {
   const [bids, setBids] = useState<OrderBookRow[]>([]);
   const [asks, setAsks] = useState<OrderBookRow[]>([]);
   const [marketTrades, setMarketTrades] = useState<MarketTradeRow[]>([]);
-  const [tradeStatus, setTradeStatus] = useState<'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR'>('UNAVAILABLE');
-  const [bookStatus, setBookStatus] = useState<'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR'>('UNAVAILABLE');
+  const [tradeStatus, setTradeStatus] = useState<'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR' | 'CONNECTION_LOST'>('UNAVAILABLE');
+  const [bookStatus, setBookStatus] = useState<'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR' | 'CONNECTION_LOST'>('UNAVAILABLE');
   const [chartInterval, setChartInterval] = useState<ChartInterval>('1m');
   const [chartStatus, setChartStatus] = useState<MarketDataStatus>('LOADING');
   const [mobileMarketPanel, setMobileMarketPanel] = useState<MobileMarketPanel>('CHART');
@@ -119,14 +122,14 @@ export default function SpotPage() {
   const [confirmationMode, setConfirmationMode] = useState<ConfirmationMode>('AUTHORITATIVE');
   const [historyTab, setHistoryTab] = useState<HistoryTab>('OPEN');
   const [historyRows, setHistoryRows] = useState<SpotHistoryRow[]>([]);
-  const [historyStatus, setHistoryStatus] = useState<'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR'>('UNAVAILABLE');
+  const [historyStatus, setHistoryStatus] = useState<'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR' | 'CONNECTION_LOST'>('UNAVAILABLE');
   const [feedback, setFeedback] = useState<string | null>(null);
   const [marginDirection, setMarginDirection] = useState<MarginDirection>('LONG');
   const [marginLeverage, setMarginLeverage] = useState<MarginLeverage>(0);
   const [marginCollateral, setMarginCollateral] = useState('');
   const [marginQuote, setMarginQuote] = useState<MarginQuoteResponse | null>(null);
   const [marginPositions, setMarginPositions] = useState<MarginPositionResponse[]>([]);
-  const [marginStatus, setMarginStatus] = useState<'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR'>('UNAVAILABLE');
+  const [marginStatus, setMarginStatus] = useState<'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR' | 'CONNECTION_LOST'>('UNAVAILABLE');
   const [marginFeedback, setMarginFeedback] = useState<string | null>(null);
   const [marginSubmitting, setMarginSubmitting] = useState(false);
   const [activeSurface, setActiveSurface] = useState<SpotSurface>('SPOT');
@@ -192,8 +195,8 @@ export default function SpotPage() {
   }, [displayPair, userId]);
 
   const marginCollateralValue = positiveNumber(marginCollateral);
-  const marginLeverageOptions = useMemo(() => marginQuote?.leverageOptions ?? [], [marginQuote]);
-  const marginReady = Boolean(userId && marginQuote && marginLeverageOptions.includes(marginLeverage) && marginCollateralValue !== null && !marginSubmitting);
+  const marginLeverageOptions = useMemo(() => (marginQuote?.leverageOptions ?? []).filter((value) => [2, 3, 5].includes(value)), [marginQuote]);
+  const marginReady = Boolean(userId && marginQuote?.state === 'LIVE' && normalizePair(marginQuote.pair) === normalizedSymbol && marginLeverageOptions.includes(marginLeverage) && marginCollateralValue !== null && !marginSubmitting);
 
   const refreshMarginPositions = async () => {
     try {
@@ -299,34 +302,11 @@ export default function SpotPage() {
 
   useEffect(() => {
     let cancelled = false;
-    if (!backendConfigured) {
-      setBids([]);
-      setAsks([]);
-      setBookStatus('UNAVAILABLE');
-      return;
-    }
-    setBookStatus('LOADING');
-    api.get('/spot/orderbook', { params: { pair: displayPair }, timeout: 15_000 })
-      .then((response) => {
-        if (cancelled) return;
-        const payload = response.data as Record<string, unknown>;
-        const nextBids = finiteRows(payload.buys ?? payload.bids);
-        const nextAsks = finiteRows(payload.sells ?? payload.asks);
-        setBids(nextBids);
-        setAsks(nextAsks);
-        setBookStatus(nextBids.length > 0 || nextAsks.length > 0 ? 'LIVE' : 'UNAVAILABLE');
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setBids([]);
-          setAsks([]);
-          setBookStatus('ERROR');
-        }
-      });
-    return () => { cancelled = true; };
-  }, [backendConfigured, displayPair]);
-
-  useEffect(() => {
+    setBids([]);
+    setAsks([]);
+    setMarketTrades([]);
+    setBookStatus(backendConfigured ? 'LOADING' : 'UNAVAILABLE');
+    setTradeStatus(backendConfigured ? 'LOADING' : 'UNAVAILABLE');
     if (!backendConfigured) return;
     const socket = io(`${apiBaseUrl}/spot`, {
       // Allow the Socket.IO polling handshake to recover through the staging
@@ -342,30 +322,32 @@ export default function SpotPage() {
     const refreshTrades = () => {
       void api.get('/spot/market-trades', { params: { pair: displayPair }, timeout: 15_000 })
         .then((response) => {
+          if (cancelled) return;
           const nextTrades = finiteTrades(response.data);
           setMarketTrades(nextTrades);
-          setTradeStatus(nextTrades.length > 0 ? 'LIVE' : 'UNAVAILABLE');
+          setTradeStatus(socket.connected ? (nextTrades.length > 0 ? 'LIVE' : 'UNAVAILABLE') : 'CONNECTION_LOST');
         })
-        .catch(() => setTradeStatus('ERROR'));
+        .catch(() => { if (!cancelled) setTradeStatus('ERROR'); });
     };
 
     const refreshBook = () => {
       void api.get('/spot/orderbook', { params: { pair: displayPair }, timeout: 15_000 })
         .then((response) => {
+          if (cancelled) return;
           const payload = response.data as Record<string, unknown>;
           const nextBids = finiteRows(payload.bids);
           const nextAsks = finiteRows(payload.asks);
           setBids(nextBids);
           setAsks(nextAsks);
-          setBookStatus(nextBids.length > 0 || nextAsks.length > 0 ? 'LIVE' : 'UNAVAILABLE');
+          setBookStatus(socket.connected ? (nextBids.length > 0 || nextAsks.length > 0 ? 'LIVE' : 'UNAVAILABLE') : 'CONNECTION_LOST');
         })
-        .catch(() => setBookStatus('ERROR'));
+        .catch(() => { if (!cancelled) setBookStatus('ERROR'); });
     };
 
     const handleOrderBook = (raw: unknown) => {
       if (!raw || typeof raw !== 'object') return;
       const event = raw as Record<string, unknown>;
-      if (String(event.pair ?? '').replaceAll('/', '').toUpperCase() !== normalizedSymbol) return;
+      if (normalizePair(String(event.pair ?? '')) !== normalizedSymbol) return;
       const payload = event.payload && typeof event.payload === 'object' ? event.payload as Record<string, unknown> : null;
       const orderBook = payload?.orderBook && typeof payload.orderBook === 'object' ? payload.orderBook as Record<string, unknown> : null;
       if (!orderBook) return;
@@ -384,39 +366,26 @@ export default function SpotPage() {
       refreshBook();
       refreshTrades();
     };
+    const handleConnectionLoss = () => {
+      setBookStatus('CONNECTION_LOST');
+      setTradeStatus('CONNECTION_LOST');
+    };
+    refreshBook();
+    refreshTrades();
+    socket.on('disconnect', handleConnectionLoss);
+    socket.on('connect_error', handleConnectionLoss);
     socket.on('connect', handleConnect);
     socket.on('spot.orderbook', handleOrderBook);
 
     return () => {
+      cancelled = true;
+      socket.off('disconnect', handleConnectionLoss);
+      socket.off('connect_error', handleConnectionLoss);
       socket.off('connect', handleConnect);
       socket.off('spot.orderbook', handleOrderBook);
       socket.disconnect();
     };
   }, [backendConfigured, displayPair, normalizedSymbol]);
-
-  useEffect(() => {
-    let cancelled = false;
-    if (!backendConfigured) {
-      setMarketTrades([]);
-      setTradeStatus('UNAVAILABLE');
-      return () => { cancelled = true; };
-    }
-    setTradeStatus('LOADING');
-    api.get('/spot/market-trades', { params: { pair: displayPair }, timeout: 15_000 })
-      .then((response) => {
-        if (cancelled) return;
-        const nextTrades = finiteTrades(response.data);
-        setMarketTrades(nextTrades);
-        setTradeStatus(nextTrades.length > 0 ? 'LIVE' : 'UNAVAILABLE');
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setMarketTrades([]);
-          setTradeStatus('ERROR');
-        }
-      });
-    return () => { cancelled = true; };
-  }, [backendConfigured, displayPair]);
 
   const priceStatus: MarketDataStatus = marketLoading
     ? 'LOADING'
@@ -431,7 +400,7 @@ export default function SpotPage() {
     && (tp.trim() === '' || positiveNumber(tp) !== null)
     && (sl.trim() === '' || positiveNumber(sl) !== null)
   );
-  const ready = backendSupportsTpSl && spotOrderReady({
+  const ready = (orderType !== 'MARKET' || currentPrice !== null) && backendSupportsTpSl && spotOrderReady({
     authenticated: Boolean(userId),
     backendConfigured,
     amount,
@@ -478,7 +447,7 @@ export default function SpotPage() {
         ...(orderType === 'STOP' ? { stopPrice: stopPrice.trim() } : {}),
         idempotencyKey: `spot:${normalizedSymbol}:${side}:${Date.now()}`,
       });
-      setOrderState(normalizeSpotOrderState((response.data as { status?: unknown })?.status ?? 'OPEN'));
+      setOrderState(normalizeSpotOrderState((response.data as { status?: unknown })?.status));
       setConfirmationOpen(false);
       setAmount('');
       setFeedback('Order accepted.');
@@ -521,21 +490,9 @@ export default function SpotPage() {
         </div>}
       </header>
 
-      {priceStatus === 'LIVE' && <section className="nexi-station-card mx-4 mt-3 min-w-0 grid-cols-[1.05fr_repeat(5,minmax(0,0.82fr))] overflow-hidden rounded-xl md:grid" aria-label="Active market context">
-        <div className="min-w-0 border-r border-violet-300/10 px-3 py-2">
-          <p className="text-[10px] uppercase tracking-[.16em] text-[#8C8299]">Active pair</p>
-          <p className="mt-0.5 truncate text-sm font-semibold">{displayPair}</p>
-        </div>
-        <MarketMetric label="Mark price" value={currentPrice?.toLocaleString('en-US', { maximumFractionDigits: 8 }) ?? null} />
-        <MarketMetric label="24h change" value={marketChange === null ? null : `${marketChange > 0 ? '+' : ''}${marketChange.toFixed(2)}%`} tone={marketChange === null ? 'muted' : marketChange >= 0 ? 'positive' : 'negative'} />
-        <MarketMetric label="24h high" value={marketHigh?.toLocaleString('en-US', { maximumFractionDigits: 8 }) ?? null} />
-        <MarketMetric label="24h low" value={marketLow?.toLocaleString('en-US', { maximumFractionDigits: 8 }) ?? null} />
-        <MarketMetric label="24h volume" value={marketVolume?.toLocaleString('en-US', { maximumFractionDigits: 2 }) ?? null} />
-      </section>}
-
       <div className="mx-3 mt-3 grid grid-cols-2 rounded-xl border border-violet-300/10 bg-[#0B0711] p-1 sm:mx-4" role="tablist" aria-label="Spot product">
         {(['SPOT', 'MARGIN'] as const).map((value) => (
-          <button key={value} type="button" role="tab" aria-selected={activeSurface === value} onClick={() => setActiveSurface(value)} className={`nexi-interactive min-h-10 rounded-lg text-xs font-semibold sm:min-h-11 sm:text-sm ${activeSurface === value ? 'bg-[#2A1742] text-white shadow-[0_0_18px_rgba(109,65,255,.16)]' : 'text-[#8C8299]'}`}>
+          <button key={value} type="button" role="tab" aria-selected={activeSurface === value} onClick={() => setActiveSurface(value)} className={`nexi-interactive min-h-11 rounded-lg text-xs font-semibold sm:min-h-11 sm:text-sm ${activeSurface === value ? 'bg-[#2A1742] text-white shadow-[0_0_18px_rgba(109,65,255,.16)]' : 'text-[#8C8299]'}`}>
             {value === 'SPOT' ? 'Spot' : 'Margin'}
           </button>
         ))}
@@ -552,9 +509,9 @@ export default function SpotPage() {
         <div className="mt-4 min-w-0 overflow-hidden rounded-xl border border-violet-300/10 bg-[#0B0711]">
           <div className="flex min-w-0 items-center justify-between gap-2 border-b border-white/5 px-3 py-2">
             <span className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8C8299]">{displayPair}</span>
-            <div className="flex shrink-0 items-center gap-1" role="tablist" aria-label="Margin chart interval">
+            <div className="nexi-scroll-rail flex max-w-[68vw] shrink-0 items-center gap-1 overflow-x-auto" role="tablist" aria-label="Margin chart interval">
               {CHART_INTERVALS.map((value) => (
-                <button key={value} type="button" role="tab" aria-selected={chartInterval === value} onClick={() => setChartInterval(value)} className={`nexi-interactive min-h-8 rounded-md px-2 text-[10px] font-semibold ${chartInterval === value ? 'bg-[#2C146C] text-white' : 'text-[#8C8299] hover:text-white'}`}>{value}</button>
+                <button key={value} type="button" role="tab" aria-selected={chartInterval === value} onClick={() => setChartInterval(value)} className={`nexi-interactive min-h-11 min-w-11 shrink-0 rounded-md px-2 text-[10px] font-semibold ${chartInterval === value ? 'bg-[#2C146C] text-white' : 'text-[#8C8299] hover:text-white'}`}>{value}</button>
               ))}
             </div>
           </div>
@@ -565,10 +522,10 @@ export default function SpotPage() {
         <div className="mt-4 grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
           <div className="min-w-0 space-y-3">
             <div className="grid min-w-0 grid-cols-2 gap-2 rounded-xl bg-[#0B0711] p-1" role="tablist" aria-label="Margin direction">
-              {(['LONG', 'SHORT'] as const).map((value) => <button key={value} type="button" role="tab" aria-selected={marginDirection === value} onClick={() => setMarginDirection(value)} className={`min-h-10 rounded-lg text-xs font-semibold ${marginDirection === value ? value === 'LONG' ? 'bg-emerald-400/15 text-[#22D3A6]' : 'bg-rose-400/15 text-[#FF5C7C]' : 'text-[#8C8299]'}`}>{value}</button>)}
+              {(['LONG', 'SHORT'] as const).map((value) => <button key={value} type="button" role="tab" aria-selected={marginDirection === value} onClick={() => setMarginDirection(value)} className={`min-h-11 rounded-lg text-xs font-semibold ${marginDirection === value ? value === 'LONG' ? 'bg-emerald-400/15 text-[#22D3A6]' : 'bg-rose-400/15 text-[#FF5C7C]' : 'text-[#8C8299]'}`}>{value}</button>)}
             </div>
             <div className="grid min-w-0 grid-cols-3 gap-2" role="tablist" aria-label="Margin leverage">
-              {marginLeverageOptions.map((value) => <button key={value} type="button" role="tab" aria-selected={marginLeverage === value} onClick={() => setMarginLeverage(value)} className={`min-h-10 rounded-lg border text-xs font-semibold ${marginLeverage === value ? 'border-violet-300/35 bg-[#2A1742] text-white' : 'border-violet-300/10 text-[#8C8299]'}`}>{value}x</button>)}
+              {marginLeverageOptions.map((value) => <button key={value} type="button" role="tab" aria-selected={marginLeverage === value} onClick={() => setMarginLeverage(value)} className={`min-h-11 rounded-lg border text-xs font-semibold ${marginLeverage === value ? 'border-violet-300/35 bg-[#2A1742] text-white' : 'border-violet-300/10 text-[#8C8299]'}`}>{value}x</button>)}
             </div>
             <label className="block text-xs text-[#C3BBD0]">Collateral (USDT)
               <input type="number" inputMode="decimal" min="0" step="any" value={marginCollateral} onChange={(event) => setMarginCollateral(event.target.value)} placeholder="Enter positive collateral" className="mt-1 min-h-11 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 text-right font-mono outline-none focus:border-[#8B5CF6]" />
@@ -585,7 +542,7 @@ export default function SpotPage() {
           </div>
         </div>
         {marginFeedback && <p role="status" className="mt-3 text-xs text-[#C3BBD0]">{marginFeedback}</p>}
-        <p className="mt-3 text-[10px] text-[#8C8299]">Backend-authoritative isolated margin only: LONG/SHORT leverage options are Admin-configured. Cross margin, futures, perpetuals, portfolio margin, and C2C are not exposed.</p>
+        <p className="mt-3 text-[10px] text-[#8C8299]">Isolated margin uses only the collateral assigned to each position. Leverage increases both potential gains and losses.</p>
       </section>}
 
       {activeSurface === 'SPOT' && <div className="grid min-w-0 gap-3 p-3 sm:gap-4 sm:p-4 xl:grid-cols-[minmax(0,1fr)_400px] xl:items-start">
@@ -602,9 +559,9 @@ export default function SpotPage() {
           <div className={`nexi-station-card order-2 min-h-[210px] min-w-0 overflow-hidden rounded-xl sm:rounded-2xl md:block md:min-h-[360px] xl:order-none xl:min-h-[430px] ${mobileMarketPanel === 'CHART' ? 'block' : 'hidden'}`}>
             <div className="flex min-w-0 items-center justify-between gap-2 border-b border-white/5 px-3 py-2">
               <span className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8C8299]">{displayPair}</span>
-              <div className="flex shrink-0 items-center gap-1" role="tablist" aria-label="Chart interval">
+              <div className="nexi-scroll-rail flex max-w-[68vw] shrink-0 items-center gap-1 overflow-x-auto" role="tablist" aria-label="Chart interval">
                 {CHART_INTERVALS.map((value) => (
-                  <button key={value} type="button" role="tab" aria-selected={chartInterval === value} onClick={() => setChartInterval(value)} className={`nexi-interactive min-h-8 rounded-md px-2 text-[10px] font-semibold ${chartInterval === value ? 'bg-[#2C146C] text-white' : 'text-[#8C8299] hover:text-white'}`}>{value}</button>
+                  <button key={value} type="button" role="tab" aria-selected={chartInterval === value} onClick={() => setChartInterval(value)} className={`nexi-interactive min-h-11 min-w-11 shrink-0 rounded-md px-2 text-[10px] font-semibold ${chartInterval === value ? 'bg-[#2C146C] text-white' : 'text-[#8C8299] hover:text-white'}`}>{value}</button>
                 ))}
               </div>
             </div>
@@ -627,7 +584,7 @@ export default function SpotPage() {
             <section className={`nexi-station-card min-w-0 overflow-hidden rounded-2xl md:block ${mobileMarketPanel === 'BOOK' ? 'block' : 'hidden'}`} aria-labelledby="order-book-heading">
               <div className="flex items-center justify-between border-b border-white/5 px-4 py-3">
                 <h2 id="order-book-heading" className="font-semibold">Order book</h2>
-                {bookStatus === 'LIVE' ? <span className="text-xs text-[#8C8299]">Live</span> : bookStatus === 'LOADING' ? <span className="text-xs text-[#8C8299]">Loading</span> : bookStatus === 'ERROR' ? <span className="text-xs text-[#8C8299]">Request error</span> : null}
+                {bookStatus === 'LIVE' ? <span className="text-xs text-[#8C8299]">Live</span> : bookStatus === 'CONNECTION_LOST' ? <span className="text-xs text-amber-200">Updates paused · last received depth</span> : bookStatus === 'LOADING' ? <span className="text-xs text-[#8C8299]">Loading</span> : bookStatus === 'ERROR' ? <span className="text-xs text-[#8C8299]">Request error</span> : null}
               </div>
               <div className="grid min-w-0 grid-cols-2 text-xs">
                 <div className="min-w-0 border-r border-white/5 p-3">
@@ -651,7 +608,7 @@ export default function SpotPage() {
             </section>
 
             <section className={`nexi-station-card min-w-0 rounded-2xl md:block ${mobileMarketPanel === 'TRADES' ? 'block' : 'hidden'}`} aria-labelledby="recent-trades-heading">
-              <div className="flex items-center justify-between gap-2 border-b border-white/5 px-4 py-3"><h2 id="recent-trades-heading" className="font-semibold">Recent trades</h2>{tradeStatus === 'LIVE' ? <span className="text-xs text-[#8C8299]">Live market records</span> : tradeStatus === 'LOADING' ? <span className="text-xs text-[#8C8299]">Loading</span> : tradeStatus === 'ERROR' ? <span className="text-xs text-[#8C8299]">Request error</span> : null}</div>
+              <div className="flex items-center justify-between gap-2 border-b border-white/5 px-4 py-3"><h2 id="recent-trades-heading" className="font-semibold">Recent trades</h2>{tradeStatus === 'LIVE' ? <span className="text-xs text-[#8C8299]">Live market records</span> : tradeStatus === 'CONNECTION_LOST' ? <span className="text-xs text-amber-200">Updates paused · last received records</span> : tradeStatus === 'LOADING' ? <span className="text-xs text-[#8C8299]">Loading</span> : tradeStatus === 'ERROR' ? <span className="text-xs text-[#8C8299]">Request error</span> : null}</div>
               {marketTrades.length > 0 ? <div className="divide-y divide-white/5 text-xs">{marketTrades.slice(0, 12).map((trade) => <div key={trade.id} className="grid grid-cols-3 gap-2 px-4 py-2 font-mono"><span>{trade.price.toLocaleString()}</span><span>{trade.amount}</span><span className="text-right text-[#8C8299]">{new Date(trade.executedAt).toLocaleTimeString()}</span></div>)}</div> : <div className="flex min-h-52 items-center justify-center p-6 text-center text-sm text-[#8C8299]">{tradeStatus === 'LOADING' ? 'Loading recent trades…' : tradeStatus === 'ERROR' ? 'Recent trades could not be loaded.' : 'No recent trades yet.'}</div>}
             </section>
           </div>
@@ -674,7 +631,7 @@ export default function SpotPage() {
                 <div className="space-y-2">{historyRows.slice(0, 30).map((row, index) => {
                   const id = String(row.id ?? row.orderId ?? `${historyTab}-${index}`);
                   const pair = String(row.pair ?? displayPair);
-                  const status = String(row.status ?? row.state ?? 'COMPLETED').replaceAll('_', ' ');
+                  const status = String(row.status ?? row.state ?? 'UNKNOWN').replaceAll('_', ' ');
                   const rowSide = row.side ? String(row.side) : '';
                   const rowAmount = String(row.amount ?? row.quantity ?? row.filled ?? '—');
                   const rowPrice = String(row.price ?? row.entryPrice ?? '—');
@@ -738,7 +695,7 @@ export default function SpotPage() {
         </aside>
       </div>}
 
-      {confirmationOpen && <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/70 p-4 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="spot-confirm-title">
+      {confirmationOpen && <ModalSurface open onClose={() => setConfirmationOpen(false)} title="Review Spot order">
         <div className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-violet-300/15 bg-[#100A18] p-5 shadow-2xl">
           <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#48C0CC]">Review order</p><h2 id="spot-confirm-title" className="mt-1 text-xl font-semibold">Confirm Spot order</h2></div></div>
           <dl className="mt-4 space-y-2 text-sm">
@@ -754,23 +711,7 @@ export default function SpotPage() {
             <button type="button" onClick={submitOrder} disabled={orderState === 'SUBMITTING'} className="min-h-12 rounded-xl bg-[#7C3AED] font-semibold disabled:opacity-50">{orderState === 'SUBMITTING' ? 'Submitting…' : 'Confirm'}</button>
           </div>
         </div>
-      </div>}
+      </ModalSurface>}
     </main>
-  );
-}
-
-function MarketMetric({ label, value, tone = 'muted' }: { label: string; value: string | null; tone?: 'muted' | 'positive' | 'negative' }) {
-  if (value === null) return null;
-  const toneClass = tone === 'positive'
-    ? 'text-[#98FCE4]'
-    : tone === 'negative'
-      ? 'text-[#FF9CB0]'
-      : 'text-[#C3BBD0]';
-
-  return (
-    <div className="min-w-0 border-r border-violet-300/10 px-3 py-2 last:border-r-0">
-      <p className="text-[10px] uppercase tracking-[.16em] text-[#8C8299]">{label}</p>
-      <p className={`mt-0.5 truncate font-mono text-xs ${toneClass}`}>{value}</p>
-    </div>
   );
 }

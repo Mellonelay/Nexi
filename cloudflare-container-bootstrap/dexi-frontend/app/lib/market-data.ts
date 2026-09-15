@@ -18,19 +18,20 @@ export type UnknownCandle = {
   volume?: unknown;
 };
 
-const finite = (value: unknown) => {
+export const finiteMarketNumber = (value: unknown) => {
+  if ((typeof value !== 'number' && typeof value !== 'string') || (typeof value === 'string' && !value.trim())) return null;
   const number = typeof value === 'number' ? value : Number(value);
   return Number.isFinite(number) ? number : null;
 };
 
 export function normalizeCandle(value: UnknownCandle): Candle | null {
-  const time = finite(value.time);
-  const open = finite(value.open);
-  const high = finite(value.high);
-  const low = finite(value.low);
-  const close = finite(value.close);
-  const volume = value.volume === undefined ? undefined : finite(value.volume);
-  if (time === null || open === null || high === null || low === null || close === null || (value.volume !== undefined && volume === null)) return null;
+  const time = finiteMarketNumber(value.time);
+  const open = finiteMarketNumber(value.open);
+  const high = finiteMarketNumber(value.high);
+  const low = finiteMarketNumber(value.low);
+  const close = finiteMarketNumber(value.close);
+  const volume = value.volume == null ? undefined : finiteMarketNumber(value.volume);
+  if (time === null || open === null || high === null || low === null || close === null || volume === null) return null;
   if (high < Math.max(open, close) || low > Math.min(open, close) || high < low) return null;
   const normalizedVolume = volume ?? undefined;
   return { time, open, high, low, close, ...(normalizedVolume === undefined ? {} : { volume: normalizedVolume }) };
