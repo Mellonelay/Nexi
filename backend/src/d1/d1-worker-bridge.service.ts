@@ -27,7 +27,7 @@ export type D1BridgeBatchResult = {
  *
  * The bridge is deliberately not used as a drop-in Prisma transport: D1
  * transaction guarantees must be implemented with native Worker-side batch
- * commands before any financial path is moved off PostgreSQL.
+ * commands before any financial path uses the D1 bridge.
  */
 @Injectable()
 export class D1WorkerBridgeService {

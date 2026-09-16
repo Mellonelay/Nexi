@@ -25,7 +25,7 @@ done
 sudo apt-get update
 sudo apt-get install -y --no-install-recommends \
   curl ca-certificates jq ripgrep fd-find git git-lfs unzip zip zstd \
-  build-essential pkg-config libssl-dev redis-tools postgresql-client
+  build-essential pkg-config libssl-dev redis-tools
 sudo ln -sf "$(command -v fdfind)" /usr/local/bin/fd 2>/dev/null || true
 
 if ! command -v uv >/dev/null 2>&1; then

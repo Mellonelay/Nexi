@@ -1,8 +1,9 @@
 # NEXI Production Completion Ledger
 
-**Authority date:** 2026-09-15 (Myanmar time)
+**Authority date:** 2026-09-17 (Myanmar time)
 **Repository:** `Mellonelay/Nexi`
-**Current source authority:** `main@3b173ea38da4c80193c5e0b552ae62fede22fab7`
+**Current source authority:** GitHub `main` (discover live; backend equality baseline proven from `81baa15f82901f26405cfd378f7e0f5fe31b693e`)
+**Current deployed production baseline:** `3b173ea38da4c80193c5e0b552ae62fede22fab7`
 **Purpose:** the single final-production completion controller for NEXI. This is a finishing-state ledger, not a restart plan.
 
 ## 1. Finishing-state rule
@@ -39,7 +40,8 @@ Therefore:
 
 ## 3. Status vocabulary
 
-- `PROVEN_PRODUCTION` — directly proven in the current production release/runtime.
+- `PROVEN_PRODUCTION` — directly proven in the deployed production release/runtime named by this ledger.
+- `PROVEN_SOURCE` — proven at current GitHub/source level by applicable deterministic checks, but not claimed deployed/runtime-proven.
 - `PROVEN_UNCHANGED` — previously accepted evidence remains reusable because the governing source/dependency has not materially changed.
 - `MANUAL_OWNER_ACCEPTANCE_REQUIRED` — requires a real owner wallet/session or privileged Admin context unavailable to automated acceptance.
 - `TARGETED_RUNTIME_REPAIR_ONLY` — implementation exists; if current runtime/manual use exposes a defect, repair the existing canonical path only.
@@ -51,8 +53,8 @@ Therefore:
 
 | Requirement | Current authority path | Source status | Runtime status | Evidence / release | Dependency drift | Remaining gap | Final verdict |
 |---|---|---|---|---|---|---|---|
-| Source convergence | GitHub `main` | Complete | N/A | `3b173ea38da4c80193c5e0b552ae62fede22fab7` | None known | None | `PROVEN_PRODUCTION` |
-| Production deployment | Worker + Container + Public + Admin | Complete | Complete | Production deployed at final SHA | None known | None | `PROVEN_PRODUCTION` |
+| Source convergence | GitHub `main` | Complete | N/A | `81baa15f82901f26405cfd378f7e0f5fe31b693e`; frontend source typecheck + 72/72 source tests + diff validation | None known | Current source is not yet deployed | `PROVEN_SOURCE` |
+| Production deployment | Worker + Container + Public + Admin | Complete for deployed baseline | Complete | `3b173ea38da4c80193c5e0b552ae62fede22fab7` production baseline | Newer source `81baa15...` exists | Deploy/accept newer source only when owner authorizes that later phase | `PROVEN_PRODUCTION` |
 | Backend health/readiness | Worker -> Container -> NestJS -> D1/Valkey | Complete | `/health`, `/healthz`, `/readyz` healthy | final production deployment | None known | None | `PROVEN_PRODUCTION` |
 | Public bounded browser acceptance | Public production app | Complete | Desktop + mobile bounded unauthenticated acceptance passed | production Playwright/Chromium | None known | Authenticated flows separate | `PROVEN_PRODUCTION` |
 | Admin bounded browser acceptance | Admin production app | Complete | Overview/users/market-feeds settle correctly to sign-in boundary; checked session no console errors/warnings | production browser acceptance | None known | Privileged actions need real Admin context | `PROVEN_PRODUCTION` |
@@ -195,7 +197,7 @@ The following are **not active gates** and must not be allowed to restart the pr
 - “production unauthorized”;
 - broad Graphify whole-repo rebuild before every change;
 - exact missed-event replay as a universal release requirement;
-- old PostgreSQL/Neon/Prisma authority;
+- retired pre-D1 database authority;
 - stale Stitch visual authority;
 - stale `More` mobile navigation;
 - old Git SHAs/worktrees/VM/Codespace handovers as present-state authority.
@@ -204,8 +206,8 @@ The following are **not active gates** and must not be allowed to restart the pr
 
 ### Already closed and reusable
 
-- Source convergence: `PROVEN_PRODUCTION`.
-- Production deployment: `PROVEN_PRODUCTION`.
+- Current GitHub/source convergence at `81baa15...`: `PROVEN_SOURCE`.
+- Deployed production baseline at `3b173ea...`: `PROVEN_PRODUCTION`.
 - Production health/readiness: `PROVEN_PRODUCTION`.
 - Required Klines: `PROVEN_PRODUCTION`.
 - Market realtime reconnect/resnapshot: `PROVEN_PRODUCTION`.
@@ -234,12 +236,15 @@ Do **not** reopen unrelated domains or restart broad acceptance.
 ## 16. Final current verdict
 
 ```text
-SOURCE_CONVERGENCE = COMPLETE
-PRODUCTION_DEPLOYMENT = COMPLETE
-PRODUCTION_BROWSER_ACCEPTANCE = COMPLETE FOR BOUNDED AVAILABLE CONTEXT
+SOURCE_CONVERGENCE = COMPLETE_AT_GITHUB_MAIN_81baa15
+SOURCE_STATE = PROVEN_SOURCE
+PRODUCTION_DEPLOYMENT = COMPLETE_AT_3b173ea_BASELINE
+FRONTEND_81baa15_DEPLOYED = NO
+PRODUCTION_BROWSER_ACCEPTANCE = COMPLETE FOR BOUNDED AVAILABLE CONTEXT ON DEPLOYED BASELINE
 MARKET_KLINES = PROVEN_PRODUCTION
 REALTIME_RECONNECT_RESNAPSHOT = PROVEN_PRODUCTION
 REST_RECOVERY = PROVEN_PRODUCTION
+DEPENDENCY_OWNERSHIP = RECONCILED
 
 AUTHENTICATED_WALLET_SIWE_BALANCE = MANUAL_OWNER_ACCEPTANCE_REQUIRED
 PRIVILEGED_ADMIN_RBAC_ACTIONS = MANUAL_OWNER_ACCEPTANCE_REQUIRED
@@ -256,6 +261,94 @@ The final `NO` is narrow. It does not mean NEXI must be rebuilt or that broad so
 - `NEXI Frontend Manual Acceptance Findings — 2026-09-12` — newer owner-observed product requirements and bounded repairs.
 - `NEXI_DEEP_LIQUID_VIOLET_FRONTEND_ACCEPTANCE_SPEC_V3` — Sep 13 Public frontend authority; explicitly supersedes V2.
 - `NEXI Engineering Work Ledger — Single Session Authority` — Sep 14/15 current operational state and VM cleanup checkpoint.
-- GitHub `Mellonelay/Nexi` current `main@3b173ea38da4c80193c5e0b552ae62fede22fab7`.
+- GitHub `Mellonelay/Nexi` current `main@81baa15f82901f26405cfd378f7e0f5fe31b693e`; deployed production baseline remains `3b173ea38da4c80193c5e0b552ae62fede22fab7`.
 
 Older handovers, branch notes, recovery artifacts, matrices and historical execution plans may be deleted after confirming they carry no unique surviving requirement not represented here.
+
+## 18. Dependency/runtime ownership completion — 2026-09-16
+
+The dependency phase corrected an earlier broader hypothesis. The recurring risk was real—new sessions had repeatedly reconstructed frontend/admin environments in the wrong places—but current filesystem/package evidence shows the remaining ownership problem is now bounded and reconciled.
+
+### Canonical Worker-0 dependency owners
+
+- Public source: `cloudflare-container-bootstrap/dexi-frontend`.
+- Public dependency owner: `/srv/nexi/public/shared/node_modules`.
+- Public source `node_modules` is a symlink to that shared owner.
+- Admin source: `apps/admin`.
+- Admin dependency owner: `/srv/nexi/admin/shared/node_modules`.
+- Admin source `node_modules` is a symlink to that shared owner.
+- Current immutable production runtimes remain `/srv/nexi/public/current` and `/srv/nexi/admin/current`; their traced runtime dependency trees are deployment artifacts, not development dependency owners.
+
+### Proof
+
+- Public direct dependencies/devDependencies: `40/40` present and matching the current lockfile install.
+- Admin direct dependencies/devDependencies: `70/70` present and matching the current lockfile install.
+- Admin `npm run typecheck`: **PASS** after re-homing dependencies to `/srv/nexi/admin/shared/node_modules`.
+- Runtime resolution proves Public `next` resolves from `/srv/nexi/public/shared/node_modules` and Admin `@tanstack/react-start` resolves from `/srv/nexi/admin/shared/node_modules`.
+- Stale source `.next` and Admin `.output` were removed as rebuildable generated state.
+- No active process used the Admin source `node_modules` during re-homing.
+- Admin dependency tree was moved atomically to `/srv/nexi/admin/shared/node_modules`; the source path now resolves there.
+- `/srv/nexi/admin/build-3b173ea/node_modules` still resolves through the source symlink to the canonical shared Admin dependency tree.
+
+### What remains separate
+
+Historical `/srv/nexi/.../releases` still consume substantial disk. They are immutable rollback/deployment artifacts, not duplicate dependency installs. Retention/deletion requires a separate explicit production-retention decision and is not part of dependency correctness.
+
+`DEPENDENCY_PHASE = COMPLETE` for ownership/reuse correctness on Worker 0.
+
+## 19. Proportional bounded authority fan-in
+
+Durable-state reconciliation is part of completion, but it is proportional rather than mechanical.
+
+- Update `NEXI_CURRENT_STATE.md` when a bounded task materially changes current durable NEXI truth: source frontier, deployed baseline, active phase, canonical ownership/routing, or immediate unresolved gates.
+- Update this ledger only when durable completion evidence is established, changed, revoked, or superseded.
+- Do not add transient process/session state, one-off timestamps, exploratory output, or ephemeral diagnostics to either authority file.
+
+When reconciliation is required:
+`EXECUTE/REPAIR -> FOCUSED VERIFY -> PROPORTIONAL CURRENT-STATE/LEDGER UPDATE -> CHECK SOURCE SHA VS DEPLOYED BASELINE -> REPORT`.
+
+The update must record only the state invalidated or newly proven by the bounded work and must not reopen unrelated rows. If source advances without deployment, record the new GitHub source SHA separately from the still-deployed production baseline.
+
+## 20. Worker-0 capability knowledge system — 2026-09-16
+
+A durable capability directory now separates Worker-0 operating mechanics, task routing, MCP capability ownership, CLI/operator ownership, browser fabric, Graphify structural intelligence, and DeepWiki semantic intelligence.
+
+Canonical references:
+- `/home/mellonelay1999/RDC_ONBOARDING.md` — Worker-0 operating mechanics and startup.
+- `NEXI_WORKER0_CAPABILITY_INDEX.md` — lightweight task-to-capability router.
+- `NEXI_WORKER0_MCP_CATALOG.md` — MCP service ownership + live schema discovery.
+- `NEXI_WORKER0_CLI_CATALOG.md` — CLI/operator ownership + live status discovery.
+- `NEXI_WORKER0_BROWSER_FABRIC.md` — Playwright/Polypane/Chrome DevTools/BrowserStack/Ponytail responsibilities.
+- `NEXI_GRAPHIFY_COMPLETE_READING_AND_USAGE_GUIDE.md` — complete graph capability + change-driven refresh lifecycle.
+- `NEXI_DEEPWIKI_COMPLETE_USAGE_GUIDE.md` — semantic/RAG capability + incremental index lifecycle.
+
+The system preserves `DISCOVER STATE; DO NOT MEMORIALIZE STATE`: mutable versions, auth, process IDs, live graph/index counts, and transient health are not permanent authority. New Worker flow is `onboarding -> capability index -> relevant specialist reference -> live status if needed -> execute`.
+
+`WORKER0_CAPABILITY_KNOWLEDGE_SYSTEM = VERIFIED_DOCUMENTATION`. This does not change production runtime state and is not browser acceptance.
+
+## 21. Cloudflare backend execution-authority convergence — 2026-09-17
+
+Current owner authority changed the backend execution model. GitHub `main` remains durable source authority; Cloudflare Worker + Container is the only active backend execution/runtime authority. Worker 0 is no longer an acceptable parallel backend runtime after the one-time convergence.
+
+### Final source-equality proof
+
+- GitHub `main@81baa15f...` and `origin/main` were equal with no unpushed commits at recovery.
+- Backend tracked source from `3b173ea...` through `81baa15f...` has no committed diff.
+- The current Cloudflare deployment uses the NEXI Worker/Container stack and a running `nexi-api-staging` Container application.
+- Cloudflare Container `/app/package.json` and `/app/package-lock.json` hashes exactly matched GitHub backend manifests.
+- A clean temporary build from GitHub `HEAD` produced 170 backend JavaScript artifacts; all 170 hashes matched the running Cloudflare Container byte-for-byte. The Container additionally contains 10 generated Prisma D1-client JavaScript artifacts produced by the image build/generation path.
+- Three VM-only source edits changed only async filesystem implementation details and were absent from both GitHub and Cloudflare. No accepted requirement, commit provenance, or runtime evidence justified promoting them. They were preserved in `/tmp` recovery evidence and the transitional VM backend source working tree was restored to GitHub `HEAD`; no VM backend runtime is authoritative.
+
+`BACKEND_SOURCE_EQUALITY_GITHUB_CLOUDFLARE = PROVEN`
+
+`VM_PARALLEL_BACKEND_AUTHORITY = RETIRED`
+
+`RETIRED_PRE_D1_DATABASE_AUTHORITY = REMOVED_FROM_ACTIVE_REPOSITORY`
+
+Fresh proof: current Cloudflare secret names contain no alternate database URL; `wrangler.jsonc` binds `CORE_DB` to D1 and points only to `backend/prisma/migrations-d1`; remote D1 migration status reports no pending migration. Backend package dependencies contain `@prisma/adapter-d1` and no retired provider adapter.
+
+### Permanent operating rule
+
+Before any Cloudflare mutation or configuration-driven debugging, read the relevant current official Cloudflare documentation, inspect current Wrangler/MCP help/schema, reconcile with NEXI config, then operate and verify. Backend runtime claims must be proven against Cloudflare, not a VM-local NestJS process. Any legitimate source repair performed through the Cloudflare execution plane must be reconciled to GitHub `main` when the bounded task finishes.
+
+This transition does **not** retroactively convert earlier source/static evidence into runtime proof. `PROOF SCOPE >= CLAIM SCOPE` remains mandatory.

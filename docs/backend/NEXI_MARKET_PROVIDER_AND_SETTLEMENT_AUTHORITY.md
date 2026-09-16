@@ -23,7 +23,7 @@ provider adapters
   → normalized market data
   → validation: price, timestamp, sequence, freshness, capability
   → MarketAuthorityService
-  → PostgreSQL MarketQuoteSnapshot / MarketQuoteLatest / MarketKline
+  → D1 MarketQuoteSnapshot / MarketQuoteLatest / MarketKline
   → Redis publication/cache
   → MarketGateway / Socket.IO
   → frontend projections
@@ -172,7 +172,7 @@ Industrial metals must remain Spot/reference-only until a sufficiently fresh, ti
 | No valid expiry quote | Current code moves the position to `SETTLEMENT_DELAYED` | IMPLEMENTED-PARTIAL | Add bounded retry/void/refund policy and auditable reason/timing |
 | Cross-provider failover | No settlement failover authority is proven; current ingestion is Binance-specific | MISSING | Allow display fallback only; explicitly forbid settlement substitution |
 | Per-asset Binary capability | `Gate2BinaryConfiguration` is pair/duration/version/enabled; `BinaryService` uses global durations `[30,60,180,280,420]` | IMPLEMENTED-PARTIAL | Add per-asset capability/eligibility and verified duration matrix |
-| Durable truth | Quotes/Klines are PostgreSQL models; Redis is publication/transport | IMPLEMENTED | Keep settlement evidence durable and replayable |
+| Durable truth | Quotes/Klines are D1 models; Aiven Valkey is publication/transport | IMPLEMENTED | Keep settlement evidence durable and replayable |
 | Provider licensing/config provenance | No current evidence proves credentials, redistribution approval, or staging runtime authority | UNVERIFIED | Record verification status without printing secrets |
 
 ## 8. Exact current Binary behavior
@@ -196,7 +196,7 @@ This is stronger than a client-side or random-price settlement, but it is not ye
 7. Extend entry and expiry provenance with instrument, price type, policy/version, and selected-event identity.
 8. Add per-asset Spot/Binary capability and duration policy.
 9. Define deterministic outage, retry, waiting, void/refund, and audit behavior.
-10. Verify coverage, licensing/redistribution, staging configuration, PostgreSQL persistence, Redis publication, Socket.IO delivery, and browser rendering per asset class.
+10. Verify coverage, licensing/redistribution, staging configuration, D1 persistence, Aiven Valkey publication, Socket.IO delivery, and browser rendering per asset class.
 
 No item above is implemented by this document.
 
@@ -215,7 +215,7 @@ The implementation campaign must answer these with source and runtime evidence:
 9. Does entry provenance pin the same policy as expiry?
 10. Are Binary capabilities and durations per asset?
 11. Can an asset be Spot-enabled while Binary-disabled?
-12. Which evidence is PostgreSQL durable versus Redis ephemeral?
+12. Which evidence is D1 durable versus Aiven Valkey ephemeral?
 13. Can a result be deterministically replayed from stored events?
 14. Are failovers visible and auditable?
 15. Which provider/environment configuration is active in each environment?

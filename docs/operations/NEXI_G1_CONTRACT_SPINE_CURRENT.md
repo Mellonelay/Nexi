@@ -21,7 +21,7 @@ Evidence: direct current source, Graphify topology, focused tests. This is not r
 
 1. `loans.service.ts` and `mining.service.ts` fall back to Prisma for financial mutations when D1 is disabled.
 2. `wallet.service.ts` mixes D1 and Prisma reads; read authority is not yet uniform.
-3. `cloudflare-container-bootstrap/wrangler.jsonc` still contains localhost staging CORS and wallet-auth values; correction requires explicit staging configuration decision.
+3. `cloudflare-container-bootstrap/wrangler.jsonc` is the source configuration for the Cloudflare backend platform contract. Current runtime CORS/wallet-auth values are verified through Cloudflare deployment state; future changes require the official-documentation gate and current owner authorization.
 4. Live D1 metadata reported zero tables while direct SQL reported 88 tables and 260 indexes; control-plane metadata is inconsistent.
 
 ## Evidence boundary

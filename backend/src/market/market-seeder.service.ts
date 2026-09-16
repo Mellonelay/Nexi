@@ -19,7 +19,7 @@ export class MarketSeederService implements OnModuleInit {
   ) {}
 
   async onModuleInit(): Promise<void> {
-    // Keep HTTP/Socket.IO startup independent from Neon catalog reconciliation.
+    // Keep HTTP/Socket.IO startup independent from D1 catalog reconciliation.
     // The catalog remains backend-authoritative and failures remain explicit.
     void this.marketAuthority.ensureCatalog()
       .then(() => {

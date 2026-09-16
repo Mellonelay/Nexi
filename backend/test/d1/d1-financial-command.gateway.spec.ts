@@ -369,7 +369,7 @@ describe("D1FinancialCommandGateway", () => {
     expect(statements[8].sql).toContain("EventOutbox");
   });
 
-  it("matches crossing Spot orders with one atomic D1 batch and no PostgreSQL locking syntax", async () => {
+  it("matches crossing Spot orders with one atomic D1 batch and no incompatible locking syntax", async () => {
     const buy = {
       id: "buy-1",
       userId: "buyer-1",

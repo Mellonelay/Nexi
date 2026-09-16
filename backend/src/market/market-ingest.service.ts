@@ -35,7 +35,7 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
   }
 
   private enqueue(event: MarketProviderEvent): void {
-    // Provider callbacks may arrive faster than Neon can durably persist them.
+    // Provider callbacks may arrive faster than D1 can durably persist them.
     // Coalesce queued ticker updates by symbol and bound the queue so a market
     // burst cannot exhaust the Prisma pool or the Node heap.
     if (event.kind === 'ticker' || event.kind === 'depth') {

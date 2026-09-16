@@ -23,8 +23,8 @@ Prioritize live parity for auth/identity, sessions, users/KYC, market controls, 
 Do not invent persistence for public routes, banners, localization, exposure, reconciliation, user entitlements, role mutations, or other currently unsupported authorities. Record an exact backend dependency instead.
 
 ## Current corrections
-- D1 is canonical durable application/financial authority. Do not label the live dependency PostgreSQL.
-- Current staging `/ops/ready` is stale-deployment evidence; use the final D1-aware readiness contract after the VM join. Do not hard-code PostgreSQL health labels.
+- D1 is canonical durable application/financial authority. Do not label it as any retired database dependency.
+- Use the D1-aware Cloudflare readiness contract. Do not hard-code retired database health labels.
 - `NexiAdminApiProvider` already fails unsupported methods with HTTP-style 501 errors; preserve fail-closed behavior.
 - Provider mode may remain `mock` or `live`, but production-path work must exercise `live` explicitly.
 

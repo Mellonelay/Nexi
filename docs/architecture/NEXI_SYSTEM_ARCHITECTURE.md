@@ -22,7 +22,7 @@ This document extends the completed charter and Phase 1 classification. It does 
 - Shared Active Pair connects Quotes Hub, Spot, Binary, charts, and related consumers.
 - REST handles durable queries/commands; WebSocket handles live updates with reconnect, freshness, and authorization rules.
 - Cloudflare and containers are deployment adapters, not domain authority.
-- PostgreSQL owns durable data; Redis supports ephemeral transport/cache/coordination only where explicitly defined.
+- D1 owns durable application/financial relational data; Aiven Valkey supports ephemeral transport/cache/coordination only where explicitly defined.
 
 ## Required cross-cutting capabilities
 Typed configuration, runtime validation, idempotency, transaction boundaries, immutable audit linkage, health/readiness, structured logs, metrics/traces, failure recovery, environment separation, and explicit sandbox-only boundaries.

@@ -42,7 +42,7 @@ COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 EXPOSE 3000
 
 # Schema changes are a separately reviewed migration concern. Container
-# startup must be restart-safe and must never mutate or reset PostgreSQL.
+# startup must be restart-safe; D1 schema mutation is an explicit migration operation, never an application-startup side effect.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 CMD node -e "fetch('http://127.0.0.1:3000/ops/live').then(r=>{if(!r.ok) process.exit(1)}).catch(()=>process.exit(1))"
 
 CMD ["node", "dist/src/main.js"]
