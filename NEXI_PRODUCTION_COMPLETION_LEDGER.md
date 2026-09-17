@@ -180,7 +180,7 @@ Current platform contracts remain:
 - D1 durable state/migrations.
 - Aiven Valkey realtime/cache/Streams.
 - R2 for file/proof/archive uses where currently configured.
-- Pipelines/Data Catalog for high-volume market/history/analytics where currently applicable.
+- Pipelines/Data Catalog for market archive/history only where current source/runtime requires them. As of 2026-09-17, both NEXI market Pipelines are live/running and bound to the Worker, and the backend archive service remains an active required caller; Pipelines are therefore **not retired**. Retirement requires a separate owner decision backed by proof that the archive path is no longer required.
 - Queues/Workflows/KV/Analytics/Secrets/DO only where the current runtime/config requires them.
 - Health/readiness/observability/audit/reconciliation/rollback evidence.
 
@@ -352,3 +352,23 @@ Fresh proof: current Cloudflare secret names contain no alternate database URL; 
 Before any Cloudflare mutation or configuration-driven debugging, read the relevant current official Cloudflare documentation, inspect current Wrangler/MCP help/schema, reconcile with NEXI config, then operate and verify. Backend runtime claims must be proven against Cloudflare, not a VM-local NestJS process. Any legitimate source repair performed through the Cloudflare execution plane must be reconciled to GitHub `main` when the bounded task finishes.
 
 This transition does **not** retroactively convert earlier source/static evidence into runtime proof. `PROOF SCOPE >= CLAIM SCOPE` remains mandatory.
+## 22. Production resource identity + Wrangler SSH proof — 2026-09-17
+
+Cloudflare resource names retain historical `staging` suffixes, but those names are not environment authority. The currently active production backend is the Worker/Container stack serving `api.nexitrading.app` with `NODE_ENV=production`. Later sessions must discover live deployment/runtime state rather than infer a staging environment from resource naming.
+
+Fresh read-only/runtime evidence established:
+- active Worker deployment is reachable through the production custom domain;
+- the active Container application is running version 58 with one `nexi-api` instance in Singapore; IDs/digests remain volatile and must be rediscovered rather than frozen;
+- official Wrangler SSH + OpenSSH ProxyCommand reached the exact running Cloudflare Container and observed `node dist/src/main.js` as PID 1;
+- `/health`, `/healthz`, `/readyz`, `/market/provider-state`, and `/market/prices` returned HTTP 200;
+- live Worker bindings include D1, Queue, Workflow, R2, Valkey secret, Sentry, Durable Object, KV, Analytics Engine, rate limiter, and two Pipeline streams;
+- a verified Wrangler `4.129.0` dry-run with Container rollout disabled produced the same 46 non-secret binding names as the active Worker; the four live-only names were exactly the secret bindings intentionally omitted from dry-run output;
+- both NEXI market Pipelines report `running`, and current backend source still requires the market archive path.
+
+`PRODUCTION_RESOURCE_NAME_SUFFIX_IS_NOT_ENVIRONMENT_AUTHORITY = PROVEN`
+
+`CLOUDFLARE_CONTAINER_SSH_OPERATOR_PATH = PROVEN`
+
+`PIPELINES_CURRENTLY_CONFIGURED_AND_REQUIRED = PROVEN_SOURCE_PLUS_PLATFORM_CONFIGURATION`
+
+This section does not claim that every configured Cloudflare feature is permanently required. It prevents premature deletion: optional-feature retirement must be decided from current callers, bindings, runtime evidence, and owner intent rather than old architecture assumptions.

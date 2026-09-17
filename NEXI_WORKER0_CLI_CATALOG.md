@@ -45,6 +45,8 @@ Purpose: durable responsibility map for local CLIs/operator tools. Versions and 
 
 A 2026-09-17 authority-transition canary confirmed the repo manifests/lockfile pin Wrangler `4.127.1`, while the repo-local `node_modules/.bin/wrangler` is absent. The installed global operator was `4.129.0` during convergence, and current upstream help advertised a newer release. These versions are volatile facts, not permanent authority. Do not auto-update or change the source pin merely to operate Cloudflare; verify the exact binary and help before each consequential task.
 
+**Operator guard:** when the repo-local binary is absent, do not run bare `npx wrangler ...`; npm may fetch a newer Wrangler into an npx sandbox and silently change operator semantics. Use `npx --no-install wrangler ...` only when the repo-local binary exists; otherwise use the explicitly verified installed `wrangler` binary or a version-pinned isolated validation environment.
+
 Cloudflare Container SSH is an official operator path. NEXI uses Wrangler as an OpenSSH ProxyCommand to the running Cloudflare Container instance when shell access is required; never expose a public SSH port and never treat the VM as the backend runtime.
 
 Before consequential use, run only the exact tool's current `--help`/status command.

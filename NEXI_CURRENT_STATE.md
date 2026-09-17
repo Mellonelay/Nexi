@@ -19,6 +19,15 @@ NEXI remains in the **finishing / targeted-repair state**, not a rebuild phase.
 - Current operator workflow is documented in `NEXI_CLOUDFLARE_BACKEND_OPERATOR_RUNBOOK.md`; Container shell access uses Cloudflare's official Wrangler SSH path.
 - Any legitimate future backend source repair performed through the Cloudflare execution plane must be verified there and reconciled to GitHub `main` immediately at task completion.
 
+### Production resource identity / operator proof — 2026-09-17
+
+- Historical Cloudflare identifiers `nexi-staging`, `nexi-api-staging`, `nexi-core-staging`, and related `*-staging` resource names are the resources currently serving NEXI production. **Name suffixes do not define the environment.** Production identity is established by the active `api.nexitrading.app` route, live deployment/runtime state, and `NODE_ENV=production`.
+- Official Wrangler Container SSH was directly proven against the running `nexi-api` Container instance through the configured ED25519 operator key and OpenSSH ProxyCommand/`--stdio` path. The live Container reported `PID 1 = node dist/src/main.js`. Worker 0 remains only the operator transport; the process runs inside Cloudflare.
+- Fresh production HTTP proof: `/health` = 200, `/healthz` = 200, `/readyz` = 200 with D1 database + Valkey/Redis readiness, `/market/provider-state` = 200, and `/market/prices` = 200.
+- Cloudflare Pipelines are **currently configured and live**, not retired: the Worker has `MARKET_STRUCTURED_STREAM` and `MARKET_ARCHIVE_STREAM` bindings; both corresponding Pipelines report `running`; backend `MarketArchiveService` is wired into market reference persistence and `MARKET_ARCHIVE_REQUIRED=true`. Do not remove/disable Pipelines until a separate evidence-backed retirement decision proves the archive path is no longer required.
+- Live Worker observability uses `SENTRY_ENVIRONMENT=production`. Repository `wrangler.jsonc` was reconciled to that production environment; its Sentry release value represents the currently deployed production baseline and must be changed to the exact Git revision for any future deployment.
+- A production-config dry-run with verified Wrangler `4.129.0` and `--containers-rollout none` passed after reconciliation. Its 46 visible non-secret bindings exactly matched the active Worker; the only four live bindings absent from dry-run display were the expected secret bindings (`JWT_SECRET`, `REDIS_URL`, `SENTRY_DSN`, `MARKET_ARCHIVE_PIPELINE_TOKEN`).
+
 ## Current proven state
 
 - Frontend source convergence: **COMPLETE and pushed** at `81baa15...`; not yet deployed.

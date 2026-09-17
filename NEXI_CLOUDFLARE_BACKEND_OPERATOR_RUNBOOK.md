@@ -28,11 +28,16 @@ Never retry a failed Wrangler command blindly. Read the actual error, re-check t
 ## Current operator baseline discovered during convergence
 
 The repository manifests and lockfile pin Wrangler `4.127.1`. During the 2026-09-17 transition, the repo-local binary was absent and the verified installed global operator was `4.129.0`; upstream help advertised a newer release. These are volatile facts. Do not silently update the repository pin. Before consequential work, discover the currently callable Wrangler version and exact subcommand help again.
+When the repo-local binary is absent, do **not** use bare `npx wrangler`: npm can fetch a newer CLI and silently change semantics. Use `npx --no-install wrangler` only when a local binary is present; otherwise use the explicitly verified installed binary or a version-pinned isolated validation environment.
 
 Current source config: `cloudflare-container-bootstrap/wrangler.jsonc`.
 Current Worker identity: `nexi-staging`.
 Current Container application identity: `nexi-api-staging`.
 Public API authority: `https://api.nexitrading.app`.
+
+**Naming rule:** `staging` in these historical Cloudflare resource identifiers does **not** mean this is a staging environment. They are the resources currently serving production. Determine environment from the active route/deployment/runtime and `NODE_ENV=production`, never from the resource-name suffix. Renaming them is a separate migration and is not required for normal production operation.
+
+**Pipelines status:** do not treat Pipelines as optional historical debris. Current Worker bindings include both market Pipeline streams, both Pipeline resources are live/running, and backend `MarketArchiveService` remains wired with `MARKET_ARCHIVE_REQUIRED=true`. Any retirement is a separate change requiring caller/runtime analysis and explicit owner approval.
 
 Do not freeze version IDs, instance IDs, image digests, process IDs, account IDs, or secret values in permanent operating instructions; discover them live.
 

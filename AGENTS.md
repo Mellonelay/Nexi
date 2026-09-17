@@ -5,6 +5,7 @@ GitHub `main` is the durable NEXI source authority. Cloudflare Worker + Containe
 
 - ChatGPT remains the parent/controller.
 - Backend runtime inspection, debugging, verification, and authorized backend operation target the live Cloudflare backend (`api.nexitrading.app`) and its Worker/Container/D1/platform resources.
+- Cloudflare resource identifiers that still contain `staging` are historical names, not environment authority. The current production backend is identified by the active `api.nexitrading.app` route, live deployment/runtime evidence, and `NODE_ENV=production`; do not redirect work to a separate staging workflow merely because a resource name contains `staging`.
 - Worker 0 may run Git, Wrangler, Cloudflare MCP, Graphify/static tools, frontend/Admin hosting, and the officially supported Wrangler Container SSH path; a local NestJS/VM backend is not acceptance or runtime truth.
 - Any legitimate backend source edit performed through the Cloudflare execution plane must be reconciled to GitHub `main` immediately when the bounded task finishes.
 - Historical Windows trees, Codespaces, old VM workspaces, branches, stashes, and receipts are reference/evidence only unless fresh verification proves they contain unique accepted work.
