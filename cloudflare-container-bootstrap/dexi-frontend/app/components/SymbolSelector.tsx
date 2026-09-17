@@ -62,8 +62,7 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
       >
         {currentAsset && <AssetIcon item={{ assetId: currentAsset.id, symbol: currentAsset.symbol, displaySymbol: currentAsset.displaySymbol, name: currentAsset.name }} size="md" />}
         <span>
-          {/* If it's a simple ticker like BTC, ETH, etc (no dots/slashes), append /USDT for display */}
-          {/^[A-Z0-9]+$/.test(currentSymbol) && currentSymbol.length <= 5 ? `${currentSymbol}/USDT` : currentSymbol}
+          {currentAsset?.pair ?? currentSymbol}
         </span>
         <ChevronDown size={20} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
@@ -113,7 +112,7 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
                     <AssetIcon item={item} />
                     <div className="min-w-0">
                       <div className="truncate text-sm font-bold text-white">
-                        {activeTab === 'Crypto' ? `${item.displaySymbol}/USDT` : item.displaySymbol}
+                        {item.pair}
                       </div>
                       <div className="truncate text-[10px] text-gray-500">{item.name}</div>
                     </div>

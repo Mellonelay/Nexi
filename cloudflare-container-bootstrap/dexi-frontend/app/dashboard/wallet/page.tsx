@@ -130,7 +130,7 @@ export default function WalletPage() {
 
   return <PageShell>
     <header className="mx-auto mb-4 flex max-w-7xl items-center justify-between gap-3 pl-14 sm:pl-0">
-      <div className="min-w-0"><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#48C0CC]">Financial control center</p><h1 className="mt-1 truncate text-xl font-semibold tracking-tight gradient-text sm:text-2xl">Wallet</h1><p className="mt-1 truncate text-xs text-[#8C8299]">Authoritative accounts, assets and activity.</p></div>
+      <div className="min-w-0"><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#48C0CC]">Financial control center</p><h1 className="mt-1 truncate text-xl font-semibold tracking-tight gradient-text sm:text-2xl">Wallet</h1><p className="mt-1 truncate text-xs text-[#8C8299]">Wallet accounts, assets and activity.</p></div>
       <div className="flex shrink-0 items-center gap-2"><WalletConnectControl /><SecondaryButton onClick={() => void loadWallet()}><RefreshCw size={15} className="sm:mr-2" /><span className="sr-only sm:not-sr-only">Refresh</span></SecondaryButton></div>
     </header>
     <WalletDashboardLayout>
@@ -140,7 +140,7 @@ export default function WalletPage() {
             <div className="min-w-0">
               <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#C3BBD0] sm:text-xs"><WalletCards size={16} className="shrink-0 text-[#48C0CC]" /> Total assets</div>
               <p className="mt-1.5 truncate font-mono text-[1.75rem] font-semibold leading-none tabular-nums sm:mt-2 sm:text-3xl">{state === 'LIVE' ? text(overviewTotal) : 'UNAVAILABLE'}</p>
-              <p className="mt-1.5 text-[10px] leading-4 text-[#8C8299] sm:text-xs">Backend-authoritative wallet value.</p>
+              <p className="mt-1.5 text-[10px] leading-4 text-[#8C8299] sm:text-xs">Current wallet value.</p>
             </div>
             {state !== 'LIVE' && <StatusBadge state={state} />}
           </div>

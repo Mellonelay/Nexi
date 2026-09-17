@@ -7,7 +7,7 @@ import { useLocale } from "../state/LocaleProvider";
 
 const navItems = [
   { key: "dashboard", label: "Dashboard", href: "/dashboard", icon: Home },
-  { key: "spot", label: "Spot", href: "/dashboard/spot", icon: LineChart },
+  { key: "spot", label: "Spot/Margin", href: "/dashboard/spot", icon: LineChart },
   { key: "options", label: "Options", href: "/dashboard/binary", icon: BarChart3 },
   { key: "wallet", label: "Wallet", href: "/dashboard/wallet", icon: Wallet },
   { key: "earn", label: "Earn", href: "/dashboard/mining", icon: Coins },

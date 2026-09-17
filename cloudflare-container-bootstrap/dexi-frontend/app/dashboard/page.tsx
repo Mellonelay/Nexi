@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import {
-  ArrowUpRight,
   Bitcoin,
   BarChart3,
   ChevronDown,
@@ -25,7 +24,6 @@ import { useLocale } from "../state/LocaleProvider";
 import {
   AssetMark,
   MarketSparkline,
-  OpportunityArtwork,
 } from "./components/QuotesHubVisuals";
 
 const tabs = [
@@ -341,37 +339,6 @@ export default function Dashboard() {
                 </button>
               ))
             )}
-          </div>
-        </section>
-        <section className="nexi-promo relative mt-auto min-h-[108px] overflow-hidden rounded-[18px] px-3 py-3 md:mt-6 md:min-h-[220px] md:rounded-[24px] md:px-7 md:py-8">
-          <OpportunityArtwork />
-          <div className="relative ml-[34%] max-w-[470px] md:ml-[26%]">
-            <h2 className="whitespace-nowrap text-[15px] font-semibold tracking-[-0.025em] text-white md:text-3xl">
-              Markets move fast.
-            </h2>
-            <p className="mt-0.5 text-[11px] font-medium text-[var(--nexi-text-secondary)] md:mt-1 md:text-2xl">
-              Act with precision.
-            </p>
-            <button
-              type="button"
-              onClick={() => router.push("/dashboard/learn")}
-              className="nexi-promo-button nexi-interactive mt-2 inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2.5 text-[10px] font-medium md:mt-5 md:min-h-11 md:rounded-xl md:px-4 md:text-sm"
-            >
-              Explore Opportunities{" "}
-              <ArrowUpRight
-                className="h-3 w-3 md:h-4 md:w-4"
-                aria-hidden="true"
-              />
-            </button>
-          </div>
-          <div
-            className="absolute right-3 top-3 flex items-center gap-1.5 md:right-5 md:top-5 md:gap-2"
-            aria-label="Promotional panel pagination"
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-[var(--nexi-cal-violet-bright)] shadow-[0_0_10px_var(--nexi-cal-violet-bright)] md:h-2 md:w-2" />
-            <span className="h-1.5 w-1.5 rounded-full bg-violet-300/25 md:h-2 md:w-2" />
-            <span className="h-1.5 w-1.5 rounded-full bg-violet-300/25 md:h-2 md:w-2" />
-            <span className="h-1.5 w-1.5 rounded-full bg-violet-300/25 md:h-2 md:w-2" />
           </div>
         </section>
       </div>

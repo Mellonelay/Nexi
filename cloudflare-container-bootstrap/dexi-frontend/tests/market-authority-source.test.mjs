@@ -20,6 +20,10 @@ test('market discovery is projected from the canonical 53-asset registry', () =>
   const catalog = read('app/lib/market-catalog.ts');
   const hook = read('app/hooks/useMarketData.ts');
   assert.match(catalog, /ASSET_REGISTRY\.map\(\(asset\) => liveByAsset\.get\(asset\.id\) \?\? pairFor\(asset\)\)/);
-  assert.match(hook, /marketCatalog\(data/);
+  assert.match(hook, /applyMarketSnapshot\(current, data/);
+  assert.match(catalog, /sequence\?: string/);
+  assert.match(catalog, /nextSequence <= previousSequence/);
+  assert.match(hook, /market_snapshot/);
+  assert.match(hook, /market_tick/);
   assert.doesNotMatch(hook, /const crypto = \[/);
 });

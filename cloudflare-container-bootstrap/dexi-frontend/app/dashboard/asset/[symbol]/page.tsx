@@ -31,7 +31,7 @@ export default function AssetDetailPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#050508] px-6 text-center text-sm text-[#C3BBD0]">
         <SafeBackButton fallback="/dashboard" label="Back to Quotes Hub" />
-        <p>{marketLoading ? 'Resolving approved market asset…' : marketError ? 'Market data is unavailable. The approved asset cannot be resolved right now.' : 'This market asset is not approved.'}</p>
+        <p>{marketLoading ? 'Loading market asset…' : marketError ? 'Market data is unavailable. This asset cannot be loaded right now.' : 'This market asset is unavailable.'}</p>
       </div>
     );
   }

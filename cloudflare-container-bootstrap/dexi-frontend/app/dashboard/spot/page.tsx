@@ -255,7 +255,7 @@ export default function SpotPage() {
         idempotencyKey: `margin:open:${normalizedSymbol}:${Date.now()}`,
       });
       setMarginCollateral('');
-      setMarginFeedback(`${marginDirection} ${marginLeverage}x position submitted to the authoritative API.`);
+      setMarginFeedback(`${marginDirection} ${marginLeverage}x position submitted.`);
       await refreshMarginPositions();
     } catch {
       setMarginFeedback('This margin position could not be opened.');

@@ -8,6 +8,7 @@ import {
 import { Toaster } from 'sonner';
 import { ActivePairProvider } from './state/ActivePairProvider';
 import { LocaleProvider } from './state/LocaleProvider';
+import { MarketDataProvider } from './hooks/useMarketData';
 import { WagmiProvider } from 'wagmi';
 import { config as wagmiConfig } from './lib/wagmi';
 
@@ -17,6 +18,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const content = (
       <QueryClientProvider client={queryClient}>
       <LocaleProvider>
+        <MarketDataProvider>
         <ActivePairProvider>
           {children}
           <Toaster
@@ -30,6 +32,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             }}
           />
         </ActivePairProvider>
+        </MarketDataProvider>
       </LocaleProvider>
       </QueryClientProvider>
   );

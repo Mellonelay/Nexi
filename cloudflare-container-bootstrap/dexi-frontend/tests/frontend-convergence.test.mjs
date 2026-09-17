@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import { ASSET_REGISTRY, findAsset, assetIconPath } from '../app/lib/asset-registry.ts';
-import { marketCatalog } from '../app/lib/market-catalog.ts';
+import { applyMarketSnapshot, applyMarketTick, marketCatalog } from '../app/lib/market-catalog.ts';
 import { finiteMarketNumber, normalizeCandle } from '../app/lib/market-data.ts';
 import { simpleMovingAverage, exponentialMovingAverage, bollingerBands, relativeStrengthIndex, movingAverageConvergenceDivergence } from '../app/lib/market-indicators.ts';
 import { instrumentFromMarketPair, instrumentFromPair, normalizePair } from '../app/state/active-instrument.ts';
@@ -78,4 +78,70 @@ test('wallet totals, action locks and shared sheets preserve source safety bound
   assert.match(read('dashboard/spot/page.tsx'), /socket.on\('disconnect', handleConnectionLoss\)/);
   assert.match(read('dashboard/spot/page.tsx'), /socket.off\('disconnect', handleConnectionLoss\)/);
   assert.match(read('components/BottomNav.tsx'), /grid-cols-5/);
+});
+
+
+test('all 53 discovery rows preserve backend state and monotonic per-symbol realtime sequences', () => {
+  const empty = marketCatalog();
+  const snapshot = applyMarketSnapshot(empty, { state: 'STALE', data: [
+    { symbol: 'BTCUSDT', lastPrice: '101', priceChangePercent: '1.5', volume: '22', provider: 'binance-spot', state: 'STALE', sequence: '10' },
+    { symbol: 'AAPLUSDT', lastPrice: '202', priceChangePercent: '-0.4', volume: '33', provider: 'gate', state: 'LIVE', sequence: '5' },
+  ] });
+  assert.equal(snapshot.length, 53);
+  assert.equal(snapshot.find((row) => row.displaySymbol === 'BTC').price, 101);
+  assert.equal(snapshot.find((row) => row.displaySymbol === 'BTC').dataState, 'STALE');
+  assert.equal(snapshot.find((row) => row.displaySymbol === 'BTC').sequence, '10');
+  assert.equal(snapshot.find((row) => row.displaySymbol === 'ETH').price, null);
+
+  const ticked = applyMarketTick(snapshot, { symbol: 'BTCUSDT', price: '103', change: '2.1', vol: '44', provider: 'binance-spot', state: 'LIVE', sequence: '11', timestamp: '2026-09-16T00:00:00Z' });
+  assert.equal(ticked.find((row) => row.displaySymbol === 'BTC').price, 103);
+  assert.equal(ticked.find((row) => row.displaySymbol === 'BTC').sequence, '11');
+
+  const replayed = applyMarketTick(ticked, { symbol: 'BTCUSDT', price: '99', state: 'LIVE', sequence: '10', timestamp: '2026-09-16T00:00:01Z' });
+  assert.equal(replayed.find((row) => row.displaySymbol === 'BTC').price, 103);
+  const lateSnapshot = applyMarketSnapshot(replayed, { state: 'LIVE', data: [
+    { symbol: 'BTCUSDT', lastPrice: '102', provider: 'binance-spot', state: 'LIVE', sequence: '10' },
+  ] });
+  assert.equal(lateSnapshot.find((row) => row.displaySymbol === 'BTC').price, 103);
+  assert.equal(lateSnapshot.find((row) => row.displaySymbol === 'BTC').sequence, '11');
+
+  const noSequence = applyMarketTick(lateSnapshot, { symbol: 'BTCUSDT', price: '500', state: 'LIVE', timestamp: '2026-09-16T00:00:02Z' });
+  assert.equal(noSequence.find((row) => row.displaySymbol === 'BTC').price, 103);
+  const staleByCanonicalId = applyMarketTick(lateSnapshot, { canonicalAssetId: 'stock:aapl', price: '203', state: 'STALE', sequence: '6', observedAt: '2026-09-16T00:00:01Z' });
+  assert.equal(staleByCanonicalId.find((row) => row.displaySymbol === 'AAPL').price, 203);
+  assert.equal(staleByCanonicalId.find((row) => row.displaySymbol === 'AAPL').dataState, 'STALE');
+});
+
+test('source keeps the exact mobile product boundary and Operate-mode Quotes surface', () => {
+  const nav = read('components/BottomNav.tsx');
+  const quotes = read('dashboard/page.tsx');
+  assert.match(nav, /label: "Spot\/Margin"/);
+  assert.match(nav, /grid-cols-5/);
+  assert.doesNotMatch(quotes, /Explore Opportunities/);
+  assert.doesNotMatch(quotes, /Markets move fast/);
+  assert.match(read('hooks/useMarketData.ts'), /socket\.on\('market_snapshot', handleSnapshot\)/);
+  assert.match(read('hooks/useMarketData.ts'), /socket\.on\('market_tick', handleTick\)/);
+});
+
+
+test('market discovery and realtime catalog have one shared provider owner', () => {
+  const providers = read('providers.tsx');
+  const hook = read('hooks/useMarketData.ts');
+  assert.match(providers, /<MarketDataProvider>/);
+  assert.match(hook, /createContext<MarketDataValue/);
+  assert.match(hook, /useMarketData must be used inside MarketDataProvider/);
+  assert.equal((providers.match(/<MarketDataProvider>/g) ?? []).length, 1);
+});
+
+
+test('public financial and market copy does not expose implementation-authority jargon', () => {
+  const publicSources = [
+    read('dashboard/spot/page.tsx'),
+    read('dashboard/wallet/page.tsx'),
+    read('dashboard/asset/[symbol]/page.tsx'),
+  ].join('\n');
+  assert.doesNotMatch(publicSources, /authoritative API/i);
+  assert.doesNotMatch(publicSources, /backend-authoritative/i);
+  assert.doesNotMatch(publicSources, /approved market asset/i);
+  assert.doesNotMatch(publicSources, /market asset is not approved/i);
 });
