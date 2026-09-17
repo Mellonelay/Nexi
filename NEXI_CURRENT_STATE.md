@@ -30,7 +30,7 @@ NEXI remains in the **finishing / targeted-repair state**, not a rebuild phase.
 
 ## Current proven state
 
-- Frontend source convergence: **COMPLETE and pushed** at `81baa15...`; not yet deployed.
+- Public source convergence frontier: **COMPLETE, verified, and pushed** at `5c01b715985fec51c79699fcf5b7319e3435ac0e`; not yet promoted to production. The bounded repair preserves backend market state and monotonic per-symbol realtime sequences without creating a second market owner.
 - Production deployment baseline: **COMPLETE** at `3b173ea...`.
 - Backend/Cloudflare readiness and health: **PROVEN PRODUCTION** for the deployed baseline.
 - Public/Admin bounded unauthenticated production browser acceptance: **COMPLETE** for the deployed baseline.
@@ -40,6 +40,7 @@ NEXI remains in the **finishing / targeted-repair state**, not a rebuild phase.
 - Worker-0 dependency ownership: **RECONCILED**. Public source `node_modules` -> `/srv/nexi/public/shared/node_modules`; Admin source `node_modules` -> `/srv/nexi/admin/shared/node_modules`.
 - Public direct dependencies: **40/40 validated** against lockfile/current install.
 - Admin direct dependencies: **70/70 validated** against lockfile/current install; Admin `npm run typecheck`: **PASS** after dependency re-homing.
+- Canonical `/srv/nexi` package-build verification for the current frontier: Public Next 14.0.4 production build **PASS** from `/srv/nexi/public/build-20260917-145740` using `/srv/nexi/public/shared/node_modules`; Admin production build **PASS** from `/srv/nexi/admin/build-20260917-145740` using `/srv/nexi/admin/shared/node_modules`. Public rebuildable `.next/cache` was removed after the successful build and is not part of the immutable release payload.
 - Runtime resolution confirms Public `next` and Admin `@tanstack/react-start` resolve from their dedicated `/srv/nexi/.../shared/node_modules` owners.
 - Stale source build outputs `.next` and Admin `.output`: **REMOVED as rebuildable generated state**.
 - Large remaining disk use under historical `/srv/nexi/.../releases` is a **release-retention/rollback policy issue**, not a dependency-correctness defect.

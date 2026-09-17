@@ -53,8 +53,8 @@ Therefore:
 
 | Requirement | Current authority path | Source status | Runtime status | Evidence / release | Dependency drift | Remaining gap | Final verdict |
 |---|---|---|---|---|---|---|---|
-| Source convergence | GitHub `main` | Complete | N/A | `81baa15f82901f26405cfd378f7e0f5fe31b693e`; frontend source typecheck + 72/72 source tests + diff validation | None known | Current source is not yet deployed | `PROVEN_SOURCE` |
-| Production deployment | Worker + Container + Public + Admin | Complete for deployed baseline | Complete | `3b173ea38da4c80193c5e0b552ae62fede22fab7` production baseline | Newer source `81baa15...` exists | Deploy/accept newer source only when owner authorizes that later phase | `PROVEN_PRODUCTION` |
+| Source convergence | GitHub `main` | Complete | N/A | `5c01b715985fec51c79699fcf5b7319e3435ac0e`; current Public source typecheck + 67/67 source tests + realtime state/monotonic-sequence regression proof + canonical Public/Admin package builds | None known | Current source is not yet promoted/deployed | `PROVEN_SOURCE` |
+| Production deployment | Worker + Container + Public + Admin | Complete for deployed baseline | Complete | `3b173ea38da4c80193c5e0b552ae62fede22fab7` production baseline | Newer Public source `5c01b715...` exists | Promote/deploy and runtime-verify newer source only with current owner authorization | `PROVEN_PRODUCTION` |
 | Backend health/readiness | Worker -> Container -> NestJS -> D1/Valkey | Complete | `/health`, `/healthz`, `/readyz` healthy | final production deployment | None known | None | `PROVEN_PRODUCTION` |
 | Public bounded browser acceptance | Public production app | Complete | Desktop + mobile bounded unauthenticated acceptance passed | production Playwright/Chromium | None known | Authenticated flows separate | `PROVEN_PRODUCTION` |
 | Admin bounded browser acceptance | Admin production app | Complete | Overview/users/market-feeds settle correctly to sign-in boundary; checked session no console errors/warnings | production browser acceptance | None known | Privileged actions need real Admin context | `PROVEN_PRODUCTION` |
@@ -372,3 +372,14 @@ Fresh read-only/runtime evidence established:
 `PIPELINES_CURRENTLY_CONFIGURED_AND_REQUIRED = PROVEN_SOURCE_PLUS_PLATFORM_CONFIGURATION`
 
 This section does not claim that every configured Cloudflare feature is permanently required. It prevents premature deletion: optional-feature retirement must be decided from current callers, bindings, runtime evidence, and owner intent rather than old architecture assumptions.
+## 23. Public/Admin deployable-source frontier — 2026-09-17
+
+The bounded Public convergence repair is durable source at GitHub `main@5c01b715985fec51c79699fcf5b7319e3435ac0e`. Current source verification established Public typecheck PASS, 67/67 source tests PASS, and the repaired market catalog/realtime path preserves backend data-state semantics and monotonic per-symbol sequence ordering. Targeted static/graph fan-in found maintainability debt but no demonstrated release-blocking duplicate authority or circular dependency in the changed scope.
+
+Canonical package builds were produced through the dedicated runtime/build ownership surfaces rather than arbitrary repository dependency trees: Public built successfully from `/srv/nexi/public/build-20260917-145740` using `/srv/nexi/public/shared/node_modules`; Admin built successfully from `/srv/nexi/admin/build-20260917-145740` using `/srv/nexi/admin/shared/node_modules`. The Public `.next/cache` generated during packaging was removed as rebuildable cache and is not part of the release payload. Existing current/rollback releases and shared dependency owners were preserved.
+
+This proves a **deployable source/package frontier**, not production promotion. Production Public/Admin remain on the previously proven deployed baseline until explicit promotion/deployment authorization, after which runtime verification must be fresh.
+
+`PUBLIC_ADMIN_DEPLOYABLE_SOURCE_FRONTIER = PROVEN_SOURCE`
+
+`PUBLIC_ADMIN_NEW_FRONTIER_DEPLOYED = NO`
