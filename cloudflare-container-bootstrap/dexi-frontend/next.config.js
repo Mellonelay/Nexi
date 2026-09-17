@@ -1,8 +1,12 @@
 const { withSentryConfig } = require('@sentry/nextjs/config');
 
 /** @type {import('next').NextConfig} */
+const releaseBuildId = process.env.NEXI_BUILD_ID?.trim();
+
 const nextConfig = {
   reactStrictMode: true,
+  output: 'standalone',
+  ...(releaseBuildId ? { generateBuildId: async () => releaseBuildId } : {}),
   async redirects() {
     return [{ source: '/', destination: '/dashboard', permanent: false }];
   },
