@@ -1,11 +1,12 @@
+import { jest } from "@jest/globals";
 // This gateway unit test supplies MarketAuthorityService itself. Mocking its
 // module keeps the test unit-scoped and avoids loading the production D1
 // adapter (which pulls ESM-only `ky`) through Jest's CommonJS runtime.
-jest.mock('../../src/market/market-authority.service', () => ({
+jest.unstable_mockModule('../../src/market/market-authority.service', () => ({
   MarketAuthorityService: class MarketAuthorityService {},
 }));
 
-import { MarketGateway } from '../../src/market/market.gateway';
+const { MarketGateway } = await import('../../src/market/market.gateway');
 
 describe('MarketGateway ordering and deduplication', () => {
   it('does not label an unavailable snapshot as live', async () => {

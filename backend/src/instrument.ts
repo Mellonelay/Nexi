@@ -8,7 +8,19 @@ if (dsn) {
     environment: process.env.SENTRY_ENVIRONMENT ?? process.env.NODE_ENV ?? "development",
     release: process.env.SENTRY_RELEASE,
     tracesSampleRate: 0.05,
-    sendDefaultPii: false,
+    dataCollection: {
+      userInfo: false,
+      cookies: false,
+      httpHeaders: false,
+      httpBodies: [],
+      urlQueryParams: false,
+      graphQL: { document: false, variables: false },
+      genAI: { inputs: false, outputs: false },
+      databaseQueryData: false,
+      queues: false,
+      stackFrameVariables: false,
+      frameContextLines: 0,
+    },
     integrations: [Sentry.nestIntegration()],
     beforeSend(event) {
       if (event.request) {

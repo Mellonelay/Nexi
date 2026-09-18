@@ -1,11 +1,11 @@
 import { BadRequestException, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
 
-jest.mock('viem', () => ({
+jest.unstable_mockModule('viem', () => ({
   getAddress: (value: string) => value.toLowerCase(),
   verifyMessage: jest.fn().mockResolvedValue(true),
 }));
 
-jest.mock('@spruceid/siwe-parser', () => ({
+jest.unstable_mockModule('@spruceid/siwe-parser', () => ({
   ParsedMessage: class {
     version = '1';
     scheme = '';
@@ -38,8 +38,8 @@ jest.mock('@spruceid/siwe-parser', () => ({
 
 // Load after module mocks so the parser and signature boundary stay deterministic.
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { WalletAuthService } = require('../../src/auth/wallet-auth.service') as typeof import('../../src/auth/wallet-auth.service');
-const { verifyMessage } = jest.requireMock('viem') as { verifyMessage: jest.Mock };
+const { WalletAuthService } = await import('../../src/auth/wallet-auth.service');
+const { verifyMessage } = await import('viem') as unknown as { verifyMessage: jest.Mock };
 
 function makeService() {
   const records = new Map<string, string>();

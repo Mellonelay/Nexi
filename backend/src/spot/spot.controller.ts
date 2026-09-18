@@ -8,7 +8,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
-import { AuthenticatedRequest } from "../auth/auth.types";
+import type { AuthenticatedRequest } from "../auth/auth.types";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { SpotService } from "./spot.service";
 import { CancelOrderDto, PlaceOrderDto } from "./spot.dto";

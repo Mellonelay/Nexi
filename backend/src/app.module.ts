@@ -37,6 +37,9 @@ import { D1PrismaModule } from "./d1/d1-prisma.module";
 import { WorkflowCommandsModule } from "./workflows/workflow-commands.module";
 import { ReferralVipModule } from "./referral-vip/referral-vip.module";
 import { ProfileModule } from "./profile/profile.module";
+import { createObserveModule } from "@nestjs/observe";
+
+export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
 @Module({
   imports: [
@@ -77,6 +80,11 @@ import { ProfileModule } from "./profile/profile.module";
     WorkflowCommandsModule,
     ReferralVipModule,
     ProfileModule,
+    ObserveModule.forRoot({
+      appKey: process.env.OBSERVE_APP_KEY,
+      appSecret: process.env.OBSERVE_APP_SECRET,
+      serviceId: "backend",
+    }),
   ],
   controllers: [AppController, FeedbackController],
   providers: [

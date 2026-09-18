@@ -14,7 +14,7 @@ import {
 import { ApiTags } from "@nestjs/swagger";
 import { AuthService } from "./auth.service";
 import { JwtAuthGuard } from "./jwt-auth.guard";
-import { AuthenticatedRequest } from "./auth.types";
+import type { AuthenticatedRequest } from "./auth.types";
 import {
   DisableMfaDto,
   GenerateBackupCodesDto,

@@ -10,7 +10,7 @@ import {
 } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
-import { AuthenticatedRequest } from "../auth/auth.types";
+import type { AuthenticatedRequest } from "../auth/auth.types";
 import { MarginService } from "./margin.service";
 import {
   CloseMarginPositionDto,

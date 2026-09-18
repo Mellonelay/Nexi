@@ -56,7 +56,7 @@ import {
   MaintenanceWindowQueryDto,
   CancelMaintenanceWindowDto,
 } from "./admin.dto";
-import { AuthenticatedRequest } from "../auth/auth.types";
+import type { AuthenticatedRequest } from "../auth/auth.types";
 import { AdminPermissionGuard } from "./admin-permission.guard";
 import { RequireAdminPermission } from "./admin-permission.decorator";
 import { MiningService } from "../mining/mining.service";

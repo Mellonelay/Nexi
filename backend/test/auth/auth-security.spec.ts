@@ -1,15 +1,20 @@
 import { UnauthorizedException } from '@nestjs/common';
 import { AuthSecurityEventsService, AuthSecurityEvent } from '../../src/auth/auth-security-events.service';
-import { AuthService } from '../../src/auth/auth.service';
-import { UsersService } from '../../src/users/users.service';
+
+
 import { AuthSessionService } from '../../src/auth/auth-session.service';
-import { FinancialOperationsController } from '../../src/financial/financial-operations.controller';
+
 import { TOTP } from 'otpauth';
 
-jest.mock('bcrypt', () => ({
+jest.unstable_mockModule('bcrypt', () => ({
   hash: jest.fn().mockImplementation((value: string) => `hashed-${value}`),
   compare: jest.fn().mockResolvedValue(true),
 }));
+
+const bcryptMock = await import('bcrypt') as unknown as { hash: jest.Mock; compare: jest.Mock };
+const { AuthService } = await import('../../src/auth/auth.service');
+const { UsersService } = await import('../../src/users/users.service');
+const { FinancialOperationsController } = await import('../../src/financial/financial-operations.controller');
 
 describe('A20 Security backend contract', () => {
   describe('UsersService.changeSecurityPassword', () => {
@@ -19,7 +24,7 @@ describe('A20 Security backend contract', () => {
     });
 
     it('rejects when the current security password is wrong', async () => {
-      const { compare } = require('bcrypt');
+      const { compare } = bcryptMock;
       compare.mockResolvedValue(false);
       const service = new UsersService(makePrisma({ id: 'user-1', securityPasswordHash: 'hashed' }) as any);
       await expect(service.changeSecurityPassword('user-1', 'wrong', 'newpassword123456')).rejects.toThrow('Current security password is incorrect');
@@ -27,7 +32,7 @@ describe('A20 Security backend contract', () => {
     });
 
     it('updates only the separate security password hash on D1 runtime', async () => {
-      const { hash } = require('bcrypt');
+      const { hash } = bcryptMock;
       hash.mockClear();
       const d1 = {
         isEnabled: jest.fn().mockReturnValue(true),
@@ -41,7 +46,7 @@ describe('A20 Security backend contract', () => {
     });
 
     it('sets a security password for a wallet-created user without changing the login password', async () => {
-      const { hash } = require('bcrypt');
+      const { hash } = bcryptMock;
       hash.mockClear();
       const d1 = {
         isEnabled: jest.fn().mockReturnValue(true),
@@ -143,7 +148,7 @@ describe('A20 Security backend contract', () => {
     });
 
     it('disables MFA after password and token verification', async () => {
-      const { compare } = require('bcrypt');
+      const { compare } = bcryptMock;
       compare.mockResolvedValue(true);
       const totp = new TOTP({
         issuer: 'NEXI',
@@ -170,7 +175,7 @@ describe('A20 Security backend contract', () => {
     });
 
     it('requires password to disable MFA', async () => {
-      const { compare } = require('bcrypt');
+      const { compare } = bcryptMock;
       compare.mockResolvedValue(false);
       const usersService = {
         findById: jest.fn().mockResolvedValue({ id: 'user-1', securityPasswordHash: 'hashed' }),
@@ -194,7 +199,7 @@ describe('A20 Security backend contract', () => {
       const service = new AuthService(usersService, {} as any);
 
       await expect(service.verifySensitiveAction('user-1', '')).rejects.toBeInstanceOf(UnauthorizedException);
-      const { compare } = require('bcrypt');
+      const { compare } = bcryptMock;
       compare.mockResolvedValue(false);
       await expect(service.verifySensitiveAction('user-1', 'wrong')).rejects.toThrow('Sensitive action confirmation failed');
       compare.mockResolvedValue(true);
