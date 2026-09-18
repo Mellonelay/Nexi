@@ -3,6 +3,7 @@ import { MarketAuthorityService, NormalizedMarketQuoteInput } from './market-aut
 import { MarketKlineService } from './market-kline.service';
 import { MarketProviderEvent, ProviderDepthEvent, ProviderTradeEvent } from './market-provider.adapter';
 import { MarketProviderRouterService } from './market-provider-router.service';
+import { MarketSeederService } from './market-seeder.service';
 import { RedisService } from '../redis/redis.service';
 import { MarketReferencePersistenceService } from './market-reference-persistence.service';
 import { MARKET_KLINES_CHANNEL, MARKET_REFERENCE_CHANNEL, MarketKlineRealtimeEvent } from './market.types';
@@ -14,24 +15,55 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
   private readonly eventQueue: MarketProviderEvent[] = [];
   private activeWorkers = 0;
   private lastSaturationLogAt = 0;
+  private providerStartRetryTimer?: NodeJS.Timeout;
+  private providerStartAttempt = 0;
+  private destroyed = false;
   constructor(
     private readonly marketAuthority: MarketAuthorityService,
     private readonly marketKlines: MarketKlineService,
+    private readonly marketSeeder: MarketSeederService,
     private readonly providers: MarketProviderRouterService,
     private readonly redis: RedisService,
     private readonly referencePersistence: MarketReferencePersistenceService,
   ) {}
 
-  async onModuleInit(): Promise<void> {
-    const started = await this.providers.start((event) => this.enqueue(event));
-    if (!started) {
-      this.logger.log('Market provider disabled or not configured; serving persisted catalog and explicit unavailable states.');
-    }
+  onModuleInit(): void {
+    this.destroyed = false;
+    // Catalog/provider reconciliation is intentionally asynchronous so HTTP can
+    // become live quickly, but provider routing must never read D1 before that
+    // reconciliation finishes. Start ingestion only from the shared promise.
+    void this.startProvidersAfterReconciliation();
   }
 
   onModuleDestroy(): void {
+    this.destroyed = true;
+    if (this.providerStartRetryTimer) clearTimeout(this.providerStartRetryTimer);
+    this.providerStartRetryTimer = undefined;
     this.providers.stop();
     this.eventQueue.length = 0;
+  }
+
+  private async startProvidersAfterReconciliation(): Promise<void> {
+    try {
+      await this.marketSeeder.ensureReconciled();
+      if (this.destroyed) return;
+      const started = await this.providers.start((event) => this.enqueue(event));
+      this.providerStartAttempt = 0;
+      if (!started) {
+        this.logger.log('Market provider disabled or not configured; serving persisted catalog and explicit unavailable states.');
+      }
+    } catch (error) {
+      this.providers.stop();
+      if (this.destroyed) return;
+      const delay = Math.min(5_000 * (2 ** this.providerStartAttempt), 30_000);
+      this.providerStartAttempt += 1;
+      this.logger.warn(`Market provider startup waiting for catalog reconciliation; retrying in ${delay}ms: ${error instanceof Error ? error.message : 'unknown error'}`);
+      this.providerStartRetryTimer = setTimeout(() => {
+        this.providerStartRetryTimer = undefined;
+        void this.startProvidersAfterReconciliation();
+      }, delay);
+      this.providerStartRetryTimer.unref?.();
+    }
   }
 
   private enqueue(event: MarketProviderEvent): void {

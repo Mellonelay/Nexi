@@ -11,6 +11,7 @@ import { BinanceSpotAdapter } from './binance-spot.adapter';
 @Injectable()
 export class MarketSeederService implements OnModuleInit {
   private readonly logger = new Logger(MarketSeederService.name);
+  private reconciliationPromise?: Promise<void>;
 
   constructor(
     private readonly marketAuthority: MarketAuthorityService,
@@ -18,21 +19,35 @@ export class MarketSeederService implements OnModuleInit {
     private readonly binanceSpot: BinanceSpotAdapter,
   ) {}
 
-  async onModuleInit(): Promise<void> {
-    // Keep HTTP/Socket.IO startup independent from D1 catalog reconciliation.
-    // The catalog remains backend-authoritative and failures remain explicit.
-    void this.marketAuthority.ensureCatalog()
-      .then(() => {
-        this.logger.log('Market catalog authority initialized; external seeding remains configuration-gated.');
-        if (this.binanceSpot.isEnabled() && process.env.MARKET_BACKFILL_ON_STARTUP === 'true') {
-          void this.syncMarketData().catch((error) => this.logger.warn(`Binance Spot REST backfill failed: ${error instanceof Error ? error.message : 'unknown error'}`));
-        } else {
-          this.logger.log('Market REST backfill skipped; run the bounded market sync job explicitly.');
-        }
-      })
-      .catch((error: unknown) => {
-        this.logger.warn(`Market catalog seeding failed: ${error instanceof Error ? error.message : 'unknown error'}`);
+  onModuleInit(): void {
+    // Keep HTTP/Socket.IO startup independent from D1 catalog reconciliation,
+    // but expose the exact same reconciliation promise so provider ingestion
+    // cannot load a stale D1 routing policy while reconciliation is in flight.
+    void this.ensureReconciled().catch((error: unknown) => {
+      this.logger.warn(`Market catalog seeding failed: ${error instanceof Error ? error.message : 'unknown error'}`);
+    });
+  }
+
+  async ensureReconciled(): Promise<void> {
+    if (!this.reconciliationPromise) {
+      this.reconciliationPromise = this.reconcileCatalog().catch((error: unknown) => {
+        // A later bounded retry may re-run the canonical reconciliation after
+        // a transient D1 failure. Never cache a rejected promise indefinitely.
+        this.reconciliationPromise = undefined;
+        throw error;
       });
+    }
+    return this.reconciliationPromise;
+  }
+
+  private async reconcileCatalog(): Promise<void> {
+    await this.marketAuthority.ensureCatalog();
+    this.logger.log('Market catalog authority initialized; external seeding remains configuration-gated.');
+    if (this.binanceSpot.isEnabled() && process.env.MARKET_BACKFILL_ON_STARTUP === 'true') {
+      void this.syncMarketData().catch((error) => this.logger.warn(`Binance Spot REST backfill failed: ${error instanceof Error ? error.message : 'unknown error'}`));
+    } else {
+      this.logger.log('Market REST backfill skipped; run the bounded market sync job explicitly.');
+    }
   }
 
   async syncMarketData(): Promise<{ state: 'DISABLED' | 'COMPLETE' }> {

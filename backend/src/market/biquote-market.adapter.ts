@@ -42,7 +42,9 @@ export class BiquoteMarketAdapter implements MarketProviderAdapter {
   private readonly logger = new Logger(BiquoteMarketAdapter.name);
   private runtimeSymbols: MarketProviderRuntimeSymbol[] = [];
   private fallbackTimer?: NodeJS.Timeout;
+  private reconnectTimer?: NodeJS.Timeout;
   private connection?: signalR.HubConnection;
+  private stopping = false;
 
   configure(symbols: readonly MarketProviderRuntimeSymbol[]): void {
     this.runtimeSymbols = [...symbols]
@@ -55,18 +57,23 @@ export class BiquoteMarketAdapter implements MarketProviderAdapter {
 
   async start(onEvent: (event: MarketProviderEvent) => void): Promise<void> {
     if (!this.isEnabled() || this.runtimeSymbols.length === 0) return;
+    this.stopping = false;
     await this.poll(onEvent);
     try {
       await this.startSignalR(onEvent);
     } catch (error) {
       this.logger.warn(`BiQuote SignalR unavailable; using bounded REST fallback: ${error instanceof Error ? error.message : 'unknown error'}`);
       this.startFallbackPolling(onEvent);
+      this.scheduleSignalRRestart(onEvent);
     }
   }
 
   stop(): void {
+    this.stopping = true;
     if (this.fallbackTimer) clearInterval(this.fallbackTimer);
+    if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
     this.fallbackTimer = undefined;
+    this.reconnectTimer = undefined;
     if (this.connection) void this.connection.stop();
     this.connection = undefined;
   }
@@ -118,16 +125,43 @@ export class BiquoteMarketAdapter implements MarketProviderAdapter {
     connection.onreconnected(() => {
       void connection.invoke('Subscribe', instruments).catch((error) => this.logger.warn(`BiQuote resubscribe failed: ${String(error)}`));
     });
+    connection.onclose((error) => {
+      if (this.connection === connection) this.connection = undefined;
+      if (this.stopping) return;
+      this.logger.warn(`BiQuote SignalR closed; continuing with REST fallback: ${error instanceof Error ? error.message : 'connection closed'}`);
+      this.startFallbackPolling(onEvent);
+      this.scheduleSignalRRestart(onEvent);
+    });
     await connection.start();
     await connection.invoke('Subscribe', instruments);
     this.connection = connection;
+    this.stopFallbackPolling();
     this.logger.log(`BiQuote SignalR subscribed to ${instruments.length} canonical symbol(s).`);
   }
 
   private startFallbackPolling(onEvent: (event: MarketProviderEvent) => void): void {
+    if (this.fallbackTimer) return;
     const interval = this.pollIntervalMs();
     this.fallbackTimer = setInterval(() => { void this.poll(onEvent); }, interval);
     this.fallbackTimer.unref?.();
+  }
+
+  private stopFallbackPolling(): void {
+    if (this.fallbackTimer) clearInterval(this.fallbackTimer);
+    this.fallbackTimer = undefined;
+  }
+
+  private scheduleSignalRRestart(onEvent: (event: MarketProviderEvent) => void): void {
+    if (this.stopping || this.reconnectTimer) return;
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = undefined;
+      void this.startSignalR(onEvent).catch((error) => {
+        if (this.stopping) return;
+        this.logger.warn(`BiQuote SignalR restart failed; REST fallback remains active: ${error instanceof Error ? error.message : 'unknown error'}`);
+        this.scheduleSignalRRestart(onEvent);
+      });
+    }, 30_000);
+    this.reconnectTimer.unref?.();
   }
 
   private pollIntervalMs(): number {

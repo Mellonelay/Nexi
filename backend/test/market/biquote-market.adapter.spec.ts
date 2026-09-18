@@ -49,4 +49,26 @@ describe('BiquoteMarketAdapter', () => {
       price: '4455.923',
     });
   });
+
+  it('keeps REST fallback active and schedules SignalR recovery after connection failure', async () => {
+    process.env.MARKET_PROVIDER_ENABLED = 'true';
+    jest.useFakeTimers();
+    try {
+      const adapter = new BiquoteMarketAdapter() as any;
+      adapter.configure([{ symbol: 'USDCNH', providerInstrument: 'USDCNH' }]);
+      adapter.poll = jest.fn().mockResolvedValue(undefined);
+      adapter.startSignalR = jest.fn().mockRejectedValue(new Error('signalr unavailable'));
+
+      await adapter.start(jest.fn());
+
+      expect(adapter.fallbackTimer).toBeDefined();
+      expect(adapter.reconnectTimer).toBeDefined();
+
+      adapter.stop();
+      expect(adapter.fallbackTimer).toBeUndefined();
+      expect(adapter.reconnectTimer).toBeUndefined();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
 });
