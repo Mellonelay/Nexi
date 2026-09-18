@@ -5,7 +5,7 @@ import { MarketProviderAdapter, MarketProviderEvent, MarketProviderRuntimeSymbol
 import type { MarketKlineInput, MarketKlineInterval } from './market-kline.contract';
 
 export type BinanceSpotMarketEvent =
-  | { kind: 'ticker'; symbol: string; provider: 'binance-spot'; source: 'websocket'; providerInstrument: string; priceType: 'LAST'; eventTime: number; price: string; change24h: string; volume24h: string; high24h: string; low24h: string }
+  | { kind: 'ticker'; symbol: string; provider: 'binance-spot'; source: 'websocket' | 'rest:watchdog'; providerInstrument: string; priceType: 'LAST'; eventTime: number; price: string; change24h: string; volume24h: string; high24h: string; low24h: string }
   | { kind: 'kline'; symbol: string; provider: 'binance-spot'; source: 'websocket:kline'; providerInstrument: string; eventTime: number; openTime: number; closeTime: number; interval: '1m'; open: string; high: string; low: string; close: string; volume: string; closed: boolean }
   | { kind: 'depth'; symbol: string; provider: 'binance-spot'; source: 'websocket'; providerInstrument: string; eventTime: number; updateId: number; bids: Array<[string, string]>; asks: Array<[string, string]> }
   | { kind: 'trade'; symbol: string; provider: 'binance-spot'; source: 'websocket'; providerInstrument: string; eventTime: number; tradeId: number; price: string; quantity: string; maker: boolean };
@@ -37,9 +37,13 @@ export class BinanceSpotAdapter implements OnModuleDestroy, MarketProviderAdapte
   private readonly logger = new Logger(BinanceSpotAdapter.name);
   private socket?: WebSocket;
   private reconnectTimer?: NodeJS.Timeout;
+  private watchdogTimer?: NodeJS.Timeout;
   private reconnectAttempt = 0;
   private eventHandler?: (event: MarketProviderEvent) => void;
   private stopping = false;
+  private watchdogInFlight = false;
+  private readonly lastTickerAt = new Map<string, number>();
+  private readonly quoteStaleAfterMs = this.readQuoteStaleAfterMs();
   private readonly enabled = process.env.MARKET_PROVIDER_ENABLED === 'true';
   private readonly httpUrl = process.env.MARKET_PROVIDER_HTTP_URL?.trim() || 'https://data-api.binance.vision';
   private symbols = ((process.env.MARKET_PROVIDER_SYMBOLS_BINANCE_SPOT ?? process.env.MARKET_PROVIDER_SYMBOLS)?.split(',') ?? ['BTCUSDT'])
@@ -85,7 +89,10 @@ export class BinanceSpotAdapter implements OnModuleDestroy, MarketProviderAdapte
     });
     socket.on('message', (data: RawData) => {
       const event = this.normalize(data.toString());
-      if (event) onEvent(event);
+      if (event) {
+        if (event.kind === 'ticker') this.lastTickerAt.set(event.symbol.toLowerCase(), Date.now());
+        onEvent(event);
+      }
     });
     socket.on('error', (error) => this.logger.warn(`Binance Spot stream error: ${error.message}`));
     socket.on('close', () => {
@@ -93,6 +100,7 @@ export class BinanceSpotAdapter implements OnModuleDestroy, MarketProviderAdapte
       this.socket = undefined;
       if (!this.stopping) this.scheduleReconnect();
     });
+    this.startWatchdog(onEvent);
   }
 
   onModuleDestroy(): void {
@@ -102,7 +110,10 @@ export class BinanceSpotAdapter implements OnModuleDestroy, MarketProviderAdapte
   stop(): void {
     this.stopping = true;
     if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+    if (this.watchdogTimer) clearInterval(this.watchdogTimer);
     this.reconnectTimer = undefined;
+    this.watchdogTimer = undefined;
+    this.watchdogInFlight = false;
     this.socket?.close();
     this.socket = undefined;
   }
@@ -117,6 +128,58 @@ export class BinanceSpotAdapter implements OnModuleDestroy, MarketProviderAdapte
       if (!this.stopping && !this.socket && this.eventHandler) void this.start(this.eventHandler);
     }, delay);
     this.reconnectTimer.unref?.();
+  }
+
+  private startWatchdog(onEvent: (event: MarketProviderEvent) => void): void {
+    if (this.watchdogTimer) clearInterval(this.watchdogTimer);
+    const interval = Math.max(5_000, Math.floor(this.quoteStaleAfterMs / 2));
+    this.watchdogTimer = setInterval(() => { void this.refreshStaleTickers(onEvent); }, interval);
+    this.watchdogTimer.unref?.();
+    void this.refreshStaleTickers(onEvent);
+  }
+
+  private async refreshStaleTickers(onEvent: (event: MarketProviderEvent) => void): Promise<void> {
+    if (this.stopping || this.watchdogInFlight || this.symbols.length === 0) return;
+    const now = Date.now();
+    const stale = this.symbols.filter((symbol) => now - (this.lastTickerAt.get(symbol) ?? 0) >= this.quoteStaleAfterMs);
+    if (stale.length === 0) return;
+    this.watchdogInFlight = true;
+    try {
+      const quotes = await this.request<Array<Record<string, unknown>>>('/api/v3/ticker/24hr', {
+        symbols: JSON.stringify(stale.map((symbol) => symbol.toUpperCase())),
+      });
+      for (const quote of quotes) {
+        const symbol = String(quote.symbol ?? '').toUpperCase();
+        const price = String(quote.lastPrice ?? '');
+        if (!symbol || !Number.isFinite(Number(price)) || Number(price) <= 0) continue;
+        const eventTime = Number(quote.closeTime ?? Date.now());
+        const event: BinanceSpotMarketEvent = {
+          kind: 'ticker',
+          symbol,
+          provider: 'binance-spot',
+          source: 'rest:watchdog',
+          providerInstrument: symbol,
+          priceType: 'LAST',
+          eventTime: Number.isFinite(eventTime) && eventTime > 0 ? eventTime : Date.now(),
+          price,
+          change24h: String(quote.priceChangePercent ?? ''),
+          volume24h: String(quote.volume ?? ''),
+          high24h: String(quote.highPrice ?? ''),
+          low24h: String(quote.lowPrice ?? ''),
+        };
+        this.lastTickerAt.set(symbol.toLowerCase(), Date.now());
+        onEvent(event);
+      }
+    } catch (error) {
+      this.logger.warn(`Binance Spot REST watchdog failed: ${error instanceof Error ? error.message : 'unknown error'}`);
+    } finally {
+      this.watchdogInFlight = false;
+    }
+  }
+
+  private readQuoteStaleAfterMs(): number {
+    const value = Number.parseInt(process.env.MARKET_QUOTE_STALE_AFTER_MS ?? '30000', 10);
+    return Number.isFinite(value) && value > 0 ? value : 30000;
   }
 
   async fetchKlines(pair: string, interval = '1m', limit = 240): Promise<unknown[][]> {

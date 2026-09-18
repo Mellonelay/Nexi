@@ -45,6 +45,35 @@ describe('BinanceSpotAdapter', () => {
     await expect(adapter.fetchTrades('BTCUSDT')).resolves.toMatchObject([{ id: 'binance:BTCUSDT:9', side: 'BUY' }]);
   });
 
+  it('recovers a silent ticker stream through the bounded REST watchdog', async () => {
+    const adapter = new BinanceSpotAdapter() as unknown as {
+      symbols: string[];
+      request: jest.Mock;
+      refreshStaleTickers: (handler: (event: unknown) => void) => Promise<void>;
+    };
+    adapter.symbols = ['adausdt'];
+    adapter.request = jest.fn().mockResolvedValue([{
+      symbol: 'ADAUSDT',
+      lastPrice: '0.21',
+      priceChangePercent: '2.5',
+      volume: '100',
+      highPrice: '0.22',
+      lowPrice: '0.20',
+      closeTime: Date.now(),
+    }]);
+    const handler = jest.fn();
+
+    await adapter.refreshStaleTickers(handler);
+
+    expect(adapter.request).toHaveBeenCalledWith('/api/v3/ticker/24hr', { symbols: '["ADAUSDT"]' });
+    expect(handler).toHaveBeenCalledWith(expect.objectContaining({
+      kind: 'ticker',
+      source: 'rest:watchdog',
+      symbol: 'ADAUSDT',
+      price: '0.21',
+    }));
+  });
+
   it('discovers only canonical Spot crypto symbols with TRADING Spot permissions', async () => {
     const adapter = new BinanceSpotAdapter();
     jest.spyOn(global, 'fetch').mockImplementation(async () => ({
