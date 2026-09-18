@@ -22,7 +22,7 @@
     "PORT": "3000",
     "SENTRY_ENVIRONMENT": "production",
     // Current live production baseline. Any future deploy must set this to the exact Git revision being deployed.
-    "SENTRY_RELEASE": "3b173ea38da4c80193c5e0b552ae62fede22fab7",
+    "SENTRY_RELEASE": "e686d4771d9b5c149b7c8c67ff47251708a8c2ad",
     "CORS_ORIGINS": "https://app.nexitrading.app,https://admin.nexitrading.app",
     "WALLET_AUTH_DOMAIN": "app.nexitrading.app",
     "WALLET_AUTH_URI": "https://app.nexitrading.app",
