@@ -47,7 +47,8 @@ export class WalletGateGuard implements CanActivate {
       request.user = wallet.user; // Inject user into request
       return true;
     } catch (e) {
-      throw new UnauthorizedException(`NEXI SECURITY: Vault Breach Attempt - ${e.message}`);
+      const message = e instanceof Error ? e.message : String(e);
+      throw new UnauthorizedException(`NEXI SECURITY: Vault Breach Attempt - ${message}`);
     }
   }
 }

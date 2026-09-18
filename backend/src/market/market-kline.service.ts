@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '../prisma/d1-client';
 import { D1PrismaService } from '../d1/d1-prisma.service';
-import { MarketKlineInput, MarketKlineInterval, normalizeMarketKline } from './market-kline.contract';
+import { normalizeMarketKline } from './market-kline.contract';
+import type { MarketKlineInput, MarketKlineInterval } from './market-kline.contract';
 
 const DERIVED_KLINE_INTERVALS = [
   ['5m', 5 * 60_000],

@@ -10,7 +10,7 @@ import {
 } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { Role } from "../prisma/d1-client";
-import { AuthenticatedRequest } from "../auth/auth.types";
+import type { AuthenticatedRequest } from "../auth/auth.types";
 import { DevelopmentOnlyGuard } from "../auth/development-only.guard";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { OwnershipGuard } from "../auth/ownership.guard";

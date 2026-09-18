@@ -17,7 +17,7 @@ import { AuthSurfaceGuard } from "../auth/auth-surface.guard";
 import { RequireAuthSurface } from "../auth/auth-surface.decorator";
 import { Roles } from "../auth/roles.decorator";
 import { RolesGuard } from "../auth/roles.guard";
-import { AuthenticatedRequest } from "../auth/auth.types";
+import type { AuthenticatedRequest } from "../auth/auth.types";
 
 @ApiTags("Admin Authentication")
 @Controller("admin/auth")

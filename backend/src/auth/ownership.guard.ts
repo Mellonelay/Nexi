@@ -5,7 +5,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { AuthenticatedRequest } from './auth.types';
+import type { AuthenticatedRequest } from './auth.types';
 
 type RequestWithIdentity = AuthenticatedRequest & {
   params?: Record<string, string | undefined>;

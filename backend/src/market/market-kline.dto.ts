@@ -1,7 +1,8 @@
 import { Type } from 'class-transformer';
 import { IsDateString, IsIn, IsInt, IsOptional, IsString, Matches, Max, Min } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { MARKET_KLINE_INTERVALS, MarketKlineInterval } from './market-kline.contract';
+import { MARKET_KLINE_INTERVALS } from './market-kline.contract';
+import type { MarketKlineInterval } from './market-kline.contract';
 
 export class MarketKlineQueryDto {
   @ApiProperty({ description: 'Canonical market pair, with or without a slash.', example: 'BTCUSDT' })

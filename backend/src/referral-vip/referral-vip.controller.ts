@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AuthSurfaceGuard } from '../auth/auth-surface.guard';
 import { RequireAuthSurface } from '../auth/auth-surface.decorator';
-import { AuthenticatedRequest } from '../auth/auth.types';
+import type { AuthenticatedRequest } from '../auth/auth.types';
 import { ClaimReferralDto } from './referral-vip.dto';
 import { ReferralVipService } from './referral-vip.service';
 

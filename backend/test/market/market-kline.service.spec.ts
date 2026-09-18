@@ -1,6 +1,7 @@
-jest.mock('../../src/d1/d1-prisma.service', () => ({ D1PrismaService: class D1PrismaService {} }));
+import { jest } from "@jest/globals";
+jest.unstable_mockModule('../../src/d1/d1-prisma.service', () => ({ D1PrismaService: class D1PrismaService {} }));
 
-import { MarketKlineService } from '../../src/market/market-kline.service';
+const { MarketKlineService } = await import('../../src/market/market-kline.service');
 
 describe('MarketKlineService quote aggregation', () => {
   const createService = (d1Enabled = false) => {

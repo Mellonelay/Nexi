@@ -1,11 +1,12 @@
+import { jest } from "@jest/globals";
 // The D1 service imports the remote adapter, which is outside this unit's
 // boundary and ships as ESM. Its behavior is represented by the local fixture
 // below instead.
-jest.mock("../../src/d1/d1-prisma.service", () => ({
+jest.unstable_mockModule("../../src/d1/d1-prisma.service", () => ({
   D1PrismaService: class D1PrismaService {},
 }));
 
-import { MarketAuthorityService } from "../../src/market/market-authority.service";
+const { MarketAuthorityService } = await import("../../src/market/market-authority.service");
 import {
   CANONICAL_MARKET_CATALOG,
   CANONICAL_MARKET_CATALOG_COUNT,
