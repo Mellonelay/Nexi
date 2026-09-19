@@ -235,16 +235,21 @@ Do **not** reopen unrelated domains or restart broad acceptance.
 
 ## 16. Final current verdict
 
+The historical baseline below remains useful as prior evidence, but the fresh runtime re-audit in Section 24 is the current decision input:
+
 ```text
-SOURCE_CONVERGENCE = COMPLETE_AT_GITHUB_MAIN_81baa15
-SOURCE_STATE = PROVEN_SOURCE
-PRODUCTION_DEPLOYMENT = COMPLETE_AT_3b173ea_BASELINE
-FRONTEND_81baa15_DEPLOYED = NO
-PRODUCTION_BROWSER_ACCEPTANCE = COMPLETE FOR BOUNDED AVAILABLE CONTEXT ON DEPLOYED BASELINE
-MARKET_KLINES = PROVEN_PRODUCTION
-REALTIME_RECONNECT_RESNAPSHOT = PROVEN_PRODUCTION
-REST_RECOVERY = PROVEN_PRODUCTION
-DEPENDENCY_OWNERSHIP = RECONCILED
+SOURCE_CONVERGENCE = COMPLETE_AT_GITHUB_MAIN
+BACKEND_CLOUDFLARE_RUNTIME = RUNTIME_VERIFIED
+CLOUDFLARE_HEALTH_READINESS = PASS
+MARKET_ASSET_ROWS = 53
+MARKET_LIVE = 37
+MARKET_STALE = 16
+MARKET_UNAVAILABLE = 0
+MARKET_ARCHIVE_R2 = RETIRED_AND_CLEARED
+MARKET_PIPELINES = EMPTY
+PUBLIC_ADMIN_HOST_OWNERSHIP = DEDICATED_SRV_NEXI_CONFIRMED
+PUBLIC_ADMIN_EXTERNAL_RUNTIME = 522_NOT_VERIFIED
+MARKET_FULL_FRESHNESS = NOT_COMPLETE
 
 AUTHENTICATED_WALLET_SIWE_BALANCE = MANUAL_OWNER_ACCEPTANCE_REQUIRED
 PRIVILEGED_ADMIN_RBAC_ACTIONS = MANUAL_OWNER_ACCEPTANCE_REQUIRED
@@ -252,7 +257,7 @@ PRIVILEGED_ADMIN_RBAC_ACTIONS = MANUAL_OWNER_ACCEPTANCE_REQUIRED
 FULL_PRODUCTION_END_TO_END_ACCEPTED = NO
 ```
 
-The final `NO` is narrow. It does not mean NEXI must be rebuilt or that broad source/deployment/runtime work is incomplete. It means the two identity-dependent owner-context gates above have not yet been truthfully exercised with real authorized identities.
+The current `NO` is not only the two identity-dependent gates. Current direct probes also show that both external Public/Admin domains return HTTP 522 and that 16 of 53 market assets are stale. The backend and archive retirement are working, but full product/runtime completion cannot be claimed until those current runtime gaps are resolved or explicitly accepted as intended behavior.
 
 ## 17. Source register used for this reconciliation
 
@@ -383,3 +388,59 @@ This proves a **deployable source/package frontier**, not production promotion. 
 `PUBLIC_ADMIN_DEPLOYABLE_SOURCE_FRONTIER = PROVEN_SOURCE`
 
 `PUBLIC_ADMIN_NEW_FRONTIER_DEPLOYED = NO`
+
+## 24. Fresh live runtime re-audit — 2026-09-19 19:24 UTC
+
+This section records fresh runtime evidence and supersedes older broad acceptance claims wherever they conflict.
+
+### Dedicated Public/Admin hosting
+
+- Public active process CWD: `/srv/nexi/public/releases/3b173ea-prod`.
+- Admin active process CWD: `/srv/nexi/admin/releases/3b173ea-prod-node`.
+- `/srv/nexi/public/current` and `/srv/nexi/admin/current` resolve to those dedicated release trees.
+- Shared dependency owners remain `/srv/nexi/public/shared/node_modules` and `/srv/nexi/admin/shared/node_modules`.
+- No active Public/Admin process was found running from the Git checkout.
+
+### Cloudflare/backend
+
+- Wrangler authentication is valid for the NEXI Cloudflare account.
+- Container application `nexi-api-staging`: active, one live instance.
+- `/healthz`: HTTP 200.
+- `/ops/live`: HTTP 200.
+- `/ops/ready`: HTTP 200 with `database=true`, `redis=true`.
+- `/market/prices`: HTTP 200.
+- `/market/provider-state`: HTTP 200.
+- Cloudflare backend status: **RUNTIME_VERIFIED**.
+
+### Market freshness
+
+- `/market/prices` returned 53 distinct assets.
+- Current states: **37 LIVE**, **16 STALE**, **0 UNAVAILABLE**.
+- The previous 13-symbol D1 sequence-collision defect is not reproduced by this live API response; all 53 rows have sequences and the affected symbols are advancing.
+- The market is therefore operational but **not fully fresh for all 53 assets**.
+- Current stale set: `AUDUSD, EURUSD, GBPUSD, USDCHF, USDCNH, USDHKD, USDJPY, USDRUB, USDTHB, XAGUSD, XALUSD, XAUUSD, XCUUSD, XPDUSD, XPTUSD, XZNUSD`.
+- Runtime-active providers: MOEX, Binance Spot, BiQuote, Gate, Yahoo. Optional providers OKX, Bitget, HTX and Bybit reported `runtimeActive=false`.
+
+### Market archive retirement
+
+- R2 bucket query filtered by `market`: zero buckets.
+- Complete R2 bucket list contains no market-archive bucket; `nexi-deposit-proofs-staging` remains the product R2 bucket.
+- `wrangler pipelines list`: **No pipelines found**.
+- Market archive R2/Pipelines path: **RETIRED/CLEARED**, with `DEPOSIT_PROOFS` retained.
+
+### Public/Admin external reachability
+
+- `https://app.nexitrading.app/`: HTTP 522.
+- `https://admin.nexitrading.app/`: HTTP 522.
+- Direct local Nginx/host probes route to Public port 3000 and Admin port 3001 and return 307 redirects.
+- This isolates the current frontend failure to the Cloudflare edge-to-origin/DNS reachability path or equivalent external routing seam; it is not evidence that the dedicated host processes are absent.
+- Public/Admin external production status: **NOT RUNTIME_VERIFIED; CURRENTLY 522**.
+
+### Current completion interpretation
+
+The backend is live and healthy, archive retirement is verified, and Public/Admin host ownership is correct. Full NEXI completion cannot be claimed because:
+
+1. Public/Admin external domains currently return 522.
+2. 16 market assets are stale.
+3. Authenticated wallet/SIWE/protected-financial acceptance remains owner-gated.
+4. Privileged Admin RBAC/action acceptance remains owner-gated.

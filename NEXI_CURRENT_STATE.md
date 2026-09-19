@@ -48,6 +48,25 @@ NEXI remains in the **finishing / targeted-repair state**, not a rebuild phase.
 - Parent/Worker-0 routing is **REALIGNED**: compile the complete owner message first; treat `@skill` mentions as capability hints; select one primary responsibility owner plus only material non-overlapping specialists; reuse proven capability routing; use the fastest precise tool/MCP/CLI; recover/reconnect live Worker-0 work before respawning; keep production authority unchanged by tool availability.
 - Worker-0 capability knowledge system: **IMPLEMENTED + VERIFIED**. `RDC_ONBOARDING.md` now routes to the lightweight capability index, MCP/CLI catalogs, browser fabric, and canonical Graphify/DeepWiki guides. Durable capability ownership is documented while mutable version/auth/schema/health/index state remains live-discovered. Current-source BrowserStack manual acceptance has started on the isolated Public preview; owner visual acceptance remains pending and is separate from backend authority convergence.
 
+## Fresh live runtime re-audit — 2026-09-19 19:24 UTC
+
+Current direct evidence supersedes older acceptance statements wherever they differ:
+
+- Public/Admin are hosted from the dedicated /srv/nexi tree:
+  - Public: /srv/nexi/public/current -> /srv/nexi/public/releases/3b173ea-prod
+  - Admin: /srv/nexi/admin/current -> /srv/nexi/admin/releases/3b173ea-prod-node
+  - active Public/Admin process CWDs match those release trees.
+- Cloudflare backend is currently healthy:
+  - /healthz 200
+  - /ops/live 200
+  - /ops/ready 200 with database=true and redis=true
+  - /market/prices 200
+  - /market/provider-state 200
+- Market runtime currently returns 53 assets: 37 LIVE, 16 STALE, 0 UNAVAILABLE. The old 13-symbol D1 sequence-collision failure is not reproduced in the current response; all rows have sequences.
+- Market archive retirement is verified: zero R2 buckets matching market, no Pipelines, and DEPOSIT_PROOFS remains.
+- External app.nexitrading.app and admin.nexitrading.app currently return HTTP 522. Local Nginx and the dedicated Public/Admin processes respond with 307, so the remaining frontend defect is in the external Cloudflare edge/origin reachability seam, not host ownership.
+- Therefore the current state is: backend runtime healthy; archive retired; market partially fresh; Public/Admin externally unavailable at the tested domains.
+
 ## Remaining owner-context gates
 
 1. Authenticated wallet/SIWE/balance + protected financial interaction: `MANUAL_OWNER_ACCEPTANCE_REQUIRED`.
