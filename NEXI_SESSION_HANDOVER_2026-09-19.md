@@ -114,10 +114,19 @@ Important limitation: current NEXI has no `.riqor/EVIDENCE.md` ledger. No projec
 
 The main VM working tree contains unrelated active product/source changes and was deliberately not reset, cleaned, committed, or overwritten.
 
-## Cleanup boundary
-Completed task worktrees and temporary build/dependency links are disposable after final fan-in. Preserve any worktree with a unique uncommitted diff until reconciled. Public/Admin immutable production releases are rollback/deployment artifacts, not generic cache; do not delete them without a specific retention decision.
+## Final cleanup completed
+Owner explicitly requested full archive/old-data cleanup after the source fan-in.
 
-Cloudflare market archive data is already gone. Do not perform another destructive Cloudflare archive pass.
+Completed:
+- all completed NEXI temporary Git worktrees used by the NestJS 12, Cloudflare cleanup, market archive cleanup, final verification and handover lanes were removed;
+- their completed local branches were removed after the commits were safely on GitHub main;
+- all remaining `/tmp/nexi-*` scratch/build/log/recovery artifacts were deleted, including the large temporary dependency and stale-recovery trees;
+- obsolete Public immutable releases were removed while preserving the exact `/srv/nexi/public/current` target `3b173ea-prod`;
+- obsolete Admin immutable releases were removed while preserving the exact `/srv/nexi/admin/current` target `3b173ea-prod-node`;
+- root filesystem headroom improved to about 6.0 GiB free / 85% used after final cleanup;
+- the main NEXI VM working tree was NOT reset because it still contains unrelated unique product/source work from another active session.
+
+Cloudflare market archive data is already gone. Do not perform another destructive Cloudflare archive pass. Do not delete the current Public/Admin release targets as cleanup.
 
 ## Next-session start packet
 1. Recover live Git/Cloudflare state; newer evidence outranks this handover.
