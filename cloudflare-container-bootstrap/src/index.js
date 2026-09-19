@@ -69,6 +69,25 @@ async function getRunningNexiContainer(env) {
   return container;
 }
 
+async function fetchNexiContainer(container, request) {
+  const response = await container.fetch(request);
+  if (response.status !== 500) return response;
+
+  const body = await response.clone().text().catch(() => "");
+  if (!body.includes("The container is not running, consider calling start()")) {
+    return response;
+  }
+
+  console.warn("NEXI_CONTAINER_COLD_START_RECOVERY", {
+    path: new URL(request.url).pathname,
+  });
+  await container.startAndWaitForPorts({
+    ports: [3000],
+    cancellationOptions: { portReadyTimeoutMS: 60_000 },
+  });
+  return container.fetch(request);
+}
+
 /**
  * The Worker is an edge gateway only. NestJS remains the API, market, wallet,
  * ledger, and Socket.IO authority. Container.fetch preserves HTTP polling and
@@ -976,7 +995,8 @@ export default {
           status: 413,
         });
       }
-      const check = await container.fetch(
+      const check = await fetchNexiContainer(
+        container,
         new Request(
           new URL("/financial/deposit-proof-upload/authorize", request.url),
           {
@@ -1019,7 +1039,7 @@ export default {
     }
 
     try {
-      return await container.fetch(request);
+      return await fetchNexiContainer(container, request);
     } catch (error) {
       const stateAfterError = await container
         .getState()
