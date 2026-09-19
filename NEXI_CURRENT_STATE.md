@@ -2,7 +2,7 @@
 
 **As of:** 2026-09-19 (Myanmar time)
 **Repository:** `Mellonelay/Nexi`
-**Current source authority:** GitHub `main@f76db5c1a12300416d43c42e4051fd7e06f0ea22`
+**Current source authority:** GitHub `main` (discover live; do not freeze this file to its own documentation commit SHA)
 **Current deployed production Worker release:** `f76db5c1a12300416d43c42e4051fd7e06f0ea22`; the active Container image contains the backend/Observe + market-archive cleanup from `7be22cf6c3288b089ec0341670ca00e3b95bc593`, while `f76db5c` changes only the Worker-side inactive-container fetch recovery.
 
 NEXI remains in the **finishing / targeted-repair state**, not a rebuild phase.
