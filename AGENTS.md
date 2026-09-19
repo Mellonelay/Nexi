@@ -141,3 +141,13 @@ Rules:
 - If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
 - Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
 - After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+
+## Production closure controller — hard rule
+
+Before substantial NEXI work, read the live VM copies of `NEXI_CURRENT_STATE.md` and `NEXI_PRODUCTION_COMPLETION_LEDGER.md`. ChatGPT Project uploads, chat exports, handovers, and historical receipts are provenance only when they conflict with current VM/GitHub/Cloudflare evidence.
+
+The active queue is Section 0 of `NEXI_PRODUCTION_COMPLETION_LEDGER.md`. Select an open row, preserve every `PROVEN + UNCHANGED` dependency, execute the smallest dependency-closed repair/proof, then update the row before moving to unrelated work. A session may not claim completion while its selected row lacks current proof or while durable truth changed without reconciling `NEXI_CURRENT_STATE.md` and the ledger.
+
+Owner manual testing is a final acceptance gate, never a substitute for automatable verification. Use controlled test wallet/Admin identities when safe; otherwise record an explicit owner deferral. Cloudflare Worker + Container remains the only backend runtime authority, and Public/Admin Worker-0 builds/runtimes remain restricted to their canonical `/srv/nexi/public` and `/srv/nexi/admin` seams.
+
+For market work, do not optimize for a cosmetic `LIVE` count. Open-market assets must remain fresh or self-recover automatically; legitimate closed-market states must carry a truthful reason; silent frozen prices, fabricated freshness, and manual recovery as normal operation are defects.

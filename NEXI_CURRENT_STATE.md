@@ -1,6 +1,6 @@
 # NEXI Current State
 
-**As of:** 2026-09-19 (Myanmar time)
+**As of:** 2026-09-20 (Myanmar time)
 **Repository:** `Mellonelay/Nexi`
 **Current source authority:** GitHub `main` (discover live; do not freeze this file to its own documentation commit SHA)
 **Current deployed production Worker release:** `b5325e751415dfdb4cc5bc8d120fe43638643531`; the active Container/Worker stack includes the NestJS 12 backend, D1 sequence repair, retired market-archive path, Observe wiring, inactive-container fetch recovery, and the USD/RUB MOEX-first source policy.
@@ -67,12 +67,15 @@ Current direct evidence supersedes older acceptance statements wherever they dif
 - External app.nexitrading.app and admin.nexitrading.app currently return HTTP 522. Local Nginx and the dedicated Public/Admin processes respond with 307, so the remaining frontend defect is in the external Cloudflare edge/origin reachability seam, not host ownership.
 - Therefore the current state is: backend runtime healthy; archive retired; market partially fresh; Public/Admin externally unavailable at the tested domains.
 
-## Remaining owner-context gates
+## Remaining production closure gates
 
-1. Authenticated wallet/SIWE/balance + protected financial interaction: `MANUAL_OWNER_ACCEPTANCE_REQUIRED`.
-2. Privileged Admin RBAC/action: `MANUAL_OWNER_ACCEPTANCE_REQUIRED`.
+1. Market reliability/freshness must be proven truthful and self-recovering for all 53 canonical assets; legitimate closed-market staleness must have an explicit reason, while open-market silent staleness is a defect.
+2. Current Public source frontier must be promoted through the canonical `/srv/nexi/public` release path and re-verified against the Cloudflare backend.
+3. All safely automatable Public/Admin/backend/async/financial product rows in `NEXI_PRODUCTION_COMPLETION_LEDGER.md` must have current end-to-end proof or applicable `PROVEN_UNCHANGED` evidence.
+4. Wallet/SIWE/protected-financial and privileged Admin paths must use controlled test identities when safe, or be explicitly deferred by the owner.
+5. Owner manual acceptance is the final gate only after the above automation gates are satisfied.
 
-`FULL_PRODUCTION_END_TO_END_ACCEPTED = NO` only because those two identity-dependent gates remain.
+`FULL_PRODUCTION_END_TO_END_ACCEPTED = NO` because automated production closure is still incomplete; it is not blocked only by the two identity-dependent gates.
 
 ## Governing rules
 
@@ -88,3 +91,12 @@ On Worker 0, Public/Admin source work must reuse their dedicated `/srv/nexi/publ
 
 The only final completion controller is `NEXI_PRODUCTION_COMPLETION_LEDGER.md`.
 Historical 27-row matrices, `CODE_TO_CODE_CLOSED`, A25/A26/A27, staging-first sequencing, recovery handovers, old SHAs, old worktrees and old VM/Codespace status files are not current authority.
+
+## Live correction — updated 2026-09-20
+
+- The current VM origin IP is `35.187.234.62`.
+- Cloudflare DNS is now converged: both `app.nexitrading.app` and `admin.nexitrading.app` are proxied A records targeting `35.187.234.62`.
+- Fresh external HTTPS verification returns `307` through Cloudflare for both domains. The stale-DNS defect is closed.
+- Last recorded `/market/prices` snapshot remains 53 assets, 36 LIVE, 17 STALE, 0 UNAVAILABLE, with `STEEMUSDT` newly stale at that observation time.
+- The earlier 13/16/17 stale counts are time snapshots, not a fixed invariant. The unresolved problem is market reliability: every open-market asset must remain fresh or self-recover automatically; legitimate closed-market states must be explicit and truthful.
+- Current interpretation: dedicated host ownership and DNS are correct; Cloudflare backend is reachable; market reliability and full automated product closure remain incomplete.

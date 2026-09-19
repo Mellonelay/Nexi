@@ -1,10 +1,122 @@
 # NEXI Production Completion Ledger
 
-**Authority date:** 2026-09-17 (Myanmar time)
+**Authority date:** 2026-09-20 (Myanmar time)
 **Repository:** `Mellonelay/Nexi`
-**Current source authority:** GitHub `main` (discover live; backend equality baseline proven from `81baa15f82901f26405cfd378f7e0f5fe31b693e`)
-**Current deployed production baseline:** `3b173ea38da4c80193c5e0b552ae62fede22fab7`
+**Current source authority:** GitHub `main` (discover live; do not freeze this ledger to a historical SHA)
+**Current deployed backend release:** `b5325e751415dfdb4cc5bc8d120fe43638643531`; Public/Admin deployed runtime remains the canonical `/srv/nexi/.../current` release until the newer Public frontier is promoted
 **Purpose:** the single final-production completion controller for NEXI. This is a finishing-state ledger, not a restart plan.
+
+## 0. Active production closure controller — owner correction 2026-09-20
+
+This section is the **active execution queue** and supersedes older statements that only wallet/SIWE and privileged Admin remain.
+
+### Hard production rules
+
+- GitHub `main` is durable source authority.
+- Cloudflare Worker + Container + NestJS is the **only backend runtime/acceptance authority**. A VM-local backend must never count as production proof.
+- Public must build/run only through `/srv/nexi/public`; Admin must build/run only through `/srv/nexi/admin`. Random session-local builds or dependency trees are not acceptance evidence.
+- ChatGPT Project uploads, chat exports, handovers, and old receipts are historical/provenance sources only when they disagree with current VM/GitHub/Cloudflare evidence.
+- `PROVEN + UNCHANGED = REUSE`; do not rebuild working domains merely to re-prove existence.
+- The owner does **not** perform manual acceptance until every safely automatable production row below is completed with current evidence.
+- Identity-dependent rows should use controlled test wallet/Admin identities when safe. If the owner explicitly defers an identity phase, mark it `OWNER_DEFERRED_IDENTITY`; do not pretend it is accepted.
+- A Work session may not claim completion or jump to an unrelated domain until its selected row is updated with proof or explicitly blocked.
+- When durable truth changes, update `NEXI_CURRENT_STATE.md`; when durable completion proof changes, update this ledger before reporting completion.
+- No Git hook owns this ledger. The ledger itself is the production work queue and proof controller.
+- `NEXI_PRODUCTION_COMPLETION_LEDGER.md` is the only writable/canonical completion controller. The DOCX is a generated/historical mirror and must never be edited as a competing authority.
+
+### Status vocabulary for the active queue
+
+- `COMPLETED` — current production evidence proves the row.
+- `PROVEN_UNCHANGED` — prior production evidence is still applicable because the governing dependency did not change.
+- `NEEDS_FRESH_PROOF` — implementation exists, but current end-to-end production proof is required before owner acceptance.
+- `OPEN_DEFECT` — current production evidence shows a real defect.
+- `AUTOMATION_IDENTITY_REQUIRED` — can be automated once a controlled identity/session is available.
+- `OWNER_DEFERRED_IDENTITY` — explicitly deferred by the owner; not accepted.
+- `BLOCKED_EXTERNAL` — blocked by a genuine external dependency with preserved evidence.
+- `OWNER_FINAL_ACCEPTANCE` — final owner manual pass only after every required pre-owner row is green.
+
+### Active production closure queue
+
+| ID | Domain | Requirement / acceptance path | Current status | Completion evidence required |
+|---|---|---|---|---|
+| A-01 | Authority | GitHub `main` is durable source authority | `COMPLETED` | live Git comparison when relevant |
+| A-02 | Authority | Cloudflare Worker -> Container -> NestJS is the only backend runtime authority | `COMPLETED` | current production runtime/health |
+| A-03 | Public hosting | Public dependency/build/runtime owner is `/srv/nexi/public` | `COMPLETED` | symlink/process/release proof |
+| A-04 | Admin hosting | Admin dependency/build/runtime owner is `/srv/nexi/admin` | `COMPLETED` | symlink/process/release proof |
+| A-05 | DNS | `app.nexitrading.app` and `admin.nexitrading.app` proxied A records -> `35.187.234.62` | `COMPLETED` | Cloudflare API record proof + external HTTPS 307 |
+| A-06 | Public release | Current Public source frontier `5c01b715...` promoted through canonical `/srv/nexi/public` release path | `OPEN_DEFECT` | deployed release identity + runtime proof |
+| A-07 | Backend baseline | Current Cloudflare backend health/readiness | `PROVEN_UNCHANGED` | fresh health/readiness after backend mutation |
+| M-01 | Market | Exactly 53 canonical NEXI assets remain authoritative | `PROVEN_UNCHANGED` | catalog/API count and identity |
+| M-02 | Market | Every asset has explicit provider/source/trading-hours policy | `NEEDS_FRESH_PROOF` | 53-row provider/source classification |
+| M-03 | Market | Market freshness is truthful and self-recovering; no silent frozen open-market asset | `OPEN_DEFECT` | open-market soak + forced disconnect/recovery + reasoned closed-market states |
+| M-04 | Market | Provider event -> normalization -> D1 quote persistence keeps monotonic sequence | `NEEDS_FRESH_PROOF` | sustained D1/API evidence for affected classes |
+| M-05 | Market | Klines `1m/5m/15m/30m/1h/4h/1d` | `PROVEN_UNCHANGED` | rerun only if market/Kline dependency changes |
+| M-06 | Market | Realtime reconnect/resnapshot continues authoritative quotes/Klines | `PROVEN_UNCHANGED` | rerun after realtime dependency change |
+| M-07 | Market | REST read-back recovery from D1 authority | `PROVEN_UNCHANGED` | rerun after read-path dependency change |
+| M-08 | Market | Real depth + executed trades are current and source-backed | `NEEDS_FRESH_PROOF` | production depth/trades provenance |
+| M-09 | Market | Long-running reliability/soak across provider thresholds and reconnects | `NEEDS_FRESH_PROOF` | timed evidence with zero unexplained open-market stale rows |
+| P-01 | Public | Dashboard / Quotes Hub | `NEEDS_FRESH_PROOF` | deployed Public -> Cloudflare backend -> real data |
+| P-02 | Public | Spot Trading | `NEEDS_FRESH_PROOF` | deployed UI/API/realtime contract proof |
+| P-03 | Public | Options / Binary | `NEEDS_FRESH_PROOF` | deployed UI/API/quote/settlement contract proof |
+| P-04 | Public | Wallet surface/access model | `NEEDS_FRESH_PROOF` | public shell + identity boundary; protected rows below |
+| P-05 | Public | Earn / Mining | `NEEDS_FRESH_PROOF` | deployed end-to-end lifecycle proof |
+| P-06 | Public | Loan | `NEEDS_FRESH_PROOF` | deployed end-to-end lifecycle proof |
+| P-07 | Public | Support | `NEEDS_FRESH_PROOF` | deployed create/read/reply/state proof |
+| P-08 | Public | Announcements | `NEEDS_FRESH_PROOF` | deployed authoritative content proof |
+| P-09 | Public | Learn | `NEEDS_FRESH_PROOF` | deployed authoritative content proof |
+| P-10 | Public | Messages | `NEEDS_FRESH_PROOF` | deployed messaging/read-state proof |
+| P-11 | Public | Settings | `NEEDS_FRESH_PROOF` | deployed preferences/security/settings proof |
+| P-12 | Public | Asset Detail + Active Pair continuity + charts | `NEEDS_FRESH_PROOF` | all required assets/timeframes through current backend |
+| P-13 | Public | Mobile nav/geometry/accessibility + notification/deposit/provider-choice UX | `NEEDS_FRESH_PROOF` | current deployed responsive/accessibility/runtime proof |
+| I-01 | Identity | Wallet-only SIWE challenge/signature/replay/session | `AUTOMATION_IDENTITY_REQUIRED` | controlled test wallet or explicit owner deferral |
+| I-02 | Identity | Wallet balance + protected financial authorization | `AUTOMATION_IDENTITY_REQUIRED` | controlled test wallet/session or explicit owner deferral |
+| I-03 | Identity | Privileged Admin auth/RBAC/action | `AUTOMATION_IDENTITY_REQUIRED` | controlled privileged Admin identity or explicit owner deferral |
+| F-01 | Financial | Deposit lifecycle | `NEEDS_FRESH_PROOF` | D1/Ledger/activity/audit/outbox read-back |
+| F-02 | Financial | Withdrawal lifecycle | `NEEDS_FRESH_PROOF` | authorization/reserve/review/audit/idempotency proof |
+| F-03 | Financial | Internal transfer | `NEEDS_FRESH_PROOF` | atomic debit/credit + idempotency/audit proof |
+| F-04 | Financial | Conversion | `NEEDS_FRESH_PROOF` | authoritative quote -> execution -> ledger proof |
+| F-05 | Trading | Protected Spot/Margin execution and lifecycle | `NEEDS_FRESH_PROOF` | order/trade/ledger/audit/realtime proof |
+| F-06 | Financial | Ledger + idempotency + Activity/audit + EventOutbox invariants | `NEEDS_FRESH_PROOF` | focused invariant tests + production-safe read-back |
+| E-01 | Product | Earn / Mining backend + Public/Admin control path | `NEEDS_FRESH_PROOF` | complete lifecycle proof |
+| E-02 | Product | Loans backend + Public/Admin control path | `NEEDS_FRESH_PROOF` | application/review/repayment/state proof |
+| C-01 | Communications | Support | `NEEDS_FRESH_PROOF` | Public/Admin end-to-end proof |
+| C-02 | Communications | Messages + notifications | `NEEDS_FRESH_PROOF` | delivery/read-state/retry proof |
+| C-03 | Content | Announcements + Learn | `NEEDS_FRESH_PROOF` | Admin-authoritative content -> Public proof |
+| C-04 | Settings | Profile/preferences/language/timezone/theme/notifications/security | `NEEDS_FRESH_PROOF` | persisted round-trip proof |
+| AD-01 | Admin | User/KYC/referral/VIP controls | `NEEDS_FRESH_PROOF` | privileged workflow proof |
+| AD-02 | Admin | Wallet/ledger/deposit/withdrawal controls | `NEEDS_FRESH_PROOF` | privileged workflow + audit proof |
+| AD-03 | Admin | Market/provider controls | `NEEDS_FRESH_PROOF` | policy mutation/read-back without duplicate authority |
+| AD-04 | Admin | Trading controls | `NEEDS_FRESH_PROOF` | privileged trading control/audit proof |
+| AD-05 | Admin | Mining/loan controls | `NEEDS_FRESH_PROOF` | privileged lifecycle proof |
+| AD-06 | Admin | Support/messages/content controls | `NEEDS_FRESH_PROOF` | Admin -> backend -> Public proof |
+| AD-07 | Admin | Feature flags/maintenance/localization | `NEEDS_FRESH_PROOF` | persisted control + consumer effect proof |
+| AD-08 | Admin | Audit/approvals/incidents | `NEEDS_FRESH_PROOF` | immutable audit + permission proof |
+| R-01 | Async | EventOutbox durable publication boundary | `NEEDS_FRESH_PROOF` | durable enqueue/publish/read-back evidence |
+| R-02 | Async | Queues retry/delivery semantics | `NEEDS_FRESH_PROOF` | bounded retry/idempotency proof |
+| R-03 | Async | Workflows orchestration | `NEEDS_FRESH_PROOF` | workflow state/recovery proof |
+| R-04 | Realtime | Valkey/Socket.IO delivery and recovery | `NEEDS_FRESH_PROOF` | reconnect/resnapshot/consumer continuity |
+| R-05 | Reliability | Duplicate/retry/concurrency safety | `NEEDS_FRESH_PROOF` | focused adversarial tests |
+| Z-01 | Gate | All non-owner-context rows above complete or proven unchanged | `OPEN_DEFECT` | zero unresolved required rows |
+| Z-02 | Gate | Identity rows completed with controlled identities or explicitly owner-deferred | `AUTOMATION_IDENTITY_REQUIRED` | row-level proof/owner decision |
+| Z-03 | Gate | `NEXI_CURRENT_STATE.md` + this ledger reconciled to latest durable truth | `NEEDS_FRESH_PROOF` | same-task reconciliation |
+| Z-04 | Gate | Owner manual acceptance | `OWNER_FINAL_ACCEPTANCE` | only after Z-01/Z-02/Z-03 permit it |
+
+### Execution order
+
+1. Market reliability architecture and current backend truth.
+2. Promote the already-implemented Public source through canonical `/srv/nexi/public`.
+3. Fresh Public/Admin/backend end-to-end closure using current Cloudflare backend only.
+4. Controlled identity tests where safe, or explicit owner deferral.
+5. Reconcile this ledger and `NEXI_CURRENT_STATE.md`.
+6. Only then request owner manual acceptance.
+
+### Tool routing for the current frontier
+
+- Market backend: NestJS 12 + NestJS Observe MCP when authenticated + Graphify Multi-View + Fallow + CodeScene + Cloudflare observability + D1/Valkey evidence + Riqor proof gate.
+- Public/Admin: canonical `/srv/nexi` builds/runtime + Fallow/CodeScene + browser/runtime evidence only after backend contracts are correct.
+- Get-Fable may route lifecycle/delegation, but **must not create a second production ledger**. This file remains the only completion controller.
+- Riqor may record proof/freshness, but cannot upgrade a row beyond the evidence actually gathered.
+
 
 ## 1. Finishing-state rule
 
@@ -50,6 +162,8 @@ Therefore:
 - `NOT_APPLICABLE` — evidence-backed exclusion from current product scope.
 
 ## 4. Current production baseline
+
+> Section 0 plus `NEXI_CURRENT_STATE.md` are the current execution decision inputs. Rows below preserve older reusable evidence and are superseded wherever a newer Section 0/current-state row differs.
 
 | Requirement | Current authority path | Source status | Runtime status | Evidence / release | Dependency drift | Remaining gap | Final verdict |
 |---|---|---|---|---|---|---|---|
@@ -242,13 +356,13 @@ SOURCE_CONVERGENCE = COMPLETE_AT_GITHUB_MAIN
 BACKEND_CLOUDFLARE_RUNTIME = RUNTIME_VERIFIED
 CLOUDFLARE_HEALTH_READINESS = PASS
 MARKET_ASSET_ROWS = 53
-MARKET_LIVE = 37
-MARKET_STALE = 16
+MARKET_LIVE = 36
+MARKET_STALE = 17
 MARKET_UNAVAILABLE = 0
 MARKET_ARCHIVE_R2 = RETIRED_AND_CLEARED
 MARKET_PIPELINES = EMPTY
 PUBLIC_ADMIN_HOST_OWNERSHIP = DEDICATED_SRV_NEXI_CONFIRMED
-PUBLIC_ADMIN_EXTERNAL_RUNTIME = 522_NOT_VERIFIED
+PUBLIC_ADMIN_EXTERNAL_RUNTIME = CLOUDFLARE_307_VERIFIED
 MARKET_FULL_FRESHNESS = NOT_COMPLETE
 
 AUTHENTICATED_WALLET_SIWE_BALANCE = MANUAL_OWNER_ACCEPTANCE_REQUIRED
@@ -440,7 +554,63 @@ This section records fresh runtime evidence and supersedes older broad acceptanc
 
 The backend is live and healthy, archive retirement is verified, and Public/Admin host ownership is correct. Full NEXI completion cannot be claimed because:
 
-1. Public/Admin external domains currently return 522.
-2. 16 market assets are stale.
+1. Section 24 recorded external 522; the latest check proves the new origin responds 307 while Cloudflare DNS remains on the old origin.
+2. Section 24 recorded 16 stale; the latest check records 17 stale because freshness is time-dependent.
 3. Authenticated wallet/SIWE/protected-financial acceptance remains owner-gated.
 4. Privileged Admin RBAC/action acceptance remains owner-gated.
+
+## 25. Live correction — 2026-09-19 19:47 UTC
+
+This supersedes the Section 24 snapshot where it differs.
+
+### VM origin and Cloudflare DNS
+
+- Current VM origin IP supplied and verified by direct origin routing: `35.187.234.62`.
+- Direct HTTPS requests to `35.187.234.62` with the Public/Admin hostnames returned `307` for both applications.
+- Cloudflare DNS API still reports:
+  - `app.nexitrading.app A 35.240.167.7 proxied=true`
+  - `admin.nexitrading.app A 35.240.167.7 proxied=true`
+- Therefore the dedicated Public/Admin host is responding, but Cloudflare DNS is still aimed at the old origin.
+
+### Market freshness correction
+
+- Fresh `/market/prices` response at 2026-09-19 19:47 UTC: 53 assets, 36 LIVE, 17 STALE, 0 UNAVAILABLE.
+- `STEEMUSDT` newly appears in the stale set in this snapshot.
+- The earlier 13 and 16 counts were time-dependent snapshots from earlier observations; they are not contradictory fixed totals.
+- Current market status remains operational but not fully fresh.
+
+### Corrected status
+
+`PUBLIC_ADMIN_DEDICATED_HOST = VERIFIED`
+
+`PUBLIC_ADMIN_ORIGIN_IP = 35.187.234.62`
+
+`PUBLIC_ADMIN_CLOUDFLARE_DNS = STALE_35.240.167.7`
+
+`MARKET_ASSET_ROWS = 53`
+
+`MARKET_LIVE = 36`
+
+`MARKET_STALE = 17`
+
+`MARKET_UNAVAILABLE = 0`
+
+`FULL_PRODUCTION_END_TO_END_ACCEPTED = NO`
+
+## 26. Live correction — 2026-09-20
+
+This supersedes the DNS/origin status recorded in Sections 24 and 25.
+
+### Cloudflare DNS and external reachability
+
+- Current VM origin IP: `35.187.234.62`.
+- Cloudflare DNS for both `app.nexitrading.app` and `admin.nexitrading.app` now targets `35.187.234.62` with proxying enabled.
+- Fresh external HTTPS checks return `307` through Cloudflare for both domains.
+- The stale-origin DNS defect is closed. A-05 remains `COMPLETED`.
+- Public/Admin external reachability is no longer the active blocker; A-06 (promotion of the newer Public source frontier) and market/full-product closure remain open.
+
+`PUBLIC_ADMIN_CLOUDFLARE_DNS = CONVERGED_35.187.234.62`
+
+`PUBLIC_ADMIN_EXTERNAL_RUNTIME = CLOUDFLARE_307_VERIFIED`
+
+`FULL_PRODUCTION_END_TO_END_ACCEPTED = NO`
