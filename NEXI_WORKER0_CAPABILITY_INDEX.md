@@ -26,6 +26,7 @@ Do not preload the MCP catalog, CLI catalog, Graphify guide, DeepWiki guide, and
 | TS/JS dead-code/change-safety/duplication | Fallow | Graphify when consumer topology is uncertain |
 | hotspots/code health/change risk | CodeScene | Graphify for topology |
 | current library/framework semantics | Context7 | official docs when platform-specific |
+| NestJS framework/runtime diagnosis | repository-local Nest CLI + installed NestJS specialist skills | Nest Observe MCP when credentials exist; Cloudflare runtime/observability for deployed truth |
 | broader external research | Context.dev / current official sources | Parallel/web research when needed |
 | Cloudflare/D1/Queues/Workflows/R2/Pipelines/Containers | project Wrangler + Cloudflare tooling | Cloudflare docs/MCP for current semantics |
 | Aiven/Valkey | `avn` + `redis-cli` | runtime/service evidence; never D1/Ledger/financial authority |
