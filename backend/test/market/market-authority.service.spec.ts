@@ -368,6 +368,20 @@ describe("MarketAuthorityService", () => {
           JSON.parse(args.create.capabilityPolicy).kline === true,
       ),
     ).toBe(true);
+    expect(
+      mappingCalls.find(
+        (args: any) =>
+          args.create.providerId === "provider-moex" &&
+          args.create.pairId === "pair-USDRUB",
+      )?.create.priority,
+    ).toBe(1);
+    expect(
+      mappingCalls.find(
+        (args: any) =>
+          args.create.providerId === "provider-yahoo" &&
+          args.create.pairId === "pair-USDRUB",
+      )?.create.priority,
+    ).toBe(5);
     expect(d1.marketProviderSymbol.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { providerId: "provider-biquote", pairId: "pair-USDRUB" },

@@ -178,6 +178,16 @@ function providerKlineSupported(entry: CanonicalMarketPair, provider: string): b
   return false;
 }
 
+function primaryQuoteProvider(entry: CanonicalMarketPair): string {
+  if (entry.category === 'crypto') return 'binance-spot';
+  // USD/RUB has a dedicated live MOEX quote adapter. Yahoo is history-only
+  // for this pair and must never outrank the live quote path.
+  if (entry.symbol === 'USDRUB') return 'moex';
+  if (entry.category === 'stock' && !BIQUOTE_QUOTE_COVERAGE.has(entry.symbol)) return 'gate';
+  if (entry.category === 'forex' && !BIQUOTE_QUOTE_COVERAGE.has(entry.symbol)) return 'yahoo';
+  return 'biquote';
+}
+
 function buildPolicy(entry: CanonicalMarketPair): AssetSourcePolicy {
   const providers = providerNames(entry);
   const mappings = providers.map((provider): ProviderMapping => ({
@@ -198,9 +208,9 @@ function buildPolicy(entry: CanonicalMarketPair): AssetSourcePolicy {
     precision: entry.category === 'crypto' ? 8 : entry.category === 'forex' ? 5 : 4,
     providerMappings: mappings,
     displayPolicy: {
-      primaryProvider: entry.category === 'crypto' ? 'binance-spot' : entry.category === 'stock' && !BIQUOTE_QUOTE_COVERAGE.has(entry.symbol) ? 'gate' : entry.category === 'forex' && !BIQUOTE_QUOTE_COVERAGE.has(entry.symbol) ? 'yahoo' : 'biquote',
+      primaryProvider: primaryQuoteProvider(entry),
       fallbackProviders: mappings
-        .filter((mapping) => mapping.provider !== (entry.category === 'crypto' ? 'binance-spot' : entry.category === 'stock' && !BIQUOTE_QUOTE_COVERAGE.has(entry.symbol) ? 'gate' : entry.category === 'forex' && !BIQUOTE_QUOTE_COVERAGE.has(entry.symbol) ? 'yahoo' : 'biquote') && mapping.quoteSupported)
+        .filter((mapping) => mapping.provider !== primaryQuoteProvider(entry) && mapping.quoteSupported)
         .map((mapping) => mapping.provider),
       maxStalenessMs: 30_000,
       delayedDataAllowed: true,

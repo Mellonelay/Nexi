@@ -23,6 +23,8 @@ describe('Market source registry', () => {
     expect(getProviderMapping('XAUUSD', 'gate')?.quoteSupported).toBe(false);
     expect(getProviderMapping('USDRUB', 'yahoo')?.klineSupported).toBe(false);
     expect(getProviderMapping('USDRUB', 'moex')?.klineSupported).toBe(true);
+    expect(getMarketSourcePolicy('USDRUB')?.displayPolicy.primaryProvider).toBe('moex');
+    expect(getMarketSourcePolicy('USDRUB')?.displayPolicy.fallbackProviders).toContain('yahoo');
   });
 
   it('gives every canonical asset a quote and Kline source path', () => {
