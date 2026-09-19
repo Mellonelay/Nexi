@@ -1,9 +1,9 @@
 # NEXI Current State
 
-**As of:** 2026-09-17 (Myanmar time)
+**As of:** 2026-09-19 (Myanmar time)
 **Repository:** `Mellonelay/Nexi`
-**Current source authority:** GitHub `main` (discover live; backend equality baseline below was proven from `81baa15f82901f26405cfd378f7e0f5fe31b693e`)
-**Current deployed production baseline:** `3b173ea38da4c80193c5e0b552ae62fede22fab7`
+**Current source authority:** GitHub `main@f76db5c1a12300416d43c42e4051fd7e06f0ea22`
+**Current deployed production Worker release:** `f76db5c1a12300416d43c42e4051fd7e06f0ea22`; the active Container image contains the backend/Observe + market-archive cleanup from `7be22cf6c3288b089ec0341670ca00e3b95bc593`, while `f76db5c` changes only the Worker-side inactive-container fetch recovery.
 
 NEXI remains in the **finishing / targeted-repair state**, not a rebuild phase.
 
@@ -24,15 +24,15 @@ NEXI remains in the **finishing / targeted-repair state**, not a rebuild phase.
 - Historical Cloudflare identifiers `nexi-staging`, `nexi-api-staging`, `nexi-core-staging`, and related `*-staging` resource names are the resources currently serving NEXI production. **Name suffixes do not define the environment.** Production identity is established by the active `api.nexitrading.app` route, live deployment/runtime state, and `NODE_ENV=production`.
 - Official Wrangler Container SSH was directly proven against the running `nexi-api` Container instance through the configured ED25519 operator key and OpenSSH ProxyCommand/`--stdio` path. The live Container reported `PID 1 = node dist/src/main.js`. Worker 0 remains only the operator transport; the process runs inside Cloudflare.
 - Fresh production HTTP proof: `/health` = 200, `/healthz` = 200, `/readyz` = 200 with D1 database + Valkey/Redis readiness, `/market/provider-state` = 200, and `/market/prices` = 200.
-- **Owner decision 2026-09-19:** the market R2/Data Catalog/Pipelines archive path is retired as unnecessary complexity. Live market authority remains provider adapters -> NestJS -> D1 quote/Kline persistence -> Aiven Valkey -> Socket.IO -> Public/Admin. `DEPOSIT_PROOFS` R2 remains in use; market archive R2/Pipeline resources are being removed.
-- Live Worker observability uses `SENTRY_ENVIRONMENT=production`. Repository `wrangler.jsonc` was reconciled to that production environment; its Sentry release value represents the currently deployed production baseline and must be changed to the exact Git revision for any future deployment.
+- **Owner decision 2026-09-19:** the market R2/Data Catalog/Pipelines archive path is retired as unnecessary complexity. Live market authority remains provider adapters -> NestJS -> D1 quote/Kline persistence -> Aiven Valkey -> Socket.IO -> Public/Admin. Active Worker bindings no longer include market R2 or Pipelines; Cloudflare Pipelines list is empty and the retired archive secret is gone. `DEPOSIT_PROOFS` R2 remains in use. The old unbound `nexi-market-archive-staging` bucket still contains 21,707 historical objects / 6.98 GB, so Cloudflare correctly refused bucket deletion until those objects are explicitly purged.
+- Live Worker observability uses `SENTRY_ENVIRONMENT=production`; fresh runtime traces carry Sentry release `f76db5c1a12300416d43c42e4051fd7e06f0ea22`. NestJS Observe `0.1.10` is wired with service ID `nexi`, its credentials are Worker secrets forwarded into the Container, and production HTTP requests have been generated. Final Observe dashboard event visibility is an owner-side dashboard confirmation, not a source/runtime wiring blocker.
 - A production-config dry-run with verified Wrangler `4.129.0` and `--containers-rollout none` passed after reconciliation. Its 46 visible non-secret bindings exactly matched the active Worker; the live secret bindings absent from dry-run display were expected secret bindings. The retired market archive token is no longer part of the target configuration.
 
 ## Current proven state
 
 - Public source convergence frontier: **COMPLETE, verified, and pushed** at `5c01b715985fec51c79699fcf5b7319e3435ac0e`; not yet promoted to production. The bounded repair preserves backend market state and monotonic per-symbol realtime sequences without creating a second market owner.
-- Production deployment baseline: **COMPLETE** at `3b173ea...`.
-- Backend/Cloudflare readiness and health: **PROVEN PRODUCTION** for the deployed baseline.
+- Production Worker deployment baseline: **COMPLETE** at `f76db5c1a12300416d43c42e4051fd7e06f0ea22`; active Container application is version 62 and healthy.
+- Backend/Cloudflare readiness and health: **PROVEN PRODUCTION** for the deployed baseline; fresh `/ops/live` and `/ops/ready` both return 200 with database=true and redis=true.
 - Public/Admin bounded unauthenticated production browser acceptance: **COMPLETE** for the deployed baseline.
 - Required Klines `1m/5m/15m/30m/1h/4h/1d`: **PROVEN PRODUCTION**.
 - Production realtime reconnect/resnapshot and REST read-back recovery: **PROVEN**.
