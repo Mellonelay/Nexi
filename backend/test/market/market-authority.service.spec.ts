@@ -15,6 +15,7 @@ import {
 describe("MarketAuthorityService", () => {
   const createService = () => {
     const latest = new Map<string, any>();
+    const snapshotMax = new Map<string, bigint>();
     const pairs = [
       ...CANONICAL_MARKET_CATALOG.map(({ symbol }) => ({
         symbol,
@@ -92,14 +93,17 @@ describe("MarketAuthorityService", () => {
           { success: true, results: [], meta: { changes: 0 } },
         ];
       }
-      const sequence = (BigInt(current?.sequence ?? 0) + 1n).toString();
+      const currentSequence = BigInt(current?.sequence ?? 0);
+      const historicalSnapshotMax = snapshotMax.get(pairId) ?? 0n;
+      const sequence = (currentSequence > historicalSnapshotMax ? currentSequence : historicalSnapshotMax) + 1n;
+      const sequenceText = sequence.toString();
       const value = {
         id: latestParams[0],
         pairId,
         symbol: latestParams[2],
         provider: latestParams[3],
         source: latestParams[4],
-        sequence,
+        sequence: sequenceText,
         price: latestParams[5],
         change24h: latestParams[6],
         volume24h: latestParams[7],
@@ -115,6 +119,7 @@ describe("MarketAuthorityService", () => {
       // Update the canonical latest row before the awaited snapshot mock so a
       // concurrent test invocation observes the serialized D1 sequence.
       latest.set(pairId, value);
+      snapshotMax.set(pairId, sequence);
       const snapshotParams = statements[1]?.params ?? [];
       await prisma.marketQuoteSnapshot.create({
         data: {
@@ -124,7 +129,7 @@ describe("MarketAuthorityService", () => {
         },
       });
       return [
-        { success: true, results: [{ sequence }], meta: { changes: 1 } },
+        { success: true, results: [{ sequence: sequenceText }], meta: { changes: 1 } },
         { success: true, results: [], meta: { changes: 1 } },
       ];
     });
@@ -145,6 +150,8 @@ describe("MarketAuthorityService", () => {
       d1,
       providerRouter,
       redis,
+      latest,
+      snapshotMax,
     };
   };
 
@@ -207,6 +214,36 @@ describe("MarketAuthorityService", () => {
     expect(first.accepted).toBe(true);
     expect(second.accepted).toBe(true);
     expect(d1.marketQuoteSnapshot.create.mock.calls.map(([args]: any[]) => args.data.sequence)).toEqual(["1", "2"]);
+  });
+
+  it("repairs historical latest/snapshot sequence drift before the next production quote", async () => {
+    const { service, d1, latest, snapshotMax } = createService();
+    latest.set("pair-BTCUSDT", {
+      pairId: "pair-BTCUSDT",
+      symbol: "BTCUSDT",
+      provider: "binance-spot",
+      source: "websocket",
+      sequence: "5",
+      price: "99",
+      state: "LIVE",
+      observedAt: new Date("2026-09-13T00:00:00.000Z"),
+      receivedAt: new Date("2026-09-13T00:00:01.000Z"),
+    });
+    snapshotMax.set("pair-BTCUSDT", 6n);
+
+    const result = await service.ingestQuote({
+      symbol: "BTCUSDT",
+      provider: "binance-spot",
+      source: "websocket",
+      price: "101",
+      observedAt: new Date("2026-09-14T00:00:00.000Z"),
+    });
+
+    expect(result.accepted).toBe(true);
+    expect(latest.get("pair-BTCUSDT").sequence).toBe("7");
+    expect(snapshotMax.get("pair-BTCUSDT")).toBe(7n);
+    const allocationSql = d1.atomicBatch.mock.calls[0][0][0].sql as string;
+    expect(allocationSql).toContain('SELECT MAX(CAST("MarketQuoteSnapshot"."sequence" AS INTEGER))');
   });
 
   it("rejects duplicate or out-of-order provider sequences without a second snapshot", async () => {

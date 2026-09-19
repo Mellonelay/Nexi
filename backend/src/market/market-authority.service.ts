@@ -680,7 +680,14 @@ export class MarketAuthorityService implements OnModuleInit {
           "symbol"=excluded."symbol",
           "provider"=excluded."provider",
           "source"=excluded."source",
-          "sequence"=CAST("MarketQuoteLatest"."sequence" AS INTEGER) + 1,
+          "sequence"=MAX(
+            CAST("MarketQuoteLatest"."sequence" AS INTEGER),
+            COALESCE((
+              SELECT MAX(CAST("MarketQuoteSnapshot"."sequence" AS INTEGER))
+              FROM "MarketQuoteSnapshot"
+              WHERE "MarketQuoteSnapshot"."pairId"="MarketQuoteLatest"."pairId"
+            ), 0)
+          ) + 1,
           "price"=excluded."price",
           "change24h"=excluded."change24h",
           "volume24h"=excluded."volume24h",
