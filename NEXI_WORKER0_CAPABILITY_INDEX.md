@@ -1,6 +1,6 @@
 # NEXI Worker-0 Capability Index
 
-Purpose: lightweight task router for Worker 0. Read this after `/home/mellonelay1999/RDC_ONBOARDING.md` only when the task needs capability selection.
+Purpose: lightweight NEXI capability overlay for Worker 0. Global capability ownership lives in `/home/mellonelay1999/.agents/GLOBAL_CAPABILITY_INDEX.md`; read this file after `/home/mellonelay1999/RDC_ONBOARDING.md` only when the task needs NEXI-specific capability selection.
 
 ## Operating rule
 
@@ -14,10 +14,14 @@ Do not preload the MCP catalog, CLI catalog, Graphify guide, DeepWiki guide, and
 
 | Need | Primary owner | Add only when useful |
 |---|---|---|
+| engineering lifecycle/phase/recovery | Get-Fable | Agent Kernel for durable governance; Riqor for evidence freshness |
+| evidence freshness/completion gate | Riqor | focused tests/runtime; never prose-only proof |
+| durable governance/architecture memory | Agent Kernel | project `.agent-kernel` overlay when present |
 | exact file/text/path | native RDC filesystem/search, `rg`, `fd` | `ast-grep` for AST-aware matching |
 | structured JSON/data/file analysis | persistent Python or Node | `jq` for simple transforms |
 | Git source/history/PR | Git / GitHub CLI | Graphify only for structural impact |
-| repository topology/ownership/path/blast radius | Graphify | direct source for implementation truth |
+| repository topology/ownership/path/blast radius | Graphify L0/L1 | direct source for implementation truth |
+| advanced cross-view graph forensics | `graphify-multiview` L2/L3 | direct source/runtime + Riqor; do not default to Omnipotent |
 | semantic repository meaning/context | DeepWiki | direct source/tests/runtime for proof |
 | TS/JS dead-code/change-safety/duplication | Fallow | Graphify when consumer topology is uncertain |
 | hotspots/code health/change risk | CodeScene | Graphify for topology |

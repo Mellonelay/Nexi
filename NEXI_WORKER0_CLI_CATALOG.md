@@ -6,6 +6,11 @@ Purpose: durable responsibility map for local CLIs/operator tools. Versions and 
 |---|---|---|---|---|---|
 | `git` | source state/history/diff | use for source frontier; not deployment truth | `git status`, `git log`, `git diff` | GitHub `main` is durable authority | `git --version` |
 | `gh` | GitHub repo/PR/CI/auth | use for GitHub operations | `gh auth status`, `gh repo view` | serialize final fan-in | `gh --version` |
+| `agent-kernel` | durable approved governance, memory, architecture contracts | use for durable global/project policy and context; not task-phase state | `agent-kernel status`, `doctor`, `sync` | does not own Get-Fable lifecycle or Riqor evidence | `agent-kernel --version` |
+| `get-fable` | engineering lifecycle routing, recovery, host hooks/skills | use for phase/card/recovery; do not make it durable global memory authority | `get-fable route`, `doctor`, targeted install | complements Agent Kernel + Riqor | `get-fable --version` |
+| `riqor` | evidence run, freshness, ordered trace, completion admissibility | use when mutation/evidence freshness matters | `riqor status --json`, `run status`, `doctor --json` | evidence gate, not implementation owner | `riqor version --json` |
+| `no-mistakes` | Git/change-safety proxy installed by Get-Fable | use only as bounded quality gate | `no-mistakes ...` | supporting guard, not source/runtime truth | `no-mistakes --version` |
+| `worker0-graph-analyze` | deterministic Omnipotent analysis over Graphify graph.json | use only for L3 structural analysis | `worker0-graph-analyze <graph.json>` | candidates only; confirm in source/runtime | script canary |
 | `graphify` | local graph extraction/update/query/path/impact | use change-driven; avoid full rebuild by default | `graphify check-update`, `graphify update`, targeted query/path | structural evidence only | `graphify --help` |
 | `fallow` | TS/JS structural/dead/duplication/risk evidence | use focused/changed-scope; not runtime or typecheck | JSON/quiet agent mode | pairs with Graphify | `fallow --help` |
 | `cs` / CodeScene | code health/hotspots/change-risk | use for maintainability prioritization | `cs --help` | not acceptance proof | `cs --help` |

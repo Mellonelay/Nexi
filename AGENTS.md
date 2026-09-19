@@ -22,6 +22,8 @@ Queue/Workflow/Worker/Container orchestrate; they never own financial truth.
 
 Do not restore any retired database authority. Do not introduce a second Admin plane, second financial authority, direct frontend D1 access, Worker financial logic, or custom VM lifecycle engine.
 ## Capability routing
+Worker-0 global control law is `/home/mellonelay1999/RDC_ONBOARDING.md` with global capability/router/hook catalogs under `/home/mellonelay1999/.agents/`. Agent Kernel owns durable governance, Get-Fable owns lifecycle phase/recovery, Riqor owns evidence freshness/completion admissibility, and the advanced `graphify-multiview` skill owns escalated multi-view structural analysis. NEXI files below are project overlays, not duplicate global authorities.
+
 Classify the complete owner request before choosing skills or tools. Use `NEXI_CODEX_CAPABILITY_ROUTING.md` as the project routing owner, `/home/mellonelay1999/RDC_ONBOARDING.md` for Worker-0 mechanics, and `NEXI_WORKER0_CAPABILITY_INDEX.md` as the lightweight capability directory. Read only the specialist reference needed for the task.
 
 Before the first execution call of each new substantive NEXI task, emit the compact `ROUTING` declaration required by the project router, then execute immediately.

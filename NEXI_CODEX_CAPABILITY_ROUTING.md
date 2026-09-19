@@ -1,9 +1,12 @@
 # NEXI Capability and Execution Routing
 
-Purpose: canonical project routing for selecting skills, MCPs, CLIs, browser surfaces, and verification lanes. This does not authorize production mutation. Worker-0 capability lookup is delegated to `NEXI_WORKER0_CAPABILITY_INDEX.md`; detailed catalogs/guides are progressive-disclosure references, not startup reading.
+Purpose: canonical NEXI project overlay for selecting skills, MCPs, CLIs, browser surfaces, and verification lanes. Global Worker-0 law and capability ownership live under `/home/mellonelay1999/RDC_ONBOARDING.md` and `/home/mellonelay1999/.agents/`; this file adds only NEXI-specific authority and routing. It does not authorize production mutation. Worker-0 capability lookup is delegated to `NEXI_WORKER0_CAPABILITY_INDEX.md`; detailed catalogs/guides are progressive-disclosure references, not startup reading.
 
 ## Dynamic routing model
-`OWNER MESSAGE -> COMPLETE TASK CONTRACT -> CURRENT NEXI AUTHORITY -> CORRECTION/DRIFT HANDLING WHEN REQUIRED -> TASK CLASSIFICATION -> ONE PRIMARY RESPONSIBILITY OWNER -> 0..N NON-OVERLAPPING SPECIALISTS -> FASTEST PRECISE TOOL/MCP/CLI -> EXECUTE -> FOCUSED VERIFY -> PARENT FAN-IN -> DURABLE STATE RECONCILIATION WHEN REQUIRED -> REPORT`
+Global control stack: `ChatGPT parent -> Selective Intelligence when triggered -> Agent Kernel durable governance -> Get-Fable lifecycle -> narrow capability owner -> Riqor evidence gate`.
+
+NEXI execution overlay:
+`OWNER MESSAGE -> COMPLETE TASK CONTRACT -> CURRENT NEXI AUTHORITY -> CORRECTION/DRIFT HANDLING WHEN REQUIRED -> TASK CLASSIFICATION -> ONE PRIMARY RESPONSIBILITY OWNER -> 0..N NON-OVERLAPPING SPECIALISTS -> FASTEST PRECISE TOOL/MCP/CLI -> EXECUTE -> FOCUSED VERIFY -> RIQOR FRESHNESS/COMPLETION GATE -> PARENT FAN-IN -> DURABLE STATE RECONCILIATION WHEN REQUIRED -> REPORT`
 
 Compile the complete owner message before execution: required actions/evidence/sequencing, must-preserve state, explicit non-goals, mutation/production authority, completion conditions, and required documentation/state updates. Do not silently drop secondary requirements.
 
