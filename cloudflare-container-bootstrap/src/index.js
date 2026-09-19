@@ -960,7 +960,10 @@ export default {
 
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    const container = await getRunningNexiContainer(env);
+    // Public request forwarding relies on Container.fetch() to own cold-start
+    // lifecycle and port readiness. Explicit startAndWaitForPorts() here can
+    // race a rollout-fixed Durable Object instance and leave it inactive.
+    const container = getNexiContainer(env);
 
     if (url.pathname === "/healthz") {
       const response = Response.json({
