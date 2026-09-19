@@ -5,7 +5,6 @@ import { MarketProviderEvent, ProviderDepthEvent, ProviderTradeEvent } from './m
 import { MarketProviderRouterService } from './market-provider-router.service';
 import { MarketSeederService } from './market-seeder.service';
 import { RedisService } from '../redis/redis.service';
-import { MarketReferencePersistenceService } from './market-reference-persistence.service';
 import { MARKET_KLINES_CHANNEL, MARKET_REFERENCE_CHANNEL, MarketKlineRealtimeEvent } from './market.types';
 
 @Injectable()
@@ -24,7 +23,6 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
     private readonly marketSeeder: MarketSeederService,
     private readonly providers: MarketProviderRouterService,
     private readonly redis: RedisService,
-    private readonly referencePersistence: MarketReferencePersistenceService,
   ) {}
 
   onModuleInit(): void {
@@ -143,12 +141,9 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
           for (const candle of derived) await this.publishMarketKlineEvent(candle);
         }
       } else if (event.kind === 'depth' || event.kind === 'trade') {
-        const result = event.kind === 'depth'
-          ? await this.referencePersistence.persistDepth(event)
-          : await this.referencePersistence.persistTrade(event);
-        if (!result.accepted && result.reason !== 'DUPLICATE') {
-          this.logger.warn(`Reference market event not persisted: ${result.reason}`);
-        }
+        // Reference depth/trade events are realtime-only. D1 remains the durable
+        // authority for quotes/Klines; retired archive infrastructure must not
+        // sit on the hot provider -> Valkey -> Socket.IO path.
         await this.publishReferenceMarketEvent(event);
       }
     } catch (error) {

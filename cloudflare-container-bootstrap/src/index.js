@@ -11,6 +11,8 @@ const CONTAINER_ENV_KEYS = [
   "SENTRY_RELEASE",
   "REDIS_URL",
   "JWT_SECRET",
+  "OBSERVE_APP_KEY",
+  "OBSERVE_APP_SECRET",
   "D1_RUNTIME_ENABLED",
   "D1_BRIDGE_ENABLED",
   "D1_BRIDGE_HOST",
@@ -33,13 +35,6 @@ const CONTAINER_ENV_KEYS = [
   "NEXI_SCHEDULER_ENABLED",
   "NEXI_B7_ENABLED",
   "NEXI_SANDBOX_ACCOUNT_IDS",
-  "MARKET_ARCHIVE_PIPELINE_URL",
-  "MARKET_ARCHIVE_PIPELINE_TOKEN",
-  "MARKET_ARCHIVE_PIPELINE_FORMAT",
-  "MARKET_ARCHIVE_REQUIRED",
-  "MARKET_ARCHIVE_RETENTION_ENABLED",
-  "MARKET_ARCHIVE_CHECKPOINT_CONFIRMED",
-  "MARKET_REFERENCE_RETENTION_SECONDS",
   "FAWAZ_CURRENCY_API_BASE_URL",
   "METALPRICE_API_BASE_URL",
   "METALPRICE_API_KEY",
@@ -608,23 +603,6 @@ NexiApiContainer.outboundByHost = {
     return Response.json({ results: result.results, meta: result.meta });
   },
 
-  "nexi.r2": async (request, env) => {
-    const url = new URL(request.url);
-    if (request.method !== "GET")
-      return new Response("Method Not Allowed", { status: 405 });
-    const key = keyFromPath(url, "/market/");
-    if (!key) return new Response("Not found", { status: 404 });
-    const object = await env.MARKET_ARCHIVE.get(key);
-    return object
-      ? new Response(object.body, {
-          headers: {
-            "content-type":
-              object.httpMetadata?.contentType || "application/octet-stream",
-          },
-        })
-      : new Response("Not found", { status: 404 });
-  },
-
   "nexi.kv": async (request, env) => {
     const url = new URL(request.url);
     const key = keyFromPath(url, "/config/");
@@ -764,42 +742,6 @@ NexiApiContainer.outboundByHost = {
     }
 
     return new Response("Method Not Allowed", { status: 405 });
-  },
-
-  "nexi.pipeline": async (request, env) => {
-    if (request.method !== "POST")
-      return new Response("Method Not Allowed", { status: 405 });
-    const body = await boundedJson(request);
-    const url = new URL(request.url);
-    const stream =
-      url.pathname === "/market-structured"
-        ? env.MARKET_STRUCTURED_STREAM
-        : url.pathname === "/market-archive"
-          ? env.MARKET_ARCHIVE_STREAM
-          : null;
-    if (!stream || body === null)
-      return Response.json(
-        { error: "Invalid pipeline request" },
-        { status: 400 },
-      );
-    const records = Array.isArray(body) ? body : [body];
-    if (
-      records.length < 1 ||
-      records.length > 100 ||
-      records.some(
-        (record) =>
-          !record ||
-          typeof record !== "object" ||
-          (record.validationMarker !== "undefined" &&
-            typeof record.validationMarker !== "string"),
-      )
-    )
-      return Response.json(
-        { error: "Invalid pipeline records" },
-        { status: 400 },
-      );
-    await stream.send(records);
-    return Response.json({ accepted: records.length });
   },
 };
 

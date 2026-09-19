@@ -2,7 +2,8 @@
 import "./instrument";
 
 import { NestFactory } from "@nestjs/core";
-import { AppModule, ObserveInstrument } from "./app.module";
+import { AppModule } from "./app.module";
+import { ObserveInstrument } from "./observe";
 import { ValidationPipe } from "@nestjs/common";
 import { RedisIoAdapter } from "./prisma/redis-io.adapter";
 import { RuntimeLifecycleService } from "./runtime/runtime-lifecycle.service";

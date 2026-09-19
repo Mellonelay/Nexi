@@ -17,7 +17,7 @@ Public Frontend / Admin -> Cloudflare Worker -> canonical Cloudflare Container -
 NestJS owns business/domain decisions.
 D1 owns durable application + financial relational truth.
 Aiven Valkey owns cache, Streams, Socket.IO, and ephemeral coordination.
-R2/Data Catalog/Pipelines own archive/analytics objects.
+R2 is retained only for active domain objects such as deposit proofs. The market R2/Data Catalog/Pipelines archive path was retired by owner decision on 2026-09-19.
 Queue/Workflow/Worker/Container orchestrate; they never own financial truth.
 
 Do not restore any retired database authority. Do not introduce a second Admin plane, second financial authority, direct frontend D1 access, Worker financial logic, or custom VM lifecycle engine.

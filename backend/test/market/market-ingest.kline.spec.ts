@@ -15,7 +15,6 @@ describe('MarketIngestService Kline publication', () => {
       { ensureReconciled: jest.fn().mockResolvedValue(undefined) } as never,
       { start: jest.fn(), stop: jest.fn() } as never,
       redis as never,
-      { persistDepth: jest.fn(), persistTrade: jest.fn() } as never,
     );
 
     await (service as any).handleProviderEvent({
@@ -47,7 +46,6 @@ describe('MarketIngestService Kline publication', () => {
       { ensureReconciled: jest.fn().mockResolvedValue(undefined) } as never,
       { start: jest.fn(), stop: jest.fn() } as never,
       redis as never,
-      { persistDepth: jest.fn(), persistTrade: jest.fn() } as never,
     );
 
     await (service as any).handleProviderEvent({
@@ -61,6 +59,26 @@ describe('MarketIngestService Kline publication', () => {
     expect(redis.publish.mock.calls[1][1]).toContain('"interval":"5m"');
   });
 
+  it('publishes provider depth/trade reference events without archive persistence', async () => {
+    const redis = { isAvailable: jest.fn().mockReturnValue(true), publish: jest.fn().mockResolvedValue(undefined) };
+    const service = new MarketIngestService(
+      { ingestQuote: jest.fn() } as never,
+      { persist: jest.fn(), accumulateQuote: jest.fn(), aggregateFromOneMinute: jest.fn() } as never,
+      { ensureReconciled: jest.fn().mockResolvedValue(undefined) } as never,
+      { start: jest.fn(), stop: jest.fn() } as never,
+      redis as never,
+    );
+
+    await (service as any).handleProviderEvent({
+      kind: 'trade', symbol: 'BTCUSDT', provider: 'binance-spot', source: 'websocket:trade',
+      providerInstrument: 'BTCUSDT', eventTime: 120_000, tradeId: 'trade-1',
+      price: '10', quantity: '0.1', maker: false,
+    });
+
+    expect(redis.publish).toHaveBeenCalledTimes(1);
+    expect(redis.publish).toHaveBeenCalledWith('market:reference:v1', expect.stringContaining('"event":"market.reference.trade"'));
+  });
+
   it('waits for catalog reconciliation before starting providers', async () => {
     let releaseReconciliation!: () => void;
     const reconciliation = new Promise<void>((resolve) => { releaseReconciliation = resolve; });
@@ -71,7 +89,6 @@ describe('MarketIngestService Kline publication', () => {
       { ensureReconciled: jest.fn().mockReturnValue(reconciliation) } as never,
       providers as never,
       { isAvailable: jest.fn().mockReturnValue(false), publish: jest.fn() } as never,
-      { persistDepth: jest.fn(), persistTrade: jest.fn() } as never,
     );
 
     service.onModuleInit();

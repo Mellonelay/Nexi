@@ -42,18 +42,12 @@
     "MARKET_BACKFILL_ON_STARTUP": "false",
     "NEXI_SCHEDULER_ENABLED": "true",
     "NEXI_B7_ENABLED": "false",
-    "MARKET_ARCHIVE_PIPELINE_URL": "https://de518faafc9c42f1bdeb344041249a49.ingest.cloudflare.com",
-    "MARKET_ARCHIVE_PIPELINE_FORMAT": "structured",
-    "MARKET_ARCHIVE_REQUIRED": "true",
-    "MARKET_ARCHIVE_RETENTION_ENABLED": "false",
-    "MARKET_ARCHIVE_CHECKPOINT_CONFIRMED": "false",
   },
   "secrets": {
     "required": [
       "REDIS_URL",
       "JWT_SECRET",
       "SENTRY_DSN",
-      "MARKET_ARCHIVE_PIPELINE_TOKEN",
     ],
   },
   "r2_buckets": [
@@ -61,10 +55,6 @@
       "binding": "DEPOSIT_PROOFS",
       "bucket_name": "nexi-deposit-proofs-staging",
       "preview_bucket_name": "nexi-deposit-proofs-staging",
-    },
-    {
-      "binding": "MARKET_ARCHIVE",
-      "bucket_name": "nexi-market-archive-staging",
     },
   ],
   "d1_databases": [
@@ -160,16 +150,6 @@
       },
     ],
   },
-  "pipelines": [
-    {
-      "binding": "MARKET_STRUCTURED_STREAM",
-      "stream": "de518faafc9c42f1bdeb344041249a49",
-    },
-    {
-      "binding": "MARKET_ARCHIVE_STREAM",
-      "stream": "177510a4918647fb8ccf7c5c796ff882",
-    },
-  ],
   "workflows": [
     {
       "binding": "WITHDRAWAL_WORKFLOW",
