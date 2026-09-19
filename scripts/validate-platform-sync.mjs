@@ -13,7 +13,6 @@ const checks = [
   ['CORS public app', worker.includes('https://app.nexitrading.app')],
   ['CORS admin app', worker.includes('https://admin.nexitrading.app')],
   ['Wallet auth domain', worker.includes('"WALLET_AUTH_DOMAIN": "app.nexitrading.app"')],
-  ['Canonical health URL', worker.includes('"NEXI_HEALTH_URL": "https://api.nexitrading.app/readyz"')],
   ['Public API URL', publicEnv.includes(`NEXT_PUBLIC_API_URL=${targets.api}`)],
   ['Public platform URL', publicEnv.includes(`NEXT_PUBLIC_PLATFORM_URL=${targets.public_app}`)],
   ['Admin live provider', adminEnv.includes('VITE_ADMIN_PROVIDER_MODE=live')],

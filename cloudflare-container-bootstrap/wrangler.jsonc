@@ -30,7 +30,6 @@
     "D1_BRIDGE_ENABLED": "true",
     "D1_BRIDGE_HOST": "nexi-core-d1",
     "QUEUE_BRIDGE_HOST": "nexi.queue",
-    "WORKFLOW_BRIDGE_HOST": "nexi.workflow",
     "D1_RUNTIME_ENABLED": "true",
     "MARKET_PROVIDER_ENABLED": "true",
     "MARKET_PROVIDER_NAME": "binance-spot",
@@ -48,7 +47,6 @@
     "MARKET_ARCHIVE_REQUIRED": "true",
     "MARKET_ARCHIVE_RETENTION_ENABLED": "false",
     "MARKET_ARCHIVE_CHECKPOINT_CONFIRMED": "false",
-    "NEXI_HEALTH_URL": "https://api.nexitrading.app/readyz",
   },
   "secrets": {
     "required": [
