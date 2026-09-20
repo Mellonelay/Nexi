@@ -79,6 +79,26 @@ describe('BinanceSpotAdapter', () => {
     }));
   });
 
+  it('refreshes a quiet symbol before the public quote stale boundary', async () => {
+    const now = Date.parse('2026-09-20T09:30:00.000Z');
+    jest.spyOn(Date, 'now').mockReturnValue(now);
+    const adapter = new BinanceSpotAdapter() as unknown as {
+      symbols: string[];
+      lastTickerAt: Map<string, number>;
+      request: jest.Mock;
+      refreshStaleTickers: (handler: (event: unknown) => void) => Promise<void>;
+    };
+    adapter.symbols = ['sunusdt'];
+    adapter.lastTickerAt.set('sunusdt', now - 16_000);
+    adapter.request = jest.fn().mockResolvedValue([{
+      symbol: 'SUNUSDT', lastPrice: '0.017', priceChangePercent: '0', volume: '1', highPrice: '0.018', lowPrice: '0.016',
+    }]);
+
+    await adapter.refreshStaleTickers(jest.fn());
+
+    expect(adapter.request).toHaveBeenCalledWith('/api/v3/ticker/24hr', { symbols: '[\"SUNUSDT\"]' });
+  });
+
   it('terminates an open but globally silent stream so reconnect can resubscribe', () => {
     const adapter = new BinanceSpotAdapter() as unknown as {
       socket: { terminate: jest.Mock; close: jest.Mock };

@@ -153,7 +153,11 @@ export class BinanceSpotAdapter implements OnModuleDestroy, MarketProviderAdapte
     if (this.stopping || this.watchdogInFlight || this.symbols.length === 0) return;
     const now = Date.now();
     this.recoverSilentStream(now);
-    const stale = this.symbols.filter((symbol) => now - (this.lastTickerAt.get(symbol) ?? 0) >= this.quoteStaleAfterMs);
+    // Refresh quiet symbols with headroom before the public freshness boundary.
+    // Waiting until quoteStaleAfterMs means the next watchdog tick can leave a
+    // healthy provider row classified STALE for up to half a watchdog period.
+    const refreshAfterMs = Math.max(5_000, Math.floor(this.quoteStaleAfterMs / 2));
+    const stale = this.symbols.filter((symbol) => now - (this.lastTickerAt.get(symbol) ?? 0) >= refreshAfterMs);
     if (stale.length === 0) return;
     this.watchdogInFlight = true;
     try {
