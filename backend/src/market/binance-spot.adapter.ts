@@ -143,7 +143,7 @@ export class BinanceSpotAdapter implements OnModuleDestroy, MarketProviderAdapte
 
   private startWatchdog(onEvent: (event: MarketProviderEvent) => void): void {
     if (this.watchdogTimer) clearInterval(this.watchdogTimer);
-    const interval = Math.max(5_000, Math.floor(this.quoteStaleAfterMs / 2));
+    const interval = Math.max(5_000, Math.floor(this.quoteStaleAfterMs / 3));
     this.watchdogTimer = setInterval(() => { void this.refreshStaleTickers(onEvent); }, interval);
     this.watchdogTimer.unref?.();
     void this.refreshStaleTickers(onEvent);

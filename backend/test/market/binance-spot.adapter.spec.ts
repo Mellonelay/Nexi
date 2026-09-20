@@ -79,6 +79,24 @@ describe('BinanceSpotAdapter', () => {
     }));
   });
 
+  it('schedules the watchdog with phase headroom before the public stale boundary', async () => {
+    jest.useFakeTimers();
+    const adapter = new BinanceSpotAdapter() as unknown as {
+      symbols: string[];
+      request: jest.Mock;
+      startWatchdog: (handler: (event: unknown) => void) => void;
+      stop: () => void;
+    };
+    adapter.symbols = ['sunusdt'];
+    adapter.request = jest.fn().mockResolvedValue([]);
+    adapter.startWatchdog(jest.fn());
+
+    expect(jest.getTimerCount()).toBe(1);
+    await jest.advanceTimersByTimeAsync(10_001);
+    expect(adapter.request).toHaveBeenCalled();
+    adapter.stop();
+  });
+
   it('refreshes a quiet symbol before the public quote stale boundary', async () => {
     const now = Date.parse('2026-09-20T09:30:00.000Z');
     jest.spyOn(Date, 'now').mockReturnValue(now);
