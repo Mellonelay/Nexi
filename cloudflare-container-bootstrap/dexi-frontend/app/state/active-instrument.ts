@@ -1,7 +1,7 @@
 export type InstrumentCategory = 'Crypto' | 'Metal' | 'Forex' | 'Shares';
 import { findAsset } from '../lib/asset-registry.ts';
 
-export type MarketProvenance = 'LIVE' | 'STALE' | 'UNAVAILABLE' | 'DISABLED';
+export type MarketProvenance = 'LIVE' | 'STALE' | 'UNAVAILABLE' | 'DISABLED' | 'CLOSED';
 
 export interface ActiveInstrument {
   assetId: string;
@@ -31,6 +31,7 @@ export interface MarketPairLike {
   vol?: number | null;
   source?: 'fallback' | 'tick' | 'external';
   dataState?: 'LIVE' | 'STALE' | 'UNAVAILABLE' | 'ERROR';
+  sessionState?: 'OPEN' | 'CLOSED';
 }
 
 export const normalizePair = (pair: string) => {
@@ -113,8 +114,9 @@ export function instrumentFromMarketPair(row: MarketPairLike): ActiveInstrument 
   const symbol = normalizePair(row.symbol);
   const registered = findAsset(row.assetId ?? row.symbol);
   const category: InstrumentCategory = registered ? (registered.category === 'Metals' ? 'Metal' : registered.category === 'Stocks' ? 'Shares' : registered.category) : categoryForSymbol(symbol);
-  const hasUsableMarketData = row.dataState === 'LIVE';
-  const provenance: MarketProvenance = row.dataState === 'LIVE' ? 'LIVE' : 'UNAVAILABLE';
+  const isClosed = row.sessionState === 'CLOSED';
+  const hasUsableMarketData = row.dataState === 'LIVE' || isClosed;
+  const provenance: MarketProvenance = isClosed ? 'CLOSED' : row.dataState === 'LIVE' ? 'LIVE' : 'UNAVAILABLE';
   return createActiveInstrument({
     assetId: registered?.id ?? row.assetId ?? (row.displaySymbol || symbol),
     symbol: row.displaySymbol || symbol,
@@ -126,8 +128,8 @@ export function instrumentFromMarketPair(row: MarketPairLike): ActiveInstrument 
     spotAvailable: category === 'Crypto',
     binaryAvailable: true,
     price: hasUsableMarketData ? row.price : null,
-    change24h: hasUsableMarketData ? row.change : null,
-    volume24h: hasUsableMarketData && Number.isFinite(row.vol) ? row.vol ?? null : null,
+    change24h: row.dataState === 'LIVE' ? row.change : null,
+    volume24h: row.dataState === 'LIVE' && Number.isFinite(row.vol) ? row.vol ?? null : null,
     precision: registered?.precision,
     displayMetadata: { displaySymbol: row.displaySymbol },
   });

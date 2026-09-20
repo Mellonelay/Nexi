@@ -11,6 +11,7 @@ import { instrumentFromMarketPair, normalizePair } from '../../../state/active-i
 import { findAsset } from '../../../lib/asset-registry';
 import AssetIcon from '../../../components/AssetIcon';
 import SafeBackButton from '../../../components/SafeBackButton';
+import { marketDisplayStatus } from '../../../lib/market-data';
 
 const placeholder = '—';
 
@@ -75,6 +76,7 @@ export default function AssetDetailPage() {
             </div>
             <div className="text-left sm:text-right">
               <p className="font-mono text-2xl tabular-nums">{instrument.price ?? placeholder}</p>
+              <span className={`inline-flex rounded border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.1em] ${marketDisplayStatus(matchedItem.dataState, matchedItem.sessionState) === 'Closed' ? 'border-white/15 text-[#8C8299]' : marketDisplayStatus(matchedItem.dataState, matchedItem.sessionState) === 'Live' ? 'border-emerald-300/20 text-emerald-200' : 'border-rose-300/20 text-rose-200'}`}>{marketDisplayStatus(matchedItem.dataState, matchedItem.sessionState)}</span>
               <p className="font-mono text-sm text-[#8C8299]">24h {instrument.change24h ?? placeholder}</p>
             </div>
           </div>
@@ -86,7 +88,12 @@ export default function AssetDetailPage() {
             <span className="text-xs text-[#8C8299]">{timeframe === '1d' ? '1D' : timeframe}</span>
           </div>
           <div className="min-w-0 min-h-[260px]">
-            <RealtimeTradingChart symbol={normalizePair(instrument.pair)} type="spot" interval={timeframe} />
+            <RealtimeTradingChart
+              symbol={normalizePair(instrument.pair)}
+              type="spot"
+              interval={timeframe}
+              marketStatus={matchedItem.sessionState === 'CLOSED' ? 'CLOSED' : undefined}
+            />
           </div>
           <div className="nexi-scroll-rail flex min-w-0 gap-1 overflow-x-auto border-t border-violet-300/10 p-2">
             {timeframeOptions.map((option) => <button key={option} type="button" onClick={() => setTimeframe(option)} aria-pressed={timeframe === option} className={`min-h-11 min-w-12 shrink-0 rounded-md px-2 text-xs font-semibold ${timeframe === option ? 'bg-[#2A1742] text-[#F8F6FF]' : 'text-[#8C8299] hover:bg-white/5 hover:text-white'}`}>{option === '1d' ? '1D' : option}</button>)}

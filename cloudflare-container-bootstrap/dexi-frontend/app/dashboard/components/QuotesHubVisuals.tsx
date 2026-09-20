@@ -16,9 +16,9 @@ export function MarketSparkline({ item, compact = false }: { item: MarketPair; c
   const gradientId = useId().replace(/:/g, '');
   const width = compact ? 108 : 136;
   const height = compact ? 36 : 44;
-  const hasLiveSeries = item.dataState === 'LIVE' && item.source !== 'fallback' && Boolean(item.sparkline && item.sparkline.length > 1);
+  const hasMarketSeries = (item.dataState === 'LIVE' || item.sessionState === 'CLOSED') && item.source !== 'fallback' && Boolean(item.sparkline && item.sparkline.length > 1);
 
-  if (!hasLiveSeries) {
+  if (!hasMarketSeries) {
     return (
       <svg viewBox={`0 0 ${width} ${height}`} className={compact ? 'h-9 w-[108px]' : 'h-11 w-[136px]'} role="img" aria-label={`${item.displaySymbol} market series unavailable`}>
         <line x1="4" y1={height / 2} x2={width - 4} y2={height / 2} stroke="var(--nexi-cal-cyan)" strokeWidth="1.25" strokeDasharray="5 6" strokeLinecap="round" opacity="0.34" />
@@ -38,7 +38,7 @@ export function MarketSparkline({ item, compact = false }: { item: MarketPair; c
   const area = `3,${height - 2} ${mapped} ${width - 3},${height - 2}`;
 
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className={compact ? 'h-9 w-[108px]' : 'h-11 w-[136px]'} role="img" aria-label={`${item.displaySymbol} market sparkline`}>
+    <svg viewBox={`0 0 ${width} ${height}`} className={compact ? 'h-9 w-[108px]' : 'h-11 w-[136px]'} role="img" aria-label={`${item.displaySymbol} ${item.sessionState === 'CLOSED' ? 'closed market' : 'market'} sparkline`}>
       <defs><linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="var(--nexi-cal-cyan)" stopOpacity="0.28" /><stop offset="1" stopColor="var(--nexi-cal-cyan)" stopOpacity="0" /></linearGradient></defs>
       <polygon points={area} fill={`url(#${gradientId})`} />
       <polyline points={mapped} fill="none" stroke="var(--nexi-cal-cyan)" strokeWidth="1.55" strokeLinecap="round" strokeLinejoin="round" />

@@ -16,6 +16,7 @@ import type {
   KycReview,
   LedgerEntry,
   MarketFeed,
+  MarketProviderRuntime,
   MaintenanceScope,
   MaintenanceWindow,
   Network,
@@ -674,6 +675,36 @@ export class NexiAdminApiProvider implements AdminDataProvider {
         const row = record(value);
         const symbols = Array.isArray(row.symbols) && row.symbols.length ? row.symbols : [null];
         return symbols.map((item) => this.marketFeedFromRow(row, item));
+      }),
+    );
+  }
+  getMarketRuntime(): Promise<MarketProviderRuntime[]> {
+    return this.request<unknown[]>("/admin/market/runtime").then((rows) =>
+      rows.map((value) => {
+        const row = record(value);
+        const capabilities = record(row.capabilities);
+        return {
+          key: stringValue(row.key),
+          displayName: stringValue(row.displayName, stringValue(row.key)),
+          status: stringValue(row.status, "UNKNOWN"),
+          priority: Number(row.priority ?? 0),
+          runtimeActive: row.runtimeActive === true,
+          capabilities: {
+            quotes: capabilities.quotes === true,
+            klines: capabilities.klines === true,
+            trades: capabilities.trades === true,
+            depth: capabilities.depth === true,
+          },
+          symbols: Array.isArray(row.symbols)
+            ? row.symbols.map((item) => {
+                const symbol = record(item);
+                return {
+                  symbol: stringValue(symbol.symbol),
+                  providerSymbol: stringValue(symbol.providerSymbol),
+                };
+              })
+            : [],
+        };
       }),
     );
   }

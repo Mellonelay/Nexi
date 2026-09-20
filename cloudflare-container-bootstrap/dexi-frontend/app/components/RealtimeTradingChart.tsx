@@ -9,11 +9,13 @@ export default function RealtimeTradingChart({
   symbol,
   type,
   interval = "1m",
+  marketStatus,
   onStatusChange,
 }: {
   symbol: string;
   type: "binary" | "spot";
   interval?: string;
+  marketStatus?: MarketDataStatus;
   onStatusChange?: (status: MarketDataStatus) => void;
 }) {
   const stream = useRealtimeMarket(symbol, interval);
@@ -23,7 +25,7 @@ export default function RealtimeTradingChart({
       : stream.status === "RECONNECTING"
         ? "CONNECTION_LOST"
         : stream.status;
-  const status: MarketDataStatus = rawStatus;
+  const status: MarketDataStatus = marketStatus === "CLOSED" ? "CLOSED" : rawStatus;
 
   useEffect(() => {
     onStatusChange?.(status);

@@ -72,4 +72,21 @@ describe('BiquoteMarketAdapter', () => {
       jest.useRealTimers();
     }
   });
+
+  it('emits a closed-session event when BiQuote has no current price', async () => {
+    process.env.MARKET_PROVIDER_ENABLED = 'true';
+    const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => ({ USDRUB: { symbol: 'USDRUB', marketState: 'closed', lastQuoteAt: '2026-09-18T20:00:00Z' } }),
+    } as Response);
+    const adapter = new BiquoteMarketAdapter();
+    adapter.configure([{ symbol: 'USDRUB', providerInstrument: 'USDRUB' }]);
+    const events: any[] = [];
+    await adapter.start((event) => events.push(event));
+    adapter.stop();
+    expect(fetchMock).toHaveBeenCalled();
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({ symbol: 'USDRUB', sessionState: 'CLOSED', source: 'biquote:rest:closed-market' });
+    expect(events[0].price).toBeUndefined();
+  });
 });

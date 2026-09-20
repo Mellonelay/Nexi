@@ -8,7 +8,7 @@ export type ProviderQuoteEvent = {
   providerInstrument: string;
   priceType: 'BID' | 'ASK' | 'MID' | 'LAST' | 'CANDLE_CLOSE' | 'REFERENCE';
   eventTime: number;
-  price: string;
+  price?: string;
   change24h?: string;
   volume24h?: string;
   high24h?: string;

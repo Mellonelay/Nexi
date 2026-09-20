@@ -27,7 +27,8 @@ const normalizedState = (value: unknown): MarketStreamSnapshot["status"] =>
   value === "LIVE" ||
   value === "STALE" ||
   value === "ERROR" ||
-  value === "UNAVAILABLE"
+  value === "UNAVAILABLE" ||
+  value === "CLOSED"
     ? value
     : "UNAVAILABLE";
 

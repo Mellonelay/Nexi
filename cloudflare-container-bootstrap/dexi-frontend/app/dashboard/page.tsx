@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { MarketPair, useMarketData } from "../hooks/useMarketData";
 import { nexiTransition } from "../lib/nexi-motion";
+import { marketDisplayStatus } from "../lib/market-data";
 import {
   instrumentFromMarketPair,
   normalizePair,
@@ -37,6 +38,9 @@ const tabs = [
 type Tab = (typeof tabs)[number]["label"];
 
 function formatValue(item: MarketPair, value: "price" | "change" | "volume") {
+  if (value === "price" && item.sessionState === "CLOSED" && item.price !== null) {
+    return item.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 8 });
+  }
   if (item.dataState !== "LIVE" || item.source === "fallback") return "—";
   if (value === "price")
     return item.price === null
@@ -296,6 +300,9 @@ export default function Dashboard() {
                       </span>
                       <span className="mt-0.5 block truncate text-[10px] text-[var(--nexi-text-muted)] md:mt-1 md:text-xs">
                         {item.name}
+                      </span>
+                      <span className={`mt-1 inline-flex rounded border px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-[0.1em] md:text-[9px] ${marketDisplayStatus(item.dataState, item.sessionState) === "Closed" ? "border-white/15 text-[var(--nexi-text-muted)]" : marketDisplayStatus(item.dataState, item.sessionState) === "Live" ? "border-emerald-300/20 text-emerald-200" : "border-rose-300/20 text-rose-200"}`}>
+                        {marketDisplayStatus(item.dataState, item.sessionState)}
                       </span>
                     </span>
                   </span>

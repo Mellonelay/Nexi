@@ -16,7 +16,7 @@ import { LoadingSkeleton, ErrorState } from "@/admin/components/states";
 import { useAdminData, useAdminQuery } from "@/admin/data/context";
 import { useAdminSession } from "@/admin/session/session";
 import { Button } from "@/components/ui/button";
-import type { MarketFeed, FeedStatus } from "@/admin/types";
+import type { MarketFeed, MarketProviderRuntime, FeedStatus } from "@/admin/types";
 import { Zap, ZapOff, Radio, ShieldOff } from "lucide-react";
 
 export const Route = createFileRoute("/market-feeds")({ component: Page });
@@ -36,6 +36,7 @@ function Inner() {
   const provider = useAdminData();
   const session = useAdminSession();
   const q = useAdminQuery((p) => p.listFeeds());
+  const runtimeQ = useAdminQuery((p) => p.getMarketRuntime?.() ?? Promise.resolve([]));
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [pending, setPending] = useState<PendingAction | null>(null);
 
@@ -123,6 +124,7 @@ function Inner() {
 
   return (
     <Shell live={liveCount} stale={staleCount} down={downCount} total={feeds.length}>
+      <RuntimePanel rows={runtimeQ.data ?? []} error={runtimeQ.error?.message} />
       <DataTable
         data={feeds}
         columns={columns}
@@ -370,6 +372,47 @@ function Shell({
       />
       {children}
     </div>
+  );
+}
+
+function RuntimePanel({ rows, error }: { rows: MarketProviderRuntime[]; error?: string }) {
+  return (
+    <section className="surface-1 rounded-lg border border-border/60 p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-semibold">Provider runtime</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            D1 policy, runtime activation, capabilities, and configured symbol coverage.
+          </p>
+        </div>
+        <StatusBadge tone={error ? "warning" : "info"} dot={false}>
+          {error ? "unavailable" : `${rows.length} providers`}
+        </StatusBadge>
+      </div>
+      {error ? (
+        <p className="mt-3 text-xs text-warning">{error}</p>
+      ) : (
+        <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+          {rows.map((row) => (
+            <div key={row.key} className="rounded-md border border-border/60 p-3">
+              <div className="flex items-center justify-between gap-2">
+                <span className="mono text-sm">{row.key}</span>
+                <StatusBadge tone={row.runtimeActive ? "success" : "neutral"} dot={false}>
+                  {row.runtimeActive ? "ACTIVE" : "INACTIVE"}
+                </StatusBadge>
+              </div>
+              <div className="mt-2 text-xs text-muted-foreground">{row.displayName} · priority {row.priority}</div>
+              <div className="mt-2 flex flex-wrap gap-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                {Object.entries(row.capabilities).filter(([, enabled]) => enabled).map(([name]) => (
+                  <span key={name} className="rounded border border-border/60 px-1.5 py-0.5">{name}</span>
+                ))}
+              </div>
+              <div className="mono mt-2 text-xs text-muted-foreground">{row.symbols.length} symbols</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 

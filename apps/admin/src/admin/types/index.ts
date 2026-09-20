@@ -305,6 +305,21 @@ export interface MarketFeed {
   status: FeedStatus;
 }
 
+export interface MarketProviderRuntime {
+  key: string;
+  displayName: string;
+  status: string;
+  priority: number;
+  runtimeActive: boolean;
+  capabilities: {
+    quotes: boolean;
+    klines: boolean;
+    trades: boolean;
+    depth: boolean;
+  };
+  symbols: Array<{ symbol: string; providerSymbol: string }>;
+}
+
 export type SpotOrderType = "market" | "limit" | "stop_limit";
 
 export interface SpotPair {

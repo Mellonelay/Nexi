@@ -179,11 +179,9 @@ export function marketSnapshotForSymbol(value: unknown, expectedSymbol: string):
   if (!current || typeof current !== 'object') return null;
   const row = current as Record<string, unknown>;
   const rawState = String(row.state ?? row.dataState ?? 'UNAVAILABLE').toUpperCase();
-  const status: MarketStreamSnapshot['status'] = rawState === 'LIVE' || rawState === 'STALE' || rawState === 'ERROR' || rawState === 'UNAVAILABLE'
+  const status: MarketStreamSnapshot['status'] = rawState === 'LIVE' || rawState === 'STALE' || rawState === 'ERROR' || rawState === 'UNAVAILABLE' || rawState === 'CLOSED'
     ? rawState
-    : rawState === 'CLOSED'
-      ? 'STALE'
-      : 'UNAVAILABLE';
+    : 'UNAVAILABLE';
   const price = Number(row.price ?? row.lastPrice);
   const sequence = Number(row.sequence);
   const rawTimestamp = row.observedAt ?? row.receivedAt;

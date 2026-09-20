@@ -55,6 +55,7 @@ const marketStateCopy: Record<
     "The chart will appear shortly.",
   ],
   STALE: ["Chart updates paused", "Please wait while updates resume."],
+  CLOSED: ["Closed", "Showing the last available market history."],
   CONNECTION_LOST: [
     "Market connection interrupted",
     "Reconnecting. The chart shows the last received data.",

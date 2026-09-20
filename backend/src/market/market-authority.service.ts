@@ -18,7 +18,7 @@ export interface NormalizedMarketQuoteInput {
   symbol: string;
   provider: string;
   source: string;
-  price: string | number;
+  price?: string | number | null;
   change24h?: string | number | null;
   volume24h?: string | number | null;
   high24h?: string | number | null;
@@ -300,12 +300,21 @@ export class MarketAuthorityService implements OnModuleInit {
       || providerMapping?.instrument
       || symbol;
     const priceType: MarketPriceType = input.priceType ?? 'LAST';
-    const price = this.decimal(input.price, 'price');
+    const pair = await this.getOrCreatePair(symbol);
+    if (input.sessionState === 'CLOSED') {
+      const price = input.price == null ? null : this.decimal(input.price, 'price');
+      if (price?.isNegative() || price?.isZero()) throw new Error('Market quote price must be positive');
+      const primaryProvider = sourcePolicy?.displayPolicy.primaryProvider ?? provider;
+      const sessionOracle = provider === primaryProvider
+        || (provider === 'biquote' && sourcePolicy?.assetClass === 'forex');
+      if (!sessionOracle) return { accepted: false, reason: 'NON_PRIMARY_CLOSED_SESSION' };
+      return this.markClosedSession(pair.id, symbol, provider, source, providerInstrument, priceType, price);
+    }
+    const price = this.decimal(input.price ?? '', 'price');
     if (price.isNegative() || price.isZero()) {
       throw new Error('Market quote price must be positive');
     }
 
-    const pair = await this.getOrCreatePair(symbol);
     const result = await this.db.$transaction(async (tx) => {
       // Serialize writers for this canonical pair before deriving the next
       // sequence. Multiple provider pollers can otherwise read the same latest
@@ -629,17 +638,19 @@ export class MarketAuthorityService implements OnModuleInit {
     if (!mapping && !isDeterministicTestProvider(provider)) throw new Error('Market provider is not mapped for ' + symbol + ': ' + provider);
     const providerInstrument = input.providerInstrument?.trim() || mapping?.instrument || symbol;
     const priceType = input.priceType ?? 'LAST';
-    const price = this.decimal(input.price, 'price');
-    if (price.isNegative() || price.isZero()) throw new Error('Market quote price must be positive');
     const pair = await this.getOrCreatePairD1(symbol);
     const db = this.d1 as any;
     if (input.sessionState === 'CLOSED') {
+      const price = input.price == null ? null : this.decimal(input.price, 'price');
+      if (price?.isNegative() || price?.isZero()) throw new Error('Market quote price must be positive');
       const primaryProvider = policy?.displayPolicy.primaryProvider ?? provider;
       const sessionOracle = provider === primaryProvider
         || (provider === 'biquote' && policy?.assetClass === 'forex');
       if (!sessionOracle) return { accepted: false, reason: 'NON_PRIMARY_CLOSED_SESSION' };
-      return this.markClosedSessionD1(db, pair.id, symbol, provider, source, providerInstrument, priceType);
+      return this.markClosedSessionD1(db, pair.id, symbol, provider, source, providerInstrument, priceType, price);
     }
+    const price = this.decimal(input.price ?? '', 'price');
+    if (price.isNegative() || price.isZero()) throw new Error('Market quote price must be positive');
     const receivedAt = new Date();
     const lineage = { providerInstrument, priceType, canonicalAssetId: policy?.canonicalAssetId ?? null, assetClass: policy?.assetClass ?? null };
     const change24h = this.optionalDecimal(input.change24h);
@@ -785,6 +796,24 @@ export class MarketAuthorityService implements OnModuleInit {
     return this.publishD1QuoteEvent(event);
   }
 
+  private async markClosedSession(
+    pairId: string,
+    symbol: string,
+    provider: string,
+    source: string,
+    providerInstrument: string,
+    priceType: MarketPriceType,
+    price: Prisma.Decimal | null,
+  ): Promise<{ accepted: boolean; event?: MarketQuoteEvent; reason?: string }> {
+    const closedSource = source.includes('closed-market') ? source : `${source}:closed-market`;
+    const latest = await this.db.marketQuoteLatest.upsert({
+      where: { pairId },
+      update: { provider, source: closedSource, state: MarketQuoteState.UNAVAILABLE, price: price ?? undefined, receivedAt: new Date() },
+      create: { pairId, symbol, provider, source: closedSource, sequence: 1n, price, state: MarketQuoteState.UNAVAILABLE },
+    });
+    return this.publishD1QuoteEvent(this.toEvent({ ...latest, state: MarketQuoteState.UNAVAILABLE }, { providerInstrument, priceType }));
+  }
+
   private async markClosedSessionD1(
     db: any,
     pairId: string,
@@ -793,19 +822,26 @@ export class MarketAuthorityService implements OnModuleInit {
     source: string,
     providerInstrument: string,
     priceType: MarketPriceType,
+    price: Prisma.Decimal | null,
   ): Promise<{ accepted: boolean; event?: MarketQuoteEvent; reason?: string }> {
     const closedSource = source.includes('closed-market') ? source : `${source}:closed-market`;
     const receivedAt = this.d1DateTime(new Date());
     const batch = await db.atomicBatch([{
-      sql: `UPDATE "MarketQuoteLatest"
-        SET "provider"=?, "source"=?, "state"='UNAVAILABLE',
-            "sequence"=CAST("sequence" AS INTEGER)+1, "receivedAt"=?
-        WHERE "pairId"=?
+      sql: `INSERT INTO "MarketQuoteLatest"
+        ("id","pairId","symbol","provider","source","sequence","price","state","receivedAt")
+        VALUES (?,?,?,?,?,1,?,'UNAVAILABLE',?)
+        ON CONFLICT("pairId") DO UPDATE SET
+          "provider"=excluded."provider",
+          "source"=excluded."source",
+          "sequence"=CAST("MarketQuoteLatest"."sequence" AS INTEGER)+1,
+          "price"=COALESCE(excluded."price", "MarketQuoteLatest"."price"),
+          "state"='UNAVAILABLE',
+          "receivedAt"=excluded."receivedAt"
         RETURNING "pairId"`,
-      params: [provider, closedSource, receivedAt, pairId],
+      params: [randomUUID(), pairId, symbol, provider, closedSource, price?.toString() ?? null, receivedAt],
     }]);
     if (Number(batch[0]?.meta?.changes ?? 0) !== 1) {
-      return { accepted: false, reason: 'CLOSED_SESSION_WITHOUT_LATEST' };
+      return { accepted: false, reason: 'CLOSED_SESSION_PERSIST_FAILED' };
     }
     const latest = await db.marketQuoteLatest.findUnique({ where: { pairId } });
     if (!latest) return { accepted: false, reason: 'CLOSED_SESSION_WITHOUT_LATEST' };
@@ -829,7 +865,7 @@ export class MarketAuthorityService implements OnModuleInit {
     return value.toISOString().replace('Z', '+00:00');
   }
 
-  private toEvent(latest: { symbol: string; sequence: bigint; price: Prisma.Decimal; change24h?: Prisma.Decimal | null; volume24h?: Prisma.Decimal | null; high24h?: Prisma.Decimal | null; low24h?: Prisma.Decimal | null; bid?: Prisma.Decimal | null; ask?: Prisma.Decimal | null; spread?: Prisma.Decimal | null; state?: MarketQuoteState; provider: string; source: string; observedAt: Date; receivedAt: Date }, lineage?: { providerInstrument?: string; priceType?: MarketPriceType }): MarketQuoteEvent {
+  private toEvent(latest: { symbol: string; sequence: bigint; price?: Prisma.Decimal | null; change24h?: Prisma.Decimal | null; volume24h?: Prisma.Decimal | null; high24h?: Prisma.Decimal | null; low24h?: Prisma.Decimal | null; bid?: Prisma.Decimal | null; ask?: Prisma.Decimal | null; spread?: Prisma.Decimal | null; state?: MarketQuoteState; provider: string; source: string; observedAt?: Date | null; receivedAt: Date }, lineage?: { providerInstrument?: string; priceType?: MarketPriceType }): MarketQuoteEvent {
     return {
       version: 'v1',
       event: 'market.quote',

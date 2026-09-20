@@ -516,7 +516,7 @@ export default function SpotPage() {
             </div>
           </div>
           <div className="min-h-[300px] md:min-h-[360px] xl:min-h-[430px]">
-            <RealtimeTradingChart symbol={normalizedSymbol} type="spot" interval={chartInterval} onStatusChange={setChartStatus} />
+            <RealtimeTradingChart symbol={normalizedSymbol} type="spot" interval={chartInterval} marketStatus={market?.sessionState === 'CLOSED' ? 'CLOSED' : undefined} onStatusChange={setChartStatus} />
           </div>
         </div>
         <div className="mt-4 grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
@@ -566,7 +566,7 @@ export default function SpotPage() {
               </div>
             </div>
             <div className="min-h-[300px] md:min-h-[360px] xl:min-h-[430px]">
-              <RealtimeTradingChart symbol={normalizedSymbol} type="spot" interval={chartInterval} onStatusChange={setChartStatus} />
+              <RealtimeTradingChart symbol={normalizedSymbol} type="spot" interval={chartInterval} marketStatus={market?.sessionState === 'CLOSED' ? 'CLOSED' : undefined} onStatusChange={setChartStatus} />
             </div>
           </div>
 

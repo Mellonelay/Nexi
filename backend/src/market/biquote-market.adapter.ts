@@ -21,6 +21,9 @@ type BiquoteTick = {
   timestamp?: string;
   marketState?: string;
   stale?: boolean;
+  quoteAgeSeconds?: number;
+  lastQuoteAt?: string;
+  source?: string;
 };
 
 type BiquoteBar = {
@@ -225,6 +228,7 @@ export class BiquoteMarketAdapter implements MarketProviderAdapter {
   }
 
   private toEvent(mapping: MarketProviderRuntimeSymbol, tick: BiquoteTick, source: string): ProviderQuoteEvent | null {
+    const closed = tick.marketState?.trim().toLowerCase() === 'closed';
     const mid = Number(tick.mid);
     const bid = Number(tick.bid);
     const ask = Number(tick.ask);
@@ -234,15 +238,15 @@ export class BiquoteMarketAdapter implements MarketProviderAdapter {
       : Number.isFinite(bid) && bid > 0 && Number.isFinite(ask) && ask > 0
         ? (bid + ask) / 2
         : last;
-    if (!Number.isFinite(price) || price <= 0) return null;
-    const eventTime = tick.timestamp ? Date.parse(tick.timestamp) : Date.now();
+    if (!closed && (!Number.isFinite(price) || price <= 0)) return null;
+    const eventTime = tick.timestamp || tick.lastQuoteAt ? Date.parse(tick.timestamp ?? tick.lastQuoteAt as string) : Date.now();
     const spread = Number.isFinite(bid) && Number.isFinite(ask) && ask >= bid ? ask - bid : undefined;
-    const closed = tick.marketState?.trim().toLowerCase() === 'closed';
     return {
       kind: 'ticker', symbol: mapping.symbol, provider: this.provider,
       source: closed && !source.includes('closed-market') ? `${source}:closed-market` : source,
       providerInstrument: mapping.providerInstrument, priceType: 'MID',
-      eventTime: Number.isFinite(eventTime) ? eventTime : Date.now(), price: String(price),
+      eventTime: Number.isFinite(eventTime) ? eventTime : Date.now(),
+      price: Number.isFinite(price) && price > 0 ? String(price) : undefined,
       change24h: tick.dayDiffPercent == null ? undefined : String(tick.dayDiffPercent),
       high24h: tick.high == null ? undefined : String(tick.high), low24h: tick.low == null ? undefined : String(tick.low),
       bid: Number.isFinite(bid) && bid > 0 ? String(bid) : undefined,
