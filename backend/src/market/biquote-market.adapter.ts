@@ -205,7 +205,13 @@ export class BiquoteMarketAdapter implements MarketProviderAdapter {
         for (const [instrument, tick] of Object.entries(ticks)) {
           const mapping = byInstrument.get(instrument.toUpperCase());
           if (!mapping) continue;
-          const event = this.toEvent(mapping, tick, tick.marketState === 'closed' ? 'biquote:rest:closed-market' : 'biquote:rest:batch');
+          const state = tick.marketState?.trim().toLowerCase();
+          const source = state === 'closed'
+            ? 'biquote:rest:closed-market'
+            : state === 'open'
+              ? 'biquote:rest:open-market'
+              : 'biquote:rest:batch';
+          const event = this.toEvent(mapping, tick, source);
           if (event) onEvent(event);
         }
       } catch (error) {
@@ -238,7 +244,7 @@ export class BiquoteMarketAdapter implements MarketProviderAdapter {
       bid: Number.isFinite(bid) && bid > 0 ? String(bid) : undefined,
       ask: Number.isFinite(ask) && ask > 0 ? String(ask) : undefined,
       spread: spread === undefined ? undefined : String(spread),
-      sessionState: closed ? 'CLOSED' : 'OPEN',
+      sessionState: closed ? 'CLOSED' : source.includes('open-market') ? 'OPEN' : undefined,
     };
   }
 
