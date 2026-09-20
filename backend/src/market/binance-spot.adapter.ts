@@ -164,7 +164,11 @@ export class BinanceSpotAdapter implements OnModuleDestroy, MarketProviderAdapte
         const symbol = String(quote.symbol ?? '').toUpperCase();
         const price = String(quote.lastPrice ?? '');
         if (!symbol || !Number.isFinite(Number(price)) || Number(price) <= 0) continue;
-        const eventTime = Number(quote.closeTime ?? Date.now());
+        // A successful watchdog fetch is a current observation of Binance's
+        // latest quote. ticker/24hr closeTime is market-activity time and can
+        // legitimately lag for quiet symbols; using it as observedAt makes a
+        // successfully re-observed quote immediately stale.
+        const eventTime = Date.now();
         const event: BinanceSpotMarketEvent = {
           kind: 'ticker',
           symbol,

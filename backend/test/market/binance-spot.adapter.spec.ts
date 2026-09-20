@@ -46,6 +46,8 @@ describe('BinanceSpotAdapter', () => {
   });
 
   it('recovers a silent ticker stream through the bounded REST watchdog', async () => {
+    const now = Date.parse('2026-09-20T04:45:00.000Z');
+    jest.spyOn(Date, 'now').mockReturnValue(now);
     const adapter = new BinanceSpotAdapter() as unknown as {
       symbols: string[];
       request: jest.Mock;
@@ -59,7 +61,9 @@ describe('BinanceSpotAdapter', () => {
       volume: '100',
       highPrice: '0.22',
       lowPrice: '0.20',
-      closeTime: Date.now(),
+      // Binance closeTime is last market activity, not the time this REST
+      // response was observed. Quiet symbols can legitimately lag > freshness.
+      closeTime: now - 120_000,
     }]);
     const handler = jest.fn();
 
@@ -71,6 +75,7 @@ describe('BinanceSpotAdapter', () => {
       source: 'rest:watchdog',
       symbol: 'ADAUSDT',
       price: '0.21',
+      eventTime: now,
     }));
   });
 
