@@ -24,6 +24,7 @@ import { ADMIN_ROLE_DEFINITIONS } from "./admin-rbac";
 import { D1FinancialCommandGateway } from "../d1/d1-financial-command.gateway";
 import { D1PrismaService } from "../d1/d1-prisma.service";
 import { randomUUID } from "node:crypto";
+import { CommunicationsService } from "../communications/communications.service";
 
 const ADMIN_ACCOUNT_SELECT = {
   id: true,
@@ -87,6 +88,7 @@ export class AdminService {
     private readonly financialOperations: FinancialOperationsService,
     private readonly sandboxExecution: SandboxExecutionService,
     private readonly d1: D1FinancialCommandGateway,
+    @Optional() private readonly communications?: CommunicationsService,
   ) {}
 
   private marketDatabase(): any {
@@ -354,7 +356,19 @@ export class AdminService {
     if (!input.body?.trim() || !input.reason?.trim())
       throw new BadRequestException("A reply body and reason are required");
     if (this.d1?.isEnabled()) {
-      return this.d1.replyAdminTicket({ ticketId: id, adminId, ...input });
+      const result = await this.d1.replyAdminTicket({ ticketId: id, adminId, ...input });
+      const ticket = await this.prisma.supportTicket.findUnique({
+        where: { id },
+        select: { userId: true },
+      });
+      if (ticket?.userId && this.communications) {
+        await this.communications.publishRealtimeEvent("SUPPORT_TICKET_REPLIED", id, {
+          userId: ticket.userId,
+          adminId,
+          internal: input.internal,
+        });
+      }
+      return result;
     }
     return this.prisma.$transaction(async (tx) => {
       const replay = await tx.adminAuditLog.findFirst({
@@ -406,7 +420,19 @@ export class AdminService {
         "A reason is required to change ticket status",
       );
     if (this.d1?.isEnabled()) {
-      return this.d1.setAdminTicketStatus({ ticketId: id, adminId, ...input });
+      const result = await this.d1.setAdminTicketStatus({ ticketId: id, adminId, ...input });
+      const ticket = await this.prisma.supportTicket.findUnique({
+        where: { id },
+        select: { userId: true },
+      });
+      if (ticket?.userId && this.communications) {
+        await this.communications.publishRealtimeEvent("SUPPORT_TICKET_STATUS_CHANGED", id, {
+          userId: ticket.userId,
+          adminId,
+          status: String(result.status ?? input.status).toUpperCase(),
+        });
+      }
+      return result;
     }
     return this.prisma.$transaction(async (tx) => {
       const replay = await tx.adminAuditLog.findFirst({

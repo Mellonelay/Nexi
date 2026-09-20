@@ -49,7 +49,7 @@ export class CommunicationsService {
     });
   }
 
-  private async event(
+  async publishRealtimeEvent(
     type: string,
     referenceId: string,
     payload: Record<string, unknown>,
@@ -86,7 +86,7 @@ export class CommunicationsService {
         include: { replies: true },
       }),
     );
-    await this.event("SUPPORT_TICKET_OPENED", ticket.id, { userId });
+    await this.publishRealtimeEvent("SUPPORT_TICKET_OPENED", ticket.id, { userId });
     await this.durableEvent(
       "support-ticket:" + ticket.id + ":" + key,
       "SUPPORT_TICKET",
@@ -104,7 +104,12 @@ export class CommunicationsService {
       skip,
       take: limit,
       orderBy: { updatedAt: "desc" },
-      include: { replies: { orderBy: { createdAt: "asc" } } },
+      include: {
+        replies: {
+          where: { internal: false },
+          orderBy: { createdAt: "asc" },
+        },
+      },
     });
   }
 
@@ -140,10 +145,13 @@ export class CommunicationsService {
       where: { id: ticketId },
       data: {
         updatedAt: new Date(),
-        status: role === Role.ADMIN ? "ANSWERED" : "OPEN",
+        status: role === Role.ADMIN ? "PENDING_USER" : "OPEN",
       },
     });
-    await this.event("SUPPORT_TICKET_REPLIED", ticketId, { replyId });
+    await this.publishRealtimeEvent("SUPPORT_TICKET_REPLIED", ticketId, {
+      replyId,
+      userId: ticket.userId,
+    });
     await this.durableEvent(
       "support-reply:" + replyId,
       "SUPPORT_TICKET",
@@ -161,7 +169,11 @@ export class CommunicationsService {
     if (!ticket) throw new NotFoundException("Support ticket not found");
     const updated = await this.database.supportTicket.update({
       where: { id: ticketId },
-      data: { assignedToId, status: "ASSIGNED" },
+      data: { assignedToId, updatedAt: new Date() },
+    });
+    await this.publishRealtimeEvent("SUPPORT_TICKET_ASSIGNED", ticketId, {
+      userId: ticket.userId,
+      assignedToId,
     });
     await this.durableEvent(
       "support-assign:" + ticketId + ":" + assignedToId,
@@ -200,7 +212,7 @@ export class CommunicationsService {
         },
       });
     });
-    await this.event("MESSAGE_SENT", message.id, {
+    await this.publishRealtimeEvent("MESSAGE_SENT", message.id, {
       senderId,
       recipientId,
       sequence: message.sequence,
@@ -259,7 +271,7 @@ export class CommunicationsService {
     });
     notification = await this.database.notification.findUnique({ where: { id } });
     if (!notification) throw new BadRequestException("Notification was not materialized");
-    await this.event("NOTIFICATION_SENT", id, { userId: data.userId, type: data.type });
+    await this.publishRealtimeEvent("NOTIFICATION_SENT", id, { userId: data.userId, type: data.type });
     return notification;
   }
 
@@ -296,7 +308,7 @@ export class CommunicationsService {
     const notification = await this.database.notification.findUnique({
       where: { id },
     });
-    await this.event("NOTIFICATION_READ", id, { userId });
+    await this.publishRealtimeEvent("NOTIFICATION_READ", id, { userId });
     return notification;
   }
 

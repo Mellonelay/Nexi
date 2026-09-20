@@ -23,3 +23,14 @@ test('communications tranche preserves truthful UI and mobile navigation contrac
   assert.match(notifications, /role="dialog"/);
   assert.match(notifications, /Retry/);
 });
+
+
+test('support exposes ticket timeline, reply, and realtime recovery', () => {
+  const support = read('./app/dashboard/support/page.tsx');
+  assert.match(support, /Ticket timeline/);
+  assert.match(support, /encodeURIComponent\(selectedTicket\.id\).*\/replies/);
+  assert.match(support, /apiBaseUrl \+ '\/communications'/);
+  assert.match(support, /type\.startsWith\('SUPPORT_TICKET_'\)/);
+  assert.match(support, /socket\.off\('communications\.event'/);
+  assert.match(support, /socket\.disconnect\(\)/);
+});

@@ -58,4 +58,52 @@ describe('CommunicationsService', () => {
     expect(findMany).toHaveBeenNthCalledWith(1, expect.objectContaining({ skip: 10, take: 10 }));
     expect(findMany).toHaveBeenNthCalledWith(2, expect.objectContaining({ skip: 10, take: 5 }));
   });
+  it('hides internal replies from the public ticket timeline', async () => {
+    const findMany = jest.fn(async () => []);
+    const prisma: any = { supportTicket: { findMany } };
+    const service = new CommunicationsService(prisma, outbox as any, d1Communications as any, redis as any);
+
+    await service.listTickets('user-1', 1, 25);
+
+    expect(findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { userId: 'user-1' },
+      include: {
+        replies: {
+          where: { internal: false },
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    }));
+  });
+
+  it('targets the ticket owner for realtime reply and assignment events', async () => {
+    const publish = jest.fn().mockResolvedValue(undefined);
+    const realtimeRedis = { isAvailable: jest.fn().mockReturnValue(true), publish };
+    const ticket = { id: 'ticket-1', userId: 'user-1', status: 'OPEN' };
+    const reply = { id: 'reply-1' };
+    const prisma: any = {
+      supportTicket: {
+        findUnique: jest.fn(async () => ticket),
+        update: jest.fn(async ({ data }: any) => ({ ...ticket, ...data })),
+      },
+      supportTicketReply: { upsert: jest.fn(async () => reply) },
+    };
+    const service = new CommunicationsService(prisma, outbox as any, d1Communications as any, realtimeRedis as any);
+
+    await service.reply('admin-1', 'ticket-1', 'Reply', 'reply-key', false, undefined, 'ADMIN' as any);
+    await service.assign('ticket-1', 'admin-2');
+
+    const payloads = publish.mock.calls.map((call) => JSON.parse(call[1]));
+    expect(payloads).toEqual(expect.arrayContaining([
+      expect.objectContaining({ type: 'SUPPORT_TICKET_REPLIED', payload: expect.objectContaining({ userId: 'user-1' }) }),
+      expect.objectContaining({ type: 'SUPPORT_TICKET_ASSIGNED', payload: expect.objectContaining({ userId: 'user-1' }) }),
+    ]));
+    expect(prisma.supportTicket.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ status: 'PENDING_USER' }),
+    }));
+    expect(prisma.supportTicket.update).toHaveBeenLastCalledWith(expect.objectContaining({
+      data: expect.not.objectContaining({ status: 'ASSIGNED' }),
+    }));
+  });
+
 });
