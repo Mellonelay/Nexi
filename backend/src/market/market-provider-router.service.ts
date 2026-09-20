@@ -248,6 +248,15 @@ export class MarketProviderRouterService {
           selected.set(entry.provider, symbols);
         }
       }
+      // MOEX remains the primary USD/RUB quote authority. BiQuote is also
+      // required as the explicit session oracle when D1 has no BiQuote mapping.
+      const biquoteUsdRub = getMarketSourcePolicy('USDRUB')?.providerMappings
+        .find((mapping) => mapping.provider === 'biquote' && mapping.quoteSupported);
+      const biquoteSymbols = selected.get('biquote') ?? [];
+      if (biquoteUsdRub && !biquoteSymbols.some((entry) => entry.symbol === 'USDRUB')) {
+        biquoteSymbols.push({ symbol: 'USDRUB', providerInstrument: biquoteUsdRub.instrument });
+        selected.set('biquote', biquoteSymbols);
+      }
       this.logger.log(`Loaded D1 market policy: ${allMappings.length} callable mapping(s), ${selected.size} active provider(s).`);
       return selected;
     } catch (error) {
