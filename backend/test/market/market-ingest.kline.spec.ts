@@ -1,6 +1,45 @@
 import { MarketIngestService } from '../../src/market/market-ingest.service';
 
 describe('MarketIngestService Kline publication', () => {
+  it('uses Binance native 1m klines instead of duplicating candle persistence from ticker quotes', async () => {
+    const marketAuthority = { ingestQuote: jest.fn().mockResolvedValue({ accepted: true }) };
+    const marketKlines = { persist: jest.fn(), accumulateQuote: jest.fn(), aggregateFromOneMinute: jest.fn() };
+    const service = new MarketIngestService(
+      marketAuthority as never,
+      marketKlines as never,
+      { ensureReconciled: jest.fn().mockResolvedValue(undefined) } as never,
+      { start: jest.fn(), stop: jest.fn() } as never,
+      { isAvailable: jest.fn().mockReturnValue(false), publish: jest.fn() } as never,
+    );
+
+    await (service as any).handleProviderEvent({
+      kind: 'ticker', symbol: 'BTCUSDT', provider: 'binance-spot', source: 'websocket',
+      providerInstrument: 'BTCUSDT', priceType: 'LAST', eventTime: 1_000, price: '10',
+    });
+
+    expect(marketAuthority.ingestQuote).toHaveBeenCalledTimes(1);
+    expect(marketKlines.accumulateQuote).not.toHaveBeenCalled();
+  });
+
+  it('keeps quote-derived 1m candles for providers without the Binance native kline stream', async () => {
+    const marketAuthority = { ingestQuote: jest.fn().mockResolvedValue({ accepted: true }) };
+    const marketKlines = { persist: jest.fn(), accumulateQuote: jest.fn().mockResolvedValue(undefined), aggregateFromOneMinute: jest.fn() };
+    const service = new MarketIngestService(
+      marketAuthority as never,
+      marketKlines as never,
+      { ensureReconciled: jest.fn().mockResolvedValue(undefined) } as never,
+      { start: jest.fn(), stop: jest.fn() } as never,
+      { isAvailable: jest.fn().mockReturnValue(false), publish: jest.fn() } as never,
+    );
+
+    await (service as any).handleProviderEvent({
+      kind: 'ticker', symbol: 'AAPLUSDT', provider: 'gate', source: 'rest:ticker',
+      providerInstrument: 'AAPL', priceType: 'LAST', eventTime: 1_000, price: '10',
+    });
+
+    expect(marketKlines.accumulateQuote).toHaveBeenCalledTimes(1);
+  });
+
   it('persists provider Kline updates before publishing the normalized realtime event', async () => {
     const candle = {
       symbol: 'BTCUSDT', interval: '1m', time: 1_000, closeTime: '1970-01-01T00:01:00.999Z',

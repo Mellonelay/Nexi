@@ -127,7 +127,7 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
           high24h: event.high24h, low24h: event.low24h, bid: event.bid, ask: event.ask, spread: event.spread,
           observedAt: new Date(event.eventTime),
         });
-        if (quote.accepted) {
+        if (quote.accepted && event.provider !== 'binance-spot') {
           await this.marketKlines.accumulateQuote({
             symbol: event.symbol, price: event.price, provider: event.provider,
             source: event.source,

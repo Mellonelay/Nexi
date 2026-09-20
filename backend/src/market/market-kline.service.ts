@@ -24,12 +24,21 @@ export interface MarketQuoteCandleInput {
 @Injectable()
 export class MarketKlineService {
   private get db(): any { return this.d1; }
+  private readonly pairCache = new Map<string, any>();
 
   constructor(private readonly d1: D1PrismaService) {}
 
+  private async pairFor(symbol: string): Promise<any | null> {
+    const cached = this.pairCache.get(symbol);
+    if (cached) return cached;
+    const pair = await this.db.marketPair.findUnique({ where: { symbol } });
+    if (pair) this.pairCache.set(symbol, pair);
+    return pair;
+  }
+
   async list(symbol: string, interval: string, limit: number, from?: Date, to?: Date) {
     const normalizedSymbol = symbol.trim().toUpperCase().replaceAll('/', '');
-    const pair = await this.db.marketPair.findUnique({ where: { symbol: normalizedSymbol } });
+    const pair = await this.pairFor(normalizedSymbol);
     if (!pair) return [];
     const rows = await this.db.marketKline.findMany({
       where: {
@@ -48,7 +57,7 @@ export class MarketKlineService {
 
   async persist(input: MarketKlineInput) {
     const normalized = normalizeMarketKline(input);
-    const pair = await this.db.marketPair.findUnique({ where: { symbol: normalized.symbol } });
+    const pair = await this.pairFor(normalized.symbol);
     if (!pair) throw new NotFoundException(`Market pair ${normalized.symbol} is not configured`);
     const existing = await this.db.marketKline.findUnique({
       where: { pairId_interval_openTime: { pairId: pair.id, interval: normalized.interval, openTime: normalized.openTime } },
@@ -88,7 +97,7 @@ export class MarketKlineService {
 
   async aggregateFromOneMinute(symbol: string, oneMinuteOpenTime: Date) {
     const normalizedSymbol = symbol.trim().toUpperCase().replaceAll('/', '');
-    const pair = await this.db.marketPair.findUnique({ where: { symbol: normalizedSymbol } });
+    const pair = await this.pairFor(normalizedSymbol);
     if (!pair) throw new NotFoundException(`Market pair ${normalizedSymbol} is not configured`);
     const eventTime = oneMinuteOpenTime.getTime();
     if (Number.isNaN(eventTime)) throw new Error('Market kline openTime is invalid');
@@ -159,7 +168,7 @@ export class MarketKlineService {
       source: `${source}:quote-aggregation`,
       observedAt: input.observedAt,
     });
-    const pair = await this.db.marketPair.findUnique({ where: { symbol: candidate.symbol } });
+    const pair = await this.pairFor(candidate.symbol);
     if (!pair) throw new NotFoundException(`Market pair ${candidate.symbol} is not configured`);
 
     const existing = await this.db.marketKline.findUnique({

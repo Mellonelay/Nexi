@@ -100,6 +100,7 @@ export class MarketAuthorityService implements OnModuleInit {
 
   private readonly logger = new Logger(MarketAuthorityService.name);
   private readonly staleAfterMs = this.readStaleAfterMs();
+  private readonly d1PairCache = new Map<string, any>();
 
   constructor(
     private readonly redis: RedisService,
@@ -576,7 +577,19 @@ export class MarketAuthorityService implements OnModuleInit {
   }
 
   private async getOrCreatePairD1(symbol: string): Promise<any> {
+    const cached = this.d1PairCache.get(symbol);
+    if (cached) return cached;
+
     const db = this.d1 as any;
+    const existing = await db.marketPair.findUnique({ where: { symbol } });
+    if (existing) {
+      this.d1PairCache.set(symbol, existing);
+      return existing;
+    }
+
+    // Provider ingestion starts only after catalog reconciliation. Keep the
+    // creation fallback for defensive/non-lifecycle callers, but never repeat
+    // catalog writes for every live quote.
     const { base, quote } = this.splitSymbol(symbol);
     const entry = canonicalMarketPair.get(symbol);
     const baseAsset = await db.marketAsset.upsert({
@@ -589,11 +602,13 @@ export class MarketAuthorityService implements OnModuleInit {
       update: { status: 'ACTIVE', providerSymbol: quote },
       create: { symbol: quote, displayName: quote, category: 'crypto', providerSymbol: quote },
     });
-    return db.marketPair.upsert({
+    const pair = await db.marketPair.upsert({
       where: { symbol },
       update: { baseAssetId: baseAsset.id, quoteAssetId: quoteAsset.id, category: entry?.category ?? 'crypto', status: 'ACTIVE' },
       create: { symbol, baseAssetId: baseAsset.id, quoteAssetId: quoteAsset.id, category: entry?.category ?? 'crypto', status: 'ACTIVE' },
     });
+    this.d1PairCache.set(symbol, pair);
+    return pair;
   }
 
   private async ingestQuoteD1(input: NormalizedMarketQuoteInput): Promise<{ accepted: boolean; event?: MarketQuoteEvent; reason?: string }> {

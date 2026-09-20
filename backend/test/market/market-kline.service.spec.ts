@@ -66,6 +66,7 @@ describe('MarketKlineService quote aggregation', () => {
     expect(data.low.toString()).toBe('29980');
     expect(data.close.toString()).toBe('29980');
     expect(data.volume).toBeNull();
+    expect(prisma.marketPair.findUnique).toHaveBeenCalledTimes(1);
   });
 
   it('writes string decimals through D1 and compares string-backed existing candles', async () => {

@@ -44,6 +44,10 @@ describe("MarketAuthorityService", () => {
           id: `pair-${where.symbol}`,
           symbol: where.symbol,
         })),
+        findUnique: jest.fn(async ({ where }: any) => ({
+          id: `pair-${where.symbol}`,
+          symbol: where.symbol,
+        })),
         findMany: jest.fn(async ({ where }: any) =>
           pairs.filter((pair) => where.symbol.in.includes(pair.symbol)),
         ),
@@ -163,6 +167,25 @@ describe("MarketAuthorityService", () => {
       snapshotMax,
     };
   };
+
+  it("caches reconciled D1 pair identity across repeated live quotes", async () => {
+    const { service, d1 } = createService();
+    for (const [index, price] of ['10', '11'].entries()) {
+      await service.ingestQuote({
+        symbol: 'BTCUSDT',
+        provider: 'binance-spot',
+        source: 'websocket',
+        providerInstrument: 'BTCUSDT',
+        priceType: 'LAST',
+        price,
+        observedAt: new Date(1_000 + index * 1_000),
+      });
+    }
+
+    expect(d1.marketPair.findUnique).toHaveBeenCalledTimes(1);
+    expect(d1.marketAsset.upsert).not.toHaveBeenCalled();
+    expect(d1.atomicBatch).toHaveBeenCalledTimes(2);
+  });
 
   it("persists exact normalized quote data and publishes one ordered event", async () => {
     const { service, d1, redis } = createService();
@@ -454,7 +477,7 @@ describe("MarketAuthorityService", () => {
       price: "100",
       observedAt: new Date(),
     });
-    expect(d1.marketPair.upsert).toHaveBeenCalledWith(
+    expect(d1.marketPair.findUnique).toHaveBeenCalledWith(
       expect.objectContaining({ where: { symbol: "AAPLUSDT" } }),
     );
   });
