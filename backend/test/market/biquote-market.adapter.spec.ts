@@ -42,6 +42,7 @@ describe('BiquoteMarketAdapter', () => {
       providerInstrument: 'AAPL',
       priceType: 'MID',
       price: '319.93',
+      sessionState: 'CLOSED',
     });
     expect(events[1]).toMatchObject({
       symbol: 'XAUUSD',

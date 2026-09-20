@@ -31,6 +31,7 @@ export interface NormalizedMarketQuoteInput {
   providerInstrument?: string;
   priceType?: MarketPriceType;
   rawData?: Prisma.InputJsonValue;
+  sessionState?: 'OPEN' | 'CLOSED';
 }
 
 export interface MarketQuoteEvent {
@@ -57,6 +58,8 @@ export interface MarketQuoteEvent {
     assetClass: string | null;
     observedAt: string | null;
     receivedAt: string;
+    sessionState?: 'OPEN' | 'CLOSED';
+    reason?: string;
   };
 }
 
@@ -209,7 +212,10 @@ export class MarketAuthorityService implements OnModuleInit {
         ? { providerInstrument: resolveProviderInstrument(pair.symbol, latest.provider) ?? pair.symbol, priceType: 'LAST' as MarketPriceType }
         : undefined;
       const providerEnabled = this.isRuntimeProviderEnabled(latest?.provider);
-      const state = providerEnabled ? this.effectiveState(latest) : MarketQuoteState.UNAVAILABLE;
+      const closedSession = this.isClosedSession(latest);
+      const state = providerEnabled
+        ? (closedSession ? MarketQuoteState.UNAVAILABLE : this.effectiveState(latest))
+        : MarketQuoteState.UNAVAILABLE;
       const sparkline = providerEnabled ? sparklines.get(pair.symbol) : undefined;
       return {
         symbol: pair.symbol,
@@ -230,6 +236,8 @@ export class MarketAuthorityService implements OnModuleInit {
         sequence: providerEnabled ? latest?.sequence?.toString() ?? null : null,
         sparkline: sparkline && sparkline.length > 1 ? sparkline : null,
         state,
+        sessionState: closedSession ? 'CLOSED' : 'OPEN',
+        reason: closedSession ? 'MARKET_CLOSED' : undefined,
         dataState: state === MarketQuoteState.LIVE
           ? 'LIVE'
           : state === MarketQuoteState.STALE
@@ -625,6 +633,9 @@ export class MarketAuthorityService implements OnModuleInit {
     if (price.isNegative() || price.isZero()) throw new Error('Market quote price must be positive');
     const pair = await this.getOrCreatePairD1(symbol);
     const db = this.d1 as any;
+    if (input.sessionState === 'CLOSED') {
+      return this.markClosedSessionD1(db, pair.id, symbol, provider, source, providerInstrument, priceType);
+    }
     const receivedAt = new Date();
     const lineage = { providerInstrument, priceType, canonicalAssetId: policy?.canonicalAssetId ?? null, assetClass: policy?.assetClass ?? null };
     const change24h = this.optionalDecimal(input.change24h);
@@ -722,12 +733,16 @@ export class MarketAuthorityService implements OnModuleInit {
             OR "MarketQuoteLatest"."provider"<>?
             OR "MarketQuoteLatest"."observedAt"<=?
           )
+          AND NOT (
+            "MarketQuoteLatest"."source" LIKE '%:closed-market'
+            AND excluded."provider"<>?
+          )
         RETURNING "sequence"`,
         params: [
           latestId, pair.id, symbol, provider, source,
           scalar.price, scalar.change24h, scalar.volume24h, scalar.high24h, scalar.low24h,
           observedAtSql, receivedAtSql, scalar.bid, scalar.ask, scalar.spread,
-          primaryProvider, primaryProvider, primaryFreshAfterSql,
+          primaryProvider, primaryProvider, primaryFreshAfterSql, primaryProvider,
         ],
       },
       {
@@ -761,6 +776,34 @@ export class MarketAuthorityService implements OnModuleInit {
       price, change24h, volume24h, high24h, low24h, bid, ask, spread,
       observedAt: input.observedAt, receivedAt,
     }, { providerInstrument, priceType });
+    return this.publishD1QuoteEvent(event);
+  }
+
+  private async markClosedSessionD1(
+    db: any,
+    pairId: string,
+    symbol: string,
+    provider: string,
+    source: string,
+    providerInstrument: string,
+    priceType: MarketPriceType,
+  ): Promise<{ accepted: boolean; event?: MarketQuoteEvent; reason?: string }> {
+    const closedSource = source.includes('closed-market') ? source : `${source}:closed-market`;
+    const receivedAt = this.d1DateTime(new Date());
+    const batch = await db.atomicBatch([{
+      sql: `UPDATE "MarketQuoteLatest"
+        SET "provider"=?, "source"=?, "state"='UNAVAILABLE',
+            "sequence"=CAST("sequence" AS INTEGER)+1, "receivedAt"=?
+        WHERE "pairId"=?
+        RETURNING "pairId"`,
+      params: [provider, closedSource, receivedAt, pairId],
+    }]);
+    if (Number(batch[0]?.meta?.changes ?? 0) !== 1) {
+      return { accepted: false, reason: 'CLOSED_SESSION_WITHOUT_LATEST' };
+    }
+    const latest = await db.marketQuoteLatest.findUnique({ where: { pairId } });
+    if (!latest) return { accepted: false, reason: 'CLOSED_SESSION_WITHOUT_LATEST' };
+    const event = this.toEvent({ ...latest, state: MarketQuoteState.UNAVAILABLE }, { providerInstrument, priceType });
     return this.publishD1QuoteEvent(event);
   }
 
@@ -802,7 +845,7 @@ export class MarketAuthorityService implements OnModuleInit {
       bid: this.decimalString(latest.bid),
       ask: this.decimalString(latest.ask),
       spread: this.decimalString(latest.spread),
-      state: this.effectiveState(latest),
+      state: this.isClosedSession(latest) ? MarketQuoteState.UNAVAILABLE : this.effectiveState(latest),
       provider: latest.provider,
       source: latest.source,
       providerInstrument: lineage?.providerInstrument || resolveProviderInstrument(latest.symbol, latest.provider) || latest.symbol,
@@ -811,7 +854,13 @@ export class MarketAuthorityService implements OnModuleInit {
       assetClass: policy?.assetClass ?? null,
       observedAt: latest.observedAt?.toISOString() ?? null,
       receivedAt: latest.receivedAt.toISOString(),
+      sessionState: this.isClosedSession(latest) ? 'CLOSED' : 'OPEN',
+      reason: this.isClosedSession(latest) ? 'MARKET_CLOSED' : undefined,
     };
+  }
+
+  private isClosedSession(latest: { source?: string | null }): boolean {
+    return typeof latest?.source === 'string' && latest.source.includes('closed-market');
   }
 
   private effectiveState(latest: { state?: MarketQuoteState; observedAt?: Date | null }): MarketQuoteState {

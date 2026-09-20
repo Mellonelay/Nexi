@@ -215,8 +215,10 @@ export class BiquoteMarketAdapter implements MarketProviderAdapter {
     if (!Number.isFinite(price) || price <= 0) return null;
     const eventTime = tick.timestamp ? Date.parse(tick.timestamp) : Date.now();
     const spread = Number.isFinite(bid) && Number.isFinite(ask) && ask >= bid ? ask - bid : undefined;
+    const closed = tick.marketState?.trim().toLowerCase() === 'closed';
     return {
-      kind: 'ticker', symbol: mapping.symbol, provider: this.provider, source,
+      kind: 'ticker', symbol: mapping.symbol, provider: this.provider,
+      source: closed && !source.includes('closed-market') ? `${source}:closed-market` : source,
       providerInstrument: mapping.providerInstrument, priceType: 'MID',
       eventTime: Number.isFinite(eventTime) ? eventTime : Date.now(), price: String(price),
       change24h: tick.dayDiffPercent == null ? undefined : String(tick.dayDiffPercent),
@@ -224,6 +226,7 @@ export class BiquoteMarketAdapter implements MarketProviderAdapter {
       bid: Number.isFinite(bid) && bid > 0 ? String(bid) : undefined,
       ask: Number.isFinite(ask) && ask > 0 ? String(ask) : undefined,
       spread: spread === undefined ? undefined : String(spread),
+      sessionState: closed ? 'CLOSED' : 'OPEN',
     };
   }
 

@@ -16,6 +16,7 @@ export type ProviderQuoteEvent = {
   bid?: string;
   ask?: string;
   spread?: string;
+  sessionState?: 'OPEN' | 'CLOSED';
 };
 
 export type ProviderKlineEvent = {
