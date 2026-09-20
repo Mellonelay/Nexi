@@ -101,4 +101,49 @@ describe('MarketGateway ordering and deduplication', () => {
     expect(redis.releaseSubscriber).toHaveBeenCalledWith(subscriber);
   });
 
+  it('retries an initial Valkey subscription failure without a process restart', async () => {
+    jest.useFakeTimers();
+    try {
+      const subscriber = { subscribe: jest.fn().mockResolvedValue(3), on: jest.fn() };
+      const createSubscriber = jest.fn()
+        .mockRejectedValueOnce(new Error('temporary outage'))
+        .mockResolvedValueOnce(subscriber);
+      const gateway = new MarketGateway(
+        { createSubscriber, releaseSubscriber: jest.fn(), isAvailable: jest.fn().mockReturnValue(true) } as any,
+        { getPrices: jest.fn() } as any,
+      );
+
+      await gateway.onModuleInit();
+      expect(createSubscriber).toHaveBeenCalledTimes(1);
+      await jest.advanceTimersByTimeAsync(1_000);
+      expect(createSubscriber).toHaveBeenCalledTimes(2);
+      expect(subscriber.subscribe).toHaveBeenCalledWith('market:quotes:v1', 'market:klines:v1', 'market:reference:v1');
+      await gateway.onModuleDestroy();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('does not resurrect a Valkey subscriber when shutdown wins a pending subscribe race', async () => {
+    let finishSubscribe!: () => void;
+    const pendingSubscribe = new Promise<number>((resolve) => {
+      finishSubscribe = () => resolve(3);
+    });
+    const subscriber = { subscribe: jest.fn(() => pendingSubscribe), on: jest.fn() };
+    const releaseSubscriber = jest.fn().mockResolvedValue(undefined);
+    const gateway = new MarketGateway(
+      { createSubscriber: jest.fn().mockResolvedValue(subscriber), releaseSubscriber, isAvailable: jest.fn().mockReturnValue(true) } as any,
+      { getPrices: jest.fn() } as any,
+    );
+
+    const initialization = gateway.onModuleInit();
+    await Promise.resolve();
+    await gateway.onModuleDestroy();
+    finishSubscribe();
+    await initialization;
+
+    expect(releaseSubscriber).toHaveBeenCalledWith(subscriber);
+    expect((gateway as any).subscriber).toBeUndefined();
+  });
+
 });

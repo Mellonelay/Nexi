@@ -167,6 +167,35 @@ export function applyMarketTick(
   };
 }
 
+export function marketSnapshotForSymbol(value: unknown, expectedSymbol: string): Pick<MarketStreamSnapshot, 'status' | 'price' | 'lastSequence' | 'lastTimestamp'> | null {
+  if (!value || typeof value !== 'object') return null;
+  const payload = value as Record<string, unknown>;
+  const rows = Array.isArray(payload.data) ? payload.data : [];
+  const expected = expectedSymbol.replaceAll('/', '').toUpperCase();
+  const current = rows.find((candidate) => {
+    if (!candidate || typeof candidate !== 'object') return false;
+    return String((candidate as Record<string, unknown>).symbol ?? '').replaceAll('/', '').toUpperCase() === expected;
+  });
+  if (!current || typeof current !== 'object') return null;
+  const row = current as Record<string, unknown>;
+  const rawState = String(row.state ?? row.dataState ?? 'UNAVAILABLE').toUpperCase();
+  const status: MarketStreamSnapshot['status'] = rawState === 'LIVE' || rawState === 'STALE' || rawState === 'ERROR' || rawState === 'UNAVAILABLE'
+    ? rawState
+    : rawState === 'CLOSED'
+      ? 'STALE'
+      : 'UNAVAILABLE';
+  const price = Number(row.price ?? row.lastPrice);
+  const sequence = Number(row.sequence);
+  const rawTimestamp = row.observedAt ?? row.receivedAt;
+  const timestamp = typeof rawTimestamp === 'string' ? Date.parse(rawTimestamp) : Number(rawTimestamp);
+  return {
+    status,
+    price: Number.isFinite(price) && price > 0 ? price : null,
+    lastSequence: Number.isFinite(sequence) ? sequence : null,
+    lastTimestamp: Number.isFinite(timestamp) && timestamp > 0 ? timestamp : null,
+  };
+}
+
 export function reconnectRecoveryStatus(snapshot: MarketStreamSnapshot): StreamState {
   return snapshot.candles.length ? 'STALE' : 'UNAVAILABLE';
 }

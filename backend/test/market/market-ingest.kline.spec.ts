@@ -79,6 +79,44 @@ describe('MarketIngestService Kline publication', () => {
     expect(redis.publish).toHaveBeenCalledWith('market:reference:v1', expect.stringContaining('"event":"market.reference.trade"'));
   });
 
+  it('dequeues durable quote events ahead of bursty reference traffic', () => {
+    const service = new MarketIngestService(
+      { ingestQuote: jest.fn() } as never,
+      { persist: jest.fn(), accumulateQuote: jest.fn(), aggregateFromOneMinute: jest.fn() } as never,
+      { ensureReconciled: jest.fn() } as never,
+      { start: jest.fn(), stop: jest.fn() } as never,
+      { isAvailable: jest.fn(), publish: jest.fn() } as never,
+    );
+    const trade = { kind: 'trade', symbol: 'BTCUSDT', provider: 'binance-spot' };
+    const ticker = { kind: 'ticker', symbol: 'SUNUSDT', provider: 'binance-spot' };
+    (service as any).eventQueue.push(trade, ticker);
+
+    expect((service as any).dequeueNextEvent()).toBe(ticker);
+  });
+
+  it('drops queued reference traffic before a durable ticker when the ingest queue saturates', () => {
+    const service = new MarketIngestService(
+      { ingestQuote: jest.fn() } as never,
+      { persist: jest.fn(), accumulateQuote: jest.fn(), aggregateFromOneMinute: jest.fn() } as never,
+      { ensureReconciled: jest.fn() } as never,
+      { start: jest.fn(), stop: jest.fn() } as never,
+      { isAvailable: jest.fn(), publish: jest.fn() } as never,
+    );
+    const depth = { kind: 'depth', symbol: 'BTCUSDT', provider: 'binance-spot' };
+    const ticker = { kind: 'ticker', symbol: 'SUNUSDT', provider: 'binance-spot' };
+    const queue = (service as any).eventQueue as unknown[];
+    queue.push(depth, ticker, ...Array.from({ length: 254 }, (_, index) => ({
+      kind: 'kline', symbol: `K${index}`, provider: 'fixture',
+    })));
+    (service as any).activeWorkers = 8;
+
+    (service as any).enqueue({ kind: 'kline', symbol: 'ETHUSDT', provider: 'binance-spot' });
+
+    expect(queue).not.toContain(depth);
+    expect(queue).toContain(ticker);
+    expect(queue).toHaveLength(256);
+  });
+
   it('waits for catalog reconciliation before starting providers', async () => {
     let releaseReconciliation!: () => void;
     const reconciliation = new Promise<void>((resolve) => { releaseReconciliation = resolve; });

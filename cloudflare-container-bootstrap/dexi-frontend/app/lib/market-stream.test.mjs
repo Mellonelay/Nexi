@@ -6,6 +6,7 @@ import {
   EMPTY_STREAM_SNAPSHOT,
   normalizeMarketKline,
   normalizeMarketTick,
+  marketSnapshotForSymbol,
   reconnectRecoveryStatus,
   shouldApplyRecovery,
   streamStatusAt,
@@ -51,6 +52,19 @@ test('normalizes and applies a backend Kline event to the selected chart', () =>
   assert.equal(normalizeMarketKline({ symbol: 'ETHUSDT', interval: '1m', openTime: 60_000, open: 1, high: 1, low: 1, close: 1 }, 'BTCUSDT', '1m'), null);
 });
 
+
+test('anchors a snapshot to the selected row state and sequence instead of aggregate state', () => {
+  const current = marketSnapshotForSymbol({
+    state: 'LIVE',
+    data: [
+      { symbol: 'BTCUSDT', state: 'LIVE', price: '100', sequence: '9', observedAt: '2026-09-19T23:30:00.000Z' },
+      { symbol: 'SUNUSDT', state: 'STALE', price: '0.02', sequence: '4', observedAt: '2026-09-19T23:28:00.000Z' },
+    ],
+  }, 'SUNUSDT');
+  assert.deepEqual(current, {
+    status: 'STALE', price: 0.02, lastSequence: 4, lastTimestamp: Date.parse('2026-09-19T23:28:00.000Z'),
+  });
+});
 
 test('models reconnect read-back failure and stale recovery generations deterministically', () => {
   assert.equal(reconnectRecoveryStatus(EMPTY_STREAM_SNAPSHOT), 'UNAVAILABLE');

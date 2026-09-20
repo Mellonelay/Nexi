@@ -42,6 +42,9 @@ export class BinanceSpotAdapter implements OnModuleDestroy, MarketProviderAdapte
   private eventHandler?: (event: MarketProviderEvent) => void;
   private stopping = false;
   private watchdogInFlight = false;
+  private streamRecoveryInFlight = false;
+  private streamOpenedAt = 0;
+  private lastStreamEventAt = 0;
   private readonly lastTickerAt = new Map<string, number>();
   private readonly quoteStaleAfterMs = this.readQuoteStaleAfterMs();
   private readonly enabled = process.env.MARKET_PROVIDER_ENABLED === 'true';
@@ -81,6 +84,9 @@ export class BinanceSpotAdapter implements OnModuleDestroy, MarketProviderAdapte
     ]).join('/');
     const url = process.env.MARKET_PROVIDER_WS_URL?.trim()
       || `wss://stream.binance.com:9443/stream?streams=${streams}`;
+    this.streamOpenedAt = Date.now();
+    this.lastStreamEventAt = this.streamOpenedAt;
+    this.streamRecoveryInFlight = false;
     this.socket = new WebSocket(url);
     const socket = this.socket;
     socket.on('open', () => {
@@ -88,6 +94,7 @@ export class BinanceSpotAdapter implements OnModuleDestroy, MarketProviderAdapte
       this.logger.log(`Connected to Binance Spot public streams for ${this.symbols.length} symbol(s).`);
     });
     socket.on('message', (data: RawData) => {
+      this.lastStreamEventAt = Date.now();
       const event = this.normalize(data.toString());
       if (event) {
         if (event.kind === 'ticker') this.lastTickerAt.set(event.symbol.toLowerCase(), Date.now());
@@ -98,6 +105,7 @@ export class BinanceSpotAdapter implements OnModuleDestroy, MarketProviderAdapte
     socket.on('close', () => {
       if (this.socket !== socket) return;
       this.socket = undefined;
+      this.streamRecoveryInFlight = false;
       if (!this.stopping) this.scheduleReconnect();
     });
     this.startWatchdog(onEvent);
@@ -114,6 +122,9 @@ export class BinanceSpotAdapter implements OnModuleDestroy, MarketProviderAdapte
     this.reconnectTimer = undefined;
     this.watchdogTimer = undefined;
     this.watchdogInFlight = false;
+    this.streamRecoveryInFlight = false;
+    this.streamOpenedAt = 0;
+    this.lastStreamEventAt = 0;
     this.socket?.close();
     this.socket = undefined;
   }
@@ -141,6 +152,7 @@ export class BinanceSpotAdapter implements OnModuleDestroy, MarketProviderAdapte
   private async refreshStaleTickers(onEvent: (event: MarketProviderEvent) => void): Promise<void> {
     if (this.stopping || this.watchdogInFlight || this.symbols.length === 0) return;
     const now = Date.now();
+    this.recoverSilentStream(now);
     const stale = this.symbols.filter((symbol) => now - (this.lastTickerAt.get(symbol) ?? 0) >= this.quoteStaleAfterMs);
     if (stale.length === 0) return;
     this.watchdogInFlight = true;
@@ -175,6 +187,16 @@ export class BinanceSpotAdapter implements OnModuleDestroy, MarketProviderAdapte
     } finally {
       this.watchdogInFlight = false;
     }
+  }
+
+  private recoverSilentStream(now: number): boolean {
+    if (!this.socket || this.stopping || this.streamRecoveryInFlight) return false;
+    const lastActivity = Math.max(this.streamOpenedAt, this.lastStreamEventAt);
+    if (lastActivity <= 0 || now - lastActivity < this.quoteStaleAfterMs * 2) return false;
+    this.streamRecoveryInFlight = true;
+    this.logger.warn(`Binance Spot stream silent for ${now - lastActivity}ms; terminating it for bounded reconnect/resubscribe.`);
+    this.socket.terminate();
+    return true;
   }
 
   private readQuoteStaleAfterMs(): number {

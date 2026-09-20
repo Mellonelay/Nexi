@@ -8,6 +8,7 @@ import {
   applyMarketTick,
   applyMarketKline,
   EMPTY_STREAM_SNAPSHOT,
+  marketSnapshotForSymbol,
   type MarketStreamSnapshot,
   normalizeMarketTick,
   normalizeMarketKline,
@@ -131,31 +132,12 @@ export function useRealtimeMarket(symbol: string, interval = "1m") {
       };
 
       const handleSnapshot = (raw: unknown) => {
-        if (disposed || !raw || typeof raw !== "object") return;
-        const payload = raw as Record<string, unknown>;
-        const rows = Array.isArray(payload.data) ? payload.data : [];
-        const expected = symbol.replaceAll("/", "").toUpperCase();
-        const current = rows.find((value) => {
-          if (!value || typeof value !== "object") return false;
-          const row = value as Record<string, unknown>;
-          return (
-            String(row.symbol ?? "")
-              .replaceAll("/", "")
-              .toUpperCase() === expected
-          );
-        });
-        const price =
-          current && typeof current === "object"
-            ? Number(
-                (current as Record<string, unknown>).price ??
-                  (current as Record<string, unknown>).lastPrice,
-              )
-            : Number.NaN;
-        const state = normalizedState(payload.state);
+        if (disposed) return;
+        const selected = marketSnapshotForSymbol(raw, symbol);
+        if (!selected) return;
         setSnapshot((previous) => ({
           ...previous,
-          status: state,
-          ...(Number.isFinite(price) && price > 0 ? { price } : {}),
+          ...selected,
         }));
       };
 

@@ -660,6 +660,8 @@ export class MarketAuthorityService implements OnModuleInit {
     const rawData = JSON.stringify(this.withLineage(input.rawData, lineage));
     const latestId = randomUUID();
     const snapshotId = randomUUID();
+    const primaryProvider = policy?.displayPolicy.primaryProvider ?? provider;
+    const primaryFreshAfterSql = this.d1DateTime(new Date(receivedAt.getTime() - (policy?.displayPolicy.maxStalenessMs ?? this.staleAfterMs)));
     const scalar = {
       price: price.toString(),
       change24h: change24h?.toString() ?? null,
@@ -699,12 +701,18 @@ export class MarketAuthorityService implements OnModuleInit {
           "bid"=excluded."bid",
           "ask"=excluded."ask",
           "spread"=excluded."spread"
-        WHERE "MarketQuoteLatest"."observedAt" IS NULL OR excluded."observedAt" >= "MarketQuoteLatest"."observedAt"
+        WHERE ("MarketQuoteLatest"."observedAt" IS NULL OR excluded."observedAt" >= "MarketQuoteLatest"."observedAt")
+          AND (
+            excluded."provider"=?
+            OR "MarketQuoteLatest"."provider"<>?
+            OR "MarketQuoteLatest"."observedAt"<=?
+          )
         RETURNING "sequence"`,
         params: [
           latestId, pair.id, symbol, provider, source,
           scalar.price, scalar.change24h, scalar.volume24h, scalar.high24h, scalar.low24h,
           observedAtSql, receivedAtSql, scalar.bid, scalar.ask, scalar.spread,
+          primaryProvider, primaryProvider, primaryFreshAfterSql,
         ],
       },
       {
@@ -723,7 +731,10 @@ export class MarketAuthorityService implements OnModuleInit {
 
     const allocated = batch[0]?.results?.[0] as { sequence?: string | number } | undefined;
     if (allocated?.sequence === undefined) {
-      return { accepted: false, reason: 'OBSERVATION_OLDER_THAN_LATEST' };
+      return {
+        accepted: false,
+        reason: provider === primaryProvider ? 'OBSERVATION_OLDER_THAN_LATEST' : 'PRIMARY_PROVIDER_HEALTHY',
+      };
     }
     const snapshotChanges = Number(batch[1]?.meta?.changes ?? 0);
     if (snapshotChanges !== 1) {

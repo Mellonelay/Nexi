@@ -74,6 +74,24 @@ describe('BinanceSpotAdapter', () => {
     }));
   });
 
+  it('terminates an open but globally silent stream so reconnect can resubscribe', () => {
+    const adapter = new BinanceSpotAdapter() as unknown as {
+      socket: { terminate: jest.Mock; close: jest.Mock };
+      lastStreamEventAt: number;
+      streamOpenedAt: number;
+      recoverSilentStream: (now: number) => boolean;
+      stop: () => void;
+    };
+    const now = Date.now();
+    adapter.socket = { terminate: jest.fn(), close: jest.fn() };
+    adapter.streamOpenedAt = now - 120_000;
+    adapter.lastStreamEventAt = now - 120_000;
+
+    expect(adapter.recoverSilentStream(now)).toBe(true);
+    expect(adapter.socket.terminate).toHaveBeenCalledTimes(1);
+    adapter.stop();
+  });
+
   it('discovers only canonical Spot crypto symbols with TRADING Spot permissions', async () => {
     const adapter = new BinanceSpotAdapter();
     jest.spyOn(global, 'fetch').mockImplementation(async () => ({

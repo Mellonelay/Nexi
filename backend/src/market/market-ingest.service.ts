@@ -78,13 +78,12 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
       }
     }
     if (this.eventQueue.length >= 256) {
-      const tradeIndex = this.eventQueue.findIndex((queued) => queued.kind === 'trade');
-      const tickerIndex = this.eventQueue.findIndex((queued) => queued.kind === 'ticker');
-      const discardIndex = tradeIndex >= 0 ? tradeIndex : tickerIndex >= 0 ? tickerIndex : 0;
-      this.eventQueue.splice(discardIndex, 1);
+      const referenceIndex = this.eventQueue.findIndex((queued) => queued.kind === 'trade' || queued.kind === 'depth');
+      const discardIndex = referenceIndex >= 0 ? referenceIndex : 0;
+      const [discarded] = this.eventQueue.splice(discardIndex, 1);
       if (Date.now() - this.lastSaturationLogAt > 60_000) {
         this.lastSaturationLogAt = Date.now();
-        this.logger.warn('Market provider queue saturated; oldest reference event dropped.');
+        this.logger.warn(`Market provider queue saturated; dropped ${discarded?.kind ?? 'unknown'} event to preserve bounded ingestion.`);
       }
     }
     this.eventQueue.push(event);
@@ -96,13 +95,19 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
     this.activeWorkers += 1;
     try {
       while (this.eventQueue.length > 0) {
-        const event = this.eventQueue.shift();
+        const event = this.dequeueNextEvent();
         if (event) await this.handleProviderEvent(event);
       }
     } finally {
       this.activeWorkers -= 1;
       if (this.eventQueue.length > 0 && this.activeWorkers < MarketIngestService.MAX_CONCURRENT_EVENT_WORKERS) void this.drainQueue();
     }
+  }
+
+  private dequeueNextEvent(): MarketProviderEvent | undefined {
+    const durableIndex = this.eventQueue.findIndex((event) => event.kind === 'ticker' || event.kind === 'kline');
+    if (durableIndex >= 0) return this.eventQueue.splice(durableIndex, 1)[0];
+    return this.eventQueue.shift();
   }
 
   async ingestNormalizedQuote(input: NormalizedMarketQuoteInput): Promise<{ accepted: boolean; reason?: string }> {

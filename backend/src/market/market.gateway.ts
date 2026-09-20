@@ -21,6 +21,9 @@ export class MarketGateway implements OnGatewayConnection, OnGatewayDisconnect, 
 
   private readonly logger = new Logger(MarketGateway.name);
   private subscriber?: Redis;
+  private subscriberRetryTimer?: NodeJS.Timeout;
+  private subscriberRetryAttempt = 0;
+  private destroyed = false;
   private readonly lastSequenceBySymbol = new Map<string, bigint>();
   private readonly lastKlineSequenceByKey = new Map<string, number>();
 
@@ -30,36 +33,64 @@ export class MarketGateway implements OnGatewayConnection, OnGatewayDisconnect, 
   ) {}
 
   async onModuleInit(): Promise<void> {
-    try {
-      this.subscriber = await this.redisService.createSubscriber();
-      await this.subscriber.subscribe(MARKET_QUOTES_CHANNEL, MARKET_KLINES_CHANNEL, MARKET_REFERENCE_CHANNEL);
-    } catch {
-      this.subscriber = undefined;
-      this.logger.warn('Market Redis subscription deferred; readiness remains false until Redis is available.');
-      return;
-    }
-    this.subscriber.on('message', (channel, message) => {
-      try {
-        if (channel === MARKET_QUOTES_CHANNEL) {
-          this.broadcastMarketQuote(JSON.parse(message) as MarketQuoteEvent);
-        } else if (channel === MARKET_KLINES_CHANNEL) {
-          this.broadcastMarketKline(JSON.parse(message) as MarketKlineRealtimeEvent);
-        } else if (channel === MARKET_REFERENCE_CHANNEL) {
-          this.broadcastMarketReference(JSON.parse(message) as MarketReferenceEvent);
-        }
-      } catch (error) {
-        this.logger.warn(`Ignoring malformed market event: ${error instanceof Error ? error.message : 'invalid JSON'}`);
-      }
-    });
+    this.destroyed = false;
+    await this.connectSubscriber();
   }
 
   async onModuleDestroy(): Promise<void> {
+    this.destroyed = true;
+    if (this.subscriberRetryTimer) clearTimeout(this.subscriberRetryTimer);
+    this.subscriberRetryTimer = undefined;
     if (this.subscriber) {
       await this.redisService.releaseSubscriber(this.subscriber);
       this.subscriber = undefined;
     }
     this.lastSequenceBySymbol.clear();
     this.lastKlineSequenceByKey.clear();
+  }
+
+  private async connectSubscriber(): Promise<void> {
+    if (this.destroyed || this.subscriber) return;
+    let subscriber: Redis | undefined;
+    try {
+      subscriber = await this.redisService.createSubscriber();
+      await subscriber.subscribe(MARKET_QUOTES_CHANNEL, MARKET_KLINES_CHANNEL, MARKET_REFERENCE_CHANNEL);
+      if (this.destroyed) {
+        await this.redisService.releaseSubscriber(subscriber).catch(() => undefined);
+        return;
+      }
+      this.subscriber = subscriber;
+      this.subscriberRetryAttempt = 0;
+      subscriber.on('message', (channel, message) => {
+        try {
+          if (channel === MARKET_QUOTES_CHANNEL) {
+            this.broadcastMarketQuote(JSON.parse(message) as MarketQuoteEvent);
+          } else if (channel === MARKET_KLINES_CHANNEL) {
+            this.broadcastMarketKline(JSON.parse(message) as MarketKlineRealtimeEvent);
+          } else if (channel === MARKET_REFERENCE_CHANNEL) {
+            this.broadcastMarketReference(JSON.parse(message) as MarketReferenceEvent);
+          }
+        } catch (error) {
+          this.logger.warn(`Ignoring malformed market event: ${error instanceof Error ? error.message : 'invalid JSON'}`);
+        }
+      });
+    } catch {
+      if (subscriber) await this.redisService.releaseSubscriber(subscriber).catch(() => undefined);
+      this.subscriber = undefined;
+      this.logger.warn('Market Redis subscription unavailable; retry scheduled while readiness remains false.');
+      this.scheduleSubscriberRetry();
+    }
+  }
+
+  private scheduleSubscriberRetry(): void {
+    if (this.destroyed || this.subscriberRetryTimer) return;
+    const delay = Math.min(1_000 * (2 ** this.subscriberRetryAttempt), 30_000);
+    this.subscriberRetryAttempt += 1;
+    this.subscriberRetryTimer = setTimeout(() => {
+      this.subscriberRetryTimer = undefined;
+      void this.connectSubscriber();
+    }, delay);
+    this.subscriberRetryTimer.unref?.();
   }
 
   handleConnection(client: Socket): void {

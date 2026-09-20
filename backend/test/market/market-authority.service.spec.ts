@@ -87,7 +87,16 @@ describe("MarketAuthorityService", () => {
       const pairId = latestParams[1];
       const observedAt = new Date(latestParams[10]);
       const current = latest.get(pairId);
-      if (current?.observedAt && observedAt.getTime() < new Date(current.observedAt).getTime()) {
+      const primaryProvider = latestParams[15];
+      const primaryFreshAfter = latestParams[17] ? new Date(latestParams[17]) : null;
+      const healthyPrimaryOwnsQuote = Boolean(
+        primaryProvider
+        && current?.provider === primaryProvider
+        && latestParams[3] !== primaryProvider
+        && primaryFreshAfter
+        && new Date(current.observedAt).getTime() > primaryFreshAfter.getTime(),
+      );
+      if (healthyPrimaryOwnsQuote || (current?.observedAt && observedAt.getTime() < new Date(current.observedAt).getTime())) {
         return [
           { success: true, results: [], meta: { changes: 0 } },
           { success: true, results: [], meta: { changes: 0 } },
@@ -407,6 +416,33 @@ describe("MarketAuthorityService", () => {
         String(args.update.providerSymbol).includes("/"),
       ),
     ).toBe(false);
+  });
+
+  it("does not let a fallback overwrite a still-fresh primary provider quote", async () => {
+    const { service, latest } = createService();
+    const now = new Date();
+    latest.set("pair-AAPLUSDT", {
+      pairId: "pair-AAPLUSDT",
+      symbol: "AAPLUSDT",
+      provider: "biquote",
+      source: "biquote:signalr",
+      sequence: "8",
+      price: "100",
+      state: "LIVE",
+      observedAt: new Date(now.getTime() - 1_000),
+      receivedAt: now,
+    });
+
+    const result = await service.ingestQuote({
+      symbol: "AAPLUSDT",
+      provider: "gate",
+      source: "gate:tradfi-reference",
+      price: "101",
+      observedAt: now,
+    });
+
+    expect(result).toMatchObject({ accepted: false, reason: "PRIMARY_PROVIDER_HEALTHY" });
+    expect(latest.get("pair-AAPLUSDT").provider).toBe("biquote");
   });
 
   it("normalizes stock display symbols to the canonical backend pair", async () => {
