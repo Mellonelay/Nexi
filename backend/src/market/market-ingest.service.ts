@@ -33,12 +33,14 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
     void this.startProvidersAfterReconciliation();
   }
 
-  onModuleDestroy(): void {
+  async onModuleDestroy(): Promise<void> {
     this.destroyed = true;
     if (this.providerStartRetryTimer) clearTimeout(this.providerStartRetryTimer);
     this.providerStartRetryTimer = undefined;
-    this.providers.stop();
+    this.logger.log('Market shutdown: stopping providers.');
+    await this.providers.stop();
     this.eventQueue.length = 0;
+    this.logger.log('Market shutdown: providers stopped and ingest queue discarded.');
   }
 
   private async startProvidersAfterReconciliation(): Promise<void> {

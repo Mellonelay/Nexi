@@ -111,11 +111,11 @@ export class BinanceSpotAdapter implements OnModuleDestroy, MarketProviderAdapte
     this.startWatchdog(onEvent);
   }
 
-  onModuleDestroy(): void {
-    this.stop();
+  async onModuleDestroy(): Promise<void> {
+    await this.stop();
   }
 
-  stop(): void {
+  async stop(): Promise<void> {
     this.stopping = true;
     if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
     if (this.watchdogTimer) clearInterval(this.watchdogTimer);
@@ -125,8 +125,25 @@ export class BinanceSpotAdapter implements OnModuleDestroy, MarketProviderAdapte
     this.streamRecoveryInFlight = false;
     this.streamOpenedAt = 0;
     this.lastStreamEventAt = 0;
-    this.socket?.close();
+    const socket = this.socket;
     this.socket = undefined;
+    if (!socket || socket.readyState === WebSocket.CLOSED) return;
+    await new Promise<void>((resolve) => {
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve();
+      };
+      const timer = setTimeout(() => {
+        socket.terminate();
+        finish();
+      }, 2_000);
+      socket.once('close', finish);
+      socket.once('error', finish);
+      socket.close();
+    });
   }
 
   private scheduleReconnect(): void {

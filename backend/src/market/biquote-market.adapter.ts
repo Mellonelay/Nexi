@@ -68,14 +68,19 @@ export class BiquoteMarketAdapter implements MarketProviderAdapter {
     }
   }
 
-  stop(): void {
+  async stop(): Promise<void> {
     this.stopping = true;
     if (this.fallbackTimer) clearInterval(this.fallbackTimer);
     if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
     this.fallbackTimer = undefined;
     this.reconnectTimer = undefined;
-    if (this.connection) void this.connection.stop();
+    const connection = this.connection;
     this.connection = undefined;
+    if (!connection) return;
+    await Promise.race([
+      connection.stop().catch(() => undefined),
+      new Promise<void>((resolve) => setTimeout(resolve, 2_000)),
+    ]);
   }
 
   async fetchHistory(symbol: string, interval: MarketKlineInterval, limit: number): Promise<MarketKlineInput[]> {

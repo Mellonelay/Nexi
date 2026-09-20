@@ -73,7 +73,7 @@ export interface MarketProviderAdapter {
   configure?(symbols: readonly MarketProviderRuntimeSymbol[]): void;
   isEnabled(): boolean;
   start(onEvent: (event: MarketProviderEvent) => void): Promise<void>;
-  stop(): void;
+  stop(): void | Promise<void>;
   fetchHistory?(symbol: string, interval: MarketKlineInterval, limit: number): Promise<MarketKlineInput[]>;
   fetchDepth?(symbol: string, limit: number): Promise<unknown>;
   fetchTrades?(symbol: string, limit: number): Promise<unknown>;

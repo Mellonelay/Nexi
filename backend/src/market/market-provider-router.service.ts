@@ -114,9 +114,13 @@ export class MarketProviderRouterService {
       .map((mapping) => mapping.provider) ?? [];
   }
 
-  stop(): void {
-    for (const adapter of this.adapters) adapter.stop();
+  async stop(): Promise<void> {
+    const results = await Promise.allSettled(this.adapters.map((adapter) => adapter.stop()));
     this.activeProviders.clear();
+    const rejected = results.filter((result): result is PromiseRejectedResult => result.status === 'rejected');
+    if (rejected.length > 0) {
+      this.logger.warn(`Market provider shutdown completed with ${rejected.length} provider error(s).`);
+    }
   }
 
   isProviderEnabled(provider?: string | null): boolean {
