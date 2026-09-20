@@ -8,7 +8,7 @@ export type ProviderQuoteEvent = {
   providerInstrument: string;
   priceType: 'BID' | 'ASK' | 'MID' | 'LAST' | 'CANDLE_CLOSE' | 'REFERENCE';
   eventTime: number;
-  price: string;
+  price?: string;
   change24h?: string;
   volume24h?: string;
   high24h?: string;
@@ -16,6 +16,7 @@ export type ProviderQuoteEvent = {
   bid?: string;
   ask?: string;
   spread?: string;
+  sessionState?: 'OPEN' | 'CLOSED';
 };
 
 export type ProviderKlineEvent = {
@@ -73,7 +74,7 @@ export interface MarketProviderAdapter {
   configure?(symbols: readonly MarketProviderRuntimeSymbol[]): void;
   isEnabled(): boolean;
   start(onEvent: (event: MarketProviderEvent) => void): Promise<void>;
-  stop(): void;
+  stop(): void | Promise<void>;
   fetchHistory?(symbol: string, interval: MarketKlineInterval, limit: number): Promise<MarketKlineInput[]>;
   fetchDepth?(symbol: string, limit: number): Promise<unknown>;
   fetchTrades?(symbol: string, limit: number): Promise<unknown>;

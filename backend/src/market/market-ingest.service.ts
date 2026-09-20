@@ -33,12 +33,14 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
     void this.startProvidersAfterReconciliation();
   }
 
-  onModuleDestroy(): void {
+  async onModuleDestroy(): Promise<void> {
     this.destroyed = true;
     if (this.providerStartRetryTimer) clearTimeout(this.providerStartRetryTimer);
     this.providerStartRetryTimer = undefined;
-    this.providers.stop();
+    this.logger.log('Market shutdown: stopping providers.');
+    await this.providers.stop();
     this.eventQueue.length = 0;
+    this.logger.log('Market shutdown: providers stopped and ingest queue discarded.');
   }
 
   private async startProvidersAfterReconciliation(): Promise<void> {
@@ -126,8 +128,9 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
           price: event.price, change24h: event.change24h, volume24h: event.volume24h,
           high24h: event.high24h, low24h: event.low24h, bid: event.bid, ask: event.ask, spread: event.spread,
           observedAt: new Date(event.eventTime),
+          sessionState: event.sessionState,
         });
-        if (quote.accepted && event.provider !== 'binance-spot') {
+        if (quote.accepted && event.price && event.provider !== 'binance-spot') {
           await this.marketKlines.accumulateQuote({
             symbol: event.symbol, price: event.price, provider: event.provider,
             source: event.source,

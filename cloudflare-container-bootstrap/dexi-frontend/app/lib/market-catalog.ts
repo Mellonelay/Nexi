@@ -20,6 +20,8 @@ export interface MarketPair {
   provider?: string;
   observedAt?: string;
   dataState?: 'LIVE' | 'STALE' | 'UNAVAILABLE' | 'ERROR';
+  sessionState?: 'OPEN' | 'CLOSED';
+  reason?: string;
   sequence?: string;
   sparkline?: number[];
 }
@@ -123,6 +125,8 @@ const pairFromPriceRow = (row: unknown, responseState: MarketPair['dataState'] |
     source: provider.toUpperCase() === 'COINGECKO' ? 'external' : 'tick',
     provider,
     dataState,
+    sessionState: typeof row.sessionState === 'string' && row.sessionState.toUpperCase() === 'CLOSED' ? 'CLOSED' : 'OPEN',
+    reason: typeof row.reason === 'string' ? row.reason : undefined,
     sequence: marketSequence(row.sequence),
     observedAt: typeof row.observedAt === 'string' ? row.observedAt : undefined,
     sparkline: sparklineFor(row),
@@ -186,6 +190,8 @@ const mergeMarketTick = (previous: MarketPair, tick: Record<string, unknown>, pr
   observedAt: tickObservedAt(tick, previous.observedAt),
   source: 'tick',
   dataState: tickState(tick.state),
+  sessionState: typeof tick.sessionState === 'string' ? (tick.sessionState.toUpperCase() === 'CLOSED' ? 'CLOSED' : 'OPEN') : previous.sessionState,
+  reason: typeof tick.reason === 'string' ? tick.reason : previous.reason,
   sequence,
 });
 

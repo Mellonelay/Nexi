@@ -358,7 +358,7 @@ export default function BinaryPage() {
           </div>
           <div className="nexi-station-card min-w-0 rounded-2xl p-2">
             <div className="border-b border-white/5 px-2 pb-2"><TimeframeSelector interval={interval} onChange={setInterval} /></div>
-            <div className="h-[clamp(260px,58vw,420px)] sm:h-[420px] xl:h-[500px]"><RealtimeTradingChart symbol={normalizedPair} type="binary" interval={interval} /></div>
+            <div className="h-[clamp(260px,58vw,420px)] sm:h-[420px] xl:h-[500px]"><RealtimeTradingChart symbol={normalizedPair} type="binary" interval={interval} marketStatus={market?.sessionState === 'CLOSED' ? 'CLOSED' : undefined} /></div>
           </div>
 
         </section>

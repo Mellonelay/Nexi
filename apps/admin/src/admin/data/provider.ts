@@ -6,6 +6,7 @@ import type {
   Asset,
   Network,
   MarketFeed,
+  MarketProviderRuntime,
   SpotPair,
   SpotOrder,
   BinaryPair,
@@ -161,6 +162,7 @@ export interface AdminDataProvider {
   disableDepositAddress(id: string, ctx: ConsequentialContext): Promise<MutationResult>;
 
   listFeeds(): Promise<MarketFeed[]>;
+  getMarketRuntime?(): Promise<MarketProviderRuntime[]>;
   setFeedStatus(
     id: string,
     status: MarketFeed["status"],

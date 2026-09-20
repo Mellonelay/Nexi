@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import { ASSET_REGISTRY, findAsset, assetIconPath } from '../app/lib/asset-registry.ts';
 import { applyMarketSnapshot, applyMarketTick, marketCatalog } from '../app/lib/market-catalog.ts';
-import { finiteMarketNumber, normalizeCandle } from '../app/lib/market-data.ts';
+import { finiteMarketNumber, normalizeCandle, marketDisplayStatus } from '../app/lib/market-data.ts';
 import { simpleMovingAverage, exponentialMovingAverage, bollingerBands, relativeStrengthIndex, movingAverageConvergenceDivergence } from '../app/lib/market-indicators.ts';
 import { instrumentFromMarketPair, instrumentFromPair, normalizePair } from '../app/state/active-instrument.ts';
 import { binaryOrderReady } from '../app/lib/trading-states.ts';
@@ -42,6 +42,12 @@ test('quote/candle adapters never coerce missing observations into zero', () => 
   assert.equal(normalizeCandle({ time: 1, open: null, high: 2, low: 0, close: 1 }), null);
   const stale = marketCatalog([{ symbol: 'ETHUSDT', lastPrice: '100', dataState: 'STALE' }]).find((item) => item.displaySymbol === 'ETH');
   assert.equal(instrumentFromMarketPair(stale).price, null);
+
+  const closed = marketCatalog([{ symbol: 'EURUSD', lastPrice: '1.14859', state: 'UNAVAILABLE', sessionState: 'CLOSED', reason: 'MARKET_CLOSED' }]).find((item) => item.displaySymbol === 'EURUSD');
+  assert.equal(closed.price, 1.14859);
+  assert.equal(closed.sessionState, 'CLOSED');
+  assert.equal(marketDisplayStatus(closed.dataState, closed.sessionState), 'Closed');
+  assert.equal(instrumentFromMarketPair(closed).price, 1.14859);
 });
 
 test('MA EMA BOLL RSI MACD calculations preserve flat and rising-series semantics', () => {

@@ -62,6 +62,7 @@ import { RequireAdminPermission } from "./admin-permission.decorator";
 import { MiningService } from "../mining/mining.service";
 import { LoanService } from "../loans/loans.service";
 import { LoanAdminDecisionDto } from "../loans/loans.dto";
+import { MarketProviderRouterService } from "../market/market-provider-router.service";
 
 @ApiTags("Admin Control Plane")
 @Controller("admin")
@@ -73,6 +74,7 @@ export class AdminController {
     private readonly adminService: AdminService,
     private readonly miningService: MiningService,
     private readonly loanService: LoanService,
+    private readonly marketProviders: MarketProviderRouterService,
   ) {}
 
   @Get("me")
@@ -469,6 +471,12 @@ export class AdminController {
   @RequireAdminPermission("feeds.view")
   getMarketFeeds() {
     return this.adminService.getMarketFeeds();
+  }
+
+  @Get("market/runtime")
+  @RequireAdminPermission("feeds.view")
+  getMarketRuntime() {
+    return this.marketProviders.currentStatus();
   }
 
   @Post("market/feeds/status")

@@ -21,6 +21,9 @@ type BiquoteTick = {
   timestamp?: string;
   marketState?: string;
   stale?: boolean;
+  quoteAgeSeconds?: number;
+  lastQuoteAt?: string;
+  source?: string;
 };
 
 type BiquoteBar = {
@@ -42,6 +45,7 @@ export class BiquoteMarketAdapter implements MarketProviderAdapter {
   private readonly logger = new Logger(BiquoteMarketAdapter.name);
   private runtimeSymbols: MarketProviderRuntimeSymbol[] = [];
   private fallbackTimer?: NodeJS.Timeout;
+  private statusTimer?: NodeJS.Timeout;
   private reconnectTimer?: NodeJS.Timeout;
   private connection?: signalR.HubConnection;
   private stopping = false;
@@ -49,6 +53,10 @@ export class BiquoteMarketAdapter implements MarketProviderAdapter {
   configure(symbols: readonly MarketProviderRuntimeSymbol[]): void {
     this.runtimeSymbols = [...symbols]
       .filter((entry) => entry.symbol.trim() && entry.providerInstrument.trim());
+    if (!this.runtimeSymbols.some((entry) => entry.symbol === 'USDRUB')
+      && getProviderMapping('USDRUB', this.provider)) {
+      this.runtimeSymbols.push({ symbol: 'USDRUB', providerInstrument: 'USDRUB' });
+    }
   }
 
   isEnabled(): boolean {
@@ -61,6 +69,7 @@ export class BiquoteMarketAdapter implements MarketProviderAdapter {
     await this.poll(onEvent);
     try {
       await this.startSignalR(onEvent);
+      this.startStatusPolling(onEvent);
     } catch (error) {
       this.logger.warn(`BiQuote SignalR unavailable; using bounded REST fallback: ${error instanceof Error ? error.message : 'unknown error'}`);
       this.startFallbackPolling(onEvent);
@@ -68,14 +77,21 @@ export class BiquoteMarketAdapter implements MarketProviderAdapter {
     }
   }
 
-  stop(): void {
+  async stop(): Promise<void> {
     this.stopping = true;
     if (this.fallbackTimer) clearInterval(this.fallbackTimer);
+    if (this.statusTimer) clearInterval(this.statusTimer);
     if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
     this.fallbackTimer = undefined;
+    this.statusTimer = undefined;
     this.reconnectTimer = undefined;
-    if (this.connection) void this.connection.stop();
+    const connection = this.connection;
     this.connection = undefined;
+    if (!connection) return;
+    await Promise.race([
+      connection.stop().catch(() => undefined),
+      new Promise<void>((resolve) => setTimeout(resolve, 2_000)),
+    ]);
   }
 
   async fetchHistory(symbol: string, interval: MarketKlineInterval, limit: number): Promise<MarketKlineInput[]> {
@@ -136,6 +152,7 @@ export class BiquoteMarketAdapter implements MarketProviderAdapter {
     await connection.invoke('Subscribe', instruments);
     this.connection = connection;
     this.stopFallbackPolling();
+    this.startStatusPolling(onEvent);
     this.logger.log(`BiQuote SignalR subscribed to ${instruments.length} canonical symbol(s).`);
   }
 
@@ -149,6 +166,13 @@ export class BiquoteMarketAdapter implements MarketProviderAdapter {
   private stopFallbackPolling(): void {
     if (this.fallbackTimer) clearInterval(this.fallbackTimer);
     this.fallbackTimer = undefined;
+  }
+
+  private startStatusPolling(onEvent: (event: MarketProviderEvent) => void): void {
+    if (this.statusTimer) return;
+    const interval = this.pollIntervalMs();
+    this.statusTimer = setInterval(() => { void this.poll(onEvent); }, interval);
+    this.statusTimer.unref?.();
   }
 
   private scheduleSignalRRestart(onEvent: (event: MarketProviderEvent) => void): void {
@@ -188,7 +212,13 @@ export class BiquoteMarketAdapter implements MarketProviderAdapter {
         for (const [instrument, tick] of Object.entries(ticks)) {
           const mapping = byInstrument.get(instrument.toUpperCase());
           if (!mapping) continue;
-          const event = this.toEvent(mapping, tick, tick.marketState === 'closed' ? 'biquote:rest:closed-market' : 'biquote:rest:batch');
+          const state = tick.marketState?.trim().toLowerCase();
+          const source = state === 'closed'
+            ? 'biquote:rest:closed-market'
+            : state === 'open'
+              ? 'biquote:rest:open-market'
+              : 'biquote:rest:batch';
+          const event = this.toEvent(mapping, tick, source);
           if (event) onEvent(event);
         }
       } catch (error) {
@@ -198,6 +228,7 @@ export class BiquoteMarketAdapter implements MarketProviderAdapter {
   }
 
   private toEvent(mapping: MarketProviderRuntimeSymbol, tick: BiquoteTick, source: string): ProviderQuoteEvent | null {
+    const closed = tick.marketState?.trim().toLowerCase() === 'closed';
     const mid = Number(tick.mid);
     const bid = Number(tick.bid);
     const ask = Number(tick.ask);
@@ -207,18 +238,21 @@ export class BiquoteMarketAdapter implements MarketProviderAdapter {
       : Number.isFinite(bid) && bid > 0 && Number.isFinite(ask) && ask > 0
         ? (bid + ask) / 2
         : last;
-    if (!Number.isFinite(price) || price <= 0) return null;
-    const eventTime = tick.timestamp ? Date.parse(tick.timestamp) : Date.now();
+    if (!closed && (!Number.isFinite(price) || price <= 0)) return null;
+    const eventTime = tick.timestamp || tick.lastQuoteAt ? Date.parse(tick.timestamp ?? tick.lastQuoteAt as string) : Date.now();
     const spread = Number.isFinite(bid) && Number.isFinite(ask) && ask >= bid ? ask - bid : undefined;
     return {
-      kind: 'ticker', symbol: mapping.symbol, provider: this.provider, source,
+      kind: 'ticker', symbol: mapping.symbol, provider: this.provider,
+      source: closed && !source.includes('closed-market') ? `${source}:closed-market` : source,
       providerInstrument: mapping.providerInstrument, priceType: 'MID',
-      eventTime: Number.isFinite(eventTime) ? eventTime : Date.now(), price: String(price),
+      eventTime: Number.isFinite(eventTime) ? eventTime : Date.now(),
+      price: Number.isFinite(price) && price > 0 ? String(price) : undefined,
       change24h: tick.dayDiffPercent == null ? undefined : String(tick.dayDiffPercent),
       high24h: tick.high == null ? undefined : String(tick.high), low24h: tick.low == null ? undefined : String(tick.low),
       bid: Number.isFinite(bid) && bid > 0 ? String(bid) : undefined,
       ask: Number.isFinite(ask) && ask > 0 ? String(ask) : undefined,
       spread: spread === undefined ? undefined : String(spread),
+      sessionState: closed ? 'CLOSED' : source.includes('open-market') ? 'OPEN' : undefined,
     };
   }
 

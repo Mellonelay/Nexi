@@ -15,6 +15,7 @@ import { D1PrismaModule } from "../d1/d1-prisma.module";
 import { ReferralVipModule } from "../referral-vip/referral-vip.module";
 import { ReferralVipAdminController } from "../referral-vip/referral-vip-admin.controller";
 import { CommunicationsModule } from "../communications/communications.module";
+import { MarketModule } from "../market/market.module";
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { CommunicationsModule } from "../communications/communications.module";
     D1PrismaModule,
     ReferralVipModule,
     CommunicationsModule,
+    MarketModule,
   ],
   controllers: [AdminController, AdminAuthController, ReferralVipAdminController],
   providers: [AdminService, AdminPermissionGuard],

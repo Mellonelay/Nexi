@@ -149,6 +149,8 @@ export class MarketGateway implements OnGatewayConnection, OnGatewayDisconnect, 
       priceType: event.quote.priceType,
       canonicalAssetId: event.quote.canonicalAssetId,
       assetClass: event.quote.assetClass,
+      sessionState: event.quote.sessionState,
+      reason: event.quote.reason,
     });
   }
 

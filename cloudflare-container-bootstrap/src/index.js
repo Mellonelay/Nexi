@@ -918,6 +918,25 @@ export default {
     }
   },
 
+  async scheduled(_controller, env) {
+    const container = await getRunningNexiContainer(env);
+    const response = await container.fetch(new Request("http://nexi.internal/ops/live"));
+    const status = response.status;
+    if (!response.ok) {
+      console.error("NEXI_CONTAINER_FORWARD_ERROR", {
+        path: "/ops/live",
+        status,
+        trigger: "scheduled-supervisor",
+      });
+      return;
+    }
+    console.log("NEXI_CONTAINER_SUPERVISOR", {
+      trigger: "scheduled-supervisor",
+      status,
+      container: "nexi-api",
+    });
+  },
+
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     // Public request forwarding relies on Container.fetch() to own cold-start
