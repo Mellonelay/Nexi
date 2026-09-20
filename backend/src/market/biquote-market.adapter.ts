@@ -42,6 +42,7 @@ export class BiquoteMarketAdapter implements MarketProviderAdapter {
   private readonly logger = new Logger(BiquoteMarketAdapter.name);
   private runtimeSymbols: MarketProviderRuntimeSymbol[] = [];
   private fallbackTimer?: NodeJS.Timeout;
+  private statusTimer?: NodeJS.Timeout;
   private reconnectTimer?: NodeJS.Timeout;
   private connection?: signalR.HubConnection;
   private stopping = false;
@@ -61,6 +62,7 @@ export class BiquoteMarketAdapter implements MarketProviderAdapter {
     await this.poll(onEvent);
     try {
       await this.startSignalR(onEvent);
+      this.startStatusPolling(onEvent);
     } catch (error) {
       this.logger.warn(`BiQuote SignalR unavailable; using bounded REST fallback: ${error instanceof Error ? error.message : 'unknown error'}`);
       this.startFallbackPolling(onEvent);
@@ -71,8 +73,10 @@ export class BiquoteMarketAdapter implements MarketProviderAdapter {
   async stop(): Promise<void> {
     this.stopping = true;
     if (this.fallbackTimer) clearInterval(this.fallbackTimer);
+    if (this.statusTimer) clearInterval(this.statusTimer);
     if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
     this.fallbackTimer = undefined;
+    this.statusTimer = undefined;
     this.reconnectTimer = undefined;
     const connection = this.connection;
     this.connection = undefined;
@@ -141,6 +145,7 @@ export class BiquoteMarketAdapter implements MarketProviderAdapter {
     await connection.invoke('Subscribe', instruments);
     this.connection = connection;
     this.stopFallbackPolling();
+    this.startStatusPolling(onEvent);
     this.logger.log(`BiQuote SignalR subscribed to ${instruments.length} canonical symbol(s).`);
   }
 
@@ -154,6 +159,13 @@ export class BiquoteMarketAdapter implements MarketProviderAdapter {
   private stopFallbackPolling(): void {
     if (this.fallbackTimer) clearInterval(this.fallbackTimer);
     this.fallbackTimer = undefined;
+  }
+
+  private startStatusPolling(onEvent: (event: MarketProviderEvent) => void): void {
+    if (this.statusTimer) return;
+    const interval = this.pollIntervalMs();
+    this.statusTimer = setInterval(() => { void this.poll(onEvent); }, interval);
+    this.statusTimer.unref?.();
   }
 
   private scheduleSignalRRestart(onEvent: (event: MarketProviderEvent) => void): void {
