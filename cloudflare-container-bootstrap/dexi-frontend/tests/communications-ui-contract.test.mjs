@@ -34,3 +34,14 @@ test('support exposes ticket timeline, reply, and realtime recovery', () => {
   assert.match(support, /socket\.off\('communications\.event'/);
   assert.match(support, /socket\.disconnect\(\)/);
 });
+
+
+test('messages uses durable realtime recovery without synthetic archive state', () => {
+  const messages = read('./app/dashboard/messages/page.tsx');
+  assert.match(messages, /apiBaseUrl \+ '\/communications'/);
+  assert.match(messages, /type === 'MESSAGE_SENT' \|\| type === 'MESSAGE_READ'/);
+  assert.match(messages, /socket\.off\('communications\.event'/);
+  assert.match(messages, /socket\.disconnect\(\)/);
+  assert.doesNotMatch(messages, /ARCHIVED/);
+  assert.match(messages, /next\.deliveryState = record\.deliveryState/);
+});

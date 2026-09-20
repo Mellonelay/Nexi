@@ -22,6 +22,7 @@ import type {
   AdminMessage,
   AdminNotification,
   AdminLearnArticle,
+  AdminLearnCategory,
   HealthCheck,
   AdminUser,
   Environment,
@@ -382,12 +383,12 @@ export interface AdminDataProvider {
   ): Promise<MutationResult>;
   listAnnouncements(): Promise<Announcement[]>;
   createAnnouncement(
-    payload: { title: string; body: string; published?: boolean },
+    payload: { title: string; body: string; targeting?: unknown; published?: boolean; startsAt?: string; endsAt?: string },
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
   updateAnnouncement(
     id: string,
-    payload: { title?: string; body?: string; published?: boolean },
+    payload: { title?: string; body?: string; targeting?: unknown; published?: boolean; startsAt?: string; endsAt?: string },
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
   publishAnnouncement(id: string, ctx: ConsequentialContext): Promise<MutationResult>;
@@ -398,13 +399,18 @@ export interface AdminDataProvider {
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
   listLearnArticles(): Promise<AdminLearnArticle[]>;
+  listLearnCategories(): Promise<AdminLearnCategory[]>;
+  createLearnCategory(
+    payload: { slug: string; name: string; description?: string; sortOrder?: number; status?: string },
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult>;
   createLearnArticle(
-    payload: { slug: string; title: string; body: string; status?: string },
+    payload: { slug: string; title: string; body: string; summary?: string; status?: string; categoryId?: string; scheduledAt?: string; tags?: string[]; media?: Array<{ url: string; altText?: string; provider?: string; metadata?: unknown }> },
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
   updateLearnArticle(
     id: string,
-    payload: { title?: string; body?: string; status?: string },
+    payload: { title?: string; body?: string; summary?: string; status?: string; categoryId?: string; scheduledAt?: string; tags?: string[]; media?: Array<{ url: string; altText?: string; provider?: string; metadata?: unknown }> },
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
   publishLearnArticle(id: string, ctx: ConsequentialContext): Promise<MutationResult>;

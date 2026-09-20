@@ -57,12 +57,22 @@ describe('recipient-owned message read', () => {
   });
 
   it('returns authoritative D1 read-back after successful durable command', async () => {
-    const message = { id: 'message', recipientId: 'recipient', readAt: '2026-09-08T00:00:00Z' };
+    const message = { id: 'message', senderId: 'sender', recipientId: 'recipient', readAt: '2026-09-08T00:00:00Z' };
     const findUnique = jest.fn(async () => message);
     const gateway: any = { markMessageRead: jest.fn(async () => true) };
-    const service = new CommunicationsService({ persistentMessage: { findUnique } } as any, {} as any, gateway, { isAvailable: () => false } as any);
+    const publish = jest.fn().mockResolvedValue(undefined);
+    const redis: any = { isAvailable: () => true, publish };
+    const service = new CommunicationsService({ persistentMessage: { findUnique } } as any, {} as any, gateway, redis);
     expect(await service.markMessageRead('recipient', 'message')).toBe(message);
     expect(gateway.markMessageRead).toHaveBeenCalledWith('recipient', 'message');
     expect(findUnique).toHaveBeenCalledWith({ where: { id: 'message' } });
+    expect(JSON.parse(publish.mock.calls[0][1])).toEqual(expect.objectContaining({
+      type: 'MESSAGE_READ',
+      payload: expect.objectContaining({
+        userId: 'recipient',
+        senderId: 'sender',
+        recipientId: 'recipient',
+      }),
+    }));
   });
 });

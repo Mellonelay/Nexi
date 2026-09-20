@@ -670,8 +670,9 @@ export interface Announcement {
   title: string;
   body?: string;
   status: "draft" | "scheduled" | "published" | "archived";
-  locale: string;
+  targeting?: unknown;
   scheduledAt?: string;
+  endsAt?: string;
   publishedAt?: string;
 }
 
@@ -699,8 +700,25 @@ export interface AdminLearnArticle {
   slug: string;
   title: string;
   body: string;
+  summary?: string;
   status: string;
+  categoryId?: string;
+  category?: { id?: string; name?: string; slug?: string } | null;
+  scheduledAt?: string;
+  publishedAt?: string;
+  tags: Array<{ tag?: { id?: string; name?: string; slug?: string } }>;
+  media: Array<{ id?: string; url: string; altText?: string; provider?: string; metadata?: unknown }>;
+  revisions: Array<{ id?: string; revision?: number; createdAt?: string }>;
   updatedAt: string;
+}
+
+export interface AdminLearnCategory {
+  id: string;
+  slug: string;
+  name: string;
+  description?: string;
+  sortOrder: number;
+  status: string;
 }
 
 export interface HealthCheck {

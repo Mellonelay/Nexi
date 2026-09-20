@@ -40,6 +40,7 @@ import type {
   AdminMessage,
   AdminNotification,
   AdminLearnArticle,
+  AdminLearnCategory,
   ExposureRow,
   Locale,
   NavItem,
@@ -1691,8 +1692,9 @@ export class NexiAdminApiProvider implements AdminDataProvider {
           title: stringValue(row.title),
           body: stringValue(row.body),
           status,
-          locale: "en",
+          targeting: row.targeting,
           scheduledAt: typeof row.startsAt === "string" ? row.startsAt : undefined,
+          endsAt: typeof row.endsAt === "string" ? row.endsAt : undefined,
           publishedAt:
             typeof row.updatedAt === "string" && row.published === true ? row.updatedAt : undefined,
         } as Announcement;
@@ -1700,14 +1702,14 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     );
   }
   createAnnouncement(
-    payload: { title: string; body: string; published?: boolean },
+    payload: { title: string; body: string; targeting?: unknown; published?: boolean; startsAt?: string; endsAt?: string },
     ctx: ConsequentialContext,
   ) {
     return this.requestMutation("/communications/admin/announcements", ctx, payload);
   }
   updateAnnouncement(
     id: string,
-    payload: { title?: string; body?: string; published?: boolean },
+    payload: { title?: string; body?: string; targeting?: unknown; published?: boolean; startsAt?: string; endsAt?: string },
     ctx: ConsequentialContext,
   ) {
     return this.requestMutation(
@@ -1775,21 +1777,50 @@ export class NexiAdminApiProvider implements AdminDataProvider {
           slug: stringValue(r.slug),
           title: stringValue(r.title),
           body: stringValue(r.body),
+          summary: typeof r.summary === "string" ? r.summary : undefined,
           status: stringValue(r.status),
+          categoryId: typeof r.categoryId === "string" ? r.categoryId : undefined,
+          category: r.category && typeof r.category === "object" ? record(r.category) : null,
+          scheduledAt: typeof r.scheduledAt === "string" ? r.scheduledAt : undefined,
+          publishedAt: typeof r.publishedAt === "string" ? r.publishedAt : undefined,
+          tags: Array.isArray(r.tags) ? r.tags.map((item) => record(item)) : [],
+          media: Array.isArray(r.media) ? r.media.map((item) => record(item)) as AdminLearnArticle["media"] : [],
+          revisions: Array.isArray(r.revisions) ? r.revisions.map((item) => record(item)) as AdminLearnArticle["revisions"] : [],
           updatedAt: stringValue(r.updatedAt),
         };
       }),
     );
   }
+  listLearnCategories(): Promise<AdminLearnCategory[]> {
+    return this.request<unknown[]>("/communications/learn/categories").then((rows) =>
+      rows.map((value) => {
+        const row = record(value);
+        return {
+          id: stringValue(row.id),
+          slug: stringValue(row.slug),
+          name: stringValue(row.name),
+          description: typeof row.description === "string" ? row.description : undefined,
+          sortOrder: Number(row.sortOrder ?? 0),
+          status: stringValue(row.status, "ACTIVE"),
+        };
+      }),
+    );
+  }
+  createLearnCategory(
+    payload: { slug: string; name: string; description?: string; sortOrder?: number; status?: string },
+    ctx: ConsequentialContext,
+  ) {
+    return this.requestMutation("/communications/admin/learn/categories", ctx, payload);
+  }
   createLearnArticle(
-    payload: { slug: string; title: string; body: string; status?: string },
+    payload: { slug: string; title: string; body: string; summary?: string; status?: string; categoryId?: string; scheduledAt?: string; tags?: string[]; media?: Array<{ url: string; altText?: string; provider?: string; metadata?: unknown }> },
     ctx: ConsequentialContext,
   ) {
     return this.requestMutation("/communications/admin/learn", ctx, payload);
   }
   updateLearnArticle(
     id: string,
-    payload: { title?: string; body?: string; status?: string },
+    payload: { title?: string; body?: string; summary?: string; status?: string; categoryId?: string; scheduledAt?: string; tags?: string[]; media?: Array<{ url: string; altText?: string; provider?: string; metadata?: unknown }> },
     ctx: ConsequentialContext,
   ) {
     return this.requestMutation(

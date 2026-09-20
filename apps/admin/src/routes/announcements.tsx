@@ -22,6 +22,9 @@ function Page() {
   const [editId, setEditId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [startsAt, setStartsAt] = useState("");
+  const [endsAt, setEndsAt] = useState("");
+  const [targeting, setTargeting] = useState("");
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -37,6 +40,9 @@ function Page() {
     setEditId(null);
     setTitle("");
     setBody("");
+    setStartsAt("");
+    setEndsAt("");
+    setTargeting("");
   };
   const save = async () => {
     if (!canPublish || !title.trim() || !body.trim() || !reason.trim()) {
@@ -46,15 +52,21 @@ function Page() {
     setBusy(true);
     setFeedback(null);
     try {
+      const targetingValue = targeting.trim() ? JSON.parse(targeting) : undefined;
+      const lifecycle = {
+        ...(startsAt ? { startsAt: new Date(startsAt).toISOString() } : {}),
+        ...(endsAt ? { endsAt: new Date(endsAt).toISOString() } : {}),
+        ...(targetingValue !== undefined ? { targeting: targetingValue } : {}),
+      };
       if (editId)
         await provider.updateAnnouncement(
           editId,
-          { title: title.trim(), body: body.trim() },
+          { title: title.trim(), body: body.trim(), ...lifecycle },
           ctx(),
         );
       else
         await provider.createAnnouncement(
-          { title: title.trim(), body: body.trim(), published: false },
+          { title: title.trim(), body: body.trim(), published: false, ...lifecycle },
           ctx(),
         );
       reset();
@@ -150,6 +162,27 @@ function Page() {
             placeholder="Announcement body"
             disabled={!canPublish || busy}
           />
+          <Input
+            type="datetime-local"
+            value={startsAt}
+            onChange={(e) => setStartsAt(e.target.value)}
+            aria-label="Announcement starts at"
+            disabled={!canPublish || busy}
+          />
+          <Input
+            type="datetime-local"
+            value={endsAt}
+            onChange={(e) => setEndsAt(e.target.value)}
+            aria-label="Announcement ends at"
+            disabled={!canPublish || busy}
+          />
+          <Textarea
+            className="md:col-span-2"
+            value={targeting}
+            onChange={(e) => setTargeting(e.target.value)}
+            placeholder='Optional targeting JSON, for example {"roles":["VIP"]}'
+            disabled={!canPublish || busy}
+          />
           <div className="flex gap-2 md:col-span-2">
             <Button onClick={() => void save()} disabled={!canPublish || busy}>
               {editId ? "Save update" : "Create draft"}
@@ -182,6 +215,9 @@ function Page() {
                   setEditId(a.id);
                   setTitle(a.title);
                   setBody(a.body ?? "");
+                  setStartsAt(a.scheduledAt ? a.scheduledAt.slice(0, 16) : "");
+                  setEndsAt(a.endsAt ? a.endsAt.slice(0, 16) : "");
+                  setTargeting(a.targeting === undefined || a.targeting === null ? "" : JSON.stringify(a.targeting));
                 }}
               >
                 Edit

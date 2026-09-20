@@ -230,7 +230,17 @@ export class CommunicationsService {
   async markMessageRead(userId: string, messageId: string) {
     const updated = await this.d1Communications.markMessageRead(userId, messageId);
     if (!updated) throw new NotFoundException("Message not found");
-    return this.d1.persistentMessage.findUnique({ where: { id: messageId } });
+    const message = await this.d1.persistentMessage.findUnique({
+      where: { id: messageId },
+    });
+    if (message) {
+      await this.publishRealtimeEvent("MESSAGE_READ", messageId, {
+        userId,
+        senderId: message.senderId,
+        recipientId: message.recipientId,
+      });
+    }
+    return message;
   }
 
   async listMessages(userId: string, page = 1, limit = 25) {

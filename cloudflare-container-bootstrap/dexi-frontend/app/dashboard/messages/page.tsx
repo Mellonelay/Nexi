@@ -1,15 +1,16 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { io } from 'socket.io-client';
 import {
-  Archive,
   CheckCheck,
   Inbox,
   MessageSquare,
   Search,
   Send,
 } from 'lucide-react';
-import api from '../../lib/api';
+import api, { apiBaseUrl } from '../../lib/api';
+import { getAccessToken } from '../../lib/auth-session';
 import {
   authoritativeValue,
   normalizeMessageDeliveryState,
@@ -31,7 +32,7 @@ import {
 import SafeBackButton from '../../components/SafeBackButton';
 
 type LoadState = 'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR';
-type Filter = 'ALL' | 'UNREAD' | 'ARCHIVED';
+type Filter = 'ALL' | 'UNREAD';
 type MessageRecord = {
   id?: unknown;
   body?: unknown;
@@ -52,14 +53,13 @@ type MessageThread = {
   readState?: unknown;
   deliveryState?: unknown;
   updatedAt?: unknown;
-  archived?: unknown;
   counterpartId?: string;
   messages?: MessageRecord[];
 };
 
-const filters: Filter[] = ['ALL', 'UNREAD', 'ARCHIVED'];
+const filters: Filter[] = ['ALL', 'UNREAD'];
 const threadTitle = (thread: MessageThread) => authoritativeValue(thread.title ?? thread.subject);
-const threadState = (thread: MessageThread) => normalizeMessageThreadState(thread.readState ?? (thread.archived ? 'ARCHIVED' : undefined));
+const threadState = (thread: MessageThread) => normalizeMessageThreadState(thread.readState);
 
 function textValue(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim() ? value.trim() : undefined;
@@ -91,6 +91,7 @@ function groupMessages(records: MessageRecord[], currentUserId: string | null): 
     }
     const createdAt = textValue(record.createdAt);
     if (createdAt) next.updatedAt = createdAt;
+    next.deliveryState = record.deliveryState;
     grouped.set(key, next);
   }
   return Array.from(grouped.values()).sort((left, right) => String(right.updatedAt ?? '').localeCompare(String(left.updatedAt ?? '')));
@@ -138,6 +139,40 @@ export default function MessagesPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    const token = getAccessToken();
+    if (!token || !userId) return;
+    const socket = io(apiBaseUrl + '/communications', {
+      auth: { token },
+      transports: ['polling', 'websocket'],
+      tryAllTransports: true,
+      reconnection: true,
+      reconnectionAttempts: 8,
+      reconnectionDelay: 500,
+      reconnectionDelayMax: 8_000,
+    });
+    let connectedOnce = false;
+    const refresh = () => { void load(); };
+    const onConnect = () => {
+      if (connectedOnce) refresh();
+      connectedOnce = true;
+    };
+    const onEvent = (payload: unknown) => {
+      if (!payload || typeof payload !== 'object') return;
+      const event = (payload as { event?: unknown }).event;
+      if (!event || typeof event !== 'object') return;
+      const type = String((event as { type?: unknown }).type ?? '');
+      if (type === 'MESSAGE_SENT' || type === 'MESSAGE_READ') refresh();
+    };
+    socket.on('connect', onConnect);
+    socket.on('communications.event', onEvent);
+    return () => {
+      socket.off('connect', onConnect);
+      socket.off('communications.event', onEvent);
+      socket.disconnect();
+    };
+  }, [load, userId]);
 
   const openThread = async (thread: MessageThread) => {
     setSelected(thread);
@@ -193,8 +228,7 @@ export default function MessagesPage() {
     const searchMatch = `${threadTitle(thread)} ${authoritativeValue(thread.subject)}`.toLowerCase().includes(query.toLowerCase());
     const stateValue = threadState(thread);
     const filterMatch = filter === 'ALL'
-      || (filter === 'UNREAD' && stateValue === 'UNREAD')
-      || (filter === 'ARCHIVED' && stateValue === 'ARCHIVED');
+      || (filter === 'UNREAD' && stateValue === 'UNREAD');
     return searchMatch && filterMatch;
   }), [filter, query, threads]);
 
