@@ -50,6 +50,10 @@ export class BiquoteMarketAdapter implements MarketProviderAdapter {
   configure(symbols: readonly MarketProviderRuntimeSymbol[]): void {
     this.runtimeSymbols = [...symbols]
       .filter((entry) => entry.symbol.trim() && entry.providerInstrument.trim());
+    if (!this.runtimeSymbols.some((entry) => entry.symbol === 'USDRUB')
+      && getProviderMapping('USDRUB', this.provider)) {
+      this.runtimeSymbols.push({ symbol: 'USDRUB', providerInstrument: 'USDRUB' });
+    }
   }
 
   isEnabled(): boolean {

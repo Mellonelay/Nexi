@@ -635,7 +635,9 @@ export class MarketAuthorityService implements OnModuleInit {
     const db = this.d1 as any;
     if (input.sessionState === 'CLOSED') {
       const primaryProvider = policy?.displayPolicy.primaryProvider ?? provider;
-      if (provider !== primaryProvider) return { accepted: false, reason: 'NON_PRIMARY_CLOSED_SESSION' };
+      const sessionOracle = provider === primaryProvider
+        || (provider === 'biquote' && policy?.assetClass === 'forex');
+      if (!sessionOracle) return { accepted: false, reason: 'NON_PRIMARY_CLOSED_SESSION' };
       return this.markClosedSessionD1(db, pair.id, symbol, provider, source, providerInstrument, priceType);
     }
     const receivedAt = new Date();
@@ -737,6 +739,7 @@ export class MarketAuthorityService implements OnModuleInit {
           )
           AND NOT (
             "MarketQuoteLatest"."source" LIKE '%:closed-market'
+            AND excluded."provider"<>?
             AND excluded."source" NOT LIKE '%:open-market'
             AND excluded."source" NOT LIKE '%:closed-market'
           )
@@ -745,7 +748,7 @@ export class MarketAuthorityService implements OnModuleInit {
           latestId, pair.id, symbol, provider, source,
           scalar.price, scalar.change24h, scalar.volume24h, scalar.high24h, scalar.low24h,
           observedAtSql, receivedAtSql, scalar.bid, scalar.ask, scalar.spread,
-          primaryProvider, primaryProvider, primaryFreshAfterSql,
+          primaryProvider, primaryProvider, primaryFreshAfterSql, primaryProvider,
         ],
       },
       {
