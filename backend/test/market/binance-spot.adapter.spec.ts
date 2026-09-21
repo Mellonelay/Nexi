@@ -117,22 +117,30 @@ describe('BinanceSpotAdapter', () => {
     expect(adapter.request).toHaveBeenCalledWith('/api/v3/ticker/24hr', { symbols: '[\"SUNUSDT\"]' });
   });
 
-  it('terminates an open but globally silent stream so reconnect can resubscribe', () => {
+  it('terminates an open but globally silent stream so reconnect can resubscribe', async () => {
     const adapter = new BinanceSpotAdapter() as unknown as {
-      socket: { terminate: jest.Mock; close: jest.Mock };
+      socket: { terminate: jest.Mock; close: jest.Mock; once: jest.Mock };
       lastStreamEventAt: number;
       streamOpenedAt: number;
       recoverSilentStream: (now: number) => boolean;
-      stop: () => void;
+      stop: () => Promise<void>;
     };
     const now = Date.now();
-    adapter.socket = { terminate: jest.fn(), close: jest.fn() };
+    let closeHandler: (() => void) | undefined;
+    const socket = {
+      terminate: jest.fn(),
+      once: jest.fn((event: string, handler: () => void) => {
+        if (event === 'close') closeHandler = handler;
+      }),
+      close: jest.fn(() => closeHandler?.()),
+    };
+    adapter.socket = socket;
     adapter.streamOpenedAt = now - 120_000;
     adapter.lastStreamEventAt = now - 120_000;
 
     expect(adapter.recoverSilentStream(now)).toBe(true);
-    expect(adapter.socket.terminate).toHaveBeenCalledTimes(1);
-    adapter.stop();
+    expect(socket.terminate).toHaveBeenCalledTimes(1);
+    await adapter.stop();
   });
 
   it('discovers only canonical Spot crypto symbols with TRADING Spot permissions', async () => {
