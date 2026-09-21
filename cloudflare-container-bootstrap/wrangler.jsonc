@@ -3,7 +3,7 @@
   // Historical Cloudflare resource identifiers retain "staging" in their names.
   // This config currently targets NEXI production via api.nexitrading.app and NODE_ENV=production.
   // Do not infer environment from the resource name; renaming resources is a separate migration.
-  "name": "nexi-staging",
+  "name": "nexi-production",
   "main": "src/index.js",
   "compatibility_date": "2026-08-19",
   "compatibility_flags": ["nodejs_compat"],
