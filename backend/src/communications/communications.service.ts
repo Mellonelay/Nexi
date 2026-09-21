@@ -185,6 +185,15 @@ export class CommunicationsService {
     return updated;
   }
 
+  private conversationIdentity(userA: string, userB: string) {
+    const [participantAId, participantBId] = [userA, userB].sort();
+    return {
+      participantAId,
+      participantBId,
+      conversationId: `conversation:${participantAId}:${participantBId}`,
+    };
+  }
+
   async sendMessage(
     senderId: string,
     recipientId: string,
@@ -193,37 +202,72 @@ export class CommunicationsService {
     attachments?: unknown,
   ) {
     const messageId = this.id(`message:${senderId}:${recipientId}`, key);
-    const message = await this.database.$transaction(async (tx) => {
-      const last = await tx.persistentMessage.findFirst({
-        where: { senderId, recipientId },
-        orderBy: { sequence: "desc" },
-        select: { sequence: true },
+    const identity = this.conversationIdentity(senderId, recipientId);
+    if (this.d1Communications.isEnabled()) {
+      await this.d1Communications.sendMessage({
+        id: messageId,
+        ...identity,
+        senderId,
+        recipientId,
+        body,
+        attachments,
+        idempotencyKey: `message:${messageId}`,
       });
-      return tx.persistentMessage.upsert({
-        where: { id: messageId },
-        update: {},
-        create: {
-          id: messageId,
-          senderId,
-          recipientId,
-          body,
-          sequence: (last?.sequence ?? 0) + 1,
-          attachments: attachments as Prisma.InputJsonValue | undefined,
-        },
+    } else {
+      await this.database.$transaction(async (tx) => {
+        const conversation = await tx.messageConversation.upsert({
+          where: {
+            participantAId_participantBId: {
+              participantAId: identity.participantAId,
+              participantBId: identity.participantBId,
+            },
+          },
+          update: {},
+          create: {
+            id: identity.conversationId,
+            participantAId: identity.participantAId,
+            participantBId: identity.participantBId,
+          },
+        });
+        if (conversation.state !== "ACTIVE")
+          throw new ForbiddenException("Conversation is restricted");
+        const last = await tx.persistentMessage.findFirst({
+          where: { conversationId: identity.conversationId },
+          orderBy: { sequence: "desc" },
+          select: { sequence: true },
+        });
+        await tx.persistentMessage.upsert({
+          where: { id: messageId },
+          update: {},
+          create: {
+            id: messageId,
+            conversationId: identity.conversationId,
+            senderId,
+            recipientId,
+            body,
+            sequence: (last?.sequence ?? 0) + 1,
+            attachments: attachments as Prisma.InputJsonValue | undefined,
+          },
+        });
       });
+      await this.durableEvent(
+        "message:" + messageId,
+        "PERSISTENT_MESSAGE",
+        messageId,
+        "MESSAGE_SENT",
+        { conversationId: identity.conversationId, senderId, recipientId },
+      );
+    }
+    const message = await this.database.persistentMessage.findUnique({
+      where: { id: messageId },
     });
+    if (!message) throw new ForbiddenException("Conversation is restricted");
     await this.publishRealtimeEvent("MESSAGE_SENT", message.id, {
+      conversationId: identity.conversationId,
       senderId,
       recipientId,
       sequence: message.sequence,
     });
-    await this.durableEvent(
-      "message:" + message.id,
-      "PERSISTENT_MESSAGE",
-      message.id,
-      "MESSAGE_SENT",
-      { senderId, recipientId, sequence: message.sequence },
-    );
     return message;
   }
 
@@ -253,9 +297,147 @@ export class CommunicationsService {
     });
   }
 
+  async listConversations(userId: string, page = 1, limit = 25) {
+    const conversations = await this.database.messageConversation.findMany({
+      where: {
+        OR: [{ participantAId: userId }, { participantBId: userId }],
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: { updatedAt: "desc" },
+      include: {
+        messages: { orderBy: [{ sequence: "asc" }, { createdAt: "asc" }] },
+      },
+    });
+    return conversations.map((conversation) => {
+      const counterpartId =
+        conversation.participantAId === userId
+          ? conversation.participantBId
+          : conversation.participantAId;
+      const unread = conversation.messages.some(
+        (message) => message.recipientId === userId && !message.readAt,
+      );
+      const last = conversation.messages[conversation.messages.length - 1];
+      return {
+        id: conversation.id,
+        counterpartId,
+        state: conversation.state,
+        readState: unread ? "UNREAD" : "READ",
+        deliveryState: last?.deliveryState ?? "SENT",
+        updatedAt: conversation.updatedAt,
+        messages: conversation.messages,
+      };
+    });
+  }
+
+  async reportConversation(
+    userId: string,
+    conversationId: string,
+    reason: string,
+    messageId?: string,
+  ) {
+    const conversation = await this.database.messageConversation.findUnique({
+      where: { id: conversationId },
+    });
+    if (
+      !conversation ||
+      (conversation.participantAId !== userId &&
+        conversation.participantBId !== userId)
+    ) {
+      throw new NotFoundException("Conversation not found");
+    }
+    if (messageId) {
+      const message = await this.database.persistentMessage.findFirst({
+        where: { id: messageId, conversationId },
+      });
+      if (!message) throw new NotFoundException("Message not found");
+    }
+    const reportedUserId =
+      conversation.participantAId === userId
+        ? conversation.participantBId
+        : conversation.participantAId;
+    const moderationCase = await this.database.messageModerationCase.create({
+      data: {
+        conversationId,
+        messageId,
+        reporterId: userId,
+        reportedUserId,
+        reason,
+      },
+    });
+    await this.durableEvent(
+      `message-moderation:${moderationCase.id}`,
+      "MESSAGE_MODERATION",
+      moderationCase.id,
+      "MESSAGE_MODERATION_REPORTED",
+      { conversationId, messageId, reporterId: userId, reportedUserId },
+    );
+    return moderationCase;
+  }
+
+  async adminMessageModeration(page = 1, limit = 100) {
+    return this.database.messageModerationCase.findMany({
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+      include: { conversation: true },
+    });
+  }
+
+  async resolveMessageModeration(
+    id: string,
+    adminId: string,
+    input: {
+      status: "OPEN" | "RESOLVED";
+      resolution?: string;
+      conversationState?: "ACTIVE" | "RESTRICTED";
+      idempotencyKey: string;
+    },
+  ) {
+    const current = await this.database.messageModerationCase.findUnique({
+      where: { id },
+    });
+    if (!current) throw new NotFoundException("Moderation case not found");
+    const updated = await this.database.$transaction(async (tx) => {
+      if (input.conversationState) {
+        await tx.messageConversation.update({
+          where: { id: current.conversationId },
+          data: { state: input.conversationState },
+        });
+      }
+      return tx.messageModerationCase.update({
+        where: { id },
+        data: {
+          status: input.status,
+          resolution: input.resolution,
+          reviewedById: adminId,
+        },
+      });
+    });
+    await this.durableEvent(
+      `message-moderation:${id}:${input.idempotencyKey}`,
+      "MESSAGE_MODERATION",
+      id,
+      "MESSAGE_MODERATION_RESOLVED",
+      {
+        status: updated.status,
+        conversationId: current.conversationId,
+        conversationState: input.conversationState,
+        reviewedById: adminId,
+      },
+    );
+    await this.publishRealtimeEvent("MESSAGE_MODERATION_UPDATED", id, {
+      conversationId: current.conversationId,
+      status: updated.status,
+      conversationState: input.conversationState,
+    });
+    return updated;
+  }
+
   async adminMessages(page = 1, limit = 100) {
     return this.database.persistentMessage.findMany({
-      skip: (page - 1) * limit, take: limit,
+      skip: (page - 1) * limit,
+      take: limit,
       orderBy: { createdAt: "desc" },
     });
   }
@@ -322,21 +504,58 @@ export class CommunicationsService {
     return notification;
   }
 
-  async announcements() {
-    return this.database.announcement.findMany({
+  private contentLocalizations(value: unknown): Record<string, Record<string, unknown>> {
+    if (!value) return {};
+    if (typeof value === "string") {
+      try {
+        const parsed = JSON.parse(value);
+        return parsed && typeof parsed === "object" ? parsed : {};
+      } catch {
+        return {};
+      }
+    }
+    return typeof value === "object"
+      ? (value as Record<string, Record<string, unknown>>)
+      : {};
+  }
+
+  private localizedContent<T extends Record<string, any>>(
+    record: T,
+    locale?: string,
+  ): T & { localizations: Record<string, Record<string, unknown>> } {
+    const localizations = this.contentLocalizations(record.localizations);
+    const normalized = locale?.toLowerCase().split("-")[0];
+    const localized = normalized ? localizations[normalized] : undefined;
+    return {
+      ...record,
+      ...(localized ?? {}),
+      localizations,
+    };
+  }
+
+  async announcements(locale?: string) {
+    const rows = await this.database.announcement.findMany({
       where: {
         published: true,
         OR: [{ startsAt: null }, { startsAt: { lte: new Date() } }],
         AND: [{ OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }] }],
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: [
+        { pinned: "desc" },
+        { pinOrder: "asc" },
+        { createdAt: "desc" },
+      ],
     });
+    return rows.map((row) => this.localizedContent(row, locale));
   }
   async createAnnouncement(data: {
     title: string;
     body: string;
     targeting?: unknown;
+    localizations?: unknown;
     published?: boolean;
+    pinned?: boolean;
+    pinOrder?: number;
     startsAt?: string;
     endsAt?: string;
     reason?: string;
@@ -353,6 +572,10 @@ export class CommunicationsService {
         startsAt: startsAt ? new Date(startsAt) : undefined,
         endsAt: endsAt ? new Date(endsAt) : undefined,
         targeting: data.targeting as Prisma.InputJsonValue | undefined,
+        localizations:
+          data.localizations === undefined
+            ? undefined
+            : JSON.stringify(data.localizations),
       },
     });
     await this.durableEvent(
@@ -371,7 +594,10 @@ export class CommunicationsService {
       title?: string;
       body?: string;
       targeting?: unknown;
+      localizations?: unknown;
       published?: boolean;
+      pinned?: boolean;
+      pinOrder?: number;
       startsAt?: string;
       endsAt?: string;
       reason?: string;
@@ -384,7 +610,11 @@ export class CommunicationsService {
     if (data.title !== undefined) update.title = data.title;
     if (data.body !== undefined) update.body = data.body;
     if (data.targeting !== undefined) update.targeting = data.targeting as Prisma.InputJsonValue;
+    if (data.localizations !== undefined)
+      update.localizations = JSON.stringify(data.localizations);
     if (data.published !== undefined) update.published = data.published;
+    if (data.pinned !== undefined) update.pinned = data.pinned;
+    if (data.pinOrder !== undefined) update.pinOrder = data.pinOrder;
     if (data.startsAt !== undefined) update.startsAt = data.startsAt ? new Date(data.startsAt) : null;
     if (data.endsAt !== undefined) update.endsAt = data.endsAt ? new Date(data.endsAt) : null;
     const announcement = await this.database.announcement.update({ where: { id }, data: update });
@@ -439,8 +669,8 @@ export class CommunicationsService {
     };
   }
 
-  async learn() {
-    return this.database.learnArticle.findMany({
+  async learn(locale?: string) {
+    const articles = await this.database.learnArticle.findMany({
       where: {
         status: "PUBLISHED",
         archivedAt: null,
@@ -453,9 +683,10 @@ export class CommunicationsService {
         media: true,
       },
     });
+    return articles.map((article) => this.localizedContent(article, locale));
   }
 
-  async learnDetail(slug: string) {
+  async learnDetail(slug: string, locale?: string) {
     const article = await this.database.learnArticle.findFirst({
       where: {
         slug,
@@ -466,7 +697,7 @@ export class CommunicationsService {
       include: this.learnInclude(),
     });
     if (!article) throw new NotFoundException("Learn article not found");
-    return article;
+    return this.localizedContent(article, locale);
   }
 
   async listLearnCategories() {
@@ -477,10 +708,11 @@ export class CommunicationsService {
   }
 
   async adminLearnArticles() {
-    return this.database.learnArticle.findMany({
+    const articles = await this.database.learnArticle.findMany({
       orderBy: { updatedAt: "desc" },
       include: this.learnInclude(),
     });
+    return articles.map((article) => this.localizedContent(article));
   }
 
   async createLearnCategory(data: {
@@ -511,6 +743,7 @@ export class CommunicationsService {
     title: string;
     body: string;
     summary?: string;
+    localizations?: unknown;
     status?: string;
     attachments?: unknown;
     categoryId?: string;
@@ -537,6 +770,10 @@ export class CommunicationsService {
           title: data.title,
           body: data.body,
           summary: data.summary,
+          localizations:
+            data.localizations === undefined
+              ? undefined
+              : JSON.stringify(data.localizations),
           status,
           attachments: data.attachments as Prisma.InputJsonValue | undefined,
           categoryId: data.categoryId,
@@ -551,6 +788,7 @@ export class CommunicationsService {
           title: article.title,
           body: article.body,
           summary: article.summary,
+          localizations: article.localizations,
           status,
           attachments: article.attachments as Prisma.InputJsonValue | undefined,
           scheduledAt,
@@ -581,6 +819,7 @@ export class CommunicationsService {
       title?: string;
       body?: string;
       summary?: string;
+      localizations?: unknown;
       status?: string;
       attachments?: unknown;
       categoryId?: string;
@@ -618,6 +857,10 @@ export class CommunicationsService {
           title: data.title ?? current.title,
           body: data.body ?? current.body,
           summary: data.summary ?? current.summary,
+          localizations:
+            data.localizations === undefined
+              ? current.localizations
+              : JSON.stringify(data.localizations),
           status,
           attachments:
             data.attachments === undefined
@@ -641,6 +884,7 @@ export class CommunicationsService {
           title: article.title,
           body: article.body,
           summary: article.summary,
+          localizations: article.localizations,
           status,
           attachments: article.attachments as Prisma.InputJsonValue | undefined,
           scheduledAt,

@@ -21,6 +21,7 @@ import type {
   FeatureFlag,
   Announcement,
   AdminMessage,
+  MessageModerationCase,
   AdminNotification,
   AdminLearnArticle,
   AdminLearnCategory,
@@ -385,16 +386,22 @@ export interface AdminDataProvider {
   ): Promise<MutationResult>;
   listAnnouncements(): Promise<Announcement[]>;
   createAnnouncement(
-    payload: { title: string; body: string; targeting?: unknown; published?: boolean; startsAt?: string; endsAt?: string },
+    payload: { title: string; body: string; targeting?: unknown; localizations?: Record<string, unknown>; published?: boolean; pinned?: boolean; pinOrder?: number; startsAt?: string; endsAt?: string },
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
   updateAnnouncement(
     id: string,
-    payload: { title?: string; body?: string; targeting?: unknown; published?: boolean; startsAt?: string; endsAt?: string },
+    payload: { title?: string; body?: string; targeting?: unknown; localizations?: Record<string, unknown>; published?: boolean; pinned?: boolean; pinOrder?: number; startsAt?: string; endsAt?: string },
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
   publishAnnouncement(id: string, ctx: ConsequentialContext): Promise<MutationResult>;
   listMessages(): Promise<AdminMessage[]>;
+  listMessageModeration(): Promise<MessageModerationCase[]>;
+  resolveMessageModeration(
+    id: string,
+    payload: { status: "OPEN" | "RESOLVED"; resolution?: string; conversationState?: "ACTIVE" | "RESTRICTED" },
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult>;
   listNotifications(): Promise<AdminNotification[]>;
   sendNotification(
     payload: { userId: string; type: string; title: string; body: string },
@@ -407,12 +414,12 @@ export interface AdminDataProvider {
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
   createLearnArticle(
-    payload: { slug: string; title: string; body: string; summary?: string; status?: string; categoryId?: string; scheduledAt?: string; tags?: string[]; media?: Array<{ url: string; altText?: string; provider?: string; metadata?: unknown }> },
+    payload: { slug: string; title: string; body: string; summary?: string; localizations?: Record<string, unknown>; status?: string; categoryId?: string; scheduledAt?: string; tags?: string[]; media?: Array<{ url: string; altText?: string; provider?: string; metadata?: unknown }> },
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
   updateLearnArticle(
     id: string,
-    payload: { title?: string; body?: string; summary?: string; status?: string; categoryId?: string; scheduledAt?: string; tags?: string[]; media?: Array<{ url: string; altText?: string; provider?: string; metadata?: unknown }> },
+    payload: { title?: string; body?: string; summary?: string; localizations?: Record<string, unknown>; status?: string; categoryId?: string; scheduledAt?: string; tags?: string[]; media?: Array<{ url: string; altText?: string; provider?: string; metadata?: unknown }> },
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
   publishLearnArticle(id: string, ctx: ConsequentialContext): Promise<MutationResult>;

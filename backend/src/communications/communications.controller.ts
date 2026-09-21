@@ -23,7 +23,10 @@ import {
   CreateLearnCategoryDto,
   CreateLearnContentDto,
   CreateTicketDto,
+  ContentLocaleQueryDto,
   PageQueryDto,
+  ReportConversationDto,
+  ResolveMessageModerationDto,
   ReplyTicketDto,
   SendMessageDto,
   UpdateAnnouncementDto,
@@ -97,6 +100,24 @@ export class CommunicationsController {
   ) {
     return this.service.listMessages(req.user.userId, q.page, q.limit);
   }
+  @Get("conversations") @UseGuards(JwtAuthGuard) conversations(
+    @Req() req: AuthenticatedRequest,
+    @Query() q: PageQueryDto,
+  ) {
+    return this.service.listConversations(req.user.userId, q.page, q.limit);
+  }
+  @Post("conversations/:id/report") @UseGuards(JwtAuthGuard) reportConversation(
+    @Req() req: AuthenticatedRequest,
+    @Param("id") id: string,
+    @Body() dto: ReportConversationDto,
+  ) {
+    return this.service.reportConversation(
+      req.user.userId,
+      id,
+      dto.reason,
+      dto.messageId,
+    );
+  }
   @Get("notifications") @UseGuards(JwtAuthGuard) notifications(
     @Req() req: AuthenticatedRequest,
     @Query() q: PageQueryDto,
@@ -109,17 +130,20 @@ export class CommunicationsController {
   ) {
     return this.service.markNotificationRead(req.user.userId, id);
   }
-  @Get("announcements") announcements() {
-    return this.service.announcements();
+  @Get("announcements") announcements(@Query() q: ContentLocaleQueryDto) {
+    return this.service.announcements(q.locale);
   }
-  @Get("learn") learn() {
-    return this.service.learn();
+  @Get("learn") learn(@Query() q: ContentLocaleQueryDto) {
+    return this.service.learn(q.locale);
   }
   @Get("learn/categories") learnCategories() {
     return this.service.listLearnCategories();
   }
-  @Get("learn/:slug") learnDetail(@Param("slug") slug: string) {
-    return this.service.learnDetail(slug);
+  @Get("learn/:slug") learnDetail(
+    @Param("slug") slug: string,
+    @Query() q: ContentLocaleQueryDto,
+  ) {
+    return this.service.learnDetail(slug, q.locale);
   }
   @Post("admin/announcements")
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -141,6 +165,22 @@ export class CommunicationsController {
   }
   @Get("admin/messages") @UseGuards(JwtAuthGuard, RolesGuard) @Roles(Role.ADMIN)
   adminMessages(@Query() q: PageQueryDto) { return this.service.adminMessages(q.page, q.limit); }
+  @Get("admin/messages/moderation")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  adminMessageModeration(@Query() q: PageQueryDto) {
+    return this.service.adminMessageModeration(q.page, q.limit);
+  }
+  @Patch("admin/messages/moderation/:id")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  resolveMessageModeration(
+    @Req() req: AuthenticatedRequest,
+    @Param("id") id: string,
+    @Body() dto: ResolveMessageModerationDto,
+  ) {
+    return this.service.resolveMessageModeration(id, req.user.userId, dto);
+  }
   @Get("admin/notifications") @UseGuards(JwtAuthGuard, RolesGuard) @Roles(Role.ADMIN)
   adminNotifications(@Query() q: PageQueryDto) { return this.service.adminNotifications(q.page, q.limit); }
   @Post("admin/notifications") @UseGuards(JwtAuthGuard, RolesGuard) @Roles(Role.ADMIN)

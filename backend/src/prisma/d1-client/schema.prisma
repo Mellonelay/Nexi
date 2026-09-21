@@ -1356,19 +1356,55 @@ model SupportTicketReply {
   @@index([ticketId, createdAt])
 }
 
+model MessageConversation {
+  id              String                  @id
+  participantAId  String
+  participantBId  String
+  state           String                  @default("ACTIVE")
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  messages        PersistentMessage[]
+  moderationCases MessageModerationCase[]
+
+  @@unique([participantAId, participantBId])
+  @@index([participantAId, updatedAt])
+  @@index([participantBId, updatedAt])
+}
+
 model PersistentMessage {
-  id            String    @id @default(uuid())
-  senderId      String
-  recipientId   String
-  body          String
-  deliveryState String    @default("SENT")
-  sequence      Int       @default(0)
-  readAt        DateTime?
-  attachments   String?
-  createdAt     DateTime  @default(now())
+  id             String               @id @default(uuid())
+  conversationId String?
+  senderId       String
+  recipientId    String
+  body           String
+  deliveryState  String               @default("SENT")
+  sequence       Int                  @default(0)
+  readAt         DateTime?
+  attachments    String?
+  createdAt      DateTime             @default(now())
+  conversation   MessageConversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([recipientId, createdAt])
   @@index([senderId, recipientId, sequence])
+  @@index([conversationId, sequence])
+}
+
+model MessageModerationCase {
+  id             String              @id @default(uuid())
+  conversationId String
+  messageId      String?
+  reporterId     String
+  reportedUserId String?
+  reason         String
+  status         String              @default("OPEN")
+  resolution     String?
+  reviewedById   String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  conversation   MessageConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, status, createdAt])
+  @@index([status, createdAt])
 }
 
 model Notification {
@@ -1385,17 +1421,21 @@ model Notification {
 }
 
 model Announcement {
-  id        String    @id @default(uuid())
-  title     String
-  body      String
-  targeting String?
-  startsAt  DateTime?
-  endsAt    DateTime?
-  published Boolean   @default(false)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id            String    @id @default(uuid())
+  title         String
+  body          String
+  targeting     String?
+  localizations String?
+  startsAt      DateTime?
+  endsAt        DateTime?
+  published     Boolean   @default(false)
+  pinned        Boolean   @default(false)
+  pinOrder      Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@index([published, startsAt, endsAt])
+  @@index([published, pinned, pinOrder])
 }
 
 model Activity {
@@ -1474,23 +1514,24 @@ model EventInbox {
 }
 
 model LearnArticle {
-  id          String                 @id @default(uuid())
-  slug        String                 @unique
-  title       String
-  body        String
-  summary     String?
-  status      String                 @default("DRAFT")
-  attachments String?
-  categoryId  String?
-  scheduledAt DateTime?
-  publishedAt DateTime?
-  archivedAt  DateTime?
-  createdAt   DateTime               @default(now())
-  updatedAt   DateTime               @updatedAt
-  category    LearnCategory?         @relation(fields: [categoryId], references: [id])
-  revisions   LearnArticleRevision[]
-  tags        LearnArticleTag[]
-  media       LearnMediaAsset[]      @relation("ArticleMedia")
+  id            String                 @id @default(uuid())
+  slug          String                 @unique
+  title         String
+  body          String
+  summary       String?
+  localizations String?
+  status        String                 @default("DRAFT")
+  attachments   String?
+  categoryId    String?
+  scheduledAt   DateTime?
+  publishedAt   DateTime?
+  archivedAt    DateTime?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+  category      LearnCategory?         @relation(fields: [categoryId], references: [id])
+  revisions     LearnArticleRevision[]
+  tags          LearnArticleTag[]
+  media         LearnMediaAsset[]      @relation("ArticleMedia")
 
   @@index([status, publishedAt])
   @@index([categoryId, status])
@@ -1510,21 +1551,22 @@ model LearnCategory {
 }
 
 model LearnArticleRevision {
-  id          String            @id @default(uuid())
-  articleId   String
-  revision    Int
-  title       String
-  body        String
-  summary     String?
-  status      String            @default("DRAFT")
-  attachments String?
-  scheduledAt DateTime?
-  publishedAt DateTime?
-  archivedAt  DateTime?
-  createdBy   String?
-  createdAt   DateTime          @default(now())
-  article     LearnArticle      @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  media       LearnMediaAsset[] @relation("RevisionMedia")
+  id            String            @id @default(uuid())
+  articleId     String
+  revision      Int
+  title         String
+  body          String
+  summary       String?
+  localizations String?
+  status        String            @default("DRAFT")
+  attachments   String?
+  scheduledAt   DateTime?
+  publishedAt   DateTime?
+  archivedAt    DateTime?
+  createdBy     String?
+  createdAt     DateTime          @default(now())
+  article       LearnArticle      @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  media         LearnMediaAsset[] @relation("RevisionMedia")
 
   @@unique([articleId, revision])
   @@index([articleId, createdAt])

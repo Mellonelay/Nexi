@@ -949,8 +949,18 @@ exports.Prisma.SupportTicketReplyScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.MessageConversationScalarFieldEnum = {
+  id: 'id',
+  participantAId: 'participantAId',
+  participantBId: 'participantBId',
+  state: 'state',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.PersistentMessageScalarFieldEnum = {
   id: 'id',
+  conversationId: 'conversationId',
   senderId: 'senderId',
   recipientId: 'recipientId',
   body: 'body',
@@ -959,6 +969,20 @@ exports.Prisma.PersistentMessageScalarFieldEnum = {
   readAt: 'readAt',
   attachments: 'attachments',
   createdAt: 'createdAt'
+};
+
+exports.Prisma.MessageModerationCaseScalarFieldEnum = {
+  id: 'id',
+  conversationId: 'conversationId',
+  messageId: 'messageId',
+  reporterId: 'reporterId',
+  reportedUserId: 'reportedUserId',
+  reason: 'reason',
+  status: 'status',
+  resolution: 'resolution',
+  reviewedById: 'reviewedById',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.NotificationScalarFieldEnum = {
@@ -977,9 +1001,12 @@ exports.Prisma.AnnouncementScalarFieldEnum = {
   title: 'title',
   body: 'body',
   targeting: 'targeting',
+  localizations: 'localizations',
   startsAt: 'startsAt',
   endsAt: 'endsAt',
   published: 'published',
+  pinned: 'pinned',
+  pinOrder: 'pinOrder',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -1043,6 +1070,7 @@ exports.Prisma.LearnArticleScalarFieldEnum = {
   title: 'title',
   body: 'body',
   summary: 'summary',
+  localizations: 'localizations',
   status: 'status',
   attachments: 'attachments',
   categoryId: 'categoryId',
@@ -1071,6 +1099,7 @@ exports.Prisma.LearnArticleRevisionScalarFieldEnum = {
   title: 'title',
   body: 'body',
   summary: 'summary',
+  localizations: 'localizations',
   status: 'status',
   attachments: 'attachments',
   scheduledAt: 'scheduledAt',
@@ -1686,7 +1715,9 @@ exports.Prisma.ModelName = {
   LegacyReward: 'LegacyReward',
   SupportTicket: 'SupportTicket',
   SupportTicketReply: 'SupportTicketReply',
+  MessageConversation: 'MessageConversation',
   PersistentMessage: 'PersistentMessage',
+  MessageModerationCase: 'MessageModerationCase',
   Notification: 'Notification',
   Announcement: 'Announcement',
   Activity: 'Activity',

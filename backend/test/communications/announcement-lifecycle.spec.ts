@@ -37,9 +37,34 @@ describe('A17 announcement lifecycle closure', () => {
       idempotencyKey: `announcement:${draft.id}:announcement-publish-1`,
     }));
 
-    expect(await service.announcements()).toEqual([published]);
+    expect(await service.announcements()).toEqual([expect.objectContaining(published)]);
     expect(findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: expect.objectContaining({ published: true }),
+    }));
+  });
+
+  it('orders pinned announcements first and resolves backend-owned localization', async () => {
+    const row = {
+      id: 'announcement-2',
+      title: 'English',
+      body: 'Body',
+      published: true,
+      pinned: true,
+      pinOrder: 2,
+      localizations: JSON.stringify({ my: { title: 'မြန်မာ', body: 'စာကိုယ်' } }),
+    };
+    const findMany = jest.fn(async () => [row]);
+    const service = new CommunicationsService(
+      { announcement: { findMany } } as any,
+      { recordEvent: jest.fn() } as any,
+      {} as any,
+      { isAvailable: () => false } as any,
+    );
+
+    const result = await service.announcements('my-MM');
+    expect(result[0]).toEqual(expect.objectContaining({ title: 'မြန်မာ', body: 'စာကိုယ်', pinned: true }));
+    expect(findMany).toHaveBeenCalledWith(expect.objectContaining({
+      orderBy: [{ pinned: 'desc' }, { pinOrder: 'asc' }, { createdAt: 'desc' }],
     }));
   });
 

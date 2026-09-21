@@ -3,7 +3,7 @@ import { CommunicationsService } from '../../src/communications/communications.s
 describe('CommunicationsService', () => {
   const outbox = { recordEvent: jest.fn().mockResolvedValue(undefined) };
   const redis = { isAvailable: jest.fn().mockReturnValue(false), publish: jest.fn() };
-  const d1Communications = {};
+  const d1Communications = { isEnabled: jest.fn(() => false) };
 
   it('creates an idempotent ticket with its first reply', async () => {
     const ticket = { id: 'ticket-1', userId: 'user-1', replies: [{ id: 'reply-1' }] };
@@ -15,19 +15,88 @@ describe('CommunicationsService', () => {
     expect(tx.supportTicket.upsert).toHaveBeenCalledWith(expect.objectContaining({ where: expect.anything(), include: { replies: true } }));
   });
 
-  it('assigns monotonic message sequence and reuses the same idempotent message', async () => {
-    const message = { id: 'message-1', sequence: 4 };
+  it('assigns monotonic sequence inside the deterministic persistent conversation', async () => {
+    const conversationId = 'conversation:user-1:user-2';
+    const message = { id: 'message-1', conversationId, sequence: 4 };
     const tx: any = {
+      messageConversation: {
+        upsert: jest.fn(async () => ({ id: conversationId, state: 'ACTIVE' })),
+      },
       persistentMessage: {
         findFirst: jest.fn(async () => ({ sequence: 3 })),
         upsert: jest.fn(async () => message),
       },
     };
-    const prisma: any = { $transaction: async (fn: any) => fn(tx) };
+    const prisma: any = {
+      $transaction: async (fn: any) => fn(tx),
+      persistentMessage: { findUnique: jest.fn(async () => message) },
+    };
     const service = new CommunicationsService(prisma, outbox as any, d1Communications as any, redis as any);
-    const result = await service.sendMessage('user-1', 'user-2', 'Hello', 'key-1');
+    const result = await service.sendMessage('user-2', 'user-1', 'Hello', 'key-1');
     expect(result.sequence).toBe(4);
-    expect(tx.persistentMessage.upsert).toHaveBeenCalledWith(expect.objectContaining({ create: expect.objectContaining({ sequence: 4 }) }));
+    expect(tx.messageConversation.upsert).toHaveBeenCalledWith(expect.objectContaining({
+      create: expect.objectContaining({ id: conversationId, participantAId: 'user-1', participantBId: 'user-2' }),
+    }));
+    expect(tx.persistentMessage.upsert).toHaveBeenCalledWith(expect.objectContaining({
+      create: expect.objectContaining({ conversationId, sequence: 4 }),
+    }));
+    expect(outbox.recordEvent).toHaveBeenCalledWith(expect.objectContaining({
+      eventType: 'MESSAGE_SENT',
+      aggregateType: 'PERSISTENT_MESSAGE',
+      payload: expect.objectContaining({ conversationId }),
+    }));
+  });
+
+  it('rejects sends into a restricted conversation before message creation', async () => {
+    const tx: any = {
+      messageConversation: {
+        upsert: jest.fn(async () => ({ id: 'conversation:user-1:user-2', state: 'RESTRICTED' })),
+      },
+      persistentMessage: {
+        findFirst: jest.fn(),
+        upsert: jest.fn(),
+      },
+    };
+    const prisma: any = {
+      $transaction: async (fn: any) => fn(tx),
+      persistentMessage: { findUnique: jest.fn() },
+    };
+    const service = new CommunicationsService(prisma, outbox as any, d1Communications as any, redis as any);
+    await expect(service.sendMessage('user-1', 'user-2', 'Hello', 'key-2')).rejects.toThrow('restricted');
+    expect(tx.persistentMessage.upsert).not.toHaveBeenCalled();
+  });
+
+  it('projects canonical conversations with counterpart, read, and delivery state', async () => {
+    const conversations = [{
+      id: 'conversation:user-1:user-2',
+      participantAId: 'user-1',
+      participantBId: 'user-2',
+      state: 'ACTIVE',
+      updatedAt: new Date('2026-09-21T00:00:00Z'),
+      messages: [{
+        id: 'message-1',
+        senderId: 'user-2',
+        recipientId: 'user-1',
+        deliveryState: 'DELIVERED',
+        sequence: 1,
+        readAt: null,
+      }],
+    }];
+    const findMany = jest.fn(async () => conversations);
+    const prisma: any = { messageConversation: { findMany } };
+    const service = new CommunicationsService(prisma, outbox as any, d1Communications as any, redis as any);
+    const result = await service.listConversations('user-1', 1, 25);
+    expect(result[0]).toEqual(expect.objectContaining({
+      id: conversations[0].id,
+      counterpartId: 'user-2',
+      state: 'ACTIVE',
+      readState: 'UNREAD',
+      deliveryState: 'DELIVERED',
+    }));
+    expect(findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { OR: [{ participantAId: 'user-1' }, { participantBId: 'user-1' }] },
+      include: expect.objectContaining({ messages: expect.any(Object) }),
+    }));
   });
 
   it('sends an idempotent admin notification through the canonical notification store', async () => {

@@ -26,6 +26,7 @@ import {
   Panel,
   PanelHeading,
   PrimaryButton,
+  SecondaryButton,
   StatusBadge,
   TabButton,
 } from '../wallet/components/ProductPrimitives';
@@ -54,48 +55,21 @@ type MessageThread = {
   deliveryState?: unknown;
   updatedAt?: unknown;
   counterpartId?: string;
+  state?: unknown;
   messages?: MessageRecord[];
 };
 
 const filters: Filter[] = ['ALL', 'UNREAD'];
-const threadTitle = (thread: MessageThread) => authoritativeValue(thread.title ?? thread.subject);
-const threadState = (thread: MessageThread) => normalizeMessageThreadState(thread.readState);
 
 function textValue(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim() ? value.trim() : undefined;
 }
 
-function groupMessages(records: MessageRecord[], currentUserId: string | null): MessageThread[] {
-  const grouped = new Map<string, MessageThread>();
-  for (const record of records) {
-    const senderId = textValue(record.senderId);
-    const recipientId = textValue(record.recipientId);
-    const participants = [senderId, recipientId].filter((value): value is string => Boolean(value)).sort();
-    const key = participants.join(':') || textValue(record.id) || `message-${grouped.size}`;
-    const existing = grouped.get(key);
-    const counterpartId = currentUserId
-      ? senderId === currentUserId ? recipientId : recipientId === currentUserId ? senderId : existing?.counterpartId
-      : existing?.counterpartId;
-    const next: MessageThread = existing ?? {
-      id: key,
-      title: counterpartId ? `Conversation ${counterpartId.slice(0, 8)}` : 'Conversation',
-      counterpartId,
-      messages: [],
-    };
-    next.counterpartId = counterpartId ?? next.counterpartId;
-    next.messages = [...(next.messages ?? []), record];
-    if (currentUserId && recipientId === currentUserId && !textValue(record.readAt)) {
-      next.readState = 'UNREAD';
-    } else if (next.readState !== 'UNREAD') {
-      next.readState = 'READ';
-    }
-    const createdAt = textValue(record.createdAt);
-    if (createdAt) next.updatedAt = createdAt;
-    next.deliveryState = record.deliveryState;
-    grouped.set(key, next);
-  }
-  return Array.from(grouped.values()).sort((left, right) => String(right.updatedAt ?? '').localeCompare(String(left.updatedAt ?? '')));
-}
+const threadTitle = (thread: MessageThread) =>
+  textValue(thread.title)
+  ?? textValue(thread.subject)
+  ?? (thread.counterpartId ? `Conversation ${thread.counterpartId.slice(0, 8)}` : 'Conversation');
+const threadState = (thread: MessageThread) => normalizeMessageThreadState(thread.readState);
 
 export default function MessagesPage() {
   const [threads, setThreads] = useState<MessageThread[]>([]);
@@ -109,6 +83,7 @@ export default function MessagesPage() {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const messageEndpoint = process.env.NEXT_PUBLIC_MESSAGES_ENDPOINT?.trim() || '/communications/messages';
+  const conversationEndpoint = process.env.NEXT_PUBLIC_CONVERSATIONS_ENDPOINT?.trim() || '/communications/conversations';
 
   useEffect(() => {
     const sync = () => { setUserId(sessionPrincipalId()); setSessionChecked(true); };
@@ -119,22 +94,21 @@ export default function MessagesPage() {
 
   const load = useCallback(async () => {
     if (!sessionChecked) return;
-    if (!messageEndpoint || !userId) {
+    if (!conversationEndpoint || !userId) {
       setThreads([]);
       setState('UNAVAILABLE');
       return;
     }
     setState('LOADING');
     try {
-      const response = await api.get(messageEndpoint);
-      const records = Array.isArray(response.data) ? response.data as MessageRecord[] : [];
-      setThreads(groupMessages(records, userId));
+      const response = await api.get(conversationEndpoint);
+      setThreads(Array.isArray(response.data) ? response.data as MessageThread[] : []);
       setState('LIVE');
     } catch {
       setThreads([]);
       setState('ERROR');
     }
-  }, [messageEndpoint, sessionChecked, userId]);
+  }, [conversationEndpoint, sessionChecked, userId]);
 
   useEffect(() => {
     void load();
@@ -224,6 +198,23 @@ export default function MessagesPage() {
     }
   };
 
+  const reportConversation = async () => {
+    const conversationId = textValue(selected?.id);
+    if (!conversationId) {
+      setFeedback('Report is unavailable until a canonical conversation is selected.');
+      return;
+    }
+    const reason = window.prompt('Why are you reporting this conversation?')?.trim();
+    if (!reason) return;
+    setFeedback(null);
+    try {
+      await api.post(`${conversationEndpoint}/${encodeURIComponent(conversationId)}/report`, { reason });
+      setFeedback('Conversation reported for review.');
+    } catch {
+      setFeedback('The message service rejected this report.');
+    }
+  };
+
   const filtered = useMemo(() => threads.filter((thread) => {
     const searchMatch = `${threadTitle(thread)} ${authoritativeValue(thread.subject)}`.toLowerCase().includes(query.toLowerCase());
     const stateValue = threadState(thread);
@@ -281,7 +272,7 @@ export default function MessagesPage() {
                 <div className="rounded-xl border border-[#2B2037] bg-[#171022] p-4">
                   <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
                      <div className="min-w-0"><h2 className="break-words font-semibold">{threadTitle(selected)}</h2><p className="mt-1 text-xs text-[#8C8299]">Conversation messages and delivery status.</p></div>
-                    <div className="flex flex-wrap gap-2"><StatusBadge state={normalizeMessageThreadState(selected.readState)} /><StatusBadge state={normalizeMessageDeliveryState(selected.deliveryState)} /></div>
+                    <div className="flex flex-wrap gap-2"><StatusBadge state={normalizeMessageThreadState(selected.readState)} /><StatusBadge state={normalizeMessageDeliveryState(selected.deliveryState)} /><StatusBadge state={String(selected.state ?? 'ACTIVE')} /></div>
                   </div>
                 </div>
 
@@ -304,7 +295,10 @@ export default function MessagesPage() {
                     />
                     <PrimaryButton onClick={() => void sendReply()} disabled={!selected.counterpartId || !userId || sending || !draft.trim()}>Send reply</PrimaryButton>
                   </div>
-                   <p className="mt-2 text-xs leading-5 text-[#8C8299]">Replies are available when messaging is connected.</p>
+                   <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                     <p className="text-xs leading-5 text-[#8C8299]">Replies are available when messaging is connected.</p>
+                     <SecondaryButton onClick={() => void reportConversation()}>Report conversation</SecondaryButton>
+                   </div>
                 </div>
               </div>
             )}

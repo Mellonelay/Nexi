@@ -25,6 +25,9 @@ function Page() {
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
   const [targeting, setTargeting] = useState("");
+  const [localizations, setLocalizations] = useState("");
+  const [pinned, setPinned] = useState(false);
+  const [pinOrder, setPinOrder] = useState("0");
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -43,6 +46,9 @@ function Page() {
     setStartsAt("");
     setEndsAt("");
     setTargeting("");
+    setLocalizations("");
+    setPinned(false);
+    setPinOrder("0");
   };
   const save = async () => {
     if (!canPublish || !title.trim() || !body.trim() || !reason.trim()) {
@@ -53,7 +59,11 @@ function Page() {
     setFeedback(null);
     try {
       const targetingValue = targeting.trim() ? JSON.parse(targeting) : undefined;
+      const localizationValue = localizations.trim() ? JSON.parse(localizations) : undefined;
       const lifecycle = {
+        ...(localizationValue !== undefined ? { localizations: localizationValue } : {}),
+        pinned,
+        pinOrder: Number(pinOrder || 0),
         ...(startsAt ? { startsAt: new Date(startsAt).toISOString() } : {}),
         ...(endsAt ? { endsAt: new Date(endsAt).toISOString() } : {}),
         ...(targetingValue !== undefined ? { targeting: targetingValue } : {}),
@@ -130,6 +140,11 @@ function Page() {
       header: "Published",
       cell: (a) => (a.publishedAt ? new Date(a.publishedAt).toLocaleString() : "—"),
     },
+    {
+      key: "pinned",
+      header: "Pinned",
+      cell: (a) => a.pinned ? `Yes · ${a.pinOrder}` : "No",
+    },
   ];
   return (
     <RouteGuard permission="announcements.view">
@@ -183,6 +198,18 @@ function Page() {
             placeholder='Optional targeting JSON, for example {"roles":["VIP"]}'
             disabled={!canPublish || busy}
           />
+          <Textarea
+            className="md:col-span-2"
+            value={localizations}
+            onChange={(e) => setLocalizations(e.target.value)}
+            placeholder='Localized content JSON, for example {"my":{"title":"…","body":"…"}}'
+            disabled={!canPublish || busy}
+          />
+          <label className="flex min-h-10 items-center gap-2 text-sm">
+            <input type="checkbox" checked={pinned} onChange={(e) => setPinned(e.target.checked)} disabled={!canPublish || busy} />
+            Pin announcement
+          </label>
+          <Input type="number" min="0" value={pinOrder} onChange={(e) => setPinOrder(e.target.value)} aria-label="Announcement pin order" disabled={!canPublish || busy} />
           <div className="flex gap-2 md:col-span-2">
             <Button onClick={() => void save()} disabled={!canPublish || busy}>
               {editId ? "Save update" : "Create draft"}
@@ -218,6 +245,9 @@ function Page() {
                   setStartsAt(a.scheduledAt ? a.scheduledAt.slice(0, 16) : "");
                   setEndsAt(a.endsAt ? a.endsAt.slice(0, 16) : "");
                   setTargeting(a.targeting === undefined || a.targeting === null ? "" : JSON.stringify(a.targeting));
+                  setLocalizations(a.localizations ? JSON.stringify(a.localizations, null, 2) : "");
+                  setPinned(a.pinned);
+                  setPinOrder(String(a.pinOrder));
                 }}
               >
                 Edit

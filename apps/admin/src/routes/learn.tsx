@@ -25,6 +25,7 @@ function Page() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [summary, setSummary] = useState("");
+  const [localizations, setLocalizations] = useState("");
   const [status, setStatus] = useState("DRAFT");
   const [categoryId, setCategoryId] = useState("");
   const [scheduledAt, setScheduledAt] = useState("");
@@ -50,6 +51,7 @@ function Page() {
     setTitle("");
     setBody("");
     setSummary("");
+    setLocalizations("");
     setStatus("DRAFT");
     setCategoryId("");
     setScheduledAt("");
@@ -60,10 +62,12 @@ function Page() {
   const articlePayload = () => {
     const parsedMedia = media.trim() ? JSON.parse(media) : [];
     if (!Array.isArray(parsedMedia)) throw new Error("Media must be a JSON array.");
+    const localizationValue = localizations.trim() ? JSON.parse(localizations) : undefined;
     return {
       title: title.trim(),
       body: body.trim(),
       ...(summary.trim() ? { summary: summary.trim() } : {}),
+      ...(localizationValue !== undefined ? { localizations: localizationValue } : {}),
       status,
       ...(categoryId ? { categoryId } : {}),
       ...(scheduledAt ? { scheduledAt: new Date(scheduledAt).toISOString() } : {}),
@@ -198,6 +202,7 @@ function Page() {
           <Input className="md:col-span-2" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" disabled={!canPublish || busy} />
           <Textarea className="md:col-span-2" value={summary} onChange={(e) => setSummary(e.target.value)} placeholder="Summary" disabled={!canPublish || busy} />
           <Textarea className="md:col-span-2" value={body} onChange={(e) => setBody(e.target.value)} placeholder="Article body" disabled={!canPublish || busy} />
+          <Textarea className="md:col-span-2" value={localizations} onChange={(e) => setLocalizations(e.target.value)} placeholder='Localized content JSON, e.g. {"my":{"title":"…","body":"…","summary":"…"}}' disabled={!canPublish || busy} />
           <select className="min-h-10 rounded-md border border-border bg-background px-3 text-sm" value={status} onChange={(e) => setStatus(e.target.value)} disabled={!canPublish || busy} aria-label="Learn status">
             {["DRAFT", "SCHEDULED", "PUBLISHED", "ARCHIVED"].map((value) => <option key={value} value={value}>{value}</option>)}
           </select>
@@ -241,6 +246,7 @@ function Page() {
                   setTitle(a.title);
                   setBody(a.body);
                   setSummary(a.summary ?? "");
+                  setLocalizations(a.localizations ? JSON.stringify(a.localizations, null, 2) : "");
                   setStatus(a.status || "DRAFT");
                   setCategoryId(a.categoryId ?? "");
                   setScheduledAt(a.scheduledAt ? a.scheduledAt.slice(0, 16) : "");

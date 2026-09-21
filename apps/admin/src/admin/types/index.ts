@@ -686,9 +686,12 @@ export interface Announcement {
   body?: string;
   status: "draft" | "scheduled" | "published" | "archived";
   targeting?: unknown;
+  localizations?: Record<string, { title?: string; body?: string }>;
   scheduledAt?: string;
   endsAt?: string;
   publishedAt?: string;
+  pinned: boolean;
+  pinOrder: number;
 }
 
 export interface AdminMessage {
@@ -696,8 +699,24 @@ export interface AdminMessage {
   senderId: string;
   recipientId: string;
   body: string;
+  conversationId?: string;
   deliveryState: string;
   createdAt: string;
+}
+
+export interface MessageModerationCase {
+  id: string;
+  conversationId: string;
+  messageId?: string;
+  reporterId: string;
+  reportedUserId?: string;
+  reason: string;
+  status: string;
+  resolution?: string;
+  reviewedById?: string;
+  conversation?: { state?: string };
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AdminNotification {
@@ -716,6 +735,7 @@ export interface AdminLearnArticle {
   title: string;
   body: string;
   summary?: string;
+  localizations?: Record<string, { title?: string; body?: string; summary?: string }>;
   status: string;
   categoryId?: string;
   category?: { id?: string; name?: string; slug?: string } | null;

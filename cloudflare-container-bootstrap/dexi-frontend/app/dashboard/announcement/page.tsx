@@ -6,11 +6,13 @@ import api from '../../lib/api';
 import { authoritativeValue } from '../../lib/product-states';
 import { DataStatePanel, inputClass, PageHeader, PageShell, Panel, PanelHeading, SecondaryButton, TabButton } from '../wallet/components/ProductPrimitives';
 import SafeBackButton from '../../components/SafeBackButton';
+import { useLocale } from '../../state/LocaleProvider';
 
 type RecordValue = Record<string, unknown>;
 const categories = ['All'];
 
 export default function AnnouncementPage() {
+  const { locale } = useLocale();
   const [items, setItems] = useState<RecordValue[]>([]);
   const [state, setState] = useState<'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR'>('LOADING');
   const [category, setCategory] = useState('All');
@@ -26,14 +28,14 @@ export default function AnnouncementPage() {
       return;
     }
     try {
-      const response = await api.get(announcementEndpoint);
+      const response = await api.get(announcementEndpoint, { params: { locale } });
       setItems(Array.isArray(response.data) ? response.data : []);
       setState('LIVE');
     } catch {
       setItems([]);
       setState('ERROR');
     }
-  }, [announcementEndpoint]);
+  }, [announcementEndpoint, locale]);
   useEffect(() => { void loadAnnouncements(); }, [loadAnnouncements]);
   const filtered = useMemo(() => items.filter((item) => (category === 'All' || authoritativeValue(item.category) === category) && `${authoritativeValue(item.title)} ${authoritativeValue(item.body)}`.toLowerCase().includes(query.toLowerCase())), [items, category, query]);
   const announcementListClass = selected ? 'hidden lg:block' : 'block';

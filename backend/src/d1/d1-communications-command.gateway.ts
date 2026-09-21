@@ -93,6 +93,64 @@ export class D1CommunicationsCommandGateway {
     ]);
   }
 
+  async sendMessage(input: {
+    id: string;
+    conversationId: string;
+    participantAId: string;
+    participantBId: string;
+    senderId: string;
+    recipientId: string;
+    body: string;
+    attachments?: unknown;
+    idempotencyKey: string;
+  }): Promise<boolean> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const result = await this.bridge.batch([
+      {
+        sql: `INSERT OR IGNORE INTO "MessageConversation" ("id","participantAId","participantBId","state","createdAt","updatedAt") VALUES (?,?,?,'ACTIVE',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`,
+        params: [input.conversationId, input.participantAId, input.participantBId],
+      },
+      {
+        sql: `INSERT OR IGNORE INTO "PersistentMessage" ("id","conversationId","senderId","recipientId","body","deliveryState","sequence","readAt","attachments","createdAt")
+          SELECT ?,?,?,?,?, 'SENT',
+            COALESCE((SELECT MAX("sequence") FROM "PersistentMessage" WHERE "conversationId"=?),0)+1,
+            NULL,?,CURRENT_TIMESTAMP
+          WHERE EXISTS (SELECT 1 FROM "MessageConversation" WHERE "id"=? AND "state"='ACTIVE')`,
+        params: [
+          input.id,
+          input.conversationId,
+          input.senderId,
+          input.recipientId,
+          input.body,
+          input.conversationId,
+          input.attachments === undefined ? null : JSON.stringify(input.attachments),
+          input.conversationId,
+        ],
+      },
+      {
+        sql: `UPDATE "MessageConversation" SET "updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND EXISTS (SELECT 1 FROM "PersistentMessage" WHERE "id"=?)`,
+        params: [input.conversationId, input.id],
+      },
+      this.eventOutboxStatement(
+        {
+          idempotencyKey: input.idempotencyKey,
+          aggregateType: "PERSISTENT_MESSAGE",
+          aggregateId: input.id,
+          eventType: "MESSAGE_SENT",
+          payload: {
+            conversationId: input.conversationId,
+            senderId: input.senderId,
+            recipientId: input.recipientId,
+          },
+        },
+        `EXISTS (SELECT 1 FROM "PersistentMessage" WHERE "id"=?)`,
+        [input.id],
+      ),
+    ]);
+    return Number(result.results[1]?.meta?.changes ?? 0) === 1
+      || Number(result.results[3]?.meta?.changes ?? 0) === 1;
+  }
+
   private eventOutboxStatement(
     event: NotificationEvent,
     condition?: string,

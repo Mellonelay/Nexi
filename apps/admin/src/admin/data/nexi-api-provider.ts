@@ -39,6 +39,7 @@ import type {
   MiningSubscriptionAdmin,
   LoanApplicationAdmin,
   AdminMessage,
+  MessageModerationCase,
   AdminNotification,
   AdminLearnArticle,
   AdminLearnCategory,
@@ -181,6 +182,18 @@ function record(value: unknown): JsonRecord {
 }
 function stringValue(value: unknown, fallback = ""): string {
   return typeof value === "string" ? value : fallback;
+}
+function jsonRecordValue(value: unknown): Record<string, any> | undefined {
+  if (value && typeof value === "object") return value as Record<string, any>;
+  if (typeof value !== "string" || !value.trim()) return undefined;
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === "object"
+      ? parsed as Record<string, any>
+      : undefined;
+  } catch {
+    return undefined;
+  }
 }
 function role(value: unknown): RoleId | "unassigned" {
   const candidate = stringValue(value);
@@ -1724,23 +1737,26 @@ export class NexiAdminApiProvider implements AdminDataProvider {
           body: stringValue(row.body),
           status,
           targeting: row.targeting,
+          localizations: jsonRecordValue(row.localizations),
           scheduledAt: typeof row.startsAt === "string" ? row.startsAt : undefined,
           endsAt: typeof row.endsAt === "string" ? row.endsAt : undefined,
           publishedAt:
             typeof row.updatedAt === "string" && row.published === true ? row.updatedAt : undefined,
+          pinned: row.pinned === true,
+          pinOrder: Number(row.pinOrder ?? 0),
         } as Announcement;
       }),
     );
   }
   createAnnouncement(
-    payload: { title: string; body: string; targeting?: unknown; published?: boolean; startsAt?: string; endsAt?: string },
+    payload: { title: string; body: string; targeting?: unknown; localizations?: Record<string, unknown>; published?: boolean; pinned?: boolean; pinOrder?: number; startsAt?: string; endsAt?: string },
     ctx: ConsequentialContext,
   ) {
     return this.requestMutation("/communications/admin/announcements", ctx, payload);
   }
   updateAnnouncement(
     id: string,
-    payload: { title?: string; body?: string; targeting?: unknown; published?: boolean; startsAt?: string; endsAt?: string },
+    payload: { title?: string; body?: string; targeting?: unknown; localizations?: Record<string, unknown>; published?: boolean; pinned?: boolean; pinOrder?: number; startsAt?: string; endsAt?: string },
     ctx: ConsequentialContext,
   ) {
     return this.requestMutation(
@@ -1768,10 +1784,48 @@ export class NexiAdminApiProvider implements AdminDataProvider {
           senderId: stringValue(r.senderId),
           recipientId: stringValue(r.recipientId),
           body: stringValue(r.body),
+          conversationId: typeof r.conversationId === "string" ? r.conversationId : undefined,
           deliveryState: stringValue(r.deliveryState),
           createdAt: stringValue(r.createdAt),
         };
       }),
+    );
+  }
+  listMessageModeration(): Promise<MessageModerationCase[]> {
+    return this.request<unknown[]>("/communications/admin/messages/moderation").then((rows) =>
+      rows.map((value) => {
+        const row = record(value);
+        const conversation = record(row.conversation);
+        return {
+          id: stringValue(row.id),
+          conversationId: stringValue(row.conversationId),
+          messageId: typeof row.messageId === "string" ? row.messageId : undefined,
+          reporterId: stringValue(row.reporterId),
+          reportedUserId: typeof row.reportedUserId === "string" ? row.reportedUserId : undefined,
+          reason: stringValue(row.reason),
+          status: stringValue(row.status),
+          resolution: typeof row.resolution === "string" ? row.resolution : undefined,
+          reviewedById: typeof row.reviewedById === "string" ? row.reviewedById : undefined,
+          conversation: Object.keys(conversation).length
+            ? { state: stringValue(conversation.state) }
+            : undefined,
+          createdAt: stringValue(row.createdAt),
+          updatedAt: stringValue(row.updatedAt),
+        };
+      }),
+    );
+  }
+  resolveMessageModeration(
+    id: string,
+    payload: { status: "OPEN" | "RESOLVED"; resolution?: string; conversationState?: "ACTIVE" | "RESTRICTED" },
+    ctx: ConsequentialContext,
+  ) {
+    return this.requestMutation(
+      `/communications/admin/messages/moderation/${encodeURIComponent(id)}`,
+      ctx,
+      payload,
+      [id, payload.status, payload.conversationState ?? ""],
+      "PATCH",
     );
   }
   listNotifications(): Promise<AdminNotification[]> {
@@ -1809,6 +1863,7 @@ export class NexiAdminApiProvider implements AdminDataProvider {
           title: stringValue(r.title),
           body: stringValue(r.body),
           summary: typeof r.summary === "string" ? r.summary : undefined,
+          localizations: jsonRecordValue(r.localizations),
           status: stringValue(r.status),
           categoryId: typeof r.categoryId === "string" ? r.categoryId : undefined,
           category: r.category && typeof r.category === "object" ? record(r.category) : null,
@@ -1844,14 +1899,14 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     return this.requestMutation("/communications/admin/learn/categories", ctx, payload);
   }
   createLearnArticle(
-    payload: { slug: string; title: string; body: string; summary?: string; status?: string; categoryId?: string; scheduledAt?: string; tags?: string[]; media?: Array<{ url: string; altText?: string; provider?: string; metadata?: unknown }> },
+    payload: { slug: string; title: string; body: string; summary?: string; localizations?: Record<string, unknown>; status?: string; categoryId?: string; scheduledAt?: string; tags?: string[]; media?: Array<{ url: string; altText?: string; provider?: string; metadata?: unknown }> },
     ctx: ConsequentialContext,
   ) {
     return this.requestMutation("/communications/admin/learn", ctx, payload);
   }
   updateLearnArticle(
     id: string,
-    payload: { title?: string; body?: string; summary?: string; status?: string; categoryId?: string; scheduledAt?: string; tags?: string[]; media?: Array<{ url: string; altText?: string; provider?: string; metadata?: unknown }> },
+    payload: { title?: string; body?: string; summary?: string; localizations?: Record<string, unknown>; status?: string; categoryId?: string; scheduledAt?: string; tags?: string[]; media?: Array<{ url: string; altText?: string; provider?: string; metadata?: unknown }> },
     ctx: ConsequentialContext,
   ) {
     return this.requestMutation(

@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client-js"
-  output = "../src/prisma/d1-client"
+  output   = "../src/prisma/d1-client"
 }
 
 datasource db {
@@ -55,15 +55,15 @@ model User {
 }
 
 model UserMfa {
-  id             String   @id @default(uuid())
-  userId         String   @unique
-  enabled        Boolean  @default(false)
-  secret         String?
-  backupCodes    String?
-  lastUsedAt     DateTime?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String    @id @default(uuid())
+  userId      String    @unique
+  enabled     Boolean   @default(false)
+  secret      String?
+  backupCodes String?
+  lastUsedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -128,9 +128,9 @@ model KYC {
 model Wallet {
   id            String   @id @default(uuid())
   userId        String   @unique
-  balance       String    @default("0")
-  frozenBalance String    @default("0")
-  balances      String     @default("{}")
+  balance       String   @default("0")
+  frozenBalance String   @default("0")
+  balances      String   @default("{}")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @default(now())
   ledgers       Ledger[]
@@ -161,8 +161,8 @@ model SpotOrder {
   type      OrderType
   price     String?
   amount    String
-  filled    String       @default("0")
-  remaining String       @default("0")
+  filled    String      @default("0")
+  remaining String      @default("0")
   status    OrderStatus @default(OPEN)
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
@@ -178,7 +178,7 @@ model SpotTrade {
   side        OrderSide
   price       String
   amount      String
-  fee         String     @default("0")
+  fee         String    @default("0")
   feeCurrency String    @default("USDT")
   createdAt   DateTime  @default(now())
   order       SpotOrder @relation(fields: [orderId], references: [id])
@@ -227,8 +227,8 @@ model ContractPosition {
   tpPrice          String? // Take Profit
   slPrice          String? // Stop Loss
   status           String // OPEN, CLOSED, LIQUIDATED
-  pnl              String    @default("0")
-  fee              String    @default("0")
+  pnl              String   @default("0")
+  fee              String   @default("0")
   marginMode       String   @default("ISOLATED") // CROSS or ISOLATED
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -243,9 +243,9 @@ model ContractPair {
   symbol      String  @unique
   minLeverage Int     @default(1)
   maxLeverage Int     @default(100)
-  makerFee    String   @default("0.0004")
-  takerFee    String   @default("0.0006")
-  minAmount   String   @default("10")
+  makerFee    String  @default("0.0004")
+  takerFee    String  @default("0.0006")
+  minAmount   String  @default("10")
   isActive    Boolean @default(true)
 }
 
@@ -265,14 +265,14 @@ model LoanApplication {
   id                    String                @id @default(uuid())
   userId                String
   amount                String
-  amountDecimal         String               @default("0")
+  amountDecimal         String                @default("0")
   currency              String                @default("USDT")
   term                  Int
   durationDays          Int                   @default(30)
-  interestRate          String                 @default("0.1")
-  interestRateDecimal   String               @default("0.1")
-  totalRepayment        String                 @default("0")
-  totalRepaymentDecimal String               @default("0")
+  interestRate          String                @default("0.1")
+  interestRateDecimal   String                @default("0.1")
+  totalRepayment        String                @default("0")
+  totalRepaymentDecimal String                @default("0")
   collateral            String?
   collateralImg         String?
   status                LoanStatus            @default(PENDING)
@@ -293,11 +293,11 @@ model MiningPlan {
   currency          String               @default("USDT")
   lockupPeriod      Int
   dailyYield        String
-  dailyYieldDecimal String              @default("0")
+  dailyYieldDecimal String               @default("0")
   minDeposit        String
-  minDepositDecimal String              @default("0")
+  minDepositDecimal String               @default("0")
   maxDeposit        String
-  maxDepositDecimal String              @default("0")
+  maxDepositDecimal String               @default("0")
   isActive          Boolean              @default(true)
   createdAt         DateTime             @default(now())
   updatedAt         DateTime             @updatedAt
@@ -309,12 +309,12 @@ model MiningSubscription {
   userId              String
   planId              String
   amount              String
-  amountDecimal       String               @default("0")
+  amountDecimal       String                @default("0")
   status              MiningStatus          @default(ACTIVE)
   startDate           DateTime              @default(now())
   endDate             DateTime?
-  totalRewards        String                 @default("0")
-  totalRewardsDecimal String               @default("0")
+  totalRewards        String                @default("0")
+  totalRewardsDecimal String                @default("0")
   lastRewardPaid      DateTime?
   planSnapshot        String?
   createdAt           DateTime              @default(now())
@@ -353,12 +353,12 @@ model Currency {
   symbol            String           @unique
   name              String
   logo              String?
-  rate              String            @default("1.0")
-  minDeposit        String            @default("10.0")
-  maxDeposit        String            @default("10000.0")
-  minWithdrawal     String            @default("10.0")
-  maxWithdrawal     String            @default("10000.0")
-  withdrawalFee     String            @default("1.0")
+  rate              String           @default("1.0")
+  minDeposit        String           @default("10.0")
+  maxDeposit        String           @default("10000.0")
+  minWithdrawal     String           @default("10.0")
+  maxWithdrawal     String           @default("10000.0")
+  withdrawalFee     String           @default("1.0")
   depositEnabled    Boolean          @default(true)
   withdrawEnabled   Boolean          @default(true)
   confirmationCount Int              @default(3)
@@ -604,7 +604,7 @@ model BinaryPair {
   symbol        String  @unique // e.g., "BTC/USDT"
   baseAsset     String // e.g., "BTC"
   quoteAsset    String // e.g., "USDT"
-  rate          String   @default("1.85") // Payout Rate e.g., 1.85 for 85%
+  rate          String  @default("1.85") // Payout Rate e.g., 1.85 for 85%
   category      String  @default("crypto") // crypto, forex, metal, stock
   logo          String? // Added logo field
   isActive      Boolean @default(true)
@@ -951,17 +951,17 @@ model MarketProviderConfig {
 }
 
 model MarketProviderSymbol {
-  id             String               @id @default(uuid())
-  providerId     String
-  pairId         String
-  providerSymbol String
-  enabled        Boolean              @default(true)
-  priority       Int                  @default(100)
+  id               String               @id @default(uuid())
+  providerId       String
+  pairId           String
+  providerSymbol   String
+  enabled          Boolean              @default(true)
+  priority         Int                  @default(100)
   capabilityPolicy String?
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
-  provider       MarketProviderConfig @relation(fields: [providerId], references: [id])
-  pair           MarketPair           @relation(fields: [pairId], references: [id])
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  provider         MarketProviderConfig @relation(fields: [providerId], references: [id])
+  pair             MarketPair           @relation(fields: [pairId], references: [id])
 
   @@unique([providerId, pairId])
   @@unique([providerId, providerSymbol])
@@ -1114,8 +1114,8 @@ model LedgerAccount {
   asset       String
   scope       LedgerAccountScope  @default(MAIN)
   status      LedgerAccountStatus @default(ACTIVE)
-  available   String             @default("0")
-  locked      String             @default("0")
+  available   String              @default("0")
+  locked      String              @default("0")
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
   user        User                @relation(fields: [userId], references: [id])
@@ -1151,14 +1151,14 @@ model SpotMarginPosition {
   direction          SpotMarginPositionDirection
   leverage           Int
   collateral         String
-  quantity           String                     @default("0")
+  quantity           String                      @default("0")
   entryPrice         String
   markPrice          String?
   debtAsset          String                      @default("")
-  debtPrincipal      String                     @default("0")
-  interestAccrued    String                     @default("0")
-  realizedPnl        String                     @default("0")
-  unrealizedPnl      String                     @default("0")
+  debtPrincipal      String                      @default("0")
+  interestAccrued    String                      @default("0")
+  realizedPnl        String                      @default("0")
+  unrealizedPnl      String                      @default("0")
   status             SpotMarginPositionStatus    @default(OPEN)
   openIdempotencyKey String                      @unique
   entryOrderId       String?                     @unique
@@ -1281,7 +1281,7 @@ model LegacyAffiliate {
   userId        String   @unique
   referralCode  String   @unique
   referredBy    String?
-  totalEarnings String    @default("0")
+  totalEarnings String   @default("0")
   createdAt     DateTime @default(now())
   updatedAt     DateTime
   user          User     @relation(fields: [userId], references: [id])
@@ -1304,7 +1304,7 @@ model LegacyLoanRepayment {
   id              String          @id
   loanId          String
   amount          String
-  amountDecimal   String         @default("0")
+  amountDecimal   String          @default("0")
   currency        String
   paidAt          DateTime        @default(now())
   ledgerPostingId String?         @unique
@@ -1356,19 +1356,55 @@ model SupportTicketReply {
   @@index([ticketId, createdAt])
 }
 
+model MessageConversation {
+  id              String                  @id
+  participantAId  String
+  participantBId  String
+  state           String                  @default("ACTIVE")
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  messages        PersistentMessage[]
+  moderationCases MessageModerationCase[]
+
+  @@unique([participantAId, participantBId])
+  @@index([participantAId, updatedAt])
+  @@index([participantBId, updatedAt])
+}
+
 model PersistentMessage {
-  id            String    @id @default(uuid())
-  senderId      String
-  recipientId   String
-  body          String
-  deliveryState String    @default("SENT")
-  sequence      Int       @default(0)
-  readAt        DateTime?
-  attachments   String?
-  createdAt     DateTime  @default(now())
+  id             String               @id @default(uuid())
+  conversationId String?
+  senderId       String
+  recipientId    String
+  body           String
+  deliveryState  String               @default("SENT")
+  sequence       Int                  @default(0)
+  readAt         DateTime?
+  attachments    String?
+  createdAt      DateTime             @default(now())
+  conversation   MessageConversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([recipientId, createdAt])
   @@index([senderId, recipientId, sequence])
+  @@index([conversationId, sequence])
+}
+
+model MessageModerationCase {
+  id             String              @id @default(uuid())
+  conversationId String
+  messageId      String?
+  reporterId     String
+  reportedUserId String?
+  reason         String
+  status         String              @default("OPEN")
+  resolution     String?
+  reviewedById   String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  conversation   MessageConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, status, createdAt])
+  @@index([status, createdAt])
 }
 
 model Notification {
@@ -1385,17 +1421,21 @@ model Notification {
 }
 
 model Announcement {
-  id        String    @id @default(uuid())
-  title     String
-  body      String
-  targeting String?
-  startsAt  DateTime?
-  endsAt    DateTime?
-  published Boolean   @default(false)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id            String    @id @default(uuid())
+  title         String
+  body          String
+  targeting     String?
+  localizations String?
+  startsAt      DateTime?
+  endsAt        DateTime?
+  published     Boolean   @default(false)
+  pinned        Boolean   @default(false)
+  pinOrder      Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@index([published, startsAt, endsAt])
+  @@index([published, pinned, pinOrder])
 }
 
 model Activity {
@@ -1455,7 +1495,7 @@ model EventOutbox {
 }
 
 model EventInbox {
-  messageId      String   @id
+  messageId      String    @id
   queue          String
   attempts       Int
   eventType      String
@@ -1463,34 +1503,35 @@ model EventInbox {
   idempotencyKey String
   correlationId  String
   payload        String
-  state          String   @default("RECEIVED")
-  receivedAt     DateTime @default(now())
+  state          String    @default("RECEIVED")
+  receivedAt     DateTime  @default(now())
   processedAt    DateTime?
   lastErrorCode  String?
-  updatedAt      DateTime @default(now())
+  updatedAt      DateTime  @default(now())
 
   @@unique([queue, idempotencyKey])
   @@index([state, receivedAt])
 }
 
 model LearnArticle {
-  id          String                 @id @default(uuid())
-  slug        String                 @unique
-  title       String
-  body        String
-  summary     String?
-  status      String                 @default("DRAFT")
-  attachments String?
-  categoryId  String?
-  scheduledAt DateTime?
-  publishedAt DateTime?
-  archivedAt  DateTime?
-  createdAt   DateTime               @default(now())
-  updatedAt   DateTime               @updatedAt
-  category    LearnCategory?         @relation(fields: [categoryId], references: [id])
-  revisions   LearnArticleRevision[]
-  tags        LearnArticleTag[]
-  media       LearnMediaAsset[]      @relation("ArticleMedia")
+  id            String                 @id @default(uuid())
+  slug          String                 @unique
+  title         String
+  body          String
+  summary       String?
+  localizations String?
+  status        String                 @default("DRAFT")
+  attachments   String?
+  categoryId    String?
+  scheduledAt   DateTime?
+  publishedAt   DateTime?
+  archivedAt    DateTime?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+  category      LearnCategory?         @relation(fields: [categoryId], references: [id])
+  revisions     LearnArticleRevision[]
+  tags          LearnArticleTag[]
+  media         LearnMediaAsset[]      @relation("ArticleMedia")
 
   @@index([status, publishedAt])
   @@index([categoryId, status])
@@ -1510,21 +1551,22 @@ model LearnCategory {
 }
 
 model LearnArticleRevision {
-  id          String            @id @default(uuid())
-  articleId   String
-  revision    Int
-  title       String
-  body        String
-  summary     String?
-  status      String            @default("DRAFT")
-  attachments String?
-  scheduledAt DateTime?
-  publishedAt DateTime?
-  archivedAt  DateTime?
-  createdBy   String?
-  createdAt   DateTime          @default(now())
-  article     LearnArticle      @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  media       LearnMediaAsset[] @relation("RevisionMedia")
+  id            String            @id @default(uuid())
+  articleId     String
+  revision      Int
+  title         String
+  body          String
+  summary       String?
+  localizations String?
+  status        String            @default("DRAFT")
+  attachments   String?
+  scheduledAt   DateTime?
+  publishedAt   DateTime?
+  archivedAt    DateTime?
+  createdBy     String?
+  createdAt     DateTime          @default(now())
+  article       LearnArticle      @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  media         LearnMediaAsset[] @relation("RevisionMedia")
 
   @@unique([articleId, revision])
   @@index([articleId, createdAt])
@@ -1603,16 +1645,16 @@ model VipLevel {
 }
 
 model UserVipState {
-  id           String   @id
-  userId       String   @unique
-  vipLevelId   String
-  progress     String   @default("0")
-  evaluatedAt  DateTime @default(now())
-  qualifiedAt  DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @default(now())
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  vipLevel     VipLevel @relation(fields: [vipLevelId], references: [id], onDelete: Restrict)
+  id          String    @id
+  userId      String    @unique
+  vipLevelId  String
+  progress    String    @default("0")
+  evaluatedAt DateTime  @default(now())
+  qualifiedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vipLevel    VipLevel  @relation(fields: [vipLevelId], references: [id], onDelete: Restrict)
 
   @@index([vipLevelId, progress])
 }
@@ -1644,7 +1686,7 @@ model Gate2SpotOrder {
   type              Gate2SpotOrderType
   status            Gate2SpotOrderStatus @default(OPEN)
   amount            String
-  filled            String              @default("0")
+  filled            String               @default("0")
   remaining         String
   price             String?
   stopPrice         String?
@@ -1657,7 +1699,7 @@ model Gate2SpotOrder {
   reserveAsset      String
   reserveScope      LedgerAccountScope   @default(MAIN)
   reservedAmount    String
-  feeRate           String              @default("0")
+  feeRate           String               @default("0")
   idempotencyKey    String
   correlationId     String
   createdAt         DateTime             @default(now())
@@ -1680,8 +1722,8 @@ model Gate2SpotTrade {
   quoteAsset     String
   price          String
   amount         String
-  buyerFee       String        @default("0")
-  sellerFee      String        @default("0")
+  buyerFee       String         @default("0")
+  sellerFee      String         @default("0")
   idempotencyKey String         @unique
   createdAt      DateTime       @default(now())
   buyerOrder     Gate2SpotOrder @relation("Gate2TradeBuyerOrder", fields: [buyerOrderId], references: [id])
@@ -1697,7 +1739,7 @@ model Gate2BinaryConfiguration {
   pair                   String
   durationSeconds        Int
   payoutRate             String
-  lossRate               String  @default("0")
+  lossRate               String   @default("0")
   minStake               String
   maxStake               String
   settlementDelaySeconds Int      @default(0)
@@ -1727,8 +1769,8 @@ model Gate2BinaryPosition {
   stake                String
   entryPrice           String
   expiryPrice          String?
-  payoutAmount         String          @default("0")
-  realizedProfit       String          @default("0")
+  payoutAmount         String           @default("0")
+  realizedProfit       String           @default("0")
   durationSeconds      Int
   expiresAt            DateTime
   state                Gate2BinaryState @default(ACTIVE)

@@ -43,5 +43,18 @@ test('messages uses durable realtime recovery without synthetic archive state', 
   assert.match(messages, /socket\.off\('communications\.event'/);
   assert.match(messages, /socket\.disconnect\(\)/);
   assert.doesNotMatch(messages, /ARCHIVED/);
-  assert.match(messages, /next\.deliveryState = record\.deliveryState/);
+  assert.match(messages, /\/communications\/conversations/);
+  assert.doesNotMatch(messages, /function groupMessages/);
+  assert.match(messages, /Report conversation/);
+  assert.match(messages, /conversationEndpoint.*encodeURIComponent\(conversationId\).*report/);
+});
+
+test('announcements and learn send the active locale to canonical backend content endpoints', () => {
+  const announcements = read('./app/dashboard/announcement/page.tsx');
+  const learn = read('./app/dashboard/learn/page.tsx');
+  assert.match(announcements, /useLocale/);
+  assert.match(announcements, /params: \{ locale \}/);
+  assert.match(learn, /useLocale/);
+  assert.match(learn, /communications\/learn', \{ params: \{ locale \} \}/);
+  assert.match(learn, /communications\/learn\/\$\{encodeURIComponent\(slug\)\}/);
 });

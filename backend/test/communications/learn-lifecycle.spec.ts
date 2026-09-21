@@ -48,7 +48,7 @@ describe('A18 Learn lifecycle closure', () => {
       idempotencyKey: `learn-article:publish:${current.id}:learn-publish-1`,
     }));
 
-    expect(await service.learn()).toEqual([published]);
+    expect(await service.learn()).toEqual([expect.objectContaining(published)]);
     expect(findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: expect.objectContaining({ status: 'PUBLISHED', archivedAt: null }),
     }));

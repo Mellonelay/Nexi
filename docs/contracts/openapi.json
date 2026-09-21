@@ -279,6 +279,53 @@
         ]
       }
     },
+    "/communications/conversations": {
+      "get": {
+        "operationId": "CommunicationsController_conversations",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
+    "/communications/conversations/{id}/report": {
+      "post": {
+        "operationId": "CommunicationsController_reportConversation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportConversationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
     "/communications/notifications": {
       "get": {
         "operationId": "CommunicationsController_notifications",
@@ -475,6 +522,53 @@
       "get": {
         "operationId": "CommunicationsController_adminMessages",
         "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
+    "/communications/admin/messages/moderation": {
+      "get": {
+        "operationId": "CommunicationsController_adminMessageModeration",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
+    "/communications/admin/messages/moderation/{id}": {
+      "patch": {
+        "operationId": "CommunicationsController_resolveMessageModeration",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveMessageModerationDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": ""
@@ -999,27 +1093,26 @@
     "/referral/me": {
       "get": {
         "operationId": "ReferralVipController_referral",
-        "summary": "Return the authenticated user referral identity and referral totals.",
         "parameters": [],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "tags": [
-          "Referral and VIP"
-        ],
         "security": [
           {
             "bearer": []
           }
+        ],
+        "summary": "Return the authenticated user referral identity and referral totals.",
+        "tags": [
+          "Referral and VIP"
         ]
       }
     },
     "/referral/claim": {
       "post": {
         "operationId": "ReferralVipController_claim",
-        "summary": "Apply a referral code once to the authenticated account.",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -1036,53 +1129,54 @@
             "description": ""
           }
         },
-        "tags": [
-          "Referral and VIP"
-        ],
         "security": [
           {
             "bearer": []
           }
+        ],
+        "summary": "Apply a referral code once to the authenticated account.",
+        "tags": [
+          "Referral and VIP"
         ]
       }
     },
     "/vip/me": {
       "get": {
         "operationId": "ReferralVipController_vip",
-        "summary": "Return the authenticated user VIP level, progress and benefits.",
         "parameters": [],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "tags": [
-          "Referral and VIP"
-        ],
         "security": [
           {
             "bearer": []
           }
+        ],
+        "summary": "Return the authenticated user VIP level, progress and benefits.",
+        "tags": [
+          "Referral and VIP"
         ]
       }
     },
     "/vip/levels": {
       "get": {
         "operationId": "ReferralVipController_levels",
-        "summary": "List enabled VIP levels and public benefit metadata.",
         "parameters": [],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "tags": [
-          "Referral and VIP"
-        ],
         "security": [
           {
             "bearer": []
           }
+        ],
+        "summary": "List enabled VIP levels and public benefit metadata.",
+        "tags": [
+          "Referral and VIP"
         ]
       }
     },
@@ -1749,6 +1843,7 @@
             "in": "query",
             "schema": {
               "default": "1m",
+              "type": "string",
               "enum": [
                 "1m",
                 "3m",
@@ -1765,8 +1860,22 @@
                 "3d",
                 "1w",
                 "1M"
-              ],
-              "type": "string"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 40,
+              "maximum": 500,
+              "default": 240,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
             }
           },
           {
@@ -1798,6 +1907,135 @@
                 }
               }
             }
+          }
+        },
+        "tags": [
+          "Market Data"
+        ]
+      }
+    },
+    "/market/assets": {
+      "get": {
+        "operationId": "MarketPublicController_listAssets",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Market Data"
+        ]
+      }
+    },
+    "/market/assets/{symbol}": {
+      "get": {
+        "operationId": "MarketPublicController_getAsset",
+        "parameters": [
+          {
+            "name": "symbol",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Market Data"
+        ]
+      }
+    },
+    "/market/provider-state": {
+      "get": {
+        "operationId": "MarketPublicController_providerState",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Market Data"
+        ]
+      }
+    },
+    "/market/depth": {
+      "get": {
+        "operationId": "MarketPublicController_depth",
+        "parameters": [
+          {
+            "name": "symbol",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pair",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Market Data"
+        ]
+      }
+    },
+    "/market/trades": {
+      "get": {
+        "operationId": "MarketPublicController_trades",
+        "parameters": [
+          {
+            "name": "symbol",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pair",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
           }
         },
         "tags": [
@@ -2403,7 +2641,6 @@
     "/admin/incidents/{id}/acknowledge": {
       "post": {
         "operationId": "AdminController_acknowledgeIncident",
-        "summary": "Acknowledge an operational incident",
         "parameters": [
           {
             "name": "id",
@@ -2443,6 +2680,7 @@
             "description": "Incident not found"
           }
         },
+        "summary": "Acknowledge an operational incident",
         "tags": [
           "Admin Control Plane"
         ]
@@ -2451,7 +2689,6 @@
     "/admin/tickets/{id}/reply": {
       "post": {
         "operationId": "AdminController_replyAdminTicket",
-        "summary": "Reply to a support ticket",
         "parameters": [
           {
             "name": "id",
@@ -2507,6 +2744,7 @@
             "description": "Support ticket not found"
           }
         },
+        "summary": "Reply to a support ticket",
         "tags": [
           "Admin Control Plane"
         ]
@@ -2515,7 +2753,6 @@
     "/admin/tickets/{id}/status": {
       "post": {
         "operationId": "AdminController_setAdminTicketStatus",
-        "summary": "Change support ticket status",
         "parameters": [
           {
             "name": "id",
@@ -2575,6 +2812,7 @@
             "description": "Support ticket not found"
           }
         },
+        "summary": "Change support ticket status",
         "tags": [
           "Admin Control Plane"
         ]
@@ -2595,7 +2833,6 @@
       },
       "post": {
         "operationId": "AdminController_createMaintenanceWindow",
-        "summary": "Schedule a maintenance window",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -2623,6 +2860,7 @@
             "description": "Invalid maintenance window request"
           }
         },
+        "summary": "Schedule a maintenance window",
         "tags": [
           "Admin Control Plane"
         ]
@@ -2631,7 +2869,6 @@
     "/admin/maintenance-windows/{id}/cancel": {
       "post": {
         "operationId": "AdminController_cancelMaintenanceWindow",
-        "summary": "Cancel a maintenance window",
         "parameters": [
           {
             "name": "id",
@@ -2671,6 +2908,7 @@
             "description": "Maintenance window not found"
           }
         },
+        "summary": "Cancel a maintenance window",
         "tags": [
           "Admin Control Plane"
         ]
@@ -3182,6 +3420,20 @@
     "/admin/market/feeds": {
       "get": {
         "operationId": "AdminController_getMarketFeeds",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/market/runtime": {
+      "get": {
+        "operationId": "AdminController_getMarketRuntime",
         "parameters": [],
         "responses": {
           "200": {
@@ -3917,8 +4169,8 @@
         ]
       }
     },
-    "/admin/address/{id}": {
-      "delete": {
+    "/admin/address/{id}/disable": {
+      "post": {
         "operationId": "AdminController_deleteDepositAddress",
         "parameters": [
           {
@@ -3930,8 +4182,18 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminIncidentAcknowledgeDto"
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
+          "201": {
             "description": ""
           }
         },
@@ -4310,7 +4572,6 @@
     "/admin/referrals": {
       "get": {
         "operationId": "ReferralVipAdminController_referrals",
-        "summary": "List referral identities and referral totals.",
         "parameters": [
           {
             "name": "limit",
@@ -4326,20 +4587,20 @@
             "description": ""
           }
         },
-        "tags": [
-          "Admin Referral and VIP"
-        ],
         "security": [
           {
             "bearer": []
           }
+        ],
+        "summary": "List referral identities and referral totals.",
+        "tags": [
+          "Admin Referral and VIP"
         ]
       }
     },
     "/admin/vip/users": {
       "get": {
         "operationId": "ReferralVipAdminController_users",
-        "summary": "List user VIP state.",
         "parameters": [
           {
             "name": "limit",
@@ -4355,38 +4616,38 @@
             "description": ""
           }
         },
-        "tags": [
-          "Admin Referral and VIP"
-        ],
         "security": [
           {
             "bearer": []
           }
+        ],
+        "summary": "List user VIP state.",
+        "tags": [
+          "Admin Referral and VIP"
         ]
       }
     },
     "/admin/vip/levels": {
       "get": {
         "operationId": "ReferralVipAdminController_levels",
-        "summary": "List all VIP levels, including disabled levels.",
         "parameters": [],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "tags": [
-          "Admin Referral and VIP"
-        ],
         "security": [
           {
             "bearer": []
           }
+        ],
+        "summary": "List all VIP levels, including disabled levels.",
+        "tags": [
+          "Admin Referral and VIP"
         ]
       },
       "post": {
         "operationId": "ReferralVipAdminController_upsertLevel",
-        "summary": "Create or update a VIP level with an Admin audit record.",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -4403,20 +4664,20 @@
             "description": ""
           }
         },
-        "tags": [
-          "Admin Referral and VIP"
-        ],
         "security": [
           {
             "bearer": []
           }
+        ],
+        "summary": "Create or update a VIP level with an Admin audit record.",
+        "tags": [
+          "Admin Referral and VIP"
         ]
       }
     },
     "/admin/vip/assign": {
       "post": {
         "operationId": "ReferralVipAdminController_assign",
-        "summary": "Assign a VIP level to a NEXI User ID with an Admin audit record.",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -4433,13 +4694,14 @@
             "description": ""
           }
         },
-        "tags": [
-          "Admin Referral and VIP"
-        ],
         "security": [
           {
             "bearer": []
           }
+        ],
+        "summary": "Assign a VIP level to a NEXI User ID with an Admin audit record.",
+        "tags": [
+          "Admin Referral and VIP"
         ]
       }
     },
@@ -4778,7 +5040,6 @@
     "/_internal/workflows/{workflow}/{action}": {
       "post": {
         "operationId": "WorkflowCommandsController_execute",
-        "summary": "Execute an authenticated Workflow-facing NestJS command",
         "parameters": [
           {
             "name": "workflow",
@@ -4845,6 +5106,7 @@
             "description": "Workflow entity was not found"
           }
         },
+        "summary": "Execute an authenticated Workflow-facing NestJS command",
         "tags": [
           "Internal Workflows"
         ]
@@ -4853,25 +5115,24 @@
     "/profile/me": {
       "get": {
         "operationId": "ProfileController_getMe",
-        "summary": "Return the complete wallet-native public profile.",
         "parameters": [],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "tags": [
-          "Profile"
-        ],
         "security": [
           {
             "bearer": []
           }
+        ],
+        "summary": "Return the complete wallet-native public profile.",
+        "tags": [
+          "Profile"
         ]
       },
       "patch": {
         "operationId": "ProfileController_updateMe",
-        "summary": "Update optional public profile metadata. Wallet identity remains immutable.",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -4888,38 +5149,38 @@
             "description": ""
           }
         },
-        "tags": [
-          "Profile"
-        ],
         "security": [
           {
             "bearer": []
           }
+        ],
+        "summary": "Update optional public profile metadata. Wallet identity remains immutable.",
+        "tags": [
+          "Profile"
         ]
       }
     },
     "/profile/preferences": {
       "get": {
         "operationId": "ProfileController_preferences",
-        "summary": "Return public account preferences.",
         "parameters": [],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "tags": [
-          "Profile"
-        ],
         "security": [
           {
             "bearer": []
           }
+        ],
+        "summary": "Return public account preferences.",
+        "tags": [
+          "Profile"
         ]
       },
       "patch": {
         "operationId": "ProfileController_updatePreferences",
-        "summary": "Update public account preferences.",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -4936,13 +5197,14 @@
             "description": ""
           }
         },
-        "tags": [
-          "Profile"
-        ],
         "security": [
           {
             "bearer": []
           }
+        ],
+        "summary": "Update public account preferences.",
+        "tags": [
+          "Profile"
         ]
       }
     }
@@ -4984,6 +5246,10 @@
         "type": "object",
         "properties": {}
       },
+      "ReportConversationDto": {
+        "type": "object",
+        "properties": {}
+      },
       "CreateAnnouncementDto": {
         "type": "object",
         "properties": {}
@@ -4993,6 +5259,10 @@
         "properties": {}
       },
       "AdminMutationDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ResolveMessageModerationDto": {
         "type": "object",
         "properties": {}
       },
@@ -5109,6 +5379,10 @@
         "properties": {}
       },
       "MarginTransferDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "Object": {
         "type": "object",
         "properties": {}
       },
