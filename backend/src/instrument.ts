@@ -23,6 +23,12 @@ if (dsn) {
     },
     integrations: [Sentry.nestIntegration()],
     beforeSend(event) {
+      // Drop ENOENT filesystem errors — caused by bot/scanner probes for non-existent paths
+      const exceptions = event.exception?.values ?? [];
+      if (exceptions.some((e) => e.value?.includes("ENOENT"))) {
+        return null;
+      }
+
       if (event.request) {
         delete event.request.data;
         delete event.request.cookies;
