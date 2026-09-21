@@ -1,6 +1,6 @@
 # NEXI Current State
 
-**As of:** 2026-09-20 (Myanmar time)
+**As of:** 2026-09-21 (Myanmar time)
 **Repository:** `Mellonelay/Nexi`
 **Current source authority:** GitHub `main` (discover live; do not freeze this file to its own documentation commit SHA)
 **Current deployed production Worker release:** `b5325e751415dfdb4cc5bc8d120fe43638643531`; the active Container/Worker stack includes the NestJS 12 backend, D1 sequence repair, retired market-archive path, Observe wiring, inactive-container fetch recovery, and the USD/RUB MOEX-first source policy.
@@ -30,7 +30,7 @@ NEXI remains in the **finishing / targeted-repair state**, not a rebuild phase.
 
 ## Current proven state
 
-- Public source convergence frontier: **COMPLETE, verified, and pushed** at `5c01b715985fec51c79699fcf5b7319e3435ac0e`; not yet promoted to production. The bounded repair preserves backend market state and monotonic per-symbol realtime sequences without creating a second market owner.
+- Unified source convergence frontier: **COMPLETE, verified, merged to GitHub `main`, and CI-green** through `a489b02b323fa8a9de8cfb329c60cf9b523706c8`. This frontier includes the accepted market/Admin fan-in, Support/non-market communications wiring, durable conversations/moderation, Announcement/Learn localization and pinning, Public canonical conversation/locale consumption, and the bounded Binance shutdown-test contract correction. It is **not yet promoted to production**; deployed Public/Admin/backend runtime identity remains the previously proven production baseline until explicit promotion authorization.
 - Production Worker deployment baseline: **COMPLETE** at `b5325e751415dfdb4cc5bc8d120fe43638643531`; active Container application is version 63 with one running `nexi-api` instance and healthy readiness.
 - Backend/Cloudflare readiness and health: **PROVEN PRODUCTION** for the deployed baseline; fresh `/ops/live` and `/ops/ready` both return 200 with database=true and redis=true.
 - Public/Admin bounded unauthenticated production browser acceptance: **COMPLETE** for the deployed baseline.
@@ -70,7 +70,7 @@ Current direct evidence supersedes older acceptance statements wherever they dif
 ## Remaining production closure gates
 
 1. Market reliability/freshness must be proven truthful and self-recovering for all 53 canonical assets; legitimate closed-market staleness must have an explicit reason, while open-market silent staleness is a defect.
-2. Current Public source frontier must be promoted through the canonical `/srv/nexi/public` release path and re-verified against the Cloudflare backend.
+2. The current unified GitHub `main` frontier must be promoted through the canonical `/srv/nexi/public`, `/srv/nexi/admin`, and Cloudflare Worker/Container release paths as applicable, then re-verified end-to-end. Promotion/deployment remains a separate explicit owner-authorized production mutation.
 3. All safely automatable Public/Admin/backend/async/financial product rows in `NEXI_PRODUCTION_COMPLETION_LEDGER.md` must have current end-to-end proof or applicable `PROVEN_UNCHANGED` evidence.
 4. Wallet/SIWE/protected-financial and privileged Admin paths must use controlled test identities when safe, or be explicitly deferred by the owner.
 5. Owner manual acceptance is the final gate only after the above automation gates are satisfied.
@@ -100,3 +100,18 @@ Historical 27-row matrices, `CODE_TO_CODE_CLOSED`, A25/A26/A27, staging-first se
 - Last recorded `/market/prices` snapshot remains 53 assets, 36 LIVE, 17 STALE, 0 UNAVAILABLE, with `STEEMUSDT` newly stale at that observation time.
 - The earlier 13/16/17 stale counts are time snapshots, not a fixed invariant. The unresolved problem is market reliability: every open-market asset must remain fresh or self-recover automatically; legitimate closed-market states must be explicit and truthful.
 - Current interpretation: dedicated host ownership and DNS are correct; Cloudflare backend is reachable; market reliability and full automated product closure remain incomplete.
+
+## Unified source convergence correction — 2026-09-21
+
+This source-level correction supersedes older statements that the newest Public/Admin/non-market/market work remained local or unmerged.
+
+- GitHub `main` and Worker-0 `main` are synchronized at `a489b02b323fa8a9de8cfb329c60cf9b523706c8`; the worktree is clean.
+- The unified source ancestry includes `e596b22` (accepted market + non-market fan-in), `0e98d6d` (durable communications/content completion), and `a489b02` (Binance WebSocket shutdown test fixture aligned to the current adapter contract).
+- GitHub Actions run `35558996698` for `a489b02` completed successfully: backend, frontend, Admin, Graphify, and Cloudflare dry-run jobs all passed.
+- The exact previously failing backend market CI command was reproduced locally after the test-fixture correction: 3/3 suites and 27/27 tests passed; Nest backend build passed.
+- Changed-scope Fallow for the CI correction passed with zero introduced dead code, complexity, duplication, or styling findings.
+- This establishes **source integration + CI verification**, not production runtime verification of the newer source. No deployment or remote D1 migration is implied.
+
+`UNIFIED_GITHUB_MAIN_SOURCE = INTEGRATED_CI_GREEN`
+
+`UNIFIED_NEW_FRONTIER_DEPLOYED = NO`

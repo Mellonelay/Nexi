@@ -1,9 +1,9 @@
 # NEXI Production Completion Ledger
 
-**Authority date:** 2026-09-20 (Myanmar time)
+**Authority date:** 2026-09-21 (Myanmar time)
 **Repository:** `Mellonelay/Nexi`
 **Current source authority:** GitHub `main` (discover live; do not freeze this ledger to a historical SHA)
-**Current deployed backend release:** `b5325e751415dfdb4cc5bc8d120fe43638643531`; Public/Admin deployed runtime remains the canonical `/srv/nexi/.../current` release until the newer Public frontier is promoted
+**Current deployed backend release:** `b5325e751415dfdb4cc5bc8d120fe43638643531`; Public/Admin deployed runtime remains the canonical `/srv/nexi/.../current` release until the newer unified source frontier is explicitly promoted
 **Purpose:** the single final-production completion controller for NEXI. This is a finishing-state ledger, not a restart plan.
 
 ## 0. Active production closure controller — owner correction 2026-09-20
@@ -44,8 +44,9 @@ This section is the **active execution queue** and supersedes older statements t
 | A-03 | Public hosting | Public dependency/build/runtime owner is `/srv/nexi/public` | `COMPLETED` | symlink/process/release proof |
 | A-04 | Admin hosting | Admin dependency/build/runtime owner is `/srv/nexi/admin` | `COMPLETED` | symlink/process/release proof |
 | A-05 | DNS | `app.nexitrading.app` and `admin.nexitrading.app` proxied A records -> `35.187.234.62` | `COMPLETED` | Cloudflare API record proof + external HTTPS 307 |
-| A-06 | Public release | Current Public source frontier `5c01b715...` promoted through canonical `/srv/nexi/public` release path | `OPEN_DEFECT` | deployed release identity + runtime proof |
-| A-07 | Backend baseline | Current Cloudflare backend health/readiness | `PROVEN_UNCHANGED` | fresh health/readiness after backend mutation |
+| A-06 | Public/Admin release | Current unified GitHub `main` Public/Admin frontier promoted through canonical `/srv/nexi/public` and `/srv/nexi/admin` release paths | `OPEN_DEFECT` | deployed release identity + runtime proof |
+| A-07 | Backend baseline | Currently deployed Cloudflare backend health/readiness | `PROVEN_UNCHANGED` | fresh health/readiness after backend deployment mutation |
+| A-08 | Backend release | Current unified GitHub `main` backend frontier promoted through canonical Cloudflare Worker/Container path | `OPEN_DEFECT` | deployed Worker/Container source identity + health/readiness + focused runtime proof |
 | M-01 | Market | Exactly 53 canonical NEXI assets remain authoritative | `PROVEN_UNCHANGED` | catalog/API count and identity |
 | M-02 | Market | Every asset has explicit provider/source/trading-hours policy | `NEEDS_FRESH_PROOF` | 53-row provider/source classification |
 | M-03 | Market | Market freshness is truthful and self-recovering; no silent frozen open-market asset | `OPEN_DEFECT` | open-market soak + forced disconnect/recovery + reasoned closed-market states |
@@ -98,7 +99,7 @@ This section is the **active execution queue** and supersedes older statements t
 | R-05 | Reliability | Duplicate/retry/concurrency safety | `NEEDS_FRESH_PROOF` | focused adversarial tests |
 | Z-01 | Gate | All non-owner-context rows above complete or proven unchanged | `OPEN_DEFECT` | zero unresolved required rows |
 | Z-02 | Gate | Identity rows completed with controlled identities or explicitly owner-deferred | `AUTOMATION_IDENTITY_REQUIRED` | row-level proof/owner decision |
-| Z-03 | Gate | `NEXI_CURRENT_STATE.md` + this ledger reconciled to latest durable truth | `NEEDS_FRESH_PROOF` | same-task reconciliation |
+| Z-03 | Gate | `NEXI_CURRENT_STATE.md` + this ledger reconciled to latest durable truth | `COMPLETED` | 2026-09-21 source/CI reconciliation; reopen only after durable truth changes |
 | Z-04 | Gate | Owner manual acceptance | `OWNER_FINAL_ACCEPTANCE` | only after Z-01/Z-02/Z-03 permit it |
 
 ### Execution order
@@ -614,3 +615,21 @@ This supersedes the DNS/origin status recorded in Sections 24 and 25.
 `PUBLIC_ADMIN_EXTERNAL_RUNTIME = CLOUDFLARE_307_VERIFIED`
 
 `FULL_PRODUCTION_END_TO_END_ACCEPTED = NO`
+
+## 27. Unified source integration + CI reconciliation — 2026-09-21
+
+This section records durable source/CI truth only. It does not promote runtime rows.
+
+- Worker-0 `main`, `origin/main`, and GitHub `main` are synchronized at `a489b02b323fa8a9de8cfb329c60cf9b523706c8` with a clean worktree.
+- The integrated ancestry contains the accepted market/non-market merge, durable communications/content completion, and the bounded Binance shutdown test-contract repair.
+- GitHub Actions run `35558996698` for that exact push SHA is green across backend, frontend, Admin, Graphify, and Cloudflare dry-run jobs.
+- Local fresh evidence for the CI repair: exact backend market CI selection 3/3 suites, 27/27 tests PASS; backend Nest build PASS.
+- Fallow changed-scope audit for the one-file CI correction: PASS with 0 introduced dead code, 0 introduced complexity, 0 introduced duplication, and 0 introduced styling findings.
+- The previous CI failure was a stale WebSocket test fixture; production adapter behavior was not changed to satisfy the legacy test.
+- No newer source from this frontier has been promoted to Public/Admin production releases or the Cloudflare Worker/Container runtime. Therefore A-06 and A-08 remain `OPEN_DEFECT`, and all runtime/product rows requiring deployed proof remain unchanged.
+
+`SOURCE_INTEGRATION = COMPLETE_AT_GITHUB_MAIN`
+
+`SOURCE_CI = GREEN_AT_A489B02`
+
+`CURRENT_UNIFIED_SOURCE_DEPLOYED = NO`
