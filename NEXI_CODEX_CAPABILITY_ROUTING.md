@@ -3,10 +3,10 @@
 Purpose: canonical NEXI project overlay for selecting skills, MCPs, CLIs, browser surfaces, and verification lanes. Global Worker-0 law and capability ownership live under `/home/mellonelay1999/RDC_ONBOARDING.md` and `/home/mellonelay1999/.agents/`; this file adds only NEXI-specific authority and routing. It does not authorize production mutation. Worker-0 capability lookup is delegated to `NEXI_WORKER0_CAPABILITY_INDEX.md`; detailed catalogs/guides are progressive-disclosure references, not startup reading.
 
 ## Dynamic routing model
-Global control stack: `ChatGPT parent -> Selective Intelligence when triggered -> Agent Kernel durable governance -> Get-Fable lifecycle -> narrow capability owner -> Riqor evidence gate`.
+Global control stack: `ChatGPT parent -> Selective Intelligence when triggered -> Agent Kernel durable governance -> Agent Skills engineering method -> narrow capability owner -> distinct evidence tools/specialists -> parent fan-in`. Get-Fable is optional recovery/delegation support; Riqor is specialist-skills-only.
 
 NEXI execution overlay:
-`OWNER MESSAGE -> COMPLETE TASK CONTRACT -> CURRENT NEXI AUTHORITY -> CORRECTION/DRIFT HANDLING WHEN REQUIRED -> TASK CLASSIFICATION -> ONE PRIMARY RESPONSIBILITY OWNER -> 0..N NON-OVERLAPPING SPECIALISTS -> FASTEST PRECISE TOOL/MCP/CLI -> EXECUTE -> FOCUSED VERIFY -> RIQOR FRESHNESS/COMPLETION GATE -> PARENT FAN-IN -> DURABLE STATE RECONCILIATION WHEN REQUIRED -> REPORT`
+`OWNER MESSAGE -> COMPLETE TASK CONTRACT -> CURRENT NEXI AUTHORITY -> CORRECTION/DRIFT HANDLING WHEN REQUIRED -> AGENT SKILLS METHOD -> ONE PRIMARY RESPONSIBILITY OWNER -> 0..N NON-OVERLAPPING SPECIALISTS/EVIDENCE TOOLS -> FASTEST PRECISE TOOL/MCP/CLI -> EXECUTE -> FOCUSED VERIFY -> PARENT FAN-IN -> DURABLE STATE RECONCILIATION WHEN REQUIRED -> REPORT`
 
 Compile the complete owner message before execution: required actions/evidence/sequencing, must-preserve state, explicit non-goals, mutation/production authority, completion conditions, and required documentation/state updates. Do not silently drop secondary requirements.
 
