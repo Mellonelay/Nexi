@@ -24,7 +24,7 @@ Do not restore any retired database authority. Do not introduce a second Admin p
 ## Capability routing
 Worker-0 global control law is `/home/mellonelay1999/RDC_ONBOARDING.md` with global capability/router/hook catalogs under `/home/mellonelay1999/.agents/`. Agent Kernel owns durable governance; Addy Osmani Agent Skills owns the engineering workflow/method selection; Get-Fable is optional lifecycle/recovery/delegation support; Riqor is specialist-skills-only; and the original Graphify multiview + Fallow + CodeScene + DeepWiki combination remains the structural/static/semantic intelligence stack. NEXI files below are project overlays, not duplicate global authorities.
 
-Classify the complete owner request before choosing skills or tools. Use `NEXI_CODEX_CAPABILITY_ROUTING.md` as the project routing owner, `/home/mellonelay1999/RDC_ONBOARDING.md` for Worker-0 mechanics, and `NEXI_WORKER0_CAPABILITY_INDEX.md` as the lightweight capability directory. Read only the specialist reference needed for the task.
+Classify the complete owner request before choosing skills or tools. Use `docs/operations/NEXI_CAPABILITY_ROUTING.md` as the project routing owner, `/home/mellonelay1999/RDC_ONBOARDING.md` for Worker-0 mechanics, and `/home/mellonelay1999/.agents/GLOBAL_CAPABILITY_INDEX.md` as the lightweight capability directory. Read only the specialist reference needed for the task.
 
 Before the first execution call of each new substantive NEXI task, emit the compact `ROUTING` declaration required by the project router, then execute immediately.
 
@@ -75,7 +75,7 @@ Do not pause between dependency-ready tasks merely to report progress.
 Do not run every skill/tool mechanically.
 
 ## Worker-0 capability knowledge
-Do not duplicate the Worker-0 tool inventory here. Route through `NEXI_WORKER0_CAPABILITY_INDEX.md`; use `NEXI_WORKER0_MCP_CATALOG.md`, `NEXI_WORKER0_CLI_CATALOG.md`, `NEXI_WORKER0_BROWSER_FABRIC.md`, and the Graphify/DeepWiki complete guides only when that capability is relevant. Discover mutable versions/auth/schema/health live.
+Do not duplicate the Worker-0 tool inventory here. Route through `/home/mellonelay1999/.agents/GLOBAL_CAPABILITY_INDEX.md`; use `/home/mellonelay1999/.agents/GLOBAL_MCP_CATALOG.md`, `/home/mellonelay1999/.agents/GLOBAL_CLI_CATALOG.md`, `/home/mellonelay1999/.agents/BROWSER_FABRIC.md`, and the Graphify/DeepWiki complete guides only when that capability is relevant. Discover mutable versions/auth/schema/health live.
 
 ## D1 operator policy
 All D1 operator inspection/migration/verification must use project-local Wrangler from `cloudflare-container-bootstrap`.
@@ -106,7 +106,7 @@ After high-impact changes, refresh once and rerun only the relevant impact/path 
 ## Cloudflare policy
 Before any Cloudflare implementation, configuration change, deployment, configuration-driven debugging, or operator mutation, read the relevant **current official Cloudflare documentation first**. Then inspect the current Wrangler/MCP help or schema for the exact product/command and reconcile it with current NEXI configuration. This gate applies repository-wide to Workers, Wrangler, Containers, D1, Queues, Workflows, R2, Pipelines, Durable Objects, bindings, secrets, routes/domains, versions/deployments/rollback, observability/logging, networking, and later Cloudflare products.
 
-Use `NEXI_CLOUDFLARE_BACKEND_OPERATOR_RUNBOOK.md` as the current NEXI Cloudflare operator reference. For backend runtime work, Cloudflare is the only execution authority. Prefer read-only platform inspection first; use the officially documented Wrangler Container SSH mechanism when shell access is required. Do not use a VM-local backend as a substitute. If a legitimate source repair is made through the Cloudflare execution plane, verify it there and reconcile the exact source change to GitHub `main` before task completion.
+Use `docs/infrastructure/NEXI_CLOUDFLARE_BACKEND_OPERATOR_RUNBOOK.md` as the current NEXI Cloudflare operator reference. For backend runtime work, Cloudflare is the only execution authority. Prefer read-only platform inspection first; use the officially documented Wrangler Container SSH mechanism when shell access is required. Do not use a VM-local backend as a substitute. If a legitimate source repair is made through the Cloudflare execution plane, verify it there and reconcile the exact source change to GitHub `main` before task completion.
 
 Do not blindly retry a failing Wrangler command: read the real error, consult current official docs/help, identify the causal owner, then retry only when justified. Capability discovery never grants unrelated mutation authority. Unrelated production mutation still requires explicit current owner approval.
 

@@ -17,4 +17,4 @@ Cloudflare Worker + Container is the backend execution/runtime authority. GitHub
 
 There is no alternate durable database URL or migration target in the active backend contract. D1 schema evolution uses `backend/prisma/migrations-d1` through current Wrangler D1 migration semantics. Application startup must not perform schema mutation.
 
-Before any Cloudflare change, follow `NEXI_CLOUDFLARE_BACKEND_OPERATOR_RUNBOOK.md` and the current official Cloudflare documentation gate.
+Before any Cloudflare change, follow `docs/infrastructure/NEXI_CLOUDFLARE_BACKEND_OPERATOR_RUNBOOK.md` and the current official Cloudflare documentation gate.

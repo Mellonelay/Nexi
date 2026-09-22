@@ -31,7 +31,7 @@ The repository manifests and lockfile pin Wrangler `4.127.1`. During the 2026-09
 When the repo-local binary is absent, do **not** use bare `npx wrangler`: npm can fetch a newer CLI and silently change semantics. Use `npx --no-install wrangler` only when a local binary is present; otherwise use the explicitly verified installed binary or a version-pinned isolated validation environment.
 
 Current source config: `cloudflare-container-bootstrap/wrangler.jsonc`.
-Complete read-only production configuration/binding inventory: `NEXI_CLOUDFLARE_PRODUCTION_CONFIGURATION_INVENTORY.md`.
+Complete read-only production configuration/binding inventory: `docs/infrastructure/NEXI_CLOUDFLARE_PRODUCTION_CONFIGURATION_INVENTORY.md`.
 Current Worker identity: `nexi-staging`.
 Current Container application identity: `nexi-api-staging`.
 Public API authority: `https://api.nexitrading.app`.

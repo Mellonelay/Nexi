@@ -16,7 +16,7 @@ NEXI remains in the **finishing / targeted-repair state**, not a rebuild phase.
 - Three VM-only asynchronous filesystem edits (`admin.service.ts`, `feedback.controller.ts`, `staging-fixture.ts`) had no GitHub/Cloudflare provenance or accepted runtime evidence. They were preserved as a recovery patch and removed from the active VM working tree rather than promoted into production authority.
 - Current official Cloudflare documentation + current Wrangler/MCP help is a mandatory pre-mutation gate for every Cloudflare product/feature.
 - Retired pre-D1 database implementation/history has been removed from active repository authority: the legacy migration tree, stale provider-specific Cloudflare docs/config descriptions, devcontainer client package, and active source/test wording are gone; current Cloudflare secrets/config expose only D1 as the durable database binding.
-- Current operator workflow is documented in `NEXI_CLOUDFLARE_BACKEND_OPERATOR_RUNBOOK.md`; Container shell access uses Cloudflare's official Wrangler SSH path.
+- Current operator workflow is documented in `docs/infrastructure/NEXI_CLOUDFLARE_BACKEND_OPERATOR_RUNBOOK.md`; Container shell access uses Cloudflare's official Wrangler SSH path.
 - Any legitimate future backend source repair performed through the Cloudflare execution plane must be verified there and reconciled to GitHub `main` immediately at task completion.
 
 ### Production resource identity / operator proof — 2026-09-17
@@ -47,6 +47,8 @@ NEXI remains in the **finishing / targeted-repair state**, not a rebuild phase.
 - Worker-0 storage recovery: **COMPLETE**. Final task-worktree, `/tmp/nexi-*`, obsolete release, and scratch cleanup left about `6.0G` free / `85%` used while preserving canonical source, shared dependencies, active releases, Graphify, DeepWiki, and host capability state.
 - Parent/Worker-0 routing is **REALIGNED**: Agent Kernel retains durable governance; Addy Osmani Agent Skills is the primary engineering workflow/method layer; Get-Fable is optional lifecycle/recovery/delegation support; Riqor is specialist-skills-only; and the original Graphify multiview + Fallow + CodeScene + DeepWiki + direct-source/tests/runtime intelligence stack remains intact. Compile the complete owner message first, select one primary responsibility owner plus only material non-overlapping specialists, and keep production authority unchanged by tool availability.
 - Worker-0 capability knowledge system: **IMPLEMENTED + VERIFIED**. `RDC_ONBOARDING.md` now routes to the lightweight capability index, MCP/CLI catalogs, browser fabric, and canonical Graphify/DeepWiki guides. Durable capability ownership is documented while mutable version/auth/schema/health/index state remains live-discovered. Current-source BrowserStack manual acceptance has started on the isolated Public preview; owner visual acceptance remains pending and is separate from backend authority convergence.
+
+- Repository documentation ownership is **REORGANIZED**: project-neutral Worker-0 CLI/MCP/skills/browser/Graphify guidance now lives under `~/.agents`; NEXI-specific routing lives under `docs/operations`; Cloudflare operator/configuration docs live under `docs/infrastructure`; July frontend planning material is archived under `docs/archive/frontend-2026-07`. The 2026-09-19 session handover and duplicate DOCX ledger were intentionally removed from source.
 
 ## Fresh live runtime re-audit — 2026-09-19 19:24 UTC
 

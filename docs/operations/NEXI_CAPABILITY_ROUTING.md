@@ -1,6 +1,6 @@
 # NEXI Capability and Execution Routing
 
-Purpose: canonical NEXI project overlay for selecting skills, MCPs, CLIs, browser surfaces, and verification lanes. Global Worker-0 law and capability ownership live under `/home/mellonelay1999/RDC_ONBOARDING.md` and `/home/mellonelay1999/.agents/`; this file adds only NEXI-specific authority and routing. It does not authorize production mutation. Worker-0 capability lookup is delegated to `NEXI_WORKER0_CAPABILITY_INDEX.md`; detailed catalogs/guides are progressive-disclosure references, not startup reading.
+Purpose: NEXI-only execution overlay. Global Worker-0 skills, CLI/MCP ownership, browser fabric, Graphify operating guidance, and capability routing live under `/home/mellonelay1999/RDC_ONBOARDING.md` and `/home/mellonelay1999/.agents/`. This file contains only NEXI-specific authority, runtime boundaries, and project routing. It does not authorize production mutation.
 
 ## Dynamic routing model
 Global control stack: `ChatGPT parent -> Selective Intelligence when triggered -> Agent Kernel durable governance -> Agent Skills engineering method -> narrow capability owner -> distinct evidence tools/specialists -> parent fan-in`. Get-Fable is optional recovery/delegation support; Riqor is specialist-skills-only.

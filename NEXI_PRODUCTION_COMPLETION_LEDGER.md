@@ -435,11 +435,11 @@ A durable capability directory now separates Worker-0 operating mechanics, task 
 
 Canonical references:
 - `/home/mellonelay1999/RDC_ONBOARDING.md` — Worker-0 operating mechanics and startup.
-- `NEXI_WORKER0_CAPABILITY_INDEX.md` — lightweight task-to-capability router.
-- `NEXI_WORKER0_MCP_CATALOG.md` — MCP service ownership + live schema discovery.
-- `NEXI_WORKER0_CLI_CATALOG.md` — CLI/operator ownership + live status discovery.
-- `NEXI_WORKER0_BROWSER_FABRIC.md` — Playwright/Polypane/Chrome DevTools/BrowserStack/Ponytail responsibilities.
-- `NEXI_GRAPHIFY_COMPLETE_READING_AND_USAGE_GUIDE.md` — complete graph capability + change-driven refresh lifecycle.
+- `/home/mellonelay1999/.agents/GLOBAL_CAPABILITY_INDEX.md` — lightweight task-to-capability router.
+- `/home/mellonelay1999/.agents/GLOBAL_MCP_CATALOG.md` — MCP service ownership + live schema discovery.
+- `/home/mellonelay1999/.agents/GLOBAL_CLI_CATALOG.md` — CLI/operator ownership + live status discovery.
+- `/home/mellonelay1999/.agents/BROWSER_FABRIC.md` — Playwright/Polypane/Chrome DevTools/BrowserStack/Ponytail responsibilities.
+- `/home/mellonelay1999/.agents/GRAPHIFY_COMPLETE_READING_AND_USAGE_GUIDE.md` — complete graph capability + change-driven refresh lifecycle.
 - `NEXI_DEEPWIKI_COMPLETE_USAGE_GUIDE.md` — semantic/RAG capability + incremental index lifecycle.
 
 The system preserves `DISCOVER STATE; DO NOT MEMORIALIZE STATE`: mutable versions, auth, process IDs, live graph/index counts, and transient health are not permanent authority. New Worker flow is `onboarding -> capability index -> relevant specialist reference -> live status if needed -> execute`.

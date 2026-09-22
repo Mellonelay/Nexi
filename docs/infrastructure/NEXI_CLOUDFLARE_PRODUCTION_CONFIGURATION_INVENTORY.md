@@ -374,11 +374,11 @@ Modified current authority/operator/source files:
 - `docs/infrastructure/NEXI_CLOUDFLARE_ENVIRONMENT_CONTRACT.md`
 - `docs/operations/NEXI_G1_CONTRACT_SPINE_CURRENT.md`
 New files added by that convergence commit:
-- `NEXI_CLOUDFLARE_BACKEND_OPERATOR_RUNBOOK.md`
-- `NEXI_CODEX_CAPABILITY_ROUTING.md`
-- `NEXI_WORKER0_CAPABILITY_INDEX.md`
-- `NEXI_WORKER0_CLI_CATALOG.md`
-- `NEXI_WORKER0_MCP_CATALOG.md`
+- `docs/infrastructure/NEXI_CLOUDFLARE_BACKEND_OPERATOR_RUNBOOK.md`
+- `docs/operations/NEXI_CAPABILITY_ROUTING.md`
+- `/home/mellonelay1999/.agents/GLOBAL_CAPABILITY_INDEX.md`
+- `/home/mellonelay1999/.agents/GLOBAL_CLI_CATALOG.md`
+- `/home/mellonelay1999/.agents/GLOBAL_MCP_CATALOG.md`
 
 Stale current-looking authority/architecture files removed:
 - `CLOUDFLARE_DOC_ALIGNMENT.md`
