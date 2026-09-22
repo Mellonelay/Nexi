@@ -1,9 +1,9 @@
 # NEXI Current State
 
-**As of:** 2026-09-21 (Myanmar time)
+**As of:** 2026-09-22 (Myanmar time)
 **Repository:** `Mellonelay/Nexi`
 **Current source authority:** GitHub `main` (discover live; do not freeze this file to its own documentation commit SHA)
-**Current deployed production Worker release:** `b5325e751415dfdb4cc5bc8d120fe43638643531`; the active Container/Worker stack includes the NestJS 12 backend, D1 sequence repair, retired market-archive path, Observe wiring, inactive-container fetch recovery, and the USD/RUB MOEX-first source policy.
+**Current deployed unified source generation:** `ed26973fe0556a6d75943b3e296be0a899449d6d`; Public/Admin current releases carry the same `NEXI_RELEASE_SHA`, and Cloudflare Worker deployment `bdadd96f-3696-474b-955d-de490a9a466d` is tagged `ed26973f`.
 
 NEXI remains in the **finishing / targeted-repair state**, not a rebuild phase.
 
@@ -30,10 +30,10 @@ NEXI remains in the **finishing / targeted-repair state**, not a rebuild phase.
 
 ## Current proven state
 
-- Unified source convergence frontier: **COMPLETE, verified, merged to GitHub `main`, and CI-green** through `a489b02b323fa8a9de8cfb329c60cf9b523706c8`. This frontier includes the accepted market/Admin fan-in, Support/non-market communications wiring, durable conversations/moderation, Announcement/Learn localization and pinning, Public canonical conversation/locale consumption, and the bounded Binance shutdown-test contract correction. It is **not yet promoted to production**; deployed Public/Admin/backend runtime identity remains the previously proven production baseline until explicit promotion authorization.
-- Production Worker deployment baseline: **COMPLETE** at `b5325e751415dfdb4cc5bc8d120fe43638643531`; active Container application is version 63 with one running `nexi-api` instance and healthy readiness.
-- Backend/Cloudflare readiness and health: **PROVEN PRODUCTION** for the deployed baseline; fresh `/ops/live` and `/ops/ready` both return 200 with database=true and redis=true.
-- Public/Admin bounded unauthenticated production browser acceptance: **COMPLETE** for the deployed baseline.
+- Unified source convergence frontier: **COMPLETE and promoted to production** at `ed26973fe0556a6d75943b3e296be0a899449d6d`. Public/Admin release identity and the tagged Cloudflare Worker deployment are aligned to that source generation. This deployment proof does not by itself close feature-level end-to-end acceptance rows.
+- Unified production deployment identity: **COMPLETE** at source generation `ed26973fe0556a6d75943b3e296be0a899449d6d`; current Worker deployment is `bdadd96f-3696-474b-955d-de490a9a466d` tagged `ed26973f`, with Public/Admin release markers aligned to the same source generation.
+- Backend/Cloudflare readiness and health: **PROVEN PRODUCTION** after unified promotion; fresh `/ops/ready` reports `status=ready`, `database=true`, and `redis=true`.
+- Public/Admin bounded unauthenticated browser acceptance remains historical proof for the prior baseline; the newly promoted `ed26973...` generation still requires current feature-level/browser proof under the production ledger.
 - Required Klines `1m/5m/15m/30m/1h/4h/1d`: **PROVEN PRODUCTION**.
 - Production realtime reconnect/resnapshot and REST read-back recovery: **PROVEN**.
 - Sep 12 wallet-browser/provider/drawer/notification/deposit repairs: **reuse unless current evidence contradicts them**.
@@ -70,7 +70,7 @@ Current direct evidence supersedes older acceptance statements wherever they dif
 ## Remaining production closure gates
 
 1. Market reliability/freshness must be proven truthful and self-recovering for all 53 canonical assets; legitimate closed-market staleness must have an explicit reason, while open-market silent staleness is a defect.
-2. The current unified GitHub `main` frontier must be promoted through the canonical `/srv/nexi/public`, `/srv/nexi/admin`, and Cloudflare Worker/Container release paths as applicable, then re-verified end-to-end. Promotion/deployment remains a separate explicit owner-authorized production mutation.
+2. Unified Public/Admin/backend production promotion is complete at `ed26973...`; remaining work is fresh feature-level end-to-end proof and targeted repair only where current evidence fails.
 3. All safely automatable Public/Admin/backend/async/financial product rows in `NEXI_PRODUCTION_COMPLETION_LEDGER.md` must have current end-to-end proof or applicable `PROVEN_UNCHANGED` evidence.
 4. Wallet/SIWE/protected-financial and privileged Admin paths must use controlled test identities when safe, or be explicitly deferred by the owner.
 5. Owner manual acceptance is the final gate only after the above automation gates are satisfied.
@@ -115,3 +115,19 @@ This source-level correction supersedes older statements that the newest Public/
 `UNIFIED_GITHUB_MAIN_SOURCE = INTEGRATED_CI_GREEN`
 
 `UNIFIED_NEW_FRONTIER_DEPLOYED = NO`
+
+
+## Unified production promotion correction — 2026-09-22
+
+Fresh direct evidence supersedes older statements that the unified source frontier was not yet deployed:
+
+- `main == origin/main == ed26973fe0556a6d75943b3e296be0a899449d6d`.
+- Public `/srv/nexi/public/current -> /srv/nexi/public/releases/ed26973f-prod`, with matching `NEXI_RELEASE_SHA`.
+- Admin `/srv/nexi/admin/current -> /srv/nexi/admin/releases/ed26973f-prod-node`, with matching `NEXI_RELEASE_SHA`.
+- Cloudflare Worker `nexi-production` deployment `bdadd96f-3696-474b-955d-de490a9a466d`, tagged `ed26973f`.
+- Remote D1 reports no pending migrations.
+- `/ops/ready` reports `database=true` and `redis=true`.
+
+`UNIFIED_NEW_FRONTIER_DEPLOYED = YES`
+
+This changes deployment identity, not full product acceptance. Remaining feature rows still require their own current end-to-end proof under `NEXI_PRODUCTION_COMPLETION_LEDGER.md`.

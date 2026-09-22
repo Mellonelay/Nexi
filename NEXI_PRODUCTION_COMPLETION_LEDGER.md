@@ -1,9 +1,9 @@
 # NEXI Production Completion Ledger
 
-**Authority date:** 2026-09-21 (Myanmar time)
+**Authority date:** 2026-09-22 (Myanmar time)
 **Repository:** `Mellonelay/Nexi`
 **Current source authority:** GitHub `main` (discover live; do not freeze this ledger to a historical SHA)
-**Current deployed backend release:** `b5325e751415dfdb4cc5bc8d120fe43638643531`; Public/Admin deployed runtime remains the canonical `/srv/nexi/.../current` release until the newer unified source frontier is explicitly promoted
+**Current deployed unified source generation:** `ed26973fe0556a6d75943b3e296be0a899449d6d`; Public/Admin current releases carry the same `NEXI_RELEASE_SHA`, and Cloudflare Worker deployment `bdadd96f-3696-474b-955d-de490a9a466d` is tagged `ed26973f`.
 **Purpose:** the single final-production completion controller for NEXI. This is a finishing-state ledger, not a restart plan.
 
 ## 0. Active production closure controller — owner correction 2026-09-20
@@ -44,9 +44,9 @@ This section is the **active execution queue** and supersedes older statements t
 | A-03 | Public hosting | Public dependency/build/runtime owner is `/srv/nexi/public` | `COMPLETED` | symlink/process/release proof |
 | A-04 | Admin hosting | Admin dependency/build/runtime owner is `/srv/nexi/admin` | `COMPLETED` | symlink/process/release proof |
 | A-05 | DNS | `app.nexitrading.app` and `admin.nexitrading.app` proxied A records -> `35.187.234.62` | `COMPLETED` | Cloudflare API record proof + external HTTPS 307 |
-| A-06 | Public/Admin release | Current unified GitHub `main` Public/Admin frontier promoted through canonical `/srv/nexi/public` and `/srv/nexi/admin` release paths | `OPEN_DEFECT` | deployed release identity + runtime proof |
-| A-07 | Backend baseline | Currently deployed Cloudflare backend health/readiness | `PROVEN_UNCHANGED` | fresh health/readiness after backend deployment mutation |
-| A-08 | Backend release | Current unified GitHub `main` backend frontier promoted through canonical Cloudflare Worker/Container path | `OPEN_DEFECT` | deployed Worker/Container source identity + health/readiness + focused runtime proof |
+| A-06 | Public/Admin release | Current unified GitHub `main` Public/Admin frontier promoted through canonical `/srv/nexi/public` and `/srv/nexi/admin` release paths | `COMPLETED` | current symlinks + matching `NEXI_RELEASE_SHA=ed26973...` + active runtime proof |
+| A-07 | Backend baseline | Currently deployed Cloudflare backend health/readiness | `COMPLETED` | fresh `/ops/ready`: `status=ready`, `database=true`, `redis=true` after unified promotion |
+| A-08 | Backend release | Current unified GitHub `main` backend frontier promoted through canonical Cloudflare Worker/Container path | `COMPLETED` | Worker deployment `bdadd96f-3696-474b-955d-de490a9a466d`, tag `ed26973f`, no pending D1 migrations, ready backend |
 | M-01 | Market | Exactly 53 canonical NEXI assets remain authoritative | `PROVEN_UNCHANGED` | catalog/API count and identity |
 | M-02 | Market | Every asset has explicit provider/source/trading-hours policy | `NEEDS_FRESH_PROOF` | 53-row provider/source classification |
 | M-03 | Market | Market freshness is truthful and self-recovering; no silent frozen open-market asset | `OPEN_DEFECT` | open-market soak + forced disconnect/recovery + reasoned closed-market states |
@@ -99,16 +99,16 @@ This section is the **active execution queue** and supersedes older statements t
 | R-05 | Reliability | Duplicate/retry/concurrency safety | `NEEDS_FRESH_PROOF` | focused adversarial tests |
 | Z-01 | Gate | All non-owner-context rows above complete or proven unchanged | `OPEN_DEFECT` | zero unresolved required rows |
 | Z-02 | Gate | Identity rows completed with controlled identities or explicitly owner-deferred | `AUTOMATION_IDENTITY_REQUIRED` | row-level proof/owner decision |
-| Z-03 | Gate | `NEXI_CURRENT_STATE.md` + this ledger reconciled to latest durable truth | `COMPLETED` | 2026-09-21 source/CI reconciliation; reopen only after durable truth changes |
+| Z-03 | Gate | `NEXI_CURRENT_STATE.md` + this ledger reconciled to latest durable truth | `COMPLETED` | 2026-09-22 cross-source reconciliation through unified `ed26973...` production promotion; reopen only after durable truth changes |
 | Z-04 | Gate | Owner manual acceptance | `OWNER_FINAL_ACCEPTANCE` | only after Z-01/Z-02/Z-03 permit it |
 
 ### Execution order
 
 1. Market reliability architecture and current backend truth.
-2. Promote the already-implemented Public source through canonical `/srv/nexi/public`.
-3. Fresh Public/Admin/backend end-to-end closure using current Cloudflare backend only.
+2. Fresh Public/Admin/backend end-to-end closure on the already-promoted `ed26973...` production generation.
+3. Financial, async, realtime, communications/content, and Admin control-plane proof in dependency order.
 4. Controlled identity tests where safe, or explicit owner deferral.
-5. Reconcile this ledger and `NEXI_CURRENT_STATE.md`.
+5. Reconcile this ledger and `NEXI_CURRENT_STATE.md` after each durable proof change.
 6. Only then request owner manual acceptance.
 
 ### Tool routing for the current frontier
@@ -633,3 +633,27 @@ This section records durable source/CI truth only. It does not promote runtime r
 `SOURCE_CI = GREEN_AT_A489B02`
 
 `CURRENT_UNIFIED_SOURCE_DEPLOYED = NO`
+
+
+## 28. Unified production promotion reconciliation — 2026-09-22
+
+This section supersedes older statements that the unified source frontier remained unpromoted.
+
+Fresh direct evidence:
+
+- GitHub/Worker-0 source: `main == origin/main == ed26973fe0556a6d75943b3e296be0a899449d6d`.
+- Public current release: `/srv/nexi/public/releases/ed26973f-prod`; `NEXI_RELEASE_SHA` equals the full `ed26973...` source SHA.
+- Admin current release: `/srv/nexi/admin/releases/ed26973f-prod-node`; `NEXI_RELEASE_SHA` equals the full `ed26973...` source SHA.
+- Cloudflare Worker `nexi-production` current deployment: `bdadd96f-3696-474b-955d-de490a9a466d`, tagged `ed26973f`.
+- Remote D1 migration status: `No migrations to apply`; migration `0008_communications_content_completion` was already applied during promotion.
+- Fresh backend readiness: `/ops/ready` reports `status=ready`, `database=true`, `redis=true`.
+
+Therefore the earlier A-06/A-08 OPEN_DEFECT statements are superseded by this newer evidence:
+
+`A-06_PUBLIC_ADMIN_PROMOTION = COMPLETED`
+
+`A-08_BACKEND_PROMOTION = COMPLETED`
+
+`UNIFIED_SOURCE_GENERATION_DEPLOYED = ed26973fe0556a6d75943b3e296be0a899449d6d`
+
+This promotion proof does **not** upgrade the remaining Public, Admin, market, financial, async, realtime, identity, or owner-acceptance rows beyond their own evidence. `Z-01` remains open until the required non-owner-context rows are closed with current end-to-end production proof.
