@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { APP_FILTER } from "@nestjs/core";
 import { SentryGlobalFilter, SentryModule } from "@sentry/nestjs/setup";
+import { EnoentExceptionFilter } from "./common/filters/enoent-exception.filter";
 import { ServeStaticModule } from "@nestjs/serve-static";
 import { join } from "path";
 import { AppController } from "./app.controller";
@@ -89,6 +90,13 @@ import { ObserveModule } from "./observe";
     {
       provide: APP_FILTER,
       useClass: SentryGlobalFilter,
+    },
+    // Must be registered after SentryGlobalFilter so NestJS applies it first.
+    // Converts ENOENT (file-not-found) errors from ServeStaticModule into clean
+    // 404 responses without forwarding them to Sentry.
+    {
+      provide: APP_FILTER,
+      useClass: EnoentExceptionFilter,
     },
     AppService,
     RuntimeLifecycleService,
