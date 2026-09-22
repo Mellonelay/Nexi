@@ -45,7 +45,7 @@ NEXI remains in the **finishing / targeted-repair state**, not a rebuild phase.
 - Stale source build outputs `.next` and Admin `.output`: **REMOVED as rebuildable generated state**.
 - Historical Public/Admin release retention cleanup: **COMPLETE by owner decision 2026-09-19**. Obsolete immutable releases were removed while preserving the exact active `/srv/nexi/public/current -> .../3b173ea-prod` and `/srv/nexi/admin/current -> .../3b173ea-prod-node` targets.
 - Worker-0 storage recovery: **COMPLETE**. Final task-worktree, `/tmp/nexi-*`, obsolete release, and scratch cleanup left about `6.0G` free / `85%` used while preserving canonical source, shared dependencies, active releases, Graphify, DeepWiki, and host capability state.
-- Parent/Worker-0 routing is **REALIGNED**: compile the complete owner message first; treat `@skill` mentions as capability hints; select one primary responsibility owner plus only material non-overlapping specialists; reuse proven capability routing; use the fastest precise tool/MCP/CLI; recover/reconnect live Worker-0 work before respawning; keep production authority unchanged by tool availability.
+- Parent/Worker-0 routing is **REALIGNED**: Agent Kernel retains durable governance; Addy Osmani Agent Skills is the primary engineering workflow/method layer; Get-Fable is optional lifecycle/recovery/delegation support; Riqor is specialist-skills-only; and the original Graphify multiview + Fallow + CodeScene + DeepWiki + direct-source/tests/runtime intelligence stack remains intact. Compile the complete owner message first, select one primary responsibility owner plus only material non-overlapping specialists, and keep production authority unchanged by tool availability.
 - Worker-0 capability knowledge system: **IMPLEMENTED + VERIFIED**. `RDC_ONBOARDING.md` now routes to the lightweight capability index, MCP/CLI catalogs, browser fabric, and canonical Graphify/DeepWiki guides. Durable capability ownership is documented while mutable version/auth/schema/health/index state remains live-discovered. Current-source BrowserStack manual acceptance has started on the isolated Public preview; owner visual acceptance remains pending and is separate from backend authority convergence.
 
 ## Fresh live runtime re-audit — 2026-09-19 19:24 UTC
@@ -105,7 +105,7 @@ Historical 27-row matrices, `CODE_TO_CODE_CLOSED`, A25/A26/A27, staging-first se
 
 This source-level correction supersedes older statements that the newest Public/Admin/non-market/market work remained local or unmerged.
 
-- GitHub `main` and Worker-0 `main` are synchronized at `a489b02b323fa8a9de8cfb329c60cf9b523706c8`; the worktree is clean.
+- GitHub `main` and Worker-0 `main` are synchronized at `fdfecb184136215720c17539475a1feefca3b304`. This includes later production/docs convergence through `ed26973` and `695bfcc`, plus the bounded routing update `fdfecb1`; no new product deployment is implied by the routing commit.
 - The unified source ancestry includes `e596b22` (accepted market + non-market fan-in), `0e98d6d` (durable communications/content completion), and `a489b02` (Binance WebSocket shutdown test fixture aligned to the current adapter contract).
 - GitHub Actions run `35558996698` for `a489b02` completed successfully: backend, frontend, Admin, Graphify, and Cloudflare dry-run jobs all passed.
 - The exact previously failing backend market CI command was reproduced locally after the test-fixture correction: 3/3 suites and 27/27 tests passed; Nest backend build passed.
