@@ -6,9 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "node .next/standalone/server.js",
-    "lint": "next lint",
-    "typecheck": "tsc --noEmit --incremental false",
-    "test:ui": "playwright test"
+    "lint": "eslint .",
+    "typecheck": "next typegen && tsc --noEmit --incremental false",
+    "test:ui": "playwright test",
+    "typegen": "next typegen"
   },
   "dependencies": {
     "@coinbase/wallet-sdk": "^4.3.7",
@@ -26,11 +27,11 @@
     "framer-motion": "^11.18.2",
     "geist": "^1.7.2",
     "lightweight-charts": "^4.1.0",
-    "lucide-react": "^0.294.0",
-    "next": "14.0.4",
+    "lucide-react": "^1.47.0",
+    "next": "16.3.5",
     "qrcode.react": "4.2.0",
-    "react": "^18",
-    "react-dom": "^18",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
     "recharts": "^2.15.4",
     "socket.io-client": "^4.7.0",
     "sonner": "^2.0.7",
@@ -42,16 +43,23 @@
     "@axe-core/playwright": "^4.12.1",
     "@playwright/test": "^1.62.0",
     "@types/node": "^20.19.30",
-    "@types/react": "^18.3.27",
-    "@types/react-dom": "^18.3.7",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
     "@wagmi/cli": "^2.10.0",
     "autoprefixer": "^10.0.1",
-    "eslint": "^8",
-    "eslint-config-next": "14.0.4",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.5",
     "postcss": "^8",
     "prettier": "^3.9.6",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "tailwindcss": "^3.3.0",
     "typescript": "^5"
+  },
+  "overrides": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0"
+  },
+  "engines": {
+    "node": ">=20.9.0"
   }
 }

@@ -6,6 +6,7 @@ const releaseBuildId = process.env.NEXI_BUILD_ID?.trim();
 const nextConfig = {
   reactStrictMode: true,
   output: 'standalone',
+  turbopack: { root: __dirname },
   ...(releaseBuildId ? { generateBuildId: async () => releaseBuildId } : {}),
   async redirects() {
     return [{ source: '/', destination: '/dashboard', permanent: false }];

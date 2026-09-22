@@ -1,34 +1,181 @@
-# NEXI Public Frontend — Current Instructions
+# NEXI Public Frontend — Agent Contract
 
-## Authority
-- GitHub `main` is the durable source authority for Public Frontend and the rest of NEXI.
-- The current synchronized VM/RDC checkout is the execution workspace for this task; historical Windows/Codespace/old-VM trees are evidence only.
-- Backend/API/D1/Cloudflare contracts must be read from the same accepted source frontier; do not use stale mirrors as contract authority.
-- Preserve unrelated parallel work and reconcile unique accepted changes before fan-in. Production mutation requires explicit owner approval.
+## Scope and authority
+This file governs only the canonical Public frontend at this directory.
+GitHub `main` is durable source authority. ChatGPT is the parent/controller. Worker 0 is the execution/evidence plane.
 
-## Current stage
-The existing design and route surfaces are preserved; this is production-path integration work, not a redesign.
-Frontend work proceeds only from the current acceptance-matrix frontier, reusing proven unchanged contracts and closing only unresolved dependencies. Runtime/browser acceptance remains downstream of code-to-code closure.
+Current backend authority is:
+`Public -> Cloudflare Worker -> Cloudflare Container -> NestJS -> D1 / Ledger / EventOutbox`.
 
-## Preserve
-Preserve Next.js 14, React 18, TypeScript 5, Tailwind 3, the existing Deep Liquid Violet design authority, public route scope, Dashboard/Quotes Hub, Spot/Margin, Binary/Options, Wallet, Mining, Loans, Messages, Support, Learn, Settings, localization, and existing responsive behavior unless a verified contract defect requires a targeted change.
-The backend owns prices, balances, payouts, PnL, settlement, authorization, lifecycle truth, and operational configuration. Frontend must render explicit loading/live/stale/unavailable/error states rather than fabricate data.
+Never use a VM-local NestJS process as production truth. Never add frontend-owned financial, market, settlement, authorization, or ledger authority.
+Current owner decisions outrank old screenshots, old chats, old frontend programs, archived docs, and generated concept images.
 
-## Parallel Frontend lane
-Start from the existing hubs: `app/lib/api.ts`, `wallet-auth.ts`, `product-states.ts`, market/realtime hooks, route-level API calls, and tests.
-Reconcile request/response types, auth/session storage, idempotency/error handling, lifecycle enums, pagination/filtering, file/upload contracts, and realtime reconnect/recovery against confirmed backend behavior. Do not invent final routes that do not yet exist.
-The current production default `apiBaseUrl` fallback of `/api` is a client deployment decision to validate at the final join; do not assume it is correct for the final domain topology until deployment routing is frozen.
-Keep wallet challenge/verify/me/logout contracts synchronized with backend auth. Do not expose secrets in browser configuration.
-Keep Aiven/Socket.IO as realtime transport only; recover authoritative state from backend/D1-backed reads after reconnect.
+## Current owner correction — market work
+Do not reopen broad market-provider reliability work during frontend completion.
+The backend market system is already substantially working; a stale provider by itself is not a blocker unless the owner explicitly reopens it or a fresh frontend-visible defect proves a broken contract.
+Frontend-visible market status is only:
+- `Live`
+- `Error`
+- `Closed`
 
-## Graphify
-Use the currently installed VM Graphify against the current repository graph; historical frontend graph counts are evidence only and must not be treated as current topology without refresh. Current hubs previously included `authoritativeValue()`, `api`, `useLocale()`, `findAsset()`, `SpotPage()`, `useMarketData()`, and `resolveEndpointTemplate()`.
-After a coherent code batch run `graphify update . --no-cluster`; use `affected`, `path`, and `explain` for targeted impact. Reclustering is only needed when community/God-node analysis matters.
+Internal transport/recovery states may remain richer, but do not expose stale/disconnected/provider diagnostics as new product statuses.
+## Product mode
+NEXI Public is an **Operate-mode financial workspace**, not a marketing site and not a redesign sandbox.
 
-## Contract evidence
-Use actual VM controller/DTO/OpenAPI material for contract changes. Feed API Documentation Checker/API Impact Mapper concrete endpoint/schema evidence, not progress summaries.
-Until `/docs-json` is deployed and frozen, mark uncertain client assumptions explicitly and keep adapters isolated so final contract deltas are cheap.
+Preserve the accepted recent mobile visual family:
+- Quotes Hub
+- Spot/Margin
+- Options/Binary
+- Wallet chooser sheet
+- Wallet
 
+Those five accepted screenshots are visual-reference evidence, then current source/runtime semantics apply.
+Explicitly rejected as visual authority:
+- `nexi_deep_liquid_violet_trading_concept.png`
+- `nexi_synthesized_spot_direction.png`
+- old September V2/V3 concepts when they conflict with later owner decisions
+
+Do not redesign completed screens from taste alone.
+Use screenshots to check hierarchy, density, spacing, composition, and interaction intent; use current source/runtime for functional truth.
+
+## Stack
+Current package authority:
+- Next.js `14.0.4`
+- React 18
+- TypeScript 5
+- Tailwind CSS 3.3
+- Lightweight Charts 4
+- TanStack Query 5
+- Socket.IO client 4.7
+- RainbowKit / wagmi / viem for wallet integration
+
+Do not describe this frontend as Next.js 12.
+## Next.js App Router rules
+This app uses the App Router. Prefer framework conventions over custom plumbing.
+
+Default to Server Components. Add `'use client'` only where interactivity, browser APIs, wallet state, realtime subscriptions, or client-only libraries require it.
+Do not move an entire route tree to the client merely because one child is interactive.
+
+Use:
+- `layout.tsx` for persistent shell
+- `page.tsx` for route UI
+- `loading.tsx` for meaningful route-segment loading states
+- `error.tsx` for recoverable segment errors
+- `not-found.tsx` for missing route/resource UI
+- `global-error.tsx` only for root-level catastrophic failure
+- Route Handlers only as thin frontend/BFF adapters, never domain authority
+
+Current repo scan found no route-level `loading.tsx`, `error.tsx`, or `not-found.tsx`; add them only where they improve a real user path, not mechanically everywhere.
+
+Use the Metadata API from layouts/pages rather than manual title/meta composition for new work.
+Keep the root viewport contract explicit and mobile-safe.
+## Next.js optimization rules
+Use `next/link` for app navigation and `next/navigation` for App Router navigation state.
+Use `next/image` for real image assets when its optimization model fits; do not replace chart/canvas/SVG/icon rendering just to use it.
+Prefer `next/font` for new or revised font-loading work, but do not churn the existing Geist setup without a measured reason.
+
+Use `next/dynamic` for heavy client-only modules when it materially lowers initial client cost. The trading chart is an established example.
+Do not blanket-apply dynamic imports to small controls.
+
+Do not blanket `no-store` every fetch. Realtime market and identity-sensitive reads may require it; stable public content should use the narrowest correct cache policy.
+Do not introduce ISR or caching for financial/user truth unless the backend contract explicitly permits it.
+
+Before framework-sensitive changes, verify behavior against the official Next.js 14 documentation:
+- https://nextjs.org/docs/14/app
+- https://nextjs.org/docs/14/app/building-your-application/routing
+- https://nextjs.org/docs/14/app/building-your-application/optimizing
+
+Use the project's installed Next CLI through package scripts or `npx --no-install next ...`. Prefer `next info`, `next build`, and the existing test scripts for diagnostics/verification.
+## Visual system
+Treat `DESIGN.md` in this directory as the current visual contract.
+
+Core identity:
+- near-black OLED canvas
+- Deep Liquid Violet interaction language
+- thin luminous violet borders/edge light
+- dense financial hierarchy
+- cyan/green positive/live accents
+- magenta/red negative/error accents
+- restrained glass only where it clarifies shell/elevation
+- execution surfaces stay crisp and readable
+
+Do not introduce generic SaaS cards, excessive glass nesting, giant marketing headings, decorative gradients, or cinematic motion into trading/product surfaces.
+
+Spot/Margin visual hierarchy:
+`pair header -> Spot/Margin switch -> dominant K-line workspace -> execution/depth -> activity -> persistent five-tab dock`.
+
+The chart is the main visual mass. Do not reintroduce oversized summary cards above it.
+Keep the seven intervals: `1m 5m 15m 30m 1h 4h 1d`.
+Keep indicator affordances aligned to the implemented chart contract.
+## Component and folder organization
+Prefer deep modules with clear ownership rather than larger route files accumulating unrelated responsibilities.
+
+Current high-risk frontend hubs identified by static analysis include:
+- `app/dashboard/binary/page.tsx`
+- `app/dashboard/wallet/page.tsx`
+- `app/components/WalletConnectControl.tsx`
+- `app/state/active-instrument.ts`
+- `app/lib/market-data.ts`
+- `app/lib/market-stream.ts`
+
+Do not refactor these just to satisfy a metric. When a touched change increases complexity, extract cohesive subcomponents/hooks/adapters behind a small interface.
+
+Shared product primitives belong in a neutral shared location when they serve multiple domains. Avoid putting broadly reused primitives under a Wallet-owned path unless they are truly Wallet-specific.
+Keep API adapters in `app/lib` or route handlers thin and typed.
+Keep route pages focused on composition/orchestration, not large transport or normalization logic.
+
+Fallow currently has no configured architecture-boundary zones. Until boundaries are added, enforce this contract manually and verify with Graphify/Fallow after structural edits.
+## Runtime and data behavior
+Frontend must render backend truth. Never fabricate:
+- prices
+- balances
+- PnL
+- payouts
+- order status
+- settlement
+- wallet state
+- authorization
+- provider health
+
+Realtime transport is not durable truth. After reconnect, recover authoritative state from backend/D1-backed reads.
+Reject duplicate/out-of-order market events where the current contract already does so.
+
+Wallet/SIWE and protected financial actions remain identity-gated.
+Do not weaken wallet gates or auth checks to make browser tests easier.
+
+## Accessibility and interaction
+All interactive controls must be keyboard reachable and operable.
+Prefer semantic `button`, `a`, `input`, `select`, and dialog primitives over click-handled divs.
+Preserve visible focus and correct name/role/value semantics.
+Mobile touch targets should be at least 44px where practical.
+Sheets, dialogs, menus, and drawers must manage focus and dismiss behavior correctly.
+Respect reduced-motion preferences; motion communicates state and hierarchy, never blocks task completion.
+Charts/order books need text labels/status summaries sufficient to understand current state without relying only on color.
 ## Validation
-Use the existing package manifest/lockfile and scripts. Run focused typecheck/lint/unit/browser tests for changed surfaces, including 320/360/390/430 mobile widths plus desktop, keyboard/focus, no horizontal overflow, and current locale requirements when UI behavior changes.
-Do not redesign completed screens merely because the backend contract changes. Adapt data, state, errors, auth, and realtime behavior with the smallest coherent change.
+For UI behavior changes, validate the rendered app, not just compilation.
+
+Minimum focused checks:
+- typecheck
+- affected unit/contract tests
+- relevant Playwright/browser flow
+- mobile widths 320 / 360 / 390 / 430
+- desktop
+- no horizontal overflow
+- keyboard/focus
+- current locale behavior where affected
+- current backend/API path, never a local Nest substitute
+
+For reference-driven UI work keep a short mismatch ledger:
+`accepted reference -> current render -> intentional deviation or actual defect`.
+
+After coherent structural changes:
+- refresh Graphify incrementally
+- use affected/path/explain only for touched seams
+- run Fallow on changed frontend paths
+Do not run broad graph or static-analysis loops when the owner/path is already known.
+
+## Git and parallel work
+Re-read files before edits. Preserve owner deletions/reorganizations and other active-session work.
+Do not restore archived/deleted frontend artifacts unless explicitly asked.
+Do not run broad formatting across unrelated files.
+Do not deploy or mutate production without explicit current owner authorization.

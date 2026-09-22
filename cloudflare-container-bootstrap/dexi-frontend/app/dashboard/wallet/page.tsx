@@ -72,7 +72,7 @@ export default function WalletPage() {
   const [error, setError] = useState('');
   const [action, setAction] = useState<Action | null>(null);
   const [currency, setCurrency] = useState('');
-  const previousUserId = useRef<string | null | undefined>();
+  const previousUserId = useRef<string | null | undefined>(undefined);
 
   const readEndpoint = userId ? '/wallet/me' : null;
   const activityEndpoint = userId ? '/wallet/activity' : null;
