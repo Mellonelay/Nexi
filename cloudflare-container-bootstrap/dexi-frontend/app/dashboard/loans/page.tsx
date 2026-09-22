@@ -77,6 +77,8 @@ const formatDate = (value: unknown) => {
     : authoritativeValue(value);
 };
 
+const loanKey = (loan: LoanRecord) => String(loan.id ?? [loan.createdAt, loan.amount, loan.currency, loan.dueDate].map((value) => authoritativeValue(value)).join(':'));
+
 const loanStatusCopy = (state: LoanState | 'UNAVAILABLE') => {
   switch (state) {
     case 'PENDING': return 'Application is awaiting review.';
@@ -297,7 +299,7 @@ export default function LoansPage() {
               )}
               {state === 'LIVE' && loans.length > 0 && (
                 <div className="space-y-3">
-                  {loans.map((loan, index) => <LoanRecordCard key={String(loan.id ?? index)} loan={loan} />)}
+                  {loans.map((loan) => <LoanRecordCard key={loanKey(loan)} loan={loan} />)}
                 </div>
               )}
             </Panel>
@@ -358,10 +360,10 @@ export default function LoansPage() {
                 <DataStatePanel state="UNAVAILABLE" title="No active repayment available" message="No active or overdue loan is available for repayment." />
               ) : (
                 <div className="space-y-3">
-                  {activeLoans.map((loan, index) => (
-                    <div key={String(loan.id ?? index)} className="rounded-xl border border-[#2B2037] bg-[#171022] p-3 sm:p-4">
+                {activeLoans.map((loan) => (
+                    <div key={loanKey(loan)} className="rounded-xl border border-[#2B2037] bg-[#171022] p-3 sm:p-4">
                       <div className="flex items-center justify-between gap-3"><p className="font-semibold">Loan {authoritativeValue(loan.id)}</p><StatusBadge state={normalizeLoanState(loan.status)} /></div>
-                      <dl className="mt-3 space-y-2 text-sm"><ReviewRow label="Total repayment" value={authoritativeValue(loan.totalRepayment)} /><ReviewRow label="Due date" value={formatDate(loan.dueDate)} /></dl><div className="mt-3 flex gap-2"><input className={`${inputClass} min-w-0`} value={repaymentLoanId === String(loan.id) ? repaymentAmount : ''} onChange={(event) => { setRepaymentLoanId(String(loan.id)); setRepaymentAmount(event.target.value); }} inputMode="decimal" placeholder="Payment amount" /><SecondaryButton onClick={() => void repayLoan()} disabled={repaying || repaymentLoanId !== String(loan.id) || positiveNumber(repaymentAmount) === null}>{repaying && repaymentLoanId === String(loan.id) ? 'Paying…' : 'Repay'}</SecondaryButton></div>
+                      <dl className="mt-3 space-y-2 text-sm"><ReviewRow label="Total repayment" value={authoritativeValue(loan.totalRepayment)} /><ReviewRow label="Due date" value={formatDate(loan.dueDate)} /></dl><div className="mt-3 flex gap-2"><input aria-label="Repayment amount" className={`${inputClass} min-w-0`} value={repaymentLoanId === String(loan.id) ? repaymentAmount : ''} onChange={(event) => { setRepaymentLoanId(String(loan.id)); setRepaymentAmount(event.target.value); }} inputMode="decimal" placeholder="Payment amount" /><SecondaryButton onClick={() => void repayLoan()} disabled={repaying || repaymentLoanId !== String(loan.id) || positiveNumber(repaymentAmount) === null}>{repaying && repaymentLoanId === String(loan.id) ? 'Paying…' : 'Repay'}</SecondaryButton></div>
                     </div>
                   ))}
                 </div>

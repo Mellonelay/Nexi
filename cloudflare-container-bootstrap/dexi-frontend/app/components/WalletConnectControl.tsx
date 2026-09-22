@@ -89,7 +89,8 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
   const previousAddress = useRef<string | null>(null);
   const previousChainId = useRef<number | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const chooserRef = useRef<HTMLDivElement>(null);
+  const chooserRef = useRef<HTMLDialogElement>(null);
+  const closeChooserRef = useRef<HTMLButtonElement>(null);
   const [sessionPresent, setSessionPresent] = useState(false);
   const sessionQuery = useQuery({
     queryKey: ["user", "me"],
@@ -238,33 +239,11 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
   useEffect(() => {
     if (!open) return;
     const trigger = triggerRef.current;
-    const frame = window.requestAnimationFrame(() =>
-      chooserRef.current?.querySelector<HTMLElement>("button")?.focus(),
-    );
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-      if (event.key !== "Tab" || !chooserRef.current) return;
-      const controls = Array.from(
-        chooserRef.current.querySelectorAll<HTMLElement>(
-          "button:not(:disabled)",
-        ),
-      );
-      if (!controls.length) return;
-      const first = controls[0];
-      const last = controls.at(-1)!;
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      }
-      if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
+    const chooser = chooserRef.current;
+    chooser?.showModal();
+    closeChooserRef.current?.focus();
     return () => {
-      window.cancelAnimationFrame(frame);
-      window.removeEventListener("keydown", handleKeyDown);
+      if (chooser?.open) chooser.close();
       trigger?.focus();
     };
   }, [open]);
@@ -319,19 +298,13 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
             : "Connect"}
       </button>
 
-      {open && (
-        <>
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            aria-label="Close wallet chooser"
-            className="fixed inset-0 z-[99] bg-black/55 sm:hidden"
-          />
-          <div
+      <dialog
             ref={chooserRef}
-            className="fixed inset-x-3 bottom-[calc(8px+env(safe-area-inset-bottom))] z-[100] flex max-h-[calc(100dvh-16px-env(safe-area-inset-bottom))] flex-col overflow-hidden rounded-2xl border border-violet-300/25 bg-[#0B0A0E] p-3 shadow-2xl sm:absolute sm:inset-x-auto sm:bottom-auto sm:right-0 sm:top-full sm:mt-2 sm:w-80 sm:max-h-[min(70dvh,520px)]"
-            role="dialog"
-            aria-modal="true"
+            onCancel={(event) => {
+              event.preventDefault();
+              setOpen(false);
+            }}
+            className="fixed inset-x-3 bottom-[calc(8px+env(safe-area-inset-bottom))] m-0 max-h-[calc(100dvh-16px-env(safe-area-inset-bottom))] max-w-none flex-col overflow-hidden rounded-2xl border border-violet-300/25 bg-[#0B0A0E] p-3 shadow-2xl backdrop:bg-black/55 sm:inset-x-auto sm:right-4 sm:top-16 sm:w-80 sm:max-h-[min(70dvh,520px)]"
             aria-label="Choose an Ethereum wallet"
           >
             <div className="flex items-start justify-between gap-3 px-1 pb-2">
@@ -349,6 +322,7 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
               </div>
               <button
                 type="button"
+                ref={closeChooserRef}
                 onClick={() => setOpen(false)}
                 className="min-h-11 min-w-11 rounded-lg text-[#8C8299] hover:bg-[#171022] hover:text-white"
                 aria-label="Close wallet chooser"
@@ -395,9 +369,7 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
                 {message || "Wallet connection failed."}
               </p>
             )}
-          </div>
-        </>
-      )}
+      </dialog>
     </div>
   );
 }

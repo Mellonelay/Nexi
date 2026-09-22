@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { LazyMotion, domAnimation, m, useReducedMotion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   X,
@@ -207,8 +207,9 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
   };
 
   return (
-    <ModalSurface open={open} onClose={onClose} title="Notifications" align="right">
-          <motion.aside
+    <LazyMotion features={domAnimation}>
+      <ModalSurface open={open} onClose={onClose} title="Notifications" align="right">
+          <m.aside
             id="nexi-notifications-panel"
             role="dialog"
             aria-modal="true"
@@ -359,7 +360,8 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
                 Open a notification to mark it as read.
               </p>
             </div>
-          </motion.aside>
-    </ModalSurface>
+          </m.aside>
+      </ModalSurface>
+    </LazyMotion>
   );
 }

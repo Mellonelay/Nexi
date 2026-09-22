@@ -31,6 +31,7 @@ interface TradingChartProps {
 
 type IndicatorKey = "MA" | "EMA" | "BOLL" | "RSI" | "MACD" | "VOL";
 const INDICATORS: IndicatorKey[] = ["MA", "EMA", "BOLL", "RSI", "MACD", "VOL"];
+const EMPTY_CANDLES: Candle[] = [];
 
 const lineData = (
   points: Array<{ time: number; value: number }>,
@@ -74,11 +75,62 @@ const marketStateCopy: Record<
   ],
 };
 
+function ChartMetricsRail({
+  symbol,
+  interval,
+  latest,
+  rsi,
+  macdHistogram,
+  activeIndicators,
+}: {
+  symbol: string;
+  interval: string;
+  latest: ReturnType<typeof latestChartMetrics>["latest"];
+  rsi: number | null;
+  macdHistogram: number | null;
+  activeIndicators: Set<IndicatorKey>;
+}) {
+  return (
+    <div className="nexi-chart-rail flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-violet-300/10 bg-black/15 px-3 py-2 font-mono text-[9px] sm:text-[10px]">
+      <span className="font-semibold text-[#F8F6FF]">{symbol}</span>
+      <span className="rounded border border-violet-300/15 px-1.5 py-0.5 text-[#CFC4FF]">{interval}</span>
+      <span className="hidden text-[#8C8299] sm:inline">O <b className="font-medium text-[#C3BBD0]">{formatMetric(latest?.open)}</b></span>
+      <span className="hidden text-[#8C8299] sm:inline">H <b className="font-medium text-[#98FCE4]">{formatMetric(latest?.high)}</b></span>
+      <span className="hidden text-[#8C8299] sm:inline">L <b className="font-medium text-[#FF9CB0]">{formatMetric(latest?.low)}</b></span>
+      <span className="text-[#8C8299]">C <b className="font-medium text-[#F8F6FF]">{formatMetric(latest?.close)}</b></span>
+      {activeIndicators.has("RSI") && <span className="ml-auto text-[#8C8299]">RSI 14 <b className="font-medium text-[#48C0CC]">{rsi === null ? "—" : rsi.toFixed(1)}</b></span>}
+      {activeIndicators.has("MA") && <span className="hidden text-[#F4D35E] md:inline">MA</span>}
+      {activeIndicators.has("EMA") && <span className="hidden text-[#A995FF] md:inline">EMA</span>}
+      {activeIndicators.has("BOLL") && <span className="hidden text-[#CFC4FF] md:inline">BOLL</span>}
+      {activeIndicators.has("VOL") && <span className="hidden text-[#8C8299] md:inline">VOL</span>}
+      {activeIndicators.has("MACD") && <span className="text-[#8C8299]">MACD <b className={`font-medium ${macdHistogram !== null && macdHistogram >= 0 ? "text-[#98FCE4]" : "text-[#FF9CB0]"}`}>{macdHistogram === null ? "—" : macdHistogram.toFixed(2)}</b></span>}
+    </div>
+  );
+}
+
+function ChartIndicatorRail({ activeIndicators, onToggle }: { activeIndicators: Set<IndicatorKey>; onToggle: (indicator: IndicatorKey) => void }) {
+  return (
+    <div className="nexi-scroll-rail flex min-w-0 gap-1 overflow-x-auto border-b border-violet-300/10 bg-black/10 px-2 py-1.5" aria-label="Chart indicators">
+      {INDICATORS.map((indicator) => {
+        const active = activeIndicators.has(indicator);
+        return <button key={indicator} type="button" aria-pressed={active} onClick={() => onToggle(indicator)} className={`nexi-interactive min-h-11 min-w-11 shrink-0 rounded-md border px-2 text-[10px] font-semibold ${active ? "border-violet-300/30 bg-[#2A1742] text-white" : "border-transparent text-[#8C8299] hover:text-white"}`}>{indicator}</button>;
+      })}
+    </div>
+  );
+}
+
+function ChartStatusOverlay({ blocksChart, stateCopy }: { blocksChart: [string, string] | false | null; stateCopy: [string, string] | null }) {
+  return <>
+    {blocksChart && <div className="absolute inset-x-0 bottom-0 top-9 z-10 flex items-center justify-center bg-[var(--nexi-surface-execution)] px-6 text-center" role="status"><div><p className="text-sm font-semibold text-white">{blocksChart[0]}</p><p className="mt-1 max-w-xs text-xs leading-5 text-[var(--nexi-text-secondary)]">{blocksChart[1]}</p></div></div>}
+    {!blocksChart && stateCopy && <div className="pointer-events-none absolute inset-x-3 bottom-3 z-10 rounded-lg border border-amber-300/25 bg-[#15101D]/95 px-3 py-2 text-xs text-amber-100" role="status"><span className="font-semibold">{stateCopy[0]}.</span> {stateCopy[1]}</div>}
+  </>;
+}
+
 export default function TradingChart({
   symbol,
   type,
   interval = "1m",
-  candles = [],
+  candles = EMPTY_CANDLES,
   status = "UNAVAILABLE",
 }: TradingChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -277,83 +329,15 @@ export default function TradingChart({
     <div
       className={`relative flex h-full w-full flex-col overflow-hidden rounded-lg ${responsiveHeight}`}
     >
-      <div className="nexi-chart-rail flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-violet-300/10 bg-black/15 px-3 py-2 font-mono text-[9px] sm:text-[10px]">
-        <span className="font-semibold text-[#F8F6FF]">{symbol}</span>
-        <span className="rounded border border-violet-300/15 px-1.5 py-0.5 text-[#CFC4FF]">
-          {interval}
-        </span>
-        <span className="hidden text-[#8C8299] sm:inline">
-          O{" "}
-          <b className="font-medium text-[#C3BBD0]">
-            {formatMetric(latest?.open)}
-          </b>
-        </span>
-        <span className="hidden text-[#8C8299] sm:inline">
-          H{" "}
-          <b className="font-medium text-[#98FCE4]">
-            {formatMetric(latest?.high)}
-          </b>
-        </span>
-        <span className="hidden text-[#8C8299] sm:inline">
-          L{" "}
-          <b className="font-medium text-[#FF9CB0]">
-            {formatMetric(latest?.low)}
-          </b>
-        </span>
-        <span className="text-[#8C8299]">
-          C{" "}
-          <b className="font-medium text-[#F8F6FF]">
-            {formatMetric(latest?.close)}
-          </b>
-        </span>
-        {activeIndicators.has("RSI") && <span className="ml-auto text-[#8C8299]">
-          RSI 14{" "}<b className="font-medium text-[#48C0CC]">{metrics.rsi === null ? "—" : metrics.rsi.toFixed(1)}</b>
-        </span>}
-        {activeIndicators.has("MA") && <span className="hidden text-[#F4D35E] md:inline">MA</span>}
-        {activeIndicators.has("EMA") && <span className="hidden text-[#A995FF] md:inline">EMA</span>}
-        {activeIndicators.has("BOLL") && <span className="hidden text-[#CFC4FF] md:inline">BOLL</span>}
-        {activeIndicators.has("VOL") && <span className="hidden text-[#8C8299] md:inline">VOL</span>}
-        {activeIndicators.has("MACD") && <span className="text-[#8C8299]">
-          MACD{" "}<b className={`font-medium ${macdHistogram !== null && macdHistogram >= 0 ? "text-[#98FCE4]" : "text-[#FF9CB0]"}`}>{macdHistogram === null ? "—" : macdHistogram.toFixed(2)}</b>
-        </span>}
-      </div>
-      <div className="nexi-scroll-rail flex min-w-0 gap-1 overflow-x-auto border-b border-violet-300/10 bg-black/10 px-2 py-1.5" aria-label="Chart indicators">
-        {INDICATORS.map((indicator) => {
-          const active = activeIndicators.has(indicator);
-          return (
-            <button key={indicator} type="button" aria-pressed={active} onClick={() => toggleIndicator(indicator)} className={`nexi-interactive min-h-11 min-w-11 shrink-0 rounded-md border px-2 text-[10px] font-semibold ${active ? "border-violet-300/30 bg-[#2A1742] text-white" : "border-transparent text-[#8C8299] hover:text-white"}`}>
-              {indicator}
-            </button>
-          );
-        })}
-      </div>
+      <ChartMetricsRail symbol={symbol} interval={interval} latest={latest} rsi={metrics.rsi} macdHistogram={macdHistogram} activeIndicators={activeIndicators} />
+      <ChartIndicatorRail activeIndicators={activeIndicators} onToggle={toggleIndicator} />
       <div
         ref={chartContainerRef}
         className="min-h-0 w-full flex-1"
         role="img"
         aria-label={`${symbol} ${interval} candlestick chart with volume and technical overlays`}
       />
-      {blocksChart && (
-        <div
-          className="absolute inset-x-0 bottom-0 top-9 z-10 flex items-center justify-center bg-[var(--nexi-surface-execution)] px-6 text-center"
-          role="status"
-        >
-          <div>
-            <p className="text-sm font-semibold text-white">{blocksChart[0]}</p>
-            <p className="mt-1 max-w-xs text-xs leading-5 text-[var(--nexi-text-secondary)]">
-              {blocksChart[1]}
-            </p>
-          </div>
-        </div>
-      )}
-      {!blocksChart && stateCopy && (
-        <div
-          className="pointer-events-none absolute inset-x-3 bottom-3 z-10 rounded-lg border border-amber-300/25 bg-[#15101D]/95 px-3 py-2 text-xs text-amber-100"
-          role="status"
-        >
-          <span className="font-semibold">{stateCopy[0]}.</span> {stateCopy[1]}
-        </div>
-      )}
+      <ChartStatusOverlay blocksChart={blocksChart} stateCopy={stateCopy} />
     </div>
   );
 }

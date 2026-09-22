@@ -70,6 +70,8 @@ const threadTitle = (thread: MessageThread) =>
   ?? textValue(thread.subject)
   ?? (thread.counterpartId ? `Conversation ${thread.counterpartId.slice(0, 8)}` : 'Conversation');
 const threadState = (thread: MessageThread) => normalizeMessageThreadState(thread.readState);
+const threadKey = (thread: MessageThread) => String(thread.id ?? [thread.counterpartId, thread.updatedAt, thread.title, thread.subject].map((value) => authoritativeValue(value)).join(':'));
+const messageKey = (record: MessageRecord) => String(record.id ?? [record.sequence, record.createdAt, record.senderId, record.recipientId, record.body ?? record.text].map((value) => authoritativeValue(value)).join(':'));
 
 export default function MessagesPage() {
   const [threads, setThreads] = useState<MessageThread[]>([]);
@@ -258,8 +260,8 @@ export default function MessagesPage() {
               {state === 'UNAVAILABLE' && <DataStatePanel state="UNAVAILABLE" title={!userId ? 'Sign in to view conversations' : 'Messages unavailable'} message={!userId ? undefined : 'Conversation history is not available right now.'} />}
               {state === 'ERROR' && <DataStatePanel state="ERROR" title="Message service error" />}
               {state === 'LIVE' && filtered.length === 0 && <DataStatePanel state="UNAVAILABLE" title="No conversations returned" />}
-              {state === 'LIVE' && filtered.map((thread, index) => (
-                <ThreadButton key={String(thread.id ?? index)} thread={thread} active={selected?.id === thread.id} onClick={() => void openThread(thread)} />
+              {state === 'LIVE' && filtered.map((thread) => (
+                <ThreadButton key={threadKey(thread)} thread={thread} active={selected?.id === thread.id} onClick={() => void openThread(thread)} />
               ))}
             </div>
           </Panel>
@@ -337,10 +339,10 @@ function AuthoritativeMessageList({ thread }: { thread: MessageThread }) {
 
   return (
     <div className="space-y-3">
-      {records.map((record, index) => {
+      {records.map((record) => {
         const delivery = normalizeMessageDeliveryState(record.deliveryState);
         return (
-          <article key={String(record.id ?? index)} className="rounded-xl border border-[#2B2037] bg-[#171022] p-4">
+          <article key={messageKey(record)} className="rounded-xl border border-[#2B2037] bg-[#171022] p-4">
             <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
               <p className="min-w-0 break-words text-sm leading-6 text-[#F2ECFA]">{authoritativeValue(record.body ?? record.text)}</p>
               <StatusBadge state={delivery} />

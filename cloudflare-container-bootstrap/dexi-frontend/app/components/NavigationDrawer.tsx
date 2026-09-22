@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   BookOpen,
@@ -25,7 +25,6 @@ import {
 import { localeLabel } from "../state/locale";
 import { useLocale } from "../state/LocaleProvider";
 import type { UiMessageKey } from "../state/messages";
-import ModalSurface from "./ModalSurface";
 import AccountIdentityHeader from "./AccountIdentityHeader";
 
 type DrawerItem = { key: UiMessageKey; href: string; icon: typeof Home };
@@ -72,7 +71,19 @@ export default function NavigationDrawer({
   const { locale, setLocale, languages, t } = useLocale();
   const [open, setOpen] = useState(false);
   const [language, setLanguage] = useState(false);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog || !open) return;
+    dialog.showModal();
+    closeRef.current?.focus();
+    return () => {
+      if (dialog.open) dialog.close();
+    };
+  }, [open]);
   const close = () => {
+    dialogRef.current?.close();
     setOpen(false);
     setLanguage(false);
   };
@@ -106,37 +117,37 @@ export default function NavigationDrawer({
           </>
         )}
       </button>
-      {open && (
-        <ModalSurface open={open} onClose={close} title={t("openApplicationMenu")} align="left">
-          <aside
-            id="nexi-application-drawer"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="nexi-application-drawer-title"
-            className="nexi-drawer relative flex h-full w-[84vw] max-w-[320px] flex-col overflow-y-auto overscroll-contain border-r border-violet-300/20 px-4 pb-[calc(20px+env(safe-area-inset-bottom))] pt-4 shadow-2xl"
-          >
-            <h2 id="nexi-application-drawer-title" className="sr-only">
+      <dialog
+        ref={dialogRef}
+        id="nexi-application-drawer"
+        aria-labelledby="nexi-application-drawer-title"
+        onCancel={(event) => {
+          event.preventDefault();
+          close();
+        }}
+        className="nexi-drawer fixed inset-y-0 left-0 m-0 flex h-[calc(100dvh-76px-env(safe-area-inset-bottom))] w-[84vw] max-w-[320px] flex-col overflow-y-auto overscroll-contain border-r border-violet-300/20 px-4 pb-[calc(20px+env(safe-area-inset-bottom))] pt-4 shadow-2xl backdrop:bg-black/70 backdrop:backdrop-blur-sm"
+      >
+        <h2 id="nexi-application-drawer-title" className="sr-only">
               {t("openApplicationMenu")}
-            </h2>
-            <div className="mb-5 flex justify-end">
-              <button
-                type="button"
-                onClick={close}
-                aria-label={t("closeApplicationMenu")}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-[#C3BBD0] hover:bg-white/5 hover:text-white"
-              >
-                <X className="h-5 w-5" aria-hidden="true" />
-              </button>
-            </div>
-            <nav
-              className="flex-1"
-              aria-label={language ? t("languageSelection") : t("primary")}
-            >
-              {!language && (
-                <AccountIdentityHeader onNavigate={close} compact />
-              )}
-              {language ? (
-                <div className="space-y-2">
+        </h2>
+        <div className="mb-5 flex justify-end">
+          <button
+            type="button"
+            ref={closeRef}
+            onClick={close}
+            aria-label={t("closeApplicationMenu")}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-[#C3BBD0] hover:bg-white/5 hover:text-white"
+          >
+            <X className="h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
+        <nav
+          className="flex-1"
+          aria-label={language ? t("languageSelection") : t("primary")}
+        >
+          {!language && <AccountIdentityHeader onNavigate={close} compact />}
+          {language ? (
+            <div className="space-y-2">
                   <button
                     type="button"
                     onClick={() => setLanguage(false)}
@@ -161,9 +172,9 @@ export default function NavigationDrawer({
                       )}
                     </button>
                   ))}
-                </div>
-              ) : (
-                <>
+            </div>
+          ) : (
+            <>
                   {groups.map((group) => (
                     <div key={group.titleKey} className="mb-5">
                       <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8C8299]">
@@ -206,12 +217,10 @@ export default function NavigationDrawer({
                       </div>
                     </div>
                   ))}
-                </>
-              )}
-            </nav>
-          </aside>
-        </ModalSurface>
-      )}
+            </>
+          )}
+        </nav>
+      </dialog>
     </>
   );
 }

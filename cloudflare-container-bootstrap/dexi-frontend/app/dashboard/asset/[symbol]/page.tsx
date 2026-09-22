@@ -14,6 +14,7 @@ import SafeBackButton from '../../../components/SafeBackButton';
 import { marketDisplayStatus } from '../../../lib/market-data';
 
 const placeholder = '—';
+const timeFormatter = new Intl.DateTimeFormat('en-US', { timeStyle: 'short' });
 
 export default function AssetDetailPage() {
   const params = useParams<{ symbol: string }>();
@@ -109,7 +110,7 @@ export default function AssetDetailPage() {
               <div><dt className="text-[#8C8299]">Volume (24h)</dt><dd className="mt-1 font-mono">{instrument.volume24h ?? placeholder}</dd></div>
               <div><dt className="text-[#8C8299]">Precision</dt><dd className="mt-1 font-mono">{instrument.precision ?? placeholder}</dd></div>
               <div><dt className="text-[#8C8299]">Source</dt><dd className="mt-1 font-mono">{matchedItem?.provider ?? placeholder}</dd></div>
-              <div><dt className="text-[#8C8299]">Updated</dt><dd className="mt-1 font-mono">{matchedItem?.observedAt ? new Date(matchedItem.observedAt).toLocaleTimeString() : placeholder}</dd></div>
+              <div><dt className="text-[#8C8299]">Updated</dt><dd className="mt-1 font-mono">{matchedItem?.observedAt ? timeFormatter.format(new Date(matchedItem.observedAt)) : placeholder}</dd></div>
             </dl>
           </div>
           <div className="min-w-0 rounded-xl border border-violet-300/15 bg-[#100A18] p-4">

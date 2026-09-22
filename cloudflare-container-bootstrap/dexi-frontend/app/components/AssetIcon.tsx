@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { assetIconPath, findAsset } from '../lib/asset-registry';
 import type { MarketPair } from '../hooks/useMarketData';
 
@@ -15,10 +15,11 @@ export default function AssetIcon({ item, size = 'sm' }: AssetIconProps) {
   const iconPath = assetIconPath(asset ?? { iconKey: undefined });
   const dimensions = size === 'md' ? 36 : 28;
   const fallback = (asset?.displaySymbol ?? item.displaySymbol).slice(0, 3).toUpperCase();
+  return <AssetIconImage key={iconPath ?? 'fallback'} item={item} asset={asset} iconPath={iconPath} size={size} dimensions={dimensions} fallback={fallback} />;
+}
+
+function AssetIconImage({ item, asset, iconPath, size, dimensions, fallback }: AssetIconProps & { asset: ReturnType<typeof findAsset>; iconPath?: string; dimensions: number; fallback: string }) {
   const [sourceAvailable, setSourceAvailable] = useState(Boolean(iconPath));
-
-  useEffect(() => setSourceAvailable(Boolean(iconPath)), [iconPath]);
-
   return (
     <span
       className={`nexi-token-mark relative flex shrink-0 items-center justify-center overflow-hidden rounded-full ${size === 'md' ? 'h-9 w-9' : 'h-7 w-7'}`}

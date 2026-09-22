@@ -52,6 +52,10 @@ type MobileMarketPanel = 'CHART' | 'BOOK' | 'TRADES';
 type SpotSurface = 'SPOT' | 'MARGIN';
 
 const CHART_INTERVALS: ChartInterval[] = ['1m', '5m', '15m', '30m', '1h', '4h', '1d'];
+const numberFormatter = new Intl.NumberFormat('en-US');
+const timeFormatter = new Intl.DateTimeFormat('en-US', { timeStyle: 'short' });
+const dateTimeFormatter = new Intl.DateTimeFormat('en-US', { dateStyle: 'short', timeStyle: 'short' });
+const orderBookRowKey = (row: OrderBookRow) => `${row.id ?? ''}:${row.price}:${row.amount}`;
 
 const finiteRows = (value: unknown): OrderBookRow[] => {
   if (!Array.isArray(value)) return [];
@@ -482,7 +486,7 @@ export default function SpotPage() {
           />
         </div>
         {currentPrice !== null && <div className="shrink-0 text-right" aria-label="Current market price">
-          <p className="font-mono text-sm text-[#C3BBD0]">{currentPrice.toLocaleString()}</p>
+          <p className="font-mono text-sm text-[#C3BBD0]">{numberFormatter.format(currentPrice)}</p>
           {marketChange !== null && <p className={`mt-0.5 font-mono text-[10px] ${marketChange >= 0 ? 'text-[#22D3A6]' : 'text-[#FF5C7C]'}`}>{marketChange > 0 ? '+' : ''}{marketChange.toFixed(2)}% 24h</p>}
         </div>}
         {priceStatus === 'ERROR' && <div className="shrink-0 text-right" role="status" aria-label="Market data error">
@@ -589,11 +593,11 @@ export default function SpotPage() {
               <div className="grid min-w-0 grid-cols-2 text-xs">
                 <div className="min-w-0 border-r border-white/5 p-3">
                   <div className="mb-2 flex min-w-0 justify-between gap-2 text-[#8C8299]"><span>Amount</span><span>Bid</span></div>
-                  {bids.slice(0, 12).map((row, index) => <button key={row.id ?? index} type="button" onClick={() => setPrice(String(row.price))} className="nexi-interactive flex min-h-8 min-w-0 w-full justify-between gap-2 rounded px-1 font-mono hover:bg-emerald-400/5"><span className="truncate">{row.amount}</span><span className="truncate text-[#22D3A6]">{row.price}</span></button>)}
+                  {bids.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(String(row.price))} className="nexi-interactive flex min-h-8 min-w-0 w-full justify-between gap-2 rounded px-1 font-mono hover:bg-emerald-400/5"><span className="truncate">{row.amount}</span><span className="truncate text-[#22D3A6]">{row.price}</span></button>)}
                 </div>
                 <div className="min-w-0 p-3">
                   <div className="mb-2 flex min-w-0 justify-between gap-2 text-[#8C8299]"><span>Ask</span><span>Amount</span></div>
-                  {asks.slice(0, 12).map((row, index) => <button key={row.id ?? index} type="button" onClick={() => setPrice(String(row.price))} className="nexi-interactive flex min-h-8 min-w-0 w-full justify-between gap-2 rounded px-1 font-mono hover:bg-rose-400/5"><span className="truncate text-[#FF5C7C]">{row.price}</span><span className="truncate">{row.amount}</span></button>)}
+                  {asks.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(String(row.price))} className="nexi-interactive flex min-h-8 min-w-0 w-full justify-between gap-2 rounded px-1 font-mono hover:bg-rose-400/5"><span className="truncate text-[#FF5C7C]">{row.price}</span><span className="truncate">{row.amount}</span></button>)}
                 </div>
               </div>
               {bids.length === 0 && asks.length === 0 && (
@@ -609,7 +613,7 @@ export default function SpotPage() {
 
             <section className={`nexi-station-card min-w-0 rounded-2xl md:block ${mobileMarketPanel === 'TRADES' ? 'block' : 'hidden'}`} aria-labelledby="recent-trades-heading">
               <div className="flex items-center justify-between gap-2 border-b border-white/5 px-4 py-3"><h2 id="recent-trades-heading" className="font-semibold">Recent trades</h2>{tradeStatus === 'LIVE' ? <span className="text-xs text-[#8C8299]">Live market records</span> : tradeStatus === 'CONNECTION_LOST' ? <span className="text-xs text-amber-200">Updates paused · last received records</span> : tradeStatus === 'LOADING' ? <span className="text-xs text-[#8C8299]">Loading</span> : tradeStatus === 'ERROR' ? <span className="text-xs text-[#8C8299]">Request error</span> : null}</div>
-              {marketTrades.length > 0 ? <div className="divide-y divide-white/5 text-xs">{marketTrades.slice(0, 12).map((trade) => <div key={trade.id} className="grid grid-cols-3 gap-2 px-4 py-2 font-mono"><span>{trade.price.toLocaleString()}</span><span>{trade.amount}</span><span className="text-right text-[#8C8299]">{new Date(trade.executedAt).toLocaleTimeString()}</span></div>)}</div> : <div className="flex min-h-52 items-center justify-center p-6 text-center text-sm text-[#8C8299]">{tradeStatus === 'LOADING' ? 'Loading recent trades…' : tradeStatus === 'ERROR' ? 'Recent trades could not be loaded.' : 'No recent trades yet.'}</div>}
+              {marketTrades.length > 0 ? <div className="divide-y divide-white/5 text-xs">{marketTrades.slice(0, 12).map((trade) => <div key={trade.id} className="grid grid-cols-3 gap-2 px-4 py-2 font-mono"><span>{numberFormatter.format(trade.price)}</span><span>{trade.amount}</span><span className="text-right text-[#8C8299]">{timeFormatter.format(new Date(trade.executedAt))}</span></div>)}</div> : <div className="flex min-h-52 items-center justify-center p-6 text-center text-sm text-[#8C8299]">{tradeStatus === 'LOADING' ? 'Loading recent trades…' : tradeStatus === 'ERROR' ? 'Recent trades could not be loaded.' : 'No recent trades yet.'}</div>}
             </section>
           </div>
 
@@ -628,15 +632,15 @@ export default function SpotPage() {
             </div>
             <div className="p-4">
               {historyRows.length > 0 ? (
-                <div className="space-y-2">{historyRows.slice(0, 30).map((row, index) => {
-                  const id = String(row.id ?? row.orderId ?? `${historyTab}-${index}`);
+                <div className="space-y-2">{historyRows.slice(0, 30).map((row) => {
+                  const id = String(row.id ?? row.orderId ?? [historyTab, row.pair, row.side, row.amount ?? row.quantity, row.price, row.createdAt ?? row.executedAt].map((value) => String(value ?? '')).join(':'));
                   const pair = String(row.pair ?? displayPair);
                   const status = String(row.status ?? row.state ?? 'UNKNOWN').replaceAll('_', ' ');
                   const rowSide = row.side ? String(row.side) : '';
                   const rowAmount = String(row.amount ?? row.quantity ?? row.filled ?? '—');
                   const rowPrice = String(row.price ?? row.entryPrice ?? '—');
                   const when = row.createdAt ?? row.executedAt ?? row.updatedAt;
-                  return <article key={id} className="rounded-xl border border-violet-300/10 bg-[#0B0711] p-3 text-xs"><div className="flex flex-wrap items-center justify-between gap-2"><span className="font-semibold">{pair}{rowSide ? ` · ${rowSide}` : ''}</span><span className="rounded-full border border-violet-300/20 px-2 py-1 uppercase text-[#C3BBD0]">{status}</span></div><div className="mt-2 grid grid-cols-2 gap-2 font-mono sm:grid-cols-4"><span>Amount {rowAmount}</span><span>Price {rowPrice}</span><span className="truncate">ID {id}</span><span>{when ? new Date(String(when)).toLocaleString() : '—'}</span></div></article>;
+                  return <article key={id} className="rounded-xl border border-violet-300/10 bg-[#0B0711] p-3 text-xs"><div className="flex flex-wrap items-center justify-between gap-2"><span className="font-semibold">{pair}{rowSide ? ` · ${rowSide}` : ''}</span><span className="rounded-full border border-violet-300/20 px-2 py-1 uppercase text-[#C3BBD0]">{status}</span></div><div className="mt-2 grid grid-cols-2 gap-2 font-mono sm:grid-cols-4"><span>Amount {rowAmount}</span><span>Price {rowPrice}</span><span className="truncate">ID {id}</span><span>{when ? dateTimeFormatter.format(new Date(String(when))) : '—'}</span></div></article>;
                 })}</div>
               ) : (
                 <div className="flex min-h-32 items-center justify-center text-center text-sm text-[#8C8299]">{historyStatus === 'LOADING' ? 'Loading activity…' : historyStatus === 'ERROR' ? 'Activity request failed.' : historyTab === 'OPEN' ? 'No open orders.' : historyTab === 'ORDERS' ? 'No order history.' : 'No trade history.'}</div>

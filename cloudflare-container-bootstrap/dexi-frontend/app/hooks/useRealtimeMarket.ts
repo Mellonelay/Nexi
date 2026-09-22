@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import { normalizeCandle } from "../lib/market-data";
 import { apiBaseUrl } from "../lib/api";
@@ -67,10 +67,7 @@ export function useRealtimeMarket(symbol: string, interval = "1m") {
   const [snapshot, setSnapshot] = useState<MarketStreamSnapshot>(
     EMPTY_STREAM_SNAPSHOT,
   );
-  const intervalSeconds = useMemo(
-    () => timeframeToSeconds(interval),
-    [interval],
-  );
+  const intervalSeconds = timeframeToSeconds(interval);
 
   useEffect(() => {
     let disposed = false;

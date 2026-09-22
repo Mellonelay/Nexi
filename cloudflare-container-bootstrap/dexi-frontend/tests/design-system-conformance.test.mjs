@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 const root = new URL('..', import.meta.url);
 const read = (relative) => readFileSync(new URL(relative, root), 'utf8');
 const chart = read('app/components/TradingChart.tsx');
-const controls = read('app/components/NexiPrimitives.tsx');
+const controls = `${read('app/components/NexiPrimitives.tsx')}\n${read('app/components/nexi-variants.ts')}`;
 const nav = read('app/components/BottomNav.tsx');
 const css = read('app/globals.css');
 

@@ -15,50 +15,31 @@ type AccountIdentityHeaderProps = {
   compact?: boolean;
 };
 
-function shortenId(value: string) {
-  return value.length > 16 ? `${value.slice(0, 8)}…${value.slice(-5)}` : value;
+type AccountState = "UNAVAILABLE" | "LOADING" | "ERROR" | "LIVE";
+
+function accountState(
+  sessionPresent: boolean,
+  sessionQuery: { isLoading: boolean; isError: boolean; data?: WalletProfile },
+): AccountState {
+  if (!sessionPresent) return "UNAVAILABLE";
+  if (sessionQuery.isLoading) return "LOADING";
+  if (sessionQuery.isError) return "ERROR";
+  return sessionQuery.data ? "LIVE" : "UNAVAILABLE";
 }
 
-export default function AccountIdentityHeader({
+function AccountIdentityCard({
+  compact,
+  displayName,
   onNavigate,
-  compact = false,
-}: AccountIdentityHeaderProps) {
-  const { t } = useLocale();
-  const queryClient = useQueryClient();
-  const [sessionPresent, setSessionPresent] = useState(false);
-  const sessionQuery = useQuery<WalletProfile>({
-    queryKey: ["user", "me"],
-    queryFn: loadCurrentUser,
-    enabled: sessionPresent,
-    retry: false,
-    staleTime: 30_000,
-  });
-
-  useEffect(() => {
-    const syncSession = () => {
-      const hasSession = hasAuthSession();
-      setSessionPresent(hasSession);
-      if (hasSession)
-        void queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-    };
-    syncSession();
-    window.addEventListener("nexi:wallet-session", syncSession);
-    return () => window.removeEventListener("nexi:wallet-session", syncSession);
-  }, [queryClient]);
-
-  const state = !sessionPresent
-    ? "UNAVAILABLE"
-    : sessionQuery.isLoading
-      ? "LOADING"
-      : sessionQuery.isError
-        ? "ERROR"
-        : sessionQuery.data
-          ? "LIVE"
-          : "UNAVAILABLE";
-  const profileId =
-    state === "LIVE" ? authoritativeValue(sessionQuery.data?.id) : "—";
-  const displayName =
-    state === "LIVE" ? authoritativeValue(sessionQuery.data?.displayName) : "—";
+  profileId,
+  state,
+  t,
+}: AccountIdentityHeaderProps & {
+  displayName: string;
+  profileId: string;
+  state: AccountState;
+  t: ReturnType<typeof useLocale>["t"];
+}) {
   const statusLabel =
     state === "LOADING"
       ? t("loadingAccount")
@@ -121,5 +102,53 @@ export default function AccountIdentityHeader({
         </span>
       </div>
     </Link>
+  );
+}
+
+function shortenId(value: string) {
+  return value.length > 16 ? `${value.slice(0, 8)}…${value.slice(-5)}` : value;
+}
+
+export default function AccountIdentityHeader({
+  onNavigate,
+  compact = false,
+}: AccountIdentityHeaderProps) {
+  const { t } = useLocale();
+  const queryClient = useQueryClient();
+  const [sessionPresent, setSessionPresent] = useState(false);
+  const sessionQuery = useQuery<WalletProfile>({
+    queryKey: ["user", "me"],
+    queryFn: loadCurrentUser,
+    enabled: sessionPresent,
+    retry: false,
+    staleTime: 30_000,
+  });
+
+  useEffect(() => {
+    const syncSession = () => {
+      const hasSession = hasAuthSession();
+      setSessionPresent(hasSession);
+      if (hasSession)
+        void queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+    };
+    syncSession();
+    window.addEventListener("nexi:wallet-session", syncSession);
+    return () => window.removeEventListener("nexi:wallet-session", syncSession);
+  }, [queryClient]);
+
+  const state = accountState(sessionPresent, sessionQuery);
+  const profileId =
+    state === "LIVE" ? authoritativeValue(sessionQuery.data?.id) : "—";
+  const displayName =
+    state === "LIVE" ? authoritativeValue(sessionQuery.data?.displayName) : "—";
+  return (
+    <AccountIdentityCard
+      compact={compact}
+      displayName={displayName}
+      onNavigate={onNavigate}
+      profileId={profileId}
+      state={state}
+      t={t}
+    />
   );
 }

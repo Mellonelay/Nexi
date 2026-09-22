@@ -11,7 +11,7 @@ import {
   Star,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { LazyMotion, domAnimation, m } from "framer-motion";
 import { MarketPair, useMarketData } from "../hooks/useMarketData";
 import { nexiTransition } from "../lib/nexi-motion";
 import { marketDisplayStatus } from "../lib/market-data";
@@ -223,11 +223,13 @@ export default function Dashboard() {
                   className={`relative flex min-h-11 min-w-0 flex-col items-center justify-center gap-0.5 overflow-hidden rounded-[8px] px-1 text-[10px] font-medium transition md:min-h-14 md:flex-row md:gap-2 md:rounded-[16px] md:text-sm ${index < tabs.length - 1 ? "border-r border-white/[0.05] md:border-r-0" : ""} ${active ? "text-white" : "text-[var(--nexi-text-secondary)] hover:bg-white/[0.04] hover:text-white"}`}
                 >
                   {active && (
-                    <motion.span
+                    <LazyMotion features={domAnimation}>
+                      <m.span
                       layoutId="quotes-tab"
                       className="nexi-tab-edge absolute inset-0 rounded-[8px] border border-[color:var(--nexi-cal-violet-bright)]/55 bg-[linear-gradient(180deg,rgba(44,20,108,.88),rgba(24,8,72,.8))] shadow-[0_0_20px_rgba(115,83,221,.28)] md:rounded-[16px]"
                       transition={{ type: "tween", ...nexiTransition.tab }}
-                    />
+                      />
+                    </LazyMotion>
                   )}
                   <Icon
                     className={`relative h-[17px] w-[17px] md:h-5 md:w-5 ${active ? "text-violet-300" : ""}`}

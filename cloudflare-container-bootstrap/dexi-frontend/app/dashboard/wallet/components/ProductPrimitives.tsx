@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { controlVariants, NexiSurface } from '../../../components/NexiPrimitives';
+import { NexiSurface } from '../../../components/NexiPrimitives';
+import { controlVariants } from '../../../components/nexi-variants';
 import { cn } from '../../../lib/cn';
 import { productStateLabel } from '../../../lib/product-states';
 

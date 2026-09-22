@@ -40,16 +40,18 @@ Use screenshots to check hierarchy, density, spacing, composition, and interacti
 
 ## Stack
 Current package authority:
-- Next.js `14.0.4`
-- React 18
+- Next.js `16.3.5`
+- React / React DOM `19.3.0`
 - TypeScript 5
+- ESLint 9 + `eslint-config-next` 16.3.5
 - Tailwind CSS 3.3
 - Lightweight Charts 4
 - TanStack Query 5
 - Socket.IO client 4.7
 - RainbowKit / wagmi / viem for wallet integration
+- Node.js `>=20.9.0`
 
-Do not describe this frontend as Next.js 12.
+Do not describe this frontend as Next.js 12 or 14. Read `package.json` before framework-sensitive work.
 ## Next.js App Router rules
 This app uses the App Router. Prefer framework conventions over custom plumbing.
 
@@ -80,14 +82,20 @@ Do not blanket-apply dynamic imports to small controls.
 Do not blanket `no-store` every fetch. Realtime market and identity-sensitive reads may require it; stable public content should use the narrowest correct cache policy.
 Do not introduce ISR or caching for financial/user truth unless the backend contract explicitly permits it.
 
-Before framework-sensitive changes, verify behavior against the official Next.js 14 documentation:
-- https://nextjs.org/docs/14/app
-- https://nextjs.org/docs/14/app/building-your-application/routing
-- https://nextjs.org/docs/14/app/building-your-application/optimizing
+Before framework-sensitive changes, verify behavior against the current official Next.js documentation for the installed 16.x line:
+- https://nextjs.org/docs/app
+- https://nextjs.org/docs/app/api-reference/cli/next
+- https://nextjs.org/docs/app/getting-started/project-structure
+- https://nextjs.org/docs/app/getting-started/server-and-client-components
 
-Use the project's installed Next CLI through package scripts or `npx --no-install next ...`. Prefer `next info`, `next build`, and the existing test scripts for diagnostics/verification.
+Use the project's installed Next CLI through package scripts or `npx --no-install next ...`.
+Use `next typegen` before TypeScript verification when route types can change.
+Use the current scripts as authority: `npm run typegen`, `npm run typecheck`, `npm run lint`, `npm run build`, and `npm run test:ui`.
+Do not revive removed `next lint` assumptions; lint is now the repository's ESLint 9 script.
 ## Visual system
 Treat `DESIGN.md` in this directory as the current visual contract.
+Read it before any visual, layout, responsive, chart-composition, wallet-sheet, navigation, or motion change.
+Do not generate a replacement design system or a second frontend design authority.
 
 Core identity:
 - near-black OLED canvas
@@ -179,3 +187,26 @@ Re-read files before edits. Preserve owner deletions/reorganizations and other a
 Do not restore archived/deleted frontend artifacts unless explicitly asked.
 Do not run broad formatting across unrelated files.
 Do not deploy or mutate production without explicit current owner authorization.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
+
+## graphify
+
+This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+
+When the user types `/graphify`, use the installed graphify skill or instructions before doing anything else.
+
+Rules:
+- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- Dirty graphify-out/ files are expected after hooks or incremental updates; dirty graph files are not a reason to skip graphify. Only skip graphify if the task is about stale or incorrect graph output, or the user explicitly says not to use it.
+- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
