@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import TradingChart from "./TradingChart";
 import { useRealtimeMarket } from "../hooks/useRealtimeMarket";
 import type { MarketDataStatus } from "../lib/market-data";
@@ -10,13 +9,11 @@ export default function RealtimeTradingChart({
   type,
   interval = "1m",
   marketStatus,
-  onStatusChange,
 }: {
   symbol: string;
   type: "binary" | "spot";
   interval?: string;
   marketStatus?: MarketDataStatus;
-  onStatusChange?: (status: MarketDataStatus) => void;
 }) {
   const stream = useRealtimeMarket(symbol, interval);
   const rawStatus: MarketDataStatus =
@@ -27,9 +24,6 @@ export default function RealtimeTradingChart({
         : stream.status;
   const status: MarketDataStatus = marketStatus === "CLOSED" ? "CLOSED" : rawStatus;
 
-  useEffect(() => {
-    onStatusChange?.(status);
-  }, [onStatusChange, status]);
 
   return (
     <TradingChart

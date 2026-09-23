@@ -17,6 +17,7 @@ import { type MarketDataStatus } from '../../lib/market-data';
 import { hasAuthSession } from '../../lib/auth-session';
 import { productStateLabel } from '../../lib/product-states';
 import { sessionPrincipalId } from '../../lib/wallet-auth';
+import LocalDateTime from '../../components/LocalDateTime';
 import {
   closeMarginPosition,
   getMarginQuote,
@@ -46,15 +47,12 @@ type MarketTradeRow = { id: string; price: number; amount: number; executedAt: s
 type OrderType = 'MARKET' | 'LIMIT' | 'STOP';
 type HistoryTab = 'OPEN' | 'ORDERS' | 'TRADES';
 type SpotHistoryRow = Record<string, unknown>;
-type ConfirmationMode = 'AUTHORITATIVE';
 type ChartInterval = '1m' | '5m' | '15m' | '30m' | '1h' | '4h' | '1d';
 type MobileMarketPanel = 'CHART' | 'BOOK' | 'TRADES';
 type SpotSurface = 'SPOT' | 'MARGIN';
 
 const CHART_INTERVALS: ChartInterval[] = ['1m', '5m', '15m', '30m', '1h', '4h', '1d'];
 const numberFormatter = new Intl.NumberFormat('en-US');
-const timeFormatter = new Intl.DateTimeFormat('en-US', { timeStyle: 'short' });
-const dateTimeFormatter = new Intl.DateTimeFormat('en-US', { dateStyle: 'short', timeStyle: 'short' });
 const orderBookRowKey = (row: OrderBookRow) => `${row.id ?? ''}:${row.price}:${row.amount}`;
 
 const finiteRows = (value: unknown): OrderBookRow[] => {
@@ -85,236 +83,62 @@ const finiteTrades = (value: unknown): MarketTradeRow[] => {
   });
 };
 
-export default function SpotPage() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const { activePair, setActivePair } = useActivePair();
-  const querySymbol = searchParams.get('symbol');
-  const symbol = querySymbol || activePair;
-  const normalizedSymbol = normalizePair(symbol);
-  const baseSymbol = normalizedSymbol.endsWith('USDT') ? normalizedSymbol.slice(0, -4) : normalizedSymbol;
-  const displayPair = findAsset(symbol)?.pair ?? (normalizedSymbol.endsWith('USDT') ? `${baseSymbol}/USDT` : symbol);
-  const backendConfigured = Boolean(apiBaseUrl);
-
-  const { marketPairs, metal, shares, forex, loading: marketLoading } = useMarketData();
-  const market = [...marketPairs, metal, shares, forex].flat().find((row) => normalizePair(row.symbol) === normalizedSymbol);
-  const currentPrice = market?.dataState === 'LIVE' ? market.price : null;
-  const marketChange = market?.dataState === 'LIVE' ? market.change : null;
-  const marketVolume = market?.dataState === 'LIVE' && market.vol != null ? market.vol : null;
-  const marketHigh = market?.dataState === 'LIVE' ? market.high ?? null : null;
-  const marketLow = market?.dataState === 'LIVE' ? market.low ?? null : null;
-
-  const [userId, setUserId] = useState<string | null>(null);
-  const [bids, setBids] = useState<OrderBookRow[]>([]);
-  const [asks, setAsks] = useState<OrderBookRow[]>([]);
-  const [marketTrades, setMarketTrades] = useState<MarketTradeRow[]>([]);
-  const [tradeStatus, setTradeStatus] = useState<'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR' | 'CONNECTION_LOST'>('UNAVAILABLE');
-  const [bookStatus, setBookStatus] = useState<'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR' | 'CONNECTION_LOST'>('UNAVAILABLE');
-  const [chartInterval, setChartInterval] = useState<ChartInterval>('1m');
-  const [chartStatus, setChartStatus] = useState<MarketDataStatus>('LOADING');
-  const [mobileMarketPanel, setMobileMarketPanel] = useState<MobileMarketPanel>('CHART');
-  const [side, setSide] = useState<'BUY' | 'SELL'>('BUY');
-  const [orderType, setOrderType] = useState<OrderType>('LIMIT');
-  const [price, setPrice] = useState('');
-  const [stopPrice, setStopPrice] = useState('');
-  const [amount, setAmount] = useState('');
-  const [tp, setTp] = useState('');
-  const [sl, setSl] = useState('');
-  const [tpSlState, setTpSlState] = useState<TpSlState>('NOT_CONFIGURED');
-  const [orderState, setOrderState] = useState<SpotOrderState>('DRAFT');
-  const [confirmationOpen, setConfirmationOpen] = useState(false);
-  const [confirmationMode, setConfirmationMode] = useState<ConfirmationMode>('AUTHORITATIVE');
-  const [historyTab, setHistoryTab] = useState<HistoryTab>('OPEN');
-  const [historyRows, setHistoryRows] = useState<SpotHistoryRow[]>([]);
-  const [historyStatus, setHistoryStatus] = useState<'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR' | 'CONNECTION_LOST'>('UNAVAILABLE');
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [marginDirection, setMarginDirection] = useState<MarginDirection>('LONG');
-  const [marginLeverage, setMarginLeverage] = useState<MarginLeverage>(0);
-  const [marginCollateral, setMarginCollateral] = useState('');
-  const [marginQuote, setMarginQuote] = useState<MarginQuoteResponse | null>(null);
-  const [marginPositions, setMarginPositions] = useState<MarginPositionResponse[]>([]);
-  const [marginStatus, setMarginStatus] = useState<'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR' | 'CONNECTION_LOST'>('UNAVAILABLE');
-  const [marginFeedback, setMarginFeedback] = useState<string | null>(null);
-  const [marginSubmitting, setMarginSubmitting] = useState(false);
-  const [activeSurface, setActiveSurface] = useState<SpotSurface>('SPOT');
-  const orderSubmissionLock = useRef(false);
-  const marginSubmissionLock = useRef(false);
-
-  useEffect(() => {
-    if (querySymbol) setActivePair(querySymbol);
-  }, [querySymbol, setActivePair]);
-
-  useEffect(() => {
-    const sync = () => setUserId(sessionPrincipalId());
-    sync();
-    window.addEventListener('nexi:wallet-session', sync);
-    return () => window.removeEventListener('nexi:wallet-session', sync);
-  }, []);
-
-  useEffect(() => {
-    setSide('BUY');
-    setOrderType('LIMIT');
-    setPrice('');
-    setStopPrice('');
-    setAmount('');
-    setTp('');
-    setSl('');
-    setTpSlState('NOT_CONFIGURED');
-    setOrderState('DRAFT');
-    setConfirmationOpen(false);
-    setFeedback(null);
-    setChartStatus('LOADING');
-    setMobileMarketPanel('CHART');
-  }, [normalizedSymbol]);
-
-  useEffect(() => {
-    if (currentPrice !== null) setPrice((current) => current || String(currentPrice));
-  }, [currentPrice]);
-
-  useEffect(() => {
-    let cancelled = false;
-    const hasToken = hasAuthSession();
-    if (!userId || !hasToken) {
-      setMarginQuote(null);
-      setMarginPositions([]);
-      setMarginStatus('UNAVAILABLE');
-      return () => { cancelled = true; };
-    }
-
-    setMarginStatus('LOADING');
-    setMarginFeedback(null);
-    Promise.allSettled([getMarginQuote(displayPair), listMarginPositions()]).then(([quoteResult, positionsResult]) => {
-      if (cancelled) return;
-      if (quoteResult.status === 'fulfilled') {
-        setMarginQuote(quoteResult.value);
-        setMarginStatus('LIVE');
-      } else {
-        setMarginQuote(null);
-        setMarginStatus('ERROR');
-      }
-      if (positionsResult.status === 'fulfilled') setMarginPositions(positionsResult.value);
-      else setMarginPositions([]);
-    });
-    return () => { cancelled = true; };
-  }, [displayPair, userId]);
-
-  const marginCollateralValue = positiveNumber(marginCollateral);
-  const marginLeverageOptions = useMemo(() => (marginQuote?.leverageOptions ?? []).filter((value) => [2, 3, 5].includes(value)), [marginQuote]);
-  const marginReady = Boolean(userId && marginQuote?.state === 'LIVE' && normalizePair(marginQuote.pair) === normalizedSymbol && marginLeverageOptions.includes(marginLeverage) && marginCollateralValue !== null && !marginSubmitting);
-
-  const refreshMarginPositions = async () => {
-    try {
-      setMarginPositions(await listMarginPositions());
-    } catch {
-      setMarginFeedback('Margin positions could not be refreshed.');
-    }
-  };
-
-  useEffect(() => {
-    if (marginLeverageOptions.length > 0 && !marginLeverageOptions.includes(marginLeverage)) {
-      setMarginLeverage(marginLeverageOptions[0]);
-    }
-  }, [marginLeverageOptions, marginLeverage]);
-
+function useSpotHistory(userId: string | null, historyTab: HistoryTab) {
+  const [rows, setRows] = useState<SpotHistoryRow[]>([]);
+  const [status, setStatus] = useState<'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR' | 'CONNECTION_LOST'>('UNAVAILABLE');
 
   useEffect(() => {
     let cancelled = false;
     if (!userId || !hasAuthSession()) {
-      setHistoryRows([]);
-      setHistoryStatus('UNAVAILABLE');
+      setRows([]);
+      setStatus('UNAVAILABLE');
       return () => { cancelled = true; };
     }
     const endpoint = historyTab === 'OPEN' ? '/spot/orders/open' : historyTab === 'ORDERS' ? '/spot/orders/history' : '/spot/trades/history';
-    setHistoryStatus('LOADING');
+    setStatus('LOADING');
     api.get(endpoint, { timeout: 15_000 })
       .then((response) => {
         if (cancelled) return;
-        const rows = Array.isArray(response.data) ? response.data.filter((row): row is SpotHistoryRow => Boolean(row && typeof row === 'object')) : [];
-        setHistoryRows(rows);
-        setHistoryStatus(rows.length > 0 ? 'LIVE' : 'UNAVAILABLE');
+        const nextRows = Array.isArray(response.data) ? response.data.filter((row): row is SpotHistoryRow => Boolean(row && typeof row === 'object')) : [];
+        setRows(nextRows);
+        setStatus(nextRows.length > 0 ? 'LIVE' : 'UNAVAILABLE');
       })
       .catch(() => {
         if (cancelled) return;
-        setHistoryRows([]);
-        setHistoryStatus('ERROR');
+        setRows([]);
+        setStatus('ERROR');
       });
     return () => { cancelled = true; };
   }, [historyTab, userId]);
 
-  const handleOpenMargin = async () => {
-    if (marginSubmissionLock.current) return;
-    if (!marginReady || marginCollateralValue === null) {
-      setMarginFeedback(!userId ? 'Verify the wallet before opening an isolated-margin position.' : 'Enter positive collateral and wait for the latest margin quote.');
-      return;
-    }
-    marginSubmissionLock.current = true;
-    setMarginSubmitting(true);
-    setMarginFeedback(null);
-    try {
-      await openMarginPosition({
-        pair: displayPair,
-        direction: marginDirection,
-        leverage: marginLeverage,
-        collateral: marginCollateral,
-        idempotencyKey: `margin:open:${normalizedSymbol}:${Date.now()}`,
-      });
-      setMarginCollateral('');
-      setMarginFeedback(`${marginDirection} ${marginLeverage}x position submitted.`);
-      await refreshMarginPositions();
-    } catch {
-      setMarginFeedback('This margin position could not be opened.');
-    } finally {
-      marginSubmissionLock.current = false;
-      setMarginSubmitting(false);
-    }
-  };
+  return { rows, status };
+}
 
-  const handleCloseMargin = async (positionId: string) => {
-    if (marginSubmissionLock.current) return;
-    marginSubmissionLock.current = true;
-    setMarginSubmitting(true);
-    setMarginFeedback(null);
-    try {
-      await closeMarginPosition(positionId, `margin:close:${positionId}:${Date.now()}`);
-      setMarginFeedback('Margin close request accepted.');
-      await refreshMarginPositions();
-    } catch {
-      setMarginFeedback('The margin close request failed.');
-    } finally {
-      marginSubmissionLock.current = false;
-      setMarginSubmitting(false);
-    }
-  };
-
-  const handleMarkMargin = async (positionId: string) => {
-    if (marginSubmissionLock.current) return;
-    marginSubmissionLock.current = true;
-    setMarginSubmitting(true);
-    setMarginFeedback(null);
-    try {
-      await markMarginPosition(positionId);
-      setMarginFeedback('Margin position refreshed with the latest quote.');
-      await refreshMarginPositions();
-    } catch {
-      setMarginFeedback('The margin quote refresh failed.');
-    } finally {
-      marginSubmissionLock.current = false;
-      setMarginSubmitting(false);
-    }
-  };
-
+function useSpotMarketFeed({
+  backendConfigured,
+  displayPair,
+  normalizedSymbol,
+}: {
+  backendConfigured: boolean;
+  displayPair: string;
+  normalizedSymbol: string;
+}) {
+  const [bids, setBids] = useState<OrderBookRow[]>([]);
+  const [asks, setAsks] = useState<OrderBookRow[]>([]);
+  const [trades, setTrades] = useState<MarketTradeRow[]>([]);
+  const [tradeStatus, setTradeStatus] = useState<'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR' | 'CONNECTION_LOST'>('UNAVAILABLE');
+  const [bookStatus, setBookStatus] = useState<'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR' | 'CONNECTION_LOST'>('UNAVAILABLE');
 
   useEffect(() => {
     let cancelled = false;
     setBids([]);
     setAsks([]);
-    setMarketTrades([]);
-    setBookStatus(backendConfigured ? 'LOADING' : 'UNAVAILABLE');
-    setTradeStatus(backendConfigured ? 'LOADING' : 'UNAVAILABLE');
+    setTrades([]);
     if (!backendConfigured) return;
+    setBookStatus('LOADING');
+    setTradeStatus('LOADING');
+
     const socket = io(`${apiBaseUrl}/spot`, {
-      // Allow the Socket.IO polling handshake to recover through the staging
-      // tunnel before upgrading to websocket.
       transports: ['polling', 'websocket'],
       tryAllTransports: true,
       reconnection: true,
@@ -328,7 +152,7 @@ export default function SpotPage() {
         .then((response) => {
           if (cancelled) return;
           const nextTrades = finiteTrades(response.data);
-          setMarketTrades(nextTrades);
+          setTrades(nextTrades);
           setTradeStatus(socket.connected ? (nextTrades.length > 0 ? 'LIVE' : 'UNAVAILABLE') : 'CONNECTION_LOST');
         })
         .catch(() => { if (!cancelled) setTradeStatus('ERROR'); });
@@ -360,8 +184,6 @@ export default function SpotPage() {
       setBids(nextBids);
       setAsks(nextAsks);
       setBookStatus(nextBids.length > 0 || nextAsks.length > 0 ? 'LIVE' : 'UNAVAILABLE');
-      // The emitted book update follows every matcher mutation. Refresh the
-      // durable trade projection instead of inventing client-side trade rows.
       refreshTrades();
     };
 
@@ -374,6 +196,7 @@ export default function SpotPage() {
       setBookStatus('CONNECTION_LOST');
       setTradeStatus('CONNECTION_LOST');
     };
+
     refreshBook();
     refreshTrades();
     socket.on('disconnect', handleConnectionLoss);
@@ -391,13 +214,383 @@ export default function SpotPage() {
     };
   }, [backendConfigured, displayPair, normalizedSymbol]);
 
-  const priceStatus: MarketDataStatus = marketLoading
-    ? 'LOADING'
-    : (market?.source === 'tick' || market?.source === 'external') && currentPrice !== null
-      ? 'LIVE'
-      : backendConfigured
-        ? 'ERROR'
-        : 'UNAVAILABLE';
+  return {
+    bids: backendConfigured ? bids : [],
+    asks: backendConfigured ? asks : [],
+    trades: backendConfigured ? trades : [],
+    tradeStatus: backendConfigured ? tradeStatus : 'UNAVAILABLE',
+    bookStatus: backendConfigured ? bookStatus : 'UNAVAILABLE',
+  };
+}
+
+
+type MarketConnectionStatus = 'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR' | 'CONNECTION_LOST';
+
+function MarginWorkspace({
+  displayPair, normalizedSymbol, chartInterval, setChartInterval, sessionClosed,
+  marginDirection, setMarginDirection, marginLeverageOptions, effectiveMarginLeverage, setMarginLeverage,
+  marginCollateral, setMarginCollateral, marginQuote, handleOpenMargin, marginReady, marginPositions,
+  userId, marginSubmitting, handleMarkMargin, handleCloseMargin, marginFeedback,
+}: {
+  displayPair: string; normalizedSymbol: string; chartInterval: ChartInterval;
+  setChartInterval: React.Dispatch<React.SetStateAction<ChartInterval>>; sessionClosed: boolean;
+  marginDirection: MarginDirection; setMarginDirection: React.Dispatch<React.SetStateAction<MarginDirection>>;
+  marginLeverageOptions: MarginLeverage[]; effectiveMarginLeverage: MarginLeverage | 0;
+  setMarginLeverage: React.Dispatch<React.SetStateAction<MarginLeverage>>;
+  marginCollateral: string; setMarginCollateral: React.Dispatch<React.SetStateAction<string>>;
+  marginQuote: MarginQuoteResponse | null; handleOpenMargin: () => void | Promise<void>; marginReady: boolean;
+  marginPositions: MarginPositionResponse[]; userId: string | null; marginSubmitting: boolean;
+  handleMarkMargin: (positionId: string) => void | Promise<void>;
+  handleCloseMargin: (positionId: string) => void | Promise<void>; marginFeedback: string | null;
+}) {
+  return (
+    <section className="nexi-station-card mx-3 mt-3 min-w-0 rounded-2xl p-3 sm:mx-4 sm:p-5" aria-labelledby="isolated-margin-heading">
+        <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold uppercase tracking-[.18em] text-[#48C0CC]">Spot isolated margin</p>
+            <h2 id="isolated-margin-heading" className="mt-1 text-lg font-semibold">{displayPair} margin workspace</h2>
+          </div>
+        </div>
+        <div className="mt-4 min-w-0 overflow-hidden rounded-xl border border-violet-300/10 bg-[#0B0711]">
+          <div className="flex min-w-0 items-center justify-between gap-2 border-b border-white/5 px-3 py-2">
+            <span className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8C8299]">{displayPair}</span>
+            <div className="nexi-scroll-rail flex max-w-[68vw] shrink-0 items-center gap-1 overflow-x-auto" role="tablist" aria-label="Margin chart interval">
+              {CHART_INTERVALS.map((value) => (
+                <button key={value} type="button" role="tab" aria-selected={chartInterval === value} onClick={() => setChartInterval(value)} className={`nexi-interactive min-h-11 min-w-11 shrink-0 rounded-md px-2 text-[10px] font-semibold ${chartInterval === value ? 'bg-[#2C146C] text-white' : 'text-[#8C8299] hover:text-white'}`}>{value}</button>
+              ))}
+            </div>
+          </div>
+          <div className="min-h-[300px] md:min-h-[360px] xl:min-h-[430px]">
+            <RealtimeTradingChart symbol={normalizedSymbol} type="spot" interval={chartInterval} marketStatus={sessionClosed ? 'CLOSED' : undefined} />
+          </div>
+        </div>
+        <div className="mt-4 grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+          <div className="min-w-0 space-y-3">
+            <div className="grid min-w-0 grid-cols-2 gap-2 rounded-xl bg-[#0B0711] p-1" role="tablist" aria-label="Margin direction">
+              {(['LONG', 'SHORT'] as const).map((value) => <button key={value} type="button" role="tab" aria-selected={marginDirection === value} onClick={() => setMarginDirection(value)} className={`min-h-11 rounded-lg text-xs font-semibold ${marginDirection === value ? value === 'LONG' ? 'bg-emerald-400/15 text-[#22D3A6]' : 'bg-rose-400/15 text-[#FF5C7C]' : 'text-[#8C8299]'}`}>{value}</button>)}
+            </div>
+            <div className="grid min-w-0 grid-cols-3 gap-2" role="tablist" aria-label="Margin leverage">
+              {marginLeverageOptions.map((value) => <button key={value} type="button" role="tab" aria-selected={effectiveMarginLeverage === value} onClick={() => setMarginLeverage(value)} className={`min-h-11 rounded-lg border text-xs font-semibold ${effectiveMarginLeverage === value ? 'border-violet-300/35 bg-[#2A1742] text-white' : 'border-violet-300/10 text-[#8C8299]'}`}>{value}x</button>)}
+            </div>
+            <label className="block text-xs text-[#C3BBD0]">Collateral (USDT)
+              <input type="number" inputMode="decimal" min="0" step="any" value={marginCollateral} onChange={(event) => setMarginCollateral(event.target.value)} placeholder="Enter positive collateral" className="mt-1 min-h-11 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 text-right font-mono outline-none focus:border-[#8B5CF6]" />
+            </label>
+            <dl className="grid min-w-0 grid-cols-2 gap-2 rounded-xl border border-violet-300/10 bg-[#0B0711] p-3 text-xs">
+              {marginQuote?.price != null && <div><dt className="text-[#8C8299]">Mark price</dt><dd className="mt-1 font-mono">{marginQuote.price}</dd></div>}
+              {marginQuote?.maintenanceRatio != null && <div><dt className="text-[#8C8299]">Maintenance ratio</dt><dd className="mt-1 font-mono">{marginQuote.maintenanceRatio}</dd></div>}
+            </dl>
+            <button type="button" onClick={handleOpenMargin} disabled={!marginReady} className="min-h-11 w-full rounded-xl bg-gradient-to-r from-[#6D28D9] to-[#8B5CF6] px-4 text-sm font-semibold disabled:cursor-not-allowed disabled:from-[#21152F] disabled:to-[#21152F] disabled:text-[#766D82]">Open {marginDirection} {effectiveMarginLeverage}x</button>
+          </div>
+          <div className="min-w-0 rounded-xl border border-violet-300/10 bg-[#0B0711] p-3">
+            <div className="flex items-center justify-between gap-2"><h3 className="text-sm font-semibold">Positions</h3><span className="text-xs text-[#8C8299]">{marginPositions.length} loaded</span></div>
+            {marginPositions.length === 0 ? <p className="mt-5 text-center text-sm text-[#8C8299]">{userId ? 'No margin positions are available.' : 'Verify the wallet to load margin positions.'}</p> : <div className="mt-3 space-y-2">{marginPositions.map((position) => <article key={position.id} className="rounded-lg border border-violet-300/10 p-3 text-xs"><div className="flex flex-wrap items-center justify-between gap-2"><span className={position.direction === 'LONG' ? 'text-[#22D3A6]' : 'text-[#FF5C7C]'}>{position.direction} {position.leverage}x</span><span className="rounded-full border border-violet-300/15 px-2 py-1 uppercase text-[#C3BBD0]">{position.status}</span></div><p className="mt-2 font-mono">Collateral {position.collateral} · Entry {position.entryPrice} · Mark {position.markPrice ?? '—'}</p><div className="mt-2 flex flex-wrap gap-2">{position.status === 'OPEN' && <button type="button" disabled={marginSubmitting} onClick={() => void handleMarkMargin(position.id)} className="rounded border border-cyan-300/20 px-2 py-1 text-[#48C0CC] disabled:opacity-50">Mark</button>}{['PENDING', 'OPEN'].includes(position.status) && <button type="button" disabled={marginSubmitting} onClick={() => void handleCloseMargin(position.id)} className="rounded border border-rose-300/20 px-2 py-1 text-[#FF9CB0] disabled:opacity-50">Close</button>}</div></article>)}</div>}
+          </div>
+        </div>
+        {marginFeedback && <p role="status" className="mt-3 text-xs text-[#C3BBD0]">{marginFeedback}</p>}
+        <p className="mt-3 text-[10px] text-[#8C8299]">Isolated margin uses only the collateral assigned to each position. Leverage increases both potential gains and losses.</p>
+      </section>
+  );
+}
+
+type SpotWorkspaceProps = {
+  displayPair: string; normalizedSymbol: string; chartInterval: ChartInterval;
+  setChartInterval: React.Dispatch<React.SetStateAction<ChartInterval>>; sessionClosed: boolean;
+  mobileMarketPanel: MobileMarketPanel; setMobileMarketPanel: React.Dispatch<React.SetStateAction<MobileMarketPanel>>;
+  bids: OrderBookRow[]; asks: OrderBookRow[]; bookStatus: MarketConnectionStatus;
+  setPrice: React.Dispatch<React.SetStateAction<string>>; marketTrades: MarketTradeRow[]; tradeStatus: MarketConnectionStatus;
+  historyTab: HistoryTab; setHistoryTab: React.Dispatch<React.SetStateAction<HistoryTab>>;
+  historyRows: SpotHistoryRow[]; historyStatus: MarketConnectionStatus;
+  side: 'BUY' | 'SELL'; setSide: React.Dispatch<React.SetStateAction<'BUY' | 'SELL'>>;
+  orderType: OrderType; setOrderType: React.Dispatch<React.SetStateAction<OrderType>>;
+  price: string; stopPrice: string; setStopPrice: React.Dispatch<React.SetStateAction<string>>;
+  amount: string; setAmount: React.Dispatch<React.SetStateAction<string>>; baseSymbol: string;
+  tpSlState: TpSlState; configureTpSl: (enabled: boolean) => void; tp: string;
+  setTp: React.Dispatch<React.SetStateAction<string>>; sl: string; setSl: React.Dispatch<React.SetStateAction<string>>;
+  total: number | null; orderState: SpotOrderState; feedback: string | null; reviewReady: boolean; ready: boolean;
+  openReview: () => void;
+};
+
+function SpotChartArea({displayPair, normalizedSymbol, chartInterval, setChartInterval, sessionClosed, mobileMarketPanel, setMobileMarketPanel}: SpotWorkspaceProps) {
+  return (
+    <>
+          <div className="order-1 hidden min-w-0 flex-wrap items-end justify-between gap-3 md:flex xl:order-none">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#A78BFA]">Spot trading</p>
+              <h1 id="spot-market-heading" className="mt-1 text-2xl font-semibold">{displayPair}</h1>
+            </div>
+            <div className="flex min-w-0 flex-wrap items-center justify-end gap-2" aria-label="Market connection status">
+            </div>
+          </div>
+
+          <div className={`nexi-station-card order-2 min-h-[210px] min-w-0 overflow-hidden rounded-xl sm:rounded-2xl md:block md:min-h-[360px] xl:order-none xl:min-h-[430px] ${mobileMarketPanel === 'CHART' ? 'block' : 'hidden'}`}>
+            <div className="flex min-w-0 items-center justify-between gap-2 border-b border-white/5 px-3 py-2">
+              <span className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8C8299]">{displayPair}</span>
+              <div className="nexi-scroll-rail flex max-w-[68vw] shrink-0 items-center gap-1 overflow-x-auto" role="tablist" aria-label="Chart interval">
+                {CHART_INTERVALS.map((value) => (
+                  <button key={value} type="button" role="tab" aria-selected={chartInterval === value} onClick={() => setChartInterval(value)} className={`nexi-interactive min-h-11 min-w-11 shrink-0 rounded-md px-2 text-[10px] font-semibold ${chartInterval === value ? 'bg-[#2C146C] text-white' : 'text-[#8C8299] hover:text-white'}`}>{value}</button>
+                ))}
+              </div>
+            </div>
+            <div className="min-h-[300px] md:min-h-[360px] xl:min-h-[430px]">
+              <RealtimeTradingChart symbol={normalizedSymbol} type="spot" interval={chartInterval} marketStatus={sessionClosed ? 'CLOSED' : undefined} />
+            </div>
+          </div>
+
+          <div className="order-3 grid min-w-0 grid-cols-3 border-b border-violet-300/20 xl:hidden" role="tablist" aria-label="Mobile market view">
+            {([
+              ['CHART', 'Chart'],
+              ['BOOK', 'Order book'],
+              ['TRADES', 'Trades'],
+            ] as const).map(([value, label]) => (
+              <button key={value} type="button" role="tab" aria-selected={mobileMarketPanel === value} onClick={() => setMobileMarketPanel(value)} className={`nexi-interactive min-h-11 min-w-0 px-1 text-xs ${mobileMarketPanel === value ? 'border-b-2 border-[#7353DD] text-white' : 'text-[#8C8299]'}`}>{label}</button>
+            ))}
+          </div>
+    </>
+  );
+}
+
+function SpotOrderBook({mobileMarketPanel, bids, asks, bookStatus, setPrice}: SpotWorkspaceProps) {
+  return (
+            <section className={`nexi-station-card min-w-0 overflow-hidden rounded-2xl md:block ${mobileMarketPanel === 'BOOK' ? 'block' : 'hidden'}`} aria-labelledby="order-book-heading">
+              <div className="flex items-center justify-between border-b border-white/5 px-4 py-3">
+                <h2 id="order-book-heading" className="font-semibold">Order book</h2>
+                {bookStatus === 'LIVE' ? <span className="text-xs text-[#8C8299]">Live</span> : bookStatus === 'CONNECTION_LOST' ? <span className="text-xs text-amber-200">Updates paused · last received depth</span> : bookStatus === 'LOADING' ? <span className="text-xs text-[#8C8299]">Loading</span> : bookStatus === 'ERROR' ? <span className="text-xs text-[#8C8299]">Request error</span> : null}
+              </div>
+              <div className="grid min-w-0 grid-cols-2 text-xs">
+                <div className="min-w-0 border-r border-white/5 p-3">
+                  <div className="mb-2 flex min-w-0 justify-between gap-2 text-[#8C8299]"><span>Amount</span><span>Bid</span></div>
+                  {bids.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(String(row.price))} className="nexi-interactive flex min-h-8 min-w-0 w-full justify-between gap-2 rounded px-1 font-mono hover:bg-emerald-400/5"><span className="truncate">{row.amount}</span><span className="truncate text-[#22D3A6]">{row.price}</span></button>)}
+                </div>
+                <div className="min-w-0 p-3">
+                  <div className="mb-2 flex min-w-0 justify-between gap-2 text-[#8C8299]"><span>Ask</span><span>Amount</span></div>
+                  {asks.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(String(row.price))} className="nexi-interactive flex min-h-8 min-w-0 w-full justify-between gap-2 rounded px-1 font-mono hover:bg-rose-400/5"><span className="truncate text-[#FF5C7C]">{row.price}</span><span className="truncate">{row.amount}</span></button>)}
+                </div>
+              </div>
+              {bids.length === 0 && asks.length === 0 && (
+                <p className="px-4 pb-6 text-center text-sm text-[#8C8299]">
+                  {bookStatus === 'LOADING'
+                    ? 'Loading the order book…'
+                    : bookStatus === 'ERROR'
+                      ? 'The order book could not be loaded.'
+                      : 'No order-book data yet.'}
+                </p>
+              )}
+            </section>
+  );
+}
+
+function streamStatusText(status: MarketConnectionStatus, liveLabel: string, lostLabel: string) {
+  if (status === 'LIVE') return liveLabel;
+  if (status === 'CONNECTION_LOST') return lostLabel;
+  if (status === 'LOADING') return 'Loading';
+  if (status === 'ERROR') return 'Request error';
+  return null;
+}
+
+function recentTradesEmptyText(status: MarketConnectionStatus) {
+  if (status === 'LOADING') return 'Loading recent trades…';
+  if (status === 'ERROR') return 'Recent trades could not be loaded.';
+  return 'No recent trades yet.';
+}
+
+function SpotRecentTrades({mobileMarketPanel, marketTrades, tradeStatus}: SpotWorkspaceProps) {
+  const statusText = streamStatusText(tradeStatus, 'Live market records', 'Updates paused · last received records');
+  const statusClass = tradeStatus === 'CONNECTION_LOST' ? 'text-xs text-amber-200' : 'text-xs text-[#8C8299]';
+  return (
+            <section className={`nexi-station-card min-w-0 rounded-2xl md:block ${mobileMarketPanel === 'TRADES' ? 'block' : 'hidden'}`} aria-labelledby="recent-trades-heading">
+              <div className="flex items-center justify-between gap-2 border-b border-white/5 px-4 py-3">
+                <h2 id="recent-trades-heading" className="font-semibold">Recent trades</h2>
+                {statusText && <span className={statusClass}>{statusText}</span>}
+              </div>
+              {marketTrades.length > 0
+                ? <div className="divide-y divide-white/5 text-xs">{marketTrades.slice(0, 12).map((trade) => <div key={trade.id} className="grid grid-cols-3 gap-2 px-4 py-2 font-mono"><span>{numberFormatter.format(trade.price)}</span><span>{trade.amount}</span><span className="text-right text-[#8C8299]"><LocalDateTime value={trade.executedAt} timeStyle="short" /></span></div>)}</div>
+                : <div className="flex min-h-52 items-center justify-center p-6 text-center text-sm text-[#8C8299]">{recentTradesEmptyText(tradeStatus)}</div>}
+            </section>
+  );
+}
+
+function SpotReferenceArea(props: SpotWorkspaceProps) {
+  return (
+    <div className="order-4 grid min-w-0 gap-4 lg:grid-cols-2 xl:order-none">
+      <SpotOrderBook {...props} />
+      <SpotRecentTrades {...props} />
+    </div>
+  );
+}
+
+function SpotActivityArea({historyTab, setHistoryTab, historyRows, historyStatus, displayPair}: SpotWorkspaceProps) {
+  return (
+          <section className="nexi-station-card order-6 min-w-0 rounded-2xl xl:order-none" aria-label="Spot activity">
+            <div className="grid min-w-0 grid-cols-3 border-b border-white/5" role="tablist" aria-label="Spot activity">
+              {([
+                ['OPEN', 'Open', 'Open orders'],
+                ['ORDERS', 'Orders', 'Order history'],
+                ['TRADES', 'Trades', 'Trade history'],
+              ] as const).map(([value, mobileLabel, desktopLabel]) => (
+                <button key={value} type="button" role="tab" aria-selected={historyTab === value} onClick={() => setHistoryTab(value)} className={`min-h-12 min-w-0 px-1 text-[11px] sm:px-2 sm:text-sm ${historyTab === value ? 'border-b-2 border-[#8B5CF6] text-white' : 'text-[#8C8299]'}`}>
+                  <span className="sm:hidden">{mobileLabel}</span>
+                  <span className="hidden sm:inline">{desktopLabel}</span>
+                </button>
+              ))}
+            </div>
+            <div className="p-4">
+              {historyRows.length > 0 ? (
+                <div className="space-y-2">{historyRows.slice(0, 30).map((row) => {
+                  const id = String(row.id ?? row.orderId ?? [historyTab, row.pair, row.side, row.amount ?? row.quantity, row.price, row.createdAt ?? row.executedAt].map((value) => String(value ?? '')).join(':'));
+                  const pair = String(row.pair ?? displayPair);
+                  const status = String(row.status ?? row.state ?? 'UNKNOWN').replaceAll('_', ' ');
+                  const rowSide = row.side ? String(row.side) : '';
+                  const rowAmount = String(row.amount ?? row.quantity ?? row.filled ?? '—');
+                  const rowPrice = String(row.price ?? row.entryPrice ?? '—');
+                  const when = row.createdAt ?? row.executedAt ?? row.updatedAt;
+                  return <article key={id} className="rounded-xl border border-violet-300/10 bg-[#0B0711] p-3 text-xs"><div className="flex flex-wrap items-center justify-between gap-2"><span className="font-semibold">{pair}{rowSide ? ` · ${rowSide}` : ''}</span><span className="rounded-full border border-violet-300/20 px-2 py-1 uppercase text-[#C3BBD0]">{status}</span></div><div className="mt-2 grid grid-cols-2 gap-2 font-mono sm:grid-cols-4"><span>Amount {rowAmount}</span><span>Price {rowPrice}</span><span className="truncate">ID {id}</span><span><LocalDateTime value={when == null ? null : String(when)} dateStyle="short" timeStyle="short" /></span></div></article>;
+                })}</div>
+              ) : (
+                <div className="flex min-h-32 items-center justify-center text-center text-sm text-[#8C8299]">{historyStatus === 'LOADING' ? 'Loading activity…' : historyStatus === 'ERROR' ? 'Activity request failed.' : historyTab === 'OPEN' ? 'No open orders.' : historyTab === 'ORDERS' ? 'No order history.' : 'No trade history.'}</div>
+              )}
+            </div>
+          </section>
+  );
+}
+
+function SpotMarketArea(props: SpotWorkspaceProps) {
+  return (
+    <section className="contents xl:block xl:space-y-4" aria-labelledby="spot-market-heading">
+      <SpotChartArea {...props} />
+      <SpotReferenceArea {...props} />
+      <SpotActivityArea {...props} />
+    </section>
+  );
+}
+
+function SpotOrderTicket({side, setSide, orderType, setOrderType, price, setPrice, stopPrice, setStopPrice, amount, setAmount, baseSymbol, tpSlState, configureTpSl, tp, setTp, sl, setSl, total, orderState, feedback, reviewReady, ready, openReview}: SpotWorkspaceProps) {
+  return (
+        <aside className="nexi-station-card order-5 h-fit min-w-0 overflow-hidden rounded-xl p-3 sm:rounded-2xl sm:p-5 xl:sticky xl:top-20 xl:order-none" aria-labelledby="spot-ticket-heading">
+          <div className="hidden items-start justify-between gap-3 sm:flex">
+            <div><p className="text-[10px] font-semibold uppercase tracking-[.18em] text-[#48C0CC]">Execution ticket</p><h2 id="spot-ticket-heading" className="mt-1 text-xl font-semibold gradient-text">Place a Spot order</h2></div>
+            <Wallet className="mt-1 h-5 w-5 shrink-0 text-[#A995FF]" aria-hidden="true" />
+          </div>
+          <div className="mt-2.5 grid min-w-0 grid-cols-2 rounded-xl bg-[#0B0711] p-1 sm:mt-3" data-testid="spot-buy-sell">
+            {(['BUY', 'SELL'] as const).map((value) => <button key={value} type="button" onClick={() => setSide(value)} className={`nexi-interactive min-h-9 min-w-0 rounded-lg px-1 text-xs font-semibold sm:min-h-11 sm:text-sm ${side === value ? value === 'BUY' ? 'bg-emerald-400/15 text-[#22D3A6]' : 'bg-rose-400/15 text-[#FF5C7C]' : 'text-[#8C8299]'}`}>{value === 'BUY' ? 'Buy' : 'Sell'}</button>)}
+          </div>
+          <div className="mt-2 grid min-w-0 grid-cols-3 gap-1 rounded-xl bg-[#0B0711] p-1" role="tablist" aria-label="Order type" data-testid="spot-order-type">
+            {(['MARKET', 'LIMIT', 'STOP'] as const).map((value) => <button key={value} type="button" role="tab" aria-selected={orderType === value} onClick={() => setOrderType(value)} className={`nexi-interactive min-h-9 min-w-0 whitespace-normal rounded-lg px-1 text-[10px] leading-tight sm:min-h-11 sm:text-xs ${orderType === value ? 'bg-[#2A1742] text-white' : 'text-[#8C8299]'}`}>{value === 'STOP' ? 'Stop Limit' : value[0] + value.slice(1).toLowerCase()}</button>)}
+          </div>
+
+          <div className="mt-2.5 space-y-2 sm:mt-3 sm:space-y-2.5" data-testid="spot-inputs">
+            <label className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 text-xs text-[#C3BBD0] sm:block"><span>Price (USDT)</span>
+              <input type="number" inputMode="decimal" value={price} onChange={(event) => setPrice(event.target.value)} disabled={orderType === 'MARKET'} placeholder={orderType === 'MARKET' ? 'Market price' : '—'} className="min-h-9 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 text-right font-mono outline-none focus:border-[#8B5CF6] sm:mt-1 sm:min-h-11" />
+            </label>
+            {orderType === 'STOP' && <label className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 text-xs text-[#C3BBD0] sm:block"><span>Stop price (USDT)</span>
+              <input type="number" inputMode="decimal" value={stopPrice} onChange={(event) => setStopPrice(event.target.value)} placeholder="—" className="min-h-9 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 text-right font-mono outline-none focus:border-[#8B5CF6] sm:mt-1 sm:min-h-11" />
+            </label>}
+            <label className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 text-xs text-[#C3BBD0] sm:block"><span>Amount ({baseSymbol})</span>
+              <input type="number" inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="0.00" className="min-h-9 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 text-right font-mono outline-none focus:border-[#8B5CF6] sm:mt-1 sm:min-h-11" />
+            </label>
+            <div className="grid min-w-0 grid-cols-4 gap-1.5">
+              {[25, 50, 75, 100].map((percentage) => <button key={percentage} type="button" disabled aria-label={`${percentage}% allocation requires an available balance`} className="min-h-8 min-w-0 rounded-lg border border-violet-300/10 px-0 text-[10px] text-[#8C8299] disabled:cursor-not-allowed sm:min-h-9">{percentage}%</button>)}
+            </div>
+            <label className="flex min-h-8 items-center gap-2 rounded-xl border border-violet-300/10 px-3 text-xs sm:min-h-9">
+              <input type="checkbox" checked={tpSlState !== 'NOT_CONFIGURED'} onChange={(event) => configureTpSl(event.target.checked)} className="h-4 w-4 accent-violet-500" />
+              Configure TP/SL
+            </label>
+            {tpSlState !== 'NOT_CONFIGURED' && <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
+              <label className="min-w-0 text-xs text-[#C3BBD0]">Take profit<input type="number" inputMode="decimal" value={tp} onChange={(event) => setTp(event.target.value)} placeholder="—" className="mt-1 min-h-11 w-full min-w-0 rounded-lg border border-violet-300/15 bg-[#0B0711] px-2 text-right font-mono" /></label>
+              <label className="min-w-0 text-xs text-[#C3BBD0]">Stop loss<input type="number" inputMode="decimal" value={sl} onChange={(event) => setSl(event.target.value)} placeholder="—" className="mt-1 min-h-11 w-full min-w-0 rounded-lg border border-violet-300/15 bg-[#0B0711] px-2 text-right font-mono" /></label>
+              <p className="text-xs text-amber-200/80 sm:col-span-2">Take-profit and stop-loss are not available for this order yet.</p>
+            </div>}
+          </div>
+
+          <dl className="mt-1.5 grid min-w-0 grid-cols-3 gap-2 rounded-xl border border-violet-300/10 bg-[#0B0711] p-1.5 text-[10px] sm:mt-3 sm:p-2 sm:text-[11px] md:grid-cols-4 md:p-3 md:text-xs">
+            <div className="min-w-0"><dt className="text-[#8C8299]">Total</dt><dd className="mt-0.5 break-words font-mono">{total === null ? '—' : `${total.toFixed(2)} USDT`}</dd></div>
+            <div className="min-w-0"><dt className="text-[#8C8299]">Fee</dt><dd className="mt-0.5 break-words font-mono">—</dd></div>
+            <div className="min-w-0"><dt className="text-[#8C8299]">Available</dt><dd className="mt-0.5 break-words font-mono">—</dd></div>
+            <div className="hidden min-w-0 md:block"><dt className="text-[#8C8299]">State</dt><dd className="mt-0.5 break-words font-mono">{productStateLabel(orderState)}</dd></div>
+          </dl>
+
+          {feedback && <p role="status" className="mt-3 text-sm text-[#C3BBD0]">{feedback}</p>}
+          <button type="button" onClick={openReview} disabled={!reviewReady} data-testid="spot-submit-btn" className="nexi-interactive mt-1.5 min-h-9 w-full rounded-xl bg-gradient-to-r from-[#6D28D9] to-[#8B5CF6] px-4 text-sm font-semibold shadow-[0_0_24px_rgba(109,40,217,.28)] disabled:cursor-not-allowed disabled:from-[#21152F] disabled:to-[#21152F] disabled:text-[#766D82] disabled:shadow-none sm:mt-3 sm:min-h-11">
+            {ready ? `Review ${side.toLowerCase()} order` : 'Enter valid order values'}
+          </button>
+        </aside>
+  );
+}
+
+function SpotWorkspace(props: SpotWorkspaceProps) {
+  return (
+    <div className="grid min-w-0 gap-3 p-3 sm:gap-4 sm:p-4 xl:grid-cols-[minmax(0,1fr)_400px] xl:items-start">
+      <SpotMarketArea {...props} />
+      <SpotOrderTicket {...props} />
+    </div>
+  );
+}
+
+function SpotOrderReview({
+  displayPair, side, orderType, amount, baseSymbol, price, stopPrice, tpSlState, tp, sl,
+  onClose, submitOrder, orderState,
+}: {
+  displayPair: string; side: 'BUY' | 'SELL'; orderType: OrderType; amount: string; baseSymbol: string;
+  price: string; stopPrice: string; tpSlState: TpSlState; tp: string; sl: string;
+  onClose: () => void; submitOrder: () => void | Promise<void>; orderState: SpotOrderState;
+}) {
+  return (
+    <ModalSurface open onClose={() => onClose()} title="Review Spot order">
+        <div className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-violet-300/15 bg-[#100A18] p-5 shadow-2xl">
+          <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#48C0CC]">Review order</p><h2 id="spot-confirm-title" className="mt-1 text-xl font-semibold">Confirm Spot order</h2></div></div>
+          <dl className="mt-4 space-y-2 text-sm">
+            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-3"><dt className="text-[#8C8299]">Pair</dt><dd className="min-w-0 break-words text-right">{displayPair}</dd></div>
+            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-3"><dt className="text-[#8C8299]">Side / type</dt><dd className="min-w-0 break-words text-right">{side} · {orderType === 'STOP' ? 'STOP LIMIT' : orderType}</dd></div>
+            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-3"><dt className="text-[#8C8299]">Amount</dt><dd className="min-w-0 break-words text-right font-mono">{amount} {baseSymbol}</dd></div>
+            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-3"><dt className="text-[#8C8299]">Price</dt><dd className="min-w-0 break-words text-right font-mono">{orderType === 'MARKET' ? 'Market' : `${price} USDT`}</dd></div>
+            {orderType === 'STOP' && <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-3"><dt className="text-[#8C8299]">Stop price</dt><dd className="min-w-0 break-words text-right font-mono">{stopPrice} USDT</dd></div>}
+            {tpSlState !== 'NOT_CONFIGURED' && <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-3"><dt className="text-[#8C8299]">TP / SL</dt><dd className="min-w-0 break-words text-right font-mono">{tp || '—'} / {sl || '—'}</dd></div>}
+          </dl>
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <button type="button" onClick={() => onClose()} className="min-h-12 rounded-xl border border-violet-300/15">Back</button>
+            <button type="button" onClick={submitOrder} disabled={orderState === 'SUBMITTING'} className="min-h-12 rounded-xl bg-[#7C3AED] font-semibold disabled:opacity-50">{orderState === 'SUBMITTING' ? 'Submitting…' : 'Confirm'}</button>
+          </div>
+        </div>
+      </ModalSurface>
+  );
+}
+
+function resolvePriceStatus(marketLoading: boolean, source: string | undefined, currentPrice: number | null, backendConfigured: boolean): MarketDataStatus {
+  if (marketLoading) return 'LOADING';
+  if ((source === 'tick' || source === 'external') && currentPrice !== null) return 'LIVE';
+  return backendConfigured ? 'ERROR' : 'UNAVAILABLE';
+}
+
+function useSpotOrderState({
+  normalizedSymbol,
+  currentPrice,
+  userId,
+  backendConfigured,
+  displayPair,
+}: {
+  normalizedSymbol: string;
+  currentPrice: number | null;
+  userId: string | null;
+  backendConfigured: boolean;
+  displayPair: string;
+}) {
+  const [mobileMarketPanel, setMobileMarketPanel] = useState<MobileMarketPanel>('CHART');
+  const [side, setSide] = useState<'BUY' | 'SELL'>('BUY');
+  const [orderType, setOrderType] = useState<OrderType>('LIMIT');
+  const [price, setPrice] = useState('');
+  const [stopPrice, setStopPrice] = useState('');
+  const [amount, setAmount] = useState('');
+  const [tp, setTp] = useState('');
+  const [sl, setSl] = useState('');
+  const [tpSlState, setTpSlState] = useState<TpSlState>('NOT_CONFIGURED');
+  const [orderState, setOrderState] = useState<SpotOrderState>('DRAFT');
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const orderSubmissionLock = useRef(false);
+
+  useEffect(() => {
+    if (currentPrice !== null) setPrice((current) => current || String(currentPrice));
+  }, [currentPrice]);
+
   const backendSupportsTpSl = tpSlState === 'NOT_CONFIGURED';
   const tpSlReady = tpSlState === 'NOT_CONFIGURED' || (
     (tp.trim() !== '' || sl.trim() !== '')
@@ -413,15 +606,12 @@ export default function SpotPage() {
     stopPrice,
   });
   const executionPrice = orderType === 'MARKET' ? currentPrice : positiveNumber(price);
-  const total = positiveNumber(amount) !== null && executionPrice !== null
-    ? positiveNumber(amount)! * executionPrice
-    : null;
-  const reviewReady = ready;
+  const amountValue = positiveNumber(amount);
+  const total = amountValue !== null && executionPrice !== null ? amountValue * executionPrice : null;
 
   const openReview = () => {
     setFeedback(null);
     if (ready) {
-      setConfirmationMode('AUTHORITATIVE');
       setConfirmationOpen(true);
       return;
     }
@@ -472,250 +662,318 @@ export default function SpotPage() {
     }
   };
 
+  return {
+    mobileMarketPanel, setMobileMarketPanel, side, setSide, orderType, setOrderType, price, setPrice,
+    stopPrice, setStopPrice, amount, setAmount, tp, setTp, sl, setSl, tpSlState, orderState,
+    confirmationOpen, setConfirmationOpen, feedback, total, reviewReady: ready, ready, openReview,
+    submitOrder, configureTpSl,
+  };
+}
+
+function useMarginTradingState({
+  userId,
+  displayPair,
+  normalizedSymbol,
+}: {
+  userId: string | null;
+  displayPair: string;
+  normalizedSymbol: string;
+}) {
+  const [marginDirection, setMarginDirection] = useState<MarginDirection>('LONG');
+  const [marginLeverage, setMarginLeverage] = useState<MarginLeverage>(0);
+  const [marginCollateral, setMarginCollateral] = useState('');
+  const [marginQuote, setMarginQuote] = useState<MarginQuoteResponse | null>(null);
+  const [marginPositions, setMarginPositions] = useState<MarginPositionResponse[]>([]);
+  const [marginFeedback, setMarginFeedback] = useState<string | null>(null);
+  const [marginSubmitting, setMarginSubmitting] = useState(false);
+  const marginSubmissionLock = useRef(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const hasToken = hasAuthSession();
+    if (!userId || !hasToken) {
+      setMarginQuote(null);
+      setMarginPositions([]);
+      return () => { cancelled = true; };
+    }
+
+    setMarginFeedback(null);
+    Promise.allSettled([getMarginQuote(displayPair), listMarginPositions()]).then(([quoteResult, positionsResult]) => {
+      if (cancelled) return;
+      setMarginQuote(quoteResult.status === 'fulfilled' ? quoteResult.value : null);
+      setMarginPositions(positionsResult.status === 'fulfilled' ? positionsResult.value : []);
+    });
+    return () => { cancelled = true; };
+  }, [displayPair, userId]);
+
+  const marginCollateralValue = positiveNumber(marginCollateral);
+  const marginLeverageOptions = useMemo(
+    () => (marginQuote?.leverageOptions ?? []).filter((value) => [2, 3, 5].includes(value)),
+    [marginQuote],
+  );
+  const effectiveMarginLeverage = marginLeverageOptions.includes(marginLeverage)
+    ? marginLeverage
+    : (marginLeverageOptions[0] ?? 0);
+  const marginReady = Boolean(
+    userId && marginQuote?.state === 'LIVE' && normalizePair(marginQuote.pair) === normalizedSymbol
+    && effectiveMarginLeverage !== 0 && marginCollateralValue !== null && !marginSubmitting,
+  );
+
+  const refreshMarginPositions = async () => {
+    try {
+      setMarginPositions(await listMarginPositions());
+    } catch {
+      setMarginFeedback('Margin positions could not be refreshed.');
+    }
+  };
+
+  const handleOpenMargin = async () => {
+    if (marginSubmissionLock.current) return;
+    if (!marginReady || marginCollateralValue === null) {
+      setMarginFeedback(!userId ? 'Verify the wallet before opening an isolated-margin position.' : 'Enter positive collateral and wait for the latest margin quote.');
+      return;
+    }
+    marginSubmissionLock.current = true;
+    setMarginSubmitting(true);
+    setMarginFeedback(null);
+    try {
+      await openMarginPosition({
+        pair: displayPair,
+        direction: marginDirection,
+        leverage: effectiveMarginLeverage,
+        collateral: marginCollateral,
+        idempotencyKey: `margin:open:${normalizedSymbol}:${Date.now()}`,
+      });
+      setMarginCollateral('');
+      setMarginFeedback(`${marginDirection} ${effectiveMarginLeverage}x position submitted.`);
+      await refreshMarginPositions();
+    } catch {
+      setMarginFeedback('This margin position could not be opened.');
+    } finally {
+      marginSubmissionLock.current = false;
+      setMarginSubmitting(false);
+    }
+  };
+
+  const handleCloseMargin = async (positionId: string) => {
+    if (marginSubmissionLock.current) return;
+    marginSubmissionLock.current = true;
+    setMarginSubmitting(true);
+    setMarginFeedback(null);
+    try {
+      await closeMarginPosition(positionId, `margin:close:${positionId}:${Date.now()}`);
+      setMarginFeedback('Margin close request accepted.');
+      await refreshMarginPositions();
+    } catch {
+      setMarginFeedback('The margin close request failed.');
+    } finally {
+      marginSubmissionLock.current = false;
+      setMarginSubmitting(false);
+    }
+  };
+
+  const handleMarkMargin = async (positionId: string) => {
+    if (marginSubmissionLock.current) return;
+    marginSubmissionLock.current = true;
+    setMarginSubmitting(true);
+    setMarginFeedback(null);
+    try {
+      await markMarginPosition(positionId);
+      setMarginFeedback('Margin position refreshed with the latest quote.');
+      await refreshMarginPositions();
+    } catch {
+      setMarginFeedback('The margin quote refresh failed.');
+    } finally {
+      marginSubmissionLock.current = false;
+      setMarginSubmitting(false);
+    }
+  };
+
+  return {
+    marginDirection, setMarginDirection, marginLeverageOptions, effectiveMarginLeverage, setMarginLeverage,
+    marginCollateral, setMarginCollateral, marginQuote, marginReady, marginPositions, marginSubmitting,
+    handleOpenMargin, handleMarkMargin, handleCloseMargin, marginFeedback,
+  };
+}
+
+function SpotHeader({
+  displayPair,
+  onSelectSymbol,
+  currentPrice,
+  marketChange,
+  priceStatus,
+}: {
+  displayPair: string;
+  onSelectSymbol: (symbol: string) => void;
+  currentPrice: number | null;
+  marketChange: number | null;
+  priceStatus: MarketDataStatus;
+}) {
+  const changeClass = marketChange !== null && marketChange >= 0 ? 'text-[#22D3A6]' : 'text-[#FF5C7C]';
+  return (
+    <header className="nexi-station-header sticky top-0 z-20 flex min-w-0 items-center justify-between gap-2 border-b px-3 py-3 backdrop-blur sm:gap-3 sm:px-4">
+      <SafeBackButton fallback="/dashboard" label="Back to Quotes Hub" />
+      <div className="min-w-0 flex-1">
+        <SymbolSelector currentSymbol={displayPair} onSelect={onSelectSymbol} />
+      </div>
+      {currentPrice !== null && (
+        <div className="shrink-0 text-right" aria-label="Current market price">
+          <p className="font-mono text-sm text-[#C3BBD0]">{numberFormatter.format(currentPrice)}</p>
+          {marketChange !== null && (
+            <p className={`mt-0.5 font-mono text-[10px] ${changeClass}`}>
+              {marketChange > 0 ? '+' : ''}{marketChange.toFixed(2)}% 24h
+            </p>
+          )}
+        </div>
+      )}
+      {priceStatus === 'ERROR' && (
+        <div className="shrink-0 text-right" role="status" aria-label="Market data error">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#FF9CB0]">Market error</p>
+        </div>
+      )}
+    </header>
+  );
+}
+
+function SpotProductTabs({
+  activeSurface,
+  setActiveSurface,
+}: {
+  activeSurface: SpotSurface;
+  setActiveSurface: React.Dispatch<React.SetStateAction<SpotSurface>>;
+}) {
+  return (
+    <div className="mx-3 mt-3 grid grid-cols-2 rounded-xl border border-violet-300/10 bg-[#0B0711] p-1 sm:mx-4" role="tablist" aria-label="Spot product">
+      {(['SPOT', 'MARGIN'] as const).map((value) => (
+        <button key={value} type="button" role="tab" aria-selected={activeSurface === value} onClick={() => setActiveSurface(value)} className={`nexi-interactive min-h-11 rounded-lg text-xs font-semibold sm:min-h-11 sm:text-sm ${activeSurface === value ? 'bg-[#2A1742] text-white shadow-[0_0_18px_rgba(109,65,255,.16)]' : 'text-[#8C8299]'}`}>
+          {value === 'SPOT' ? 'Spot' : 'Margin'}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function SpotPageBody({
+  normalizedSymbol,
+  baseSymbol,
+  displayPair,
+  backendConfigured,
+  onSelectSymbol,
+}: {
+  normalizedSymbol: string;
+  baseSymbol: string;
+  displayPair: string;
+  backendConfigured: boolean;
+  onSelectSymbol: (symbol: string) => void;
+}) {
+
+  const { marketPairs, metal, shares, forex, loading: marketLoading } = useMarketData();
+  const market = [...marketPairs, metal, shares, forex].flat().find((row) => normalizePair(row.symbol) === normalizedSymbol);
+  const currentPrice = market?.dataState === 'LIVE' ? market.price : null;
+  const marketChange = market?.dataState === 'LIVE' ? market.change : null;
+
+  const [userId, setUserId] = useState<string | null>(null);
+  const { bids, asks, trades: marketTrades, tradeStatus, bookStatus } = useSpotMarketFeed({
+    backendConfigured,
+    displayPair,
+    normalizedSymbol,
+  });
+  const [chartInterval, setChartInterval] = useState<ChartInterval>('1m');
+  const [historyTab, setHistoryTab] = useState<HistoryTab>('OPEN');
+  const { rows: historyRows, status: historyStatus } = useSpotHistory(userId, historyTab);
+  const [activeSurface, setActiveSurface] = useState<SpotSurface>('SPOT');
+  const {
+    mobileMarketPanel, setMobileMarketPanel, side, setSide, orderType, setOrderType, price, setPrice,
+    stopPrice, setStopPrice, amount, setAmount, tp, setTp, sl, setSl, tpSlState, orderState,
+    confirmationOpen, setConfirmationOpen, feedback, total, reviewReady, ready, openReview,
+    submitOrder, configureTpSl,
+  } = useSpotOrderState({ normalizedSymbol, currentPrice, userId, backendConfigured, displayPair });
+  const {
+    marginDirection, setMarginDirection, marginLeverageOptions, effectiveMarginLeverage, setMarginLeverage,
+    marginCollateral, setMarginCollateral, marginQuote, marginReady, marginPositions, marginSubmitting,
+    handleOpenMargin, handleMarkMargin, handleCloseMargin, marginFeedback,
+  } = useMarginTradingState({ userId, displayPair, normalizedSymbol });
+
+  useEffect(() => {
+    const sync = () => setUserId(sessionPrincipalId());
+    sync();
+    window.addEventListener('nexi:wallet-session', sync);
+    return () => window.removeEventListener('nexi:wallet-session', sync);
+  }, []);
+
+
+  const priceStatus = resolvePriceStatus(marketLoading, market?.source, currentPrice, backendConfigured);
+
   return (
     <main className="nexi-page-shell min-h-[100dvh] w-full min-w-0 overflow-x-clip pb-36 text-[#F8F6FF] lg:pb-8">
-      <header className="nexi-station-header sticky top-0 z-20 flex min-w-0 items-center justify-between gap-2 border-b px-3 py-3 backdrop-blur sm:gap-3 sm:px-4">
-        <SafeBackButton fallback="/dashboard" label="Back to Quotes Hub" />
-        <div className="min-w-0 flex-1">
-          <SymbolSelector
-            currentSymbol={displayPair}
-            onSelect={(next) => {
-              setActivePair(next);
-              router.push(`/dashboard/spot?symbol=${next}`);
-            }}
-          />
-        </div>
-        {currentPrice !== null && <div className="shrink-0 text-right" aria-label="Current market price">
-          <p className="font-mono text-sm text-[#C3BBD0]">{numberFormatter.format(currentPrice)}</p>
-          {marketChange !== null && <p className={`mt-0.5 font-mono text-[10px] ${marketChange >= 0 ? 'text-[#22D3A6]' : 'text-[#FF5C7C]'}`}>{marketChange > 0 ? '+' : ''}{marketChange.toFixed(2)}% 24h</p>}
-        </div>}
-        {priceStatus === 'ERROR' && <div className="shrink-0 text-right" role="status" aria-label="Market data error">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#FF9CB0]">Market error</p>
-        </div>}
-      </header>
+      <SpotHeader
+        displayPair={displayPair}
+        onSelectSymbol={onSelectSymbol}
+        currentPrice={currentPrice}
+        marketChange={marketChange}
+        priceStatus={priceStatus}
+      />
+      <SpotProductTabs activeSurface={activeSurface} setActiveSurface={setActiveSurface} />
 
-      <div className="mx-3 mt-3 grid grid-cols-2 rounded-xl border border-violet-300/10 bg-[#0B0711] p-1 sm:mx-4" role="tablist" aria-label="Spot product">
-        {(['SPOT', 'MARGIN'] as const).map((value) => (
-          <button key={value} type="button" role="tab" aria-selected={activeSurface === value} onClick={() => setActiveSurface(value)} className={`nexi-interactive min-h-11 rounded-lg text-xs font-semibold sm:min-h-11 sm:text-sm ${activeSurface === value ? 'bg-[#2A1742] text-white shadow-[0_0_18px_rgba(109,65,255,.16)]' : 'text-[#8C8299]'}`}>
-            {value === 'SPOT' ? 'Spot' : 'Margin'}
-          </button>
-        ))}
-      </div>
+      {activeSurface === 'MARGIN' && <MarginWorkspace
+        displayPair={displayPair} normalizedSymbol={normalizedSymbol} chartInterval={chartInterval} setChartInterval={setChartInterval}
+        sessionClosed={market?.sessionState === 'CLOSED'} marginDirection={marginDirection} setMarginDirection={setMarginDirection}
+        marginLeverageOptions={marginLeverageOptions} effectiveMarginLeverage={effectiveMarginLeverage} setMarginLeverage={setMarginLeverage}
+        marginCollateral={marginCollateral} setMarginCollateral={setMarginCollateral} marginQuote={marginQuote}
+        handleOpenMargin={handleOpenMargin} marginReady={marginReady} marginPositions={marginPositions} userId={userId}
+        marginSubmitting={marginSubmitting} handleMarkMargin={handleMarkMargin} handleCloseMargin={handleCloseMargin}
+        marginFeedback={marginFeedback}
+      />}
 
+      {activeSurface === 'SPOT' && <SpotWorkspace
+        displayPair={displayPair} normalizedSymbol={normalizedSymbol} chartInterval={chartInterval} setChartInterval={setChartInterval}
+        sessionClosed={market?.sessionState === 'CLOSED'} mobileMarketPanel={mobileMarketPanel} setMobileMarketPanel={setMobileMarketPanel}
+        bids={bids} asks={asks} bookStatus={bookStatus} setPrice={setPrice} marketTrades={marketTrades} tradeStatus={tradeStatus}
+        historyTab={historyTab} setHistoryTab={setHistoryTab} historyRows={historyRows} historyStatus={historyStatus}
+        side={side} setSide={setSide} orderType={orderType} setOrderType={setOrderType} price={price} stopPrice={stopPrice}
+        setStopPrice={setStopPrice} amount={amount} setAmount={setAmount} baseSymbol={baseSymbol} tpSlState={tpSlState}
+        configureTpSl={configureTpSl} tp={tp} setTp={setTp} sl={sl} setSl={setSl} total={total} orderState={orderState}
+        feedback={feedback} reviewReady={reviewReady} ready={ready} openReview={openReview}
+      />}
 
-      {activeSurface === 'MARGIN' && <section className="nexi-station-card mx-3 mt-3 min-w-0 rounded-2xl p-3 sm:mx-4 sm:p-5" aria-labelledby="isolated-margin-heading">
-        <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-[.18em] text-[#48C0CC]">Spot isolated margin</p>
-            <h2 id="isolated-margin-heading" className="mt-1 text-lg font-semibold">{displayPair} margin workspace</h2>
-          </div>
-        </div>
-        <div className="mt-4 min-w-0 overflow-hidden rounded-xl border border-violet-300/10 bg-[#0B0711]">
-          <div className="flex min-w-0 items-center justify-between gap-2 border-b border-white/5 px-3 py-2">
-            <span className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8C8299]">{displayPair}</span>
-            <div className="nexi-scroll-rail flex max-w-[68vw] shrink-0 items-center gap-1 overflow-x-auto" role="tablist" aria-label="Margin chart interval">
-              {CHART_INTERVALS.map((value) => (
-                <button key={value} type="button" role="tab" aria-selected={chartInterval === value} onClick={() => setChartInterval(value)} className={`nexi-interactive min-h-11 min-w-11 shrink-0 rounded-md px-2 text-[10px] font-semibold ${chartInterval === value ? 'bg-[#2C146C] text-white' : 'text-[#8C8299] hover:text-white'}`}>{value}</button>
-              ))}
-            </div>
-          </div>
-          <div className="min-h-[300px] md:min-h-[360px] xl:min-h-[430px]">
-            <RealtimeTradingChart symbol={normalizedSymbol} type="spot" interval={chartInterval} marketStatus={market?.sessionState === 'CLOSED' ? 'CLOSED' : undefined} onStatusChange={setChartStatus} />
-          </div>
-        </div>
-        <div className="mt-4 grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-          <div className="min-w-0 space-y-3">
-            <div className="grid min-w-0 grid-cols-2 gap-2 rounded-xl bg-[#0B0711] p-1" role="tablist" aria-label="Margin direction">
-              {(['LONG', 'SHORT'] as const).map((value) => <button key={value} type="button" role="tab" aria-selected={marginDirection === value} onClick={() => setMarginDirection(value)} className={`min-h-11 rounded-lg text-xs font-semibold ${marginDirection === value ? value === 'LONG' ? 'bg-emerald-400/15 text-[#22D3A6]' : 'bg-rose-400/15 text-[#FF5C7C]' : 'text-[#8C8299]'}`}>{value}</button>)}
-            </div>
-            <div className="grid min-w-0 grid-cols-3 gap-2" role="tablist" aria-label="Margin leverage">
-              {marginLeverageOptions.map((value) => <button key={value} type="button" role="tab" aria-selected={marginLeverage === value} onClick={() => setMarginLeverage(value)} className={`min-h-11 rounded-lg border text-xs font-semibold ${marginLeverage === value ? 'border-violet-300/35 bg-[#2A1742] text-white' : 'border-violet-300/10 text-[#8C8299]'}`}>{value}x</button>)}
-            </div>
-            <label className="block text-xs text-[#C3BBD0]">Collateral (USDT)
-              <input type="number" inputMode="decimal" min="0" step="any" value={marginCollateral} onChange={(event) => setMarginCollateral(event.target.value)} placeholder="Enter positive collateral" className="mt-1 min-h-11 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 text-right font-mono outline-none focus:border-[#8B5CF6]" />
-            </label>
-            <dl className="grid min-w-0 grid-cols-2 gap-2 rounded-xl border border-violet-300/10 bg-[#0B0711] p-3 text-xs">
-              {marginQuote?.price != null && <div><dt className="text-[#8C8299]">Mark price</dt><dd className="mt-1 font-mono">{marginQuote.price}</dd></div>}
-              {marginQuote?.maintenanceRatio != null && <div><dt className="text-[#8C8299]">Maintenance ratio</dt><dd className="mt-1 font-mono">{marginQuote.maintenanceRatio}</dd></div>}
-            </dl>
-            <button type="button" onClick={handleOpenMargin} disabled={!marginReady} className="min-h-11 w-full rounded-xl bg-gradient-to-r from-[#6D28D9] to-[#8B5CF6] px-4 text-sm font-semibold disabled:cursor-not-allowed disabled:from-[#21152F] disabled:to-[#21152F] disabled:text-[#766D82]">Open {marginDirection} {marginLeverage}x</button>
-          </div>
-          <div className="min-w-0 rounded-xl border border-violet-300/10 bg-[#0B0711] p-3">
-            <div className="flex items-center justify-between gap-2"><h3 className="text-sm font-semibold">Positions</h3><span className="text-xs text-[#8C8299]">{marginPositions.length} loaded</span></div>
-            {marginPositions.length === 0 ? <p className="mt-5 text-center text-sm text-[#8C8299]">{userId ? 'No margin positions are available.' : 'Verify the wallet to load margin positions.'}</p> : <div className="mt-3 space-y-2">{marginPositions.map((position) => <article key={position.id} className="rounded-lg border border-violet-300/10 p-3 text-xs"><div className="flex flex-wrap items-center justify-between gap-2"><span className={position.direction === 'LONG' ? 'text-[#22D3A6]' : 'text-[#FF5C7C]'}>{position.direction} {position.leverage}x</span><span className="rounded-full border border-violet-300/15 px-2 py-1 uppercase text-[#C3BBD0]">{position.status}</span></div><p className="mt-2 font-mono">Collateral {position.collateral} · Entry {position.entryPrice} · Mark {position.markPrice ?? '—'}</p><div className="mt-2 flex flex-wrap gap-2">{position.status === 'OPEN' && <button type="button" disabled={marginSubmitting} onClick={() => void handleMarkMargin(position.id)} className="rounded border border-cyan-300/20 px-2 py-1 text-[#48C0CC] disabled:opacity-50">Mark</button>}{['PENDING', 'OPEN'].includes(position.status) && <button type="button" disabled={marginSubmitting} onClick={() => void handleCloseMargin(position.id)} className="rounded border border-rose-300/20 px-2 py-1 text-[#FF9CB0] disabled:opacity-50">Close</button>}</div></article>)}</div>}
-          </div>
-        </div>
-        {marginFeedback && <p role="status" className="mt-3 text-xs text-[#C3BBD0]">{marginFeedback}</p>}
-        <p className="mt-3 text-[10px] text-[#8C8299]">Isolated margin uses only the collateral assigned to each position. Leverage increases both potential gains and losses.</p>
-      </section>}
-
-      {activeSurface === 'SPOT' && <div className="grid min-w-0 gap-3 p-3 sm:gap-4 sm:p-4 xl:grid-cols-[minmax(0,1fr)_400px] xl:items-start">
-        <section className="contents xl:block xl:space-y-4" aria-labelledby="spot-market-heading">
-          <div className="order-1 hidden min-w-0 flex-wrap items-end justify-between gap-3 md:flex xl:order-none">
-            <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#A78BFA]">Spot trading</p>
-              <h1 id="spot-market-heading" className="mt-1 text-2xl font-semibold">{displayPair}</h1>
-            </div>
-            <div className="flex min-w-0 flex-wrap items-center justify-end gap-2" aria-label="Market connection status">
-            </div>
-          </div>
-
-          <div className={`nexi-station-card order-2 min-h-[210px] min-w-0 overflow-hidden rounded-xl sm:rounded-2xl md:block md:min-h-[360px] xl:order-none xl:min-h-[430px] ${mobileMarketPanel === 'CHART' ? 'block' : 'hidden'}`}>
-            <div className="flex min-w-0 items-center justify-between gap-2 border-b border-white/5 px-3 py-2">
-              <span className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8C8299]">{displayPair}</span>
-              <div className="nexi-scroll-rail flex max-w-[68vw] shrink-0 items-center gap-1 overflow-x-auto" role="tablist" aria-label="Chart interval">
-                {CHART_INTERVALS.map((value) => (
-                  <button key={value} type="button" role="tab" aria-selected={chartInterval === value} onClick={() => setChartInterval(value)} className={`nexi-interactive min-h-11 min-w-11 shrink-0 rounded-md px-2 text-[10px] font-semibold ${chartInterval === value ? 'bg-[#2C146C] text-white' : 'text-[#8C8299] hover:text-white'}`}>{value}</button>
-                ))}
-              </div>
-            </div>
-            <div className="min-h-[300px] md:min-h-[360px] xl:min-h-[430px]">
-              <RealtimeTradingChart symbol={normalizedSymbol} type="spot" interval={chartInterval} marketStatus={market?.sessionState === 'CLOSED' ? 'CLOSED' : undefined} onStatusChange={setChartStatus} />
-            </div>
-          </div>
-
-          <div className="order-3 grid min-w-0 grid-cols-3 border-b border-violet-300/20 xl:hidden" role="tablist" aria-label="Mobile market view">
-            {([
-              ['CHART', 'Chart'],
-              ['BOOK', 'Order book'],
-              ['TRADES', 'Trades'],
-            ] as const).map(([value, label]) => (
-              <button key={value} type="button" role="tab" aria-selected={mobileMarketPanel === value} onClick={() => setMobileMarketPanel(value)} className={`nexi-interactive min-h-11 min-w-0 px-1 text-xs ${mobileMarketPanel === value ? 'border-b-2 border-[#7353DD] text-white' : 'text-[#8C8299]'}`}>{label}</button>
-            ))}
-          </div>
-
-          <div className="order-4 grid min-w-0 gap-4 lg:grid-cols-2 xl:order-none">
-            <section className={`nexi-station-card min-w-0 overflow-hidden rounded-2xl md:block ${mobileMarketPanel === 'BOOK' ? 'block' : 'hidden'}`} aria-labelledby="order-book-heading">
-              <div className="flex items-center justify-between border-b border-white/5 px-4 py-3">
-                <h2 id="order-book-heading" className="font-semibold">Order book</h2>
-                {bookStatus === 'LIVE' ? <span className="text-xs text-[#8C8299]">Live</span> : bookStatus === 'CONNECTION_LOST' ? <span className="text-xs text-amber-200">Updates paused · last received depth</span> : bookStatus === 'LOADING' ? <span className="text-xs text-[#8C8299]">Loading</span> : bookStatus === 'ERROR' ? <span className="text-xs text-[#8C8299]">Request error</span> : null}
-              </div>
-              <div className="grid min-w-0 grid-cols-2 text-xs">
-                <div className="min-w-0 border-r border-white/5 p-3">
-                  <div className="mb-2 flex min-w-0 justify-between gap-2 text-[#8C8299]"><span>Amount</span><span>Bid</span></div>
-                  {bids.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(String(row.price))} className="nexi-interactive flex min-h-8 min-w-0 w-full justify-between gap-2 rounded px-1 font-mono hover:bg-emerald-400/5"><span className="truncate">{row.amount}</span><span className="truncate text-[#22D3A6]">{row.price}</span></button>)}
-                </div>
-                <div className="min-w-0 p-3">
-                  <div className="mb-2 flex min-w-0 justify-between gap-2 text-[#8C8299]"><span>Ask</span><span>Amount</span></div>
-                  {asks.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(String(row.price))} className="nexi-interactive flex min-h-8 min-w-0 w-full justify-between gap-2 rounded px-1 font-mono hover:bg-rose-400/5"><span className="truncate text-[#FF5C7C]">{row.price}</span><span className="truncate">{row.amount}</span></button>)}
-                </div>
-              </div>
-              {bids.length === 0 && asks.length === 0 && (
-                <p className="px-4 pb-6 text-center text-sm text-[#8C8299]">
-                  {bookStatus === 'LOADING'
-                    ? 'Loading the order book…'
-                    : bookStatus === 'ERROR'
-                      ? 'The order book could not be loaded.'
-                      : 'No order-book data yet.'}
-                </p>
-              )}
-            </section>
-
-            <section className={`nexi-station-card min-w-0 rounded-2xl md:block ${mobileMarketPanel === 'TRADES' ? 'block' : 'hidden'}`} aria-labelledby="recent-trades-heading">
-              <div className="flex items-center justify-between gap-2 border-b border-white/5 px-4 py-3"><h2 id="recent-trades-heading" className="font-semibold">Recent trades</h2>{tradeStatus === 'LIVE' ? <span className="text-xs text-[#8C8299]">Live market records</span> : tradeStatus === 'CONNECTION_LOST' ? <span className="text-xs text-amber-200">Updates paused · last received records</span> : tradeStatus === 'LOADING' ? <span className="text-xs text-[#8C8299]">Loading</span> : tradeStatus === 'ERROR' ? <span className="text-xs text-[#8C8299]">Request error</span> : null}</div>
-              {marketTrades.length > 0 ? <div className="divide-y divide-white/5 text-xs">{marketTrades.slice(0, 12).map((trade) => <div key={trade.id} className="grid grid-cols-3 gap-2 px-4 py-2 font-mono"><span>{numberFormatter.format(trade.price)}</span><span>{trade.amount}</span><span className="text-right text-[#8C8299]">{timeFormatter.format(new Date(trade.executedAt))}</span></div>)}</div> : <div className="flex min-h-52 items-center justify-center p-6 text-center text-sm text-[#8C8299]">{tradeStatus === 'LOADING' ? 'Loading recent trades…' : tradeStatus === 'ERROR' ? 'Recent trades could not be loaded.' : 'No recent trades yet.'}</div>}
-            </section>
-          </div>
-
-          <section className="nexi-station-card order-6 min-w-0 rounded-2xl xl:order-none" aria-label="Spot activity">
-            <div className="grid min-w-0 grid-cols-3 border-b border-white/5" role="tablist" aria-label="Spot activity">
-              {([
-                ['OPEN', 'Open', 'Open orders'],
-                ['ORDERS', 'Orders', 'Order history'],
-                ['TRADES', 'Trades', 'Trade history'],
-              ] as const).map(([value, mobileLabel, desktopLabel]) => (
-                <button key={value} type="button" role="tab" aria-selected={historyTab === value} onClick={() => setHistoryTab(value)} className={`min-h-12 min-w-0 px-1 text-[11px] sm:px-2 sm:text-sm ${historyTab === value ? 'border-b-2 border-[#8B5CF6] text-white' : 'text-[#8C8299]'}`}>
-                  <span className="sm:hidden">{mobileLabel}</span>
-                  <span className="hidden sm:inline">{desktopLabel}</span>
-                </button>
-              ))}
-            </div>
-            <div className="p-4">
-              {historyRows.length > 0 ? (
-                <div className="space-y-2">{historyRows.slice(0, 30).map((row) => {
-                  const id = String(row.id ?? row.orderId ?? [historyTab, row.pair, row.side, row.amount ?? row.quantity, row.price, row.createdAt ?? row.executedAt].map((value) => String(value ?? '')).join(':'));
-                  const pair = String(row.pair ?? displayPair);
-                  const status = String(row.status ?? row.state ?? 'UNKNOWN').replaceAll('_', ' ');
-                  const rowSide = row.side ? String(row.side) : '';
-                  const rowAmount = String(row.amount ?? row.quantity ?? row.filled ?? '—');
-                  const rowPrice = String(row.price ?? row.entryPrice ?? '—');
-                  const when = row.createdAt ?? row.executedAt ?? row.updatedAt;
-                  return <article key={id} className="rounded-xl border border-violet-300/10 bg-[#0B0711] p-3 text-xs"><div className="flex flex-wrap items-center justify-between gap-2"><span className="font-semibold">{pair}{rowSide ? ` · ${rowSide}` : ''}</span><span className="rounded-full border border-violet-300/20 px-2 py-1 uppercase text-[#C3BBD0]">{status}</span></div><div className="mt-2 grid grid-cols-2 gap-2 font-mono sm:grid-cols-4"><span>Amount {rowAmount}</span><span>Price {rowPrice}</span><span className="truncate">ID {id}</span><span>{when ? dateTimeFormatter.format(new Date(String(when))) : '—'}</span></div></article>;
-                })}</div>
-              ) : (
-                <div className="flex min-h-32 items-center justify-center text-center text-sm text-[#8C8299]">{historyStatus === 'LOADING' ? 'Loading activity…' : historyStatus === 'ERROR' ? 'Activity request failed.' : historyTab === 'OPEN' ? 'No open orders.' : historyTab === 'ORDERS' ? 'No order history.' : 'No trade history.'}</div>
-              )}
-            </div>
-          </section>
-        </section>
-
-        <aside className="nexi-station-card order-5 h-fit min-w-0 overflow-hidden rounded-xl p-3 sm:rounded-2xl sm:p-5 xl:sticky xl:top-20 xl:order-none" aria-labelledby="spot-ticket-heading">
-          <div className="hidden items-start justify-between gap-3 sm:flex">
-            <div><p className="text-[10px] font-semibold uppercase tracking-[.18em] text-[#48C0CC]">Execution ticket</p><h2 id="spot-ticket-heading" className="mt-1 text-xl font-semibold gradient-text">Place a Spot order</h2></div>
-            <Wallet className="mt-1 h-5 w-5 shrink-0 text-[#A995FF]" aria-hidden="true" />
-          </div>
-          <div className="mt-2.5 grid min-w-0 grid-cols-2 rounded-xl bg-[#0B0711] p-1 sm:mt-3" data-testid="spot-buy-sell">
-            {(['BUY', 'SELL'] as const).map((value) => <button key={value} type="button" onClick={() => setSide(value)} className={`nexi-interactive min-h-9 min-w-0 rounded-lg px-1 text-xs font-semibold sm:min-h-11 sm:text-sm ${side === value ? value === 'BUY' ? 'bg-emerald-400/15 text-[#22D3A6]' : 'bg-rose-400/15 text-[#FF5C7C]' : 'text-[#8C8299]'}`}>{value === 'BUY' ? 'Buy' : 'Sell'}</button>)}
-          </div>
-          <div className="mt-2 grid min-w-0 grid-cols-3 gap-1 rounded-xl bg-[#0B0711] p-1" role="tablist" aria-label="Order type" data-testid="spot-order-type">
-            {(['MARKET', 'LIMIT', 'STOP'] as const).map((value) => <button key={value} type="button" role="tab" aria-selected={orderType === value} onClick={() => setOrderType(value)} className={`nexi-interactive min-h-9 min-w-0 whitespace-normal rounded-lg px-1 text-[10px] leading-tight sm:min-h-11 sm:text-xs ${orderType === value ? 'bg-[#2A1742] text-white' : 'text-[#8C8299]'}`}>{value === 'STOP' ? 'Stop Limit' : value[0] + value.slice(1).toLowerCase()}</button>)}
-          </div>
-
-          <div className="mt-2.5 space-y-2 sm:mt-3 sm:space-y-2.5" data-testid="spot-inputs">
-            <label className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 text-xs text-[#C3BBD0] sm:block"><span>Price (USDT)</span>
-              <input type="number" inputMode="decimal" value={price} onChange={(event) => setPrice(event.target.value)} disabled={orderType === 'MARKET'} placeholder={orderType === 'MARKET' ? 'Market price' : '—'} className="min-h-9 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 text-right font-mono outline-none focus:border-[#8B5CF6] sm:mt-1 sm:min-h-11" />
-            </label>
-            {orderType === 'STOP' && <label className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 text-xs text-[#C3BBD0] sm:block"><span>Stop price (USDT)</span>
-              <input type="number" inputMode="decimal" value={stopPrice} onChange={(event) => setStopPrice(event.target.value)} placeholder="—" className="min-h-9 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 text-right font-mono outline-none focus:border-[#8B5CF6] sm:mt-1 sm:min-h-11" />
-            </label>}
-            <label className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 text-xs text-[#C3BBD0] sm:block"><span>Amount ({baseSymbol})</span>
-              <input type="number" inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="0.00" className="min-h-9 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 text-right font-mono outline-none focus:border-[#8B5CF6] sm:mt-1 sm:min-h-11" />
-            </label>
-            <div className="grid min-w-0 grid-cols-4 gap-1.5">
-              {[25, 50, 75, 100].map((percentage) => <button key={percentage} type="button" disabled aria-label={`${percentage}% allocation requires an available balance`} className="min-h-8 min-w-0 rounded-lg border border-violet-300/10 px-0 text-[10px] text-[#8C8299] disabled:cursor-not-allowed sm:min-h-9">{percentage}%</button>)}
-            </div>
-            <label className="flex min-h-8 items-center gap-2 rounded-xl border border-violet-300/10 px-3 text-xs sm:min-h-9">
-              <input type="checkbox" checked={tpSlState !== 'NOT_CONFIGURED'} onChange={(event) => configureTpSl(event.target.checked)} className="h-4 w-4 accent-violet-500" />
-              Configure TP/SL
-            </label>
-            {tpSlState !== 'NOT_CONFIGURED' && <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
-              <label className="min-w-0 text-xs text-[#C3BBD0]">Take profit<input type="number" inputMode="decimal" value={tp} onChange={(event) => setTp(event.target.value)} placeholder="—" className="mt-1 min-h-11 w-full min-w-0 rounded-lg border border-violet-300/15 bg-[#0B0711] px-2 text-right font-mono" /></label>
-              <label className="min-w-0 text-xs text-[#C3BBD0]">Stop loss<input type="number" inputMode="decimal" value={sl} onChange={(event) => setSl(event.target.value)} placeholder="—" className="mt-1 min-h-11 w-full min-w-0 rounded-lg border border-violet-300/15 bg-[#0B0711] px-2 text-right font-mono" /></label>
-              <p className="text-xs text-amber-200/80 sm:col-span-2">Take-profit and stop-loss are not available for this order yet.</p>
-            </div>}
-          </div>
-
-          <dl className="mt-1.5 grid min-w-0 grid-cols-3 gap-2 rounded-xl border border-violet-300/10 bg-[#0B0711] p-1.5 text-[10px] sm:mt-3 sm:p-2 sm:text-[11px] md:grid-cols-4 md:p-3 md:text-xs">
-            <div className="min-w-0"><dt className="text-[#8C8299]">Total</dt><dd className="mt-0.5 break-words font-mono">{total === null ? '—' : `${total.toFixed(2)} USDT`}</dd></div>
-            <div className="min-w-0"><dt className="text-[#8C8299]">Fee</dt><dd className="mt-0.5 break-words font-mono">—</dd></div>
-            <div className="min-w-0"><dt className="text-[#8C8299]">Available</dt><dd className="mt-0.5 break-words font-mono">—</dd></div>
-            <div className="hidden min-w-0 md:block"><dt className="text-[#8C8299]">State</dt><dd className="mt-0.5 break-words font-mono">{productStateLabel(orderState)}</dd></div>
-          </dl>
-
-          {feedback && <p role="status" className="mt-3 text-sm text-[#C3BBD0]">{feedback}</p>}
-          <button type="button" onClick={openReview} disabled={!reviewReady} data-testid="spot-submit-btn" className="nexi-interactive mt-1.5 min-h-9 w-full rounded-xl bg-gradient-to-r from-[#6D28D9] to-[#8B5CF6] px-4 text-sm font-semibold shadow-[0_0_24px_rgba(109,40,217,.28)] disabled:cursor-not-allowed disabled:from-[#21152F] disabled:to-[#21152F] disabled:text-[#766D82] disabled:shadow-none sm:mt-3 sm:min-h-11">
-            {ready ? `Review ${side.toLowerCase()} order` : 'Enter valid order values'}
-          </button>
-        </aside>
-      </div>}
-
-      {confirmationOpen && <ModalSurface open onClose={() => setConfirmationOpen(false)} title="Review Spot order">
-        <div className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-violet-300/15 bg-[#100A18] p-5 shadow-2xl">
-          <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#48C0CC]">Review order</p><h2 id="spot-confirm-title" className="mt-1 text-xl font-semibold">Confirm Spot order</h2></div></div>
-          <dl className="mt-4 space-y-2 text-sm">
-            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-3"><dt className="text-[#8C8299]">Pair</dt><dd className="min-w-0 break-words text-right">{displayPair}</dd></div>
-            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-3"><dt className="text-[#8C8299]">Side / type</dt><dd className="min-w-0 break-words text-right">{side} · {orderType === 'STOP' ? 'STOP LIMIT' : orderType}</dd></div>
-            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-3"><dt className="text-[#8C8299]">Amount</dt><dd className="min-w-0 break-words text-right font-mono">{amount} {baseSymbol}</dd></div>
-            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-3"><dt className="text-[#8C8299]">Price</dt><dd className="min-w-0 break-words text-right font-mono">{orderType === 'MARKET' ? 'Market' : `${price} USDT`}</dd></div>
-            {orderType === 'STOP' && <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-3"><dt className="text-[#8C8299]">Stop price</dt><dd className="min-w-0 break-words text-right font-mono">{stopPrice} USDT</dd></div>}
-            {tpSlState !== 'NOT_CONFIGURED' && <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-3"><dt className="text-[#8C8299]">TP / SL</dt><dd className="min-w-0 break-words text-right font-mono">{tp || '—'} / {sl || '—'}</dd></div>}
-          </dl>
-          <div className="mt-5 grid grid-cols-2 gap-3">
-            <button type="button" onClick={() => setConfirmationOpen(false)} className="min-h-12 rounded-xl border border-violet-300/15">Back</button>
-            <button type="button" onClick={submitOrder} disabled={orderState === 'SUBMITTING'} className="min-h-12 rounded-xl bg-[#7C3AED] font-semibold disabled:opacity-50">{orderState === 'SUBMITTING' ? 'Submitting…' : 'Confirm'}</button>
-          </div>
-        </div>
-      </ModalSurface>}
+      {confirmationOpen && <SpotOrderReview
+        displayPair={displayPair} side={side} orderType={orderType} amount={amount} baseSymbol={baseSymbol} price={price}
+        stopPrice={stopPrice} tpSlState={tpSlState} tp={tp} sl={sl} onClose={() => setConfirmationOpen(false)}
+        submitOrder={submitOrder} orderState={orderState}
+      />}
     </main>
+  );
+}
+
+
+export default function SpotPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const { activePair, setActivePair } = useActivePair();
+  const querySymbol = searchParams.get('symbol');
+  const symbol = querySymbol || activePair;
+  const normalizedSymbol = normalizePair(symbol);
+  const baseSymbol = normalizedSymbol.endsWith('USDT') ? normalizedSymbol.slice(0, -4) : normalizedSymbol;
+  const displayPair = findAsset(symbol)?.pair ?? (normalizedSymbol.endsWith('USDT') ? `${baseSymbol}/USDT` : symbol);
+  const backendConfigured = Boolean(apiBaseUrl);
+
+  useEffect(() => {
+    if (querySymbol) setActivePair(querySymbol);
+  }, [querySymbol, setActivePair]);
+
+  const handleSelectSymbol = (next: string) => {
+    setActivePair(next);
+    router.push(`/dashboard/spot?symbol=${next}`);
+  };
+
+  return (
+    <SpotPageBody
+      key={normalizedSymbol}
+      normalizedSymbol={normalizedSymbol}
+      baseSymbol={baseSymbol}
+      displayPair={displayPair}
+      backendConfigured={backendConfigured}
+      onSelectSymbol={handleSelectSymbol}
+    />
   );
 }

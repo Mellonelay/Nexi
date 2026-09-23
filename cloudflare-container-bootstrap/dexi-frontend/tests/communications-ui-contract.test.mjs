@@ -15,7 +15,7 @@ test('communications tranche preserves truthful UI and mobile navigation contrac
   assert.match(support, /Recent tickets/);
   assert.match(support, /Add attachment/);
   assert.match(messages, /Back to conversations/);
-  assert.match(messages, /selected \? 'hidden lg:block'/);
+  assert.match(messages, /selectedId \? 'hidden lg:block'/);
   assert.match(announcements, /Back to announcements/);
   assert.match(announcements, /selected \? 'hidden lg:block'/);
   assert.match(learn, /Back to lessons/);

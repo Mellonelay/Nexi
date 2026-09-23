@@ -5,6 +5,7 @@ import { LifeBuoy, Search, Ticket } from 'lucide-react';
 import { io } from 'socket.io-client';
 import api, { apiBaseUrl } from '../../lib/api';
 import { getAccessToken } from '../../lib/auth-session';
+import LocalDateTime from '../../components/LocalDateTime';
 import { DataStatePanel, Field, inputClass, PageHeader, PageShell, Panel, PanelHeading, PrimaryButton, TabButton } from '../wallet/components/ProductPrimitives';
 
 type TicketReply = {
@@ -30,7 +31,6 @@ const helpTopics = [
   { title: 'Trading support', category: 'Trading', copy: 'Order and position issues need a request identifier for support to investigate.' },
   { title: 'Security events', category: 'Security', copy: 'Session, wallet signature, and sign-in issues can be reviewed when activity details are available.' },
 ];
-const dateTimeFormatter = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' });
 
 function ticketRows(data: unknown): SupportTicket[] {
   if (Array.isArray(data)) return data as SupportTicket[];
@@ -231,7 +231,7 @@ export default function SupportPage() {
                   <article key={item.id} className="rounded-xl border border-[#2B2037] bg-[#171022] p-4">
                     <div className="flex flex-wrap gap-2 text-xs text-[#8C8299]">
                       <span>{item.authorId}</span>
-                      <span>{item.createdAt ? dateTimeFormatter.format(new Date(item.createdAt)) : '—'}</span>
+                      <span><LocalDateTime value={item.createdAt} dateStyle="medium" timeStyle="short" /></span>
                     </div>
                     <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#C3BBD0]">{item.body}</p>
                   </article>

@@ -158,13 +158,14 @@ export default function MessagesPage() {
       .map((record) => textValue(record.id))
       .filter((id): id is string => Boolean(id));
     if (unreadIds.length === 0) return;
+    const unreadIdSet = new Set(unreadIds);
     try {
       await Promise.all(unreadIds.map((id) => api.post(`${messageEndpoint}/${encodeURIComponent(id)}/read`)));
       const readThread: MessageThread = {
         ...thread,
         readState: 'READ',
         messages: (thread.messages ?? []).map((record) =>
-          textValue(record.recipientId) === userId && unreadIds.includes(textValue(record.id) ?? '')
+          textValue(record.recipientId) === userId && unreadIdSet.has(textValue(record.id) ?? '')
             ? { ...record, readAt: new Date().toISOString() }
             : record,
         ),
@@ -228,7 +229,6 @@ export default function MessagesPage() {
   const unreadCount = state === 'LIVE'
     ? threads.filter((thread) => threadState(thread) === 'UNREAD').length
     : null;
-  const conversationListClass = selected ? 'hidden lg:block' : 'block';
   return (
     <PageShell>
       <PageHeader
@@ -245,71 +245,131 @@ export default function MessagesPage() {
           <Metric label="Attachments" value="—" hint="Unavailable" />
         </section>
         <div className="grid gap-5 lg:grid-cols-[minmax(280px,0.72fr)_minmax(0,1.28fr)] lg:items-start">
-          <Panel className={conversationListClass}>
-            <PanelHeading title="Conversations" action={<Inbox size={18} className="text-[#48C0CC]" />} />
-            <div className="relative">
-              <Search size={17} className="absolute left-3 top-3 text-[#8C8299]" />
-              <input className={`${inputClass} pl-10`} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search conversations" aria-label="Search conversations" />
-            </div>
-            <div className="mt-4 flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Conversation filters">
-              {filters.map((item) => <TabButton key={item} active={filter === item} onClick={() => setFilter(item)}>{item[0] + item.slice(1).toLowerCase()}</TabButton>)}
-            </div>
-
-            <div className="mt-4 space-y-2">
-              {state === 'LOADING' && <DataStatePanel state="LOADING" title="Loading conversations" />}
-              {state === 'UNAVAILABLE' && <DataStatePanel state="UNAVAILABLE" title={!userId ? 'Sign in to view conversations' : 'Messages unavailable'} message={!userId ? undefined : 'Conversation history is not available right now.'} />}
-              {state === 'ERROR' && <DataStatePanel state="ERROR" title="Message service error" />}
-              {state === 'LIVE' && filtered.length === 0 && <DataStatePanel state="UNAVAILABLE" title="No conversations returned" />}
-              {state === 'LIVE' && filtered.map((thread) => (
-                <ThreadButton key={threadKey(thread)} thread={thread} active={selected?.id === thread.id} onClick={() => void openThread(thread)} />
-              ))}
-            </div>
-          </Panel>
-          <Panel className="min-h-[520px]">
-            <PanelHeading title="Conversation detail" action={<CheckCheck size={18} className="text-[#8C8299]" />} />
-            {selected && <SafeBackButton onBack={() => setSelected(null)} label="Back to conversations" showLabel className="mb-3 border-transparent px-2 text-sm font-semibold text-[#A995FF]" />}
-             {!selected && <DataStatePanel state="UNAVAILABLE" title="Choose a conversation" message="Select a conversation to view its messages." />}
-            {selected && (
-              <div className="flex min-h-[430px] flex-col">
-                <div className="rounded-xl border border-[#2B2037] bg-[#171022] p-4">
-                  <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
-                     <div className="min-w-0"><h2 className="break-words font-semibold">{threadTitle(selected)}</h2><p className="mt-1 text-xs text-[#8C8299]">Conversation messages and delivery status.</p></div>
-                    <div className="flex flex-wrap gap-2"><StatusBadge state={normalizeMessageThreadState(selected.readState)} /><StatusBadge state={normalizeMessageDeliveryState(selected.deliveryState)} /><StatusBadge state={String(selected.state ?? 'ACTIVE')} /></div>
-                  </div>
-                </div>
-
-                <div className="flex-1 space-y-3 py-4">
-                  <AuthoritativeMessageList thread={selected} />
-                </div>
-
-
-                {feedback && <p role="status" className="mb-4 rounded-xl border border-[#49335E] bg-[#171022] p-3 text-xs leading-5 text-[#C3BBD0]">{feedback}</p>}
-                <div className="mt-auto border-t border-[#2B2037] pt-4">
-                  <label className="block text-sm font-semibold text-[#F2ECFA]" htmlFor="message-reply">Reply</label>
-                  <div className="mt-2 flex min-w-0 flex-col gap-2 sm:flex-row">
-                    <input
-                      id="message-reply"
-                      className={inputClass}
-                      value={draft}
-                      onChange={(event) => setDraft(event.target.value)}
-                      placeholder={selected.counterpartId ? 'Write a reply' : 'Reply unavailable'}
-                      disabled={!selected.counterpartId || !userId || sending}
-                    />
-                    <PrimaryButton onClick={() => void sendReply()} disabled={!selected.counterpartId || !userId || sending || !draft.trim()}>Send reply</PrimaryButton>
-                  </div>
-                   <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                     <p className="text-xs leading-5 text-[#8C8299]">Replies are available when messaging is connected.</p>
-                     <SecondaryButton onClick={() => void reportConversation()}>Report conversation</SecondaryButton>
-                   </div>
-                </div>
-              </div>
-            )}
-          </Panel>
+          <ConversationList
+            state={state}
+            filtered={filtered}
+            query={query}
+            onQueryChange={setQuery}
+            filter={filter}
+            onFilterChange={setFilter}
+            userId={userId}
+            selectedId={selected?.id}
+            onOpenThread={openThread}
+          />
+          <ConversationDetail
+            selected={selected}
+            onClearSelection={() => setSelected(null)}
+            feedback={feedback}
+            draft={draft}
+            onDraftChange={setDraft}
+            userId={userId}
+            sending={sending}
+            onSendReply={sendReply}
+            onReportConversation={reportConversation}
+          />
         </div>
       </main>
     </PageShell>
   );
 }
+function ConversationList({
+  state,
+  filtered,
+  query,
+  onQueryChange,
+  filter,
+  onFilterChange,
+  userId,
+  selectedId,
+  onOpenThread,
+}: {
+  state: LoadState;
+  filtered: MessageThread[];
+  query: string;
+  onQueryChange: (value: string) => void;
+  filter: Filter;
+  onFilterChange: (value: Filter) => void;
+  userId: string | null;
+  selectedId: unknown;
+  onOpenThread: (thread: MessageThread) => Promise<void>;
+}) {
+  const className = selectedId ? 'hidden lg:block' : 'block';
+  return (
+    <Panel className={className}>
+      <PanelHeading title="Conversations" action={<Inbox size={18} className="text-[#48C0CC]" />} />
+      <div className="relative">
+        <Search size={17} className="absolute left-3 top-3 text-[#8C8299]" />
+        <input className={`${inputClass} pl-10`} value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder="Search conversations" aria-label="Search conversations" />
+      </div>
+      <div className="mt-4 flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Conversation filters">
+        {filters.map((item) => <TabButton key={item} active={filter === item} onClick={() => onFilterChange(item)}>{item[0] + item.slice(1).toLowerCase()}</TabButton>)}
+      </div>
+      <div className="mt-4 space-y-2">
+        {state === 'LOADING' && <DataStatePanel state="LOADING" title="Loading conversations" />}
+        {state === 'UNAVAILABLE' && <DataStatePanel state="UNAVAILABLE" title={!userId ? 'Sign in to view conversations' : 'Messages unavailable'} message={!userId ? undefined : 'Conversation history is not available right now.'} />}
+        {state === 'ERROR' && <DataStatePanel state="ERROR" title="Message service error" />}
+        {state === 'LIVE' && filtered.length === 0 && <DataStatePanel state="UNAVAILABLE" title="No conversations returned" />}
+        {state === 'LIVE' && filtered.map((thread) => (
+          <ThreadButton key={threadKey(thread)} thread={thread} active={selectedId === thread.id} onClick={() => void onOpenThread(thread)} />
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
+function ConversationDetail({
+  selected,
+  onClearSelection,
+  feedback,
+  draft,
+  onDraftChange,
+  userId,
+  sending,
+  onSendReply,
+  onReportConversation,
+}: {
+  selected: MessageThread | null;
+  onClearSelection: () => void;
+  feedback: string | null;
+  draft: string;
+  onDraftChange: (value: string) => void;
+  userId: string | null;
+  sending: boolean;
+  onSendReply: () => Promise<void>;
+  onReportConversation: () => Promise<void>;
+}) {
+  return (
+    <Panel className="min-h-[520px]">
+      <PanelHeading title="Conversation detail" action={<CheckCheck size={18} className="text-[#8C8299]" />} />
+      {selected && <SafeBackButton onBack={onClearSelection} label="Back to conversations" showLabel className="mb-3 border-transparent px-2 text-sm font-semibold text-[#A995FF]" />}
+      {!selected && <DataStatePanel state="UNAVAILABLE" title="Choose a conversation" message="Select a conversation to view its messages." />}
+      {selected && (
+        <div className="flex min-h-[430px] flex-col">
+          <div className="rounded-xl border border-[#2B2037] bg-[#171022] p-4">
+            <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0"><h2 className="break-words font-semibold">{threadTitle(selected)}</h2><p className="mt-1 text-xs text-[#8C8299]">Conversation messages and delivery status.</p></div>
+              <div className="flex flex-wrap gap-2"><StatusBadge state={normalizeMessageThreadState(selected.readState)} /><StatusBadge state={normalizeMessageDeliveryState(selected.deliveryState)} /><StatusBadge state={String(selected.state ?? 'ACTIVE')} /></div>
+            </div>
+          </div>
+          <div className="flex-1 space-y-3 py-4"><AuthoritativeMessageList thread={selected} /></div>
+          {feedback && <p role="status" className="mb-4 rounded-xl border border-[#49335E] bg-[#171022] p-3 text-xs leading-5 text-[#C3BBD0]">{feedback}</p>}
+          <div className="mt-auto border-t border-[#2B2037] pt-4">
+            <label className="block text-sm font-semibold text-[#F2ECFA]" htmlFor="message-reply">Reply</label>
+            <div className="mt-2 flex min-w-0 flex-col gap-2 sm:flex-row">
+              <input id="message-reply" className={inputClass} value={draft} onChange={(event) => onDraftChange(event.target.value)} placeholder={selected.counterpartId ? 'Write a reply' : 'Reply unavailable'} disabled={!selected.counterpartId || !userId || sending} />
+              <PrimaryButton onClick={() => void onSendReply()} disabled={!selected.counterpartId || !userId || sending || !draft.trim()}>Send reply</PrimaryButton>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs leading-5 text-[#8C8299]">Replies are available when messaging is connected.</p>
+              <SecondaryButton onClick={() => void onReportConversation()}>Report conversation</SecondaryButton>
+            </div>
+          </div>
+        </div>
+      )}
+    </Panel>
+  );
+}
+
 function ThreadButton({ thread, active, onClick }: { thread: MessageThread; active: boolean; onClick: () => void }) {
   const readState = threadState(thread);
   const deliveryState = normalizeMessageDeliveryState(thread.deliveryState);

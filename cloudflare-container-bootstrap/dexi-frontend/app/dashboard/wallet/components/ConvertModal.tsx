@@ -19,7 +19,7 @@ type Quote = { id: string; fromAsset: string; toAsset: string; inputAmount: stri
 export default function ConvertModal({ isOpen, onClose, currencies, selectedCurrency, onCompleted }: ConvertModalProps) {
   const symbols = currencies.map((item) => item.symbol);
   const [fromAsset, setFromAsset] = useState(selectedCurrency || symbols[0] || 'USDT');
-  const [toAsset, setToAsset] = useState(symbols.find((item) => item !== selectedCurrency) || 'USDT');
+  const [toAsset, setToAsset] = useState(() => symbols.find((item) => item !== selectedCurrency) || 'USDT');
   const [amount, setAmount] = useState('');
   const [quote, setQuote] = useState<Quote | null>(null);
   const [busy, setBusy] = useState(false);
