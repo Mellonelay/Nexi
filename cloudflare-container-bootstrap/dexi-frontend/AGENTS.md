@@ -11,8 +11,8 @@ Never use a VM-local NestJS process as production truth. Never add frontend-owne
 Current owner decisions outrank old screenshots, old chats, old frontend programs, archived docs, and generated concept images.
 
 ## Current owner correction — market work
-Do not reopen broad market-provider reliability work during frontend completion.
-The backend market system is already substantially working; a stale provider by itself is not a blocker unless the owner explicitly reopens it or a fresh frontend-visible defect proves a broken contract.
+Do not reopen broad market-provider reliability work during frontend completion merely from historical stale-provider counts.
+The backend market system is substantially working; a stale provider by itself is not a blocker. A fresh production-visible defect such as the current BrowserStack Galaxy S24 Spot `MARKET ERROR` is an active acceptance defect and must be diagnosed through the causal frontend/backend/realtime owner before broad provider architecture is reopened.
 Frontend-visible market status is only:
 - `Live`
 - `Error`
@@ -160,18 +160,22 @@ Sheets, dialogs, menus, and drawers must manage focus and dismiss behavior corre
 Respect reduced-motion preferences; motion communicates state and hierarchy, never blocks task completion.
 Charts/order books need text labels/status summaries sufficient to understand current state without relying only on color.
 ## Validation
-For UI behavior changes, validate the rendered app, not just compilation.
+For UI behavior changes, validate the rendered deployed app, not just compilation.
 
-Minimum focused checks:
-- typecheck
-- affected unit/contract tests
-- relevant Playwright/browser flow
-- mobile widths 320 / 360 / 390 / 430
-- desktop
-- no horizontal overflow
-- keyboard/focus
-- current locale behavior where affected
-- current backend/API path, never a local Nest substitute
+Before deployment, run only the focused deterministic source/build gates invalidated by the change. Final browser acceptance follows the global Browser Fabric:
+- BrowserStack = real-browser / real-device runtime acceptance owner;
+- Polypane = responsive / multi-viewport acceptance owner;
+- Playwright / Chrome DevTools = supporting automation and diagnosis, not a separate mandatory acceptance stage.
+
+Minimum affected-flow proof:
+- typecheck / affected unit-contract tests / production build as required by the change;
+- deployed `https://app.nexitrading.app` using the real `https://api.nexitrading.app` Cloudflare backend;
+- BrowserStack evidence for relevant browser/device behavior;
+- Polypane evidence for 320 / 360 / ~390 / 412-430 / tablet / desktop and short-height states where applicable;
+- no horizontal overflow;
+- keyboard/focus/accessibility behavior where affected;
+- current locale behavior where affected;
+- never a VM-local Nest substitute or disconnected mock for an end-to-end production claim
 
 For reference-driven UI work keep a short mismatch ledger:
 `accepted reference -> current render -> intentional deviation or actual defect`.

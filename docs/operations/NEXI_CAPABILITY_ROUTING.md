@@ -25,7 +25,7 @@ Third-party skills specialize work; they do not override NEXI architecture, secu
 - Platform/backend runtime: current official Cloudflare docs first, then verified Wrangler/Cloudflare MCP/runtime surfaces; use Wrangler Container SSH when documented shell access is required. `avn` + `redis-cli` remain Valkey realtime/cache only. Never substitute a VM backend for Cloudflare runtime truth.
 - Git/PR/CI: Git + GitHub.
 - Runtime/telemetry: direct service/process/HTTP evidence, Sentry, task-relevant Cloudflare observability.
-- Browser: local Playwright first; Polypane + Chrome DevTools MCP for responsive/DOM/network inspection; BrowserStack for real browsers/devices when materially justified.
+- Browser: production acceptance is owned by BrowserStack (real browsers/devices) and Polypane (responsive/multi-viewport) against the deployed Public app and the real Cloudflare backend. Playwright and Chrome DevTools MCP are supporting automation/diagnostic tools only; do not create a mandatory local-preview acceptance chain.
 - Direct bounded editing: parent/RDC when owner and proof are deterministic.
 - Heavy workers: Codex/Kilo only for substantial bounded work or independent review where separate reasoning context adds value.
 
@@ -59,12 +59,16 @@ Codex `/mcp` is authoritative for Codex-visible MCP tools and OAuth state. `rdc-
 Never create Remote-Desktop-Commander-via-Remote-Desktop-Commander recursion.
 
 ## Browser responsibility split
-1. Playwright: deterministic local automation.
-2. Polypane: responsive multi-viewport surface; CDP at `127.0.0.1:5858` when running.
-3. Chrome DevTools MCP: inspect/control Polypane panes, DOM/accessibility, console/network, screenshots, input/navigation, performance/debugging.
-4. BrowserStack: real-browser/device cloud, accessibility/cross-browser/visual/remote automation when local evidence is insufficient.
-5. BrowserStack Local: only when cloud testing must reach localhost/private Worker-0 services.
+Final production acceptance follows the global `/home/mellonelay1999/.agents/BROWSER_FABRIC.md` contract:
+
+1. BrowserStack: PRIMARY real-browser / real-device runtime acceptance owner.
+2. Polypane: PRIMARY responsive / multi-viewport inspection owner; CDP at `127.0.0.1:5858` when running.
+3. Chrome DevTools MCP: supporting DOM/accessibility/console/network/performance diagnosis through Polypane; not a third acceptance owner.
+4. Playwright: supporting deterministic automation or BrowserStack Automate engine when useful; not a separate mandatory local acceptance stage.
+5. BrowserStack Local: exception path only when cloud testing must reach localhost/private Worker-0 services.
 6. VNC/noVNC: optional owner human-GUI/login lane only; never a browser automation dependency.
+
+For NEXI completion, the browser target is the deployed `https://app.nexitrading.app` generation exercising the real `https://api.nexitrading.app` Cloudflare Worker -> Container -> NestJS backend. A local standalone frontend, mock backend, or VM-local NestJS process cannot prove end-to-end production behavior.
 
 ## Astra lineage
 `NEXI_ASTRA_FRONTEND_BINDING_MANIFEST.md` and the `nexi-frontend-astra-controller` skill are retained as historical frontend-binding/execution lineage. They are not the active project routing controller. Current owner decisions and this routing model control new work.

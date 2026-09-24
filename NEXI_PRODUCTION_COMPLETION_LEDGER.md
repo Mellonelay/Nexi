@@ -1,9 +1,9 @@
 # NEXI Production Completion Ledger
 
-**Authority date:** 2026-09-22 (Myanmar time)
+**Authority date:** 2026-09-25 (Myanmar time)
 **Repository:** `Mellonelay/Nexi`
 **Current source authority:** GitHub `main` (discover live; do not freeze this ledger to a historical SHA)
-**Current deployed unified source generation:** `ed26973fe0556a6d75943b3e296be0a899449d6d`; Public/Admin current releases carry the same `NEXI_RELEASE_SHA`, and Cloudflare Worker deployment `bdadd96f-3696-474b-955d-de490a9a466d` is tagged `ed26973f`.
+**Current live split:** GitHub `main=04c8f5f420d5e6b1cf7e0324b9c4a52535ee3152`; Public release `04c8f5f4-prod`; Admin release `ed26973f-prod-node` with no Admin source changes since `ed26973...`; Cloudflare backend deployment remains `bdadd96f-3696-474b-955d-de490a9a466d` from the `ed26973f` promotion.
 **Purpose:** the single final-production completion controller for NEXI. This is a finishing-state ledger, not a restart plan.
 
 ## 0. Active production closure controller — owner correction 2026-09-20
@@ -44,9 +44,9 @@ This section is the **active execution queue** and supersedes older statements t
 | A-03 | Public hosting | Public dependency/build/runtime owner is `/srv/nexi/public` | `COMPLETED` | symlink/process/release proof |
 | A-04 | Admin hosting | Admin dependency/build/runtime owner is `/srv/nexi/admin` | `COMPLETED` | symlink/process/release proof |
 | A-05 | DNS | `app.nexitrading.app` and `admin.nexitrading.app` proxied A records -> `35.187.234.62` | `COMPLETED` | Cloudflare API record proof + external HTTPS 307 |
-| A-06 | Public/Admin release | Current unified GitHub `main` Public/Admin frontier promoted through canonical `/srv/nexi/public` and `/srv/nexi/admin` release paths | `COMPLETED` | current symlinks + matching `NEXI_RELEASE_SHA=ed26973...` + active runtime proof |
+| A-06 | Public/Admin release | Public current source frontier is promoted through `/srv/nexi/public`; Admin remains on its unchanged `ed26973...` source generation through `/srv/nexi/admin` | `COMPLETED` | Public `NEXI_RELEASE_SHA=04c8f5f...` + Admin `NEXI_RELEASE_SHA=ed26973...` + active services + zero Admin source diff from `ed26973...` to current main |
 | A-07 | Backend baseline | Currently deployed Cloudflare backend health/readiness | `COMPLETED` | fresh `/ops/ready`: `status=ready`, `database=true`, `redis=true` after unified promotion |
-| A-08 | Backend release | Current unified GitHub `main` backend frontier promoted through canonical Cloudflare Worker/Container path | `COMPLETED` | Worker deployment `bdadd96f-3696-474b-955d-de490a9a466d`, tag `ed26973f`, no pending D1 migrations, ready backend |
+| A-08 | Backend release | Deployed Cloudflare backend baseline is healthy, but current `main` contains post-`ed26973...` backend Sentry/ENOENT source changes not yet proven deployed | `NEEDS_FRESH_PROOF` | deployed Worker version `bdadd96f-3696-474b-955d-de490a9a466d` + `/ops/ready` 200; reconcile/deploy current backend source only when the active repair requires it |
 | M-01 | Market | Exactly 53 canonical NEXI assets remain authoritative | `PROVEN_UNCHANGED` | catalog/API count and identity |
 | M-02 | Market | Every asset has explicit provider/source/trading-hours policy | `NEEDS_FRESH_PROOF` | 53-row provider/source classification |
 | M-03 | Market | Market freshness is truthful and self-recovering; no silent frozen open-market asset | `OPEN_DEFECT` | open-market soak + forced disconnect/recovery + reasoned closed-market states |
@@ -57,9 +57,9 @@ This section is the **active execution queue** and supersedes older statements t
 | M-08 | Market | Real depth + executed trades are current and source-backed | `NEEDS_FRESH_PROOF` | production depth/trades provenance |
 | M-09 | Market | Long-running reliability/soak across provider thresholds and reconnects | `NEEDS_FRESH_PROOF` | timed evidence with zero unexplained open-market stale rows |
 | P-01 | Public | Dashboard / Quotes Hub | `NEEDS_FRESH_PROOF` | deployed Public -> Cloudflare backend -> real data |
-| P-02 | Public | Spot Trading | `NEEDS_FRESH_PROOF` | deployed UI/API/realtime contract proof |
+| P-02 | Public | Spot Trading | `OPEN_DEFECT` | BrowserStack focused evidence for Public `04c8f5f4`: Galaxy S24 Chrome showed `MARKET ERROR` and remained loading while Windows/iPhone and adjacent market surfaces differed; diagnose causal owner, repair canonical path, then retest affected production evidence |
 | P-03 | Public | Options / Binary | `NEEDS_FRESH_PROOF` | deployed UI/API/quote/settlement contract proof |
-| P-04 | Public | Wallet surface/access model | `NEEDS_FRESH_PROOF` | public shell + identity boundary; protected rows below |
+| P-04 | Public | Wallet surface/access model | `NEEDS_FRESH_PROOF` | global Public wallet gate repair is deployed at `04c8f5f...`; protected actions remain gated; WalletConnect production-visible chooser UX is still unverified |
 | P-05 | Public | Earn / Mining | `NEEDS_FRESH_PROOF` | deployed end-to-end lifecycle proof |
 | P-06 | Public | Loan | `NEEDS_FRESH_PROOF` | deployed end-to-end lifecycle proof |
 | P-07 | Public | Support | `NEEDS_FRESH_PROOF` | deployed create/read/reply/state proof |
@@ -99,22 +99,22 @@ This section is the **active execution queue** and supersedes older statements t
 | R-05 | Reliability | Duplicate/retry/concurrency safety | `NEEDS_FRESH_PROOF` | focused adversarial tests |
 | Z-01 | Gate | All non-owner-context rows above complete or proven unchanged | `OPEN_DEFECT` | zero unresolved required rows |
 | Z-02 | Gate | Identity rows completed with controlled identities or explicitly owner-deferred | `AUTOMATION_IDENTITY_REQUIRED` | row-level proof/owner decision |
-| Z-03 | Gate | `NEXI_CURRENT_STATE.md` + this ledger reconciled to latest durable truth | `COMPLETED` | 2026-09-22 cross-source reconciliation through unified `ed26973...` production promotion; reopen only after durable truth changes |
+| Z-03 | Gate | `NEXI_CURRENT_STATE.md` + this ledger reconciled to latest durable truth | `COMPLETED` | 2026-09-25 authority realignment: current `04c8f5f...` source/Public identity, unchanged Admin `ed26973...` release, deployed backend `ed26973...` baseline, current browser failures, and documentation ownership reconciled |
 | Z-04 | Gate | Owner manual acceptance | `OWNER_FINAL_ACCEPTANCE` | only after Z-01/Z-02/Z-03 permit it |
 
 ### Execution order
 
-1. Market reliability architecture and current backend truth.
-2. Fresh Public/Admin/backend end-to-end closure on the already-promoted `ed26973...` production generation.
-3. Financial, async, realtime, communications/content, and Admin control-plane proof in dependency order.
-4. Controlled identity tests where safe, or explicit owner deferral.
+1. Preserve all `COMPLETED` / `PROVEN_UNCHANGED` rows and start from the freshest demonstrated failure or missing proof.
+2. Diagnose and repair the current Public Spot failure (`P-02`) against the deployed `04c8f5f4` Public generation and the real Cloudflare backend; broaden into market/provider work only if causal evidence requires it.
+3. Close the remaining Public/Admin/backend/financial/async/realtime/communications rows in dependency order, using the deployed production surfaces rather than a local backend substitute.
+4. Exercise identity-dependent rows with controlled test wallet/Admin identities when safe; an owner deferral remains explicit and never counts as acceptance.
 5. Reconcile this ledger and `NEXI_CURRENT_STATE.md` after each durable proof change.
-6. Only then request owner manual acceptance.
+6. Run final BrowserStack + Polypane production acceptance, then request owner manual acceptance only after the automatable pre-owner gates are green.
 
 ### Tool routing for the current frontier
 
-- Market backend: NestJS 12 + NestJS Observe MCP when authenticated + Graphify Multi-View + Fallow + CodeScene + Cloudflare observability + D1/Valkey evidence + Riqor proof gate.
-- Public/Admin: canonical `/srv/nexi` builds/runtime + Fallow/CodeScene + browser/runtime evidence only after backend contracts are correct.
+- Market/backend: direct NestJS source + real Cloudflare Worker/Container/D1/Valkey runtime evidence; add Graphify/Fallow/CodeScene/Nest Observe only for their distinct proof classes. A current consumer failure may trigger this lane, but a historical stale count alone does not.
+- Public/Admin: canonical `/srv/nexi` builds/runtime. Final rendered acceptance is owned by BrowserStack (real browser/device) + Polypane (responsive multi-viewport) against deployed production and the real Cloudflare backend; Playwright/Chrome DevTools are supporting diagnostics/automation, not separate mandatory acceptance owners.
 - Get-Fable may route lifecycle/delegation, but **must not create a second production ledger**. This file remains the only completion controller.
 - Riqor may record proof/freshness, but cannot upgrade a row beyond the evidence actually gathered.
 
@@ -149,7 +149,7 @@ Therefore:
 | Edge/platform routing | Cloudflare Worker |
 | Business runtime | Cloudflare Container + NestJS |
 | Consumer/control surfaces | Public + Admin |
-| Public visual/UX authority | Sep 13 V3 Deep Liquid Violet acceptance, subject to newer owner decisions |
+| Public visual/UX authority | Public-local `DESIGN.md`: current owner corrections -> five recent accepted reference screens -> later NEXI-specific implementation decisions; Sep-12/13 V2/V3 are historical when they conflict |
 
 ## 3. Status vocabulary
 
@@ -162,9 +162,9 @@ Therefore:
 - `SUPERSEDED` — historical requirement/controller explicitly displaced by newer authority.
 - `NOT_APPLICABLE` — evidence-backed exclusion from current product scope.
 
-## 4. Current production baseline
+## 4. Historical production baseline — provenance only
 
-> Section 0 plus `NEXI_CURRENT_STATE.md` are the current execution decision inputs. Rows below preserve older reusable evidence and are superseded wherever a newer Section 0/current-state row differs.
+> **HISTORICAL:** Section 0 plus `NEXI_CURRENT_STATE.md` are the current execution decision inputs. Rows below preserve earlier evidence for provenance and reuse only; they must not override Section 0 or current state when source/deployment/browser evidence has advanced.
 
 | Requirement | Current authority path | Source status | Runtime status | Evidence / release | Dependency drift | Remaining gap | Final verdict |
 |---|---|---|---|---|---|---|---|
@@ -189,12 +189,12 @@ These are **surviving product requirements**, not instructions to rebuild alread
 | Asset Detail | Quotes -> Asset Detail -> same canonical asset/pair | Preserve nested route; not a 12th destination. |
 | Active Asset / Active Pair | Quotes Hub -> Asset Detail -> Spot/Margin -> Options/Binary | Preserve one canonical owner; no silent reset. `TARGETED_RUNTIME_REPAIR_ONLY` if current use exposes drift. |
 | Canonical asset identity | 53 NEXI-controlled local assets/icons | Preserve exactly 53 unless a newer explicit owner decision changes it. Provider branding must not replace NEXI identity. |
-| Public visual system | Deep Liquid Violet + selective Liquid Glass + Geist/Geist Mono | Sep 13 V3 is current Public visual/geometry acceptance. Do not restore stale Stitch, generic dark-premium target, `More`, or IBM Plex Mono from old docs. |
+| Public visual system | Deep Liquid Violet + restrained glass + Geist/Geist Mono | Follow Public-local `DESIGN.md` and the five recent accepted references (Quotes Hub, Spot/Margin, Options/Binary, wallet chooser, Wallet). Older Sep-12/13 V2/V3 and rejected generated concepts are historical where they conflict. |
 | Mobile persistent navigation | Dashboard / Spot / Options / Wallet / Earn | Preserve exactly. |
 | Mobile geometry | 320/360/~390/412-430/tablet/desktop + short-height viewport; safe-area/bottom-nav clearance | Preserve; repair systemic shared geometry only if a current defect is observed. |
 | Accessibility | focus, semantics, labels, keyboard where applicable, contrast, reduced motion, touch targets, text scaling | Surviving acceptance requirement. Do not reopen unrelated components without a changed primitive/observed defect. |
-| Wallet browser access model | normal non-Web3 browser = full-screen wallet-access gate; compatible wallet browser may explore public product before NEXI auth | Sep 12 owner requirement, implemented. Recheck only in real wallet-browser manual acceptance when available. |
-| Explicit wallet provider choice | provider discovery separate from SIWE/auth; no silent first-injected fallback | Sep 12 owner requirement, implemented. Real provider/browser behavior remains part of owner wallet acceptance. |
+| Wallet browser access model | non-protected Public product surfaces remain accessible without a NEXI wallet session; wallet/account/financial actions are protected | Current owner/source correction deployed at `04c8f5f...`. Do not restore the superseded global full-screen wallet gate. |
+| Explicit wallet provider choice | provider discovery separate from SIWE/auth; no silent first-injected fallback | Preserve. BrowserStack production chooser currently shows Coinbase + injected/browser wallet; WalletConnect visibility remains unverified and must be tested with a controlled test identity/extension path before owner acceptance. |
 | Notification center | `All`, `Trading`, `Wallet`, `Account`, `System`; truthful loading/empty/error/retry/read states | Sep 12 requirement, implemented against real backend types. Repair only if current production use exposes a defect. |
 | Deposit UX | Deposit -> Select asset -> Deposit details; backend/Admin-configured asset/network/address/QR/instructions; amount/proof/submit preserved | Sep 12 requirement, implemented. Financial authority remains backend/D1; no frontend-owned config. |
 
@@ -202,7 +202,7 @@ These are **surviving product requirements**, not instructions to rebuild alread
 
 | Requirement | Required path / invariant | Current treatment |
 |---|---|---|
-| Wallet-only SIWE | challenge -> exact signature verification -> replay prevention -> WalletIdentity -> AuthSession | Existing canonical path. Final real signature/session proof is manual owner gate. |
+| Wallet-only SIWE | challenge -> exact signature verification -> replay prevention -> WalletIdentity -> AuthSession | Existing canonical path. Prefer controlled automated test-wallet proof in BrowserStack/production when safe; owner manual acceptance remains the final gate, not the first proof step. |
 | One verified wallet = one NEXI account | wallet identity resolves one canonical user | Preserve. |
 | Stable six-digit public NEXI ID | public `userCode`; internal D1 `User.id` opaque | Preserve. |
 | Profile/KYC | submitted authoritative profile/KYC state -> Admin review/audit | Existing domain; do not rebuild. Targeted repair only on current failure evidence. |

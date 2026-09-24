@@ -1,135 +1,103 @@
 # NEXI Current State
 
-**As of:** 2026-09-22 (Myanmar time)
+**As of:** 2026-09-25 (Myanmar time)
 **Repository:** `Mellonelay/Nexi`
-**Current source authority:** GitHub `main` (discover live; do not freeze this file to its own documentation commit SHA)
-**Current deployed unified source generation:** `ed26973fe0556a6d75943b3e296be0a899449d6d`; Public/Admin current releases carry the same `NEXI_RELEASE_SHA`, and Cloudflare Worker deployment `bdadd96f-3696-474b-955d-de490a9a466d` is tagged `ed26973f`.
+**Durable source authority:** GitHub `main`; always discover live before consequential work.
+**Current source frontier:** `04c8f5f420d5e6b1cf7e0324b9c4a52535ee3152` (`fix(frontend): keep public dashboard accessible without wallet`).
 
-NEXI remains in the **finishing / targeted-repair state**, not a rebuild phase.
+NEXI is in a **finishing / targeted-repair** phase. It is not in a rebuild or broad rediscovery phase.
 
-## Backend execution-authority transition — 2026-09-17
+## Authority and architecture
 
-- **Cloudflare Worker + Container is now the only active backend execution/runtime authority.**
-- **GitHub `main` remains durable source authority.**
-- Worker 0 / VM is an operator, recovery, source-analysis, frontend/Admin hosting, and tooling plane only; it must not host a competing NestJS backend runtime or provide backend acceptance truth.
-- Final backend source-equality reconciliation is **PROVEN**: tracked backend source at GitHub `main@81baa15...` is unchanged from `3b173ea...`; the running Cloudflare Container package manifests exactly match Git, and 170/170 source-produced backend JavaScript build artifacts matched byte-for-byte. The only additional Container artifacts were 10 deterministic generated Prisma D1 client files created by the Container/Docker build path.
-- Three VM-only asynchronous filesystem edits (`admin.service.ts`, `feedback.controller.ts`, `staging-fixture.ts`) had no GitHub/Cloudflare provenance or accepted runtime evidence. They were preserved as a recovery patch and removed from the active VM working tree rather than promoted into production authority.
-- Current official Cloudflare documentation + current Wrangler/MCP help is a mandatory pre-mutation gate for every Cloudflare product/feature.
-- Retired pre-D1 database implementation/history has been removed from active repository authority: the legacy migration tree, stale provider-specific Cloudflare docs/config descriptions, devcontainer client package, and active source/test wording are gone; current Cloudflare secrets/config expose only D1 as the durable database binding.
-- Current operator workflow is documented in `docs/infrastructure/NEXI_CLOUDFLARE_BACKEND_OPERATOR_RUNBOOK.md`; Container shell access uses Cloudflare's official Wrangler SSH path.
-- Any legitimate future backend source repair performed through the Cloudflare execution plane must be verified there and reconciled to GitHub `main` immediately at task completion.
+- ChatGPT is the parent/controller; RDC Worker 0 is the operator/evidence plane.
+- Cloudflare Worker -> Cloudflare Container -> NestJS is the only backend runtime/acceptance authority.
+- Worker 0 must not host or substitute a VM-local NestJS backend for production proof.
+- NestJS owns business/domain logic.
+- D1 owns durable application and financial relational truth.
+- Ledger owns accounting truth; EventOutbox is the durable publication boundary.
+- Aiven Valkey owns realtime/cache/Streams/ephemeral coordination only.
+- Queues own delivery/retry; Workflows own orchestration.
+- Public and Admin consume/control the same canonical backend authority.
+- `PROVEN + UNCHANGED = REUSE`; do not reopen completed work without dependency drift or contradictory evidence.
+## Current live source and deployment split
 
-### Production resource identity / operator proof — 2026-09-17
+Fresh Worker-0 evidence on 2026-09-25:
 
-- Historical Cloudflare identifiers `nexi-staging`, `nexi-api-staging`, `nexi-core-staging`, and related `*-staging` resource names are the resources currently serving NEXI production. **Name suffixes do not define the environment.** Production identity is established by the active `api.nexitrading.app` route, live deployment/runtime state, and `NODE_ENV=production`.
-- Official Wrangler Container SSH was directly proven against the running `nexi-api` Container instance through the configured ED25519 operator key and OpenSSH ProxyCommand/`--stdio` path. The live Container reported `PID 1 = node dist/src/main.js`. Worker 0 remains only the operator transport; the process runs inside Cloudflare.
-- Fresh production HTTP proof: `/health` = 200, `/healthz` = 200, `/readyz` = 200 with D1 database + Valkey/Redis readiness, `/market/provider-state` = 200, and `/market/prices` = 200.
-- **Owner decision 2026-09-19:** the market R2/Data Catalog/Pipelines archive path is retired as unnecessary complexity. Live market authority remains provider adapters -> NestJS -> D1 quote/Kline persistence -> Aiven Valkey -> Socket.IO -> Public/Admin. Active Worker bindings no longer include market R2 or Pipelines; Cloudflare Pipelines list is empty and the retired archive secret is gone. `DEPOSIT_PROOFS` R2 remains in use. The retired `nexi-market-archive-staging` bucket was emptied through Cloudflare's R2 Empty Bucket job (21,711 objects deleted) and then deleted; `DEPOSIT_PROOFS` remains the only NEXI R2 bucket in the active product configuration.
-- Live Worker observability uses `SENTRY_ENVIRONMENT=production`; the active Worker carries Sentry release `b5325e751415dfdb4cc5bc8d120fe43638643531`. NestJS Observe `0.1.10` is wired with service ID `nexi`, its credentials are Worker secrets forwarded into the Container, and production HTTP requests have been generated. Final Observe dashboard event visibility is an owner-side dashboard confirmation, not a source/runtime wiring blocker.
-- A production-config dry-run with verified Wrangler `4.129.0` and `--containers-rollout none` passed after reconciliation. Its 46 visible non-secret bindings exactly matched the active Worker; the live secret bindings absent from dry-run display were expected secret bindings. The retired market archive token is no longer part of the target configuration.
+- `main == origin/main == 04c8f5f420d5e6b1cf7e0324b9c4a52535ee3152`.
+- Public: `/srv/nexi/public/current -> /srv/nexi/public/releases/04c8f5f4-prod`.
+- Public `NEXI_RELEASE_SHA = 04c8f5f420d5e6b1cf7e0324b9c4a52535ee3152`; service active.
+- Public source/runtime framework: Next.js `16.3.5` + React `19.3.0`.
+- Admin: `/srv/nexi/admin/current -> /srv/nexi/admin/releases/ed26973f-prod-node`.
+- Admin `NEXI_RELEASE_SHA = ed26973fe0556a6d75943b3e296be0a899449d6d`; service active.
+- No Admin source files changed between `ed26973...` and current `04c8f5f...`; the older Admin release marker does not currently imply an Admin source mismatch.
+- Cloudflare backend deployment remains the `ed26973f` unified production promotion: deployment `15c716b8-8ae5-45ec-a9f2-b2d2f6f0c89d`, Worker version `bdadd96f-3696-474b-955d-de490a9a466d`.
+- Current GitHub `main` contains later backend Sentry/ENOENT source changes after `ed26973...`; they are source-integrated but are not claimed deployed by this document.
+- Remote backend health is current: `/health` = 200 and `/ops/ready` = 200 with `database=true`, `redis=true`.
 
-## Current proven state
+This is intentionally a split identity. Do not describe the whole product as one current unified deployment SHA when Public, Admin, and backend release identities differ.
+## Current external reachability
 
-- Unified source convergence frontier: **COMPLETE and promoted to production** at `ed26973fe0556a6d75943b3e296be0a899449d6d`. Public/Admin release identity and the tagged Cloudflare Worker deployment are aligned to that source generation. This deployment proof does not by itself close feature-level end-to-end acceptance rows.
-- Unified production deployment identity: **COMPLETE** at source generation `ed26973fe0556a6d75943b3e296be0a899449d6d`; current Worker deployment is `bdadd96f-3696-474b-955d-de490a9a466d` tagged `ed26973f`, with Public/Admin release markers aligned to the same source generation.
-- Backend/Cloudflare readiness and health: **PROVEN PRODUCTION** after unified promotion; fresh `/ops/ready` reports `status=ready`, `database=true`, and `redis=true`.
-- Public/Admin bounded unauthenticated browser acceptance remains historical proof for the prior baseline; the newly promoted `ed26973...` generation still requires current feature-level/browser proof under the production ledger.
-- Required Klines `1m/5m/15m/30m/1h/4h/1d`: **PROVEN PRODUCTION**.
-- Production realtime reconnect/resnapshot and REST read-back recovery: **PROVEN**.
-- Sep 12 wallet-browser/provider/drawer/notification/deposit repairs: **reuse unless current evidence contradicts them**.
-- Worker-0 dependency ownership: **RECONCILED**. Public source `node_modules` -> `/srv/nexi/public/shared/node_modules`; Admin source `node_modules` -> `/srv/nexi/admin/shared/node_modules`.
-- Public direct dependencies: **40/40 validated** against lockfile/current install.
-- Admin direct dependencies: **70/70 validated** against lockfile/current install; Admin `npm run typecheck`: **PASS** after dependency re-homing.
-- Canonical `/srv/nexi` package-build verification for the current frontier: Public Next 14.0.4 production build **PASS** from `/srv/nexi/public/build-20260917-145740` using `/srv/nexi/public/shared/node_modules`; Admin production build **PASS** from `/srv/nexi/admin/build-20260917-145740` using `/srv/nexi/admin/shared/node_modules`. Public rebuildable `.next/cache` was removed after the successful build and is not part of the immutable release payload.
-- Runtime resolution confirms Public `next` and Admin `@tanstack/react-start` resolve from their dedicated `/srv/nexi/.../shared/node_modules` owners.
-- Stale source build outputs `.next` and Admin `.output`: **REMOVED as rebuildable generated state**.
-- Historical Public/Admin release retention cleanup: **COMPLETE by owner decision 2026-09-19**. Obsolete immutable releases were removed while preserving the exact active `/srv/nexi/public/current -> .../3b173ea-prod` and `/srv/nexi/admin/current -> .../3b173ea-prod-node` targets.
-- Worker-0 storage recovery: **COMPLETE**. Final task-worktree, `/tmp/nexi-*`, obsolete release, and scratch cleanup left about `6.0G` free / `85%` used while preserving canonical source, shared dependencies, active releases, Graphify, DeepWiki, and host capability state.
-- Parent/Worker-0 routing is **REALIGNED**: Agent Kernel retains durable governance; Addy Osmani Agent Skills is the primary engineering workflow/method layer; Get-Fable is optional lifecycle/recovery/delegation support; Riqor is specialist-skills-only; and the original Graphify multiview + Fallow + CodeScene + DeepWiki + direct-source/tests/runtime intelligence stack remains intact. Compile the complete owner message first, select one primary responsibility owner plus only material non-overlapping specialists, and keep production authority unchanged by tool availability.
-- Worker-0 capability knowledge system: **IMPLEMENTED + VERIFIED**. `RDC_ONBOARDING.md` now routes to the lightweight capability index, MCP/CLI catalogs, browser fabric, and canonical Graphify/DeepWiki guides. Durable capability ownership is documented while mutable version/auth/schema/health/index state remains live-discovered. Current-source BrowserStack manual acceptance has started on the isolated Public preview; owner visual acceptance remains pending and is separate from backend authority convergence.
+Fresh 2026-09-25 probes:
 
-- Repository documentation ownership is **REORGANIZED**: project-neutral Worker-0 CLI/MCP/skills/browser/Graphify guidance now lives under `~/.agents`; NEXI-specific routing lives under `docs/operations`; Cloudflare operator/configuration docs live under `docs/infrastructure`; July frontend planning material is archived under `docs/archive/frontend-2026-07`. The 2026-09-19 session handover and duplicate DOCX ledger were intentionally removed from source.
+- `https://app.nexitrading.app/dashboard` -> 200.
+- `https://nexitrading.app/dashboard` -> 200.
+- `https://admin.nexitrading.app/` -> 307.
+- `https://api.nexitrading.app/health` -> 200.
+- `https://www.nexitrading.app/dashboard` -> 525.
 
-## Fresh live runtime re-audit — 2026-09-19 19:24 UTC
+The `www` TLS/edge path remains an open infrastructure defect. The main Public, Admin, and API paths are reachable.
 
-Current direct evidence supersedes older acceptance statements wherever they differ:
+## Public frontend correction and preserved proof
 
-- Public/Admin are hosted from the dedicated /srv/nexi tree:
-  - Public: /srv/nexi/public/current -> /srv/nexi/public/releases/3b173ea-prod
-  - Admin: /srv/nexi/admin/current -> /srv/nexi/admin/releases/3b173ea-prod-node
-  - active Public/Admin process CWDs match those release trees.
-- Cloudflare backend is currently healthy:
-  - /healthz 200
-  - /ops/live 200
-  - /ops/ready 200 with database=true and redis=true
-  - /market/prices 200
-  - /market/provider-state 200
-- Market runtime currently returns 53 assets: 37 LIVE, 16 STALE, 0 UNAVAILABLE. The old 13-symbol D1 sequence-collision failure is not reproduced in the current response; all rows have sequences.
-- Market archive retirement is verified: zero R2 buckets matching market, no Pipelines, and DEPOSIT_PROOFS remains.
-- External app.nexitrading.app and admin.nexitrading.app currently return HTTP 522. Local Nginx and the dedicated Public/Admin processes respond with 307, so the remaining frontend defect is in the external Cloudflare edge/origin reachability seam, not host ownership.
-- Therefore the current state is: backend runtime healthy; archive retired; market partially fresh; Public/Admin externally unavailable at the tested domains.
+The Public shell wallet-boundary defect was repaired and deployed at `04c8f5f...`:
+- non-protected Public market/product surfaces remain accessible without a NEXI wallet session;
+- protected wallet/account/financial actions remain identity-gated;
+- the global dashboard shell must not be re-wrapped in a wallet gate.
 
-## Remaining production closure gates
+Canonical 53-asset source/backend parity and local asset-icon integrity were verified in the current Public generation. Preserve that model unless current contradictory evidence appears.
+## Browser / rendered acceptance frontier
 
-1. Market reliability/freshness must be proven truthful and self-recovering for all 53 canonical assets; legitimate closed-market staleness must have an explicit reason, while open-market silent staleness is a defect.
-2. Unified Public/Admin/backend production promotion is complete at `ed26973...`; remaining work is fresh feature-level end-to-end proof and targeted repair only where current evidence fails.
-3. All safely automatable Public/Admin/backend/async/financial product rows in `NEXI_PRODUCTION_COMPLETION_LEDGER.md` must have current end-to-end proof or applicable `PROVEN_UNCHANGED` evidence.
-4. Wallet/SIWE/protected-financial and privileged Admin paths must use controlled test identities when safe, or be explicitly deferred by the owner.
-5. Owner manual acceptance is the final gate only after the above automation gates are satisfied.
+Production browser acceptance must target the **deployed Public generation** at `https://app.nexitrading.app` while it exercises the real Cloudflare backend at `https://api.nexitrading.app`.
 
-`FULL_PRODUCTION_END_TO_END_ACCEPTED = NO` because automated production closure is still incomplete; it is not blocked only by the two identity-dependent gates.
+Browser ownership:
+- BrowserStack = real-browser / real-device acceptance.
+- Polypane = responsive / multi-viewport acceptance.
+- Playwright and Chrome DevTools are supporting automation/diagnostic tools, not additional mandatory acceptance owners.
 
-## Governing rules
+Current BrowserStack focused evidence for release `04c8f5f4`:
+- Windows 11 Chrome: Spot remained loading, no explicit MARKET ERROR in that capture.
+- Galaxy S24 Chrome: Spot showed `MARKET ERROR` and remained loading.
+- iPhone 15 Pro Max Safari: Spot rendered live market values in that capture.
+- Binary and Asset Detail rendered live market data in the same focused runs.
+- Wallet chooser showed Coinbase Wallet and Injected/browser-wallet choices.
+- WalletConnect was not visible in those production chooser captures.
 
-`PROVEN + UNCHANGED = REUSE`
+Therefore the Galaxy Spot failure is a real current acceptance defect, but the evidence does **not** prove a backend-wide market outage. Diagnose the causal owner before reopening broad provider architecture.
+## Open completion gates
 
-If existing functionality fails, repair the existing canonical path only. Do not restart completed domains, restore superseded controllers, create parallel authority, or rerun broad acceptance without change-driven evidence.
+- Overall Public browser acceptance is incomplete.
+- Galaxy S24 Spot acceptance is failed/open at the current evidence frontier.
+- Polypane production responsive acceptance is incomplete.
+- WalletConnect production-visible UX is unverified.
+- `www.nexitrading.app` TLS/edge path remains open.
+- Current-main backend changes after `ed26973...` are not claimed deployed.
+- Full Sentry release-lifecycle/source-map/runtime proof remains incomplete.
+- Remaining Public/Admin/financial/async/realtime/identity rows are controlled by `NEXI_PRODUCTION_COMPLETION_LEDGER.md`.
+- Controlled test wallet/Admin identities should be used for safely automatable identity-dependent acceptance where possible.
+- Owner manual acceptance remains the final gate only after automatable closure.
 
-When a bounded task materially changes durable truth, reconcile authority before reporting completion: update `NEXI_CURRENT_STATE.md` for current truth, and update `NEXI_PRODUCTION_COMPLETION_LEDGER.md` only when durable completion evidence changed. Do not memorialize transient commands/processes.
+## Documentation and continuity
 
-On Worker 0, Public/Admin source work must reuse their dedicated `/srv/nexi/public` and `/srv/nexi/admin` dependency/runtime seams. Do not create session-local frontend/admin dependency trees.
+- `NEXI_PRODUCTION_COMPLETION_LEDGER.md` is the sole writable completion controller.
+- `NEXI_CURRENT_STATE.md` is current durable truth, not a chronological diary.
+- Root `AGENTS.md` owns NEXI execution/governance instructions.
+- `docs/operations/NEXI_CAPABILITY_ROUTING.md` is the NEXI routing overlay.
+- `/home/mellonelay1999/.agents/BROWSER_FABRIC.md` owns browser-tool responsibility and production browser workflow.
+- Public-local `AGENTS.md` and `DESIGN.md` govern the canonical Public frontend.
+- Historical analysis/recovery material belongs under `docs/archive` or `docs/recovery`; it must not compete with current authority.
 
-## Completion controller
+## Next dependency-ready direction
 
-The only final completion controller is `NEXI_PRODUCTION_COMPLETION_LEDGER.md`.
-Historical 27-row matrices, `CODE_TO_CODE_CLOSED`, A25/A26/A27, staging-first sequencing, recovery handovers, old SHAs, old worktrees and old VM/Codespace status files are not current authority.
+Finish authority/document realignment, then continue from the current production acceptance failures and open ledger rows. Repair demonstrated defects on their existing canonical paths, verify only invalidated evidence, update durable state/ledger when proof changes, and defer owner manual testing until the automated pre-owner gates are satisfied.
 
-## Live correction — updated 2026-09-20
-
-- The current VM origin IP is `35.187.234.62`.
-- Cloudflare DNS is now converged: both `app.nexitrading.app` and `admin.nexitrading.app` are proxied A records targeting `35.187.234.62`.
-- Fresh external HTTPS verification returns `307` through Cloudflare for both domains. The stale-DNS defect is closed.
-- Last recorded `/market/prices` snapshot remains 53 assets, 36 LIVE, 17 STALE, 0 UNAVAILABLE, with `STEEMUSDT` newly stale at that observation time.
-- The earlier 13/16/17 stale counts are time snapshots, not a fixed invariant. The unresolved problem is market reliability: every open-market asset must remain fresh or self-recover automatically; legitimate closed-market states must be explicit and truthful.
-- Current interpretation: dedicated host ownership and DNS are correct; Cloudflare backend is reachable; market reliability and full automated product closure remain incomplete.
-
-## Unified source convergence correction — 2026-09-21
-
-This source-level correction supersedes older statements that the newest Public/Admin/non-market/market work remained local or unmerged.
-
-- GitHub `main` and Worker-0 `main` are synchronized at `fdfecb184136215720c17539475a1feefca3b304`. This includes later production/docs convergence through `ed26973` and `695bfcc`, plus the bounded routing update `fdfecb1`; no new product deployment is implied by the routing commit.
-- The unified source ancestry includes `e596b22` (accepted market + non-market fan-in), `0e98d6d` (durable communications/content completion), and `a489b02` (Binance WebSocket shutdown test fixture aligned to the current adapter contract).
-- GitHub Actions run `35558996698` for `a489b02` completed successfully: backend, frontend, Admin, Graphify, and Cloudflare dry-run jobs all passed.
-- The exact previously failing backend market CI command was reproduced locally after the test-fixture correction: 3/3 suites and 27/27 tests passed; Nest backend build passed.
-- Changed-scope Fallow for the CI correction passed with zero introduced dead code, complexity, duplication, or styling findings.
-- This establishes **source integration + CI verification**, not production runtime verification of the newer source. No deployment or remote D1 migration is implied.
-
-`UNIFIED_GITHUB_MAIN_SOURCE = INTEGRATED_CI_GREEN`
-
-`UNIFIED_NEW_FRONTIER_DEPLOYED = NO`
-
-
-## Unified production promotion correction — 2026-09-22
-
-Fresh direct evidence supersedes older statements that the unified source frontier was not yet deployed:
-
-- `main == origin/main == ed26973fe0556a6d75943b3e296be0a899449d6d`.
-- Public `/srv/nexi/public/current -> /srv/nexi/public/releases/ed26973f-prod`, with matching `NEXI_RELEASE_SHA`.
-- Admin `/srv/nexi/admin/current -> /srv/nexi/admin/releases/ed26973f-prod-node`, with matching `NEXI_RELEASE_SHA`.
-- Cloudflare Worker `nexi-production` deployment `bdadd96f-3696-474b-955d-de490a9a466d`, tagged `ed26973f`.
-- Remote D1 reports no pending migrations.
-- `/ops/ready` reports `database=true` and `redis=true`.
-
-`UNIFIED_NEW_FRONTIER_DEPLOYED = YES`
-
-This changes deployment identity, not full product acceptance. Remaining feature rows still require their own current end-to-end proof under `NEXI_PRODUCTION_COMPLETION_LEDGER.md`.
+`FULL_PRODUCTION_END_TO_END_ACCEPTED = NO`
