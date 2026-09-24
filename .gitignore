@@ -35,3 +35,13 @@ work/
 *.temp
 .DS_Store
 Thumbs.db
+
+# Worker-0 / Ruflo local state and generated harness artifacts
+.env.local
+.env.*.local
+.claude-flow/
+.claude/
+.swarm/
+.mcp.json
+CLAUDE.md
+ruvector.db
