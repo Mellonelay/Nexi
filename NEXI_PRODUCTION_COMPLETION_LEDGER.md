@@ -3,7 +3,7 @@
 **Authority date:** 2026-09-25 (Myanmar time)
 **Repository:** `Mellonelay/Nexi`
 **Current source authority:** GitHub `main` (discover live; do not freeze this ledger to a historical SHA)
-**Current live split:** GitHub `main=04c8f5f420d5e6b1cf7e0324b9c4a52535ee3152`; Public release `04c8f5f4-prod`; Admin release `ed26973f-prod-node` with no Admin source changes since `ed26973...`; Cloudflare backend deployment remains `bdadd96f-3696-474b-955d-de490a9a466d` from the `ed26973f` promotion.
+**Current product/runtime split:** product implementation commit `04c8f5f420d5e6b1cf7e0324b9c4a52535ee3152`; Public release `04c8f5f4-prod`; Admin release `ed26973f-prod-node` with no Admin source changes since `ed26973...`; Cloudflare backend deployment remains `bdadd96f-3696-474b-955d-de490a9a466d` from the `ed26973f` promotion. GitHub `main` may advance via documentation/governance-only commits; discover live before consequential work.
 **Purpose:** the single final-production completion controller for NEXI. This is a finishing-state ledger, not a restart plan.
 
 ## 0. Active production closure controller — owner correction 2026-09-20

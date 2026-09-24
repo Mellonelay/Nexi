@@ -3,7 +3,7 @@
 **As of:** 2026-09-25 (Myanmar time)
 **Repository:** `Mellonelay/Nexi`
 **Durable source authority:** GitHub `main`; always discover live before consequential work.
-**Current source frontier:** `04c8f5f420d5e6b1cf7e0324b9c4a52535ee3152` (`fix(frontend): keep public dashboard accessible without wallet`).
+**Current product implementation frontier:** `04c8f5f420d5e6b1cf7e0324b9c4a52535ee3152` (`fix(frontend): keep public dashboard accessible without wallet`). Documentation/governance-only commits may advance GitHub `main` without changing product deployment identity; always discover live `main` before consequential work.
 
 NEXI is in a **finishing / targeted-repair** phase. It is not in a rebuild or broad rediscovery phase.
 
@@ -23,7 +23,7 @@ NEXI is in a **finishing / targeted-repair** phase. It is not in a rebuild or br
 
 Fresh Worker-0 evidence on 2026-09-25:
 
-- `main == origin/main == 04c8f5f420d5e6b1cf7e0324b9c4a52535ee3152`.
+- Product implementation commit under this reconciliation is `04c8f5f420d5e6b1cf7e0324b9c4a52535ee3152`. GitHub `main` may be newer because of documentation/governance-only fan-in; discover live before work.
 - Public: `/srv/nexi/public/current -> /srv/nexi/public/releases/04c8f5f4-prod`.
 - Public `NEXI_RELEASE_SHA = 04c8f5f420d5e6b1cf7e0324b9c4a52535ee3152`; service active.
 - Public source/runtime framework: Next.js `16.3.5` + React `19.3.0`.
