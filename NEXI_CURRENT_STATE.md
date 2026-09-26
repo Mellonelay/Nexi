@@ -1,8 +1,8 @@
 # NEXI Current State
 
-**As of:** 2026-09-25 (Myanmar time)
+**As of:** 2026-09-26 (Myanmar time)
 **Repository:** `Mellonelay/Nexi`
-**Durable source authority:** GitHub `main`; always discover live before consequential work.
+**Durable source authority:** GitHub `main`; latest source read for this update surfaced `696b6929e26dfc9bc71e2a5f229eceebe93fa1d6`. Discover live again before consequential work.
 **Current product implementation frontier:** `04c8f5f420d5e6b1cf7e0324b9c4a52535ee3152` (`fix(frontend): keep public dashboard accessible without wallet`). Documentation/governance-only commits may advance GitHub `main` without changing product deployment identity; always discover live `main` before consequential work.
 
 NEXI is in a **finishing / targeted-repair** phase. It is not in a rebuild or broad rediscovery phase.
@@ -35,17 +35,18 @@ Fresh Worker-0 evidence on 2026-09-25:
 - Remote backend health is current: `/health` = 200 and `/ops/ready` = 200 with `database=true`, `redis=true`.
 
 This is intentionally a split identity. Do not describe the whole product as one current unified deployment SHA when Public, Admin, and backend release identities differ.
-## Current external reachability
+## Current external reachability and host/CORS boundary
 
-Fresh 2026-09-25 probes:
+Last recorded external probes from 2026-09-25 reported `app` and apex dashboard reachable, Admin redirecting to sign-in, API health 200, and `www` returning 525. On 2026-09-26 the Cloudflare API confirmed:
+- `www.nexitrading.app` is proxied to `35.187.234.62` (record modified 2026-09-26 05:43 UTC).
+- Apex `nexitrading.app` still points to proxied `91.195.240.94`.
+- Zone SSL mode is Full with active certificate.
+- No zone dynamic redirect entrypoint or Page Rules are configured.
+- The previous session reported an external `https://www.nexitrading.app/dashboard` HTTP/2 200 after correcting the `www` record; a fresh external GET in this update timed out at the execution proxy, so current page reachability was not independently reconfirmed.
 
-- `https://app.nexitrading.app/dashboard` -> 200.
-- `https://nexitrading.app/dashboard` -> 200.
-- `https://admin.nexitrading.app/` -> 307.
-- `https://api.nexitrading.app/health` -> 200.
-- `https://www.nexitrading.app/dashboard` -> 525.
+BrowserStack DevTools evidence provided 2026-09-26 shows the Galaxy S24 page origin is `https://www.nexitrading.app`; API requests for auth refresh, Spot orderbook/trades, and Socket.IO polling fail CORS because responses do not allow that origin. Current GitHub `main` backend config and Cloudflare configuration inventory allow only `https://app.nexitrading.app` and `https://admin.nexitrading.app`; SIWE domain/URI remain `app.nexitrading.app`. A fresh production OPTIONS request from the canonical `app` origin returned 204 with `Access-Control-Allow-Origin`; the `www` Socket.IO OPTIONS request returned 400 without that header.
 
-The `www` TLS/edge path remains an open infrastructure defect. The main Public, Admin, and API paths are reachable.
+Assessment: P-02 has a demonstrated canonical-host/CORS mismatch when the browser page is served on `www`. Preserve `app.nexitrading.app` as wallet-signing authority; prefer redirecting `www` and apex to `app` rather than broadening the SIWE origin. Cloudflare routing has not been changed in this update; production routing change awaits explicit owner authorization.
 
 ## Public frontend correction and preserved proof
 
@@ -69,17 +70,18 @@ Current BrowserStack focused evidence for release `04c8f5f4`:
 - Galaxy S24 Chrome: Spot showed `MARKET ERROR` and remained loading.
 - iPhone 15 Pro Max Safari: Spot rendered live market values in that capture.
 - Binary and Asset Detail rendered live market data in the same focused runs.
-- Wallet chooser showed Coinbase Wallet and Injected/browser-wallet choices.
-- WalletConnect was not visible in those production chooser captures.
+- Wallet chooser showed Coinbase Wallet and Injected/browser-wallet choices; a supplied Galaxy capture showed “Wallet verification failed.”
+- New DevTools screenshot evidence shows failed API calls from origin `www.nexitrading.app`, which does not match the current backend CORS allowlist. This explains the failed Spot/auth requests for that host; it does not yet prove a successful wallet provider/signature/session flow.
+- WalletConnect was not visible in earlier production chooser captures.
 
-Therefore the Galaxy Spot failure is a real current acceptance defect, but the evidence does **not** prove a backend-wide market outage. Diagnose the causal owner before reopening broad provider architecture.
+P-02 remains open until the canonical host path is corrected and the Galaxy browser is retested against the real backend. The current evidence identifies host/CORS mismatch rather than a backend-wide market outage.
 ## Open completion gates
 
 - Overall Public browser acceptance is incomplete.
 - Galaxy S24 Spot acceptance is failed/open at the current evidence frontier.
 - Polypane production responsive acceptance is incomplete.
 - WalletConnect production-visible UX is unverified.
-- `www.nexitrading.app` TLS/edge path remains open.
+- `www` TLS DNS mispoint was corrected, but canonical-host routing remains unresolved: `www` serves a frontend origin excluded from CORS/SIWE config and apex still points at the old IP; redirect policy approval and fresh edge verification remain open.
 - Current-main backend changes after `ed26973...` are not claimed deployed.
 - Full Sentry release-lifecycle/source-map/runtime proof remains incomplete.
 - Remaining Public/Admin/financial/async/realtime/identity rows are controlled by `NEXI_PRODUCTION_COMPLETION_LEDGER.md`.
