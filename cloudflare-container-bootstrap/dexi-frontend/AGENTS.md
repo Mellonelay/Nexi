@@ -169,7 +169,7 @@ Before deployment, run only the focused deterministic source/build gates invalid
 
 Minimum affected-flow proof:
 - typecheck / affected unit-contract tests / production build as required by the change;
-- deployed `https://app.nexitrading.app` using the real `https://api.nexitrading.app` Cloudflare backend;
+- deployed `https://www.nexitrading.app` using the real `https://api.nexitrading.app` Cloudflare backend;
 - BrowserStack evidence for relevant browser/device behavior;
 - Polypane evidence for 320 / 360 / ~390 / 412-430 / tablet / desktop and short-height states where applicable;
 - no horizontal overflow;

@@ -68,7 +68,7 @@ Final production acceptance follows the global `/home/mellonelay1999/.agents/BRO
 5. BrowserStack Local: exception path only when cloud testing must reach localhost/private Worker-0 services.
 6. VNC/noVNC: optional owner human-GUI/login lane only; never a browser automation dependency.
 
-For NEXI completion, the browser target is the deployed `https://app.nexitrading.app` generation exercising the real `https://api.nexitrading.app` Cloudflare Worker -> Container -> NestJS backend. A local standalone frontend, mock backend, or VM-local NestJS process cannot prove end-to-end production behavior.
+For NEXI completion, the browser target is the deployed `https://www.nexitrading.app` generation exercising the real `https://api.nexitrading.app` Cloudflare Worker -> Container -> NestJS backend. A local standalone frontend, mock backend, or VM-local NestJS process cannot prove end-to-end production behavior.
 
 ## Astra lineage
 `NEXI_ASTRA_FRONTEND_BINDING_MANIFEST.md` and the `nexi-frontend-astra-controller` skill are retained as historical frontend-binding/execution lineage. They are not the active project routing controller. Current owner decisions and this routing model control new work.

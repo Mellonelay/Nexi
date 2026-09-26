@@ -1,8 +1,17 @@
 # NEXI Cloudflare Environment Contract
 
-**Authority date:** 2026-09-17
+**Authority date:** 2026-09-26
 
 Cloudflare Worker + Container is the backend execution/runtime authority. GitHub `main` is durable source authority. D1 is durable application/financial relational truth; Ledger is accounting truth; EventOutbox is the durable publication boundary; Aiven Valkey is realtime/cache/Streams only.
+
+## Canonical production host contract
+
+- Public frontend: `https://www.nexitrading.app`.
+- Backend API: `https://api.nexitrading.app` (Cloudflare Worker Custom Domain).
+- Admin frontend: `https://admin.nexitrading.app`.
+- Apex `nexitrading.app` and legacy `app.nexitrading.app` redirect to the canonical Public host with HTTP 308; neither is an alternate frontend authority.
+- Worker CORS allows exactly the Public and Admin origins. SIWE domain/URI use the canonical Public host.
+- Keep this contract synchronized with `platform/cloudflare-targets.json`, Wrangler production vars, Public build environment, and the platform sync validator.
 
 ## Required platform bindings / runtime inputs
 

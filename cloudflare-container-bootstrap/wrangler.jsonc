@@ -26,9 +26,9 @@
     "SENTRY_ENVIRONMENT": "production",
     // Current live production baseline. Any future deploy must set this to the exact Git revision being deployed.
     "SENTRY_RELEASE": "b21185db5943619d174e9efee3b923a1c16bb7f8",
-    "CORS_ORIGINS": "https://app.nexitrading.app,https://admin.nexitrading.app",
-    "WALLET_AUTH_DOMAIN": "app.nexitrading.app",
-    "WALLET_AUTH_URI": "https://app.nexitrading.app",
+    "CORS_ORIGINS": "https://www.nexitrading.app,https://admin.nexitrading.app",
+    "WALLET_AUTH_DOMAIN": "www.nexitrading.app",
+    "WALLET_AUTH_URI": "https://www.nexitrading.app",
     "WALLET_AUTH_SUPPORTED_CHAIN_IDS": "1",
     "D1_BRIDGE_ENABLED": "true",
     "D1_BRIDGE_HOST": "nexi-core-d1",
