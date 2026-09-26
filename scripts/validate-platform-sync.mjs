@@ -6,17 +6,18 @@ const read = (p) => fs.readFileSync(path.join(root, p), 'utf8');
 const targets = JSON.parse(read('platform/cloudflare-targets.json'));
 const worker = read('cloudflare-container-bootstrap/wrangler.jsonc');
 const publicEnv = read('cloudflare-container-bootstrap/dexi-frontend/.env.example');
-const adminEnv = read('apps/admin/.env.example');
+const adminData = read('apps/admin/src/admin/data/context.tsx');
 
+const publicHost = new URL(targets.public_app).hostname;
 const checks = [
+  ['Public canonical host', targets.public_app === 'https://www.nexitrading.app'],
   ['API custom domain', worker.includes('"pattern": "api.nexitrading.app"')],
-  ['CORS public app', worker.includes('https://app.nexitrading.app')],
-  ['CORS admin app', worker.includes('https://admin.nexitrading.app')],
-  ['Wallet auth domain', worker.includes('"WALLET_AUTH_DOMAIN": "app.nexitrading.app"')],
+  ['CORS canonical Public and Admin origins', worker.includes(`"CORS_ORIGINS": "${targets.public_app},${targets.admin_app}"`)],
+  ['SIWE canonical domain', worker.includes(`"WALLET_AUTH_DOMAIN": "${publicHost}"`)],
+  ['SIWE canonical URI', worker.includes(`"WALLET_AUTH_URI": "${targets.public_app}"`)],
   ['Public API URL', publicEnv.includes(`NEXT_PUBLIC_API_URL=${targets.api}`)],
   ['Public platform URL', publicEnv.includes(`NEXT_PUBLIC_PLATFORM_URL=${targets.public_app}`)],
-  ['Admin live provider', adminEnv.includes('VITE_ADMIN_PROVIDER_MODE=live')],
-  ['Admin API URL', adminEnv.includes(`VITE_ADMIN_API_BASE_URL=${targets.api}`)],
+  ['Admin API URL', adminData.includes(`"https://api.nexitrading.app"`)],
 ];
 
 let failed = 0;
@@ -25,4 +26,4 @@ for (const [name, ok] of checks) {
   if (!ok) failed++;
 }
 if (failed) process.exit(1);
-console.log('PASS NEXI platform endpoint sync');
+console.log('PASS NEXI canonical host and platform endpoint sync');

@@ -10,7 +10,7 @@ This document defines what browser evidence must prove. It does not own runtime 
 ## Production target
 
 Browser acceptance for NEXI completion must exercise:
-- deployed Public: `https://app.nexitrading.app`;
+- deployed Public: `https://www.nexitrading.app`;
 - real backend: `https://api.nexitrading.app`;
 - Cloudflare Worker -> Cloudflare Container -> NestJS -> D1/Ledger/EventOutbox/Valkey paths applicable to the tested flow.
 

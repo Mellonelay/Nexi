@@ -1,7 +1,7 @@
 # NEXI Cloudflare Production Runtime Configuration Inventory
 
-**Status:** CURRENT read-only production configuration reference
-**As of:** 2026-09-17 (Myanmar time)
+**Status:** Historical read-only production configuration snapshot; not a live current-state authority
+**Snapshot captured:** 2026-09-17 (Myanmar time). Current domain/CORS/SIWE values are in `NEXI_CURRENT_STATE.md`; rediscover them from Cloudflare before operations.
 **GitHub/source HEAD at capture:** `dba195ed2bd9fb528b276afab70ed9a7f7b58e46`
 **Active Worker version:** `be954c93-2661-4c6b-9943-eb038fd42820` (version number `130`)
 **Production API route:** `api.nexitrading.app`

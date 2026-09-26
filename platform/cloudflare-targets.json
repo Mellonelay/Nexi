@@ -1,6 +1,6 @@
 {
   "zone": "nexitrading.app",
-  "public_app": "https://app.nexitrading.app",
+  "public_app": "https://www.nexitrading.app",
   "admin_app": "https://admin.nexitrading.app",
   "api": "https://api.nexitrading.app",
   "api_health": "https://api.nexitrading.app/readyz",
