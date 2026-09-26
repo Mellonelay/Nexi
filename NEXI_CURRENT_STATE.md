@@ -2,7 +2,7 @@
 
 **As of:** 2026-09-26 (Myanmar time)
 **Repository:** `Mellonelay/Nexi`
-**Durable source authority:** GitHub `main`; latest source read for this update surfaced `696b6929e26dfc9bc71e2a5f229eceebe93fa1d6`. Discover live again before consequential work.
+**Durable source authority:** GitHub `main`; backend CORS and SIWE configuration evidence in this update was read from source snapshot `696b6929e26dfc9bc71e2a5f229eceebe93fa1d6`. This state/ledger reconciliation adds documentation only; discover live before consequential work.
 **Current product implementation frontier:** `04c8f5f420d5e6b1cf7e0324b9c4a52535ee3152` (`fix(frontend): keep public dashboard accessible without wallet`). Documentation/governance-only commits may advance GitHub `main` without changing product deployment identity; always discover live `main` before consequential work.
 
 NEXI is in a **finishing / targeted-repair** phase. It is not in a rebuild or broad rediscovery phase.
