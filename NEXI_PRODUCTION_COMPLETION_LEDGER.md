@@ -1,6 +1,6 @@
 # NEXI Production Completion Ledger
 
-**Authority date:** 2026-09-25 (Myanmar time)
+**Authority date:** 2026-09-26 (Myanmar time)
 **Repository:** `Mellonelay/Nexi`
 **Current source authority:** GitHub `main` (discover live; do not freeze this ledger to a historical SHA)
 **Current product/runtime split:** product implementation commit `04c8f5f420d5e6b1cf7e0324b9c4a52535ee3152`; Public release `04c8f5f4-prod`; Admin release `ed26973f-prod-node` with no Admin source changes since `ed26973...`; Cloudflare backend deployment remains `bdadd96f-3696-474b-955d-de490a9a466d` from the `ed26973f` promotion. GitHub `main` may advance via documentation/governance-only commits; discover live before consequential work.
@@ -57,7 +57,7 @@ This section is the **active execution queue** and supersedes older statements t
 | M-08 | Market | Real depth + executed trades are current and source-backed | `NEEDS_FRESH_PROOF` | production depth/trades provenance |
 | M-09 | Market | Long-running reliability/soak across provider thresholds and reconnects | `NEEDS_FRESH_PROOF` | timed evidence with zero unexplained open-market stale rows |
 | P-01 | Public | Dashboard / Quotes Hub | `NEEDS_FRESH_PROOF` | deployed Public -> Cloudflare backend -> real data |
-| P-02 | Public | Spot Trading | `OPEN_DEFECT` | BrowserStack focused evidence for Public `04c8f5f4`: Galaxy S24 Chrome showed `MARKET ERROR` and remained loading while Windows/iPhone and adjacent market surfaces differed; diagnose causal owner, repair canonical path, then retest affected production evidence |
+| P-02 | Public | Spot Trading | `OPEN_DEFECT` | 2026-09-26 BrowserStack DevTools capture shows the Galaxy S24 page origin as `https://www.nexitrading.app`; CORS blocks `/auth/refresh`, Spot orderbook/trades, and Socket.IO polling because responses lack `Access-Control-Allow-Origin`. Current `main@696b6929` config lists only `https://app.nexitrading.app` and `https://admin.nexitrading.app` in `CORS_ORIGINS`, and SIWE authority is `app.nexitrading.app`. Fresh production OPTIONS from canonical app origin returned 204 with the expected ACAO header; `www` Socket.IO OPTIONS returned 400 without ACAO. Cloudflare currently routes proxied `www` to `35.187.234.62`; no zone page/dynamic redirect rules are configured. Treat as canonical-host/CORS mismatch; preserve app as SIWE authority, canonicalize `www` to `app` after explicit production-routing approval, then retest with controlled wallet. P-02 remains open. |
 | P-03 | Public | Options / Binary | `NEEDS_FRESH_PROOF` | deployed UI/API/quote/settlement contract proof |
 | P-04 | Public | Wallet surface/access model | `NEEDS_FRESH_PROOF` | global Public wallet gate repair is deployed at `04c8f5f...`; protected actions remain gated; WalletConnect production-visible chooser UX is still unverified |
 | P-05 | Public | Earn / Mining | `NEEDS_FRESH_PROOF` | deployed end-to-end lifecycle proof |
@@ -105,7 +105,7 @@ This section is the **active execution queue** and supersedes older statements t
 ### Execution order
 
 1. Preserve all `COMPLETED` / `PROVEN_UNCHANGED` rows and start from the freshest demonstrated failure or missing proof.
-2. Diagnose and repair the current Public Spot failure (`P-02`) against the deployed `04c8f5f4` Public generation and the real Cloudflare backend; broaden into market/provider work only if causal evidence requires it.
+2. Resolve the P-02 canonical-host/CORS failure identified on 2026-09-26. Keep SIWE domain `app.nexitrading.app`; obtain approval for the Cloudflare `www`/apex redirect change, then BrowserStack-test canonical `app.nexitrading.app` with controlled MetaMask identity before broadening into market/provider work.
 3. Close the remaining Public/Admin/backend/financial/async/realtime/communications rows in dependency order, using the deployed production surfaces rather than a local backend substitute.
 4. Exercise identity-dependent rows with controlled test wallet/Admin identities when safe; an owner deferral remains explicit and never counts as acceptance.
 5. Reconcile this ledger and `NEXI_CURRENT_STATE.md` after each durable proof change.
