@@ -43,7 +43,7 @@ This section is the **active execution queue** and supersedes older statements t
 | A-02 | Authority | Cloudflare Worker -> Container -> NestJS is the only backend runtime authority | `COMPLETED` | current production runtime/health |
 | A-03 | Public hosting | Public dependency/build/runtime owner is `/srv/nexi/public` | `COMPLETED` | symlink/process/release proof |
 | A-04 | Admin hosting | Admin dependency/build/runtime owner is `/srv/nexi/admin` | `COMPLETED` | symlink/process/release proof |
-| A-05 | DNS / host routing | Public `www` and Admin `admin` proxied A records -> `35.187.234.62`; API is Worker Custom Domain; apex and legacy `app` redirect 308 to Public `www` | `NEEDS_FRESH_PROOF` | Cloudflare API confirmed DNS, Worker Custom Domain, and active redirect rule on 2026-09-26; verify fresh external HTTPS responses for all four host roles |
+| A-05 | DNS / edge | canonical www + Admin route to 35.187.234.62; legacy app + apex are proxied redirect hosts; API remains Worker custom domain | COMPLETED | Cloudflare DNS/API and HTTPS probes on 2026-09-26: www 200; app and apex 308 -> www; Admin / 307 -> /overview; API /health 200; no wildcard DNS record |
 | A-06 | Public/Admin release | Public current source frontier is promoted through `/srv/nexi/public`; Admin remains on its unchanged `ed26973...` source generation through `/srv/nexi/admin` | `COMPLETED` | Public `NEXI_RELEASE_SHA=04c8f5f...` + Admin `NEXI_RELEASE_SHA=ed26973...` + active services + zero Admin source diff from `ed26973...` to current main |
 | A-07 | Backend baseline | Currently deployed Cloudflare backend health/readiness | `COMPLETED` | fresh `/ops/ready`: `status=ready`, `database=true`, `redis=true` after unified promotion |
 | A-08 | Backend release | Deployed Cloudflare backend baseline is healthy, but current `main` contains post-`ed26973...` backend Sentry/ENOENT source changes not yet proven deployed | `NEEDS_FRESH_PROOF` | deployed Worker version `bdadd96f-3696-474b-955d-de490a9a466d` + `/ops/ready` 200; reconcile/deploy current backend source only when the active repair requires it |
@@ -99,7 +99,7 @@ This section is the **active execution queue** and supersedes older statements t
 | R-05 | Reliability | Duplicate/retry/concurrency safety | `NEEDS_FRESH_PROOF` | focused adversarial tests |
 | Z-01 | Gate | All non-owner-context rows above complete or proven unchanged | `OPEN_DEFECT` | zero unresolved required rows |
 | Z-02 | Gate | Identity rows completed with controlled identities or explicitly owner-deferred | `AUTOMATION_IDENTITY_REQUIRED` | row-level proof/owner decision |
-| Z-03 | Gate | `NEXI_CURRENT_STATE.md` + this ledger reconciled to latest durable truth | `COMPLETED` | 2026-09-26 owner-selected canonical domains reconciled with current Cloudflare DNS, Worker Custom Domain, redirect rule, CORS, and SIWE settings; post-change runtime/browser proof remains explicitly open under A-05/P-02 |
+| Z-03 | Gate | NEXI_CURRENT_STATE.md + this ledger reconciled to latest durable truth | COMPLETED | 2026-09-26 canonical host/DNS/redirect, CORS and SIWE settings reconciled; fresh route probes close host reachability; post-change CORS/Socket.IO and authenticated browser proof remain open under P-02/I-01 |
 | Z-04 | Gate | Owner manual acceptance | `OWNER_FINAL_ACCEPTANCE` | only after Z-01/Z-02/Z-03 permit it |
 
 ### Execution order
@@ -118,6 +118,23 @@ This section is the **active execution queue** and supersedes older statements t
 - Get-Fable may route lifecycle/delegation, but **must not create a second production ledger**. This file remains the only completion controller.
 - Riqor may record proof/freshness, but cannot upgrade a row beyond the evidence actually gathered.
 
+
+## Fresh targeted production verification — 2026-09-26 06:10 UTC
+
+This is an evidence update only; it does not upgrade any product acceptance row without the row's required proof.
+
+- **TLS / edge (A-05):** A-05 remains COMPLETED. Canonical Public is https://www.nexitrading.app; app and apex redirect to www; Admin is https://admin.nexitrading.app; API is https://api.nexitrading.app. Cloudflare API showed no wildcard record. Worker-0 HTTPS probes at 2026-09-26 22:21 UTC returned www 200, app/apex 308, Admin 307, and API health 200.
+- **Backend / market:** Cloudflare-served `/health`, `/healthz`, and `/readyz` returned 200; readiness reported D1 and Redis ready. `/market/assets` and `/market/prices` each returned 53 canonical instruments. Quote states were time-varying (21 LIVE, 31 closed/unavailable, one transient stale quote; that quote recovered to LIVE on the next D1 read). BTC/ETH samples were current. These bounded snapshots do not close M-03 or M-09 soak/freshness requirements.
+- **Public Spot (P-02):** The canonical route is `/dashboard/spot` and its HTML returned 200; `/spot` is not a valid route (404). The response contained SSR loading placeholders, which do not verify hydrated browser behavior. The BrowserStack Galaxy S24 capture showed `MARKET ERROR` alongside failed API/CORS requests; at that time the Live tool surface exposed no session DOM, network logs, or controls, and RDC DevTools had no connected Chrome. Later Cloudflare configuration evidence shows CORS/SIWE origins aligned to canonical `www` and Admin. No post-change preflight or BrowserStack trace is captured here, so P-02 is `NEEDS_FRESH_PROOF`; do not treat the capture-time failure as current or as proof of a backend-wide market outage.
+- **Wallet identity (I-01):** SIWE code review confirms successful first login can create a persistent D1 user, while BrowserStack session control and an approved pre-existing test identity were unavailable. No MetaMask wallet was created/imported, no signature was sent, and no production account was created. I-01 remains `AUTOMATION_IDENTITY_REQUIRED`.
+
+`A-05_TLS_EDGE = COMPLETED`
+
+`P-02_GALAXY_SPOT = NEEDS_FRESH_PROOF`
+
+`M-03_MARKET_FRESHNESS = OPEN_DEFECT`
+
+`I-01_SIWE = AUTOMATION_IDENTITY_REQUIRED`
 
 ## 1. Finishing-state rule
 

@@ -48,6 +48,9 @@ Live Cloudflare API read on 2026-09-26 verified:
 
 BrowserStack DevTools screenshots from 2026-09-26 show failed CORS responses for API calls made while the Public page was loaded from `www`. Those captures prove the failure at capture time. The live Cloudflare values now match the owner-selected hosts, but no post-configuration OPTIONS response or fresh BrowserStack network trace has been captured in this work. Therefore the host/CORS configuration is aligned, while browser/runtime behavior still needs fresh proof.
 
+
+Fresh read-only HTTPS probes from Worker 0 at 2026-09-26 22:21 UTC returned: www.nexitrading.app/dashboard 200; legacy app and apex /dashboard 308 to the same www path; admin.nexitrading.app/ 307 to /overview; and api.nexitrading.app/health 200. This proves route reachability and redirect behavior at that capture time only; it does not prove hydrated, wallet-authenticated UI or post-change CORS/API/Socket.IO behavior.
+
 ## Public frontend correction and preserved proof
 
 The Public shell wallet-boundary defect was repaired and deployed at `04c8f5f...`:
@@ -78,10 +81,10 @@ P-02 remains `NEEDS_FRESH_PROOF` until the current `www` page passes authenticat
 ## Open completion gates
 
 - Overall Public browser acceptance is incomplete.
-- Galaxy S24 Spot acceptance is failed/open at the current evidence frontier.
+- Galaxy S24 Spot remains NEEDS_FRESH_PROOF after a capture-time CORS failure; rerun preflight/API/Socket.IO checks and the page after CORS configuration alignment.
 - Polypane production responsive acceptance is incomplete.
 - WalletConnect production-visible UX is unverified.
-- Canonical-host DNS and redirect configuration now match the owner decision. External route responses and post-configuration CORS/browser behavior still need fresh proof.
+- Canonical-host DNS, redirects, and route responses were verified on 2026-09-26 22:21 UTC. Post-configuration CORS/preflight and authenticated browser behavior still need fresh proof.
 - Current-main backend changes after `ed26973...` are not claimed deployed.
 - Full Sentry release-lifecycle/source-map/runtime proof remains incomplete.
 - Remaining Public/Admin/financial/async/realtime/identity rows are controlled by `NEXI_PRODUCTION_COMPLETION_LEDGER.md`.

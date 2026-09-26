@@ -1,6 +1,6 @@
 # NEXI Cloudflare Backend Operator Runbook
 
-**Authority date:** 2026-09-17 (Myanmar time)
+**Authority date:** 2026-09-26
 **Status:** CURRENT backend runtime/operator authority
 
 ## Authority
@@ -21,7 +21,7 @@ Before implementing, configuring, deploying, or making configuration-driven debu
 
 `TASK -> IDENTIFY PRODUCT -> READ CURRENT OFFICIAL DOCS -> INSPECT CURRENT WRANGLER/MCP HELP -> RECONCILE WITH NEXI CONFIG -> OPERATE -> VERIFY`
 
-This applies to Workers, Wrangler, Containers, D1, Queues, Workflows, R2, Pipelines, Durable Objects, bindings, secrets, routes/domains, versions/deployments/rollback, observability/logging, networking, and any later Cloudflare product.
+This applies to Workers, Wrangler, Containers, D1, Queues, Workflows, R2, Durable Objects, bindings, secrets, routes/domains, versions/deployments/rollback, observability/logging, networking, and any later Cloudflare product.
 
 Never retry a failed Wrangler command blindly. Read the actual error, re-check the exact product docs/help, identify the causal owner, and retry only when justified. Capability discovery does not grant mutation authority.
 
@@ -32,13 +32,12 @@ When the repo-local binary is absent, do **not** use bare `npx wrangler`: npm ca
 
 Current source config: `cloudflare-container-bootstrap/wrangler.jsonc`.
 Complete read-only production configuration/binding inventory: `docs/infrastructure/NEXI_CLOUDFLARE_PRODUCTION_CONFIGURATION_INVENTORY.md`.
-Current Worker identity: `nexi-staging`.
+Current Worker identity: `nexi-production`.
 Current Container application identity: `nexi-api-staging`.
+Canonical Public frontend: `https://www.nexitrading.app`.
 Public API authority: `https://api.nexitrading.app`.
 
-**Naming rule:** `staging` in these historical Cloudflare resource identifiers does **not** mean this is a staging environment. They are the resources currently serving production. Determine environment from the active route/deployment/runtime and `NODE_ENV=production`, never from the resource-name suffix. Renaming them is a separate migration and is not required for normal production operation.
-
-**Pipelines status:** do not treat Pipelines as optional historical debris. Current Worker bindings include both market Pipeline streams, both Pipeline resources are live/running, and backend `MarketArchiveService` remains wired with `MARKET_ARCHIVE_REQUIRED=true`. Any retirement is a separate change requiring caller/runtime analysis and explicit owner approval.
+**Naming rule:** historical resources such as `nexi-api-staging`, `nexi-core-staging`, queue/workflow names, and other surviving `*-staging` identifiers are production resources despite their names. The Worker itself is now `nexi-production`. Determine environment from active routing/runtime and `NODE_ENV=production`, never from a legacy resource suffix. Renaming surviving resources is a separate migration.
 
 Do not freeze version IDs, instance IDs, image digests, process IDs, account IDs, or secret values in permanent operating instructions; discover them live.
 
@@ -56,8 +55,7 @@ Do not freeze version IDs, instance IDs, image digests, process IDs, account IDs
 | `wrangler d1 list/info/execute/export/time-travel/migrations` | D1 operator path | `d1 list`, `d1 info`; bounded read-only `d1 execute --remote` SQL where justified | Execute/migrations/time-travel may mutate | D1 is canonical durable application/financial truth. Use migrations for schema. Never substitute VM SQLite. |
 | `wrangler queues list/info` + queue consumer controls | Queue inventory/config/delivery | `queues list`, `queues info <name>` | create/update/delete/pause/resume/purge mutate | Queues deliver/retry only; never financial authority. Purge is destructive. |
 | `wrangler workflows list/describe/instances` | Workflow inventory/runtime | `workflows list`, `workflows describe <name>`, bounded instance reads | trigger/terminate/delete mutate | Workflows orchestrate; they do not own originating financial truth. |
-| `wrangler r2 bucket list` / object operations | R2 inventory and objects | `r2 bucket list` | object put/delete, bucket create/delete mutate | R2 owns approved objects/archive, not ledger truth. Protect deposit proofs. |
-| `wrangler pipelines list/get` | Pipeline state/config | `pipelines list`, `pipelines get <name>` | setup/create/update/delete/stream/sink changes mutate | Current CLI marks Pipelines commands open beta; re-read docs/help before use. |
+| `wrangler r2 bucket list` / object operations | R2 inventory and objects | `r2 bucket list` | object put/delete, bucket create/delete mutate | R2 stores approved active domain objects such as deposit proofs; it is not ledger truth. |
 | `wrangler containers list/info/instances` | Container application/instance truth | `containers list`, `containers info <app> --json`, `containers instances <app> --json` | Read-only | Container state is runtime evidence; app ID and instance ID are different. |
 | `wrangler containers ssh <INSTANCE_ID>` | Official shell transport to a running Container | inspect `containers ssh --help`; use OpenSSH ProxyCommand for a normal shell | Shell commands can mutate live runtime | Requires matching `authorized_keys` and Cloudflare write access. SSH does not expose a public port, does not start a stopped Container, and alone does not keep it alive. |
 | `wrangler containers build/push` | Build/push Container image | help/config inspection | High | Container image must correspond to GitHub source; verify and reconcile source before/after rollout. |
@@ -108,7 +106,6 @@ wrangler d1 list --config wrangler.jsonc
 wrangler queues list --config wrangler.jsonc
 wrangler workflows list --config wrangler.jsonc
 wrangler r2 bucket list --config wrangler.jsonc
-wrangler pipelines list --config wrangler.jsonc
 curl -fsS https://api.nexitrading.app/health
 curl -fsS https://api.nexitrading.app/readyz
 ```
@@ -123,7 +120,6 @@ The command existing is not proof that the resource is integrated correctly. Mat
 - Container not running -> inspect application/instance state; SSH does not start stopped instances.
 - D1 error -> confirm database binding/name, `--remote` semantics, migration state, and exact SQL; never switch to VM SQLite as workaround.
 - Deploy/rollout error -> inspect the actual Worker version/deployment and Container application/instance state before retrying.
-- Pipelines error -> re-check current beta docs/help and live resource state.
 
 ## Official documentation consulted for this authority transition
 
@@ -136,4 +132,4 @@ The command existing is not proof that the resource is integrated correctly. Mat
 - https://developers.cloudflare.com/queues/configuration/configure-queues/
 - https://developers.cloudflare.com/workflows/reference/wrangler-commands
 
-For D1, R2, Pipelines, Queues, Workflows, Containers, Workers, or other Cloudflare work after this transition, open the relevant current product documentation again before mutation; this list is evidence of this transition, not a permanent substitute for fresh documentation.
+For D1, R2, Queues, Workflows, Containers, Workers, or other Cloudflare work after this transition, open the relevant current product documentation again before mutation; this list is evidence of this transition, not a permanent substitute for fresh documentation.
