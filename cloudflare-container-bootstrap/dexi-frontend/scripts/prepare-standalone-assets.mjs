@@ -1,5 +1,5 @@
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync } from 'node:fs';
+import { dirname, join, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 function findNestedServer(standaloneRoot) {
@@ -45,7 +45,10 @@ export function prepareStandaloneAssets(projectRoot = process.cwd()) {
   const standaloneRoot = join(projectRoot, '.next', 'standalone');
   const serverEntry = join(standaloneRoot, 'server.js');
   const actualServer = existsSync(serverEntry) ? realpathSync(serverEntry) : findNestedServer(standaloneRoot);
-  const serverRoot = dirname(actualServer);
+  if (!existsSync(serverEntry)) {
+    symlinkSync(relative(standaloneRoot, actualServer), serverEntry);
+  }
+  const serverRoot = dirname(realpathSync(serverEntry));
   copyTree(join(projectRoot, '.next', 'static'), join(serverRoot, '.next', 'static'), 'static');
   copyTree(join(projectRoot, 'public'), join(serverRoot, 'public'), 'public');
   return { serverRoot };

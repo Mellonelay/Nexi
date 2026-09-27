@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { test } from 'node:test';
@@ -30,6 +30,7 @@ test('copies static and public assets beside a workspace-nested standalone serve
   try {
     const serverRoot = createBuild(root, 'workspace-app');
     assert.deepEqual(prepareStandaloneAssets(root), { serverRoot });
+    assert.equal(realpathSync(join(root, '.next', 'standalone', 'server.js')), join(serverRoot, 'server.js'));
     assertAssetsCopied(root, serverRoot);
   } finally {
     rmSync(root, { recursive: true, force: true });
