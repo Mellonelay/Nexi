@@ -1,9 +1,9 @@
 # NEXI Current State
 
-**As of:** 2026-09-26 (Myanmar time)
+**As of:** 2026-09-27 (Myanmar time)
 **Repository:** `Mellonelay/Nexi`
 **Durable source authority:** GitHub `main`; current production host/CORS/SIWE values below were read directly from the Cloudflare API on 2026-09-26. The Public domain source alignment is recorded in this revision; discover the exact current `main` SHA before consequential work.
-**Current product implementation frontier:** `04c8f5f420d5e6b1cf7e0324b9c4a52535ee3152` (`fix(frontend): keep public dashboard accessible without wallet`). Documentation/governance-only commits may advance GitHub `main` without changing product deployment identity; always discover live `main` before consequential work.
+**Current product implementation frontier:** `12cf799e50451091c17a2bef1b62a44b39567f0a` (`fix(frontend): include standalone assets in public release`). Documentation/governance-only commits may advance GitHub `main` without changing product deployment identity; always discover live `main` before consequential work.
 
 NEXI is in a **finishing / targeted-repair** phase. It is not in a rebuild or broad rediscovery phase.
 
@@ -21,15 +21,16 @@ NEXI is in a **finishing / targeted-repair** phase. It is not in a rebuild or br
 - `PROVEN + UNCHANGED = REUSE`; do not reopen completed work without dependency drift or contradictory evidence.
 ## Current live source and deployment split
 
-Fresh Worker-0 evidence on 2026-09-25:
+Fresh Worker-0 evidence on 2026-09-27:
 
-- Product implementation commit under this reconciliation is `04c8f5f420d5e6b1cf7e0324b9c4a52535ee3152`. GitHub `main` may be newer because of documentation/governance-only fan-in; discover live before work.
-- Public: `/srv/nexi/public/current -> /srv/nexi/public/releases/04c8f5f4-prod`.
-- Public `NEXI_RELEASE_SHA = 04c8f5f420d5e6b1cf7e0324b9c4a52535ee3152`; service active.
+- Product implementation commit under this reconciliation is `12cf799e50451091c17a2bef1b62a44b39567f0a` (`fix(frontend): include standalone assets in public release`); GitHub `main` was clean at this SHA when state was updated.
+- Public: `/srv/nexi/public/current -> /srv/nexi/public/releases/12cf799-assets2-prod`.
+- Public `NEXI_RELEASE_SHA = 12cf799e50451091c17a2bef1b62a44b39567f0a`; service active.
 - Public source/runtime framework: Next.js `16.3.5` + React `19.3.0`.
+- Public standalone packaging now includes the root server entry plus traced dependencies, `.next/static`, and `public` beside the server. The deployed `/dashboard` returned HTTP 200 and all 45 referenced static assets returned HTTP 200 with expected MIME types during the 2026-09-27 deployment verification.
 - Admin: `/srv/nexi/admin/current -> /srv/nexi/admin/releases/ed26973f-prod-node`.
 - Admin `NEXI_RELEASE_SHA = ed26973fe0556a6d75943b3e296be0a899449d6d`; service active.
-- No Admin source files changed between `ed26973...` and current `04c8f5f...`; the older Admin release marker does not currently imply an Admin source mismatch.
+- No Admin source files changed between `ed26973...` and current `main` at `12cf799...`; the older Admin release marker does not currently imply an Admin source mismatch.
 - Cloudflare backend deployment remains the `ed26973f` unified production promotion: deployment `15c716b8-8ae5-45ec-a9f2-b2d2f6f0c89d`, Worker version `bdadd96f-3696-474b-955d-de490a9a466d`.
 - Current GitHub `main` contains later backend Sentry/ENOENT source changes after `ed26973...`; they are source-integrated but are not claimed deployed by this document.
 - Remote backend health is current: `/health` = 200 and `/ops/ready` = 200 with `database=true`, `redis=true`.
@@ -53,10 +54,12 @@ Fresh read-only HTTPS probes from Worker 0 at 2026-09-26 22:21 UTC returned: www
 
 ## Public frontend correction and preserved proof
 
-The Public shell wallet-boundary defect was repaired and deployed at `04c8f5f...`:
+The Public shell wallet-boundary defect was repaired at `04c8f5f...` and remains in the current `12cf799...` Public source:
 - non-protected Public market/product surfaces remain accessible without a NEXI wallet session;
 - protected wallet/account/financial actions remain identity-gated;
 - the global dashboard shell must not be re-wrapped in a wallet gate.
+
+The current Public release also fixes standalone asset packaging: production HTML referenced missing JavaScript, CSS, fonts, and public assets because the standalone release omitted `.next/static` and `public`. The source build now copies both beside the standalone server and preserves the server entry/traced dependencies. The deployed release returned HTTP 200 for `/dashboard` and all 45 referenced static assets during the 2026-09-27 verification.
 
 Canonical 53-asset source/backend parity and local asset-icon integrity were verified in the current Public generation. Preserve that model unless current contradictory evidence appears.
 ## Browser / rendered acceptance frontier
@@ -68,19 +71,22 @@ Browser ownership:
 - Polypane = responsive / multi-viewport acceptance.
 - Playwright and Chrome DevTools are supporting automation/diagnostic tools, not additional mandatory acceptance owners.
 
-Current BrowserStack focused evidence for release `04c8f5f4`:
+Historical BrowserStack focused evidence for release `04c8f5f4` (2026-09-26):
 - Windows 11 Chrome: Spot remained loading, no explicit MARKET ERROR in that capture.
 - Galaxy S24 Chrome: Spot showed `MARKET ERROR` and remained loading.
 - iPhone 15 Pro Max Safari: Spot rendered live market values in that capture.
 - Binary and Asset Detail rendered live market data in the same focused runs.
 - Wallet chooser showed Coinbase Wallet and Injected/browser-wallet choices; a supplied Galaxy capture showed “Wallet verification failed.”
-- The screenshot captures show API CORS failures from `www.nexitrading.app`. Live Worker CORS and SIWE values now match `www` and Admin, but behavior after that configuration change remains unverified; no successful wallet provider/signature/session flow is proven.
-- WalletConnect was not visible in earlier production chooser captures.
+- The screenshot captures show API CORS failures from `www.nexitrading.app`. Live Worker CORS and SIWE values now match `www` and Admin, but behavior after that configuration change remains unverified; no successful wallet provider/signature/session flow was proven there.
+- WalletConnect was not visible in those chooser captures.
+
+Fresh local Playwright authentication attempts against Public release `12cf799...` on 2026-09-27 used the persistent test-wallet profile, bundled Chromium, and chain `0x1`. The visible chooser offered MetaMask and Coinbase Wallet; selecting MetaMask and unlocking the existing wallet opened only the extension `home.html#/unlock` then `home.html#/`, with no site-permission/notification target. A separate uninstrumented call to `eth_requestAccounts` from `https://www.nexitrading.app` remained pending for 45 seconds; read-only `eth_accounts` count remained zero. No SIWE challenge, signature, or session was reached. Correlated production Sentry queries returned no relevant events. Authenticated browser acceptance has not started.
 
 P-02 remains `NEEDS_FRESH_PROOF` until the current `www` page passes authenticated API preflight/request and Socket.IO checks, then the Galaxy Spot page is retested against the real backend. The available evidence identifies a host/CORS failure in the captured browser run; it does not prove a backend-wide market outage.
 ## Open completion gates
 
-- Overall Public browser acceptance is incomplete.
+- Overall Public browser acceptance is incomplete; no wallet-authenticated production session has been proven.
+- The current local Playwright/MetaMask frontier is blocked at `eth_requestAccounts`: after MetaMask unlock, no site-permission target appears and the request remains pending with zero accounts on chain 1. Do not treat this as a production NEXI or backend defect without further causal evidence.
 - Galaxy S24 Spot remains NEEDS_FRESH_PROOF after a capture-time CORS failure; rerun preflight/API/Socket.IO checks and the page after CORS configuration alignment.
 - Polypane production responsive acceptance is incomplete.
 - WalletConnect production-visible UX is unverified.
@@ -88,7 +94,7 @@ P-02 remains `NEEDS_FRESH_PROOF` until the current `www` page passes authenticat
 - Current-main backend changes after `ed26973...` are not claimed deployed.
 - Full Sentry release-lifecycle/source-map/runtime proof remains incomplete.
 - Remaining Public/Admin/financial/async/realtime/identity rows are controlled by `NEXI_PRODUCTION_COMPLETION_LEDGER.md`.
-- Controlled test wallet/Admin identities should be used for safely automatable identity-dependent acceptance where possible.
+- A persistent test wallet exists in the protected Worker-0 browser profile, but wallet connection/SIWE remains unverified because MetaMask does not expose a permission target in the current Playwright path. Continue from this exact boundary without creating another wallet. Controlled Admin identity acceptance remains open.
 - Owner manual acceptance remains the final gate only after automatable closure.
 
 ## Documentation and continuity

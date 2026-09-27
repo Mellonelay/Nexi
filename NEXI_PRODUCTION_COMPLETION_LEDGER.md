@@ -1,9 +1,9 @@
 # NEXI Production Completion Ledger
 
-**Authority date:** 2026-09-26 (Myanmar time)
+**Authority date:** 2026-09-27 (Myanmar time)
 **Repository:** `Mellonelay/Nexi`
 **Current source authority:** GitHub `main` (discover live; do not freeze this ledger to a historical SHA)
-**Current product/runtime split:** product implementation commit `04c8f5f420d5e6b1cf7e0324b9c4a52535ee3152`; Public release `04c8f5f4-prod`; Admin release `ed26973f-prod-node` with no Admin source changes since `ed26973...`; Cloudflare backend deployment remains `bdadd96f-3696-474b-955d-de490a9a466d` from the `ed26973f` promotion. GitHub `main` may advance via documentation/governance-only commits; discover live before consequential work.
+**Current product/runtime split:** product implementation commit `12cf799e50451091c17a2bef1b62a44b39567f0a`; Public release `12cf799-assets2-prod` with release SHA `12cf799e50451091c17a2bef1b62a44b39567f0a`; Admin release `ed26973f-prod-node` with no Admin source changes since `ed26973...`; Cloudflare backend deployment remains `bdadd96f-3696-474b-955d-de490a9a466d` from the `ed26973f` promotion. GitHub `main` may advance via documentation/governance-only commits; discover live before consequential work.
 **Purpose:** the single final-production completion controller for NEXI. This is a finishing-state ledger, not a restart plan.
 
 ## 0. Active production closure controller — owner correction 2026-09-20
@@ -44,7 +44,7 @@ This section is the **active execution queue** and supersedes older statements t
 | A-03 | Public hosting | Public dependency/build/runtime owner is `/srv/nexi/public` | `COMPLETED` | symlink/process/release proof |
 | A-04 | Admin hosting | Admin dependency/build/runtime owner is `/srv/nexi/admin` | `COMPLETED` | symlink/process/release proof |
 | A-05 | DNS / edge | canonical www + Admin route to 35.187.234.62; legacy app + apex are proxied redirect hosts; API remains Worker custom domain | COMPLETED | Cloudflare DNS/API and HTTPS probes on 2026-09-26: www 200; app and apex 308 -> www; Admin / 307 -> /overview; API /health 200; no wildcard DNS record |
-| A-06 | Public/Admin release | Public current source frontier is promoted through `/srv/nexi/public`; Admin remains on its unchanged `ed26973...` source generation through `/srv/nexi/admin` | `COMPLETED` | Public `NEXI_RELEASE_SHA=04c8f5f...` + Admin `NEXI_RELEASE_SHA=ed26973...` + active services + zero Admin source diff from `ed26973...` to current main |
+| A-06 | Public/Admin release | Public current source frontier is promoted through `/srv/nexi/public`; Admin remains on its unchanged `ed26973...` source generation through `/srv/nexi/admin` | `COMPLETED` | Public `NEXI_RELEASE_SHA=12cf799e50451091c17a2bef1b62a44b39567f0a`, current release `12cf799-assets2-prod`, active service; Admin `NEXI_RELEASE_SHA=ed26973...` + active service + no Admin source changes identified since `ed26973...` |
 | A-07 | Backend baseline | Currently deployed Cloudflare backend health/readiness | `COMPLETED` | fresh `/ops/ready`: `status=ready`, `database=true`, `redis=true` after unified promotion |
 | A-08 | Backend release | Deployed Cloudflare backend baseline is healthy, but current `main` contains post-`ed26973...` backend Sentry/ENOENT source changes not yet proven deployed | `NEEDS_FRESH_PROOF` | deployed Worker version `bdadd96f-3696-474b-955d-de490a9a466d` + `/ops/ready` 200; reconcile/deploy current backend source only when the active repair requires it |
 | M-01 | Market | Exactly 53 canonical NEXI assets remain authoritative | `PROVEN_UNCHANGED` | catalog/API count and identity |
@@ -56,10 +56,10 @@ This section is the **active execution queue** and supersedes older statements t
 | M-07 | Market | REST read-back recovery from D1 authority | `PROVEN_UNCHANGED` | rerun after read-path dependency change |
 | M-08 | Market | Real depth + executed trades are current and source-backed | `NEEDS_FRESH_PROOF` | production depth/trades provenance |
 | M-09 | Market | Long-running reliability/soak across provider thresholds and reconnects | `NEEDS_FRESH_PROOF` | timed evidence with zero unexplained open-market stale rows |
-| P-01 | Public | Dashboard / Quotes Hub | `NEEDS_FRESH_PROOF` | deployed Public -> Cloudflare backend -> real data |
+| P-01 | Public | Dashboard / Quotes Hub | `NEEDS_FRESH_PROOF` | Public `12cf799...` dashboard and 45 referenced static assets returned HTTP 200 after standalone asset packaging fix; this proves asset reachability only. Authenticated rendered interaction/data acceptance remains open. |
 | P-02 | Public | Spot Trading | `NEEDS_FRESH_PROOF` | BrowserStack screenshots from 2026-09-26 show CORS failures for `/auth/refresh`, Spot orderbook/trades, and Socket.IO polling from Public origin `https://www.nexitrading.app`. Live Cloudflare API now confirms CORS origins `https://www.nexitrading.app,https://admin.nexitrading.app`, SIWE domain/URI `www.nexitrading.app`, and the active canonical-host routing rule. No post-configuration production OPTIONS or BrowserStack network trace is yet recorded. Verify current `www` preflights, API calls, socket reconnect, then retest Galaxy S24 Spot; keep controlled-wallet SIWE/signature verification as a separate subsequent gate. |
 | P-03 | Public | Options / Binary | `NEEDS_FRESH_PROOF` | deployed UI/API/quote/settlement contract proof |
-| P-04 | Public | Wallet surface/access model | `NEEDS_FRESH_PROOF` | global Public wallet gate repair is deployed at `04c8f5f...`; protected actions remain gated; WalletConnect production-visible chooser UX is still unverified |
+| P-04 | Public | Wallet surface/access model | `NEEDS_FRESH_PROOF` | global Public wallet gate repair remains in current Public source; protected actions remain gated; 2026-09-27 Playwright showed MetaMask chooser and unlock but no site permission target/account; full wallet-authenticated UI and WalletConnect production-visible UX remain unverified |
 | P-05 | Public | Earn / Mining | `NEEDS_FRESH_PROOF` | deployed end-to-end lifecycle proof |
 | P-06 | Public | Loan | `NEEDS_FRESH_PROOF` | deployed end-to-end lifecycle proof |
 | P-07 | Public | Support | `NEEDS_FRESH_PROOF` | deployed create/read/reply/state proof |
@@ -69,7 +69,7 @@ This section is the **active execution queue** and supersedes older statements t
 | P-11 | Public | Settings | `NEEDS_FRESH_PROOF` | deployed preferences/security/settings proof |
 | P-12 | Public | Asset Detail + Active Pair continuity + charts | `NEEDS_FRESH_PROOF` | all required assets/timeframes through current backend |
 | P-13 | Public | Mobile nav/geometry/accessibility + notification/deposit/provider-choice UX | `NEEDS_FRESH_PROOF` | current deployed responsive/accessibility/runtime proof |
-| I-01 | Identity | Wallet-only SIWE challenge/signature/replay/session | `AUTOMATION_IDENTITY_REQUIRED` | controlled test wallet or explicit owner deferral |
+| I-01 | Identity | Wallet-only SIWE challenge/signature/replay/session | `AUTOMATION_IDENTITY_REQUIRED` | persistent test wallet exists in the protected Worker-0 profile; on 2026-09-27 the named MetaMask chooser flow unlocked the wallet but no site-permission target appeared. Direct `eth_requestAccounts` remained pending for 45s, `eth_accounts` count stayed 0, chain was 1; no challenge/signature/session proof. Continue from this exact browser-extension frontier. |
 | I-02 | Identity | Wallet balance + protected financial authorization | `AUTOMATION_IDENTITY_REQUIRED` | controlled test wallet/session or explicit owner deferral |
 | I-03 | Identity | Privileged Admin auth/RBAC/action | `AUTOMATION_IDENTITY_REQUIRED` | controlled privileged Admin identity or explicit owner deferral |
 | F-01 | Financial | Deposit lifecycle | `NEEDS_FRESH_PROOF` | D1/Ledger/activity/audit/outbox read-back |
