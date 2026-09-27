@@ -1,15 +1,15 @@
 'use client';
 
-import { sepolia } from 'viem/chains';
+import { mainnet, sepolia } from 'viem/chains';
 import { createConfig, http, type Config } from 'wagmi';
 import { coinbaseWallet, injected, walletConnect } from 'wagmi/connectors';
 
 const configuredRpcUrl = process.env.NEXT_PUBLIC_WALLET_RPC_URL;
 const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID?.trim();
 
-// Sepolia is the approved non-production wallet-auth chain. A dedicated RPC
-// is optional; viem can use the chain's public fallback when no override exists.
-export const walletChain = sepolia;
+// Production wallet authentication uses Ethereum Mainnet; Sepolia remains for non-production.
+// A dedicated RPC is optional; viem can use the selected chain's public fallback.
+export const walletChain = process.env.NODE_ENV === 'production' ? mainnet : sepolia;
 export const walletConnectConfigured = Boolean(walletConnectProjectId);
 
 const connectors = [
@@ -26,7 +26,8 @@ export const config: Config = createConfig({
   chains: [walletChain],
   connectors,
   transports: {
-    [walletChain.id]: configuredRpcUrl ? http(configuredRpcUrl) : http(),
+    [mainnet.id]: configuredRpcUrl ? http(configuredRpcUrl) : http(),
+    [sepolia.id]: configuredRpcUrl ? http(configuredRpcUrl) : http(),
   },
   // Discover every EIP-6963 injected provider independently so MetaMask,
   // Trust Wallet, Brave, Rabby, Coinbase and other compatible wallets can
