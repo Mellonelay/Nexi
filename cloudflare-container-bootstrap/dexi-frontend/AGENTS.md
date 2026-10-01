@@ -12,7 +12,7 @@ Current owner decisions outrank old screenshots, old chats, old frontend program
 
 ## Current owner correction — market work
 Do not reopen broad market-provider reliability work during frontend completion merely from historical stale-provider counts.
-The backend market system is substantially working; a stale provider by itself is not a blocker. A fresh production-visible defect such as the current BrowserStack Galaxy S24 Spot `MARKET ERROR` is an active acceptance defect and must be diagnosed through the causal frontend/backend/realtime owner before broad provider architecture is reopened.
+The backend market system is substantially working; a stale provider by itself is not a blocker. Only a fresh production-visible defect reproduced in the current primary authenticated NEXI browser/runtime path is an active frontend acceptance defect; diagnose it through the causal frontend/backend/realtime owner before broad provider architecture is reopened. Historical or unauthenticated BrowserStack evidence is not a substitute for that proof.
 Frontend-visible market status is only:
 - `Live`
 - `Error`
@@ -162,16 +162,19 @@ Charts/order books need text labels/status summaries sufficient to understand cu
 ## Validation
 For UI behavior changes, validate the rendered deployed app, not just compilation.
 
-Before deployment, run only the focused deterministic source/build gates invalidated by the change. Final browser acceptance follows the global Browser Fabric:
-- BrowserStack = real-browser / real-device runtime acceptance owner;
-- Polypane = responsive / multi-viewport acceptance owner;
-- Playwright / Chrome DevTools = supporting automation and diagnosis, not a separate mandatory acceptance stage.
+Before deployment, run only the focused deterministic source/build gates invalidated by the change. Final browser acceptance follows the current global Browser Fabric and owner-selected browser responsibility model:
+- the preserved authenticated Worker-0 Chrome profile is the PRIMARY NEXI rendered/product acceptance environment;
+- Playwright / Chrome DevTools / React DevTools / passive Requestly support that same primary browser state;
+- Polypane is a SECONDARY responsive/multi-viewport breadth surface after the primary authenticated path works;
+- BrowserStack is a SECONDARY targeted real-device/cross-browser confirmation surface, not the primary authenticated discovery loop;
+- unauthenticated secondary-browser evidence cannot substitute for authenticated NEXI product proof.
 
 Minimum affected-flow proof:
 - typecheck / affected unit-contract tests / production build as required by the change;
 - deployed `https://www.nexitrading.app` using the real `https://api.nexitrading.app` Cloudflare backend;
-- BrowserStack evidence for relevant browser/device behavior;
-- Polypane evidence for 320 / 360 / ~390 / 412-430 / tablet / desktop and short-height states where applicable;
+- primary authenticated Chrome rendered/interaction evidence for the affected NEXI path;
+- responsive evidence at the required CSS viewport probes in the primary path, with Polypane used for additional breadth when useful;
+- BrowserStack only when the claim specifically requires targeted real-device/cross-browser confirmation;
 - no horizontal overflow;
 - keyboard/focus/accessibility behavior where affected;
 - current locale behavior where affected;

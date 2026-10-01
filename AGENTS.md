@@ -22,11 +22,11 @@ Queue/Workflow/Worker/Container orchestrate; they never own financial truth.
 
 Do not restore any retired database authority. Do not introduce a second Admin plane, second financial authority, direct frontend D1 access, Worker financial logic, or custom VM lifecycle engine.
 ## Capability routing
-Worker-0 global control law is `/home/mellonelay1999/RDC_ONBOARDING.md` with global capability/router/hook catalogs under `/home/mellonelay1999/.agents/`. Agent Kernel owns durable governance; Addy Osmani Agent Skills owns the engineering workflow/method selection; Get-Fable is optional lifecycle/recovery/delegation support; Riqor is specialist-skills-only; and the original Graphify multiview + Fallow + CodeScene + DeepWiki combination remains the structural/static/semantic intelligence stack. NEXI files below are project overlays, not duplicate global authorities.
+Worker-0 global execution law is `/home/mellonelay1999/RDC_ONBOARDING.md` with global capability/router/hook catalogs under `/home/mellonelay1999/.agents/`. The ChatGPT Work parent owns NEXI Work Control Plane reasoning, Agent Skills method selection, Selective Intelligence, Ponytail/Karpathy discipline, phase routing and fan-in. Worker-0 executes/evidences through Fabric/RDC and its local tools. Get-Fable and Riqor runtimes were removed by owner decision on 2026-09-30 and must not be routed to or reinstalled. The Graphify multiview + Fallow + CodeScene + DeepWiki combination remains the structural/static/semantic intelligence stack. NEXI files below are project overlays, not duplicate global authorities.
 
 Classify the complete owner request before choosing skills or tools. Use `docs/operations/NEXI_CAPABILITY_ROUTING.md` as the project routing owner, `/home/mellonelay1999/RDC_ONBOARDING.md` for Worker-0 mechanics, and `/home/mellonelay1999/.agents/GLOBAL_CAPABILITY_INDEX.md` as the lightweight capability directory. Read only the specialist reference needed for the task.
 
-Before the first execution call of each new substantive NEXI task, emit the compact `ROUTING` declaration required by the project router, then execute immediately.
+Before the first execution call of each new substantive NEXI task, emit the compact `ROUTING` declaration required by the project router, then execute immediately. That startup route is not a permanent lease: when the engineering phase, failure mode, causal owner, or proof target changes, the ChatGPT Work parent must re-enter NEXI Work Control Plane + `using-agent-skills`, select the method for the CURRENT phase, and continue. Reuse unchanged skill/tool/onboarding contracts from the session cache instead of rereading them mechanically.
 
 Before execution, compile the entire owner message into one bounded contract: required actions, evidence, sequencing, preserved state, explicit non-goals, mutation/production authority, completion conditions, and required durable-state updates. A later requirement in the same owner message is not optional; every required item must finish as `PROVEN_COMPLETE` or `BLOCKED_WITH_EVIDENCE`.
 
@@ -144,7 +144,7 @@ Rules:
 
 ## Production closure controller — hard rule
 
-Before substantial NEXI work, read the live VM copies of `NEXI_CURRENT_STATE.md` and `NEXI_PRODUCTION_COMPLETION_LEDGER.md`. ChatGPT Project uploads, chat exports, handovers, and historical receipts are provenance only when they conflict with current VM/GitHub/Cloudflare evidence.
+On a fresh NEXI Work session, after continuity loss, or when the relevant durable frontier may have changed, read the live VM `NEXI_CURRENT_STATE.md` and relevant `NEXI_PRODUCTION_COMPLETION_LEDGER.md` rows and cache their identity/freshness. Reuse that proof while unchanged; do not reread the full files before every bounded action. ChatGPT Project uploads, chat exports, handovers, and historical receipts are provenance only when they conflict with current VM/GitHub/Cloudflare evidence.
 
 The active queue is Section 0 of `NEXI_PRODUCTION_COMPLETION_LEDGER.md`. Select an open row, preserve every `PROVEN + UNCHANGED` dependency, execute the smallest dependency-closed repair/proof, then update the row before moving to unrelated work. A session may not claim completion while its selected row lacks current proof or while durable truth changed without reconciling `NEXI_CURRENT_STATE.md` and the ledger.
 

@@ -18,7 +18,6 @@
 | `A` | `app.nexitrading.app` | `192.0.2.0` | `true` | Legacy redirect host |
 | `A` | `nexitrading.app` | `192.0.2.0` | `true` | Apex redirect host |
 | `A` | `www.nexitrading.app` | `35.187.234.62` | `true` | Canonical Public origin |
-| `CNAME` | `mcp.nexitrading.app` | `a901a8f5-52aa-4297-9ca1-b2908afdc796.cfargotunnel.com` | `true` | Worker-0 Fabric tunnel |
 | `AAAA` | `api.nexitrading.app` | `100::` | `true` | Worker custom domain |
 
 - No wildcard DNS record is currently present.
