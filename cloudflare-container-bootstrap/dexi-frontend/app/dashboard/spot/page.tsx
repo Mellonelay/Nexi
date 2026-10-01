@@ -244,15 +244,15 @@ function MarginWorkspace({
   handleCloseMargin: (positionId: string) => void | Promise<void>; marginFeedback: string | null;
 }) {
   return (
-    <section className="nexi-station-card mx-3 mt-3 min-w-0 rounded-2xl p-3 sm:mx-4 sm:p-5" aria-labelledby="isolated-margin-heading">
-        <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
+    <section className="nexi-margin-workspace nexi-station-card mx-3 mt-3 min-w-0 rounded-2xl p-3 sm:mx-4 sm:p-5" aria-labelledby="isolated-margin-heading">
+        <div className="nexi-margin-heading flex min-w-0 flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-[10px] font-semibold uppercase tracking-[.18em] text-[#48C0CC]">Spot isolated margin</p>
             <h2 id="isolated-margin-heading" className="mt-1 text-lg font-semibold">{displayPair} margin workspace</h2>
           </div>
         </div>
-        <div className="mt-4 min-w-0 overflow-hidden rounded-xl border border-violet-300/10 bg-[#0B0711]">
-          <div className="flex min-w-0 items-center justify-between gap-2 border-b border-white/5 px-3 py-2">
+        <div className="nexi-margin-chart-frame mt-4 min-w-0 overflow-hidden rounded-xl border border-violet-300/10 bg-[#0B0711]">
+          <div className="nexi-trading-intervals flex min-w-0 items-center justify-between gap-2 border-b border-white/5 px-3 py-2">
             <span className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8C8299]">{displayPair}</span>
             <div className="nexi-scroll-rail flex max-w-[68vw] shrink-0 items-center gap-1 overflow-x-auto" role="tablist" aria-label="Margin chart interval">
               {CHART_INTERVALS.map((value) => (
@@ -260,7 +260,7 @@ function MarginWorkspace({
               ))}
             </div>
           </div>
-          <div className="min-h-[300px] md:min-h-[360px] xl:min-h-[430px]">
+          <div className="nexi-trading-plot-shell min-h-[300px] md:min-h-[360px] xl:min-h-[430px]">
             <RealtimeTradingChart symbol={normalizedSymbol} type="spot" interval={chartInterval} marketStatus={sessionClosed ? 'CLOSED' : undefined} />
           </div>
         </div>
@@ -313,7 +313,7 @@ type SpotWorkspaceProps = {
 function SpotChartArea({displayPair, normalizedSymbol, chartInterval, setChartInterval, sessionClosed, mobileMarketPanel, setMobileMarketPanel}: SpotWorkspaceProps) {
   return (
     <>
-          <div className="order-1 hidden min-w-0 flex-wrap items-end justify-between gap-3 md:flex xl:order-none">
+          <div className="nexi-trading-heading order-1 hidden min-w-0 flex-wrap items-end justify-between gap-3 md:flex xl:order-none">
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#A78BFA]">Spot trading</p>
               <h1 id="spot-market-heading" className="mt-1 text-2xl font-semibold">{displayPair}</h1>
@@ -322,8 +322,8 @@ function SpotChartArea({displayPair, normalizedSymbol, chartInterval, setChartIn
             </div>
           </div>
 
-          <div className={`nexi-station-card order-2 min-h-[210px] min-w-0 overflow-hidden rounded-xl sm:rounded-2xl md:block md:min-h-[360px] xl:order-none xl:min-h-[430px] ${mobileMarketPanel === 'CHART' ? 'block' : 'hidden'}`}>
-            <div className="flex min-w-0 items-center justify-between gap-2 border-b border-white/5 px-3 py-2">
+          <div className={`nexi-trading-chart-card nexi-station-card order-2 min-h-[210px] min-w-0 overflow-hidden rounded-xl sm:rounded-2xl xl:block md:min-h-[360px] xl:order-none xl:min-h-[430px] ${mobileMarketPanel === 'CHART' ? 'block' : 'hidden'}`}>
+            <div className="nexi-trading-intervals flex min-w-0 items-center justify-between gap-2 border-b border-white/5 px-3 py-2">
               <span className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8C8299]">{displayPair}</span>
               <div className="nexi-scroll-rail flex max-w-[68vw] shrink-0 items-center gap-1 overflow-x-auto" role="tablist" aria-label="Chart interval">
                 {CHART_INTERVALS.map((value) => (
@@ -331,7 +331,7 @@ function SpotChartArea({displayPair, normalizedSymbol, chartInterval, setChartIn
                 ))}
               </div>
             </div>
-            <div className="min-h-[300px] md:min-h-[360px] xl:min-h-[430px]">
+            <div className="nexi-trading-plot-shell h-[300px] md:h-[360px] xl:h-[430px]">
               <RealtimeTradingChart symbol={normalizedSymbol} type="spot" interval={chartInterval} marketStatus={sessionClosed ? 'CLOSED' : undefined} />
             </div>
           </div>
@@ -351,7 +351,7 @@ function SpotChartArea({displayPair, normalizedSymbol, chartInterval, setChartIn
 
 function SpotOrderBook({mobileMarketPanel, bids, asks, bookStatus, setPrice}: SpotWorkspaceProps) {
   return (
-            <section className={`nexi-station-card min-w-0 overflow-hidden rounded-2xl md:block ${mobileMarketPanel === 'BOOK' ? 'block' : 'hidden'}`} aria-labelledby="order-book-heading">
+            <section className={`nexi-station-card min-w-0 overflow-hidden rounded-2xl xl:block ${mobileMarketPanel === 'BOOK' ? 'block' : 'hidden'}`} aria-labelledby="order-book-heading">
               <div className="flex items-center justify-between border-b border-white/5 px-4 py-3">
                 <h2 id="order-book-heading" className="font-semibold">Order book</h2>
                 {bookStatus === 'LIVE' ? <span className="text-xs text-[#8C8299]">Live</span> : bookStatus === 'CONNECTION_LOST' ? <span className="text-xs text-amber-200">Updates paused · last received depth</span> : bookStatus === 'LOADING' ? <span className="text-xs text-[#8C8299]">Loading</span> : bookStatus === 'ERROR' ? <span className="text-xs text-[#8C8299]">Request error</span> : null}
@@ -397,7 +397,7 @@ function SpotRecentTrades({mobileMarketPanel, marketTrades, tradeStatus}: SpotWo
   const statusText = streamStatusText(tradeStatus, 'Live market records', 'Updates paused · last received records');
   const statusClass = tradeStatus === 'CONNECTION_LOST' ? 'text-xs text-amber-200' : 'text-xs text-[#8C8299]';
   return (
-            <section className={`nexi-station-card min-w-0 rounded-2xl md:block ${mobileMarketPanel === 'TRADES' ? 'block' : 'hidden'}`} aria-labelledby="recent-trades-heading">
+            <section className={`nexi-station-card min-w-0 rounded-2xl xl:block ${mobileMarketPanel === 'TRADES' ? 'block' : 'hidden'}`} aria-labelledby="recent-trades-heading">
               <div className="flex items-center justify-between gap-2 border-b border-white/5 px-4 py-3">
                 <h2 id="recent-trades-heading" className="font-semibold">Recent trades</h2>
                 {statusText && <span className={statusClass}>{statusText}</span>}
@@ -518,7 +518,7 @@ function SpotOrderTicket({side, setSide, orderType, setOrderType, price, setPric
 
 function SpotWorkspace(props: SpotWorkspaceProps) {
   return (
-    <div className="grid min-w-0 gap-3 p-3 sm:gap-4 sm:p-4 xl:grid-cols-[minmax(0,1fr)_400px] xl:items-start">
+    <div className="nexi-trading-workspace grid min-w-0 gap-3 p-3 sm:gap-4 sm:p-4 xl:grid-cols-[minmax(0,1fr)_400px] xl:items-start">
       <SpotMarketArea {...props} />
       <SpotOrderTicket {...props} />
     </div>
@@ -843,7 +843,7 @@ function SpotProductTabs({
   setActiveSurface: React.Dispatch<React.SetStateAction<SpotSurface>>;
 }) {
   return (
-    <div className="mx-3 mt-3 grid grid-cols-2 rounded-xl border border-violet-300/10 bg-[#0B0711] p-1 sm:mx-4" role="tablist" aria-label="Spot product">
+    <div className="nexi-trading-products mx-3 mt-3 grid grid-cols-2 rounded-xl border border-violet-300/10 bg-[#0B0711] p-1 sm:mx-4" role="tablist" aria-label="Spot product">
       {(['SPOT', 'MARGIN'] as const).map((value) => (
         <button key={value} type="button" role="tab" aria-selected={activeSurface === value} onClick={() => setActiveSurface(value)} className={`nexi-interactive min-h-11 rounded-lg text-xs font-semibold sm:min-h-11 sm:text-sm ${activeSurface === value ? 'bg-[#2A1742] text-white shadow-[0_0_18px_rgba(109,65,255,.16)]' : 'text-[#8C8299]'}`}>
           {value === 'SPOT' ? 'Spot' : 'Margin'}
@@ -905,7 +905,7 @@ function SpotPageBody({
   const priceStatus = resolvePriceStatus(marketLoading, market?.source, currentPrice, backendConfigured);
 
   return (
-    <main className="nexi-page-shell min-h-[100dvh] w-full min-w-0 overflow-x-clip pb-36 text-[#F8F6FF] lg:pb-8">
+    <main className="nexi-trading-page nexi-page-shell min-h-[100dvh] w-full min-w-0 overflow-x-clip pb-36 text-[#F8F6FF] lg:pb-8">
       <SpotHeader
         displayPair={displayPair}
         onSelectSymbol={onSelectSymbol}

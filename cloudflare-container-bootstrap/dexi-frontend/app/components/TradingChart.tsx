@@ -110,7 +110,7 @@ function ChartMetricsRail({
 
 function ChartIndicatorRail({ activeIndicators, onToggle }: { activeIndicators: Set<IndicatorKey>; onToggle: (indicator: IndicatorKey) => void }) {
   return (
-    <div className="nexi-scroll-rail flex min-w-0 gap-1 overflow-x-auto border-b border-violet-300/10 bg-black/10 px-2 py-1.5" aria-label="Chart indicators">
+    <div className="nexi-chart-indicators nexi-scroll-rail flex min-w-0 gap-1 overflow-x-auto border-b border-violet-300/10 bg-black/10 px-2 py-1.5" aria-label="Chart indicators">
       {INDICATORS.map((indicator) => {
         const active = activeIndicators.has(indicator);
         return <button key={indicator} type="button" aria-pressed={active} onClick={() => onToggle(indicator)} className={`nexi-interactive min-h-11 min-w-11 shrink-0 rounded-md border px-2 text-[10px] font-semibold ${active ? "border-violet-300/30 bg-[#2A1742] text-white" : "border-transparent text-[#8C8299] hover:text-white"}`}>{indicator}</button>;
@@ -324,7 +324,7 @@ export default function TradingChart({
   const blocksChart = candles.length === 0 && stateCopy;
   return (
     <div
-      className={`relative flex h-full w-full flex-col overflow-hidden rounded-lg ${responsiveHeight}`}
+      className={`nexi-trading-chart relative flex h-full w-full flex-col overflow-hidden rounded-lg ${responsiveHeight}`}
     >
       <ChartMetricsRail symbol={symbol} interval={interval} latest={latest} rsi={metrics.rsi} macdHistogram={macdHistogram} activeIndicators={activeIndicators} />
       <ChartIndicatorRail activeIndicators={activeIndicators} onToggle={toggleIndicator} />

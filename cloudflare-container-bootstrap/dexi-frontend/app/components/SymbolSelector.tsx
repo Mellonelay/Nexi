@@ -56,15 +56,15 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="nexi-interactive flex min-h-11 min-w-0 items-center gap-2 text-lg font-bold transition-colors hover:text-gray-300"
+        className="nexi-interactive flex min-h-11 min-w-0 max-w-full items-center gap-2 text-lg font-bold transition-colors hover:text-gray-300"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >
         {currentAsset && <AssetIcon item={{ assetId: currentAsset.id, symbol: currentAsset.symbol, displaySymbol: currentAsset.displaySymbol, name: currentAsset.name }} size="md" />}
-        <span>
+        <span className="min-w-0 truncate">
           {currentAsset?.pair ?? currentSymbol}
         </span>
-        <ChevronDown size={20} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown size={20} className={`shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {/* Dropdown Content */}
