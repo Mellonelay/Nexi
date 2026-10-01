@@ -260,7 +260,7 @@ function MarginWorkspace({
               ))}
             </div>
           </div>
-          <div className="nexi-trading-plot-shell min-h-[300px] md:min-h-[360px] xl:min-h-[430px]">
+          <div className="nexi-trading-plot-shell h-[300px] md:h-[360px] xl:h-[430px]">
             <RealtimeTradingChart symbol={normalizedSymbol} type="spot" interval={chartInterval} marketStatus={sessionClosed ? 'CLOSED' : undefined} />
           </div>
         </div>
