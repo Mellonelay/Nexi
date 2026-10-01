@@ -142,7 +142,7 @@ export default function Dashboard() {
           </div>
         </header>
         {mobileSearchOpen && (
-          <label className="nexi-shell-glass mt-2 flex min-h-12 items-center gap-2 rounded-xl border border-violet-300/20 px-3 text-sm md:hidden">
+          <label className="nexi-dashboard-search nexi-shell-glass mt-2 flex min-h-12 items-center gap-2 rounded-xl border border-violet-300/20 px-3 text-sm md:hidden">
             <Search
               className="h-4 w-4 shrink-0 text-[var(--nexi-cyan)]"
               aria-hidden="true"
@@ -196,7 +196,7 @@ export default function Dashboard() {
                   disabled
                   aria-label="Favorites unavailable"
                   title="Saved favorites are not available yet"
-                  className="nexi-icon-button h-11 w-11 shrink-0 cursor-not-allowed rounded-[12px] opacity-50 md:rounded-[14px]"
+                  className="nexi-active-pair-favorite nexi-icon-button h-11 w-11 shrink-0 cursor-not-allowed rounded-[12px] opacity-50 md:rounded-[14px]"
                 >
                   <Star className="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" />
                 </button>
@@ -258,7 +258,7 @@ export default function Dashboard() {
             <span className="md:hidden">Market</span>
             <span className="hidden md:block">{t("asset")}</span>
             <span className="text-right md:hidden">Price / 24h</span>
-            <span aria-hidden="true" />
+            <span className="hidden md:block" aria-hidden="true" />
             <span className="hidden min-w-0 text-right md:block">
               {t("lastPrice")}
             </span>

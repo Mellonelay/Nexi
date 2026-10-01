@@ -450,19 +450,47 @@ body {
   }
 }
 
-@media (max-width: 349px) {
+/* Quotes owns its mobile header and active-pair composition. */
+@media (max-width: 767px) {
+  .nexi-dashboard-toolbar { display: contents; }
+  .nexi-dashboard-toolbar button {
+    position: absolute;
+    top: 6px;
+    right: 12px;
+    z-index: 1;
+  }
+  .nexi-dashboard-search { margin-top: 56px; }
   .nexi-dashboard-hero {
     grid-template-columns: minmax(0, 1fr);
+    margin-top: 8px;
   }
-
   .nexi-dashboard-title {
+    font-size: 1.5rem;
+    line-height: 1.1;
     white-space: normal;
-    font-size: 1.75rem;
   }
-
+  .nexi-dashboard-hero > div {
+    padding-top: 0;
+    padding-right: 52px;
+  }
   .nexi-dashboard-hero .nexi-active-pair {
     width: 100%;
+    padding: 6px;
   }
+  .nexi-dashboard-hero .nexi-active-pair button:first-child { min-height: 44px; }
+  .nexi-dashboard-hero .nexi-active-pair-favorite { display: none; }
+}
+
+@media (min-width: 500px) and (max-width: 767px) {
+  .nexi-dashboard-hero { grid-template-columns: minmax(0, 1fr) 220px; }
+  .nexi-dashboard-toolbar button { right: 240px; }
+}
+
+@media (min-width: 500px) and (max-width: 767px) and (max-height: 400px) {
+  .nexi-dashboard-hero { margin-top: 4px; }
+  .nexi-dashboard-hero .nexi-active-pair { padding: 4px; }
+  .nexi-dashboard-hero ~ .nexi-tabs-shell { margin-top: 2px; }
+  .nexi-dashboard-hero ~ section .nexi-market-row { align-items: start; }
 }
 
 @media (max-height: 700px) and (max-width: 767px) {
