@@ -1,9 +1,9 @@
 # NEXI Current State
 
-**As of:** 2026-09-27 (Myanmar time)
+**As of:** 2026-10-01 (Myanmar time)
 **Repository:** `Mellonelay/Nexi`
 **Durable source authority:** GitHub `main`; current production host/CORS/SIWE values below were read directly from the Cloudflare API on 2026-09-26. The Public domain source alignment is recorded in this revision; discover the exact current `main` SHA before consequential work.
-**Current product implementation frontier:** `12cf799e50451091c17a2bef1b62a44b39567f0a` (`fix(frontend): include standalone assets in public release`). Documentation/governance-only commits may advance GitHub `main` without changing product deployment identity; always discover live `main` before consequential work.
+**Current deployed Public implementation frontier:** `a924e0dc3bdb39f69aa0dd7c5baafc964ba24a62` (chart resize, closed drawer and short-height trading geometry). Documentation/governance-only commits may advance GitHub `main` without changing product deployment identity; always discover live `main` before consequential work.
 
 NEXI is in a **finishing / targeted-repair** phase. It is not in a rebuild or broad rediscovery phase.
 
@@ -21,11 +21,11 @@ NEXI is in a **finishing / targeted-repair** phase. It is not in a rebuild or br
 - `PROVEN + UNCHANGED = REUSE`; do not reopen completed work without dependency drift or contradictory evidence.
 ## Current live source and deployment split
 
-Fresh Worker-0 evidence on 2026-09-27:
+Public deployment reconciled from fresh Worker-0 evidence on 2026-10-01; unchanged Admin/backend identities below retain their earlier provenance:
 
-- Product implementation commit under this reconciliation is `12cf799e50451091c17a2bef1b62a44b39567f0a` (`fix(frontend): include standalone assets in public release`); GitHub `main` was clean at this SHA when state was updated.
-- Public: `/srv/nexi/public/current -> /srv/nexi/public/releases/12cf799-assets2-prod`.
-- Public `NEXI_RELEASE_SHA = 12cf799e50451091c17a2bef1b62a44b39567f0a`; service active.
+- Public source `a924e0dc3bdb39f69aa0dd7c5baafc964ba24a62` was fast-forward pushed and confirmed through the GitHub ref API.
+- Public: `/srv/nexi/public/current -> /srv/nexi/public/releases/a924e0d-geometry-prod`.
+- Public `NEXI_RELEASE_SHA = a924e0dc3bdb39f69aa0dd7c5baafc964ba24a62`; existing `nexi-public.service` active with process CWD in that release. Origin Spot HTML returned 200 with the verified BUILD_ID.
 - Public source/runtime framework: Next.js `16.3.5` + React `19.3.0`.
 - Public standalone packaging now includes the root server entry plus traced dependencies, `.next/static`, and `public` beside the server. The deployed `/dashboard` returned HTTP 200 and all 45 referenced static assets returned HTTP 200 with expected MIME types during the 2026-09-27 deployment verification.
 - Admin: `/srv/nexi/admin/current -> /srv/nexi/admin/releases/ed26973f-prod-node`.
@@ -47,14 +47,12 @@ Live Cloudflare API read on 2026-09-26 verified:
 - `api.nexitrading.app` is a Cloudflare Worker Custom Domain attached to service `nexi-production`, environment `production`.
 - Live Worker plain-text vars are `CORS_ORIGINS=https://www.nexitrading.app,https://admin.nexitrading.app`, `WALLET_AUTH_DOMAIN=www.nexitrading.app`, and `WALLET_AUTH_URI=https://www.nexitrading.app`.
 
-BrowserStack DevTools screenshots from 2026-09-26 show failed CORS responses for API calls made while the Public page was loaded from `www`. Those captures prove the failure at capture time. The live Cloudflare values now match the owner-selected hosts, but no post-configuration OPTIONS response or fresh BrowserStack network trace has been captured in this work. Therefore the host/CORS configuration is aligned, while browser/runtime behavior still needs fresh proof.
+Fresh preserved-Chrome Requestly passive capture on 2026-10-01: market prices 200; auth refresh 201; authenticated auth/me 304; Socket.IO polling 200 and WebSocket upgrade 101. Current browser evidence does not reproduce the historical CORS/401/503 failures. This is bounded Spot transport/session proof, not market-wide or real-device acceptance.
 
-
-Fresh read-only HTTPS probes from Worker 0 at 2026-09-26 22:21 UTC returned: www.nexitrading.app/dashboard 200; legacy app and apex /dashboard 308 to the same www path; admin.nexitrading.app/ 307 to /overview; and api.nexitrading.app/health 200. This proves route reachability and redirect behavior at that capture time only; it does not prove hydrated, wallet-authenticated UI or post-change CORS/API/Socket.IO behavior.
 
 ## Public frontend correction and preserved proof
 
-The Public shell wallet-boundary defect was repaired at `04c8f5f...` and remains in the current `12cf799...` Public source:
+The Public shell wallet-boundary defect was repaired at `04c8f5f...` and remains in the current `a924e0d...` Public source:
 - non-protected Public market/product surfaces remain accessible without a NEXI wallet session;
 - protected wallet/account/financial actions remain identity-gated;
 - the global dashboard shell must not be re-wrapped in a wallet gate.
@@ -67,35 +65,29 @@ Canonical 53-asset source/backend parity and local asset-icon integrity were ver
 Production browser acceptance must target the **deployed Public generation** at `https://www.nexitrading.app` while it exercises the real Cloudflare backend at `https://api.nexitrading.app`.
 
 Browser ownership:
-- BrowserStack = real-browser / real-device acceptance.
-- Polypane = responsive / multi-viewport acceptance.
-- Playwright and Chrome DevTools are supporting automation/diagnostic tools, not additional mandatory acceptance owners.
+- PRIMARY authenticated acceptance: preserved Worker-0 Chrome/MetaMask profile, with Playwright CLI + Chrome DevTools/CDP attached to the same NEXI tab.
+- Requestly supplies passive HTTP evidence; React DevTools supplies component/state diagnostics where needed.
+- Polypane is secondary responsive breadth. BrowserStack is secondary targeted real-device/cross-browser verification, primary only for that distinct claim.
 
-Historical BrowserStack focused evidence for release `04c8f5f4` (2026-09-26):
-- Windows 11 Chrome: Spot remained loading, no explicit MARKET ERROR in that capture.
-- Galaxy S24 Chrome: Spot showed `MARKET ERROR` and remained loading.
-- iPhone 15 Pro Max Safari: Spot rendered live market values in that capture.
-- Binary and Asset Detail rendered live market data in the same focused runs.
-- Wallet chooser showed Coinbase Wallet and Injected/browser-wallet choices; a supplied Galaxy capture showed “Wallet verification failed.”
-- The screenshot captures show API CORS failures from `www.nexitrading.app`. Live Worker CORS and SIWE values now match `www` and Admin, but behavior after that configuration change remains unverified; no successful wallet provider/signature/session flow was proven there.
-- WalletConnect was not visible in those chooser captures.
+Current deployed changed-behavior proof (Spot at `142a4aa`, unchanged and reused in `a924e0d`; Margin at `a924e0d`):
+- Closed drawer is display:none with zero geometry across the tested mobile/landscape/tablet/desktop probes; corrected real pointer close succeeds.
+- Chart container and rendered lightweight-chart dimensions track responsive transitions within 1 CSS px after settling.
+- Bottom dock remains present on mobile, desktop sidebar hidden, and tested Spot page overflow is zero.
+- Source-delivered CSS at `142a4aa` (no injected prototype styles): tested Spot 320/360/390/430 widths, short-height, 480/568/844 landscape, tablet and desktop-class rendered states; chart/canvas dimensions agree within 1 CSS px, pair/price do not overlap, and market panels switch exclusively below the desktop composition breakpoint. Observed desktop CSS widths reflect the preserved calibration, not nominal device pixels.
+- Fresh boundary 2026-10-01T08:43:29.399Z: prices/klines and Socket.IO polling returned 200; no page errors were captured during these checks. This is bounded changed-behavior proof, not product-wide acceptance.
+- Margin boundary 2026-10-01T09:11:54.818Z: new build delivered; refresh 201, me 200, prices/klines/polling 200, no console errors. Mobile coarse-pointer probes passed; plot reachable with 16px dock clearance via the shared MAIN scroll owner. Canceled navigation/third-party telemetry requests were retained separately from application failures.
+- Owner re-authenticated the existing wallet; real app refresh/me requests prove a valid current session. No wallet setup or SIWE re-investigation is required absent fresh contradictory evidence.
 
-Fresh local Playwright authentication attempts against Public release `12cf799...` on 2026-09-27 used the persistent test-wallet profile, bundled Chromium, and chain `0x1`. The visible chooser offered MetaMask and Coinbase Wallet; selecting MetaMask and unlocking the existing wallet opened only the extension `home.html#/unlock` then `home.html#/`, with no site-permission/notification target. A separate uninstrumented call to `eth_requestAccounts` from `https://www.nexitrading.app` remained pending for 45 seconds; read-only `eth_accounts` count remained zero. No SIWE challenge, signature, or session was reached. Correlated production Sentry queries returned no relevant events. Authenticated browser acceptance has not started.
-
-P-02 remains `NEEDS_FRESH_PROOF` until the current `www` page passes authenticated API preflight/request and Socket.IO checks, then the Galaxy Spot page is retested against the real backend. The available evidence identifies a host/CORS failure in the captured browser run; it does not prove a backend-wide market outage.
 ## Open completion gates
 
-- Overall Public browser acceptance is incomplete; no wallet-authenticated production session has been proven.
-- The current local Playwright/MetaMask frontier is blocked at `eth_requestAccounts`: after MetaMask unlock, no site-permission target appears and the request remains pending with zero accounts on chain 1. Do not treat this as a production NEXI or backend defect without further causal evidence.
-- Galaxy S24 Spot remains NEEDS_FRESH_PROOF after a capture-time CORS failure; rerun preflight/API/Socket.IO checks and the page after CORS configuration alignment.
-- Polypane production responsive acceptance is incomplete.
-- WalletConnect production-visible UX is unverified.
-- Canonical-host DNS, redirects, and route responses were verified on 2026-09-26 22:21 UTC. Post-configuration CORS/preflight and authenticated browser behavior still need fresh proof.
+- Overall authenticated frontend geometry acceptance remains incomplete. Deployed Spot landscape 844×390 plot start improved from y=440 to y=206; short-height trading composition and exclusive panel switching are verified. Margin portrait wrapper gap is repaired and runtime-verified at `a924e0d`: chart/root height equals its 300px wrapper; plotted region at 390×650 increased from 126.5px to 206.5px.
+- Quotes, Asset Detail, Options and Wallet/sheet geometry still require affected-path acceptance; do not generalize Spot proof to all routes or states.
+- Targeted real-device/cross-browser acceptance and WalletConnect production-visible UX remain unverified.
+- Only the broad NON-CRYPTO stale/session-hours investigation is deferred. Crypto realtime, all 53 assets, chart intervals/continuity, Public/backend/Admin dependency-ready paths and frontend geometry remain in scope.
 - Current-main backend changes after `ed26973...` are not claimed deployed.
 - Full Sentry release-lifecycle/source-map/runtime proof remains incomplete.
-- Remaining Public/Admin/financial/async/realtime/identity rows are controlled by `NEXI_PRODUCTION_COMPLETION_LEDGER.md`.
-- A persistent test wallet exists in the protected Worker-0 browser profile, but wallet connection/SIWE remains unverified because MetaMask does not expose a permission target in the current Playwright path. Continue from this exact boundary without creating another wallet. Controlled Admin identity acceptance remains open.
-- Owner manual acceptance remains the final gate only after automatable closure.
+- Other Public/Admin/financial/async/realtime rows remain controlled by the completion ledger. No financial or privileged Admin action is authorized by frontend acceptance.
+- Controlled Admin identity acceptance and owner final acceptance remain open.
 
 ## Documentation and continuity
 
@@ -109,6 +101,6 @@ P-02 remains `NEEDS_FRESH_PROOF` until the current `www` page passes authenticat
 
 ## Next dependency-ready direction
 
-Finish authority/document realignment, then continue from the current production acceptance failures and open ledger rows. Repair demonstrated defects on their existing canonical paths, verify only invalidated evidence, update durable state/ledger when proof changes, and defer owner manual testing until the automated pre-owner gates are satisfied.
+Continue the authenticated Quotes/discovery, Asset Detail, Options and Wallet/sheet geometry frontier, reusing the verified Spot/Margin changes and preserved session. Repair demonstrated defects on their existing canonical paths, verify only invalidated evidence, update durable state/ledger when proof changes, and defer owner manual testing until the automated pre-owner gates are satisfied.
 
 `FULL_PRODUCTION_END_TO_END_ACCEPTED = NO`
