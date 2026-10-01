@@ -249,10 +249,7 @@ export default function TradingChart({
     });
 
     const resizeObserver = new ResizeObserver(() => {
-      chart.applyOptions({
-        width: container.clientWidth,
-        height: container.clientHeight,
-      });
+      chart.resize(container.clientWidth, container.clientHeight);
     });
     resizeObserver.observe(container);
 
