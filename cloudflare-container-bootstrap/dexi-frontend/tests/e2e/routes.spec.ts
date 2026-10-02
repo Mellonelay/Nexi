@@ -86,6 +86,68 @@ for (const viewport of viewports) {
   });
 }
 
+
+test('header reflows without horizontal clipping at 320px with 200% text', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  const response = await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
+  expect(response?.ok()).toBeTruthy();
+  const normalGeometry = await page.evaluate(() => {
+    const header = document.querySelector<HTMLElement>('header.nexi-app-header');
+    const main = document.querySelector<HTMLElement>('main');
+    if (!header || !main) throw new Error('Expected NEXI header and main');
+    const headerRect = header.getBoundingClientRect();
+    return {
+      headerHeight: headerRect.height,
+      mainClientWidth: main.clientWidth,
+      mainScrollWidth: main.scrollWidth,
+    };
+  });
+  expect(normalGeometry.headerHeight).toBeGreaterThanOrEqual(55);
+  expect(normalGeometry.headerHeight).toBeLessThanOrEqual(57);
+  expect(normalGeometry.mainScrollWidth).toBeLessThanOrEqual(normalGeometry.mainClientWidth + 1);
+
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = '200%';
+  });
+  await page.waitForTimeout(150);
+
+  const geometry = await page.evaluate(() => {
+    const header = document.querySelector<HTMLElement>('header.nexi-app-header');
+    const main = document.querySelector<HTMLElement>('main');
+    if (!header || !main) throw new Error('Expected NEXI header and main');
+
+    const headerRect = header.getBoundingClientRect();
+    const controls = Array.from(header.querySelectorAll<HTMLElement>('button, label'))
+      .filter((element) => {
+        const rect = element.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+      })
+      .map((element) => {
+        const rect = element.getBoundingClientRect();
+        return {
+          left: rect.left,
+          right: rect.right,
+          top: rect.top,
+          bottom: rect.bottom,
+        };
+      });
+
+    return {
+      mainClientWidth: main.clientWidth,
+      mainScrollWidth: main.scrollWidth,
+      headerLeft: headerRect.left,
+      headerRight: headerRect.right,
+      controls,
+    };
+  });
+
+  expect(geometry.mainScrollWidth).toBeLessThanOrEqual(geometry.mainClientWidth + 1);
+  for (const control of geometry.controls) {
+    expect(control.left).toBeGreaterThanOrEqual(geometry.headerLeft - 1);
+    expect(control.right).toBeLessThanOrEqual(geometry.headerRight + 1);
+  }
+});
+
 test('public navigation preserves the approved destination contract', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });

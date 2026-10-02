@@ -14,7 +14,7 @@ export default function AppHeader() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const { locale, setLocale, languages, t } = useLocale();
   return (
-    <header className="nexi-app-header relative z-40 flex h-[56px] min-w-0 items-center gap-[8px] border-b border-violet-300/15 px-[12px] md:h-[64px] md:px-6">
+    <header className="nexi-app-header relative z-40 flex h-auto min-h-14 min-w-0 flex-wrap items-center gap-[8px] border-b border-violet-300/15 px-3 py-1 md:min-h-16 md:px-6 md:py-2">
       <div className="lg:hidden min-w-0">
         <NavigationDrawer triggerContent={<NexiWordmark compact />} />
       </div>
