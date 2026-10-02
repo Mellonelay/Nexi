@@ -1,5 +1,7 @@
 # NEXI Admin Control Plane — Current Status
 
+> HISTORICAL SCAFFOLD SNAPSHOT — retained for provenance, not current route counts, live parity, build commands, or production readiness. Current apps/admin/AGENTS.md, synchronized source and NEXI_PRODUCTION_COMPLETION_LEDGER.md control continuation. The original source generation below is preserved; no original event date is inferred from this reconciliation on 2026-10-03.
+
 **Canonical cleanup branch:** `admin/canonical-clean`  
 **Source basis:** latest verified `replit/admin-completion` Finance fix (`c798e3bcd5c8b352f30e100209ea8b2ef1390a15`)  
 **Live provider:** connected in source for published Admin contracts; joined runtime verification is not established

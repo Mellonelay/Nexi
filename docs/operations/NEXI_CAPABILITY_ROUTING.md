@@ -3,7 +3,7 @@
 Purpose: NEXI-only execution overlay. Global Worker-0 skills, CLI/MCP ownership, browser fabric, Graphify operating guidance, and capability routing live under `/home/mellonelay1999/RDC_ONBOARDING.md` and `/home/mellonelay1999/.agents/`. This file contains only NEXI-specific authority, runtime boundaries, and project routing. It does not authorize production mutation.
 
 ## Dynamic routing model
-Global control stack: `ChatGPT parent -> Selective Intelligence when triggered -> Agent Kernel durable governance -> Agent Skills engineering method -> narrow capability owner -> distinct evidence tools/specialists -> parent fan-in`. Get-Fable is optional recovery/delegation support; Riqor is specialist-skills-only.
+Global control stack: `ChatGPT parent -> Selective Intelligence when triggered -> Agent Kernel durable governance -> Agent Skills engineering method -> narrow capability owner -> distinct evidence tools/specialists -> parent fan-in`. Get-Fable and Riqor CLI/plugin/owned-hook runtimes were removed by owner decision on 2026-09-30. Do not route to or reinstall them; retained standalone skill instructions do not establish an active runtime.
 
 NEXI execution overlay:
 `OWNER MESSAGE -> COMPLETE TASK CONTRACT -> CURRENT NEXI AUTHORITY -> CORRECTION/DRIFT HANDLING WHEN REQUIRED -> AGENT SKILLS METHOD -> ONE PRIMARY RESPONSIBILITY OWNER -> 0..N NON-OVERLAPPING SPECIALISTS/EVIDENCE TOOLS -> FASTEST PRECISE TOOL/MCP/CLI -> EXECUTE -> FOCUSED VERIFY -> PARENT FAN-IN -> DURABLE STATE RECONCILIATION WHEN REQUIRED -> REPORT`
@@ -25,7 +25,7 @@ Third-party skills specialize work; they do not override NEXI architecture, secu
 - Platform/backend runtime: current official Cloudflare docs first, then verified Wrangler/Cloudflare MCP/runtime surfaces; use Wrangler Container SSH when documented shell access is required. `avn` + `redis-cli` remain Valkey realtime/cache only. Never substitute a VM backend for Cloudflare runtime truth.
 - Git/PR/CI: Git + GitHub.
 - Runtime/telemetry: direct service/process/HTTP evidence, Sentry, task-relevant Cloudflare observability.
-- Browser: production acceptance is owned by BrowserStack (real browsers/devices) and Polypane (responsive/multi-viewport) against the deployed Public app and the real Cloudflare backend. Playwright and Chrome DevTools MCP are supporting automation/diagnostic tools only; do not create a mandatory local-preview acceptance chain.
+- Browser: preserved authenticated Worker-0 Chrome owns primary NEXI product acceptance against the deployed Public app and real Cloudflare backend. Playwright/DevTools support the same profile/tab. Polypane is secondary responsive breadth; BrowserStack is targeted real-device/cross-browser evidence. Follow the responsibility split below; no mandatory duplicate or local-preview acceptance chain.
 - Direct bounded editing: parent/RDC when owner and proof are deterministic.
 - Heavy workers: Codex/Kilo only for substantial bounded work or independent review where separate reasoning context adds value.
 

@@ -99,27 +99,28 @@ This section is the **active execution queue** and supersedes older statements t
 | R-05 | Reliability | Duplicate/retry/concurrency safety | `NEEDS_FRESH_PROOF` | focused adversarial tests |
 | Z-01 | Gate | All non-owner-context rows above complete or proven unchanged | `OPEN_DEFECT` | zero unresolved required rows |
 | Z-02 | Gate | Identity rows completed with controlled identities or explicitly owner-deferred | `AUTOMATION_IDENTITY_REQUIRED` | row-level proof/owner decision |
-| Z-03 | Gate | NEXI_CURRENT_STATE.md + this ledger reconciled to latest durable truth | COMPLETED | 2026-09-26 canonical host/DNS/redirect, CORS and SIWE settings reconciled; fresh route probes close host reachability; post-change CORS/Socket.IO and authenticated browser proof remain open under P-02/I-01 |
+| Z-03 | Gate | NEXI_CURRENT_STATE.md + this ledger reconciled to latest durable truth | COMPLETED | Current-state/ledger reconciliation includes the 2026-10-02 geometry closeout at deployed be50529; historical host/auth snapshots below are superseded within their proven scope. P-02/I-01 retain their separate full-product/session requirements; geometry does not close them. |
 | Z-04 | Gate | Owner manual acceptance | `OWNER_FINAL_ACCEPTANCE` | only after Z-01/Z-02/Z-03 permit it |
 
 ### Execution order
 
 1. Preserve all `COMPLETED` / `PROVEN_UNCHANGED` rows and start from the freshest demonstrated failure or missing proof.
-2. Preserve canonical Public `www`, API `api`, Admin `admin`. Reuse current authenticated preserved-Chrome Spot transport proof; continue the reproduced landscape geometry slice, then affected-route acceptance. No repeat wallet/SIWE setup.
+2. Preserve canonical Public `www`, API `api`, Admin `admin`. Public responsive/mobile geometry is COMPLETED in Section 29; reuse its deployed proof and do not reopen the former landscape/Quotes slice without fresh contradictory evidence. Resume the next owner-selected unresolved product/platform row; do not repeat wallet/SIWE setup.
 3. Close the remaining Public/Admin/backend/financial/async/realtime/communications rows in dependency order, using the deployed production surfaces rather than a local backend substitute.
 4. Exercise identity-dependent rows with controlled test wallet/Admin identities when safe; an owner deferral remains explicit and never counts as acceptance.
 5. Reconcile this ledger and `NEXI_CURRENT_STATE.md` after each durable proof change.
-6. Run final BrowserStack + Polypane production acceptance, then request owner manual acceptance only after the automatable pre-owner gates are green.
+6. Complete primary authenticated preserved-Chrome production acceptance for each selected path. Add Polypane breadth or BrowserStack real-device/cross-browser confirmation only for distinct required claims; request owner manual acceptance only after the automatable pre-owner gates are green.
 
 ### Tool routing for the current frontier
 
 - Market/backend: direct NestJS source + real Cloudflare Worker/Container/D1/Valkey runtime evidence; add Graphify/Fallow/CodeScene/Nest Observe only for their distinct proof classes. A current consumer failure may trigger this lane, but a historical stale count alone does not.
 - Public/Admin: canonical `/srv/nexi` build/runtime ownership. PRIMARY authenticated Public acceptance is preserved Worker-0 Chrome/MetaMask + Playwright/DevTools on the same NEXI tab. Polypane supplies secondary responsive breadth; BrowserStack supplies distinct real-device/cross-browser verification.
-- Get-Fable may route lifecycle/delegation, but **must not create a second production ledger**. This file remains the only completion controller.
-- Riqor may record proof/freshness, but cannot upgrade a row beyond the evidence actually gathered.
+- Get-Fable and Riqor CLI/plugin/owned-hook runtimes were removed by owner decision on 2026-09-30; do not invoke or reinstall them. This file remains the only completion controller; no tool/skill may upgrade a row beyond its actual evidence.
 
 
-## Fresh targeted production verification — 2026-09-26 06:10 UTC
+## Historical targeted production verification — 2026-09-26 06:10 UTC
+
+This dated snapshot is not current tool/auth/browser state. Later authenticated and geometry receipts in Section 29 and NEXI_CURRENT_STATE.md supersede affected observations; broader product/session guarantees remain separate queue items.
 
 This is an evidence update only; it does not upgrade any product acceptance row without the row's required proof.
 
@@ -219,7 +220,7 @@ These are **surviving product requirements**, not instructions to rebuild alread
 
 | Requirement | Required path / invariant | Current treatment |
 |---|---|---|
-| Wallet-only SIWE | challenge -> exact signature verification -> replay prevention -> WalletIdentity -> AuthSession | Existing canonical path. Prefer controlled automated test-wallet proof in BrowserStack/production when safe; owner manual acceptance remains the final gate, not the first proof step. |
+| Wallet-only SIWE | challenge -> exact signature verification -> replay prevention -> WalletIdentity -> AuthSession | Existing canonical path. Use the preserved controlled Chrome/MetaMask identity for primary authenticated production proof; owner manual acceptance remains the final gate, not the first proof step. |
 | One verified wallet = one NEXI account | wallet identity resolves one canonical user | Preserve. |
 | Stable six-digit public NEXI ID | public `userCode`; internal D1 `User.id` opaque | Preserve. |
 | Profile/KYC | submitted authoritative profile/KYC state -> Admin review/audit | Existing domain; do not rebuild. Targeted repair only on current failure evidence. |
@@ -334,7 +335,9 @@ The following are **not active gates** and must not be allowed to restart the pr
 - stale `More` mobile navigation;
 - old Git SHAs/worktrees/VM/Codespace handovers as present-state authority.
 
-## 15. Final completion decision
+## 15. Historical completion decision — superseded baseline
+
+The narrow two-gate assessment below is retained for provenance. Section 0's full production queue and later dated receipts control current completion; the old source/deployment SHAs are not today's frontier.
 
 ### Already closed and reusable
 
@@ -365,9 +368,9 @@ If the owner encounters a feature that **already exists but does not work**:
 
 Do **not** reopen unrelated domains or restart broad acceptance.
 
-## 16. Final current verdict
+## 16. Historical September runtime verdict — superseded snapshot
 
-The historical baseline below remains useful as prior evidence, but the fresh runtime re-audit in Section 24 is the current decision input:
+The baseline below preserves the September re-audit. Later corrections in Sections 25–29 and NEXI_CURRENT_STATE.md control present state; these counts, host errors, and identity classifications must not be read as fresh observations:
 
 ```text
 SOURCE_CONVERGENCE = COMPLETE_AT_GITHUB_MAIN
@@ -389,7 +392,7 @@ PRIVILEGED_ADMIN_RBAC_ACTIONS = MANUAL_OWNER_ACCEPTANCE_REQUIRED
 FULL_PRODUCTION_END_TO_END_ACCEPTED = NO
 ```
 
-The current `NO` is not only the two identity-dependent gates. Current direct probes also show that both external Public/Admin domains return HTTP 522 and that 16 of 53 market assets are stale. The backend and archive retirement are working, but full product/runtime completion cannot be claimed until those current runtime gaps are resolved or explicitly accepted as intended behavior.
+Historical assessment (retained for provenance, not current runtime): the `NO` was not only the two identity-dependent gates. The then-current direct probes showed that both external Public/Admin domains returned HTTP 522 and that 16 of 53 market assets were stale. That generation's backend/archive evidence did not close its runtime gaps. Current full-product acceptance remains governed by Section 0; later receipts determine which historical gaps are superseded.
 
 ## 17. Source register used for this reconciliation
 

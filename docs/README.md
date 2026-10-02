@@ -30,6 +30,10 @@ Global Worker-0 mechanics and browser tooling are not duplicated here:
 - `/home/mellonelay1999/RDC_ONBOARDING.md`
 - `/home/mellonelay1999/.agents/BROWSER_FABRIC.md`
 
+## Chronology and supersessions
+
+Use [the dated documentation and graph register](operations/NEXI_DOCUMENTATION_CHRONOLOGY.md) to distinguish current contracts, historical requirements, and evidence snapshots. The register is navigation/provenance, not another completion controller. Public geometry is closed by the ledger's 2026-10-02 receipt; full production acceptance remains open.
+
 ## Historical locations
 
 - `archive/` — superseded analysis/design/program artifacts retained for provenance.
@@ -44,7 +48,7 @@ Do not restart a domain because an older document contains a stale SHA, phase na
 
 ## Browser/runtime rule
 
-A browser claim that NEXI works must use the deployed Public generation and the real Cloudflare backend. BrowserStack and Polypane are the two acceptance owners. Local Playwright/Chrome DevTools are supporting automation/diagnostics, not substitute production acceptance environments.
+A browser claim that NEXI works must use the deployed Public generation and the real Cloudflare backend. Preserved authenticated Worker-0 Chrome is the primary NEXI product acceptance surface; Playwright and DevTools support that same profile/tab. Polypane provides secondary responsive breadth; BrowserStack provides targeted real-device/cross-browser evidence when that claim requires it. Do not duplicate acceptance passes or assume secondary sessions inherit wallet authentication.
 
 ## Maintenance rule
 
