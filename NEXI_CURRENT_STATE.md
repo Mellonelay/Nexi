@@ -124,3 +124,7 @@ Fresh deployed evidence for implementation `be50529b789786fd83d808178f386b015f77
 `PUBLIC_RESPONSIVE_MOBILE_GEOMETRY_PHASE = COMPLETED`
 
 This does not upgrade unrelated market/backend/Admin/financial/product-lifecycle rows or owner final acceptance.
+
+## Work continuity control — 2026-10-02
+
+The existing skill checkpoint now enforces project-owned phase reconciliation (`scripts/nexi_phase_checkpoint.py`). Active engineering `workCycle` and sealed phase receipts preserve prior proof; skill fingerprints persist outside `/tmp`. Eight focused checks and real wrapper transition/recovery checks passed. Parent semantic review remains required; this is not an automatic ChatGPT host hook or product acceptance. See `docs/operations/NEXI_PHASE_RECONCILIATION.md`. Public geometry remains completed; deployed implementation remains `be50529...`; full production end-to-end acceptance remains NO.

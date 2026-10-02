@@ -697,3 +697,7 @@ Evidence:
 `PUBLIC_RESPONSIVE_MOBILE_GEOMETRY_PHASE = COMPLETED`
 
 Rows P-01/P-03/P-04/P-12/P-13 retain their broader product/lifecycle statuses where their acceptance paths extend beyond geometry. `FULL_PRODUCTION_END_TO_END_ACCEPTED` remains `NO`.
+
+## Work-control reconciliation — 2026-10-02
+
+The NEXI checkpoint requires prior-phase evidence and explicit reconciliation of this ledger and current state before a phase transition or final completion report. The parent updates the exact selected queue row when durable completion evidence changes; justified unchanged phases do not churn product statuses. Eight focused gate checks and a real wrapper blocked-transition/recovery check passed. This control change closes no additional product row, promotes no source, and grants no deployment/push authority. Public geometry proof and broader open queue requirements remain unchanged. Protocol: `docs/operations/NEXI_PHASE_RECONCILIATION.md`.

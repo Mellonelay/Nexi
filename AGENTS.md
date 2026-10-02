@@ -151,3 +151,7 @@ The active queue is Section 0 of `NEXI_PRODUCTION_COMPLETION_LEDGER.md`. Select 
 Owner manual testing is a final acceptance gate, never a substitute for automatable verification. Use controlled test wallet/Admin identities when safe; otherwise record an explicit owner deferral. Cloudflare Worker + Container remains the only backend runtime authority, and Public/Admin Worker-0 builds/runtimes remain restricted to their canonical `/srv/nexi/public` and `/srv/nexi/admin` seams.
 
 For market work, do not optimize for a cosmetic `LIVE` count. Open-market assets must remain fresh or self-recover automatically; legitimate closed-market states must carry a truthful reason; silent frozen prices, fabricated freshness, and manual recovery as normal operation are defects.
+
+## Durable phase checkpoint — 2026-10-02
+
+For NEXI engineering work, use the existing `worker0-skill-checkpoint` at each real phase boundary and before completion. Its project-owned gate requires the preceding phase's saved proof plus explicit reconciliation of `NEXI_CURRENT_STATE.md` and `NEXI_PRODUCTION_COMPLETION_LEDGER.md`. Follow `docs/operations/NEXI_PHASE_RECONCILIATION.md`; recover `workCycle` from the current capsule before acting. The routing helper is advisory: using-agent-skills and the parent choose the actual causal method; a keyword-selected unrelated skill is not invocation proof. Preserve completed product evidence and separate local/GitHub source from deployed source. Do not bypass a blocked checkpoint or create a second completion ledger.

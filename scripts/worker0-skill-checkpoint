@@ -1,0 +1,139 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+import argparse, hashlib, json, os, subprocess, time, tempfile, re
+from pathlib import Path
+
+ROUTER = "/home/mellonelay1999/.local/bin/worker0-skill-route"
+STATE_ROOT = Path("/home/mellonelay1999/.local/state/worker0-skill-continuity")
+STATE_ROOT.mkdir(mode=0o700, parents=True, exist_ok=True)
+
+ap = argparse.ArgumentParser()
+ap.add_argument("--cwd", default=os.getcwd())
+ap.add_argument("--request", required=True)
+ap.add_argument("--stage", choices=["auto","discovery","implementation","completion"], default="auto")
+ap.add_argument("--reason", default="work-step")
+ap.add_argument("--json", action="store_true")
+ap.add_argument("--phase", choices=["auto","recovery","planning","diagnosis","implementation","test","browser","review","git","deploy","completion"], default="auto")
+ap.add_argument("--phase-receipt")
+ap.add_argument("--goal")
+ap.add_argument("--slice")
+ap.add_argument("--next-proof")
+ap.add_argument("--session-id", default=os.environ.get("WORKER0_SKILL_SESSION_ID"))
+a = ap.parse_args()
+if not a.session_id or not re.fullmatch(r"[A-Za-z0-9_.-]{1,120}",a.session_id):
+    ap.error("Supply a unique --session-id and preserve it in continuity")
+
+p = subprocess.run(
+    [ROUTER, "--cwd", a.cwd, "--request", a.request, "--stage", a.stage, "--phase", a.phase, "--json"],
+    capture_output=True, text=True
+)
+if p.returncode:
+    raise SystemExit(p.stderr or p.stdout or p.returncode)
+route = json.loads(p.stdout)
+
+# NEXI owns durable phase proof; other projects retain the existing skill lease.
+top = subprocess.run(["git", "-C", a.cwd, "rev-parse", "--show-toplevel"],
+                     capture_output=True, text=True)
+root = Path(top.stdout.strip()) if top.returncode == 0 else Path(a.cwd).resolve()
+durable = None
+if all((root / name).is_file() for name in
+       ("NEXI_CURRENT_STATE.md", "NEXI_PRODUCTION_COMPLETION_LEDGER.md")):
+    gate = root / "scripts/nexi_phase_checkpoint.py"
+    cmd = ["python3", str(gate), "--repo", str(root), "--capsule",
+           "/home/mellonelay1999/nexi-work-current-checkpoint.json", "--phase", route["phase"]]
+    for flag, value in (("--receipt", a.phase_receipt), ("--goal", a.goal),
+                        ("--slice", a.slice), ("--next-proof", a.next_proof)):
+        if value:
+            cmd.extend((flag, value))
+    if a.reason == "completion" or a.stage == "completion":
+        cmd.append("--require-closed")
+    checked = subprocess.run(cmd, capture_output=True, text=True)
+    if checked.returncode:
+        raise SystemExit(checked.stderr or checked.stdout or checked.returncode)
+    durable = json.loads(checked.stdout)
+
+skill_hashes = {}
+for item in route.get("selected", []):
+    path = Path(item["path"])
+    try:
+        body = path.read_bytes()
+        skill_hashes[item["id"]] = hashlib.sha256(body).hexdigest()
+    except Exception:
+        skill_hashes[item["id"]] = "UNREADABLE"
+
+key = hashlib.sha256((a.session_id+"\0"+os.path.realpath(a.cwd)).encode()).hexdigest()[:16]
+state_file = STATE_ROOT / f"{key}.json"
+prev = {}
+if state_file.exists():
+    try:
+        prev = json.loads(state_file.read_text())
+    except Exception:
+        prev = {}
+
+current_ids = [x["id"] for x in route.get("selected", [])]
+refresh_reasons = {
+    "owner-correction","phase-change","failure","no-progress","resume",
+    "context-refresh","fan-out","fan-in","capability-change","completion"
+}
+changed = (
+    prev.get("selected") != current_ids
+    or prev.get("skill_hashes") != skill_hashes
+    or prev.get("stage") != route.get("stage")
+    or prev.get("phase") != route.get("phase")
+)
+lease = "REFRESHED" if changed or a.reason in refresh_reasons else "REUSED"
+primary = next(
+    (x["id"] for x in route.get("selected", []) if x.get("role") == "primary"),
+    "none"
+)
+
+state = {
+    "updated_at": time.time(),
+    "cwd": os.path.realpath(a.cwd),
+    "stage": route.get("stage"),
+    "phase": route.get("phase"),
+    "session_id": a.session_id,
+    "selected": current_ids,
+    "skill_hashes": skill_hashes,
+    "primary": primary,
+    "reason": a.reason,
+    "lease": lease,
+}
+fd,tmp=tempfile.mkstemp(prefix=state_file.name+".",dir=STATE_ROOT)
+try:
+    with os.fdopen(fd,"w") as f: f.write(json.dumps(state,indent=2)+"\n")
+    os.replace(tmp,state_file)
+finally:
+    if os.path.exists(tmp): os.unlink(tmp)
+
+out = {
+    "checkpoint": "SKILL_CHECKPOINT",
+    "durable_phase": durable,
+    "phase": route.get("phase"),
+    "lease": lease,
+    "active": current_ids,
+    "primary_owner": primary,
+    "reason": a.reason,
+    "skill_paths": [x["path"] for x in route.get("selected", [])],
+    "tool_routes": route.get("tool_routes", []),
+    "state_file": str(state_file),
+    "instruction": (
+        "Load/follow current selected skill bodies before consequential action; "
+        "selected/installed alone does not count as applied."
+    ),
+}
+
+if a.json:
+    print(json.dumps(out, indent=2))
+else:
+    print(
+        "SKILL CHECKPOINT | phase=%s | lease=%s | active=%s | owner=%s | reason=%s"
+        % (
+            out["phase"],
+            out["lease"],
+            ",".join(out["active"]),
+            out["primary_owner"],
+            out["reason"],
+        )
+    )
+    print("load: " + " ".join(out["skill_paths"]))
