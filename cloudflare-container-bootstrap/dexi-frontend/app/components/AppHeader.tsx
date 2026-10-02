@@ -16,7 +16,13 @@ export default function AppHeader() {
   return (
     <header className="nexi-app-header relative z-40 flex h-auto min-h-14 min-w-0 flex-wrap items-center gap-[8px] border-b border-violet-300/15 px-3 py-1 md:min-h-16 md:px-6 md:py-2">
       <div className="lg:hidden min-w-0">
-        <NavigationDrawer triggerContent={<NexiWordmark compact />} />
+        <NavigationDrawer
+          triggerContent={
+            <span className="contents max-[359px]:[&>span>span:last-child]:hidden">
+              <NexiWordmark compact />
+            </span>
+          }
+        />
       </div>
       <div className="hidden min-w-0 flex-1 lg:block" aria-hidden="true" />
       <div className="ml-auto flex min-w-0 items-center gap-[6px] md:gap-2">

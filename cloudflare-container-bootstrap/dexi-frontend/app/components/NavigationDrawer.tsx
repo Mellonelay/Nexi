@@ -91,7 +91,7 @@ export default function NavigationDrawer({
     <>
       <button
         type="button"
-        aria-label={t("openApplicationMenu")}
+        aria-label={`NEXI, ${t("openApplicationMenu")}`}
         aria-controls="nexi-application-drawer"
         aria-expanded={open}
         onClick={() => setOpen(true)}

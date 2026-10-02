@@ -23,6 +23,8 @@ test('mobile controls expose names to assistive technology', () => {
   const support = read('app/dashboard/support/page.tsx');
 
   assert.match(drawer, /aria-labelledby="nexi-application-drawer-title"/);
+  assert.match(drawer, /NEXI, \$\{t\("openApplicationMenu"\)\}/);
+  assert.match(read('app/components/AppHeader.tsx'), /max-\[359px\]:\[&>span>span:last-child\]:hidden/);
   assert.match(timeframe, /aria-label="Chart timeframe"/);
   assert.match(timeframe, /aria-pressed=\{interval === tf\}/);
   assert.match(support, /aria-label="Ticket subject"/);
