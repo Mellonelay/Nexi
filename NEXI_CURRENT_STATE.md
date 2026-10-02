@@ -99,7 +99,7 @@ Current deployed changed-behavior proof (Spot at `142a4aa`, reused through `be50
 - `docs/operations/NEXI_CAPABILITY_ROUTING.md` is the NEXI routing overlay.
 - `/home/mellonelay1999/.agents/BROWSER_FABRIC.md` owns browser-tool responsibility and production browser workflow.
 - Public-local `AGENTS.md` and `DESIGN.md` govern the canonical Public frontend.
-- Historical analysis/recovery material belongs under `docs/archive` or `docs/recovery`; it must not compete with current authority.
+- Historical analysis/recovery material belongs under `docs/archive`; it must not compete with current authority.
 
 ## Next dependency-ready direction
 

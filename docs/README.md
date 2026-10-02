@@ -37,7 +37,8 @@ Use [the dated documentation and graph register](operations/NEXI_DOCUMENTATION_C
 ## Historical locations
 
 - `archive/` — superseded analysis/design/program artifacts retained for provenance.
-- `recovery/` — recovery/forensic handovers; never current authority by themselves.
+- `archive/recovery-2026-08/` — superseded recovery/forensic handovers.
+- `archive/quality-2026-09/` — dated repo-map/read-coverage evidence; never live readiness or capability proof.
 - dated evidence inside older domain documents remains historical unless current source/runtime reconfirms it.
 
 ## Reuse rule

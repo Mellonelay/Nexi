@@ -6,7 +6,7 @@
 | Closure matrix | `docs/quality/NEXI_PHASE2_CLOSURE_MATRIX.json` | A–F states recorded |
 | Lane/collision state | `docs/quality/NEXI_PHASE2_LANE_STATE.json` | shared mutations serialized |
 | Execution receipt | `NEXI_CURRENT_STATE.md` | Graphify fallback and test evidence |
-| Repository map | `docs/quality/NEXI_OMNIPOTENT_REPO_MAP_2026-09-03.md` | source inventory and prior findings |
+| Repository map | `docs/archive/quality-2026-09/NEXI_OMNIPOTENT_REPO_MAP_2026-09-03.md` | source inventory and prior findings |
 | Prior reconciliation | `NEXI_CURRENT_STATE.md` | historical/current checkpoint |
 | Backend tests | command receipt | 68 suites / 260 tests passed; 5 skipped |
 | Frontend contract tests | command receipt | 6/6 passed |

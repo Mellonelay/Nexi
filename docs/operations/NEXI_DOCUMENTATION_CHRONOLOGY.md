@@ -25,7 +25,7 @@ Dates are content/event dates, not filesystem modification times. UTC and Myanma
 | 2026-07-29/30 | [Evidence index](../implementation/NEXI_COMPLETION_EVIDENCE_INDEX.md), archived frontend fidelity | Bounded historical UI/static results, not current runtime |
 | 2026-08-07/11 | Archived design lineage; Public design-token graph/PPTX indexes; provider authority | Preserve useful requirements; old PostgreSQL, typography and incompatible asset counts are superseded |
 | 2026-08-19 owner override | Charter's product-scope correction | Overrides older conflicting margin-retirement/exclusion prose |
-| 2026-08-30 V1 then V2 | [Recovery V1](../recovery/NEXI_CHATGPT_WORK_TAKEOVER_FULL_AUDIT_20260830.md), [V2](../recovery/NEXI_TAKEOVER_FORENSIC_AUDIT_V2_20260830.md) | V2 supersedes V1 omissions; old CI failures/VM-only classifications describe that generation |
+| 2026-08-30 V1 then V2 | [Recovery V1](../archive/recovery-2026-08/NEXI_CHATGPT_WORK_TAKEOVER_FULL_AUDIT_20260830.md), [V2](../archive/recovery-2026-08/NEXI_TAKEOVER_FORENSIC_AUDIT_V2_20260830.md) | V2 supersedes V1 omissions; old CI failures/VM-only classifications describe that generation |
 | 2026-09-03 | Repo map and context-read coverage in quality/ | Dated structural/coverage evidence; not current tool health |
 | 2026-09-12/13 | Earlier manual findings/design lineage | Later approved references and Public DESIGN.md govern visual conflicts |
 | 2026-09-15 | Uploaded ledger/current-state exports; ledger historical Section 15 | The narrow two-gate completion assessment is superseded by the full active queue |
