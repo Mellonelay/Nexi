@@ -60,3 +60,22 @@ test('public product copy does not expose raw market-state enums', () => {
   assert.match(account, /productStateLabel\(state\)/);
   assert.match(quotes, /item\.source === ["']fallback["']\) return ["']—["']/);
 });
+
+
+test('public geometry keeps touch targets stable and critical labels reflow under text enlargement', () => {
+  const header = read('app/components/AppHeader.tsx');
+  const variants = read('app/components/nexi-variants.ts');
+  const selector = read('app/components/SymbolSelector.tsx');
+  const asset = read('app/dashboard/asset/[symbol]/page.tsx');
+  const binary = read('app/dashboard/binary/page.tsx');
+  const wallet = read('app/dashboard/wallet/page.tsx');
+
+  assert.match(header, /h-\[44px\] w-\[44px\]/);
+  assert.match(variants, /compact:\s*'min-h-\[44px\]/);
+  assert.match(wallet, /View activity[\s\S]*min-h-\[44px\]/);
+  assert.match(wallet, /Asset filter[\s\S]*min-h-\[44px\]/);
+  assert.match(selector, /span className="min-w-0 whitespace-normal break-words text-left leading-tight"/);
+  assert.match(asset, /h1 className="break-words text-2xl/);
+  assert.match(binary, /h1 id="binary-heading" className="mt-1 break-words leading-tight text-2xl/);
+  assert.match(asset, /grid-cols-\[repeat\(auto-fit,minmax\(min\(100%,7rem\),1fr\)\)\]/);
+});

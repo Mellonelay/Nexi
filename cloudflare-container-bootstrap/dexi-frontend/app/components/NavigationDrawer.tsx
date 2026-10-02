@@ -97,8 +97,8 @@ export default function NavigationDrawer({
         onClick={() => setOpen(true)}
         className={
           triggerContent
-            ? "inline-flex h-11 min-w-0 items-center rounded-xl px-1 text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)]"
-            : "inline-flex h-11 w-11 items-center justify-center rounded-xl border border-violet-300/20 bg-black/20 text-white backdrop-blur-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)]"
+            ? "inline-flex h-[44px] min-w-0 items-center rounded-xl px-1 text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)]"
+            : "inline-flex h-[44px] w-[44px] items-center justify-center rounded-xl border border-violet-300/20 bg-black/20 text-white backdrop-blur-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)]"
         }
       >
         {triggerContent ? (

@@ -56,12 +56,12 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="nexi-interactive flex min-h-11 min-w-0 max-w-full items-center gap-2 text-lg font-bold transition-colors hover:text-gray-300"
+        className="nexi-interactive flex min-h-[44px] min-w-0 max-w-full items-center gap-2 text-lg font-bold transition-colors hover:text-gray-300"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >
         {currentAsset && <AssetIcon item={{ assetId: currentAsset.id, symbol: currentAsset.symbol, displaySymbol: currentAsset.displaySymbol, name: currentAsset.name }} size="md" />}
-        <span className="min-w-0 truncate">
+        <span className="min-w-0 whitespace-normal break-words text-left leading-tight">
           {currentAsset?.pair ?? currentSymbol}
         </span>
         <ChevronDown size={20} className={`shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -80,7 +80,7 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
                   role="tab"
                   aria-selected={activeTab === tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`min-h-11 min-w-0 py-2 text-[10px] font-bold transition-colors ${activeTab === tab
+                  className={`min-h-[44px] min-w-0 py-2 text-[10px] font-bold transition-colors ${activeTab === tab
                       ? 'border-b-2 border-[#7353DD] bg-white/5 text-white'
                       : 'text-gray-500 hover:text-gray-300'
                     }`}

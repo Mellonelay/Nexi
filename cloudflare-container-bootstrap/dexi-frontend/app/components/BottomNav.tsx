@@ -34,7 +34,7 @@ export default function BottomNav() {
               key={item.href}
               href={item.href}
               aria-current={active ? "page" : undefined}
-              className={`relative flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-[12px] px-1 text-[10px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)] ${active ? "text-violet-300" : "text-[var(--nexi-text-secondary)] hover:bg-white/[0.03] hover:text-white"}`}
+              className={`relative flex min-h-[44px] flex-col items-center justify-center gap-0.5 rounded-[12px] px-1 text-[10px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)] ${active ? "text-violet-300" : "text-[var(--nexi-text-secondary)] hover:bg-white/[0.03] hover:text-white"}`}
             >
               {active && (
                 <span

@@ -59,14 +59,19 @@ Codex `/mcp` is authoritative for Codex-visible MCP tools and OAuth state. `rdc-
 Never create Remote-Desktop-Commander-via-Remote-Desktop-Commander recursion.
 
 ## Browser responsibility split
-Final production acceptance follows the global `/home/mellonelay1999/.agents/BROWSER_FABRIC.md` contract:
+Final production acceptance follows the global `/home/mellonelay1999/.agents/BROWSER_FABRIC.md` contract and the current owner decision:
 
-1. BrowserStack: PRIMARY real-browser / real-device runtime acceptance owner.
-2. Polypane: PRIMARY responsive / multi-viewport inspection owner; CDP at `127.0.0.1:5858` when running.
-3. Chrome DevTools MCP: supporting DOM/accessibility/console/network/performance diagnosis through Polypane; not a third acceptance owner.
-4. Playwright: supporting deterministic automation or BrowserStack Automate engine when useful; not a separate mandatory local acceptance stage.
-5. BrowserStack Local: exception path only when cloud testing must reach localhost/private Worker-0 services.
-6. VNC/noVNC: optional owner human-GUI/login lane only; never a browser automation dependency.
+1. Preserved headed Worker-0 Chrome + MetaMask profile: PRIMARY rendered/authenticated NEXI product-testing environment. Reuse the existing controlled profile/session and do not repeat SIWE unless fresh regression evidence requires it.
+2. Microsoft Playwright Extension + the stateful Playwright CLI session: deterministic navigation, replay, assertions, screenshots, and geometry checks attached to that same authenticated browser state.
+3. Chrome DevTools MCP / raw CDP on the same profile, plus React DevTools, Tailwind DevTools, and passive Requestly: focused DOM/CSS/network/console/component/utility diagnosis; these support the primary browser and are not separate acceptance owners.
+4. Testing Toolkit: bounded responsive/accessibility/visual diagnostics in the preserved profile when its specific surface answers the current question. Do not treat its embedded unauthenticated views as authenticated acceptance.
+5. Fallow and Graphify: structural/causal source evidence only; never rendered acceptance.
+6. Polypane: SECONDARY responsive/multi-viewport breadth after the authenticated primary path is working.
+7. BrowserStack: SECONDARY targeted real-device/cross-browser confirmation. It is primary only when the claim itself is specifically real-device or cross-browser behavior; it cannot replace the preserved authenticated NEXI session unless that remote session independently proves wallet/session state.
+8. BrowserStack Local: exception path only when cloud testing must reach localhost/private Worker-0 services.
+9. VNC/noVNC: owner human-GUI/login lane for operating the preserved profile/extensions when native browser automation is insufficient; preserve it as reusable infrastructure.
+
+Tool or attachment failure is a tooling limitation, not product-failure evidence. Do not create a new wallet, browser profile, login flow, or duplicate browser harness unless a fresh causal defect requires one.
 
 For NEXI completion, the browser target is the deployed `https://www.nexitrading.app` generation exercising the real `https://api.nexitrading.app` Cloudflare Worker -> Container -> NestJS backend. A local standalone frontend, mock backend, or VM-local NestJS process cannot prove end-to-end production behavior.
 

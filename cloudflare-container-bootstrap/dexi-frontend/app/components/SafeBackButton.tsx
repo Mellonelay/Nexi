@@ -81,7 +81,7 @@ export default function SafeBackButton({
       type="button"
       aria-label={label}
       onClick={goBack}
-      className={`nexi-interactive inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-2 rounded-lg border border-violet-300/15 text-[#C3BBD0] transition hover:border-violet-300/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)] ${className}`}
+      className={`nexi-interactive inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center gap-2 rounded-lg border border-violet-300/15 text-[#C3BBD0] transition hover:border-violet-300/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)] ${className}`}
     >
       <ArrowLeft size={18} aria-hidden="true" />
       <span className={showLabel ? '' : 'sr-only'}>{label}</span>

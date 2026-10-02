@@ -14,16 +14,16 @@ export default function AppHeader() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const { locale, setLocale, languages, t } = useLocale();
   return (
-    <header className="nexi-app-header relative z-40 flex h-14 min-w-0 items-center gap-2 border-b border-violet-300/15 px-3 md:h-16 md:px-6">
+    <header className="nexi-app-header relative z-40 flex h-[56px] min-w-0 items-center gap-[8px] border-b border-violet-300/15 px-[12px] md:h-[64px] md:px-6">
       <div className="lg:hidden min-w-0">
         <NavigationDrawer triggerContent={<NexiWordmark compact />} />
       </div>
       <div className="hidden min-w-0 flex-1 lg:block" aria-hidden="true" />
-      <div className="ml-auto flex min-w-0 items-center gap-1.5 md:gap-2">
+      <div className="ml-auto flex min-w-0 items-center gap-[6px] md:gap-2">
         <span
           aria-label="Ethereum network"
           title="Ethereum network"
-          className="nexi-header-icon hidden h-10 w-10 shrink-0 sm:flex"
+          className="nexi-header-icon hidden h-[40px] w-[40px] shrink-0 sm:flex"
         >
           <AssetIcon
             item={{
@@ -36,7 +36,7 @@ export default function AppHeader() {
         </span>
         <WalletConnectControl compact />
         <label
-          className="nexi-header-icon relative h-11 w-11 shrink-0 cursor-pointer"
+          className="nexi-header-icon relative h-[44px] w-[44px] shrink-0 cursor-pointer"
           title={t("languageSelection")}
         >
           <Languages className="h-[18px] w-[18px]" aria-hidden="true" />
@@ -60,7 +60,7 @@ export default function AppHeader() {
           aria-controls="nexi-notifications-panel"
           aria-expanded={notificationsOpen}
           onClick={() => setNotificationsOpen((open) => !open)}
-          className="nexi-header-icon relative h-11 w-11 shrink-0"
+          className="nexi-header-icon relative h-[44px] w-[44px] shrink-0"
         >
           <Bell className="h-[18px] w-[18px]" aria-hidden="true" />
         </button>

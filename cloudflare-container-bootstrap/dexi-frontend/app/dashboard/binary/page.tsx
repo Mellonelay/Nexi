@@ -353,7 +353,7 @@ export default function BinaryPage() {
       <div className="grid min-w-0 gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_400px] xl:items-start">
         <section className="min-w-0 space-y-4 xl:col-start-1 xl:row-start-1" aria-labelledby="binary-heading">
           <div className="flex min-w-0 flex-wrap items-end justify-between gap-3">
-            <div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-[.2em] text-[#A78BFA]">Options</p><h1 id="binary-heading" className="mt-1 truncate text-2xl font-semibold">{displayPair}</h1></div>
+            <div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-[.2em] text-[#A78BFA]">Options</p><h1 id="binary-heading" className="mt-1 break-words leading-tight text-2xl font-semibold">{displayPair}</h1></div>
             {state !== 'DRAFT' && <span className={`shrink-0 rounded-full border px-3 py-1 font-mono text-xs ${stateTone}`}>{binaryStateLabel(state)}</span>}
           </div>
           <div className="nexi-station-card min-w-0 rounded-2xl p-2">

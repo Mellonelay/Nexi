@@ -79,15 +79,15 @@ function AssetDetailView({
   const { instrument, definition, aboutCopy, aboutFacts, displayStatus, statusClass } = assetDetailModel(item);
 
   return (
-    <div className="min-h-screen w-full min-w-0 overflow-x-clip bg-[#050508] px-4 pb-28 pt-4 text-[#F8F6FF] md:px-8 md:pb-10 md:pt-8">
+    <div className="min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-[#050508] px-4 pb-28 pt-4 text-[#F8F6FF] md:px-8 md:pb-10 md:pt-8">
       <div className="mx-auto max-w-6xl">
-        <header className="mb-6 flex items-center justify-between gap-4">
-          <SafeBackButton fallback="/dashboard" label="Back to Quotes Hub" className="border-violet-300/20 bg-[#100A18] hover:border-violet-300/45" />
+        <header className="mb-6 grid grid-cols-[44px_minmax(0,1fr)_44px] items-start gap-3 sm:gap-4">
+          <SafeBackButton fallback="/dashboard" label="Back to Quotes Hub" className="!min-h-[44px] !min-w-[44px] border-violet-300/20 bg-[#100A18] hover:border-violet-300/45" />
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8C8299]">Asset Detail</p>
-            <h1 className="truncate text-2xl font-semibold tracking-tight md:text-3xl">{instrument.pair}</h1>
+            <p className="break-words text-xs font-semibold uppercase tracking-[0.16em] text-[#8C8299]">Asset Detail</p>
+            <h1 className="break-words text-2xl font-semibold leading-tight tracking-tight md:text-3xl">{instrument.pair}</h1>
           </div>
-          <button type="button" disabled aria-label="Favorites unavailable" title="Saved favorites are not available yet" className="inline-flex h-11 w-11 cursor-not-allowed items-center justify-center rounded-lg border border-violet-300/20 bg-[#100A18] text-[#C3BBD0] opacity-50">
+          <button type="button" disabled aria-label="Favorites unavailable" title="Saved favorites are not available yet" className="inline-flex h-[44px] w-[44px] cursor-not-allowed items-center justify-center rounded-lg border border-violet-300/20 bg-[#100A18] text-[#C3BBD0] opacity-50">
             <Star className="h-5 w-5" aria-hidden="true" />
           </button>
         </header>
@@ -130,7 +130,7 @@ function AssetDetailView({
         <section className="mb-5 grid gap-4 md:grid-cols-2">
           <div className="min-w-0 rounded-xl border border-violet-300/15 bg-[#100A18] p-4">
             <h2 className="mb-4 font-semibold">Market data</h2>
-            <dl className="grid grid-cols-2 gap-x-4 gap-y-4 text-sm">
+            <dl className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,7rem),1fr))] gap-x-4 gap-y-4 text-sm">
               <div><dt className="text-[#8C8299]">Last price</dt><dd className="mt-1 font-mono">{instrument.price ?? placeholder}</dd></div>
               <div><dt className="text-[#8C8299]">24h change</dt><dd className="mt-1 font-mono">{instrument.change24h ?? placeholder}</dd></div>
               <div><dt className="text-[#8C8299]">Volume (24h)</dt><dd className="mt-1 font-mono">{instrument.volume24h ?? placeholder}</dd></div>

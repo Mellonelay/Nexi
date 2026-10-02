@@ -28,7 +28,7 @@ export const surfaceVariants = cva(
 );
 
 export const controlVariants = cva(
-  'nexi-interactive nexi-ripple inline-flex min-h-11 items-center justify-center font-semibold outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)] disabled:pointer-events-none disabled:opacity-40',
+  'nexi-interactive nexi-ripple inline-flex min-h-[44px] items-center justify-center font-semibold outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)] disabled:pointer-events-none disabled:opacity-40',
   {
     variants: {
       intent: {
@@ -39,9 +39,9 @@ export const controlVariants = cva(
         danger: 'border border-rose-300/25 bg-rose-400/10 text-[var(--nexi-negative-soft)]',
       },
       size: {
-        compact: 'min-h-9 rounded-lg px-3 text-xs',
+        compact: 'min-h-[44px] rounded-lg px-3 text-xs',
         default: 'rounded-xl px-4 text-sm',
-        icon: 'h-11 w-11 rounded-xl p-0',
+        icon: 'h-[44px] w-[44px] rounded-xl p-0',
       },
       selected: {
         true: 'ring-1 ring-inset ring-violet-300/30 shadow-[0_0_24px_rgba(139,92,246,.16)]',
