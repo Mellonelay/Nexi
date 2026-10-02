@@ -1,9 +1,9 @@
 # NEXI Production Completion Ledger
 
-**Authority date:** 2026-09-27 (Myanmar time)
+**Authority date:** 2026-10-02 (Myanmar time)
 **Repository:** `Mellonelay/Nexi`
 **Current source authority:** GitHub `main` (discover live; do not freeze this ledger to a historical SHA)
-**Current product/runtime split:** Public implementation commit `a924e0dc3bdb39f69aa0dd7c5baafc964ba24a62`; Public release `a924e0d-geometry-prod` with that release SHA; Admin release `ed26973f-prod-node` with no Admin source changes since `ed26973...`; Cloudflare backend deployment remains `bdadd96f-3696-474b-955d-de490a9a466d` from the `ed26973f` promotion. GitHub `main` may advance via documentation/governance-only commits; discover live before consequential work.
+**Current product/runtime split:** Public implementation `be50529b789786fd83d808178f386b015f77b1f3`; Public release `be50529-geometry-prod` with that release SHA; Admin release `ed26973f-prod-node` remains unchanged; Cloudflare backend deployment remains `bdadd96f-3696-474b-955d-de490a9a466d` from the `ed26973f` promotion. A documentation-only closeout commit may make GitHub `main` newer than the deployed Public implementation; discover live before consequential work.
 **Purpose:** the single final-production completion controller for NEXI. This is a finishing-state ledger, not a restart plan.
 
 ## 0. Active production closure controller — owner correction 2026-09-20
@@ -43,8 +43,8 @@ This section is the **active execution queue** and supersedes older statements t
 | A-02 | Authority | Cloudflare Worker -> Container -> NestJS is the only backend runtime authority | `COMPLETED` | current production runtime/health |
 | A-03 | Public hosting | Public dependency/build/runtime owner is `/srv/nexi/public` | `COMPLETED` | symlink/process/release proof |
 | A-04 | Admin hosting | Admin dependency/build/runtime owner is `/srv/nexi/admin` | `COMPLETED` | symlink/process/release proof |
-| A-05 | DNS / edge | canonical www + Admin route to 35.187.234.62; legacy app + apex are proxied redirect hosts; API remains Worker custom domain | COMPLETED | Cloudflare DNS/API and HTTPS probes on 2026-09-26: www 200; app and apex 308 -> www; Admin / 307 -> /overview; API /health 200; no wildcard DNS record |
-| A-06 | Public/Admin release | Public current source frontier is promoted through `/srv/nexi/public`; Admin remains on its unchanged `ed26973...` source generation through `/srv/nexi/admin` | `COMPLETED` | Public `NEXI_RELEASE_SHA=a924e0dc3bdb39f69aa0dd7c5baafc964ba24a62`, current release `a924e0d-geometry-prod`, active existing service + process CWD + origin HTML BUILD_ID proof; Admin `NEXI_RELEASE_SHA=ed26973...` + active service + no Admin source changes identified since `ed26973...` |
+| A-05 | DNS / edge | canonical `www` + Admin route to current Worker-0 origin `34.143.137.221`; legacy app + apex are proxied redirect hosts; API remains Worker custom domain | `COMPLETED` | Latest verified 2026-10-01: Worker-0 IP `34.143.137.221` matched Cloudflare `www` and `admin` A-record targets. Earlier 2026-09-26 edge probes remain historical proof for redirects/health. |
+| A-06 | Public/Admin release | Public current implementation is promoted through `/srv/nexi/public`; Admin remains on its unchanged `ed26973...` source generation through `/srv/nexi/admin` | `COMPLETED` | Public `NEXI_RELEASE_SHA=be50529b789786fd83d808178f386b015f77b1f3`, current release `be50529-geometry-prod`, verified build `/srv/nexi/public/build-be50529-20261002-121819`, active service/process CWD and local/external HTTP 200; Admin remains `ed26973...`. |
 | A-07 | Backend baseline | Currently deployed Cloudflare backend health/readiness | `COMPLETED` | fresh `/ops/ready`: `status=ready`, `database=true`, `redis=true` after unified promotion |
 | A-08 | Backend release | Deployed Cloudflare backend baseline is healthy, but current `main` contains post-`ed26973...` backend Sentry/ENOENT source changes not yet proven deployed | `NEEDS_FRESH_PROOF` | deployed Worker version `bdadd96f-3696-474b-955d-de490a9a466d` + `/ops/ready` 200; reconcile/deploy current backend source only when the active repair requires it |
 | M-01 | Market | Exactly 53 canonical NEXI assets remain authoritative | `PROVEN_UNCHANGED` | catalog/API count and identity |
@@ -59,7 +59,7 @@ This section is the **active execution queue** and supersedes older statements t
 | P-01 | Public | Dashboard / Quotes Hub | `NEEDS_FRESH_PROOF` | Public `12cf799...` dashboard and 45 referenced static assets returned HTTP 200 after standalone asset packaging fix; this proves asset reachability only. Authenticated rendered interaction/data acceptance remains open. |
 | P-02 | Public | Spot Trading | `NEEDS_FRESH_PROOF` | Preserved authenticated Chrome: deployed chart resize/drawer proof retained. At `142a4aa`, short-height composition, definite Spot chart height, pair/price separation and exclusive market-panel switching are runtime-verified across bounded mobile/tablet/desktop-class probes. Fresh prices/klines/polling 200; no page errors. Margin portrait definite-height correction is BUILD_VERIFIED, DEPLOYED and RUNTIME_VERIFIED at `a924e0d`: 300px chart/root, 206.5px plot at 390×650; fresh refresh 201/me 200. Complete trading E2E remains open; no financial action performed. |
 | P-03 | Public | Options / Binary | `NEEDS_FRESH_PROOF` | deployed UI/API/quote/settlement contract proof |
-| P-04 | Public | Wallet surface/access model | `NEEDS_FRESH_PROOF` | global Public wallet gate repair remains in current Public source; protected actions remain gated; 2026-09-27 Playwright showed MetaMask chooser and unlock but no site permission target/account; full wallet-authenticated UI and WalletConnect production-visible UX remain unverified |
+| P-04 | Public | Wallet surface/access model | `NEEDS_FRESH_PROOF` | Global Public wallet gate repair remains in current Public source; protected actions remain gated. On 2026-10-02 the preserved MetaMask test wallet completed NEXI SIWE on chain 1 and the authenticated Wallet route retained the session under geometry verification. WalletConnect production-visible UX and protected wallet/financial action lifecycle remain unverified. |
 | P-05 | Public | Earn / Mining | `NEEDS_FRESH_PROOF` | deployed end-to-end lifecycle proof |
 | P-06 | Public | Loan | `NEEDS_FRESH_PROOF` | deployed end-to-end lifecycle proof |
 | P-07 | Public | Support | `NEEDS_FRESH_PROOF` | deployed create/read/reply/state proof |
@@ -68,8 +68,8 @@ This section is the **active execution queue** and supersedes older statements t
 | P-10 | Public | Messages | `NEEDS_FRESH_PROOF` | deployed messaging/read-state proof |
 | P-11 | Public | Settings | `NEEDS_FRESH_PROOF` | deployed preferences/security/settings proof |
 | P-12 | Public | Asset Detail + Active Pair continuity + charts | `NEEDS_FRESH_PROOF` | all required assets/timeframes through current backend |
-| P-13 | Public | Mobile nav/geometry/accessibility + notification/deposit/provider-choice UX | `NEEDS_FRESH_PROOF` | Drawer/pointer proof retained. Source-delivered Spot CSS at `142a4aa`: zero tested page overflow, mobile dock with hidden sidebar, landscape plot y206 at 844×390 (previously y440), chart/canvas within 1px, exclusive Chart/Book/Trades states. Margin landscape plot y207; portrait wrapper correction runtime-verified at `a924e0d`; chart reachable with 16px dock clearance. Other routes/states, dialog/accessibility and real-device breadth remain open. |
-| I-01 | Identity | Wallet-only SIWE challenge/signature/replay/session | `AUTOMATION_IDENTITY_REQUIRED` | persistent test wallet exists in the protected Worker-0 profile; on 2026-09-27 the named MetaMask chooser flow unlocked the wallet but no site-permission target appeared. Direct `eth_requestAccounts` remained pending for 45s, `eth_accounts` count stayed 0, chain was 1; no challenge/signature/session proof. Continue from this exact browser-extension frontier. |
+| P-13 | Public | Mobile nav/geometry/accessibility + notification/deposit/provider-choice UX | `NEEDS_FRESH_PROOF` | Geometry/accessibility subphase **COMPLETED** at `be50529b789786fd83d808178f386b015f77b1f3`: authenticated deployed 8-fixture Dashboard matrix, 320/390/landscape 200% text stress, zero tested page/main overflow, narrow-mobile header repair, `NEXI, Open application menu` accessible name, bounded drawer/focus, safe-area propagation, reduced-height search/keyboard focus, and authenticated 320 Options/Wallet/Asset geometry. Remaining P-13 gaps are non-geometry notification/deposit/provider-choice UX and any distinct real-device/cross-browser claim. |
+| I-01 | Identity | Wallet-only SIWE challenge/signature/replay/session | `NEEDS_FRESH_PROOF` | Preserved dedicated Worker-0 MetaMask test wallet completed NEXI SIWE on Ethereum chain 1 on 2026-10-02; application wallet verification succeeded and the authenticated browser session persisted through the final geometry acceptance. Replay-protection semantics were not re-exercised in this phase, so the full I-01 contract is not yet marked complete. |
 | I-02 | Identity | Wallet balance + protected financial authorization | `AUTOMATION_IDENTITY_REQUIRED` | controlled test wallet/session or explicit owner deferral |
 | I-03 | Identity | Privileged Admin auth/RBAC/action | `AUTOMATION_IDENTITY_REQUIRED` | controlled privileged Admin identity or explicit owner deferral |
 | F-01 | Financial | Deposit lifecycle | `NEEDS_FRESH_PROOF` | D1/Ledger/activity/audit/outbox read-back |
@@ -674,3 +674,23 @@ Therefore the earlier A-06/A-08 OPEN_DEFECT statements are superseded by this ne
 `UNIFIED_SOURCE_GENERATION_DEPLOYED = ed26973fe0556a6d75943b3e296be0a899449d6d`
 
 This promotion proof does **not** upgrade the remaining Public, Admin, market, financial, async, realtime, identity, or owner-acceptance rows beyond their own evidence. `Z-01` remains open until the required non-owner-context rows are closed with current end-to-end production proof.
+
+## 29. Public responsive/mobile geometry closure — 2026-10-02
+
+This section closes the bounded **Public geometry phase** only. It does not mark the broader Public product rows complete.
+
+Evidence:
+
+- implementation/release: `be50529b789786fd83d808178f386b015f77b1f3` -> `/srv/nexi/public/releases/be50529-geometry-prod` from verified build `/srv/nexi/public/build-be50529-20261002-121819`; active service and external dashboard 200;
+- focused changed-scope test/lint/type/Fallow gates passed before promotion;
+- preserved authenticated Worker-0 Chrome/MetaMask session re-verified through a NEXI SIWE sign-in request on chain 1 showing **No changes**;
+- authenticated Dashboard geometry passed 320×568, 360×800, 390×844, 430×932, 360×640, 568×320, 768×1024 and the calibrated desktop-class probe with zero tested document/main horizontal overflow;
+- at 320×568 the header is 56px, the narrow brand trigger is 40×44, and the accessible name is `NEXI, Open application menu`; at 360px+ the full wordmark remains;
+- 200% text stress at 320/390/568-landscape reflows vertically without horizontal overflow or controls escaping the header;
+- drawer bounds/focus, 34px safe-area propagation, and reduced-height search/keyboard focus passed in scope;
+- authenticated 320 geometry passed Options, Wallet and Asset Detail;
+- BrowserStack Testing Toolkit and DevTools AI remain secondary evidence. The DevTools AI 122px docked viewport is not a target fixture and is excluded from 320px geometry acceptance.
+
+`PUBLIC_RESPONSIVE_MOBILE_GEOMETRY_PHASE = COMPLETED`
+
+Rows P-01/P-03/P-04/P-12/P-13 retain their broader product/lifecycle statuses where their acceptance paths extend beyond geometry. `FULL_PRODUCTION_END_TO_END_ACCEPTED` remains `NO`.
