@@ -53,6 +53,8 @@ export default function SupportPage() {
   const [reply, setReply] = useState('');
   const [feedback, setFeedback] = useState<string | null>(null);
   const [selectedTopic, setSelectedTopic] = useState(helpTopics[0]);
+  const [ticketsState, setTicketsState] = useState<'LOADING' | 'LIVE' | 'ERROR'>('LOADING');
+  const [sessionRevision, setSessionRevision] = useState(0);
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const submissionLock = useRef(false);
@@ -69,11 +71,26 @@ export default function SupportPage() {
     ? tickets.find((ticket) => ticket.id === selectedTicketId) ?? null
     : null;
   const loadTickets = useCallback(async () => {
+    setTicketsState('LOADING');
+    try {
     const response = await api.get('/communications/tickets', { params: { page: 1, limit: 25 } });
     const rows = ticketRows(response.data);
     setTickets(rows);
     setSelectedTicketId((current) =>
       current && rows.some((ticket) => ticket.id === current) ? current : rows[0]?.id ?? null);
+    setTicketsState('LIVE');
+    } catch (error) {
+      setTickets([]);
+      setSelectedTicketId(null);
+      setTicketsState('ERROR');
+      throw error;
+    }
+  }, []);
+
+  useEffect(() => {
+    const sync = () => setSessionRevision((current) => current + 1);
+    window.addEventListener('nexi:wallet-session', sync);
+    return () => window.removeEventListener('nexi:wallet-session', sync);
   }, []);
 
   useEffect(() => {
@@ -82,7 +99,7 @@ export default function SupportPage() {
       if (active) setTickets([]);
     });
     return () => { active = false; };
-  }, [loadTickets]);
+  }, [loadTickets, sessionRevision]);
 
   useEffect(() => {
     const token = getAccessToken();
@@ -116,7 +133,7 @@ export default function SupportPage() {
       socket.off('communications.event', onEvent);
       socket.disconnect();
     };
-  }, [loadTickets]);
+  }, [loadTickets, sessionRevision]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -172,7 +189,7 @@ export default function SupportPage() {
       <main className="mx-auto grid max-w-7xl gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.72fr)]">
         <div className="space-y-5">
           <Panel>
-            <PanelHeading title="Find help" description="Static guidance explains the shell; ticket state is loaded from the support authority." />
+            <PanelHeading title="Find help" description="Search help topics or review your recent support tickets." />
             <div className="relative">
               <Search size={17} className="absolute left-3 top-3 text-[#8C8299]" />
               <input className={inputClass + ' pl-10'} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search help topics" aria-label="Search help topics" />
@@ -208,7 +225,7 @@ export default function SupportPage() {
           <Panel>
             <PanelHeading title="Recent tickets" description="Read-back from the support authority." />
             <div className="space-y-2">
-              {tickets.length ? tickets.map((ticket) => (
+              {ticketsState === 'LOADING' ? <DataStatePanel state="LOADING" title="Loading tickets" /> : ticketsState === 'ERROR' ? <><DataStatePanel state="ERROR" title="Tickets unavailable" message="Verify your wallet and try again. Ticket history could not be loaded." /><PrimaryButton onClick={() => void loadTickets().catch(() => undefined)}>Retry tickets</PrimaryButton></> : tickets.length ? tickets.map((ticket) => (
                 <button
                   key={ticket.id}
                   type="button"

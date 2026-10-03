@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import api from '../../lib/api';
 import { SUPPORTED_LOCALES, type LocaleCode } from '../../state/locale';
 import { useLocale } from '../../state/LocaleProvider';
-import { loadCurrentUser, type WalletProfile, clearWalletSession, sessionPrincipalId } from '../../lib/wallet-auth';
+import { type WalletProfile, clearWalletSession, sessionPrincipalId } from '../../lib/wallet-auth';
 import { recoverPublicSession } from '../../lib/api';
 import { DataStatePanel, Field, inputClass, PageHeader, PageShell, Panel, PanelHeading, PrimaryButton, TabButton } from '../wallet/components/ProductPrimitives';
 import SafeBackButton from '../../components/SafeBackButton';
@@ -58,7 +58,7 @@ export default function SettingsPage() {
     setState('LOADING');
     try {
       const [me, pref, kycStatus, sessionList, securityStatus] = await Promise.all([
-        loadCurrentUser(),
+        api.get<WalletProfile>('/auth/me').then((r) => r.data),
         api.get<Preferences>('/auth/preferences').then((r)=>r.data),
         api.get('/kyc/status').then((r)=>r.data),
         api.get<Session[]>('/auth/sessions').then((r)=>r.data),

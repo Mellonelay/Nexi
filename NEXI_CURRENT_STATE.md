@@ -1,6 +1,6 @@
 # NEXI Current State
 
-**As of:** 2026-10-02 (Myanmar time)
+**As of:** 2026-10-03 (Myanmar time)
 **Repository:** `Mellonelay/Nexi`
 **Durable source authority:** GitHub `main`; current production host/CORS/SIWE values below were read directly from the Cloudflare API on 2026-09-26. The Public domain source alignment is recorded in this revision; discover the exact current `main` SHA before consequential work.
 **Current deployed Public implementation frontier:** `be50529b789786fd83d808178f386b015f77b1f3` (Public responsive/mobile geometry closeout: narrow-mobile AppHeader one-row composition + corrected accessible menu name). Later documentation-only commits may advance GitHub `main` without changing this deployed implementation identity; always discover live `main` before consequential work.
@@ -61,7 +61,7 @@ The Public shell wallet-boundary defect was repaired at `04c8f5f...` and remains
 
 The current Public release also fixes standalone asset packaging: production HTML referenced missing JavaScript, CSS, fonts, and public assets because the standalone release omitted `.next/static` and `public`. The source build now copies both beside the standalone server and preserves the server entry/traced dependencies. The deployed release returned HTTP 200 for `/dashboard` and all 45 referenced static assets during the 2026-09-27 verification.
 
-Canonical 53-asset source/backend parity and local asset-icon integrity were verified in the current Public generation. Preserve that model unless current contradictory evidence appears.
+Canonical 53-asset registry/source coverage remains authoritative, and all 53 local asset-mark files are present. However, a 2026-10-03 source audit found that 36 of the 53 SVGs still contain text/placeholder-like marks rather than finished NEXI custom artwork. Therefore file-count/path coverage is proven, but full custom-icon visual acceptance is OPEN and must not be described as closed.
 ## Browser / rendered acceptance frontier
 
 Production browser acceptance must target the **deployed Public generation** at `https://www.nexitrading.app` while it exercises the real Cloudflare backend at `https://api.nexitrading.app`.
@@ -79,6 +79,20 @@ Current deployed changed-behavior proof (Spot at `142a4aa`, reused through `be50
 - Fresh boundary 2026-10-01T08:43:29.399Z: prices/klines and Socket.IO polling returned 200; no page errors were captured during these checks. This is bounded changed-behavior proof, not product-wide acceptance.
 - Margin boundary 2026-10-01T09:11:54.818Z: new build delivered; refresh 201, me 200, prices/klines/polling 200, no console errors. Mobile coarse-pointer probes passed; plot reachable with 16px dock clearance via the shared MAIN scroll owner. Canceled navigation/third-party telemetry requests were retained separately from application failures.
 - Owner re-authenticated the existing wallet; real app refresh/me requests prove a valid current session. No wallet setup or SIWE re-investigation is required absent fresh contradictory evidence.
+
+## Public product/reference convergence frontier — 2026-10-03
+
+The responsive/mobile geometry phase remains **COMPLETED**. The next Public frontend work is a bounded product/reference-convergence and full E2E pass, not another geometry redesign.
+
+Current demonstrated gaps:
+- **Dashboard / asset identity:** exactly 53 local asset-mark files exist, but 36 are still text/placeholder-like SVGs; full NEXI custom-icon quality is not accepted.
+- **Spot/Margin chart presentation:** MA/EMA/BOLL/RSI/MACD/VOL computation and overlays exist, but the accepted mobile reference intent for visible MA/EMA metric context is not fully represented in the current narrow/mobile presentation.
+- **Options/Binary:** source already renders the backend-driven five-column duration selector with min/max, payout, stake and Long/Short. Fresh production GET /binary/config returned HTTP 200 with empty durations and configurations, so the missing five live boxes are a current product/configuration defect; do not hardcode a historical duration set in the frontend.
+- **Wallet:** the shared AppHeader already renders wallet identity and app/dashboard/wallet/page.tsx renders another WalletConnectControl, creating redundant wallet/address identity in the Wallet composition.
+
+The accepted September reference family remains Quotes Hub, Spot/Margin, Options/Binary, wallet chooser, and Wallet, adapted to current NEXI runtime truth. Old Sep-12/13 V2/V3 authority, app.nexitrading.app, VM-local backend acceptance, consumer STALE/provider-health wording, BrowserStack-first authenticated acceptance, and the Sep-15 narrow completion model remain superseded.
+
+Owner-reported 2026-10-03 state: Polypane has now been wallet signed-in. Treat that as current owner state, while feature acceptance that depends on NEXI application authentication still uses the real /auth/me result plus rendered signed-in state when needed. Do not repeat wallet/profile/SIWE setup absent contradictory evidence.
 
 ## Open completion gates
 
@@ -103,7 +117,7 @@ Current deployed changed-behavior proof (Spot at `142a4aa`, reused through `be50
 
 ## Next dependency-ready direction
 
-Do not reopen the completed Public geometry phase without fresh contradictory evidence. Preserve the `be50529...` deployed proof and continue only with the next owner-selected platform/product completion row; broader backend/Admin/financial/market rows remain governed by the production completion ledger.
+Do not reopen the completed Public geometry phase without fresh contradictory evidence. Preserve the be50529... deployed proof. The active owner-selected frontier is now Public product/reference convergence plus full Public E2E closure under the production completion ledger; after those Public rows close, continue the remaining backend/market, identity/financial, communications, Admin, async/reliability and final-gate rows without skipping them.
 
 `FULL_PRODUCTION_END_TO_END_ACCEPTED = NO`
 
@@ -128,3 +142,11 @@ This does not upgrade unrelated market/backend/Admin/financial/product-lifecycle
 ## Work continuity control — 2026-10-02
 
 The existing skill checkpoint now enforces project-owned phase reconciliation (`scripts/nexi_phase_checkpoint.py`). Active engineering `workCycle` and sealed phase receipts preserve prior proof; skill fingerprints persist outside `/tmp`. Eight focused checks and real wrapper transition/recovery checks passed. Parent semantic review remains required; this is not an automatic ChatGPT host hook or product acceptance. See `docs/operations/NEXI_PHASE_RECONCILIATION.md`. Public geometry remains completed; deployed implementation remains `be50529...`; full production end-to-end acceptance remains NO.
+
+## Public convergence candidate checkpoint — 2026-10-03
+
+The current dirty candidate replaces 36 placeholder asset SVGs, improves ADA contrast, exposes actual MA(20)/EMA(20)/EMA(50) values with existing chart-series colors, and removes the authenticated Wallet body identity duplicate. Additional bounded repairs normalize Mining boolean/numeric enabled flags and decimal limits, separate public Loans catalog loading from protected history, distinguish Support read failures from empty state, remove the Settings profile-read/session-event request loop, make Messages read-service status truthful, and format Asset Detail backend values. These changes are SOURCE_IMPLEMENTED, not deployed or production accepted. Canonical typegen/typecheck and 20 focused tests passed; the communications-contract test passed from its required repository context. Fallow returned WARN with zero introduced dead-code/complexity findings; the attributed socket-cleanup clone is pre-existing. Canonical production build PASSED at /srv/nexi/public/build-public-convergence-20261003-0510 using the existing NEXT_TURBOPACK_ROOT=/srv/nexi/public override. Git fan-in and production verification remain pending. The existing production release and geometry proof remain unchanged.
+
+Binary is BLOCKED_WITH_EVIDENCE: real /binary/config returned 200 with empty arrays; BinaryService filters configuration through the market source policy, whose deployed ancestor and current source have settlement disabled/UNAPPROVED, binary=false and no supported durations. No later approved settlement policy was found in current authority. D1 remote inspection failed with Cloudflare 7403, so configuration-row presence/enabled state remains UNKNOWN. Do not invent settlement approval, durations or payouts.
+
+Fresh Worker metadata identifies deployment f41876b3-e8dd-4bf0-8043-61a81ecbb86f, Worker version 2ef838f5-f96a-4f48-99e2-db9d80dbc0b4 (September-26 canonical-host migration). The NestJS container code generation remains recorded as ed26973f; Worker metadata alone does not establish a newer container implementation SHA. This supersedes bdadd96f as the current Worker UUID, while preserving its historical promotion provenance.

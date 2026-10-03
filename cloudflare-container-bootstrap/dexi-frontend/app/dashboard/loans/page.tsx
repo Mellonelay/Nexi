@@ -13,6 +13,7 @@ import {
   WalletCards,
 } from 'lucide-react';
 import api from '../../lib/api';
+import { finiteMarketNumber } from '../../lib/market-data';
 import {
   authoritativeValue,
   LoanState,
@@ -111,23 +112,27 @@ export default function LoansPage() {
 
   const load = useCallback(async () => {
     if (!sessionChecked) return;
+    setPlansState('LOADING');
+    try {
+      const planResult = await api.get('/loans/plans');
+      setPlans(Array.isArray(planResult.data) ? planResult.data : []);
+      setPlansState('LIVE');
+    } catch {
+      setPlans([]);
+      setPlansState('ERROR');
+    }
     if (!userId || !backendConfigured) {
       setLoans([]);
       setState('UNAVAILABLE');
       return;
     }
-
     setState('LOADING');
     try {
-      const [result, planResult] = await Promise.all([api.get(`/loans/my/${userId}`), api.get('/loans/plans')]);
+      const result = await api.get(`/loans/my/${userId}`);
       setLoans(Array.isArray(result.data) ? result.data : []);
-      setPlans(Array.isArray(planResult.data) ? planResult.data : []);
-      setPlansState('LIVE');
       setState('LIVE');
     } catch {
       setLoans([]);
-      setPlans([]);
-      setPlansState('ERROR');
       setState('ERROR');
     }
   }, [backendConfigured, sessionChecked, userId]);
@@ -151,7 +156,7 @@ export default function LoansPage() {
   const principal = positiveNumber(amount);
   const durationDays = positiveInteger(duration);
   const selectedPlan = plans.find((plan) => String(plan.id) === selectedPlanId);
-  const selectedRate = selectedPlan && typeof selectedPlan.interestRate === 'number' ? selectedPlan.interestRate : null;
+  const selectedRate = selectedPlan ? finiteMarketNumber(selectedPlan.interestRate) : null;
   const interestPreview = principal !== null && selectedRate !== null ? principal * selectedRate : null;
   const totalPreview = principal !== null && interestPreview !== null ? principal + interestPreview : null;
   const reviewApplication = async (event: FormEvent) => {

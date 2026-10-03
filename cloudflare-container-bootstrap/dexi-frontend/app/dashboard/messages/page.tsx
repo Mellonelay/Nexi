@@ -241,7 +241,7 @@ export default function MessagesPage() {
         <section className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Message summary">
           <Metric label="Conversations" value={state === 'LIVE' ? authoritativeValue(threads.length) : '—'} hint="Available conversations" />
           <Metric label="Unread" value={unreadCount === null ? '—' : authoritativeValue(unreadCount)} hint="Current unread state" />
-          <Metric label="Delivery service" value={messageEndpoint && userId ? 'Available' : 'Unavailable'} hint="Message delivery status" />
+          <Metric label="Conversation service" value={state === 'LIVE' ? 'Available' : 'Unavailable'} hint="Conversation read status" />
           <Metric label="Attachments" value="—" hint="Unavailable" />
         </section>
         <div className="grid gap-5 lg:grid-cols-[minmax(280px,0.72fr)_minmax(0,1.28fr)] lg:items-start">

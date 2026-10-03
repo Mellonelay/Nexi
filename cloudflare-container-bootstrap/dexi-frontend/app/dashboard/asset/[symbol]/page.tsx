@@ -15,6 +15,8 @@ import { marketDisplayStatus } from '../../../lib/market-data';
 import LocalDateTime from '../../../components/LocalDateTime';
 
 const placeholder = '—';
+const formatNumber = (value: number | null, precision = 2) => value === null ? placeholder : value.toLocaleString('en-US', { maximumFractionDigits: precision });
+const formatChange = (value: number | null) => value === null ? placeholder : `${value > 0 ? '+' : ''}${value.toFixed(2)}%`;
 const TIMEFRAME_OPTIONS = ['1m', '5m', '15m', '30m', '1h', '4h', '1d'] as const;
 type MarketItem = ReturnType<typeof useMarketData>['marketPairs'][number];
 
@@ -102,9 +104,9 @@ function AssetDetailView({
               </div>
             </div>
             <div className="text-left sm:text-right">
-              <p className="font-mono text-2xl tabular-nums">{instrument.price ?? placeholder}</p>
+              <p className="font-mono text-2xl tabular-nums">{formatNumber(instrument.price, instrument.precision ?? 8)}</p>
               <span className={`inline-flex rounded border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.1em] ${statusClass}`}>{displayStatus}</span>
-              <p className="font-mono text-sm text-[#8C8299]">24h {instrument.change24h ?? placeholder}</p>
+              <p className="font-mono text-sm text-[#8C8299]">24h {formatChange(instrument.change24h)}</p>
             </div>
           </div>
         </section>
@@ -131,9 +133,9 @@ function AssetDetailView({
           <div className="min-w-0 rounded-xl border border-violet-300/15 bg-[#100A18] p-4">
             <h2 className="mb-4 font-semibold">Market data</h2>
             <dl className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,7rem),1fr))] gap-x-4 gap-y-4 text-sm">
-              <div><dt className="text-[#8C8299]">Last price</dt><dd className="mt-1 font-mono">{instrument.price ?? placeholder}</dd></div>
-              <div><dt className="text-[#8C8299]">24h change</dt><dd className="mt-1 font-mono">{instrument.change24h ?? placeholder}</dd></div>
-              <div><dt className="text-[#8C8299]">Volume (24h)</dt><dd className="mt-1 font-mono">{instrument.volume24h ?? placeholder}</dd></div>
+              <div><dt className="text-[#8C8299]">Last price</dt><dd className="mt-1 font-mono">{formatNumber(instrument.price, instrument.precision ?? 8)}</dd></div>
+              <div><dt className="text-[#8C8299]">24h change</dt><dd className="mt-1 font-mono">{formatChange(instrument.change24h)}</dd></div>
+              <div><dt className="text-[#8C8299]">Volume (24h)</dt><dd className="mt-1 font-mono">{formatNumber(instrument.volume24h)}</dd></div>
               <div><dt className="text-[#8C8299]">Precision</dt><dd className="mt-1 font-mono">{instrument.precision ?? placeholder}</dd></div>
               <div><dt className="text-[#8C8299]">Source</dt><dd className="mt-1 font-mono">{provider ?? placeholder}</dd></div>
               <div><dt className="text-[#8C8299]">Updated</dt><dd className="mt-1 font-mono"><LocalDateTime value={item.observedAt} timeStyle="short" /></dd></div>

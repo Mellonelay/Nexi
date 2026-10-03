@@ -1,6 +1,6 @@
 # NEXI Production Completion Ledger
 
-**Authority date:** 2026-10-02 (Myanmar time)
+**Authority date:** 2026-10-03 (Myanmar time)
 **Repository:** `Mellonelay/Nexi`
 **Current source authority:** GitHub `main` (discover live; do not freeze this ledger to a historical SHA)
 **Current product/runtime split:** Public implementation `be50529b789786fd83d808178f386b015f77b1f3`; Public release `be50529-geometry-prod` with that release SHA; Admin release `ed26973f-prod-node` remains unchanged; Cloudflare backend deployment remains `bdadd96f-3696-474b-955d-de490a9a466d` from the `ed26973f` promotion. A documentation-only closeout commit may make GitHub `main` newer than the deployed Public implementation; discover live before consequential work.
@@ -9,6 +9,39 @@
 ## 0. Active production closure controller — owner correction 2026-09-20
 
 This section is the **active execution queue** and supersedes older statements that only wallet/SIWE and privileged Admin remain.
+
+
+### 0.1 Whole-product completion order — owner decision 2026-10-03
+
+**Owner objective:** finish the entire current production-completion program today without silently dropping any active row. “Today” is an execution priority, not permission to weaken evidence, fabricate a PASS, bypass identity/authorization, or replace the causal owner with a shortcut.
+
+This file remains the **single writable completion controller**. Do not create another competing completion ledger. NEXI_CURRENT_STATE.md remains durable current truth; /home/mellonelay1999/.agents/BROWSER_FABRIC.md owns browser-tool responsibility only.
+
+Execution order:
+1. **Reconcile truth first.** Read this Section 0, NEXI_CURRENT_STATE.md, current GitHub main, live Worker-0/release state, and the current browser-fabric contract. Update stale row narratives before implementation.
+2. **Public/frontend closure next.** The existing frontend Work session is the primary owner for the Public P-* rows and product-visible frontend changes. It must consume this ledger first, then close the current Public product/reference defects and the remaining Public E2E rows. The completed responsive/mobile geometry proof is reused and must not be restarted without contradictory evidence.
+3. **Market/backend closure.** After the Public slice is closed or a demonstrated Public failure is routed to its backend causal owner, continue A-08 and the open M-* rows. The broad non-crypto stale/session-hours investigation remains deferred unless a fresh product-visible defect makes it causal.
+4. **Identity + protected financial/trading closure.** Reuse the preserved authenticated wallet state. Close I-* and F-* through the canonical NestJS -> D1/Ledger/EventOutbox paths. A documentation or browser task does not itself authorize a financial transaction.
+5. **Earn/Loans + communications/settings.** Close E-* and C-* with real Public -> backend -> durable read-back paths and truthful unavailable/error states.
+6. **Admin closure.** Close AD-* through the separate Admin plane and canonical backend authority. Privileged mutations require the appropriate controlled Admin identity/authorization.
+7. **Async/reliability closure.** Close R-* with affected-domain evidence for EventOutbox, Queue retry/delivery, Workflows, Valkey/Socket.IO recovery and duplicate/retry/concurrency safety.
+8. **Final gates.** Reconcile Z-01/Z-02/Z-03 and only then perform Z-04 owner final acceptance.
+
+**Frontend-session ownership boundary:** frontend owns Public source/rendered behavior and may identify a backend/config causal owner, but it must not hardcode backend truth, invent financial state, rebuild backend/Admin domains, or turn Polypane into the authenticated product authority. Route causal backend/config work to the correct owner and resume the same Public row after repair.
+
+**Browser path for this slice:** preserved authenticated Worker-0 Chrome/MetaMask remains the primary authenticated product proof. Polypane 31.0.0 supplies secondary responsive/multi-viewport breadth using the already-produced learning/connection artifacts. The current owner-approved direct-deploy loop is deterministic source/build gates -> deploy current Public candidate -> test the deployed www.nexitrading.app generation -> bounded repair/redeploy/retest. Do not add a mandatory staging/local-browser gate.
+
+**Current Public product/reference defects that must be recorded before further frontend implementation:**
+- P-01: 53 asset entries/files are present, but 36 local SVGs are text/placeholder-like rather than finished NEXI custom artwork. File existence is not icon-quality acceptance.
+- P-02: chart engine/overlays implement MA/EMA/BOLL/RSI/MACD/VOL, but the accepted mobile reference intent for visible MA/EMA metric context is not fully converged.
+- P-03: source already has the five-column backend-driven duration selector, min/max, payout, stake and Long/Short. Fresh production GET https://api.nexitrading.app/binary/config returned HTTP 200 with empty durations and configurations; the missing live boxes are therefore a current product/configuration defect, not a reason to hardcode historical values.
+- P-04: Wallet renders a local WalletConnectControl while the shared AppHeader already owns wallet identity, producing redundant wallet/address identity in the current composition.
+- P-13: responsive/mobile geometry sub-scope is completed at be50529...; only product/accessibility/provider-choice behavior not already proven remains open.
+
+The accepted visual/reference family is Quotes Hub, Spot/Margin, Options/Binary, wallet chooser and Wallet, adapted to current NEXI runtime truth. Old V2/V3 authority and other superseded September assumptions must not be restored.
+
+After this reconciliation the 62 active rows classify as: **8 COMPLETED, 4 PROVEN_UNCHANGED, 40 NEEDS_FRESH_PROOF, 6 OPEN_DEFECT, 3 AUTOMATION_IDENTITY_REQUIRED, 1 OWNER_FINAL_ACCEPTANCE.** These counts describe proof state, not implementation absence.
+
 
 ### Hard production rules
 
@@ -56,10 +89,10 @@ This section is the **active execution queue** and supersedes older statements t
 | M-07 | Market | REST read-back recovery from D1 authority | `PROVEN_UNCHANGED` | rerun after read-path dependency change |
 | M-08 | Market | Real depth + executed trades are current and source-backed | `NEEDS_FRESH_PROOF` | production depth/trades provenance |
 | M-09 | Market | Long-running reliability/soak across provider thresholds and reconnects | `NEEDS_FRESH_PROOF` | timed evidence with zero unexplained open-market stale rows |
-| P-01 | Public | Dashboard / Quotes Hub | `NEEDS_FRESH_PROOF` | Public `12cf799...` dashboard and 45 referenced static assets returned HTTP 200 after standalone asset packaging fix; this proves asset reachability only. Authenticated rendered interaction/data acceptance remains open. |
-| P-02 | Public | Spot Trading | `NEEDS_FRESH_PROOF` | Preserved authenticated Chrome: deployed chart resize/drawer proof retained. At `142a4aa`, short-height composition, definite Spot chart height, pair/price separation and exclusive market-panel switching are runtime-verified across bounded mobile/tablet/desktop-class probes. Fresh prices/klines/polling 200; no page errors. Margin portrait definite-height correction is BUILD_VERIFIED, DEPLOYED and RUNTIME_VERIFIED at `a924e0d`: 300px chart/root, 206.5px plot at 390×650; fresh refresh 201/me 200. Complete trading E2E remains open; no financial action performed. |
-| P-03 | Public | Options / Binary | `NEEDS_FRESH_PROOF` | deployed UI/API/quote/settlement contract proof |
-| P-04 | Public | Wallet surface/access model | `NEEDS_FRESH_PROOF` | Global Public wallet gate repair remains in current Public source; protected actions remain gated. On 2026-10-02 the preserved MetaMask test wallet completed NEXI SIWE on chain 1 and the authenticated Wallet route retained the session under geometry verification. WalletConnect production-visible UX and protected wallet/financial action lifecycle remain unverified. |
+| P-01 | Public | Dashboard / Quotes Hub | `OPEN_DEFECT` | Existing reachability/geometry proof is retained. 2026-10-03 asset-mark audit found 53/53 local SVG files but 36 still contain text/placeholder-like marks, so full NEXI custom-icon visual acceptance is not closed. Authenticated Quotes interaction/data E2E remains open. |
+| P-02 | Public | Spot Trading | `OPEN_DEFECT` | Preserve the deployed chart resize/drawer/short-height geometry proof. Current TradingChart implements MA/EMA/BOLL/RSI/MACD/VOL and overlays, but 2026-10-03 owner/reference reconciliation found the narrow/mobile indicator metric presentation not yet converged to the accepted NEXI reference intent. Complete trading E2E also remains open; no financial action is implied. |
+| P-03 | Public | Options / Binary | `OPEN_DEFECT` | Source already renders a five-column backend-driven duration selector with min/max, payout, stake and Long/Short. Fresh 2026-10-03 production GET /binary/config returned HTTP 200 with empty durations and configurations, so the live selector cannot populate. Repair the backend/config causal owner; do not hardcode a historical duration set. Full quote/submit/countdown/settlement E2E remains open. |
+| P-04 | Public | Wallet surface/access model | `OPEN_DEFECT` | Global Public wallet-gate repair and authenticated geometry proof remain reusable. Current source has wallet identity in the shared AppHeader and another WalletConnectControl in the Wallet page header, producing redundant wallet/address identity. Resolve that composition drift through the existing owner; protected financial lifecycle proof remains separate. |
 | P-05 | Public | Earn / Mining | `NEEDS_FRESH_PROOF` | deployed end-to-end lifecycle proof |
 | P-06 | Public | Loan | `NEEDS_FRESH_PROOF` | deployed end-to-end lifecycle proof |
 | P-07 | Public | Support | `NEEDS_FRESH_PROOF` | deployed create/read/reply/state proof |
@@ -99,7 +132,7 @@ This section is the **active execution queue** and supersedes older statements t
 | R-05 | Reliability | Duplicate/retry/concurrency safety | `NEEDS_FRESH_PROOF` | focused adversarial tests |
 | Z-01 | Gate | All non-owner-context rows above complete or proven unchanged | `OPEN_DEFECT` | zero unresolved required rows |
 | Z-02 | Gate | Identity rows completed with controlled identities or explicitly owner-deferred | `AUTOMATION_IDENTITY_REQUIRED` | row-level proof/owner decision |
-| Z-03 | Gate | NEXI_CURRENT_STATE.md + this ledger reconciled to latest durable truth | COMPLETED | Current-state/ledger reconciliation includes the 2026-10-02 geometry closeout at deployed be50529; historical host/auth snapshots below are superseded within their proven scope. P-02/I-01 retain their separate full-product/session requirements; geometry does not close them. |
+| Z-03 | Gate | NEXI_CURRENT_STATE.md + this ledger reconciled to latest durable truth | COMPLETED | Reconciled 2026-10-03 to the owner whole-product completion objective, completed be50529... geometry scope, current Public product/reference defects, current browser ownership and Polypane learning state. Geometry does not close broader Public/product/session rows. |
 | Z-04 | Gate | Owner manual acceptance | `OWNER_FINAL_ACCEPTANCE` | only after Z-01/Z-02/Z-03 permit it |
 
 ### Execution order
@@ -240,7 +273,7 @@ These are **surviving product requirements**, not instructions to rebuild alread
 | Trades | show genuine executed provider trades only | Never label ticks as trades. |
 | Spot | order validation/reservation/lifecycle/fills/fees/ledger/outbox/realtime/history | Existing domain. Do not rebuild; targeted repair only if a current path fails. |
 | Margin | isolated only; LONG/SHORT; exactly 2x/3x/5x; collateral/risk/interest/close/liquidation + ledger/Admin visibility | Existing domain. Cross/futures/perpetual/portfolio margin remain excluded. |
-| Options/Binary | same Active Pair; backend-configured durations `30/60/180/240/480`; authoritative payout/countdown/settlement/refund/cancel/unavailable states | Existing domain. |
+| Options/Binary | same Active Pair; backend-configured enabled durations from the canonical configuration authority; authoritative payout/countdown/settlement/refund/cancel/unavailable states | Existing domain. Do not hardcode a historical duration set when current configuration is empty or differs. |
 | Binary sandbox | overrides isolated, permissioned, audited, never silently affect normal users | Preserve governance isolation. |
 
 ## 8. Wallet and financial authority
@@ -701,3 +734,11 @@ Rows P-01/P-03/P-04/P-12/P-13 retain their broader product/lifecycle statuses wh
 ## Work-control reconciliation — 2026-10-02
 
 The NEXI checkpoint requires prior-phase evidence and explicit reconciliation of this ledger and current state before a phase transition or final completion report. The parent updates the exact selected queue row when durable completion evidence changes; justified unchanged phases do not churn product statuses. Eight focused gate checks and a real wrapper blocked-transition/recovery check passed. This control change closes no additional product row, promotes no source, and grants no deployment/push authority. Public geometry proof and broader open queue requirements remain unchanged. Protocol: `docs/operations/NEXI_PHASE_RECONCILIATION.md`.
+
+## Public convergence candidate evidence checkpoint — 2026-10-03
+
+The current dirty candidate replaces 36 placeholder asset SVGs, improves ADA contrast, exposes actual MA(20)/EMA(20)/EMA(50) values with existing chart-series colors, and removes the authenticated Wallet body identity duplicate. Additional bounded repairs normalize Mining boolean/numeric enabled flags and decimal limits, separate public Loans catalog loading from protected history, distinguish Support read failures from empty state, remove the Settings profile-read/session-event request loop, make Messages read-service status truthful, and format Asset Detail backend values. These changes are SOURCE_IMPLEMENTED, not deployed or production accepted. Canonical typegen/typecheck and 20 focused tests passed; the communications-contract test passed from its required repository context. Fallow returned WARN with zero introduced dead-code/complexity findings; the attributed socket-cleanup clone is pre-existing. Canonical production build PASSED at /srv/nexi/public/build-public-convergence-20261003-0510 using the existing NEXT_TURBOPACK_ROOT=/srv/nexi/public override. Git fan-in and production verification remain pending. The existing production release and geometry proof remain unchanged.
+
+Binary is BLOCKED_WITH_EVIDENCE: real /binary/config returned 200 with empty arrays; BinaryService filters configuration through the market source policy, whose deployed ancestor and current source have settlement disabled/UNAPPROVED, binary=false and no supported durations. No later approved settlement policy was found in current authority. D1 remote inspection failed with Cloudflare 7403, so configuration-row presence/enabled state remains UNKNOWN. Do not invent settlement approval, durations or payouts.
+
+Fresh Worker metadata identifies deployment f41876b3-e8dd-4bf0-8043-61a81ecbb86f, Worker version 2ef838f5-f96a-4f48-99e2-db9d80dbc0b4 (September-26 canonical-host migration). The NestJS container code generation remains recorded as ed26973f; Worker metadata alone does not establish a newer container implementation SHA. This supersedes bdadd96f as the current Worker UUID, while preserving its historical promotion provenance.
