@@ -93,7 +93,7 @@ function ChartMetricsRail({
   overlays: { ma20: number | undefined; ema20: number | undefined; ema50: number | undefined };
 }) {
   return (
-    <div role="region" aria-label="Chart values" tabIndex={0} className="nexi-chart-rail nexi-scroll-rail flex min-w-0 shrink-0 items-center overflow-x-auto whitespace-nowrap gap-x-3 gap-y-1 border-b border-violet-300/10 bg-black/15 px-3 py-2 font-mono text-[9px] sm:text-[10px]">
+    <div role="region" aria-label="Chart values" tabIndex={0} className="nexi-chart-rail [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex min-w-0 shrink-0 items-center overflow-x-auto whitespace-nowrap gap-x-3 gap-y-1 border-b border-violet-300/10 bg-black/15 px-3 py-2 font-mono text-[9px] sm:text-[10px]">
       <span className="font-semibold text-[#F8F6FF]">{symbol}</span>
       <span className="rounded border border-violet-300/15 px-1.5 py-0.5 text-[#CFC4FF]">{interval}</span>
       <span className="hidden text-[#8C8299] sm:inline">O <b className="font-medium text-[#C3BBD0]">{formatMetric(latest?.open)}</b></span>
