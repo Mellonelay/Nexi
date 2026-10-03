@@ -155,3 +155,13 @@ For market work, do not optimize for a cosmetic `LIVE` count. Open-market assets
 ## Durable phase checkpoint — 2026-10-02
 
 For NEXI engineering work, use the existing `worker0-skill-checkpoint` at each real phase boundary and before completion. Its project-owned gate requires the preceding phase's saved proof plus explicit reconciliation of `NEXI_CURRENT_STATE.md` and `NEXI_PRODUCTION_COMPLETION_LEDGER.md`. Follow `docs/operations/NEXI_PHASE_RECONCILIATION.md`; recover `workCycle` from the current capsule before acting. The routing helper is advisory: using-agent-skills and the parent choose the actual causal method; a keyword-selected unrelated skill is not invocation proof. Preserve completed product evidence and separate local/GitHub source from deployed source. Do not bypass a blocked checkpoint or create a second completion ledger.
+
+## CodeScene MCP mandatory maintainability safeguards
+
+Code Health is authoritative for maintainability. Target **10.0** for AI-touched scorable code; 9+ and a non-regression PASS do not satisfy that target. Apply worker0-codescene and nexi-codescene-quality-gates through the existing Work Kernel.
+
+After each AI code modification run code_health_review on the affected supported files. Before every commit run pre_commit_code_health_safeguard, inspecting quality_gates and metadata coverage; before a PR run analyze_change_set against the actual base ref (HEAD scope). Compose the deterministic staged guard cs delta --git-hook --staged with existing hooks. On regression or a missed target use the review to guide 3–5 small refactor steps and remeasure; do not claim readiness without meeting the target or explicit scoped owner acceptance. Unsupported/zero eligible files are NOT_SCORED, never 10.0.
+
+Use live select_project and project/file hotspot and goal variants; stale vendor aliases are not callable authority. Project API availability must be proved separately from local analysis. Graphify owns topology, Fallow distinct static findings, and real production/browser tests behavior. Reuse closed geometry; maintainability tools cannot grant production or financial acceptance.
+
+Read docs/operations/NEXI_CODESCENE_WORKFLOW.md for the organized nine official skills, CLI/MCP examples, auth/project boundaries and optional ACE constraints.

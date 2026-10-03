@@ -82,3 +82,7 @@ Do not erase valid binding knowledge merely because its historical name contains
 ## Verification
 Match proof to the claim: deterministic checks -> runtime observation -> source reconciliation -> independent review. A graph path does not prove behavior; a build does not prove runtime; browser success does not repair a source/contract failure.
 Keep `IMPLEMENTED`, `STATICALLY_VALIDATED`, `TESTED`, `INTEGRATED`, `RUNTIME_VERIFIED`, `DEPLOYED`, and `OWNER_ACCEPTED` distinct.
+
+## CodeScene required gates
+
+Use NEXI_CODESCENE_WORKFLOW.md and nexi-codescene-quality-gates for AI code changes. Preserve the three parent-owned lanes; add per-file review, mandatory pre-commit and PR safeguards with measured 10.0 target. Code Health does not replace production acceptance.

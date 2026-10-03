@@ -1,0 +1,4 @@
+interface:
+  display_name: "NEXI CodeScene Quality Gates"
+  short_description: "Route CodeScene skills, CLI and MCP safeguards"
+  default_prompt: "Use $nexi-codescene-quality-gates to safeguard the current NEXI change before commit."
