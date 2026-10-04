@@ -86,3 +86,10 @@ Keep `IMPLEMENTED`, `STATICALLY_VALIDATED`, `TESTED`, `INTEGRATED`, `RUNTIME_VER
 ## CodeScene required gates
 
 Use NEXI_CODESCENE_WORKFLOW.md and nexi-codescene-quality-gates for AI code changes. Preserve the three parent-owned lanes; add per-file review, mandatory pre-commit and PR safeguards with measured 10.0 target. Code Health does not replace production acceptance.
+
+
+## Workspace Memory and cross-session evidence
+
+Route each fact to its owning store. ChatGPT Workspace Memory follows the installed `workspace-memory` skill and keeps short topic navigation lines with real `dc://` provenance. Agent Kernel stores approved governance; the Worker-0 checkpoint stores verified operational continuity; Graphify stores revision-bound structure; GitHub stores project source and reviewed project documentation; chat exports are historical evidence only. A write or query in one store does not prove persistence in another.
+
+Before Workspace Memory access, verify its active index/root or native capability. Never guess a `.memory` path, workspace/chat/message ID, or citation. Graphify Work Memory is optional: honor native `recall_state` and stop if unsupported. Worker-0 edits follow `RDC_ONBOARDING.md` and the bounded `worker0-protect unlock -> edit -> verify -> refresh-lock` cycle. Use skills.sh to discover only a distinct missing capability, then inspect and audit before adoption. Keep private chat memory out of the project repository. Validate agent guidance with `agnix` and update only the store that owns the change.
