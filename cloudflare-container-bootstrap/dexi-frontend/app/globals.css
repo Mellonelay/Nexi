@@ -377,13 +377,15 @@ body {
     transition-duration: var(--nexi-motion-press);
   }
 
-  .nexi-ripple {
+  .nexi-ripple,
+  .nexi-station-card[aria-labelledby="spot-ticket-heading"] .nexi-interactive {
     position: relative;
     isolation: isolate;
     overflow: hidden;
   }
 
-  .nexi-ripple::after {
+  .nexi-ripple::after,
+  .nexi-station-card[aria-labelledby="spot-ticket-heading"] .nexi-interactive::after {
     position: absolute;
     inset: 50% auto auto 50%;
     width: 140%;
@@ -398,12 +400,14 @@ body {
     z-index: 0;
   }
 
-  .nexi-ripple > * {
+  .nexi-ripple > *,
+  .nexi-station-card[aria-labelledby="spot-ticket-heading"] .nexi-interactive > * {
     position: relative;
     z-index: 1;
   }
 
-  .nexi-ripple:active::after {
+  .nexi-ripple:active::after,
+  .nexi-station-card[aria-labelledby="spot-ticket-heading"] .nexi-interactive:active::after {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
   }
