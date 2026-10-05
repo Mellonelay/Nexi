@@ -162,6 +162,8 @@ Charts/order books need text labels/status summaries sufficient to understand cu
 ## Validation
 For UI behavior changes, validate the rendered deployed app, not just compilation.
 
+PUBLIC BUILD AUTHORITY: Do not build this app during iterative repair. Finish all source changes and focused source checks first. The only generated Public build/runtime directory is `/srv/nexi/public/current`; do not create `build-*`, `releases/*`, candidate, temporary, rollback, worktree, or copied build-output directories under `/srv/nexi/public`. When the owner-selected source frontier is ready for the final integration pass, stop `nexi-public.service`, synchronize this canonical source into `/srv/nexi/public/current`, run the single production build there, restart the service, and verify deployed behavior.
+
 Before deployment, run only the focused deterministic source/build gates invalidated by the change. Final browser acceptance follows the current global Browser Fabric and owner-selected browser responsibility model:
 - the preserved authenticated Worker-0 Chrome profile is the PRIMARY NEXI rendered/product acceptance environment;
 - Playwright / Chrome DevTools / React DevTools / passive Requestly support that same primary browser state;

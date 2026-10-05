@@ -50,14 +50,14 @@ If source authority advances without deployment, record the new GitHub source SH
 On Worker 0, always use the dedicated hosting/runtime seams instead of creating session-local frontend/admin dependency trees:
 - Public source: `/home/mellonelay1999/workspaces/Nexi/cloudflare-container-bootstrap/dexi-frontend`
 - Public canonical dependencies: `/srv/nexi/public/shared/node_modules`
-- Public runtime: `/srv/nexi/public/current` -> immutable release under `/srv/nexi/public/releases/`
+- Public canonical build/runtime directory: `/srv/nexi/public/current`
 - Admin source: `/home/mellonelay1999/workspaces/Nexi/apps/admin`
 - Admin canonical dependencies: `/srv/nexi/admin/shared/node_modules`
-- Admin runtime: `/srv/nexi/admin/current` -> immutable release under `/srv/nexi/admin/releases/`
+- Admin runtime remains governed by its current task-specific authority.
 
-Both source `node_modules` paths must be symlinks to their dedicated `/srv/nexi/.../shared/node_modules` owners. Do not run `npm ci` directly inside either source tree on Worker 0 because npm may replace the symlink with a new local tree. If dependency reconstruction is required, stage the current source `package.json` + `package-lock.json` into the corresponding `/srv/nexi/<surface>/shared` install context, rebuild there, then restore/verify the source symlink. Package manifests/lockfiles remain source authority; `node_modules`, `.next`, `.output`, and traced release runtime dependencies are generated state.
+CURRENT OWNER BUILD RULE FOR PUBLIC: `/srv/nexi/public/current` is the only generated Public build/runtime directory. It is a real directory, not a symlink. Do not create `/srv/nexi/public/build-*`, `/srv/nexi/public/releases/*`, candidate release trees, temporary build roots, copied build outputs, rollback release copies, or alternate Public build directories. Finish all source repairs and focused source checks first. Only when the owner-selected Public source frontier is ready for final integration may the parent stop `nexi-public.service`, synchronize the verified canonical Public source into `/srv/nexi/public/current`, run the one final production build in that same directory, restart the service, and verify the deployed behavior. No iterative build/deploy loop while source defects remain open.
 
-Historical immutable releases are rollback/deployment artifacts, not dependency duplicates. Do not delete them as part of dependency cleanup without an explicit retention decision.
+Both source `node_modules` paths must be symlinks to their dedicated `/srv/nexi/.../shared/node_modules` owners. Do not run `npm ci` directly inside either source tree on Worker 0 because npm may replace the symlink with a new local tree. If dependency reconstruction is required, stage the current source `package.json` + `package-lock.json` into the corresponding `/srv/nexi/<surface>/shared` install context, rebuild there, then restore/verify the source symlink. Package manifests/lockfiles remain source authority; `node_modules`, `.next`, and `.output` are generated state.
 
 ## Fast execution routing
 Use direct source when the affected file/symbol is already known.
