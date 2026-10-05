@@ -97,6 +97,10 @@ Treat `DESIGN.md` in this directory as the current visual contract.
 Read it before any visual, layout, responsive, chart-composition, wallet-sheet, navigation, or motion change.
 Do not generate a replacement design system or a second frontend design authority.
 
+Frontend-local design intelligence is installed at `.agents/skills/ui-ux-pro-max/` (UI/UX Pro Max, Universal / Agent Standard). For bounded UI/UX work, read its `SKILL.md` and use `scripts/search.py` for focused evidence: exact style/UX/chart queries first, then the `nextjs` stack only for distinct implementation guidance. Reuse its local offline datasets; do not rerun broad design-system generation when the current NEXI design direction is already established. Never persist a generated `design-system/*/MASTER.md` unless the owner explicitly requests a new secondary artifact; `DESIGN.md` and current owner visual references remain authority.
+
+Apply the skill as advisory evidence, not as a redesign mandate. Its generic Fintech/Crypto reasoning can conflict with NEXI's accepted Deep Liquid Violet identity; current owner decisions and `DESIGN.md` win. For web NEXI, use the skill's active `glassmorphism` guidance where it improves hierarchy, contrast, and elevation. Its `liquid-glass` entry is explicitly scoped to Apple platform materials (`swiftui|uikit|appkit`), so on Next.js/web borrow only restrained translucency/refraction/motion principles rather than claiming or mechanically reproducing Apple Liquid Glass. Its Next.js dataset is verified for 16.2 while this app is 16.3.5, so official current Next.js docs remain framework authority.
+
 Core identity:
 - near-black OLED canvas
 - Deep Liquid Violet interaction language
