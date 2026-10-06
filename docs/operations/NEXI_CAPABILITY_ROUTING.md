@@ -25,7 +25,7 @@ Third-party skills specialize work; they do not override NEXI architecture, secu
 - Platform/backend runtime: current official Cloudflare docs first, then verified Wrangler/Cloudflare MCP/runtime surfaces; use Wrangler Container SSH when documented shell access is required. `avn` + `redis-cli` remain Valkey realtime/cache only. Never substitute a VM backend for Cloudflare runtime truth.
 - Git/PR/CI: Git + GitHub.
 - Runtime/telemetry: direct service/process/HTTP evidence, Sentry, task-relevant Cloudflare observability.
-- Browser: preserved authenticated Worker-0 Chrome owns primary NEXI product acceptance against the deployed Public app and real Cloudflare backend. Playwright/DevTools support the same profile/tab. Polypane is secondary responsive breadth; BrowserStack is targeted real-device/cross-browser evidence. Follow the responsibility split below; no mandatory duplicate or local-preview acceptance chain.
+- Browser: Polypane on DevTools `127.0.0.1:5859` owns primary visual/responsive discovery and acceptance breadth. Preserved authenticated Worker-0 Chrome on `5858` owns distinct wallet/session acceptance. Playwright/DevTools support only the claim they are attached to; BrowserStack is targeted real-device/cross-browser evidence. Follow the responsibility split below; do not duplicate the same acceptance claim.
 - Direct bounded editing: parent/RDC when owner and proof are deterministic.
 - Heavy workers: Codex/Kilo only for substantial bounded work or independent review where separate reasoning context adds value.
 
@@ -54,22 +54,20 @@ ROUTING
 Then execute immediately.
 
 ## MCP/CLI transport policy
-Use one primary transport owner per responsibility. The live Worker-0 `rdc-mcp` route table is documented and canaried in `RDC_ONBOARDING.md`; do not duplicate mutable auth state here.
-Codex `/mcp` is authoritative for Codex-visible MCP tools and OAuth state. `rdc-mcp` is a direct Worker-0 diagnostic/canary bridge, not a universal mirror of Codex MCPs.
+Use one primary transport owner per responsibility. Worker-0 MCP transport is owned by `mcpc` named sessions; `rdc-mcp` is the compatibility facade over that same client and route table. For Next.js 16+ development diagnostics use the official `@nexi-nextjs` (`next-devtools-mcp`) route, which discovers running development servers through `/_next/mcp`; direct source/types remain implementation authority. Current route/auth canaries belong in `RDC_ONBOARDING.md` / `GLOBAL_MCP_CATALOG.md`; do not duplicate mutable auth state here.
+Codex `/mcp` remains authoritative for Codex-visible MCP tools and Codex OAuth state. Worker-0 mcpc profiles/sessions are a separate transport/auth domain, not a universal mirror of Codex MCPs.
 Never create Remote-Desktop-Commander-via-Remote-Desktop-Commander recursion.
 
 ## Browser responsibility split
 Final production acceptance follows the global `/home/mellonelay1999/.agents/BROWSER_FABRIC.md` contract and the current owner decision:
 
-1. Preserved headed Worker-0 Chrome + MetaMask profile: PRIMARY rendered/authenticated NEXI product-testing environment. Reuse the existing controlled profile/session and do not repeat SIWE unless fresh regression evidence requires it.
-2. Microsoft Playwright Extension + the stateful Playwright CLI session: deterministic navigation, replay, assertions, screenshots, and geometry checks attached to that same authenticated browser state.
-3. Chrome DevTools MCP / raw CDP on the same profile, plus React DevTools, Tailwind DevTools, and passive Requestly: focused DOM/CSS/network/console/component/utility diagnosis; these support the primary browser and are not separate acceptance owners.
-4. Testing Toolkit: bounded responsive/accessibility/visual diagnostics in the preserved profile when its specific surface answers the current question. Do not treat its embedded unauthenticated views as authenticated acceptance.
+1. Polypane + Chrome DevTools on port 5859: PRIMARY visual/responsive discovery and rendered layout acceptance. Verify the actual Polypane page/pane identity on attach.
+2. Preserved headed Worker-0 Chrome + MetaMask on port 5858: PRIMARY wallet-authenticated/session acceptance. Reuse the controlled profile/session and do not repeat SIWE absent fresh regression evidence.
+3. Playwright / Chrome DevTools support only the browser/profile they are attached to for deterministic interaction, DOM, network, console, screenshots, and focused assertions; they are not independent acceptance owners.
+4. Testing Toolkit and BrowserStack remain claim-specific support for bounded accessibility/responsive diagnostics or real-device/cross-browser evidence. Do not infer authenticated state across browser surfaces.
 5. Fallow and Graphify: structural/causal source evidence only; never rendered acceptance.
-6. Polypane: SECONDARY responsive/multi-viewport breadth after the authenticated primary path is working.
-7. BrowserStack: SECONDARY targeted real-device/cross-browser confirmation. It is primary only when the claim itself is specifically real-device or cross-browser behavior; it cannot replace the preserved authenticated NEXI session unless that remote session independently proves wallet/session state.
-8. BrowserStack Local: exception path only when cloud testing must reach localhost/private Worker-0 services.
-9. VNC/noVNC: owner human-GUI/login lane for operating the preserved profile/extensions when native browser automation is insufficient; preserve it as reusable infrastructure.
+6. BrowserStack Local: exception path only when cloud testing must reach localhost/private Worker-0 services.
+7. VNC/noVNC: owner human-GUI/login lane for operating the preserved profile/extensions when native browser automation is insufficient; preserve it as reusable infrastructure.
 
 Tool or attachment failure is a tooling limitation, not product-failure evidence. Do not create a new wallet, browser profile, login flow, or duplicate browser harness unless a fresh causal defect requires one.
 
@@ -86,3 +84,9 @@ Keep `IMPLEMENTED`, `STATICALLY_VALIDATED`, `TESTED`, `INTEGRATED`, `RUNTIME_VER
 ## CodeScene required gates
 
 Use NEXI_CODESCENE_WORKFLOW.md and nexi-codescene-quality-gates for AI code changes. Preserve the three parent-owned lanes; add per-file review, mandatory pre-commit and PR safeguards with measured 10.0 target. Code Health does not replace production acceptance.
+
+## Workspace Memory and cross-session evidence
+
+Use the installed ChatGPT `workspace-memory` skill for Workspace Memory operations, with `nexi-workspace-memory` as the Worker-0/NEXI companion. Preserve independent ownership: Workspace Memory keeps navigable topic lines with real `dc://` provenance; Agent Kernel keeps approved governance; the Worker-0 checkpoint keeps verified operational continuity; Graphify keeps revision-bound relationships; GitHub `main` keeps project source and reviewed project documentation; chat exports are historical evidence. A write/query in one store does not prove persistence in another.
+
+Before a memory operation, verify the active Workspace Memory index/root or exact native tool capability. Do not guess a `.memory` path, workspace/chat/message ID, or citation. Graphify Work Memory may be unsupported: read native `recall_state` and stop on unsupported. For Worker-0 actions, follow `RDC_ONBOARDING.md`, recover handles, use `worker0-protect unlock` only for authorized bounded edits, and restore protection with `worker0-protect refresh-lock`. Use skills.sh only to discover a distinct missing capability; inspect and audit a candidate before adoption. Do not commit/push/publish beyond the explicit owner scope. Never put private chat memory in the project repo.
