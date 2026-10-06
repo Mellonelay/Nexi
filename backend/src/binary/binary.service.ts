@@ -44,10 +44,13 @@ export class BinaryService {
     const expiresAt = new Date(String(raw.expiresAt));
     if (expiresAt.getTime() > Date.now()) throw new BadRequestException('Binary position has not expired');
     const pair = await this.d1.getActiveMarketPair(String(raw.pair));
-    const quote = pair ? await this.d1.getLiveMarketQuote(pair.id, expiresAt.toISOString(), String(raw.entrySequence)) : null;
-    if (!pair || !quote || !this.isSettlementQuoteAllowed(String(raw.pair), quote.provider)) {
-      return { position: raw, delayed: true };
-    }
+    const quote = pair
+      ? await this.getApprovedSettlementQuote(pair, {
+          observedAt: expiresAt.toISOString(),
+          sequence: String(raw.entrySequence),
+        })
+      : null;
+    if (!pair || !quote) return { position: raw, delayed: true };
     const configuration: any = await this.d1.getBinaryConfiguration(String(raw.pair), Number(raw.durationSeconds), Number(raw.configurationVersion));
     if (!configuration) return { position: raw, error: true };
     const sandbox = await this.sandboxScenarios.findBinaryDirective(this.prisma, String(raw.userId), String(raw.id));
@@ -73,8 +76,8 @@ export class BinaryService {
     if (stake.lt(new Prisma.Decimal(String(configuration.minStake))) || stake.gt(new Prisma.Decimal(String(configuration.maxStake)))) {
       throw new BadRequestException('Stake is outside configured limits');
     }
-    const quote = await this.d1.getLiveMarketQuote(pair.id);
-    if (!quote) throw new ServiceUnavailableException(`Live market quote unavailable for ${pair.symbol}`);
+    const quote = await this.getApprovedSettlementQuote(pair);
+    if (!quote) throw new ServiceUnavailableException(`Approved settlement quote unavailable for ${pair.symbol}`);
     const expiresAt = new Date(Date.now() + input.durationSeconds * 1000);
     const position: any = await this.d1.openBinaryPosition({
       userId, pair: pair.symbol, asset: pair.quoteAsset, side: input.side, stake: stake.toString(), durationSeconds: input.durationSeconds,
@@ -135,11 +138,23 @@ export class BinaryService {
     return { id: quote.id, price: quote.price, provider: quote.provider, source: quote.source, observedAt: quote.observedAt, receivedAt: quote.receivedAt, sequence: quote.sequence, freshnessMs: Date.now() - quote.receivedAt.getTime() };
   }
 
+  private async getApprovedSettlementQuote(
+    pair: { id: string; symbol: string },
+    minimum: { observedAt?: string; sequence?: string } = {},
+  ) {
+    const quote = await this.d1.getLiveMarketQuote(pair.id, minimum.observedAt, minimum.sequence);
+    return quote && this.isSettlementQuoteAllowed(pair.symbol, quote.provider) ? quote : null;
+  }
+
   private isBinaryPairAvailable(symbol: string): boolean {
     // Jest integration fixtures intentionally use deterministic isolated pairs.
     if (process.env.NODE_ENV === 'test') return true;
-    const policy = getMarketSourcePolicy(symbol)?.capabilities;
-    return Boolean(policy?.binary && policy.supportedBinaryDurations.length > 0);
+    const policy = getMarketSourcePolicy(symbol);
+    return Boolean(
+      policy?.capabilities.binary
+      && policy.settlementPolicy.enabled
+      && policy.settlementPolicy.approvalStatus === 'APPROVED',
+    );
   }
 
   private isSettlementQuoteAllowed(symbol: string, provider: string): boolean {

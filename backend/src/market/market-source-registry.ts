@@ -84,6 +84,7 @@ export interface AssetSourcePolicy {
 }
 
 const CRYPTO_PROVIDERS = ['binance-spot', 'coingecko', 'coinmarketcap'];
+const APPROVED_CRYPTO_BINARY_PROVIDER = 'binance-spot';
 const STOCK_PROVIDERS = ['biquote', 'yahoo', 'okx', 'bitget', 'htx', 'bybit', 'gate', 'tickdb', 'alltick', 'massive', 'finnhub', 'alpha-vantage'];
 const FOREX_PROVIDERS = ['moex', 'biquote', 'yahoo', 'bybit', 'gate', 'htx', 'okx', 'bitget', 'tickdb', 'alltick', 'live-rates', 'massive', 'finnhub', 'oanda', 'alpha-vantage', 'fawaz-currency'];
 const PRECIOUS_METAL_PROVIDERS = ['biquote', 'yahoo', 'okx', 'htx', 'bitget', 'bybit', 'gate', 'tickdb', 'alltick', 'live-rates', 'oanda', 'metals-api', 'alpha-vantage', 'fawaz-currency'];
@@ -188,6 +189,25 @@ function primaryQuoteProvider(entry: CanonicalMarketPair): string {
   return 'biquote';
 }
 
+function isApprovedBinarySettlementProvider(entry: CanonicalMarketPair, provider: string): boolean {
+  return entry.category === 'crypto' && provider === APPROVED_CRYPTO_BINARY_PROVIDER;
+}
+
+function binarySettlementPolicy(entry: CanonicalMarketPair): AssetSourcePolicy['settlementPolicy'] {
+  if (entry.category !== 'crypto') return { enabled: false, approvalStatus: 'UNAPPROVED' };
+  return {
+    enabled: true,
+    approvalStatus: 'APPROVED',
+    provider: APPROVED_CRYPTO_BINARY_PROVIDER,
+    instrument: providerInstrument(entry, APPROVED_CRYPTO_BINARY_PROVIDER),
+    priceType: 'LAST',
+    timestampPolicy: 'OBSERVED_AT_OR_AFTER_EXPIRY',
+    maxStalenessMs: 30_000,
+    precision: 8,
+    outagePolicy: 'RETRY',
+  };
+}
+
 function buildPolicy(entry: CanonicalMarketPair): AssetSourcePolicy {
   const providers = providerNames(entry);
   const mappings = providers.map((provider): ProviderMapping => ({
@@ -197,7 +217,7 @@ function buildPolicy(entry: CanonicalMarketPair): AssetSourcePolicy {
     klineSupported: providerKlineSupported(entry, provider),
     websocketSupported: supportsWebsocket(provider, entry),
     metadataSupported: provider !== 'binance-spot' || entry.category === 'crypto',
-    settlementCandidate: false,
+    settlementCandidate: isApprovedBinarySettlementProvider(entry, provider),
   }));
 
   return {
@@ -215,15 +235,12 @@ function buildPolicy(entry: CanonicalMarketPair): AssetSourcePolicy {
       maxStalenessMs: 30_000,
       delayedDataAllowed: true,
     },
-    // No source has been approved as NEXI settlement authority in this slice.
-    settlementPolicy: {
-      enabled: false,
-      approvalStatus: 'UNAPPROVED',
-    },
+    settlementPolicy: binarySettlementPolicy(entry),
     capabilities: {
       marketBrowse: true,
       spot: true,
-      binary: false,
+      binary: entry.category === 'crypto',
+      // D1 Gate2BinaryConfiguration is the runtime authority for enabled durations.
       supportedBinaryDurations: [],
     },
     provenance: {

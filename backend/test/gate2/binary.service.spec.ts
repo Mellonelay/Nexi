@@ -24,6 +24,29 @@ describe('Gate 2 Binary authority', () => {
     return { service, d1, position };
   }
 
+  it('exposes approved crypto configurations in production while preserving D1 terms', async () => {
+    const { service, d1 } = createService();
+    const configurations = [420, 30, 280, 60, 180].map((durationSeconds, index) => ({
+      pair: 'BTCUSDT', durationSeconds, enabled: 1,
+      payoutRate: String(0.8 + index / 100), minStake: String(index + 1), maxStake: String(1000 + index),
+    }));
+    d1.listBinaryConfigurations = jest.fn().mockResolvedValue([
+      ...configurations,
+      { pair: 'EURUSD', durationSeconds: 90, enabled: 1, payoutRate: '0.9', minStake: '1', maxStake: '1000' },
+    ]);
+    const previousEnvironment = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
+    try {
+      await expect(service.getConfig()).resolves.toEqual({
+        durations: [30, 60, 180, 280, 420], configurations,
+      });
+      expect(d1.openBinaryPosition).not.toHaveBeenCalled();
+    } finally {
+      if (previousEnvironment === undefined) delete process.env.NODE_ENV;
+      else process.env.NODE_ENV = previousEnvironment;
+    }
+  });
+
   it('accepts a locked duration only after exact stake reservation and live quote evidence', async () => {
     const { service, d1 } = createService();
     await service.openPosition('user-1', { pair: 'BTC/USDT', side: BinarySide.CALL, stake: '10', durationSeconds: 30, idempotencyKey: 'binary-key-1' });
@@ -34,6 +57,13 @@ describe('Gate 2 Binary authority', () => {
     const { service, d1 } = createService();
     d1.getBinaryConfiguration.mockResolvedValueOnce(null);
     await expect(service.openPosition('user-1', { pair: 'BTCUSDT', side: BinarySide.CALL, stake: '10', durationSeconds: 90, idempotencyKey: 'binary-key-1' })).rejects.toThrow('Binary configuration unavailable');
+    expect(d1.openBinaryPosition).not.toHaveBeenCalled();
+  });
+
+  it('rejects an entry quote from a provider that is not approved for settlement', async () => {
+    const { service, d1 } = createService();
+    d1.getLiveMarketQuote.mockResolvedValueOnce({ ...quote, provider: 'coingecko' });
+    await expect(service.openPosition('user-1', { pair: 'BTCUSDT', side: BinarySide.CALL, stake: '10', durationSeconds: 30, idempotencyKey: 'binary-key-1' })).rejects.toThrow('Approved settlement quote unavailable');
     expect(d1.openBinaryPosition).not.toHaveBeenCalled();
   });
 

@@ -38,8 +38,12 @@ describe('Market source registry', () => {
     expect(missing).toEqual([]);
   });
 
-  it('fails closed for Binary settlement until policy approval exists', () => {
-    expect(isSettlementApproved('BTCUSDT', 'binance-spot')).toBe(false);
+  it('approves Binary settlement only for the owner-authorized crypto source', () => {
+    expect(isSettlementApproved('BTCUSDT', 'binance-spot')).toBe(true);
+    expect(isSettlementApproved('BTCUSDT', 'coingecko')).toBe(false);
+    expect(getProviderMapping('BTCUSDT', 'binance-spot')?.settlementCandidate).toBe(true);
+    expect(getMarketSourcePolicy('BTCUSDT')?.capabilities.binary).toBe(true);
+    expect(getMarketSourcePolicy('BTCUSDT')?.capabilities.supportedBinaryDurations).toEqual([]);
     expect(getMarketSourcePolicy('XCUUSD')?.capabilities.binary).toBe(false);
   });
 });
