@@ -169,18 +169,18 @@ For UI behavior changes, validate the rendered deployed app, not just compilatio
 PUBLIC BUILD AUTHORITY: Do not build this app during iterative repair. Finish all source changes and focused source checks first. The only generated Public build/runtime directory is `/srv/nexi/public/current`; do not create `build-*`, `releases/*`, candidate, temporary, rollback, worktree, or copied build-output directories under `/srv/nexi/public`. When the owner-selected source frontier is ready for the final integration pass, stop `nexi-public.service`, synchronize this canonical source into `/srv/nexi/public/current`, run the single production build there, restart the service, and verify deployed behavior.
 
 Before deployment, run only the focused deterministic source/build gates invalidated by the change. Final browser acceptance follows the current global Browser Fabric and owner-selected browser responsibility model:
-- the preserved authenticated Worker-0 Chrome profile is the PRIMARY NEXI rendered/product acceptance environment;
-- Playwright / Chrome DevTools / React DevTools / passive Requestly support that same primary browser state;
-- Polypane is a SECONDARY responsive/multi-viewport breadth surface after the primary authenticated path works;
-- BrowserStack is a SECONDARY targeted real-device/cross-browser confirmation surface, not the primary authenticated discovery loop;
-- unauthenticated secondary-browser evidence cannot substitute for authenticated NEXI product proof.
+- Polypane on DevTools `127.0.0.1:5859` is the PRIMARY visual/responsive discovery and rendered-layout acceptance surface; verify the actual Polypane page/pane identity on attach;
+- the preserved headed Worker-0 Chrome + MetaMask profile on `127.0.0.1:5858` is the PRIMARY wallet-authenticated/session acceptance surface;
+- Playwright / Chrome DevTools / React DevTools / passive Requestly support only the browser/profile and claim they are attached to; they are not independent acceptance owners;
+- BrowserStack is targeted real-device/cross-browser confirmation only when the claim specifically requires it;
+- do not infer authenticated state across Polypane, Chrome, or BrowserStack surfaces.
 
 Minimum affected-flow proof:
 - typecheck / affected unit-contract tests / production build as required by the change;
 - deployed `https://www.nexitrading.app` using the real `https://api.nexitrading.app` Cloudflare backend;
-- primary authenticated Chrome rendered/interaction evidence for the affected NEXI path;
-- responsive evidence at the required CSS viewport probes in the primary path, with Polypane used for additional breadth when useful;
-- BrowserStack only when the claim specifically requires targeted real-device/cross-browser confirmation;
+- Polypane rendered/interaction evidence for affected visual/responsive claims;
+- preserved Chrome rendered/session evidence when the affected claim requires wallet/application authentication;
+- responsive evidence at the required CSS viewport probes in Polypane, with BrowserStack only when the claim specifically requires targeted real-device/cross-browser confirmation;
 - no horizontal overflow;
 - keyboard/focus/accessibility behavior where affected;
 - current locale behavior where affected;
