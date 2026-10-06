@@ -1057,6 +1057,9 @@ model MarketQuoteSnapshot {
 
   @@unique([pairId, sequence])
   @@index([symbol, sequence])
+  // Numeric sequence expression index is maintained in D1 migration 0009;
+  // Prisma 7.3 cannot model expression indexes.
+
   @@index([receivedAt])
 }
 
@@ -1105,6 +1108,7 @@ model MarketKline {
 
   @@unique([pairId, interval, openTime])
   @@index([symbol, interval, openTime])
+  @@index([interval, openTime, pairId, symbol, close])
   @@index([receivedAt])
 }
 
