@@ -4,15 +4,25 @@ import test from "node:test";
 
 const source = readFileSync(new URL("../src/index.js", import.meta.url), "utf8");
 
-test("all Container callers explicitly wait for cold-start readiness", () => {
+test("background Container helper returns only after port readiness", async () => {
   const helper = source.slice(
     source.indexOf("async function getRunningNexiContainer"),
     source.indexOf("export class NexiApiContainer"),
   );
-  assert.match(helper, /await container\.startAndWaitForPorts\(\{/);
-  assert.match(helper, /ports: \[3000\]/);
-  assert.match(helper, /portReadyTimeoutMS: 60_000/);
-  assert.equal(source.match(/await getRunningNexiContainer\(env\)/g)?.length, 2);
+  let release;
+  const readiness = new Promise((resolve) => { release = resolve; });
+  let observedOptions;
+  const container = {
+    startAndWaitForPorts(options) { observedOptions = options; return readiness; },
+  };
+  const getRunning = new Function("getNexiContainer", `${helper}; return getRunningNexiContainer;`)(() => container);
+  let returned = false;
+  const running = getRunning({}).then((value) => { returned = true; return value; });
+  await Promise.resolve();
+  assert.equal(returned, false);
+  assert.deepEqual(observedOptions, { ports: [3000], cancellationOptions: { portReadyTimeoutMS: 60_000 } });
+  release();
+  assert.equal(await running, container);
 });
 
 const classifierStart = source.indexOf("function classifyD1Sql");

@@ -1,3 +1,4 @@
+import { boundedJson, MAX_GATEWAY_BODY_BYTES } from "./bounded-json.js";
 import { Container, getContainer } from "@cloudflare/containers";
 import { WorkflowEntrypoint } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
@@ -140,25 +141,13 @@ export class NexiApiContainer extends Container {
   }
 }
 
-const MAX_GATEWAY_BODY_BYTES = 256 * 1024;
-
-async function boundedJson(request) {
-  const length = Number(request.headers.get("content-length") || 0);
-  if (length > MAX_GATEWAY_BODY_BYTES) return null;
-  const text = await request.text();
-  if (text.length > MAX_GATEWAY_BODY_BYTES) return null;
-  try {
-    return JSON.parse(text);
-  } catch {
-    return null;
-  }
+function isRecord(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
 function validEnvelope(body) {
   return (
-    body &&
-    typeof body === "object" &&
-    !Array.isArray(body) &&
+    isRecord(body) &&
     typeof body.type === "string" &&
     typeof body.version === "number" &&
     typeof body.idempotencyKey === "string" &&
@@ -170,14 +159,12 @@ function validEnvelope(body) {
 function validQueueEnvelope(body) {
   return (
     validEnvelope(body) &&
-    body.type.length <= 160 &&
+    [body.type, body.idempotencyKey, body.correlationId].every(
+      (value) => value.length <= 160,
+    ) &&
     Number.isInteger(body.version) &&
     body.version > 0 &&
-    body.idempotencyKey.length <= 160 &&
-    body.correlationId.length <= 160 &&
-    body.payload &&
-    typeof body.payload === "object" &&
-    !Array.isArray(body.payload)
+    isRecord(body.payload)
   );
 }
 
