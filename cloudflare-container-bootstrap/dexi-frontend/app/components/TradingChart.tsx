@@ -76,16 +76,12 @@ const marketStateCopy: Record<
 };
 
 function ChartMetricsRail({
-  symbol,
-  interval,
   latest,
   rsi,
   macdHistogram,
   activeIndicators,
   overlays,
 }: {
-  symbol: string;
-  interval: string;
   latest: ReturnType<typeof latestChartMetrics>["latest"];
   rsi: number | null;
   macdHistogram: number | null;
@@ -94,15 +90,13 @@ function ChartMetricsRail({
 }) {
   return (
     <div role="region" aria-label="Chart values" tabIndex={0} className="nexi-chart-rail [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex min-w-0 shrink-0 items-center overflow-x-auto whitespace-nowrap gap-x-3 gap-y-1 border-b border-violet-300/10 bg-black/15 px-3 py-2 font-mono text-[9px] sm:text-[10px]">
-      <span className="font-semibold text-[#F8F6FF]">{symbol}</span>
-      <span className="rounded border border-violet-300/15 px-1.5 py-0.5 text-[#CFC4FF]">{interval}</span>
       <span className="hidden text-[#8C8299] sm:inline">O <b className="font-medium text-[#C3BBD0]">{formatMetric(latest?.open)}</b></span>
       <span className="hidden text-[#8C8299] sm:inline">H <b className="font-medium text-[#98FCE4]">{formatMetric(latest?.high)}</b></span>
       <span className="hidden text-[#8C8299] sm:inline">L <b className="font-medium text-[#FF9CB0]">{formatMetric(latest?.low)}</b></span>
       <span className="text-[#8C8299]">C <b className="font-medium text-[#F8F6FF]">{formatMetric(latest?.close)}</b></span>
       {activeIndicators.has("RSI") && <span className="ml-auto text-[#8C8299]">RSI 14 <b className="font-medium text-[#48C0CC]">{rsi === null ? "—" : rsi.toFixed(1)}</b></span>}
-      {activeIndicators.has("MA") && <span className="order-first shrink-0 text-[#F4D35E] sm:order-none">MA(20) <b className="font-medium">{formatMetric(overlays.ma20)}</b></span>}
-      {activeIndicators.has("EMA") && <><span className="order-first shrink-0 text-[#A995FF] sm:order-none">EMA(20) <b className="font-medium">{formatMetric(overlays.ema20)}</b></span><span className="order-first shrink-0 text-[#48C0CC] sm:order-none">EMA(50) <b className="font-medium">{formatMetric(overlays.ema50)}</b></span></>}
+      {activeIndicators.has("MA") && <span className="shrink-0 text-[#F4D35E]">MA(20) <b className="font-medium">{formatMetric(overlays.ma20)}</b></span>}
+      {activeIndicators.has("EMA") && <><span className="shrink-0 text-[#A995FF]">EMA(20) <b className="font-medium">{formatMetric(overlays.ema20)}</b></span><span className="shrink-0 text-[#48C0CC]">EMA(50) <b className="font-medium">{formatMetric(overlays.ema50)}</b></span></>}
       {activeIndicators.has("BOLL") && <span className="hidden text-[#CFC4FF] md:inline">BOLL</span>}
       {activeIndicators.has("VOL") && <span className="hidden text-[#8C8299] md:inline">VOL</span>}
       {activeIndicators.has("MACD") && <span className="text-[#8C8299]">MACD <b className={`font-medium ${macdHistogram !== null && macdHistogram >= 0 ? "text-[#98FCE4]" : "text-[#FF9CB0]"}`}>{macdHistogram === null ? "—" : macdHistogram.toFixed(2)}</b></span>}
@@ -333,14 +327,14 @@ export default function TradingChart({
     <div
       className={`nexi-trading-chart relative flex h-full w-full flex-col overflow-hidden rounded-lg ${responsiveHeight}`}
     >
-      <ChartMetricsRail symbol={symbol} interval={interval} latest={latest} rsi={metrics.rsi} macdHistogram={macdHistogram} activeIndicators={activeIndicators} overlays={overlays} />
-      <ChartIndicatorRail activeIndicators={activeIndicators} onToggle={toggleIndicator} />
+      <ChartMetricsRail latest={latest} rsi={metrics.rsi} macdHistogram={macdHistogram} activeIndicators={activeIndicators} overlays={overlays} />
       <div
         ref={chartContainerRef}
         className="min-h-0 w-full flex-1"
         role="img"
         aria-label={`${symbol} ${interval} candlestick chart with volume and technical overlays`}
       />
+      {type === "spot" && <ChartIndicatorRail activeIndicators={activeIndicators} onToggle={toggleIndicator} />}
       <ChartStatusOverlay blocksChart={blocksChart} stateCopy={stateCopy} />
     </div>
   );

@@ -811,7 +811,7 @@ function SpotHeader({
 }) {
   const changeClass = marketChange !== null && marketChange >= 0 ? 'text-[#22D3A6]' : 'text-[#FF5C7C]';
   return (
-    <header className="nexi-station-header sticky top-0 z-20 flex min-w-0 items-center justify-between gap-2 border-b px-3 py-3 backdrop-blur sm:gap-3 sm:px-4">
+    <header className="nexi-station-header sticky top-0 z-20 flex min-w-0 items-center justify-between gap-2 border-b px-3 py-3 sm:gap-3 sm:px-4">
       <SafeBackButton fallback="/dashboard" label="Back to Quotes Hub" />
       <div className="min-w-0 flex-1">
         <SymbolSelector currentSymbol={displayPair} onSelect={onSelectSymbol} />

@@ -22,7 +22,7 @@ export default function BottomNav() {
       aria-label={t("primary")}
       className="relative z-50 shrink-0 px-3 pb-[calc(4px+env(safe-area-inset-bottom))] pt-1 lg:hidden"
     >
-      <div className="nexi-bottom-nav mx-auto grid h-[60px] max-w-[420px] grid-cols-5 items-center rounded-[18px] border px-1 backdrop-blur-2xl">
+      <div className="nexi-bottom-nav mx-auto grid h-[60px] max-w-[420px] grid-cols-5 items-center rounded-[18px] border px-1">
         {navItems.map((item) => {
           const Icon = item.icon;
           const active =

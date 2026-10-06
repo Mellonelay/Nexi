@@ -57,6 +57,12 @@ const toPositive = (value: unknown) => {
   return Number.isFinite(number) && number > 0 ? number : null;
 };
 
+const formatDuration = (seconds: number) => {
+  if (seconds < 60) return `${seconds}s`;
+  if (seconds % 60 === 0) return `${seconds / 60}m`;
+  return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
+};
+
 const normalizePosition = (value: unknown): BinaryPosition | null => {
   if (!value || typeof value !== 'object') return null;
   const row = value as Record<string, unknown>;
@@ -116,7 +122,7 @@ export default function BinaryPage() {
   const [history, setHistory] = useState<BinaryPosition[]>([]);
   const [selectedResult, setSelectedResult] = useState<BinaryPosition | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
-  const [now, setNow] = useState(Date.now());
+  const [now, setNow] = useState(Date.now);
   const [binaryConfigurations, setBinaryConfigurations] = useState<BinaryConfiguration[]>([]);
   const [binaryDurations, setBinaryDurations] = useState<number[]>([]);
   const submissionLock = useRef(false);
@@ -246,7 +252,10 @@ export default function BinaryPage() {
       const item = configured.get(seconds);
       const raw = item ? Number(item.payoutRate) : Number.NaN;
       const rate = Number.isFinite(raw) && raw > 0 ? raw : null;
-      return { seconds, enabled: Boolean(item?.enabled && rate), rate, minimumAmount: item ? Number(item.minStake) : null, maximumAmount: item ? Number(item.maxStake) : null };
+      const minimumAmount = item ? toPositive(item.minStake) : null;
+      const maximumAmount = item ? toPositive(item.maxStake) : null;
+      const validRange = minimumAmount !== null && maximumAmount !== null && minimumAmount <= maximumAmount;
+      return { seconds, enabled: Boolean(item?.enabled && rate && validRange), rate, minimumAmount, maximumAmount };
     });
   }, [binaryConfigurations, binaryDurations, normalizedPair]);
   useEffect(() => {
@@ -344,7 +353,7 @@ export default function BinaryPage() {
 
   return (
     <main className="nexi-page-shell min-h-[100dvh] w-full min-w-0 overflow-x-clip pb-8 text-[#F8F6FF] lg:pb-8">
-      <header className="nexi-station-header sticky top-0 z-20 flex min-w-0 items-center justify-between gap-2 border-b px-3 py-3 backdrop-blur sm:gap-3 sm:px-4">
+      <header className="nexi-station-header sticky top-0 z-20 flex min-w-0 items-center justify-between gap-2 border-b px-3 py-3 sm:gap-3 sm:px-4">
         <SafeBackButton fallback="/dashboard" label="Back to Quotes Hub" />
         <div className="min-w-0 flex-1"><SymbolSelector currentSymbol={pair} onSelect={(next) => { setPair(next); setActivePair(next); router.push(`/dashboard/binary?symbol=${next}`); }} /></div>
         {currentPrice !== null && <div className="shrink-0 text-right" aria-label="Current market price"><p className="font-mono text-sm text-[#C3BBD0]">{currentPrice.toLocaleString()}</p>{marketChange !== null && <p className={`mt-0.5 font-mono text-[10px] ${marketChange >= 0 ? 'text-[#22D3A6]' : 'text-[#FF5C7C]'}`}>{marketChange > 0 ? '+' : ''}{marketChange.toFixed(2)}% 24h</p>}</div>}
@@ -374,8 +383,8 @@ export default function BinaryPage() {
             <Wallet className="hidden h-5 w-5 shrink-0 text-[#A995FF] sm:mt-1 sm:block" aria-hidden="true" />
           </div>
           <p className="mt-2 hidden text-xs leading-5 text-[#8C8299] sm:block">Long means higher at expiry. Short means lower at expiry.</p>
-          <div className="mt-2 grid min-w-0 grid-cols-5 gap-1.5 sm:mt-4 sm:gap-2 xl:grid-cols-3 2xl:grid-cols-5" aria-label="Expiry duration">
-            {durationOptions.map((option) => <button key={option.seconds} type="button" disabled={!option.enabled} onClick={() => setDuration(option.seconds)} className={`nexi-interactive group min-h-[64px] min-w-0 rounded-lg border px-1.5 py-2 text-left transition sm:min-h-[84px] sm:rounded-xl sm:px-2 sm:py-2.5 ${duration === option.seconds ? 'border-[#8B5CF6] bg-[linear-gradient(145deg,rgba(109,65,255,.22),rgba(26,16,36,.92))] text-white shadow-[0_0_22px_rgba(109,65,255,.14)]' : 'border-violet-300/10 bg-[#0B0711]/70 text-[#8C8299] hover:border-violet-300/25'} disabled:cursor-not-allowed disabled:opacity-55`}><span className="block text-[9px] font-semibold uppercase tracking-[.04em] sm:text-[11px] sm:tracking-[.08em]">{option.seconds}s</span><span className="mt-1 block font-mono text-xs text-[#F5F7FB] sm:mt-2 sm:text-base">{option.rate === null ? '—' : `${(option.rate * 100).toFixed(0)}%`}</span><span className="mt-1 hidden text-[10px] text-[#8C8299] sm:block">{option.minimumAmount === null || option.maximumAmount === null ? 'Range unavailable' : `${option.minimumAmount}–${option.maximumAmount} USDT`}</span></button>)}
+          <div className="mt-2 grid min-w-0 grid-cols-5 gap-1.5 sm:mt-4 sm:gap-2" aria-label="Expiry duration">
+            {durationOptions.map((option) => <button key={option.seconds} type="button" aria-pressed={duration === option.seconds} disabled={!option.enabled} onClick={() => setDuration(option.seconds)} className={`nexi-interactive nexi-ripple group min-h-[64px] min-w-0 rounded-lg border px-1.5 py-2 text-center transition sm:min-h-[84px] sm:rounded-xl sm:px-2 sm:py-2.5 ${duration === option.seconds ? 'border-[#8B5CF6] bg-[linear-gradient(145deg,rgba(109,65,255,.22),rgba(26,16,36,.92))] text-white shadow-[0_0_22px_rgba(109,65,255,.14)]' : 'border-violet-300/10 bg-[#0B0711]/70 text-[#8C8299] hover:border-violet-300/25'} disabled:cursor-not-allowed disabled:opacity-55`}><span className="block text-center text-[9px] font-semibold uppercase tracking-[.04em] sm:text-[11px] sm:tracking-[.08em]">{formatDuration(option.seconds)}</span><span className="mt-1 block font-mono text-xs text-[#F5F7FB] sm:mt-2 sm:text-base">{option.rate === null ? '—' : `${(option.rate * 100).toFixed(0)}%`}</span><span className="mt-1 block break-words text-[8px] leading-3 text-[#8C8299] sm:text-[10px]">{option.minimumAmount === null || option.maximumAmount === null ? 'Range unavailable' : `${option.minimumAmount}–${option.maximumAmount} USDT`}</span></button>)}
           </div>
           <div className="mt-2 rounded-xl border border-violet-300/10 bg-[#0B0711]/75 px-3 py-2 text-[10px] leading-4 text-[#AFA4BC] sm:mt-3 sm:py-2.5 sm:text-xs sm:leading-5">{availabilityCopy}</div>
           <label className="mt-4 block text-xs text-[#C3BBD0]">Stake (USDT)
@@ -386,12 +395,12 @@ export default function BinaryPage() {
             <div><dt className="text-[#8C8299]">Option Wallet</dt><dd className="mt-1 font-mono">Unavailable</dd></div>
             <div><dt className="text-[#8C8299]">Payout rate</dt><dd className="mt-1 font-mono">{payoutRate === null ? '—' : `${(payoutRate * 100).toFixed(0)}%`}</dd></div>
             <div><dt className="text-[#8C8299]">Potential return</dt><dd className="mt-1 font-mono">{potentialReturn === null ? '—' : `${potentialReturn.toFixed(2)} USDT`}</dd></div>
-            <div><dt className="text-[#8C8299]">Duration</dt><dd className="mt-1 font-mono">{selectedDuration ? `${duration}s` : '—'}</dd></div>
+            <div><dt className="text-[#8C8299]">Duration</dt><dd className="mt-1 font-mono">{selectedDuration ? formatDuration(duration) : '—'}</dd></div>
           </dl>
           {feedback && <p role="status" className="mt-3 text-sm text-[#C3BBD0]">{feedback}</p>}
           <div className="mt-4 grid grid-cols-2 gap-3">
-            <button type="button" onClick={() => openReview('LONG')} disabled={!reviewReady} className="nexi-interactive flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#159B78] font-semibold disabled:cursor-not-allowed disabled:bg-[#17332E] disabled:text-[#6E9188]"><ArrowUp size={16} />Long</button>
-            <button type="button" onClick={() => openReview('SHORT')} disabled={!reviewReady} className="nexi-interactive flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#D9465F] font-semibold disabled:cursor-not-allowed disabled:bg-[#3A1D25] disabled:text-[#99707A]"><ArrowDown size={16} />Short</button>
+            <button type="button" onClick={() => openReview('LONG')} disabled={!reviewReady} className="nexi-interactive nexi-ripple flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#159B78] font-semibold disabled:cursor-not-allowed disabled:bg-[#17332E] disabled:text-[#6E9188]"><ArrowUp size={16} />Long</button>
+            <button type="button" onClick={() => openReview('SHORT')} disabled={!reviewReady} className="nexi-interactive nexi-ripple flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#D9465F] font-semibold disabled:cursor-not-allowed disabled:bg-[#3A1D25] disabled:text-[#99707A]"><ArrowDown size={16} />Short</button>
           </div>
         </aside>
 

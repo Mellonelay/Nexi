@@ -308,7 +308,7 @@ On narrow screens, use bounded horizontal scrolling rather than shrinking touch 
 
 ### Indicators
 
-Required controls:
+Available chart controls:
 - MA
 - EMA
 - BOLL
@@ -316,7 +316,7 @@ Required controls:
 - MACD
 - VOL
 
-Do not overload the chart with decorative overlays by default. A selected indicator should have a clear state.
+On Spot/asset chart surfaces, keep these controls in the compact rail below the plotted region, matching the accepted reference hierarchy. Binary may retain the selected overlays without adding the six-button rail to the trade-ticket composition. Controls remain keyboard-operable and preserve selected state. Do not overload the plotted region with decorative UI.
 
 ### Chart
 

@@ -69,9 +69,20 @@ test('Options fail closed without both configured stake limits', () => {
   assert.doesNotMatch(read('dashboard/binary/page.tsx'), /raw > 1 \? raw \/ 100/);
 });
 
+test('chart controls follow the plot and Options keeps five config-driven duration boxes', () => {
+  const chart = read('components/TradingChart.tsx');
+  const binary = read('dashboard/binary/page.tsx');
+  assert.ok(chart.indexOf('ref={chartContainerRef}') < chart.indexOf('type === "spot" && <ChartIndicatorRail'));
+  assert.doesNotMatch(chart, /<summary[^>]*>\s*Indicators/);
+  assert.match(binary, /grid-cols-5/);
+  assert.match(binary, /durationOptions\.map/);
+  assert.match(binary, /formatDuration\(option\.seconds\)/);
+  assert.doesNotMatch(binary, /\[\s*60\s*,\s*300\s*,\s*900\s*,\s*1800\s*,\s*3600\s*\]/);
+});
+
 test('wallet totals, action locks and shared sheets preserve source safety boundaries', () => {
   const wallet = read('dashboard/wallet/page.tsx');
-  assert.match(wallet, /const overviewTotal = root.total;/);
+  assert.match(wallet, /walletMetricValue\(state, root\.total\)/);
   assert.doesNotMatch(wallet, /available \+ locked/);
   for (const name of ['Deposit', 'Withdraw', 'Transfer', 'Convert']) {
     const source = read('dashboard/wallet/components/' + name + 'Modal.tsx');
