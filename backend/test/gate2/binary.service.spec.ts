@@ -47,6 +47,33 @@ describe('Gate 2 Binary authority', () => {
     }
   });
 
+  it('keeps a disabled canonical duration in the Public configuration response', async () => {
+    const { service, d1 } = createService();
+    d1.listBinaryConfigurations = jest.fn().mockResolvedValue([30, 60, 180, 280, 420].map((durationSeconds) => ({
+      pair: 'BTCUSDT', durationSeconds, enabled: durationSeconds === 60 ? 0 : 1,
+      payoutRate: '0.85', minStake: '1', maxStake: '1000',
+    })));
+    const previousEnvironment = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
+    try {
+      const result = await service.getConfig();
+      expect(result.durations).toEqual([30, 60, 180, 280, 420]);
+      expect(result.configurations.find((item: any) => item.durationSeconds === 60)?.enabled).toBe(0);
+    } finally {
+      if (previousEnvironment === undefined) delete process.env.NODE_ENV;
+      else process.env.NODE_ENV = previousEnvironment;
+    }
+  });
+
+  it('rejects stakes outside the current D1 configuration bounds', async () => {
+    const { service, d1 } = createService();
+    d1.getBinaryConfiguration.mockResolvedValueOnce({
+      pair: 'BTCUSDT', durationSeconds: 30, payoutRate: '0.85', minStake: '11', maxStake: '1000', version: 7, enabled: true,
+    });
+    await expect(service.openPosition('user-1', { pair: 'BTCUSDT', side: BinarySide.CALL, stake: '10', durationSeconds: 30, idempotencyKey: 'binary-key-1' })).rejects.toThrow('Stake is outside configured limits');
+    expect(d1.openBinaryPosition).not.toHaveBeenCalled();
+  });
+
   it('accepts a locked duration only after exact stake reservation and live quote evidence', async () => {
     const { service, d1 } = createService();
     await service.openPosition('user-1', { pair: 'BTC/USDT', side: BinarySide.CALL, stake: '10', durationSeconds: 30, idempotencyKey: 'binary-key-1' });
@@ -118,6 +145,16 @@ describe('D1 binary settlement sandbox directive', () => {
     await service.settlePosition('position-d1-1');
     expect(d1.settleBinaryPositionAtomic).toHaveBeenCalledWith(
       expect.objectContaining({ state: 'LOSS' }),
+    );
+  });
+
+  it('settles from the opened configuration version after that version is disabled', async () => {
+    const { service, d1 } = createD1Service(null, '110');
+    d1.getBinaryConfiguration.mockResolvedValueOnce({ ...config, payoutRate: '0.9', enabled: 0 });
+    await service.settlePosition('position-d1-1');
+    expect(d1.getBinaryConfiguration).toHaveBeenCalledWith('BTCUSDT', 30, 7);
+    expect(d1.settleBinaryPositionAtomic).toHaveBeenCalledWith(
+      expect.objectContaining({ state: 'WIN', payout: '19' }),
     );
   });
 

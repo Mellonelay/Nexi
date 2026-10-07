@@ -57,7 +57,7 @@
     "NEXI_CONVERSION_QUOTE_TTL_MS": "30000",
     "MARKET_BACKFILL_ON_STARTUP": "false",
     "NEXI_SCHEDULER_ENABLED": "true",
-    "NEXI_B7_ENABLED": "false",
+    "NEXI_B7_ENABLED": "true",
   },
   "secrets": {
     "required": [

@@ -25,6 +25,7 @@ import { D1FinancialCommandGateway } from "../d1/d1-financial-command.gateway";
 import { D1PrismaService } from "../d1/d1-prisma.service";
 import { randomUUID } from "node:crypto";
 import { CommunicationsService } from "../communications/communications.service";
+import { assertBinaryDurationUnchanged, latestBinaryConfigurationRows, resolveBinaryEnabled } from "./binary-configuration.utils";
 
 const ADMIN_ACCOUNT_SELECT = {
   id: true,
@@ -736,14 +737,17 @@ export class AdminService {
       _sum: { amount: true },
     });
     const activeUsers = await this.prisma.user.count();
-    const avgPayout = await this.prisma.binaryTimeframe.aggregate({
-      _avg: { payoutRate: true },
+    const binaryConfigurations = await this.prisma.gate2BinaryConfiguration.findMany({
+      where: { enabled: true },
+      select: { payoutRate: true },
     });
 
     return {
       totalVolume: totalVolume._sum.amount || 0,
       activeUsers,
-      globalPayoutRate: avgPayout._avg.payoutRate || 1.85,
+      globalPayoutRate: binaryConfigurations.length
+        ? binaryConfigurations.reduce((sum, config) => sum + Number(config.payoutRate), 0) / binaryConfigurations.length
+        : 0,
     };
   }
 
@@ -2214,16 +2218,15 @@ export class AdminService {
           )
         : rows;
     }
-    return this.prisma.gate2BinaryConfiguration.findMany({
-      where: pair
-        ? { pair: pair.trim().toUpperCase(), enabled: true }
-        : { enabled: true },
+    const rows = await this.prisma.gate2BinaryConfiguration.findMany({
+      where: pair ? { pair: pair.trim().toUpperCase() } : undefined,
       orderBy: [
         { pair: "asc" },
         { durationSeconds: "asc" },
         { version: "desc" },
       ],
     });
+    return latestBinaryConfigurationRows(rows);
   }
 
   async updateBinaryConfiguration(
@@ -2246,15 +2249,16 @@ export class AdminService {
       );
     const pair = input.pair.trim().toUpperCase();
     const sourceDurationSeconds = input.sourceDurationSeconds ?? input.durationSeconds;
+    assertBinaryDurationUnchanged(input.durationSeconds, sourceDurationSeconds);
     const target = `${pair}:${input.durationSeconds}`;
     if (this.d1?.isEnabled()) {
-      const current = await this.d1.getBinaryConfiguration(pair, sourceDurationSeconds);
-      if (!current) throw new NotFoundException("Active Binary configuration not found");
+      const current = await this.d1.getBinaryConfiguration(pair, sourceDurationSeconds, undefined, true);
+      if (!current) throw new NotFoundException("Binary configuration not found");
       const payoutRate = input.payoutRate ?? Number(current.payoutRate);
       const minStake = input.minStake ?? Number(current.minStake);
       const maxStake = input.maxStake ?? Number(current.maxStake);
       if (!Number.isFinite(payoutRate) || payoutRate <= 0 || !Number.isFinite(minStake) || minStake <= 0 || !Number.isFinite(maxStake) || maxStake < minStake) throw new BadRequestException("Binary payout and stake limits are invalid");
-      return this.d1.updateBinaryConfiguration({ pair, sourceDurationSeconds, durationSeconds: input.durationSeconds, payoutRate, minStake, maxStake, enabled: input.enabled !== false, adminId, reason: input.reason, idempotencyKey: input.idempotencyKey });
+      return this.d1.updateBinaryConfiguration({ pair, sourceDurationSeconds, durationSeconds: input.durationSeconds, payoutRate, minStake, maxStake, enabled: resolveBinaryEnabled(input.enabled, current.enabled), adminId, reason: input.reason, idempotencyKey: input.idempotencyKey });
     }
     return this.prisma.$transaction(
       async (tx) => {
@@ -2271,7 +2275,6 @@ export class AdminService {
           where: {
             pair,
             durationSeconds: sourceDurationSeconds,
-            enabled: true,
           },
           orderBy: { version: "desc" },
         });
@@ -2292,10 +2295,6 @@ export class AdminService {
             "Binary payout and stake limits are invalid",
           );
         }
-        if (input.durationSeconds !== sourceDurationSeconds) {
-          const conflict = await tx.gate2BinaryConfiguration.findFirst({ where: { pair, durationSeconds: input.durationSeconds, enabled: true } });
-          if (conflict) throw new BadRequestException("Binary duration already exists for this pair");
-        }
         await tx.gate2BinaryConfiguration.updateMany({
           where: {
             pair,
@@ -2314,7 +2313,7 @@ export class AdminService {
             maxStake,
             settlementDelaySeconds: current.settlementDelaySeconds,
             version: current.version + 1,
-            enabled: input.enabled !== false,
+            enabled: input.enabled ?? current.enabled,
           },
         });
         await tx.adminAuditLog.create({

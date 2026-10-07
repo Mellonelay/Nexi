@@ -1012,11 +1012,11 @@ export class D1FinancialCommandGateway {
   async getBinaryConfiguration(
     pair: string,
     durationSeconds: number,
-    version?: number,
+    version?: number, includeDisabled = false,
   ): Promise<Record<string, unknown> | null> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const result = await this.bridge.select<Record<string, unknown>>(
-      `SELECT * FROM "Gate2BinaryConfiguration" WHERE "pair"=? AND "durationSeconds"=? AND "enabled"=1 ${version === undefined ? 'ORDER BY "version" DESC' : 'AND "version"=?'} LIMIT 1`,
+      `SELECT * FROM "Gate2BinaryConfiguration" WHERE "pair"=? AND "durationSeconds"=? ${version === undefined ? `${includeDisabled ? '' : 'AND "enabled"=1'} ORDER BY "version" DESC` : 'AND "version"=?'} LIMIT 1`,
       version === undefined
         ? [pair, durationSeconds]
         : [pair, durationSeconds, version],
@@ -3287,14 +3287,14 @@ export class D1FinancialCommandGateway {
   async getAdminStats(): Promise<Record<string, unknown>> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const result = await this.bridge.select<Record<string, unknown>>(
-      `SELECT (SELECT COALESCE(SUM("amount"),0) FROM "BinaryOptionPosition") AS "totalVolume", (SELECT COUNT(*) FROM "User") AS "activeUsers", (SELECT COALESCE(AVG("payoutRate"),1.85) FROM "BinaryTimeframe") AS "globalPayoutRate"`,
+      `SELECT (SELECT COALESCE(SUM("amount"),0) FROM "BinaryOptionPosition") AS "totalVolume", (SELECT COUNT(*) FROM "User") AS "activeUsers", (SELECT COALESCE(AVG("payoutRate"),0) FROM "Gate2BinaryConfiguration" WHERE "enabled"=1) AS "globalPayoutRate"`,
       [],
     );
     return (
       result.results[0] ?? {
         totalVolume: "0",
         activeUsers: 0,
-        globalPayoutRate: 1.85,
+        globalPayoutRate: 0,
       }
     );
   }
@@ -4443,7 +4443,7 @@ export class D1FinancialCommandGateway {
   }): Promise<Record<string, unknown>> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const currentResult = await this.bridge.select<Record<string, unknown>>(
-      `SELECT * FROM "Gate2BinaryConfiguration" WHERE "pair"=? AND "durationSeconds"=? AND "enabled"=1 ORDER BY "version" DESC LIMIT 1`,
+      `SELECT * FROM "Gate2BinaryConfiguration" WHERE "pair"=? AND "durationSeconds"=? ORDER BY "version" DESC LIMIT 1`,
       [command.pair, command.sourceDurationSeconds],
     );
     const current = currentResult.results[0];
@@ -4458,7 +4458,7 @@ export class D1FinancialCommandGateway {
     const nextVersion = Number(current.version ?? 0) + 1;
     const nextId = randomUUID();
     const result = await this.bridge.batch([
-      { sql: `UPDATE "Gate2BinaryConfiguration" SET "enabled"=0,"updatedAt"=CURRENT_TIMESTAMP WHERE "pair"=? AND "durationSeconds"=? AND "enabled"=1`, params: [command.pair, command.sourceDurationSeconds] },
+      { sql: `UPDATE "Gate2BinaryConfiguration" SET "enabled"=0,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=?`, params: [String(current.id)] },
       { sql: `INSERT INTO "Gate2BinaryConfiguration" ("id","pair","durationSeconds","payoutRate","lossRate","minStake","maxStake","settlementDelaySeconds","version","enabled","createdAt","updatedAt") VALUES (?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`, params: [nextId, command.pair, command.durationSeconds, command.payoutRate, Number(current.lossRate ?? 0), command.minStake, command.maxStake, Number(current.settlementDelaySeconds ?? 0), nextVersion, command.enabled ? 1 : 0] },
       { sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`, params: [randomUUID(), command.adminId, "BINARY_CONFIGURATION_UPDATED", `${command.pair}:${command.durationSeconds}`, JSON.stringify({ reason: command.reason, idempotencyKey: command.idempotencyKey, sourceDurationSeconds: command.sourceDurationSeconds, durationSeconds: command.durationSeconds, version: nextVersion })] },
       this.eventOutboxStatement({ idempotencyKey: `event:${command.idempotencyKey}`, aggregateType: "Gate2BinaryConfiguration", aggregateId: nextId, eventType: "BINARY_CONFIGURATION_UPDATED", correlationId: command.idempotencyKey, payload: { pair: command.pair, sourceDurationSeconds: command.sourceDurationSeconds, durationSeconds: command.durationSeconds, version: nextVersion } }),
@@ -4471,7 +4471,7 @@ export class D1FinancialCommandGateway {
   async listBinaryConfigurations(): Promise<Record<string, unknown>[]> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const result = await this.bridge.select<Record<string, unknown>>(
-      `SELECT * FROM "Gate2BinaryConfiguration" WHERE "enabled"=1 ORDER BY "pair" ASC,"durationSeconds" ASC`,
+      `SELECT "id","pair","durationSeconds","payoutRate","lossRate","minStake","maxStake","settlementDelaySeconds","version","enabled","createdAt","updatedAt" FROM (SELECT *,ROW_NUMBER() OVER (PARTITION BY "pair","durationSeconds" ORDER BY "version" DESC) AS row_num FROM "Gate2BinaryConfiguration") WHERE row_num=1 ORDER BY "pair" ASC,"durationSeconds" ASC`,
       [],
     );
     return result.results;
