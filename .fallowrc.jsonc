@@ -1,0 +1,52 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+
+  // Keep framework ownership with Fallow's built-ins:
+  // Next.js (Public), NestJS/Jest/Prisma (Backend), TanStack/Vite (Admin).
+  "ignorePatterns": [
+    "backend/src/prisma/d1-client/**",
+    "cloudflare-container-bootstrap/worker-configuration.d.ts",
+    "apps/admin/src/routeTree.gen.ts",
+    "**/*.gen.ts"
+  ],
+
+  // Cross-surface NEXI law: Public, Backend, Admin, and the edge Worker
+  // are separate implementation planes. They communicate through contracts,
+  // never by importing each other's source.
+  "boundaries": {
+    "zones": [
+      {
+        "name": "public",
+        "root": "cloudflare-container-bootstrap/dexi-frontend",
+        "patterns": ["**/*.{ts,tsx,js,jsx,mts,mjs}"]
+      },
+      {
+        "name": "backend",
+        "root": "backend",
+        "patterns": ["src/**/*.{ts,tsx,js,jsx,mts,mjs}", "test/**/*.{ts,tsx,js,jsx,mts,mjs}"]
+      },
+      {
+        "name": "admin",
+        "root": "apps/admin",
+        "patterns": ["src/**/*.{ts,tsx,js,jsx,mts,mjs}"]
+      },
+      {
+        "name": "edge",
+        "root": "cloudflare-container-bootstrap",
+        "patterns": ["src/**/*.{ts,tsx,js,jsx,mts,mjs}"]
+      }
+    ],
+    "rules": [
+      { "from": "public", "allow": [] },
+      { "from": "backend", "allow": [] },
+      { "from": "admin", "allow": [] },
+      { "from": "edge", "allow": [] }
+    ]
+  },
+
+  // Existing-codebase adoption: report architecture crossings first.
+  // Promote this to error only after the initial baseline is reconciled.
+  "rules": {
+    "boundary-violation": "warn"
+  }
+}
