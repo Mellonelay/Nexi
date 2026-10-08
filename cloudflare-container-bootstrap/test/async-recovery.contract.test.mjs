@@ -31,3 +31,29 @@ test('Workflow bridge exposes only withdrawal/mining/loan and validates identifi
   assert.match(source, /typeof params !== "object" \|\| Array\.isArray\(params\)/);
   assert.match(source, /workflow\.create\(\{ id: body\.id, params \}\)/);
 });
+
+
+test('Workflow entrypoints consume the Cloudflare event payload', async () => {
+  const classes = source.slice(source.indexOf('export class NexiWithdrawalWorkflow'), source.indexOf('function requireLoanDueTerminal')).replaceAll('export class', 'class');
+  const calls = [];
+  const make = new Function('WorkflowEntrypoint', 'workflowEntityId', 'invokeWorkflowCommand', 'workflowEventPayload', 'NonRetryableError', classes + '; return [NexiWithdrawalWorkflow, NexiMiningWorkflow, NexiLoanWorkflow];');
+  const workflows = make(class {}, (params, key) => {
+    assert.equal(params[key], 'controlled-entity');
+    return params[key];
+  }, async (...args) => {
+    calls.push(args);
+    return { done: true };
+  }, event => event.payload, Error);
+  const step = {
+    do: async (_name, _options, callback) => callback(),
+    waitForEvent: async (_name, options) => {
+      assert.equal(options.type, 'decision');
+      return { payload: { decision: 'REJECTED' } };
+    },
+  };
+  for (const [index, key] of ['withdrawalId', 'subscriptionId', 'loanId'].entries()) {
+    const result = await new workflows[index]().run({ payload: { [key]: 'controlled-entity' }, instanceId: 'controlled-instance' }, step);
+    assert.equal(result.done, true);
+  }
+  assert.deepEqual(calls.map(args => args[4]), ['controlled-entity', 'controlled-entity']);
+});

@@ -753,7 +753,7 @@ NexiApiContainer.outboundByHost = {
 
 export class NexiWithdrawalWorkflow extends WorkflowEntrypoint {
   async run(event, step) {
-    const withdrawalId = workflowEntityId(event.params, "withdrawalId");
+    const withdrawalId = workflowEntityId(event.payload, "withdrawalId");
     const prepared = await step.do(
       "withdrawal-prepare",
       { retries: { limit: 5, delay: "5 seconds", backoff: "exponential" } },
@@ -787,7 +787,7 @@ export class NexiWithdrawalWorkflow extends WorkflowEntrypoint {
 
 export class NexiMiningWorkflow extends WorkflowEntrypoint {
   async run(event, step) {
-    const subscriptionId = workflowEntityId(event.params, "subscriptionId");
+    const subscriptionId = workflowEntityId(event.payload, "subscriptionId");
     let state = await step.do(
       "mining-plan",
       { retries: { limit: 5, delay: "5 seconds", backoff: "exponential" } },
@@ -815,7 +815,7 @@ export class NexiMiningWorkflow extends WorkflowEntrypoint {
 
 export class NexiLoanWorkflow extends WorkflowEntrypoint {
   async run(event, step) {
-    const loanId = workflowEntityId(event.params, "loanId");
+    const loanId = workflowEntityId(event.payload, "loanId");
     const decisionEvent = await step.waitForEvent("loan-decision", {
       type: "decision",
       timeout: "365 days",
