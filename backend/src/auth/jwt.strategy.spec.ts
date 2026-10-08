@@ -2,7 +2,7 @@ import { Role } from '../prisma/d1-client';
 import { JwtStrategy } from './jwt.strategy';
 
 describe('JWT claim contract', () => {
-  const strategy = new JwtStrategy({ getOrThrow: () => 'test-only-secret' } as never);
+  const strategy = new JwtStrategy({ getOrThrow: () => 'test-only-secret' } as never, {} as never);
 
   it('accepts wallet-native users whose canonical email is null', async () => {
     await expect(strategy.validate({ sub: 'wallet-user', email: null, role: Role.USER, surface: 'PUBLIC' })).resolves.toEqual({

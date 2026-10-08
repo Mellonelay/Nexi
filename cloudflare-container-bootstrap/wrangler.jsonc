@@ -57,7 +57,6 @@
     "NEXI_CONVERSION_QUOTE_TTL_MS": "30000",
     "MARKET_BACKFILL_ON_STARTUP": "false",
     "NEXI_SCHEDULER_ENABLED": "true",
-    "NEXI_B7_ENABLED": "true",
   },
   "secrets": {
     "required": [
@@ -165,6 +164,22 @@
         "max_retries": 5,
         "retry_delay": 15,
         "dead_letter_queue": "nexi-domain-events-staging-dlq",
+      },
+      {
+        "queue": "nexi-integration-jobs-staging",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 5,
+        "retry_delay": 15,
+        "dead_letter_queue": "nexi-integration-jobs-staging-dlq",
+      },
+      {
+        "queue": "nexi-notifications-staging",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 5,
+        "retry_delay": 15,
+        "dead_letter_queue": "nexi-notifications-staging-dlq",
       },
     ],
   },

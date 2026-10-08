@@ -14,6 +14,7 @@ import { AuthSurfaceGuard } from "../../src/auth/auth-surface.guard";
 import { RolesGuard } from "../../src/auth/roles.guard";
 import { AdminPermissionGuard } from "../../src/admin/admin-permission.guard";
 import { D1FinancialCommandGateway } from "../../src/d1/d1-financial-command.gateway";
+import { MarketProviderRouterService } from "../../src/market/market-provider-router.service";
 
 /**
  * C3 proof: Public and Admin HTTP surfaces operate on one D1-shaped durable
@@ -120,6 +121,7 @@ describe("C3 Public ↔ Backend ↔ Admin financial causality", () => {
         { provide: MiningService, useValue: {} },
         { provide: LoanService, useValue: {} },
         { provide: D1FinancialCommandGateway, useValue: state },
+        { provide: MarketProviderRouterService, useValue: { currentStatus: jest.fn() } },
         { provide: AuthService, useValue: { verifySensitiveAction: jest.fn().mockResolvedValue(undefined) } },
       ],
     })

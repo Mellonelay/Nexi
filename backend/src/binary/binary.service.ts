@@ -5,7 +5,7 @@ import { D1PrismaService } from '../d1/d1-prisma.service';
 import { assertPositiveDecimal, binaryTransitionAllowed, decimalProduct } from '../gate2/gate2-rules';
 import { BinaryGateway } from './binary.gateway';
 import { SandboxScenarioService } from '../sandbox/sandbox-scenario.service';
-import { getMarketSourcePolicy, isDeterministicTestProvider, isSettlementApproved } from '../market/market-source-registry';
+import { getMarketSourcePolicy, getProviderMapping, isDeterministicTestProvider, isSettlementApproved } from '../market/market-source-registry';
 import { D1FinancialCommandGateway } from '../d1/d1-financial-command.gateway';
 
 export interface OpenBinaryPositionInput {
@@ -149,17 +149,14 @@ export class BinaryService {
   private isBinaryPairAvailable(symbol: string): boolean {
     // Jest integration fixtures intentionally use deterministic isolated pairs.
     if (process.env.NODE_ENV === 'test') return true;
-    const policy = getMarketSourcePolicy(symbol);
-    return Boolean(
-      policy?.capabilities.binary
-      && policy.settlementPolicy.enabled
-      && policy.settlementPolicy.approvalStatus === 'APPROVED',
-    );
+    return Boolean(getMarketSourcePolicy(symbol));
   }
 
   private isSettlementQuoteAllowed(symbol: string, provider: string): boolean {
     if (isDeterministicTestProvider(provider)) return true;
-    return isSettlementApproved(symbol, provider);
+    const policy = getMarketSourcePolicy(symbol);
+    if (policy?.assetClass === 'crypto') return isSettlementApproved(symbol, provider);
+    return getProviderMapping(symbol, provider)?.quoteSupported === true;
   }
 
   private assertIdempotencyKey(key: string): void {

@@ -126,7 +126,7 @@ After this reconciliation the 62 active rows classify as: **8 COMPLETED, 4 PROVE
 | AD-07 | Admin | Feature flags/maintenance/localization | `NEEDS_FRESH_PROOF` | persisted control + consumer effect proof |
 | AD-08 | Admin | Audit/approvals/incidents | `NEEDS_FRESH_PROOF` | immutable audit + permission proof |
 | R-01 | Async | EventOutbox durable publication boundary | `NEEDS_FRESH_PROOF` | durable enqueue/publish/read-back evidence |
-| R-02 | Async | Queues retry/delivery semantics | `NEEDS_FRESH_PROOF` | bounded retry/idempotency proof |
+| R-02 | Async | Queues retry/delivery semantics | `NEEDS_FRESH_PROOF` | 2026-10-08: dedicated DLQs and both existing-Worker consumers active; settings/IDs read back. Four synthetic nonfinancial pushes produced one RECEIVED D1 row per queue. Realtime gateway/outbox7/7 + Worker contracts5/5 pass. Downstream business processing and live failure-to-DLQ recovery remain unproven. |
 | R-03 | Async | Workflows orchestration | `NEEDS_FRESH_PROOF` | workflow state/recovery proof |
 | R-04 | Realtime | Valkey/Socket.IO delivery and recovery | `NEEDS_FRESH_PROOF` | reconnect/resnapshot/consumer continuity |
 | R-05 | Reliability | Duplicate/retry/concurrency safety | `NEEDS_FRESH_PROOF` | focused adversarial tests |

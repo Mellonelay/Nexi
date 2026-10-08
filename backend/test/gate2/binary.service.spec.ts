@@ -24,23 +24,37 @@ describe('Gate 2 Binary authority', () => {
     return { service, d1, position };
   }
 
-  it('exposes approved crypto configurations in production while preserving D1 terms', async () => {
+  it('exposes crypto and canonical non-crypto configurations in production while preserving D1 terms', async () => {
     const { service, d1 } = createService();
     const configurations = [420, 30, 280, 60, 180].map((durationSeconds, index) => ({
       pair: 'BTCUSDT', durationSeconds, enabled: 1,
       payoutRate: String(0.8 + index / 100), minStake: String(index + 1), maxStake: String(1000 + index),
     }));
-    d1.listBinaryConfigurations = jest.fn().mockResolvedValue([
-      ...configurations,
-      { pair: 'EURUSD', durationSeconds: 90, enabled: 1, payoutRate: '0.9', minStake: '1', maxStake: '1000' },
-    ]);
+    const forex = { pair: 'EURUSD', durationSeconds: 30, enabled: 1, payoutRate: '0.9', minStake: '1', maxStake: '1000' };
+    d1.listBinaryConfigurations = jest.fn().mockResolvedValue([...configurations, forex]);
     const previousEnvironment = process.env.NODE_ENV;
     process.env.NODE_ENV = 'production';
     try {
       await expect(service.getConfig()).resolves.toEqual({
-        durations: [30, 60, 180, 280, 420], configurations,
+        durations: [30, 60, 180, 280, 420], configurations: [...configurations, forex],
       });
       expect(d1.openBinaryPosition).not.toHaveBeenCalled();
+    } finally {
+      if (previousEnvironment === undefined) delete process.env.NODE_ENV;
+      else process.env.NODE_ENV = previousEnvironment;
+    }
+  });
+
+  it('opens non-crypto Binary positions using the canonical live market provider', async () => {
+    const { service, d1 } = createService();
+    d1.getActiveMarketPair.mockResolvedValueOnce({ ...pair, symbol: 'EURUSD', baseAsset: 'EUR', quoteAsset: 'USD' });
+    d1.getBinaryConfiguration.mockResolvedValueOnce({ pair: 'EURUSD', durationSeconds: 30, payoutRate: '0.85', lossRate: '0', minStake: '1', maxStake: '1000', version: 2, enabled: true });
+    d1.getLiveMarketQuote.mockResolvedValueOnce({ ...quote, provider: 'biquote' });
+    const previousEnvironment = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
+    try {
+      await service.openPosition('user-1', { pair: 'EURUSD', side: BinarySide.CALL, stake: '10', durationSeconds: 30, idempotencyKey: 'binary-key-2' });
+      expect(d1.openBinaryPosition).toHaveBeenCalledWith(expect.objectContaining({ pair: 'EURUSD', entryProvider: 'biquote', configurationVersion: 2 }));
     } finally {
       if (previousEnvironment === undefined) delete process.env.NODE_ENV;
       else process.env.NODE_ENV = previousEnvironment;

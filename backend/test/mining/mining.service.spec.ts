@@ -34,7 +34,7 @@ describe('MiningService', () => {
   it('uses the D1 scheduler query and D1 admin listing', async () => {
     const previousB7 = process.env.NEXI_B7_ENABLED;
     const previousScheduler = process.env.NEXI_SCHEDULER_ENABLED;
-    process.env.NEXI_B7_ENABLED = 'true';
+    delete process.env.NEXI_B7_ENABLED;
     process.env.NEXI_SCHEDULER_ENABLED = 'true';
     const d1: any = {
       getMiningSubscription: jest.fn().mockResolvedValue({ id: 'subscription-1', userId: 'user-1', status: 'ACTIVE', endDate: null }),

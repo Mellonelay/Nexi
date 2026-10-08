@@ -239,7 +239,7 @@ function buildPolicy(entry: CanonicalMarketPair): AssetSourcePolicy {
     capabilities: {
       marketBrowse: true,
       spot: true,
-      binary: entry.category === 'crypto',
+      binary: true,
       // D1 Gate2BinaryConfiguration is the runtime authority for enabled durations.
       supportedBinaryDurations: [],
     },

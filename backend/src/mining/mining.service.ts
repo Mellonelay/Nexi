@@ -63,7 +63,7 @@ export class MiningService {
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async distributeRewards() {
-    if (process.env.NEXI_B7_ENABLED !== 'true' || process.env.NEXI_SCHEDULER_ENABLED !== 'true') return { skipped: true };
+    if (process.env.NEXI_SCHEDULER_ENABLED !== 'true') return { skipped: true };
     const d1 = this.requireD1FinancialAuthority();
     const owner = randomUUID();
     const lockKey = 'nexi:scheduler:mining-rewards:daily';
