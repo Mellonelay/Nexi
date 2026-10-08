@@ -54,7 +54,7 @@ test('product interaction feedback is progressive and accessibility-aware', () =
 });
 
 test('public product copy does not expose raw market-state enums', () => {
-  const primitives = read('app/dashboard/wallet/components/ProductPrimitives.tsx');
+  const primitives = read('app/components/PagePrimitives.tsx');
   const account = read('app/components/AccountIdentityHeader.tsx');
   const quotes = read('app/dashboard/page.tsx');
 

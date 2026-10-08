@@ -5,7 +5,7 @@ import { Clock3, Coins, History, RefreshCw, ShieldCheck, Sparkles } from 'lucide
 import api from '../../lib/api';
 import { actionCanSubmit, authoritativeValue, EARN_STATES, normalizeProductState, resolveEndpointTemplate } from '../../lib/product-states';
 import { sessionPrincipalId } from '../../lib/wallet-auth';
-import { DataStatePanel, Field, inputClass, Metric, PageHeader, PageShell, Panel, PanelHeading, PrimaryButton, SecondaryButton, StatusBadge } from '../wallet/components/ProductPrimitives';
+import { DataStatePanel, Field, inputClass, Metric, PageHeader, PageShell, Panel, PanelHeading, PrimaryButton, SecondaryButton, StatusBadge } from '../../components/PagePrimitives';
 
 type RecordValue = Record<string, unknown>;
 type FlowStage = 'IDLE' | 'REVIEW' | 'SUBMITTING' | 'PENDING_CONFIRMATION' | 'ERROR';

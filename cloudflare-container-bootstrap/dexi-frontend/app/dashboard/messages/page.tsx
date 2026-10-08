@@ -29,7 +29,7 @@ import {
   SecondaryButton,
   StatusBadge,
   TabButton,
-} from '../wallet/components/ProductPrimitives';
+} from '../../components/PagePrimitives';
 import SafeBackButton from '../../components/SafeBackButton';
 
 type LoadState = 'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR';

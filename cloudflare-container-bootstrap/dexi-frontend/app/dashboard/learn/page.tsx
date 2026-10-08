@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Bookmark, BookOpen, GraduationCap, Search } from 'lucide-react';
 import api from '../../lib/api';
 import { authoritativeValue } from '../../lib/product-states';
-import { DataStatePanel, inputClass, PageHeader, PageShell, Panel, PanelHeading, TabButton } from '../wallet/components/ProductPrimitives';
+import { DataStatePanel, inputClass, PageHeader, PageShell, Panel, PanelHeading, TabButton } from '../../components/PagePrimitives';
 import { useLocale } from '../../state/LocaleProvider';
 
 type LearnArticle = { id?: unknown; slug?: unknown; title?: unknown; summary?: unknown; body?: unknown; category?: { name?: unknown } | unknown; status?: unknown };

@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
-import { NexiSurface } from '../../../components/NexiPrimitives';
-import { controlVariants } from '../../../components/nexi-variants';
-import { cn } from '../../../lib/cn';
-import { productStateLabel } from '../../../lib/product-states';
+import { NexiSurface } from './NexiPrimitives';
+import { controlVariants } from './nexi-variants';
+import { cn } from '../lib/cn';
+import { productStateLabel } from '../lib/product-states';
 
 const stateTone: Record<string, string> = {
   LIVE: 'border-[#48C0CC]/35 bg-[#48C0CC]/10 text-[#48C0CC]',
@@ -34,9 +34,9 @@ const stateTone: Record<string, string> = {
 
 export function PageShell({ children }: { children: ReactNode }) {
   return (
-    <div className="nexi-page-shell relative min-h-[100dvh] min-w-0 overflow-x-clip text-[#F8F6FF]">
+    <div className="nexi-page-shell relative min-h-full min-w-0 overflow-x-clip text-[#F8F6FF]">
       <div aria-hidden="true" className="nexi-atmosphere pointer-events-none absolute inset-0" />
-      <div className="relative min-w-0 px-4 py-5 pb-[calc(112px+var(--nexi-safe-bottom))] sm:px-6 lg:px-8 [&>main]:min-w-0 [&>main>*]:min-w-0">
+      <div className="relative min-w-0 px-4 py-5 pb-6 sm:px-6 lg:px-8 [&>main]:min-w-0 [&>main>*]:min-w-0">
         {children}
       </div>
     </div>
@@ -50,8 +50,8 @@ export function PageHeader({ eyebrow, title, description, action }: {
   action?: ReactNode;
 }) {
   return (
-    <header className="mx-auto mb-6 flex max-w-7xl flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-      <div className="min-w-0 pl-14 sm:pl-0">
+    <header className="nexi-station-header mx-auto mb-6 flex max-w-7xl flex-col gap-4 rounded-2xl border px-4 py-4 sm:flex-row sm:items-end sm:justify-between sm:px-5">
+      <div className="min-w-0">
         {eyebrow && <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#48C0CC]">{eyebrow}</p>}
         <h1 className="text-2xl font-semibold tracking-tight gradient-text sm:text-3xl">{title}</h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-[#C3BBD0]">{description}</p>

@@ -6,7 +6,7 @@ import { io } from 'socket.io-client';
 import api, { apiBaseUrl } from '../../lib/api';
 import { getAccessToken } from '../../lib/auth-session';
 import LocalDateTime from '../../components/LocalDateTime';
-import { DataStatePanel, Field, inputClass, PageHeader, PageShell, Panel, PanelHeading, PrimaryButton, TabButton } from '../wallet/components/ProductPrimitives';
+import { DataStatePanel, Field, inputClass, PageHeader, PageShell, Panel, PanelHeading, PrimaryButton, TabButton } from '../../components/PagePrimitives';
 
 type TicketReply = {
   id: string;

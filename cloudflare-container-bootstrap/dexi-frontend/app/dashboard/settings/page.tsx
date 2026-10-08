@@ -9,7 +9,7 @@ import { SUPPORTED_LOCALES, type LocaleCode } from '../../state/locale';
 import { useLocale } from '../../state/LocaleProvider';
 import { type WalletProfile, clearWalletSession, sessionPrincipalId } from '../../lib/wallet-auth';
 import { recoverPublicSession } from '../../lib/api';
-import { DataStatePanel, Field, inputClass, PageHeader, PageShell, Panel, PanelHeading, PrimaryButton, TabButton } from '../wallet/components/ProductPrimitives';
+import { DataStatePanel, Field, inputClass, PageHeader, PageShell, Panel, PanelHeading, PrimaryButton, TabButton } from '../../components/PagePrimitives';
 import SafeBackButton from '../../components/SafeBackButton';
 import WalletConnectControl from '../../components/WalletConnectControl';
 

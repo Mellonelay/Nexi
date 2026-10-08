@@ -13,7 +13,7 @@ import DepositModal from './components/DepositModal';
 import TransferModal from './components/TransferModal';
 import WithdrawModal from './components/WithdrawModal';
 import ConvertModal from './components/ConvertModal';
-import { DataStatePanel, Metric, PageShell, Panel, PanelHeading, SecondaryButton, StatusBadge, TabButton } from './components/ProductPrimitives';
+import { DataStatePanel, Metric, PageShell, Panel, PanelHeading, SecondaryButton, StatusBadge, TabButton } from '../../components/PagePrimitives';
 import WalletDashboardLayout from './components/WalletDashboardLayout';
 
 type Tab = 'Overview' | 'Funding' | 'Spot' | 'Margin' | 'Binary' | 'Finance';

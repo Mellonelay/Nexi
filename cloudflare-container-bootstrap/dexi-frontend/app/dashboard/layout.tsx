@@ -17,9 +17,9 @@ export default function DashboardLayout({
       <div className="hidden lg:block">
         <Sidebar />
       </div>
-      <main className="min-h-0 min-w-0 flex-1 overflow-x-clip overflow-y-auto">
+      <main className="min-h-0 min-w-0 flex flex-1 flex-col overflow-x-clip overflow-y-auto">
         <AppHeader />
-        <div className="h-full w-full min-w-0">{children}</div>
+        <div className="min-h-0 w-full min-w-0 flex-1">{children}</div>
       </main>
       <BottomNav />
     </div>

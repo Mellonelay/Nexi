@@ -31,7 +31,7 @@ import {
   PanelHeading,
   PrimaryButton,  SecondaryButton,
   StatusBadge,
-} from '../wallet/components/ProductPrimitives';
+} from '../../components/PagePrimitives';
 
 type LoadState = 'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR';
 

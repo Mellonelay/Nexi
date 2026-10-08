@@ -57,7 +57,7 @@ export default function AssetDetailPage() {
 
   if (!matchedItem) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#050508] px-6 text-center text-sm text-[#C3BBD0]">
+      <div className="nexi-page-shell relative flex min-h-full w-full flex-col items-center justify-center gap-4 overflow-x-clip px-6 py-6 text-center text-sm text-[#C3BBD0]">
         <SafeBackButton fallback="/dashboard" label="Back to Quotes Hub" />
         <p>{marketLoading ? 'Loading market asset…' : marketError ? 'Market data is unavailable. This asset cannot be loaded right now.' : 'This market asset is unavailable.'}</p>
       </div>
@@ -81,9 +81,9 @@ function AssetDetailView({
   const { instrument, definition, aboutCopy, aboutFacts, displayStatus, statusClass } = assetDetailModel(item);
 
   return (
-    <div className="min-h-[100dvh] w-full min-w-0 overflow-x-clip bg-[#050508] px-4 pb-28 pt-4 text-[#F8F6FF] md:px-8 md:pb-10 md:pt-8">
-      <div className="mx-auto max-w-6xl">
-        <header className="mb-6 grid grid-cols-[44px_minmax(0,1fr)_44px] items-start gap-3 sm:gap-4">
+    <div className="nexi-page-shell relative min-h-full w-full min-w-0 overflow-x-clip px-4 pb-6 pt-4 text-[#F8F6FF] md:px-8 md:pb-8 md:pt-8">
+      <div className="relative mx-auto max-w-6xl">
+        <header className="nexi-station-header mb-6 grid grid-cols-[44px_minmax(0,1fr)_44px] items-start gap-3 rounded-2xl border p-3 sm:gap-4 sm:p-4">
           <SafeBackButton fallback="/dashboard" label="Back to Quotes Hub" className="!min-h-[44px] !min-w-[44px] border-violet-300/20 bg-[#100A18] hover:border-violet-300/45" />
           <div className="min-w-0 flex-1">
             <p className="break-words text-xs font-semibold uppercase tracking-[0.16em] text-[#8C8299]">Asset Detail</p>

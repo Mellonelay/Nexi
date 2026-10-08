@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Bookmark, CalendarDays, Megaphone, Search } from 'lucide-react';
 import api from '../../lib/api';
 import { authoritativeValue } from '../../lib/product-states';
-import { DataStatePanel, inputClass, PageHeader, PageShell, Panel, PanelHeading, SecondaryButton, TabButton } from '../wallet/components/ProductPrimitives';
+import { DataStatePanel, inputClass, PageHeader, PageShell, Panel, PanelHeading, SecondaryButton, TabButton } from '../../components/PagePrimitives';
 import SafeBackButton from '../../components/SafeBackButton';
 import { useLocale } from '../../state/LocaleProvider';
 

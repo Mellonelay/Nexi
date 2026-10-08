@@ -119,7 +119,7 @@ export default function Dashboard() {
       />
       <div className="relative mx-auto flex min-h-[calc(100dvh-4.5rem)] max-w-[1510px] flex-col px-3 pb-2 pt-1.5 md:px-7 md:pb-8 md:pt-5">
         <header className="nexi-dashboard-toolbar -mx-3 mt-2 flex min-h-[54px] items-center justify-end gap-2 px-3 md:-mx-7 md:min-h-[60px] md:px-7">
-          <label className="hidden h-11 min-w-[320px] max-w-[430px] flex-1 items-center gap-2 rounded-xl border border-white/10 bg-black/20 px-4 text-sm text-[var(--nexi-text-muted)] backdrop-blur-xl md:flex">
+          <label className="nexi-shell-glass hidden h-11 min-w-[320px] max-w-[430px] flex-1 items-center gap-2 rounded-xl border border-[var(--nexi-border-subtle)] px-4 text-sm text-[var(--nexi-text-muted)] md:flex">
             <Search className="h-4 w-4" aria-hidden="true" />
             <span className="sr-only">{t("filter")}</span>
             <input
