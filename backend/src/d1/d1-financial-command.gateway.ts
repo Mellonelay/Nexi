@@ -1650,9 +1650,9 @@ export class D1FinancialCommandGateway {
     guard?: { sql: string; params: D1BridgeParameter[] };
   }): D1BridgeBatchStatement {
     const prefix = `INSERT OR IGNORE INTO "EventOutbox" ("id","idempotencyKey","aggregateType","aggregateId","eventType","eventVersion","correlationId","payload","state","availableAt","attempts","createdAt","updatedAt")`;
-    const values = `?,?,?, ?,1,?,?,'PENDING',CURRENT_TIMESTAMP,0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP`;
+    const values = `?,?,?,?,?,1,?,?,'PENDING',CURRENT_TIMESTAMP,0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP`;
     return {
-      sql: `${prefix} ${command.guard ? "SELECT" : "VALUES"} (${values})${command.guard ? ` WHERE ${command.guard.sql}` : ""}`,
+      sql: `${prefix} ${command.guard ? `SELECT ${values} WHERE ${command.guard.sql}` : `VALUES (${values})`}`,
       params: [
         randomUUID(),
         command.idempotencyKey,
