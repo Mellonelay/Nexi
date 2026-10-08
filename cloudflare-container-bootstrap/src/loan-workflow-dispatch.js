@@ -34,7 +34,7 @@ export async function dispatchLoanApproval(env, event) {
   // Cloudflare buffers events sent after instance creation, including before
   // the workflow reaches waitForEvent("loan-decision").
   await instance.sendEvent({
-    type: "loan-decision",
+    type: "decision",
     payload: { decision: "APPROVED" },
   });
   return true;

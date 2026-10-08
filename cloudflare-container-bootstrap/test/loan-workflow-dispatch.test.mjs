@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { dispatchLoanApproval } from "../src/loan-workflow-dispatch.js";
 
 test("LOAN_APPROVED creates one deterministic workflow and signals its approval wait", async () => {
-  const sendEvent = async () => {};
+  const sendEvent = async (event) => assert.equal(event.type, "decision");
   const status = async () => ({ status: "unknown" });
   const running = { status: async () => ({ status: "running" }), sendEvent };
   const get = async () => {
@@ -47,7 +47,7 @@ test("replayed approval reuses the existing workflow instance", async () => {
   });
 
   assert.deepEqual(sent, [
-    { type: "loan-decision", payload: { decision: "APPROVED" } },
+    { type: "decision", payload: { decision: "APPROVED" } },
   ]);
 });
 
