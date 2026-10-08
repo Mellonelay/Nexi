@@ -7,12 +7,19 @@ describe('CommunicationsService', () => {
 
   it('creates an idempotent ticket with its first reply', async () => {
     const ticket = { id: 'ticket-1', userId: 'user-1', replies: [{ id: 'reply-1' }] };
-    const tx: any = { supportTicket: { upsert: jest.fn(async () => ticket) } };
-    const prisma: any = { $transaction: async (fn: any) => fn(tx) };
+    const atomicBatch = jest.fn().mockResolvedValue([]);
+    const prisma: any = {
+      atomicBatch,
+      supportTicket: { findUnique: jest.fn(async () => ticket) },
+    };
     const service = new CommunicationsService(prisma, outbox as any, d1Communications as any, redis as any);
     const result = await service.createTicket('user-1', 'Help', 'Body', 'key-1');
     expect(result).toBe(ticket);
-    expect(tx.supportTicket.upsert).toHaveBeenCalledWith(expect.objectContaining({ where: expect.anything(), include: { replies: true } }));
+    expect(atomicBatch).toHaveBeenCalledWith(expect.arrayContaining([
+      expect.objectContaining({ sql: expect.stringContaining('INSERT INTO "SupportTicket"') }),
+      expect.objectContaining({ sql: expect.stringContaining('INSERT INTO "SupportTicketReply"') }),
+    ]));
+    expect(prisma.supportTicket.findUnique).toHaveBeenCalledWith(expect.objectContaining({ include: { replies: true } }));
   });
 
   it('assigns monotonic sequence inside the deterministic persistent conversation', async () => {

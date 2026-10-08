@@ -10,6 +10,7 @@ import { D1PrismaService } from "../d1/d1-prisma.service";
 import { RedisService } from "../redis/redis.service";
 import { EventOutboxService } from "../events/event-outbox.service";
 import { D1CommunicationsCommandGateway } from "../d1/d1-communications-command.gateway";
+import type { D1BridgeBatchStatement } from "../d1/d1-worker-bridge.service";
 
 @Injectable()
 export class CommunicationsService {
@@ -73,19 +74,23 @@ export class CommunicationsService {
     key: string,
   ) {
     const ticketId = this.id(`ticket:${userId}`, key);
-    const ticket = await this.database.$transaction(async (tx) =>
-      tx.supportTicket.upsert({
-        where: { id: ticketId },
-        update: {},
-        create: {
-          id: ticketId,
-          userId,
-          subject,
-          replies: { create: { authorId: userId, body } },
-        },
-        include: { replies: true },
-      }),
-    );
+    const createdAt = new Date().toISOString();
+    const replyId = this.id(`reply:${ticketId}:${userId}`, key);
+    await this.d1.atomicBatch([
+      {
+        sql: `INSERT INTO "SupportTicket" ("id", "userId", "subject", "status", "priority", "createdAt", "updatedAt") VALUES (?, ?, ?, 'OPEN', 'NORMAL', ?, ?) ON CONFLICT("id") DO NOTHING`,
+        params: [ticketId, userId, subject, createdAt, createdAt],
+      },
+      {
+        sql: `INSERT INTO "SupportTicketReply" ("id", "ticketId", "authorId", "body", "internal", "createdAt") VALUES (?, ?, ?, ?, 0, ?) ON CONFLICT("id") DO NOTHING`,
+        params: [replyId, ticketId, userId, body, createdAt],
+      },
+    ]);
+    const ticket = await this.database.supportTicket.findUnique({
+      where: { id: ticketId },
+      include: { replies: true },
+    });
+    if (!ticket) throw new BadRequestException("Support ticket was not materialized");
     await this.publishRealtimeEvent("SUPPORT_TICKET_OPENED", ticket.id, { userId });
     await this.durableEvent(
       "support-ticket:" + ticket.id + ":" + key,
@@ -763,43 +768,22 @@ export class CommunicationsService {
         "Scheduled Learn articles require scheduledAt",
       );
     const publishedAt = status === "PUBLISHED" ? new Date() : undefined;
-    const article = await this.database.$transaction(async (tx) => {
-      const article = await tx.learnArticle.create({
-        data: {
-          slug: data.slug,
-          title: data.title,
-          body: data.body,
-          summary: data.summary,
-          localizations:
-            data.localizations === undefined
-              ? undefined
-              : JSON.stringify(data.localizations),
-          status,
-          attachments: data.attachments as Prisma.InputJsonValue | undefined,
-          categoryId: data.categoryId,
-          scheduledAt,
-          publishedAt,
-        },
-      });
-      await tx.learnArticleRevision.create({
-        data: {
-          articleId: article.id,
-          revision: 1,
-          title: article.title,
-          body: article.body,
-          summary: article.summary,
-          localizations: article.localizations,
-          status,
-          attachments: article.attachments as Prisma.InputJsonValue | undefined,
-          scheduledAt,
-          publishedAt,
-        },
-      });
-      await this.replaceLearnRelations(tx, article.id, data.tags, data.media);
-      return tx.learnArticle.findUnique({
-        where: { id: article.id },
-        include: this.learnInclude(),
-      });
+    const articleId = this.id("learn-article", data.slug);
+    const revisionId = this.id(`learn-revision:${articleId}`, "1");
+    const now = new Date().toISOString();
+    const statements = this.learnCreationStatements({
+      data,
+      articleId,
+      revisionId,
+      status,
+      scheduledAt,
+      publishedAt,
+      now,
+    });
+    await this.d1.atomicBatch(statements);
+    const article = await this.database.learnArticle.findUnique({
+      where: { id: articleId },
+      include: this.learnInclude(),
     });
     if (!article)
       throw new BadRequestException("Learn article was not materialized");
@@ -925,6 +909,90 @@ export class CommunicationsService {
       );
     }
     return article;
+  }
+
+  private learnCreationStatements(input: {
+    data: {
+      slug: string;
+      title: string;
+      body: string;
+      summary?: string;
+      localizations?: unknown;
+      attachments?: unknown;
+      categoryId?: string;
+      tags?: string[];
+      media?: Array<{ url: string; altText?: string; provider?: string; metadata?: unknown }>;
+    };
+    articleId: string;
+    revisionId: string;
+    status: string;
+    scheduledAt: Date | undefined;
+    publishedAt: Date | undefined;
+    now: string;
+  }): D1BridgeBatchStatement[] {
+    const { data, articleId, revisionId, status, scheduledAt, publishedAt, now } = input;
+    const sharedContent = [
+      data.title,
+      data.body,
+      data.summary ?? null,
+      data.localizations === undefined ? null : JSON.stringify(data.localizations),
+      status,
+      this.learnStoredValue(data.attachments),
+    ];
+    const statements: D1BridgeBatchStatement[] = [
+      {
+        sql: `INSERT INTO "LearnContent" ("id", "slug", "title", "body", "summary", "localizations", "status", "attachments", "categoryId", "scheduledAt", "publishedAt", "createdAt", "updatedAt") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        params: [articleId, data.slug, ...sharedContent, data.categoryId ?? null, scheduledAt?.toISOString() ?? null, publishedAt?.toISOString() ?? null, now, now],
+      },
+      {
+        sql: `INSERT INTO "LearnArticleRevision" ("id", "articleId", "revision", "title", "body", "summary", "localizations", "status", "attachments", "scheduledAt", "publishedAt") VALUES (?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        params: [revisionId, articleId, ...sharedContent, scheduledAt?.toISOString() ?? null, publishedAt?.toISOString() ?? null],
+      },
+    ];
+    this.appendLearnRelationStatements({
+      statements,
+      articleId,
+      tags: data.tags,
+      media: data.media,
+      now,
+    });
+    return statements;
+  }
+
+  private learnStoredValue(value: unknown): string | null {
+    if (value === undefined || value === null) return null;
+    return typeof value === "string" ? value : JSON.stringify(value);
+  }
+
+  private appendLearnRelationStatements(input: {
+    statements: D1BridgeBatchStatement[];
+    articleId: string;
+    tags?: string[];
+    media?: Array<{ url: string; altText?: string; provider?: string; metadata?: unknown }>;
+    now: string;
+  }): void {
+    const { statements, articleId, now } = input;
+    const selectedTags = (input.tags ?? []).map((name) => name.trim()).filter(Boolean);
+    const selectedMedia = input.media ?? [];
+    if (statements.length + selectedTags.length * 2 + selectedMedia.length > 16)
+      throw new BadRequestException("Learn article relations exceed the atomic D1 batch limit");
+    for (const name of selectedTags) {
+      const slug = name.toLowerCase().replace(/\s+/g, "-");
+      statements.push({
+        sql: `INSERT INTO "LearnTag" ("id", "slug", "name", "updatedAt") VALUES (?, ?, ?, ?) ON CONFLICT("slug") DO UPDATE SET "name" = excluded."name", "updatedAt" = excluded."updatedAt"`,
+        params: [this.id("learn-tag", slug), slug, name, now],
+      });
+      statements.push({
+        sql: `INSERT INTO "LearnArticleTag" ("articleId", "tagId") SELECT ?, "id" FROM "LearnTag" WHERE "slug" = ?`,
+        params: [articleId, slug],
+      });
+    }
+    selectedMedia.forEach((item, index) => {
+      statements.push({
+        sql: `INSERT INTO "LearnMediaAsset" ("id", "articleId", "url", "altText", "provider", "metadata") VALUES (?, ?, ?, ?, ?, ?)`,
+        params: [this.id(`learn-media:${articleId}`, String(index)), articleId, item.url, item.altText ?? null, item.provider ?? null, this.learnStoredValue(item.metadata)],
+      });
+    });
   }
 
   private async replaceLearnRelations(

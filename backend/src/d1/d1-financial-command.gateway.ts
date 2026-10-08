@@ -1,3 +1,6 @@
+export type { D1DepositObservationCommand } from "./deposit-commands";
+import { type DepositClaimSubmission, type D1DepositObservationCommand, depositClaimSubmissionStatements, depositClaimReviewStatements, depositClaimCreditStatements, assertDepositClaimReview, readDepositClaim, validateDepositClaimAmount, assertDepositClaimDestination } from "./deposit-commands";
+import { findCommandByIdempotencyKey } from "./d1-command-queries";
 import {
   BadRequestException,
   Injectable,
@@ -168,18 +171,6 @@ export interface D1BinarySettleCommand {
   realizedProfit: string;
   idempotencyKey: string;
   correlationId: string;
-}
-
-export interface D1DepositObservationCommand {
-  userId: string;
-  asset: string;
-  network: string;
-  address: string;
-  txHash: string;
-  amount: string;
-  confirmations: number;
-  requiredConfirmations: number;
-  observationKey: string;
 }
 
 export interface D1WithdrawalCreateCommand {
@@ -4439,11 +4430,11 @@ export class D1FinancialCommandGateway {
     requestedBy: string;
   }): Promise<Record<string, unknown>> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
-    const existing = await this.bridge.select<Record<string, unknown>>(
-      `SELECT * FROM "AdminGovernanceCommand" WHERE "idempotencyKey"=? LIMIT 1`,
-      [command.idempotencyKey],
+    const existing = await findCommandByIdempotencyKey(this.bridge,
+      "AdminGovernanceCommand",
+      command.idempotencyKey,
     );
-    if (existing.results[0]) return existing.results[0];
+    if (existing) return existing;
     const result = await this.bridge.batch([
       {
         sql: `INSERT INTO "AdminGovernanceCommand" ("id","idempotencyKey","commandType","target","reason","payload","requestedBy","status","createdAt","updatedAt") VALUES (?,?,?,?,?,?,?,'PENDING',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`,
@@ -5271,68 +5262,20 @@ export class D1FinancialCommandGateway {
     return row.results[0] ?? null;
   }
 
-  private validateDepositClaimAmount(
-    amountValue: string,
-    minimumValue: string,
-    maximumValue: string,
-  ): void {
-    this.assertDepositClaimAmountWithinLimits(
-      this.parseDepositClaimAmount(amountValue),
-      minimumValue,
-      maximumValue,
-    );
+  private validateDepositClaimAmount(amountValue: string, minimumValue: string, maximumValue: string): void {
+    validateDepositClaimAmount({amountValue, minimumValue, maximumValue});
   }
 
-  private parseDepositClaimAmount(amountValue: string): Prisma.Decimal {
-    if (!/^[0-9]+(?:[.][0-9]{1,18})?$/.test(amountValue)) {
-      throw new BadRequestException("Deposit amount is invalid");
-    }
-    const amount = new Prisma.Decimal(amountValue);
-    if (!amount.isFinite() || !amount.isPositive()) {
-      throw new BadRequestException("Deposit amount is outside configured limits");
-    }
-    return amount;
-  }
-
-  private assertDepositClaimAmountWithinLimits(
-    amount: Prisma.Decimal,
-    minimumValue: string,
-    maximumValue: string,
-  ): void {
-    if (amount.lt(minimumValue) || amount.gt(maximumValue)) {
-      throw new BadRequestException("Deposit amount is outside configured limits");
-    }
-  }
-
-  private assertDepositClaimDestination(address: any, amountValue: string): void {
-    if (!address) throw new BadRequestException("Deposit destination is unavailable");
-    this.validateDepositClaimAmount(
-      amountValue,
-      String(address.minDeposit),
-      String(address.maxDeposit),
-    );
-  }
-
-  async submitDepositClaim(command: {
-    id: string;
-    userId: string;
-    asset: string;
-    network: string;
-    depositAddressId: string;
-    claimedAmount: string;
-    proofObjectKey: string;
-    txHash?: string;
-    idempotencyKey: string;
-  }): Promise<Record<string, unknown>> {
+  async submitDepositClaim(command: DepositClaimSubmission): Promise<Record<string, unknown>> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
-    const existing = await this.bridge.select<Record<string, unknown>>(
-      `SELECT * FROM "DepositClaim" WHERE "idempotencyKey"=? LIMIT 1`,
-      [command.idempotencyKey],
+    const existing = await findCommandByIdempotencyKey(this.bridge,
+      "DepositClaim",
+      command.idempotencyKey,
     );
-    if (existing.results[0]) {
-      if (String(existing.results[0].userId) !== command.userId)
+    if (existing) {
+      if (String(existing.userId) !== command.userId)
         throw new BadRequestException("Deposit claim ownership mismatch");
-      return existing.results[0];
+      return existing;
     }
     const address = await this.bridge.select<any>(
       `SELECT d."id",d."address",c."symbol",c."minDeposit",c."maxDeposit",w."code" AS "network" FROM "DepositAddress" d JOIN "Currency" c ON c."id"=d."currencyId" JOIN "WalletNetwork" w ON w."id"=d."walletNetworkId" WHERE d."id"=? AND w."code"=? AND d."isActive"=1 AND c."symbol"=? AND c."isActive"=1 AND c."depositEnabled"=1 AND w."isActive"=1 AND w."depositEnabled"=1 LIMIT 1`,
@@ -5342,45 +5285,11 @@ export class D1FinancialCommandGateway {
         this.normalizeAsset(command.asset),
       ],
     );
-    this.assertDepositClaimDestination(address.results[0], command.claimedAmount);
-    const result = await this.bridge.batch([
-      {
-        sql: `INSERT INTO "DepositClaim" ("id","userId","asset","network","depositAddressId","destinationAddressSnapshot","claimedAmount","proofObjectKey","txHash","state","idempotencyKey","submittedAt","updatedAt") VALUES (?,?,?,?,?,?,?,?,?,'PENDING_REVIEW',?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`,
-        params: [
-          command.id,
-          command.userId,
-          address.results[0].symbol,
-          String(address.results[0].network),
-          command.depositAddressId,
-          address.results[0].address,
-          command.claimedAmount,
-          command.proofObjectKey,
-          command.txHash ?? null,
-          command.idempotencyKey,
-        ],
-      },
-      {
-        sql: `INSERT INTO "Gate2OperationAudit" ("id","userId","operationType","operationId","eventType","idempotencyKey","details","createdAt") VALUES (?,?, 'DEPOSIT_CLAIM',?,'DEPOSIT_CLAIM_SUBMITTED',?,?,CURRENT_TIMESTAMP)`,
-        params: [
-          randomUUID(),
-          command.userId,
-          command.id,
-          command.idempotencyKey,
-          JSON.stringify({
-            asset: address.results[0].symbol,
-            network: String(address.results[0].network),
-          }),
-        ],
-      },
-    ]);
+    assertDepositClaimDestination(address.results[0], command.claimedAmount);
+    const result = await this.bridge.batch(depositClaimSubmissionStatements(command, address.results[0], this.eventOutboxStatement({ idempotencyKey: `event:${command.idempotencyKey}`, aggregateType: "DepositClaim", aggregateId: command.id, eventType: "DEPOSIT_CLAIM_SUBMITTED", correlationId: command.idempotencyKey, payload: { userId: command.userId, asset: address.results[0].symbol, network: address.results[0].network, claimedAmount: command.claimedAmount } })));
     this.requireChanges(result, 0, "D1 deposit claim creation");
-    const row = await this.bridge.select<Record<string, unknown>>(
-      `SELECT * FROM "DepositClaim" WHERE "id"=? LIMIT 1`,
-      [command.id],
-    );
-    if (!row.results[0])
-      throw new BadRequestException("D1 deposit claim was not materialized");
-    return row.results[0];
+    this.requireChanges(result, 2, "D1 deposit claim outbox");
+    return readDepositClaim({bridge: this.bridge, id: command.id});
   }
 
   async listDepositClaims(userId?: string): Promise<Record<string, unknown>[]> {
@@ -5408,32 +5317,11 @@ export class D1FinancialCommandGateway {
     ).results[0];
     if (!claim) throw new NotFoundException("Deposit claim not found");
     if (String(claim.state) === state) return claim;
-    const result = await this.bridge.batch([
-      {
-        sql: `UPDATE "DepositClaim" SET "state"=?,"reviewedAt"=CURRENT_TIMESTAMP,"reviewedBy"=? ,"reviewReason"=? ,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=?`,
-        params: [state, adminId, reason, id],
-      },
-      {
-        sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`,
-        params: [
-          randomUUID(),
-          adminId,
-          `DEPOSIT_CLAIM_${state}`,
-          id,
-          JSON.stringify({ reason, idempotencyKey }),
-        ],
-      },
-    ]);
+    assertDepositClaimReview(String(claim.state));
+    const result = await this.bridge.batch(depositClaimReviewStatements({id, state, adminId, reason, idempotencyKey}, this.eventOutboxStatement({ idempotencyKey: `event:${idempotencyKey}`, aggregateType: "DepositClaim", aggregateId: id, eventType: `DEPOSIT_CLAIM_${state}`, correlationId: idempotencyKey, payload: { userId: claim.userId, state, adminId, reason } })));
     this.requireChanges(result, 0, "D1 deposit claim state transition");
-    const row = await this.bridge.select<Record<string, unknown>>(
-      `SELECT * FROM "DepositClaim" WHERE "id"=? LIMIT 1`,
-      [id],
-    );
-    if (!row.results[0])
-      throw new BadRequestException(
-        "D1 deposit claim state was not materialized",
-      );
-    return row.results[0];
+    this.requireChanges(result, 2, "D1 deposit claim outbox");
+    return readDepositClaim({bridge: this.bridge, id});
   }
 
   async creditDepositClaim(
@@ -5470,36 +5358,10 @@ export class D1FinancialCommandGateway {
       economicGroup: id,
       metadata: { adminId, reason },
     });
-    const result = await this.bridge.batch([
-      {
-        sql: `UPDATE "DepositClaim" SET "state"='CREDITED',"creditedLedgerPostingId"=? ,"reviewedAt"=COALESCE("reviewedAt",CURRENT_TIMESTAMP),"reviewedBy"=COALESCE("reviewedBy",?),"reviewReason"=COALESCE("reviewReason",?),"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "state"='APPROVED'`,
-        params: [posting.postingId, adminId, reason, id],
-      },
-      {
-        sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`,
-        params: [
-          randomUUID(),
-          adminId,
-          "DEPOSIT_CLAIM_CREDITED",
-          id,
-          JSON.stringify({
-            reason,
-            idempotencyKey,
-            postingId: posting.postingId,
-          }),
-        ],
-      },
-    ]);
+    const result = await this.bridge.batch(depositClaimCreditStatements({id, postingId: posting.postingId, adminId, reason, idempotencyKey}, this.eventOutboxStatement({ idempotencyKey: `event:${idempotencyKey}`, aggregateType: "DepositClaim", aggregateId: id, eventType: "DEPOSIT_CLAIM_CREDITED", correlationId: idempotencyKey, payload: { userId: claim.userId, asset: claim.asset, amount: claim.claimedAmount, postingId: posting.postingId, adminId, reason } })));
     this.requireChanges(result, 0, "D1 deposit claim credit");
-    const row = await this.bridge.select<Record<string, unknown>>(
-      `SELECT * FROM "DepositClaim" WHERE "id"=? LIMIT 1`,
-      [id],
-    );
-    if (!row.results[0])
-      throw new BadRequestException(
-        "D1 deposit claim credit was not materialized",
-      );
-    return row.results[0];
+    this.requireChanges(result, 2, "D1 deposit claim outbox");
+    return readDepositClaim({bridge: this.bridge, id});
   }
 
   async getWithdrawalById(
