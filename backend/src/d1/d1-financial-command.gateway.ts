@@ -4261,7 +4261,7 @@ export class D1FinancialCommandGateway {
     if (!current) throw new NotFoundException("KYC review not found");
     const result = await this.bridge.batch([
       {
-        sql: `INSERT OR IGNORE INTO "AdminGovernanceCommand" ("id","commandType","target","reason","idempotencyKey","payload","status","requestedBy","createdAt","updatedAt") VALUES (?,?,?,?,?,?, 'EXECUTED',?,?,CURRENT_TIMESTAMP)`,
+        sql: `INSERT OR IGNORE INTO "AdminGovernanceCommand" ("id","commandType","target","reason","idempotencyKey","payload","status","requestedBy","createdAt","updatedAt") VALUES (?,?,?,?,?,?, 'EXECUTED',?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`,
         params: [
           randomUUID(),
           "KYC_DECISION",

@@ -1060,6 +1060,29 @@ describe("D1FinancialCommandGateway", () => {
     );
   });
 
+  it("binds every KYC decision batch statement and timestamps governance commands in D1", async () => {
+    const bridge = createBridge({
+      select: jest.fn().mockResolvedValue({
+        results: [{ id: "kyc-1", userId: "user-1", status: "PENDING" }],
+      }),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+
+    await gateway.decideKyc({
+      id: "kyc-1",
+      decision: "APPROVED",
+      reason: "Controlled test review",
+      adminId: "admin-1",
+      idempotencyKey: "kyc-decision-1",
+    });
+
+    const statements = (bridge.batch as jest.Mock).mock.calls[0][0] as D1BridgeBatchStatement[];
+    for (const statement of statements) {
+      expect(statement.params).toHaveLength((statement.sql.match(/\?/g) ?? []).length);
+    }
+    expect(statements[0].sql).toContain("'EXECUTED',?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP");
+  });
+
   it("enforces F7 deposit amount limits with exact decimals", () => {
     const gateway = new D1FinancialCommandGateway(createBridge());
     expect(() => (gateway as any).validateDepositClaimAmount("10", "10", "100")).not.toThrow();
