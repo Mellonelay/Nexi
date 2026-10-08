@@ -699,7 +699,7 @@ function BinaryPairEditForm({
         if (!o) onClose();
       }}
       title={pair ? `Edit — ${pair.symbol}` : ""}
-      description="Edit all five user-facing Option boxes: duration seconds, payout, minimum and maximum stake."
+      description="Edit payout, stake limits, and availability for each of the five fixed Option durations."
       submitLabel="Save pair"
       submitDisabled={!reasonOk || !configsValid}
       onSubmit={async () => {
@@ -736,20 +736,7 @@ function BinaryPairEditForm({
           >
             <div className="text-xs font-medium">Box {index + 1}</div>
             <Field label="Duration (seconds)">
-              <Input
-                type="number"
-                min={1}
-                max={86400}
-                value={config.durationSeconds}
-                onChange={(e) =>
-                  setState((s) => ({
-                    ...s,
-                    durationConfigs: s.durationConfigs.map((item, i) =>
-                      i === index ? { ...item, durationSeconds: Number(e.target.value) } : item,
-                    ),
-                  }))
-                }
-              />
+              <Input value={config.durationSeconds} readOnly />
             </Field>
             <Field label="Payout (bps)">
               <Input
@@ -792,6 +779,21 @@ function BinaryPairEditForm({
                 }
               />
             </Field>
+            <label className="flex items-center justify-between rounded-md border border-border/60 px-2 py-1.5">
+              <span className="text-xs">Enabled</span>
+              <Switch
+                data-testid={`bin-duration-enabled-${config.sourceDurationSeconds}`}
+                checked={config.enabled}
+                onCheckedChange={(enabled) =>
+                  setState((s) => ({
+                    ...s,
+                    durationConfigs: s.durationConfigs.map((item, i) =>
+                      i === index ? { ...item, enabled } : item,
+                    ),
+                  }))
+                }
+              />
+            </label>
           </div>
         ))}
       </div>

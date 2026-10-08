@@ -840,12 +840,12 @@ export class NexiAdminApiProvider implements AdminDataProvider {
         payoutBps: Math.round(Number(config.payoutRate ?? 0) * 10000),
         minStake: stringValue(config.minStake, "0"),
         maxStake: stringValue(config.maxStake, "0"),
-        enabled: config.enabled !== false,
+        enabled: config.enabled === true || config.enabled === 1,
       }));
       return {
         id: symbol,
         symbol,
-        enabled: configs.some((row) => row.enabled !== false),
+        enabled: configs.some((row) => row.enabled === true || row.enabled === 1),
         payoutBps,
         durationConfigs,
         minStake: stringValue(current.minStake, "0"),
@@ -853,7 +853,7 @@ export class NexiAdminApiProvider implements AdminDataProvider {
         exposureCap: "UNAVAILABLE",
         exposureUsed: "UNAVAILABLE",
         settlementDelayMs: Number(current.settlementDelaySeconds ?? 0) * 1000,
-        maintenance: configs.every((row) => row.enabled === false),
+        maintenance: configs.every((row) => row.enabled === false || row.enabled === 0),
       };
     });
   }

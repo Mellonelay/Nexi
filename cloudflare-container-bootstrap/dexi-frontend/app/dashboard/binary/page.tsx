@@ -248,7 +248,7 @@ export default function BinaryPage() {
     const configured = new Map(binaryConfigurations
       .filter((item) => normalizePair(item.pair) === normalizedPair)
       .map((item) => [item.durationSeconds, item] as const));
-    return binaryDurations.filter((seconds) => configured.get(seconds)?.enabled).map((seconds) => {
+    return binaryDurations.filter((seconds) => configured.has(seconds)).map((seconds) => {
       const item = configured.get(seconds);
       const raw = item ? Number(item.payoutRate) : Number.NaN;
       const rate = Number.isFinite(raw) && raw > 0 ? raw : null;
