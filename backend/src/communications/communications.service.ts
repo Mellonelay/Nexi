@@ -12,6 +12,36 @@ import { EventOutboxService } from "../events/event-outbox.service";
 import { D1CommunicationsCommandGateway } from "../d1/d1-communications-command.gateway";
 import type { D1BridgeBatchStatement } from "../d1/d1-worker-bridge.service";
 
+type LearnArticleUpdateData = {
+  title?: string;
+  body?: string;
+  summary?: string;
+  localizations?: unknown;
+  status?: string;
+  attachments?: unknown;
+  categoryId?: string;
+  scheduledAt?: string;
+  tags?: string[];
+  media?: Array<{ url: string; altText?: string; provider?: string; metadata?: unknown }>;
+};
+
+type LearnArticleCreateData = Omit<
+  LearnArticleUpdateData,
+  "title" | "body"
+> & {
+  slug: string;
+  title: string;
+  body: string;
+};
+
+type LearnArticleUpdateContext = {
+  id: string;
+  data: LearnArticleUpdateData;
+  next: any;
+  revision: number;
+  now: string;
+};
+
 @Injectable()
 export class CommunicationsService {
   constructor(
@@ -743,24 +773,7 @@ export class CommunicationsService {
     return category;
   }
 
-  async createLearn(data: {
-    slug: string;
-    title: string;
-    body: string;
-    summary?: string;
-    localizations?: unknown;
-    status?: string;
-    attachments?: unknown;
-    categoryId?: string;
-    scheduledAt?: string;
-    tags?: string[];
-    media?: Array<{
-      url: string;
-      altText?: string;
-      provider?: string;
-      metadata?: unknown;
-    }>;
-  }) {
+  async createLearn(data: LearnArticleCreateData) {
     const status = this.learnStatus(data.status);
     const scheduledAt = this.learnDate(data.scheduledAt);
     if (status === "SCHEDULED" && !scheduledAt)
@@ -797,31 +810,70 @@ export class CommunicationsService {
     return article;
   }
 
-  async updateLearn(
-    id: string,
-    data: {
-      title?: string;
-      body?: string;
-      summary?: string;
-      localizations?: unknown;
-      status?: string;
-      attachments?: unknown;
-      categoryId?: string;
-      scheduledAt?: string;
-      tags?: string[];
-      media?: Array<{
-        url: string;
-        altText?: string;
-        provider?: string;
-        metadata?: unknown;
-      }>;
-    },
-  ) {
-    const current = await this.database.learnArticle.findUnique({
-      where: { id },
-    });
+  async updateLearn(id: string, data: LearnArticleUpdateData) {
+    const current = await this.database.learnArticle.findUnique({ where: { id } });
     if (!current) throw new NotFoundException("Learn article not found");
+    const next = this.resolveLearnUpdate(current, data);
+    const latest = await this.database.learnArticleRevision.findFirst({
+      where: { articleId: id },
+      orderBy: { revision: "desc" },
+      select: { revision: true },
+    });
+    const now = new Date().toISOString();
+    await this.d1.atomicBatch(this.learnUpdateStatements({
+      id, data, next, revision: (latest?.revision ?? 0) + 1, now,
+    }));
+    const article = await this.database.learnArticle.findUnique({
+      where: { id },
+      include: this.learnInclude(),
+    });
+    if (!article)
+      throw new BadRequestException("Learn article was not materialized");
+    const updatedAt =
+      article.updatedAt instanceof Date
+        ? article.updatedAt.toISOString()
+        : new Date(article.updatedAt).toISOString();
+    await this.durableEvent(
+      "learn-article:update:" + article.id + ":" + updatedAt,
+      "LEARN_ARTICLE",
+      article.id,
+      "LEARN_ARTICLE_UPDATED",
+      { status: article.status, slug: article.slug },
+    );
+    return article;
+  }
+
+  private resolveLearnUpdate(current: any, data: LearnArticleUpdateData) {
     const status = this.learnStatus(data.status ?? current.status);
+    return {
+      title: data.title ?? current.title,
+      body: data.body ?? current.body,
+      summary: data.summary ?? current.summary,
+      localizations: this.learnUpdateLocalizations(current, data),
+      status,
+      attachments: this.learnUpdateAttachments(current, data),
+      categoryId: data.categoryId ?? current.categoryId,
+      scheduledAt: this.learnUpdateSchedule(current, data, status),
+      publishedAt: this.learnUpdatePublishedAt(current, status),
+      archivedAt: status === "ARCHIVED" ? new Date() : null,
+    };
+  }
+
+  private learnUpdateLocalizations(current: any, data: LearnArticleUpdateData) {
+    return data.localizations === undefined
+      ? current.localizations
+      : JSON.stringify(data.localizations);
+  }
+
+  private learnUpdateAttachments(current: any, data: LearnArticleUpdateData) {
+    return data.attachments === undefined ? current.attachments : data.attachments;
+  }
+
+  private learnUpdateSchedule(
+    current: any,
+    data: LearnArticleUpdateData,
+    status: string,
+  ) {
     const scheduledAt =
       data.scheduledAt === undefined
         ? current.scheduledAt
@@ -830,71 +882,44 @@ export class CommunicationsService {
       throw new BadRequestException(
         "Scheduled Learn articles require scheduledAt",
       );
-    const publishedAt =
-      status === "PUBLISHED"
-        ? (current.publishedAt ?? new Date())
-        : current.publishedAt;
-    const article = await this.database.$transaction(async (tx) => {
-      const article = await tx.learnArticle.update({
-        where: { id },
-        data: {
-          title: data.title ?? current.title,
-          body: data.body ?? current.body,
-          summary: data.summary ?? current.summary,
-          localizations:
-            data.localizations === undefined
-              ? current.localizations
-              : JSON.stringify(data.localizations),
-          status,
-          attachments:
-            data.attachments === undefined
-              ? current.attachments
-              : (data.attachments as Prisma.InputJsonValue),
-          categoryId: data.categoryId ?? current.categoryId,
-          scheduledAt,
-          publishedAt,
-          archivedAt: status === "ARCHIVED" ? new Date() : null,
-        },
-      });
-      const latest = await tx.learnArticleRevision.findFirst({
-        where: { articleId: id },
-        orderBy: { revision: "desc" },
-        select: { revision: true },
-      });
-      await tx.learnArticleRevision.create({
-        data: {
-          articleId: id,
-          revision: (latest?.revision ?? 0) + 1,
-          title: article.title,
-          body: article.body,
-          summary: article.summary,
-          localizations: article.localizations,
-          status,
-          attachments: article.attachments as Prisma.InputJsonValue | undefined,
-          scheduledAt,
-          publishedAt,
-        },
-      });
-      if (data.tags !== undefined || data.media !== undefined)
-        await this.replaceLearnRelations(tx, id, data.tags, data.media);
-      return tx.learnArticle.findUnique({
-        where: { id },
-        include: this.learnInclude(),
-      });
-    });
-    if (!article)
-      throw new BadRequestException("Learn article was not materialized");
-    await this.durableEvent(
-      "learn-article:update:" +
-        article.id +
-        ":" +
-        article.updatedAt.toISOString(),
-      "LEARN_ARTICLE",
-      article.id,
-      "LEARN_ARTICLE_UPDATED",
-      { status: article.status, slug: article.slug },
-    );
-    return article;
+    return scheduledAt;
+  }
+
+  private learnUpdatePublishedAt(current: any, status: string) {
+    return status === "PUBLISHED"
+      ? (current.publishedAt ?? new Date())
+      : current.publishedAt;
+  }
+
+  private learnUpdateStatements(
+    input: LearnArticleUpdateContext,
+  ): D1BridgeBatchStatement[] {
+    const { id, data, next, revision, now } = input;
+    const statements: D1BridgeBatchStatement[] = [
+      {
+        sql: 'UPDATE "LearnContent" SET "title"=?,"body"=?,"summary"=?,"localizations"=?,"status"=?,"attachments"=?,"categoryId"=?,"scheduledAt"=?,"publishedAt"=?,"archivedAt"=?,"updatedAt"=? WHERE "id"=?',
+        params: [
+          next.title, next.body, next.summary, next.localizations, next.status,
+          this.learnStoredValue(next.attachments), next.categoryId,
+          next.scheduledAt?.toISOString() ?? null,
+          next.publishedAt?.toISOString() ?? null,
+          next.archivedAt?.toISOString() ?? null, now, id,
+        ],
+      },
+      {
+        sql: 'INSERT INTO "LearnArticleRevision" ("id","articleId","revision","title","body","summary","localizations","status","attachments","scheduledAt","publishedAt","createdAt") VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
+        params: [
+          this.id("learn-revision:" + id, String(revision)), id, revision,
+          next.title, next.body, next.summary, next.localizations, next.status,
+          this.learnStoredValue(next.attachments),
+          next.scheduledAt?.toISOString() ?? null,
+          next.publishedAt?.toISOString() ?? null, now,
+        ],
+      },
+    ];
+    if (data.tags !== undefined || data.media !== undefined)
+      this.replaceLearnRelations(statements, id, data.tags, data.media);
+    return statements;
   }
 
   async publishLearn(id: string, idempotencyKey?: string) {
@@ -964,6 +989,36 @@ export class CommunicationsService {
     return typeof value === "string" ? value : JSON.stringify(value);
   }
 
+  private replaceLearnRelations(
+    statements: D1BridgeBatchStatement[],
+    articleId: string,
+    tags?: string[],
+    media?: Array<{
+      url: string;
+      altText?: string;
+      provider?: string;
+      metadata?: unknown;
+    }>,
+  ): void {
+    if (tags !== undefined)
+      statements.push({
+        sql: 'DELETE FROM "LearnArticleTag" WHERE "articleId"=?',
+        params: [articleId],
+      });
+    if (media !== undefined)
+      statements.push({
+        sql: 'DELETE FROM "LearnMediaAsset" WHERE "articleId"=?',
+        params: [articleId],
+      });
+    this.appendLearnRelationStatements({
+      statements,
+      articleId,
+      tags,
+      media,
+      now: new Date().toISOString(),
+    });
+  }
+
   private appendLearnRelationStatements(input: {
     statements: D1BridgeBatchStatement[];
     articleId: string;
@@ -995,42 +1050,5 @@ export class CommunicationsService {
     });
   }
 
-  private async replaceLearnRelations(
-    tx: any,
-    articleId: string,
-    tags?: string[],
-    media?: Array<{
-      url: string;
-      altText?: string;
-      provider?: string;
-      metadata?: unknown;
-    }>,
-  ) {
-    if (tags !== undefined) {
-      await tx.learnArticleTag.deleteMany({ where: { articleId } });
-      for (const rawTag of tags) {
-        const slug = rawTag.trim().toLowerCase().replace(/\s+/g, "-");
-        if (!slug) continue;
-        const tag = await tx.learnTag.upsert({
-          where: { slug },
-          update: { name: rawTag.trim() },
-          create: { slug, name: rawTag.trim() },
-        });
-        await tx.learnArticleTag.create({ data: { articleId, tagId: tag.id } });
-      }
-    }
-    if (media !== undefined) {
-      await tx.learnMediaAsset.deleteMany({ where: { articleId } });
-      if (media.length)
-        await tx.learnMediaAsset.createMany({
-          data: media.map((item) => ({
-            articleId,
-            url: item.url,
-            altText: item.altText,
-            provider: item.provider,
-            metadata: item.metadata as Prisma.InputJsonValue | undefined,
-          })),
-        });
-    }
-  }
+
 }

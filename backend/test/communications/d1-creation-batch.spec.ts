@@ -79,4 +79,45 @@ describe('D1 atomic communications creation', () => {
       expect(db.prepare('SELECT COUNT(*) AS n FROM LearnArticleRevision').get().n).toBe(1);
     } finally { db.close(); }
   });
+  it('publishes Learn content with an atomic article/revision batch and durable events', async () => {
+    const db = new DatabaseSync(':memory:');
+    try {
+      const migration = readFileSync('prisma/migrations-d1/0001_initial.sql', 'utf8');
+      for (const table of ['LearnCategory', 'LearnContent', 'LearnArticleRevision']) {
+        const start = migration.indexOf('CREATE TABLE "' + table + '" (');
+        const end = migration.indexOf(');', start);
+        db.exec(migration.slice(start, end + 2));
+      }
+      db.exec('ALTER TABLE LearnContent ADD COLUMN localizations TEXT; ALTER TABLE LearnArticleRevision ADD COLUMN localizations TEXT;');
+      const atomicBatch = jest.fn(async (statements: Array<{sql: string; params?: unknown[]}>) => {
+        db.exec('BEGIN');
+        try {
+          for (const statement of statements) db.prepare(statement.sql).run(...(statement.params ?? []));
+          db.exec('COMMIT');
+          return [];
+        } catch (error) { db.exec('ROLLBACK'); throw error; }
+      });
+      const prisma: any = {
+        atomicBatch,
+        learnArticle: {
+          findUnique: jest.fn(({ where }: any) => db.prepare('SELECT * FROM LearnContent WHERE id = ?').get(where.id)),
+        },
+        learnArticleRevision: {
+          findFirst: jest.fn(({ where }: any) => db.prepare('SELECT revision FROM LearnArticleRevision WHERE articleId = ? ORDER BY revision DESC LIMIT 1').get(where.articleId)),
+        },
+      };
+      const outbox: any = { recordEvent: jest.fn(async () => undefined) };
+      const service = new CommunicationsService(prisma, outbox, {} as any, { isAvailable: () => false } as any);
+      const created = await service.createLearn({
+        slug: 'publish-test', title: 'Draft', body: 'Controlled content', status: 'DRAFT',
+      });
+      const published = await service.publishLearn(created.id, 'publish-key');
+      expect(published.status).toBe('PUBLISHED');
+      expect(atomicBatch).toHaveBeenCalledTimes(2);
+      expect(atomicBatch.mock.calls[1][0]).toHaveLength(2);
+      expect(db.prepare('SELECT status FROM LearnContent WHERE id = ?').get(created.id).status).toBe('PUBLISHED');
+      expect(db.prepare('SELECT status, revision FROM LearnArticleRevision WHERE articleId = ? ORDER BY revision DESC LIMIT 1').get(created.id)).toMatchObject({ status: 'PUBLISHED', revision: 2 });
+      expect(outbox.recordEvent).toHaveBeenCalledTimes(3);
+    } finally { db.close(); }
+  });
 });
