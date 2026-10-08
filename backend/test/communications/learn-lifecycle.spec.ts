@@ -20,28 +20,30 @@ describe('A18 Learn lifecycle closure', () => {
     };
     const published = { ...current, status: 'PUBLISHED', publishedAt: new Date('2026-09-09T00:00:00Z'), updatedAt: new Date('2026-09-09T00:00:00Z') };
     const findMany = jest.fn(async () => [published]);
-    const tx: any = {
+    const d1: any = {
       learnArticle: {
-        update: jest.fn(async () => published),
-        findUnique: jest.fn(async () => published),
+        findUnique: jest.fn()
+          .mockResolvedValueOnce(current)
+          .mockResolvedValueOnce(published),
+        findMany,
       },
       learnArticleRevision: {
         findFirst: jest.fn(async () => ({ revision: 1 })),
-        create: jest.fn(async () => ({ id: 'revision-2' })),
       },
-    };
-    const d1: any = {
-      learnArticle: { findUnique: jest.fn(async () => current), findMany },
-      $transaction: jest.fn(async (fn: (arg: any) => Promise<unknown>) => fn(tx)),
+      atomicBatch: jest.fn(async () => []),
     };
     const outbox: any = { recordEvent: jest.fn(async () => ({})) };
     const service = new CommunicationsService(d1, outbox, {} as any, { isAvailable: () => false } as any);
 
     expect(await service.publishLearn(current.id, 'learn-publish-1')).toEqual(published);
-    expect(tx.learnArticle.update).toHaveBeenCalledWith(expect.objectContaining({
-      where: { id: current.id },
-      data: expect.objectContaining({ status: 'PUBLISHED' }),
-    }));
+    expect(d1.atomicBatch).toHaveBeenCalledWith(expect.arrayContaining([
+      expect.objectContaining({
+        sql: expect.stringContaining('UPDATE "LearnContent"'),
+      }),
+      expect.objectContaining({
+        sql: expect.stringContaining('INSERT INTO "LearnArticleRevision"'),
+      }),
+    ]));
     expect(outbox.recordEvent).toHaveBeenCalledWith(expect.objectContaining({ eventType: 'LEARN_ARTICLE_UPDATED', aggregateId: current.id }));
     expect(outbox.recordEvent).toHaveBeenCalledWith(expect.objectContaining({
       eventType: 'LEARN_ARTICLE_PUBLISHED',
