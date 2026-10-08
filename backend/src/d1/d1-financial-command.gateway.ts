@@ -984,7 +984,8 @@ export class D1FinancialCommandGateway {
     if (!row) return null;
     const receivedAt = new Date(String(row.receivedAt));
     const observedAt = new Date(String(row.observedAt));
-    const freshnessMs = Date.now() - receivedAt.getTime();
+    // Recent delivery cannot make an old provider observation fresh.
+    const freshnessMs = Date.now() - Math.min(receivedAt.getTime(), observedAt.getTime());
     const staleAfterMs = Number(
       process.env.NEXI_MARKET_STALE_AFTER_MS ?? 30_000,
     );

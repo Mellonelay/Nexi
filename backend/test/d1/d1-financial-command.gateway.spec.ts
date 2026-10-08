@@ -50,6 +50,49 @@ describe("D1FinancialCommandGateway", () => {
     delete process.env.D1_RUNTIME_ENABLED;
   });
 
+  describe("financial quote freshness", () => {
+    const now = Date.parse("2026-10-08T01:00:00Z");
+    let clock: jest.SpyInstance;
+    let previousThreshold: string | undefined;
+
+    beforeEach(() => {
+      previousThreshold = process.env.NEXI_MARKET_STALE_AFTER_MS;
+      process.env.NEXI_MARKET_STALE_AFTER_MS = "30000";
+      clock = jest.spyOn(Date, "now").mockReturnValue(now);
+    });
+
+    afterEach(() => {
+      clock.mockRestore();
+      if (previousThreshold === undefined) delete process.env.NEXI_MARKET_STALE_AFTER_MS;
+      else process.env.NEXI_MARKET_STALE_AFTER_MS = previousThreshold;
+    });
+
+    const quote = (observedAge: number, receivedAge: number) => ({
+      id: "quote-1", pairId: "pair-1", symbol: "USDHKD",
+      provider: "biquote", source: "biquote:signalr", sequence: "90440",
+      price: "7.8", state: "LIVE",
+      observedAt: new Date(now - observedAge).toISOString(),
+      receivedAt: new Date(now - receivedAge).toISOString(),
+    });
+
+    it.each([
+      [31000, 1000],
+      [1000, 31000],
+    ])("rejects stale evidence with observation age %i and receipt age %i", async (observedAge, receivedAge) => {
+      const bridge = createBridge({ select: jest.fn().mockResolvedValue({ results: [quote(observedAge, receivedAge)] }) });
+      const gateway = new D1FinancialCommandGateway(bridge);
+      await expect(gateway.getLiveMarketQuote("pair-1")).resolves.toBeNull();
+      expect(bridge.batch).not.toHaveBeenCalled();
+    });
+
+    it("returns fresh evidence with freshness measured from the older timestamp", async () => {
+      const bridge = createBridge({ select: jest.fn().mockResolvedValue({ results: [quote(2000, 1000)] }) });
+      const gateway = new D1FinancialCommandGateway(bridge);
+      await expect(gateway.getLiveMarketQuote("pair-1")).resolves.toMatchObject({ freshnessMs: 2000, sequence: "90440" });
+      expect(bridge.batch).not.toHaveBeenCalled();
+    });
+  });
+
   it("resolves a six-digit NEXI recipient code through D1 without loading a full user record", async () => {
     const bridge = createBridge({
       select: jest.fn().mockResolvedValue({
