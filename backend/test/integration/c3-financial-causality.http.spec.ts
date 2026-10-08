@@ -6,6 +6,7 @@ import { WalletController } from "../../src/wallet/wallet.controller";
 import { WalletService } from "../../src/wallet/wallet.service";
 import { AdminController } from "../../src/admin/admin.controller";
 import { AdminService } from "../../src/admin/admin.service";
+import { AdminWalletConfigurationService } from "../../src/admin/admin-wallet-configuration.service";
 import { MiningService } from "../../src/mining/mining.service";
 import { LoanService } from "../../src/loans/loans.service";
 import { JwtAuthGuard } from "../../src/auth/jwt-auth.guard";
@@ -34,6 +35,10 @@ class SharedFinancialState {
   isEnabled() { return true; }
   async hasAssetCapability(asset: string, _network: string, capability: string) {
     return asset.toUpperCase() === "USDT" && capability === "withdraw";
+  }
+  async getWalletAssetNetworkConfig(asset: string, network: string) {
+    if (asset.toUpperCase() !== "USDT" || network.toUpperCase() !== "TRC20") return null;
+    return { assetActive: 1, withdrawEnabled: 1, networkActive: 1, networkWithdrawEnabled: 1, minWithdrawal: "1", maxWithdrawal: "1000", withdrawalFee: "0.2" };
   }
   async getSystemConfigValue(key: string) {
     return key === "gate2.withdrawal.fee.USDT.TRC20" ? "0.2" : null;
@@ -118,6 +123,7 @@ describe("C3 Public ↔ Backend ↔ Admin financial causality", () => {
         { provide: FinancialOperationsService, useValue: financial },
         { provide: WalletService, useFactory: () => new WalletService({} as any, {} as any, state as any) },
         { provide: AdminService, useValue: adminFacade },
+        { provide: AdminWalletConfigurationService, useValue: {} },
         { provide: MiningService, useValue: {} },
         { provide: LoanService, useValue: {} },
         { provide: D1FinancialCommandGateway, useValue: state },

@@ -26,6 +26,13 @@ import { D1PrismaService } from "../d1/d1-prisma.service";
 import { randomUUID } from "node:crypto";
 import { CommunicationsService } from "../communications/communications.service";
 import { assertBinaryDurationUnchanged, latestBinaryConfigurationRows, resolveBinaryEnabled } from "./binary-configuration.utils";
+import {
+  AdminPlanMutationContext,
+  assertValidMiningPlanValues,
+  miningPlanDecimalPatch,
+  requireMiningPlanMutationContext,
+  updateD1MiningPlan,
+} from "./admin-mining-plan-configuration";
 
 const ADMIN_ACCOUNT_SELECT = {
   id: true,
@@ -63,12 +70,6 @@ const ADMIN_ACCOUNT_SELECT = {
 type AdminAccountRecord = Prisma.UserGetPayload<{
   select: typeof ADMIN_ACCOUNT_SELECT;
 }>;
-
-type AdminPlanMutationContext = {
-  adminId: string;
-  reason: string;
-  idempotencyKey: string;
-};
 
 type AdminWithdrawalDecision = (
   requestId: string,
@@ -1935,13 +1936,6 @@ export class AdminService {
     return updated;
   }
 
-  async createCurrency(data: any, adminId: string) {
-    if (this.d1?.isEnabled()) {
-      throw new BadRequestException("Creating a new currency through Admin requires the D1-native create path; update an existing canonical currency instead");
-    }
-    return this.prisma.currency.create({ data });
-  }
-
   async addDepositAddress(
     currencyId: number,
     network: string,
@@ -1967,7 +1961,7 @@ export class AdminService {
   // --- Mining Management ---
 
   async getMiningPlans() {
-    if (this.d1?.isEnabled()) return this.d1.listMiningPlans();
+    if (this.d1?.isEnabled()) return this.d1.listAdminMiningPlans();
     return this.prisma.miningPlan.findMany({
       orderBy: { lockupPeriod: "asc" },
     });
@@ -1980,12 +1974,22 @@ export class AdminService {
     const dailyYield = new Prisma.Decimal(String(data.dailyYield));
     const minDeposit = new Prisma.Decimal(String(data.minDeposit));
     const maxDeposit = new Prisma.Decimal(String(data.maxDeposit));
-    if (
-      dailyYield.isNegative() ||
-      minDeposit.isNegative() ||
-      maxDeposit.lt(minDeposit)
-    ) {
-      throw new BadRequestException("Mining plan values are invalid");
+    assertValidMiningPlanValues(dailyYield, minDeposit, maxDeposit);
+    if (this.d1?.isEnabled()) {
+      const auditContext = requireMiningPlanMutationContext(context);
+      return this.d1.createMiningPlan({
+        id: randomUUID(),
+        name: String(data.name).trim(),
+        currency: String(data.currency ?? "USDT").trim().toUpperCase(),
+        lockupPeriod: Number(data.lockupPeriod),
+        dailyYield: dailyYield.toString(),
+        minDeposit: minDeposit.toString(),
+        maxDeposit: maxDeposit.toString(),
+        isActive: data.isActive ?? true,
+        adminId: auditContext.adminId,
+        reason: auditContext.reason,
+        idempotencyKey: auditContext.idempotencyKey,
+      });
     }
     return this.prisma.$transaction(async (tx) => {
       const plan = await tx.miningPlan.create({
@@ -2018,33 +2022,18 @@ export class AdminService {
     data: any,
     context?: AdminPlanMutationContext,
   ) {
-    const decimalPatch: any = { ...data };
-    if (
-      data.dailyYield !== undefined &&
-      typeof data.dailyYield === "object" &&
-      "set" in data.dailyYield
-    ) {
-      decimalPatch.dailyYieldDecimal = new Prisma.Decimal(
-        String(data.dailyYield.set),
-      ).toString();
-    }
-    if (
-      data.minDeposit !== undefined &&
-      typeof data.minDeposit === "object" &&
-      "set" in data.minDeposit
-    ) {
-      decimalPatch.minDepositDecimal = new Prisma.Decimal(
-        String(data.minDeposit.set),
-      ).toString();
-    }
-    if (
-      data.maxDeposit !== undefined &&
-      typeof data.maxDeposit === "object" &&
-      "set" in data.maxDeposit
-    ) {
-      decimalPatch.maxDepositDecimal = new Prisma.Decimal(
-        String(data.maxDeposit.set),
-      ).toString();
+    const decimalPatch = miningPlanDecimalPatch(data);
+    if (this.d1?.isEnabled()) {
+      const auditContext = requireMiningPlanMutationContext(context);
+      const existing = await this.d1.getMiningPlan(id);
+      if (!existing) throw new NotFoundException("Mining plan not found");
+      return updateD1MiningPlan({
+        d1: this.d1,
+        id,
+        data,
+        existing,
+        context: auditContext,
+      });
     }
     return this.prisma.$transaction(async (tx) => {
       const plan = await tx.miningPlan.update({

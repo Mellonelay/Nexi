@@ -2,6 +2,7 @@ import { boundedJson, MAX_GATEWAY_BODY_BYTES } from "./bounded-json.js";
 import { Container, getContainer } from "@cloudflare/containers";
 import { WorkflowEntrypoint } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
+import { dispatchLoanApproval } from "./loan-workflow-dispatch.js";
 export { ContainerProxy } from "@cloudflare/containers";
 
 const CONTAINER_ENV_KEYS = [
@@ -841,8 +842,32 @@ export class NexiLoanWorkflow extends WorkflowEntrypoint {
       () => invokeWorkflowCommand(
         this.env, "loan", event.instanceId, "check-due", loanId,
         `${event.instanceId}:check-due`,
-      ),
+      ).then(requireLoanDueTerminal),
     );
+  }
+}
+
+function requireLoanDueTerminal(result) {
+  if (result?.done !== true) {
+    throw new Error("Loan due-date reconciliation is not terminal");
+  }
+  return result;
+}
+
+async function dispatchLoanApprovalOrRetry(env, message) {
+  try {
+    await dispatchLoanApproval(env, message.body);
+    return true;
+  } catch (error) {
+    console.error("NEXI_LOAN_WORKFLOW_DISPATCH_FAILED", {
+      messageId: message.id,
+      attempts: message.attempts,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    message.retry({
+      delaySeconds: Math.min(2 ** Math.min(message.attempts, 7), 300),
+    });
+    return false;
   }
 }
 
@@ -900,6 +925,7 @@ export default {
         });
         continue;
       }
+      if (!await dispatchLoanApprovalOrRetry(env, message)) continue;
       message.ack();
     }
   },

@@ -21,6 +21,7 @@ import {
 } from "@nestjs/swagger";
 import { Role } from "../prisma/d1-client";
 import { AdminService } from "./admin.service";
+import { AdminWalletConfigurationService } from "./admin-wallet-configuration.service";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { Roles } from "../auth/roles.decorator";
 import { RolesGuard } from "../auth/roles.guard";
@@ -29,6 +30,9 @@ import { RequireAuthSurface } from "../auth/auth-surface.decorator";
 import {
   CreateCurrencyDto,
   CreateDepositAddressDto,
+  CreateWalletNetworkDto,
+  UpdateWalletNetworkDto,
+  UpdateDepositAddressStateDto,
   CreateLoanPlanDto,
   CreateMiningPlanDto,
   UpdateCurrencyDto,
@@ -72,6 +76,7 @@ import { MarketProviderRouterService } from "../market/market-provider-router.se
 export class AdminController {
   constructor(
     private readonly adminService: AdminService,
+    private readonly walletConfiguration: AdminWalletConfigurationService,
     private readonly miningService: MiningService,
     private readonly loanService: LoanService,
     private readonly marketProviders: MarketProviderRouterService,
@@ -787,7 +792,7 @@ export class AdminController {
   @Post("currencies")
   @RequireAdminPermission("assets.edit")
   createCurrency(@Body() body: CreateCurrencyDto, @Req() request: AuthenticatedRequest) {
-    return this.adminService.createCurrency(body, request.user.userId);
+    return this.walletConfiguration.createCurrency(body, request.user.userId);
   }
 
   @Patch("currencies/:id")
@@ -826,6 +831,28 @@ export class AdminController {
     @Req() request: AuthenticatedRequest,
   ) {
     return this.adminService.deleteDepositAddress(id, request.user.userId, body.reason, body.idempotencyKey);
+  }
+
+  @Get("wallet-networks")
+  @RequireAdminPermission("assets.view")
+  getWalletNetworks() { return this.walletConfiguration.getWalletNetworks(); }
+
+  @Post("wallet-networks")
+  @RequireAdminPermission("assets.edit")
+  createWalletNetwork(@Body() body: CreateWalletNetworkDto, @Req() request: AuthenticatedRequest) {
+    return this.walletConfiguration.createWalletNetwork(body, request.user.userId);
+  }
+
+  @Patch("wallet-networks/:id")
+  @RequireAdminPermission("assets.edit")
+  updateWalletNetwork(@Param("id", ParseUUIDPipe) id: string, @Body() body: UpdateWalletNetworkDto, @Req() request: AuthenticatedRequest) {
+    return this.walletConfiguration.updateWalletNetwork(id, body, request.user.userId);
+  }
+
+  @Patch("address/:id/state")
+  @RequireAdminPermission("assets.edit")
+  updateDepositAddressState(@Param("id", ParseUUIDPipe) id: string, @Body() body: UpdateDepositAddressStateDto, @Req() request: AuthenticatedRequest) {
+    return this.walletConfiguration.setDepositAddressState(id, body, request.user.userId);
   }
 
   // --- Mining Plans ---

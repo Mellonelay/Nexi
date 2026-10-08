@@ -104,6 +104,11 @@ export type MiningRewardAccrual = $Result.DefaultSelection<Prisma.$MiningRewardA
  */
 export type Currency = $Result.DefaultSelection<Prisma.$CurrencyPayload>
 /**
+ * Model WalletNetwork
+ *
+ */
+export type WalletNetwork = $Result.DefaultSelection<Prisma.$WalletNetworkPayload>
+/**
  * Model DepositAddress
  * 
  */
@@ -1356,6 +1361,16 @@ export class PrismaClient<
   get currency(): Prisma.CurrencyDelegate<ExtArgs, ClientOptions>;
 
   /**
+   * `prisma.walletNetwork`: Exposes CRUD operations for the **WalletNetwork** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more WalletNetworks
+    * const walletNetworks = await prisma.walletNetwork.findMany()
+    * ```
+    */
+  get walletNetwork(): Prisma.WalletNetworkDelegate<ExtArgs, ClientOptions>;
+
+  /**
    * `prisma.depositAddress`: Exposes CRUD operations for the **DepositAddress** model.
     * Example usage:
     * ```ts
@@ -2506,6 +2521,7 @@ export namespace Prisma {
     MiningSubscription: 'MiningSubscription',
     MiningRewardAccrual: 'MiningRewardAccrual',
     Currency: 'Currency',
+    WalletNetwork: 'WalletNetwork',
     DepositAddress: 'DepositAddress',
     DepositClaim: 'DepositClaim',
     LoanPlan: 'LoanPlan',
@@ -2591,7 +2607,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "userMfa" | "walletIdentity" | "authSession" | "kYC" | "wallet" | "ledger" | "spotOrder" | "spotTrade" | "binaryOptionPosition" | "contractPosition" | "contractPair" | "conversionTransaction" | "loanApplication" | "miningPlan" | "miningSubscription" | "miningRewardAccrual" | "currency" | "depositAddress" | "depositClaim" | "loanPlan" | "systemConfig" | "adminAuditLog" | "adminRoleAssignment" | "adminGovernanceCommand" | "adminGovernanceApproval" | "adminIncident" | "adminMaintenanceWindow" | "adminFeatureFlag" | "binaryPair" | "binaryTimeframe" | "withdrawalRequest" | "optionGameSettings" | "marketData" | "marketAsset" | "marketNetwork" | "marketAssetCapability" | "marketPair" | "marketProviderConfig" | "marketProviderSymbol" | "marketTrade" | "marketDepthSnapshot" | "marketDepthLevel" | "marketQuoteSnapshot" | "marketQuoteLatest" | "marketKline" | "ledgerAccount" | "spotMarginAccount" | "spotMarginPosition" | "spotMarginPositionEvent" | "spotMarginActivity" | "ledgerPosting" | "ledgerIdempotency" | "ledgerAuditEvent" | "legacyAdmin" | "legacyAffiliate" | "legacyBinaryOptionResult" | "legacyLoanRepayment" | "legacyReward" | "supportTicket" | "supportTicketReply" | "messageConversation" | "persistentMessage" | "messageModerationCase" | "notification" | "announcement" | "activity" | "eventOutbox" | "eventInbox" | "learnArticle" | "learnCategory" | "learnArticleRevision" | "learnTag" | "learnArticleTag" | "learnMediaAsset" | "legacySettings" | "userPreference" | "vipLevel" | "userVipState" | "gate2SpotOrder" | "gate2SpotTrade" | "gate2BinaryConfiguration" | "gate2BinaryPosition" | "gate2Deposit" | "gate2Withdrawal" | "gate2InternalTransfer" | "gate2ConversionQuote" | "gate2OperationAudit"
+      modelProps: "user" | "userMfa" | "walletIdentity" | "authSession" | "kYC" | "wallet" | "ledger" | "spotOrder" | "spotTrade" | "binaryOptionPosition" | "contractPosition" | "contractPair" | "conversionTransaction" | "loanApplication" | "miningPlan" | "miningSubscription" | "miningRewardAccrual" | "currency" | "walletNetwork" | "depositAddress" | "depositClaim" | "loanPlan" | "systemConfig" | "adminAuditLog" | "adminRoleAssignment" | "adminGovernanceCommand" | "adminGovernanceApproval" | "adminIncident" | "adminMaintenanceWindow" | "adminFeatureFlag" | "binaryPair" | "binaryTimeframe" | "withdrawalRequest" | "optionGameSettings" | "marketData" | "marketAsset" | "marketNetwork" | "marketAssetCapability" | "marketPair" | "marketProviderConfig" | "marketProviderSymbol" | "marketTrade" | "marketDepthSnapshot" | "marketDepthLevel" | "marketQuoteSnapshot" | "marketQuoteLatest" | "marketKline" | "ledgerAccount" | "spotMarginAccount" | "spotMarginPosition" | "spotMarginPositionEvent" | "spotMarginActivity" | "ledgerPosting" | "ledgerIdempotency" | "ledgerAuditEvent" | "legacyAdmin" | "legacyAffiliate" | "legacyBinaryOptionResult" | "legacyLoanRepayment" | "legacyReward" | "supportTicket" | "supportTicketReply" | "messageConversation" | "persistentMessage" | "messageModerationCase" | "notification" | "announcement" | "activity" | "eventOutbox" | "eventInbox" | "learnArticle" | "learnCategory" | "learnArticleRevision" | "learnTag" | "learnArticleTag" | "learnMediaAsset" | "legacySettings" | "userPreference" | "vipLevel" | "userVipState" | "gate2SpotOrder" | "gate2SpotTrade" | "gate2BinaryConfiguration" | "gate2BinaryPosition" | "gate2Deposit" | "gate2Withdrawal" | "gate2InternalTransfer" | "gate2ConversionQuote" | "gate2OperationAudit"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -3924,6 +3940,80 @@ export namespace Prisma {
           count: {
             args: Prisma.CurrencyCountArgs<ExtArgs>
             result: $Utils.Optional<CurrencyCountAggregateOutputType> | number
+          }
+        }
+      }
+      WalletNetwork: {
+        payload: Prisma.$WalletNetworkPayload<ExtArgs>
+        fields: Prisma.WalletNetworkFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.WalletNetworkFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WalletNetworkPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.WalletNetworkFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WalletNetworkPayload>
+          }
+          findFirst: {
+            args: Prisma.WalletNetworkFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WalletNetworkPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.WalletNetworkFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WalletNetworkPayload>
+          }
+          findMany: {
+            args: Prisma.WalletNetworkFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WalletNetworkPayload>[]
+          }
+          create: {
+            args: Prisma.WalletNetworkCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WalletNetworkPayload>
+          }
+          createMany: {
+            args: Prisma.WalletNetworkCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.WalletNetworkCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WalletNetworkPayload>[]
+          }
+          delete: {
+            args: Prisma.WalletNetworkDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WalletNetworkPayload>
+          }
+          update: {
+            args: Prisma.WalletNetworkUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WalletNetworkPayload>
+          }
+          deleteMany: {
+            args: Prisma.WalletNetworkDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.WalletNetworkUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.WalletNetworkUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WalletNetworkPayload>[]
+          }
+          upsert: {
+            args: Prisma.WalletNetworkUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WalletNetworkPayload>
+          }
+          aggregate: {
+            args: Prisma.WalletNetworkAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateWalletNetwork>
+          }
+          groupBy: {
+            args: Prisma.WalletNetworkGroupByArgs<ExtArgs>
+            result: $Utils.Optional<WalletNetworkGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.WalletNetworkCountArgs<ExtArgs>
+            result: $Utils.Optional<WalletNetworkCountAggregateOutputType> | number
           }
         }
       }
@@ -9233,6 +9323,7 @@ export namespace Prisma {
     miningSubscription?: MiningSubscriptionOmit
     miningRewardAccrual?: MiningRewardAccrualOmit
     currency?: CurrencyOmit
+    walletNetwork?: WalletNetworkOmit
     depositAddress?: DepositAddressOmit
     depositClaim?: DepositClaimOmit
     loanPlan?: LoanPlanOmit
@@ -9817,10 +9908,12 @@ export namespace Prisma {
 
   export type CurrencyCountOutputType = {
     depositAddresses: number
+    walletNetworks: number
   }
 
   export type CurrencyCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     depositAddresses?: boolean | CurrencyCountOutputTypeCountDepositAddressesArgs
+    walletNetworks?: boolean | CurrencyCountOutputTypeCountWalletNetworksArgs
   }
 
   // Custom InputTypes
@@ -9838,6 +9931,44 @@ export namespace Prisma {
    * CurrencyCountOutputType without action
    */
   export type CurrencyCountOutputTypeCountDepositAddressesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: DepositAddressWhereInput
+  }
+
+  /**
+   * CurrencyCountOutputType without action
+   */
+  export type CurrencyCountOutputTypeCountWalletNetworksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: WalletNetworkWhereInput
+  }
+
+
+  /**
+   * Count Type WalletNetworkCountOutputType
+   */
+
+  export type WalletNetworkCountOutputType = {
+    depositAddresses: number
+  }
+
+  export type WalletNetworkCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    depositAddresses?: boolean | WalletNetworkCountOutputTypeCountDepositAddressesArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * WalletNetworkCountOutputType without action
+   */
+  export type WalletNetworkCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WalletNetworkCountOutputType
+     */
+    select?: WalletNetworkCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * WalletNetworkCountOutputType without action
+   */
+  export type WalletNetworkCountOutputTypeCountDepositAddressesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: DepositAddressWhereInput
   }
 
@@ -31576,6 +31707,7 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     depositAddresses?: boolean | Currency$depositAddressesArgs<ExtArgs>
+    walletNetworks?: boolean | Currency$walletNetworksArgs<ExtArgs>
     _count?: boolean | CurrencyCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["currency"]>
 
@@ -31642,6 +31774,7 @@ export namespace Prisma {
   export type CurrencyOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "symbol" | "name" | "logo" | "rate" | "minDeposit" | "maxDeposit" | "minWithdrawal" | "maxWithdrawal" | "withdrawalFee" | "depositEnabled" | "withdrawEnabled" | "confirmationCount" | "decimals" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["currency"]>
   export type CurrencyInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     depositAddresses?: boolean | Currency$depositAddressesArgs<ExtArgs>
+    walletNetworks?: boolean | Currency$walletNetworksArgs<ExtArgs>
     _count?: boolean | CurrencyCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type CurrencyIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -31651,6 +31784,7 @@ export namespace Prisma {
     name: "Currency"
     objects: {
       depositAddresses: Prisma.$DepositAddressPayload<ExtArgs>[]
+      walletNetworks: Prisma.$WalletNetworkPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
@@ -32065,6 +32199,7 @@ export namespace Prisma {
   export interface Prisma__CurrencyClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     depositAddresses<T extends Currency$depositAddressesArgs<ExtArgs> = {}>(args?: Subset<T, Currency$depositAddressesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DepositAddressPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    walletNetworks<T extends Currency$walletNetworksArgs<ExtArgs> = {}>(args?: Subset<T, Currency$walletNetworksArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WalletNetworkPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -32521,6 +32656,30 @@ export namespace Prisma {
   }
 
   /**
+   * Currency.walletNetworks
+   */
+  export type Currency$walletNetworksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WalletNetwork
+     */
+    select?: WalletNetworkSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WalletNetwork
+     */
+    omit?: WalletNetworkOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WalletNetworkInclude<ExtArgs> | null
+    where?: WalletNetworkWhereInput
+    orderBy?: WalletNetworkOrderByWithRelationInput | WalletNetworkOrderByWithRelationInput[]
+    cursor?: WalletNetworkWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: WalletNetworkScalarFieldEnum | WalletNetworkScalarFieldEnum[]
+  }
+
+  /**
    * Currency without action
    */
   export type CurrencyDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -32536,6 +32695,1204 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: CurrencyInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model WalletNetwork
+   */
+
+  export type AggregateWalletNetwork = {
+    _count: WalletNetworkCountAggregateOutputType | null
+    _avg: WalletNetworkAvgAggregateOutputType | null
+    _sum: WalletNetworkSumAggregateOutputType | null
+    _min: WalletNetworkMinAggregateOutputType | null
+    _max: WalletNetworkMaxAggregateOutputType | null
+  }
+
+  export type WalletNetworkAvgAggregateOutputType = {
+    currencyId: number | null
+  }
+
+  export type WalletNetworkSumAggregateOutputType = {
+    currencyId: number | null
+  }
+
+  export type WalletNetworkMinAggregateOutputType = {
+    id: string | null
+    currencyId: number | null
+    code: string | null
+    name: string | null
+    isActive: boolean | null
+    depositEnabled: boolean | null
+    withdrawEnabled: boolean | null
+    notice: string | null
+    instructions: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type WalletNetworkMaxAggregateOutputType = {
+    id: string | null
+    currencyId: number | null
+    code: string | null
+    name: string | null
+    isActive: boolean | null
+    depositEnabled: boolean | null
+    withdrawEnabled: boolean | null
+    notice: string | null
+    instructions: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type WalletNetworkCountAggregateOutputType = {
+    id: number
+    currencyId: number
+    code: number
+    name: number
+    isActive: number
+    depositEnabled: number
+    withdrawEnabled: number
+    notice: number
+    instructions: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type WalletNetworkAvgAggregateInputType = {
+    currencyId?: true
+  }
+
+  export type WalletNetworkSumAggregateInputType = {
+    currencyId?: true
+  }
+
+  export type WalletNetworkMinAggregateInputType = {
+    id?: true
+    currencyId?: true
+    code?: true
+    name?: true
+    isActive?: true
+    depositEnabled?: true
+    withdrawEnabled?: true
+    notice?: true
+    instructions?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type WalletNetworkMaxAggregateInputType = {
+    id?: true
+    currencyId?: true
+    code?: true
+    name?: true
+    isActive?: true
+    depositEnabled?: true
+    withdrawEnabled?: true
+    notice?: true
+    instructions?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type WalletNetworkCountAggregateInputType = {
+    id?: true
+    currencyId?: true
+    code?: true
+    name?: true
+    isActive?: true
+    depositEnabled?: true
+    withdrawEnabled?: true
+    notice?: true
+    instructions?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type WalletNetworkAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which WalletNetwork to aggregate.
+     */
+    where?: WalletNetworkWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     *
+     * Determine the order of WalletNetworks to fetch.
+     */
+    orderBy?: WalletNetworkOrderByWithRelationInput | WalletNetworkOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     *
+     * Sets the start position
+     */
+    cursor?: WalletNetworkWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Take `±n` WalletNetworks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Skip the first `n` WalletNetworks.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     *
+     * Count returned WalletNetworks
+    **/
+    _count?: true | WalletNetworkCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     *
+     * Select which fields to average
+    **/
+    _avg?: WalletNetworkAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     *
+     * Select which fields to sum
+    **/
+    _sum?: WalletNetworkSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     *
+     * Select which fields to find the minimum value
+    **/
+    _min?: WalletNetworkMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     *
+     * Select which fields to find the maximum value
+    **/
+    _max?: WalletNetworkMaxAggregateInputType
+  }
+
+  export type GetWalletNetworkAggregateType<T extends WalletNetworkAggregateArgs> = {
+        [P in keyof T & keyof AggregateWalletNetwork]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateWalletNetwork[P]>
+      : GetScalarType<T[P], AggregateWalletNetwork[P]>
+  }
+
+
+
+
+  export type WalletNetworkGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: WalletNetworkWhereInput
+    orderBy?: WalletNetworkOrderByWithAggregationInput | WalletNetworkOrderByWithAggregationInput[]
+    by: WalletNetworkScalarFieldEnum[] | WalletNetworkScalarFieldEnum
+    having?: WalletNetworkScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: WalletNetworkCountAggregateInputType | true
+    _avg?: WalletNetworkAvgAggregateInputType
+    _sum?: WalletNetworkSumAggregateInputType
+    _min?: WalletNetworkMinAggregateInputType
+    _max?: WalletNetworkMaxAggregateInputType
+  }
+
+  export type WalletNetworkGroupByOutputType = {
+    id: string
+    currencyId: number
+    code: string
+    name: string
+    isActive: boolean
+    depositEnabled: boolean
+    withdrawEnabled: boolean
+    notice: string | null
+    instructions: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: WalletNetworkCountAggregateOutputType | null
+    _avg: WalletNetworkAvgAggregateOutputType | null
+    _sum: WalletNetworkSumAggregateOutputType | null
+    _min: WalletNetworkMinAggregateOutputType | null
+    _max: WalletNetworkMaxAggregateOutputType | null
+  }
+
+  type GetWalletNetworkGroupByPayload<T extends WalletNetworkGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<WalletNetworkGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof WalletNetworkGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], WalletNetworkGroupByOutputType[P]>
+            : GetScalarType<T[P], WalletNetworkGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type WalletNetworkSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    currencyId?: boolean
+    code?: boolean
+    name?: boolean
+    isActive?: boolean
+    depositEnabled?: boolean
+    withdrawEnabled?: boolean
+    notice?: boolean
+    instructions?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    currency?: boolean | CurrencyDefaultArgs<ExtArgs>
+    depositAddresses?: boolean | WalletNetwork$depositAddressesArgs<ExtArgs>
+    _count?: boolean | WalletNetworkCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["walletNetwork"]>
+
+  export type WalletNetworkSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    currencyId?: boolean
+    code?: boolean
+    name?: boolean
+    isActive?: boolean
+    depositEnabled?: boolean
+    withdrawEnabled?: boolean
+    notice?: boolean
+    instructions?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    currency?: boolean | CurrencyDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["walletNetwork"]>
+
+  export type WalletNetworkSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    currencyId?: boolean
+    code?: boolean
+    name?: boolean
+    isActive?: boolean
+    depositEnabled?: boolean
+    withdrawEnabled?: boolean
+    notice?: boolean
+    instructions?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    currency?: boolean | CurrencyDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["walletNetwork"]>
+
+  export type WalletNetworkSelectScalar = {
+    id?: boolean
+    currencyId?: boolean
+    code?: boolean
+    name?: boolean
+    isActive?: boolean
+    depositEnabled?: boolean
+    withdrawEnabled?: boolean
+    notice?: boolean
+    instructions?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type WalletNetworkOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "currencyId" | "code" | "name" | "isActive" | "depositEnabled" | "withdrawEnabled" | "notice" | "instructions" | "createdAt" | "updatedAt", ExtArgs["result"]["walletNetwork"]>
+  export type WalletNetworkInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    currency?: boolean | CurrencyDefaultArgs<ExtArgs>
+    depositAddresses?: boolean | WalletNetwork$depositAddressesArgs<ExtArgs>
+    _count?: boolean | WalletNetworkCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type WalletNetworkIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    currency?: boolean | CurrencyDefaultArgs<ExtArgs>
+  }
+  export type WalletNetworkIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    currency?: boolean | CurrencyDefaultArgs<ExtArgs>
+  }
+
+  export type $WalletNetworkPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "WalletNetwork"
+    objects: {
+      currency: Prisma.$CurrencyPayload<ExtArgs>
+      depositAddresses: Prisma.$DepositAddressPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      currencyId: number
+      code: string
+      name: string
+      isActive: boolean
+      depositEnabled: boolean
+      withdrawEnabled: boolean
+      notice: string | null
+      instructions: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["walletNetwork"]>
+    composites: {}
+  }
+
+  type WalletNetworkGetPayload<S extends boolean | null | undefined | WalletNetworkDefaultArgs> = $Result.GetResult<Prisma.$WalletNetworkPayload, S>
+
+  type WalletNetworkCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<WalletNetworkFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: WalletNetworkCountAggregateInputType | true
+    }
+
+  export interface WalletNetworkDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['WalletNetwork'], meta: { name: 'WalletNetwork' } }
+    /**
+     * Find zero or one WalletNetwork that matches the filter.
+     * @param {WalletNetworkFindUniqueArgs} args - Arguments to find a WalletNetwork
+     * @example
+     * // Get one WalletNetwork
+     * const walletNetwork = await prisma.walletNetwork.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends WalletNetworkFindUniqueArgs>(args: SelectSubset<T, WalletNetworkFindUniqueArgs<ExtArgs>>): Prisma__WalletNetworkClient<$Result.GetResult<Prisma.$WalletNetworkPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one WalletNetwork that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {WalletNetworkFindUniqueOrThrowArgs} args - Arguments to find a WalletNetwork
+     * @example
+     * // Get one WalletNetwork
+     * const walletNetwork = await prisma.walletNetwork.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends WalletNetworkFindUniqueOrThrowArgs>(args: SelectSubset<T, WalletNetworkFindUniqueOrThrowArgs<ExtArgs>>): Prisma__WalletNetworkClient<$Result.GetResult<Prisma.$WalletNetworkPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first WalletNetwork that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WalletNetworkFindFirstArgs} args - Arguments to find a WalletNetwork
+     * @example
+     * // Get one WalletNetwork
+     * const walletNetwork = await prisma.walletNetwork.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends WalletNetworkFindFirstArgs>(args?: SelectSubset<T, WalletNetworkFindFirstArgs<ExtArgs>>): Prisma__WalletNetworkClient<$Result.GetResult<Prisma.$WalletNetworkPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first WalletNetwork that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WalletNetworkFindFirstOrThrowArgs} args - Arguments to find a WalletNetwork
+     * @example
+     * // Get one WalletNetwork
+     * const walletNetwork = await prisma.walletNetwork.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends WalletNetworkFindFirstOrThrowArgs>(args?: SelectSubset<T, WalletNetworkFindFirstOrThrowArgs<ExtArgs>>): Prisma__WalletNetworkClient<$Result.GetResult<Prisma.$WalletNetworkPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more WalletNetworks that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WalletNetworkFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all WalletNetworks
+     * const walletNetworks = await prisma.walletNetwork.findMany()
+     *
+     * // Get first 10 WalletNetworks
+     * const walletNetworks = await prisma.walletNetwork.findMany({ take: 10 })
+     *
+     * // Only select the `id`
+     * const walletNetworkWithIdOnly = await prisma.walletNetwork.findMany({ select: { id: true } })
+     *
+     */
+    findMany<T extends WalletNetworkFindManyArgs>(args?: SelectSubset<T, WalletNetworkFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WalletNetworkPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a WalletNetwork.
+     * @param {WalletNetworkCreateArgs} args - Arguments to create a WalletNetwork.
+     * @example
+     * // Create one WalletNetwork
+     * const WalletNetwork = await prisma.walletNetwork.create({
+     *   data: {
+     *     // ... data to create a WalletNetwork
+     *   }
+     * })
+     *
+     */
+    create<T extends WalletNetworkCreateArgs>(args: SelectSubset<T, WalletNetworkCreateArgs<ExtArgs>>): Prisma__WalletNetworkClient<$Result.GetResult<Prisma.$WalletNetworkPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many WalletNetworks.
+     * @param {WalletNetworkCreateManyArgs} args - Arguments to create many WalletNetworks.
+     * @example
+     * // Create many WalletNetworks
+     * const walletNetwork = await prisma.walletNetwork.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *
+     */
+    createMany<T extends WalletNetworkCreateManyArgs>(args?: SelectSubset<T, WalletNetworkCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many WalletNetworks and returns the data saved in the database.
+     * @param {WalletNetworkCreateManyAndReturnArgs} args - Arguments to create many WalletNetworks.
+     * @example
+     * // Create many WalletNetworks
+     * const walletNetwork = await prisma.walletNetwork.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *
+     * // Create many WalletNetworks and only return the `id`
+     * const walletNetworkWithIdOnly = await prisma.walletNetwork.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     *
+     */
+    createManyAndReturn<T extends WalletNetworkCreateManyAndReturnArgs>(args?: SelectSubset<T, WalletNetworkCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WalletNetworkPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a WalletNetwork.
+     * @param {WalletNetworkDeleteArgs} args - Arguments to delete one WalletNetwork.
+     * @example
+     * // Delete one WalletNetwork
+     * const WalletNetwork = await prisma.walletNetwork.delete({
+     *   where: {
+     *     // ... filter to delete one WalletNetwork
+     *   }
+     * })
+     *
+     */
+    delete<T extends WalletNetworkDeleteArgs>(args: SelectSubset<T, WalletNetworkDeleteArgs<ExtArgs>>): Prisma__WalletNetworkClient<$Result.GetResult<Prisma.$WalletNetworkPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one WalletNetwork.
+     * @param {WalletNetworkUpdateArgs} args - Arguments to update one WalletNetwork.
+     * @example
+     * // Update one WalletNetwork
+     * const walletNetwork = await prisma.walletNetwork.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     *
+     */
+    update<T extends WalletNetworkUpdateArgs>(args: SelectSubset<T, WalletNetworkUpdateArgs<ExtArgs>>): Prisma__WalletNetworkClient<$Result.GetResult<Prisma.$WalletNetworkPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more WalletNetworks.
+     * @param {WalletNetworkDeleteManyArgs} args - Arguments to filter WalletNetworks to delete.
+     * @example
+     * // Delete a few WalletNetworks
+     * const { count } = await prisma.walletNetwork.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     *
+     */
+    deleteMany<T extends WalletNetworkDeleteManyArgs>(args?: SelectSubset<T, WalletNetworkDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more WalletNetworks.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WalletNetworkUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many WalletNetworks
+     * const walletNetwork = await prisma.walletNetwork.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     *
+     */
+    updateMany<T extends WalletNetworkUpdateManyArgs>(args: SelectSubset<T, WalletNetworkUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more WalletNetworks and returns the data updated in the database.
+     * @param {WalletNetworkUpdateManyAndReturnArgs} args - Arguments to update many WalletNetworks.
+     * @example
+     * // Update many WalletNetworks
+     * const walletNetwork = await prisma.walletNetwork.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *
+     * // Update zero or more WalletNetworks and only return the `id`
+     * const walletNetworkWithIdOnly = await prisma.walletNetwork.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     *
+     */
+    updateManyAndReturn<T extends WalletNetworkUpdateManyAndReturnArgs>(args: SelectSubset<T, WalletNetworkUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WalletNetworkPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one WalletNetwork.
+     * @param {WalletNetworkUpsertArgs} args - Arguments to update or create a WalletNetwork.
+     * @example
+     * // Update or create a WalletNetwork
+     * const walletNetwork = await prisma.walletNetwork.upsert({
+     *   create: {
+     *     // ... data to create a WalletNetwork
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the WalletNetwork we want to update
+     *   }
+     * })
+     */
+    upsert<T extends WalletNetworkUpsertArgs>(args: SelectSubset<T, WalletNetworkUpsertArgs<ExtArgs>>): Prisma__WalletNetworkClient<$Result.GetResult<Prisma.$WalletNetworkPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of WalletNetworks.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WalletNetworkCountArgs} args - Arguments to filter WalletNetworks to count.
+     * @example
+     * // Count the number of WalletNetworks
+     * const count = await prisma.walletNetwork.count({
+     *   where: {
+     *     // ... the filter for the WalletNetworks we want to count
+     *   }
+     * })
+    **/
+    count<T extends WalletNetworkCountArgs>(
+      args?: Subset<T, WalletNetworkCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], WalletNetworkCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a WalletNetwork.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WalletNetworkAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends WalletNetworkAggregateArgs>(args: Subset<T, WalletNetworkAggregateArgs>): Prisma.PrismaPromise<GetWalletNetworkAggregateType<T>>
+
+    /**
+     * Group by WalletNetwork.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WalletNetworkGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     *
+    **/
+    groupBy<
+      T extends WalletNetworkGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: WalletNetworkGroupByArgs['orderBy'] }
+        : { orderBy?: WalletNetworkGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, WalletNetworkGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetWalletNetworkGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the WalletNetwork model
+   */
+  readonly fields: WalletNetworkFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for WalletNetwork.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__WalletNetworkClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    currency<T extends CurrencyDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CurrencyDefaultArgs<ExtArgs>>): Prisma__CurrencyClient<$Result.GetResult<Prisma.$CurrencyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    depositAddresses<T extends WalletNetwork$depositAddressesArgs<ExtArgs> = {}>(args?: Subset<T, WalletNetwork$depositAddressesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DepositAddressPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the WalletNetwork model
+   */
+  interface WalletNetworkFieldRefs {
+    readonly id: FieldRef<"WalletNetwork", 'String'>
+    readonly currencyId: FieldRef<"WalletNetwork", 'Int'>
+    readonly code: FieldRef<"WalletNetwork", 'String'>
+    readonly name: FieldRef<"WalletNetwork", 'String'>
+    readonly isActive: FieldRef<"WalletNetwork", 'Boolean'>
+    readonly depositEnabled: FieldRef<"WalletNetwork", 'Boolean'>
+    readonly withdrawEnabled: FieldRef<"WalletNetwork", 'Boolean'>
+    readonly notice: FieldRef<"WalletNetwork", 'String'>
+    readonly instructions: FieldRef<"WalletNetwork", 'String'>
+    readonly createdAt: FieldRef<"WalletNetwork", 'DateTime'>
+    readonly updatedAt: FieldRef<"WalletNetwork", 'DateTime'>
+  }
+
+
+  // Custom InputTypes
+  /**
+   * WalletNetwork findUnique
+   */
+  export type WalletNetworkFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WalletNetwork
+     */
+    select?: WalletNetworkSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WalletNetwork
+     */
+    omit?: WalletNetworkOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WalletNetworkInclude<ExtArgs> | null
+    /**
+     * Filter, which WalletNetwork to fetch.
+     */
+    where: WalletNetworkWhereUniqueInput
+  }
+
+  /**
+   * WalletNetwork findUniqueOrThrow
+   */
+  export type WalletNetworkFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WalletNetwork
+     */
+    select?: WalletNetworkSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WalletNetwork
+     */
+    omit?: WalletNetworkOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WalletNetworkInclude<ExtArgs> | null
+    /**
+     * Filter, which WalletNetwork to fetch.
+     */
+    where: WalletNetworkWhereUniqueInput
+  }
+
+  /**
+   * WalletNetwork findFirst
+   */
+  export type WalletNetworkFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WalletNetwork
+     */
+    select?: WalletNetworkSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WalletNetwork
+     */
+    omit?: WalletNetworkOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WalletNetworkInclude<ExtArgs> | null
+    /**
+     * Filter, which WalletNetwork to fetch.
+     */
+    where?: WalletNetworkWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     *
+     * Determine the order of WalletNetworks to fetch.
+     */
+    orderBy?: WalletNetworkOrderByWithRelationInput | WalletNetworkOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     *
+     * Sets the position for searching for WalletNetworks.
+     */
+    cursor?: WalletNetworkWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Take `±n` WalletNetworks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Skip the first `n` WalletNetworks.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     *
+     * Filter by unique combinations of WalletNetworks.
+     */
+    distinct?: WalletNetworkScalarFieldEnum | WalletNetworkScalarFieldEnum[]
+  }
+
+  /**
+   * WalletNetwork findFirstOrThrow
+   */
+  export type WalletNetworkFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WalletNetwork
+     */
+    select?: WalletNetworkSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WalletNetwork
+     */
+    omit?: WalletNetworkOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WalletNetworkInclude<ExtArgs> | null
+    /**
+     * Filter, which WalletNetwork to fetch.
+     */
+    where?: WalletNetworkWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     *
+     * Determine the order of WalletNetworks to fetch.
+     */
+    orderBy?: WalletNetworkOrderByWithRelationInput | WalletNetworkOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     *
+     * Sets the position for searching for WalletNetworks.
+     */
+    cursor?: WalletNetworkWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Take `±n` WalletNetworks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Skip the first `n` WalletNetworks.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     *
+     * Filter by unique combinations of WalletNetworks.
+     */
+    distinct?: WalletNetworkScalarFieldEnum | WalletNetworkScalarFieldEnum[]
+  }
+
+  /**
+   * WalletNetwork findMany
+   */
+  export type WalletNetworkFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WalletNetwork
+     */
+    select?: WalletNetworkSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WalletNetwork
+     */
+    omit?: WalletNetworkOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WalletNetworkInclude<ExtArgs> | null
+    /**
+     * Filter, which WalletNetworks to fetch.
+     */
+    where?: WalletNetworkWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     *
+     * Determine the order of WalletNetworks to fetch.
+     */
+    orderBy?: WalletNetworkOrderByWithRelationInput | WalletNetworkOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     *
+     * Sets the position for listing WalletNetworks.
+     */
+    cursor?: WalletNetworkWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Take `±n` WalletNetworks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Skip the first `n` WalletNetworks.
+     */
+    skip?: number
+    distinct?: WalletNetworkScalarFieldEnum | WalletNetworkScalarFieldEnum[]
+  }
+
+  /**
+   * WalletNetwork create
+   */
+  export type WalletNetworkCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WalletNetwork
+     */
+    select?: WalletNetworkSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WalletNetwork
+     */
+    omit?: WalletNetworkOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WalletNetworkInclude<ExtArgs> | null
+    /**
+     * The data needed to create a WalletNetwork.
+     */
+    data: XOR<WalletNetworkCreateInput, WalletNetworkUncheckedCreateInput>
+  }
+
+  /**
+   * WalletNetwork createMany
+   */
+  export type WalletNetworkCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many WalletNetworks.
+     */
+    data: WalletNetworkCreateManyInput | WalletNetworkCreateManyInput[]
+  }
+
+  /**
+   * WalletNetwork createManyAndReturn
+   */
+  export type WalletNetworkCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WalletNetwork
+     */
+    select?: WalletNetworkSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the WalletNetwork
+     */
+    omit?: WalletNetworkOmit<ExtArgs> | null
+    /**
+     * The data used to create many WalletNetworks.
+     */
+    data: WalletNetworkCreateManyInput | WalletNetworkCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WalletNetworkIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * WalletNetwork update
+   */
+  export type WalletNetworkUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WalletNetwork
+     */
+    select?: WalletNetworkSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WalletNetwork
+     */
+    omit?: WalletNetworkOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WalletNetworkInclude<ExtArgs> | null
+    /**
+     * The data needed to update a WalletNetwork.
+     */
+    data: XOR<WalletNetworkUpdateInput, WalletNetworkUncheckedUpdateInput>
+    /**
+     * Choose, which WalletNetwork to update.
+     */
+    where: WalletNetworkWhereUniqueInput
+  }
+
+  /**
+   * WalletNetwork updateMany
+   */
+  export type WalletNetworkUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update WalletNetworks.
+     */
+    data: XOR<WalletNetworkUpdateManyMutationInput, WalletNetworkUncheckedUpdateManyInput>
+    /**
+     * Filter which WalletNetworks to update
+     */
+    where?: WalletNetworkWhereInput
+    /**
+     * Limit how many WalletNetworks to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * WalletNetwork updateManyAndReturn
+   */
+  export type WalletNetworkUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WalletNetwork
+     */
+    select?: WalletNetworkSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the WalletNetwork
+     */
+    omit?: WalletNetworkOmit<ExtArgs> | null
+    /**
+     * The data used to update WalletNetworks.
+     */
+    data: XOR<WalletNetworkUpdateManyMutationInput, WalletNetworkUncheckedUpdateManyInput>
+    /**
+     * Filter which WalletNetworks to update
+     */
+    where?: WalletNetworkWhereInput
+    /**
+     * Limit how many WalletNetworks to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WalletNetworkIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * WalletNetwork upsert
+   */
+  export type WalletNetworkUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WalletNetwork
+     */
+    select?: WalletNetworkSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WalletNetwork
+     */
+    omit?: WalletNetworkOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WalletNetworkInclude<ExtArgs> | null
+    /**
+     * The filter to search for the WalletNetwork to update in case it exists.
+     */
+    where: WalletNetworkWhereUniqueInput
+    /**
+     * In case the WalletNetwork found by the `where` argument doesn't exist, create a new WalletNetwork with this data.
+     */
+    create: XOR<WalletNetworkCreateInput, WalletNetworkUncheckedCreateInput>
+    /**
+     * In case the WalletNetwork was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<WalletNetworkUpdateInput, WalletNetworkUncheckedUpdateInput>
+  }
+
+  /**
+   * WalletNetwork delete
+   */
+  export type WalletNetworkDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WalletNetwork
+     */
+    select?: WalletNetworkSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WalletNetwork
+     */
+    omit?: WalletNetworkOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WalletNetworkInclude<ExtArgs> | null
+    /**
+     * Filter which WalletNetwork to delete.
+     */
+    where: WalletNetworkWhereUniqueInput
+  }
+
+  /**
+   * WalletNetwork deleteMany
+   */
+  export type WalletNetworkDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which WalletNetworks to delete
+     */
+    where?: WalletNetworkWhereInput
+    /**
+     * Limit how many WalletNetworks to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * WalletNetwork.depositAddresses
+   */
+  export type WalletNetwork$depositAddressesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DepositAddress
+     */
+    select?: DepositAddressSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DepositAddress
+     */
+    omit?: DepositAddressOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DepositAddressInclude<ExtArgs> | null
+    where?: DepositAddressWhereInput
+    orderBy?: DepositAddressOrderByWithRelationInput | DepositAddressOrderByWithRelationInput[]
+    cursor?: DepositAddressWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: DepositAddressScalarFieldEnum | DepositAddressScalarFieldEnum[]
+  }
+
+  /**
+   * WalletNetwork without action
+   */
+  export type WalletNetworkDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WalletNetwork
+     */
+    select?: WalletNetworkSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WalletNetwork
+     */
+    omit?: WalletNetworkOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WalletNetworkInclude<ExtArgs> | null
   }
 
 
@@ -32562,6 +33919,7 @@ export namespace Prisma {
   export type DepositAddressMinAggregateOutputType = {
     id: string | null
     currencyId: number | null
+    walletNetworkId: string | null
     network: string | null
     address: string | null
     label: string | null
@@ -32573,6 +33931,7 @@ export namespace Prisma {
   export type DepositAddressMaxAggregateOutputType = {
     id: string | null
     currencyId: number | null
+    walletNetworkId: string | null
     network: string | null
     address: string | null
     label: string | null
@@ -32584,6 +33943,7 @@ export namespace Prisma {
   export type DepositAddressCountAggregateOutputType = {
     id: number
     currencyId: number
+    walletNetworkId: number
     network: number
     address: number
     label: number
@@ -32605,6 +33965,7 @@ export namespace Prisma {
   export type DepositAddressMinAggregateInputType = {
     id?: true
     currencyId?: true
+    walletNetworkId?: true
     network?: true
     address?: true
     label?: true
@@ -32616,6 +33977,7 @@ export namespace Prisma {
   export type DepositAddressMaxAggregateInputType = {
     id?: true
     currencyId?: true
+    walletNetworkId?: true
     network?: true
     address?: true
     label?: true
@@ -32627,6 +33989,7 @@ export namespace Prisma {
   export type DepositAddressCountAggregateInputType = {
     id?: true
     currencyId?: true
+    walletNetworkId?: true
     network?: true
     address?: true
     label?: true
@@ -32643,55 +34006,55 @@ export namespace Prisma {
     where?: DepositAddressWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
+     *
      * Determine the order of DepositAddresses to fetch.
      */
     orderBy?: DepositAddressOrderByWithRelationInput | DepositAddressOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
+     *
      * Sets the start position
      */
     cursor?: DepositAddressWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
+     *
      * Take `±n` DepositAddresses from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
+     *
      * Skip the first `n` DepositAddresses.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
+     *
      * Count returned DepositAddresses
     **/
     _count?: true | DepositAddressCountAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
+     *
      * Select which fields to average
     **/
     _avg?: DepositAddressAvgAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
+     *
      * Select which fields to sum
     **/
     _sum?: DepositAddressSumAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
+     *
      * Select which fields to find the minimum value
     **/
     _min?: DepositAddressMinAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
+     *
      * Select which fields to find the maximum value
     **/
     _max?: DepositAddressMaxAggregateInputType
@@ -32725,6 +34088,7 @@ export namespace Prisma {
   export type DepositAddressGroupByOutputType = {
     id: string
     currencyId: number
+    walletNetworkId: string | null
     network: string
     address: string
     label: string | null
@@ -32755,6 +34119,7 @@ export namespace Prisma {
   export type DepositAddressSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     currencyId?: boolean
+    walletNetworkId?: boolean
     network?: boolean
     address?: boolean
     label?: boolean
@@ -32762,6 +34127,7 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     currency?: boolean | CurrencyDefaultArgs<ExtArgs>
+    walletNetwork?: boolean | DepositAddress$walletNetworkArgs<ExtArgs>
     manualClaims?: boolean | DepositAddress$manualClaimsArgs<ExtArgs>
     _count?: boolean | DepositAddressCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["depositAddress"]>
@@ -32769,6 +34135,7 @@ export namespace Prisma {
   export type DepositAddressSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     currencyId?: boolean
+    walletNetworkId?: boolean
     network?: boolean
     address?: boolean
     label?: boolean
@@ -32776,11 +34143,13 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     currency?: boolean | CurrencyDefaultArgs<ExtArgs>
+    walletNetwork?: boolean | DepositAddress$walletNetworkArgs<ExtArgs>
   }, ExtArgs["result"]["depositAddress"]>
 
   export type DepositAddressSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     currencyId?: boolean
+    walletNetworkId?: boolean
     network?: boolean
     address?: boolean
     label?: boolean
@@ -32788,11 +34157,13 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     currency?: boolean | CurrencyDefaultArgs<ExtArgs>
+    walletNetwork?: boolean | DepositAddress$walletNetworkArgs<ExtArgs>
   }, ExtArgs["result"]["depositAddress"]>
 
   export type DepositAddressSelectScalar = {
     id?: boolean
     currencyId?: boolean
+    walletNetworkId?: boolean
     network?: boolean
     address?: boolean
     label?: boolean
@@ -32801,28 +34172,33 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type DepositAddressOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "currencyId" | "network" | "address" | "label" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["depositAddress"]>
+  export type DepositAddressOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "currencyId" | "walletNetworkId" | "network" | "address" | "label" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["depositAddress"]>
   export type DepositAddressInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     currency?: boolean | CurrencyDefaultArgs<ExtArgs>
+    walletNetwork?: boolean | DepositAddress$walletNetworkArgs<ExtArgs>
     manualClaims?: boolean | DepositAddress$manualClaimsArgs<ExtArgs>
     _count?: boolean | DepositAddressCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type DepositAddressIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     currency?: boolean | CurrencyDefaultArgs<ExtArgs>
+    walletNetwork?: boolean | DepositAddress$walletNetworkArgs<ExtArgs>
   }
   export type DepositAddressIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     currency?: boolean | CurrencyDefaultArgs<ExtArgs>
+    walletNetwork?: boolean | DepositAddress$walletNetworkArgs<ExtArgs>
   }
 
   export type $DepositAddressPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "DepositAddress"
     objects: {
       currency: Prisma.$CurrencyPayload<ExtArgs>
+      walletNetwork: Prisma.$WalletNetworkPayload<ExtArgs> | null
       manualClaims: Prisma.$DepositClaimPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       currencyId: number
+      walletNetworkId: string | null
       network: string
       address: string
       label: string | null
@@ -32908,13 +34284,13 @@ export namespace Prisma {
      * @example
      * // Get all DepositAddresses
      * const depositAddresses = await prisma.depositAddress.findMany()
-     * 
+     *
      * // Get first 10 DepositAddresses
      * const depositAddresses = await prisma.depositAddress.findMany({ take: 10 })
-     * 
+     *
      * // Only select the `id`
      * const depositAddressWithIdOnly = await prisma.depositAddress.findMany({ select: { id: true } })
-     * 
+     *
      */
     findMany<T extends DepositAddressFindManyArgs>(args?: SelectSubset<T, DepositAddressFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DepositAddressPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
 
@@ -32928,7 +34304,7 @@ export namespace Prisma {
      *     // ... data to create a DepositAddress
      *   }
      * })
-     * 
+     *
      */
     create<T extends DepositAddressCreateArgs>(args: SelectSubset<T, DepositAddressCreateArgs<ExtArgs>>): Prisma__DepositAddressClient<$Result.GetResult<Prisma.$DepositAddressPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
@@ -32942,7 +34318,7 @@ export namespace Prisma {
      *     // ... provide data here
      *   ]
      * })
-     *     
+     *
      */
     createMany<T extends DepositAddressCreateManyArgs>(args?: SelectSubset<T, DepositAddressCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
@@ -32956,7 +34332,7 @@ export namespace Prisma {
      *     // ... provide data here
      *   ]
      * })
-     * 
+     *
      * // Create many DepositAddresses and only return the `id`
      * const depositAddressWithIdOnly = await prisma.depositAddress.createManyAndReturn({
      *   select: { id: true },
@@ -32966,7 +34342,7 @@ export namespace Prisma {
      * })
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * 
+     *
      */
     createManyAndReturn<T extends DepositAddressCreateManyAndReturnArgs>(args?: SelectSubset<T, DepositAddressCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DepositAddressPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
 
@@ -32980,7 +34356,7 @@ export namespace Prisma {
      *     // ... filter to delete one DepositAddress
      *   }
      * })
-     * 
+     *
      */
     delete<T extends DepositAddressDeleteArgs>(args: SelectSubset<T, DepositAddressDeleteArgs<ExtArgs>>): Prisma__DepositAddressClient<$Result.GetResult<Prisma.$DepositAddressPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
@@ -32997,7 +34373,7 @@ export namespace Prisma {
      *     // ... provide data here
      *   }
      * })
-     * 
+     *
      */
     update<T extends DepositAddressUpdateArgs>(args: SelectSubset<T, DepositAddressUpdateArgs<ExtArgs>>): Prisma__DepositAddressClient<$Result.GetResult<Prisma.$DepositAddressPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
@@ -33011,7 +34387,7 @@ export namespace Prisma {
      *     // ... provide filter here
      *   }
      * })
-     * 
+     *
      */
     deleteMany<T extends DepositAddressDeleteManyArgs>(args?: SelectSubset<T, DepositAddressDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
@@ -33030,7 +34406,7 @@ export namespace Prisma {
      *     // ... provide data here
      *   }
      * })
-     * 
+     *
      */
     updateMany<T extends DepositAddressUpdateManyArgs>(args: SelectSubset<T, DepositAddressUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
@@ -33047,7 +34423,7 @@ export namespace Prisma {
      *     // ... provide data here
      *   ]
      * })
-     * 
+     *
      * // Update zero or more DepositAddresses and only return the `id`
      * const depositAddressWithIdOnly = await prisma.depositAddress.updateManyAndReturn({
      *   select: { id: true },
@@ -33060,7 +34436,7 @@ export namespace Prisma {
      * })
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * 
+     *
      */
     updateManyAndReturn<T extends DepositAddressUpdateManyAndReturnArgs>(args: SelectSubset<T, DepositAddressUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DepositAddressPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
@@ -33149,7 +34525,7 @@ export namespace Prisma {
      *     _all: true
      *   },
      * })
-     * 
+     *
     **/
     groupBy<
       T extends DepositAddressGroupByArgs,
@@ -33224,6 +34600,7 @@ export namespace Prisma {
   export interface Prisma__DepositAddressClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     currency<T extends CurrencyDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CurrencyDefaultArgs<ExtArgs>>): Prisma__CurrencyClient<$Result.GetResult<Prisma.$CurrencyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    walletNetwork<T extends DepositAddress$walletNetworkArgs<ExtArgs> = {}>(args?: Subset<T, DepositAddress$walletNetworkArgs<ExtArgs>>): Prisma__WalletNetworkClient<$Result.GetResult<Prisma.$WalletNetworkPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     manualClaims<T extends DepositAddress$manualClaimsArgs<ExtArgs> = {}>(args?: Subset<T, DepositAddress$manualClaimsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DepositClaimPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -33256,6 +34633,7 @@ export namespace Prisma {
   interface DepositAddressFieldRefs {
     readonly id: FieldRef<"DepositAddress", 'String'>
     readonly currencyId: FieldRef<"DepositAddress", 'Int'>
+    readonly walletNetworkId: FieldRef<"DepositAddress", 'String'>
     readonly network: FieldRef<"DepositAddress", 'String'>
     readonly address: FieldRef<"DepositAddress", 'String'>
     readonly label: FieldRef<"DepositAddress", 'String'>
@@ -33653,6 +35031,25 @@ export namespace Prisma {
      * Limit how many DepositAddresses to delete.
      */
     limit?: number
+  }
+
+  /**
+   * DepositAddress.walletNetwork
+   */
+  export type DepositAddress$walletNetworkArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WalletNetwork
+     */
+    select?: WalletNetworkSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WalletNetwork
+     */
+    omit?: WalletNetworkOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WalletNetworkInclude<ExtArgs> | null
+    where?: WalletNetworkWhereInput
   }
 
   /**
@@ -112967,9 +114364,27 @@ export namespace Prisma {
   export type CurrencyScalarFieldEnum = (typeof CurrencyScalarFieldEnum)[keyof typeof CurrencyScalarFieldEnum]
 
 
+  export const WalletNetworkScalarFieldEnum: {
+    id: 'id',
+    currencyId: 'currencyId',
+    code: 'code',
+    name: 'name',
+    isActive: 'isActive',
+    depositEnabled: 'depositEnabled',
+    withdrawEnabled: 'withdrawEnabled',
+    notice: 'notice',
+    instructions: 'instructions',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type WalletNetworkScalarFieldEnum = (typeof WalletNetworkScalarFieldEnum)[keyof typeof WalletNetworkScalarFieldEnum]
+
+
   export const DepositAddressScalarFieldEnum: {
     id: 'id',
     currencyId: 'currencyId',
+    walletNetworkId: 'walletNetworkId',
     network: 'network',
     address: 'address',
     label: 'label',
@@ -116148,6 +117563,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Currency"> | Date | string
     updatedAt?: DateTimeFilter<"Currency"> | Date | string
     depositAddresses?: DepositAddressListRelationFilter
+    walletNetworks?: WalletNetworkListRelationFilter
   }
 
   export type CurrencyOrderByWithRelationInput = {
@@ -116169,6 +117585,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     depositAddresses?: DepositAddressOrderByRelationAggregateInput
+    walletNetworks?: WalletNetworkOrderByRelationAggregateInput
   }
 
   export type CurrencyWhereUniqueInput = Prisma.AtLeast<{
@@ -116193,6 +117610,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Currency"> | Date | string
     updatedAt?: DateTimeFilter<"Currency"> | Date | string
     depositAddresses?: DepositAddressListRelationFilter
+    walletNetworks?: WalletNetworkListRelationFilter
   }, "id" | "symbol">
 
   export type CurrencyOrderByWithAggregationInput = {
@@ -116243,12 +117661,104 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"Currency"> | Date | string
   }
 
+  export type WalletNetworkWhereInput = {
+    AND?: WalletNetworkWhereInput | WalletNetworkWhereInput[]
+    OR?: WalletNetworkWhereInput[]
+    NOT?: WalletNetworkWhereInput | WalletNetworkWhereInput[]
+    id?: StringFilter<"WalletNetwork"> | string
+    currencyId?: IntFilter<"WalletNetwork"> | number
+    code?: StringFilter<"WalletNetwork"> | string
+    name?: StringFilter<"WalletNetwork"> | string
+    isActive?: BoolFilter<"WalletNetwork"> | boolean
+    depositEnabled?: BoolFilter<"WalletNetwork"> | boolean
+    withdrawEnabled?: BoolFilter<"WalletNetwork"> | boolean
+    notice?: StringNullableFilter<"WalletNetwork"> | string | null
+    instructions?: StringNullableFilter<"WalletNetwork"> | string | null
+    createdAt?: DateTimeFilter<"WalletNetwork"> | Date | string
+    updatedAt?: DateTimeFilter<"WalletNetwork"> | Date | string
+    currency?: XOR<CurrencyScalarRelationFilter, CurrencyWhereInput>
+    depositAddresses?: DepositAddressListRelationFilter
+  }
+
+  export type WalletNetworkOrderByWithRelationInput = {
+    id?: SortOrder
+    currencyId?: SortOrder
+    code?: SortOrder
+    name?: SortOrder
+    isActive?: SortOrder
+    depositEnabled?: SortOrder
+    withdrawEnabled?: SortOrder
+    notice?: SortOrderInput | SortOrder
+    instructions?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    currency?: CurrencyOrderByWithRelationInput
+    depositAddresses?: DepositAddressOrderByRelationAggregateInput
+  }
+
+  export type WalletNetworkWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    currencyId_code?: WalletNetworkCurrencyIdCodeCompoundUniqueInput
+    AND?: WalletNetworkWhereInput | WalletNetworkWhereInput[]
+    OR?: WalletNetworkWhereInput[]
+    NOT?: WalletNetworkWhereInput | WalletNetworkWhereInput[]
+    currencyId?: IntFilter<"WalletNetwork"> | number
+    code?: StringFilter<"WalletNetwork"> | string
+    name?: StringFilter<"WalletNetwork"> | string
+    isActive?: BoolFilter<"WalletNetwork"> | boolean
+    depositEnabled?: BoolFilter<"WalletNetwork"> | boolean
+    withdrawEnabled?: BoolFilter<"WalletNetwork"> | boolean
+    notice?: StringNullableFilter<"WalletNetwork"> | string | null
+    instructions?: StringNullableFilter<"WalletNetwork"> | string | null
+    createdAt?: DateTimeFilter<"WalletNetwork"> | Date | string
+    updatedAt?: DateTimeFilter<"WalletNetwork"> | Date | string
+    currency?: XOR<CurrencyScalarRelationFilter, CurrencyWhereInput>
+    depositAddresses?: DepositAddressListRelationFilter
+  }, "id" | "currencyId_code">
+
+  export type WalletNetworkOrderByWithAggregationInput = {
+    id?: SortOrder
+    currencyId?: SortOrder
+    code?: SortOrder
+    name?: SortOrder
+    isActive?: SortOrder
+    depositEnabled?: SortOrder
+    withdrawEnabled?: SortOrder
+    notice?: SortOrderInput | SortOrder
+    instructions?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: WalletNetworkCountOrderByAggregateInput
+    _avg?: WalletNetworkAvgOrderByAggregateInput
+    _max?: WalletNetworkMaxOrderByAggregateInput
+    _min?: WalletNetworkMinOrderByAggregateInput
+    _sum?: WalletNetworkSumOrderByAggregateInput
+  }
+
+  export type WalletNetworkScalarWhereWithAggregatesInput = {
+    AND?: WalletNetworkScalarWhereWithAggregatesInput | WalletNetworkScalarWhereWithAggregatesInput[]
+    OR?: WalletNetworkScalarWhereWithAggregatesInput[]
+    NOT?: WalletNetworkScalarWhereWithAggregatesInput | WalletNetworkScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"WalletNetwork"> | string
+    currencyId?: IntWithAggregatesFilter<"WalletNetwork"> | number
+    code?: StringWithAggregatesFilter<"WalletNetwork"> | string
+    name?: StringWithAggregatesFilter<"WalletNetwork"> | string
+    isActive?: BoolWithAggregatesFilter<"WalletNetwork"> | boolean
+    depositEnabled?: BoolWithAggregatesFilter<"WalletNetwork"> | boolean
+    withdrawEnabled?: BoolWithAggregatesFilter<"WalletNetwork"> | boolean
+    notice?: StringNullableWithAggregatesFilter<"WalletNetwork"> | string | null
+    instructions?: StringNullableWithAggregatesFilter<"WalletNetwork"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"WalletNetwork"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"WalletNetwork"> | Date | string
+  }
+
   export type DepositAddressWhereInput = {
     AND?: DepositAddressWhereInput | DepositAddressWhereInput[]
     OR?: DepositAddressWhereInput[]
     NOT?: DepositAddressWhereInput | DepositAddressWhereInput[]
     id?: StringFilter<"DepositAddress"> | string
     currencyId?: IntFilter<"DepositAddress"> | number
+    walletNetworkId?: StringNullableFilter<"DepositAddress"> | string | null
     network?: StringFilter<"DepositAddress"> | string
     address?: StringFilter<"DepositAddress"> | string
     label?: StringNullableFilter<"DepositAddress"> | string | null
@@ -116256,12 +117766,14 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"DepositAddress"> | Date | string
     updatedAt?: DateTimeFilter<"DepositAddress"> | Date | string
     currency?: XOR<CurrencyScalarRelationFilter, CurrencyWhereInput>
+    walletNetwork?: XOR<WalletNetworkNullableScalarRelationFilter, WalletNetworkWhereInput> | null
     manualClaims?: DepositClaimListRelationFilter
   }
 
   export type DepositAddressOrderByWithRelationInput = {
     id?: SortOrder
     currencyId?: SortOrder
+    walletNetworkId?: SortOrderInput | SortOrder
     network?: SortOrder
     address?: SortOrder
     label?: SortOrderInput | SortOrder
@@ -116269,6 +117781,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     currency?: CurrencyOrderByWithRelationInput
+    walletNetwork?: WalletNetworkOrderByWithRelationInput
     manualClaims?: DepositClaimOrderByRelationAggregateInput
   }
 
@@ -116278,6 +117791,7 @@ export namespace Prisma {
     OR?: DepositAddressWhereInput[]
     NOT?: DepositAddressWhereInput | DepositAddressWhereInput[]
     currencyId?: IntFilter<"DepositAddress"> | number
+    walletNetworkId?: StringNullableFilter<"DepositAddress"> | string | null
     network?: StringFilter<"DepositAddress"> | string
     address?: StringFilter<"DepositAddress"> | string
     label?: StringNullableFilter<"DepositAddress"> | string | null
@@ -116285,12 +117799,14 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"DepositAddress"> | Date | string
     updatedAt?: DateTimeFilter<"DepositAddress"> | Date | string
     currency?: XOR<CurrencyScalarRelationFilter, CurrencyWhereInput>
+    walletNetwork?: XOR<WalletNetworkNullableScalarRelationFilter, WalletNetworkWhereInput> | null
     manualClaims?: DepositClaimListRelationFilter
   }, "id">
 
   export type DepositAddressOrderByWithAggregationInput = {
     id?: SortOrder
     currencyId?: SortOrder
+    walletNetworkId?: SortOrderInput | SortOrder
     network?: SortOrder
     address?: SortOrder
     label?: SortOrderInput | SortOrder
@@ -116310,6 +117826,7 @@ export namespace Prisma {
     NOT?: DepositAddressScalarWhereWithAggregatesInput | DepositAddressScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"DepositAddress"> | string
     currencyId?: IntWithAggregatesFilter<"DepositAddress"> | number
+    walletNetworkId?: StringNullableWithAggregatesFilter<"DepositAddress"> | string | null
     network?: StringWithAggregatesFilter<"DepositAddress"> | string
     address?: StringWithAggregatesFilter<"DepositAddress"> | string
     label?: StringNullableWithAggregatesFilter<"DepositAddress"> | string | null
@@ -124166,6 +125683,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     depositAddresses?: DepositAddressCreateNestedManyWithoutCurrencyInput
+    walletNetworks?: WalletNetworkCreateNestedManyWithoutCurrencyInput
   }
 
   export type CurrencyUncheckedCreateInput = {
@@ -124187,6 +125705,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     depositAddresses?: DepositAddressUncheckedCreateNestedManyWithoutCurrencyInput
+    walletNetworks?: WalletNetworkUncheckedCreateNestedManyWithoutCurrencyInput
   }
 
   export type CurrencyUpdateInput = {
@@ -124207,6 +125726,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     depositAddresses?: DepositAddressUpdateManyWithoutCurrencyNestedInput
+    walletNetworks?: WalletNetworkUpdateManyWithoutCurrencyNestedInput
   }
 
   export type CurrencyUncheckedUpdateInput = {
@@ -124228,6 +125748,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     depositAddresses?: DepositAddressUncheckedUpdateManyWithoutCurrencyNestedInput
+    walletNetworks?: WalletNetworkUncheckedUpdateManyWithoutCurrencyNestedInput
   }
 
   export type CurrencyCreateManyInput = {
@@ -124289,6 +125810,107 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type WalletNetworkCreateInput = {
+    id?: string
+    code: string
+    name: string
+    isActive?: boolean
+    depositEnabled?: boolean
+    withdrawEnabled?: boolean
+    notice?: string | null
+    instructions?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    currency: CurrencyCreateNestedOneWithoutWalletNetworksInput
+    depositAddresses?: DepositAddressCreateNestedManyWithoutWalletNetworkInput
+  }
+
+  export type WalletNetworkUncheckedCreateInput = {
+    id?: string
+    currencyId: number
+    code: string
+    name: string
+    isActive?: boolean
+    depositEnabled?: boolean
+    withdrawEnabled?: boolean
+    notice?: string | null
+    instructions?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    depositAddresses?: DepositAddressUncheckedCreateNestedManyWithoutWalletNetworkInput
+  }
+
+  export type WalletNetworkUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    depositEnabled?: BoolFieldUpdateOperationsInput | boolean
+    withdrawEnabled?: BoolFieldUpdateOperationsInput | boolean
+    notice?: NullableStringFieldUpdateOperationsInput | string | null
+    instructions?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    currency?: CurrencyUpdateOneRequiredWithoutWalletNetworksNestedInput
+    depositAddresses?: DepositAddressUpdateManyWithoutWalletNetworkNestedInput
+  }
+
+  export type WalletNetworkUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    currencyId?: IntFieldUpdateOperationsInput | number
+    code?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    depositEnabled?: BoolFieldUpdateOperationsInput | boolean
+    withdrawEnabled?: BoolFieldUpdateOperationsInput | boolean
+    notice?: NullableStringFieldUpdateOperationsInput | string | null
+    instructions?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    depositAddresses?: DepositAddressUncheckedUpdateManyWithoutWalletNetworkNestedInput
+  }
+
+  export type WalletNetworkCreateManyInput = {
+    id?: string
+    currencyId: number
+    code: string
+    name: string
+    isActive?: boolean
+    depositEnabled?: boolean
+    withdrawEnabled?: boolean
+    notice?: string | null
+    instructions?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type WalletNetworkUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    depositEnabled?: BoolFieldUpdateOperationsInput | boolean
+    withdrawEnabled?: BoolFieldUpdateOperationsInput | boolean
+    notice?: NullableStringFieldUpdateOperationsInput | string | null
+    instructions?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WalletNetworkUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    currencyId?: IntFieldUpdateOperationsInput | number
+    code?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    depositEnabled?: BoolFieldUpdateOperationsInput | boolean
+    withdrawEnabled?: BoolFieldUpdateOperationsInput | boolean
+    notice?: NullableStringFieldUpdateOperationsInput | string | null
+    instructions?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type DepositAddressCreateInput = {
     id?: string
     network: string
@@ -124298,12 +125920,14 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     currency: CurrencyCreateNestedOneWithoutDepositAddressesInput
+    walletNetwork?: WalletNetworkCreateNestedOneWithoutDepositAddressesInput
     manualClaims?: DepositClaimCreateNestedManyWithoutDepositAddressInput
   }
 
   export type DepositAddressUncheckedCreateInput = {
     id?: string
     currencyId: number
+    walletNetworkId?: string | null
     network: string
     address: string
     label?: string | null
@@ -124322,12 +125946,14 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     currency?: CurrencyUpdateOneRequiredWithoutDepositAddressesNestedInput
+    walletNetwork?: WalletNetworkUpdateOneWithoutDepositAddressesNestedInput
     manualClaims?: DepositClaimUpdateManyWithoutDepositAddressNestedInput
   }
 
   export type DepositAddressUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     currencyId?: IntFieldUpdateOperationsInput | number
+    walletNetworkId?: NullableStringFieldUpdateOperationsInput | string | null
     network?: StringFieldUpdateOperationsInput | string
     address?: StringFieldUpdateOperationsInput | string
     label?: NullableStringFieldUpdateOperationsInput | string | null
@@ -124340,6 +125966,7 @@ export namespace Prisma {
   export type DepositAddressCreateManyInput = {
     id?: string
     currencyId: number
+    walletNetworkId?: string | null
     network: string
     address: string
     label?: string | null
@@ -124361,6 +125988,7 @@ export namespace Prisma {
   export type DepositAddressUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     currencyId?: IntFieldUpdateOperationsInput | number
+    walletNetworkId?: NullableStringFieldUpdateOperationsInput | string | null
     network?: StringFieldUpdateOperationsInput | string
     address?: StringFieldUpdateOperationsInput | string
     label?: NullableStringFieldUpdateOperationsInput | string | null
@@ -132666,7 +134294,17 @@ export namespace Prisma {
     none?: DepositAddressWhereInput
   }
 
+  export type WalletNetworkListRelationFilter = {
+    every?: WalletNetworkWhereInput
+    some?: WalletNetworkWhereInput
+    none?: WalletNetworkWhereInput
+  }
+
   export type DepositAddressOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type WalletNetworkOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -132747,9 +134385,70 @@ export namespace Prisma {
     isNot?: CurrencyWhereInput
   }
 
+  export type WalletNetworkCurrencyIdCodeCompoundUniqueInput = {
+    currencyId: number
+    code: string
+  }
+
+  export type WalletNetworkCountOrderByAggregateInput = {
+    id?: SortOrder
+    currencyId?: SortOrder
+    code?: SortOrder
+    name?: SortOrder
+    isActive?: SortOrder
+    depositEnabled?: SortOrder
+    withdrawEnabled?: SortOrder
+    notice?: SortOrder
+    instructions?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type WalletNetworkAvgOrderByAggregateInput = {
+    currencyId?: SortOrder
+  }
+
+  export type WalletNetworkMaxOrderByAggregateInput = {
+    id?: SortOrder
+    currencyId?: SortOrder
+    code?: SortOrder
+    name?: SortOrder
+    isActive?: SortOrder
+    depositEnabled?: SortOrder
+    withdrawEnabled?: SortOrder
+    notice?: SortOrder
+    instructions?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type WalletNetworkMinOrderByAggregateInput = {
+    id?: SortOrder
+    currencyId?: SortOrder
+    code?: SortOrder
+    name?: SortOrder
+    isActive?: SortOrder
+    depositEnabled?: SortOrder
+    withdrawEnabled?: SortOrder
+    notice?: SortOrder
+    instructions?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type WalletNetworkSumOrderByAggregateInput = {
+    currencyId?: SortOrder
+  }
+
+  export type WalletNetworkNullableScalarRelationFilter = {
+    is?: WalletNetworkWhereInput | null
+    isNot?: WalletNetworkWhereInput | null
+  }
+
   export type DepositAddressCountOrderByAggregateInput = {
     id?: SortOrder
     currencyId?: SortOrder
+    walletNetworkId?: SortOrder
     network?: SortOrder
     address?: SortOrder
     label?: SortOrder
@@ -132765,6 +134464,7 @@ export namespace Prisma {
   export type DepositAddressMaxOrderByAggregateInput = {
     id?: SortOrder
     currencyId?: SortOrder
+    walletNetworkId?: SortOrder
     network?: SortOrder
     address?: SortOrder
     label?: SortOrder
@@ -132776,6 +134476,7 @@ export namespace Prisma {
   export type DepositAddressMinOrderByAggregateInput = {
     id?: SortOrder
     currencyId?: SortOrder
+    walletNetworkId?: SortOrder
     network?: SortOrder
     address?: SortOrder
     label?: SortOrder
@@ -138735,11 +140436,25 @@ export namespace Prisma {
     connect?: DepositAddressWhereUniqueInput | DepositAddressWhereUniqueInput[]
   }
 
+  export type WalletNetworkCreateNestedManyWithoutCurrencyInput = {
+    create?: XOR<WalletNetworkCreateWithoutCurrencyInput, WalletNetworkUncheckedCreateWithoutCurrencyInput> | WalletNetworkCreateWithoutCurrencyInput[] | WalletNetworkUncheckedCreateWithoutCurrencyInput[]
+    connectOrCreate?: WalletNetworkCreateOrConnectWithoutCurrencyInput | WalletNetworkCreateOrConnectWithoutCurrencyInput[]
+    createMany?: WalletNetworkCreateManyCurrencyInputEnvelope
+    connect?: WalletNetworkWhereUniqueInput | WalletNetworkWhereUniqueInput[]
+  }
+
   export type DepositAddressUncheckedCreateNestedManyWithoutCurrencyInput = {
     create?: XOR<DepositAddressCreateWithoutCurrencyInput, DepositAddressUncheckedCreateWithoutCurrencyInput> | DepositAddressCreateWithoutCurrencyInput[] | DepositAddressUncheckedCreateWithoutCurrencyInput[]
     connectOrCreate?: DepositAddressCreateOrConnectWithoutCurrencyInput | DepositAddressCreateOrConnectWithoutCurrencyInput[]
     createMany?: DepositAddressCreateManyCurrencyInputEnvelope
     connect?: DepositAddressWhereUniqueInput | DepositAddressWhereUniqueInput[]
+  }
+
+  export type WalletNetworkUncheckedCreateNestedManyWithoutCurrencyInput = {
+    create?: XOR<WalletNetworkCreateWithoutCurrencyInput, WalletNetworkUncheckedCreateWithoutCurrencyInput> | WalletNetworkCreateWithoutCurrencyInput[] | WalletNetworkUncheckedCreateWithoutCurrencyInput[]
+    connectOrCreate?: WalletNetworkCreateOrConnectWithoutCurrencyInput | WalletNetworkCreateOrConnectWithoutCurrencyInput[]
+    createMany?: WalletNetworkCreateManyCurrencyInputEnvelope
+    connect?: WalletNetworkWhereUniqueInput | WalletNetworkWhereUniqueInput[]
   }
 
   export type DepositAddressUpdateManyWithoutCurrencyNestedInput = {
@@ -138756,6 +140471,20 @@ export namespace Prisma {
     deleteMany?: DepositAddressScalarWhereInput | DepositAddressScalarWhereInput[]
   }
 
+  export type WalletNetworkUpdateManyWithoutCurrencyNestedInput = {
+    create?: XOR<WalletNetworkCreateWithoutCurrencyInput, WalletNetworkUncheckedCreateWithoutCurrencyInput> | WalletNetworkCreateWithoutCurrencyInput[] | WalletNetworkUncheckedCreateWithoutCurrencyInput[]
+    connectOrCreate?: WalletNetworkCreateOrConnectWithoutCurrencyInput | WalletNetworkCreateOrConnectWithoutCurrencyInput[]
+    upsert?: WalletNetworkUpsertWithWhereUniqueWithoutCurrencyInput | WalletNetworkUpsertWithWhereUniqueWithoutCurrencyInput[]
+    createMany?: WalletNetworkCreateManyCurrencyInputEnvelope
+    set?: WalletNetworkWhereUniqueInput | WalletNetworkWhereUniqueInput[]
+    disconnect?: WalletNetworkWhereUniqueInput | WalletNetworkWhereUniqueInput[]
+    delete?: WalletNetworkWhereUniqueInput | WalletNetworkWhereUniqueInput[]
+    connect?: WalletNetworkWhereUniqueInput | WalletNetworkWhereUniqueInput[]
+    update?: WalletNetworkUpdateWithWhereUniqueWithoutCurrencyInput | WalletNetworkUpdateWithWhereUniqueWithoutCurrencyInput[]
+    updateMany?: WalletNetworkUpdateManyWithWhereWithoutCurrencyInput | WalletNetworkUpdateManyWithWhereWithoutCurrencyInput[]
+    deleteMany?: WalletNetworkScalarWhereInput | WalletNetworkScalarWhereInput[]
+  }
+
   export type DepositAddressUncheckedUpdateManyWithoutCurrencyNestedInput = {
     create?: XOR<DepositAddressCreateWithoutCurrencyInput, DepositAddressUncheckedCreateWithoutCurrencyInput> | DepositAddressCreateWithoutCurrencyInput[] | DepositAddressUncheckedCreateWithoutCurrencyInput[]
     connectOrCreate?: DepositAddressCreateOrConnectWithoutCurrencyInput | DepositAddressCreateOrConnectWithoutCurrencyInput[]
@@ -138770,10 +140499,86 @@ export namespace Prisma {
     deleteMany?: DepositAddressScalarWhereInput | DepositAddressScalarWhereInput[]
   }
 
+  export type WalletNetworkUncheckedUpdateManyWithoutCurrencyNestedInput = {
+    create?: XOR<WalletNetworkCreateWithoutCurrencyInput, WalletNetworkUncheckedCreateWithoutCurrencyInput> | WalletNetworkCreateWithoutCurrencyInput[] | WalletNetworkUncheckedCreateWithoutCurrencyInput[]
+    connectOrCreate?: WalletNetworkCreateOrConnectWithoutCurrencyInput | WalletNetworkCreateOrConnectWithoutCurrencyInput[]
+    upsert?: WalletNetworkUpsertWithWhereUniqueWithoutCurrencyInput | WalletNetworkUpsertWithWhereUniqueWithoutCurrencyInput[]
+    createMany?: WalletNetworkCreateManyCurrencyInputEnvelope
+    set?: WalletNetworkWhereUniqueInput | WalletNetworkWhereUniqueInput[]
+    disconnect?: WalletNetworkWhereUniqueInput | WalletNetworkWhereUniqueInput[]
+    delete?: WalletNetworkWhereUniqueInput | WalletNetworkWhereUniqueInput[]
+    connect?: WalletNetworkWhereUniqueInput | WalletNetworkWhereUniqueInput[]
+    update?: WalletNetworkUpdateWithWhereUniqueWithoutCurrencyInput | WalletNetworkUpdateWithWhereUniqueWithoutCurrencyInput[]
+    updateMany?: WalletNetworkUpdateManyWithWhereWithoutCurrencyInput | WalletNetworkUpdateManyWithWhereWithoutCurrencyInput[]
+    deleteMany?: WalletNetworkScalarWhereInput | WalletNetworkScalarWhereInput[]
+  }
+
+  export type CurrencyCreateNestedOneWithoutWalletNetworksInput = {
+    create?: XOR<CurrencyCreateWithoutWalletNetworksInput, CurrencyUncheckedCreateWithoutWalletNetworksInput>
+    connectOrCreate?: CurrencyCreateOrConnectWithoutWalletNetworksInput
+    connect?: CurrencyWhereUniqueInput
+  }
+
+  export type DepositAddressCreateNestedManyWithoutWalletNetworkInput = {
+    create?: XOR<DepositAddressCreateWithoutWalletNetworkInput, DepositAddressUncheckedCreateWithoutWalletNetworkInput> | DepositAddressCreateWithoutWalletNetworkInput[] | DepositAddressUncheckedCreateWithoutWalletNetworkInput[]
+    connectOrCreate?: DepositAddressCreateOrConnectWithoutWalletNetworkInput | DepositAddressCreateOrConnectWithoutWalletNetworkInput[]
+    createMany?: DepositAddressCreateManyWalletNetworkInputEnvelope
+    connect?: DepositAddressWhereUniqueInput | DepositAddressWhereUniqueInput[]
+  }
+
+  export type DepositAddressUncheckedCreateNestedManyWithoutWalletNetworkInput = {
+    create?: XOR<DepositAddressCreateWithoutWalletNetworkInput, DepositAddressUncheckedCreateWithoutWalletNetworkInput> | DepositAddressCreateWithoutWalletNetworkInput[] | DepositAddressUncheckedCreateWithoutWalletNetworkInput[]
+    connectOrCreate?: DepositAddressCreateOrConnectWithoutWalletNetworkInput | DepositAddressCreateOrConnectWithoutWalletNetworkInput[]
+    createMany?: DepositAddressCreateManyWalletNetworkInputEnvelope
+    connect?: DepositAddressWhereUniqueInput | DepositAddressWhereUniqueInput[]
+  }
+
+  export type CurrencyUpdateOneRequiredWithoutWalletNetworksNestedInput = {
+    create?: XOR<CurrencyCreateWithoutWalletNetworksInput, CurrencyUncheckedCreateWithoutWalletNetworksInput>
+    connectOrCreate?: CurrencyCreateOrConnectWithoutWalletNetworksInput
+    upsert?: CurrencyUpsertWithoutWalletNetworksInput
+    connect?: CurrencyWhereUniqueInput
+    update?: XOR<XOR<CurrencyUpdateToOneWithWhereWithoutWalletNetworksInput, CurrencyUpdateWithoutWalletNetworksInput>, CurrencyUncheckedUpdateWithoutWalletNetworksInput>
+  }
+
+  export type DepositAddressUpdateManyWithoutWalletNetworkNestedInput = {
+    create?: XOR<DepositAddressCreateWithoutWalletNetworkInput, DepositAddressUncheckedCreateWithoutWalletNetworkInput> | DepositAddressCreateWithoutWalletNetworkInput[] | DepositAddressUncheckedCreateWithoutWalletNetworkInput[]
+    connectOrCreate?: DepositAddressCreateOrConnectWithoutWalletNetworkInput | DepositAddressCreateOrConnectWithoutWalletNetworkInput[]
+    upsert?: DepositAddressUpsertWithWhereUniqueWithoutWalletNetworkInput | DepositAddressUpsertWithWhereUniqueWithoutWalletNetworkInput[]
+    createMany?: DepositAddressCreateManyWalletNetworkInputEnvelope
+    set?: DepositAddressWhereUniqueInput | DepositAddressWhereUniqueInput[]
+    disconnect?: DepositAddressWhereUniqueInput | DepositAddressWhereUniqueInput[]
+    delete?: DepositAddressWhereUniqueInput | DepositAddressWhereUniqueInput[]
+    connect?: DepositAddressWhereUniqueInput | DepositAddressWhereUniqueInput[]
+    update?: DepositAddressUpdateWithWhereUniqueWithoutWalletNetworkInput | DepositAddressUpdateWithWhereUniqueWithoutWalletNetworkInput[]
+    updateMany?: DepositAddressUpdateManyWithWhereWithoutWalletNetworkInput | DepositAddressUpdateManyWithWhereWithoutWalletNetworkInput[]
+    deleteMany?: DepositAddressScalarWhereInput | DepositAddressScalarWhereInput[]
+  }
+
+  export type DepositAddressUncheckedUpdateManyWithoutWalletNetworkNestedInput = {
+    create?: XOR<DepositAddressCreateWithoutWalletNetworkInput, DepositAddressUncheckedCreateWithoutWalletNetworkInput> | DepositAddressCreateWithoutWalletNetworkInput[] | DepositAddressUncheckedCreateWithoutWalletNetworkInput[]
+    connectOrCreate?: DepositAddressCreateOrConnectWithoutWalletNetworkInput | DepositAddressCreateOrConnectWithoutWalletNetworkInput[]
+    upsert?: DepositAddressUpsertWithWhereUniqueWithoutWalletNetworkInput | DepositAddressUpsertWithWhereUniqueWithoutWalletNetworkInput[]
+    createMany?: DepositAddressCreateManyWalletNetworkInputEnvelope
+    set?: DepositAddressWhereUniqueInput | DepositAddressWhereUniqueInput[]
+    disconnect?: DepositAddressWhereUniqueInput | DepositAddressWhereUniqueInput[]
+    delete?: DepositAddressWhereUniqueInput | DepositAddressWhereUniqueInput[]
+    connect?: DepositAddressWhereUniqueInput | DepositAddressWhereUniqueInput[]
+    update?: DepositAddressUpdateWithWhereUniqueWithoutWalletNetworkInput | DepositAddressUpdateWithWhereUniqueWithoutWalletNetworkInput[]
+    updateMany?: DepositAddressUpdateManyWithWhereWithoutWalletNetworkInput | DepositAddressUpdateManyWithWhereWithoutWalletNetworkInput[]
+    deleteMany?: DepositAddressScalarWhereInput | DepositAddressScalarWhereInput[]
+  }
+
   export type CurrencyCreateNestedOneWithoutDepositAddressesInput = {
     create?: XOR<CurrencyCreateWithoutDepositAddressesInput, CurrencyUncheckedCreateWithoutDepositAddressesInput>
     connectOrCreate?: CurrencyCreateOrConnectWithoutDepositAddressesInput
     connect?: CurrencyWhereUniqueInput
+  }
+
+  export type WalletNetworkCreateNestedOneWithoutDepositAddressesInput = {
+    create?: XOR<WalletNetworkCreateWithoutDepositAddressesInput, WalletNetworkUncheckedCreateWithoutDepositAddressesInput>
+    connectOrCreate?: WalletNetworkCreateOrConnectWithoutDepositAddressesInput
+    connect?: WalletNetworkWhereUniqueInput
   }
 
   export type DepositClaimCreateNestedManyWithoutDepositAddressInput = {
@@ -138796,6 +140601,16 @@ export namespace Prisma {
     upsert?: CurrencyUpsertWithoutDepositAddressesInput
     connect?: CurrencyWhereUniqueInput
     update?: XOR<XOR<CurrencyUpdateToOneWithWhereWithoutDepositAddressesInput, CurrencyUpdateWithoutDepositAddressesInput>, CurrencyUncheckedUpdateWithoutDepositAddressesInput>
+  }
+
+  export type WalletNetworkUpdateOneWithoutDepositAddressesNestedInput = {
+    create?: XOR<WalletNetworkCreateWithoutDepositAddressesInput, WalletNetworkUncheckedCreateWithoutDepositAddressesInput>
+    connectOrCreate?: WalletNetworkCreateOrConnectWithoutDepositAddressesInput
+    upsert?: WalletNetworkUpsertWithoutDepositAddressesInput
+    disconnect?: WalletNetworkWhereInput | boolean
+    delete?: WalletNetworkWhereInput | boolean
+    connect?: WalletNetworkWhereUniqueInput
+    update?: XOR<XOR<WalletNetworkUpdateToOneWithWhereWithoutDepositAddressesInput, WalletNetworkUpdateWithoutDepositAddressesInput>, WalletNetworkUncheckedUpdateWithoutDepositAddressesInput>
   }
 
   export type DepositClaimUpdateManyWithoutDepositAddressNestedInput = {
@@ -147933,11 +149748,13 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
+    walletNetwork?: WalletNetworkCreateNestedOneWithoutDepositAddressesInput
     manualClaims?: DepositClaimCreateNestedManyWithoutDepositAddressInput
   }
 
   export type DepositAddressUncheckedCreateWithoutCurrencyInput = {
     id?: string
+    walletNetworkId?: string | null
     network: string
     address: string
     label?: string | null
@@ -147954,6 +149771,43 @@ export namespace Prisma {
 
   export type DepositAddressCreateManyCurrencyInputEnvelope = {
     data: DepositAddressCreateManyCurrencyInput | DepositAddressCreateManyCurrencyInput[]
+  }
+
+  export type WalletNetworkCreateWithoutCurrencyInput = {
+    id?: string
+    code: string
+    name: string
+    isActive?: boolean
+    depositEnabled?: boolean
+    withdrawEnabled?: boolean
+    notice?: string | null
+    instructions?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    depositAddresses?: DepositAddressCreateNestedManyWithoutWalletNetworkInput
+  }
+
+  export type WalletNetworkUncheckedCreateWithoutCurrencyInput = {
+    id?: string
+    code: string
+    name: string
+    isActive?: boolean
+    depositEnabled?: boolean
+    withdrawEnabled?: boolean
+    notice?: string | null
+    instructions?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    depositAddresses?: DepositAddressUncheckedCreateNestedManyWithoutWalletNetworkInput
+  }
+
+  export type WalletNetworkCreateOrConnectWithoutCurrencyInput = {
+    where: WalletNetworkWhereUniqueInput
+    create: XOR<WalletNetworkCreateWithoutCurrencyInput, WalletNetworkUncheckedCreateWithoutCurrencyInput>
+  }
+
+  export type WalletNetworkCreateManyCurrencyInputEnvelope = {
+    data: WalletNetworkCreateManyCurrencyInput | WalletNetworkCreateManyCurrencyInput[]
   }
 
   export type DepositAddressUpsertWithWhereUniqueWithoutCurrencyInput = {
@@ -147978,12 +149832,193 @@ export namespace Prisma {
     NOT?: DepositAddressScalarWhereInput | DepositAddressScalarWhereInput[]
     id?: StringFilter<"DepositAddress"> | string
     currencyId?: IntFilter<"DepositAddress"> | number
+    walletNetworkId?: StringNullableFilter<"DepositAddress"> | string | null
     network?: StringFilter<"DepositAddress"> | string
     address?: StringFilter<"DepositAddress"> | string
     label?: StringNullableFilter<"DepositAddress"> | string | null
     isActive?: BoolFilter<"DepositAddress"> | boolean
     createdAt?: DateTimeFilter<"DepositAddress"> | Date | string
     updatedAt?: DateTimeFilter<"DepositAddress"> | Date | string
+  }
+
+  export type WalletNetworkUpsertWithWhereUniqueWithoutCurrencyInput = {
+    where: WalletNetworkWhereUniqueInput
+    update: XOR<WalletNetworkUpdateWithoutCurrencyInput, WalletNetworkUncheckedUpdateWithoutCurrencyInput>
+    create: XOR<WalletNetworkCreateWithoutCurrencyInput, WalletNetworkUncheckedCreateWithoutCurrencyInput>
+  }
+
+  export type WalletNetworkUpdateWithWhereUniqueWithoutCurrencyInput = {
+    where: WalletNetworkWhereUniqueInput
+    data: XOR<WalletNetworkUpdateWithoutCurrencyInput, WalletNetworkUncheckedUpdateWithoutCurrencyInput>
+  }
+
+  export type WalletNetworkUpdateManyWithWhereWithoutCurrencyInput = {
+    where: WalletNetworkScalarWhereInput
+    data: XOR<WalletNetworkUpdateManyMutationInput, WalletNetworkUncheckedUpdateManyWithoutCurrencyInput>
+  }
+
+  export type WalletNetworkScalarWhereInput = {
+    AND?: WalletNetworkScalarWhereInput | WalletNetworkScalarWhereInput[]
+    OR?: WalletNetworkScalarWhereInput[]
+    NOT?: WalletNetworkScalarWhereInput | WalletNetworkScalarWhereInput[]
+    id?: StringFilter<"WalletNetwork"> | string
+    currencyId?: IntFilter<"WalletNetwork"> | number
+    code?: StringFilter<"WalletNetwork"> | string
+    name?: StringFilter<"WalletNetwork"> | string
+    isActive?: BoolFilter<"WalletNetwork"> | boolean
+    depositEnabled?: BoolFilter<"WalletNetwork"> | boolean
+    withdrawEnabled?: BoolFilter<"WalletNetwork"> | boolean
+    notice?: StringNullableFilter<"WalletNetwork"> | string | null
+    instructions?: StringNullableFilter<"WalletNetwork"> | string | null
+    createdAt?: DateTimeFilter<"WalletNetwork"> | Date | string
+    updatedAt?: DateTimeFilter<"WalletNetwork"> | Date | string
+  }
+
+  export type CurrencyCreateWithoutWalletNetworksInput = {
+    symbol: string
+    name: string
+    logo?: string | null
+    rate?: string
+    minDeposit?: string
+    maxDeposit?: string
+    minWithdrawal?: string
+    maxWithdrawal?: string
+    withdrawalFee?: string
+    depositEnabled?: boolean
+    withdrawEnabled?: boolean
+    confirmationCount?: number
+    decimals?: number
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    depositAddresses?: DepositAddressCreateNestedManyWithoutCurrencyInput
+  }
+
+  export type CurrencyUncheckedCreateWithoutWalletNetworksInput = {
+    id?: number
+    symbol: string
+    name: string
+    logo?: string | null
+    rate?: string
+    minDeposit?: string
+    maxDeposit?: string
+    minWithdrawal?: string
+    maxWithdrawal?: string
+    withdrawalFee?: string
+    depositEnabled?: boolean
+    withdrawEnabled?: boolean
+    confirmationCount?: number
+    decimals?: number
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    depositAddresses?: DepositAddressUncheckedCreateNestedManyWithoutCurrencyInput
+  }
+
+  export type CurrencyCreateOrConnectWithoutWalletNetworksInput = {
+    where: CurrencyWhereUniqueInput
+    create: XOR<CurrencyCreateWithoutWalletNetworksInput, CurrencyUncheckedCreateWithoutWalletNetworksInput>
+  }
+
+  export type DepositAddressCreateWithoutWalletNetworkInput = {
+    id?: string
+    network: string
+    address: string
+    label?: string | null
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    currency: CurrencyCreateNestedOneWithoutDepositAddressesInput
+    manualClaims?: DepositClaimCreateNestedManyWithoutDepositAddressInput
+  }
+
+  export type DepositAddressUncheckedCreateWithoutWalletNetworkInput = {
+    id?: string
+    currencyId: number
+    network: string
+    address: string
+    label?: string | null
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    manualClaims?: DepositClaimUncheckedCreateNestedManyWithoutDepositAddressInput
+  }
+
+  export type DepositAddressCreateOrConnectWithoutWalletNetworkInput = {
+    where: DepositAddressWhereUniqueInput
+    create: XOR<DepositAddressCreateWithoutWalletNetworkInput, DepositAddressUncheckedCreateWithoutWalletNetworkInput>
+  }
+
+  export type DepositAddressCreateManyWalletNetworkInputEnvelope = {
+    data: DepositAddressCreateManyWalletNetworkInput | DepositAddressCreateManyWalletNetworkInput[]
+  }
+
+  export type CurrencyUpsertWithoutWalletNetworksInput = {
+    update: XOR<CurrencyUpdateWithoutWalletNetworksInput, CurrencyUncheckedUpdateWithoutWalletNetworksInput>
+    create: XOR<CurrencyCreateWithoutWalletNetworksInput, CurrencyUncheckedCreateWithoutWalletNetworksInput>
+    where?: CurrencyWhereInput
+  }
+
+  export type CurrencyUpdateToOneWithWhereWithoutWalletNetworksInput = {
+    where?: CurrencyWhereInput
+    data: XOR<CurrencyUpdateWithoutWalletNetworksInput, CurrencyUncheckedUpdateWithoutWalletNetworksInput>
+  }
+
+  export type CurrencyUpdateWithoutWalletNetworksInput = {
+    symbol?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    logo?: NullableStringFieldUpdateOperationsInput | string | null
+    rate?: StringFieldUpdateOperationsInput | string
+    minDeposit?: StringFieldUpdateOperationsInput | string
+    maxDeposit?: StringFieldUpdateOperationsInput | string
+    minWithdrawal?: StringFieldUpdateOperationsInput | string
+    maxWithdrawal?: StringFieldUpdateOperationsInput | string
+    withdrawalFee?: StringFieldUpdateOperationsInput | string
+    depositEnabled?: BoolFieldUpdateOperationsInput | boolean
+    withdrawEnabled?: BoolFieldUpdateOperationsInput | boolean
+    confirmationCount?: IntFieldUpdateOperationsInput | number
+    decimals?: IntFieldUpdateOperationsInput | number
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    depositAddresses?: DepositAddressUpdateManyWithoutCurrencyNestedInput
+  }
+
+  export type CurrencyUncheckedUpdateWithoutWalletNetworksInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    symbol?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    logo?: NullableStringFieldUpdateOperationsInput | string | null
+    rate?: StringFieldUpdateOperationsInput | string
+    minDeposit?: StringFieldUpdateOperationsInput | string
+    maxDeposit?: StringFieldUpdateOperationsInput | string
+    minWithdrawal?: StringFieldUpdateOperationsInput | string
+    maxWithdrawal?: StringFieldUpdateOperationsInput | string
+    withdrawalFee?: StringFieldUpdateOperationsInput | string
+    depositEnabled?: BoolFieldUpdateOperationsInput | boolean
+    withdrawEnabled?: BoolFieldUpdateOperationsInput | boolean
+    confirmationCount?: IntFieldUpdateOperationsInput | number
+    decimals?: IntFieldUpdateOperationsInput | number
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    depositAddresses?: DepositAddressUncheckedUpdateManyWithoutCurrencyNestedInput
+  }
+
+  export type DepositAddressUpsertWithWhereUniqueWithoutWalletNetworkInput = {
+    where: DepositAddressWhereUniqueInput
+    update: XOR<DepositAddressUpdateWithoutWalletNetworkInput, DepositAddressUncheckedUpdateWithoutWalletNetworkInput>
+    create: XOR<DepositAddressCreateWithoutWalletNetworkInput, DepositAddressUncheckedCreateWithoutWalletNetworkInput>
+  }
+
+  export type DepositAddressUpdateWithWhereUniqueWithoutWalletNetworkInput = {
+    where: DepositAddressWhereUniqueInput
+    data: XOR<DepositAddressUpdateWithoutWalletNetworkInput, DepositAddressUncheckedUpdateWithoutWalletNetworkInput>
+  }
+
+  export type DepositAddressUpdateManyWithWhereWithoutWalletNetworkInput = {
+    where: DepositAddressScalarWhereInput
+    data: XOR<DepositAddressUpdateManyMutationInput, DepositAddressUncheckedUpdateManyWithoutWalletNetworkInput>
   }
 
   export type CurrencyCreateWithoutDepositAddressesInput = {
@@ -148003,6 +150038,7 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
+    walletNetworks?: WalletNetworkCreateNestedManyWithoutCurrencyInput
   }
 
   export type CurrencyUncheckedCreateWithoutDepositAddressesInput = {
@@ -148023,11 +150059,45 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
+    walletNetworks?: WalletNetworkUncheckedCreateNestedManyWithoutCurrencyInput
   }
 
   export type CurrencyCreateOrConnectWithoutDepositAddressesInput = {
     where: CurrencyWhereUniqueInput
     create: XOR<CurrencyCreateWithoutDepositAddressesInput, CurrencyUncheckedCreateWithoutDepositAddressesInput>
+  }
+
+  export type WalletNetworkCreateWithoutDepositAddressesInput = {
+    id?: string
+    code: string
+    name: string
+    isActive?: boolean
+    depositEnabled?: boolean
+    withdrawEnabled?: boolean
+    notice?: string | null
+    instructions?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    currency: CurrencyCreateNestedOneWithoutWalletNetworksInput
+  }
+
+  export type WalletNetworkUncheckedCreateWithoutDepositAddressesInput = {
+    id?: string
+    currencyId: number
+    code: string
+    name: string
+    isActive?: boolean
+    depositEnabled?: boolean
+    withdrawEnabled?: boolean
+    notice?: string | null
+    instructions?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type WalletNetworkCreateOrConnectWithoutDepositAddressesInput = {
+    where: WalletNetworkWhereUniqueInput
+    create: XOR<WalletNetworkCreateWithoutDepositAddressesInput, WalletNetworkUncheckedCreateWithoutDepositAddressesInput>
   }
 
   export type DepositClaimCreateWithoutDepositAddressInput = {
@@ -148109,6 +150179,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    walletNetworks?: WalletNetworkUpdateManyWithoutCurrencyNestedInput
   }
 
   export type CurrencyUncheckedUpdateWithoutDepositAddressesInput = {
@@ -148127,6 +150198,46 @@ export namespace Prisma {
     confirmationCount?: IntFieldUpdateOperationsInput | number
     decimals?: IntFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    walletNetworks?: WalletNetworkUncheckedUpdateManyWithoutCurrencyNestedInput
+  }
+
+  export type WalletNetworkUpsertWithoutDepositAddressesInput = {
+    update: XOR<WalletNetworkUpdateWithoutDepositAddressesInput, WalletNetworkUncheckedUpdateWithoutDepositAddressesInput>
+    create: XOR<WalletNetworkCreateWithoutDepositAddressesInput, WalletNetworkUncheckedCreateWithoutDepositAddressesInput>
+    where?: WalletNetworkWhereInput
+  }
+
+  export type WalletNetworkUpdateToOneWithWhereWithoutDepositAddressesInput = {
+    where?: WalletNetworkWhereInput
+    data: XOR<WalletNetworkUpdateWithoutDepositAddressesInput, WalletNetworkUncheckedUpdateWithoutDepositAddressesInput>
+  }
+
+  export type WalletNetworkUpdateWithoutDepositAddressesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    depositEnabled?: BoolFieldUpdateOperationsInput | boolean
+    withdrawEnabled?: BoolFieldUpdateOperationsInput | boolean
+    notice?: NullableStringFieldUpdateOperationsInput | string | null
+    instructions?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    currency?: CurrencyUpdateOneRequiredWithoutWalletNetworksNestedInput
+  }
+
+  export type WalletNetworkUncheckedUpdateWithoutDepositAddressesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    currencyId?: IntFieldUpdateOperationsInput | number
+    code?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    depositEnabled?: BoolFieldUpdateOperationsInput | boolean
+    withdrawEnabled?: BoolFieldUpdateOperationsInput | boolean
+    notice?: NullableStringFieldUpdateOperationsInput | string | null
+    instructions?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -148350,11 +150461,13 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     currency: CurrencyCreateNestedOneWithoutDepositAddressesInput
+    walletNetwork?: WalletNetworkCreateNestedOneWithoutDepositAddressesInput
   }
 
   export type DepositAddressUncheckedCreateWithoutManualClaimsInput = {
     id?: string
     currencyId: number
+    walletNetworkId?: string | null
     network: string
     address: string
     label?: string | null
@@ -148594,11 +150707,13 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     currency?: CurrencyUpdateOneRequiredWithoutDepositAddressesNestedInput
+    walletNetwork?: WalletNetworkUpdateOneWithoutDepositAddressesNestedInput
   }
 
   export type DepositAddressUncheckedUpdateWithoutManualClaimsInput = {
     id?: StringFieldUpdateOperationsInput | string
     currencyId?: IntFieldUpdateOperationsInput | number
+    walletNetworkId?: NullableStringFieldUpdateOperationsInput | string | null
     network?: StringFieldUpdateOperationsInput | string
     address?: StringFieldUpdateOperationsInput | string
     label?: NullableStringFieldUpdateOperationsInput | string | null
@@ -159475,10 +161590,24 @@ export namespace Prisma {
 
   export type DepositAddressCreateManyCurrencyInput = {
     id?: string
+    walletNetworkId?: string | null
     network: string
     address: string
     label?: string | null
     isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type WalletNetworkCreateManyCurrencyInput = {
+    id?: string
+    code: string
+    name: string
+    isActive?: boolean
+    depositEnabled?: boolean
+    withdrawEnabled?: boolean
+    notice?: string | null
+    instructions?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -159491,11 +161620,13 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    walletNetwork?: WalletNetworkUpdateOneWithoutDepositAddressesNestedInput
     manualClaims?: DepositClaimUpdateManyWithoutDepositAddressNestedInput
   }
 
   export type DepositAddressUncheckedUpdateWithoutCurrencyInput = {
     id?: StringFieldUpdateOperationsInput | string
+    walletNetworkId?: NullableStringFieldUpdateOperationsInput | string | null
     network?: StringFieldUpdateOperationsInput | string
     address?: StringFieldUpdateOperationsInput | string
     label?: NullableStringFieldUpdateOperationsInput | string | null
@@ -159507,6 +161638,94 @@ export namespace Prisma {
 
   export type DepositAddressUncheckedUpdateManyWithoutCurrencyInput = {
     id?: StringFieldUpdateOperationsInput | string
+    walletNetworkId?: NullableStringFieldUpdateOperationsInput | string | null
+    network?: StringFieldUpdateOperationsInput | string
+    address?: StringFieldUpdateOperationsInput | string
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WalletNetworkUpdateWithoutCurrencyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    depositEnabled?: BoolFieldUpdateOperationsInput | boolean
+    withdrawEnabled?: BoolFieldUpdateOperationsInput | boolean
+    notice?: NullableStringFieldUpdateOperationsInput | string | null
+    instructions?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    depositAddresses?: DepositAddressUpdateManyWithoutWalletNetworkNestedInput
+  }
+
+  export type WalletNetworkUncheckedUpdateWithoutCurrencyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    depositEnabled?: BoolFieldUpdateOperationsInput | boolean
+    withdrawEnabled?: BoolFieldUpdateOperationsInput | boolean
+    notice?: NullableStringFieldUpdateOperationsInput | string | null
+    instructions?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    depositAddresses?: DepositAddressUncheckedUpdateManyWithoutWalletNetworkNestedInput
+  }
+
+  export type WalletNetworkUncheckedUpdateManyWithoutCurrencyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    depositEnabled?: BoolFieldUpdateOperationsInput | boolean
+    withdrawEnabled?: BoolFieldUpdateOperationsInput | boolean
+    notice?: NullableStringFieldUpdateOperationsInput | string | null
+    instructions?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DepositAddressCreateManyWalletNetworkInput = {
+    id?: string
+    currencyId: number
+    network: string
+    address: string
+    label?: string | null
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type DepositAddressUpdateWithoutWalletNetworkInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    network?: StringFieldUpdateOperationsInput | string
+    address?: StringFieldUpdateOperationsInput | string
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    currency?: CurrencyUpdateOneRequiredWithoutDepositAddressesNestedInput
+    manualClaims?: DepositClaimUpdateManyWithoutDepositAddressNestedInput
+  }
+
+  export type DepositAddressUncheckedUpdateWithoutWalletNetworkInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    currencyId?: IntFieldUpdateOperationsInput | number
+    network?: StringFieldUpdateOperationsInput | string
+    address?: StringFieldUpdateOperationsInput | string
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    manualClaims?: DepositClaimUncheckedUpdateManyWithoutDepositAddressNestedInput
+  }
+
+  export type DepositAddressUncheckedUpdateManyWithoutWalletNetworkInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    currencyId?: IntFieldUpdateOperationsInput | number
     network?: StringFieldUpdateOperationsInput | string
     address?: StringFieldUpdateOperationsInput | string
     label?: NullableStringFieldUpdateOperationsInput | string | null

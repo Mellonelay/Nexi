@@ -18,6 +18,7 @@ class D1FinancialHarness {
   readonly activities: Array<Record<string, unknown>> = [];
   isEnabled() { return true; }
   async hasAssetCapability(asset: string, _network: string, capability: string) { return asset.toUpperCase() === 'USDT' && capability === 'withdraw'; }
+  async getWalletAssetNetworkConfig(asset: string, network: string) { return asset.toUpperCase() === 'USDT' && network.toUpperCase() === 'TRC20' ? { assetActive: 1, withdrawEnabled: 1, networkActive: 1, networkWithdrawEnabled: 1, minWithdrawal: '1', maxWithdrawal: '1000', withdrawalFee: '0.2' } : null; }
   async getSystemConfigValue(key: string) { return key === 'gate2.withdrawal.fee.USDT.TRC20' ? '0.2' : null; }
   async getWithdrawal(requestKey: string) { return this.withdrawals.find((row) => row.requestKey === requestKey) ?? null; }
   async reserveWithdrawal(input: Record<string, string>) {

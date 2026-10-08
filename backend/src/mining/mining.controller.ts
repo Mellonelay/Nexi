@@ -101,15 +101,23 @@ export class MiningController {
   @Post("admin/plan")
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
-  async createPlan(@Body() body: CreateMiningPlanRequestDto) {
-    return this.miningService.createPlan(
-      body.name,
-      body.dailyYield,
-      body.lockupPeriod,
-      body.min,
-      body.max,
-      body.currency,
-    );
+  async createPlan(
+    @Body() body: CreateMiningPlanRequestDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.miningService.createPlan({
+      name: body.name,
+      dailyYield: body.dailyYield,
+      lockupPeriod: body.lockupPeriod,
+      minDeposit: body.min,
+      maxDeposit: body.max,
+      currency: body.currency ?? "USDT",
+      adminContext: {
+        adminId: request.user.userId,
+        reason: body.reason,
+        idempotencyKey: body.idempotencyKey,
+      },
+    });
   }
 
   // Dev: Force Yield Distribution

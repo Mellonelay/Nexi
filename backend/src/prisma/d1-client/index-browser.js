@@ -388,9 +388,24 @@ exports.Prisma.CurrencyScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.WalletNetworkScalarFieldEnum = {
+  id: 'id',
+  currencyId: 'currencyId',
+  code: 'code',
+  name: 'name',
+  isActive: 'isActive',
+  depositEnabled: 'depositEnabled',
+  withdrawEnabled: 'withdrawEnabled',
+  notice: 'notice',
+  instructions: 'instructions',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.DepositAddressScalarFieldEnum = {
   id: 'id',
   currencyId: 'currencyId',
+  walletNetworkId: 'walletNetworkId',
   network: 'network',
   address: 'address',
   label: 'label',
@@ -1672,6 +1687,7 @@ exports.Prisma.ModelName = {
   MiningSubscription: 'MiningSubscription',
   MiningRewardAccrual: 'MiningRewardAccrual',
   Currency: 'Currency',
+  WalletNetwork: 'WalletNetwork',
   DepositAddress: 'DepositAddress',
   DepositClaim: 'DepositClaim',
   LoanPlan: 'LoanPlan',

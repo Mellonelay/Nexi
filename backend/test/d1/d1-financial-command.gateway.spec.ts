@@ -798,6 +798,103 @@ describe("D1FinancialCommandGateway", () => {
     expect(statements.some((statement) => statement.sql.includes('INSERT INTO "AdminAuditLog"'))).toBe(true);
   });
 
+  it("does not emit currency audit or outbox when the symbol already exists", async () => {
+    const bridge = createBridge({
+      batch: jest.fn().mockResolvedValue({
+        results: [
+          { success: true, meta: { changes: 0 } },
+          { success: true, meta: { changes: 0 } },
+          { success: true, meta: { changes: 0 } },
+        ],
+      }),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+
+    await expect((gateway as any).createAdminCurrency({
+      symbol: "BTC",
+      name: "Bitcoin",
+      adminId: "admin-1",
+      reason: "Configure the BTC wallet asset",
+      idempotencyKey: "wallet-currency-btc-conflict",
+    })).rejects.toThrow("Currency symbol already exists");
+
+    const statements = (bridge.batch as jest.Mock).mock.calls[0][0] as D1BridgeBatchStatement[];
+    expect(statements[1].sql).toContain("WHERE changes()=1");
+    expect(statements[2].sql).toContain("changes()=1");
+  });
+
+  it("defaults new Wallet currencies to disabled with canonical configuration defaults", () => {
+    const gateway = new D1FinancialCommandGateway(createBridge());
+    expect((gateway as any).adminCurrencyPayload({
+      symbol: " usdt ",
+      name: " Tether ",
+      adminId: "admin-1",
+      reason: "Configure the Tether wallet asset",
+      idempotencyKey: "wallet-currency-usdt-0001",
+    })).toEqual({
+      symbol: "USDT",
+      name: "Tether",
+      logo: null,
+      rate: "1.0",
+      minDeposit: "10.0",
+      maxDeposit: "10000.0",
+      minWithdrawal: "10.0",
+      maxWithdrawal: "10000.0",
+      withdrawalFee: "1.0",
+      depositEnabled: false,
+      withdrawEnabled: false,
+      confirmationCount: 3,
+      decimals: 18,
+      isActive: false,
+    });
+  });
+
+
+
+  it("creates and updates Mining plans through D1 with Admin audit and EventOutbox", async () => {
+    const plan = { id: "plan-1", name: "Basic", currency: "USDT", lockupPeriod: 7, dailyYield: "0.02", dailyYieldDecimal: "0.02", minDeposit: "10", minDepositDecimal: "10", maxDeposit: "100", maxDepositDecimal: "100", isActive: 0 };
+    const bridge = createBridge({
+      select: jest.fn().mockImplementation(async (sql: string) => {
+        if (sql.includes('FROM "AdminAuditLog"')) return { results: [] };
+        if (sql.includes('FROM "MiningPlan"')) return { results: [plan] };
+        return { results: [] };
+      }),
+      batch: jest.fn().mockImplementation(async (statements: D1BridgeBatchStatement[]) => ({
+        results: statements.map(() => ({ success: true, meta: { changes: 1 } })),
+      })),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+    const command = { id: "plan-1", name: "Basic", currency: "USDT", lockupPeriod: 7, dailyYield: "0.02", minDeposit: "10", maxDeposit: "100", isActive: false, adminId: "admin-1", reason: "reviewed plan change", idempotencyKey: "mining-plan-key-01" };
+
+    await expect(gateway.createMiningPlan(command)).resolves.toMatchObject({ id: "plan-1" });
+    await expect(gateway.updateMiningPlan(command)).resolves.toMatchObject({ id: "plan-1" });
+
+    const createStatements = (bridge.batch as jest.Mock).mock.calls[0][0] as D1BridgeBatchStatement[];
+    const updateStatements = (bridge.batch as jest.Mock).mock.calls[1][0] as D1BridgeBatchStatement[];
+    for (const statements of [createStatements, updateStatements]) {
+      expect(statements).toHaveLength(3);
+      expect(statements[1].sql).toContain('INSERT INTO "AdminAuditLog"');
+      expect(statements[2].sql).toContain('INSERT OR IGNORE INTO "EventOutbox"');
+      expect(statements[2].sql).toContain("changes()=1");
+      const audit = JSON.parse(String(statements[1].params[4]));
+      expect(audit.reason).toBe(command.reason);
+      expect(audit.idempotencyKey).toBe(command.idempotencyKey);
+    }
+    expect(createStatements[0].sql).toContain('INSERT OR IGNORE INTO "MiningPlan"');
+    expect(updateStatements[0].sql).toContain('UPDATE "MiningPlan"');
+    expect(createStatements[0].params).toContain(0);
+    expect(updateStatements[0].params).toContain(0);
+  });
+
+  it("keeps inactive Mining plans visible to Admin without exposing them in the Public list", async () => {
+    const bridge = createBridge({
+      select: jest.fn().mockResolvedValue({ results: [{ id: "inactive-plan", isActive: 0 }] }),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+    await expect(gateway.listAdminMiningPlans()).resolves.toEqual([{ id: "inactive-plan", isActive: 0 }]);
+    expect(bridge.select).toHaveBeenCalledWith(expect.not.stringContaining('WHERE "isActive"=1'));
+  });
+
   it("renames a Binary duration through a versioned D1 config update with audit and outbox", async () => {
     const bridge = createBridge({
       select: jest.fn().mockImplementation(async (sql: string) => {
@@ -832,6 +929,142 @@ describe("D1FinancialCommandGateway", () => {
     expect(statements[1].sql).toContain('INSERT INTO "Gate2BinaryConfiguration"');
     expect(statements.some((statement) => statement.sql.includes('AdminAuditLog'))).toBe(true);
     expect(statements.some((statement) => statement.sql.includes('EventOutbox'))).toBe(true);
+  });
+
+  it("keeps Wallet funding capability independent from market capabilities", async () => {
+    const bridge = createBridge({
+      select: jest.fn().mockResolvedValue({ results: [{ id: "wallet-network-1" }] }),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+    await expect(gateway.hasAssetCapability("USDT", "TRC20", "deposit")).resolves.toBe(true);
+    const [sql, params] = (bridge.select as jest.Mock).mock.calls[0];
+    expect(sql).toContain('FROM "Currency"');
+    expect(sql).toContain('JOIN "WalletNetwork"');
+    expect(sql).not.toContain("MarketAsset");
+    expect(params).toEqual(["USDT", "TRC20"]);
+  });
+
+  it("creates Wallet networks disabled with atomic Admin audit and outbox", async () => {
+    const bridge = createBridge({
+      select: jest.fn().mockImplementation(async (sql: string) => {
+        if (sql.includes('FROM "AdminAuditLog"')) return { results: [] };
+        if (sql.includes('FROM "Currency"')) return { results: [{ id: 3 }] };
+        if (sql.includes('FROM "WalletNetwork"')) return { results: [{ id: "network-1", code: "BASE", isActive: 0 }] };
+        return { results: [] };
+      }),
+      batch: jest.fn().mockResolvedValue({ results: [0, 1, 2].map(() => ({ success: true, meta: { changes: 1 } })) }),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+    await expect(gateway.createAdminWalletNetwork({
+      currencyId: 3, code: "base", name: "Base", adminId: "admin-1",
+      reason: "Configure Base wallet network", idempotencyKey: "wallet-net-base-0001",
+    })).resolves.toMatchObject({ id: "network-1", code: "BASE", isActive: 0 });
+    const statements = (bridge.batch as jest.Mock).mock.calls[0][0] as D1BridgeBatchStatement[];
+    expect(statements[0].sql).toContain('INSERT OR IGNORE INTO "WalletNetwork"');
+    expect(statements[0].sql).toContain('VALUES (?,?,?,?,0,0,0');
+    expect(statements[1].sql).toContain('AdminAuditLog');
+    expect(statements[2].sql).toContain('EventOutbox');
+  });
+
+  it("binds new deposit addresses to configured Wallet networks and keeps them inactive", async () => {
+    const bridge = createBridge({
+      select: jest.fn().mockImplementation(async (sql: string) => {
+        if (sql.includes('FROM "DepositAddress" d JOIN "AdminAuditLog"')) return { results: [] };
+        if (sql.includes('FROM "Currency"')) return { results: [{ id: 3, symbol: "ETH" }] };
+        if (sql.includes('FROM "WalletNetwork"')) return { results: [{ id: "wallet-net-base", code: "BASE" }] };
+        if (sql.includes('FROM "DepositAddress" WHERE "id"=?')) return { results: [{ id: "address-1", walletNetworkId: "wallet-net-base", isActive: 0 }] };
+        return { results: [] };
+      }),
+      batch: jest.fn().mockResolvedValue({ results: [0, 1, 2].map(() => ({ success: true, meta: { changes: 1 } })) }),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+    await expect(gateway.createAdminDepositAddress({ currencyId: 3, network: "base", address: "0x12345678", adminId: "admin-1", reason: "Configure deposit address", idempotencyKey: "wallet-address-base-01" })).resolves.toMatchObject({ walletNetworkId: "wallet-net-base", isActive: 0 });
+    const statements = (bridge.batch as jest.Mock).mock.calls[0][0] as D1BridgeBatchStatement[];
+    expect(statements[0].sql).toContain('"walletNetworkId"');
+    expect(statements[0].sql).toContain('VALUES (?,?,?,?,?,?,0');
+    expect(statements[1].sql).toContain('AdminAuditLog');
+    expect(statements[2].sql).toContain('EventOutbox');
+  });
+
+  it("serves deposit destinations only through active Wallet asset, network, and address authority", async () => {
+    const bridge = createBridge();
+    const gateway = new D1FinancialCommandGateway(bridge);
+    await expect(gateway.listDepositDestinations()).resolves.toEqual([]);
+    const [sql] = (bridge.select as jest.Mock).mock.calls[0];
+    expect(sql).toContain('JOIN "WalletNetwork"');
+    expect(sql).toContain('w."isActive"=1');
+    expect(sql).toContain('w."depositEnabled"=1');
+    expect(sql).not.toContain("MarketNetwork");
+  });
+
+  it("updates Wallet network controls with replay-safe audit and outbox", async () => {
+    const network = { id: "wallet-net-1", isActive: 0, depositEnabled: 0, withdrawEnabled: 0 };
+    const bridge = createBridge({
+      select: jest.fn().mockImplementation(async (sql: string) => {
+        if (sql.includes('FROM "AdminAuditLog"')) return { results: [] };
+        if (sql.includes('FROM "WalletNetwork"')) return { results: [network] };
+        return { results: [] };
+      }),
+      batch: jest.fn().mockResolvedValue({ results: [0, 1, 2].map(() => ({ success: true, meta: { changes: 1 } })) }),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+    await expect(gateway.updateAdminWalletNetwork({
+      id: "wallet-net-1", patch: { isActive: true, depositEnabled: true }, adminId: "admin-1",
+      reason: "Enable deposits", idempotencyKey: "wallet-net-enable-01",
+    })).resolves.toMatchObject({ id: "wallet-net-1" });
+    const statements = (bridge.batch as jest.Mock).mock.calls[0][0] as D1BridgeBatchStatement[];
+    expect(statements[0].sql).toContain('UPDATE "WalletNetwork"');
+    expect(statements[0].params).toEqual([1, 1, "wallet-net-1"]);
+    expect(statements[1].sql).toContain('AdminAuditLog');
+    expect(statements[2].sql).toContain('EventOutbox');
+  });
+
+  it("includes the loan identity in the committed approval event for workflow dispatch", async () => {
+    const loan = {
+      id: "loan-42",
+      userId: "user-1",
+      currency: "USDT",
+      amountDecimal: "5",
+      durationDays: 30,
+      status: "PENDING",
+    };
+    const bridge = createBridge({
+      batch: jest.fn().mockImplementation(async (statements: D1BridgeBatchStatement[]) => ({
+        results: statements.map((_, index) => ({
+          success: true,
+          meta: { changes: [0, 1, 3, 7].includes(index) ? 1 : 0 },
+        })),
+      })),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+    jest.spyOn(gateway, "getLoanApplication").mockResolvedValueOnce(loan).mockResolvedValueOnce({
+      ...loan,
+      status: "ACTIVE",
+      dueDate: "2026-11-07T00:00:00.000Z",
+    });
+    jest.spyOn(gateway as any, "getAccountForUser").mockResolvedValue(account);
+    jest.spyOn(gateway as any, "findAccount").mockResolvedValue(account);
+
+    await gateway.approveLoan({
+      loanId: loan.id,
+      idempotencyKey: "approve-42",
+      adminId: "admin-1",
+      reason: "Approved after review",
+    });
+
+    const statements = (bridge.batch as jest.Mock).mock.calls[0][0] as D1BridgeBatchStatement[];
+    const approvalEvent = statements.at(-1)!;
+    expect(approvalEvent.sql).toContain('INSERT OR IGNORE INTO "EventOutbox"');
+    expect(approvalEvent.params).toContain(
+      JSON.stringify({ loanId: loan.id, adminId: "admin-1", reason: "Approved after review" }),
+    );
+  });
+
+  it("enforces F7 deposit amount limits with exact decimals", () => {
+    const gateway = new D1FinancialCommandGateway(createBridge());
+    expect(() => (gateway as any).validateDepositClaimAmount("10", "10", "100")).not.toThrow();
+    expect(() => (gateway as any).validateDepositClaimAmount("9.999", "10", "100")).toThrow("outside configured limits");
+    expect(() => (gateway as any).validateDepositClaimAmount("not-a-number", "10", "100")).toThrow("Deposit amount is invalid");
   });
 
 });

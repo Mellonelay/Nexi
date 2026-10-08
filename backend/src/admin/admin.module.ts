@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { AdminService } from "./admin.service";
+import { AdminWalletConfigurationService } from "./admin-wallet-configuration.service";
 import { AdminController } from "./admin.controller";
 import { AdminAuthController } from "./admin-auth.controller";
 import { AuthModule } from "../auth/auth.module";
@@ -33,6 +34,6 @@ import { MarketModule } from "../market/market.module";
     MarketModule,
   ],
   controllers: [AdminController, AdminAuthController, ReferralVipAdminController],
-  providers: [AdminService, AdminPermissionGuard],
+  providers: [AdminService, AdminWalletConfigurationService, AdminPermissionGuard],
 })
 export class AdminModule {}

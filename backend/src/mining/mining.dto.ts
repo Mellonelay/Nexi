@@ -51,4 +51,12 @@ export class CreateMiningPlanRequestDto {
   @IsString()
   @Length(2, 32)
   currency?: string;
+
+  @IsString()
+  @Length(3, 256)
+  reason!: string;
+
+  @IsString()
+  @Length(8, 128)
+  idempotencyKey!: string;
 }

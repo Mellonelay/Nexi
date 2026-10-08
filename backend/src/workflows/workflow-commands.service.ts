@@ -173,9 +173,9 @@ export class WorkflowCommandsService {
       const result = await this.loans.markOverdue();
       const current: any = await this.d1.getLoanApplication(input.entityId);
       return {
-        done:
-          ["PAID", "REJECTED"].includes(String(current?.status)) ||
-          String(current?.status) !== "OVERDUE",
+        done: ["OVERDUE", "PAID", "REJECTED"].includes(
+          String(current?.status),
+        ),
         state: current?.status ?? "UNKNOWN",
         result,
         loan: current,

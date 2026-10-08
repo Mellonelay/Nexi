@@ -25,13 +25,36 @@ export class FinancialOperationsService {
     return { deposit: await this.d1.creditDepositAtomic(String(deposit.id), 'Deposit observation reached confirmation threshold', undefined, `gate2:deposit:credit:${deposit.id}`), credited: true, providerLive: false };
   }
 
+  private hasWithdrawalCapability(config: Awaited<ReturnType<D1FinancialCommandGateway['getWalletAssetNetworkConfig']>>): boolean {
+    return Boolean(config) && [
+      config?.assetActive,
+      config?.withdrawEnabled,
+      config?.networkActive,
+      config?.networkWithdrawEnabled,
+    ].every((value) => Number(value) === 1);
+  }
+
+  private assertWithdrawalCapability(config: Awaited<ReturnType<D1FinancialCommandGateway['getWalletAssetNetworkConfig']>>): void {
+    if (!this.hasWithdrawalCapability(config)) throw new BadRequestException('withdraw capability is unavailable');
+  }
+
+  private assertWithdrawalAmountWithinLimits(amount: ReturnType<typeof assertPositiveDecimal>, minimum: ReturnType<typeof assertPositiveDecimal>, maximum: ReturnType<typeof assertPositiveDecimal>): void {
+    if (amount.lt(minimum) || amount.gt(maximum)) throw new BadRequestException('Withdrawal amount is outside configured limits');
+  }
+
+  private async configuredWithdrawalFee(asset: string, network: string, amount: ReturnType<typeof assertPositiveDecimal>) {
+    const config = await this.d1.getWalletAssetNetworkConfig(asset, network);
+    this.assertWithdrawalCapability(config);
+    const minimum = assertPositiveDecimal(String(config.minWithdrawal));
+    const maximum = assertPositiveDecimal(String(config.maxWithdrawal));
+    this.assertWithdrawalAmountWithinLimits(amount, minimum, maximum);
+    return assertNonNegativeDecimal(String(config.withdrawalFee));
+  }
+
   async requestWithdrawal(userId: string, input: WithdrawalInput): Promise<any> {
     this.assertIdempotencyKey(input.idempotencyKey);
     const amount = assertPositiveDecimal(input.amount);
-    if (!await this.d1.hasAssetCapability(input.asset, input.network, 'withdraw')) throw new BadRequestException('withdraw capability is unavailable');
-    const rawFee = await this.d1.getSystemConfigValue(`gate2.withdrawal.fee.${input.asset.trim().toUpperCase()}.${input.network.trim().toUpperCase()}`);
-    if (rawFee === null) throw new ServiceUnavailableException('Withdrawal fee configuration unavailable');
-    const fee = assertNonNegativeDecimal(rawFee);
+    const fee = await this.configuredWithdrawalFee(input.asset, input.network, amount);
     const existing = await this.d1.getWithdrawal(input.idempotencyKey);
     if (existing) {
       if (String(existing.userId) !== userId) throw new BadRequestException('Withdrawal ownership mismatch');
@@ -184,6 +207,7 @@ export class FinancialOperationsService {
     this.assertIdempotencyKey(input.idempotencyKey);
     const amount = assertPositiveDecimal(input.claimedAmount);
     if (!input.proofObjectKey.trim()) throw new BadRequestException('Deposit proof is required');
+    this.authorizeDepositProofUpload(userId, input.proofObjectKey.trim());
     const claim: any = await this.d1.submitDepositClaim({ id: randomUUID(), userId, asset: input.asset, network: input.network, depositAddressId: input.depositAddressId, claimedAmount: amount.toString(), proofObjectKey: input.proofObjectKey.trim(), txHash: input.txHash?.trim(), idempotencyKey: input.idempotencyKey });
     return { depositRequestId: claim.id, status: claim.state, claim, replayed: false };
   }

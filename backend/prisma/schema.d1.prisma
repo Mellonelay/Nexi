@@ -367,21 +367,44 @@ model Currency {
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
   depositAddresses  DepositAddress[]
+  walletNetworks    WalletNetwork[]
+}
+
+model WalletNetwork {
+  id              String           @id @default(uuid())
+  currencyId      Int
+  code            String
+  name            String
+  isActive        Boolean          @default(false)
+  depositEnabled  Boolean          @default(false)
+  withdrawEnabled Boolean          @default(false)
+  notice          String?
+  instructions    String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  currency        Currency         @relation(fields: [currencyId], references: [id], onDelete: Restrict)
+  depositAddresses DepositAddress[]
+
+  @@unique([currencyId, code])
+  @@index([currencyId, isActive])
 }
 
 model DepositAddress {
-  id           String         @id @default(uuid())
-  currencyId   Int
-  currency     Currency       @relation(fields: [currencyId], references: [id])
-  network      String // e.g., "ERC20", "TRC20", "BTC"
-  address      String
-  label        String? // e.g., "Main Wallet"
-  isActive     Boolean        @default(true)
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  manualClaims DepositClaim[]
+  id              String         @id @default(uuid())
+  currencyId      Int
+  currency        Currency       @relation(fields: [currencyId], references: [id])
+  walletNetworkId String?
+  walletNetwork   WalletNetwork? @relation(fields: [walletNetworkId], references: [id], onDelete: Restrict)
+  network         String // immutable historical snapshot; new writes resolve WalletNetwork.code
+  address         String
+  label           String?
+  isActive        Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  manualClaims    DepositClaim[]
 
   @@index([currencyId])
+  @@index([walletNetworkId, isActive])
 }
 
 enum DepositClaimState {

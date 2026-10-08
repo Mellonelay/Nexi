@@ -14,6 +14,13 @@ test('Queue consumer uses explicit retry for invalid/failed ingress and explicit
   assert.match(source, /_internal\/events\/queue/);
 });
 
+test('approved-loan workflow dispatch completes before Queue acknowledgement and retries failures', () => {
+  const dispatch = source.indexOf('await dispatchLoanApproval(env, message.body)');
+  const ack = source.indexOf('message.ack()', dispatch);
+  assert.ok(dispatch >= 0 && ack > dispatch);
+  assert.match(source.slice(dispatch, ack), /catch \(error\)[\s\S]*message\.retry\(/);
+});
+
 test('domain-event Queue has bounded retries and a configured dead-letter destination', () => {
   assert.match(config, /"queue"\s*:\s*"nexi-domain-events-staging"[\s\S]*"max_retries"\s*:\s*5[\s\S]*"dead_letter_queue"\s*:\s*"nexi-domain-events-staging-dlq"/);
 });

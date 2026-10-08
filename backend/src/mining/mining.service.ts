@@ -26,6 +26,13 @@ export class MiningService {
     return amount;
   }
 
+  private nonNegativeDecimal(value: string, label: string): Prisma.Decimal {
+    let amount: Prisma.Decimal;
+    try { amount = new Prisma.Decimal(value); } catch { throw new BadRequestException(`${label} must be a decimal`); }
+    if (!amount.isFinite() || amount.isNegative()) throw new BadRequestException(`${label} must be non-negative`);
+    return amount;
+  }
+
   private idempotentId(prefix: string, key: string): string {
     const hex = createHash('sha256').update(`${prefix}:${key}`).digest('hex').slice(0, 32);
     return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-5${hex.slice(13, 16)}-${(parseInt(hex.slice(16, 18), 16) & 0x3f | 0x80).toString(16).padStart(2, '0')}${hex.slice(18, 20)}-${hex.slice(20)}`;
@@ -35,13 +42,36 @@ export class MiningService {
     return this.d1;
   }
 
-  async createPlan(name: string, dailyYield: string, lockupPeriod: number, minDeposit: string, maxDeposit: string, currency = 'USDT') {
-    const yieldRate = this.decimal(dailyYield, 'dailyYield');
-    const min = this.decimal(minDeposit, 'minDeposit');
-    const max = this.decimal(maxDeposit, 'maxDeposit');
-    if (max.lt(min)) throw new BadRequestException('maxDeposit must be greater than minDeposit');
+  async createPlan(input: {
+    name: string;
+    dailyYield: string;
+    lockupPeriod: number;
+    minDeposit: string;
+    maxDeposit: string;
+    currency: string;
+    adminContext: { adminId: string; reason: string; idempotencyKey: string };
+  }) {
+    const yieldRate = this.nonNegativeDecimal(input.dailyYield, 'dailyYield');
+    const min = this.nonNegativeDecimal(input.minDeposit, 'minDeposit');
+    const max = this.nonNegativeDecimal(input.maxDeposit, 'maxDeposit');
+    if ([max.lt(min), !Number.isInteger(input.lockupPeriod), input.lockupPeriod < 1].some(Boolean)) {
+      throw new BadRequestException('Mining plan values are invalid');
+    }
+    if ([input.adminContext.adminId, input.adminContext.reason.trim(), input.adminContext.idempotencyKey.trim()].some((value) => !value)) {
+      throw new BadRequestException('Mining plan audit context is required');
+    }
     const d1 = this.requireD1FinancialAuthority();
-    return d1.createMiningPlan({ id: randomUUID(), name, currency, lockupPeriod, dailyYield: yieldRate.toString(), minDeposit: min.toString(), maxDeposit: max.toString() });
+    return d1.createMiningPlan({
+      id: randomUUID(),
+      name: input.name,
+      currency: input.currency,
+      lockupPeriod: input.lockupPeriod,
+      dailyYield: yieldRate.toString(),
+      minDeposit: min.toString(),
+      maxDeposit: max.toString(),
+      isActive: true,
+      ...input.adminContext,
+    });
   }
 
   async getPlans() { return this.d1.listMiningPlans(); }

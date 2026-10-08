@@ -61,6 +61,8 @@ export class CreateCurrencyDto {
   @IsOptional() @Type(() => Number) @IsInt() @Min(0) confirmationCount?: number;
   @IsOptional() @Type(() => Number) @IsInt() @Min(0) decimals?: number;
   @IsOptional() @IsBoolean() isActive?: boolean;
+  @IsString() @Length(3, 500) reason!: string;
+  @IsString() @Length(8, 128) idempotencyKey!: string;
 }
 
 export class UpdateCurrencyDto extends PartialType(CreateCurrencyDto) {
@@ -78,6 +80,33 @@ export class CreateDepositAddressDto {
   @IsString() @Length(8, 256) address!: string;
   @IsOptional() @IsString() @Length(1, 128) label?: string;
   @IsString() @Length(6, 256) reason!: string;
+  @IsString() @Length(8, 128) idempotencyKey!: string;
+}
+
+export class CreateWalletNetworkDto {
+  @Type(() => Number) @IsInt() @Min(1) currencyId!: number;
+  @IsString() @Length(2, 32) @Matches(/^[A-Za-z0-9_-]+$/) code!: string;
+  @IsString() @Length(2, 64) name!: string;
+  @IsOptional() @IsString() @Length(0, 1000) notice?: string;
+  @IsOptional() @IsString() @Length(0, 2000) instructions?: string;
+  @IsString() @Length(3, 500) reason!: string;
+  @IsString() @Length(8, 128) idempotencyKey!: string;
+}
+
+export class UpdateWalletNetworkDto {
+  @IsOptional() @IsString() @Length(2, 64) name?: string;
+  @IsOptional() @IsBoolean() isActive?: boolean;
+  @IsOptional() @IsBoolean() depositEnabled?: boolean;
+  @IsOptional() @IsBoolean() withdrawEnabled?: boolean;
+  @IsOptional() @IsString() @Length(0, 1000) notice?: string;
+  @IsOptional() @IsString() @Length(0, 2000) instructions?: string;
+  @IsString() @Length(3, 500) reason!: string;
+  @IsString() @Length(8, 128) idempotencyKey!: string;
+}
+
+export class UpdateDepositAddressStateDto {
+  @IsBoolean() isActive!: boolean;
+  @IsString() @Length(3, 500) reason!: string;
   @IsString() @Length(8, 128) idempotencyKey!: string;
 }
 

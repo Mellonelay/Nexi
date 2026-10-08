@@ -6,7 +6,8 @@ describe('Gate 2 financial operations', () => {
     const transfer = { id: 'transfer-1', fromUserId: 'user-1', toUserId: 'user-2', asset: 'USDT', amount: '5', debitPostingId: 'debit-1', creditPostingId: 'credit-1' };
     const d1: any = {
       hasAssetCapability: jest.fn().mockResolvedValue(true),
-      getSystemConfigValue: jest.fn().mockImplementation(async (key: string) => key.includes('withdrawal.fee') ? '0.2' : key.includes('conversion.rate') ? '0.000025' : null),
+      getWalletAssetNetworkConfig: jest.fn().mockResolvedValue({ assetActive: 1, withdrawEnabled: 1, networkActive: 1, networkWithdrawEnabled: 1, minWithdrawal: '1', maxWithdrawal: '1000', withdrawalFee: '0.2' }),
+      getSystemConfigValue: jest.fn().mockImplementation(async (key: string) => key.includes('conversion.rate') ? '0.000025' : null),
       getWithdrawal: jest.fn().mockResolvedValue(null),
       reserveWithdrawal: jest.fn().mockResolvedValue(withdrawal),
       getInternalTransfer: jest.fn().mockResolvedValue(null),
@@ -39,6 +40,14 @@ describe('Gate 2 financial operations', () => {
     const result = await new FinancialOperationsService(d1).transfer('user-1', { toUserId: 'user-2', asset: 'USDT', amount: '5', idempotencyKey: 'transfer-key-1' });
     expect(result.transfer).toMatchObject({ id: 'transfer-1' });
     expect(d1.pairedTransfer).toHaveBeenCalledWith(expect.objectContaining({ amount: '5', referenceType: 'GATE2_INTERNAL_TRANSFER', internalTransfer: expect.objectContaining({ fromUserId: 'user-1', toUserId: 'user-2' }) }));
+  });
+
+  it('rejects another user’s proof key when submitting a deposit claim', async () => {
+    const { d1 } = createD1();
+    await expect(new FinancialOperationsService(d1).submitDepositClaim('user-1', {
+      asset: 'USDT', network: 'TRC20', depositAddressId: 'address-1', claimedAmount: '10',
+      proofObjectKey: 'deposit-proofs/user-2/123e4567-e89b-12d3-a456-426614174000', idempotencyKey: 'deposit-key-123',
+    })).rejects.toThrow('Deposit proof key is invalid');
   });
 
   it('rejects malformed financial idempotency before D1 mutation', async () => {
