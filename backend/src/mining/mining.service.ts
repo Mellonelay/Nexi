@@ -111,13 +111,19 @@ export class MiningService {
     }
   }
 
+  private alreadyRewardedToday(lastRewardPaid: unknown): boolean {
+    return String(lastRewardPaid ?? '').slice(0, 10) >= new Date().toISOString().slice(0, 10);
+  }
+
   async accrue(subscriptionId: string) {
     const d1 = this.requireD1FinancialAuthority();
     const subscription: any = await d1.getMiningSubscription(subscriptionId);
     if (!subscription || String(subscription.status) !== 'ACTIVE') throw new NotFoundException('Active mining subscription not found');
     if (subscription.endDate && new Date(String(subscription.endDate)) <= new Date()) return d1.releaseMiningSubscription(subscriptionId, String(subscription.userId), `mature:${subscriptionId}`, 'COMPLETED');
+    if (this.alreadyRewardedToday(subscription.lastRewardPaid))
+      return { ...subscription, replayed: true };
     const result = await d1.accrueMiningReward(subscriptionId);
-    await this.publish('MINING_REWARD_POSTED', subscriptionId, {});
+    if (!result.replayed) await this.publish('MINING_REWARD_POSTED', subscriptionId, {});
     return result;
   }
 

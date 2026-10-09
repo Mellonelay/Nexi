@@ -1210,7 +1210,7 @@ export class D1FinancialCommandGateway {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const result = await this.bridge.batch([
       {
-        sql: `INSERT OR IGNORE INTO "SpotMarginPosition" ("id","accountId","direction","leverage","collateral","quantity","entryPrice","markPrice","debtAsset","debtPrincipal","interestAccrued","realizedPnl","unrealizedPnl","status","openIdempotencyKey","entryOrderId","openedAt","updatedAt") VALUES (?,?,?,?,?,?,?,?,?,?, '0','0','0',?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`,
+        sql: `INSERT OR IGNORE INTO "SpotMarginPosition" ("id","accountId","direction","leverage","collateral","quantity","entryPrice","markPrice","debtAsset","debtPrincipal","interestAccrued","realizedPnl","unrealizedPnl","status","openIdempotencyKey","entryOrderId","openedAt","updatedAt") VALUES (?,?,?,?,?,?,?,?,?,?, '0','0','0',?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`,
         params: [
           command.positionId,
           command.accountId,
@@ -1837,7 +1837,7 @@ export class D1FinancialCommandGateway {
   > {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const result = await this.bridge.select<Record<string, unknown>>(
-      `SELECT "id","userId","status","endDate" FROM "MiningSubscription" WHERE "status"='ACTIVE' ORDER BY "createdAt" ASC`,
+      `SELECT "id","userId","status","endDate" FROM "MiningSubscription" WHERE "status"='ACTIVE' AND ("lastRewardPaid" IS NULL OR "lastRewardPaid" < CURRENT_DATE) ORDER BY "createdAt" ASC`,
     );
     return result.results;
   }
@@ -2111,7 +2111,7 @@ export class D1FinancialCommandGateway {
       String(subscription.planCurrency),
     );
     const current = await this.findAccount(account.id);
-    const key = `mining-reward:${subscription.id}:${subscription.lastRewardPaid ?? "initial"}`;
+    const key = `mining-reward:${subscription.id}:${new Date().toISOString().slice(0, 10)}`;
     const idemId = randomUUID();
     const postingId = randomUUID();
     const activityId = randomUUID();
@@ -2446,7 +2446,7 @@ export class D1FinancialCommandGateway {
       },
       this.rollbackIfNoChanges(key, "LOAN_DISBURSEMENT"),
       {
-        sql: `INSERT INTO "LedgerPosting" ("id","accountId","asset","kind","amount","availableDelta","lockedDelta","referenceType","referenceId","idempotencyKey","correlationId","economicGroup","createdAt","metadata") SELECT ?,?,?, 'CREDIT',?,?, 'LOAN_DISBURSEMENT',?,?,?,?,CURRENT_TIMESTAMP,? WHERE EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "id"=? AND "debitPostingId" IS NULL)`,
+        sql: `INSERT INTO "LedgerPosting" ("id","accountId","asset","kind","amount","availableDelta","lockedDelta","referenceType","referenceId","idempotencyKey","correlationId","economicGroup","createdAt","metadata") SELECT ?,?,?, 'CREDIT',?,?,?, 'LOAN_DISBURSEMENT',?,?,?,?,CURRENT_TIMESTAMP,? WHERE EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "id"=? AND "debitPostingId" IS NULL)`,
         params: [
           postingId,
           account.id,
@@ -2654,7 +2654,7 @@ export class D1FinancialCommandGateway {
       },
       this.rollbackIfNoChanges(key, "LOAN_REPAYMENT"),
       {
-        sql: `INSERT INTO "LedgerPosting" ("id","accountId","asset","kind","amount","availableDelta","lockedDelta","referenceType","referenceId","idempotencyKey","correlationId","economicGroup","createdAt","metadata") SELECT ?,?,?, 'DEBIT',?,?, 'LOAN_REPAYMENT',?,?,?,?,CURRENT_TIMESTAMP,? WHERE EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "id"=? AND "debitPostingId" IS NULL)`,
+        sql: `INSERT INTO "LedgerPosting" ("id","accountId","asset","kind","amount","availableDelta","lockedDelta","referenceType","referenceId","idempotencyKey","correlationId","economicGroup","createdAt","metadata") SELECT ?,?,?, 'DEBIT',?,?,?, 'LOAN_REPAYMENT',?,?,?,?,CURRENT_TIMESTAMP,? WHERE EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "id"=? AND "debitPostingId" IS NULL)`,
         params: [
           postingId,
           account.id,
@@ -5482,7 +5482,7 @@ export class D1FinancialCommandGateway {
       },
       this.rollbackIfNoChanges(reserveKey, "WITHDRAWAL_RESERVE"),
       {
-        sql: `INSERT INTO "LedgerPosting" ("id","accountId","asset","kind","amount","availableDelta","lockedDelta","referenceType","referenceId","idempotencyKey","correlationId","economicGroup","createdAt","metadata") SELECT ?,?,?, 'RESERVE',?,?, 'GATE2_WITHDRAWAL_RESERVE',?,?,?,?,CURRENT_TIMESTAMP,? WHERE EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "debitPostingId" IS NULL)`,
+        sql: `INSERT INTO "LedgerPosting" ("id","accountId","asset","kind","amount","availableDelta","lockedDelta","referenceType","referenceId","idempotencyKey","correlationId","economicGroup","createdAt","metadata") SELECT ?,?,?, 'RESERVE',?,?,?, 'GATE2_WITHDRAWAL_RESERVE',?,?,?,?,CURRENT_TIMESTAMP,? WHERE EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "debitPostingId" IS NULL)`,
         params: [
           postingId,
           account.id,
@@ -5615,7 +5615,7 @@ export class D1FinancialCommandGateway {
       },
       this.rollbackIfNoChanges(key, "WITHDRAWAL_RELEASE"),
       {
-        sql: `INSERT INTO "LedgerPosting" ("id","accountId","asset","kind","amount","availableDelta","lockedDelta","referenceType","referenceId","idempotencyKey","correlationId","economicGroup","createdAt","metadata") SELECT ?,?,?, 'RELEASE',?,?, 'GATE2_WITHDRAWAL_RELEASE',?,?,?,?,CURRENT_TIMESTAMP,? WHERE EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "debitPostingId" IS NULL)`,
+        sql: `INSERT INTO "LedgerPosting" ("id","accountId","asset","kind","amount","availableDelta","lockedDelta","referenceType","referenceId","idempotencyKey","correlationId","economicGroup","createdAt","metadata") SELECT ?,?,?, 'RELEASE',?,?,?, 'GATE2_WITHDRAWAL_RELEASE',?,?,?,?,CURRENT_TIMESTAMP,? WHERE EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "debitPostingId" IS NULL)`,
         params: [
           postingId,
           account.id,
@@ -5755,7 +5755,7 @@ export class D1FinancialCommandGateway {
       },
       this.rollbackIfNoChanges(key, "WITHDRAWAL_SETTLEMENT"),
       {
-        sql: `INSERT INTO "LedgerPosting" ("id","accountId","asset","kind","amount","availableDelta","lockedDelta","referenceType","referenceId","idempotencyKey","correlationId","economicGroup","createdAt","metadata") SELECT ?,?,?, 'SETTLEMENT',?,?, 'GATE2_WITHDRAWAL_SETTLEMENT',?,?,?,?,CURRENT_TIMESTAMP,? WHERE EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "debitPostingId" IS NULL)`,
+        sql: `INSERT INTO "LedgerPosting" ("id","accountId","asset","kind","amount","availableDelta","lockedDelta","referenceType","referenceId","idempotencyKey","correlationId","economicGroup","createdAt","metadata") SELECT ?,?,?, 'SETTLEMENT',?,?,?, 'GATE2_WITHDRAWAL_SETTLEMENT',?,?,?,?,CURRENT_TIMESTAMP,? WHERE EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "debitPostingId" IS NULL)`,
         params: [
           postingId,
           account.id,
@@ -6002,7 +6002,7 @@ export class D1FinancialCommandGateway {
       },
       this.rollbackIfNoChanges(stakeKey, "BINARY_SETTLEMENT"),
       {
-        sql: `INSERT INTO "LedgerPosting" ("id","accountId","asset","kind","amount","availableDelta","lockedDelta","referenceType","referenceId","idempotencyKey","correlationId","economicGroup","createdAt","metadata") SELECT ?,?,?, 'SETTLEMENT',?,?, 'GATE2_BINARY_STAKE_SETTLEMENT',?,?,?,?,CURRENT_TIMESTAMP,? WHERE EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "debitPostingId" IS NULL)`,
+        sql: `INSERT INTO "LedgerPosting" ("id","accountId","asset","kind","amount","availableDelta","lockedDelta","referenceType","referenceId","idempotencyKey","correlationId","economicGroup","createdAt","metadata") SELECT ?,?,?, 'SETTLEMENT',?,?,?, 'GATE2_BINARY_STAKE_SETTLEMENT',?,?,?,?,CURRENT_TIMESTAMP,? WHERE EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "debitPostingId" IS NULL)`,
         params: [
           stakePostingId,
           account.id,
@@ -6049,7 +6049,7 @@ export class D1FinancialCommandGateway {
     if (!payout.isZero()) {
       statements.push(
         {
-          sql: `INSERT INTO "LedgerPosting" ("id","accountId","asset","kind","amount","availableDelta","lockedDelta","referenceType","referenceId","idempotencyKey","correlationId","economicGroup","createdAt","metadata") SELECT ?,?,?, 'CREDIT',?,?, 'GATE2_BINARY_PAYOUT',?,?,?,?,CURRENT_TIMESTAMP,? WHERE EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "debitPostingId" IS NULL)`,
+          sql: `INSERT INTO "LedgerPosting" ("id","accountId","asset","kind","amount","availableDelta","lockedDelta","referenceType","referenceId","idempotencyKey","correlationId","economicGroup","createdAt","metadata") SELECT ?,?,?, 'CREDIT',?,?,?, 'GATE2_BINARY_PAYOUT',?,?,?,?,CURRENT_TIMESTAMP,? WHERE EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "debitPostingId" IS NULL)`,
           params: [
             payoutPostingId,
             account.id,

@@ -31,6 +31,18 @@ describe('MiningService', () => {
     expect(d1[method]).toHaveBeenCalled();
   });
 
+  it('does not republish a replayed mining reward', async () => {
+    const redis: any = { publish: jest.fn() };
+    const d1: any = {
+      getMiningSubscription: jest.fn().mockResolvedValue({ id: 'subscription-1', userId: 'user-1', status: 'ACTIVE', endDate: null, lastRewardPaid: new Date().toISOString() }),
+      accrueMiningReward: jest.fn(),
+    };
+    const service = new MiningService(redis, d1);
+    await expect(service.accrue('subscription-1')).resolves.toMatchObject({ id: 'subscription-1', replayed: true });
+    expect(d1.accrueMiningReward).not.toHaveBeenCalled();
+    expect(redis.publish).not.toHaveBeenCalled();
+  });
+
   it('uses the D1 scheduler query and D1 admin listing', async () => {
     const previousB7 = process.env.NEXI_B7_ENABLED;
     const previousScheduler = process.env.NEXI_SCHEDULER_ENABLED;

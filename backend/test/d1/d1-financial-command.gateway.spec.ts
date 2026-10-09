@@ -1083,6 +1083,33 @@ describe("D1FinancialCommandGateway", () => {
     expect(statements[0].sql).toContain("'EXECUTED',?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP");
   });
 
+  it("uses a deterministic UTC-day mining reward idempotency key", async () => {
+    const bridge = createBridge();
+    const gateway = new D1FinancialCommandGateway(bridge);
+    const today = new Date().toISOString().slice(0, 10);
+    const subscription = {
+      id: "subscription-1",
+      userId: "user-1",
+      status: "ACTIVE",
+      planCurrency: "USDT",
+      amountDecimal: "10",
+      planDailyYieldDecimal: "0.01",
+      totalRewards: "0",
+      totalRewardsDecimal: "0",
+      lastRewardPaid: null,
+    };
+    jest.spyOn(gateway, "getMiningSubscription")
+      .mockResolvedValueOnce(subscription)
+      .mockResolvedValueOnce({ ...subscription, lastRewardPaid: today });
+    jest.spyOn(gateway as any, "getAccountForUser").mockResolvedValue(account);
+    jest.spyOn(gateway as any, "findAccount").mockResolvedValue(account);
+
+    await gateway.accrueMiningReward("subscription-1");
+    const statements = (bridge.batch as jest.Mock).mock.calls[0][0] as D1BridgeBatchStatement[];
+    expect(statements[0].params).toContain(`mining-reward:subscription-1:${today}`);
+    expect(bridge.batch).toHaveBeenCalledTimes(1);
+  });
+
   it("enforces F7 deposit amount limits with exact decimals", () => {
     const gateway = new D1FinancialCommandGateway(createBridge());
     expect(() => (gateway as any).validateDepositClaimAmount("10", "10", "100")).not.toThrow();
