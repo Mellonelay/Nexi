@@ -14,20 +14,19 @@
       "custom_domain": true,
     },
   ],
+  // Owner decision: disable Cloudflare Worker Observability to control cost.
+  // Preserve Sentry error/tracing instrumentation independently.
   "observability": {
-    "enabled": true,
-    "head_sampling_rate": 1,
-    "redact_query_string": false,
+    "enabled": false,
+    "redact_query_string": true,
     "logs": {
-      "enabled": true,
-      "head_sampling_rate": 1,
-      "invocation_logs": true,
-      "persist": true,
+      "enabled": false,
+      "invocation_logs": false,
+      "persist": false,
     },
     "traces": {
-      "enabled": true,
-      "head_sampling_rate": 1,
-      "persist": true,
+      "enabled": false,
+      "persist": false,
     },
   },
   "triggers": {
