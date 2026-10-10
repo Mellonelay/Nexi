@@ -1,6 +1,11 @@
 import { GoneException } from "@nestjs/common";
 import { WalletService } from "../../src/wallet/wallet.service";
 
+const walletAccountsByScope = [
+  { asset: "USDT", scope: "MAIN", available: "10.25", locked: "1.75", status: "ACTIVE" },
+  { asset: "USDT", scope: "MARGIN", available: "60", locked: "0", status: "ACTIVE" },
+];
+
 describe("WalletService D1 read authority", () => {
   const prisma = {
     wallet: { upsert: jest.fn() },
@@ -55,16 +60,7 @@ describe("WalletService D1 read authority", () => {
       getBalance: jest
         .fn()
         .mockResolvedValue({ available: "10.25", locked: "1.75" }),
-      listLedgerAccounts: jest
-        .fn()
-        .mockResolvedValue([
-          {
-            asset: "USDT",
-            available: "10.25",
-            locked: "1.75",
-            status: "ACTIVE",
-          },
-        ]),
+      listLedgerAccounts: jest.fn().mockResolvedValue(walletAccountsByScope),
       listCurrencies: jest.fn().mockResolvedValue([{ symbol: "USDT" }]),
       listUserPostings: jest
         .fn()

@@ -13,7 +13,7 @@ import { D1FinancialCommandGateway } from '../../src/d1/d1-financial-command.gat
 import { Gate2WithdrawalDto } from '../../src/financial/financial-operations.dto';
 
 class D1FinancialHarness {
-  private readonly accounts = new Map([['user-1:USDT', { id: 'acct-user-1-usdt', userId: 'user-1', asset: 'USDT', available: '100', locked: '0', status: 'ACTIVE' }]]);
+  private readonly accounts = new Map([['user-1:USDT', { id: 'acct-user-1-usdt', userId: 'user-1', asset: 'USDT', scope: 'MAIN', available: '100', locked: '0', status: 'ACTIVE' }]]);
   readonly withdrawals: Array<Record<string, unknown>> = [];
   readonly activities: Array<Record<string, unknown>> = [];
   isEnabled() { return true; }

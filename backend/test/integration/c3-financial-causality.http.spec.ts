@@ -25,7 +25,7 @@ import { MarketProviderRouterService } from "../../src/market/market-provider-ro
  */
 class SharedFinancialState {
   private readonly accounts = new Map([
-    ["user-1:USDT", { id: "acct-user-1-usdt", userId: "user-1", asset: "USDT", available: "100", locked: "0", status: "ACTIVE" }],
+    ["user-1:USDT", { id: "acct-user-1-usdt", userId: "user-1", asset: "USDT", scope: "MAIN", available: "100", locked: "0", status: "ACTIVE" }],
   ]);
   readonly withdrawals: Array<Record<string, any>> = [];
   readonly activities: Array<Record<string, any>> = [];

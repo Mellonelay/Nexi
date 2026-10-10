@@ -45,7 +45,9 @@ export class WalletService {
 
   async getAllBalances(userId: string) {
     const d1 = this.requireD1ReadAuthority();
-    const accounts = await d1.listLedgerAccounts(userId);
+    const accounts = (await d1.listLedgerAccounts(userId)).filter(
+      (account) => String(account.scope ?? "").toUpperCase() === "MAIN",
+    );
     return Object.fromEntries(
       accounts.map((account) => [
         account.asset,
