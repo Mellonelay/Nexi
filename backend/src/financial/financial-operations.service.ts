@@ -1,13 +1,18 @@
 import { BadRequestException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
-import { Gate2ConversionQuoteState, Gate2DepositState, Gate2WithdrawalState } from '../prisma/d1-client';
+import { Gate2ConversionQuoteState, Gate2DepositState, Gate2WithdrawalState, Prisma } from '../prisma/d1-client';
 import { randomUUID } from 'node:crypto';
-import { D1FinancialCommandGateway } from '../d1/d1-financial-command.gateway';
+import { D1FinancialCommandGateway, type D1MarketPairRow } from '../d1/d1-financial-command.gateway';
 import { assertNonNegativeDecimal, assertPositiveDecimal, decimalProduct } from '../gate2/gate2-rules';
 
 export interface DepositObservation { userId: string; asset: string; network: string; address: string; txHash: string; amount: string; confirmations: number; requiredConfirmations: number; observationKey: string; provider: 'deterministic-test'; }
 export interface WithdrawalInput { asset: string; network: string; address: string; amount: string; idempotencyKey: string; }
 export interface TransferInput { toUserId?: string; toUserCode?: number; asset: string; amount: string; idempotencyKey: string; }
 export interface ConversionQuoteInput { fromAsset: string; toAsset: string; amount: string; quoteKey: string; }
+type ConversionAssets = Pick<ConversionQuoteInput, 'fromAsset' | 'toAsset'>;
+type ConversionRateRequest = ConversionAssets & { rateKey: string };
+type ConversionMarketPair = ConversionAssets & { pair: D1MarketPairRow; inverted: boolean };
+type ConversionMarketRate = { price: string; inverted: boolean };
+type ConversionRateSource = { rate: Prisma.Decimal; provider: string; source: string; evidenceId: string };
 export interface DepositClaimInput { asset: string; network: string; depositAddressId: string; claimedAmount: string; proofObjectKey: string; txHash?: string; idempotencyKey: string; }
 
 @Injectable()
@@ -167,10 +172,8 @@ export class FinancialOperationsService {
       return { quote: existing, replayed: true };
     }
     const rateKey = `gate2.conversion.rate.${fromAsset}.${toAsset}`;
-    const configuredRate = await this.d1.getSystemConfigValue(rateKey);
-    if (configuredRate === null) throw new ServiceUnavailableException('Conversion rate unavailable');
-    const rate = assertPositiveDecimal(configuredRate);
-    const quote = await this.d1.createConversionQuote({ id: randomUUID(), userId, fromAsset, toAsset, inputAmount: amount.toString(), rate: rate.toString(), outputAmount: decimalProduct(amount, rate).toString(), provider: 'backend-config', source: rateKey, evidenceId: rateKey, configurationVersion: 1, expiresAt: new Date(Date.now() + Number(process.env.NEXI_CONVERSION_QUOTE_TTL_MS ?? 30_000)).toISOString(), quoteKey: input.quoteKey });
+    const conversionRate = await this.resolveConversionRate({ fromAsset, toAsset, rateKey });
+    const quote = await this.d1.createConversionQuote({ id: randomUUID(), userId, fromAsset, toAsset, inputAmount: amount.toString(), rate: conversionRate.rate.toString(), outputAmount: decimalProduct(amount, conversionRate.rate).toString(), provider: conversionRate.provider, source: conversionRate.source, evidenceId: conversionRate.evidenceId, configurationVersion: 1, expiresAt: new Date(Date.now() + Number(process.env.NEXI_CONVERSION_QUOTE_TTL_MS ?? 30_000)).toISOString(), quoteKey: input.quoteKey });
     return { quote, replayed: false };
   }
 
@@ -220,6 +223,53 @@ export class FinancialOperationsService {
   getDeposits(userId: string) { return this.d1.listDeposits(userId); }
   getWithdrawals(userId: string) { return this.d1.listWithdrawals(userId); }
   getTransfers(userId: string) { return this.d1.listInternalTransfers(userId); }
+
+  private async resolveConversionRate(request: ConversionRateRequest): Promise<ConversionRateSource> {
+    const configuredRate = await this.d1.getSystemConfigValue(request.rateKey);
+    if (configuredRate !== null) {
+      return {
+        rate: assertPositiveDecimal(configuredRate),
+        provider: 'backend-config',
+        source: request.rateKey,
+        evidenceId: request.rateKey,
+      };
+    }
+    return this.resolveMarketConversionRate(request);
+  }
+
+  private async resolveMarketConversionRate(assets: ConversionAssets): Promise<ConversionRateSource> {
+    const pair = await this.getConversionMarketPair(assets);
+    this.assertConversionPairDirection(pair);
+    const marketQuote = await this.d1.getLiveMarketQuote(pair.pair.id);
+    if (!marketQuote) throw new ServiceUnavailableException('Conversion market quote unavailable');
+    return {
+      rate: this.normalizeConversionMarketRate({ price: marketQuote.price, inverted: pair.inverted }),
+      provider: marketQuote.provider,
+      source: `${marketQuote.symbol}:${marketQuote.source}`,
+      evidenceId: marketQuote.id,
+    };
+  }
+
+  private async getConversionMarketPair(assets: ConversionAssets): Promise<ConversionMarketPair> {
+    const directPair = await this.d1.getActiveMarketPair(`${assets.fromAsset}${assets.toAsset}`);
+    if (directPair) return { ...assets, pair: directPair, inverted: false };
+    const inversePair = await this.d1.getActiveMarketPair(`${assets.toAsset}${assets.fromAsset}`);
+    if (!inversePair) throw new ServiceUnavailableException('Conversion market unavailable');
+    return { ...assets, pair: inversePair, inverted: true };
+  }
+
+  private assertConversionPairDirection(direction: ConversionMarketPair): void {
+    const expectedBase = direction.inverted ? direction.toAsset : direction.fromAsset;
+    const expectedQuote = direction.inverted ? direction.fromAsset : direction.toAsset;
+    if (direction.pair.baseAsset !== expectedBase) throw new ServiceUnavailableException('Conversion market unavailable');
+    if (direction.pair.quoteAsset !== expectedQuote) throw new ServiceUnavailableException('Conversion market unavailable');
+  }
+
+  private normalizeConversionMarketRate(input: ConversionMarketRate): Prisma.Decimal {
+    const marketRate = assertPositiveDecimal(input.price);
+    if (!input.inverted) return marketRate;
+    return assertPositiveDecimal(new Prisma.Decimal(1).div(marketRate).toDecimalPlaces(18, Prisma.Decimal.ROUND_DOWN));
+  }
 
   private assertIdempotencyKey(key: string): void { if (!key || !/^[A-Za-z0-9._:-]{8,160}$/.test(key)) throw new BadRequestException('Idempotency key is invalid'); }
 }

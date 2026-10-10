@@ -12,6 +12,8 @@ describe('Gate 2 financial operations', () => {
       reserveWithdrawal: jest.fn().mockResolvedValue(withdrawal),
       getInternalTransfer: jest.fn().mockResolvedValue(null),
       getConversionQuoteByKey: jest.fn().mockResolvedValue(null),
+      getActiveMarketPair: jest.fn().mockImplementation(async (symbol: string) => symbol === 'BTCUSDT' ? { id: 'pair-btc-usdt', symbol: 'BTCUSDT', baseAsset: 'BTC', quoteAsset: 'USDT' } : null),
+      getLiveMarketQuote: jest.fn().mockResolvedValue({ id: 'market-quote-1', symbol: 'BTCUSDT', price: '40000', provider: 'binance-spot', source: 'websocket' }),
       getUserById: jest.fn().mockImplementation(async (id: string) => ({ id })),
       getAccountForUser: jest.fn().mockResolvedValue({ id: 'account-1', asset: 'USDT' }),
       pairedTransfer: jest.fn().mockResolvedValue({ debitPostingId: 'debit-1', creditPostingId: 'credit-1' }),
@@ -32,6 +34,38 @@ describe('Gate 2 financial operations', () => {
     const result = await new FinancialOperationsService(d1).createConversionQuote('user-1', { fromAsset: 'USDT', toAsset: 'BTC', amount: '10', quoteKey: 'quote-key-1' });
     expect(result.replayed).toBe(false);
     expect(d1.createConversionQuote).toHaveBeenCalledWith(expect.objectContaining({ inputAmount: '10', rate: '0.000025', outputAmount: '0.00025', source: 'gate2.conversion.rate.USDT.BTC', quoteKey: 'quote-key-1' }));
+  });
+
+  it('uses a fresh D1 market quote and its lineage when conversion config is absent', async () => {
+    const { d1 } = createD1();
+    d1.getSystemConfigValue.mockResolvedValue(null);
+    const result = await new FinancialOperationsService(d1).createConversionQuote('user-1', { fromAsset: 'USDT', toAsset: 'BTC', amount: '10', quoteKey: 'market-quote-key-1' });
+    expect(result.replayed).toBe(false);
+    expect(d1.getActiveMarketPair).toHaveBeenNthCalledWith(1, 'USDTBTC');
+    expect(d1.getActiveMarketPair).toHaveBeenNthCalledWith(2, 'BTCUSDT');
+    expect(d1.createConversionQuote).toHaveBeenCalledWith(expect.objectContaining({
+      inputAmount: '10', rate: '0.000025', outputAmount: '0.00025',
+      provider: 'binance-spot', source: 'BTCUSDT:websocket', evidenceId: 'market-quote-1',
+      quoteKey: 'market-quote-key-1',
+    }));
+  });
+
+  it('fails closed when market-pair metadata disagrees with the requested conversion direction', async () => {
+    const { d1 } = createD1();
+    d1.getSystemConfigValue.mockResolvedValue(null);
+    d1.getActiveMarketPair.mockImplementation(async (symbol: string) => symbol === 'BTCUSDT'
+      ? { id: 'pair-btc-usdt', symbol: 'BTCUSDT', baseAsset: 'USDT', quoteAsset: 'BTC' }
+      : null);
+    await expect(new FinancialOperationsService(d1).createConversionQuote('user-1', { fromAsset: 'USDT', toAsset: 'BTC', amount: '10', quoteKey: 'market-direction-key' })).rejects.toThrow('Conversion market unavailable');
+    expect(d1.createConversionQuote).not.toHaveBeenCalled();
+  });
+
+  it('fails closed when neither config nor an active market pair exists', async () => {
+    const { d1 } = createD1();
+    d1.getSystemConfigValue.mockResolvedValue(null);
+    d1.getActiveMarketPair.mockResolvedValue(null);
+    await expect(new FinancialOperationsService(d1).createConversionQuote('user-1', { fromAsset: 'USDT', toAsset: 'BTC', amount: '10', quoteKey: 'market-unavailable-key' })).rejects.toThrow('Conversion market unavailable');
+    expect(d1.createConversionQuote).not.toHaveBeenCalled();
   });
 
   it('uses paired D1 ledger postings for an internal transfer', async () => {
