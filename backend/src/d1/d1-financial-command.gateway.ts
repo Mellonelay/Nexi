@@ -120,6 +120,7 @@ export interface D1SpotOrderCommand {
   feeRate: string;
   idempotencyKey: string;
   correlationId: string;
+  borrow?: LedgerPostingCommand;
 }
 
 export interface D1SpotMatchCommand {
@@ -1202,7 +1203,9 @@ export class D1FinancialCommandGateway {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const result = await this.bridge.batch([
       {
-        sql: `INSERT OR IGNORE INTO "SpotMarginPosition" ("id","accountId","direction","leverage","collateral","quantity","entryPrice","markPrice","debtAsset","debtPrincipal","interestAccrued","realizedPnl","unrealizedPnl","status","openIdempotencyKey","entryOrderId","openedAt","updatedAt") VALUES (?,?,?,?,?,?,?,?,?,?, '0','0','0',?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`,
+        sql: `INSERT OR IGNORE INTO "SpotMarginPosition" ("id","accountId","direction","leverage","collateral","quantity","entryPrice","markPrice","debtAsset","debtPrincipal","interestAccrued","realizedPnl","unrealizedPnl","status","openIdempotencyKey","entryOrderId","openedAt","updatedAt") SELECT ?,?,?,?,?,?,?,?,?,?, '0','0','0',?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP
+          WHERE EXISTS (SELECT 1 FROM "Gate2SpotOrder" o WHERE o."id"=? AND o."userId"=? AND o."idempotencyKey"=? AND o."status" IN ('OPEN','PARTIALLY_FILLED','FILLED'))
+          AND NOT EXISTS (SELECT 1 FROM "LedgerIdempotency" i WHERE i."idempotencyKey"=? AND i."debitPostingId" IS NOT NULL)`,
         params: [
           command.positionId,
           command.accountId,
@@ -1217,6 +1220,10 @@ export class D1FinancialCommandGateway {
           command.status,
           command.openIdempotencyKey,
           command.entryOrderId,
+          command.entryOrderId,
+          command.userId,
+          `margin:entry:${command.openIdempotencyKey}`,
+          `margin:orphan:repay:${command.openIdempotencyKey}`,
         ],
       },
       {
@@ -6134,7 +6141,12 @@ export class D1FinancialCommandGateway {
       command.reserveScope,
     );
     const current = await this.findAccount(account.id);
-    const available = this.nonNegativeDecimal(current.available);
+    const borrow = command.borrow;
+    if (borrow && (borrow.accountId !== account.id || this.normalizeAsset(borrow.asset) !== this.normalizeAsset(command.reserveAsset))) {
+      throw new BadRequestException("Margin borrow must use the reserved account and asset");
+    }
+    const borrowAmount = borrow ? this.decimal(borrow.amount) : new Prisma.Decimal(0);
+    const available = this.nonNegativeDecimal(current.available).plus(borrowAmount);
     const locked = this.nonNegativeDecimal(current.locked);
     const reserved = this.decimal(command.reservedAmount);
     if (available.lt(reserved))
@@ -6157,7 +6169,7 @@ export class D1FinancialCommandGateway {
           account.id,
           command.reserveAsset.toUpperCase(),
           command.reserveScope,
-          current.available,
+          available.toString(),
           current.locked,
         ],
       },
@@ -6171,7 +6183,7 @@ export class D1FinancialCommandGateway {
           account.id,
           command.reserveAsset.toUpperCase(),
           command.reserveScope,
-          current.available,
+          available.toString(),
           current.locked,
           idempotencyId,
           command.idempotencyKey,
@@ -6284,10 +6296,26 @@ export class D1FinancialCommandGateway {
         },
       }),
     );
-    const result = await this.bridge.batch(statements);
-    this.requireChanges(result, 1, "D1 spot order account reservation");
-    this.requireChanges(result, 3, "D1 spot order ledger posting");
-    this.requireChanges(result, 7, "D1 spot order record");
+    const borrowStatements = borrow
+      ? this.buildLedgerMutationStatements(
+          borrow,
+          "CREDIT",
+          { availableDelta: "amount", lockedDelta: "zero" },
+          current,
+          borrowAmount,
+          randomUUID(),
+          randomUUID(),
+        )
+      : { statements: [], postingId: "" };
+    const result = await this.bridge.batch([...borrowStatements.statements, ...statements]);
+    const offset = borrowStatements.statements.length;
+    if (borrow) {
+      this.requireChanges(result, 1, "D1 margin borrow account transition");
+      this.requireChanges(result, 3, "D1 margin borrow posting");
+    }
+    this.requireChanges(result, offset + 1, "D1 spot order account reservation");
+    this.requireChanges(result, offset + 3, "D1 spot order ledger posting");
+    this.requireChanges(result, offset + 7, "D1 spot order record");
     const created = await this.bridge.select<Record<string, unknown>>(
       `SELECT * FROM "Gate2SpotOrder" WHERE "userId" = ? AND "idempotencyKey" = ? LIMIT 1`,
       [command.userId, command.idempotencyKey],
@@ -7064,6 +7092,104 @@ export class D1FinancialCommandGateway {
     });
   }
 
+  // A canceled, unfilled Margin entry may retain its previously credited borrow
+  // if position materialization failed. Recover it only through an ownership-
+  // checked, conditionally atomic Ledger debit; never adjust balances directly.
+  async repayUnmatchedMarginBorrow(
+    userId: string,
+    openIdempotencyKey: string,
+  ): Promise<LedgerMutationResult> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const openingKey = openIdempotencyKey.trim();
+    if (openingKey.length < 8 || openingKey.length > 160) {
+      throw new BadRequestException("Invalid Margin opening idempotency key");
+    }
+    const borrowKey = `margin:borrow:${openingKey}`;
+    const entryKey = `margin:entry:${openingKey}`;
+    const repaymentKey = `margin:orphan:repay:${openingKey}`;
+
+    const original = await this.bridge.select<{
+      id: string; accountId: string; asset: string; amount: string;
+      correlationId: string; economicGroup: string | null;
+    }>(
+      `SELECT p."id",p."accountId",p."asset",p."amount",p."correlationId",p."economicGroup"
+       FROM "LedgerPosting" p JOIN "LedgerAccount" a ON a."id"=p."accountId"
+       WHERE p."idempotencyKey"=? AND p."referenceType"='SPOT_MARGIN_BORROW'
+         AND p."referenceId"=? AND p."kind"='CREDIT'
+         AND a."userId"=? AND a."scope"='MARGIN' LIMIT 1`,
+      [borrowKey, openingKey, userId],
+    );
+    const borrow = original.results[0];
+    if (!borrow) throw new BadRequestException("Owned Margin borrow not found");
+
+    const orders = await this.bridge.select<{
+      id: string; status: string; filled: string; reservedAmount: string;
+    }>(
+      `SELECT "id","status","filled","reservedAmount" FROM "Gate2SpotOrder"
+       WHERE "userId"=? AND "idempotencyKey"=? LIMIT 1`,
+      [userId, entryKey],
+    );
+    const order = orders.results[0];
+    if (!order || order.status !== "CANCELED" ||
+        !this.nonNegativeDecimal(order.filled).isZero() ||
+        !this.nonNegativeDecimal(order.reservedAmount).isZero()) {
+      throw new BadRequestException("Margin entry must be canceled, unfilled and released");
+    }
+
+    const amount = this.decimal(borrow.amount);
+    const command: LedgerPostingCommand = {
+      accountId: borrow.accountId,
+      asset: borrow.asset,
+      amount: amount.toString(),
+      referenceType: "SPOT_MARGIN_ORPHAN_REPAYMENT",
+      referenceId: openingKey,
+      idempotencyKey: repaymentKey,
+      correlationId: borrow.correlationId,
+      economicGroup: borrow.economicGroup ?? undefined,
+      metadata: { originalBorrowPostingId: borrow.id, entryOrderId: order.id },
+    };
+
+    // These conditions execute within the same D1 transaction as the debit.
+    // They prevent a delayed position opening or a fill from racing repayment.
+    const guard = {
+      sql: `EXISTS (
+          SELECT 1 FROM "Gate2SpotOrder" o WHERE o."id"=? AND o."userId"=?
+          AND o."idempotencyKey"=? AND o."status"='CANCELED'
+          AND o."reserveScope"='MARGIN' AND CAST(o."filled" AS REAL)=0
+          AND CAST(o."reservedAmount" AS REAL)=0
+        )
+        AND NOT EXISTS (SELECT 1 FROM "Gate2SpotTrade" t
+          WHERE t."buyerOrderId"=? OR t."sellerOrderId"=?)
+        AND NOT EXISTS (
+          SELECT 1 FROM "SpotMarginPosition" p
+          JOIN "SpotMarginAccount" a ON a."id"=p."accountId"
+          WHERE p."openIdempotencyKey"=? AND a."userId"=?
+        )
+        AND EXISTS (
+          SELECT 1 FROM "LedgerPosting" p JOIN "LedgerAccount" a
+          ON a."id"=p."accountId" WHERE p."id"=? AND p."accountId"=?
+          AND p."referenceType"='SPOT_MARGIN_BORROW' AND p."kind"='CREDIT'
+          AND a."userId"=? AND a."scope"='MARGIN'
+        )`,
+      params: [
+        order.id, userId, entryKey, order.id, order.id, openingKey, userId,
+        borrow.id, borrow.accountId, userId,
+      ],
+    };
+    return this.execute(
+      command,
+      "DEBIT",
+      { availableDelta: "-amount", lockedDelta: "zero" },
+      guard,
+      {
+        aggregateType: "MARGIN",
+        aggregateId: order.id,
+        eventType: "MARGIN_ORPHAN_BORROW_REPAID",
+        payload: { userId, entryOrderId: order.id, originalBorrowPostingId: borrow.id, amount: amount.toString(), asset: borrow.asset },
+      },
+    );
+  }
+
   async compensate(
     command: LedgerPostingCommand,
   ): Promise<LedgerMutationResult> {
@@ -7419,6 +7545,8 @@ export class D1FinancialCommandGateway {
     command: LedgerPostingCommand,
     operation: string,
     delta: { availableDelta: string; lockedDelta: string },
+    guard?: { sql: string; params: D1BridgeParameter[] },
+    outbox?: { aggregateType: string; aggregateId: string; eventType: string; payload: Record<string, unknown> },
   ): Promise<LedgerMutationResult> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const amount = this.decimal(command.amount);
@@ -7556,11 +7684,85 @@ export class D1FinancialCommandGateway {
       },
     ];
 
+    if (guard) {
+      statements[0].sql = `${statements[0].sql} AND (${guard.sql})`;
+      statements[0].params = [...(statements[0].params ?? []), ...guard.params];
+    }
+    if (outbox) {
+      statements.push(this.eventOutboxStatement({
+        idempotencyKey: `outbox:${command.idempotencyKey}`,
+        aggregateType: outbox.aggregateType,
+        aggregateId: outbox.aggregateId,
+        eventType: outbox.eventType,
+        correlationId,
+        payload: outbox.payload,
+        guard: { sql: `EXISTS (SELECT 1 FROM "LedgerPosting" WHERE "id"=?)`, params: [postingId] },
+      }));
+    }
     const result = await this.bridge.batch(statements);
     this.requireChanges(result, 1, "D1 ledger account transition");
     this.requireChanges(result, 3, "D1 ledger posting");
     const finalAccount = await this.findAccount(command.accountId);
     return this.result(postingId, finalAccount, false);
+  }
+
+  private buildLedgerMutationStatements(
+    command: LedgerPostingCommand,
+    operation: string,
+    delta: { availableDelta: string; lockedDelta: string },
+    account: LedgerAccountRow,
+    amount: Prisma.Decimal,
+    id: string,
+    postingId: string,
+  ): { statements: D1BridgeBatchStatement[]; postingId: string } {
+    const asset = this.normalizeAsset(command.asset);
+    const available = this.nonNegativeDecimal(account.available);
+    const locked = this.nonNegativeDecimal(account.locked);
+    const availableDelta = this.resolveDelta(delta.availableDelta, amount);
+    const lockedDelta = this.resolveDelta(delta.lockedDelta, amount);
+    const nextAvailable = available.plus(availableDelta);
+    const nextLocked = locked.plus(lockedDelta);
+    if (nextAvailable.isNegative() || nextLocked.isNegative()) {
+      throw new BadRequestException("Ledger account cannot satisfy the requested mutation");
+    }
+    const correlationId = command.correlationId ?? command.idempotencyKey;
+    return {
+      postingId,
+      statements: [
+        {
+          sql: `INSERT OR IGNORE INTO "LedgerIdempotency" ("id", "idempotencyKey", "operation", "accountId", "createdAt", "updatedAt")
+            SELECT ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+            WHERE NOT EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey" = ?)
+              AND EXISTS (SELECT 1 FROM "LedgerAccount" WHERE "id" = ? AND "asset" = ? AND "status" = 'ACTIVE' AND "available" = ? AND "locked" = ?)`,
+          params: [id, command.idempotencyKey, operation, command.accountId, command.idempotencyKey, command.accountId, asset, account.available, account.locked],
+        },
+        {
+          sql: `UPDATE "LedgerAccount" SET "available" = ?, "locked" = ?, "updatedAt" = CURRENT_TIMESTAMP
+            WHERE "id" = ? AND "asset" = ? AND "status" = 'ACTIVE' AND "available" = ? AND "locked" = ?
+              AND EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "id" = ? AND "idempotencyKey" = ? AND "debitPostingId" IS NULL)`,
+          params: [nextAvailable.toString(), nextLocked.toString(), command.accountId, asset, account.available, account.locked, id, command.idempotencyKey],
+        },
+        this.rollbackIfNoChanges(command.idempotencyKey, operation),
+        {
+          sql: `INSERT INTO "LedgerPosting" ("id", "accountId", "asset", "kind", "amount", "availableDelta", "lockedDelta", "referenceType", "referenceId", "idempotencyKey", "correlationId", "economicGroup", "createdAt", "metadata")
+            SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?
+            WHERE EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "id" = ? AND "idempotencyKey" = ? AND "debitPostingId" IS NULL)`,
+          params: [postingId, command.accountId, asset, operation, amount.toString(), availableDelta.toString(), lockedDelta.toString(), command.referenceType, command.referenceId, command.idempotencyKey, correlationId, command.economicGroup ?? null, command.metadata ? JSON.stringify(command.metadata) : null, id, command.idempotencyKey],
+        },
+        {
+          sql: `UPDATE "LedgerIdempotency" SET "debitPostingId" = ?, "updatedAt" = CURRENT_TIMESTAMP
+            WHERE "id" = ? AND "idempotencyKey" = ? AND "debitPostingId" IS NULL AND EXISTS (SELECT 1 FROM "LedgerPosting" WHERE "id" = ?)`,
+          params: [postingId, id, command.idempotencyKey, postingId],
+        },
+        this.auditStatement(command.accountId, postingId, `${operation}_POSTED`, command.idempotencyKey, correlationId, command.referenceType, command.referenceId),
+        {
+          sql: `INSERT OR IGNORE INTO "Activity" ("id", "userId", "type", "status", "referenceType", "referenceId", "idempotencyKey", "ledgerCorrelationId", "ledgerPostingId", "asset", "amount", "details", "createdAt")
+            SELECT ?, ?, ?, 'COMPLETED', ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP
+            WHERE EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "id" = ? AND "debitPostingId" = ?)`,
+          params: [randomUUID(), account.userId, command.referenceType, command.referenceType, command.referenceId, command.idempotencyKey, correlationId, postingId, asset, amount.toString(), command.metadata ? JSON.stringify(command.metadata) : null, id, postingId],
+        },
+      ],
+    };
   }
 
   private hashId(prefix: string, value: string): string {

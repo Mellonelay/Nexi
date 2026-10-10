@@ -51,15 +51,18 @@ export class MarginService {
     const debtPrincipal = input.direction === MarginPositionDirection.LONG ? collateral.mul(leverage - 1) : quantity;
     const account = await this.d1.ensureMarginAccount({ userId, pair: pair.symbol, baseAsset: pair.baseAsset, quoteAsset: pair.quoteAsset });
     const borrowed = await this.d1.getAccountForUser(userId, debtAsset, 'MARGIN');
-    await this.d1.credit({ accountId: borrowed.id, asset: debtAsset, amount: debtPrincipal.toString(), referenceType: 'SPOT_MARGIN_BORROW', referenceId: input.idempotencyKey, idempotencyKey: `margin:borrow:${input.idempotencyKey}`, correlationId: input.idempotencyKey, economicGroup: account.id, metadata: { pair: pair.symbol, direction: input.direction, leverage } });
     const feeValue = await this.d1.getSystemConfigValue('gate2.spot.feeRate');
     const feeRate = feeValue === null ? new Prisma.Decimal('0.001') : assertNonNegativeDecimal(feeValue);
     const reserveAsset = input.direction === MarginPositionDirection.LONG ? pair.quoteAsset : pair.baseAsset;
     const reserveAmount = input.direction === MarginPositionDirection.LONG ? quantity.mul(new Prisma.Decimal(quote.price)).mul(new Prisma.Decimal(1).add(feeRate)) : quantity;
-    const order = await this.d1.reserveSpotOrder({ userId, pair: pair.symbol, baseAsset: pair.baseAsset, quoteAsset: pair.quoteAsset, side: input.direction === MarginPositionDirection.LONG ? OrderSide.BUY : OrderSide.SELL, type: Gate2SpotOrderType.LIMIT, amount: quantity.toString(), price: quote.price, stopPrice: null, reserveAsset, reserveScope: LedgerAccountScope.MARGIN, reservedAmount: reserveAmount.toString(), feeRate: feeRate.toString(), idempotencyKey: `margin:entry:${input.idempotencyKey}`, correlationId: input.idempotencyKey });
+    const order = await this.d1.reserveSpotOrder({ userId, pair: pair.symbol, baseAsset: pair.baseAsset, quoteAsset: pair.quoteAsset, side: input.direction === MarginPositionDirection.LONG ? OrderSide.BUY : OrderSide.SELL, type: Gate2SpotOrderType.LIMIT, amount: quantity.toString(), price: quote.price, stopPrice: null, reserveAsset, reserveScope: LedgerAccountScope.MARGIN, reservedAmount: reserveAmount.toString(), feeRate: feeRate.toString(), idempotencyKey: `margin:entry:${input.idempotencyKey}`, correlationId: input.idempotencyKey, borrow: { accountId: borrowed.id, asset: debtAsset, amount: debtPrincipal.toString(), referenceType: 'SPOT_MARGIN_BORROW', referenceId: input.idempotencyKey, idempotencyKey: `margin:borrow:${input.idempotencyKey}`, correlationId: input.idempotencyKey, economicGroup: account.id, metadata: { pair: pair.symbol, direction: input.direction, leverage } } });
     for (let attempt = 0; attempt < 128; attempt += 1) if (!await this.d1.matchSpotOrder({ pair: pair.symbol })) break;
     const filled: any = await this.d1.getSpotOrder(userId, String(order.id));
     return this.d1.createMarginPosition({ positionId: crypto.randomUUID(), accountId: account.id, userId, direction: input.direction, leverage, collateral: collateral.toString(), quantity: String(filled?.filled ?? '0'), entryPrice: String(filled?.price ?? quote.price), markPrice: String(filled?.price ?? quote.price), status: filled?.status === 'FILLED' ? SpotMarginPositionStatus.OPEN : SpotMarginPositionStatus.PENDING, debtAsset, debtPrincipal: debtPrincipal.toString(), openIdempotencyKey: input.idempotencyKey, entryOrderId: String(order.id), pair: pair.symbol, positionAsset: pair.baseAsset, activityId: crypto.randomUUID(), positionEventId: crypto.randomUUID() });
+  }
+
+  repayUnmatchedBorrow(userId: string, openIdempotencyKey: string) {
+    return this.d1.repayUnmatchedMarginBorrow(userId, openIdempotencyKey);
   }
 
   listPositions(userId: string, status?: SpotMarginPositionStatus) {

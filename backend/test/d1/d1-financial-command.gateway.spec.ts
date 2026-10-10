@@ -412,6 +412,89 @@ describe("D1FinancialCommandGateway", () => {
     expect(statements[8].sql).toContain("EventOutbox");
   });
 
+  it("atomically borrows before reserving the margin entry order", async () => {
+    let orderLookup = 0;
+    const bridge = createBridge({
+      select: jest.fn().mockImplementation(async (sql: string) => {
+        if (sql.includes("Gate2SpotOrder")) {
+          orderLookup += 1;
+          return { results: orderLookup > 1 ? [{ id: "order-1", status: "OPEN" }] : [] };
+        }
+        if (sql.includes("LedgerIdempotency")) return { results: [] };
+        if (sql.includes("LedgerAccount")) return { results: [{ ...account, scope: "MARGIN", available: "25.00" }] };
+        return { results: [] };
+      }),
+      batch: jest.fn().mockImplementation(async (statements: D1BridgeBatchStatement[]) => ({
+        results: statements.map((_, index) => ({ success: true, meta: { changes: [1, 3, 8, 10, 14].includes(index) ? 1 : 0 } })),
+      })),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+
+    await gateway.reserveSpotOrder({
+      userId: "user-1", pair: "BTCUSDT", baseAsset: "BTC", quoteAsset: "USDT", side: "SELL", type: "LIMIT",
+      amount: "1.25", price: "100", stopPrice: null, reserveAsset: "BTC", reserveScope: "MARGIN", reservedAmount: "1.25",
+      feeRate: "0.001", idempotencyKey: "margin-entry-key-1", correlationId: "margin-entry-key-1",
+      borrow: {
+        accountId: "account-1", asset: "BTC", amount: "1.25", referenceType: "SPOT_MARGIN_BORROW", referenceId: "margin-open-1",
+        idempotencyKey: "margin:borrow:margin-open-1", correlationId: "margin-open-1", economicGroup: "margin-account-1",
+      },
+    });
+
+    const statements = (bridge.batch as jest.Mock).mock.calls[0][0] as D1BridgeBatchStatement[];
+    expect(statements).toHaveLength(16);
+    expect(statements[0].sql).toContain("LedgerIdempotency");
+    expect(statements[3].sql).toContain("LedgerPosting");
+    expect(statements[7].sql).toContain("LedgerIdempotency");
+    expect(statements[14].sql).toContain("Gate2SpotOrder");
+  });
+
+
+  it("repays only an owned canceled and unfilled Margin borrow in one guarded ledger batch", async () => {
+    const marginAccount = { ...account, scope: "MARGIN", available: "60", locked: "0" };
+    const original = { id: "borrow-posting-1", accountId: "account-1", asset: "USDT", amount: "10", correlationId: "margin-open-old", economicGroup: "isolated-margin-1" };
+    const order = { id: "entry-order-old", status: "CANCELED", filled: "0", reservedAmount: "0" };
+    let recordedPosting = "";
+    const bridge = createBridge({
+      select: jest.fn().mockImplementation(async (sql: string) => {
+        if (sql.includes('FROM "LedgerPosting" p JOIN')) return { results: [original] };
+        if (sql.includes('FROM "Gate2SpotOrder"')) return { results: [order] };
+        if (sql.includes('FROM "LedgerIdempotency"')) return { results: recordedPosting ? [{ operation: "DEBIT", accountId: "account-1", debitPostingId: recordedPosting }] : [] };
+        if (sql.includes('FROM "LedgerAccount"')) return { results: [marginAccount] };
+        return { results: [] };
+      }),
+      batch: jest.fn().mockImplementation(async (statements: D1BridgeBatchStatement[]) => {
+        recordedPosting = String(statements[3].params?.[0] ?? "");
+        return { results: statements.map((_, index) => ({ success: true, meta: { changes: [1, 3, 7].includes(index) ? 1 : 0 } })) };
+      }),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+    await gateway.repayUnmatchedMarginBorrow("user-1", "margin-open-old");
+    const statements = (bridge.batch as jest.Mock).mock.calls[0][0] as D1BridgeBatchStatement[];
+    expect(statements).toHaveLength(8);
+    expect(statements[0].sql).toContain('NOT EXISTS (\n          SELECT 1 FROM "SpotMarginPosition"');
+    expect(statements[0].sql).toContain('"Gate2SpotTrade"');
+    expect(statements[0].sql).toContain('"SPOT_MARGIN_BORROW"'.replaceAll('"', "'"));
+    expect(statements[3].params).toContain("SPOT_MARGIN_ORPHAN_REPAYMENT");
+    expect(statements[7].sql).toContain('"EventOutbox"');
+    await expect(gateway.repayUnmatchedMarginBorrow("user-1", "margin-open-old"))
+      .resolves.toMatchObject({ replayed: true });
+    expect(bridge.batch).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects repayment when a Margin entry was not fully canceled and released", async () => {
+    const bridge = createBridge({
+      select: jest.fn().mockImplementation(async (sql: string) => {
+        if (sql.includes('FROM "LedgerPosting" p JOIN')) return { results: [{ id: "borrow-1", accountId: "account-1", asset: "USDT", amount: "10", correlationId: "original", economicGroup: null }] };
+        if (sql.includes('FROM "Gate2SpotOrder"')) return { results: [{ id: "entry-1", status: "OPEN", filled: "0", reservedAmount: "10" }] };
+        return { results: [] };
+      }),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+    await expect(gateway.repayUnmatchedMarginBorrow("user-1", "margin-open-old"))
+      .rejects.toThrow("Margin entry must be canceled");
+    expect(bridge.batch).not.toHaveBeenCalled();
+  });
+
   it("matches crossing Spot orders with one atomic D1 batch and no incompatible locking syntax", async () => {
     const buy = {
       id: "buy-1",

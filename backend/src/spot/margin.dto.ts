@@ -78,6 +78,12 @@ export class MarginTransferDto {
   idempotencyKey!: string;
 }
 
+export class RepayUnmatchedMarginBorrowDto {
+  @IsString()
+  @Length(8, 160)
+  openIdempotencyKey!: string;
+}
+
 export class CloseMarginPositionDto {
   @IsString()
   @Length(1, 128)

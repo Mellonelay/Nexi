@@ -17,6 +17,7 @@ import {
   LiquidateMarginPositionDto,
   MarginTransferDto,
   OpenMarginPositionDto,
+  RepayUnmatchedMarginBorrowDto,
 } from "./margin.dto";
 
 @ApiTags("Margin Trading")
@@ -88,6 +89,18 @@ export class MarginController {
     @Req() request: AuthenticatedRequest,
   ) {
     return this.marginService.transfer(request.user.userId, body);
+  }
+
+  @Post("borrows/orphan/repay")
+  @UseGuards(JwtAuthGuard)
+  repayUnmatchedBorrow(
+    @Body() body: RepayUnmatchedMarginBorrowDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.marginService.repayUnmatchedBorrow(
+      request.user.userId,
+      body.openIdempotencyKey,
+    );
   }
 
   @Get("activity")

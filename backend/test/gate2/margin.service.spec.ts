@@ -23,16 +23,46 @@ describe('Spot isolated margin authority', () => {
       getSystemConfigValue: jest.fn().mockResolvedValue(null),
       ensureMarginAccount: jest.fn().mockResolvedValue({ id: 'margin-account-1' }),
       getAccountForUser: jest.fn().mockResolvedValue({ id: 'margin-usdt' }),
-      credit: jest.fn().mockResolvedValue({ postingId: 'borrow-1' }),
       reserveSpotOrder: jest.fn().mockResolvedValue({ id: 'entry-order-1' }),
       matchSpotOrder: jest.fn().mockResolvedValue(false),
       getSpotOrder: jest.fn().mockResolvedValue({ id: 'entry-order-1', status: 'OPEN', filled: '0', price: '100' }),
       createMarginPosition: jest.fn().mockResolvedValue({ id: 'position-1', status: SpotMarginPositionStatus.PENDING }),
     };
     await expect(new MarginService(d1).openPosition('user-1', { pair: 'BTC/USDT', direction: MarginPositionDirection.SHORT, leverage: 5, collateral: '25', idempotencyKey: 'margin-open-1' })).resolves.toMatchObject({ status: SpotMarginPositionStatus.PENDING });
-    expect(d1.credit).toHaveBeenCalledWith(expect.objectContaining({ asset: 'BTC', amount: '1.25', referenceType: 'SPOT_MARGIN_BORROW' }));
-    expect(d1.reserveSpotOrder).toHaveBeenCalledWith(expect.objectContaining({ reserveScope: LedgerAccountScope.MARGIN, side: OrderSide.SELL, reservedAmount: '1.25' }));
+    expect(d1.reserveSpotOrder).toHaveBeenCalledWith(expect.objectContaining({
+      reserveScope: LedgerAccountScope.MARGIN,
+      side: OrderSide.SELL,
+      reservedAmount: '1.25',
+      borrow: expect.objectContaining({ asset: 'BTC', amount: '1.25', referenceType: 'SPOT_MARGIN_BORROW' }),
+    }));
     expect(d1.createMarginPosition).toHaveBeenCalledWith(expect.objectContaining({ status: SpotMarginPositionStatus.PENDING, entryOrderId: 'entry-order-1' }));
+  });
+
+  it('does not commit a borrow before the atomic entry reservation', async () => {
+    const d1: any = {
+      getActiveMarketPair: jest.fn().mockResolvedValue(pair),
+      getLiveMarketQuote: jest.fn().mockResolvedValue({ price: '100' }),
+      getSystemConfigValue: jest.fn().mockResolvedValue(null),
+      ensureMarginAccount: jest.fn().mockResolvedValue({ id: 'margin-account-1' }),
+      getAccountForUser: jest.fn().mockResolvedValue({ id: 'margin-btc' }),
+      credit: jest.fn(),
+      reserveSpotOrder: jest.fn().mockRejectedValue(new Error('reservation rejected')),
+    };
+
+    await expect(new MarginService(d1).openPosition('user-1', {
+      pair: 'BTC/USDT', direction: MarginPositionDirection.SHORT, leverage: 5, collateral: '25', idempotencyKey: 'margin-open-orphan',
+    })).rejects.toThrow('reservation rejected');
+    expect(d1.credit).not.toHaveBeenCalled();
+    expect(d1.reserveSpotOrder).toHaveBeenCalledWith(expect.objectContaining({
+      borrow: expect.objectContaining({ referenceType: 'SPOT_MARGIN_BORROW' }),
+    }));
+  });
+
+  it('routes orphan-borrow repayment through the owned D1 financial authority', async () => {
+    const d1: any = { repayUnmatchedMarginBorrow: jest.fn().mockResolvedValue({ postingId: 'repay-1', replayed: false }) };
+    await expect(new MarginService(d1).repayUnmatchedBorrow('user-1', 'margin-open-1'))
+      .resolves.toMatchObject({ postingId: 'repay-1' });
+    expect(d1.repayUnmatchedMarginBorrow).toHaveBeenCalledWith('user-1', 'margin-open-1');
   });
 
   it('accrues interest through the D1 margin command', async () => {
