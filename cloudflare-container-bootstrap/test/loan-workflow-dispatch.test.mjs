@@ -144,3 +144,33 @@ test("unrelated and malformed events do not create loan workflows", async () => 
     /valid loanId/,
   );
 });
+
+test("replayed approval restarts the errored deterministic instance before signaling", async () => {
+  const calls = [];
+  const instance = {
+    status: async () => {
+      calls.push("status");
+      return { status: "errored" };
+    },
+    restart: async () => calls.push("restart"),
+    sendEvent: async (event) => {
+      calls.push(event.type);
+    },
+  };
+  const env = {
+    LOAN_WORKFLOW: {
+      get: async (id) => {
+        assert.equal(id, "loan-loan-42");
+        return instance;
+      },
+      create: async () => assert.fail("errored instance must be restarted in place"),
+    },
+  };
+
+  await dispatchLoanApproval(env, {
+    type: "LOAN_APPROVED",
+    payload: { loanId: "loan-42" },
+  });
+
+  assert.deepEqual(calls, ["status", "restart", "decision"]);
+});

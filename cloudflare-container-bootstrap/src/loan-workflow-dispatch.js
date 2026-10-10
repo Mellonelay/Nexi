@@ -1,12 +1,15 @@
+function isMissingWorkflowInstance(error) {
+  return error?.code === 10400 || /instance\.not_found/i.test(String(error));
+}
+
 async function loanWorkflowInstance(workflow, id, loanId) {
   const instance = await workflow.get(id).catch(async (error) => {
-    const isMissing =
-      error?.code === 10400 || /instance\.not_found/i.test(String(error));
-    if (!isMissing) throw error;
+    if (!isMissingWorkflowInstance(error)) throw error;
     return workflow.create({ id, params: { loanId } });
   });
   const current = await instance.status().catch(() => ({ status: "unknown" }));
   if (current.status === "complete") return null;
+  if (current.status === "errored") await instance.restart();
   return instance;
 }
 function loanIdFromApproval(event) {
