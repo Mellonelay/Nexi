@@ -41,6 +41,23 @@ it("prepares the financial posting and Margin SQL against SQLite column definiti
       expect(() => db.prepare(sql).run(...Array((sql.match(/\?/g) ?? []).length).fill("probe"))).not.toThrow();
     }
 
+    const marginCloseSqlTail = source
+      .split('sql: `INSERT INTO "LedgerPosting"')
+      .find((segment) => segment.includes("SPOT_MARGIN_"))
+      ?.split("`", 1)[0];
+    expect(marginCloseSqlTail).toBeDefined();
+    const marginCloseSql =
+      'INSERT INTO "LedgerPosting"' +
+      marginCloseSqlTail!.replace(
+        String.fromCharCode(36) + "{eventType}",
+        "REPAYMENT",
+      );
+    expect(() =>
+      db.prepare(marginCloseSql).run(
+        ...Array((marginCloseSql.match(/\?/g) ?? []).length).fill("probe"),
+      ),
+    ).not.toThrow();
+
     const marginStatements = Array.from(
       source.matchAll(/sql:\s*`(INSERT OR IGNORE INTO "SpotMarginPosition"[^\`]+)`/g),
       (match) => match[1],

@@ -1502,7 +1502,7 @@ export class D1FinancialCommandGateway {
       },
       this.rollbackIfNoChanges(`${receipt}:debit`, "MARGIN_CLOSE_DEBIT"),
       {
-        sql: `INSERT INTO "LedgerPosting" ("id","accountId","asset","kind","amount","availableDelta","lockedDelta","referenceType","referenceId","idempotencyKey","correlationId","economicGroup","createdAt","metadata") SELECT ?,?,?, 'DEBIT',?,?, '0',?,?,?,?,CURRENT_TIMESTAMP,? WHERE EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "id"=? AND "debitPostingId" IS NULL)`,
+        sql: `INSERT INTO "LedgerPosting" ("id","accountId","asset","kind","amount","availableDelta","lockedDelta","referenceType","referenceId","idempotencyKey","correlationId","economicGroup","createdAt","metadata") SELECT ?,?,?, 'DEBIT',?,?, '0',?,?,?,?,?,CURRENT_TIMESTAMP,? WHERE EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "id"=? AND "debitPostingId" IS NULL)`,
         params: [
           postingId,
           account.id,
@@ -5761,8 +5761,7 @@ export class D1FinancialCommandGateway {
           account.id,
           this.normalizeAsset(String(withdrawal.asset)),
           amount.toString(),
-          "0",
-          requestId,
+          "0", amount.negated().toString(), requestId,
           key,
           requestId,
           requestId,
