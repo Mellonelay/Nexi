@@ -263,9 +263,7 @@ async function invokeWorkflowCommand(
         "x-nexi-workflow-instance": instanceId,
       },
       body: JSON.stringify({
-        workflow,
         instanceId,
-        action,
         entityId,
         idempotencyKey,
         payload,
