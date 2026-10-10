@@ -876,24 +876,18 @@ export class D1FinancialCommandGateway {
           WHERE "id"=? AND "idempotencyKey"=? AND "creditPostingId" IS NULL AND EXISTS (SELECT 1 FROM "LedgerPosting" WHERE "id"=?)`,
         params: [creditPostingId, creditIdemId, creditKey, creditPostingId],
       },
-      this.auditStatement(
-        from.id,
-        debitPostingId,
-        "CONVERSION_DEBIT_POSTED",
-        debitKey,
-        correlationId,
-        "GATE2_CONVERSION_DEBIT",
-        command.quoteId,
-      ),
-      this.auditStatement(
-        to.id,
-        creditPostingId,
-        "CONVERSION_CREDIT_POSTED",
-        creditKey,
-        correlationId,
-        "GATE2_CONVERSION_CREDIT",
-        command.quoteId,
-      ),
+      {
+        sql: `INSERT INTO "LedgerAuditEvent" ("id","accountId","postingId","eventType","idempotencyKey","correlationId","details","createdAt")
+          SELECT ?,?,?, 'CONVERSION_DEBIT_POSTED',?,?,?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "LedgerPosting" WHERE "id"=?)
+          UNION ALL
+          SELECT ?,?,?, 'CONVERSION_CREDIT_POSTED',?,?,?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "LedgerPosting" WHERE "id"=?)`,
+        params: [
+          randomUUID(), from.id, debitPostingId, debitKey, correlationId,
+          JSON.stringify({ referenceType: "GATE2_CONVERSION_DEBIT", referenceId: command.quoteId }), debitPostingId,
+          randomUUID(), to.id, creditPostingId, creditKey, correlationId,
+          JSON.stringify({ referenceType: "GATE2_CONVERSION_CREDIT", referenceId: command.quoteId }), creditPostingId,
+        ],
+      },
       {
         sql: `INSERT OR IGNORE INTO "Activity" ("id","userId","type","status","referenceType","referenceId","idempotencyKey","ledgerCorrelationId","ledgerPostingId","asset","amount","details","createdAt")
           SELECT ?,?,'CONVERSION','COMPLETED','GATE2_CONVERSION',?,?,?,?,?,?,?,CURRENT_TIMESTAMP
@@ -983,7 +977,7 @@ export class D1FinancialCommandGateway {
     this.requireChanges(result, 7, "D1 conversion debit idempotency");
     this.requireChanges(result, 8, "D1 conversion credit posting");
     this.requireChanges(result, 9, "D1 conversion credit idempotency");
-    this.requireChanges(result, 14, "D1 conversion quote acceptance");
+    this.requireChanges(result, 13, "D1 conversion quote acceptance");
     const accepted = await this.getConversionQuoteById(command.quoteId);
     if (!accepted || String(accepted.state) !== "ACCEPTED")
       throw new BadRequestException("D1 conversion quote was not accepted");
