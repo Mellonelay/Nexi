@@ -13,6 +13,10 @@ const DERIVED_KLINE_INTERVALS = [
   ['1d', 24 * 60 * 60_000],
 ] as const satisfies ReadonlyArray<readonly [MarketKlineInterval, number]>;
 
+function candlesInBucket(rows: Array<{ openTime: Date; [key: string]: any }>, startMs: number, endMs: number) {
+  return rows.filter((row) => row.openTime.getTime() >= startMs && row.openTime.getTime() < endMs);
+}
+
 export interface MarketQuoteCandleInput {
   symbol: string;
   price: string | number;
@@ -102,15 +106,23 @@ export class MarketKlineService {
     const eventTime = oneMinuteOpenTime.getTime();
     if (Number.isNaN(eventTime)) throw new Error('Market kline openTime is invalid');
 
+    // All derived UTC buckets fit inside the same UTC day. Query the widest
+    // bucket only once, then filter in memory to avoid six overlapping D1 reads.
+    const dayWidthMs = 24 * 60 * 60_000;
+    const dayStartMs = Math.floor(eventTime / dayWidthMs) * dayWidthMs;
+    const dayRows = await this.db.marketKline.findMany({
+      where: {
+        pairId: pair.id, interval: '1m',
+        openTime: { gte: new Date(dayStartMs), lt: new Date(dayStartMs + dayWidthMs) },
+      },
+      orderBy: { openTime: 'asc' },
+    });
     const derived = [];
     for (const [interval, widthMs] of DERIVED_KLINE_INTERVALS) {
       const bucketStartMs = Math.floor(eventTime / widthMs) * widthMs;
       const bucketStart = new Date(bucketStartMs);
-      const bucketEnd = new Date(bucketStartMs + widthMs);
-      const rows = await this.db.marketKline.findMany({
-        where: { pairId: pair.id, interval: '1m', openTime: { gte: bucketStart, lt: bucketEnd } },
-        orderBy: { openTime: 'asc' },
-      });
+      const bucketEndMs = bucketStartMs + widthMs;
+      const rows = candlesInBucket(dayRows, bucketStartMs, bucketEndMs);
       if (rows.length === 0) continue;
 
       const first = rows[0];

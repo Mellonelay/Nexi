@@ -31,6 +31,35 @@ describe('MarketKlineService quote aggregation', () => {
     return { service: new MarketKlineService(prisma), prisma };
   };
 
+  it('reuses one indexed daily candle read across all six derived intervals', async () => {
+    const candle = (minute: number, price: string) => ({
+      openTime: new Date(`2026-10-10T12:${String(minute).padStart(2, '0')}:00.000Z`),
+      closeTime: new Date(`2026-10-10T12:${String(minute).padStart(2, '0')}:59.999Z`),
+      open: price, high: price, low: price, close: price, volume: '1',
+      provider: 'binance-spot', observedAt: new Date(`2026-10-10T12:${String(minute).padStart(2, '0')}:59.999Z`),
+    });
+    const rows = [candle(30, '100'), candle(34, '110'), candle(35, '120')];
+    const d1: any = {
+      marketPair: { findUnique: jest.fn(async () => ({ id: 'pair-btcusdt', symbol: 'BTCUSDT' })) },
+      marketKline: { findMany: jest.fn(async () => rows) },
+    };
+    const service = new MarketKlineService(d1);
+    const persist = jest.spyOn(service, 'persist').mockImplementation(async (data: any) => data);
+    const result = await service.aggregateFromOneMinute('BTCUSDT', candle(34, '110').openTime);
+    expect(d1.marketKline.findMany).toHaveBeenCalledTimes(1);
+    expect(d1.marketKline.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { pairId: 'pair-btcusdt', interval: '1m', openTime: {
+        gte: new Date('2026-10-10T00:00:00.000Z'), lt: new Date('2026-10-11T00:00:00.000Z'),
+      } },
+      orderBy: { openTime: 'asc' },
+    }));
+    expect(result).toHaveLength(6);
+    const fiveMinute = persist.mock.calls.find(([data]: any[]) => data.interval === '5m')?.[0];
+    expect(fiveMinute).toMatchObject({ open: '100', high: '110', low: '100', close: '110', volume: '2' });
+    const day = persist.mock.calls.find(([data]: any[]) => data.interval === '1d')?.[0];
+    expect(day).toMatchObject({ open: '100', high: '120', low: '100', close: '120', volume: '3' });
+  });
+
   it('creates a 1m candle from a provider quote with explicit derived lineage and no fabricated volume', async () => {
     const { service, prisma } = createService();
 
