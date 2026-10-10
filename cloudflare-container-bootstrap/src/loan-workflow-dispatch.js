@@ -1,14 +1,14 @@
 async function loanWorkflowInstance(workflow, id, loanId) {
-  let instance = await workflow.get(id);
+  const instance = await workflow.get(id).catch(async (error) => {
+    const isMissing =
+      error?.code === 10400 || /instance\.not_found/i.test(String(error));
+    if (!isMissing) throw error;
+    return workflow.create({ id, params: { loanId } });
+  });
   const current = await instance.status().catch(() => ({ status: "unknown" }));
-
   if (current.status === "complete") return null;
-  if (current.status === "unknown") {
-    instance = await workflow.create({ id, params: { loanId } });
-  }
   return instance;
 }
-
 function loanIdFromApproval(event) {
   if (event.type !== "LOAN_APPROVED") return null;
 

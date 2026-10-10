@@ -2,13 +2,14 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { dispatchLoanApproval } from "../src/loan-workflow-dispatch.js";
 
-test("LOAN_APPROVED creates one deterministic workflow and signals its approval wait", async () => {
+test("LOAN_APPROVED creates one deterministic workflow when get reports not found", async () => {
   const sendEvent = async (event) => assert.equal(event.type, "decision");
-  const status = async () => ({ status: "unknown" });
   const running = { status: async () => ({ status: "running" }), sendEvent };
   const get = async () => {
     get.calls += 1;
-    return get.calls === 1 ? { status } : running;
+    const error = new Error("(instance.not_found) Instance not found");
+    error.code = 10400;
+    throw error;
   };
   get.calls = 0;
   const create = async (input) => {
@@ -30,6 +31,64 @@ test("LOAN_APPROVED creates one deterministic workflow and signals its approval 
     { id: "loan-loan-42", params: { loanId: "loan-42" } },
   ]);
   assert.equal(get.calls, 1);
+});
+
+test("a concurrent creation conflict is recovered by the next queue retry", async () => {
+  const sent = [];
+  const instance = {
+    status: async () => ({ status: "running" }),
+    sendEvent: async (event) => sent.push(event),
+  };
+  let getCalls = 0;
+  const env = {
+    LOAN_WORKFLOW: {
+      get: async () => {
+        getCalls += 1;
+        if (getCalls === 1) {
+          const error = new Error("(instance.not_found) Instance not found");
+          error.code = 10400;
+          throw error;
+        }
+        return instance;
+      },
+      create: async () => {
+        const error = new Error("(instance.already_exists) Instance already exists");
+        error.code = 10405;
+        throw error;
+      },
+    },
+  };
+  const event = {
+    type: "LOAN_APPROVED",
+    payload: { loanId: "loan-42" },
+  };
+
+  await assert.rejects(dispatchLoanApproval(env, event), /already_exists/);
+  await dispatchLoanApproval(env, event);
+
+  assert.equal(getCalls, 2);
+  assert.deepEqual(sent, [
+    { type: "decision", payload: { decision: "APPROVED" } },
+  ]);
+});
+
+test("unexpected workflow lookup failures remain retryable", async () => {
+  const env = {
+    LOAN_WORKFLOW: {
+      get: async () => {
+        throw new Error("workflow API unavailable");
+      },
+      create: async () => assert.fail("unexpected errors must not create instances"),
+    },
+  };
+
+  await assert.rejects(
+    dispatchLoanApproval(env, {
+      type: "LOAN_APPROVED",
+      payload: { loanId: "loan-42" },
+    }),
+    /workflow API unavailable/,
+  );
 });
 
 test("replayed approval reuses the existing workflow instance", async () => {
