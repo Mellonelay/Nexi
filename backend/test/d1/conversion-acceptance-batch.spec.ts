@@ -95,6 +95,9 @@ describe("conversion acceptance D1 batch", () => {
     ).resolves.toMatchObject({ state: "ACCEPTED" });
 
     expect(statements).toHaveLength(16);
+    for (const statement of statements) {
+      expect(statement.params ?? []).toHaveLength(statement.sql.match(/\?/g)?.length ?? 0);
+    }
     const audit = statements.find((statement) =>
       statement.sql.includes('INSERT INTO "LedgerAuditEvent"'),
     );
