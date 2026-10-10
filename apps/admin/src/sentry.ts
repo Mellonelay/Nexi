@@ -9,6 +9,18 @@ if (dsn) {
       (import.meta.env.VITE_SENTRY_ENVIRONMENT as string | undefined) ?? import.meta.env.MODE,
     release: import.meta.env.VITE_SENTRY_RELEASE as string | undefined,
     tracesSampleRate: 0.05,
+    enableLogs: true,
+    replaysSessionSampleRate: 0.02,
+    replaysOnErrorSampleRate: 1.0,
+    profileSessionSampleRate: 0.01,
+    integrations: [
+      Sentry.consoleLoggingIntegration({ levels: ["warn", "error"] }),
+      Sentry.replayIntegration({
+        maskAllText: true,
+        blockAllMedia: true,
+      }),
+      Sentry.browserProfilingIntegration(),
+    ],
     sendDefaultPii: false,
   });
 }

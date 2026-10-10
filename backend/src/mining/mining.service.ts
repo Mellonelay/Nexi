@@ -6,6 +6,8 @@ import { LedgerAuthorityService } from '../ledger/ledger-authority.service';
 import { D1PrismaService } from '../d1/d1-prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { D1FinancialCommandGateway } from '../d1/d1-financial-command.gateway';
+import { SentryCron } from '@sentry/nestjs';
+import * as Sentry from '@sentry/nestjs';
 
 @Injectable()
 export class MiningService {
@@ -92,6 +94,12 @@ export class MiningService {
   }
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  @SentryCron('nexi-mining-daily-rewards', {
+    schedule: { type: 'crontab', value: '0 0 * * *' },
+    checkinMargin: 5,
+    maxRuntime: 60,
+    timezone: 'UTC',
+  })
   async distributeRewards() {
     if (process.env.NEXI_SCHEDULER_ENABLED !== 'true') return { skipped: true };
     const d1 = this.requireD1FinancialAuthority();
@@ -105,6 +113,7 @@ export class MiningService {
         await this.accrue(String(subscription.id));
         processed += 1;
       }
+      Sentry.metrics.count('nexi.mining.rewards.processed', processed);
       return { processed };
     } finally {
       await this.redis.releaseLock(lockKey, owner);

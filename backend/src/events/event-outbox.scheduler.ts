@@ -2,6 +2,7 @@ import { Injectable, Optional } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { RedisService } from "../redis/redis.service";
 import { EventOutboxService } from "./event-outbox.service";
+import * as Sentry from "@sentry/nestjs";
 
 @Injectable()
 export class EventOutboxScheduler {
@@ -16,6 +17,9 @@ export class EventOutboxScheduler {
       return { skipped: true, reason: "scheduler-disabled" };
     }
     if (!this.redis || !this.redis.isAvailable()) {
+      Sentry.metrics.count("nexi.scheduler.skipped", 1, {
+        attributes: { scheduler: "event-outbox", reason: "redis-unavailable" },
+      });
       return { skipped: true, reason: "redis-unavailable" };
     }
 
@@ -25,7 +29,17 @@ export class EventOutboxScheduler {
       return { skipped: true, reason: "scheduler-lock-unavailable" };
     }
     try {
-      return await this.outbox.publishPending(25);
+      const startedAt = Date.now();
+      const result = await this.outbox.publishPending(25);
+      Sentry.metrics.distribution(
+        "nexi.scheduler.duration",
+        Date.now() - startedAt,
+        {
+          unit: "millisecond",
+          attributes: { scheduler: "event-outbox" },
+        },
+      );
+      return result;
     } finally {
       await this.redis.releaseLock(lockKey, owner);
     }

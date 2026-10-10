@@ -21,7 +21,10 @@ if (dsn) {
       stackFrameVariables: false,
       frameContextLines: 0,
     },
-    integrations: [Sentry.nestIntegration()],
+    integrations: [
+      Sentry.nestIntegration(),
+      Sentry.consoleLoggingIntegration({ levels: ["warn", "error"] }),
+    ],
     beforeSend(event) {
       // Drop ENOENT filesystem errors — caused by bot/scanner probes for non-existent paths
       const exceptions = event.exception?.values ?? [];

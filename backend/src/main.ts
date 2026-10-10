@@ -4,7 +4,7 @@ import "./instrument";
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { ObserveInstrument } from "./observe";
-import { ValidationPipe } from "@nestjs/common";
+import { ConsoleLogger, ValidationPipe } from "@nestjs/common";
 import { RedisIoAdapter } from "./prisma/redis-io.adapter";
 import { RuntimeLifecycleService } from "./runtime/runtime-lifecycle.service";
 import { resolveRuntimeConfig } from "./runtime/runtime.config";
@@ -13,6 +13,7 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 export async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     instrument: ObserveInstrument,
+    logger: new ConsoleLogger({ forceConsole: true }),
   });
   const runtimeConfig = resolveRuntimeConfig();
   const openApiConfig = new DocumentBuilder()
