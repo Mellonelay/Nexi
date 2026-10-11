@@ -102,6 +102,7 @@ export interface AdminDataProvider {
 
   /** KYC */
   listKyc(): Promise<KycReview[]>;
+  getKycEvidence?(userId: string, side: "front" | "back"): Promise<Blob>;
   decideKyc(
     id: string,
     decision: Exclude<KycStatus, "unverified" | "pending">,

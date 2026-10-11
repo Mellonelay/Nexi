@@ -3,6 +3,7 @@ import { Container, getContainer } from "@cloudflare/containers";
 import { WorkflowEntrypoint } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
 import { dispatchLoanApproval } from "./loan-workflow-dispatch.js";
+import { handleKycEvidenceStorage } from "../kyc-evidence-storage.js";
 export { ContainerProxy } from "@cloudflare/containers";
 
 const CONTAINER_ENV_KEYS = [
@@ -194,15 +195,15 @@ async function queueIngressSignature(
   ).join("");
 }
 
-async function workflowCommandSignature(
-  secret,
-  timestamp,
-  workflow,
-  instanceId,
-  action,
-  entityId,
-  idempotencyKey,
-) {
+async function workflowCommandSignature(secret, timestamp, command) {
+  const {
+    workflow,
+    instanceId,
+    action,
+    entityId,
+    idempotencyKey,
+    payload = {},
+  } = command;
   const key = await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(secret),
@@ -214,7 +215,7 @@ async function workflowCommandSignature(
     "HMAC",
     key,
     new TextEncoder().encode(
-      `${timestamp}:${workflow}:${instanceId}:${action}:${entityId}:${idempotencyKey}`,
+      JSON.stringify([timestamp, workflow, instanceId, action, entityId, idempotencyKey, payload]),
     ),
   );
   return Array.from(new Uint8Array(signature), (byte) =>
@@ -242,15 +243,14 @@ async function invokeWorkflowCommand(
   const secret = typeof env.JWT_SECRET === "string" ? env.JWT_SECRET : "";
   if (!secret) throw new NonRetryableError("JWT_SECRET is required for Workflow commands");
   const timestamp = Date.now();
-  const signature = await workflowCommandSignature(
-    secret,
-    timestamp,
+  const signature = await workflowCommandSignature(secret, timestamp, {
     workflow,
     instanceId,
     action,
     entityId,
     idempotencyKey,
-  );
+    payload,
+  });
   const container = await getRunningNexiContainer(env);
   const response = await container.fetch(
     new Request(`https://nexi.internal/_internal/workflows/${workflow}/${action}`, {
@@ -511,6 +511,7 @@ function hasTopLevelSqlSemicolon(sql) {
  * supports bounded read queries and named health checks, never public SQL.
  */
 NexiApiContainer.outboundByHost = {
+  "nexi-kyc-evidence": handleKycEvidenceStorage,
   "nexi-core-d1": async (request, env) => {
     const url = new URL(request.url);
     if (url.pathname === "/health" && request.method === "GET") {

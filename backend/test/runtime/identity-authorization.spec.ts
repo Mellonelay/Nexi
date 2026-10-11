@@ -151,7 +151,7 @@ describe('B1 identity and authorization foundation', () => {
         dob: '1815-12-10',
         country: 'GB',
         documentType: 'passport',
-        documentUrl: 'https://files.example.test/document.png',
+        frontEvidenceId: 'a8edbb2f-622f-4b20-9b0a-c3523c6432d2',
       },
       { user: { userId: 'authenticated-user', email: 'u@example.test', role: Role.USER } },
     );
@@ -172,8 +172,20 @@ describe('B1 identity and authorization foundation', () => {
       dob: '1815-12-10',
       country: 'GB',
       documentType: 'passport',
+      frontEvidenceId: 'a8edbb2f-622f-4b20-9b0a-c3523c6432d2',
       documentUrl: 'https://files.example.test/document.png',
     }, { type: 'body', metatype: KycSubmissionDto, data: '' })).rejects.toThrow();
+
+    await expect(pipe.transform({
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+      dob: '1815-12-10',
+      country: 'GB',
+      documentType: 'passport',
+      frontEvidenceId: 'a8edbb2f-622f-4b20-9b0a-c3523c6432d2',
+    }, { type: 'body', metatype: KycSubmissionDto, data: '' })).resolves.toEqual(expect.objectContaining({
+      frontEvidenceId: 'a8edbb2f-622f-4b20-9b0a-c3523c6432d2',
+    }));
 
     await expect(pipe.transform({
       email: 'u@example.test',

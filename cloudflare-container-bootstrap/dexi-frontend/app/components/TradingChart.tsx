@@ -27,6 +27,7 @@ interface TradingChartProps {
   interval?: string;
   candles?: Candle[];
   status?: MarketDataStatus;
+  sandboxed?: boolean;
 }
 
 type IndicatorKey = "MA" | "EMA" | "BOLL" | "RSI" | "MACD" | "VOL";
@@ -128,6 +129,7 @@ export default function TradingChart({
   interval = "1m",
   candles = EMPTY_CANDLES,
   status = "UNAVAILABLE",
+  sandboxed = false,
 }: TradingChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -327,12 +329,13 @@ export default function TradingChart({
     <div
       className={`nexi-trading-chart relative flex h-full w-full flex-col overflow-hidden rounded-lg ${responsiveHeight}`}
     >
+      {sandboxed && <div role="status" className="border-b border-amber-300/20 bg-amber-300/5 px-3 py-1 text-center font-mono text-[10px] font-semibold uppercase tracking-wider text-amber-100">Sandbox simulation · test data</div>}
       <ChartMetricsRail latest={latest} rsi={metrics.rsi} macdHistogram={macdHistogram} activeIndicators={activeIndicators} overlays={overlays} />
       <div
         ref={chartContainerRef}
         className="min-h-0 w-full flex-1"
         role="img"
-        aria-label={`${symbol} ${interval} candlestick chart with volume and technical overlays`}
+        aria-label={`${sandboxed ? "Sandbox simulation of " : ""}${symbol} ${interval} candlestick chart with volume and technical overlays`}
       />
       {type === "spot" && <ChartIndicatorRail activeIndicators={activeIndicators} onToggle={toggleIndicator} />}
       <ChartStatusOverlay blocksChart={blocksChart} stateCopy={stateCopy} />

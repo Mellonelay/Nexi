@@ -12,7 +12,7 @@ type CoinGeckoMarketRow = {
 
 type CoinGeckoMarketsResponse = CoinGeckoMarketRow[];
 
-const COINGECKO_IDS: Record<string, string> = {
+export const COINGECKO_IDS: Readonly<Record<string, string>> = {
   BTCUSDT: 'bitcoin', ETHUSDT: 'ethereum', LTCUSDT: 'litecoin', XRPUSDT: 'ripple',
   BCHUSDT: 'bitcoin-cash', ETCUSDT: 'ethereum-classic', FILUSDT: 'filecoin',
   USDCUSDT: 'usd-coin', SUNUSDT: 'sun-token', DOTUSDT: 'polkadot', ADAUSDT: 'cardano',

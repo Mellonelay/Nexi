@@ -93,6 +93,54 @@ export class D1CommunicationsCommandGateway {
     ]);
   }
 
+  async resolveMessageModeration(input: {
+    id: string;
+    conversationId: string;
+    adminId: string;
+    status: "OPEN" | "RESOLVED";
+    resolution?: string;
+    conversationState?: "ACTIVE" | "RESTRICTED";
+    idempotencyKey: string;
+  }): Promise<boolean> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const statements: D1BridgeBatchStatement[] = [
+      {
+        sql: `UPDATE "MessageModerationCase"
+          SET "status"=?,"resolution"=?,"reviewedById"=?,"updatedAt"=CURRENT_TIMESTAMP
+          WHERE "id"=?`,
+        params: [input.status, input.resolution ?? null, input.adminId, input.id],
+      },
+    ];
+    if (input.conversationState) {
+      statements.push({
+        sql: `UPDATE "MessageConversation"
+          SET "state"=?,"updatedAt"=CURRENT_TIMESTAMP
+          WHERE "id"=(SELECT "conversationId" FROM "MessageModerationCase" WHERE "id"=?)`,
+        params: [input.conversationState, input.id],
+      });
+    }
+    statements.push(
+      this.eventOutboxStatement(
+        {
+          idempotencyKey: `message-moderation:${input.id}:${input.idempotencyKey}`,
+          aggregateType: "MESSAGE_MODERATION",
+          aggregateId: input.id,
+          eventType: "MESSAGE_MODERATION_RESOLVED",
+          payload: {
+            status: input.status,
+            conversationId: input.conversationId,
+            reviewedById: input.adminId,
+            conversationState: input.conversationState,
+          },
+        },
+        `EXISTS (SELECT 1 FROM "MessageModerationCase" WHERE "id"=?)`,
+        [input.id],
+      ),
+    );
+    const result = await this.bridge.batch(statements);
+    return Number(result.results[0]?.meta?.changes ?? 0) === 1;
+  }
+
   async sendMessage(input: {
     id: string;
     conversationId: string;

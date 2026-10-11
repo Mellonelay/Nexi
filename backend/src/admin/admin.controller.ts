@@ -1,8 +1,10 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
+  Header,
   Param,
   ParseIntPipe,
   ParseUUIDPipe,
@@ -10,6 +12,7 @@ import {
   Post,
   Query,
   Req,
+  StreamableFile,
   UseGuards,
 } from "@nestjs/common";
 import {
@@ -67,6 +70,7 @@ import { MiningService } from "../mining/mining.service";
 import { LoanService } from "../loans/loans.service";
 import { LoanAdminDecisionDto } from "../loans/loans.dto";
 import { MarketProviderRouterService } from "../market/market-provider-router.service";
+import { KycService } from "../kyc/kyc.service";
 
 @ApiTags("Admin Control Plane")
 @Controller("admin")
@@ -80,6 +84,7 @@ export class AdminController {
     private readonly miningService: MiningService,
     private readonly loanService: LoanService,
     private readonly marketProviders: MarketProviderRouterService,
+    private readonly kycService: KycService,
   ) {}
 
   @Get("me")
@@ -379,6 +384,24 @@ export class AdminController {
   @RequireAdminPermission("kyc.view")
   getKycReviews() {
     return this.adminService.getKycReviews();
+  }
+
+  @Get("kyc/:userId/evidence/:side")
+  @RequireAdminPermission("kyc.view")
+  @Header("Cache-Control", "private, no-store")
+  @Header("X-Content-Type-Options", "nosniff")
+  async getKycEvidence(
+    @Param("userId", ParseUUIDPipe) userId: string,
+    @Param("side") side: string,
+  ) {
+    if (side !== "front" && side !== "back") {
+      throw new BadRequestException("Evidence side must be front or back");
+    }
+    const evidence = await this.kycService.getAdminEvidence(userId, side);
+    return new StreamableFile(evidence.body, {
+      type: evidence.contentType,
+      disposition: 'attachment; filename="kyc-evidence"',
+    });
   }
 
   @Post("kyc/decision")

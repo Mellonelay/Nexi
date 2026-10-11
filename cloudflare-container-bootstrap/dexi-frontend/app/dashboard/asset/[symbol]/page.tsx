@@ -5,6 +5,7 @@ import { ArrowUpRight, BarChart3, ChevronRight, Info, Star } from 'lucide-react'
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import RealtimeTradingChart from '../../../components/RealtimeTradingChart';
+import api from '../../../lib/api';
 import { useActiveInstrument } from '../../../state/ActivePairProvider';
 import { useMarketData } from '../../../hooks/useMarketData';
 import { instrumentFromMarketPair, normalizePair } from '../../../state/active-instrument';
@@ -19,20 +20,61 @@ const formatNumber = (value: number | null, precision = 2) => value === null ? p
 const formatChange = (value: number | null) => value === null ? placeholder : `${value > 0 ? '+' : ''}${value.toFixed(2)}%`;
 const TIMEFRAME_OPTIONS = ['1m', '5m', '15m', '30m', '1h', '4h', '1d'] as const;
 type MarketItem = ReturnType<typeof useMarketData>['marketPairs'][number];
+type AssetDetails = {
+  symbol: string;
+  category: string;
+  status: 'FRESH' | 'PARTIAL' | 'STALE';
+  refreshedAt: string;
+  expiresAt: string;
+  provenance: Array<{ provider: string; url: string; checkedAt?: string; verifiedAt?: string }>;
+  [key: string]: unknown;
+};
+type DetailState = 'LOADING' | 'READY' | 'UNAVAILABLE';
+const detailText = (value: unknown): string | null => typeof value === 'string' && value.trim() ? value.trim() : null;
+const detailList = (value: unknown): string | null => Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string').join(', ') || null : null;
 
-function assetDetailModel(item: MarketItem) {
+function assetDetailModel(item: MarketItem, details: AssetDetails | null, detailState: DetailState) {
   const instrument = instrumentFromMarketPair(item);
   const definition = findAsset(instrument.pair) ?? findAsset(instrument.symbol);
-  const aboutCopy = instrument.category === 'Crypto'
-    ? `${instrument.name} market context and project information.`
-    : `${instrument.category} reference information for this approved instrument.`;
-  let aboutFacts: Array<[string, string | number]> = [['Issuer', placeholder], ['Exchange', placeholder], ['Corporate actions', placeholder]];
+  const aboutCopy = detailText(details?.description)
+    ?? detailText(details?.companyOverview)
+    ?? detailText(details?.securityDescription)
+    ?? detailText(details?.pairDescription)
+    ?? detailText(details?.instrumentDescription)
+    ?? (detailState === 'LOADING' ? 'Loading approved asset profile…' : detailState === 'UNAVAILABLE' ? 'Descriptive profile details are currently unavailable.' : `${instrument.name} market reference information.`);
+  let aboutFacts: Array<[string, string | number]> = [
+    ['Metadata status', details?.status ?? (detailState === 'UNAVAILABLE' ? 'UNAVAILABLE' : placeholder)],
+    ['Metadata source', detailText(details?.sourceProvider) ?? details?.provenance?.map((entry) => entry.provider).join(', ') ?? placeholder],
+    ['Last refreshed', detailText(details?.refreshedAt) ?? placeholder],
+  ];
   if (instrument.category === 'Crypto') {
-    aboutFacts = [['Protocol / network', definition?.protocol ?? placeholder], ['Supply model', placeholder], ['Metadata source', definition?.metadataProvider ?? placeholder]];
+    aboutFacts = [
+      ['Project', detailText(details?.projectName) ?? instrument.name],
+      ['Categories', detailList(details?.categories) ?? placeholder],
+      ['Launch date', detailText(details?.launchDate) ?? placeholder],
+      ['Metadata status', details?.status ?? placeholder],
+    ];
+  } else if (instrument.category === 'Shares') {
+    aboutFacts = [
+      ['Issuer', detailText(details?.companyName) ?? placeholder],
+      ['Sector / industry', [detailText(details?.sector), detailText(details?.industry)].filter(Boolean).join(' / ') || placeholder],
+      ['Exchange', detailText(details?.exchange) ?? placeholder],
+      ['Metadata status', details?.status ?? placeholder],
+    ];
   } else if (instrument.category === 'Metal') {
-    aboutFacts = [['Reference instrument', placeholder], ['Market session', placeholder], ['Contract details', placeholder]];
+    aboutFacts = [
+      ['Instrument', detailText(details?.instrumentDescription) ?? instrument.name],
+      ['Market session', detailText(details?.marketSessionState) ?? placeholder],
+      ['Contract unit', detailText((details?.specification as Record<string, unknown> | undefined)?.unit) ?? placeholder],
+      ['Metadata status', details?.status ?? placeholder],
+    ];
   } else if (instrument.category === 'Forex') {
-    aboutFacts = [['Base / quote', instrument.pair || placeholder], ['Market session', placeholder], ['Lot details', placeholder]];
+    aboutFacts = [
+      ['Base currency', detailText(details?.baseCurrencyName) ?? detailText(details?.baseCurrency) ?? placeholder],
+      ['Quote currency', detailText(details?.quoteCurrencyName) ?? detailText(details?.quoteCurrency) ?? placeholder],
+      ['Market session', detailText(details?.marketSessionState) ?? placeholder],
+      ['Metadata status', details?.status ?? placeholder],
+    ];
   }
   const displayStatus = marketDisplayStatus(item.dataState, item.sessionState);
   const statusClass = displayStatus === 'Closed'
@@ -78,7 +120,29 @@ function AssetDetailView({
   timeframe: string;
   onTimeframeChange: (value: string) => void;
 }) {
-  const { instrument, definition, aboutCopy, aboutFacts, displayStatus, statusClass } = assetDetailModel(item);
+  const [details, setDetails] = useState<AssetDetails | null>(null);
+  const [detailState, setDetailState] = useState<DetailState>('LOADING');
+
+  useEffect(() => {
+    let cancelled = false;
+    setDetails(null);
+    setDetailState('LOADING');
+    api.get(`/market/assets/${encodeURIComponent(item.symbol)}`).then((response) => {
+      if (cancelled) return;
+      const profile = response.data?.details as AssetDetails | undefined;
+      if (!profile || normalizePair(profile.symbol) !== normalizePair(item.symbol)) {
+        setDetailState('UNAVAILABLE');
+        return;
+      }
+      setDetails(profile);
+      setDetailState('READY');
+    }).catch(() => {
+      if (!cancelled) setDetailState('UNAVAILABLE');
+    });
+    return () => { cancelled = true; };
+  }, [item.symbol]);
+
+  const { instrument, definition, aboutCopy, aboutFacts, displayStatus, statusClass } = assetDetailModel(item, details, detailState);
 
   return (
     <div className="nexi-page-shell relative min-h-full w-full min-w-0 overflow-x-clip px-4 pb-6 pt-4 text-[#F8F6FF] md:px-8 md:pb-8 md:pt-8">

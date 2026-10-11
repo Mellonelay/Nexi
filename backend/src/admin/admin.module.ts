@@ -17,6 +17,7 @@ import { ReferralVipModule } from "../referral-vip/referral-vip.module";
 import { ReferralVipAdminController } from "../referral-vip/referral-vip-admin.controller";
 import { CommunicationsModule } from "../communications/communications.module";
 import { MarketModule } from "../market/market.module";
+import { KycModule } from "../kyc/kyc.module";
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { MarketModule } from "../market/market.module";
     ReferralVipModule,
     CommunicationsModule,
     MarketModule,
+    KycModule,
   ],
   controllers: [AdminController, AdminAuthController, ReferralVipAdminController],
   providers: [AdminService, AdminWalletConfigurationService, AdminPermissionGuard],

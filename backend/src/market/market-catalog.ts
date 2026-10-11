@@ -5,7 +5,6 @@ export interface CanonicalMarketPair {
   category: MarketCatalogCategory;
   displayName: string;
   providerSymbol: string;
-  metadataProvider: string;
 }
 
 const crypto = [
@@ -39,18 +38,18 @@ const metals = [
 export const CANONICAL_MARKET_CATALOG: readonly CanonicalMarketPair[] = [
   ...crypto.map(([symbol, displayName]) => ({
     symbol: `${symbol}USDT`, category: 'crypto' as const, displayName,
-    providerSymbol: symbol, metadataProvider: 'CoinGecko/CoinMarketCap',
+    providerSymbol: symbol,
   })),
   ...stocks.map(([symbol, displayName]) => ({
     symbol: `${symbol}USDT`, category: 'stock' as const, displayName,
-    providerSymbol: symbol, metadataProvider: 'BiQuote',
+    providerSymbol: symbol,
   })),
   ...forex.map(([symbol, displayName]) => ({
     symbol, category: 'forex' as const, displayName,
-    providerSymbol: `${symbol.slice(0, 3)}/${symbol.slice(3)}`, metadataProvider: 'BiQuote/MOEX',
+    providerSymbol: `${symbol.slice(0, 3)}/${symbol.slice(3)}`,
   })),
   ...metals.map(([symbol, displayName, providerSymbol]) => ({
-    symbol, category: 'metal' as const, displayName, providerSymbol, metadataProvider: 'Metals-API/MetalpriceAPI',
+    symbol, category: 'metal' as const, displayName, providerSymbol,
   })),
 ];
 

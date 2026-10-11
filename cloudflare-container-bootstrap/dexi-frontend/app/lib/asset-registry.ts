@@ -17,7 +17,6 @@ export interface AssetDefinition {
   coingeckoId?: string;
   coinmarketcapId?: number;
   providerSymbol: string;
-  metadataProvider: string;
   availability: AssetAvailability;
   description: string;
   protocol?: string;
@@ -57,22 +56,22 @@ const fallbackIconColors: Record<string, string> = {
 const cryptoDefinitions: AssetDefinition[] = crypto.map(([symbol, coingeckoId, coinmarketcapId, name, protocol]) => ({
   id: `crypto:${symbol.toLowerCase()}`,
   category: 'Crypto', symbol, pair: `${symbol}/USDT`, displaySymbol: symbol, name, baseAsset: symbol, quoteAsset: 'USDT', precision: 8,
-  iconKey: symbol.toLowerCase(), iconSlug: simpleIconSources[symbol]?.[0], iconColor: simpleIconSources[symbol]?.[1], coingeckoId, coinmarketcapId, providerSymbol: symbol, metadataProvider: 'CoinGecko/CoinMarketCap', availability: 'LIVE', description: `${name} market and project information.`, protocol,
+  iconKey: symbol.toLowerCase(), iconSlug: simpleIconSources[symbol]?.[0], iconColor: simpleIconSources[symbol]?.[1], coingeckoId, coinmarketcapId, providerSymbol: symbol, availability: 'LIVE', description: `${name} market and project information.`, protocol,
 }));
 
 const stockDefinitions: AssetDefinition[] = stocks.map((symbol) => ({
   id: `stock:${symbol.toLowerCase()}`, category: 'Stocks', symbol: `${symbol}.US`, pair: `${symbol}/USDT`, displaySymbol: symbol, name: stockNames[symbol], baseAsset: `${symbol}.US`, quoteAsset: 'USDT', precision: 4,
-  iconKey: symbol.toLowerCase(), iconSlug: simpleIconSources[symbol]?.[0], iconColor: simpleIconSources[symbol]?.[1], providerSymbol: symbol, metadataProvider: 'BiQuote', availability: 'UNAVAILABLE', description: `${stockNames[symbol]} equity reference information.`,
+  iconKey: symbol.toLowerCase(), iconSlug: simpleIconSources[symbol]?.[0], iconColor: simpleIconSources[symbol]?.[1], providerSymbol: symbol, availability: 'UNAVAILABLE', description: `${stockNames[symbol]} equity reference information.`,
 }));
 
 const forexDefinitions: AssetDefinition[] = forex.map((symbol) => ({
   id: `forex:${symbol.toLowerCase()}`, category: 'Forex', symbol, pair: `${symbol.slice(0, 3)}/${symbol.slice(3)}`, displaySymbol: symbol, name: `${symbol.slice(0, 3)}/${symbol.slice(3)}`, baseAsset: symbol.slice(0, 3), quoteAsset: symbol.slice(3), precision: 6,
-  iconKey: symbol.toLowerCase(), iconColor: fallbackIconColors[symbol], providerSymbol: `${symbol.slice(0, 3)}/${symbol.slice(3)}`, metadataProvider: 'BiQuote/MOEX', availability: symbol === 'USDRUB' ? 'UNVERIFIED' : 'UNAVAILABLE', description: `${symbol.slice(0, 3)}/${symbol.slice(3)} currency pair reference information.`,
+  iconKey: symbol.toLowerCase(), iconColor: fallbackIconColors[symbol], providerSymbol: `${symbol.slice(0, 3)}/${symbol.slice(3)}`, availability: symbol === 'USDRUB' ? 'UNVERIFIED' : 'UNAVAILABLE', description: `${symbol.slice(0, 3)}/${symbol.slice(3)} currency pair reference information.`,
 }));
 
 const metalDefinitions: AssetDefinition[] = metals.map(([symbol, name, providerSymbol]) => ({
   id: `metal:${symbol.toLowerCase()}`, category: 'Metals', symbol, pair: `${symbol.slice(0, 3)}/USD`, displaySymbol: symbol, name, baseAsset: symbol.slice(0, 3), quoteAsset: 'USD', precision: 4,
-  iconKey: symbol.toLowerCase(), iconColor: fallbackIconColors[symbol] ?? '7353DD', providerSymbol, metadataProvider: 'Metals-API/MetalpriceAPI (candidate)', availability: 'UNAVAILABLE', description: `${name} commodity reference information.`,
+  iconKey: symbol.toLowerCase(), iconColor: fallbackIconColors[symbol] ?? '7353DD', providerSymbol, availability: 'UNAVAILABLE', description: `${name} commodity reference information.`,
 }));
 
 export const ASSET_REGISTRY = [...cryptoDefinitions, ...stockDefinitions, ...forexDefinitions, ...metalDefinitions] as const;

@@ -126,10 +126,11 @@ describe('D1 binary settlement sandbox directive', () => {
   };
   const config = { pair: 'BTCUSDT', durationSeconds: 30, payoutRate: '0.85', lossRate: '0', minStake: '1', maxStake: '1000', version: 7, enabled: true };
 
-  function createD1Service(directive: unknown, quotePrice = '90') {
+  function createD1Service(directive: unknown, quotePrice = '90', side: BinarySide = BinarySide.CALL) {
     const d1 = {
       isEnabled: jest.fn().mockReturnValue(true),
-      getBinaryPosition: jest.fn().mockResolvedValue(rawPosition),
+      listBinaryPositions: jest.fn().mockResolvedValue([]),
+      getBinaryPosition: jest.fn().mockResolvedValue({ ...rawPosition, side }),
       getActiveMarketPair: jest.fn().mockResolvedValue({ id: 'pair-1', symbol: 'BTCUSDT', baseAsset: 'BTC', quoteAsset: 'USDT' }),
       getLiveMarketQuote: jest.fn().mockResolvedValue({ id: 'quote-1', price: quotePrice, provider: 'deterministic-test', source: 'gate2', observedAt: new Date().toISOString(), receivedAt: new Date().toISOString(), sequence: 4, freshnessMs: 2 }),
       getBinaryConfiguration: jest.fn().mockResolvedValue(config),
@@ -142,13 +143,16 @@ describe('D1 binary settlement sandbox directive', () => {
   }
 
   it.each([
-    { mode: 'forced_win', result: 'WIN', quotePrice: '90', expiryAboveEntry: true },
-    { mode: 'forced_loss', result: 'LOSS', quotePrice: '110', expiryAboveEntry: false },
-  ])('keeps $mode settlement price and candles consistent with its result', async ({ mode, result, quotePrice, expiryAboveEntry }) => {
-    const commandId = `cmd-${mode}`;
+    { side: BinarySide.CALL, mode: 'forced_win', result: 'WIN', quotePrice: '90', expiryAboveEntry: true },
+    { side: BinarySide.CALL, mode: 'forced_loss', result: 'LOSS', quotePrice: '110', expiryAboveEntry: false },
+    { side: BinarySide.PUT, mode: 'forced_win', result: 'WIN', quotePrice: '110', expiryAboveEntry: false },
+    { side: BinarySide.PUT, mode: 'forced_loss', result: 'LOSS', quotePrice: '90', expiryAboveEntry: true },
+  ])('keeps $side $mode settlement price and candles consistent with its result', async ({ side, mode, result, quotePrice, expiryAboveEntry }) => {
+    const commandId = `cmd-${side}-${mode}`;
     const { service, d1 } = createD1Service(
       { commandId, mode, result, expiresAt: new Date(Date.now() + 60_000) },
       quotePrice,
+      side,
     );
     const settled: any = await service.settlePosition('position-d1-1');
     expect(d1.getLiveMarketQuote).not.toHaveBeenCalled();
@@ -161,9 +165,20 @@ describe('D1 binary settlement sandbox directive', () => {
       }),
     );
     const command = d1.settleBinaryPositionAtomic.mock.calls[0][0];
-    expect(Number(command.expiryPrice) > 100).toBe(expiryAboveEntry);
+    const expiry = Number(command.expiryPrice);
+    expect(expiry > 100).toBe(expiryAboveEntry);
+    expect(settled.position.sandboxSimulation.entryPrice).toBe('100');
     expect(settled.position.sandboxSimulation.candles.length).toBeGreaterThan(0);
     expect(settled.position.sandboxSimulation.candles.at(-1).close).toBe(command.expiryPrice);
+    for (const candle of settled.position.sandboxSimulation.candles) {
+      const open = Number(candle.open);
+      const high = Number(candle.high);
+      const low = Number(candle.low);
+      const close = Number(candle.close);
+      expect(high).toBeGreaterThanOrEqual(Math.max(open, close));
+      expect(low).toBeLessThanOrEqual(Math.min(open, close));
+      expect(low).toBeGreaterThan(0);
+    }
   });
 
   it('serves scoped simulation candles on active positions without changing market data', async () => {

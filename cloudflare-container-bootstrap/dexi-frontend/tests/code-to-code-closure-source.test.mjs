@@ -18,6 +18,13 @@ const spotPublic = read('cloudflare-container-bootstrap/dexi-frontend/app/dashbo
 const marginApi = read('cloudflare-container-bootstrap/dexi-frontend/app/lib/margin-api.ts');
 const binaryPublic = read('cloudflare-container-bootstrap/dexi-frontend/app/dashboard/binary/page.tsx');
 const walletPublic = read('cloudflare-container-bootstrap/dexi-frontend/app/dashboard/wallet/page.tsx');
+const walletReadback = [
+  'async function readAuthority',
+  'const response = await api.get(endpoint)',
+  'readAuthority(walletEndpoint',
+  'readAuthority(activityEndpoint',
+  "loadWalletData('/wallet/me', '/wallet/activity')",
+];
 const depositPublic = read('cloudflare-container-bootstrap/dexi-frontend/app/dashboard/wallet/components/DepositModal.tsx');
 const withdrawPublic = read('cloudflare-container-bootstrap/dexi-frontend/app/dashboard/wallet/components/WithdrawModal.tsx');
 const transferPublic = read('cloudflare-container-bootstrap/dexi-frontend/app/dashboard/wallet/components/TransferModal.tsx');
@@ -118,7 +125,7 @@ test('A09 Wallet Deposit: Public claim → Admin decision → D1 ledger/outbox �
   hasAll(financialController, ['@Post("deposit-claims")', '@Get("deposit-claims")']);
   hasAll(d1, ['async creditDepositClaim', 'eventType: "DEPOSIT_CREDITED"']);
   hasAll(adminProvider, ['/admin/deposits/', '/credit']);
-  hasAll(walletPublic, ["api.get(readEndpoint)", "api.get(activityEndpoint)"]);
+  hasAll(walletPublic, walletReadback);
 });
 
 test('A10 Withdrawal: Public request → Admin decision → D1/outbox → Public/wallet readback is wired', () => {
@@ -126,7 +133,7 @@ test('A10 Withdrawal: Public request → Admin decision → D1/outbox → Public
   hasAll(financialController, ['@Post("withdrawals")', '@Get("withdrawals")']);
   hasAll(d1, ['eventType: "WITHDRAWAL_RESERVED"', 'eventType: "WITHDRAWAL_APPROVED"', 'eventType: "WITHDRAWAL_SETTLED"']);
   hasAll(adminProvider, ['/admin/withdrawals/']);
-  hasAll(walletPublic, ["api.get(readEndpoint)", "api.get(activityEndpoint)"]);
+  hasAll(walletPublic, walletReadback);
 });
 
 test('A11 Transfer: Public command → D1 paired ledger/outbox → wallet activity recovery is wired', () => {
@@ -134,7 +141,7 @@ test('A11 Transfer: Public command → D1 paired ledger/outbox → wallet activi
   hasAll(financialController, ['@Post("transfers")', '@Get("transfers")']);
   hasAll(financialService, ['async transfer(', 'this.d1.pairedTransfer']);
   hasAll(d1, ['eventType: "TRANSFER_COMPLETED"', 'async pairedTransfer']);
-  hasAll(walletPublic, ["api.get(activityEndpoint)"]);
+  hasAll(walletPublic, walletReadback);
 });
 
 test('A12 Convert: Public quote/accept → D1 atomic ledger/outbox → wallet recovery is wired', () => {
@@ -142,7 +149,7 @@ test('A12 Convert: Public quote/accept → D1 atomic ledger/outbox → wallet re
   hasAll(financialController, ['@Post("conversion/quote")', '@Post("conversion/accept")']);
   hasAll(financialService, ['async createConversionQuote(', 'async acceptConversion(', 'this.d1.acceptConversion']);
   hasAll(d1, ['eventType: "CONVERSION_ACCEPTED"', 'async acceptConversion']);
-  hasAll(walletPublic, ["api.get(readEndpoint)", "api.get(activityEndpoint)"]);
+  hasAll(walletPublic, walletReadback);
 });
 
 test('A13 Mining/Earn: Public lifecycle → D1 ledger/outbox/realtime → Admin/readback is wired', () => {

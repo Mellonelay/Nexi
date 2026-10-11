@@ -48,6 +48,7 @@ function Inner() {
   const [assignFor, setAssignFor] = useState<KycReview | null>(null);
   const [notesFor, setNotesFor] = useState<KycReview | null>(null);
   const [pending, setPending] = useState<PendingKycAction | null>(null);
+  const [evidenceBusy, setEvidenceBusy] = useState<"front" | "back" | null>(null);
 
   const kyc = useMemo(() => kycQ.data ?? [], [kycQ.data]);
   const users = usersQ.data ?? [];
@@ -77,6 +78,33 @@ function Inner() {
   const canUpdateNotes = canDecide && provider.supports?.("updateKycNotes") !== false;
 
   const userFor = (id: string): User | undefined => users.find((u) => u.id === id);
+
+  const downloadEvidence = async (review: KycReview, side: "front" | "back") => {
+    if (!provider.getKycEvidence) {
+      toast.error("Private KYC evidence access is unavailable.");
+      return;
+    }
+    setEvidenceBusy(side);
+    try {
+      const blob = await provider.getKycEvidence(review.userId, side);
+      const extension = blob.type === "application/pdf" ? ".pdf"
+        : blob.type === "image/png" ? ".png"
+        : blob.type === "image/webp" ? ".webp"
+        : ".jpg";
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = `kyc-${side}-${review.id}${extension}`;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+    } catch {
+      toast.error(`KYC ${side} document could not be retrieved.`);
+    } finally {
+      setEvidenceBusy(null);
+    }
+  };
 
   const columns: DataTableColumn<KycReview>[] = [
     {
@@ -252,6 +280,31 @@ function Inner() {
                       ),
                     },
                   ],
+                },
+                {
+                  id: "evidence",
+                  title: "Identity documents",
+                  content: (
+                    <div className="flex flex-wrap gap-2">
+                      {(["front", "back"] as const).map((side) => (
+                        <Button
+                          key={side}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={!provider.getKycEvidence || evidenceBusy !== null}
+                          onClick={() => void downloadEvidence(selected, side)}
+                        >
+                          {evidenceBusy === side ? "Retrieving…" : `Download ${side}`}
+                        </Button>
+                      ))}
+                      {!provider.getKycEvidence ? (
+                        <p className="w-full text-xs text-muted-foreground">
+                          Private evidence access is not configured for this provider.
+                        </p>
+                      ) : null}
+                    </div>
+                  ),
                 },
                 {
                   id: "user",

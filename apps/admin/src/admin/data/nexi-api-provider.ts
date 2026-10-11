@@ -486,6 +486,23 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       };
     });
   }
+  async getKycEvidence(userId: string, side: "front" | "back"): Promise<Blob> {
+    const token = await this.config.getToken();
+    if (!token.trim()) throw new NexiAdminApiError(401, "Admin session token is unavailable");
+    const response = await fetch(
+      `${this.config.baseUrl.endsWith("/") ? this.config.baseUrl.slice(0, -1) : this.config.baseUrl}/admin/kyc/${encodeURIComponent(userId)}/evidence/${side}`,
+      { headers: { Accept: "application/octet-stream", Authorization: `Bearer ${token}` } },
+    );
+    if (!response.ok) {
+      let message = `Admin API request failed (${response.status})`;
+      try {
+        const payload = record(await response.json());
+        if (typeof payload.message === "string") message = payload.message;
+      } catch { /* retain the status-based error for non-JSON responses */ }
+      throw new NexiAdminApiError(response.status, message);
+    }
+    return response.blob();
+  }
   async decideKyc(
     id: string,
     decision: Parameters<AdminDataProvider["decideKyc"]>[1],
