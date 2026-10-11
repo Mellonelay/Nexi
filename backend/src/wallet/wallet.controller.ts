@@ -7,6 +7,7 @@ import {
   UseGuards,
   Req,
   GoneException,
+  Query,
 } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { Role } from "../prisma/d1-client";
@@ -42,8 +43,21 @@ export class WalletController {
 
   @Get("activity")
   @UseGuards(JwtAuthGuard)
-  async getActivity(@Req() request: AuthenticatedRequest) {
-    return this.walletService.getActivity(request.user.userId);
+  async getActivity(
+    @Req() request: AuthenticatedRequest,
+    @Query("limit") limit?: string,
+    @Query("cursor") cursor?: string,
+    @Query("type") type?: string,
+    @Query("asset") asset?: string,
+    @Query("status") status?: string,
+  ) {
+    return this.walletService.getActivity(request.user.userId, { limit, cursor, type, asset, status });
+  }
+
+  @Get("overview")
+  @UseGuards(JwtAuthGuard)
+  async getOverview(@Req() request: AuthenticatedRequest) {
+    return this.walletService.getOverview(request.user.userId);
   }
 
   @Get("me")

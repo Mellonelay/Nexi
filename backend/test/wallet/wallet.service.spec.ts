@@ -1,4 +1,4 @@
-import { GoneException } from "@nestjs/common";
+import { BadRequestException, GoneException } from "@nestjs/common";
 import { WalletService } from "../../src/wallet/wallet.service";
 
 const walletAccountsByScope = [
@@ -37,6 +37,7 @@ describe("WalletService D1 read authority", () => {
     ],
     ["getLedger", (service: WalletService) => service.getLedger("user-1")],
     ["getActivity", (service: WalletService) => service.getActivity("user-1")],
+    ["getOverview", (service: WalletService) => service.getOverview("user-1")],
   ])(
     "fails closed for %s when D1 is unavailable",
     async (_operation, operation) => {
@@ -118,14 +119,79 @@ describe("WalletService D1 read authority", () => {
     expect(await service.getLedger("user-1")).toEqual([
       expect.objectContaining({ amount: "2", walletId: "account-1" }),
     ]);
-    expect(await service.getActivity("user-1")).toEqual([
-      expect.objectContaining({ amount: "2", referenceId: "withdrawal-1" }),
-    ]);
+    expect(await service.getActivity("user-1")).toEqual({
+      activities: [expect.objectContaining({ amount: "2", referenceId: "withdrawal-1", relatedLedgerPostings: [] })],
+      hasMore: false,
+      nextCursor: null,
+    });
     expect(d1.ensureWallet).toHaveBeenCalledWith("user-1");
     expect(prisma.wallet.upsert).not.toHaveBeenCalled();
     expect(prisma.ledgerAccount.findMany).not.toHaveBeenCalled();
     expect(prisma.currency.findMany).not.toHaveBeenCalled();
     expect(prisma.activity.findMany).not.toHaveBeenCalled();
+  });
+
+  it("returns persisted available and locked values across Ledger scopes", async () => {
+    const d1 = {
+      isEnabled: jest.fn(() => true),
+      listLedgerAccounts: jest.fn().mockResolvedValue(walletAccountsByScope),
+      listCurrencies: jest.fn().mockResolvedValue([{ symbol: "USDT" }]),
+    } as any;
+    const service = new WalletService(prisma, ledger, d1);
+    await expect(service.getOverview("user-1")).resolves.toEqual({
+      currencies: ["USDT"],
+      assets: [{
+        asset: "USDT",
+        name: "USDT",
+        logo: null,
+        scopes: {
+          MAIN: { available: "10.25", locked: "1.75", total: "12", state: "ACTIVE", accountExists: true },
+          MARGIN: { available: "60", locked: "0", total: "60", state: "ACTIVE", accountExists: true },
+        },
+      }],
+    });
+    expect(d1.listLedgerAccounts).toHaveBeenCalledWith("user-1");
+    expect(prisma.ledgerAccount.findMany).not.toHaveBeenCalled();
+  });
+
+  it("fills supported currencies with a truthful unopened zero MAIN balance without creating an account", async () => {
+    const d1 = {
+      isEnabled: jest.fn(() => true),
+      listLedgerAccounts: jest.fn().mockResolvedValue([]),
+      listCurrencies: jest.fn().mockResolvedValue([{ symbol: "USDT", name: "Tether" }]),
+    } as any;
+    const service = new WalletService(prisma, ledger, d1);
+    await expect(service.getOverview("user-1")).resolves.toEqual({
+      currencies: ["USDT"],
+      assets: [{
+        asset: "USDT",
+        name: "Tether",
+        logo: null,
+        scopes: {
+          MAIN: { available: "0", locked: "0", total: "0", state: "NOT_OPENED", accountExists: false },
+        },
+      }],
+    });
+    expect(d1.listLedgerAccounts).toHaveBeenCalledWith("user-1");
+    expect(prisma.ledgerAccount.findMany).not.toHaveBeenCalled();
+  });
+
+  it("rejects malformed activity cursors and keeps filters user scoped", async () => {
+    const d1 = {
+      isEnabled: jest.fn(() => true),
+      listUserActivityPage: jest.fn().mockResolvedValue({ rows: [], hasMore: false }),
+    } as any;
+    const service = new WalletService(prisma, ledger, d1);
+    await expect(service.getActivity("user-1", { cursor: "invalid" })).rejects.toBeInstanceOf(BadRequestException);
+    await service.getActivity("user-1", { limit: 20, type: "transfer", asset: "usdt", status: "completed" });
+    expect(d1.listUserActivityPage).toHaveBeenCalledWith("user-1", {
+      limit: 20,
+      beforeCreatedAt: undefined,
+      beforeId: undefined,
+      type: "TRANSFER",
+      asset: "USDT",
+      status: "COMPLETED",
+    });
   });
 
   it("keeps the legacy pending-withdrawal read disabled regardless of D1 state", async () => {

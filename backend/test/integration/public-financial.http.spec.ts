@@ -63,7 +63,7 @@ describe('Public financial C2 contract path', () => {
     const withdrawal = await financial.requestWithdrawal(body, requestUser);
     expect(withdrawal).toMatchObject({ replayed: false, providerLive: false, withdrawal: { state: 'PENDING_REVIEW', requestKey: raw.idempotencyKey } });
     expect(await wallet.getMyWallet(requestUser)).toMatchObject({ USDT: { available: '89.8', locked: '10.2', total: '100' } });
-    expect(await wallet.getActivity(requestUser)).toEqual(expect.arrayContaining([expect.objectContaining({ type: 'WITHDRAWAL', ledgerCorrelationId: raw.idempotencyKey, ledgerPostingId: 'posting-1' })]));
+    expect(await wallet.getActivity(requestUser)).toMatchObject({ activities: expect.arrayContaining([expect.objectContaining({ type: 'WITHDRAWAL', ledgerCorrelationId: raw.idempotencyKey, ledgerPostingId: 'posting-1' })]), hasMore: false, nextCursor: null });
     const replay = await financial.requestWithdrawal(body, requestUser);
     expect(replay).toMatchObject({ replayed: true, withdrawal: { id: 'withdrawal-1' } });
     expect(d1.withdrawals).toHaveLength(1);

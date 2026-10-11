@@ -40,29 +40,84 @@ export class BinaryService {
     if (!raw) throw new NotFoundException('Binary position not found');
     if (actorUserId && String(raw.userId) !== actorUserId) throw new BadRequestException('Binary position ownership mismatch');
     const terminal = new Set<string>([Gate2BinaryState.WIN, Gate2BinaryState.LOSS, Gate2BinaryState.ERROR]).has(String(raw.state));
-    if (terminal) return { position: raw, replayed: true };
+    if (terminal) return { position: this.withPersistedSandboxSimulation(raw), replayed: true };
     const expiresAt = new Date(String(raw.expiresAt));
     if (expiresAt.getTime() > Date.now()) throw new BadRequestException('Binary position has not expired');
     const pair = await this.d1.getActiveMarketPair(String(raw.pair));
-    const quote = pair
-      ? await this.getApprovedSettlementQuote(pair, {
-          observedAt: expiresAt.toISOString(),
-          sequence: String(raw.entrySequence),
-        })
-      : null;
-    if (!pair || !quote) return { position: raw, delayed: true };
+    if (!pair) return { position: raw, delayed: true };
     const configuration: any = await this.d1.getBinaryConfiguration(String(raw.pair), Number(raw.durationSeconds), Number(raw.configurationVersion));
     if (!configuration) return { position: raw, error: true };
     const sandbox = await this.sandboxScenarios.findBinaryDirective(this.prisma, String(raw.userId), String(raw.id));
-    const state = (sandbox?.result ?? this.outcome(String(raw.side) as BinarySide, new Prisma.Decimal(String(raw.entryPrice)), new Prisma.Decimal(quote.price))) as 'WIN' | 'LOSS';
-    const payout = this.payoutFor(state, new Prisma.Decimal(String(raw.stake)), configuration);
-    const position: any = await this.d1.settleBinaryPositionAtomic({
-      positionId, userId: String(raw.userId), asset: pair.quoteAsset, stake: String(raw.stake), payout: payout.toString(), state,
-      expiryPrice: quote.price.toString(), expiryQuoteId: quote.id, expiryProvider: quote.provider, expirySource: quote.source,
-      expiryObservedAt: quote.observedAt, expiryReceivedAt: quote.receivedAt, expirySequence: String(quote.sequence),
-      realizedProfit: payout.sub(new Prisma.Decimal(String(raw.stake))).toString(), idempotencyKey: String(raw.idempotencyKey), correlationId: String(raw.correlationId),
+    if (sandbox) return this.settleSandboxPosition({ raw, pair, configuration, expiresAt, sandbox });
+    const quote = await this.getApprovedSettlementQuote(pair, {
+      observedAt: expiresAt.toISOString(),
+      sequence: String(raw.entrySequence),
     });
-    this.binaryGateway.emitPositionUpdate(String(raw.userId), { event: 'binary.position.settled', position });
+    if (!quote) return { position: raw, delayed: true };
+    return this.settleProviderPosition({ raw, pair, configuration, expiresAt, sandbox: null, quote });
+  }
+
+  private async settleSandboxPosition(context: {
+    raw: any;
+    pair: any;
+    configuration: any;
+    expiresAt: Date;
+    sandbox: NonNullable<Awaited<ReturnType<SandboxScenarioService['findBinaryDirective']>>>;
+  }) {
+    const entryPrice = new Prisma.Decimal(String(context.raw.entryPrice));
+    const expiryPrice = this.sandboxExpiryPrice(entryPrice, String(context.raw.side) as BinarySide, context.sandbox.result);
+    return this.persistSettlement({ ...context, entryPrice, expiryPrice, state: context.sandbox.result, quote: null });
+  }
+
+  private async settleProviderPosition(context: {
+    raw: any;
+    pair: any;
+    configuration: any;
+    expiresAt: Date;
+    sandbox: null;
+    quote: NonNullable<Awaited<ReturnType<BinaryService['getApprovedSettlementQuote']>>>;
+  }) {
+    const entryPrice = new Prisma.Decimal(String(context.raw.entryPrice));
+    const expiryPrice = new Prisma.Decimal(String(context.quote.price));
+    const state = this.outcome(String(context.raw.side) as BinarySide, entryPrice, expiryPrice);
+    return this.persistSettlement({ ...context, entryPrice, expiryPrice, state });
+  }
+
+  private async persistSettlement(context: {
+    raw: any;
+    pair: any;
+    configuration: any;
+    expiresAt: Date;
+    sandbox?: NonNullable<Awaited<ReturnType<SandboxScenarioService['findBinaryDirective']>>>;
+    quote: any | null;
+    entryPrice: Prisma.Decimal;
+    expiryPrice: Prisma.Decimal;
+    state: 'WIN' | 'LOSS';
+  }) {
+    const payout = this.payoutFor(context.state, new Prisma.Decimal(String(context.raw.stake)), context.configuration);
+    const simulated = Boolean(context.sandbox);
+    const settled: any = await this.d1.settleBinaryPositionAtomic({
+      positionId: String(context.raw.id),
+      userId: String(context.raw.userId),
+      asset: String(context.pair.quoteAsset),
+      stake: String(context.raw.stake),
+      payout: payout.toString(),
+      state: context.state,
+      expiryPrice: context.expiryPrice.toString(),
+      expiryQuoteId: simulated ? null : context.quote.id,
+      expiryProvider: simulated ? 'nexi-sandbox-simulation' : context.quote.provider,
+      expirySource: simulated ? `sandbox:${context.sandbox!.commandId}:${context.sandbox!.mode}` : context.quote.source,
+      expiryObservedAt: simulated ? context.expiresAt.toISOString() : context.quote.observedAt,
+      expiryReceivedAt: simulated ? new Date().toISOString() : context.quote.receivedAt,
+      expirySequence: simulated ? String(context.raw.entrySequence) : String(context.quote.sequence),
+      realizedProfit: payout.sub(new Prisma.Decimal(String(context.raw.stake))).toString(),
+      idempotencyKey: String(context.raw.idempotencyKey),
+      correlationId: String(context.raw.correlationId),
+    });
+    const position = simulated
+      ? { ...settled, sandboxSimulation: this.buildSandboxSimulation(context.raw, context.sandbox!, context.expiryPrice, true) }
+      : settled;
+    this.binaryGateway.emitPositionUpdate(String(context.raw.userId), { event: 'binary.position.settled', position });
     return { position, replayed: false };
   }
 
@@ -96,11 +151,25 @@ export class BinaryService {
   }
 
   async getCurrentPositions(userId: string) {
-    return this.d1.listBinaryPositions(userId, true);
+    const positions: any[] = await this.d1.listBinaryPositions(userId, true);
+    return Promise.all(positions.map(async (position) => {
+      const directive = await this.sandboxScenarios.findBinaryDirective(this.prisma, userId, String(position.id));
+      if (!directive) return position;
+      const expiryPrice = this.sandboxExpiryPrice(
+        new Prisma.Decimal(String(position.entryPrice)),
+        String(position.side) as BinarySide,
+        directive.result,
+      );
+      return {
+        ...position,
+        sandboxSimulation: this.buildSandboxSimulation(position, directive, expiryPrice, false),
+      };
+    }));
   }
 
   async getHistory(userId: string) {
-    return this.d1.listBinaryPositions(userId, false);
+    const positions: any[] = await this.d1.listBinaryPositions(userId, false);
+    return positions.map((position) => this.withPersistedSandboxSimulation(position));
   }
 
   async getConfig() {
@@ -109,7 +178,98 @@ export class BinaryService {
     return { durations, configurations };
   }
 
-  private outcome(side: BinarySide, entry: Prisma.Decimal, expiry: Prisma.Decimal): Gate2BinaryState {
+  private sandboxExpiryPrice(
+    entry: Prisma.Decimal,
+    side: BinarySide,
+    result: 'WIN' | 'LOSS',
+  ): Prisma.Decimal {
+    const delta = entry.mul('0.001').toDecimalPlaces(18, Prisma.Decimal.ROUND_UP);
+    const movement = delta.isZero() ? new Prisma.Decimal('0.000000000000000001') : delta;
+    const higher = (side === BinarySide.CALL) === (result === Gate2BinaryState.WIN);
+    const expiry = higher ? entry.add(movement) : entry.sub(movement);
+    if (expiry.isZero() || expiry.isNegative()) {
+      throw new BadRequestException('Sandbox outcome cannot produce a positive expiry price');
+    }
+    return expiry;
+  }
+
+  private buildSandboxSimulation(
+    position: any,
+    directive: { commandId: string; mode: string; result: 'WIN' | 'LOSS' },
+    expiryPrice: Prisma.Decimal,
+    completed: boolean,
+  ) {
+    const durationSeconds = Math.max(1, Number(position.durationSeconds) || 1);
+    const expiresAtMs = new Date(String(position.expiresAt)).getTime();
+    const createdAtMs = position.createdAt
+      ? new Date(String(position.createdAt)).getTime()
+      : expiresAtMs - durationSeconds * 1000;
+    const endAtMs = completed
+      ? expiresAtMs
+      : Math.min(Date.now(), expiresAtMs);
+    const entry = new Prisma.Decimal(String(position.entryPrice));
+    const count = Math.min(12, Math.max(2, Math.ceil(durationSeconds / 5)));
+    const candles: Array<Record<string, string | number>> = [];
+    const source = `binary-sandbox:${directive.commandId}`;
+    for (let index = 0; index < count; index += 1) {
+      const start = createdAtMs + durationSeconds * 1000 * index / count;
+      const scheduledEnd = createdAtMs + durationSeconds * 1000 * (index + 1) / count;
+      if (start >= endAtMs) break;
+      const end = Math.min(scheduledEnd, endAtMs);
+      if (end <= start) continue;
+      const openRatio = (start - createdAtMs) / (durationSeconds * 1000);
+      const closeRatio = (end - createdAtMs) / (durationSeconds * 1000);
+      const open = entry.add(expiryPrice.sub(entry).mul(openRatio));
+      const close = entry.add(expiryPrice.sub(entry).mul(closeRatio));
+      const high = Prisma.Decimal.max(open, close);
+      const low = Prisma.Decimal.min(open, close);
+      candles.push({
+        sequence: index,
+        openTime: new Date(start).toISOString(),
+        closeTime: new Date(end).toISOString(),
+        open: open.toString(),
+        high: high.toString(),
+        low: low.toString(),
+        close: close.toString(),
+        volume: '0',
+        provider: 'nexi-sandbox-simulation',
+        source,
+      });
+    }
+    return {
+      scenarioId: directive.commandId,
+      mode: directive.mode,
+      plannedResult: directive.result,
+      state: completed ? directive.result : String(position.state),
+      source: 'nexi-sandbox-simulation',
+      entryPrice: entry.toString(),
+      expiryPrice: expiryPrice.toString(),
+      candles,
+    };
+  }
+
+  private withPersistedSandboxSimulation(position: any) {
+    if (String(position.expiryProvider) !== 'nexi-sandbox-simulation' || !position.expiryPrice) {
+      return position;
+    }
+    const parts = String(position.expirySource ?? '').split(':');
+    const directive = {
+      commandId: parts[1] ?? 'unknown',
+      mode: parts[2] ?? 'forced',
+      result: String(position.state) as 'WIN' | 'LOSS',
+    };
+    return {
+      ...position,
+      sandboxSimulation: this.buildSandboxSimulation(
+        position,
+        directive,
+        new Prisma.Decimal(String(position.expiryPrice)),
+        true,
+      ),
+    };
+  }
+
+  private outcome(side: BinarySide, entry: Prisma.Decimal, expiry: Prisma.Decimal): 'WIN' | 'LOSS' {
     // Binary has exactly two outcomes. An equal price is a loss, never a draw/refund.
     const win = side === BinarySide.CALL ? expiry.gt(entry) : expiry.lt(entry);
     return win ? Gate2BinaryState.WIN : Gate2BinaryState.LOSS;

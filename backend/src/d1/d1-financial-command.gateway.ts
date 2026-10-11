@@ -163,7 +163,7 @@ export interface D1BinarySettleCommand {
   payout: string;
   state: string;
   expiryPrice: string;
-  expiryQuoteId: string;
+  expiryQuoteId: string | null;
   expiryProvider: string;
   expirySource: string;
   expiryObservedAt: string;
@@ -3704,6 +3704,62 @@ export class D1FinancialCommandGateway {
       [userId, Math.min(Math.max(limit, 1), 100)],
     );
     return result.results;
+  }
+
+  async listUserActivityPage(
+    userId: string,
+    options: {
+      limit: number;
+      beforeCreatedAt?: string;
+      beforeId?: string;
+      type?: string;
+      asset?: string;
+      status?: string;
+    },
+  ): Promise<{ rows: Record<string, unknown>[]; hasMore: boolean }> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const where = ['a."userId"=?'];
+    const params: (string | number)[] = [userId];
+    if (options.type) {
+      where.push('a."type"=?');
+      params.push(options.type);
+    }
+    if (options.asset) {
+      where.push('a."asset"=?');
+      params.push(options.asset);
+    }
+    if (options.status) {
+      where.push('a."status"=?');
+      params.push(options.status);
+    }
+    if (options.beforeCreatedAt && options.beforeId) {
+      where.push('(a."createdAt"<? OR (a."createdAt"=? AND a."id"<?))');
+      params.push(options.beforeCreatedAt, options.beforeCreatedAt, options.beforeId);
+    }
+    params.push(Math.min(Math.max(options.limit, 1), 100) + 1);
+    const result = await this.bridge.select<Record<string, unknown>>(
+      `SELECT a.*,
+        (SELECT json_group_array(json_object(
+          'id',p."id",'asset',p."asset",'kind',p."kind",'amount',p."amount",
+          'availableDelta',p."availableDelta",'lockedDelta',p."lockedDelta",
+          'scope',la."scope",'referenceType',p."referenceType",
+          'referenceId',p."referenceId",'idempotencyKey',p."idempotencyKey",
+          'correlationId',p."correlationId",'createdAt',p."createdAt"
+        )) FROM "LedgerPosting" p
+          JOIN "LedgerAccount" la ON la."id"=p."accountId"
+          WHERE la."userId"=a."userId"
+            AND (p."correlationId"=a."ledgerCorrelationId" OR p."id"=a."ledgerPostingId")
+        ) AS "relatedLedgerPostings"
+       FROM "Activity" a
+       WHERE ${where.join(' AND ')}
+       ORDER BY a."createdAt" DESC,a."id" DESC LIMIT ?`,
+      params,
+    );
+    const hasMore = result.results.length > Math.min(Math.max(options.limit, 1), 100);
+    return {
+      rows: result.results.slice(0, Math.min(Math.max(options.limit, 1), 100)),
+      hasMore,
+    };
   }
 
   async listCurrencies(): Promise<Record<string, unknown>[]> {

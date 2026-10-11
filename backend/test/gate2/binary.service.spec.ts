@@ -136,30 +136,70 @@ describe('D1 binary settlement sandbox directive', () => {
       settleBinaryPositionAtomic: jest.fn().mockResolvedValue({ ...rawPosition, state: 'WIN' }),
     };
     const prisma = { adminGovernanceCommand: { findMany: jest.fn() } };
-    const service = new BinaryService(prisma as any, { emitPositionUpdate: jest.fn() } as any, { findBinaryDirective: jest.fn().mockResolvedValue(directive) } as any, d1 as any);
-    return { service, d1 };
+    const sandboxScenarios = { findBinaryDirective: jest.fn().mockResolvedValue(directive) };
+    const service = new BinaryService(prisma as any, { emitPositionUpdate: jest.fn() } as any, sandboxScenarios as any, d1 as any);
+    return { service, d1, sandboxScenarios };
   }
 
-  it('D1 settlement honors forced_win directive overriding computed LOSS', async () => {
+  it.each([
+    { mode: 'forced_win', result: 'WIN', quotePrice: '90', expiryAboveEntry: true },
+    { mode: 'forced_loss', result: 'LOSS', quotePrice: '110', expiryAboveEntry: false },
+  ])('keeps $mode settlement price and candles consistent with its result', async ({ mode, result, quotePrice, expiryAboveEntry }) => {
+    const commandId = `cmd-${mode}`;
     const { service, d1 } = createD1Service(
-      { commandId: 'cmd-1', mode: 'forced_win', result: 'WIN', expiresAt: new Date(Date.now() + 60_000) },
-      '90',
+      { commandId, mode, result, expiresAt: new Date(Date.now() + 60_000) },
+      quotePrice,
     );
-    await service.settlePosition('position-d1-1');
+    const settled: any = await service.settlePosition('position-d1-1');
+    expect(d1.getLiveMarketQuote).not.toHaveBeenCalled();
     expect(d1.settleBinaryPositionAtomic).toHaveBeenCalledWith(
-      expect.objectContaining({ state: 'WIN' }),
+      expect.objectContaining({
+        state: result,
+        expiryQuoteId: null,
+        expiryProvider: 'nexi-sandbox-simulation',
+        expirySource: `sandbox:${commandId}:${mode}`,
+      }),
     );
+    const command = d1.settleBinaryPositionAtomic.mock.calls[0][0];
+    expect(Number(command.expiryPrice) > 100).toBe(expiryAboveEntry);
+    expect(settled.position.sandboxSimulation.candles.length).toBeGreaterThan(0);
+    expect(settled.position.sandboxSimulation.candles.at(-1).close).toBe(command.expiryPrice);
   });
 
-  it('D1 settlement honors forced_loss directive overriding computed WIN', async () => {
-    const { service, d1 } = createD1Service(
-      { commandId: 'cmd-2', mode: 'forced_loss', result: 'LOSS', expiresAt: new Date(Date.now() + 60_000) },
-      '110',
-    );
-    await service.settlePosition('position-d1-1');
-    expect(d1.settleBinaryPositionAtomic).toHaveBeenCalledWith(
-      expect.objectContaining({ state: 'LOSS' }),
-    );
+  it('serves scoped simulation candles on active positions without changing market data', async () => {
+    const directive = {
+      commandId: 'active-command',
+      mode: 'forced_win',
+      result: 'WIN',
+      expiresAt: new Date(Date.now() + 60_000),
+    };
+    const { service, d1, sandboxScenarios } = createD1Service(directive);
+    d1.listBinaryPositions = jest.fn().mockResolvedValue([rawPosition]);
+    const positions: any[] = await service.getCurrentPositions('user-1');
+    expect(sandboxScenarios.findBinaryDirective).toHaveBeenCalledWith(expect.anything(), 'user-1', rawPosition.id);
+    expect(positions[0].sandboxSimulation).toMatchObject({
+      source: 'nexi-sandbox-simulation',
+      plannedResult: 'WIN',
+      entryPrice: '100',
+    });
+    expect(positions[0].sandboxSimulation.candles.length).toBeGreaterThan(0);
+    expect(d1.getLiveMarketQuote).not.toHaveBeenCalled();
+  });
+
+  it('rebuilds the same sandbox candle sequence from the persisted settlement receipt', async () => {
+    const { service, d1 } = createD1Service(null);
+    const persisted = {
+      ...rawPosition,
+      state: 'WIN',
+      expiryPrice: '100.1',
+      expiryProvider: 'nexi-sandbox-simulation',
+      expirySource: 'sandbox:cmd-1:forced_win',
+    };
+    d1.getBinaryPosition.mockResolvedValue(persisted);
+    const result: any = await service.settlePosition('position-d1-1', 'user-1');
+    expect(result).toMatchObject({ replayed: true, position: { state: 'WIN' } });
+    expect(result.position.sandboxSimulation.candles.at(-1).close).toBe('100.1');
+    expect(d1.settleBinaryPositionAtomic).not.toHaveBeenCalled();
   });
 
   it('settles from the opened configuration version after that version is disabled', async () => {
