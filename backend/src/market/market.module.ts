@@ -7,6 +7,7 @@ import { RedisModule } from '../redis/redis.module';
 import { D1PrismaModule } from '../d1/d1-prisma.module';
 import { BinaryModule } from '../binary/binary.module';
 import { MarketAuthorityService } from './market-authority.service';
+import { MarketQuoteRetentionScheduler } from './market-quote-retention.scheduler';
 import { MarketKlineController } from './market-kline.controller';
 import { MarketPublicController } from './market-public.controller';
 import { MarketKlineService } from './market-kline.service';
@@ -28,7 +29,7 @@ import { OkxMarketAdapter, BitgetMarketAdapter, HtxMarketAdapter, BybitMarketAda
 @Module({
   imports: [D1PrismaModule, RedisModule, BinaryModule],
   controllers: [MarketKlineController, MarketPublicController],
-  providers: [MarketAuthorityService, MarketIngestService, MarketGateway, MarketSeederService, MarketSubscriberService, MarketKlineService, MarketKlineQueryService, BinanceSpotAdapter, MoexUsdRubAdapter, BiquoteMarketAdapter, YahooMarketAdapter, CoinGeckoMarketAdapter, CoinMarketCapMarketAdapter, OandaMarketAdapter, MetalsApiMarketAdapter, MetalpriceApiMarketAdapter, FawazCurrencyMarketAdapter, RzzroIndustrialMetalsMarketAdapter, OkxMarketAdapter, BitgetMarketAdapter, HtxMarketAdapter, BybitMarketAdapter, GateMarketAdapter, MarketProviderRouterService],
+  providers: [MarketQuoteRetentionScheduler, MarketAuthorityService, MarketIngestService, MarketGateway, MarketSeederService, MarketSubscriberService, MarketKlineService, MarketKlineQueryService, BinanceSpotAdapter, MoexUsdRubAdapter, BiquoteMarketAdapter, YahooMarketAdapter, CoinGeckoMarketAdapter, CoinMarketCapMarketAdapter, OandaMarketAdapter, MetalsApiMarketAdapter, MetalpriceApiMarketAdapter, FawazCurrencyMarketAdapter, RzzroIndustrialMetalsMarketAdapter, OkxMarketAdapter, BitgetMarketAdapter, HtxMarketAdapter, BybitMarketAdapter, GateMarketAdapter, MarketProviderRouterService],
   exports: [MarketAuthorityService, MarketIngestService, MarketGateway, MarketSeederService, MarketSubscriberService, BinanceSpotAdapter, MoexUsdRubAdapter, BiquoteMarketAdapter, YahooMarketAdapter, CoinGeckoMarketAdapter, CoinMarketCapMarketAdapter, OandaMarketAdapter, MetalsApiMarketAdapter, MetalpriceApiMarketAdapter, FawazCurrencyMarketAdapter, RzzroIndustrialMetalsMarketAdapter, OkxMarketAdapter, BitgetMarketAdapter, HtxMarketAdapter, BybitMarketAdapter, GateMarketAdapter, MarketProviderRouterService],
 })
 export class MarketModule {}
