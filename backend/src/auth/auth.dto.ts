@@ -1,5 +1,5 @@
 import { Transform, Type } from 'class-transformer';
-import { IsEmail, IsISO8601, IsInt, IsObject, IsOptional, IsString, IsUrl, Length, Matches, MaxLength, Min, MinLength } from 'class-validator';
+import { IsEmail, IsISO8601, IsInt, IsObject, IsOptional, IsString, IsUUID, Length, Matches, MaxLength, Min, MinLength } from 'class-validator';
 
 const normalizeEmail = ({ value }: { value: unknown }): unknown =>
   typeof value === 'string' ? value.trim().toLowerCase() : value;
@@ -51,8 +51,12 @@ export class KycSubmissionDto {
   @Length(2, 64)
   documentType!: string;
 
-  @IsUrl({ require_protocol: true })
-  documentUrl!: string;
+  @IsUUID()
+  frontEvidenceId!: string;
+
+  @IsOptional()
+  @IsUUID()
+  backEvidenceId?: string;
 }
 
 export class WalletChallengeDto {

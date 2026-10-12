@@ -12,6 +12,13 @@ import { EventOutboxService } from "../events/event-outbox.service";
 import { D1CommunicationsCommandGateway } from "../d1/d1-communications-command.gateway";
 import type { D1BridgeBatchStatement } from "../d1/d1-worker-bridge.service";
 
+type ResolveMessageModerationInput = {
+  status: "OPEN" | "RESOLVED";
+  resolution?: string;
+  conversationState?: "ACTIVE" | "RESTRICTED";
+  idempotencyKey: string;
+};
+
 type LearnArticleUpdateData = {
   title?: string;
   body?: string;
@@ -422,24 +429,58 @@ export class CommunicationsService {
   async resolveMessageModeration(
     id: string,
     adminId: string,
-    input: {
-      status: "OPEN" | "RESOLVED";
-      resolution?: string;
-      conversationState?: "ACTIVE" | "RESTRICTED";
-      idempotencyKey: string;
-    },
+    input: ResolveMessageModerationInput,
   ) {
     const current = await this.database.messageModerationCase.findUnique({
       where: { id },
     });
     if (!current) throw new NotFoundException("Moderation case not found");
+    const updated = this.d1Communications.isEnabled()
+      ? await this.resolveMessageModerationWithD1(id, current.conversationId, adminId, input)
+      : await this.resolveMessageModerationWithTransaction(id, current.conversationId, adminId, input);
+    await this.publishRealtimeEvent("MESSAGE_MODERATION_UPDATED", id, {
+      conversationId: current.conversationId,
+      status: updated.status,
+      conversationState: input.conversationState,
+    });
+    return updated;
+  }
+
+  private async resolveMessageModerationWithD1(
+    id: string,
+    conversationId: string,
+    adminId: string,
+    input: ResolveMessageModerationInput,
+  ) {
+    const changed = await this.d1Communications.resolveMessageModeration({
+      id,
+      conversationId,
+      adminId,
+      status: input.status,
+      resolution: input.resolution,
+      conversationState: input.conversationState,
+      idempotencyKey: input.idempotencyKey,
+    });
+    if (!changed) throw new NotFoundException("Moderation case not found");
+    const updated = await this.database.messageModerationCase.findUnique({ where: { id } });
+    if (!updated)
+      throw new BadRequestException("Moderation case was not materialized");
+    return updated;
+  }
+
+  private async resolveMessageModerationWithTransaction(
+    id: string,
+    conversationId: string,
+    adminId: string,
+    input: ResolveMessageModerationInput,
+  ) {
     const updated = await this.database.$transaction(async (tx) => {
-      if (input.conversationState) {
-        await tx.messageConversation.update({
-          where: { id: current.conversationId },
-          data: { state: input.conversationState },
-        });
-      }
+      await (input.conversationState
+        ? tx.messageConversation.update({
+            where: { id: conversationId },
+            data: { state: input.conversationState },
+          })
+        : Promise.resolve());
       return tx.messageModerationCase.update({
         where: { id },
         data: {
@@ -456,16 +497,11 @@ export class CommunicationsService {
       "MESSAGE_MODERATION_RESOLVED",
       {
         status: updated.status,
-        conversationId: current.conversationId,
+        conversationId,
         conversationState: input.conversationState,
         reviewedById: adminId,
       },
     );
-    await this.publishRealtimeEvent("MESSAGE_MODERATION_UPDATED", id, {
-      conversationId: current.conversationId,
-      status: updated.status,
-      conversationState: input.conversationState,
-    });
     return updated;
   }
 

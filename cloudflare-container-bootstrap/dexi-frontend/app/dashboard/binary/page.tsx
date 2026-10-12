@@ -17,6 +17,7 @@ import { sessionPrincipalId } from '../../lib/wallet-auth';
 import { normalizePair } from '../../state/active-instrument';
 import { findAsset } from '../../lib/asset-registry';
 import { finiteMarketNumber } from '../../lib/market-data';
+import { binarySandboxChartFeed, selectBinarySandboxPosition } from '../../lib/binary-sandbox-chart';
 import {
   binaryOrderReady,
   BinaryPositionState,
@@ -50,6 +51,8 @@ type BinaryPosition = {
   expiresAt: string | null;
   status: BinaryPositionState;
   referenceId: string | null;
+  side: 'CALL' | 'PUT' | 'UNKNOWN';
+  sandboxSimulation?: unknown;
 };
 
 const toPositive = (value: unknown) => {
@@ -73,6 +76,8 @@ const normalizePosition = (value: unknown): BinaryPosition | null => {
     id,
     symbol: String(row.symbol ?? row.pair ?? '—'),
     direction: ['SHORT', 'PUT', 'DOWN'].includes(rawSide) ? 'SHORT' : ['LONG', 'CALL', 'UP'].includes(rawSide) ? 'LONG' : 'UNKNOWN',
+    side: ['SHORT', 'PUT', 'DOWN'].includes(rawSide) ? 'PUT' : ['LONG', 'CALL', 'UP'].includes(rawSide) ? 'CALL' : 'UNKNOWN',
+    sandboxSimulation: row.sandboxSimulation,
     amount: toPositive(row.amount ?? row.stake),
     entryPrice: toPositive(row.entryPrice),
     closePrice: toPositive(row.closePrice ?? row.resultPrice ?? row.expiryPrice),
@@ -121,11 +126,14 @@ export default function BinaryPage() {
   const [activePositions, setActivePositions] = useState<BinaryPosition[]>([]);
   const [history, setHistory] = useState<BinaryPosition[]>([]);
   const [selectedResult, setSelectedResult] = useState<BinaryPosition | null>(null);
+  const [selectedChartTradeId, setSelectedChartTradeId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [now, setNow] = useState(Date.now);
   const [binaryConfigurations, setBinaryConfigurations] = useState<BinaryConfiguration[]>([]);
   const [binaryDurations, setBinaryDurations] = useState<number[]>([]);
   const submissionLock = useRef(false);
+  const chartPairRef = useRef(normalizedPair);
+  chartPairRef.current = normalizedPair;
   const { marketPairs, metal, shares, forex } = useMarketData();
 
   useEffect(() => {
@@ -143,6 +151,7 @@ export default function BinaryPage() {
     setActivePositions([]);
     setHistory([]);
     setSelectedResult(null);
+    setSelectedChartTradeId(null);
     setFeedback(null);
   }, [normalizedPair]);
 
@@ -157,6 +166,7 @@ export default function BinaryPage() {
     if (!userId || !apiBaseUrl) return;
     const token = getAccessToken();
     if (!token) return;
+    let disposed = false;
     const socket = io(apiBaseUrl, {
       auth: { token },
       transports: ['websocket'],
@@ -164,6 +174,25 @@ export default function BinaryPage() {
       reconnectionAttempts: 8,
       reconnectionDelayMax: 8_000,
     });
+    let hasConnected = false;
+    const handleReconnect = () => {
+      if (!hasConnected) {
+        hasConnected = true;
+        return;
+      }
+      Promise.allSettled([
+        api.get('/binary/positions/current'),
+        api.get('/binary/positions/history'),
+      ]).then(([currentResult, historyResult]) => {
+        if (disposed) return;
+        if (currentResult.status === 'fulfilled' && Array.isArray(currentResult.value.data)) {
+          setActivePositions(currentResult.value.data.map(normalizePosition).filter((item): item is BinaryPosition => Boolean(item)));
+        }
+        if (historyResult.status === 'fulfilled' && Array.isArray(historyResult.value.data)) {
+          setHistory(historyResult.value.data.map(normalizePosition).filter((item): item is BinaryPosition => Boolean(item)));
+        }
+      });
+    };
     const handlePositionUpdate = (raw: unknown) => {
       const payload = raw as { event: string; position: unknown };
       const position = normalizePosition(payload.position);
@@ -173,6 +202,7 @@ export default function BinaryPage() {
         setActivePositions((current) => current.filter((item) => item.id !== position.id));
         setHistory((current) => [position, ...current.filter((item) => item.id !== position.id)]);
         setSelectedResult(position);
+        setSelectedChartTradeId((current) => current ?? (normalizePair(position.symbol) === chartPairRef.current ? position.id : null));
         setTab('HISTORY');
       }
       setState(position.status);
@@ -180,10 +210,13 @@ export default function BinaryPage() {
     const handleConnectionLoss = () => {
       setState((current) => INTERRUPTIBLE_BINARY_STATES.has(current) ? 'CONNECTION_LOST' : current);
     };
+    socket.on('connect', handleReconnect);
     socket.on('binary_position_update', handlePositionUpdate);
     socket.on('disconnect', handleConnectionLoss);
     socket.on('connect_error', handleConnectionLoss);
     return () => {
+      disposed = true;
+      socket.off('connect', handleReconnect);
       socket.off('binary_position_update', handlePositionUpdate);
       socket.off('disconnect', handleConnectionLoss);
       socket.off('connect_error', handleConnectionLoss);
@@ -211,10 +244,11 @@ export default function BinaryPage() {
   }, []);
 
   useEffect(() => {
+    setSelectedResult(null);
+    setSelectedChartTradeId(null);
     if (!userId) {
       setActivePositions([]);
       setHistory([]);
-      setSelectedResult(null);
       return;
     }
     let cancelled = false;
@@ -243,6 +277,16 @@ export default function BinaryPage() {
   const market = allMarkets.find((item) => normalizePair(item.symbol) === normalizedPair);
   const currentPrice = market?.dataState === 'LIVE' ? market.price : null;
   const marketChange = market?.dataState === 'LIVE' ? market.change : null;
+  const sandboxChartPosition = selectBinarySandboxPosition(
+    activePositions,
+    history,
+    selectedChartTradeId,
+    normalizedPair,
+  ) as BinaryPosition | null;
+  const sandboxChartFeed = useMemo(
+    () => binarySandboxChartFeed(sandboxChartPosition, interval),
+    [sandboxChartPosition, interval],
+  );
 
   const durationOptions = useMemo(() => {
     const configured = new Map(binaryConfigurations
@@ -367,7 +411,7 @@ export default function BinaryPage() {
           </div>
           <div className="nexi-station-card min-w-0 rounded-2xl p-2">
             <div className="border-b border-white/5 px-2 pb-2"><TimeframeSelector interval={interval} onChange={setInterval} /></div>
-            <div className="h-[clamp(260px,58vw,420px)] sm:h-[420px] xl:h-[500px]"><RealtimeTradingChart symbol={normalizedPair} type="binary" interval={interval} marketStatus={market?.sessionState === 'CLOSED' ? 'CLOSED' : undefined} /></div>
+            <div className="h-[clamp(260px,58vw,420px)] sm:h-[420px] xl:h-[500px]"><RealtimeTradingChart symbol={normalizedPair} type="binary" interval={interval} marketStatus={market?.sessionState === 'CLOSED' ? 'CLOSED' : undefined} sandboxFeed={sandboxChartFeed} /></div>
           </div>
 
         </section>
@@ -411,8 +455,8 @@ export default function BinaryPage() {
           {tab === 'TRADE' && <div className="p-4">
             <p className="text-sm leading-5 text-[#C3BBD0]">Select a duration, enter a stake, then review. Long = higher; Short = lower.</p>
           </div>}
-          {tab === 'ACTIVE' && <PositionList positions={activePositions} now={now} empty="No active options positions are available." onSelect={setSelectedResult} />}
-          {tab === 'HISTORY' && <PositionList positions={history} now={now} empty="Position history is unavailable." onSelect={setSelectedResult} />}
+          {tab === 'ACTIVE' && <PositionList positions={activePositions} now={now} empty="No active options positions are available." onSelect={(position) => { setSelectedChartTradeId(position.id); setSelectedResult(position); }} />}
+          {tab === 'HISTORY' && <PositionList positions={history} now={now} empty="Position history is unavailable." onSelect={(position) => { setSelectedChartTradeId(position.id); setSelectedResult(position); }} />}
         </section>
       </div>
 

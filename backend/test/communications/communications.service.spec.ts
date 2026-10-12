@@ -5,6 +5,46 @@ describe('CommunicationsService', () => {
   const redis = { isAvailable: jest.fn().mockReturnValue(false), publish: jest.fn() };
   const d1Communications = { isEnabled: jest.fn(() => false) };
 
+  it('routes Admin moderation through the canonical D1 command and reads back the result', async () => {
+    const current = { id: 'case-1', conversationId: 'conversation:user-1:user-2' };
+    const updated = { ...current, status: 'RESOLVED', resolution: 'reviewed', reviewedById: 'admin-1' };
+    const findUnique = jest.fn()
+      .mockResolvedValueOnce(current)
+      .mockResolvedValueOnce(updated);
+    const prisma: any = {
+      messageModerationCase: { findUnique },
+      $transaction: jest.fn(),
+    };
+    const d1Commands = {
+      isEnabled: jest.fn(() => true),
+      resolveMessageModeration: jest.fn().mockResolvedValue(true),
+    };
+    const durableOutbox = { recordEvent: jest.fn() };
+    const service = new CommunicationsService(
+      prisma,
+      durableOutbox as any,
+      d1Commands as any,
+      redis as any,
+    );
+
+    await expect(service.resolveMessageModeration('case-1', 'admin-1', {
+      status: 'RESOLVED',
+      resolution: 'reviewed',
+      conversationState: 'RESTRICTED',
+      idempotencyKey: 'review-1',
+    })).resolves.toBe(updated);
+
+    expect(d1Commands.resolveMessageModeration).toHaveBeenCalledWith(expect.objectContaining({
+      id: 'case-1',
+      conversationId: current.conversationId,
+      adminId: 'admin-1',
+      status: 'RESOLVED',
+      idempotencyKey: 'review-1',
+    }));
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+    expect(durableOutbox.recordEvent).not.toHaveBeenCalled();
+  });
+
   it('creates an idempotent ticket with its first reply', async () => {
     const ticket = { id: 'ticket-1', userId: 'user-1', replies: [{ id: 'reply-1' }] };
     const atomicBatch = jest.fn().mockResolvedValue([]);

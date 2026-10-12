@@ -168,6 +168,19 @@ describe("MarketAuthorityService", () => {
     };
   };
 
+  it("resolves a canonical base ticker to its canonical market pair", async () => {
+    const { service } = createService();
+    jest.spyOn(service, "getAssets").mockResolvedValue([
+      { symbol: "BTCUSDT", category: "crypto", canonicalAssetId: "crypto:btc" },
+    ]);
+
+    await expect(service.getAsset("BTC")).resolves.toMatchObject({
+      symbol: "BTCUSDT",
+      canonicalAssetId: "crypto:btc",
+    });
+    expect(service.getAssets).toHaveBeenCalledTimes(1);
+  });
+
   it("caches reconciled D1 pair identity across repeated live quotes", async () => {
     const { service, d1 } = createService();
     for (const [index, price] of ['10', '11'].entries()) {

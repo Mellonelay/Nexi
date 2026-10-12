@@ -72,6 +72,11 @@
       "bucket_name": "nexi-deposit-proofs-staging",
       "preview_bucket_name": "nexi-deposit-proofs-staging",
     },
+    {
+      "binding": "KYC_EVIDENCE",
+      "bucket_name": "nexi-kyc-evidence-staging",
+      "preview_bucket_name": "nexi-kyc-evidence-staging",
+    },
   ],
   "d1_databases": [
     {

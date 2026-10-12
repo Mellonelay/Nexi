@@ -1200,4 +1200,17 @@ describe("D1FinancialCommandGateway", () => {
     expect(() => (gateway as any).validateDepositClaimAmount("not-a-number", "10", "100")).toThrow("Deposit amount is invalid");
   });
 
+  it("keeps private KYC object keys and legacy document URLs out of Admin list responses", async () => {
+    const bridge = createBridge();
+    const gateway = new D1FinancialCommandGateway(bridge);
+    await gateway.listKycReviews();
+    const [sql] = (bridge.select as jest.Mock).mock.calls.at(-1) as [string, unknown[]];
+    expect(sql).toContain('k."id"');
+    expect(sql).toContain('k."status"');
+    expect(sql).not.toContain('"documentUrl"');
+    expect(sql).not.toContain('"idFront"');
+    expect(sql).not.toContain('"idBack"');
+    expect(sql).not.toContain('"email"');
+  });
+
 });

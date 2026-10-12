@@ -45,7 +45,15 @@ export class WorkflowCommandsService {
     }
     const expected = createHmac("sha256", secret)
       .update(
-        `${timestamp}:${input.workflow}:${input.instanceId}:${input.action}:${input.entityId}:${input.idempotencyKey}`,
+        JSON.stringify([
+          timestamp,
+          input.workflow,
+          input.instanceId,
+          input.action,
+          input.entityId,
+          input.idempotencyKey,
+          input.payload ?? {},
+        ]),
       )
       .digest("hex");
     const actual = Buffer.from(signature, "hex");

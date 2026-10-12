@@ -4223,6 +4223,8 @@ export class D1FinancialCommandGateway {
     country: string;
     documentType: string;
     documentUrl: string;
+    idFront: string;
+    idBack: string | null;
   }): Promise<Record<string, unknown>> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const existing = await this.getKyc(command.userId);
@@ -4232,7 +4234,7 @@ export class D1FinancialCommandGateway {
       throw new BadRequestException("KYC already pending");
     const result = await this.bridge.batch([
       {
-        sql: `INSERT INTO "KYC" ("id","userId","firstName","lastName","dob","country","documentType","documentUrl","status","createdAt","updatedAt") VALUES (?,?,?,?,?,?,?,?,'PENDING',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ON CONFLICT("userId") DO UPDATE SET "firstName"=excluded."firstName","lastName"=excluded."lastName","dob"=excluded."dob","country"=excluded."country","documentType"=excluded."documentType","documentUrl"=excluded."documentUrl","status"='PENDING',"updatedAt"=CURRENT_TIMESTAMP`,
+        sql: `INSERT INTO "KYC" ("id","userId","firstName","lastName","dob","country","documentType","documentUrl","idFront","idBack","status","createdAt","updatedAt") VALUES (?,?,?,?,?,?,?,?,?,?,'PENDING',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ON CONFLICT("userId") DO UPDATE SET "firstName"=excluded."firstName","lastName"=excluded."lastName","dob"=excluded."dob","country"=excluded."country","documentType"=excluded."documentType","documentUrl"=excluded."documentUrl","idFront"=excluded."idFront","idBack"=excluded."idBack","status"='PENDING',"updatedAt"=CURRENT_TIMESTAMP`,
         params: [
           randomUUID(),
           command.userId,
@@ -4242,6 +4244,8 @@ export class D1FinancialCommandGateway {
           command.country,
           command.documentType,
           command.documentUrl,
+          command.idFront,
+          command.idBack,
         ],
       },
       this.eventOutboxStatement({
@@ -4285,7 +4289,7 @@ export class D1FinancialCommandGateway {
   async listKycReviews(): Promise<Record<string, unknown>[]> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const result = await this.bridge.select<Record<string, unknown>>(
-      `SELECT k.*,u."email" FROM "KYC" k JOIN "User" u ON u."id"=k."userId" ORDER BY k."updatedAt" DESC`,
+      `SELECT k."id",k."userId",k."createdAt",k."documentType",k."country",k."status" FROM "KYC" k ORDER BY k."updatedAt" DESC`,
       [],
     );
     return result.results;

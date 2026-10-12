@@ -95,6 +95,20 @@ describe("conversion acceptance D1 batch", () => {
     ).resolves.toMatchObject({ state: "ACCEPTED" });
 
     expect(statements).toHaveLength(16);
+    // Conversion charges zero fees: debit only the input amount and credit
+    // only the quoted output amount, with no third fee posting.
+    expect(statements[2].params?.[0]).toBe("9");
+    expect(statements[4].params?.[0]).toBe("0.00001");
+    const conversionPostings = statements.filter((statement) =>
+      statement.sql.includes('INSERT INTO "LedgerPosting"'),
+    );
+    expect(conversionPostings).toHaveLength(2);
+    expect(conversionPostings.map((statement) => statement.sql)).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("'GATE2_CONVERSION_DEBIT'"),
+        expect.stringContaining("'GATE2_CONVERSION_CREDIT'"),
+      ]),
+    );
     for (const statement of statements) {
       expect(statement.params ?? []).toHaveLength(statement.sql.match(/\?/g)?.length ?? 0);
     }
