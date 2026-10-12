@@ -277,8 +277,12 @@ export class MarketAuthorityService implements OnModuleInit {
   }
 
   async getAsset(symbolInput: string): Promise<Record<string, unknown> | null> {
-    const symbol = this.normalizeSymbol(symbolInput);
-    if (!DEFAULT_MARKET_SYMBOLS.includes(symbol)) return null;
+    const requested = symbolInput.trim().toUpperCase().replace(/\.US\/USDT$/, 'USDT').replaceAll('/', '').replaceAll('.', '');
+    if (!/^[A-Z0-9]{2,24}$/.test(requested)) throw new Error('Market symbol is invalid');
+    const symbol = DEFAULT_MARKET_SYMBOLS.includes(requested)
+      ? requested
+      : [...canonicalMarketPair.values()].find((entry) => entry.symbol.endsWith('USDT') && entry.symbol.slice(0, -4) === requested)?.symbol;
+    if (!symbol) return null;
     const assets = await this.getAssets();
     return assets.find((asset) => asset.symbol === symbol) ?? null;
   }

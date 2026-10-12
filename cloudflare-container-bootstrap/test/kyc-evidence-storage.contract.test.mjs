@@ -5,7 +5,7 @@ import { handleKycEvidenceStorage } from "../kyc-evidence-storage.js";
 const key = "kyc-evidence/user-123/0fdbd7e0-1cf7-46b2-a759-1ce812570ad4";
 const png = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
-test("fails closed when the separately authorized KYC bucket binding is absent", async () => {
+test("fails closed when the KYC bucket binding is absent", async () => {
   const response = await handleKycEvidenceStorage(new Request("http://nexi-kyc-evidence/objects?key=" + encodeURIComponent(key), { method: "HEAD" }), {});
   assert.equal(response.status, 503);
 });

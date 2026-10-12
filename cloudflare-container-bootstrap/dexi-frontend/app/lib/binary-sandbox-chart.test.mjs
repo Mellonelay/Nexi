@@ -20,7 +20,7 @@ const position = (side, plannedResult, expiryPrice, state = plannedResult, candl
 const valid = (value, interval) => assert.equal(binarySandboxChartFeed(value, interval).valid, true);
 const invalid = (value) => assert.deepEqual(binarySandboxChartFeed(value), { isSandbox: true, valid: false, candles: [] });
 
-test("accepts forced outcomes only when expiry direction matches settlement, including tie losses", () => {
+test("accepts forced outcomes only when expiry direction matches WIN or LOSS, including equal-price LOSS", () => {
   valid(position("CALL", "WIN", 100.1));
   valid(position("CALL", "LOSS", 99.9));
   valid(position("CALL", "LOSS", 100));

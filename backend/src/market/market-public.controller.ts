@@ -18,6 +18,8 @@ export class MarketPublicController {
 
   @Get('assets/:symbol')
   async getAsset(@Param('symbol') symbol: string) {
+    const normalized = symbol.trim().toUpperCase().replace(/\.US\/USDT$/, 'USDT').replaceAll('/', '').replaceAll('.', '');
+    if (!/^[A-Z0-9]{2,24}$/.test(normalized)) throw new BadRequestException('Market symbol is invalid');
     const asset = await this.authority.getAsset(symbol);
     if (!asset) throw new NotFoundException('Market asset is unavailable');
     return { ...asset, details: await this.metadata.getProfile(asset) };
