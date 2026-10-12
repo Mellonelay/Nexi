@@ -45,6 +45,7 @@ body {
   background: var(--nexi-glass-panel-bg);
   border: 1px solid var(--nexi-border);
   border-radius: var(--nexi-radius-sm);
+  -webkit-backdrop-filter: blur(var(--nexi-glass-blur-panel)) saturate(var(--nexi-glass-saturation-panel));
   backdrop-filter: blur(var(--nexi-glass-blur-panel)) saturate(var(--nexi-glass-saturation-panel));
   box-shadow: var(--nexi-shadow-panel);
 }
@@ -62,6 +63,7 @@ body {
     border-color: var(--nexi-border-subtle);
     background:
       linear-gradient(180deg, rgba(12, 10, 38, 0.72), rgba(1, 1, 14, 0.7));
+    -webkit-backdrop-filter: blur(var(--nexi-glass-blur-shell)) saturate(var(--nexi-glass-saturation-shell));
     backdrop-filter: blur(var(--nexi-glass-blur-shell)) saturate(var(--nexi-glass-saturation-shell));
     box-shadow:
       inset 0 1px 0 var(--nexi-specular-edge),
@@ -72,6 +74,7 @@ body {
   .nexi-dashboard-topbar {
     border-color: transparent;
     background: transparent;
+    -webkit-backdrop-filter: none;
     backdrop-filter: none;
     box-shadow: none;
   }
@@ -95,6 +98,7 @@ body {
     .nexi-dashboard-topbar {
       border-color: var(--nexi-border-subtle);
       background: linear-gradient(180deg, rgba(12, 10, 38, 0.66), rgba(4, 3, 21, 0.54));
+      -webkit-backdrop-filter: blur(var(--nexi-glass-blur-shell)) saturate(var(--nexi-glass-saturation-shell));
       backdrop-filter: blur(var(--nexi-glass-blur-shell)) saturate(var(--nexi-glass-saturation-shell));
       box-shadow: inset 0 -1px 0 rgba(115, 83, 221, 0.12);
     }
@@ -106,6 +110,7 @@ body {
     background:
       radial-gradient(circle at 100% 0%, rgba(109, 65, 255, 0.16), transparent 48%),
       linear-gradient(135deg, var(--nexi-glass-raised-bg), var(--nexi-glass-panel-bg));
+    -webkit-backdrop-filter: blur(var(--nexi-glass-blur-panel)) saturate(var(--nexi-glass-saturation-panel));
     backdrop-filter: blur(var(--nexi-glass-blur-panel)) saturate(var(--nexi-glass-saturation-panel));
     box-shadow: var(--nexi-shadow-panel);
   }
@@ -115,6 +120,7 @@ body {
     background:
       radial-gradient(circle at 92% 8%, rgba(109, 65, 255, 0.28), transparent 44%),
       linear-gradient(120deg, rgba(34, 18, 89, 0.76), rgba(12, 10, 38, 0.64) 58%, rgba(6, 4, 26, 0.72));
+    -webkit-backdrop-filter: blur(var(--nexi-glass-blur-raised)) saturate(var(--nexi-glass-saturation-shell));
     backdrop-filter: blur(var(--nexi-glass-blur-raised)) saturate(var(--nexi-glass-saturation-shell));
     box-shadow: var(--nexi-shadow-active);
   }
@@ -122,9 +128,20 @@ body {
   .nexi-tabs-shell {
     border: 1px solid rgba(24, 24, 56, 0.92);
     background: linear-gradient(180deg, rgba(11, 9, 38, 0.88), rgba(8, 4, 28, 0.9));
+    -webkit-backdrop-filter: blur(var(--nexi-glass-blur-panel)) saturate(var(--nexi-glass-saturation-panel));
     backdrop-filter: blur(var(--nexi-glass-blur-panel)) saturate(var(--nexi-glass-saturation-panel));
     box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 10px 28px rgba(0,0,0,.24);
   }
+
+  .nexi-symbol-selector-trigger {
+    border: 1px solid rgba(139, 92, 246, 0.46);
+    border-radius: 14px;
+    background: linear-gradient(145deg, rgba(44, 20, 108, 0.66), rgba(12, 10, 38, 0.82));
+    -webkit-backdrop-filter: blur(18px) saturate(var(--nexi-glass-saturation-shell));
+    backdrop-filter: blur(18px) saturate(var(--nexi-glass-saturation-shell));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), inset 0 0 0 1px rgba(139, 92, 246, 0.12), 0 8px 22px rgba(1, 1, 14, 0.25);
+  }
+
 
   .nexi-quote-row {
     border-color: var(--nexi-border-subtle);
@@ -147,14 +164,20 @@ body {
       radial-gradient(circle at 14% 50%, rgba(115, 83, 221, 0.28), transparent 16rem),
       radial-gradient(circle at 88% 24%, rgba(72, 192, 204, 0.06), transparent 14rem),
       linear-gradient(115deg, rgba(24, 8, 72, 0.82) 0%, rgba(11, 9, 38, 0.76) 58%, rgba(4, 3, 21, 0.88) 100%);
+    -webkit-backdrop-filter: blur(var(--nexi-glass-blur-raised)) saturate(var(--nexi-glass-saturation-shell));
     backdrop-filter: blur(var(--nexi-glass-blur-raised)) saturate(var(--nexi-glass-saturation-shell));
     box-shadow: inset 0 1px 0 rgba(255,255,255,.055), 0 18px 46px rgba(0,0,0,.34), 0 0 24px rgba(115,83,221,.16);
+  }
+
+  .nexi-bottom-nav,
+  .nexi-shell-glass {
+    -webkit-backdrop-filter: blur(var(--nexi-glass-blur-shell)) saturate(var(--nexi-glass-saturation-shell));
+    backdrop-filter: blur(var(--nexi-glass-blur-shell)) saturate(var(--nexi-glass-saturation-shell));
   }
 
   .nexi-bottom-nav {
     border-color: rgba(115, 83, 221, 0.34);
     background: linear-gradient(180deg, rgba(11, 9, 38, 0.82), rgba(4, 4, 24, 0.9));
-    backdrop-filter: blur(var(--nexi-glass-blur-shell)) saturate(var(--nexi-glass-saturation-shell));
     box-shadow:
       inset 0 1px 0 rgba(255,255,255,.055),
       0 -10px 30px rgba(0, 0, 0, 0.38),
@@ -166,6 +189,7 @@ body {
     background:
       radial-gradient(circle at 100% 0%, rgba(109, 65, 255, 0.18), transparent 18rem),
       linear-gradient(180deg, rgba(11, 9, 36, 0.92) 0%, rgba(1, 1, 14, 0.98) 100%);
+    -webkit-backdrop-filter: blur(var(--nexi-glass-blur-shell)) saturate(var(--nexi-glass-saturation-panel));
     backdrop-filter: blur(var(--nexi-glass-blur-shell)) saturate(var(--nexi-glass-saturation-panel));
     box-shadow: 16px 0 58px rgba(1, 1, 14, 0.48), inset -1px 0 0 rgba(109, 65, 255, 0.12);
   }
@@ -197,6 +221,7 @@ body {
     color: var(--nexi-text-secondary);
     background: linear-gradient(180deg, rgba(22, 18, 57, 0.72), rgba(6, 4, 26, 0.78));
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 12px 32px rgba(1, 1, 14, 0.28);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
     backdrop-filter: blur(18px) saturate(150%);
   }
 
@@ -232,6 +257,7 @@ body {
     background:
       radial-gradient(circle at 88% 118%, rgba(115, 83, 221, 0.3), transparent 40%),
       linear-gradient(135deg, rgba(44, 20, 108, 0.68), rgba(11, 9, 38, 0.82));
+    -webkit-backdrop-filter: blur(22px) saturate(158%);
     backdrop-filter: blur(22px) saturate(158%);
     box-shadow: inset 0 1px 0 rgba(255,255,255,.09), 0 0 24px rgba(115,83,221,.2), 0 18px 48px rgba(0,0,0,.4);
   }
@@ -246,6 +272,7 @@ body {
   .nexi-secondary-button {
     border: 1px solid rgba(142, 91, 226, 0.28);
     background: rgba(6, 4, 26, 0.76);
+    -webkit-backdrop-filter: blur(18px) saturate(145%);
     backdrop-filter: blur(18px) saturate(145%);
   }
 
@@ -259,6 +286,7 @@ body {
     background:
       radial-gradient(circle at 82% 30%, rgba(115, 83, 221, 0.075), transparent 42%),
       linear-gradient(105deg, rgba(12, 8, 36, 0.92), rgba(8, 4, 28, 0.94));
+    -webkit-backdrop-filter: blur(16px) saturate(145%);
     backdrop-filter: blur(16px) saturate(145%);
     box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 10px 24px rgba(0,0,0,.2);
   }
@@ -285,6 +313,7 @@ body {
     border: 1px solid rgba(142, 91, 226, 0.65);
     background: rgba(6, 4, 26, 0.34);
     box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 0 22px rgba(109,65,255,.12);
+    -webkit-backdrop-filter: blur(16px) saturate(145%);
     backdrop-filter: blur(16px) saturate(145%);
   }
 
@@ -292,6 +321,45 @@ body {
     color: white;
     border-color: rgba(116,242,247,.48);
     box-shadow: 0 0 24px rgba(109,65,255,.22);
+  }
+}
+
+
+/* Shared selected-tab refraction. State fills and focus rings remain component-owned. */
+:where(button[role="tab"][aria-selected="true"], button.nexi-tab-control[aria-pressed="true"]) {
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0) 72%);
+  -webkit-backdrop-filter: blur(14px) saturate(var(--nexi-glass-saturation-panel));
+  backdrop-filter: blur(14px) saturate(var(--nexi-glass-saturation-panel));
+  outline: 1px solid rgba(185, 150, 255, 0.22);
+  outline-offset: -1px;
+}
+
+.nexi-symbol-selector-trigger:focus-visible {
+  outline: 2px solid var(--nexi-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :where(button[role="tab"][aria-selected="true"], button.nexi-tab-control[aria-pressed="true"]) {
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .nexi-symbol-selector-trigger {
+    background: #0b0711;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :where(button[role="tab"][aria-selected="true"], button.nexi-tab-control[aria-pressed="true"]) {
+    outline-color: rgba(185, 150, 255, 0.82);
+  }
+
+  .nexi-symbol-selector-trigger {
+    border-color: rgba(185, 150, 255, 0.82);
   }
 }
 
@@ -356,12 +424,12 @@ body {
 @layer components {
   .nexi-shell-glass {
     background: linear-gradient(180deg, rgba(11, 9, 36, 0.78), rgba(4, 4, 24, 0.9));
-    backdrop-filter: blur(var(--nexi-glass-blur-shell)) saturate(var(--nexi-glass-saturation-shell));
     box-shadow: inset 0 1px 0 var(--nexi-specular-edge), 0 18px 48px rgba(1, 1, 14, 0.38);
   }
 
   .nexi-raised-panel {
     background: radial-gradient(circle at 100% 0%, rgba(109, 65, 255, 0.18), transparent 48%), linear-gradient(135deg, rgba(26, 12, 36, 0.90), rgba(12, 10, 38, 0.80));
+    -webkit-backdrop-filter: blur(var(--nexi-glass-blur-raised)) saturate(var(--nexi-glass-saturation-panel));
     backdrop-filter: blur(var(--nexi-glass-blur-raised)) saturate(var(--nexi-glass-saturation-panel));
     box-shadow: var(--nexi-shadow-panel), inset 0 0 0 1px rgba(139, 92, 246, 0.08);
   }

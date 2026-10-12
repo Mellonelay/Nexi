@@ -11,12 +11,14 @@ export default function RealtimeTradingChart({
   interval = "1m",
   marketStatus,
   sandboxFeed,
+  showIndicatorControls,
 }: {
   symbol: string;
   type: "binary" | "spot";
   interval?: string;
   marketStatus?: MarketDataStatus;
   sandboxFeed?: BinarySandboxChartFeed;
+  showIndicatorControls?: boolean;
 }) {
   const stream = useRealtimeMarket(symbol, interval);
   const rawStatus: MarketDataStatus =
@@ -41,6 +43,7 @@ export default function RealtimeTradingChart({
       candles={candles}
       status={status}
       sandboxed={hasSandbox}
+      showIndicatorControls={showIndicatorControls}
     />
   );
 }

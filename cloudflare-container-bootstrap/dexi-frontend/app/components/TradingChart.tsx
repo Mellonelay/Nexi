@@ -28,6 +28,7 @@ interface TradingChartProps {
   candles?: Candle[];
   status?: MarketDataStatus;
   sandboxed?: boolean;
+  showIndicatorControls?: boolean;
 }
 
 type IndicatorKey = "MA" | "EMA" | "BOLL" | "RSI" | "MACD" | "VOL";
@@ -130,6 +131,7 @@ export default function TradingChart({
   candles = EMPTY_CANDLES,
   status = "UNAVAILABLE",
   sandboxed = false,
+  showIndicatorControls = type === "spot",
 }: TradingChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -337,7 +339,7 @@ export default function TradingChart({
         role="img"
         aria-label={`${sandboxed ? "Sandbox simulation of " : ""}${symbol} ${interval} candlestick chart with volume and technical overlays`}
       />
-      {type === "spot" && <ChartIndicatorRail activeIndicators={activeIndicators} onToggle={toggleIndicator} />}
+      {showIndicatorControls && <ChartIndicatorRail activeIndicators={activeIndicators} onToggle={toggleIndicator} />}
       <ChartStatusOverlay blocksChart={blocksChart} stateCopy={stateCopy} />
     </div>
   );

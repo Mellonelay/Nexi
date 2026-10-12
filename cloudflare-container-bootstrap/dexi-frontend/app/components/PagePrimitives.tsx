@@ -96,7 +96,7 @@ export function Metric({ label, value, hint }: { label: string; value: string; h
 }
 
 export function TabButton({ active, children, onClick }: { active: boolean; children: ReactNode; onClick: () => void }) {
-  return <button type="button" onClick={onClick} className={cn(controlVariants({ intent: active ? 'primary' : 'secondary', size: 'compact', selected: active }), 'shrink-0')} aria-pressed={active}>{children}</button>;
+  return <button type="button" onClick={onClick} className={cn(controlVariants({ intent: active ? 'primary' : 'secondary', size: 'compact', selected: active }), 'nexi-tab-control shrink-0')} aria-pressed={active}>{children}</button>;
 }
 
 export function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: string }) {

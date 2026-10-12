@@ -56,7 +56,7 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="nexi-interactive flex min-h-[44px] min-w-0 max-w-full items-center gap-2 text-lg font-bold transition-colors hover:text-gray-300"
+        className="nexi-interactive nexi-symbol-selector-trigger flex min-h-[44px] min-w-0 max-w-full items-center gap-2 text-lg font-bold transition-colors hover:text-gray-300"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >

@@ -48,6 +48,11 @@ type OrderType = 'MARKET' | 'LIMIT' | 'STOP';
 type HistoryTab = 'OPEN' | 'ORDERS' | 'TRADES';
 type SpotHistoryRow = Record<string, unknown>;
 type ChartInterval = '1m' | '5m' | '15m' | '30m' | '1h' | '4h' | '1d';
+
+function SpotRealtimeTradingChart({ symbol, interval, marketStatus }: { symbol: string; interval: ChartInterval; marketStatus?: MarketDataStatus }) {
+  return <RealtimeTradingChart symbol={symbol} type="spot" interval={interval} marketStatus={marketStatus} showIndicatorControls={false} />;
+}
+
 type MobileMarketPanel = 'CHART' | 'BOOK' | 'TRADES';
 type SpotSurface = 'SPOT' | 'MARGIN';
 
@@ -261,7 +266,7 @@ function MarginWorkspace({
             </div>
           </div>
           <div className="nexi-trading-plot-shell h-[300px] md:h-[360px] xl:h-[430px]">
-            <RealtimeTradingChart symbol={normalizedSymbol} type="spot" interval={chartInterval} marketStatus={sessionClosed ? 'CLOSED' : undefined} />
+            <SpotRealtimeTradingChart symbol={normalizedSymbol} interval={chartInterval} marketStatus={sessionClosed ? 'CLOSED' : undefined} />
           </div>
         </div>
         <div className="mt-4 grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
@@ -332,7 +337,7 @@ function SpotChartArea({displayPair, normalizedSymbol, chartInterval, setChartIn
               </div>
             </div>
             <div className="nexi-trading-plot-shell h-[300px] md:h-[360px] xl:h-[430px]">
-              <RealtimeTradingChart symbol={normalizedSymbol} type="spot" interval={chartInterval} marketStatus={sessionClosed ? 'CLOSED' : undefined} />
+              <SpotRealtimeTradingChart symbol={normalizedSymbol} interval={chartInterval} marketStatus={sessionClosed ? 'CLOSED' : undefined} />
             </div>
           </div>
 
