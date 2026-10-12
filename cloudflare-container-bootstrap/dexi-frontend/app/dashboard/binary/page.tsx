@@ -91,6 +91,39 @@ const normalizePosition = (value: unknown): BinaryPosition | null => {
   };
 };
 
+type OptionWalletBalance =
+  | { state: 'UNAUTHENTICATED' | 'LOADING' | 'UNSUPPORTED' | 'ERROR' }
+  | { state: 'ZERO' | 'POSITIVE'; available: string };
+
+function optionWalletBalanceLabel(balance: OptionWalletBalance): string {
+  if (balance.state === 'UNAUTHENTICATED') return 'Verify wallet';
+  if (balance.state === 'LOADING') return 'Loading…';
+  if (balance.state === 'UNSUPPORTED') return 'Unavailable for this account';
+  if (balance.state === 'ERROR') return 'Balance request failed';
+  if (balance.state === 'ZERO' || balance.state === 'POSITIVE') {
+    return balance.state === 'ZERO'
+      ? balance.available + ' USDT · no available funds'
+      : balance.available + ' USDT available';
+  }
+  return 'Balance unavailable';
+}
+
+function readOptionWalletBalance(payload: unknown): OptionWalletBalance {
+  if (!payload || typeof payload !== 'object') return { state: 'ERROR' };
+  const overview = payload as { currencies?: unknown; assets?: unknown };
+  const currencies = Array.isArray(overview.currencies) ? overview.currencies : [];
+  if (!currencies.some((currency) => String(currency).trim().toUpperCase() === 'USDT')) return { state: 'UNSUPPORTED' };
+  const assets = Array.isArray(overview.assets) ? overview.assets : [];
+  const usdt = assets.find((asset) => asset && typeof asset === 'object' && String((asset as { asset?: unknown }).asset).trim().toUpperCase() === 'USDT') as { scopes?: unknown } | undefined;
+  if (!usdt?.scopes || typeof usdt.scopes !== 'object') return { state: 'UNSUPPORTED' };
+  const main = (usdt.scopes as Record<string, unknown>).MAIN;
+  if (!main || typeof main !== 'object') return { state: 'UNSUPPORTED' };
+  const account = main as { accountExists?: unknown; state?: unknown; available?: unknown };
+  if (account.accountExists !== true || String(account.state).toUpperCase() !== 'ACTIVE') return { state: 'UNSUPPORTED' };
+  if (typeof account.available !== 'string' || !/^[0-9]+([.][0-9]+)?$/.test(account.available)) return { state: 'ERROR' };
+  return /^0+([.]0+)?$/.test(account.available) ? { state: 'ZERO', available: account.available } : { state: 'POSITIVE', available: account.available };
+}
+
 const FINAL_BINARY_STATES = new Set<BinaryPositionState>(['WIN', 'LOSS', 'ERROR']);
 const INTERRUPTIBLE_BINARY_STATES = new Set<BinaryPositionState>(['OPEN', 'SETTLING', 'SETTLEMENT_DELAYED']);
 
@@ -128,6 +161,14 @@ export default function BinaryPage() {
   const [selectedResult, setSelectedResult] = useState<BinaryPosition | null>(null);
   const [selectedChartTradeId, setSelectedChartTradeId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [optionWalletBalanceResult, setOptionWalletBalanceResult] = useState<{ userId: string; balance: OptionWalletBalance } | null>(null);
+  const optionWalletBalance: OptionWalletBalance = !userId
+    ? { state: 'UNAUTHENTICATED' }
+    : !apiBaseUrl
+      ? { state: 'UNSUPPORTED' }
+      : optionWalletBalanceResult?.userId === userId
+        ? optionWalletBalanceResult.balance
+        : { state: 'LOADING' };
   const [now, setNow] = useState(Date.now);
   const [binaryConfigurations, setBinaryConfigurations] = useState<BinaryConfiguration[]>([]);
   const [binaryDurations, setBinaryDurations] = useState<number[]>([]);
@@ -161,6 +202,25 @@ export default function BinaryPage() {
     window.addEventListener('nexi:wallet-session', sync);
     return () => window.removeEventListener('nexi:wallet-session', sync);
   }, []);
+
+  useEffect(() => {
+    if (!userId || !apiBaseUrl) return;
+    let cancelled = false;
+    api.get('/wallet/overview').then((response) => {
+      if (cancelled || sessionPrincipalId() !== userId) return;
+      setOptionWalletBalanceResult({ userId, balance: readOptionWalletBalance(response.data) });
+    }).catch((error: unknown) => {
+      if (cancelled || sessionPrincipalId() !== userId) return;
+      const status = error && typeof error === 'object' && 'response' in error
+        ? (error as { response?: { status?: number } }).response?.status
+        : undefined;
+      setOptionWalletBalanceResult({
+        userId,
+        balance: { state: status === 401 ? 'UNAUTHENTICATED' : 'ERROR' },
+      });
+    });
+    return () => { cancelled = true; };
+  }, [userId]);
 
   useEffect(() => {
     if (!userId || !apiBaseUrl) return;
@@ -426,7 +486,6 @@ export default function BinaryPage() {
             </div>
             <Wallet className="hidden h-5 w-5 shrink-0 text-[#A995FF] sm:mt-1 sm:block" aria-hidden="true" />
           </div>
-          <p className="mt-2 hidden text-xs leading-5 text-[#8C8299] sm:block">Long means higher at expiry. Short means lower at expiry.</p>
           <div className="mt-2 grid min-w-0 grid-cols-5 gap-1.5 sm:mt-4 sm:gap-2" aria-label="Expiry duration">
             {durationOptions.map((option) => <button key={option.seconds} type="button" aria-pressed={duration === option.seconds} disabled={!option.enabled} onClick={() => setDuration(option.seconds)} className={`nexi-interactive nexi-ripple group min-h-[64px] min-w-0 rounded-lg border px-1.5 py-2 text-center transition sm:min-h-[84px] sm:rounded-xl sm:px-2 sm:py-2.5 ${duration === option.seconds ? 'border-[#8B5CF6] bg-[linear-gradient(145deg,rgba(109,65,255,.22),rgba(26,16,36,.92))] text-white shadow-[0_0_22px_rgba(109,65,255,.14)]' : 'border-violet-300/10 bg-[#0B0711]/70 text-[#8C8299] hover:border-violet-300/25'} disabled:cursor-not-allowed disabled:opacity-55`}><span className="block text-center text-[9px] font-semibold uppercase tracking-[.04em] sm:text-[11px] sm:tracking-[.08em]">{formatDuration(option.seconds)}</span><span className="mt-1 block font-mono text-xs text-[#F5F7FB] sm:mt-2 sm:text-base">{option.rate === null ? '—' : `${(option.rate * 100).toFixed(0)}%`}</span><span className="mt-1 block break-words text-[8px] leading-3 text-[#8C8299] sm:text-[10px]">{option.minimumAmount === null || option.maximumAmount === null ? 'Range unavailable' : `${option.minimumAmount}–${option.maximumAmount} USDT`}</span></button>)}
           </div>
@@ -436,7 +495,7 @@ export default function BinaryPage() {
             <span id="binary-stake-range" className="mt-1 block text-[10px] text-[#8C8299]">{minimumStake !== null && maximumStake !== null ? `Allowed range: ${minimumStake}–${maximumStake} USDT` : 'Stake range unavailable'}</span>
           </label>
           <dl className="mt-4 grid grid-cols-2 gap-3 rounded-xl border border-violet-300/10 bg-[#0B0711] p-3 text-xs">
-            <div><dt className="text-[#8C8299]">Option Wallet</dt><dd className="mt-1 font-mono">Unavailable</dd></div>
+            <div><dt className="text-[#8C8299]">Option Wallet (Main)</dt><dd className="mt-1 font-mono" aria-live="polite">{optionWalletBalanceLabel(optionWalletBalance)}</dd></div>
             <div><dt className="text-[#8C8299]">Payout rate</dt><dd className="mt-1 font-mono">{payoutRate === null ? '—' : `${(payoutRate * 100).toFixed(0)}%`}</dd></div>
             <div><dt className="text-[#8C8299]">Potential return</dt><dd className="mt-1 font-mono">{potentialReturn === null ? '—' : `${potentialReturn.toFixed(2)} USDT`}</dd></div>
             <div><dt className="text-[#8C8299]">Duration</dt><dd className="mt-1 font-mono">{selectedDuration ? formatDuration(duration) : '—'}</dd></div>
@@ -452,9 +511,6 @@ export default function BinaryPage() {
           <div className="grid grid-cols-3 border-b border-white/5" role="tablist">
             {([['TRADE', 'Trade'], ['ACTIVE', 'Active trades'], ['HISTORY', 'History']] as const).map(([value, label]) => <button key={value} type="button" role="tab" aria-selected={tab === value} onClick={() => setTab(value)} className={`nexi-interactive min-h-12 min-w-0 px-1 text-xs sm:px-2 sm:text-sm ${tab === value ? 'border-b-2 border-[#8B5CF6] text-white' : 'text-[#8C8299]'}`}>{label}</button>)}
           </div>
-          {tab === 'TRADE' && <div className="p-4">
-            <p className="text-sm leading-5 text-[#C3BBD0]">Select a duration, enter a stake, then review. Long = higher; Short = lower.</p>
-          </div>}
           {tab === 'ACTIVE' && <PositionList positions={activePositions} now={now} empty="No active options positions are available." onSelect={(position) => { setSelectedChartTradeId(position.id); setSelectedResult(position); }} />}
           {tab === 'HISTORY' && <PositionList positions={history} now={now} empty="Position history is unavailable." onSelect={(position) => { setSelectedChartTradeId(position.id); setSelectedResult(position); }} />}
         </section>

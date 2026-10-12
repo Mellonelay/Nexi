@@ -188,7 +188,7 @@ export default function TradingChart({
         borderColor: "rgba(139,92,246,0.18)",
         timeVisible: true,
         secondsVisible: interval.endsWith("s"),
-        rightOffset: 3,
+        rightOffset: 1,
         barSpacing: 8,
       },
       crosshair: {

@@ -257,9 +257,8 @@ function MarginWorkspace({
           </div>
         </div>
         <div className="nexi-margin-chart-frame mt-4 min-w-0 overflow-hidden rounded-xl border border-violet-300/10 bg-[#0B0711]">
-          <div className="nexi-trading-intervals flex min-w-0 items-center justify-between gap-2 border-b border-white/5 px-3 py-2">
-            <span className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8C8299]">{displayPair}</span>
-            <div className="nexi-scroll-rail flex max-w-[68vw] shrink-0 items-center gap-1 overflow-x-auto" role="tablist" aria-label="Margin chart interval">
+          <div className="nexi-trading-intervals flex min-w-0 items-center gap-2 border-b border-white/5 px-3 py-2">
+            <div className="nexi-scroll-rail flex min-w-0 flex-1 items-center justify-between gap-1 overflow-x-auto" role="tablist" aria-label="Margin chart interval">
               {CHART_INTERVALS.map((value) => (
                 <button key={value} type="button" role="tab" aria-selected={chartInterval === value} onClick={() => setChartInterval(value)} className={`nexi-interactive min-h-11 min-w-11 shrink-0 rounded-md px-2 text-[10px] font-semibold ${chartInterval === value ? 'bg-[#2C146C] text-white' : 'text-[#8C8299] hover:text-white'}`}>{value}</button>
               ))}
@@ -328,9 +327,8 @@ function SpotChartArea({displayPair, normalizedSymbol, chartInterval, setChartIn
           </div>
 
           <div className={`nexi-trading-chart-card nexi-station-card order-2 min-h-[210px] min-w-0 overflow-hidden rounded-xl sm:rounded-2xl xl:block md:min-h-[360px] xl:order-none xl:min-h-[430px] ${mobileMarketPanel === 'CHART' ? 'block' : 'hidden'}`}>
-            <div className="nexi-trading-intervals flex min-w-0 items-center justify-between gap-2 border-b border-white/5 px-3 py-2">
-              <span className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8C8299]">{displayPair}</span>
-              <div className="nexi-scroll-rail flex max-w-[68vw] shrink-0 items-center gap-1 overflow-x-auto" role="tablist" aria-label="Chart interval">
+            <div className="nexi-trading-intervals flex min-w-0 items-center gap-2 border-b border-white/5 px-3 py-2">
+              <div className="nexi-scroll-rail flex min-w-0 flex-1 items-center justify-between gap-1 overflow-x-auto" role="tablist" aria-label="Chart interval">
                 {CHART_INTERVALS.map((value) => (
                   <button key={value} type="button" role="tab" aria-selected={chartInterval === value} onClick={() => setChartInterval(value)} className={`nexi-interactive min-h-11 min-w-11 shrink-0 rounded-md px-2 text-[10px] font-semibold ${chartInterval === value ? 'bg-[#2C146C] text-white' : 'text-[#8C8299] hover:text-white'}`}>{value}</button>
                 ))}

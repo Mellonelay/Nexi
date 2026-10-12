@@ -241,6 +241,7 @@ function AssetDetailView({
               type="spot"
               interval={timeframe}
               marketStatus={item.sessionState === 'CLOSED' ? 'CLOSED' : undefined}
+              showIndicatorControls={false}
             />
           </div>
           <div className="nexi-scroll-rail flex min-w-0 gap-1 overflow-x-auto border-t border-violet-300/10 p-2">
