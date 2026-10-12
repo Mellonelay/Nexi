@@ -4234,7 +4234,7 @@ export class D1FinancialCommandGateway {
       throw new BadRequestException("KYC already pending");
     const result = await this.bridge.batch([
       {
-        sql: `INSERT INTO "KYC" ("id","userId","firstName","lastName","dob","country","documentType","documentUrl","idFront","idBack","status","createdAt","updatedAt") VALUES (?,?,?,?,?,?,?,?,?,?,'PENDING',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ON CONFLICT("userId") DO UPDATE SET "firstName"=excluded."firstName","lastName"=excluded."lastName","dob"=excluded."dob","country"=excluded."country","documentType"=excluded."documentType","documentUrl"=excluded."documentUrl","idFront"=excluded."idFront","idBack"=excluded."idBack","status"='PENDING',"updatedAt"=CURRENT_TIMESTAMP`,
+        sql: `INSERT INTO "KYC" ("id","userId","firstName","lastName","dob","country","documentType","documentUrl","idFront","idBack","status","createdAt","updatedAt") VALUES (?,?,?,?,?,?,?,?,?,?,'PENDING',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ON CONFLICT("userId") DO UPDATE SET "firstName"=excluded."firstName","lastName"=excluded."lastName","dob"=excluded."dob","country"=excluded."country","documentType"=excluded."documentType","documentUrl"=excluded."documentUrl","idFront"=excluded."idFront","idBack"=excluded."idBack","status"='PENDING',"updatedAt"=CURRENT_TIMESTAMP WHERE "status" NOT IN ('APPROVED','PENDING')`,
         params: [
           randomUUID(),
           command.userId,
@@ -4254,6 +4254,7 @@ export class D1FinancialCommandGateway {
         aggregateId: command.userId,
         eventType: "KYC_SUBMITTED",
         payload: { userId: command.userId },
+        guard: { sql: "changes()=1", params: [] },
       }),
     ]);
     this.requireChanges(result, 0, "D1 KYC submission");

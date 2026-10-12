@@ -106,7 +106,7 @@ export class D1CommunicationsCommandGateway {
     const statements: D1BridgeBatchStatement[] = [
       {
         sql: `UPDATE "MessageModerationCase"
-          SET "status"=?,"resolution"=?,"reviewedById"=?,"updatedAt"=CURRENT_TIMESTAMP
+          SET "status"=?,"resolution"=COALESCE(?, "resolution"),"reviewedById"=?,"updatedAt"=CURRENT_TIMESTAMP
           WHERE "id"=?`,
         params: [input.status, input.resolution ?? null, input.adminId, input.id],
       },
