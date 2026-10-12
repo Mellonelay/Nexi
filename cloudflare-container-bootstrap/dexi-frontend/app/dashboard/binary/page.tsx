@@ -133,7 +133,6 @@ export default function BinaryPage() {
   const [binaryDurations, setBinaryDurations] = useState<number[]>([]);
   const submissionLock = useRef(false);
   const chartPairRef = useRef(normalizedPair);
-  chartPairRef.current = normalizedPair;
   const { marketPairs, metal, shares, forex } = useMarketData();
 
   useEffect(() => {
@@ -142,6 +141,7 @@ export default function BinaryPage() {
   }, [initialSymbol, setActivePair]);
 
   useEffect(() => {
+    chartPairRef.current = normalizedPair;
     setAmount('');
     setDirection('LONG');
     setTab('TRADE');
@@ -396,7 +396,7 @@ export default function BinaryPage() {
   };
 
   return (
-    <main className="nexi-page-shell min-h-[100dvh] w-full min-w-0 overflow-x-clip pb-8 text-[#F8F6FF] lg:pb-8">
+    <main className="nexi-trading-page nexi-page-shell min-h-full w-full min-w-0 overflow-x-clip pb-8 text-[#F8F6FF]">
       <header className="nexi-station-header sticky top-0 z-20 flex min-w-0 items-center justify-between gap-2 border-b px-3 py-3 sm:gap-3 sm:px-4">
         <SafeBackButton fallback="/dashboard" label="Back to Quotes Hub" />
         <div className="min-w-0 flex-1"><SymbolSelector currentSymbol={pair} onSelect={(next) => { setPair(next); setActivePair(next); router.push(`/dashboard/binary?symbol=${next}`); }} /></div>
@@ -411,7 +411,7 @@ export default function BinaryPage() {
           </div>
           <div className="nexi-station-card min-w-0 rounded-2xl p-2">
             <div className="border-b border-white/5 px-2 pb-2"><TimeframeSelector interval={interval} onChange={setInterval} /></div>
-            <div className="h-[clamp(260px,58vw,420px)] sm:h-[420px] xl:h-[500px]"><RealtimeTradingChart symbol={normalizedPair} type="binary" interval={interval} marketStatus={market?.sessionState === 'CLOSED' ? 'CLOSED' : undefined} sandboxFeed={sandboxChartFeed} /></div>
+            <div className="nexi-options-chart-frame h-[clamp(260px,58vw,420px)] sm:h-[420px] xl:h-[500px]"><RealtimeTradingChart symbol={normalizedPair} type="binary" interval={interval} marketStatus={market?.sessionState === 'CLOSED' ? 'CLOSED' : undefined} sandboxFeed={sandboxChartFeed} showIndicatorControls={false} /></div>
           </div>
 
         </section>

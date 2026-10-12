@@ -8,50 +8,54 @@ datasource db {
 }
 
 model User {
-  id                    String                  @id @default(uuid())
-  userCode              Int                     @unique
-  email                 String?                 @unique
-  password              String?
-  securityPasswordHash  String?
-  displayName           String?
-  role                  Role                    @default(USER)
-  createdAt             DateTime                @default(now())
-  updatedAt             DateTime                @updatedAt
-  lastActive            DateTime                @default(now())
-  binaryPositions       BinaryOptionPosition[]
-  kyc                   KYC?
-  loans                 LoanApplication[]
-  wallet                Wallet?
-  withdrawalRequests    WithdrawalRequest[]
-  forceOutcome          String                  @default("NORMAL")
-  contractPositions     ContractPosition[]
-  authSessions          AuthSession[]
-  spotOrders            SpotOrder[]
-  spotTrades            SpotTrade[]
-  conversions           ConversionTransaction[]
-  miningSubscriptions   MiningSubscription[]
-  affiliate             LegacyAffiliate?
-  rewards               LegacyReward[]
-  ledgerAccounts        LedgerAccount[]
-  miningRewardAccruals  MiningRewardAccrual[]
-  gate2SpotOrders       Gate2SpotOrder[]
-  gate2BinaryPositions  Gate2BinaryPosition[]
-  gate2Deposits         Gate2Deposit[]
-  depositClaims         DepositClaim[]          @relation("DepositClaimOwner")
-  reviewedDepositClaims DepositClaim[]          @relation("DepositClaimReviewer")
-  gate2Withdrawals      Gate2Withdrawal[]
-  gate2ConversionQuotes Gate2ConversionQuote[]
-  gate2OperationAudits  Gate2OperationAudit[]
-  gate2TransfersFrom    Gate2InternalTransfer[] @relation("Gate2TransferFrom")
-  gate2TransfersTo      Gate2InternalTransfer[] @relation("Gate2TransferTo")
-  adminRoleAssignment   AdminRoleAssignment?
-  walletIdentity        WalletIdentity?
-  spotMarginAccounts    SpotMarginAccount[]
-  spotMarginActivities  SpotMarginActivity[]
-  activities            Activity[]
-  preference            UserPreference?
-  vipState              UserVipState?
-  mfa                   UserMfa?
+  id                           String                     @id @default(uuid())
+  userCode                     Int                        @unique
+  email                        String?                    @unique
+  password                     String?
+  securityPasswordHash         String?
+  displayName                  String?
+  role                         Role                       @default(USER)
+  createdAt                    DateTime                   @default(now())
+  updatedAt                    DateTime                   @updatedAt
+  lastActive                   DateTime                   @default(now())
+  binaryPositions              BinaryOptionPosition[]
+  kyc                          KYC?
+  loans                        LoanApplication[]
+  wallet                       Wallet?
+  withdrawalRequests           WithdrawalRequest[]
+  forceOutcome                 String                     @default("NORMAL")
+  contractPositions            ContractPosition[]
+  authSessions                 AuthSession[]
+  spotOrders                   SpotOrder[]
+  spotTrades                   SpotTrade[]
+  conversions                  ConversionTransaction[]
+  miningSubscriptions          MiningSubscription[]
+  affiliate                    LegacyAffiliate?
+  rewards                      LegacyReward[]
+  ledgerAccounts               LedgerAccount[]
+  miningRewardAccruals         MiningRewardAccrual[]
+  gate2SpotOrders              Gate2SpotOrder[]
+  gate2BinaryPositions         Gate2BinaryPosition[]
+  gate2Deposits                Gate2Deposit[]
+  depositClaims                DepositClaim[]             @relation("DepositClaimOwner")
+  reviewedDepositClaims        DepositClaim[]             @relation("DepositClaimReviewer")
+  gate2Withdrawals             Gate2Withdrawal[]
+  gate2ConversionQuotes        Gate2ConversionQuote[]
+  gate2OperationAudits         Gate2OperationAudit[]
+  gate2TransfersFrom           Gate2InternalTransfer[]    @relation("Gate2TransferFrom")
+  gate2TransfersTo             Gate2InternalTransfer[]    @relation("Gate2TransferTo")
+  adminRoleAssignment          AdminRoleAssignment?
+  walletIdentity               WalletIdentity?
+  spotMarginAccounts           SpotMarginAccount[]
+  spotMarginActivities         SpotMarginActivity[]
+  activities                   Activity[]
+  preference                   UserPreference?
+  vipState                     UserVipState?
+  mfa                          UserMfa?
+  referralAttributionsSent     ReferralAttributionEvent[] @relation("ReferralAttributionReferrer")
+  referralAttributionsReceived ReferralAttributionEvent[] @relation("ReferralAttributionReferred")
+  referralRewardsSent          ReferralRewardEvent[]      @relation("ReferralRewardReferrer")
+  referralRewardsReceived      ReferralRewardEvent[]      @relation("ReferralRewardReferred")
 }
 
 model UserMfa {
@@ -1254,6 +1258,7 @@ model LedgerPosting {
   auditEvents         LedgerAuditEvent[]
   miningRewardAccrual MiningRewardAccrual?
   loanRepayment       LegacyLoanRepayment?
+  referralRewardEvent ReferralRewardEvent?
 
   @@unique([accountId, idempotencyKey])
   @@index([referenceType, referenceId])
@@ -1313,6 +1318,37 @@ model LegacyAffiliate {
   user          User     @relation(fields: [userId], references: [id])
 
   @@map("Affiliate")
+}
+
+model ReferralAttributionEvent {
+  id             String   @id
+  referrerUserId String
+  referredUserId String   @unique
+  referralCode   String
+  status         String
+  attributedAt   DateTime @default(now())
+  createdAt      DateTime @default(now())
+  referrer       User     @relation("ReferralAttributionReferrer", fields: [referrerUserId], references: [id], onDelete: Restrict)
+  referred       User     @relation("ReferralAttributionReferred", fields: [referredUserId], references: [id], onDelete: Restrict)
+
+  @@index([referrerUserId, attributedAt])
+}
+
+model ReferralRewardEvent {
+  id              String        @id
+  referrerUserId  String
+  referredUserId  String
+  ledgerPostingId String        @unique
+  amount          String
+  asset           String
+  status          String
+  rewardedAt      DateTime
+  createdAt       DateTime      @default(now())
+  referrer        User          @relation("ReferralRewardReferrer", fields: [referrerUserId], references: [id], onDelete: Restrict)
+  referred        User          @relation("ReferralRewardReferred", fields: [referredUserId], references: [id], onDelete: Restrict)
+  ledgerPosting   LedgerPosting @relation(fields: [ledgerPostingId], references: [id], onDelete: Restrict)
+
+  @@index([referrerUserId, rewardedAt])
 }
 
 model LegacyBinaryOptionResult {

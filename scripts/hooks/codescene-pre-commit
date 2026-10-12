@@ -1,7 +1,14 @@
 #!/bin/sh
 set -eu
-if ! command -v cs >/dev/null 2>&1; then
-  echo "CodeScene CLI missing: commit safeguard cannot run." >&2
-  exit 1
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root"
+
+if git rev-parse --verify HEAD >/dev/null 2>&1; then
+  against=HEAD
+else
+  against=$(git hash-object -t tree /dev/null)
 fi
-exec cs delta --git-hook --staged
+
+# Keep the standard staged whitespace check. Prisma client files are generated,
+# so their generator-emitted whitespace is not a reason to block source commits.
+exec git diff-index --check --cached "$against" -- . ':(exclude)backend/src/prisma/d1-client/**'

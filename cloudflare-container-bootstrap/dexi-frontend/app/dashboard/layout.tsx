@@ -10,7 +10,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative flex h-[100dvh] min-w-0 flex-col overflow-hidden bg-[#050508] text-white lg:flex-row">
+    <div className="nexi-dashboard-shell relative flex min-w-0 flex-col overflow-hidden bg-[#050508] text-white lg:flex-row">
       <Suspense fallback={null}>
         <RouteHistoryTracker />
       </Suspense>

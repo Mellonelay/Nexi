@@ -915,6 +915,28 @@ exports.Prisma.LegacyAffiliateScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.ReferralAttributionEventScalarFieldEnum = {
+  id: 'id',
+  referrerUserId: 'referrerUserId',
+  referredUserId: 'referredUserId',
+  referralCode: 'referralCode',
+  status: 'status',
+  attributedAt: 'attributedAt',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.ReferralRewardEventScalarFieldEnum = {
+  id: 'id',
+  referrerUserId: 'referrerUserId',
+  referredUserId: 'referredUserId',
+  ledgerPostingId: 'ledgerPostingId',
+  amount: 'amount',
+  asset: 'asset',
+  status: 'status',
+  rewardedAt: 'rewardedAt',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.LegacyBinaryOptionResultScalarFieldEnum = {
   id: 'id',
   positionId: 'positionId',
@@ -1726,6 +1748,8 @@ exports.Prisma.ModelName = {
   LedgerAuditEvent: 'LedgerAuditEvent',
   LegacyAdmin: 'LegacyAdmin',
   LegacyAffiliate: 'LegacyAffiliate',
+  ReferralAttributionEvent: 'ReferralAttributionEvent',
+  ReferralRewardEvent: 'ReferralRewardEvent',
   LegacyBinaryOptionResult: 'LegacyBinaryOptionResult',
   LegacyLoanRepayment: 'LegacyLoanRepayment',
   LegacyReward: 'LegacyReward',

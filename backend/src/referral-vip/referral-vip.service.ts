@@ -14,6 +14,21 @@ interface ReferralRow {
   referralCount?: number | string | null;
 }
 
+interface ReferralHistoryAttributionRow {
+  referredUserCode: number;
+  status: string;
+  attributedAt: string | null;
+}
+
+interface ReferralHistoryRewardRow {
+  id: string;
+  referredUserCode: number;
+  amount: string;
+  asset: string;
+  status: string;
+  rewardedAt: string;
+}
+
 interface VipRow {
   stateId: string;
   userId: string;
@@ -72,6 +87,58 @@ export class ReferralVipService {
     const row = result.results[0];
     if (!row) throw new NotFoundException('Referral identity not found');
     return { referralCode: row.referralCode, referralCount: Number(row.referralCount ?? 0), totalEarnings: String(row.totalEarnings ?? '0'), referredByUserCode: row.referredByUserCode ?? null };
+  }
+
+  async getReferralHistory(userId: string, limit = 50, offset = 0) {
+    this.assertD1();
+    const safeLimit = Number.isFinite(limit) ? Math.min(Math.max(Math.trunc(limit), 1), 100) : 50;
+    const safeOffset = Number.isFinite(offset) ? Math.min(Math.max(Math.trunc(offset), 0), 1_000_000) : 0;
+    const queryLimit = safeLimit + 1;
+
+    const [attributionResult, rewardResult] = await Promise.all([
+      this.d1.select<ReferralHistoryAttributionRow>(
+        'SELECT u."userCode" AS "referredUserCode",COALESCE(e."status",?) AS "status",e."attributedAt" AS "attributedAt" ' +
+        'FROM "Affiliate" referred JOIN "User" u ON u."id"=referred."userId" ' +
+        'LEFT JOIN "ReferralAttributionEvent" e ON e."referredUserId"=referred."userId" ' +
+        'WHERE referred."referredBy"=? ' +
+        'ORDER BY CASE WHEN e."attributedAt" IS NULL THEN 1 ELSE 0 END,e."attributedAt" DESC,u."userCode" DESC LIMIT ? OFFSET ?',
+        ['ATTRIBUTED', userId, queryLimit, safeOffset],
+      ),
+      this.d1.select<ReferralHistoryRewardRow>(
+        'SELECT e."id",u."userCode" AS "referredUserCode",e."amount",e."asset",e."status",e."rewardedAt" ' +
+        'FROM "ReferralRewardEvent" e JOIN "User" u ON u."id"=e."referredUserId" ' +
+        'WHERE e."referrerUserId"=? ORDER BY e."rewardedAt" DESC,e."id" DESC LIMIT ? OFFSET ?',
+        [userId, queryLimit, safeOffset],
+      ),
+    ]);
+
+    const referralRows = attributionResult.results;
+    const rewardRows = rewardResult.results;
+    return {
+      referrals: {
+        items: referralRows.slice(0, safeLimit).map((row) => ({
+          referredUserCode: Number(row.referredUserCode),
+          status: String(row.status),
+          attributedAt: row.attributedAt == null ? null : String(row.attributedAt),
+        })),
+        limit: safeLimit,
+        offset: safeOffset,
+        hasMore: referralRows.length > safeLimit,
+      },
+      rewards: {
+        items: rewardRows.slice(0, safeLimit).map((row) => ({
+          id: String(row.id),
+          referredUserCode: Number(row.referredUserCode),
+          amount: String(row.amount),
+          asset: String(row.asset),
+          status: String(row.status),
+          rewardedAt: String(row.rewardedAt),
+        })),
+        limit: safeLimit,
+        offset: safeOffset,
+        hasMore: rewardRows.length > safeLimit,
+      },
+    };
   }
 
   async getVip(userId: string) {

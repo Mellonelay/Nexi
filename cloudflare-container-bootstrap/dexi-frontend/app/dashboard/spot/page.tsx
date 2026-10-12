@@ -476,10 +476,10 @@ function SpotOrderTicket({side, setSide, orderType, setOrderType, price, setPric
             <Wallet className="mt-1 h-5 w-5 shrink-0 text-[#A995FF]" aria-hidden="true" />
           </div>
           <div className="mt-2.5 grid min-w-0 grid-cols-2 rounded-xl bg-[#0B0711] p-1 sm:mt-3" data-testid="spot-buy-sell">
-            {(['BUY', 'SELL'] as const).map((value) => <button key={value} type="button" onClick={() => setSide(value)} className={`nexi-interactive min-h-9 min-w-0 rounded-lg px-1 text-xs font-semibold sm:min-h-11 sm:text-sm ${side === value ? value === 'BUY' ? 'bg-emerald-400/15 text-[#22D3A6]' : 'bg-rose-400/15 text-[#FF5C7C]' : 'text-[#8C8299]'}`}>{value === 'BUY' ? 'Buy' : 'Sell'}</button>)}
+            {(['BUY', 'SELL'] as const).map((value) => <button key={value} type="button" onClick={() => setSide(value)} className={`nexi-interactive min-h-11 min-w-0 rounded-lg px-1 text-xs font-semibold sm:text-sm ${side === value ? value === 'BUY' ? 'bg-emerald-400/15 text-[#22D3A6]' : 'bg-rose-400/15 text-[#FF5C7C]' : 'text-[#8C8299]'}`}>{value === 'BUY' ? 'Buy' : 'Sell'}</button>)}
           </div>
           <div className="mt-2 grid min-w-0 grid-cols-3 gap-1 rounded-xl bg-[#0B0711] p-1" role="tablist" aria-label="Order type" data-testid="spot-order-type">
-            {(['MARKET', 'LIMIT', 'STOP'] as const).map((value) => <button key={value} type="button" role="tab" aria-selected={orderType === value} onClick={() => setOrderType(value)} className={`nexi-interactive min-h-9 min-w-0 whitespace-normal rounded-lg px-1 text-[10px] leading-tight sm:min-h-11 sm:text-xs ${orderType === value ? 'bg-[#2A1742] text-white' : 'text-[#8C8299]'}`}>{value === 'STOP' ? 'Stop Limit' : value[0] + value.slice(1).toLowerCase()}</button>)}
+            {(['MARKET', 'LIMIT', 'STOP'] as const).map((value) => <button key={value} type="button" role="tab" aria-selected={orderType === value} onClick={() => setOrderType(value)} className={`nexi-interactive min-h-11 min-w-0 whitespace-normal rounded-lg px-1 text-[10px] leading-tight sm:text-xs ${orderType === value ? 'bg-[#2A1742] text-white' : 'text-[#8C8299]'}`}>{value === 'STOP' ? 'Stop Limit' : value[0] + value.slice(1).toLowerCase()}</button>)}
           </div>
 
           <div className="mt-2.5 space-y-2 sm:mt-3 sm:space-y-2.5" data-testid="spot-inputs">
@@ -910,7 +910,7 @@ function SpotPageBody({
   const priceStatus = resolvePriceStatus(marketLoading, market?.source, currentPrice, backendConfigured);
 
   return (
-    <main className="nexi-trading-page nexi-page-shell min-h-[100dvh] w-full min-w-0 overflow-x-clip pb-36 text-[#F8F6FF] lg:pb-8">
+    <main className="nexi-trading-page nexi-page-shell min-h-full w-full min-w-0 overflow-x-clip pb-8 text-[#F8F6FF]">
       <SpotHeader
         displayPair={displayPair}
         onSelectSymbol={onSelectSymbol}

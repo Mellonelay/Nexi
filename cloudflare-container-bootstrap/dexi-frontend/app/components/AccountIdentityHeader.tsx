@@ -27,6 +27,18 @@ function accountState(
   return sessionQuery.data ? "LIVE" : "UNAVAILABLE";
 }
 
+function accountVipLabel(
+  state: AccountState,
+  level: number | null,
+  name: string | null,
+  t: ReturnType<typeof useLocale>["t"],
+) {
+  if (state === "LIVE" && level !== null) {
+    return name ? `Level ${level} · ${name}` : `Level ${level}`;
+  }
+  return state === "LOADING" ? t("loadingAccount") : t("accountUnavailable");
+}
+
 function AccountIdentityCard({
   compact,
   displayName,
@@ -34,11 +46,13 @@ function AccountIdentityCard({
   profileId,
   state,
   t,
+  vipLabel,
 }: AccountIdentityHeaderProps & {
   displayName: string;
   profileId: string;
   state: AccountState;
   t: ReturnType<typeof useLocale>["t"];
+  vipLabel: string;
 }) {
   const statusLabel =
     state === "LOADING"
@@ -52,7 +66,6 @@ function AccountIdentityCard({
       : state === "LOADING"
         ? "bg-[#A995FF]"
         : "bg-[#8C8299]";
-
   return (
     <Link
       href="/dashboard/settings?tab=profile"
@@ -85,7 +98,7 @@ function AccountIdentityCard({
           </div>
           <div className="rounded-xl border border-violet-300/10 bg-black/15 px-2.5 py-2">
             <p className="text-[#8C8299]">{t("vipLevel")}</p>
-            <p className="mt-1 font-medium text-[#F8F6FF]">—</p>
+            <p className="mt-1 truncate font-medium text-[#F8F6FF]">{vipLabel}</p>
           </div>
         </div>
       )}
@@ -141,6 +154,10 @@ export default function AccountIdentityHeader({
     state === "LIVE" ? authoritativeValue(sessionQuery.data?.id) : "—";
   const displayName =
     state === "LIVE" ? authoritativeValue(sessionQuery.data?.displayName) : "—";
+  const vip = state === "LIVE" ? sessionQuery.data?.vip ?? null : null;
+  const vipLevel = vip?.level ?? null;
+  const vipName = vip?.name?.trim() || null;
+  const vipLabel = accountVipLabel(state, vipLevel, vipName, t);
   return (
     <AccountIdentityCard
       compact={compact}
@@ -149,6 +166,7 @@ export default function AccountIdentityHeader({
       profileId={profileId}
       state={state}
       t={t}
+      vipLabel={vipLabel}
     />
   );
 }

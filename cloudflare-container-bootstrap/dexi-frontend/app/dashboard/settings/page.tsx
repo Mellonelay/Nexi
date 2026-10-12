@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Bell, Globe2, LogOut, MonitorSmartphone, Palette, ShieldCheck, UserRound } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../lib/api';
 import { SUPPORTED_LOCALES, type LocaleCode } from '../../state/locale';
 import { useLocale } from '../../state/LocaleProvider';
-import { type WalletProfile, clearWalletSession, sessionPrincipalId } from '../../lib/wallet-auth';
+import { type VipProfile, type WalletProfile, clearWalletSession, sessionPrincipalId } from '../../lib/wallet-auth';
 import { recoverPublicSession } from '../../lib/api';
 import { DataStatePanel, Field, inputClass, PageHeader, PageShell, Panel, PanelHeading, PrimaryButton, TabButton } from '../../components/PagePrimitives';
 import SafeBackButton from '../../components/SafeBackButton';
@@ -20,6 +20,295 @@ type Session = { id: string; createdAt: string; lastUsedAt: string; absoluteExpi
 type SecurityState = { passwordSet: boolean; mfa: { enabled: boolean; hasSecret: boolean; hasBackupCodes: boolean } };
 const notificationKeys = ['tradeEvents', 'walletEvents', 'securityEvents', 'productAnnouncements'] as const;
 const notificationLabels: Record<typeof notificationKeys[number], string> = { tradeEvents: 'Trade events', walletEvents: 'Wallet events', securityEvents: 'Security events', productAnnouncements: 'Product announcements' };
+
+type VipBenefitRow = { label: string; value: string };
+
+function displayVipBenefit(value: unknown): string {
+  if (typeof value === 'string') return value.trim();
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'object') {
+    try { return JSON.stringify(value) ?? ''; } catch { return ''; }
+  }
+  return String(value);
+}
+
+function vipBenefitRows(benefits: unknown): VipBenefitRow[] {
+  const entries = typeof benefits === 'string'
+    ? [['Benefit', benefits] as const]
+    : Array.isArray(benefits)
+      ? benefits.map((value, index) => [`Benefit ${index + 1}`, value] as const)
+      : benefits && typeof benefits === 'object'
+        ? Object.entries(benefits)
+        : [];
+  return entries.flatMap(([key, rawValue]) => {
+    const value = displayVipBenefit(rawValue);
+    if (!value) return [];
+    const label = String(key).replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').trim();
+    return [{ label: label ? label[0].toUpperCase() + label.slice(1) : 'Benefit', value }];
+  });
+}
+
+function VipProgress({ progress, threshold }: { progress: string; threshold: string }) {
+  const current = Number(progress);
+  const maximum = Number(threshold);
+  const measurable = Number.isFinite(current) && current >= 0 && Number.isFinite(maximum) && maximum > 0;
+  const value = measurable ? Math.min(current, maximum) : 0;
+
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-3 text-sm">
+        <span className="text-[#C3BBD0]">Progress</span>
+        <span className="font-mono tabular-nums text-white">{progress} / {threshold}</span>
+      </div>
+      {measurable && (
+        <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10" role="progressbar" aria-label="VIP progress" aria-valuemin={0} aria-valuemax={maximum} aria-valuenow={value} aria-valuetext={`${progress} / ${threshold}`}>
+          <div className="h-full rounded-full bg-[#8B5CF6]" style={{ width: `${(value / maximum) * 100}%` }} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function VipBenefits({ benefits }: { benefits: unknown }) {
+  const rows = vipBenefitRows(benefits);
+  return (
+    <div>
+      <h3 className="text-sm font-medium text-white">Benefits</h3>
+      {rows.length ? (
+        <dl className="mt-2 grid gap-2 sm:grid-cols-2">
+          {rows.map((benefit) => (
+            <div key={benefit.label} className="min-w-0 rounded-xl border border-[#2B2037] bg-[#171022] p-3">
+              <dt className="text-xs text-[#8C8299]">{benefit.label}</dt>
+              <dd className="mt-1 break-words text-sm text-[#F5F7FB]">{benefit.value}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : (
+        <p className="mt-2 text-sm text-[#8C8299]">No benefits are currently supplied.</p>
+      )}
+    </div>
+  );
+}
+
+function VipMembershipPanel({ vip }: { vip: VipProfile | null | undefined }) {
+  return (
+    <Panel className="min-w-0">
+      <PanelHeading title="VIP membership" />
+      {vip ? (
+        <div className="space-y-4">
+          <div>
+            <p className="text-xs text-[#8C8299]">Current level</p>
+            <p className="mt-1 font-semibold text-white">Level {vip.level}{vip.name.trim() ? ` · ${vip.name.trim()}` : ''}</p>
+          </div>
+          <VipProgress progress={vip.progress} threshold={vip.threshold} />
+          <VipBenefits benefits={vip.benefits} />
+        </div>
+      ) : (
+        <p className="text-sm text-[#8C8299]">VIP details are unavailable.</p>
+      )}
+    </Panel>
+  );
+}
+
+async function copyReferralInviteLink(referralCode: string) {
+  if (!navigator.clipboard?.writeText) {
+    toast.error('Invite link could not be copied in this browser.');
+    return;
+  }
+  const invite = new URL('/signup', window.location.origin);
+  invite.searchParams.set('ref', referralCode);
+  try {
+    await navigator.clipboard.writeText(invite.toString());
+    toast.success('Referral invite link copied.');
+  } catch {
+    toast.error('Referral invite link could not be copied.');
+  }
+}
+
+type ReferralAttributionHistoryItem = { referredUserCode: number; status: string; attributedAt: string | null };
+type ReferralRewardHistoryItem = { id: string; referredUserCode: number; amount: string; asset: string; status: string; rewardedAt: string };
+type ReferralHistoryPage<T> = { items: T[]; limit: number; offset: number; hasMore: boolean };
+type ReferralHistoryResponse = {
+  referrals: ReferralHistoryPage<ReferralAttributionHistoryItem>;
+  rewards: ReferralHistoryPage<ReferralRewardHistoryItem>;
+};
+
+const REFERRAL_HISTORY_PAGE_SIZE = 25;
+
+function referralHistoryDate(value: string | null) {
+  if (!value) return 'Date unavailable';
+  const normalized = value.includes('T') ? value : `${value.replace(' ', 'T')}Z`;
+  const date = new Date(normalized);
+  return Number.isNaN(date.getTime()) ? 'Date unavailable' : date.toLocaleString();
+}
+
+function referralStatusLabel(value: string) {
+  return value.toLowerCase().replace(/[_-]+/g, ' ');
+}
+
+function ReferralHistoryPanel() {
+  const [history, setHistory] = useState<ReferralHistoryResponse | null>(null);
+  const [state, setState] = useState<'LOADING' | 'LIVE' | 'ERROR' | 'UNAVAILABLE'>('LOADING');
+  const offsetRef = useRef(0);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState(false);
+  const [reload, setReload] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      setState('LOADING');
+      setHistory(null);
+      offsetRef.current = 0;
+      if (!sessionPrincipalId()) {
+        setState('UNAVAILABLE');
+        return;
+      }
+      try {
+        const response = await api.get<ReferralHistoryResponse>('/referral/history', {
+          params: { limit: REFERRAL_HISTORY_PAGE_SIZE, offset: 0 },
+        });
+        if (!active) return;
+        setHistory(response.data);
+        offsetRef.current = REFERRAL_HISTORY_PAGE_SIZE;
+        setState('LIVE');
+      } catch {
+        if (active) setState('ERROR');
+      }
+    };
+    void load();
+    return () => { active = false; };
+  }, [reload]);
+
+  const loadMore = async () => {
+    if (!history || loadingMore) return;
+    setLoadingMore(true);
+    setLoadMoreError(false);
+    const requestOffset = offsetRef.current;
+    try {
+      const response = await api.get<ReferralHistoryResponse>('/referral/history', {
+        params: { limit: REFERRAL_HISTORY_PAGE_SIZE, offset: requestOffset },
+      });
+      setHistory((current) => current ? {
+        referrals: {
+          ...response.data.referrals,
+          items: [...current.referrals.items, ...response.data.referrals.items],
+        },
+        rewards: {
+          ...response.data.rewards,
+          items: [...current.rewards.items, ...response.data.rewards.items],
+        },
+      } : response.data);
+      offsetRef.current = requestOffset + REFERRAL_HISTORY_PAGE_SIZE;
+    } catch {
+      setLoadMoreError(true);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  return (
+    <Panel className="min-w-0">
+      <PanelHeading title="Referral history" />
+      {state === 'LOADING' && <p className="text-sm text-[#8C8299]" role="status">Loading referral history…</p>}
+      {state === 'UNAVAILABLE' && <p className="text-sm text-[#8C8299]">Connect and verify your wallet to view referral history.</p>}
+      {state === 'ERROR' && (
+        <div className="space-y-3">
+          <p className="text-sm text-[#C3BBD0]" role="alert">Referral history could not be loaded.</p>
+          <button type="button" onClick={() => setReload((value) => value + 1)} className="min-h-11 rounded-xl border border-violet-300/20 bg-violet-400/10 px-4 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)]">Retry</button>
+        </div>
+      )}
+      {state === 'LIVE' && history && (
+        <div className="space-y-5">
+          <div className="grid gap-5 sm:grid-cols-2">
+            <section aria-labelledby="referral-attribution-history-title" className="min-w-0">
+              <h3 id="referral-attribution-history-title" className="text-sm font-medium text-white">Referred accounts</h3>
+              {history.referrals.items.length ? (
+                <ul className="mt-3 space-y-2">
+                  {history.referrals.items.map((item) => (
+                    <li key={item.referredUserCode} className="rounded-xl border border-[#2B2037] bg-[#171022] p-3">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <span className="text-sm text-white">NEXI user {item.referredUserCode}</span>
+                        <span className="text-xs capitalize text-[#C3BBD0]">{referralStatusLabel(item.status)}</span>
+                      </div>
+                      <p className="mt-1 text-xs text-[#8C8299]">Attributed: {referralHistoryDate(item.attributedAt)}</p>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-2 text-sm text-[#8C8299]">No referred accounts yet.</p>
+              )}
+            </section>
+            <section aria-labelledby="referral-reward-history-title" className="min-w-0">
+              <h3 id="referral-reward-history-title" className="text-sm font-medium text-white">Reward history</h3>
+              {history.rewards.items.length ? (
+                <ul className="mt-3 space-y-2">
+                  {history.rewards.items.map((item) => (
+                    <li key={item.id} className="rounded-xl border border-[#2B2037] bg-[#171022] p-3">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <span className="break-all font-mono text-sm tabular-nums text-white">{item.amount} {item.asset}</span>
+                        <span className="text-xs capitalize text-[#C3BBD0]">{referralStatusLabel(item.status)}</span>
+                      </div>
+                      <p className="mt-1 text-xs text-[#8C8299]">From NEXI user {item.referredUserCode} · {referralHistoryDate(item.rewardedAt)}</p>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-2 text-sm text-[#8C8299]">No referral rewards have been recorded.</p>
+              )}
+            </section>
+          </div>
+          {loadMoreError && <p className="text-sm text-[#FCA5A5]" role="alert">More history could not be loaded.</p>}
+          {(history.referrals.hasMore || history.rewards.hasMore) && (
+            <button type="button" onClick={() => void loadMore()} disabled={loadingMore} className="min-h-11 rounded-xl border border-violet-300/20 bg-violet-400/10 px-4 text-sm text-white disabled:cursor-wait disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)]">
+              {loadingMore ? 'Loading…' : 'Load more history'}
+            </button>
+          )}
+        </div>
+      )}
+    </Panel>
+  );
+}
+
+function ReferralMembershipPanel({ referral }: { referral: WalletProfile['referral'] }) {
+  return (
+    <Panel className="min-w-0">
+      <PanelHeading title="Referral program" />
+      {referral ? (
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs text-[#8C8299]">Your referral code</p>
+              <p className="mt-1 break-all font-mono text-sm text-white">{referral.referralCode}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void copyReferralInviteLink(referral.referralCode)}
+              className="min-h-11 rounded-xl border border-violet-300/20 bg-violet-400/10 px-4 text-sm text-white transition-colors hover:bg-violet-400/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)]"
+            >
+              Copy invite link
+            </button>
+          </div>
+          <dl className="grid grid-cols-2 gap-3">
+            <div className="min-w-0 rounded-xl border border-[#2B2037] bg-[#171022] p-3">
+              <dt className="text-xs text-[#8C8299]">Referred accounts</dt>
+              <dd className="mt-1 font-mono tabular-nums text-white">{referral.referralCount}</dd>
+            </div>
+            <div className="min-w-0 rounded-xl border border-[#2B2037] bg-[#171022] p-3">
+              <dt className="text-xs text-[#8C8299]">Referral earnings</dt>
+              <dd className="mt-1 break-all font-mono tabular-nums text-white">{referral.totalEarnings}</dd>
+            </div>
+          </dl>
+          <p className="text-xs text-[#C3BBD0]">
+            Referred by: {referral.referredByUserCode === null ? 'None' : `NEXI user ${referral.referredByUserCode}`}
+          </p>
+        </div>
+      ) : (
+        <p className="text-sm text-[#8C8299]">Referral details are unavailable.</p>
+      )}
+    </Panel>
+  );
+}
 
 export default function SettingsPage() {
   const [tab, setTab] = useState<Tab>('profile');
@@ -136,13 +425,13 @@ export default function SettingsPage() {
   if (state !== 'LIVE' || !profile || !preferences || !security) return <PageShell><DataStatePanel state={state} title="Account settings unavailable" /></PageShell>;
 
   return <PageShell><div className="mb-4"><SafeBackButton fallback="/dashboard" label="Back to Dashboard" /></div><PageHeader eyebrow="Account" title="Settings" description="Manage profile, identity verification, sessions, notifications, locale and appearance." /><main className="mx-auto min-w-0 max-w-7xl"><div className="mb-4 flex min-w-0 gap-2 overflow-x-auto pb-1" role="tablist">{tabs.map((item)=><TabButton key={item} active={tab===item} onClick={()=>setTab(item)}>{item[0].toUpperCase()+item.slice(1)}</TabButton>)}</div>
-  {tab==='profile'&&<div className="grid gap-4 lg:grid-cols-2"><Panel><PanelHeading title="Profile" action={<UserRound size={18}/>} /><form onSubmit={saveProfile} className="space-y-3"><Field label="NEXI User ID"><input className={inputClass} value={profile.id} readOnly /></Field><Field label="Display name"><input className={inputClass} value={displayName} onChange={(e)=>setDisplayName(e.target.value)} /></Field><Field label="Email"><input className={inputClass} type="email" value={email} onChange={(e)=>setEmail(e.target.value)} /></Field><PrimaryButton type="submit" disabled={busy}>Save profile</PrimaryButton></form></Panel><Panel><PanelHeading title="Identity verification" action={<ShieldCheck size={18}/>} /><p className="mb-4 text-sm text-[#C3BBD0]">Status: <strong>{kycStatus}</strong></p>{kycStatus!=='APPROVED'&&kycStatus!=='PENDING'&&<form onSubmit={submitKyc} className="space-y-3"><Field label="First name"><input className={inputClass} value={firstName} onChange={(e)=>setFirstName(e.target.value)} required /></Field><Field label="Last name"><input className={inputClass} value={lastName} onChange={(e)=>setLastName(e.target.value)} required /></Field><Field label="Date of birth"><input className={inputClass} type="date" value={dob} onChange={(e)=>setDob(e.target.value)} required /></Field><Field label="Country"><input className={inputClass} value={country} onChange={(e)=>setCountry(e.target.value)} required /></Field><Field label="Document type"><select className={inputClass} value={documentType} onChange={(e)=>setDocumentType(e.target.value)}><option>PASSPORT</option><option>ID_CARD</option><option>DRIVERS_LICENSE</option></select></Field><Field label="Identity document front"><input className={inputClass} type="file" accept="image/jpeg,image/png,image/webp,application/pdf" onChange={(e)=>setFrontDocument(e.target.files?.[0] ?? null)} required /></Field><Field label="Identity document back (optional)"><input className={inputClass} type="file" accept="image/jpeg,image/png,image/webp,application/pdf" onChange={(e)=>setBackDocument(e.target.files?.[0] ?? null)} /></Field><p className="text-xs text-[#C3BBD0]">Private upload. JPEG, PNG, WebP or PDF up to 5 MiB per file.</p><PrimaryButton type="submit" disabled={busy}>Submit for verification</PrimaryButton></form>}</Panel></div>}
+  {tab==='profile'&&<div className="grid gap-4 lg:grid-cols-2"><Panel><PanelHeading title="Profile" action={<UserRound size={18}/>} /><form onSubmit={saveProfile} className="space-y-3"><Field label="NEXI User ID"><input className={inputClass} value={profile.id} readOnly /></Field><Field label="Display name"><input className={inputClass} value={displayName} onChange={(e)=>setDisplayName(e.target.value)} /></Field><Field label="Email"><input className={inputClass} type="email" value={email} onChange={(e)=>setEmail(e.target.value)} /></Field><PrimaryButton type="submit" disabled={busy}>Save profile</PrimaryButton></form></Panel><Panel><PanelHeading title="Identity verification" action={<ShieldCheck size={18}/>} /><p className="mb-4 text-sm text-[#C3BBD0]">Status: <strong>{kycStatus}</strong></p>{kycStatus!=='APPROVED'&&kycStatus!=='PENDING'&&<form onSubmit={submitKyc} className="space-y-3"><Field label="First name"><input className={inputClass} value={firstName} onChange={(e)=>setFirstName(e.target.value)} required /></Field><Field label="Last name"><input className={inputClass} value={lastName} onChange={(e)=>setLastName(e.target.value)} required /></Field><Field label="Date of birth"><input className={inputClass} type="date" value={dob} onChange={(e)=>setDob(e.target.value)} required /></Field><Field label="Country"><input className={inputClass} value={country} onChange={(e)=>setCountry(e.target.value)} required /></Field><Field label="Document type"><select className={inputClass} value={documentType} onChange={(e)=>setDocumentType(e.target.value)}><option>PASSPORT</option><option>ID_CARD</option><option>DRIVERS_LICENSE</option></select></Field><Field label="Identity document front"><input className={inputClass} type="file" accept="image/jpeg,image/png,image/webp,application/pdf" onChange={(e)=>setFrontDocument(e.target.files?.[0] ?? null)} required /></Field><Field label="Identity document back (optional)"><input className={inputClass} type="file" accept="image/jpeg,image/png,image/webp,application/pdf" onChange={(e)=>setBackDocument(e.target.files?.[0] ?? null)} /></Field><p className="text-xs text-[#C3BBD0]">Private upload. JPEG, PNG, WebP or PDF up to 5 MiB per file.</p><PrimaryButton type="submit" disabled={busy}>Submit for verification</PrimaryButton></form>}</Panel><VipMembershipPanel vip={profile.vip} /><ReferralMembershipPanel referral={profile.referral} /><ReferralHistoryPanel /></div>}
   {tab==='security'&&<div className="grid gap-4 lg:grid-cols-2"><Panel><PanelHeading title="Security password" action={<ShieldCheck size={18}/>} /><p className="mb-4 text-sm text-[#C3BBD0]">This password protects sensitive account actions. It is not a public login credential; NEXI public access remains wallet/SIWE only.</p><form onSubmit={saveSecurityPassword} className="space-y-3">{security.passwordSet&&<Field label="Current password"><input className={inputClass} type="password" value={currentPassword} onChange={(e)=>setCurrentPassword(e.target.value)} required /></Field>}<Field label={security.passwordSet?'New security password':'Set security password'}><input className={inputClass} type="password" minLength={12} value={newPassword} onChange={(e)=>setNewPassword(e.target.value)} required /></Field><PrimaryButton type="submit" disabled={busy}>{security.passwordSet?'Change password':'Set password'}</PrimaryButton></form></Panel><Panel><PanelHeading title="Authenticator MFA" action={<ShieldCheck size={18}/>} /><p className="mb-4 text-sm text-[#C3BBD0]">TOTP and one-time recovery codes are managed here for sensitive actions.</p>{!security.mfa.enabled&&!mfaSetup&&<div className="space-y-3"><Field label="Authenticator label"><input className={inputClass} value={mfaLabel} onChange={(e)=>setMfaLabel(e.target.value)} /></Field><PrimaryButton type="button" onClick={()=>void setupMfa()} disabled={busy}>Set up MFA</PrimaryButton></div>}{mfaSetup&&<div className="space-y-3"><p className="break-all rounded-xl border border-[#2B2037] bg-[#171022] p-3 font-mono text-xs">Secret: {mfaSetup.secret}<br />URI: {mfaSetup.uri}</p><Field label="Authenticator code"><input className={inputClass} inputMode="numeric" pattern="[0-9]{6}" maxLength={6} value={mfaToken} onChange={(e)=>setMfaToken(e.target.value)} /></Field><PrimaryButton type="button" onClick={()=>void verifyMfa()} disabled={busy}>Verify and enable MFA</PrimaryButton></div>}{security.mfa.enabled&&<div className="space-y-3"><p className="text-sm text-emerald-300">MFA is enabled.</p><button type="button" onClick={()=>void generateBackupCodes()} disabled={busy} className="min-h-11 rounded-xl border border-[#2B2037] px-4 text-sm">Generate recovery codes</button><Field label="Security password"><input className={inputClass} type="password" value={mfaPassword} onChange={(e)=>setMfaPassword(e.target.value)} /></Field><Field label="TOTP or recovery code"><input className={inputClass} inputMode="numeric" value={mfaToken} onChange={(e)=>setMfaToken(e.target.value)} /></Field><button type="button" onClick={()=>void disableMfa()} disabled={busy} className="min-h-11 rounded-xl border border-[#FF748A]/40 px-4 text-sm text-[#FFB6C2]">Disable MFA</button></div>}{backupCodes.length>0&&<div className="mt-4 rounded-xl border border-amber-300/30 bg-amber-300/5 p-3"><p className="text-xs text-amber-200">Store these recovery codes securely. They are shown once.</p><p className="mt-2 break-all font-mono text-xs">{backupCodes.join(' · ')}</p></div>}</Panel></div>}
   {tab==='notifications'&&<Panel><PanelHeading title="Notifications" action={<Bell size={18}/>} /><div className="space-y-3">{notificationKeys.map((key)=><label key={key} className="flex min-h-12 items-center justify-between rounded-xl border border-[#2B2037] bg-[#171022] p-3"><span>{notificationLabels[key]}</span><input type="checkbox" checked={Boolean(preferences.notificationSettings?.[key])} onChange={(e)=>void patchPreferences({ notificationSettings: { ...(preferences.notificationSettings??{}), [key]:e.target.checked } })} /></label>)}</div></Panel>}
   {tab==='language'&&<Panel><PanelHeading title="Language" action={<Globe2 size={18}/>} /><div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{SUPPORTED_LOCALES.map((item)=><button type="button" key={item.code} onClick={()=>void patchPreferences({locale:item.code})} className={`min-h-12 rounded-xl border px-3 text-left ${locale===item.code?'border-[#8B5CF6] bg-[#2A1742]':'border-[#2B2037] bg-[#171022]'}`}><span className="block font-semibold">{item.label}</span><span className="text-xs text-[#8C8299]">{item.code}</span></button>)}</div></Panel>}
   {tab==='wallet'&&<Panel><PanelHeading title="Connected Ethereum wallet" /><div className="grid gap-3 sm:grid-cols-3"><p className="rounded-xl border border-[#2B2037] bg-[#171022] p-3 text-sm">Address<br/><span className="break-all font-mono text-xs">{profile.walletAddress??'—'}</span></p><p className="rounded-xl border border-[#2B2037] bg-[#171022] p-3 text-sm">Chain ID<br/><span className="font-mono">{profile.chainId??'—'}</span></p><p className="rounded-xl border border-[#2B2037] bg-[#171022] p-3 text-sm">KYC<br/><span className="font-mono">{profile.kycStatus}</span></p></div></Panel>}
   {tab==='session'&&<Panel><PanelHeading title="Sessions" action={<MonitorSmartphone size={18}/>} /><div className="space-y-2">{sessions.map((session)=><div key={session.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#2B2037] bg-[#171022] p-3"><div><p className="font-mono text-xs">{session.id}</p><p className="text-xs text-[#8C8299]">Last used {new Date(session.lastUsedAt).toLocaleString()} {session.revokedAt?'· revoked':''}</p></div><button type="button" disabled={Boolean(session.revokedAt)} onClick={()=>void revokeSession(session.id)} className="min-h-10 rounded-lg border border-[#2B2037] px-3 text-xs disabled:opacity-40">Revoke</button></div>)}</div><button type="button" onClick={()=>void logoutAll()} className="mt-4 min-h-11 rounded-xl border border-[#FF748A]/40 px-4 text-sm text-[#FFB6C2]"><LogOut size={16} className="mr-2 inline"/>Log out all sessions</button></Panel>}
   {tab==='appearance'&&<Panel><PanelHeading title="Appearance" action={<Palette size={18}/>} /><div className="flex gap-2"><button type="button" onClick={()=>void patchPreferences({theme:'dark'})} className={`min-h-11 rounded-xl border px-4 ${preferences.theme==='dark'?'border-[#8B5CF6] bg-[#2A1742]':'border-[#2B2037]'}`}>Dark</button><button type="button" onClick={()=>void patchPreferences({theme:'system'})} className={`min-h-11 rounded-xl border px-4 ${preferences.theme==='system'?'border-[#8B5CF6] bg-[#2A1742]':'border-[#2B2037]'}`}>System</button></div></Panel>}
-  {tab==='about'&&<Panel><PanelHeading title="About NEXI" /><p className="text-sm text-[#C3BBD0]">NEXI Public · authenticated REST and Socket.IO client. Runtime release metadata is supplied by the platform environment.</p></Panel>}
+  {tab==='about'&&<Panel className="space-y-5"><div><PanelHeading title="About NEXI" /><p className="max-w-3xl text-sm leading-6 text-[#C3BBD0]">NEXI is a mobile-first financial application for exploring supported markets and managing account services through a connected wallet.</p></div><section className="border-t border-[#2B2037] pt-4"><h2 className="text-sm font-semibold text-white">Markets and trading</h2><p className="mt-2 text-sm leading-6 text-[#C3BBD0]">Quotes Hub covers 53 instruments across crypto, stocks, forex, and metals. Spot and isolated Margin provide charting, order entry, market depth, trades, orders, and positions where the selected instrument and account support them. Options availability, durations, and payouts come from current backend configuration.</p></section><section className="border-t border-[#2B2037] pt-4"><h2 className="text-sm font-semibold text-white">Wallet and account services</h2><p className="mt-2 text-sm leading-6 text-[#C3BBD0]">Wallet surfaces show supported account balances and ledger-backed activity. Deposit, withdrawal, transfer, conversion, Earn, Mining, and Loans actions depend on account access and current service availability.</p></section><section className="border-t border-[#2B2037] pt-4"><h2 className="text-sm font-semibold text-white">Identity and security</h2><p className="mt-2 text-sm leading-6 text-[#C3BBD0]">Public account access uses wallet signature verification. Profile settings include identity verification status, active sessions, a security password for sensitive actions, authenticator MFA, and one-time recovery codes.</p></section><section className="border-t border-[#2B2037] pt-4"><h2 className="text-sm font-semibold text-white">Market data and availability</h2><p className="mt-2 text-sm leading-6 text-[#C3BBD0]">Market coverage and data freshness vary by instrument, provider, and market session. NEXI shows unavailable, stale, or error states when current data or an account service cannot be confirmed.</p></section></Panel>}
   </main></PageShell>;
 }

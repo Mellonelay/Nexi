@@ -15,16 +15,16 @@ export default function LoginPage() {
   }, [router]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-900">
-      <div className="w-full max-w-md p-8 space-y-6 bg-gray-800 rounded-lg shadow-lg">
-        <h1 className="text-3xl font-bold text-center text-white">
+    <div className="nexi-safe-area-page nexi-page-shell flex min-h-[100dvh] min-w-0 items-center justify-center text-[#F5F7FB]">
+      <div className="nexi-raised-panel w-full max-w-md space-y-6 rounded-2xl border border-violet-300/20 p-6 shadow-2xl sm:p-8">
+        <h1 className="gradient-text text-center text-3xl font-bold">
           Login to NEXI
         </h1>
-        <p className="text-center text-sm text-gray-300">Connect and sign a message with your Ethereum wallet to access NEXI.</p>
+        <p className="text-center text-sm leading-6 text-[#C3BBD0]">Connect and sign a message with your Ethereum wallet to access NEXI.</p>
         <WalletConnectControl compact />
         <p className="text-center text-[#8C8299]">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-blue-400 hover:underline">
+          <Link href="/signup" className="text-[var(--nexi-focus)] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)]">
             Sign up
           </Link>
         </p>

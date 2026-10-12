@@ -17,15 +17,15 @@ export default function SignupPage() {
   }, [router]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-900">
-      <div className="w-full max-w-md p-8 space-y-6 bg-gray-800 rounded-lg shadow-lg">
-        <h1 className="text-3xl font-bold text-center text-white">Create Account</h1>
-        <p className="text-center text-sm text-gray-300">Create your NEXI account by connecting and signing with an Ethereum wallet.</p>
+    <main className="nexi-safe-area-page nexi-page-shell flex min-h-[100dvh] min-w-0 items-center justify-center text-[#F5F7FB]">
+      <div className="nexi-raised-panel w-full max-w-md space-y-6 rounded-2xl border border-violet-300/20 p-6 shadow-2xl sm:p-8">
+        <h1 className="gradient-text text-center text-3xl font-bold">Create Account</h1>
+        <p className="text-center text-sm leading-6 text-[#C3BBD0]">Create your NEXI account by connecting and signing with an Ethereum wallet.</p>
         <WalletConnectControl compact />
         <p className="text-center text-[#8C8299]">
-          Already have an account? <Link href="/login" className="text-blue-400 hover:underline">Login</Link>
+          Already have an account? <Link href="/login" className="text-[var(--nexi-focus)] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)]">Login</Link>
         </p>
       </div>
-    </div>
+    </main>
   );
 }

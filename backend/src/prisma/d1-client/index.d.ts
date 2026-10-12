@@ -105,7 +105,7 @@ export type MiningRewardAccrual = $Result.DefaultSelection<Prisma.$MiningRewardA
 export type Currency = $Result.DefaultSelection<Prisma.$CurrencyPayload>
 /**
  * Model WalletNetwork
- *
+ * 
  */
 export type WalletNetwork = $Result.DefaultSelection<Prisma.$WalletNetworkPayload>
 /**
@@ -298,6 +298,16 @@ export type LegacyAdmin = $Result.DefaultSelection<Prisma.$LegacyAdminPayload>
  * 
  */
 export type LegacyAffiliate = $Result.DefaultSelection<Prisma.$LegacyAffiliatePayload>
+/**
+ * Model ReferralAttributionEvent
+ * 
+ */
+export type ReferralAttributionEvent = $Result.DefaultSelection<Prisma.$ReferralAttributionEventPayload>
+/**
+ * Model ReferralRewardEvent
+ * 
+ */
+export type ReferralRewardEvent = $Result.DefaultSelection<Prisma.$ReferralRewardEventPayload>
 /**
  * Model LegacyBinaryOptionResult
  * 
@@ -1751,6 +1761,26 @@ export class PrismaClient<
   get legacyAffiliate(): Prisma.LegacyAffiliateDelegate<ExtArgs, ClientOptions>;
 
   /**
+   * `prisma.referralAttributionEvent`: Exposes CRUD operations for the **ReferralAttributionEvent** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ReferralAttributionEvents
+    * const referralAttributionEvents = await prisma.referralAttributionEvent.findMany()
+    * ```
+    */
+  get referralAttributionEvent(): Prisma.ReferralAttributionEventDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.referralRewardEvent`: Exposes CRUD operations for the **ReferralRewardEvent** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ReferralRewardEvents
+    * const referralRewardEvents = await prisma.referralRewardEvent.findMany()
+    * ```
+    */
+  get referralRewardEvent(): Prisma.ReferralRewardEventDelegate<ExtArgs, ClientOptions>;
+
+  /**
    * `prisma.legacyBinaryOptionResult`: Exposes CRUD operations for the **LegacyBinaryOptionResult** model.
     * Example usage:
     * ```ts
@@ -2560,6 +2590,8 @@ export namespace Prisma {
     LedgerAuditEvent: 'LedgerAuditEvent',
     LegacyAdmin: 'LegacyAdmin',
     LegacyAffiliate: 'LegacyAffiliate',
+    ReferralAttributionEvent: 'ReferralAttributionEvent',
+    ReferralRewardEvent: 'ReferralRewardEvent',
     LegacyBinaryOptionResult: 'LegacyBinaryOptionResult',
     LegacyLoanRepayment: 'LegacyLoanRepayment',
     LegacyReward: 'LegacyReward',
@@ -2607,7 +2639,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "userMfa" | "walletIdentity" | "authSession" | "kYC" | "wallet" | "ledger" | "spotOrder" | "spotTrade" | "binaryOptionPosition" | "contractPosition" | "contractPair" | "conversionTransaction" | "loanApplication" | "miningPlan" | "miningSubscription" | "miningRewardAccrual" | "currency" | "walletNetwork" | "depositAddress" | "depositClaim" | "loanPlan" | "systemConfig" | "adminAuditLog" | "adminRoleAssignment" | "adminGovernanceCommand" | "adminGovernanceApproval" | "adminIncident" | "adminMaintenanceWindow" | "adminFeatureFlag" | "binaryPair" | "binaryTimeframe" | "withdrawalRequest" | "optionGameSettings" | "marketData" | "marketAsset" | "marketNetwork" | "marketAssetCapability" | "marketPair" | "marketProviderConfig" | "marketProviderSymbol" | "marketTrade" | "marketDepthSnapshot" | "marketDepthLevel" | "marketQuoteSnapshot" | "marketQuoteLatest" | "marketKline" | "ledgerAccount" | "spotMarginAccount" | "spotMarginPosition" | "spotMarginPositionEvent" | "spotMarginActivity" | "ledgerPosting" | "ledgerIdempotency" | "ledgerAuditEvent" | "legacyAdmin" | "legacyAffiliate" | "legacyBinaryOptionResult" | "legacyLoanRepayment" | "legacyReward" | "supportTicket" | "supportTicketReply" | "messageConversation" | "persistentMessage" | "messageModerationCase" | "notification" | "announcement" | "activity" | "eventOutbox" | "eventInbox" | "learnArticle" | "learnCategory" | "learnArticleRevision" | "learnTag" | "learnArticleTag" | "learnMediaAsset" | "legacySettings" | "userPreference" | "vipLevel" | "userVipState" | "gate2SpotOrder" | "gate2SpotTrade" | "gate2BinaryConfiguration" | "gate2BinaryPosition" | "gate2Deposit" | "gate2Withdrawal" | "gate2InternalTransfer" | "gate2ConversionQuote" | "gate2OperationAudit"
+      modelProps: "user" | "userMfa" | "walletIdentity" | "authSession" | "kYC" | "wallet" | "ledger" | "spotOrder" | "spotTrade" | "binaryOptionPosition" | "contractPosition" | "contractPair" | "conversionTransaction" | "loanApplication" | "miningPlan" | "miningSubscription" | "miningRewardAccrual" | "currency" | "walletNetwork" | "depositAddress" | "depositClaim" | "loanPlan" | "systemConfig" | "adminAuditLog" | "adminRoleAssignment" | "adminGovernanceCommand" | "adminGovernanceApproval" | "adminIncident" | "adminMaintenanceWindow" | "adminFeatureFlag" | "binaryPair" | "binaryTimeframe" | "withdrawalRequest" | "optionGameSettings" | "marketData" | "marketAsset" | "marketNetwork" | "marketAssetCapability" | "marketPair" | "marketProviderConfig" | "marketProviderSymbol" | "marketTrade" | "marketDepthSnapshot" | "marketDepthLevel" | "marketQuoteSnapshot" | "marketQuoteLatest" | "marketKline" | "ledgerAccount" | "spotMarginAccount" | "spotMarginPosition" | "spotMarginPositionEvent" | "spotMarginActivity" | "ledgerPosting" | "ledgerIdempotency" | "ledgerAuditEvent" | "legacyAdmin" | "legacyAffiliate" | "referralAttributionEvent" | "referralRewardEvent" | "legacyBinaryOptionResult" | "legacyLoanRepayment" | "legacyReward" | "supportTicket" | "supportTicketReply" | "messageConversation" | "persistentMessage" | "messageModerationCase" | "notification" | "announcement" | "activity" | "eventOutbox" | "eventInbox" | "learnArticle" | "learnCategory" | "learnArticleRevision" | "learnTag" | "learnArticleTag" | "learnMediaAsset" | "legacySettings" | "userPreference" | "vipLevel" | "userVipState" | "gate2SpotOrder" | "gate2SpotTrade" | "gate2BinaryConfiguration" | "gate2BinaryPosition" | "gate2Deposit" | "gate2Withdrawal" | "gate2InternalTransfer" | "gate2ConversionQuote" | "gate2OperationAudit"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -6829,6 +6861,154 @@ export namespace Prisma {
           }
         }
       }
+      ReferralAttributionEvent: {
+        payload: Prisma.$ReferralAttributionEventPayload<ExtArgs>
+        fields: Prisma.ReferralAttributionEventFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ReferralAttributionEventFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferralAttributionEventPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ReferralAttributionEventFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferralAttributionEventPayload>
+          }
+          findFirst: {
+            args: Prisma.ReferralAttributionEventFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferralAttributionEventPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ReferralAttributionEventFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferralAttributionEventPayload>
+          }
+          findMany: {
+            args: Prisma.ReferralAttributionEventFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferralAttributionEventPayload>[]
+          }
+          create: {
+            args: Prisma.ReferralAttributionEventCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferralAttributionEventPayload>
+          }
+          createMany: {
+            args: Prisma.ReferralAttributionEventCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ReferralAttributionEventCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferralAttributionEventPayload>[]
+          }
+          delete: {
+            args: Prisma.ReferralAttributionEventDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferralAttributionEventPayload>
+          }
+          update: {
+            args: Prisma.ReferralAttributionEventUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferralAttributionEventPayload>
+          }
+          deleteMany: {
+            args: Prisma.ReferralAttributionEventDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ReferralAttributionEventUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ReferralAttributionEventUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferralAttributionEventPayload>[]
+          }
+          upsert: {
+            args: Prisma.ReferralAttributionEventUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferralAttributionEventPayload>
+          }
+          aggregate: {
+            args: Prisma.ReferralAttributionEventAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateReferralAttributionEvent>
+          }
+          groupBy: {
+            args: Prisma.ReferralAttributionEventGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ReferralAttributionEventGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ReferralAttributionEventCountArgs<ExtArgs>
+            result: $Utils.Optional<ReferralAttributionEventCountAggregateOutputType> | number
+          }
+        }
+      }
+      ReferralRewardEvent: {
+        payload: Prisma.$ReferralRewardEventPayload<ExtArgs>
+        fields: Prisma.ReferralRewardEventFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ReferralRewardEventFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferralRewardEventPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ReferralRewardEventFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferralRewardEventPayload>
+          }
+          findFirst: {
+            args: Prisma.ReferralRewardEventFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferralRewardEventPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ReferralRewardEventFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferralRewardEventPayload>
+          }
+          findMany: {
+            args: Prisma.ReferralRewardEventFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferralRewardEventPayload>[]
+          }
+          create: {
+            args: Prisma.ReferralRewardEventCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferralRewardEventPayload>
+          }
+          createMany: {
+            args: Prisma.ReferralRewardEventCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ReferralRewardEventCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferralRewardEventPayload>[]
+          }
+          delete: {
+            args: Prisma.ReferralRewardEventDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferralRewardEventPayload>
+          }
+          update: {
+            args: Prisma.ReferralRewardEventUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferralRewardEventPayload>
+          }
+          deleteMany: {
+            args: Prisma.ReferralRewardEventDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ReferralRewardEventUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ReferralRewardEventUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferralRewardEventPayload>[]
+          }
+          upsert: {
+            args: Prisma.ReferralRewardEventUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferralRewardEventPayload>
+          }
+          aggregate: {
+            args: Prisma.ReferralRewardEventAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateReferralRewardEvent>
+          }
+          groupBy: {
+            args: Prisma.ReferralRewardEventGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ReferralRewardEventGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ReferralRewardEventCountArgs<ExtArgs>
+            result: $Utils.Optional<ReferralRewardEventCountAggregateOutputType> | number
+          }
+        }
+      }
       LegacyBinaryOptionResult: {
         payload: Prisma.$LegacyBinaryOptionResultPayload<ExtArgs>
         fields: Prisma.LegacyBinaryOptionResultFieldRefs
@@ -9362,6 +9542,8 @@ export namespace Prisma {
     ledgerAuditEvent?: LedgerAuditEventOmit
     legacyAdmin?: LegacyAdminOmit
     legacyAffiliate?: LegacyAffiliateOmit
+    referralAttributionEvent?: ReferralAttributionEventOmit
+    referralRewardEvent?: ReferralRewardEventOmit
     legacyBinaryOptionResult?: LegacyBinaryOptionResultOmit
     legacyLoanRepayment?: LegacyLoanRepaymentOmit
     legacyReward?: LegacyRewardOmit
@@ -9499,6 +9681,10 @@ export namespace Prisma {
     spotMarginAccounts: number
     spotMarginActivities: number
     activities: number
+    referralAttributionsSent: number
+    referralAttributionsReceived: number
+    referralRewardsSent: number
+    referralRewardsReceived: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -9527,6 +9713,10 @@ export namespace Prisma {
     spotMarginAccounts?: boolean | UserCountOutputTypeCountSpotMarginAccountsArgs
     spotMarginActivities?: boolean | UserCountOutputTypeCountSpotMarginActivitiesArgs
     activities?: boolean | UserCountOutputTypeCountActivitiesArgs
+    referralAttributionsSent?: boolean | UserCountOutputTypeCountReferralAttributionsSentArgs
+    referralAttributionsReceived?: boolean | UserCountOutputTypeCountReferralAttributionsReceivedArgs
+    referralRewardsSent?: boolean | UserCountOutputTypeCountReferralRewardsSentArgs
+    referralRewardsReceived?: boolean | UserCountOutputTypeCountReferralRewardsReceivedArgs
   }
 
   // Custom InputTypes
@@ -9713,6 +9903,34 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountActivitiesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ActivityWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountReferralAttributionsSentArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ReferralAttributionEventWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountReferralAttributionsReceivedArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ReferralAttributionEventWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountReferralRewardsSentArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ReferralRewardEventWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountReferralRewardsReceivedArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ReferralRewardEventWhereInput
   }
 
 
@@ -10971,6 +11189,10 @@ export namespace Prisma {
     preference?: boolean | User$preferenceArgs<ExtArgs>
     vipState?: boolean | User$vipStateArgs<ExtArgs>
     mfa?: boolean | User$mfaArgs<ExtArgs>
+    referralAttributionsSent?: boolean | User$referralAttributionsSentArgs<ExtArgs>
+    referralAttributionsReceived?: boolean | User$referralAttributionsReceivedArgs<ExtArgs>
+    referralRewardsSent?: boolean | User$referralRewardsSentArgs<ExtArgs>
+    referralRewardsReceived?: boolean | User$referralRewardsReceivedArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -11051,6 +11273,10 @@ export namespace Prisma {
     preference?: boolean | User$preferenceArgs<ExtArgs>
     vipState?: boolean | User$vipStateArgs<ExtArgs>
     mfa?: boolean | User$mfaArgs<ExtArgs>
+    referralAttributionsSent?: boolean | User$referralAttributionsSentArgs<ExtArgs>
+    referralAttributionsReceived?: boolean | User$referralAttributionsReceivedArgs<ExtArgs>
+    referralRewardsSent?: boolean | User$referralRewardsSentArgs<ExtArgs>
+    referralRewardsReceived?: boolean | User$referralRewardsReceivedArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -11092,6 +11318,10 @@ export namespace Prisma {
       preference: Prisma.$UserPreferencePayload<ExtArgs> | null
       vipState: Prisma.$UserVipStatePayload<ExtArgs> | null
       mfa: Prisma.$UserMfaPayload<ExtArgs> | null
+      referralAttributionsSent: Prisma.$ReferralAttributionEventPayload<ExtArgs>[]
+      referralAttributionsReceived: Prisma.$ReferralAttributionEventPayload<ExtArgs>[]
+      referralRewardsSent: Prisma.$ReferralRewardEventPayload<ExtArgs>[]
+      referralRewardsReceived: Prisma.$ReferralRewardEventPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -11532,6 +11762,10 @@ export namespace Prisma {
     preference<T extends User$preferenceArgs<ExtArgs> = {}>(args?: Subset<T, User$preferenceArgs<ExtArgs>>): Prisma__UserPreferenceClient<$Result.GetResult<Prisma.$UserPreferencePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     vipState<T extends User$vipStateArgs<ExtArgs> = {}>(args?: Subset<T, User$vipStateArgs<ExtArgs>>): Prisma__UserVipStateClient<$Result.GetResult<Prisma.$UserVipStatePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     mfa<T extends User$mfaArgs<ExtArgs> = {}>(args?: Subset<T, User$mfaArgs<ExtArgs>>): Prisma__UserMfaClient<$Result.GetResult<Prisma.$UserMfaPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    referralAttributionsSent<T extends User$referralAttributionsSentArgs<ExtArgs> = {}>(args?: Subset<T, User$referralAttributionsSentArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReferralAttributionEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    referralAttributionsReceived<T extends User$referralAttributionsReceivedArgs<ExtArgs> = {}>(args?: Subset<T, User$referralAttributionsReceivedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReferralAttributionEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    referralRewardsSent<T extends User$referralRewardsSentArgs<ExtArgs> = {}>(args?: Subset<T, User$referralRewardsSentArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReferralRewardEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    referralRewardsReceived<T extends User$referralRewardsReceivedArgs<ExtArgs> = {}>(args?: Subset<T, User$referralRewardsReceivedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReferralRewardEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -12707,6 +12941,102 @@ export namespace Prisma {
      */
     include?: UserMfaInclude<ExtArgs> | null
     where?: UserMfaWhereInput
+  }
+
+  /**
+   * User.referralAttributionsSent
+   */
+  export type User$referralAttributionsSentArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferralAttributionEvent
+     */
+    select?: ReferralAttributionEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReferralAttributionEvent
+     */
+    omit?: ReferralAttributionEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferralAttributionEventInclude<ExtArgs> | null
+    where?: ReferralAttributionEventWhereInput
+    orderBy?: ReferralAttributionEventOrderByWithRelationInput | ReferralAttributionEventOrderByWithRelationInput[]
+    cursor?: ReferralAttributionEventWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ReferralAttributionEventScalarFieldEnum | ReferralAttributionEventScalarFieldEnum[]
+  }
+
+  /**
+   * User.referralAttributionsReceived
+   */
+  export type User$referralAttributionsReceivedArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferralAttributionEvent
+     */
+    select?: ReferralAttributionEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReferralAttributionEvent
+     */
+    omit?: ReferralAttributionEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferralAttributionEventInclude<ExtArgs> | null
+    where?: ReferralAttributionEventWhereInput
+    orderBy?: ReferralAttributionEventOrderByWithRelationInput | ReferralAttributionEventOrderByWithRelationInput[]
+    cursor?: ReferralAttributionEventWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ReferralAttributionEventScalarFieldEnum | ReferralAttributionEventScalarFieldEnum[]
+  }
+
+  /**
+   * User.referralRewardsSent
+   */
+  export type User$referralRewardsSentArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferralRewardEvent
+     */
+    select?: ReferralRewardEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReferralRewardEvent
+     */
+    omit?: ReferralRewardEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferralRewardEventInclude<ExtArgs> | null
+    where?: ReferralRewardEventWhereInput
+    orderBy?: ReferralRewardEventOrderByWithRelationInput | ReferralRewardEventOrderByWithRelationInput[]
+    cursor?: ReferralRewardEventWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ReferralRewardEventScalarFieldEnum | ReferralRewardEventScalarFieldEnum[]
+  }
+
+  /**
+   * User.referralRewardsReceived
+   */
+  export type User$referralRewardsReceivedArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferralRewardEvent
+     */
+    select?: ReferralRewardEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReferralRewardEvent
+     */
+    omit?: ReferralRewardEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferralRewardEventInclude<ExtArgs> | null
+    where?: ReferralRewardEventWhereInput
+    orderBy?: ReferralRewardEventOrderByWithRelationInput | ReferralRewardEventOrderByWithRelationInput[]
+    cursor?: ReferralRewardEventWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ReferralRewardEventScalarFieldEnum | ReferralRewardEventScalarFieldEnum[]
   }
 
   /**
@@ -32820,55 +33150,55 @@ export namespace Prisma {
     where?: WalletNetworkWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of WalletNetworks to fetch.
      */
     orderBy?: WalletNetworkOrderByWithRelationInput | WalletNetworkOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the start position
      */
     cursor?: WalletNetworkWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` WalletNetworks from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` WalletNetworks.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Count returned WalletNetworks
     **/
     _count?: true | WalletNetworkCountAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Select which fields to average
     **/
     _avg?: WalletNetworkAvgAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Select which fields to sum
     **/
     _sum?: WalletNetworkSumAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: WalletNetworkMinAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Select which fields to find the maximum value
     **/
     _max?: WalletNetworkMaxAggregateInputType
@@ -33103,13 +33433,13 @@ export namespace Prisma {
      * @example
      * // Get all WalletNetworks
      * const walletNetworks = await prisma.walletNetwork.findMany()
-     *
+     * 
      * // Get first 10 WalletNetworks
      * const walletNetworks = await prisma.walletNetwork.findMany({ take: 10 })
-     *
+     * 
      * // Only select the `id`
      * const walletNetworkWithIdOnly = await prisma.walletNetwork.findMany({ select: { id: true } })
-     *
+     * 
      */
     findMany<T extends WalletNetworkFindManyArgs>(args?: SelectSubset<T, WalletNetworkFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WalletNetworkPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
 
@@ -33123,7 +33453,7 @@ export namespace Prisma {
      *     // ... data to create a WalletNetwork
      *   }
      * })
-     *
+     * 
      */
     create<T extends WalletNetworkCreateArgs>(args: SelectSubset<T, WalletNetworkCreateArgs<ExtArgs>>): Prisma__WalletNetworkClient<$Result.GetResult<Prisma.$WalletNetworkPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
@@ -33137,7 +33467,7 @@ export namespace Prisma {
      *     // ... provide data here
      *   ]
      * })
-     *
+     *     
      */
     createMany<T extends WalletNetworkCreateManyArgs>(args?: SelectSubset<T, WalletNetworkCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
@@ -33151,7 +33481,7 @@ export namespace Prisma {
      *     // ... provide data here
      *   ]
      * })
-     *
+     * 
      * // Create many WalletNetworks and only return the `id`
      * const walletNetworkWithIdOnly = await prisma.walletNetwork.createManyAndReturn({
      *   select: { id: true },
@@ -33161,7 +33491,7 @@ export namespace Prisma {
      * })
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     *
+     * 
      */
     createManyAndReturn<T extends WalletNetworkCreateManyAndReturnArgs>(args?: SelectSubset<T, WalletNetworkCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WalletNetworkPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
 
@@ -33175,7 +33505,7 @@ export namespace Prisma {
      *     // ... filter to delete one WalletNetwork
      *   }
      * })
-     *
+     * 
      */
     delete<T extends WalletNetworkDeleteArgs>(args: SelectSubset<T, WalletNetworkDeleteArgs<ExtArgs>>): Prisma__WalletNetworkClient<$Result.GetResult<Prisma.$WalletNetworkPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
@@ -33192,7 +33522,7 @@ export namespace Prisma {
      *     // ... provide data here
      *   }
      * })
-     *
+     * 
      */
     update<T extends WalletNetworkUpdateArgs>(args: SelectSubset<T, WalletNetworkUpdateArgs<ExtArgs>>): Prisma__WalletNetworkClient<$Result.GetResult<Prisma.$WalletNetworkPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
@@ -33206,7 +33536,7 @@ export namespace Prisma {
      *     // ... provide filter here
      *   }
      * })
-     *
+     * 
      */
     deleteMany<T extends WalletNetworkDeleteManyArgs>(args?: SelectSubset<T, WalletNetworkDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
@@ -33225,7 +33555,7 @@ export namespace Prisma {
      *     // ... provide data here
      *   }
      * })
-     *
+     * 
      */
     updateMany<T extends WalletNetworkUpdateManyArgs>(args: SelectSubset<T, WalletNetworkUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
@@ -33242,7 +33572,7 @@ export namespace Prisma {
      *     // ... provide data here
      *   ]
      * })
-     *
+     * 
      * // Update zero or more WalletNetworks and only return the `id`
      * const walletNetworkWithIdOnly = await prisma.walletNetwork.updateManyAndReturn({
      *   select: { id: true },
@@ -33255,7 +33585,7 @@ export namespace Prisma {
      * })
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     *
+     * 
      */
     updateManyAndReturn<T extends WalletNetworkUpdateManyAndReturnArgs>(args: SelectSubset<T, WalletNetworkUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WalletNetworkPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
@@ -33344,7 +33674,7 @@ export namespace Prisma {
      *     _all: true
      *   },
      * })
-     *
+     * 
     **/
     groupBy<
       T extends WalletNetworkGroupByArgs,
@@ -33461,7 +33791,7 @@ export namespace Prisma {
     readonly createdAt: FieldRef<"WalletNetwork", 'DateTime'>
     readonly updatedAt: FieldRef<"WalletNetwork", 'DateTime'>
   }
-
+    
 
   // Custom InputTypes
   /**
@@ -33530,31 +33860,31 @@ export namespace Prisma {
     where?: WalletNetworkWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of WalletNetworks to fetch.
      */
     orderBy?: WalletNetworkOrderByWithRelationInput | WalletNetworkOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the position for searching for WalletNetworks.
      */
     cursor?: WalletNetworkWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` WalletNetworks from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` WalletNetworks.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     *
+     * 
      * Filter by unique combinations of WalletNetworks.
      */
     distinct?: WalletNetworkScalarFieldEnum | WalletNetworkScalarFieldEnum[]
@@ -33582,31 +33912,31 @@ export namespace Prisma {
     where?: WalletNetworkWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of WalletNetworks to fetch.
      */
     orderBy?: WalletNetworkOrderByWithRelationInput | WalletNetworkOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the position for searching for WalletNetworks.
      */
     cursor?: WalletNetworkWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` WalletNetworks from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` WalletNetworks.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     *
+     * 
      * Filter by unique combinations of WalletNetworks.
      */
     distinct?: WalletNetworkScalarFieldEnum | WalletNetworkScalarFieldEnum[]
@@ -33634,25 +33964,25 @@ export namespace Prisma {
     where?: WalletNetworkWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of WalletNetworks to fetch.
      */
     orderBy?: WalletNetworkOrderByWithRelationInput | WalletNetworkOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the position for listing WalletNetworks.
      */
     cursor?: WalletNetworkWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` WalletNetworks from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` WalletNetworks.
      */
     skip?: number
@@ -34006,55 +34336,55 @@ export namespace Prisma {
     where?: DepositAddressWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of DepositAddresses to fetch.
      */
     orderBy?: DepositAddressOrderByWithRelationInput | DepositAddressOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the start position
      */
     cursor?: DepositAddressWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` DepositAddresses from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` DepositAddresses.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Count returned DepositAddresses
     **/
     _count?: true | DepositAddressCountAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Select which fields to average
     **/
     _avg?: DepositAddressAvgAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Select which fields to sum
     **/
     _sum?: DepositAddressSumAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: DepositAddressMinAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Select which fields to find the maximum value
     **/
     _max?: DepositAddressMaxAggregateInputType
@@ -34284,13 +34614,13 @@ export namespace Prisma {
      * @example
      * // Get all DepositAddresses
      * const depositAddresses = await prisma.depositAddress.findMany()
-     *
+     * 
      * // Get first 10 DepositAddresses
      * const depositAddresses = await prisma.depositAddress.findMany({ take: 10 })
-     *
+     * 
      * // Only select the `id`
      * const depositAddressWithIdOnly = await prisma.depositAddress.findMany({ select: { id: true } })
-     *
+     * 
      */
     findMany<T extends DepositAddressFindManyArgs>(args?: SelectSubset<T, DepositAddressFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DepositAddressPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
 
@@ -34304,7 +34634,7 @@ export namespace Prisma {
      *     // ... data to create a DepositAddress
      *   }
      * })
-     *
+     * 
      */
     create<T extends DepositAddressCreateArgs>(args: SelectSubset<T, DepositAddressCreateArgs<ExtArgs>>): Prisma__DepositAddressClient<$Result.GetResult<Prisma.$DepositAddressPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
@@ -34318,7 +34648,7 @@ export namespace Prisma {
      *     // ... provide data here
      *   ]
      * })
-     *
+     *     
      */
     createMany<T extends DepositAddressCreateManyArgs>(args?: SelectSubset<T, DepositAddressCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
@@ -34332,7 +34662,7 @@ export namespace Prisma {
      *     // ... provide data here
      *   ]
      * })
-     *
+     * 
      * // Create many DepositAddresses and only return the `id`
      * const depositAddressWithIdOnly = await prisma.depositAddress.createManyAndReturn({
      *   select: { id: true },
@@ -34342,7 +34672,7 @@ export namespace Prisma {
      * })
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     *
+     * 
      */
     createManyAndReturn<T extends DepositAddressCreateManyAndReturnArgs>(args?: SelectSubset<T, DepositAddressCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DepositAddressPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
 
@@ -34356,7 +34686,7 @@ export namespace Prisma {
      *     // ... filter to delete one DepositAddress
      *   }
      * })
-     *
+     * 
      */
     delete<T extends DepositAddressDeleteArgs>(args: SelectSubset<T, DepositAddressDeleteArgs<ExtArgs>>): Prisma__DepositAddressClient<$Result.GetResult<Prisma.$DepositAddressPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
@@ -34373,7 +34703,7 @@ export namespace Prisma {
      *     // ... provide data here
      *   }
      * })
-     *
+     * 
      */
     update<T extends DepositAddressUpdateArgs>(args: SelectSubset<T, DepositAddressUpdateArgs<ExtArgs>>): Prisma__DepositAddressClient<$Result.GetResult<Prisma.$DepositAddressPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
@@ -34387,7 +34717,7 @@ export namespace Prisma {
      *     // ... provide filter here
      *   }
      * })
-     *
+     * 
      */
     deleteMany<T extends DepositAddressDeleteManyArgs>(args?: SelectSubset<T, DepositAddressDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
@@ -34406,7 +34736,7 @@ export namespace Prisma {
      *     // ... provide data here
      *   }
      * })
-     *
+     * 
      */
     updateMany<T extends DepositAddressUpdateManyArgs>(args: SelectSubset<T, DepositAddressUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
@@ -34423,7 +34753,7 @@ export namespace Prisma {
      *     // ... provide data here
      *   ]
      * })
-     *
+     * 
      * // Update zero or more DepositAddresses and only return the `id`
      * const depositAddressWithIdOnly = await prisma.depositAddress.updateManyAndReturn({
      *   select: { id: true },
@@ -34436,7 +34766,7 @@ export namespace Prisma {
      * })
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     *
+     * 
      */
     updateManyAndReturn<T extends DepositAddressUpdateManyAndReturnArgs>(args: SelectSubset<T, DepositAddressUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DepositAddressPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
@@ -34525,7 +34855,7 @@ export namespace Prisma {
      *     _all: true
      *   },
      * })
-     *
+     * 
     **/
     groupBy<
       T extends DepositAddressGroupByArgs,
@@ -71961,6 +72291,7 @@ export namespace Prisma {
     auditEvents?: boolean | LedgerPosting$auditEventsArgs<ExtArgs>
     miningRewardAccrual?: boolean | LedgerPosting$miningRewardAccrualArgs<ExtArgs>
     loanRepayment?: boolean | LedgerPosting$loanRepaymentArgs<ExtArgs>
+    referralRewardEvent?: boolean | LedgerPosting$referralRewardEventArgs<ExtArgs>
     _count?: boolean | LedgerPostingCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["ledgerPosting"]>
 
@@ -72023,6 +72354,7 @@ export namespace Prisma {
     auditEvents?: boolean | LedgerPosting$auditEventsArgs<ExtArgs>
     miningRewardAccrual?: boolean | LedgerPosting$miningRewardAccrualArgs<ExtArgs>
     loanRepayment?: boolean | LedgerPosting$loanRepaymentArgs<ExtArgs>
+    referralRewardEvent?: boolean | LedgerPosting$referralRewardEventArgs<ExtArgs>
     _count?: boolean | LedgerPostingCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type LedgerPostingIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -72039,6 +72371,7 @@ export namespace Prisma {
       auditEvents: Prisma.$LedgerAuditEventPayload<ExtArgs>[]
       miningRewardAccrual: Prisma.$MiningRewardAccrualPayload<ExtArgs> | null
       loanRepayment: Prisma.$LegacyLoanRepaymentPayload<ExtArgs> | null
+      referralRewardEvent: Prisma.$ReferralRewardEventPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -72453,6 +72786,7 @@ export namespace Prisma {
     auditEvents<T extends LedgerPosting$auditEventsArgs<ExtArgs> = {}>(args?: Subset<T, LedgerPosting$auditEventsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LedgerAuditEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     miningRewardAccrual<T extends LedgerPosting$miningRewardAccrualArgs<ExtArgs> = {}>(args?: Subset<T, LedgerPosting$miningRewardAccrualArgs<ExtArgs>>): Prisma__MiningRewardAccrualClient<$Result.GetResult<Prisma.$MiningRewardAccrualPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     loanRepayment<T extends LedgerPosting$loanRepaymentArgs<ExtArgs> = {}>(args?: Subset<T, LedgerPosting$loanRepaymentArgs<ExtArgs>>): Prisma__LegacyLoanRepaymentClient<$Result.GetResult<Prisma.$LegacyLoanRepaymentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    referralRewardEvent<T extends LedgerPosting$referralRewardEventArgs<ExtArgs> = {}>(args?: Subset<T, LedgerPosting$referralRewardEventArgs<ExtArgs>>): Prisma__ReferralRewardEventClient<$Result.GetResult<Prisma.$ReferralRewardEventPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -72949,6 +73283,25 @@ export namespace Prisma {
      */
     include?: LegacyLoanRepaymentInclude<ExtArgs> | null
     where?: LegacyLoanRepaymentWhereInput
+  }
+
+  /**
+   * LedgerPosting.referralRewardEvent
+   */
+  export type LedgerPosting$referralRewardEventArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferralRewardEvent
+     */
+    select?: ReferralRewardEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReferralRewardEvent
+     */
+    omit?: ReferralRewardEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferralRewardEventInclude<ExtArgs> | null
+    where?: ReferralRewardEventWhereInput
   }
 
   /**
@@ -77196,6 +77549,2220 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: LegacyAffiliateInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ReferralAttributionEvent
+   */
+
+  export type AggregateReferralAttributionEvent = {
+    _count: ReferralAttributionEventCountAggregateOutputType | null
+    _min: ReferralAttributionEventMinAggregateOutputType | null
+    _max: ReferralAttributionEventMaxAggregateOutputType | null
+  }
+
+  export type ReferralAttributionEventMinAggregateOutputType = {
+    id: string | null
+    referrerUserId: string | null
+    referredUserId: string | null
+    referralCode: string | null
+    status: string | null
+    attributedAt: Date | null
+    createdAt: Date | null
+  }
+
+  export type ReferralAttributionEventMaxAggregateOutputType = {
+    id: string | null
+    referrerUserId: string | null
+    referredUserId: string | null
+    referralCode: string | null
+    status: string | null
+    attributedAt: Date | null
+    createdAt: Date | null
+  }
+
+  export type ReferralAttributionEventCountAggregateOutputType = {
+    id: number
+    referrerUserId: number
+    referredUserId: number
+    referralCode: number
+    status: number
+    attributedAt: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type ReferralAttributionEventMinAggregateInputType = {
+    id?: true
+    referrerUserId?: true
+    referredUserId?: true
+    referralCode?: true
+    status?: true
+    attributedAt?: true
+    createdAt?: true
+  }
+
+  export type ReferralAttributionEventMaxAggregateInputType = {
+    id?: true
+    referrerUserId?: true
+    referredUserId?: true
+    referralCode?: true
+    status?: true
+    attributedAt?: true
+    createdAt?: true
+  }
+
+  export type ReferralAttributionEventCountAggregateInputType = {
+    id?: true
+    referrerUserId?: true
+    referredUserId?: true
+    referralCode?: true
+    status?: true
+    attributedAt?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type ReferralAttributionEventAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ReferralAttributionEvent to aggregate.
+     */
+    where?: ReferralAttributionEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ReferralAttributionEvents to fetch.
+     */
+    orderBy?: ReferralAttributionEventOrderByWithRelationInput | ReferralAttributionEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ReferralAttributionEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ReferralAttributionEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ReferralAttributionEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ReferralAttributionEvents
+    **/
+    _count?: true | ReferralAttributionEventCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ReferralAttributionEventMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ReferralAttributionEventMaxAggregateInputType
+  }
+
+  export type GetReferralAttributionEventAggregateType<T extends ReferralAttributionEventAggregateArgs> = {
+        [P in keyof T & keyof AggregateReferralAttributionEvent]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateReferralAttributionEvent[P]>
+      : GetScalarType<T[P], AggregateReferralAttributionEvent[P]>
+  }
+
+
+
+
+  export type ReferralAttributionEventGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ReferralAttributionEventWhereInput
+    orderBy?: ReferralAttributionEventOrderByWithAggregationInput | ReferralAttributionEventOrderByWithAggregationInput[]
+    by: ReferralAttributionEventScalarFieldEnum[] | ReferralAttributionEventScalarFieldEnum
+    having?: ReferralAttributionEventScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ReferralAttributionEventCountAggregateInputType | true
+    _min?: ReferralAttributionEventMinAggregateInputType
+    _max?: ReferralAttributionEventMaxAggregateInputType
+  }
+
+  export type ReferralAttributionEventGroupByOutputType = {
+    id: string
+    referrerUserId: string
+    referredUserId: string
+    referralCode: string
+    status: string
+    attributedAt: Date
+    createdAt: Date
+    _count: ReferralAttributionEventCountAggregateOutputType | null
+    _min: ReferralAttributionEventMinAggregateOutputType | null
+    _max: ReferralAttributionEventMaxAggregateOutputType | null
+  }
+
+  type GetReferralAttributionEventGroupByPayload<T extends ReferralAttributionEventGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ReferralAttributionEventGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ReferralAttributionEventGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ReferralAttributionEventGroupByOutputType[P]>
+            : GetScalarType<T[P], ReferralAttributionEventGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ReferralAttributionEventSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    referrerUserId?: boolean
+    referredUserId?: boolean
+    referralCode?: boolean
+    status?: boolean
+    attributedAt?: boolean
+    createdAt?: boolean
+    referrer?: boolean | UserDefaultArgs<ExtArgs>
+    referred?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["referralAttributionEvent"]>
+
+  export type ReferralAttributionEventSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    referrerUserId?: boolean
+    referredUserId?: boolean
+    referralCode?: boolean
+    status?: boolean
+    attributedAt?: boolean
+    createdAt?: boolean
+    referrer?: boolean | UserDefaultArgs<ExtArgs>
+    referred?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["referralAttributionEvent"]>
+
+  export type ReferralAttributionEventSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    referrerUserId?: boolean
+    referredUserId?: boolean
+    referralCode?: boolean
+    status?: boolean
+    attributedAt?: boolean
+    createdAt?: boolean
+    referrer?: boolean | UserDefaultArgs<ExtArgs>
+    referred?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["referralAttributionEvent"]>
+
+  export type ReferralAttributionEventSelectScalar = {
+    id?: boolean
+    referrerUserId?: boolean
+    referredUserId?: boolean
+    referralCode?: boolean
+    status?: boolean
+    attributedAt?: boolean
+    createdAt?: boolean
+  }
+
+  export type ReferralAttributionEventOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "referrerUserId" | "referredUserId" | "referralCode" | "status" | "attributedAt" | "createdAt", ExtArgs["result"]["referralAttributionEvent"]>
+  export type ReferralAttributionEventInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    referrer?: boolean | UserDefaultArgs<ExtArgs>
+    referred?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type ReferralAttributionEventIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    referrer?: boolean | UserDefaultArgs<ExtArgs>
+    referred?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type ReferralAttributionEventIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    referrer?: boolean | UserDefaultArgs<ExtArgs>
+    referred?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $ReferralAttributionEventPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ReferralAttributionEvent"
+    objects: {
+      referrer: Prisma.$UserPayload<ExtArgs>
+      referred: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      referrerUserId: string
+      referredUserId: string
+      referralCode: string
+      status: string
+      attributedAt: Date
+      createdAt: Date
+    }, ExtArgs["result"]["referralAttributionEvent"]>
+    composites: {}
+  }
+
+  type ReferralAttributionEventGetPayload<S extends boolean | null | undefined | ReferralAttributionEventDefaultArgs> = $Result.GetResult<Prisma.$ReferralAttributionEventPayload, S>
+
+  type ReferralAttributionEventCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ReferralAttributionEventFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ReferralAttributionEventCountAggregateInputType | true
+    }
+
+  export interface ReferralAttributionEventDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ReferralAttributionEvent'], meta: { name: 'ReferralAttributionEvent' } }
+    /**
+     * Find zero or one ReferralAttributionEvent that matches the filter.
+     * @param {ReferralAttributionEventFindUniqueArgs} args - Arguments to find a ReferralAttributionEvent
+     * @example
+     * // Get one ReferralAttributionEvent
+     * const referralAttributionEvent = await prisma.referralAttributionEvent.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ReferralAttributionEventFindUniqueArgs>(args: SelectSubset<T, ReferralAttributionEventFindUniqueArgs<ExtArgs>>): Prisma__ReferralAttributionEventClient<$Result.GetResult<Prisma.$ReferralAttributionEventPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ReferralAttributionEvent that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ReferralAttributionEventFindUniqueOrThrowArgs} args - Arguments to find a ReferralAttributionEvent
+     * @example
+     * // Get one ReferralAttributionEvent
+     * const referralAttributionEvent = await prisma.referralAttributionEvent.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ReferralAttributionEventFindUniqueOrThrowArgs>(args: SelectSubset<T, ReferralAttributionEventFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ReferralAttributionEventClient<$Result.GetResult<Prisma.$ReferralAttributionEventPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ReferralAttributionEvent that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReferralAttributionEventFindFirstArgs} args - Arguments to find a ReferralAttributionEvent
+     * @example
+     * // Get one ReferralAttributionEvent
+     * const referralAttributionEvent = await prisma.referralAttributionEvent.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ReferralAttributionEventFindFirstArgs>(args?: SelectSubset<T, ReferralAttributionEventFindFirstArgs<ExtArgs>>): Prisma__ReferralAttributionEventClient<$Result.GetResult<Prisma.$ReferralAttributionEventPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ReferralAttributionEvent that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReferralAttributionEventFindFirstOrThrowArgs} args - Arguments to find a ReferralAttributionEvent
+     * @example
+     * // Get one ReferralAttributionEvent
+     * const referralAttributionEvent = await prisma.referralAttributionEvent.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ReferralAttributionEventFindFirstOrThrowArgs>(args?: SelectSubset<T, ReferralAttributionEventFindFirstOrThrowArgs<ExtArgs>>): Prisma__ReferralAttributionEventClient<$Result.GetResult<Prisma.$ReferralAttributionEventPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ReferralAttributionEvents that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReferralAttributionEventFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ReferralAttributionEvents
+     * const referralAttributionEvents = await prisma.referralAttributionEvent.findMany()
+     * 
+     * // Get first 10 ReferralAttributionEvents
+     * const referralAttributionEvents = await prisma.referralAttributionEvent.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const referralAttributionEventWithIdOnly = await prisma.referralAttributionEvent.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ReferralAttributionEventFindManyArgs>(args?: SelectSubset<T, ReferralAttributionEventFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReferralAttributionEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ReferralAttributionEvent.
+     * @param {ReferralAttributionEventCreateArgs} args - Arguments to create a ReferralAttributionEvent.
+     * @example
+     * // Create one ReferralAttributionEvent
+     * const ReferralAttributionEvent = await prisma.referralAttributionEvent.create({
+     *   data: {
+     *     // ... data to create a ReferralAttributionEvent
+     *   }
+     * })
+     * 
+     */
+    create<T extends ReferralAttributionEventCreateArgs>(args: SelectSubset<T, ReferralAttributionEventCreateArgs<ExtArgs>>): Prisma__ReferralAttributionEventClient<$Result.GetResult<Prisma.$ReferralAttributionEventPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ReferralAttributionEvents.
+     * @param {ReferralAttributionEventCreateManyArgs} args - Arguments to create many ReferralAttributionEvents.
+     * @example
+     * // Create many ReferralAttributionEvents
+     * const referralAttributionEvent = await prisma.referralAttributionEvent.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ReferralAttributionEventCreateManyArgs>(args?: SelectSubset<T, ReferralAttributionEventCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ReferralAttributionEvents and returns the data saved in the database.
+     * @param {ReferralAttributionEventCreateManyAndReturnArgs} args - Arguments to create many ReferralAttributionEvents.
+     * @example
+     * // Create many ReferralAttributionEvents
+     * const referralAttributionEvent = await prisma.referralAttributionEvent.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ReferralAttributionEvents and only return the `id`
+     * const referralAttributionEventWithIdOnly = await prisma.referralAttributionEvent.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ReferralAttributionEventCreateManyAndReturnArgs>(args?: SelectSubset<T, ReferralAttributionEventCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReferralAttributionEventPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ReferralAttributionEvent.
+     * @param {ReferralAttributionEventDeleteArgs} args - Arguments to delete one ReferralAttributionEvent.
+     * @example
+     * // Delete one ReferralAttributionEvent
+     * const ReferralAttributionEvent = await prisma.referralAttributionEvent.delete({
+     *   where: {
+     *     // ... filter to delete one ReferralAttributionEvent
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ReferralAttributionEventDeleteArgs>(args: SelectSubset<T, ReferralAttributionEventDeleteArgs<ExtArgs>>): Prisma__ReferralAttributionEventClient<$Result.GetResult<Prisma.$ReferralAttributionEventPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ReferralAttributionEvent.
+     * @param {ReferralAttributionEventUpdateArgs} args - Arguments to update one ReferralAttributionEvent.
+     * @example
+     * // Update one ReferralAttributionEvent
+     * const referralAttributionEvent = await prisma.referralAttributionEvent.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ReferralAttributionEventUpdateArgs>(args: SelectSubset<T, ReferralAttributionEventUpdateArgs<ExtArgs>>): Prisma__ReferralAttributionEventClient<$Result.GetResult<Prisma.$ReferralAttributionEventPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ReferralAttributionEvents.
+     * @param {ReferralAttributionEventDeleteManyArgs} args - Arguments to filter ReferralAttributionEvents to delete.
+     * @example
+     * // Delete a few ReferralAttributionEvents
+     * const { count } = await prisma.referralAttributionEvent.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ReferralAttributionEventDeleteManyArgs>(args?: SelectSubset<T, ReferralAttributionEventDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ReferralAttributionEvents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReferralAttributionEventUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ReferralAttributionEvents
+     * const referralAttributionEvent = await prisma.referralAttributionEvent.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ReferralAttributionEventUpdateManyArgs>(args: SelectSubset<T, ReferralAttributionEventUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ReferralAttributionEvents and returns the data updated in the database.
+     * @param {ReferralAttributionEventUpdateManyAndReturnArgs} args - Arguments to update many ReferralAttributionEvents.
+     * @example
+     * // Update many ReferralAttributionEvents
+     * const referralAttributionEvent = await prisma.referralAttributionEvent.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ReferralAttributionEvents and only return the `id`
+     * const referralAttributionEventWithIdOnly = await prisma.referralAttributionEvent.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ReferralAttributionEventUpdateManyAndReturnArgs>(args: SelectSubset<T, ReferralAttributionEventUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReferralAttributionEventPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ReferralAttributionEvent.
+     * @param {ReferralAttributionEventUpsertArgs} args - Arguments to update or create a ReferralAttributionEvent.
+     * @example
+     * // Update or create a ReferralAttributionEvent
+     * const referralAttributionEvent = await prisma.referralAttributionEvent.upsert({
+     *   create: {
+     *     // ... data to create a ReferralAttributionEvent
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ReferralAttributionEvent we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ReferralAttributionEventUpsertArgs>(args: SelectSubset<T, ReferralAttributionEventUpsertArgs<ExtArgs>>): Prisma__ReferralAttributionEventClient<$Result.GetResult<Prisma.$ReferralAttributionEventPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ReferralAttributionEvents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReferralAttributionEventCountArgs} args - Arguments to filter ReferralAttributionEvents to count.
+     * @example
+     * // Count the number of ReferralAttributionEvents
+     * const count = await prisma.referralAttributionEvent.count({
+     *   where: {
+     *     // ... the filter for the ReferralAttributionEvents we want to count
+     *   }
+     * })
+    **/
+    count<T extends ReferralAttributionEventCountArgs>(
+      args?: Subset<T, ReferralAttributionEventCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ReferralAttributionEventCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ReferralAttributionEvent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReferralAttributionEventAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ReferralAttributionEventAggregateArgs>(args: Subset<T, ReferralAttributionEventAggregateArgs>): Prisma.PrismaPromise<GetReferralAttributionEventAggregateType<T>>
+
+    /**
+     * Group by ReferralAttributionEvent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReferralAttributionEventGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ReferralAttributionEventGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ReferralAttributionEventGroupByArgs['orderBy'] }
+        : { orderBy?: ReferralAttributionEventGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ReferralAttributionEventGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetReferralAttributionEventGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ReferralAttributionEvent model
+   */
+  readonly fields: ReferralAttributionEventFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ReferralAttributionEvent.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ReferralAttributionEventClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    referrer<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    referred<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ReferralAttributionEvent model
+   */
+  interface ReferralAttributionEventFieldRefs {
+    readonly id: FieldRef<"ReferralAttributionEvent", 'String'>
+    readonly referrerUserId: FieldRef<"ReferralAttributionEvent", 'String'>
+    readonly referredUserId: FieldRef<"ReferralAttributionEvent", 'String'>
+    readonly referralCode: FieldRef<"ReferralAttributionEvent", 'String'>
+    readonly status: FieldRef<"ReferralAttributionEvent", 'String'>
+    readonly attributedAt: FieldRef<"ReferralAttributionEvent", 'DateTime'>
+    readonly createdAt: FieldRef<"ReferralAttributionEvent", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ReferralAttributionEvent findUnique
+   */
+  export type ReferralAttributionEventFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferralAttributionEvent
+     */
+    select?: ReferralAttributionEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReferralAttributionEvent
+     */
+    omit?: ReferralAttributionEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferralAttributionEventInclude<ExtArgs> | null
+    /**
+     * Filter, which ReferralAttributionEvent to fetch.
+     */
+    where: ReferralAttributionEventWhereUniqueInput
+  }
+
+  /**
+   * ReferralAttributionEvent findUniqueOrThrow
+   */
+  export type ReferralAttributionEventFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferralAttributionEvent
+     */
+    select?: ReferralAttributionEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReferralAttributionEvent
+     */
+    omit?: ReferralAttributionEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferralAttributionEventInclude<ExtArgs> | null
+    /**
+     * Filter, which ReferralAttributionEvent to fetch.
+     */
+    where: ReferralAttributionEventWhereUniqueInput
+  }
+
+  /**
+   * ReferralAttributionEvent findFirst
+   */
+  export type ReferralAttributionEventFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferralAttributionEvent
+     */
+    select?: ReferralAttributionEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReferralAttributionEvent
+     */
+    omit?: ReferralAttributionEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferralAttributionEventInclude<ExtArgs> | null
+    /**
+     * Filter, which ReferralAttributionEvent to fetch.
+     */
+    where?: ReferralAttributionEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ReferralAttributionEvents to fetch.
+     */
+    orderBy?: ReferralAttributionEventOrderByWithRelationInput | ReferralAttributionEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ReferralAttributionEvents.
+     */
+    cursor?: ReferralAttributionEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ReferralAttributionEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ReferralAttributionEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ReferralAttributionEvents.
+     */
+    distinct?: ReferralAttributionEventScalarFieldEnum | ReferralAttributionEventScalarFieldEnum[]
+  }
+
+  /**
+   * ReferralAttributionEvent findFirstOrThrow
+   */
+  export type ReferralAttributionEventFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferralAttributionEvent
+     */
+    select?: ReferralAttributionEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReferralAttributionEvent
+     */
+    omit?: ReferralAttributionEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferralAttributionEventInclude<ExtArgs> | null
+    /**
+     * Filter, which ReferralAttributionEvent to fetch.
+     */
+    where?: ReferralAttributionEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ReferralAttributionEvents to fetch.
+     */
+    orderBy?: ReferralAttributionEventOrderByWithRelationInput | ReferralAttributionEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ReferralAttributionEvents.
+     */
+    cursor?: ReferralAttributionEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ReferralAttributionEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ReferralAttributionEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ReferralAttributionEvents.
+     */
+    distinct?: ReferralAttributionEventScalarFieldEnum | ReferralAttributionEventScalarFieldEnum[]
+  }
+
+  /**
+   * ReferralAttributionEvent findMany
+   */
+  export type ReferralAttributionEventFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferralAttributionEvent
+     */
+    select?: ReferralAttributionEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReferralAttributionEvent
+     */
+    omit?: ReferralAttributionEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferralAttributionEventInclude<ExtArgs> | null
+    /**
+     * Filter, which ReferralAttributionEvents to fetch.
+     */
+    where?: ReferralAttributionEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ReferralAttributionEvents to fetch.
+     */
+    orderBy?: ReferralAttributionEventOrderByWithRelationInput | ReferralAttributionEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ReferralAttributionEvents.
+     */
+    cursor?: ReferralAttributionEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ReferralAttributionEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ReferralAttributionEvents.
+     */
+    skip?: number
+    distinct?: ReferralAttributionEventScalarFieldEnum | ReferralAttributionEventScalarFieldEnum[]
+  }
+
+  /**
+   * ReferralAttributionEvent create
+   */
+  export type ReferralAttributionEventCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferralAttributionEvent
+     */
+    select?: ReferralAttributionEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReferralAttributionEvent
+     */
+    omit?: ReferralAttributionEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferralAttributionEventInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ReferralAttributionEvent.
+     */
+    data: XOR<ReferralAttributionEventCreateInput, ReferralAttributionEventUncheckedCreateInput>
+  }
+
+  /**
+   * ReferralAttributionEvent createMany
+   */
+  export type ReferralAttributionEventCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ReferralAttributionEvents.
+     */
+    data: ReferralAttributionEventCreateManyInput | ReferralAttributionEventCreateManyInput[]
+  }
+
+  /**
+   * ReferralAttributionEvent createManyAndReturn
+   */
+  export type ReferralAttributionEventCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferralAttributionEvent
+     */
+    select?: ReferralAttributionEventSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReferralAttributionEvent
+     */
+    omit?: ReferralAttributionEventOmit<ExtArgs> | null
+    /**
+     * The data used to create many ReferralAttributionEvents.
+     */
+    data: ReferralAttributionEventCreateManyInput | ReferralAttributionEventCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferralAttributionEventIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ReferralAttributionEvent update
+   */
+  export type ReferralAttributionEventUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferralAttributionEvent
+     */
+    select?: ReferralAttributionEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReferralAttributionEvent
+     */
+    omit?: ReferralAttributionEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferralAttributionEventInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ReferralAttributionEvent.
+     */
+    data: XOR<ReferralAttributionEventUpdateInput, ReferralAttributionEventUncheckedUpdateInput>
+    /**
+     * Choose, which ReferralAttributionEvent to update.
+     */
+    where: ReferralAttributionEventWhereUniqueInput
+  }
+
+  /**
+   * ReferralAttributionEvent updateMany
+   */
+  export type ReferralAttributionEventUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ReferralAttributionEvents.
+     */
+    data: XOR<ReferralAttributionEventUpdateManyMutationInput, ReferralAttributionEventUncheckedUpdateManyInput>
+    /**
+     * Filter which ReferralAttributionEvents to update
+     */
+    where?: ReferralAttributionEventWhereInput
+    /**
+     * Limit how many ReferralAttributionEvents to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ReferralAttributionEvent updateManyAndReturn
+   */
+  export type ReferralAttributionEventUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferralAttributionEvent
+     */
+    select?: ReferralAttributionEventSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReferralAttributionEvent
+     */
+    omit?: ReferralAttributionEventOmit<ExtArgs> | null
+    /**
+     * The data used to update ReferralAttributionEvents.
+     */
+    data: XOR<ReferralAttributionEventUpdateManyMutationInput, ReferralAttributionEventUncheckedUpdateManyInput>
+    /**
+     * Filter which ReferralAttributionEvents to update
+     */
+    where?: ReferralAttributionEventWhereInput
+    /**
+     * Limit how many ReferralAttributionEvents to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferralAttributionEventIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ReferralAttributionEvent upsert
+   */
+  export type ReferralAttributionEventUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferralAttributionEvent
+     */
+    select?: ReferralAttributionEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReferralAttributionEvent
+     */
+    omit?: ReferralAttributionEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferralAttributionEventInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ReferralAttributionEvent to update in case it exists.
+     */
+    where: ReferralAttributionEventWhereUniqueInput
+    /**
+     * In case the ReferralAttributionEvent found by the `where` argument doesn't exist, create a new ReferralAttributionEvent with this data.
+     */
+    create: XOR<ReferralAttributionEventCreateInput, ReferralAttributionEventUncheckedCreateInput>
+    /**
+     * In case the ReferralAttributionEvent was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ReferralAttributionEventUpdateInput, ReferralAttributionEventUncheckedUpdateInput>
+  }
+
+  /**
+   * ReferralAttributionEvent delete
+   */
+  export type ReferralAttributionEventDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferralAttributionEvent
+     */
+    select?: ReferralAttributionEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReferralAttributionEvent
+     */
+    omit?: ReferralAttributionEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferralAttributionEventInclude<ExtArgs> | null
+    /**
+     * Filter which ReferralAttributionEvent to delete.
+     */
+    where: ReferralAttributionEventWhereUniqueInput
+  }
+
+  /**
+   * ReferralAttributionEvent deleteMany
+   */
+  export type ReferralAttributionEventDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ReferralAttributionEvents to delete
+     */
+    where?: ReferralAttributionEventWhereInput
+    /**
+     * Limit how many ReferralAttributionEvents to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ReferralAttributionEvent without action
+   */
+  export type ReferralAttributionEventDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferralAttributionEvent
+     */
+    select?: ReferralAttributionEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReferralAttributionEvent
+     */
+    omit?: ReferralAttributionEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferralAttributionEventInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ReferralRewardEvent
+   */
+
+  export type AggregateReferralRewardEvent = {
+    _count: ReferralRewardEventCountAggregateOutputType | null
+    _min: ReferralRewardEventMinAggregateOutputType | null
+    _max: ReferralRewardEventMaxAggregateOutputType | null
+  }
+
+  export type ReferralRewardEventMinAggregateOutputType = {
+    id: string | null
+    referrerUserId: string | null
+    referredUserId: string | null
+    ledgerPostingId: string | null
+    amount: string | null
+    asset: string | null
+    status: string | null
+    rewardedAt: Date | null
+    createdAt: Date | null
+  }
+
+  export type ReferralRewardEventMaxAggregateOutputType = {
+    id: string | null
+    referrerUserId: string | null
+    referredUserId: string | null
+    ledgerPostingId: string | null
+    amount: string | null
+    asset: string | null
+    status: string | null
+    rewardedAt: Date | null
+    createdAt: Date | null
+  }
+
+  export type ReferralRewardEventCountAggregateOutputType = {
+    id: number
+    referrerUserId: number
+    referredUserId: number
+    ledgerPostingId: number
+    amount: number
+    asset: number
+    status: number
+    rewardedAt: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type ReferralRewardEventMinAggregateInputType = {
+    id?: true
+    referrerUserId?: true
+    referredUserId?: true
+    ledgerPostingId?: true
+    amount?: true
+    asset?: true
+    status?: true
+    rewardedAt?: true
+    createdAt?: true
+  }
+
+  export type ReferralRewardEventMaxAggregateInputType = {
+    id?: true
+    referrerUserId?: true
+    referredUserId?: true
+    ledgerPostingId?: true
+    amount?: true
+    asset?: true
+    status?: true
+    rewardedAt?: true
+    createdAt?: true
+  }
+
+  export type ReferralRewardEventCountAggregateInputType = {
+    id?: true
+    referrerUserId?: true
+    referredUserId?: true
+    ledgerPostingId?: true
+    amount?: true
+    asset?: true
+    status?: true
+    rewardedAt?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type ReferralRewardEventAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ReferralRewardEvent to aggregate.
+     */
+    where?: ReferralRewardEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ReferralRewardEvents to fetch.
+     */
+    orderBy?: ReferralRewardEventOrderByWithRelationInput | ReferralRewardEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ReferralRewardEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ReferralRewardEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ReferralRewardEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ReferralRewardEvents
+    **/
+    _count?: true | ReferralRewardEventCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ReferralRewardEventMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ReferralRewardEventMaxAggregateInputType
+  }
+
+  export type GetReferralRewardEventAggregateType<T extends ReferralRewardEventAggregateArgs> = {
+        [P in keyof T & keyof AggregateReferralRewardEvent]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateReferralRewardEvent[P]>
+      : GetScalarType<T[P], AggregateReferralRewardEvent[P]>
+  }
+
+
+
+
+  export type ReferralRewardEventGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ReferralRewardEventWhereInput
+    orderBy?: ReferralRewardEventOrderByWithAggregationInput | ReferralRewardEventOrderByWithAggregationInput[]
+    by: ReferralRewardEventScalarFieldEnum[] | ReferralRewardEventScalarFieldEnum
+    having?: ReferralRewardEventScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ReferralRewardEventCountAggregateInputType | true
+    _min?: ReferralRewardEventMinAggregateInputType
+    _max?: ReferralRewardEventMaxAggregateInputType
+  }
+
+  export type ReferralRewardEventGroupByOutputType = {
+    id: string
+    referrerUserId: string
+    referredUserId: string
+    ledgerPostingId: string
+    amount: string
+    asset: string
+    status: string
+    rewardedAt: Date
+    createdAt: Date
+    _count: ReferralRewardEventCountAggregateOutputType | null
+    _min: ReferralRewardEventMinAggregateOutputType | null
+    _max: ReferralRewardEventMaxAggregateOutputType | null
+  }
+
+  type GetReferralRewardEventGroupByPayload<T extends ReferralRewardEventGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ReferralRewardEventGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ReferralRewardEventGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ReferralRewardEventGroupByOutputType[P]>
+            : GetScalarType<T[P], ReferralRewardEventGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ReferralRewardEventSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    referrerUserId?: boolean
+    referredUserId?: boolean
+    ledgerPostingId?: boolean
+    amount?: boolean
+    asset?: boolean
+    status?: boolean
+    rewardedAt?: boolean
+    createdAt?: boolean
+    referrer?: boolean | UserDefaultArgs<ExtArgs>
+    referred?: boolean | UserDefaultArgs<ExtArgs>
+    ledgerPosting?: boolean | LedgerPostingDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["referralRewardEvent"]>
+
+  export type ReferralRewardEventSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    referrerUserId?: boolean
+    referredUserId?: boolean
+    ledgerPostingId?: boolean
+    amount?: boolean
+    asset?: boolean
+    status?: boolean
+    rewardedAt?: boolean
+    createdAt?: boolean
+    referrer?: boolean | UserDefaultArgs<ExtArgs>
+    referred?: boolean | UserDefaultArgs<ExtArgs>
+    ledgerPosting?: boolean | LedgerPostingDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["referralRewardEvent"]>
+
+  export type ReferralRewardEventSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    referrerUserId?: boolean
+    referredUserId?: boolean
+    ledgerPostingId?: boolean
+    amount?: boolean
+    asset?: boolean
+    status?: boolean
+    rewardedAt?: boolean
+    createdAt?: boolean
+    referrer?: boolean | UserDefaultArgs<ExtArgs>
+    referred?: boolean | UserDefaultArgs<ExtArgs>
+    ledgerPosting?: boolean | LedgerPostingDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["referralRewardEvent"]>
+
+  export type ReferralRewardEventSelectScalar = {
+    id?: boolean
+    referrerUserId?: boolean
+    referredUserId?: boolean
+    ledgerPostingId?: boolean
+    amount?: boolean
+    asset?: boolean
+    status?: boolean
+    rewardedAt?: boolean
+    createdAt?: boolean
+  }
+
+  export type ReferralRewardEventOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "referrerUserId" | "referredUserId" | "ledgerPostingId" | "amount" | "asset" | "status" | "rewardedAt" | "createdAt", ExtArgs["result"]["referralRewardEvent"]>
+  export type ReferralRewardEventInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    referrer?: boolean | UserDefaultArgs<ExtArgs>
+    referred?: boolean | UserDefaultArgs<ExtArgs>
+    ledgerPosting?: boolean | LedgerPostingDefaultArgs<ExtArgs>
+  }
+  export type ReferralRewardEventIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    referrer?: boolean | UserDefaultArgs<ExtArgs>
+    referred?: boolean | UserDefaultArgs<ExtArgs>
+    ledgerPosting?: boolean | LedgerPostingDefaultArgs<ExtArgs>
+  }
+  export type ReferralRewardEventIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    referrer?: boolean | UserDefaultArgs<ExtArgs>
+    referred?: boolean | UserDefaultArgs<ExtArgs>
+    ledgerPosting?: boolean | LedgerPostingDefaultArgs<ExtArgs>
+  }
+
+  export type $ReferralRewardEventPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ReferralRewardEvent"
+    objects: {
+      referrer: Prisma.$UserPayload<ExtArgs>
+      referred: Prisma.$UserPayload<ExtArgs>
+      ledgerPosting: Prisma.$LedgerPostingPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      referrerUserId: string
+      referredUserId: string
+      ledgerPostingId: string
+      amount: string
+      asset: string
+      status: string
+      rewardedAt: Date
+      createdAt: Date
+    }, ExtArgs["result"]["referralRewardEvent"]>
+    composites: {}
+  }
+
+  type ReferralRewardEventGetPayload<S extends boolean | null | undefined | ReferralRewardEventDefaultArgs> = $Result.GetResult<Prisma.$ReferralRewardEventPayload, S>
+
+  type ReferralRewardEventCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ReferralRewardEventFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ReferralRewardEventCountAggregateInputType | true
+    }
+
+  export interface ReferralRewardEventDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ReferralRewardEvent'], meta: { name: 'ReferralRewardEvent' } }
+    /**
+     * Find zero or one ReferralRewardEvent that matches the filter.
+     * @param {ReferralRewardEventFindUniqueArgs} args - Arguments to find a ReferralRewardEvent
+     * @example
+     * // Get one ReferralRewardEvent
+     * const referralRewardEvent = await prisma.referralRewardEvent.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ReferralRewardEventFindUniqueArgs>(args: SelectSubset<T, ReferralRewardEventFindUniqueArgs<ExtArgs>>): Prisma__ReferralRewardEventClient<$Result.GetResult<Prisma.$ReferralRewardEventPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ReferralRewardEvent that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ReferralRewardEventFindUniqueOrThrowArgs} args - Arguments to find a ReferralRewardEvent
+     * @example
+     * // Get one ReferralRewardEvent
+     * const referralRewardEvent = await prisma.referralRewardEvent.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ReferralRewardEventFindUniqueOrThrowArgs>(args: SelectSubset<T, ReferralRewardEventFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ReferralRewardEventClient<$Result.GetResult<Prisma.$ReferralRewardEventPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ReferralRewardEvent that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReferralRewardEventFindFirstArgs} args - Arguments to find a ReferralRewardEvent
+     * @example
+     * // Get one ReferralRewardEvent
+     * const referralRewardEvent = await prisma.referralRewardEvent.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ReferralRewardEventFindFirstArgs>(args?: SelectSubset<T, ReferralRewardEventFindFirstArgs<ExtArgs>>): Prisma__ReferralRewardEventClient<$Result.GetResult<Prisma.$ReferralRewardEventPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ReferralRewardEvent that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReferralRewardEventFindFirstOrThrowArgs} args - Arguments to find a ReferralRewardEvent
+     * @example
+     * // Get one ReferralRewardEvent
+     * const referralRewardEvent = await prisma.referralRewardEvent.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ReferralRewardEventFindFirstOrThrowArgs>(args?: SelectSubset<T, ReferralRewardEventFindFirstOrThrowArgs<ExtArgs>>): Prisma__ReferralRewardEventClient<$Result.GetResult<Prisma.$ReferralRewardEventPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ReferralRewardEvents that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReferralRewardEventFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ReferralRewardEvents
+     * const referralRewardEvents = await prisma.referralRewardEvent.findMany()
+     * 
+     * // Get first 10 ReferralRewardEvents
+     * const referralRewardEvents = await prisma.referralRewardEvent.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const referralRewardEventWithIdOnly = await prisma.referralRewardEvent.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ReferralRewardEventFindManyArgs>(args?: SelectSubset<T, ReferralRewardEventFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReferralRewardEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ReferralRewardEvent.
+     * @param {ReferralRewardEventCreateArgs} args - Arguments to create a ReferralRewardEvent.
+     * @example
+     * // Create one ReferralRewardEvent
+     * const ReferralRewardEvent = await prisma.referralRewardEvent.create({
+     *   data: {
+     *     // ... data to create a ReferralRewardEvent
+     *   }
+     * })
+     * 
+     */
+    create<T extends ReferralRewardEventCreateArgs>(args: SelectSubset<T, ReferralRewardEventCreateArgs<ExtArgs>>): Prisma__ReferralRewardEventClient<$Result.GetResult<Prisma.$ReferralRewardEventPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ReferralRewardEvents.
+     * @param {ReferralRewardEventCreateManyArgs} args - Arguments to create many ReferralRewardEvents.
+     * @example
+     * // Create many ReferralRewardEvents
+     * const referralRewardEvent = await prisma.referralRewardEvent.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ReferralRewardEventCreateManyArgs>(args?: SelectSubset<T, ReferralRewardEventCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ReferralRewardEvents and returns the data saved in the database.
+     * @param {ReferralRewardEventCreateManyAndReturnArgs} args - Arguments to create many ReferralRewardEvents.
+     * @example
+     * // Create many ReferralRewardEvents
+     * const referralRewardEvent = await prisma.referralRewardEvent.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ReferralRewardEvents and only return the `id`
+     * const referralRewardEventWithIdOnly = await prisma.referralRewardEvent.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ReferralRewardEventCreateManyAndReturnArgs>(args?: SelectSubset<T, ReferralRewardEventCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReferralRewardEventPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ReferralRewardEvent.
+     * @param {ReferralRewardEventDeleteArgs} args - Arguments to delete one ReferralRewardEvent.
+     * @example
+     * // Delete one ReferralRewardEvent
+     * const ReferralRewardEvent = await prisma.referralRewardEvent.delete({
+     *   where: {
+     *     // ... filter to delete one ReferralRewardEvent
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ReferralRewardEventDeleteArgs>(args: SelectSubset<T, ReferralRewardEventDeleteArgs<ExtArgs>>): Prisma__ReferralRewardEventClient<$Result.GetResult<Prisma.$ReferralRewardEventPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ReferralRewardEvent.
+     * @param {ReferralRewardEventUpdateArgs} args - Arguments to update one ReferralRewardEvent.
+     * @example
+     * // Update one ReferralRewardEvent
+     * const referralRewardEvent = await prisma.referralRewardEvent.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ReferralRewardEventUpdateArgs>(args: SelectSubset<T, ReferralRewardEventUpdateArgs<ExtArgs>>): Prisma__ReferralRewardEventClient<$Result.GetResult<Prisma.$ReferralRewardEventPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ReferralRewardEvents.
+     * @param {ReferralRewardEventDeleteManyArgs} args - Arguments to filter ReferralRewardEvents to delete.
+     * @example
+     * // Delete a few ReferralRewardEvents
+     * const { count } = await prisma.referralRewardEvent.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ReferralRewardEventDeleteManyArgs>(args?: SelectSubset<T, ReferralRewardEventDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ReferralRewardEvents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReferralRewardEventUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ReferralRewardEvents
+     * const referralRewardEvent = await prisma.referralRewardEvent.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ReferralRewardEventUpdateManyArgs>(args: SelectSubset<T, ReferralRewardEventUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ReferralRewardEvents and returns the data updated in the database.
+     * @param {ReferralRewardEventUpdateManyAndReturnArgs} args - Arguments to update many ReferralRewardEvents.
+     * @example
+     * // Update many ReferralRewardEvents
+     * const referralRewardEvent = await prisma.referralRewardEvent.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ReferralRewardEvents and only return the `id`
+     * const referralRewardEventWithIdOnly = await prisma.referralRewardEvent.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ReferralRewardEventUpdateManyAndReturnArgs>(args: SelectSubset<T, ReferralRewardEventUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReferralRewardEventPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ReferralRewardEvent.
+     * @param {ReferralRewardEventUpsertArgs} args - Arguments to update or create a ReferralRewardEvent.
+     * @example
+     * // Update or create a ReferralRewardEvent
+     * const referralRewardEvent = await prisma.referralRewardEvent.upsert({
+     *   create: {
+     *     // ... data to create a ReferralRewardEvent
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ReferralRewardEvent we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ReferralRewardEventUpsertArgs>(args: SelectSubset<T, ReferralRewardEventUpsertArgs<ExtArgs>>): Prisma__ReferralRewardEventClient<$Result.GetResult<Prisma.$ReferralRewardEventPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ReferralRewardEvents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReferralRewardEventCountArgs} args - Arguments to filter ReferralRewardEvents to count.
+     * @example
+     * // Count the number of ReferralRewardEvents
+     * const count = await prisma.referralRewardEvent.count({
+     *   where: {
+     *     // ... the filter for the ReferralRewardEvents we want to count
+     *   }
+     * })
+    **/
+    count<T extends ReferralRewardEventCountArgs>(
+      args?: Subset<T, ReferralRewardEventCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ReferralRewardEventCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ReferralRewardEvent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReferralRewardEventAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ReferralRewardEventAggregateArgs>(args: Subset<T, ReferralRewardEventAggregateArgs>): Prisma.PrismaPromise<GetReferralRewardEventAggregateType<T>>
+
+    /**
+     * Group by ReferralRewardEvent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReferralRewardEventGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ReferralRewardEventGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ReferralRewardEventGroupByArgs['orderBy'] }
+        : { orderBy?: ReferralRewardEventGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ReferralRewardEventGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetReferralRewardEventGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ReferralRewardEvent model
+   */
+  readonly fields: ReferralRewardEventFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ReferralRewardEvent.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ReferralRewardEventClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    referrer<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    referred<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    ledgerPosting<T extends LedgerPostingDefaultArgs<ExtArgs> = {}>(args?: Subset<T, LedgerPostingDefaultArgs<ExtArgs>>): Prisma__LedgerPostingClient<$Result.GetResult<Prisma.$LedgerPostingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ReferralRewardEvent model
+   */
+  interface ReferralRewardEventFieldRefs {
+    readonly id: FieldRef<"ReferralRewardEvent", 'String'>
+    readonly referrerUserId: FieldRef<"ReferralRewardEvent", 'String'>
+    readonly referredUserId: FieldRef<"ReferralRewardEvent", 'String'>
+    readonly ledgerPostingId: FieldRef<"ReferralRewardEvent", 'String'>
+    readonly amount: FieldRef<"ReferralRewardEvent", 'String'>
+    readonly asset: FieldRef<"ReferralRewardEvent", 'String'>
+    readonly status: FieldRef<"ReferralRewardEvent", 'String'>
+    readonly rewardedAt: FieldRef<"ReferralRewardEvent", 'DateTime'>
+    readonly createdAt: FieldRef<"ReferralRewardEvent", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ReferralRewardEvent findUnique
+   */
+  export type ReferralRewardEventFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferralRewardEvent
+     */
+    select?: ReferralRewardEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReferralRewardEvent
+     */
+    omit?: ReferralRewardEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferralRewardEventInclude<ExtArgs> | null
+    /**
+     * Filter, which ReferralRewardEvent to fetch.
+     */
+    where: ReferralRewardEventWhereUniqueInput
+  }
+
+  /**
+   * ReferralRewardEvent findUniqueOrThrow
+   */
+  export type ReferralRewardEventFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferralRewardEvent
+     */
+    select?: ReferralRewardEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReferralRewardEvent
+     */
+    omit?: ReferralRewardEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferralRewardEventInclude<ExtArgs> | null
+    /**
+     * Filter, which ReferralRewardEvent to fetch.
+     */
+    where: ReferralRewardEventWhereUniqueInput
+  }
+
+  /**
+   * ReferralRewardEvent findFirst
+   */
+  export type ReferralRewardEventFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferralRewardEvent
+     */
+    select?: ReferralRewardEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReferralRewardEvent
+     */
+    omit?: ReferralRewardEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferralRewardEventInclude<ExtArgs> | null
+    /**
+     * Filter, which ReferralRewardEvent to fetch.
+     */
+    where?: ReferralRewardEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ReferralRewardEvents to fetch.
+     */
+    orderBy?: ReferralRewardEventOrderByWithRelationInput | ReferralRewardEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ReferralRewardEvents.
+     */
+    cursor?: ReferralRewardEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ReferralRewardEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ReferralRewardEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ReferralRewardEvents.
+     */
+    distinct?: ReferralRewardEventScalarFieldEnum | ReferralRewardEventScalarFieldEnum[]
+  }
+
+  /**
+   * ReferralRewardEvent findFirstOrThrow
+   */
+  export type ReferralRewardEventFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferralRewardEvent
+     */
+    select?: ReferralRewardEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReferralRewardEvent
+     */
+    omit?: ReferralRewardEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferralRewardEventInclude<ExtArgs> | null
+    /**
+     * Filter, which ReferralRewardEvent to fetch.
+     */
+    where?: ReferralRewardEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ReferralRewardEvents to fetch.
+     */
+    orderBy?: ReferralRewardEventOrderByWithRelationInput | ReferralRewardEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ReferralRewardEvents.
+     */
+    cursor?: ReferralRewardEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ReferralRewardEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ReferralRewardEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ReferralRewardEvents.
+     */
+    distinct?: ReferralRewardEventScalarFieldEnum | ReferralRewardEventScalarFieldEnum[]
+  }
+
+  /**
+   * ReferralRewardEvent findMany
+   */
+  export type ReferralRewardEventFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferralRewardEvent
+     */
+    select?: ReferralRewardEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReferralRewardEvent
+     */
+    omit?: ReferralRewardEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferralRewardEventInclude<ExtArgs> | null
+    /**
+     * Filter, which ReferralRewardEvents to fetch.
+     */
+    where?: ReferralRewardEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ReferralRewardEvents to fetch.
+     */
+    orderBy?: ReferralRewardEventOrderByWithRelationInput | ReferralRewardEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ReferralRewardEvents.
+     */
+    cursor?: ReferralRewardEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ReferralRewardEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ReferralRewardEvents.
+     */
+    skip?: number
+    distinct?: ReferralRewardEventScalarFieldEnum | ReferralRewardEventScalarFieldEnum[]
+  }
+
+  /**
+   * ReferralRewardEvent create
+   */
+  export type ReferralRewardEventCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferralRewardEvent
+     */
+    select?: ReferralRewardEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReferralRewardEvent
+     */
+    omit?: ReferralRewardEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferralRewardEventInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ReferralRewardEvent.
+     */
+    data: XOR<ReferralRewardEventCreateInput, ReferralRewardEventUncheckedCreateInput>
+  }
+
+  /**
+   * ReferralRewardEvent createMany
+   */
+  export type ReferralRewardEventCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ReferralRewardEvents.
+     */
+    data: ReferralRewardEventCreateManyInput | ReferralRewardEventCreateManyInput[]
+  }
+
+  /**
+   * ReferralRewardEvent createManyAndReturn
+   */
+  export type ReferralRewardEventCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferralRewardEvent
+     */
+    select?: ReferralRewardEventSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReferralRewardEvent
+     */
+    omit?: ReferralRewardEventOmit<ExtArgs> | null
+    /**
+     * The data used to create many ReferralRewardEvents.
+     */
+    data: ReferralRewardEventCreateManyInput | ReferralRewardEventCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferralRewardEventIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ReferralRewardEvent update
+   */
+  export type ReferralRewardEventUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferralRewardEvent
+     */
+    select?: ReferralRewardEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReferralRewardEvent
+     */
+    omit?: ReferralRewardEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferralRewardEventInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ReferralRewardEvent.
+     */
+    data: XOR<ReferralRewardEventUpdateInput, ReferralRewardEventUncheckedUpdateInput>
+    /**
+     * Choose, which ReferralRewardEvent to update.
+     */
+    where: ReferralRewardEventWhereUniqueInput
+  }
+
+  /**
+   * ReferralRewardEvent updateMany
+   */
+  export type ReferralRewardEventUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ReferralRewardEvents.
+     */
+    data: XOR<ReferralRewardEventUpdateManyMutationInput, ReferralRewardEventUncheckedUpdateManyInput>
+    /**
+     * Filter which ReferralRewardEvents to update
+     */
+    where?: ReferralRewardEventWhereInput
+    /**
+     * Limit how many ReferralRewardEvents to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ReferralRewardEvent updateManyAndReturn
+   */
+  export type ReferralRewardEventUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferralRewardEvent
+     */
+    select?: ReferralRewardEventSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReferralRewardEvent
+     */
+    omit?: ReferralRewardEventOmit<ExtArgs> | null
+    /**
+     * The data used to update ReferralRewardEvents.
+     */
+    data: XOR<ReferralRewardEventUpdateManyMutationInput, ReferralRewardEventUncheckedUpdateManyInput>
+    /**
+     * Filter which ReferralRewardEvents to update
+     */
+    where?: ReferralRewardEventWhereInput
+    /**
+     * Limit how many ReferralRewardEvents to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferralRewardEventIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ReferralRewardEvent upsert
+   */
+  export type ReferralRewardEventUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferralRewardEvent
+     */
+    select?: ReferralRewardEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReferralRewardEvent
+     */
+    omit?: ReferralRewardEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferralRewardEventInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ReferralRewardEvent to update in case it exists.
+     */
+    where: ReferralRewardEventWhereUniqueInput
+    /**
+     * In case the ReferralRewardEvent found by the `where` argument doesn't exist, create a new ReferralRewardEvent with this data.
+     */
+    create: XOR<ReferralRewardEventCreateInput, ReferralRewardEventUncheckedCreateInput>
+    /**
+     * In case the ReferralRewardEvent was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ReferralRewardEventUpdateInput, ReferralRewardEventUncheckedUpdateInput>
+  }
+
+  /**
+   * ReferralRewardEvent delete
+   */
+  export type ReferralRewardEventDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferralRewardEvent
+     */
+    select?: ReferralRewardEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReferralRewardEvent
+     */
+    omit?: ReferralRewardEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferralRewardEventInclude<ExtArgs> | null
+    /**
+     * Filter which ReferralRewardEvent to delete.
+     */
+    where: ReferralRewardEventWhereUniqueInput
+  }
+
+  /**
+   * ReferralRewardEvent deleteMany
+   */
+  export type ReferralRewardEventDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ReferralRewardEvents to delete
+     */
+    where?: ReferralRewardEventWhereInput
+    /**
+     * Limit how many ReferralRewardEvents to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ReferralRewardEvent without action
+   */
+  export type ReferralRewardEventDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferralRewardEvent
+     */
+    select?: ReferralRewardEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReferralRewardEvent
+     */
+    omit?: ReferralRewardEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferralRewardEventInclude<ExtArgs> | null
   }
 
 
@@ -115008,6 +117575,34 @@ export namespace Prisma {
   export type LegacyAffiliateScalarFieldEnum = (typeof LegacyAffiliateScalarFieldEnum)[keyof typeof LegacyAffiliateScalarFieldEnum]
 
 
+  export const ReferralAttributionEventScalarFieldEnum: {
+    id: 'id',
+    referrerUserId: 'referrerUserId',
+    referredUserId: 'referredUserId',
+    referralCode: 'referralCode',
+    status: 'status',
+    attributedAt: 'attributedAt',
+    createdAt: 'createdAt'
+  };
+
+  export type ReferralAttributionEventScalarFieldEnum = (typeof ReferralAttributionEventScalarFieldEnum)[keyof typeof ReferralAttributionEventScalarFieldEnum]
+
+
+  export const ReferralRewardEventScalarFieldEnum: {
+    id: 'id',
+    referrerUserId: 'referrerUserId',
+    referredUserId: 'referredUserId',
+    ledgerPostingId: 'ledgerPostingId',
+    amount: 'amount',
+    asset: 'asset',
+    status: 'status',
+    rewardedAt: 'rewardedAt',
+    createdAt: 'createdAt'
+  };
+
+  export type ReferralRewardEventScalarFieldEnum = (typeof ReferralRewardEventScalarFieldEnum)[keyof typeof ReferralRewardEventScalarFieldEnum]
+
+
   export const LegacyBinaryOptionResultScalarFieldEnum: {
     id: 'id',
     positionId: 'positionId',
@@ -115942,6 +118537,10 @@ export namespace Prisma {
     preference?: XOR<UserPreferenceNullableScalarRelationFilter, UserPreferenceWhereInput> | null
     vipState?: XOR<UserVipStateNullableScalarRelationFilter, UserVipStateWhereInput> | null
     mfa?: XOR<UserMfaNullableScalarRelationFilter, UserMfaWhereInput> | null
+    referralAttributionsSent?: ReferralAttributionEventListRelationFilter
+    referralAttributionsReceived?: ReferralAttributionEventListRelationFilter
+    referralRewardsSent?: ReferralRewardEventListRelationFilter
+    referralRewardsReceived?: ReferralRewardEventListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -115989,6 +118588,10 @@ export namespace Prisma {
     preference?: UserPreferenceOrderByWithRelationInput
     vipState?: UserVipStateOrderByWithRelationInput
     mfa?: UserMfaOrderByWithRelationInput
+    referralAttributionsSent?: ReferralAttributionEventOrderByRelationAggregateInput
+    referralAttributionsReceived?: ReferralAttributionEventOrderByRelationAggregateInput
+    referralRewardsSent?: ReferralRewardEventOrderByRelationAggregateInput
+    referralRewardsReceived?: ReferralRewardEventOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -116039,6 +118642,10 @@ export namespace Prisma {
     preference?: XOR<UserPreferenceNullableScalarRelationFilter, UserPreferenceWhereInput> | null
     vipState?: XOR<UserVipStateNullableScalarRelationFilter, UserVipStateWhereInput> | null
     mfa?: XOR<UserMfaNullableScalarRelationFilter, UserMfaWhereInput> | null
+    referralAttributionsSent?: ReferralAttributionEventListRelationFilter
+    referralAttributionsReceived?: ReferralAttributionEventListRelationFilter
+    referralRewardsSent?: ReferralRewardEventListRelationFilter
+    referralRewardsReceived?: ReferralRewardEventListRelationFilter
   }, "id" | "userCode" | "email">
 
   export type UserOrderByWithAggregationInput = {
@@ -120631,6 +123238,7 @@ export namespace Prisma {
     auditEvents?: LedgerAuditEventListRelationFilter
     miningRewardAccrual?: XOR<MiningRewardAccrualNullableScalarRelationFilter, MiningRewardAccrualWhereInput> | null
     loanRepayment?: XOR<LegacyLoanRepaymentNullableScalarRelationFilter, LegacyLoanRepaymentWhereInput> | null
+    referralRewardEvent?: XOR<ReferralRewardEventNullableScalarRelationFilter, ReferralRewardEventWhereInput> | null
   }
 
   export type LedgerPostingOrderByWithRelationInput = {
@@ -120652,6 +123260,7 @@ export namespace Prisma {
     auditEvents?: LedgerAuditEventOrderByRelationAggregateInput
     miningRewardAccrual?: MiningRewardAccrualOrderByWithRelationInput
     loanRepayment?: LegacyLoanRepaymentOrderByWithRelationInput
+    referralRewardEvent?: ReferralRewardEventOrderByWithRelationInput
   }
 
   export type LedgerPostingWhereUniqueInput = Prisma.AtLeast<{
@@ -120677,6 +123286,7 @@ export namespace Prisma {
     auditEvents?: LedgerAuditEventListRelationFilter
     miningRewardAccrual?: XOR<MiningRewardAccrualNullableScalarRelationFilter, MiningRewardAccrualWhereInput> | null
     loanRepayment?: XOR<LegacyLoanRepaymentNullableScalarRelationFilter, LegacyLoanRepaymentWhereInput> | null
+    referralRewardEvent?: XOR<ReferralRewardEventNullableScalarRelationFilter, ReferralRewardEventWhereInput> | null
   }, "id" | "accountId_idempotencyKey">
 
   export type LedgerPostingOrderByWithAggregationInput = {
@@ -120974,6 +123584,155 @@ export namespace Prisma {
     totalEarnings?: StringWithAggregatesFilter<"LegacyAffiliate"> | string
     createdAt?: DateTimeWithAggregatesFilter<"LegacyAffiliate"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"LegacyAffiliate"> | Date | string
+  }
+
+  export type ReferralAttributionEventWhereInput = {
+    AND?: ReferralAttributionEventWhereInput | ReferralAttributionEventWhereInput[]
+    OR?: ReferralAttributionEventWhereInput[]
+    NOT?: ReferralAttributionEventWhereInput | ReferralAttributionEventWhereInput[]
+    id?: StringFilter<"ReferralAttributionEvent"> | string
+    referrerUserId?: StringFilter<"ReferralAttributionEvent"> | string
+    referredUserId?: StringFilter<"ReferralAttributionEvent"> | string
+    referralCode?: StringFilter<"ReferralAttributionEvent"> | string
+    status?: StringFilter<"ReferralAttributionEvent"> | string
+    attributedAt?: DateTimeFilter<"ReferralAttributionEvent"> | Date | string
+    createdAt?: DateTimeFilter<"ReferralAttributionEvent"> | Date | string
+    referrer?: XOR<UserScalarRelationFilter, UserWhereInput>
+    referred?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type ReferralAttributionEventOrderByWithRelationInput = {
+    id?: SortOrder
+    referrerUserId?: SortOrder
+    referredUserId?: SortOrder
+    referralCode?: SortOrder
+    status?: SortOrder
+    attributedAt?: SortOrder
+    createdAt?: SortOrder
+    referrer?: UserOrderByWithRelationInput
+    referred?: UserOrderByWithRelationInput
+  }
+
+  export type ReferralAttributionEventWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    referredUserId?: string
+    AND?: ReferralAttributionEventWhereInput | ReferralAttributionEventWhereInput[]
+    OR?: ReferralAttributionEventWhereInput[]
+    NOT?: ReferralAttributionEventWhereInput | ReferralAttributionEventWhereInput[]
+    referrerUserId?: StringFilter<"ReferralAttributionEvent"> | string
+    referralCode?: StringFilter<"ReferralAttributionEvent"> | string
+    status?: StringFilter<"ReferralAttributionEvent"> | string
+    attributedAt?: DateTimeFilter<"ReferralAttributionEvent"> | Date | string
+    createdAt?: DateTimeFilter<"ReferralAttributionEvent"> | Date | string
+    referrer?: XOR<UserScalarRelationFilter, UserWhereInput>
+    referred?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id" | "referredUserId">
+
+  export type ReferralAttributionEventOrderByWithAggregationInput = {
+    id?: SortOrder
+    referrerUserId?: SortOrder
+    referredUserId?: SortOrder
+    referralCode?: SortOrder
+    status?: SortOrder
+    attributedAt?: SortOrder
+    createdAt?: SortOrder
+    _count?: ReferralAttributionEventCountOrderByAggregateInput
+    _max?: ReferralAttributionEventMaxOrderByAggregateInput
+    _min?: ReferralAttributionEventMinOrderByAggregateInput
+  }
+
+  export type ReferralAttributionEventScalarWhereWithAggregatesInput = {
+    AND?: ReferralAttributionEventScalarWhereWithAggregatesInput | ReferralAttributionEventScalarWhereWithAggregatesInput[]
+    OR?: ReferralAttributionEventScalarWhereWithAggregatesInput[]
+    NOT?: ReferralAttributionEventScalarWhereWithAggregatesInput | ReferralAttributionEventScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ReferralAttributionEvent"> | string
+    referrerUserId?: StringWithAggregatesFilter<"ReferralAttributionEvent"> | string
+    referredUserId?: StringWithAggregatesFilter<"ReferralAttributionEvent"> | string
+    referralCode?: StringWithAggregatesFilter<"ReferralAttributionEvent"> | string
+    status?: StringWithAggregatesFilter<"ReferralAttributionEvent"> | string
+    attributedAt?: DateTimeWithAggregatesFilter<"ReferralAttributionEvent"> | Date | string
+    createdAt?: DateTimeWithAggregatesFilter<"ReferralAttributionEvent"> | Date | string
+  }
+
+  export type ReferralRewardEventWhereInput = {
+    AND?: ReferralRewardEventWhereInput | ReferralRewardEventWhereInput[]
+    OR?: ReferralRewardEventWhereInput[]
+    NOT?: ReferralRewardEventWhereInput | ReferralRewardEventWhereInput[]
+    id?: StringFilter<"ReferralRewardEvent"> | string
+    referrerUserId?: StringFilter<"ReferralRewardEvent"> | string
+    referredUserId?: StringFilter<"ReferralRewardEvent"> | string
+    ledgerPostingId?: StringFilter<"ReferralRewardEvent"> | string
+    amount?: StringFilter<"ReferralRewardEvent"> | string
+    asset?: StringFilter<"ReferralRewardEvent"> | string
+    status?: StringFilter<"ReferralRewardEvent"> | string
+    rewardedAt?: DateTimeFilter<"ReferralRewardEvent"> | Date | string
+    createdAt?: DateTimeFilter<"ReferralRewardEvent"> | Date | string
+    referrer?: XOR<UserScalarRelationFilter, UserWhereInput>
+    referred?: XOR<UserScalarRelationFilter, UserWhereInput>
+    ledgerPosting?: XOR<LedgerPostingScalarRelationFilter, LedgerPostingWhereInput>
+  }
+
+  export type ReferralRewardEventOrderByWithRelationInput = {
+    id?: SortOrder
+    referrerUserId?: SortOrder
+    referredUserId?: SortOrder
+    ledgerPostingId?: SortOrder
+    amount?: SortOrder
+    asset?: SortOrder
+    status?: SortOrder
+    rewardedAt?: SortOrder
+    createdAt?: SortOrder
+    referrer?: UserOrderByWithRelationInput
+    referred?: UserOrderByWithRelationInput
+    ledgerPosting?: LedgerPostingOrderByWithRelationInput
+  }
+
+  export type ReferralRewardEventWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    ledgerPostingId?: string
+    AND?: ReferralRewardEventWhereInput | ReferralRewardEventWhereInput[]
+    OR?: ReferralRewardEventWhereInput[]
+    NOT?: ReferralRewardEventWhereInput | ReferralRewardEventWhereInput[]
+    referrerUserId?: StringFilter<"ReferralRewardEvent"> | string
+    referredUserId?: StringFilter<"ReferralRewardEvent"> | string
+    amount?: StringFilter<"ReferralRewardEvent"> | string
+    asset?: StringFilter<"ReferralRewardEvent"> | string
+    status?: StringFilter<"ReferralRewardEvent"> | string
+    rewardedAt?: DateTimeFilter<"ReferralRewardEvent"> | Date | string
+    createdAt?: DateTimeFilter<"ReferralRewardEvent"> | Date | string
+    referrer?: XOR<UserScalarRelationFilter, UserWhereInput>
+    referred?: XOR<UserScalarRelationFilter, UserWhereInput>
+    ledgerPosting?: XOR<LedgerPostingScalarRelationFilter, LedgerPostingWhereInput>
+  }, "id" | "ledgerPostingId">
+
+  export type ReferralRewardEventOrderByWithAggregationInput = {
+    id?: SortOrder
+    referrerUserId?: SortOrder
+    referredUserId?: SortOrder
+    ledgerPostingId?: SortOrder
+    amount?: SortOrder
+    asset?: SortOrder
+    status?: SortOrder
+    rewardedAt?: SortOrder
+    createdAt?: SortOrder
+    _count?: ReferralRewardEventCountOrderByAggregateInput
+    _max?: ReferralRewardEventMaxOrderByAggregateInput
+    _min?: ReferralRewardEventMinOrderByAggregateInput
+  }
+
+  export type ReferralRewardEventScalarWhereWithAggregatesInput = {
+    AND?: ReferralRewardEventScalarWhereWithAggregatesInput | ReferralRewardEventScalarWhereWithAggregatesInput[]
+    OR?: ReferralRewardEventScalarWhereWithAggregatesInput[]
+    NOT?: ReferralRewardEventScalarWhereWithAggregatesInput | ReferralRewardEventScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ReferralRewardEvent"> | string
+    referrerUserId?: StringWithAggregatesFilter<"ReferralRewardEvent"> | string
+    referredUserId?: StringWithAggregatesFilter<"ReferralRewardEvent"> | string
+    ledgerPostingId?: StringWithAggregatesFilter<"ReferralRewardEvent"> | string
+    amount?: StringWithAggregatesFilter<"ReferralRewardEvent"> | string
+    asset?: StringWithAggregatesFilter<"ReferralRewardEvent"> | string
+    status?: StringWithAggregatesFilter<"ReferralRewardEvent"> | string
+    rewardedAt?: DateTimeWithAggregatesFilter<"ReferralRewardEvent"> | Date | string
+    createdAt?: DateTimeWithAggregatesFilter<"ReferralRewardEvent"> | Date | string
   }
 
   export type LegacyBinaryOptionResultWhereInput = {
@@ -123816,6 +126575,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -123863,6 +126626,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserUpdateInput = {
@@ -123910,6 +126677,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -123957,6 +126728,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -129171,6 +131946,7 @@ export namespace Prisma {
     auditEvents?: LedgerAuditEventCreateNestedManyWithoutPostingInput
     miningRewardAccrual?: MiningRewardAccrualCreateNestedOneWithoutLedgerPostingInput
     loanRepayment?: LegacyLoanRepaymentCreateNestedOneWithoutLedgerPostingInput
+    referralRewardEvent?: ReferralRewardEventCreateNestedOneWithoutLedgerPostingInput
   }
 
   export type LedgerPostingUncheckedCreateInput = {
@@ -129191,6 +131967,7 @@ export namespace Prisma {
     auditEvents?: LedgerAuditEventUncheckedCreateNestedManyWithoutPostingInput
     miningRewardAccrual?: MiningRewardAccrualUncheckedCreateNestedOneWithoutLedgerPostingInput
     loanRepayment?: LegacyLoanRepaymentUncheckedCreateNestedOneWithoutLedgerPostingInput
+    referralRewardEvent?: ReferralRewardEventUncheckedCreateNestedOneWithoutLedgerPostingInput
   }
 
   export type LedgerPostingUpdateInput = {
@@ -129211,6 +131988,7 @@ export namespace Prisma {
     auditEvents?: LedgerAuditEventUpdateManyWithoutPostingNestedInput
     miningRewardAccrual?: MiningRewardAccrualUpdateOneWithoutLedgerPostingNestedInput
     loanRepayment?: LegacyLoanRepaymentUpdateOneWithoutLedgerPostingNestedInput
+    referralRewardEvent?: ReferralRewardEventUpdateOneWithoutLedgerPostingNestedInput
   }
 
   export type LedgerPostingUncheckedUpdateInput = {
@@ -129231,6 +132009,7 @@ export namespace Prisma {
     auditEvents?: LedgerAuditEventUncheckedUpdateManyWithoutPostingNestedInput
     miningRewardAccrual?: MiningRewardAccrualUncheckedUpdateOneWithoutLedgerPostingNestedInput
     loanRepayment?: LegacyLoanRepaymentUncheckedUpdateOneWithoutLedgerPostingNestedInput
+    referralRewardEvent?: ReferralRewardEventUncheckedUpdateOneWithoutLedgerPostingNestedInput
   }
 
   export type LedgerPostingCreateManyInput = {
@@ -129558,6 +132337,155 @@ export namespace Prisma {
     totalEarnings?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ReferralAttributionEventCreateInput = {
+    id: string
+    referralCode: string
+    status: string
+    attributedAt?: Date | string
+    createdAt?: Date | string
+    referrer: UserCreateNestedOneWithoutReferralAttributionsSentInput
+    referred: UserCreateNestedOneWithoutReferralAttributionsReceivedInput
+  }
+
+  export type ReferralAttributionEventUncheckedCreateInput = {
+    id: string
+    referrerUserId: string
+    referredUserId: string
+    referralCode: string
+    status: string
+    attributedAt?: Date | string
+    createdAt?: Date | string
+  }
+
+  export type ReferralAttributionEventUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    referralCode?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    attributedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    referrer?: UserUpdateOneRequiredWithoutReferralAttributionsSentNestedInput
+    referred?: UserUpdateOneRequiredWithoutReferralAttributionsReceivedNestedInput
+  }
+
+  export type ReferralAttributionEventUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    referrerUserId?: StringFieldUpdateOperationsInput | string
+    referredUserId?: StringFieldUpdateOperationsInput | string
+    referralCode?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    attributedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ReferralAttributionEventCreateManyInput = {
+    id: string
+    referrerUserId: string
+    referredUserId: string
+    referralCode: string
+    status: string
+    attributedAt?: Date | string
+    createdAt?: Date | string
+  }
+
+  export type ReferralAttributionEventUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    referralCode?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    attributedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ReferralAttributionEventUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    referrerUserId?: StringFieldUpdateOperationsInput | string
+    referredUserId?: StringFieldUpdateOperationsInput | string
+    referralCode?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    attributedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ReferralRewardEventCreateInput = {
+    id: string
+    amount: string
+    asset: string
+    status: string
+    rewardedAt: Date | string
+    createdAt?: Date | string
+    referrer: UserCreateNestedOneWithoutReferralRewardsSentInput
+    referred: UserCreateNestedOneWithoutReferralRewardsReceivedInput
+    ledgerPosting: LedgerPostingCreateNestedOneWithoutReferralRewardEventInput
+  }
+
+  export type ReferralRewardEventUncheckedCreateInput = {
+    id: string
+    referrerUserId: string
+    referredUserId: string
+    ledgerPostingId: string
+    amount: string
+    asset: string
+    status: string
+    rewardedAt: Date | string
+    createdAt?: Date | string
+  }
+
+  export type ReferralRewardEventUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    amount?: StringFieldUpdateOperationsInput | string
+    asset?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    rewardedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    referrer?: UserUpdateOneRequiredWithoutReferralRewardsSentNestedInput
+    referred?: UserUpdateOneRequiredWithoutReferralRewardsReceivedNestedInput
+    ledgerPosting?: LedgerPostingUpdateOneRequiredWithoutReferralRewardEventNestedInput
+  }
+
+  export type ReferralRewardEventUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    referrerUserId?: StringFieldUpdateOperationsInput | string
+    referredUserId?: StringFieldUpdateOperationsInput | string
+    ledgerPostingId?: StringFieldUpdateOperationsInput | string
+    amount?: StringFieldUpdateOperationsInput | string
+    asset?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    rewardedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ReferralRewardEventCreateManyInput = {
+    id: string
+    referrerUserId: string
+    referredUserId: string
+    ledgerPostingId: string
+    amount: string
+    asset: string
+    status: string
+    rewardedAt: Date | string
+    createdAt?: Date | string
+  }
+
+  export type ReferralRewardEventUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    amount?: StringFieldUpdateOperationsInput | string
+    asset?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    rewardedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ReferralRewardEventUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    referrerUserId?: StringFieldUpdateOperationsInput | string
+    referredUserId?: StringFieldUpdateOperationsInput | string
+    ledgerPostingId?: StringFieldUpdateOperationsInput | string
+    amount?: StringFieldUpdateOperationsInput | string
+    asset?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    rewardedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type LegacyBinaryOptionResultCreateInput = {
@@ -132981,6 +135909,18 @@ export namespace Prisma {
     isNot?: UserMfaWhereInput | null
   }
 
+  export type ReferralAttributionEventListRelationFilter = {
+    every?: ReferralAttributionEventWhereInput
+    some?: ReferralAttributionEventWhereInput
+    none?: ReferralAttributionEventWhereInput
+  }
+
+  export type ReferralRewardEventListRelationFilter = {
+    every?: ReferralRewardEventWhereInput
+    some?: ReferralRewardEventWhereInput
+    none?: ReferralRewardEventWhereInput
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
@@ -133075,6 +136015,14 @@ export namespace Prisma {
   }
 
   export type ActivityOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ReferralAttributionEventOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ReferralRewardEventOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -136559,6 +139507,11 @@ export namespace Prisma {
     isNot?: LegacyLoanRepaymentWhereInput | null
   }
 
+  export type ReferralRewardEventNullableScalarRelationFilter = {
+    is?: ReferralRewardEventWhereInput | null
+    isNot?: ReferralRewardEventWhereInput | null
+  }
+
   export type LedgerPostingAccountIdIdempotencyKeyCompoundUniqueInput = {
     accountId: string
     idempotencyKey: string
@@ -136748,6 +139701,72 @@ export namespace Prisma {
     totalEarnings?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type ReferralAttributionEventCountOrderByAggregateInput = {
+    id?: SortOrder
+    referrerUserId?: SortOrder
+    referredUserId?: SortOrder
+    referralCode?: SortOrder
+    status?: SortOrder
+    attributedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ReferralAttributionEventMaxOrderByAggregateInput = {
+    id?: SortOrder
+    referrerUserId?: SortOrder
+    referredUserId?: SortOrder
+    referralCode?: SortOrder
+    status?: SortOrder
+    attributedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ReferralAttributionEventMinOrderByAggregateInput = {
+    id?: SortOrder
+    referrerUserId?: SortOrder
+    referredUserId?: SortOrder
+    referralCode?: SortOrder
+    status?: SortOrder
+    attributedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ReferralRewardEventCountOrderByAggregateInput = {
+    id?: SortOrder
+    referrerUserId?: SortOrder
+    referredUserId?: SortOrder
+    ledgerPostingId?: SortOrder
+    amount?: SortOrder
+    asset?: SortOrder
+    status?: SortOrder
+    rewardedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ReferralRewardEventMaxOrderByAggregateInput = {
+    id?: SortOrder
+    referrerUserId?: SortOrder
+    referredUserId?: SortOrder
+    ledgerPostingId?: SortOrder
+    amount?: SortOrder
+    asset?: SortOrder
+    status?: SortOrder
+    rewardedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ReferralRewardEventMinOrderByAggregateInput = {
+    id?: SortOrder
+    referrerUserId?: SortOrder
+    referredUserId?: SortOrder
+    ledgerPostingId?: SortOrder
+    amount?: SortOrder
+    asset?: SortOrder
+    status?: SortOrder
+    rewardedAt?: SortOrder
+    createdAt?: SortOrder
   }
 
   export type BinaryOptionPositionScalarRelationFilter = {
@@ -138744,6 +141763,34 @@ export namespace Prisma {
     connect?: UserMfaWhereUniqueInput
   }
 
+  export type ReferralAttributionEventCreateNestedManyWithoutReferrerInput = {
+    create?: XOR<ReferralAttributionEventCreateWithoutReferrerInput, ReferralAttributionEventUncheckedCreateWithoutReferrerInput> | ReferralAttributionEventCreateWithoutReferrerInput[] | ReferralAttributionEventUncheckedCreateWithoutReferrerInput[]
+    connectOrCreate?: ReferralAttributionEventCreateOrConnectWithoutReferrerInput | ReferralAttributionEventCreateOrConnectWithoutReferrerInput[]
+    createMany?: ReferralAttributionEventCreateManyReferrerInputEnvelope
+    connect?: ReferralAttributionEventWhereUniqueInput | ReferralAttributionEventWhereUniqueInput[]
+  }
+
+  export type ReferralAttributionEventCreateNestedManyWithoutReferredInput = {
+    create?: XOR<ReferralAttributionEventCreateWithoutReferredInput, ReferralAttributionEventUncheckedCreateWithoutReferredInput> | ReferralAttributionEventCreateWithoutReferredInput[] | ReferralAttributionEventUncheckedCreateWithoutReferredInput[]
+    connectOrCreate?: ReferralAttributionEventCreateOrConnectWithoutReferredInput | ReferralAttributionEventCreateOrConnectWithoutReferredInput[]
+    createMany?: ReferralAttributionEventCreateManyReferredInputEnvelope
+    connect?: ReferralAttributionEventWhereUniqueInput | ReferralAttributionEventWhereUniqueInput[]
+  }
+
+  export type ReferralRewardEventCreateNestedManyWithoutReferrerInput = {
+    create?: XOR<ReferralRewardEventCreateWithoutReferrerInput, ReferralRewardEventUncheckedCreateWithoutReferrerInput> | ReferralRewardEventCreateWithoutReferrerInput[] | ReferralRewardEventUncheckedCreateWithoutReferrerInput[]
+    connectOrCreate?: ReferralRewardEventCreateOrConnectWithoutReferrerInput | ReferralRewardEventCreateOrConnectWithoutReferrerInput[]
+    createMany?: ReferralRewardEventCreateManyReferrerInputEnvelope
+    connect?: ReferralRewardEventWhereUniqueInput | ReferralRewardEventWhereUniqueInput[]
+  }
+
+  export type ReferralRewardEventCreateNestedManyWithoutReferredInput = {
+    create?: XOR<ReferralRewardEventCreateWithoutReferredInput, ReferralRewardEventUncheckedCreateWithoutReferredInput> | ReferralRewardEventCreateWithoutReferredInput[] | ReferralRewardEventUncheckedCreateWithoutReferredInput[]
+    connectOrCreate?: ReferralRewardEventCreateOrConnectWithoutReferredInput | ReferralRewardEventCreateOrConnectWithoutReferredInput[]
+    createMany?: ReferralRewardEventCreateManyReferredInputEnvelope
+    connect?: ReferralRewardEventWhereUniqueInput | ReferralRewardEventWhereUniqueInput[]
+  }
+
   export type BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput = {
     create?: XOR<BinaryOptionPositionCreateWithoutUserInput, BinaryOptionPositionUncheckedCreateWithoutUserInput> | BinaryOptionPositionCreateWithoutUserInput[] | BinaryOptionPositionUncheckedCreateWithoutUserInput[]
     connectOrCreate?: BinaryOptionPositionCreateOrConnectWithoutUserInput | BinaryOptionPositionCreateOrConnectWithoutUserInput[]
@@ -138965,6 +142012,34 @@ export namespace Prisma {
     create?: XOR<UserMfaCreateWithoutUserInput, UserMfaUncheckedCreateWithoutUserInput>
     connectOrCreate?: UserMfaCreateOrConnectWithoutUserInput
     connect?: UserMfaWhereUniqueInput
+  }
+
+  export type ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput = {
+    create?: XOR<ReferralAttributionEventCreateWithoutReferrerInput, ReferralAttributionEventUncheckedCreateWithoutReferrerInput> | ReferralAttributionEventCreateWithoutReferrerInput[] | ReferralAttributionEventUncheckedCreateWithoutReferrerInput[]
+    connectOrCreate?: ReferralAttributionEventCreateOrConnectWithoutReferrerInput | ReferralAttributionEventCreateOrConnectWithoutReferrerInput[]
+    createMany?: ReferralAttributionEventCreateManyReferrerInputEnvelope
+    connect?: ReferralAttributionEventWhereUniqueInput | ReferralAttributionEventWhereUniqueInput[]
+  }
+
+  export type ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput = {
+    create?: XOR<ReferralAttributionEventCreateWithoutReferredInput, ReferralAttributionEventUncheckedCreateWithoutReferredInput> | ReferralAttributionEventCreateWithoutReferredInput[] | ReferralAttributionEventUncheckedCreateWithoutReferredInput[]
+    connectOrCreate?: ReferralAttributionEventCreateOrConnectWithoutReferredInput | ReferralAttributionEventCreateOrConnectWithoutReferredInput[]
+    createMany?: ReferralAttributionEventCreateManyReferredInputEnvelope
+    connect?: ReferralAttributionEventWhereUniqueInput | ReferralAttributionEventWhereUniqueInput[]
+  }
+
+  export type ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput = {
+    create?: XOR<ReferralRewardEventCreateWithoutReferrerInput, ReferralRewardEventUncheckedCreateWithoutReferrerInput> | ReferralRewardEventCreateWithoutReferrerInput[] | ReferralRewardEventUncheckedCreateWithoutReferrerInput[]
+    connectOrCreate?: ReferralRewardEventCreateOrConnectWithoutReferrerInput | ReferralRewardEventCreateOrConnectWithoutReferrerInput[]
+    createMany?: ReferralRewardEventCreateManyReferrerInputEnvelope
+    connect?: ReferralRewardEventWhereUniqueInput | ReferralRewardEventWhereUniqueInput[]
+  }
+
+  export type ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput = {
+    create?: XOR<ReferralRewardEventCreateWithoutReferredInput, ReferralRewardEventUncheckedCreateWithoutReferredInput> | ReferralRewardEventCreateWithoutReferredInput[] | ReferralRewardEventUncheckedCreateWithoutReferredInput[]
+    connectOrCreate?: ReferralRewardEventCreateOrConnectWithoutReferredInput | ReferralRewardEventCreateOrConnectWithoutReferredInput[]
+    createMany?: ReferralRewardEventCreateManyReferredInputEnvelope
+    connect?: ReferralRewardEventWhereUniqueInput | ReferralRewardEventWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -139421,6 +142496,62 @@ export namespace Prisma {
     update?: XOR<XOR<UserMfaUpdateToOneWithWhereWithoutUserInput, UserMfaUpdateWithoutUserInput>, UserMfaUncheckedUpdateWithoutUserInput>
   }
 
+  export type ReferralAttributionEventUpdateManyWithoutReferrerNestedInput = {
+    create?: XOR<ReferralAttributionEventCreateWithoutReferrerInput, ReferralAttributionEventUncheckedCreateWithoutReferrerInput> | ReferralAttributionEventCreateWithoutReferrerInput[] | ReferralAttributionEventUncheckedCreateWithoutReferrerInput[]
+    connectOrCreate?: ReferralAttributionEventCreateOrConnectWithoutReferrerInput | ReferralAttributionEventCreateOrConnectWithoutReferrerInput[]
+    upsert?: ReferralAttributionEventUpsertWithWhereUniqueWithoutReferrerInput | ReferralAttributionEventUpsertWithWhereUniqueWithoutReferrerInput[]
+    createMany?: ReferralAttributionEventCreateManyReferrerInputEnvelope
+    set?: ReferralAttributionEventWhereUniqueInput | ReferralAttributionEventWhereUniqueInput[]
+    disconnect?: ReferralAttributionEventWhereUniqueInput | ReferralAttributionEventWhereUniqueInput[]
+    delete?: ReferralAttributionEventWhereUniqueInput | ReferralAttributionEventWhereUniqueInput[]
+    connect?: ReferralAttributionEventWhereUniqueInput | ReferralAttributionEventWhereUniqueInput[]
+    update?: ReferralAttributionEventUpdateWithWhereUniqueWithoutReferrerInput | ReferralAttributionEventUpdateWithWhereUniqueWithoutReferrerInput[]
+    updateMany?: ReferralAttributionEventUpdateManyWithWhereWithoutReferrerInput | ReferralAttributionEventUpdateManyWithWhereWithoutReferrerInput[]
+    deleteMany?: ReferralAttributionEventScalarWhereInput | ReferralAttributionEventScalarWhereInput[]
+  }
+
+  export type ReferralAttributionEventUpdateManyWithoutReferredNestedInput = {
+    create?: XOR<ReferralAttributionEventCreateWithoutReferredInput, ReferralAttributionEventUncheckedCreateWithoutReferredInput> | ReferralAttributionEventCreateWithoutReferredInput[] | ReferralAttributionEventUncheckedCreateWithoutReferredInput[]
+    connectOrCreate?: ReferralAttributionEventCreateOrConnectWithoutReferredInput | ReferralAttributionEventCreateOrConnectWithoutReferredInput[]
+    upsert?: ReferralAttributionEventUpsertWithWhereUniqueWithoutReferredInput | ReferralAttributionEventUpsertWithWhereUniqueWithoutReferredInput[]
+    createMany?: ReferralAttributionEventCreateManyReferredInputEnvelope
+    set?: ReferralAttributionEventWhereUniqueInput | ReferralAttributionEventWhereUniqueInput[]
+    disconnect?: ReferralAttributionEventWhereUniqueInput | ReferralAttributionEventWhereUniqueInput[]
+    delete?: ReferralAttributionEventWhereUniqueInput | ReferralAttributionEventWhereUniqueInput[]
+    connect?: ReferralAttributionEventWhereUniqueInput | ReferralAttributionEventWhereUniqueInput[]
+    update?: ReferralAttributionEventUpdateWithWhereUniqueWithoutReferredInput | ReferralAttributionEventUpdateWithWhereUniqueWithoutReferredInput[]
+    updateMany?: ReferralAttributionEventUpdateManyWithWhereWithoutReferredInput | ReferralAttributionEventUpdateManyWithWhereWithoutReferredInput[]
+    deleteMany?: ReferralAttributionEventScalarWhereInput | ReferralAttributionEventScalarWhereInput[]
+  }
+
+  export type ReferralRewardEventUpdateManyWithoutReferrerNestedInput = {
+    create?: XOR<ReferralRewardEventCreateWithoutReferrerInput, ReferralRewardEventUncheckedCreateWithoutReferrerInput> | ReferralRewardEventCreateWithoutReferrerInput[] | ReferralRewardEventUncheckedCreateWithoutReferrerInput[]
+    connectOrCreate?: ReferralRewardEventCreateOrConnectWithoutReferrerInput | ReferralRewardEventCreateOrConnectWithoutReferrerInput[]
+    upsert?: ReferralRewardEventUpsertWithWhereUniqueWithoutReferrerInput | ReferralRewardEventUpsertWithWhereUniqueWithoutReferrerInput[]
+    createMany?: ReferralRewardEventCreateManyReferrerInputEnvelope
+    set?: ReferralRewardEventWhereUniqueInput | ReferralRewardEventWhereUniqueInput[]
+    disconnect?: ReferralRewardEventWhereUniqueInput | ReferralRewardEventWhereUniqueInput[]
+    delete?: ReferralRewardEventWhereUniqueInput | ReferralRewardEventWhereUniqueInput[]
+    connect?: ReferralRewardEventWhereUniqueInput | ReferralRewardEventWhereUniqueInput[]
+    update?: ReferralRewardEventUpdateWithWhereUniqueWithoutReferrerInput | ReferralRewardEventUpdateWithWhereUniqueWithoutReferrerInput[]
+    updateMany?: ReferralRewardEventUpdateManyWithWhereWithoutReferrerInput | ReferralRewardEventUpdateManyWithWhereWithoutReferrerInput[]
+    deleteMany?: ReferralRewardEventScalarWhereInput | ReferralRewardEventScalarWhereInput[]
+  }
+
+  export type ReferralRewardEventUpdateManyWithoutReferredNestedInput = {
+    create?: XOR<ReferralRewardEventCreateWithoutReferredInput, ReferralRewardEventUncheckedCreateWithoutReferredInput> | ReferralRewardEventCreateWithoutReferredInput[] | ReferralRewardEventUncheckedCreateWithoutReferredInput[]
+    connectOrCreate?: ReferralRewardEventCreateOrConnectWithoutReferredInput | ReferralRewardEventCreateOrConnectWithoutReferredInput[]
+    upsert?: ReferralRewardEventUpsertWithWhereUniqueWithoutReferredInput | ReferralRewardEventUpsertWithWhereUniqueWithoutReferredInput[]
+    createMany?: ReferralRewardEventCreateManyReferredInputEnvelope
+    set?: ReferralRewardEventWhereUniqueInput | ReferralRewardEventWhereUniqueInput[]
+    disconnect?: ReferralRewardEventWhereUniqueInput | ReferralRewardEventWhereUniqueInput[]
+    delete?: ReferralRewardEventWhereUniqueInput | ReferralRewardEventWhereUniqueInput[]
+    connect?: ReferralRewardEventWhereUniqueInput | ReferralRewardEventWhereUniqueInput[]
+    update?: ReferralRewardEventUpdateWithWhereUniqueWithoutReferredInput | ReferralRewardEventUpdateWithWhereUniqueWithoutReferredInput[]
+    updateMany?: ReferralRewardEventUpdateManyWithWhereWithoutReferredInput | ReferralRewardEventUpdateManyWithWhereWithoutReferredInput[]
+    deleteMany?: ReferralRewardEventScalarWhereInput | ReferralRewardEventScalarWhereInput[]
+  }
+
   export type BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput = {
     create?: XOR<BinaryOptionPositionCreateWithoutUserInput, BinaryOptionPositionUncheckedCreateWithoutUserInput> | BinaryOptionPositionCreateWithoutUserInput[] | BinaryOptionPositionUncheckedCreateWithoutUserInput[]
     connectOrCreate?: BinaryOptionPositionCreateOrConnectWithoutUserInput | BinaryOptionPositionCreateOrConnectWithoutUserInput[]
@@ -139849,6 +142980,62 @@ export namespace Prisma {
     delete?: UserMfaWhereInput | boolean
     connect?: UserMfaWhereUniqueInput
     update?: XOR<XOR<UserMfaUpdateToOneWithWhereWithoutUserInput, UserMfaUpdateWithoutUserInput>, UserMfaUncheckedUpdateWithoutUserInput>
+  }
+
+  export type ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput = {
+    create?: XOR<ReferralAttributionEventCreateWithoutReferrerInput, ReferralAttributionEventUncheckedCreateWithoutReferrerInput> | ReferralAttributionEventCreateWithoutReferrerInput[] | ReferralAttributionEventUncheckedCreateWithoutReferrerInput[]
+    connectOrCreate?: ReferralAttributionEventCreateOrConnectWithoutReferrerInput | ReferralAttributionEventCreateOrConnectWithoutReferrerInput[]
+    upsert?: ReferralAttributionEventUpsertWithWhereUniqueWithoutReferrerInput | ReferralAttributionEventUpsertWithWhereUniqueWithoutReferrerInput[]
+    createMany?: ReferralAttributionEventCreateManyReferrerInputEnvelope
+    set?: ReferralAttributionEventWhereUniqueInput | ReferralAttributionEventWhereUniqueInput[]
+    disconnect?: ReferralAttributionEventWhereUniqueInput | ReferralAttributionEventWhereUniqueInput[]
+    delete?: ReferralAttributionEventWhereUniqueInput | ReferralAttributionEventWhereUniqueInput[]
+    connect?: ReferralAttributionEventWhereUniqueInput | ReferralAttributionEventWhereUniqueInput[]
+    update?: ReferralAttributionEventUpdateWithWhereUniqueWithoutReferrerInput | ReferralAttributionEventUpdateWithWhereUniqueWithoutReferrerInput[]
+    updateMany?: ReferralAttributionEventUpdateManyWithWhereWithoutReferrerInput | ReferralAttributionEventUpdateManyWithWhereWithoutReferrerInput[]
+    deleteMany?: ReferralAttributionEventScalarWhereInput | ReferralAttributionEventScalarWhereInput[]
+  }
+
+  export type ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput = {
+    create?: XOR<ReferralAttributionEventCreateWithoutReferredInput, ReferralAttributionEventUncheckedCreateWithoutReferredInput> | ReferralAttributionEventCreateWithoutReferredInput[] | ReferralAttributionEventUncheckedCreateWithoutReferredInput[]
+    connectOrCreate?: ReferralAttributionEventCreateOrConnectWithoutReferredInput | ReferralAttributionEventCreateOrConnectWithoutReferredInput[]
+    upsert?: ReferralAttributionEventUpsertWithWhereUniqueWithoutReferredInput | ReferralAttributionEventUpsertWithWhereUniqueWithoutReferredInput[]
+    createMany?: ReferralAttributionEventCreateManyReferredInputEnvelope
+    set?: ReferralAttributionEventWhereUniqueInput | ReferralAttributionEventWhereUniqueInput[]
+    disconnect?: ReferralAttributionEventWhereUniqueInput | ReferralAttributionEventWhereUniqueInput[]
+    delete?: ReferralAttributionEventWhereUniqueInput | ReferralAttributionEventWhereUniqueInput[]
+    connect?: ReferralAttributionEventWhereUniqueInput | ReferralAttributionEventWhereUniqueInput[]
+    update?: ReferralAttributionEventUpdateWithWhereUniqueWithoutReferredInput | ReferralAttributionEventUpdateWithWhereUniqueWithoutReferredInput[]
+    updateMany?: ReferralAttributionEventUpdateManyWithWhereWithoutReferredInput | ReferralAttributionEventUpdateManyWithWhereWithoutReferredInput[]
+    deleteMany?: ReferralAttributionEventScalarWhereInput | ReferralAttributionEventScalarWhereInput[]
+  }
+
+  export type ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput = {
+    create?: XOR<ReferralRewardEventCreateWithoutReferrerInput, ReferralRewardEventUncheckedCreateWithoutReferrerInput> | ReferralRewardEventCreateWithoutReferrerInput[] | ReferralRewardEventUncheckedCreateWithoutReferrerInput[]
+    connectOrCreate?: ReferralRewardEventCreateOrConnectWithoutReferrerInput | ReferralRewardEventCreateOrConnectWithoutReferrerInput[]
+    upsert?: ReferralRewardEventUpsertWithWhereUniqueWithoutReferrerInput | ReferralRewardEventUpsertWithWhereUniqueWithoutReferrerInput[]
+    createMany?: ReferralRewardEventCreateManyReferrerInputEnvelope
+    set?: ReferralRewardEventWhereUniqueInput | ReferralRewardEventWhereUniqueInput[]
+    disconnect?: ReferralRewardEventWhereUniqueInput | ReferralRewardEventWhereUniqueInput[]
+    delete?: ReferralRewardEventWhereUniqueInput | ReferralRewardEventWhereUniqueInput[]
+    connect?: ReferralRewardEventWhereUniqueInput | ReferralRewardEventWhereUniqueInput[]
+    update?: ReferralRewardEventUpdateWithWhereUniqueWithoutReferrerInput | ReferralRewardEventUpdateWithWhereUniqueWithoutReferrerInput[]
+    updateMany?: ReferralRewardEventUpdateManyWithWhereWithoutReferrerInput | ReferralRewardEventUpdateManyWithWhereWithoutReferrerInput[]
+    deleteMany?: ReferralRewardEventScalarWhereInput | ReferralRewardEventScalarWhereInput[]
+  }
+
+  export type ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput = {
+    create?: XOR<ReferralRewardEventCreateWithoutReferredInput, ReferralRewardEventUncheckedCreateWithoutReferredInput> | ReferralRewardEventCreateWithoutReferredInput[] | ReferralRewardEventUncheckedCreateWithoutReferredInput[]
+    connectOrCreate?: ReferralRewardEventCreateOrConnectWithoutReferredInput | ReferralRewardEventCreateOrConnectWithoutReferredInput[]
+    upsert?: ReferralRewardEventUpsertWithWhereUniqueWithoutReferredInput | ReferralRewardEventUpsertWithWhereUniqueWithoutReferredInput[]
+    createMany?: ReferralRewardEventCreateManyReferredInputEnvelope
+    set?: ReferralRewardEventWhereUniqueInput | ReferralRewardEventWhereUniqueInput[]
+    disconnect?: ReferralRewardEventWhereUniqueInput | ReferralRewardEventWhereUniqueInput[]
+    delete?: ReferralRewardEventWhereUniqueInput | ReferralRewardEventWhereUniqueInput[]
+    connect?: ReferralRewardEventWhereUniqueInput | ReferralRewardEventWhereUniqueInput[]
+    update?: ReferralRewardEventUpdateWithWhereUniqueWithoutReferredInput | ReferralRewardEventUpdateWithWhereUniqueWithoutReferredInput[]
+    updateMany?: ReferralRewardEventUpdateManyWithWhereWithoutReferredInput | ReferralRewardEventUpdateManyWithWhereWithoutReferredInput[]
+    deleteMany?: ReferralRewardEventScalarWhereInput | ReferralRewardEventScalarWhereInput[]
   }
 
   export type UserCreateNestedOneWithoutMfaInput = {
@@ -141950,6 +145137,12 @@ export namespace Prisma {
     connect?: LegacyLoanRepaymentWhereUniqueInput
   }
 
+  export type ReferralRewardEventCreateNestedOneWithoutLedgerPostingInput = {
+    create?: XOR<ReferralRewardEventCreateWithoutLedgerPostingInput, ReferralRewardEventUncheckedCreateWithoutLedgerPostingInput>
+    connectOrCreate?: ReferralRewardEventCreateOrConnectWithoutLedgerPostingInput
+    connect?: ReferralRewardEventWhereUniqueInput
+  }
+
   export type LedgerAuditEventUncheckedCreateNestedManyWithoutPostingInput = {
     create?: XOR<LedgerAuditEventCreateWithoutPostingInput, LedgerAuditEventUncheckedCreateWithoutPostingInput> | LedgerAuditEventCreateWithoutPostingInput[] | LedgerAuditEventUncheckedCreateWithoutPostingInput[]
     connectOrCreate?: LedgerAuditEventCreateOrConnectWithoutPostingInput | LedgerAuditEventCreateOrConnectWithoutPostingInput[]
@@ -141967,6 +145160,12 @@ export namespace Prisma {
     create?: XOR<LegacyLoanRepaymentCreateWithoutLedgerPostingInput, LegacyLoanRepaymentUncheckedCreateWithoutLedgerPostingInput>
     connectOrCreate?: LegacyLoanRepaymentCreateOrConnectWithoutLedgerPostingInput
     connect?: LegacyLoanRepaymentWhereUniqueInput
+  }
+
+  export type ReferralRewardEventUncheckedCreateNestedOneWithoutLedgerPostingInput = {
+    create?: XOR<ReferralRewardEventCreateWithoutLedgerPostingInput, ReferralRewardEventUncheckedCreateWithoutLedgerPostingInput>
+    connectOrCreate?: ReferralRewardEventCreateOrConnectWithoutLedgerPostingInput
+    connect?: ReferralRewardEventWhereUniqueInput
   }
 
   export type EnumLedgerPostingKindFieldUpdateOperationsInput = {
@@ -142015,6 +145214,16 @@ export namespace Prisma {
     update?: XOR<XOR<LegacyLoanRepaymentUpdateToOneWithWhereWithoutLedgerPostingInput, LegacyLoanRepaymentUpdateWithoutLedgerPostingInput>, LegacyLoanRepaymentUncheckedUpdateWithoutLedgerPostingInput>
   }
 
+  export type ReferralRewardEventUpdateOneWithoutLedgerPostingNestedInput = {
+    create?: XOR<ReferralRewardEventCreateWithoutLedgerPostingInput, ReferralRewardEventUncheckedCreateWithoutLedgerPostingInput>
+    connectOrCreate?: ReferralRewardEventCreateOrConnectWithoutLedgerPostingInput
+    upsert?: ReferralRewardEventUpsertWithoutLedgerPostingInput
+    disconnect?: ReferralRewardEventWhereInput | boolean
+    delete?: ReferralRewardEventWhereInput | boolean
+    connect?: ReferralRewardEventWhereUniqueInput
+    update?: XOR<XOR<ReferralRewardEventUpdateToOneWithWhereWithoutLedgerPostingInput, ReferralRewardEventUpdateWithoutLedgerPostingInput>, ReferralRewardEventUncheckedUpdateWithoutLedgerPostingInput>
+  }
+
   export type LedgerAuditEventUncheckedUpdateManyWithoutPostingNestedInput = {
     create?: XOR<LedgerAuditEventCreateWithoutPostingInput, LedgerAuditEventUncheckedCreateWithoutPostingInput> | LedgerAuditEventCreateWithoutPostingInput[] | LedgerAuditEventUncheckedCreateWithoutPostingInput[]
     connectOrCreate?: LedgerAuditEventCreateOrConnectWithoutPostingInput | LedgerAuditEventCreateOrConnectWithoutPostingInput[]
@@ -142047,6 +145256,16 @@ export namespace Prisma {
     delete?: LegacyLoanRepaymentWhereInput | boolean
     connect?: LegacyLoanRepaymentWhereUniqueInput
     update?: XOR<XOR<LegacyLoanRepaymentUpdateToOneWithWhereWithoutLedgerPostingInput, LegacyLoanRepaymentUpdateWithoutLedgerPostingInput>, LegacyLoanRepaymentUncheckedUpdateWithoutLedgerPostingInput>
+  }
+
+  export type ReferralRewardEventUncheckedUpdateOneWithoutLedgerPostingNestedInput = {
+    create?: XOR<ReferralRewardEventCreateWithoutLedgerPostingInput, ReferralRewardEventUncheckedCreateWithoutLedgerPostingInput>
+    connectOrCreate?: ReferralRewardEventCreateOrConnectWithoutLedgerPostingInput
+    upsert?: ReferralRewardEventUpsertWithoutLedgerPostingInput
+    disconnect?: ReferralRewardEventWhereInput | boolean
+    delete?: ReferralRewardEventWhereInput | boolean
+    connect?: ReferralRewardEventWhereUniqueInput
+    update?: XOR<XOR<ReferralRewardEventUpdateToOneWithWhereWithoutLedgerPostingInput, ReferralRewardEventUpdateWithoutLedgerPostingInput>, ReferralRewardEventUncheckedUpdateWithoutLedgerPostingInput>
   }
 
   export type LedgerAccountCreateNestedOneWithoutAuditEventsInput = {
@@ -142091,6 +145310,76 @@ export namespace Prisma {
     upsert?: UserUpsertWithoutAffiliateInput
     connect?: UserWhereUniqueInput
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutAffiliateInput, UserUpdateWithoutAffiliateInput>, UserUncheckedUpdateWithoutAffiliateInput>
+  }
+
+  export type UserCreateNestedOneWithoutReferralAttributionsSentInput = {
+    create?: XOR<UserCreateWithoutReferralAttributionsSentInput, UserUncheckedCreateWithoutReferralAttributionsSentInput>
+    connectOrCreate?: UserCreateOrConnectWithoutReferralAttributionsSentInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutReferralAttributionsReceivedInput = {
+    create?: XOR<UserCreateWithoutReferralAttributionsReceivedInput, UserUncheckedCreateWithoutReferralAttributionsReceivedInput>
+    connectOrCreate?: UserCreateOrConnectWithoutReferralAttributionsReceivedInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutReferralAttributionsSentNestedInput = {
+    create?: XOR<UserCreateWithoutReferralAttributionsSentInput, UserUncheckedCreateWithoutReferralAttributionsSentInput>
+    connectOrCreate?: UserCreateOrConnectWithoutReferralAttributionsSentInput
+    upsert?: UserUpsertWithoutReferralAttributionsSentInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutReferralAttributionsSentInput, UserUpdateWithoutReferralAttributionsSentInput>, UserUncheckedUpdateWithoutReferralAttributionsSentInput>
+  }
+
+  export type UserUpdateOneRequiredWithoutReferralAttributionsReceivedNestedInput = {
+    create?: XOR<UserCreateWithoutReferralAttributionsReceivedInput, UserUncheckedCreateWithoutReferralAttributionsReceivedInput>
+    connectOrCreate?: UserCreateOrConnectWithoutReferralAttributionsReceivedInput
+    upsert?: UserUpsertWithoutReferralAttributionsReceivedInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutReferralAttributionsReceivedInput, UserUpdateWithoutReferralAttributionsReceivedInput>, UserUncheckedUpdateWithoutReferralAttributionsReceivedInput>
+  }
+
+  export type UserCreateNestedOneWithoutReferralRewardsSentInput = {
+    create?: XOR<UserCreateWithoutReferralRewardsSentInput, UserUncheckedCreateWithoutReferralRewardsSentInput>
+    connectOrCreate?: UserCreateOrConnectWithoutReferralRewardsSentInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutReferralRewardsReceivedInput = {
+    create?: XOR<UserCreateWithoutReferralRewardsReceivedInput, UserUncheckedCreateWithoutReferralRewardsReceivedInput>
+    connectOrCreate?: UserCreateOrConnectWithoutReferralRewardsReceivedInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type LedgerPostingCreateNestedOneWithoutReferralRewardEventInput = {
+    create?: XOR<LedgerPostingCreateWithoutReferralRewardEventInput, LedgerPostingUncheckedCreateWithoutReferralRewardEventInput>
+    connectOrCreate?: LedgerPostingCreateOrConnectWithoutReferralRewardEventInput
+    connect?: LedgerPostingWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutReferralRewardsSentNestedInput = {
+    create?: XOR<UserCreateWithoutReferralRewardsSentInput, UserUncheckedCreateWithoutReferralRewardsSentInput>
+    connectOrCreate?: UserCreateOrConnectWithoutReferralRewardsSentInput
+    upsert?: UserUpsertWithoutReferralRewardsSentInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutReferralRewardsSentInput, UserUpdateWithoutReferralRewardsSentInput>, UserUncheckedUpdateWithoutReferralRewardsSentInput>
+  }
+
+  export type UserUpdateOneRequiredWithoutReferralRewardsReceivedNestedInput = {
+    create?: XOR<UserCreateWithoutReferralRewardsReceivedInput, UserUncheckedCreateWithoutReferralRewardsReceivedInput>
+    connectOrCreate?: UserCreateOrConnectWithoutReferralRewardsReceivedInput
+    upsert?: UserUpsertWithoutReferralRewardsReceivedInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutReferralRewardsReceivedInput, UserUpdateWithoutReferralRewardsReceivedInput>, UserUncheckedUpdateWithoutReferralRewardsReceivedInput>
+  }
+
+  export type LedgerPostingUpdateOneRequiredWithoutReferralRewardEventNestedInput = {
+    create?: XOR<LedgerPostingCreateWithoutReferralRewardEventInput, LedgerPostingUncheckedCreateWithoutReferralRewardEventInput>
+    connectOrCreate?: LedgerPostingCreateOrConnectWithoutReferralRewardEventInput
+    upsert?: LedgerPostingUpsertWithoutReferralRewardEventInput
+    connect?: LedgerPostingWhereUniqueInput
+    update?: XOR<XOR<LedgerPostingUpdateToOneWithWhereWithoutReferralRewardEventInput, LedgerPostingUpdateWithoutReferralRewardEventInput>, LedgerPostingUncheckedUpdateWithoutReferralRewardEventInput>
   }
 
   export type BinaryOptionPositionCreateNestedOneWithoutLegacyResultsInput = {
@@ -145227,6 +148516,122 @@ export namespace Prisma {
     create: XOR<UserMfaCreateWithoutUserInput, UserMfaUncheckedCreateWithoutUserInput>
   }
 
+  export type ReferralAttributionEventCreateWithoutReferrerInput = {
+    id: string
+    referralCode: string
+    status: string
+    attributedAt?: Date | string
+    createdAt?: Date | string
+    referred: UserCreateNestedOneWithoutReferralAttributionsReceivedInput
+  }
+
+  export type ReferralAttributionEventUncheckedCreateWithoutReferrerInput = {
+    id: string
+    referredUserId: string
+    referralCode: string
+    status: string
+    attributedAt?: Date | string
+    createdAt?: Date | string
+  }
+
+  export type ReferralAttributionEventCreateOrConnectWithoutReferrerInput = {
+    where: ReferralAttributionEventWhereUniqueInput
+    create: XOR<ReferralAttributionEventCreateWithoutReferrerInput, ReferralAttributionEventUncheckedCreateWithoutReferrerInput>
+  }
+
+  export type ReferralAttributionEventCreateManyReferrerInputEnvelope = {
+    data: ReferralAttributionEventCreateManyReferrerInput | ReferralAttributionEventCreateManyReferrerInput[]
+  }
+
+  export type ReferralAttributionEventCreateWithoutReferredInput = {
+    id: string
+    referralCode: string
+    status: string
+    attributedAt?: Date | string
+    createdAt?: Date | string
+    referrer: UserCreateNestedOneWithoutReferralAttributionsSentInput
+  }
+
+  export type ReferralAttributionEventUncheckedCreateWithoutReferredInput = {
+    id: string
+    referrerUserId: string
+    referralCode: string
+    status: string
+    attributedAt?: Date | string
+    createdAt?: Date | string
+  }
+
+  export type ReferralAttributionEventCreateOrConnectWithoutReferredInput = {
+    where: ReferralAttributionEventWhereUniqueInput
+    create: XOR<ReferralAttributionEventCreateWithoutReferredInput, ReferralAttributionEventUncheckedCreateWithoutReferredInput>
+  }
+
+  export type ReferralAttributionEventCreateManyReferredInputEnvelope = {
+    data: ReferralAttributionEventCreateManyReferredInput | ReferralAttributionEventCreateManyReferredInput[]
+  }
+
+  export type ReferralRewardEventCreateWithoutReferrerInput = {
+    id: string
+    amount: string
+    asset: string
+    status: string
+    rewardedAt: Date | string
+    createdAt?: Date | string
+    referred: UserCreateNestedOneWithoutReferralRewardsReceivedInput
+    ledgerPosting: LedgerPostingCreateNestedOneWithoutReferralRewardEventInput
+  }
+
+  export type ReferralRewardEventUncheckedCreateWithoutReferrerInput = {
+    id: string
+    referredUserId: string
+    ledgerPostingId: string
+    amount: string
+    asset: string
+    status: string
+    rewardedAt: Date | string
+    createdAt?: Date | string
+  }
+
+  export type ReferralRewardEventCreateOrConnectWithoutReferrerInput = {
+    where: ReferralRewardEventWhereUniqueInput
+    create: XOR<ReferralRewardEventCreateWithoutReferrerInput, ReferralRewardEventUncheckedCreateWithoutReferrerInput>
+  }
+
+  export type ReferralRewardEventCreateManyReferrerInputEnvelope = {
+    data: ReferralRewardEventCreateManyReferrerInput | ReferralRewardEventCreateManyReferrerInput[]
+  }
+
+  export type ReferralRewardEventCreateWithoutReferredInput = {
+    id: string
+    amount: string
+    asset: string
+    status: string
+    rewardedAt: Date | string
+    createdAt?: Date | string
+    referrer: UserCreateNestedOneWithoutReferralRewardsSentInput
+    ledgerPosting: LedgerPostingCreateNestedOneWithoutReferralRewardEventInput
+  }
+
+  export type ReferralRewardEventUncheckedCreateWithoutReferredInput = {
+    id: string
+    referrerUserId: string
+    ledgerPostingId: string
+    amount: string
+    asset: string
+    status: string
+    rewardedAt: Date | string
+    createdAt?: Date | string
+  }
+
+  export type ReferralRewardEventCreateOrConnectWithoutReferredInput = {
+    where: ReferralRewardEventWhereUniqueInput
+    create: XOR<ReferralRewardEventCreateWithoutReferredInput, ReferralRewardEventUncheckedCreateWithoutReferredInput>
+  }
+
+  export type ReferralRewardEventCreateManyReferredInputEnvelope = {
+    data: ReferralRewardEventCreateManyReferredInput | ReferralRewardEventCreateManyReferredInput[]
+  }
+
   export type BinaryOptionPositionUpsertWithWhereUniqueWithoutUserInput = {
     where: BinaryOptionPositionWhereUniqueInput
     update: XOR<BinaryOptionPositionUpdateWithoutUserInput, BinaryOptionPositionUncheckedUpdateWithoutUserInput>
@@ -146338,6 +149743,98 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type ReferralAttributionEventUpsertWithWhereUniqueWithoutReferrerInput = {
+    where: ReferralAttributionEventWhereUniqueInput
+    update: XOR<ReferralAttributionEventUpdateWithoutReferrerInput, ReferralAttributionEventUncheckedUpdateWithoutReferrerInput>
+    create: XOR<ReferralAttributionEventCreateWithoutReferrerInput, ReferralAttributionEventUncheckedCreateWithoutReferrerInput>
+  }
+
+  export type ReferralAttributionEventUpdateWithWhereUniqueWithoutReferrerInput = {
+    where: ReferralAttributionEventWhereUniqueInput
+    data: XOR<ReferralAttributionEventUpdateWithoutReferrerInput, ReferralAttributionEventUncheckedUpdateWithoutReferrerInput>
+  }
+
+  export type ReferralAttributionEventUpdateManyWithWhereWithoutReferrerInput = {
+    where: ReferralAttributionEventScalarWhereInput
+    data: XOR<ReferralAttributionEventUpdateManyMutationInput, ReferralAttributionEventUncheckedUpdateManyWithoutReferrerInput>
+  }
+
+  export type ReferralAttributionEventScalarWhereInput = {
+    AND?: ReferralAttributionEventScalarWhereInput | ReferralAttributionEventScalarWhereInput[]
+    OR?: ReferralAttributionEventScalarWhereInput[]
+    NOT?: ReferralAttributionEventScalarWhereInput | ReferralAttributionEventScalarWhereInput[]
+    id?: StringFilter<"ReferralAttributionEvent"> | string
+    referrerUserId?: StringFilter<"ReferralAttributionEvent"> | string
+    referredUserId?: StringFilter<"ReferralAttributionEvent"> | string
+    referralCode?: StringFilter<"ReferralAttributionEvent"> | string
+    status?: StringFilter<"ReferralAttributionEvent"> | string
+    attributedAt?: DateTimeFilter<"ReferralAttributionEvent"> | Date | string
+    createdAt?: DateTimeFilter<"ReferralAttributionEvent"> | Date | string
+  }
+
+  export type ReferralAttributionEventUpsertWithWhereUniqueWithoutReferredInput = {
+    where: ReferralAttributionEventWhereUniqueInput
+    update: XOR<ReferralAttributionEventUpdateWithoutReferredInput, ReferralAttributionEventUncheckedUpdateWithoutReferredInput>
+    create: XOR<ReferralAttributionEventCreateWithoutReferredInput, ReferralAttributionEventUncheckedCreateWithoutReferredInput>
+  }
+
+  export type ReferralAttributionEventUpdateWithWhereUniqueWithoutReferredInput = {
+    where: ReferralAttributionEventWhereUniqueInput
+    data: XOR<ReferralAttributionEventUpdateWithoutReferredInput, ReferralAttributionEventUncheckedUpdateWithoutReferredInput>
+  }
+
+  export type ReferralAttributionEventUpdateManyWithWhereWithoutReferredInput = {
+    where: ReferralAttributionEventScalarWhereInput
+    data: XOR<ReferralAttributionEventUpdateManyMutationInput, ReferralAttributionEventUncheckedUpdateManyWithoutReferredInput>
+  }
+
+  export type ReferralRewardEventUpsertWithWhereUniqueWithoutReferrerInput = {
+    where: ReferralRewardEventWhereUniqueInput
+    update: XOR<ReferralRewardEventUpdateWithoutReferrerInput, ReferralRewardEventUncheckedUpdateWithoutReferrerInput>
+    create: XOR<ReferralRewardEventCreateWithoutReferrerInput, ReferralRewardEventUncheckedCreateWithoutReferrerInput>
+  }
+
+  export type ReferralRewardEventUpdateWithWhereUniqueWithoutReferrerInput = {
+    where: ReferralRewardEventWhereUniqueInput
+    data: XOR<ReferralRewardEventUpdateWithoutReferrerInput, ReferralRewardEventUncheckedUpdateWithoutReferrerInput>
+  }
+
+  export type ReferralRewardEventUpdateManyWithWhereWithoutReferrerInput = {
+    where: ReferralRewardEventScalarWhereInput
+    data: XOR<ReferralRewardEventUpdateManyMutationInput, ReferralRewardEventUncheckedUpdateManyWithoutReferrerInput>
+  }
+
+  export type ReferralRewardEventScalarWhereInput = {
+    AND?: ReferralRewardEventScalarWhereInput | ReferralRewardEventScalarWhereInput[]
+    OR?: ReferralRewardEventScalarWhereInput[]
+    NOT?: ReferralRewardEventScalarWhereInput | ReferralRewardEventScalarWhereInput[]
+    id?: StringFilter<"ReferralRewardEvent"> | string
+    referrerUserId?: StringFilter<"ReferralRewardEvent"> | string
+    referredUserId?: StringFilter<"ReferralRewardEvent"> | string
+    ledgerPostingId?: StringFilter<"ReferralRewardEvent"> | string
+    amount?: StringFilter<"ReferralRewardEvent"> | string
+    asset?: StringFilter<"ReferralRewardEvent"> | string
+    status?: StringFilter<"ReferralRewardEvent"> | string
+    rewardedAt?: DateTimeFilter<"ReferralRewardEvent"> | Date | string
+    createdAt?: DateTimeFilter<"ReferralRewardEvent"> | Date | string
+  }
+
+  export type ReferralRewardEventUpsertWithWhereUniqueWithoutReferredInput = {
+    where: ReferralRewardEventWhereUniqueInput
+    update: XOR<ReferralRewardEventUpdateWithoutReferredInput, ReferralRewardEventUncheckedUpdateWithoutReferredInput>
+    create: XOR<ReferralRewardEventCreateWithoutReferredInput, ReferralRewardEventUncheckedCreateWithoutReferredInput>
+  }
+
+  export type ReferralRewardEventUpdateWithWhereUniqueWithoutReferredInput = {
+    where: ReferralRewardEventWhereUniqueInput
+    data: XOR<ReferralRewardEventUpdateWithoutReferredInput, ReferralRewardEventUncheckedUpdateWithoutReferredInput>
+  }
+
+  export type ReferralRewardEventUpdateManyWithWhereWithoutReferredInput = {
+    where: ReferralRewardEventScalarWhereInput
+    data: XOR<ReferralRewardEventUpdateManyMutationInput, ReferralRewardEventUncheckedUpdateManyWithoutReferredInput>
+  }
+
   export type UserCreateWithoutMfaInput = {
     id?: string
     userCode: number
@@ -146382,6 +149879,10 @@ export namespace Prisma {
     activities?: ActivityCreateNestedManyWithoutUserInput
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutMfaInput = {
@@ -146428,6 +149929,10 @@ export namespace Prisma {
     activities?: ActivityUncheckedCreateNestedManyWithoutUserInput
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutMfaInput = {
@@ -146490,6 +149995,10 @@ export namespace Prisma {
     activities?: ActivityUpdateManyWithoutUserNestedInput
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutMfaInput = {
@@ -146536,6 +150045,10 @@ export namespace Prisma {
     activities?: ActivityUncheckedUpdateManyWithoutUserNestedInput
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type UserCreateWithoutWalletIdentityInput = {
@@ -146582,6 +150095,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutWalletIdentityInput = {
@@ -146628,6 +150145,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutWalletIdentityInput = {
@@ -146690,6 +150211,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutWalletIdentityInput = {
@@ -146736,6 +150261,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type UserCreateWithoutAuthSessionsInput = {
@@ -146782,6 +150311,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutAuthSessionsInput = {
@@ -146828,6 +150361,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutAuthSessionsInput = {
@@ -146890,6 +150427,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAuthSessionsInput = {
@@ -146936,6 +150477,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type UserCreateWithoutKycInput = {
@@ -146982,6 +150527,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutKycInput = {
@@ -147028,6 +150577,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutKycInput = {
@@ -147090,6 +150643,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutKycInput = {
@@ -147136,6 +150693,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type LedgerCreateWithoutWalletInput = {
@@ -147213,6 +150774,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutWalletInput = {
@@ -147259,6 +150824,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutWalletInput = {
@@ -147352,6 +150921,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutWalletInput = {
@@ -147398,6 +150971,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type WalletCreateWithoutLedgersInput = {
@@ -147500,6 +151077,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutSpotOrdersInput = {
@@ -147546,6 +151127,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutSpotOrdersInput = {
@@ -147641,6 +151226,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutSpotOrdersInput = {
@@ -147687,6 +151276,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type SpotTradeUpsertWithWhereUniqueWithoutOrderInput = {
@@ -147786,6 +151379,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutSpotTradesInput = {
@@ -147832,6 +151429,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutSpotTradesInput = {
@@ -147937,6 +151538,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutSpotTradesInput = {
@@ -147983,6 +151588,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type UserCreateWithoutBinaryPositionsInput = {
@@ -148029,6 +151638,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutBinaryPositionsInput = {
@@ -148075,6 +151688,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutBinaryPositionsInput = {
@@ -148160,6 +151777,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutBinaryPositionsInput = {
@@ -148206,6 +151827,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type LegacyBinaryOptionResultUpsertWithWhereUniqueWithoutPositionInput = {
@@ -148279,6 +151904,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutContractPositionsInput = {
@@ -148325,6 +151954,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutContractPositionsInput = {
@@ -148387,6 +152020,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutContractPositionsInput = {
@@ -148433,6 +152070,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type UserCreateWithoutConversionsInput = {
@@ -148479,6 +152120,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutConversionsInput = {
@@ -148525,6 +152170,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutConversionsInput = {
@@ -148587,6 +152236,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutConversionsInput = {
@@ -148633,6 +152286,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type UserCreateWithoutLoansInput = {
@@ -148679,6 +152336,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutLoansInput = {
@@ -148725,6 +152386,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutLoansInput = {
@@ -148816,6 +152481,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutLoansInput = {
@@ -148862,6 +152531,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type LegacyLoanRepaymentUpsertWithWhereUniqueWithoutLoanInput = {
@@ -148997,6 +152670,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutMiningSubscriptionsInput = {
@@ -149043,6 +152720,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutMiningSubscriptionsInput = {
@@ -149173,6 +152854,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutMiningSubscriptionsInput = {
@@ -149219,6 +152904,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type MiningPlanUpsertWithoutSubscriptionsInput = {
@@ -149363,6 +153052,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutMiningRewardAccrualsInput = {
@@ -149409,6 +153102,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutMiningRewardAccrualsInput = {
@@ -149433,6 +153130,7 @@ export namespace Prisma {
     account: LedgerAccountCreateNestedOneWithoutPostingsInput
     auditEvents?: LedgerAuditEventCreateNestedManyWithoutPostingInput
     loanRepayment?: LegacyLoanRepaymentCreateNestedOneWithoutLedgerPostingInput
+    referralRewardEvent?: ReferralRewardEventCreateNestedOneWithoutLedgerPostingInput
   }
 
   export type LedgerPostingUncheckedCreateWithoutMiningRewardAccrualInput = {
@@ -149452,6 +153150,7 @@ export namespace Prisma {
     metadata?: string | null
     auditEvents?: LedgerAuditEventUncheckedCreateNestedManyWithoutPostingInput
     loanRepayment?: LegacyLoanRepaymentUncheckedCreateNestedOneWithoutLedgerPostingInput
+    referralRewardEvent?: ReferralRewardEventUncheckedCreateNestedOneWithoutLedgerPostingInput
   }
 
   export type LedgerPostingCreateOrConnectWithoutMiningRewardAccrualInput = {
@@ -149598,6 +153297,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutMiningRewardAccrualsInput = {
@@ -149644,6 +153347,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type LedgerPostingUpsertWithoutMiningRewardAccrualInput = {
@@ -149674,6 +153381,7 @@ export namespace Prisma {
     account?: LedgerAccountUpdateOneRequiredWithoutPostingsNestedInput
     auditEvents?: LedgerAuditEventUpdateManyWithoutPostingNestedInput
     loanRepayment?: LegacyLoanRepaymentUpdateOneWithoutLedgerPostingNestedInput
+    referralRewardEvent?: ReferralRewardEventUpdateOneWithoutLedgerPostingNestedInput
   }
 
   export type LedgerPostingUncheckedUpdateWithoutMiningRewardAccrualInput = {
@@ -149693,6 +153401,7 @@ export namespace Prisma {
     metadata?: NullableStringFieldUpdateOperationsInput | string | null
     auditEvents?: LedgerAuditEventUncheckedUpdateManyWithoutPostingNestedInput
     loanRepayment?: LegacyLoanRepaymentUncheckedUpdateOneWithoutLedgerPostingNestedInput
+    referralRewardEvent?: ReferralRewardEventUncheckedUpdateOneWithoutLedgerPostingNestedInput
   }
 
   export type ActivityUpsertWithoutMiningRewardAccrualInput = {
@@ -150302,6 +154011,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutDepositClaimsInput = {
@@ -150348,6 +154061,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutDepositClaimsInput = {
@@ -150399,6 +154116,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutReviewedDepositClaimsInput = {
@@ -150445,6 +154166,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutReviewedDepositClaimsInput = {
@@ -150536,6 +154261,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutDepositClaimsInput = {
@@ -150582,6 +154311,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUpsertWithoutReviewedDepositClaimsInput = {
@@ -150639,6 +154372,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutReviewedDepositClaimsInput = {
@@ -150685,6 +154422,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type DepositAddressUpsertWithoutManualClaimsInput = {
@@ -150766,6 +154507,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutAdminRoleAssignmentInput = {
@@ -150812,6 +154557,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutAdminRoleAssignmentInput = {
@@ -150874,6 +154623,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAdminRoleAssignmentInput = {
@@ -150920,6 +154673,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type AdminGovernanceApprovalCreateWithoutCommandInput = {
@@ -151099,6 +154856,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutWithdrawalRequestsInput = {
@@ -151145,6 +154906,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutWithdrawalRequestsInput = {
@@ -151207,6 +154972,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutWithdrawalRequestsInput = {
@@ -151253,6 +155022,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type MarketNetworkCreateWithoutAssetInput = {
@@ -153196,6 +156969,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutLedgerAccountsInput = {
@@ -153242,6 +157019,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutLedgerAccountsInput = {
@@ -153266,6 +157047,7 @@ export namespace Prisma {
     auditEvents?: LedgerAuditEventCreateNestedManyWithoutPostingInput
     miningRewardAccrual?: MiningRewardAccrualCreateNestedOneWithoutLedgerPostingInput
     loanRepayment?: LegacyLoanRepaymentCreateNestedOneWithoutLedgerPostingInput
+    referralRewardEvent?: ReferralRewardEventCreateNestedOneWithoutLedgerPostingInput
   }
 
   export type LedgerPostingUncheckedCreateWithoutAccountInput = {
@@ -153285,6 +157067,7 @@ export namespace Prisma {
     auditEvents?: LedgerAuditEventUncheckedCreateNestedManyWithoutPostingInput
     miningRewardAccrual?: MiningRewardAccrualUncheckedCreateNestedOneWithoutLedgerPostingInput
     loanRepayment?: LegacyLoanRepaymentUncheckedCreateNestedOneWithoutLedgerPostingInput
+    referralRewardEvent?: ReferralRewardEventUncheckedCreateNestedOneWithoutLedgerPostingInput
   }
 
   export type LedgerPostingCreateOrConnectWithoutAccountInput = {
@@ -153380,6 +157163,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutLedgerAccountsInput = {
@@ -153426,6 +157213,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type LedgerPostingUpsertWithWhereUniqueWithoutAccountInput = {
@@ -153538,6 +157329,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutSpotMarginAccountsInput = {
@@ -153584,6 +157379,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutSpotMarginAccountsInput = {
@@ -153734,6 +157533,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutSpotMarginAccountsInput = {
@@ -153780,6 +157583,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type SpotMarginPositionUpsertWithWhereUniqueWithoutAccountInput = {
@@ -154169,6 +157976,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutSpotMarginActivitiesInput = {
@@ -154215,6 +158026,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutSpotMarginActivitiesInput = {
@@ -154359,6 +158174,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutSpotMarginActivitiesInput = {
@@ -154405,6 +158224,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type SpotMarginAccountUpsertWithoutActivitiesInput = {
@@ -154613,6 +158436,33 @@ export namespace Prisma {
     create: XOR<LegacyLoanRepaymentCreateWithoutLedgerPostingInput, LegacyLoanRepaymentUncheckedCreateWithoutLedgerPostingInput>
   }
 
+  export type ReferralRewardEventCreateWithoutLedgerPostingInput = {
+    id: string
+    amount: string
+    asset: string
+    status: string
+    rewardedAt: Date | string
+    createdAt?: Date | string
+    referrer: UserCreateNestedOneWithoutReferralRewardsSentInput
+    referred: UserCreateNestedOneWithoutReferralRewardsReceivedInput
+  }
+
+  export type ReferralRewardEventUncheckedCreateWithoutLedgerPostingInput = {
+    id: string
+    referrerUserId: string
+    referredUserId: string
+    amount: string
+    asset: string
+    status: string
+    rewardedAt: Date | string
+    createdAt?: Date | string
+  }
+
+  export type ReferralRewardEventCreateOrConnectWithoutLedgerPostingInput = {
+    where: ReferralRewardEventWhereUniqueInput
+    create: XOR<ReferralRewardEventCreateWithoutLedgerPostingInput, ReferralRewardEventUncheckedCreateWithoutLedgerPostingInput>
+  }
+
   export type LedgerAccountUpsertWithoutPostingsInput = {
     update: XOR<LedgerAccountUpdateWithoutPostingsInput, LedgerAccountUncheckedUpdateWithoutPostingsInput>
     create: XOR<LedgerAccountCreateWithoutPostingsInput, LedgerAccountUncheckedCreateWithoutPostingsInput>
@@ -154730,6 +158580,39 @@ export namespace Prisma {
     activityId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
+  export type ReferralRewardEventUpsertWithoutLedgerPostingInput = {
+    update: XOR<ReferralRewardEventUpdateWithoutLedgerPostingInput, ReferralRewardEventUncheckedUpdateWithoutLedgerPostingInput>
+    create: XOR<ReferralRewardEventCreateWithoutLedgerPostingInput, ReferralRewardEventUncheckedCreateWithoutLedgerPostingInput>
+    where?: ReferralRewardEventWhereInput
+  }
+
+  export type ReferralRewardEventUpdateToOneWithWhereWithoutLedgerPostingInput = {
+    where?: ReferralRewardEventWhereInput
+    data: XOR<ReferralRewardEventUpdateWithoutLedgerPostingInput, ReferralRewardEventUncheckedUpdateWithoutLedgerPostingInput>
+  }
+
+  export type ReferralRewardEventUpdateWithoutLedgerPostingInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    amount?: StringFieldUpdateOperationsInput | string
+    asset?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    rewardedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    referrer?: UserUpdateOneRequiredWithoutReferralRewardsSentNestedInput
+    referred?: UserUpdateOneRequiredWithoutReferralRewardsReceivedNestedInput
+  }
+
+  export type ReferralRewardEventUncheckedUpdateWithoutLedgerPostingInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    referrerUserId?: StringFieldUpdateOperationsInput | string
+    referredUserId?: StringFieldUpdateOperationsInput | string
+    amount?: StringFieldUpdateOperationsInput | string
+    asset?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    rewardedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type LedgerAccountCreateWithoutAuditEventsInput = {
     id?: string
     asset: string
@@ -154778,6 +158661,7 @@ export namespace Prisma {
     account: LedgerAccountCreateNestedOneWithoutPostingsInput
     miningRewardAccrual?: MiningRewardAccrualCreateNestedOneWithoutLedgerPostingInput
     loanRepayment?: LegacyLoanRepaymentCreateNestedOneWithoutLedgerPostingInput
+    referralRewardEvent?: ReferralRewardEventCreateNestedOneWithoutLedgerPostingInput
   }
 
   export type LedgerPostingUncheckedCreateWithoutAuditEventsInput = {
@@ -154797,6 +158681,7 @@ export namespace Prisma {
     metadata?: string | null
     miningRewardAccrual?: MiningRewardAccrualUncheckedCreateNestedOneWithoutLedgerPostingInput
     loanRepayment?: LegacyLoanRepaymentUncheckedCreateNestedOneWithoutLedgerPostingInput
+    referralRewardEvent?: ReferralRewardEventUncheckedCreateNestedOneWithoutLedgerPostingInput
   }
 
   export type LedgerPostingCreateOrConnectWithoutAuditEventsInput = {
@@ -154869,6 +158754,7 @@ export namespace Prisma {
     account?: LedgerAccountUpdateOneRequiredWithoutPostingsNestedInput
     miningRewardAccrual?: MiningRewardAccrualUpdateOneWithoutLedgerPostingNestedInput
     loanRepayment?: LegacyLoanRepaymentUpdateOneWithoutLedgerPostingNestedInput
+    referralRewardEvent?: ReferralRewardEventUpdateOneWithoutLedgerPostingNestedInput
   }
 
   export type LedgerPostingUncheckedUpdateWithoutAuditEventsInput = {
@@ -154888,6 +158774,7 @@ export namespace Prisma {
     metadata?: NullableStringFieldUpdateOperationsInput | string | null
     miningRewardAccrual?: MiningRewardAccrualUncheckedUpdateOneWithoutLedgerPostingNestedInput
     loanRepayment?: LegacyLoanRepaymentUncheckedUpdateOneWithoutLedgerPostingNestedInput
+    referralRewardEvent?: ReferralRewardEventUncheckedUpdateOneWithoutLedgerPostingNestedInput
   }
 
   export type UserCreateWithoutAffiliateInput = {
@@ -154934,6 +158821,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutAffiliateInput = {
@@ -154980,6 +158871,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutAffiliateInput = {
@@ -155042,6 +158937,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAffiliateInput = {
@@ -155088,6 +158987,970 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
+  }
+
+  export type UserCreateWithoutReferralAttributionsSentInput = {
+    id?: string
+    userCode: number
+    email?: string | null
+    password?: string | null
+    securityPasswordHash?: string | null
+    displayName?: string | null
+    role?: $Enums.Role
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    lastActive?: Date | string
+    forceOutcome?: string
+    binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
+    kyc?: KYCCreateNestedOneWithoutUserInput
+    loans?: LoanApplicationCreateNestedManyWithoutUserInput
+    wallet?: WalletCreateNestedOneWithoutUserInput
+    withdrawalRequests?: WithdrawalRequestCreateNestedManyWithoutUserInput
+    contractPositions?: ContractPositionCreateNestedManyWithoutUserInput
+    authSessions?: AuthSessionCreateNestedManyWithoutUserInput
+    spotOrders?: SpotOrderCreateNestedManyWithoutUserInput
+    spotTrades?: SpotTradeCreateNestedManyWithoutUserInput
+    conversions?: ConversionTransactionCreateNestedManyWithoutUserInput
+    miningSubscriptions?: MiningSubscriptionCreateNestedManyWithoutUserInput
+    affiliate?: LegacyAffiliateCreateNestedOneWithoutUserInput
+    rewards?: LegacyRewardCreateNestedManyWithoutUserInput
+    ledgerAccounts?: LedgerAccountCreateNestedManyWithoutUserInput
+    miningRewardAccruals?: MiningRewardAccrualCreateNestedManyWithoutUserInput
+    gate2SpotOrders?: Gate2SpotOrderCreateNestedManyWithoutUserInput
+    gate2BinaryPositions?: Gate2BinaryPositionCreateNestedManyWithoutUserInput
+    gate2Deposits?: Gate2DepositCreateNestedManyWithoutUserInput
+    depositClaims?: DepositClaimCreateNestedManyWithoutUserInput
+    reviewedDepositClaims?: DepositClaimCreateNestedManyWithoutReviewerInput
+    gate2Withdrawals?: Gate2WithdrawalCreateNestedManyWithoutUserInput
+    gate2ConversionQuotes?: Gate2ConversionQuoteCreateNestedManyWithoutUserInput
+    gate2OperationAudits?: Gate2OperationAuditCreateNestedManyWithoutUserInput
+    gate2TransfersFrom?: Gate2InternalTransferCreateNestedManyWithoutFromUserInput
+    gate2TransfersTo?: Gate2InternalTransferCreateNestedManyWithoutToUserInput
+    adminRoleAssignment?: AdminRoleAssignmentCreateNestedOneWithoutUserInput
+    walletIdentity?: WalletIdentityCreateNestedOneWithoutUserInput
+    spotMarginAccounts?: SpotMarginAccountCreateNestedManyWithoutUserInput
+    spotMarginActivities?: SpotMarginActivityCreateNestedManyWithoutUserInput
+    activities?: ActivityCreateNestedManyWithoutUserInput
+    preference?: UserPreferenceCreateNestedOneWithoutUserInput
+    vipState?: UserVipStateCreateNestedOneWithoutUserInput
+    mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
+  }
+
+  export type UserUncheckedCreateWithoutReferralAttributionsSentInput = {
+    id?: string
+    userCode: number
+    email?: string | null
+    password?: string | null
+    securityPasswordHash?: string | null
+    displayName?: string | null
+    role?: $Enums.Role
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    lastActive?: Date | string
+    forceOutcome?: string
+    binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
+    kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
+    loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
+    wallet?: WalletUncheckedCreateNestedOneWithoutUserInput
+    withdrawalRequests?: WithdrawalRequestUncheckedCreateNestedManyWithoutUserInput
+    contractPositions?: ContractPositionUncheckedCreateNestedManyWithoutUserInput
+    authSessions?: AuthSessionUncheckedCreateNestedManyWithoutUserInput
+    spotOrders?: SpotOrderUncheckedCreateNestedManyWithoutUserInput
+    spotTrades?: SpotTradeUncheckedCreateNestedManyWithoutUserInput
+    conversions?: ConversionTransactionUncheckedCreateNestedManyWithoutUserInput
+    miningSubscriptions?: MiningSubscriptionUncheckedCreateNestedManyWithoutUserInput
+    affiliate?: LegacyAffiliateUncheckedCreateNestedOneWithoutUserInput
+    rewards?: LegacyRewardUncheckedCreateNestedManyWithoutUserInput
+    ledgerAccounts?: LedgerAccountUncheckedCreateNestedManyWithoutUserInput
+    miningRewardAccruals?: MiningRewardAccrualUncheckedCreateNestedManyWithoutUserInput
+    gate2SpotOrders?: Gate2SpotOrderUncheckedCreateNestedManyWithoutUserInput
+    gate2BinaryPositions?: Gate2BinaryPositionUncheckedCreateNestedManyWithoutUserInput
+    gate2Deposits?: Gate2DepositUncheckedCreateNestedManyWithoutUserInput
+    depositClaims?: DepositClaimUncheckedCreateNestedManyWithoutUserInput
+    reviewedDepositClaims?: DepositClaimUncheckedCreateNestedManyWithoutReviewerInput
+    gate2Withdrawals?: Gate2WithdrawalUncheckedCreateNestedManyWithoutUserInput
+    gate2ConversionQuotes?: Gate2ConversionQuoteUncheckedCreateNestedManyWithoutUserInput
+    gate2OperationAudits?: Gate2OperationAuditUncheckedCreateNestedManyWithoutUserInput
+    gate2TransfersFrom?: Gate2InternalTransferUncheckedCreateNestedManyWithoutFromUserInput
+    gate2TransfersTo?: Gate2InternalTransferUncheckedCreateNestedManyWithoutToUserInput
+    adminRoleAssignment?: AdminRoleAssignmentUncheckedCreateNestedOneWithoutUserInput
+    walletIdentity?: WalletIdentityUncheckedCreateNestedOneWithoutUserInput
+    spotMarginAccounts?: SpotMarginAccountUncheckedCreateNestedManyWithoutUserInput
+    spotMarginActivities?: SpotMarginActivityUncheckedCreateNestedManyWithoutUserInput
+    activities?: ActivityUncheckedCreateNestedManyWithoutUserInput
+    preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
+    vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
+    mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
+  }
+
+  export type UserCreateOrConnectWithoutReferralAttributionsSentInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutReferralAttributionsSentInput, UserUncheckedCreateWithoutReferralAttributionsSentInput>
+  }
+
+  export type UserCreateWithoutReferralAttributionsReceivedInput = {
+    id?: string
+    userCode: number
+    email?: string | null
+    password?: string | null
+    securityPasswordHash?: string | null
+    displayName?: string | null
+    role?: $Enums.Role
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    lastActive?: Date | string
+    forceOutcome?: string
+    binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
+    kyc?: KYCCreateNestedOneWithoutUserInput
+    loans?: LoanApplicationCreateNestedManyWithoutUserInput
+    wallet?: WalletCreateNestedOneWithoutUserInput
+    withdrawalRequests?: WithdrawalRequestCreateNestedManyWithoutUserInput
+    contractPositions?: ContractPositionCreateNestedManyWithoutUserInput
+    authSessions?: AuthSessionCreateNestedManyWithoutUserInput
+    spotOrders?: SpotOrderCreateNestedManyWithoutUserInput
+    spotTrades?: SpotTradeCreateNestedManyWithoutUserInput
+    conversions?: ConversionTransactionCreateNestedManyWithoutUserInput
+    miningSubscriptions?: MiningSubscriptionCreateNestedManyWithoutUserInput
+    affiliate?: LegacyAffiliateCreateNestedOneWithoutUserInput
+    rewards?: LegacyRewardCreateNestedManyWithoutUserInput
+    ledgerAccounts?: LedgerAccountCreateNestedManyWithoutUserInput
+    miningRewardAccruals?: MiningRewardAccrualCreateNestedManyWithoutUserInput
+    gate2SpotOrders?: Gate2SpotOrderCreateNestedManyWithoutUserInput
+    gate2BinaryPositions?: Gate2BinaryPositionCreateNestedManyWithoutUserInput
+    gate2Deposits?: Gate2DepositCreateNestedManyWithoutUserInput
+    depositClaims?: DepositClaimCreateNestedManyWithoutUserInput
+    reviewedDepositClaims?: DepositClaimCreateNestedManyWithoutReviewerInput
+    gate2Withdrawals?: Gate2WithdrawalCreateNestedManyWithoutUserInput
+    gate2ConversionQuotes?: Gate2ConversionQuoteCreateNestedManyWithoutUserInput
+    gate2OperationAudits?: Gate2OperationAuditCreateNestedManyWithoutUserInput
+    gate2TransfersFrom?: Gate2InternalTransferCreateNestedManyWithoutFromUserInput
+    gate2TransfersTo?: Gate2InternalTransferCreateNestedManyWithoutToUserInput
+    adminRoleAssignment?: AdminRoleAssignmentCreateNestedOneWithoutUserInput
+    walletIdentity?: WalletIdentityCreateNestedOneWithoutUserInput
+    spotMarginAccounts?: SpotMarginAccountCreateNestedManyWithoutUserInput
+    spotMarginActivities?: SpotMarginActivityCreateNestedManyWithoutUserInput
+    activities?: ActivityCreateNestedManyWithoutUserInput
+    preference?: UserPreferenceCreateNestedOneWithoutUserInput
+    vipState?: UserVipStateCreateNestedOneWithoutUserInput
+    mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
+  }
+
+  export type UserUncheckedCreateWithoutReferralAttributionsReceivedInput = {
+    id?: string
+    userCode: number
+    email?: string | null
+    password?: string | null
+    securityPasswordHash?: string | null
+    displayName?: string | null
+    role?: $Enums.Role
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    lastActive?: Date | string
+    forceOutcome?: string
+    binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
+    kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
+    loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
+    wallet?: WalletUncheckedCreateNestedOneWithoutUserInput
+    withdrawalRequests?: WithdrawalRequestUncheckedCreateNestedManyWithoutUserInput
+    contractPositions?: ContractPositionUncheckedCreateNestedManyWithoutUserInput
+    authSessions?: AuthSessionUncheckedCreateNestedManyWithoutUserInput
+    spotOrders?: SpotOrderUncheckedCreateNestedManyWithoutUserInput
+    spotTrades?: SpotTradeUncheckedCreateNestedManyWithoutUserInput
+    conversions?: ConversionTransactionUncheckedCreateNestedManyWithoutUserInput
+    miningSubscriptions?: MiningSubscriptionUncheckedCreateNestedManyWithoutUserInput
+    affiliate?: LegacyAffiliateUncheckedCreateNestedOneWithoutUserInput
+    rewards?: LegacyRewardUncheckedCreateNestedManyWithoutUserInput
+    ledgerAccounts?: LedgerAccountUncheckedCreateNestedManyWithoutUserInput
+    miningRewardAccruals?: MiningRewardAccrualUncheckedCreateNestedManyWithoutUserInput
+    gate2SpotOrders?: Gate2SpotOrderUncheckedCreateNestedManyWithoutUserInput
+    gate2BinaryPositions?: Gate2BinaryPositionUncheckedCreateNestedManyWithoutUserInput
+    gate2Deposits?: Gate2DepositUncheckedCreateNestedManyWithoutUserInput
+    depositClaims?: DepositClaimUncheckedCreateNestedManyWithoutUserInput
+    reviewedDepositClaims?: DepositClaimUncheckedCreateNestedManyWithoutReviewerInput
+    gate2Withdrawals?: Gate2WithdrawalUncheckedCreateNestedManyWithoutUserInput
+    gate2ConversionQuotes?: Gate2ConversionQuoteUncheckedCreateNestedManyWithoutUserInput
+    gate2OperationAudits?: Gate2OperationAuditUncheckedCreateNestedManyWithoutUserInput
+    gate2TransfersFrom?: Gate2InternalTransferUncheckedCreateNestedManyWithoutFromUserInput
+    gate2TransfersTo?: Gate2InternalTransferUncheckedCreateNestedManyWithoutToUserInput
+    adminRoleAssignment?: AdminRoleAssignmentUncheckedCreateNestedOneWithoutUserInput
+    walletIdentity?: WalletIdentityUncheckedCreateNestedOneWithoutUserInput
+    spotMarginAccounts?: SpotMarginAccountUncheckedCreateNestedManyWithoutUserInput
+    spotMarginActivities?: SpotMarginActivityUncheckedCreateNestedManyWithoutUserInput
+    activities?: ActivityUncheckedCreateNestedManyWithoutUserInput
+    preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
+    vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
+    mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
+  }
+
+  export type UserCreateOrConnectWithoutReferralAttributionsReceivedInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutReferralAttributionsReceivedInput, UserUncheckedCreateWithoutReferralAttributionsReceivedInput>
+  }
+
+  export type UserUpsertWithoutReferralAttributionsSentInput = {
+    update: XOR<UserUpdateWithoutReferralAttributionsSentInput, UserUncheckedUpdateWithoutReferralAttributionsSentInput>
+    create: XOR<UserCreateWithoutReferralAttributionsSentInput, UserUncheckedCreateWithoutReferralAttributionsSentInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutReferralAttributionsSentInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutReferralAttributionsSentInput, UserUncheckedUpdateWithoutReferralAttributionsSentInput>
+  }
+
+  export type UserUpdateWithoutReferralAttributionsSentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userCode?: IntFieldUpdateOperationsInput | number
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    securityPasswordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    displayName?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
+    forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
+    kyc?: KYCUpdateOneWithoutUserNestedInput
+    loans?: LoanApplicationUpdateManyWithoutUserNestedInput
+    wallet?: WalletUpdateOneWithoutUserNestedInput
+    withdrawalRequests?: WithdrawalRequestUpdateManyWithoutUserNestedInput
+    contractPositions?: ContractPositionUpdateManyWithoutUserNestedInput
+    authSessions?: AuthSessionUpdateManyWithoutUserNestedInput
+    spotOrders?: SpotOrderUpdateManyWithoutUserNestedInput
+    spotTrades?: SpotTradeUpdateManyWithoutUserNestedInput
+    conversions?: ConversionTransactionUpdateManyWithoutUserNestedInput
+    miningSubscriptions?: MiningSubscriptionUpdateManyWithoutUserNestedInput
+    affiliate?: LegacyAffiliateUpdateOneWithoutUserNestedInput
+    rewards?: LegacyRewardUpdateManyWithoutUserNestedInput
+    ledgerAccounts?: LedgerAccountUpdateManyWithoutUserNestedInput
+    miningRewardAccruals?: MiningRewardAccrualUpdateManyWithoutUserNestedInput
+    gate2SpotOrders?: Gate2SpotOrderUpdateManyWithoutUserNestedInput
+    gate2BinaryPositions?: Gate2BinaryPositionUpdateManyWithoutUserNestedInput
+    gate2Deposits?: Gate2DepositUpdateManyWithoutUserNestedInput
+    depositClaims?: DepositClaimUpdateManyWithoutUserNestedInput
+    reviewedDepositClaims?: DepositClaimUpdateManyWithoutReviewerNestedInput
+    gate2Withdrawals?: Gate2WithdrawalUpdateManyWithoutUserNestedInput
+    gate2ConversionQuotes?: Gate2ConversionQuoteUpdateManyWithoutUserNestedInput
+    gate2OperationAudits?: Gate2OperationAuditUpdateManyWithoutUserNestedInput
+    gate2TransfersFrom?: Gate2InternalTransferUpdateManyWithoutFromUserNestedInput
+    gate2TransfersTo?: Gate2InternalTransferUpdateManyWithoutToUserNestedInput
+    adminRoleAssignment?: AdminRoleAssignmentUpdateOneWithoutUserNestedInput
+    walletIdentity?: WalletIdentityUpdateOneWithoutUserNestedInput
+    spotMarginAccounts?: SpotMarginAccountUpdateManyWithoutUserNestedInput
+    spotMarginActivities?: SpotMarginActivityUpdateManyWithoutUserNestedInput
+    activities?: ActivityUpdateManyWithoutUserNestedInput
+    preference?: UserPreferenceUpdateOneWithoutUserNestedInput
+    vipState?: UserVipStateUpdateOneWithoutUserNestedInput
+    mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutReferralAttributionsSentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userCode?: IntFieldUpdateOperationsInput | number
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    securityPasswordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    displayName?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
+    forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
+    kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
+    loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
+    wallet?: WalletUncheckedUpdateOneWithoutUserNestedInput
+    withdrawalRequests?: WithdrawalRequestUncheckedUpdateManyWithoutUserNestedInput
+    contractPositions?: ContractPositionUncheckedUpdateManyWithoutUserNestedInput
+    authSessions?: AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+    spotOrders?: SpotOrderUncheckedUpdateManyWithoutUserNestedInput
+    spotTrades?: SpotTradeUncheckedUpdateManyWithoutUserNestedInput
+    conversions?: ConversionTransactionUncheckedUpdateManyWithoutUserNestedInput
+    miningSubscriptions?: MiningSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+    affiliate?: LegacyAffiliateUncheckedUpdateOneWithoutUserNestedInput
+    rewards?: LegacyRewardUncheckedUpdateManyWithoutUserNestedInput
+    ledgerAccounts?: LedgerAccountUncheckedUpdateManyWithoutUserNestedInput
+    miningRewardAccruals?: MiningRewardAccrualUncheckedUpdateManyWithoutUserNestedInput
+    gate2SpotOrders?: Gate2SpotOrderUncheckedUpdateManyWithoutUserNestedInput
+    gate2BinaryPositions?: Gate2BinaryPositionUncheckedUpdateManyWithoutUserNestedInput
+    gate2Deposits?: Gate2DepositUncheckedUpdateManyWithoutUserNestedInput
+    depositClaims?: DepositClaimUncheckedUpdateManyWithoutUserNestedInput
+    reviewedDepositClaims?: DepositClaimUncheckedUpdateManyWithoutReviewerNestedInput
+    gate2Withdrawals?: Gate2WithdrawalUncheckedUpdateManyWithoutUserNestedInput
+    gate2ConversionQuotes?: Gate2ConversionQuoteUncheckedUpdateManyWithoutUserNestedInput
+    gate2OperationAudits?: Gate2OperationAuditUncheckedUpdateManyWithoutUserNestedInput
+    gate2TransfersFrom?: Gate2InternalTransferUncheckedUpdateManyWithoutFromUserNestedInput
+    gate2TransfersTo?: Gate2InternalTransferUncheckedUpdateManyWithoutToUserNestedInput
+    adminRoleAssignment?: AdminRoleAssignmentUncheckedUpdateOneWithoutUserNestedInput
+    walletIdentity?: WalletIdentityUncheckedUpdateOneWithoutUserNestedInput
+    spotMarginAccounts?: SpotMarginAccountUncheckedUpdateManyWithoutUserNestedInput
+    spotMarginActivities?: SpotMarginActivityUncheckedUpdateManyWithoutUserNestedInput
+    activities?: ActivityUncheckedUpdateManyWithoutUserNestedInput
+    preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
+    vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
+    mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
+  }
+
+  export type UserUpsertWithoutReferralAttributionsReceivedInput = {
+    update: XOR<UserUpdateWithoutReferralAttributionsReceivedInput, UserUncheckedUpdateWithoutReferralAttributionsReceivedInput>
+    create: XOR<UserCreateWithoutReferralAttributionsReceivedInput, UserUncheckedCreateWithoutReferralAttributionsReceivedInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutReferralAttributionsReceivedInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutReferralAttributionsReceivedInput, UserUncheckedUpdateWithoutReferralAttributionsReceivedInput>
+  }
+
+  export type UserUpdateWithoutReferralAttributionsReceivedInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userCode?: IntFieldUpdateOperationsInput | number
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    securityPasswordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    displayName?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
+    forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
+    kyc?: KYCUpdateOneWithoutUserNestedInput
+    loans?: LoanApplicationUpdateManyWithoutUserNestedInput
+    wallet?: WalletUpdateOneWithoutUserNestedInput
+    withdrawalRequests?: WithdrawalRequestUpdateManyWithoutUserNestedInput
+    contractPositions?: ContractPositionUpdateManyWithoutUserNestedInput
+    authSessions?: AuthSessionUpdateManyWithoutUserNestedInput
+    spotOrders?: SpotOrderUpdateManyWithoutUserNestedInput
+    spotTrades?: SpotTradeUpdateManyWithoutUserNestedInput
+    conversions?: ConversionTransactionUpdateManyWithoutUserNestedInput
+    miningSubscriptions?: MiningSubscriptionUpdateManyWithoutUserNestedInput
+    affiliate?: LegacyAffiliateUpdateOneWithoutUserNestedInput
+    rewards?: LegacyRewardUpdateManyWithoutUserNestedInput
+    ledgerAccounts?: LedgerAccountUpdateManyWithoutUserNestedInput
+    miningRewardAccruals?: MiningRewardAccrualUpdateManyWithoutUserNestedInput
+    gate2SpotOrders?: Gate2SpotOrderUpdateManyWithoutUserNestedInput
+    gate2BinaryPositions?: Gate2BinaryPositionUpdateManyWithoutUserNestedInput
+    gate2Deposits?: Gate2DepositUpdateManyWithoutUserNestedInput
+    depositClaims?: DepositClaimUpdateManyWithoutUserNestedInput
+    reviewedDepositClaims?: DepositClaimUpdateManyWithoutReviewerNestedInput
+    gate2Withdrawals?: Gate2WithdrawalUpdateManyWithoutUserNestedInput
+    gate2ConversionQuotes?: Gate2ConversionQuoteUpdateManyWithoutUserNestedInput
+    gate2OperationAudits?: Gate2OperationAuditUpdateManyWithoutUserNestedInput
+    gate2TransfersFrom?: Gate2InternalTransferUpdateManyWithoutFromUserNestedInput
+    gate2TransfersTo?: Gate2InternalTransferUpdateManyWithoutToUserNestedInput
+    adminRoleAssignment?: AdminRoleAssignmentUpdateOneWithoutUserNestedInput
+    walletIdentity?: WalletIdentityUpdateOneWithoutUserNestedInput
+    spotMarginAccounts?: SpotMarginAccountUpdateManyWithoutUserNestedInput
+    spotMarginActivities?: SpotMarginActivityUpdateManyWithoutUserNestedInput
+    activities?: ActivityUpdateManyWithoutUserNestedInput
+    preference?: UserPreferenceUpdateOneWithoutUserNestedInput
+    vipState?: UserVipStateUpdateOneWithoutUserNestedInput
+    mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutReferralAttributionsReceivedInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userCode?: IntFieldUpdateOperationsInput | number
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    securityPasswordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    displayName?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
+    forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
+    kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
+    loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
+    wallet?: WalletUncheckedUpdateOneWithoutUserNestedInput
+    withdrawalRequests?: WithdrawalRequestUncheckedUpdateManyWithoutUserNestedInput
+    contractPositions?: ContractPositionUncheckedUpdateManyWithoutUserNestedInput
+    authSessions?: AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+    spotOrders?: SpotOrderUncheckedUpdateManyWithoutUserNestedInput
+    spotTrades?: SpotTradeUncheckedUpdateManyWithoutUserNestedInput
+    conversions?: ConversionTransactionUncheckedUpdateManyWithoutUserNestedInput
+    miningSubscriptions?: MiningSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+    affiliate?: LegacyAffiliateUncheckedUpdateOneWithoutUserNestedInput
+    rewards?: LegacyRewardUncheckedUpdateManyWithoutUserNestedInput
+    ledgerAccounts?: LedgerAccountUncheckedUpdateManyWithoutUserNestedInput
+    miningRewardAccruals?: MiningRewardAccrualUncheckedUpdateManyWithoutUserNestedInput
+    gate2SpotOrders?: Gate2SpotOrderUncheckedUpdateManyWithoutUserNestedInput
+    gate2BinaryPositions?: Gate2BinaryPositionUncheckedUpdateManyWithoutUserNestedInput
+    gate2Deposits?: Gate2DepositUncheckedUpdateManyWithoutUserNestedInput
+    depositClaims?: DepositClaimUncheckedUpdateManyWithoutUserNestedInput
+    reviewedDepositClaims?: DepositClaimUncheckedUpdateManyWithoutReviewerNestedInput
+    gate2Withdrawals?: Gate2WithdrawalUncheckedUpdateManyWithoutUserNestedInput
+    gate2ConversionQuotes?: Gate2ConversionQuoteUncheckedUpdateManyWithoutUserNestedInput
+    gate2OperationAudits?: Gate2OperationAuditUncheckedUpdateManyWithoutUserNestedInput
+    gate2TransfersFrom?: Gate2InternalTransferUncheckedUpdateManyWithoutFromUserNestedInput
+    gate2TransfersTo?: Gate2InternalTransferUncheckedUpdateManyWithoutToUserNestedInput
+    adminRoleAssignment?: AdminRoleAssignmentUncheckedUpdateOneWithoutUserNestedInput
+    walletIdentity?: WalletIdentityUncheckedUpdateOneWithoutUserNestedInput
+    spotMarginAccounts?: SpotMarginAccountUncheckedUpdateManyWithoutUserNestedInput
+    spotMarginActivities?: SpotMarginActivityUncheckedUpdateManyWithoutUserNestedInput
+    activities?: ActivityUncheckedUpdateManyWithoutUserNestedInput
+    preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
+    vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
+    mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
+  }
+
+  export type UserCreateWithoutReferralRewardsSentInput = {
+    id?: string
+    userCode: number
+    email?: string | null
+    password?: string | null
+    securityPasswordHash?: string | null
+    displayName?: string | null
+    role?: $Enums.Role
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    lastActive?: Date | string
+    forceOutcome?: string
+    binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
+    kyc?: KYCCreateNestedOneWithoutUserInput
+    loans?: LoanApplicationCreateNestedManyWithoutUserInput
+    wallet?: WalletCreateNestedOneWithoutUserInput
+    withdrawalRequests?: WithdrawalRequestCreateNestedManyWithoutUserInput
+    contractPositions?: ContractPositionCreateNestedManyWithoutUserInput
+    authSessions?: AuthSessionCreateNestedManyWithoutUserInput
+    spotOrders?: SpotOrderCreateNestedManyWithoutUserInput
+    spotTrades?: SpotTradeCreateNestedManyWithoutUserInput
+    conversions?: ConversionTransactionCreateNestedManyWithoutUserInput
+    miningSubscriptions?: MiningSubscriptionCreateNestedManyWithoutUserInput
+    affiliate?: LegacyAffiliateCreateNestedOneWithoutUserInput
+    rewards?: LegacyRewardCreateNestedManyWithoutUserInput
+    ledgerAccounts?: LedgerAccountCreateNestedManyWithoutUserInput
+    miningRewardAccruals?: MiningRewardAccrualCreateNestedManyWithoutUserInput
+    gate2SpotOrders?: Gate2SpotOrderCreateNestedManyWithoutUserInput
+    gate2BinaryPositions?: Gate2BinaryPositionCreateNestedManyWithoutUserInput
+    gate2Deposits?: Gate2DepositCreateNestedManyWithoutUserInput
+    depositClaims?: DepositClaimCreateNestedManyWithoutUserInput
+    reviewedDepositClaims?: DepositClaimCreateNestedManyWithoutReviewerInput
+    gate2Withdrawals?: Gate2WithdrawalCreateNestedManyWithoutUserInput
+    gate2ConversionQuotes?: Gate2ConversionQuoteCreateNestedManyWithoutUserInput
+    gate2OperationAudits?: Gate2OperationAuditCreateNestedManyWithoutUserInput
+    gate2TransfersFrom?: Gate2InternalTransferCreateNestedManyWithoutFromUserInput
+    gate2TransfersTo?: Gate2InternalTransferCreateNestedManyWithoutToUserInput
+    adminRoleAssignment?: AdminRoleAssignmentCreateNestedOneWithoutUserInput
+    walletIdentity?: WalletIdentityCreateNestedOneWithoutUserInput
+    spotMarginAccounts?: SpotMarginAccountCreateNestedManyWithoutUserInput
+    spotMarginActivities?: SpotMarginActivityCreateNestedManyWithoutUserInput
+    activities?: ActivityCreateNestedManyWithoutUserInput
+    preference?: UserPreferenceCreateNestedOneWithoutUserInput
+    vipState?: UserVipStateCreateNestedOneWithoutUserInput
+    mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
+  }
+
+  export type UserUncheckedCreateWithoutReferralRewardsSentInput = {
+    id?: string
+    userCode: number
+    email?: string | null
+    password?: string | null
+    securityPasswordHash?: string | null
+    displayName?: string | null
+    role?: $Enums.Role
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    lastActive?: Date | string
+    forceOutcome?: string
+    binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
+    kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
+    loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
+    wallet?: WalletUncheckedCreateNestedOneWithoutUserInput
+    withdrawalRequests?: WithdrawalRequestUncheckedCreateNestedManyWithoutUserInput
+    contractPositions?: ContractPositionUncheckedCreateNestedManyWithoutUserInput
+    authSessions?: AuthSessionUncheckedCreateNestedManyWithoutUserInput
+    spotOrders?: SpotOrderUncheckedCreateNestedManyWithoutUserInput
+    spotTrades?: SpotTradeUncheckedCreateNestedManyWithoutUserInput
+    conversions?: ConversionTransactionUncheckedCreateNestedManyWithoutUserInput
+    miningSubscriptions?: MiningSubscriptionUncheckedCreateNestedManyWithoutUserInput
+    affiliate?: LegacyAffiliateUncheckedCreateNestedOneWithoutUserInput
+    rewards?: LegacyRewardUncheckedCreateNestedManyWithoutUserInput
+    ledgerAccounts?: LedgerAccountUncheckedCreateNestedManyWithoutUserInput
+    miningRewardAccruals?: MiningRewardAccrualUncheckedCreateNestedManyWithoutUserInput
+    gate2SpotOrders?: Gate2SpotOrderUncheckedCreateNestedManyWithoutUserInput
+    gate2BinaryPositions?: Gate2BinaryPositionUncheckedCreateNestedManyWithoutUserInput
+    gate2Deposits?: Gate2DepositUncheckedCreateNestedManyWithoutUserInput
+    depositClaims?: DepositClaimUncheckedCreateNestedManyWithoutUserInput
+    reviewedDepositClaims?: DepositClaimUncheckedCreateNestedManyWithoutReviewerInput
+    gate2Withdrawals?: Gate2WithdrawalUncheckedCreateNestedManyWithoutUserInput
+    gate2ConversionQuotes?: Gate2ConversionQuoteUncheckedCreateNestedManyWithoutUserInput
+    gate2OperationAudits?: Gate2OperationAuditUncheckedCreateNestedManyWithoutUserInput
+    gate2TransfersFrom?: Gate2InternalTransferUncheckedCreateNestedManyWithoutFromUserInput
+    gate2TransfersTo?: Gate2InternalTransferUncheckedCreateNestedManyWithoutToUserInput
+    adminRoleAssignment?: AdminRoleAssignmentUncheckedCreateNestedOneWithoutUserInput
+    walletIdentity?: WalletIdentityUncheckedCreateNestedOneWithoutUserInput
+    spotMarginAccounts?: SpotMarginAccountUncheckedCreateNestedManyWithoutUserInput
+    spotMarginActivities?: SpotMarginActivityUncheckedCreateNestedManyWithoutUserInput
+    activities?: ActivityUncheckedCreateNestedManyWithoutUserInput
+    preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
+    vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
+    mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
+  }
+
+  export type UserCreateOrConnectWithoutReferralRewardsSentInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutReferralRewardsSentInput, UserUncheckedCreateWithoutReferralRewardsSentInput>
+  }
+
+  export type UserCreateWithoutReferralRewardsReceivedInput = {
+    id?: string
+    userCode: number
+    email?: string | null
+    password?: string | null
+    securityPasswordHash?: string | null
+    displayName?: string | null
+    role?: $Enums.Role
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    lastActive?: Date | string
+    forceOutcome?: string
+    binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
+    kyc?: KYCCreateNestedOneWithoutUserInput
+    loans?: LoanApplicationCreateNestedManyWithoutUserInput
+    wallet?: WalletCreateNestedOneWithoutUserInput
+    withdrawalRequests?: WithdrawalRequestCreateNestedManyWithoutUserInput
+    contractPositions?: ContractPositionCreateNestedManyWithoutUserInput
+    authSessions?: AuthSessionCreateNestedManyWithoutUserInput
+    spotOrders?: SpotOrderCreateNestedManyWithoutUserInput
+    spotTrades?: SpotTradeCreateNestedManyWithoutUserInput
+    conversions?: ConversionTransactionCreateNestedManyWithoutUserInput
+    miningSubscriptions?: MiningSubscriptionCreateNestedManyWithoutUserInput
+    affiliate?: LegacyAffiliateCreateNestedOneWithoutUserInput
+    rewards?: LegacyRewardCreateNestedManyWithoutUserInput
+    ledgerAccounts?: LedgerAccountCreateNestedManyWithoutUserInput
+    miningRewardAccruals?: MiningRewardAccrualCreateNestedManyWithoutUserInput
+    gate2SpotOrders?: Gate2SpotOrderCreateNestedManyWithoutUserInput
+    gate2BinaryPositions?: Gate2BinaryPositionCreateNestedManyWithoutUserInput
+    gate2Deposits?: Gate2DepositCreateNestedManyWithoutUserInput
+    depositClaims?: DepositClaimCreateNestedManyWithoutUserInput
+    reviewedDepositClaims?: DepositClaimCreateNestedManyWithoutReviewerInput
+    gate2Withdrawals?: Gate2WithdrawalCreateNestedManyWithoutUserInput
+    gate2ConversionQuotes?: Gate2ConversionQuoteCreateNestedManyWithoutUserInput
+    gate2OperationAudits?: Gate2OperationAuditCreateNestedManyWithoutUserInput
+    gate2TransfersFrom?: Gate2InternalTransferCreateNestedManyWithoutFromUserInput
+    gate2TransfersTo?: Gate2InternalTransferCreateNestedManyWithoutToUserInput
+    adminRoleAssignment?: AdminRoleAssignmentCreateNestedOneWithoutUserInput
+    walletIdentity?: WalletIdentityCreateNestedOneWithoutUserInput
+    spotMarginAccounts?: SpotMarginAccountCreateNestedManyWithoutUserInput
+    spotMarginActivities?: SpotMarginActivityCreateNestedManyWithoutUserInput
+    activities?: ActivityCreateNestedManyWithoutUserInput
+    preference?: UserPreferenceCreateNestedOneWithoutUserInput
+    vipState?: UserVipStateCreateNestedOneWithoutUserInput
+    mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+  }
+
+  export type UserUncheckedCreateWithoutReferralRewardsReceivedInput = {
+    id?: string
+    userCode: number
+    email?: string | null
+    password?: string | null
+    securityPasswordHash?: string | null
+    displayName?: string | null
+    role?: $Enums.Role
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    lastActive?: Date | string
+    forceOutcome?: string
+    binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
+    kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
+    loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
+    wallet?: WalletUncheckedCreateNestedOneWithoutUserInput
+    withdrawalRequests?: WithdrawalRequestUncheckedCreateNestedManyWithoutUserInput
+    contractPositions?: ContractPositionUncheckedCreateNestedManyWithoutUserInput
+    authSessions?: AuthSessionUncheckedCreateNestedManyWithoutUserInput
+    spotOrders?: SpotOrderUncheckedCreateNestedManyWithoutUserInput
+    spotTrades?: SpotTradeUncheckedCreateNestedManyWithoutUserInput
+    conversions?: ConversionTransactionUncheckedCreateNestedManyWithoutUserInput
+    miningSubscriptions?: MiningSubscriptionUncheckedCreateNestedManyWithoutUserInput
+    affiliate?: LegacyAffiliateUncheckedCreateNestedOneWithoutUserInput
+    rewards?: LegacyRewardUncheckedCreateNestedManyWithoutUserInput
+    ledgerAccounts?: LedgerAccountUncheckedCreateNestedManyWithoutUserInput
+    miningRewardAccruals?: MiningRewardAccrualUncheckedCreateNestedManyWithoutUserInput
+    gate2SpotOrders?: Gate2SpotOrderUncheckedCreateNestedManyWithoutUserInput
+    gate2BinaryPositions?: Gate2BinaryPositionUncheckedCreateNestedManyWithoutUserInput
+    gate2Deposits?: Gate2DepositUncheckedCreateNestedManyWithoutUserInput
+    depositClaims?: DepositClaimUncheckedCreateNestedManyWithoutUserInput
+    reviewedDepositClaims?: DepositClaimUncheckedCreateNestedManyWithoutReviewerInput
+    gate2Withdrawals?: Gate2WithdrawalUncheckedCreateNestedManyWithoutUserInput
+    gate2ConversionQuotes?: Gate2ConversionQuoteUncheckedCreateNestedManyWithoutUserInput
+    gate2OperationAudits?: Gate2OperationAuditUncheckedCreateNestedManyWithoutUserInput
+    gate2TransfersFrom?: Gate2InternalTransferUncheckedCreateNestedManyWithoutFromUserInput
+    gate2TransfersTo?: Gate2InternalTransferUncheckedCreateNestedManyWithoutToUserInput
+    adminRoleAssignment?: AdminRoleAssignmentUncheckedCreateNestedOneWithoutUserInput
+    walletIdentity?: WalletIdentityUncheckedCreateNestedOneWithoutUserInput
+    spotMarginAccounts?: SpotMarginAccountUncheckedCreateNestedManyWithoutUserInput
+    spotMarginActivities?: SpotMarginActivityUncheckedCreateNestedManyWithoutUserInput
+    activities?: ActivityUncheckedCreateNestedManyWithoutUserInput
+    preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
+    vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
+    mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+  }
+
+  export type UserCreateOrConnectWithoutReferralRewardsReceivedInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutReferralRewardsReceivedInput, UserUncheckedCreateWithoutReferralRewardsReceivedInput>
+  }
+
+  export type LedgerPostingCreateWithoutReferralRewardEventInput = {
+    id?: string
+    asset: string
+    kind: $Enums.LedgerPostingKind
+    amount: string
+    availableDelta: string
+    lockedDelta: string
+    referenceType: string
+    referenceId: string
+    idempotencyKey: string
+    correlationId: string
+    economicGroup?: string | null
+    createdAt?: Date | string
+    metadata?: string | null
+    account: LedgerAccountCreateNestedOneWithoutPostingsInput
+    auditEvents?: LedgerAuditEventCreateNestedManyWithoutPostingInput
+    miningRewardAccrual?: MiningRewardAccrualCreateNestedOneWithoutLedgerPostingInput
+    loanRepayment?: LegacyLoanRepaymentCreateNestedOneWithoutLedgerPostingInput
+  }
+
+  export type LedgerPostingUncheckedCreateWithoutReferralRewardEventInput = {
+    id?: string
+    accountId: string
+    asset: string
+    kind: $Enums.LedgerPostingKind
+    amount: string
+    availableDelta: string
+    lockedDelta: string
+    referenceType: string
+    referenceId: string
+    idempotencyKey: string
+    correlationId: string
+    economicGroup?: string | null
+    createdAt?: Date | string
+    metadata?: string | null
+    auditEvents?: LedgerAuditEventUncheckedCreateNestedManyWithoutPostingInput
+    miningRewardAccrual?: MiningRewardAccrualUncheckedCreateNestedOneWithoutLedgerPostingInput
+    loanRepayment?: LegacyLoanRepaymentUncheckedCreateNestedOneWithoutLedgerPostingInput
+  }
+
+  export type LedgerPostingCreateOrConnectWithoutReferralRewardEventInput = {
+    where: LedgerPostingWhereUniqueInput
+    create: XOR<LedgerPostingCreateWithoutReferralRewardEventInput, LedgerPostingUncheckedCreateWithoutReferralRewardEventInput>
+  }
+
+  export type UserUpsertWithoutReferralRewardsSentInput = {
+    update: XOR<UserUpdateWithoutReferralRewardsSentInput, UserUncheckedUpdateWithoutReferralRewardsSentInput>
+    create: XOR<UserCreateWithoutReferralRewardsSentInput, UserUncheckedCreateWithoutReferralRewardsSentInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutReferralRewardsSentInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutReferralRewardsSentInput, UserUncheckedUpdateWithoutReferralRewardsSentInput>
+  }
+
+  export type UserUpdateWithoutReferralRewardsSentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userCode?: IntFieldUpdateOperationsInput | number
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    securityPasswordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    displayName?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
+    forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
+    kyc?: KYCUpdateOneWithoutUserNestedInput
+    loans?: LoanApplicationUpdateManyWithoutUserNestedInput
+    wallet?: WalletUpdateOneWithoutUserNestedInput
+    withdrawalRequests?: WithdrawalRequestUpdateManyWithoutUserNestedInput
+    contractPositions?: ContractPositionUpdateManyWithoutUserNestedInput
+    authSessions?: AuthSessionUpdateManyWithoutUserNestedInput
+    spotOrders?: SpotOrderUpdateManyWithoutUserNestedInput
+    spotTrades?: SpotTradeUpdateManyWithoutUserNestedInput
+    conversions?: ConversionTransactionUpdateManyWithoutUserNestedInput
+    miningSubscriptions?: MiningSubscriptionUpdateManyWithoutUserNestedInput
+    affiliate?: LegacyAffiliateUpdateOneWithoutUserNestedInput
+    rewards?: LegacyRewardUpdateManyWithoutUserNestedInput
+    ledgerAccounts?: LedgerAccountUpdateManyWithoutUserNestedInput
+    miningRewardAccruals?: MiningRewardAccrualUpdateManyWithoutUserNestedInput
+    gate2SpotOrders?: Gate2SpotOrderUpdateManyWithoutUserNestedInput
+    gate2BinaryPositions?: Gate2BinaryPositionUpdateManyWithoutUserNestedInput
+    gate2Deposits?: Gate2DepositUpdateManyWithoutUserNestedInput
+    depositClaims?: DepositClaimUpdateManyWithoutUserNestedInput
+    reviewedDepositClaims?: DepositClaimUpdateManyWithoutReviewerNestedInput
+    gate2Withdrawals?: Gate2WithdrawalUpdateManyWithoutUserNestedInput
+    gate2ConversionQuotes?: Gate2ConversionQuoteUpdateManyWithoutUserNestedInput
+    gate2OperationAudits?: Gate2OperationAuditUpdateManyWithoutUserNestedInput
+    gate2TransfersFrom?: Gate2InternalTransferUpdateManyWithoutFromUserNestedInput
+    gate2TransfersTo?: Gate2InternalTransferUpdateManyWithoutToUserNestedInput
+    adminRoleAssignment?: AdminRoleAssignmentUpdateOneWithoutUserNestedInput
+    walletIdentity?: WalletIdentityUpdateOneWithoutUserNestedInput
+    spotMarginAccounts?: SpotMarginAccountUpdateManyWithoutUserNestedInput
+    spotMarginActivities?: SpotMarginActivityUpdateManyWithoutUserNestedInput
+    activities?: ActivityUpdateManyWithoutUserNestedInput
+    preference?: UserPreferenceUpdateOneWithoutUserNestedInput
+    vipState?: UserVipStateUpdateOneWithoutUserNestedInput
+    mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutReferralRewardsSentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userCode?: IntFieldUpdateOperationsInput | number
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    securityPasswordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    displayName?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
+    forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
+    kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
+    loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
+    wallet?: WalletUncheckedUpdateOneWithoutUserNestedInput
+    withdrawalRequests?: WithdrawalRequestUncheckedUpdateManyWithoutUserNestedInput
+    contractPositions?: ContractPositionUncheckedUpdateManyWithoutUserNestedInput
+    authSessions?: AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+    spotOrders?: SpotOrderUncheckedUpdateManyWithoutUserNestedInput
+    spotTrades?: SpotTradeUncheckedUpdateManyWithoutUserNestedInput
+    conversions?: ConversionTransactionUncheckedUpdateManyWithoutUserNestedInput
+    miningSubscriptions?: MiningSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+    affiliate?: LegacyAffiliateUncheckedUpdateOneWithoutUserNestedInput
+    rewards?: LegacyRewardUncheckedUpdateManyWithoutUserNestedInput
+    ledgerAccounts?: LedgerAccountUncheckedUpdateManyWithoutUserNestedInput
+    miningRewardAccruals?: MiningRewardAccrualUncheckedUpdateManyWithoutUserNestedInput
+    gate2SpotOrders?: Gate2SpotOrderUncheckedUpdateManyWithoutUserNestedInput
+    gate2BinaryPositions?: Gate2BinaryPositionUncheckedUpdateManyWithoutUserNestedInput
+    gate2Deposits?: Gate2DepositUncheckedUpdateManyWithoutUserNestedInput
+    depositClaims?: DepositClaimUncheckedUpdateManyWithoutUserNestedInput
+    reviewedDepositClaims?: DepositClaimUncheckedUpdateManyWithoutReviewerNestedInput
+    gate2Withdrawals?: Gate2WithdrawalUncheckedUpdateManyWithoutUserNestedInput
+    gate2ConversionQuotes?: Gate2ConversionQuoteUncheckedUpdateManyWithoutUserNestedInput
+    gate2OperationAudits?: Gate2OperationAuditUncheckedUpdateManyWithoutUserNestedInput
+    gate2TransfersFrom?: Gate2InternalTransferUncheckedUpdateManyWithoutFromUserNestedInput
+    gate2TransfersTo?: Gate2InternalTransferUncheckedUpdateManyWithoutToUserNestedInput
+    adminRoleAssignment?: AdminRoleAssignmentUncheckedUpdateOneWithoutUserNestedInput
+    walletIdentity?: WalletIdentityUncheckedUpdateOneWithoutUserNestedInput
+    spotMarginAccounts?: SpotMarginAccountUncheckedUpdateManyWithoutUserNestedInput
+    spotMarginActivities?: SpotMarginActivityUncheckedUpdateManyWithoutUserNestedInput
+    activities?: ActivityUncheckedUpdateManyWithoutUserNestedInput
+    preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
+    vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
+    mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
+  }
+
+  export type UserUpsertWithoutReferralRewardsReceivedInput = {
+    update: XOR<UserUpdateWithoutReferralRewardsReceivedInput, UserUncheckedUpdateWithoutReferralRewardsReceivedInput>
+    create: XOR<UserCreateWithoutReferralRewardsReceivedInput, UserUncheckedCreateWithoutReferralRewardsReceivedInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutReferralRewardsReceivedInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutReferralRewardsReceivedInput, UserUncheckedUpdateWithoutReferralRewardsReceivedInput>
+  }
+
+  export type UserUpdateWithoutReferralRewardsReceivedInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userCode?: IntFieldUpdateOperationsInput | number
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    securityPasswordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    displayName?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
+    forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
+    kyc?: KYCUpdateOneWithoutUserNestedInput
+    loans?: LoanApplicationUpdateManyWithoutUserNestedInput
+    wallet?: WalletUpdateOneWithoutUserNestedInput
+    withdrawalRequests?: WithdrawalRequestUpdateManyWithoutUserNestedInput
+    contractPositions?: ContractPositionUpdateManyWithoutUserNestedInput
+    authSessions?: AuthSessionUpdateManyWithoutUserNestedInput
+    spotOrders?: SpotOrderUpdateManyWithoutUserNestedInput
+    spotTrades?: SpotTradeUpdateManyWithoutUserNestedInput
+    conversions?: ConversionTransactionUpdateManyWithoutUserNestedInput
+    miningSubscriptions?: MiningSubscriptionUpdateManyWithoutUserNestedInput
+    affiliate?: LegacyAffiliateUpdateOneWithoutUserNestedInput
+    rewards?: LegacyRewardUpdateManyWithoutUserNestedInput
+    ledgerAccounts?: LedgerAccountUpdateManyWithoutUserNestedInput
+    miningRewardAccruals?: MiningRewardAccrualUpdateManyWithoutUserNestedInput
+    gate2SpotOrders?: Gate2SpotOrderUpdateManyWithoutUserNestedInput
+    gate2BinaryPositions?: Gate2BinaryPositionUpdateManyWithoutUserNestedInput
+    gate2Deposits?: Gate2DepositUpdateManyWithoutUserNestedInput
+    depositClaims?: DepositClaimUpdateManyWithoutUserNestedInput
+    reviewedDepositClaims?: DepositClaimUpdateManyWithoutReviewerNestedInput
+    gate2Withdrawals?: Gate2WithdrawalUpdateManyWithoutUserNestedInput
+    gate2ConversionQuotes?: Gate2ConversionQuoteUpdateManyWithoutUserNestedInput
+    gate2OperationAudits?: Gate2OperationAuditUpdateManyWithoutUserNestedInput
+    gate2TransfersFrom?: Gate2InternalTransferUpdateManyWithoutFromUserNestedInput
+    gate2TransfersTo?: Gate2InternalTransferUpdateManyWithoutToUserNestedInput
+    adminRoleAssignment?: AdminRoleAssignmentUpdateOneWithoutUserNestedInput
+    walletIdentity?: WalletIdentityUpdateOneWithoutUserNestedInput
+    spotMarginAccounts?: SpotMarginAccountUpdateManyWithoutUserNestedInput
+    spotMarginActivities?: SpotMarginActivityUpdateManyWithoutUserNestedInput
+    activities?: ActivityUpdateManyWithoutUserNestedInput
+    preference?: UserPreferenceUpdateOneWithoutUserNestedInput
+    vipState?: UserVipStateUpdateOneWithoutUserNestedInput
+    mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutReferralRewardsReceivedInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userCode?: IntFieldUpdateOperationsInput | number
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    securityPasswordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    displayName?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
+    forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
+    kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
+    loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
+    wallet?: WalletUncheckedUpdateOneWithoutUserNestedInput
+    withdrawalRequests?: WithdrawalRequestUncheckedUpdateManyWithoutUserNestedInput
+    contractPositions?: ContractPositionUncheckedUpdateManyWithoutUserNestedInput
+    authSessions?: AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+    spotOrders?: SpotOrderUncheckedUpdateManyWithoutUserNestedInput
+    spotTrades?: SpotTradeUncheckedUpdateManyWithoutUserNestedInput
+    conversions?: ConversionTransactionUncheckedUpdateManyWithoutUserNestedInput
+    miningSubscriptions?: MiningSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+    affiliate?: LegacyAffiliateUncheckedUpdateOneWithoutUserNestedInput
+    rewards?: LegacyRewardUncheckedUpdateManyWithoutUserNestedInput
+    ledgerAccounts?: LedgerAccountUncheckedUpdateManyWithoutUserNestedInput
+    miningRewardAccruals?: MiningRewardAccrualUncheckedUpdateManyWithoutUserNestedInput
+    gate2SpotOrders?: Gate2SpotOrderUncheckedUpdateManyWithoutUserNestedInput
+    gate2BinaryPositions?: Gate2BinaryPositionUncheckedUpdateManyWithoutUserNestedInput
+    gate2Deposits?: Gate2DepositUncheckedUpdateManyWithoutUserNestedInput
+    depositClaims?: DepositClaimUncheckedUpdateManyWithoutUserNestedInput
+    reviewedDepositClaims?: DepositClaimUncheckedUpdateManyWithoutReviewerNestedInput
+    gate2Withdrawals?: Gate2WithdrawalUncheckedUpdateManyWithoutUserNestedInput
+    gate2ConversionQuotes?: Gate2ConversionQuoteUncheckedUpdateManyWithoutUserNestedInput
+    gate2OperationAudits?: Gate2OperationAuditUncheckedUpdateManyWithoutUserNestedInput
+    gate2TransfersFrom?: Gate2InternalTransferUncheckedUpdateManyWithoutFromUserNestedInput
+    gate2TransfersTo?: Gate2InternalTransferUncheckedUpdateManyWithoutToUserNestedInput
+    adminRoleAssignment?: AdminRoleAssignmentUncheckedUpdateOneWithoutUserNestedInput
+    walletIdentity?: WalletIdentityUncheckedUpdateOneWithoutUserNestedInput
+    spotMarginAccounts?: SpotMarginAccountUncheckedUpdateManyWithoutUserNestedInput
+    spotMarginActivities?: SpotMarginActivityUncheckedUpdateManyWithoutUserNestedInput
+    activities?: ActivityUncheckedUpdateManyWithoutUserNestedInput
+    preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
+    vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
+    mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+  }
+
+  export type LedgerPostingUpsertWithoutReferralRewardEventInput = {
+    update: XOR<LedgerPostingUpdateWithoutReferralRewardEventInput, LedgerPostingUncheckedUpdateWithoutReferralRewardEventInput>
+    create: XOR<LedgerPostingCreateWithoutReferralRewardEventInput, LedgerPostingUncheckedCreateWithoutReferralRewardEventInput>
+    where?: LedgerPostingWhereInput
+  }
+
+  export type LedgerPostingUpdateToOneWithWhereWithoutReferralRewardEventInput = {
+    where?: LedgerPostingWhereInput
+    data: XOR<LedgerPostingUpdateWithoutReferralRewardEventInput, LedgerPostingUncheckedUpdateWithoutReferralRewardEventInput>
+  }
+
+  export type LedgerPostingUpdateWithoutReferralRewardEventInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    asset?: StringFieldUpdateOperationsInput | string
+    kind?: EnumLedgerPostingKindFieldUpdateOperationsInput | $Enums.LedgerPostingKind
+    amount?: StringFieldUpdateOperationsInput | string
+    availableDelta?: StringFieldUpdateOperationsInput | string
+    lockedDelta?: StringFieldUpdateOperationsInput | string
+    referenceType?: StringFieldUpdateOperationsInput | string
+    referenceId?: StringFieldUpdateOperationsInput | string
+    idempotencyKey?: StringFieldUpdateOperationsInput | string
+    correlationId?: StringFieldUpdateOperationsInput | string
+    economicGroup?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    metadata?: NullableStringFieldUpdateOperationsInput | string | null
+    account?: LedgerAccountUpdateOneRequiredWithoutPostingsNestedInput
+    auditEvents?: LedgerAuditEventUpdateManyWithoutPostingNestedInput
+    miningRewardAccrual?: MiningRewardAccrualUpdateOneWithoutLedgerPostingNestedInput
+    loanRepayment?: LegacyLoanRepaymentUpdateOneWithoutLedgerPostingNestedInput
+  }
+
+  export type LedgerPostingUncheckedUpdateWithoutReferralRewardEventInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    accountId?: StringFieldUpdateOperationsInput | string
+    asset?: StringFieldUpdateOperationsInput | string
+    kind?: EnumLedgerPostingKindFieldUpdateOperationsInput | $Enums.LedgerPostingKind
+    amount?: StringFieldUpdateOperationsInput | string
+    availableDelta?: StringFieldUpdateOperationsInput | string
+    lockedDelta?: StringFieldUpdateOperationsInput | string
+    referenceType?: StringFieldUpdateOperationsInput | string
+    referenceId?: StringFieldUpdateOperationsInput | string
+    idempotencyKey?: StringFieldUpdateOperationsInput | string
+    correlationId?: StringFieldUpdateOperationsInput | string
+    economicGroup?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    metadata?: NullableStringFieldUpdateOperationsInput | string | null
+    auditEvents?: LedgerAuditEventUncheckedUpdateManyWithoutPostingNestedInput
+    miningRewardAccrual?: MiningRewardAccrualUncheckedUpdateOneWithoutLedgerPostingNestedInput
+    loanRepayment?: LegacyLoanRepaymentUncheckedUpdateOneWithoutLedgerPostingNestedInput
   }
 
   export type BinaryOptionPositionCreateWithoutLegacyResultsInput = {
@@ -155268,6 +160131,7 @@ export namespace Prisma {
     account: LedgerAccountCreateNestedOneWithoutPostingsInput
     auditEvents?: LedgerAuditEventCreateNestedManyWithoutPostingInput
     miningRewardAccrual?: MiningRewardAccrualCreateNestedOneWithoutLedgerPostingInput
+    referralRewardEvent?: ReferralRewardEventCreateNestedOneWithoutLedgerPostingInput
   }
 
   export type LedgerPostingUncheckedCreateWithoutLoanRepaymentInput = {
@@ -155287,6 +160151,7 @@ export namespace Prisma {
     metadata?: string | null
     auditEvents?: LedgerAuditEventUncheckedCreateNestedManyWithoutPostingInput
     miningRewardAccrual?: MiningRewardAccrualUncheckedCreateNestedOneWithoutLedgerPostingInput
+    referralRewardEvent?: ReferralRewardEventUncheckedCreateNestedOneWithoutLedgerPostingInput
   }
 
   export type LedgerPostingCreateOrConnectWithoutLoanRepaymentInput = {
@@ -155416,6 +160281,7 @@ export namespace Prisma {
     account?: LedgerAccountUpdateOneRequiredWithoutPostingsNestedInput
     auditEvents?: LedgerAuditEventUpdateManyWithoutPostingNestedInput
     miningRewardAccrual?: MiningRewardAccrualUpdateOneWithoutLedgerPostingNestedInput
+    referralRewardEvent?: ReferralRewardEventUpdateOneWithoutLedgerPostingNestedInput
   }
 
   export type LedgerPostingUncheckedUpdateWithoutLoanRepaymentInput = {
@@ -155435,6 +160301,7 @@ export namespace Prisma {
     metadata?: NullableStringFieldUpdateOperationsInput | string | null
     auditEvents?: LedgerAuditEventUncheckedUpdateManyWithoutPostingNestedInput
     miningRewardAccrual?: MiningRewardAccrualUncheckedUpdateOneWithoutLedgerPostingNestedInput
+    referralRewardEvent?: ReferralRewardEventUncheckedUpdateOneWithoutLedgerPostingNestedInput
   }
 
   export type ActivityUpsertWithoutLoanRepaymentInput = {
@@ -155526,6 +160393,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutRewardsInput = {
@@ -155572,6 +160443,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutRewardsInput = {
@@ -155634,6 +160509,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutRewardsInput = {
@@ -155680,6 +160559,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type SupportTicketReplyCreateWithoutTicketInput = {
@@ -156087,6 +160970,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutActivitiesInput = {
@@ -156133,6 +161020,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutActivitiesInput = {
@@ -156247,6 +161138,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutActivitiesInput = {
@@ -156293,6 +161188,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type MiningRewardAccrualUpsertWithoutActivityInput = {
@@ -157211,6 +162110,10 @@ export namespace Prisma {
     activities?: ActivityCreateNestedManyWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutPreferenceInput = {
@@ -157257,6 +162160,10 @@ export namespace Prisma {
     activities?: ActivityUncheckedCreateNestedManyWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutPreferenceInput = {
@@ -157319,6 +162226,10 @@ export namespace Prisma {
     activities?: ActivityUpdateManyWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPreferenceInput = {
@@ -157365,6 +162276,10 @@ export namespace Prisma {
     activities?: ActivityUncheckedUpdateManyWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type UserVipStateCreateWithoutVipLevelInput = {
@@ -157470,6 +162385,10 @@ export namespace Prisma {
     activities?: ActivityCreateNestedManyWithoutUserInput
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutVipStateInput = {
@@ -157516,6 +162435,10 @@ export namespace Prisma {
     activities?: ActivityUncheckedCreateNestedManyWithoutUserInput
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutVipStateInput = {
@@ -157605,6 +162528,10 @@ export namespace Prisma {
     activities?: ActivityUpdateManyWithoutUserNestedInput
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutVipStateInput = {
@@ -157651,6 +162578,10 @@ export namespace Prisma {
     activities?: ActivityUncheckedUpdateManyWithoutUserNestedInput
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type VipLevelUpsertWithoutUserStatesInput = {
@@ -157730,6 +162661,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutGate2SpotOrdersInput = {
@@ -157776,6 +162711,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutGate2SpotOrdersInput = {
@@ -157912,6 +162851,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutGate2SpotOrdersInput = {
@@ -157958,6 +162901,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type Gate2SpotTradeUpsertWithWhereUniqueWithoutBuyerOrderInput = {
@@ -158334,6 +163281,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutGate2BinaryPositionsInput = {
@@ -158380,6 +163331,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutGate2BinaryPositionsInput = {
@@ -158442,6 +163397,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutGate2BinaryPositionsInput = {
@@ -158488,6 +163447,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type UserCreateWithoutGate2DepositsInput = {
@@ -158534,6 +163497,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutGate2DepositsInput = {
@@ -158580,6 +163547,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutGate2DepositsInput = {
@@ -158642,6 +163613,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutGate2DepositsInput = {
@@ -158688,6 +163663,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type UserCreateWithoutGate2WithdrawalsInput = {
@@ -158734,6 +163713,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutGate2WithdrawalsInput = {
@@ -158780,6 +163763,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutGate2WithdrawalsInput = {
@@ -158842,6 +163829,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutGate2WithdrawalsInput = {
@@ -158888,6 +163879,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type UserCreateWithoutGate2TransfersFromInput = {
@@ -158934,6 +163929,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutGate2TransfersFromInput = {
@@ -158980,6 +163979,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutGate2TransfersFromInput = {
@@ -159031,6 +164034,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutGate2TransfersToInput = {
@@ -159077,6 +164084,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutGate2TransfersToInput = {
@@ -159139,6 +164150,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutGate2TransfersFromInput = {
@@ -159185,6 +164200,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUpsertWithoutGate2TransfersToInput = {
@@ -159242,6 +164261,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutGate2TransfersToInput = {
@@ -159288,6 +164311,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type UserCreateWithoutGate2ConversionQuotesInput = {
@@ -159334,6 +164361,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutGate2ConversionQuotesInput = {
@@ -159380,6 +164411,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutGate2ConversionQuotesInput = {
@@ -159442,6 +164477,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutGate2ConversionQuotesInput = {
@@ -159488,6 +164527,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type UserCreateWithoutGate2OperationAuditsInput = {
@@ -159534,6 +164577,10 @@ export namespace Prisma {
     preference?: UserPreferenceCreateNestedOneWithoutUserInput
     vipState?: UserVipStateCreateNestedOneWithoutUserInput
     mfa?: UserMfaCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventCreateNestedManyWithoutReferredInput
   }
 
   export type UserUncheckedCreateWithoutGate2OperationAuditsInput = {
@@ -159580,6 +164627,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedCreateNestedOneWithoutUserInput
     vipState?: UserVipStateUncheckedCreateNestedOneWithoutUserInput
     mfa?: UserMfaUncheckedCreateNestedOneWithoutUserInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedCreateNestedManyWithoutReferredInput
+    referralRewardsSent?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferrerInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedCreateNestedManyWithoutReferredInput
   }
 
   export type UserCreateOrConnectWithoutGate2OperationAuditsInput = {
@@ -159642,6 +164693,10 @@ export namespace Prisma {
     preference?: UserPreferenceUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUpdateManyWithoutReferredNestedInput
   }
 
   export type UserUncheckedUpdateWithoutGate2OperationAuditsInput = {
@@ -159688,6 +164743,10 @@ export namespace Prisma {
     preference?: UserPreferenceUncheckedUpdateOneWithoutUserNestedInput
     vipState?: UserVipStateUncheckedUpdateOneWithoutUserNestedInput
     mfa?: UserMfaUncheckedUpdateOneWithoutUserNestedInput
+    referralAttributionsSent?: ReferralAttributionEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralAttributionsReceived?: ReferralAttributionEventUncheckedUpdateManyWithoutReferredNestedInput
+    referralRewardsSent?: ReferralRewardEventUncheckedUpdateManyWithoutReferrerNestedInput
+    referralRewardsReceived?: ReferralRewardEventUncheckedUpdateManyWithoutReferredNestedInput
   }
 
   export type BinaryOptionPositionCreateManyUserInput = {
@@ -160088,6 +165147,46 @@ export namespace Prisma {
     asset?: string | null
     amount?: string | null
     details?: string | null
+    createdAt?: Date | string
+  }
+
+  export type ReferralAttributionEventCreateManyReferrerInput = {
+    id: string
+    referredUserId: string
+    referralCode: string
+    status: string
+    attributedAt?: Date | string
+    createdAt?: Date | string
+  }
+
+  export type ReferralAttributionEventCreateManyReferredInput = {
+    id: string
+    referrerUserId: string
+    referralCode: string
+    status: string
+    attributedAt?: Date | string
+    createdAt?: Date | string
+  }
+
+  export type ReferralRewardEventCreateManyReferrerInput = {
+    id: string
+    referredUserId: string
+    ledgerPostingId: string
+    amount: string
+    asset: string
+    status: string
+    rewardedAt: Date | string
+    createdAt?: Date | string
+  }
+
+  export type ReferralRewardEventCreateManyReferredInput = {
+    id: string
+    referrerUserId: string
+    ledgerPostingId: string
+    amount: string
+    asset: string
+    status: string
+    rewardedAt: Date | string
     createdAt?: Date | string
   }
 
@@ -161318,6 +166417,126 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type ReferralAttributionEventUpdateWithoutReferrerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    referralCode?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    attributedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    referred?: UserUpdateOneRequiredWithoutReferralAttributionsReceivedNestedInput
+  }
+
+  export type ReferralAttributionEventUncheckedUpdateWithoutReferrerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    referredUserId?: StringFieldUpdateOperationsInput | string
+    referralCode?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    attributedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ReferralAttributionEventUncheckedUpdateManyWithoutReferrerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    referredUserId?: StringFieldUpdateOperationsInput | string
+    referralCode?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    attributedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ReferralAttributionEventUpdateWithoutReferredInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    referralCode?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    attributedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    referrer?: UserUpdateOneRequiredWithoutReferralAttributionsSentNestedInput
+  }
+
+  export type ReferralAttributionEventUncheckedUpdateWithoutReferredInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    referrerUserId?: StringFieldUpdateOperationsInput | string
+    referralCode?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    attributedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ReferralAttributionEventUncheckedUpdateManyWithoutReferredInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    referrerUserId?: StringFieldUpdateOperationsInput | string
+    referralCode?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    attributedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ReferralRewardEventUpdateWithoutReferrerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    amount?: StringFieldUpdateOperationsInput | string
+    asset?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    rewardedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    referred?: UserUpdateOneRequiredWithoutReferralRewardsReceivedNestedInput
+    ledgerPosting?: LedgerPostingUpdateOneRequiredWithoutReferralRewardEventNestedInput
+  }
+
+  export type ReferralRewardEventUncheckedUpdateWithoutReferrerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    referredUserId?: StringFieldUpdateOperationsInput | string
+    ledgerPostingId?: StringFieldUpdateOperationsInput | string
+    amount?: StringFieldUpdateOperationsInput | string
+    asset?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    rewardedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ReferralRewardEventUncheckedUpdateManyWithoutReferrerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    referredUserId?: StringFieldUpdateOperationsInput | string
+    ledgerPostingId?: StringFieldUpdateOperationsInput | string
+    amount?: StringFieldUpdateOperationsInput | string
+    asset?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    rewardedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ReferralRewardEventUpdateWithoutReferredInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    amount?: StringFieldUpdateOperationsInput | string
+    asset?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    rewardedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    referrer?: UserUpdateOneRequiredWithoutReferralRewardsSentNestedInput
+    ledgerPosting?: LedgerPostingUpdateOneRequiredWithoutReferralRewardEventNestedInput
+  }
+
+  export type ReferralRewardEventUncheckedUpdateWithoutReferredInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    referrerUserId?: StringFieldUpdateOperationsInput | string
+    ledgerPostingId?: StringFieldUpdateOperationsInput | string
+    amount?: StringFieldUpdateOperationsInput | string
+    asset?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    rewardedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ReferralRewardEventUncheckedUpdateManyWithoutReferredInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    referrerUserId?: StringFieldUpdateOperationsInput | string
+    ledgerPostingId?: StringFieldUpdateOperationsInput | string
+    amount?: StringFieldUpdateOperationsInput | string
+    asset?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    rewardedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type LedgerCreateManyWalletInput = {
     id?: string
     type: $Enums.LedgerType
@@ -162529,6 +167748,7 @@ export namespace Prisma {
     auditEvents?: LedgerAuditEventUpdateManyWithoutPostingNestedInput
     miningRewardAccrual?: MiningRewardAccrualUpdateOneWithoutLedgerPostingNestedInput
     loanRepayment?: LegacyLoanRepaymentUpdateOneWithoutLedgerPostingNestedInput
+    referralRewardEvent?: ReferralRewardEventUpdateOneWithoutLedgerPostingNestedInput
   }
 
   export type LedgerPostingUncheckedUpdateWithoutAccountInput = {
@@ -162548,6 +167768,7 @@ export namespace Prisma {
     auditEvents?: LedgerAuditEventUncheckedUpdateManyWithoutPostingNestedInput
     miningRewardAccrual?: MiningRewardAccrualUncheckedUpdateOneWithoutLedgerPostingNestedInput
     loanRepayment?: LegacyLoanRepaymentUncheckedUpdateOneWithoutLedgerPostingNestedInput
+    referralRewardEvent?: ReferralRewardEventUncheckedUpdateOneWithoutLedgerPostingNestedInput
   }
 
   export type LedgerPostingUncheckedUpdateManyWithoutAccountInput = {

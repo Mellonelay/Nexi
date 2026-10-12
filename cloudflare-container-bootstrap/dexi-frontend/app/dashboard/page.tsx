@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import {
   Bitcoin,
   BarChart3,
@@ -13,6 +14,7 @@ import {
 import { useRouter } from "next/navigation";
 import { LazyMotion, domAnimation, m } from "framer-motion";
 import { MarketPair, useMarketData } from "../hooks/useMarketData";
+import { useFavoriteAssets } from "../hooks/useFavoriteAssets";
 import { nexiTransition } from "../lib/nexi-motion";
 import { marketDisplayStatus } from "../lib/market-data";
 import {
@@ -61,6 +63,8 @@ export default function Dashboard() {
   const router = useRouter();
   const { activeInstrument, setActiveInstrument } = useActiveInstrument();
   const { t } = useLocale();
+  const favorites = useFavoriteAssets();
+  const isFavorite = favorites.isFavorite;
   const [activeTab, setActiveTab] = useState<Tab>("Crypto");
   const [query, setQuery] = useState("");
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
@@ -73,10 +77,14 @@ export default function Dashboard() {
     error: marketError,
   } = useMarketData();
 
+  const allMarketPairs = useMemo(
+    () => [...marketPairs, ...metal, ...shares, ...forex],
+    [forex, marketPairs, metal, shares],
+  );
   const activeData = useMemo(() => {
     const source =
       activeTab === "Favorites"
-        ? []
+        ? allMarketPairs.filter((item) => isFavorite(item.symbol))
         : activeTab === "Metals"
           ? metal
           : activeTab === "Forex"
@@ -91,7 +99,7 @@ export default function Dashboard() {
         .toLowerCase()
         .includes(normalizedQuery),
     );
-  }, [activeTab, forex, marketPairs, metal, query, shares]);
+  }, [activeTab, allMarketPairs, isFavorite, forex, marketPairs, metal, query, shares]);
 
   const activePair =
     [...marketPairs, ...metal, ...shares, ...forex].find(
@@ -112,12 +120,12 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="nexi-page-shell relative min-h-[100dvh] overflow-hidden pb-0 text-[var(--nexi-text)] md:pb-8">
+    <div className="nexi-page-shell relative min-h-full overflow-hidden pb-0 text-[var(--nexi-text)] md:pb-8">
       <div
         aria-hidden="true"
         className="nexi-atmosphere pointer-events-none absolute inset-0"
       />
-      <div className="relative mx-auto flex min-h-[calc(100dvh-4.5rem)] max-w-[1510px] flex-col px-3 pb-2 pt-1.5 md:px-7 md:pb-8 md:pt-5">
+      <div className="relative mx-auto flex min-h-full max-w-[1510px] flex-col px-3 pb-2 pt-1.5 md:px-7 md:pb-8 md:pt-5">
         <header className="nexi-dashboard-toolbar -mx-3 mt-2 flex min-h-[54px] items-center justify-end gap-2 px-3 md:-mx-7 md:min-h-[60px] md:px-7">
           <label className="nexi-shell-glass hidden h-11 min-w-[320px] max-w-[430px] flex-1 items-center gap-2 rounded-xl border border-[var(--nexi-border-subtle)] px-4 text-sm text-[var(--nexi-text-muted)] md:flex">
             <Search className="h-4 w-4" aria-hidden="true" />
@@ -193,12 +201,14 @@ export default function Dashboard() {
                 </button>
                 <button
                   type="button"
-                  disabled
-                  aria-label="Favorites unavailable"
-                  title="Saved favorites are not available yet"
-                  className="nexi-active-pair-favorite nexi-icon-button h-11 w-11 shrink-0 cursor-not-allowed rounded-[12px] opacity-50 md:rounded-[14px]"
+                  disabled={favorites.status !== "READY" || favorites.saving}
+                  aria-label={favorites.isFavorite(activePair.symbol) ? "Remove pair from favorites" : "Add pair to favorites"}
+                  aria-pressed={favorites.isFavorite(activePair.symbol)}
+                  title={favorites.status === "READY" ? "Toggle saved favorite" : favorites.status === "LOADING" ? "Loading saved favorites" : favorites.status === "SIGN_IN_REQUIRED" ? "Connect your wallet to load favorites" : "Favorites are unavailable"}
+                  onClick={() => void favorites.toggleFavorite(activePair.symbol)}
+                  className={`nexi-active-pair-favorite nexi-icon-button h-11 w-11 shrink-0 rounded-[12px] md:rounded-[14px] ${favorites.isFavorite(activePair.symbol) ? "text-violet-200" : ""}`}
                 >
-                  <Star className="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" />
+                  <Star className="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" fill={favorites.isFavorite(activePair.symbol) ? "currentColor" : "none"} />
                 </button>
               </div>
             </section>
@@ -272,17 +282,24 @@ export default function Dashboard() {
 
           {marketError && <p role="status" className="mt-3 text-xs text-[var(--nexi-text-muted)]">Prices unavailable. You can still explore all instruments.</p>}
           <div className="mt-1.5 space-y-1.5 md:mt-3 md:space-y-2.5">
-            {loading ? (
-              <div className="nexi-market-row px-4 py-14 text-center text-sm text-[var(--nexi-text-muted)]">
+            {loading || (activeTab === "Favorites" && favorites.status === "LOADING") ? (
+              <div className="nexi-market-row px-4 py-14 text-center text-sm text-[var(--nexi-text-muted)]" role="status">
                 {t("loadingMarketCatalog")}…
               </div>
-            ) : activeTab === "Favorites" ? (
-              <div className="nexi-market-row px-4 py-14 text-center text-sm text-[var(--nexi-text-muted)]">
-                Saved favorites are not available yet.
+            ) : activeTab === "Favorites" && favorites.status === "SIGN_IN_REQUIRED" ? (
+              <div className="nexi-market-row flex flex-col items-center gap-3 px-4 py-14 text-center text-sm text-[var(--nexi-text-muted)]" role="status">
+                <p>Connect your wallet to view and save favorites.</p>
+                <Link href="/login" className="inline-flex min-h-11 items-center rounded-xl border border-violet-300/20 bg-violet-400/10 px-4 text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)]">
+                  Connect wallet
+                </Link>
+              </div>
+            ) : activeTab === "Favorites" && favorites.status === "UNAVAILABLE" ? (
+              <div className="nexi-market-row px-4 py-14 text-center text-sm text-[var(--nexi-text-muted)]" role="status">
+                Favorites could not be loaded. Try again later.
               </div>
             ) : activeData.length === 0 ? (
-              <div className="nexi-market-row px-4 py-14 text-center text-sm text-[var(--nexi-text-muted)]">
-                {t("noInstrumentsAvailable")}
+              <div className="nexi-market-row px-4 py-14 text-center text-sm text-[var(--nexi-text-muted)]" role="status">
+                {activeTab === "Favorites" ? "No saved favorites yet. Save a pair from its header or asset details." : t("noInstrumentsAvailable")}
               </div>
             ) : (
               activeData.map((item) => (

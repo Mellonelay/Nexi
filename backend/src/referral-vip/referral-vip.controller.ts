@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AuthSurfaceGuard } from '../auth/auth-surface.guard';
@@ -19,6 +19,22 @@ export class ReferralVipController {
   @ApiOperation({ summary: 'Return the authenticated user referral identity and referral totals.' })
   referral(@Req() request: AuthenticatedRequest) {
     return this.service.getReferral(request.user.userId);
+  }
+
+  @Get('referral/history')
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface('PUBLIC')
+  @ApiOperation({ summary: 'Return account-scoped referral attribution and ledger-backed reward history.' })
+  referralHistory(
+    @Req() request: AuthenticatedRequest,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+  ) {
+    return this.service.getReferralHistory(
+      request.user.userId,
+      limit === undefined ? 50 : Number(limit),
+      offset === undefined ? 0 : Number(offset),
+    );
   }
 
   @Post('referral/claim')

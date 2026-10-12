@@ -51,6 +51,27 @@ body {
 }
 
 @layer components {
+  .nexi-dashboard-shell {
+    height: min(100dvh, var(--nexi-visible-viewport-height, 100dvh));
+  }
+
+  .nexi-safe-area-header {
+    padding-inline: max(12px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-right));
+    padding-block: max(4px, env(safe-area-inset-top)) 4px;
+  }
+
+  @media (min-width: 768px) {
+    .nexi-safe-area-header {
+      padding-inline: max(24px, env(safe-area-inset-left)) max(24px, env(safe-area-inset-right));
+      padding-block: max(8px, env(safe-area-inset-top)) 8px;
+    }
+  }
+
+  .nexi-safe-area-page {
+    padding-block: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-bottom));
+    padding-inline: max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right));
+  }
+
   .nexi-page-shell {
     background:
       radial-gradient(circle at 82% -4%, rgba(115, 83, 221, 0.16), transparent 26rem),
@@ -326,7 +347,7 @@ body {
 
 
 /* Shared selected-tab refraction. State fills and focus rings remain component-owned. */
-:where(button[role="tab"][aria-selected="true"], button.nexi-tab-control[aria-pressed="true"]) {
+:where(button[role="tab"][aria-selected="true"], button[aria-pressed="true"]) {
   background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0) 72%);
   -webkit-backdrop-filter: blur(14px) saturate(var(--nexi-glass-saturation-panel));
   backdrop-filter: blur(14px) saturate(var(--nexi-glass-saturation-panel));
@@ -340,7 +361,7 @@ body {
 }
 
 @media (prefers-reduced-transparency: reduce) {
-  :where(button[role="tab"][aria-selected="true"], button.nexi-tab-control[aria-pressed="true"]) {
+  :where(button[role="tab"][aria-selected="true"], button[aria-pressed="true"]) {
     background-image: none;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
@@ -354,7 +375,7 @@ body {
 }
 
 @media (prefers-contrast: more) {
-  :where(button[role="tab"][aria-selected="true"], button.nexi-tab-control[aria-pressed="true"]) {
+  :where(button[role="tab"][aria-selected="true"], button[aria-pressed="true"]) {
     outline-color: rgba(185, 150, 255, 0.82);
   }
 
@@ -599,6 +620,14 @@ body {
   }
 }
 
+@media (forced-colors: active) {
+  :is(.nexi-panel, .nexi-raised-panel, .nexi-station-card, .nexi-topbar, .nexi-station-header, .nexi-bottom-nav) {
+    color: CanvasText; border: 1px solid CanvasText; background: Canvas; box-shadow: none;
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+  }
+  :where(button, a, input, select, textarea):focus-visible { outline: 2px solid Highlight; outline-offset: 2px; }
+}
+
 @media (prefers-contrast: more) {
   :is(.card-dark, .nexi-shell-glass, .nexi-raised-panel, .nexi-panel,
       .nexi-panel-strong, .nexi-station-card, .nexi-tabs-shell, .nexi-promo,
@@ -646,7 +675,10 @@ body {
   .nexi-trading-page .nexi-margin-heading { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   .nexi-trading-page .nexi-margin-chart-frame { margin-top: 0; }
   .nexi-trading-page .nexi-trading-intervals { padding-block: 4px; }
-  .nexi-trading-page .nexi-trading-intervals button { min-height: 32px; min-width: 44px; }
+  .nexi-trading-page .nexi-trading-intervals button { min-height: 44px; min-width: 44px; }
+  .nexi-trading-page .nexi-options-chart-frame { height: 220px !important; }
+  .nexi-trading-page .nexi-options-chart-frame .nexi-trading-chart,
+  .nexi-trading-page .nexi-options-chart-frame .nexi-trading-plot-shell { height: 220px; min-height: 220px; }
   .nexi-trading-page .nexi-chart-rail { padding-block: 4px; }
   .nexi-trading-page .nexi-trading-chart { height: 220px; min-height: 0; }
   .nexi-trading-page .nexi-trading-plot-shell { height: 220px; min-height: 220px; }
