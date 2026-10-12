@@ -1200,6 +1200,32 @@ describe("D1FinancialCommandGateway", () => {
     expect(() => (gateway as any).validateDepositClaimAmount("not-a-number", "10", "100")).toThrow("Deposit amount is invalid");
   });
 
+  it("guards KYC resubmission atomically and only emits after the row changes", async () => {
+    const bridge = createBridge({
+      batch: jest.fn().mockResolvedValue({
+        results: [{ meta: { changes: 0 } }, { meta: { changes: 0 } }],
+      }),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+
+    await expect(gateway.submitKyc({
+      userId: "user-1",
+      firstName: "Ada",
+      lastName: "Lovelace",
+      dob: "1815-12-10",
+      country: "GB",
+      documentType: "PASSPORT",
+      documentUrl: "",
+      idFront: "kyc-evidence/user-1/front",
+      idBack: null,
+    })).rejects.toThrow("D1 KYC submission did not apply exactly once");
+
+    const statements = (bridge.batch as jest.Mock).mock.calls[0][0] as D1BridgeBatchStatement[];
+    expect(statements[0].sql).toContain(`WHERE "status" NOT IN ('APPROVED','PENDING')`);
+    expect(statements[1].sql).toContain("SELECT");
+    expect(statements[1].sql).toContain("changes()=1");
+  });
+
   it("keeps private KYC object keys and legacy document URLs out of Admin list responses", async () => {
     const bridge = createBridge();
     const gateway = new D1FinancialCommandGateway(bridge);

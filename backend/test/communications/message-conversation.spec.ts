@@ -34,6 +34,26 @@ describe('persistent message conversation D1 command boundary', () => {
       'MESSAGE_MODERATION_RESOLVED',
     ]));
   });
+  it('preserves the existing moderation resolution when an update omits one', async () => {
+    const bridge: any = {
+      isEnabled: () => true,
+      batch: jest.fn(async () => ({ results: [{ meta: { changes: 1 } }, { meta: { changes: 1 } }] })),
+    };
+    const gateway = new D1CommunicationsCommandGateway(bridge);
+
+    await gateway.resolveMessageModeration({
+      id: 'case-1',
+      conversationId: 'conversation:user-1:user-2',
+      adminId: 'admin-1',
+      status: 'OPEN',
+      idempotencyKey: 'review-2',
+    });
+
+    const [update] = bridge.batch.mock.calls[0][0];
+    expect(update.sql).toContain('COALESCE(?, "resolution")');
+    expect(update.params).toEqual(['OPEN', null, 'admin-1', 'case-1']);
+  });
+
   beforeEach(() => { process.env.D1_RUNTIME_ENABLED = 'true'; });
   afterEach(() => {
     if (previous === undefined) delete process.env.D1_RUNTIME_ENABLED;
