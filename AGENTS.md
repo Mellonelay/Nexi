@@ -146,7 +146,7 @@ Rules:
 
 On a fresh NEXI Work session, after continuity loss, or when the relevant durable frontier may have changed, read the live VM `NEXI_CURRENT_STATE.md` and relevant `NEXI_PRODUCTION_COMPLETION_LEDGER.md` rows and cache their identity/freshness. Reuse that proof while unchanged; do not reread the full files before every bounded action. ChatGPT Project uploads, chat exports, handovers, and historical receipts are provenance only when they conflict with current VM/GitHub/Cloudflare evidence.
 
-The active queue is Section 0 of `NEXI_PRODUCTION_COMPLETION_LEDGER.md`. Select an open row, preserve every `PROVEN + UNCHANGED` dependency, execute the smallest dependency-closed repair/proof, then update the row before moving to unrelated work. A session may not claim completion while its selected row lacks current proof or while durable truth changed without reconciling `NEXI_CURRENT_STATE.md` and the ledger.
+The current owner directive selects the active work. The completion ledger is historical evidence and a reconciliation record; a stale queue row, receipt, phase capsule, or checkpoint cannot block an explicit current owner instruction. Preserve proven completed work and update current-state records proportionally after material source/runtime changes. Never claim verification that has not been performed.
 
 Owner manual testing is a final acceptance gate, never a substitute for automatable verification. Use controlled test wallet/Admin identities when safe; otherwise record an explicit owner deferral. Cloudflare Worker + Container remains the only backend runtime authority, and Public/Admin Worker-0 builds/runtimes remain restricted to their canonical `/srv/nexi/public` and `/srv/nexi/admin` seams.
 
@@ -154,7 +154,7 @@ For market work, do not optimize for a cosmetic `LIVE` count. Open-market assets
 
 ## Durable phase checkpoint — 2026-10-02
 
-For NEXI engineering work, use the existing `worker0-skill-checkpoint` at each real phase boundary and before completion. Its project-owned gate requires the preceding phase's saved proof plus explicit reconciliation of `NEXI_CURRENT_STATE.md` and `NEXI_PRODUCTION_COMPLETION_LEDGER.md`. Follow `docs/operations/NEXI_PHASE_RECONCILIATION.md`; recover `workCycle` from the current capsule before acting. The routing helper is advisory: using-agent-skills and the parent choose the actual causal method; a keyword-selected unrelated skill is not invocation proof. Preserve completed product evidence and separate local/GitHub source from deployed source. Do not bypass a blocked checkpoint or create a second completion ledger.
+Do not make a durable phase checkpoint, stale workCycle capsule, or phase-reconciliation receipt a prerequisite for executing a current owner directive. Use live repository and runtime evidence to preserve completed work; update durable state proportionally after material changes. Do not create a second completion ledger.
 
 ## CodeScene MCP mandatory maintainability safeguards
 
