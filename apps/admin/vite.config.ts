@@ -8,6 +8,9 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { sentryTanstackStart } from "@sentry/tanstackstart-react/vite";
 
 const adminOutputDir = process.env.NEXI_ADMIN_OUTPUT_DIR ?? "./.output";
+const adminBuildDir = process.env.NEXI_ADMIN_OUTPUT_DIR
+  ? `${adminOutputDir}/.nitro`
+  : adminOutputDir;
 
 export default defineConfig({
   plugins: [
@@ -28,7 +31,11 @@ export default defineConfig({
   ],
   nitro: {
     preset: "node-server",
-    output: { dir: adminOutputDir },
+    output: {
+      dir: adminBuildDir,
+      serverDir: `${adminOutputDir}/server`,
+      publicDir: `${adminOutputDir}/public`,
+    },
   },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
