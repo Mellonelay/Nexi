@@ -1,5 +1,8 @@
 # NEXI Final Product Program Charter
 
+> **Historical specification / superseded as live authority (2026-10-14).** This document preserves earlier requirements and rationale, not current deployment or completion status. Apply current owner decisions, current GitHub `main`, and [documentation authority](README.md) before using any older rule or phase gate. Preserve still-applicable financial/security invariants.
+
+
 > **Current owner authority override — 2026-08-19:** Active trading scope is
 > **Spot/Margin + Options**. Spot and isolated Margin share one public page;
 > Margin is limited to LONG/SHORT at 2x, 3x, and 5x. Options is the separate

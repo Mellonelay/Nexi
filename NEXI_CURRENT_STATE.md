@@ -1,315 +1,34 @@
-# NEXI Current State
+# NEXI Current State — Compact Authority Capsule
 
-**As of:** 2026-10-06 (Myanmar time)
-**Repository:** `Mellonelay/Nexi`
-**Durable source authority:** GitHub `main`; current production host/CORS/SIWE values below were read directly from the Cloudflare API on 2026-09-26. The Public domain source alignment is recorded in this revision; discover the exact current `main` SHA before consequential work.
-**Current deployed Public implementation frontier:** `5aafc0ff74cd715a77de3bc22d96603dbc2c4943`, active in the real `/srv/nexi/public/current` directory. The verified pre-build source implementation frontier is `9fa600243cf7e57bbb60b22413debc1c64f6c7c2` (Public `2d41d40...`, Binary `ff80eb3...`, Worker `9fa6002...`); it is not deployed. This documentation reconciliation may make GitHub `main` newer without changing that implementation frontier. P04 repair and 53-icon/geometry proof are retained within their original scope.
+**Reconciled:** 2026-10-14 (documentation-only recovery).
+**Source snapshot observed:** `Mellonelay/Nexi`, `main = origin/main = 7fbde5ca82287902cb351546ccae1b632f1aae44` before this documentation change. **Do not pin future work to this SHA.** Inspect HEAD live.
+**Provenance:** full preceding state narrative is recoverable from Git at `git show 7fbde5c:NEXI_CURRENT_STATE.md`. Its dated receipts are not current runtime state.
 
-NEXI is in a **finishing / targeted-repair** phase. It is not in a rebuild or broad rediscovery phase.
+## Architecture that remains in force
 
-## October 10 owner supersession — backend runtime acceptance continuity
+- ChatGPT Work controller → RDC Worker-0 operator; GitHub main owns durable source; Cloudflare Worker + Container owns backend runtime.
+- Public Next.js and Admin React/TanStack consume the same NestJS domain authority through Cloudflare edge routing.
+- D1 is durable application/financial truth; Ledger is accounting truth; EventOutbox publication boundary. Valkey is realtime/cache only. Queues deliver; Workflows orchestrate. R2 is used for approved private domain objects.
+- Canonical Public source: `cloudflare-container-bootstrap/dexi-frontend`; canonical build/runtime: `/srv/nexi/public/current`. Admin source: `apps/admin`, runtime: `/srv/nexi/admin/current`. Do not create alternative Public build trees.
 
-The current backend Work-session's live transaction receipts and the actual Cloudflare/D1/Ledger/EventOutbox observations—not the historical October 6–8 completion ledger or the old Worker-0 checkpoint—control the next backend acceptance step. The ledger remains the final evidence record, not a preflight execution queue for this backend pass. Earlier entries below retain their dated provenance and may not be treated as fresh runtime state; preserve all existing proof and uncommitted documentation edits. Final ledger reconciliation must be bounded to genuinely changed/proven rows after the runtime pass, without reopening completed work.
+## Owner-approved product and UI changes to preserve
 
-On October 10, direct Worker-0 Git read found HEAD and `origin/main` at `a71ce46731f8ecee6b377797d33fef341f60f598`, following financial SQL/Mining replay repair `57527181c81884546b944b1514616d2dcb290313` and financial-binding follow-up `a71ce46`. The separate backend Work-session report states Worker version `784d96cf-2362-4ed5-a184-62efca68a020` serves 100%, matching Container image is healthy, HTTP `/health` = 200, 36 focused D1 regression tests and two GitHub checks passed. **This document has not independently verified that Worker/Container deployment identity, runtime `SENTRY_RELEASE`, or any end-to-end financial lifecycle; do not upgrade these to independently proven results.**
+- Wallet: Funding (`MAIN`), Spot, Margin, Options (`BINARY`), Finance; same-user cross-wallet transfers plus another-NEXI-user transfers, account-scoped Ledger/Activity and USDT-equivalent Overview without double-counting.
+- Margin/Options user-facing transferable asset: USDT only; preserve legitimate Margin base-asset debts and loan obligations. Each Wallet account has a compact Available/Locked/Total display.
+- Markets: 53 catalog identities (17 crypto, 20 shares, 9 forex, 7 metals), distinct from wallet-supported deposit assets. Trade charts retain genuine provider price data. Binary controlled WIN/LOSS may not alter real market feeds.
+- SIWE wallet-only authentication; Public browser campaign uses Polypane and Chrome DevTools with authorized Coinbase Wallet. Old MetaMask test-session assumptions are stale.
+- Public Quiet Refraction, responsive/mobile wallet-browser geometry and final authenticated browser acceptance are distinct from source tests.
+- Admin is an audited, permissioned control plane; financial controls act through NestJS/D1, never independent authority.
+- Sentry SDK telemetry is the intended observability path. **Cloudflare Observability stays disabled.** Backend/Public/Admin artifact SHA, embedded runtime releases and Sentry release lifecycle require separate direct proof.
 
-The reported immediate acceptance gaps are: (1) an unresolved Margin borrow balance after failed position opening—read-only reconcile exact records before any further Margin mutation; (2) Convert rate/config missing; (3) Loan approval fetch/socket error; (4) Withdrawal post-deploy settlement reconciliation; (5) Mining accrual/replay when legitimately due; (6) Spot execution/fills beyond create/cancel; and (7) asynchronous delivery/recovery and relevant Binary/auth/realtime regression proof. These are **seven lifecycle acceptance areas, not seven failing automated tests**. Individual successful TEST_ONLY steps must be reused; other steps remain failed, unexecuted, or evidence missing as applicable. No fabrication of financial records/rates/time or broad production-write permission arises from this documentation.
+## Current completion/evidence frontier
 
-**Next action for the backend Work parent:** recover current October 9–10 TEST_ONLY receipts/handles, classify individual steps `PROVEN | FAILED | NOT_EXECUTED | EVIDENCE_MISSING`, reconcile Margin accounting first, and continue targeted runtime causal repairs and proof. Do not first scan/restart the historical ledger. No change in this section constitutes backend acceptance or owner final acceptance.
+Source files and paths above were inspected for the documentation migration at snapshot `7fbde5c`; Graphify's promoted index matched that SHA (7,058 nodes, 17,236 edges) and was used for mapping only. Previous implementation, focused tests and Sentry completion belong to their individual session receipts. **This documentation pass has not independently asserted their current deployment or authenticated browser acceptance.**
 
-## Authority and architecture
+For current runtime, verify the exact Worker/Container version and D1 bindings on Cloudflare, active Public/Admin build IDs on Worker-0, and Sentry ingestion/release directly. Keep `IMPLEMENTED`, `TESTED`, `DEPLOYED`, `RUNTIME_VERIFIED` and `OWNER_ACCEPTED` separate.
 
-- ChatGPT is the parent/controller; RDC Worker 0 is the operator/evidence plane.
-- Cloudflare Worker -> Cloudflare Container -> NestJS is the only backend runtime/acceptance authority.
-- Worker 0 must not host or substitute a VM-local NestJS backend for production proof.
-- NestJS owns business/domain logic.
-- D1 owns durable application and financial relational truth.
-- Ledger owns accounting truth; EventOutbox is the durable publication boundary.
-- Aiven Valkey owns realtime/cache/Streams/ephemeral coordination only.
-- Queues own delivery/retry; Workflows own orchestration.
-- Public and Admin consume/control the same canonical backend authority.
-- `PROVEN + UNCHANGED = REUSE`; do not reopen completed work without dependency drift or contradictory evidence.
-## Current live source and deployment split
+## Active navigation and execution
 
-Public/backend reachability and source split reverified on 2026-10-06; Admin/backend release identities below retain dated provenance:
-- The pre-build source implementation batch is integrated through `9fa600243cf7e57bbb60b22413debc1c64f6c7c2`; post-push verification confirmed GitHub `main` contains Public `2d41d40...`, Binary `ff80eb3...`, Worker `9fa6002...` and the state reconciliation commit. Discover live `HEAD`/`origin/main` before consequential work rather than treating this sentence as a permanent SHA lock.
-- Public RELEASE_SHA remains `5aafc0ff74cd715a77de3bc22d96603dbc2c4943`; `/srv/nexi/public/current` is a real directory, not a release symlink. Public service is active; production `/dashboard` returned HTTP 200.
-- Product source is committed in three reviewed pre-build commits: Public `2d41d40...`, Binary `ff80eb3...`, Worker `9fa6002...`. Only state/ledger/capability-routing reconciliation remains uncommitted at this checkpoint. No product build/deploy was performed.
-- Wallet page/test and the 53 asset icon files are unchanged between deployed Public and current HEAD; retain their scoped prior proof. Broader Wallet/Quotes E2E remains open.
-- Public source/runtime framework: Next.js `16.3.5` + React `19.3.0`.
-- Public standalone packaging now includes the root server entry plus traced dependencies, `.next/static`, and `public` beside the server. The deployed `/dashboard` returned HTTP 200 and all 45 referenced static assets returned HTTP 200 with expected MIME types during the 2026-09-27 deployment verification.
-- Admin: `/srv/nexi/admin/current -> /srv/nexi/admin/releases/ed26973f-prod-node`.
-- Admin `NEXI_RELEASE_SHA = ed26973fe0556a6d75943b3e296be0a899449d6d`; service active.
-- No Admin source files changed between `ed26973...` and the dated `12cf799...` main checkpoint; the older Admin release marker does not currently imply an Admin source mismatch.
-- Cloudflare backend deployment remains the `ed26973f` unified production promotion: deployment `15c716b8-8ae5-45ec-a9f2-b2d2f6f0c89d`, Worker version `bdadd96f-3696-474b-955d-de490a9a466d`.
-- Current GitHub `main` contains later backend Sentry/ENOENT source changes after `ed26973...`; they are source-integrated but are not claimed deployed by this document.
-- Current Cloudflare backend reachability/readiness proof (2026-10-06; deployed source equivalence not established): `/health` = 200 and `/ops/ready` = 200 with `database=true`, `redis=true`.
+Start at [docs/README.md](docs/README.md), then the owning [Backend](docs/backend/README.md), [Frontend](docs/frontend/README.md), [Admin](docs/admin/README.md), [cross-surface map](docs/architecture/CROSS_SURFACE_FEATURE_MAP.md) or [Sentry operations](docs/operations/NEXI_SENTRY_OBSERVABILITY.md). `AGENTS.md` remains binding repo law, subject to current owner decisions. **The historical production-completion ledger and dated `tasks/` plans are not active gating authorities.**
 
-This is intentionally a split identity. Do not describe the whole product as one current unified deployment SHA when Public, Admin, and backend release identities differ.
-## Current external reachability and canonical-host contract
-
-Owner decision on 2026-09-26: Public frontend uses `https://www.nexitrading.app`; backend API uses `https://api.nexitrading.app`; Admin uses `https://admin.nexitrading.app`. Do not redirect Public traffic back to `app` or apex.
-
-Latest origin supersession: on 2026-10-01 Worker-0 IP and Cloudflare `www`/`admin` A-record targets were verified at `34.143.137.221`. The dated 2026-09-26 snapshot below is retained as historical context only.
-
-Live Cloudflare API read on 2026-09-26 verified:
-- Proxied A records for `www` and `admin` point to `35.187.234.62`.
-- Proxied originless A records for apex and legacy `app` point to `192.0.2.0`.
-- An enabled zone redirect rule returns HTTP 308 from apex and legacy `app` to `https://www.nexitrading.app`, preserving path and query.
-- `api.nexitrading.app` is a Cloudflare Worker Custom Domain attached to service `nexi-production`, environment `production`.
-- Live Worker plain-text vars are `CORS_ORIGINS=https://www.nexitrading.app,https://admin.nexitrading.app`, `WALLET_AUTH_DOMAIN=www.nexitrading.app`, and `WALLET_AUTH_URI=https://www.nexitrading.app`.
-
-Fresh preserved-Chrome Requestly passive capture on 2026-10-01: market prices 200; auth refresh 201; authenticated auth/me 304; Socket.IO polling 200 and WebSocket upgrade 101. Current browser evidence does not reproduce the historical CORS/401/503 failures. This is bounded Spot transport/session proof, not market-wide or real-device acceptance.
-
-
-## Public frontend correction and preserved proof
-
-The Public shell wallet-boundary defect was repaired at `04c8f5f...` and remains unchanged in the freshly verified `6f74ce6...` Public source:
-- non-protected Public market/product surfaces remain accessible without a NEXI wallet session;
-- protected wallet/account/financial actions remain identity-gated;
-- the global dashboard shell must not be re-wrapped in a wallet gate.
-
-The current Public release also fixes standalone asset packaging: production HTML referenced missing JavaScript, CSS, fonts, and public assets because the standalone release omitted `.next/static` and `public`. The source build now copies both beside the standalone server and preserves the server entry/traced dependencies. The deployed release returned HTTP 200 for `/dashboard` and all 45 referenced static assets during the 2026-09-27 verification.
-
-2026-10-04: all 53 production asset icons loaded and passed rendered identity/quality inspection in existing Polypane5859 at 320x568 (17 Crypto, 7 Metals, 9 Forex, 20 Stocks). Corrected Ethereum Classic/Solana captures were separately inspected. Receipt: /home/mellonelay1999/nexi-phase-receipts/p01-rendered-20261004/rendered-identity-receipt.json. This closes icon proof only; Quotes interaction/data/favorites E2E and owner acceptance remain open.
-## Browser / rendered acceptance frontier
-
-Production browser acceptance must target the **deployed Public generation** at `https://www.nexitrading.app` while it exercises the real Cloudflare backend at `https://api.nexitrading.app`.
-
-Browser ownership:
-- PRIMARY frontend/product/reference acceptance: Polypane FIRST via explicit DevTools CLI/MCP5859. Never Playwright for Polypane. Chrome5858 only for distinct MetaMask/session proof.
-- Requestly supplies passive HTTP evidence; React DevTools supplies component/state diagnostics where needed.
-- BrowserStack supports distinct real-device/cross-browser claims. Authentication is proved per browser/pane.
-
-Historical unchanged geometry proof (Spot at `142a4aa`, reused through `be50529`; Margin repair introduced at `a924e0d` and unchanged through `be50529`):
-- Closed drawer is display:none with zero geometry across the tested mobile/landscape/tablet/desktop probes; corrected real pointer close succeeds.
-- Chart container and rendered lightweight-chart dimensions track responsive transitions within 1 CSS px after settling.
-- Bottom dock remains present on mobile, desktop sidebar hidden, and tested Spot page overflow is zero.
-- Source-delivered CSS at `142a4aa` (no injected prototype styles): tested Spot 320/360/390/430 widths, short-height, 480/568/844 landscape, tablet and desktop-class rendered states; chart/canvas dimensions agree within 1 CSS px, pair/price do not overlap, and market panels switch exclusively below the desktop composition breakpoint. Observed desktop CSS widths reflect the preserved calibration, not nominal device pixels.
-- Fresh boundary 2026-10-01T08:43:29.399Z: prices/klines and Socket.IO polling returned 200; no page errors were captured during these checks. This is bounded changed-behavior proof, not product-wide acceptance.
-- Margin boundary 2026-10-01T09:11:54.818Z: new build delivered; refresh 201, me 200, prices/klines/polling 200, no console errors. Mobile coarse-pointer probes passed; plot reachable with 16px dock clearance via the shared MAIN scroll owner. Canceled navigation/third-party telemetry requests were retained separately from application failures.
-- Owner re-authenticated the existing wallet; real app refresh/me requests prove a valid current session. No wallet setup or SIWE re-investigation is required absent fresh contradictory evidence.
-
-## Public product/reference convergence frontier — 2026-10-03
-
-The responsive/mobile geometry phase remains **COMPLETED**. The next Public frontend work is a bounded product/reference-convergence and full E2E pass, not another geometry redesign.
-
-Current demonstrated gaps:
-- **Dashboard / asset identity:** 2026-10-04: all 53 production asset icons loaded and passed rendered identity/quality inspection in existing Polypane5859 at 320x568 (17 Crypto, 7 Metals, 9 Forex, 20 Stocks). Corrected Ethereum Classic/Solana captures were separately inspected. Receipt: /home/mellonelay1999/nexi-phase-receipts/p01-rendered-20261004/rendered-identity-receipt.json. This closes icon proof only; Quotes interaction/data/favorites E2E and owner acceptance remain open.
-- **Spot/Margin chart presentation:** current source candidate removes duplicated pair/interval labels within the chart and places the Spot six-control rail below the plotted region. OHLC/MA/EMA/RSI/MACD values, overlay calculations/series, resize behavior and existing chart dimensions remain. Source checks do not establish rendered convergence; P-02 and full trading E2E remain open.
-- **Options/Binary:** the 2026-10-04 production baseline remains `/binary/config = {durations:[],configurations:[]}` while remote D1 contains 85 enabled rows across five durations. The owner has now approved `binance-spot` as the crypto Binary settlement authority, and source commit `ff80eb3...` enforces that provider for entry/settlement while keeping non-crypto disabled and D1/Admin authoritative for enabled durations, payout and stake ranges. The 2026-10-04 no-approved-provider finding is historical. Current blockers are Cloudflare backend promotion/equivalence, live config/quote/settlement proof and full Binary E2E; do not hardcode frontend durations or payouts. Historical receipt: /home/mellonelay1999/nexi-phase-receipts/p03-binary-configuration-read-20261004.json.
-- **Wallet:** shared-header identity and the scoped successful-empty/activity-isolation repair remain proven unchanged. Real nonzero-balance isolation and broader Wallet acceptance remain open; do not reopen the completed repair.
-
-The accepted September reference family remains Quotes Hub, Spot/Margin, Options/Binary, wallet chooser, and Wallet, adapted to current NEXI runtime truth. Old Sep-12/13 V2/V3 authority, app.nexitrading.app, VM-local backend acceptance, consumer STALE/provider-health wording, BrowserStack-first authenticated acceptance, and the Sep-15 narrow completion model remain superseded.
-
-Owner-reported 2026-10-03 state: Polypane has now been wallet signed-in. Treat that as current owner state, while feature acceptance that depends on NEXI application authentication still uses the real /auth/me result plus rendered signed-in state when needed. Do not repeat wallet/profile/SIWE setup absent contradictory evidence.
-
-## Open completion gates
-
-- Public responsive/mobile geometry is **COMPLETED**, introduced at `be50529b789786fd83d808178f386b015f77b1f3` and reused unchanged through the verified `6f74ce6...` release within the defined geometry scope. The final shared AppHeader repair keeps the normal mobile header at 56px including true 320×568, preserves the full wordmark from 360px upward, and exposes the mobile menu as `NEXI, Open application menu`. Existing Spot/Margin chart/drawer geometry proof remains reused unchanged.
-- Fresh authenticated deployed proof covers Dashboard/Quotes, Asset Detail, Options and Wallet geometry plus shared header/drawer behavior. Tested 320/360/390/430 widths, short-height 360×640, landscape 568×320, tablet 768×1024, 200% text stress, safe-area propagation and reduced-height search/keyboard behavior show zero tested document/main horizontal overflow and bounded controls. BrowserStack real-device/cross-browser claims remain separate.
-- Targeted real-device/cross-browser acceptance and WalletConnect production-visible UX remain separate product-acceptance work; they are not asserted by the completed geometry phase.
-- Only the broad NON-CRYPTO stale/session-hours investigation is deferred. Crypto realtime, all 53 assets, chart intervals/continuity and Public/backend/Admin dependency-ready product paths remain in scope; the bounded Public responsive/mobile geometry phase is closed unless contradictory evidence appears.
-- Current-main backend changes after `ed26973...` are not claimed deployed.
-- Full Sentry release-lifecycle/source-map/runtime proof remains incomplete.
-- Other Public/Admin/financial/async/realtime rows remain controlled by the completion ledger. No financial or privileged Admin action is authorized by frontend acceptance.
-- Controlled Admin identity acceptance and owner final acceptance remain open.
-
-## Documentation and continuity
-
-- `NEXI_PRODUCTION_COMPLETION_LEDGER.md` is the sole writable completion controller.
-- `NEXI_CURRENT_STATE.md` is current durable truth, not a chronological diary.
-- Root `AGENTS.md` owns NEXI execution/governance instructions.
-- `docs/operations/NEXI_CAPABILITY_ROUTING.md` is the NEXI routing overlay.
-- `/home/mellonelay1999/.agents/BROWSER_FABRIC.md` owns browser-tool responsibility and production browser workflow.
-- Public-local `AGENTS.md` and `DESIGN.md` govern the canonical Public frontend.
-- Historical analysis/recovery material belongs under `docs/archive`; it must not compete with current authority.
-
-## Next dependency-ready direction
-
-Do not reopen the completed Public geometry phase without fresh contradictory evidence. Preserve the be50529... deployed proof. Owner correction on 2026-10-08 supersedes the Public-first queue: complete backend authority before separate Admin and Public UI sessions. Preserve the deployed 53×5 Binary capability and the a022 quote-observation-age safety repair. Use reliable crypto inputs for necessary runtime proof; truthful non-crypto degraded states are recorded and deferred to the final all-53 market pass unless financial safety or another backend domain depends on them. Current backend frontier: Wallet funding authority and its Admin/backend configuration contract. A separate Public/Admin frontend delivery session was explicitly authorized on 2026-10-08 while backend work continued: Public shared-surface commit c45a5ae and Binary availability commit 639bffe are in GitHub main; Public RELEASE_SHA 639bffee0e1817edf96308fa682bc810585fe799 is active. This does not change backend, Worker, Cloudflare, or D1 ownership. Public visual acceptance remains open because the available Polypane session exposed only blank internal surfaces.
-
-`FULL_PRODUCTION_END_TO_END_ACCEPTED = NO`
-
-## Public responsive/mobile geometry closure — 2026-10-02
-
-Fresh deployed evidence for implementation `be50529b789786fd83d808178f386b015f77b1f3`:
-
-- canonical production build `/srv/nexi/public/build-be50529-20261002-121819` -> release `/srv/nexi/public/releases/be50529-geometry-prod`; service active; local and external dashboard HTTP 200;
-- focused changed-scope tests, ESLint, TypeScript and Fallow checks passed before promotion;
-- preserved Worker-0 Chrome/MetaMask NEXI session was re-verified through SIWE on Ethereum chain 1 with **No changes**; no financial transaction occurred;
-- authenticated Dashboard geometry passed 320×568, 360×800, 390×844, 430×932, 360×640, 568×320, 768×1024 and the calibrated desktop-class probe with zero tested document/main horizontal overflow and in-bounds header controls;
-- 200% text stress at 320×568, 390×844 and 568×320 reflowed vertically without horizontal overflow or header-control escape;
-- 320 drawer opened within the viewport with `overflow-y:auto` and focus on `Close application menu`;
-- safe-area emulation produced `env(safe-area-inset-bottom)=34px` and 54px computed drawer bottom padding;
-- reduced-height 390×544 search state exposed/focused the market search input inside the viewport with zero page overflow;
-- authenticated Options and Wallet route checks at 320×568 retained the wallet session, 56px header and zero page/main overflow; Asset Detail was separately measured at authenticated 320×568 with the same geometry result.
-
-`PUBLIC_RESPONSIVE_MOBILE_GEOMETRY_PHASE = COMPLETED`
-
-This does not upgrade unrelated market/backend/Admin/financial/product-lifecycle rows or owner final acceptance.
-
-## Work continuity control — 2026-10-02
-
-The existing skill checkpoint now enforces project-owned phase reconciliation (`scripts/nexi_phase_checkpoint.py`). Active engineering `workCycle` and sealed phase receipts preserve prior proof; skill fingerprints persist outside `/tmp`. Eight focused checks and real wrapper transition/recovery checks passed. Parent semantic review remains required; this is not an automatic ChatGPT host hook or product acceptance. See `docs/operations/NEXI_PHASE_RECONCILIATION.md`. Public geometry remains completed; geometry proof remains tied to `be50529...`; current Public is `5aafc0f` in `/srv/nexi/public/current`; full production end-to-end acceptance remains NO.
-
-## Public convergence candidate checkpoint — 2026-10-03
-
-Historical superseded convergence candidate (2026-10-03): replaced 36 placeholder asset SVGs, improves ADA contrast, exposes actual MA(20)/EMA(20)/EMA(50) values with existing chart-series colors, and removes the authenticated Wallet body identity duplicate. Additional bounded repairs normalize Mining boolean/numeric enabled flags and decimal limits, separate public Loans catalog loading from protected history, distinguish Support read failures from empty state, remove the Settings profile-read/session-event request loop, make Messages read-service status truthful, and format Asset Detail backend values. These changes were integrated and deployed in the superseded `8dc1bec-public-convergence-prod` generation; current Public is `5aafc0f` in `/srv/nexi/public/current`. Full route/icon/lifecycle acceptance remains open. Canonical typegen/typecheck and 20 focused tests passed; the communications-contract test passed from its required repository context. Fallow returned WARN with zero introduced dead-code/complexity findings; the attributed socket-cleanup clone is pre-existing. Canonical production build PASSED at /srv/nexi/public/build-public-convergence-20261003-0510 using the existing NEXT_TURBOPACK_ROOT=/srv/nexi/public override. Git fan-in and deployment occurred at `8dc1bec`; current Public supersedes that release. Retained candidate gates do not establish full product acceptance. Closed geometry proof remains unchanged.
-
-2026-10-04 P03 BLOCKED_WITH_EVIDENCE: actual Polypane GET /binary/config revalidated HTTP304 and retained body {durations:[],configurations:[]}; live duration/stake controls remain unavailable. Remote production D1 read succeeded (Wrangler4.127.1, rowsWritten0): 85 enabled rows for 17 pairs, 14 current canonical crypto pairs; MASK/STEEM/SUSHI have no enabled rows and AVAX/LINK/MATIC are noncanonical configured pairs. The prior Cloudflare7403/UNKNOWN finding is superseded. The BinaryService source inspected on 2026-10-04 filtered rows through market policy binary=false and supportedBinaryDurations=[]; settlement remains disabled/UNAPPROVED, with no approved provider authority found. Admin configuration updates do not confer settlement approval. Backend deployed-source equivalence was not newly proven. Owner-approved provider/pair settlement policy is required before enabling financial behavior; do not hardcode durations/payouts or mutate Admin/D1 merely to populate controls. Receipt: /home/mellonelay1999/nexi-phase-receipts/p03-binary-configuration-read-20261004.json. Quote/submit/countdown/settlement E2E remains open.
-
-Fresh Worker metadata identifies deployment f41876b3-e8dd-4bf0-8043-61a81ecbb86f, Worker version 2ef838f5-f96a-4f48-99e2-db9d80dbc0b4 (September-26 canonical-host migration). The NestJS container code generation remains recorded as ed26973f; Worker metadata alone does not establish a newer container implementation SHA. This supersedes bdadd96f as the current Worker UUID, while preserving its historical promotion provenance.
-
-Historical superseded generation — Git fan-in checkpoint: verified candidate and three preserved local checkpoints are durable at GitHub main `8dc1bec8646aa777795ceb1bb8c24e1ddad1435e`. Canonical build is verified; production still be50529 until promotion and browser proof.
-
-Historical superseded generation — Deployment checkpoint 2026-10-03: Public current -> /srv/nexi/public/releases/8dc1bec-public-convergence-prod, NEXI_RELEASE_SHA=8dc1bec8646aa777795ceb1bb8c24e1ddad1435e, service active; local origin and external Dashboard HTTP 200. This supersedes be50529 as current implementation while retaining its completed geometry proof. Authenticated changed-behavior acceptance remains pending; no full Public or platform completion claim.
-
-Historical superseded generation — Changed-behavior failure 2026-10-03: deployed 8dc1bec metric values exist, but generic scroll snapping combined with reordered MA/EMA spans selects a non-leading start position and hides MA/EMA values on initial mobile render. P-02 presentation remains OPEN_DEFECT. Repair scope is the metric rail only; engine and completed geometry primitives remain unchanged. Chrome was recovered using the same existing profile after its former process disappeared; real refresh201/auth-me200 resumed. Polypane protected route currently renders Verify wallet; pane labels/old owner sign-in are not fresh application authentication proof.
-
-## Historical P04 completion — 2026-10-04
-
-P04 slice status: COMPLETE at deployed changed-behavior scope. Polypane owns frontend/product/reference verification; use explicit DevTools CLI on 5859, not Playwright. Chrome 5858 is not running and was not used. Geometry remains CLOSED.
-
-At the 2026-10-04 proof checkpoint, HEAD, origin/main, GitHub main, deployed source, and release marker were `702ee5d83c82e2708fced19b0f424ff5d285e40a`. Public current symlink and active process CWD are `/srv/nexi/public/releases/702ee5d-public-wallet-empty-prod`; `nexi-public.service` is active.
-
-Only a successful explicit [] or {activities:[]} renders EMPTY. Missing/non-array collections, malformed rows, and rows without real ledger identity do not render empty. Valid ledger-backed rows preserve identity. Wallet and activity reads are independent. Focused tests 15/15, TypeScript, focused lint, 23 before/after render-tree comparisons, canonical production build, and standalone packaging passed. CodeScene health: Wallet 10.0/10, focused test 10.0/10; safeguard passed with two eligible files.
-
-Polypane production page 6 at 500x768 showed the real cached activity body [] (HTTP 304) as “No wallet activity yet”; the accompanying wallet body was {} (HTTP 304), so this account had no nonzero balances. In a controlled client-only test, page 6 intercepted both wallet endpoints without sending requests to the backend: /wallet/me returned a labeled test fixture (total 8450.25, available 7920.25, locked 530.00, BTC 0.5 available/0.6 total), while /wallet/activity returned controlled 503. The page retained the visible wallet figures, rendered “Activity authority unavailable,” and did not render EMPTY or the wallet error state. The XHR methods were restored and the test hook removed. The subsequent real refresh returned 401 for both endpoints; page 6 showed wallet and activity errors, and its console recorded 401 resource errors plus an uncaught promise on the refresh/XHR path. The 500px real-balance production proof is limited to a client fixture; no actual nonzero balance existed. The 320px Polypane pane continued to show the cached real EMPTY state. No SIWE request was signed and no backend data was changed.
-
-Final bounded structural review used only the exact P04 changed files and direct Wallet owner. Local Graphify 0.9.72 `graphify-out/graph.json` is built at `702ee5d83c82e2708fced19b0f424ff5d285e40a` (7,607 nodes/17,060 links). It identifies `app/dashboard/wallet/page.tsx` as the causal owner: `useWalletAuthority()` calls `loadWalletData()`, which calls `readAuthority()`; the `readActivities()` edge is inferred. The exact P04 commit changes only that page and `tests/wallet-activity-response.test.mjs`. Fallow 3.30.0, rooted at the Public app, reports 12 page imports, one importer, six estimated-zero-coverage complexity/CRAP findings, and zero duplication for the inspected page/test. It cannot statically connect the `.mjs` test: focused inspection marks it unreachable, and `fallow review --base HEAD^` classifies it unused with an incomplete-import-graph caveat while reporting seven changed files although Git shows two. Treat those as analyzer coverage/scope limitations, not a test failure; focused tests passed 15/15. No architecture zones or rule packs are configured. Wallet actions, backend ledger, auth/provider, chart indicators, icons, and geometry are unchanged.
-
-P01 53-icon identity/quality proof is preserved unchanged; remaining P01 Quotes interactions/data/favorites, P02 rendered feedback/full E2E, P03 backend promotion/runtime configuration and settlement proof, and OWNER_FINAL_ACCEPTANCE remain open. Compact Worker 0 continuity is saved; no writable Workspace Memory persistence capability was exposed. Attached bootstrap/catalog copies include stale Chrome-primary wording; current owner routing remains Polypane first.
-
-
-### Destination frontier 2026-10-04
-
-2026-10-04 production BTC Spot chart renders actual MA(20), EMA(20), EMA(50), RSI(14), canvases and existing indicator/timeframe controls. Spot open orders/margin positions returned401; depth/trades revalidated304. No order or financial action performed. Full Spot/trading E2E remains unproven; indicator authority and closed geometry preserved. Receipt: /home/mellonelay1999/nexi-phase-receipts/p01-rendered-20261004/spot-dom.json.
-
-Native Workspace Memory has no exposed writable capability in this destination; verified continuity is saved and reread in the Worker-0 checkpoint. P01 icon scope passed; P03 owner approval is Git-integrated in the verified source implementation frontier. The next causal gate is Cloudflare backend promotion/equivalence and live Binary acceptance. OWNER_FINAL_ACCEPTANCE remains OPEN.
-
-## Cross-session memory routing — 2026-10-05
-
-Added the Worker-0 companion skill `~/.agents/skills/nexi-workspace-memory/SKILL.md` and linked it from the Worker-0 Kernel, global capability/router docs, and project capability router. It separates ChatGPT Workspace Memory, Agent Kernel governance, Worker-0 operational checkpoint, Graphify repository structure/Work Memory, GitHub source, and historical chat exports. Live checks found no `~/.memory` or repo `.memory` index on Worker-0; Graphify MCP recall reports `unsupported`. No Workspace Memory or Graphify Work Memory write is claimed; use the verified Worker-0 checkpoint for operational continuity.
-
-## Bounded Public continuation — 2026-10-05
-
-Live source and active Public release agree at `5aafc0f`. The sole source delta from P04/icon proof baseline `702ee5d` is scoped Spot ripple CSS; Wallet implementation/tests and local asset icon files are unchanged. Reuse the 53-icon rendered receipt; do not repeat icon setup or reopen geometry. P04 scoped activity repair remains proven, while the latest recorded real refresh is 401 and real-account nonzero-balance isolation remains unproven.
-
-Original 12-slide `Nexi Design System (final).pptx` was read directly: shell/raised glass, crisp unblurred execution surfaces, and visual press/ripple feedback are specified; no device-vibration implementation or Liquid Glass requirement is established. Current source already contains the three surface tiers and visual feedback rules. P02 deployed ripple application/reduced-motion proof remains open: the running Polypane 31 endpoint is reachable, but its current app target shows only “Font”, with no NEXI pane targets. No new feature source, build, deployment, financial action or geometry change was made. Next dependency-ready Public proof is P01 Quotes interactions/data/favorites, with P02 existing scoped visual-feedback proof retained as an open required path after usable Polypane panes are restored.
-
-## Worker-0 DeepWiki / mcpc operational state — 2026-10-06
-
-Worker-0 DeepWiki is closed out and ready for normal use. MCP client authority is mcpc 0.7.0 with @nexi-deepwiki; rdc-mcp deepwiki remains compatibility syntax only. The canonical supported surface is 64 tools; live discovery returns one additional deprecated compatibility alias, get_architecture_summary. The 64-tool receipt is stored at ~/.local/share/nexi-mcp/audits/deepwiki-64-tools-20261006/.
-
-Runtime is FastEmbed 0.8.1 + ONNX Runtime 1.30.0 with multi-qa-MiniLM-L6-cos-v1 AVX2 INT8 and LanceDB 0.39.0 exact-flat search. Canonical index schema v3 contains 340 files / 4,159 chunks and records source commit a1014882819dd0d077a8838220295614108a1442 with dirty-worktree provenance. Canonical wiki generation completed successfully with 250 file-doc items, 6 module items, 6 codemaps and 277 Markdown pages.
-
-LLM synthesis uses the existing OpenRouter OpenAI-compatible configuration with model openrouter/free only. Request timeout is 30 seconds, SDK retries are disabled, and the Local DeepWiki retry layer owns bounded retry. Routine refresh is incremental; full rebuild is recovery-only. DeepWiki sessions should be closed after semantic work. Stale build directories, temp files, audit logs, Python caches, installer caches, and the retired custom DeepWiki transport were removed. The Hugging Face model artifact cache is intentionally retained.
-
-## Current preserved source frontier — 2026-10-06
-
-The owner-approved `binance-spot` crypto Binary settlement policy is Git-integrated in source commit `ff80eb300b3c813f788665ea864b7f7baa27a29a`. Entry quotes fail closed for other providers; non-crypto remains disabled. D1/Admin configuration owns enabled durations, each payout and stake range; frontend boxes remain configuration-driven. The current target is 30/60/180/280/420 seconds, never a hardcoded artwork list. Cloudflare deployment equivalence, config/quote/settlement runtime proof and complete Binary E2E are not established. The earlier no-approved-provider narrative is historical and superseded at owner/source-candidate scope only.
-
-Public build authority is one final in-place build in `/srv/nexi/public/current` after the full source frontier and focused gates are ready. No alternate build/release trees, rollback copies or iterative build/deploy loops. Polypane5859 owns visual/responsive proof; preserved Chrome5858 is only for distinct wallet/session proof. The recovery checkpoint's stale explanatory workCycle was closed as superseded without claiming task completion, and routing resumed the P02/P03 source slice.
-
-## Pre-build engineering review and source repairs — 2026-10-06
-
-Source-only batch: removed chart pair/timeframe duplication while preserving numeric metrics, engine and overlays; kept Options configuration-driven with mobile stake ranges and selected-state accessibility; aligned Spot/Options header and bottom navigation with existing DESIGN.md glass tokens; repaired reduced-motion feedback and opaque high-contrast/transparency fallbacks. UI/UX Pro Max is advisory; no Apple Liquid Glass redesign or geometry reopening.
-
-Worker private gateway JSON parsing now enforces its existing 256 KiB limit while reading bytes and cancels oversized streams. Five behavioral regressions cover boundaries, misleading/missing lengths, UTF-8 and failures. Other body-reading paths are outside this bounded repair. Source SENTRY_RELEASE was corrected to the exact existing live 40-character Git SHA; no backend deployment occurred.
-
-Focused proof: Worker suite 15/15; backend suites 12/12 including production-mode configuration policy preserving D1 payout/min/max and the five approved durations; frontend chart/Options checks, TypeScript, design conformance and CSS parsing passed. Focused frontend lint has zero errors and four existing effect warnings. CodeScene staged safeguards passed for the Public, Binary and Worker commits after bounded complexity repairs; the final Binary helper centralizes approved quote selection and the Worker envelope validator reuses a shared record predicate. Source Git fan-in is implemented locally through `9fa6002...`; production build/deployment is not claimed.
-
-Live truth: Cloudflare Worker deployment f41876b3-e8dd-4bf0-8043-61a81ecbb86f remains active; readiness is healthy. Fresh read-only Cloudflare D1 evidence on 2026-10-06 confirms 85 enabled Binary rows across the five durations (17 each; payout 0.85, stake 1–1000) and 17 LIVE `binance-spot` rows in `MarketQuoteLatest`; the query wrote zero rows. Actual Polypane public GET /binary/config returned HTTP 200 with zero configurations/durations. The Git-integrated source implementation frontier passes the production-policy regression, but deployed backend equivalence and configuration/settlement acceptance remain open. Public remains `5aafc0ff74cd715a77de3bc22d96603dbc2c4943` in `/srv/nexi/public/current`; source implementation is integrated through `9fa600243cf7e57bbb60b22413debc1c64f6c7c2`, with this documentation revision following those implementation commits. Remote GitHub fan-in is verified. The completed source batch now requires backend promotion planning, then the owner-authorized production promotion/build path and changed-behavior production proof. No full product acceptance or ledger-row upgrade.
-
-
-## Cloudflare D1 / cost checkpoint — 2026-10-06
-
-The production Worker `nexi-production` uses D1 `nexi-core-staging` (`522177fa-ac42-4d8f-a6a8-b34eed262f15`). D1 migration `0009_market_read_indexes` is applied. Its Kline index removes the global sort in the multi-pair price query: one post-index 848-row sample read 901 rows; the prior one-hour Insights average was 7,609. This per-query result does not yet establish a monthly bill reduction; five-minute Insights was empty. Database size grew from ~4.24 GB to ~4.38 GB. Source migration/schema are integrated in GitHub main at `3f9f366`.
-
-Cost inventory: Logpush jobs are absent and Worker `logpush=false`; Worker Logs/traces remain persisted at 100% sampling, and Container logs are enabled. The only running Container instance is the production API primary and was not stopped. `/health`, `/ops/ready`, and `/market/prices` are healthy; `/binary/config` still returns empty arrays. Installed Cloudflare `cf` CLI has `cf containers build`, but that command requires a local Docker binary; SSH is for runtime inspection, not image builds. Workers Builds are not configured for this Worker. No Worker/Container deploy occurred.
-
-## Queue prerequisite reconciliation — 2026-10-08
-Source HEAD/origin-main remains cda371b7deada426aa693e4d15495ef47bc9f183; current backend/Worker edits remain staged and three unrelated UI edits remain unstaged. No commit or deployment in this bounded item. Two dedicated production DLQs created via pinned Wrangler and verified: integration-jobs DLQ 7a8b2fc4e71e46a992b820183e19a4af; notifications DLQ 3d7673bae87041a5a7e326734959ddd8. Main queues still have zero consumers at prerequisite readback. Current deployed Worker script was fetched read-only and its generic queue handler validates/signs envelopes, forwards to authenticated Container ingress, retries errors, and acknowledges success. Existing realtime gateway/outbox tests 7/7 and Worker queue/binding contract tests 5/5 pass. Health/readiness healthy. EventInbox persists RECEIVED; no downstream processor or backend producer to integration/notifications found in bounded current-source lookup. Consumer activation and end-to-end downstream processing are not yet proven; financial commands must not be replayed.
-
-
-### Queue consumer activation — 2026-10-08T01:24Z
-Dedicated integration and notifications consumers are active on the existing nexi-production Worker: consumer IDs 85f05e19afdb4acbb3f7d8724cc34ee8 and 381a53c3e5e543b0a0fe77d6a08ad7c3. Exact API readback: each uses its dedicated DLQ, batch size10, timeout5s, retries5, retry delay15s. No Worker/Container code deployment. Explicitly synthetic nonfinancial QUEUE_INGRESS_PROBE sent twice per queue with shared per-queue idempotency keys and correlation nexi-queue-reconcile-20261008-0123; all four pushes accepted. Remote Wrangler D1 readback found one RECEIVED row per queue. This proves delivery/durable receipt at the probe scope, not downstream notification/integration business processing or failure-to-DLQ behavior. Probe receipt writes occurred through runtime; no operator financial/D1 migration. Readiness remained healthy. Existing tests: realtime gateway/outbox7/7 and Worker queue/binding contracts5/5 (not an authenticated-ingress test suite). Source contains no EventInbox processor or backend producer calls to integration/notifications. R-02 remains NEEDS_FRESH_PROOF for downstream/error recovery.
-
-### Backend source verification — 2026-10-08T01:29Z
-Current uncommitted Binary pair eligibility uses canonical registry membership; provider validation reuses getProviderMapping for non-crypto and retains isSettlementApproved for crypto. Unknown pairs remain unavailable; quote freshness/sequence/config/limits/Ledger path unchanged. Current affected23/23, final focused16/16, full backend72/72 suites and339/339 tests PASS; final Nest buildPASS. Existing staged CodeScene hook PASS after removing duplicated policy/mapping conditions; Binary health7.45 remains inherited debt, no broad financial refactor. Graphify affected and Fallow direct import path verify existing Binary→registry ownership. Migration0011 remains the only pending migration; production still100 enabled configurations globally and zero Currency/active DepositAddress. No backend code deployment or Binary financial E2E yet.
-
-### Source fan-in — 2026-10-08T01:31Z
-Backend/Worker implementation commit12e8dee66a3d4212fed7b754fc424641367e90f4 is pushed; localHEAD=origin/main at native readback. Only three original Public/Admin UI paths remain dirty. Whole backend339/339 and Nest buildPASS; original precommit hookPASS without bypass. Cloudflare resource IDs match existing configuration; no unrelated binding retargeting planned. Pending migration0011 exact read-only predicate finds180 missing eligible pair-duration rows. Deployment uses source12e8dee, pinned Wrangler/Dockerfile and explicit SENTRY_RELEASE/source tag override; stale checked-in prior-release variable is not runtime provenance for this rollout. Full product E2E remains open.
-
-### Migration and in-progress promotion — 2026-10-08T01:39Z
-D1 migration0011 applied successfully. Primary readback confirms53 active canonical pairs at each30/60/180/280/420 duration:265 canonical configurations,280 global including15 preserved legacy rows. Worker versionb0ae825f-7fb7-4a58-9c8f-b40f2c339a14 is100% active with SENTRY_RELEASE/tag12e8dee66a3d4212fed7b754fc424641367e90f4. Container build/rollout remains in progress; application version77 still serves prior imageae1c11be at this readback. Readiness200 database/redistrue; Binary public view still85rows17pairs, so rollout is not complete. Existing Fallow3.30.0 MCP audit PASS:0introduced findings,2inherited complexity/10inherited duplication groups; audit count16 includes3 preserved UI edits. Three backend review anchors validated, no stale/rejected judgments. Hidden-source/policy-rulepack limitations retained. Financial product E2E remains open.
-
-### Backend promotion verified — 2026-10-08T01:42Z
-Pinned Wrangler deployment finished exit0. Workerb0ae825f-7fb7-4a58-9c8f-b40f2c339a14 is100% with source12e8dee release/tag. Container version78 targets100%; exact instancefde387823556b436138bfeac1a031e123de318c86639a5114b2520a8a717298a is running new imagesha256:23b72ebe70fb3910afafbaf85cf7e69e5009235c9d587327e75a4170117ca057. Instance-list API was stale; exact-instance GET and live behavior establish cutover. Public GET /binary/config returns265 configs/53pairs and53at each30/60/180/280/420 duration. /ops/ready200 database/redistrue. Migration0011 preserves existing Admin rows and15legacy configurations. Prior in-progress17pair snapshot above is superseded. This closes migration/image/config promotion proof only; financial product E2E and broader backend obligations remain open. Evidence: /home/mellonelay1999/nexi-backend-promotion-evidence-20261008.json.
-
-### Financial quote freshness diagnosis — 2026-10-08T01:48Z
-A repeated live sample showed temporary USD/HKD and USD/RUB STALE states with later recovery. The D1 financial gateway checks receipt age but only validates that the provider observation timestamp is finite. A recently received old observation can therefore pass the financial quote gate while MarketAuthority correctly labels it stale. Spot, Margin and Binary share this gate. Next repair: reject observations older than the existing threshold, preserving minimum observation/sequence guards, provider lineage and all financial batch paths. No threshold relaxation or fabricated timestamps. Public Learn/Announcements/categories return empty lists; protected tickets/messages/notifications/KYC/Binary reads return401 as expected without identity. Workflow bindings/new classes are deployed, but zero instances do not establish business lifecycle proof.
-
-### Quote observation-age repair implemented — 2026-10-08T01:51Z
-Regression reproduced stale-observation acceptance and receipt-only freshness metadata (2 failed / 18 passed before repair). The shared gateway now derives freshness from the older of observedAt/receivedAt, without changing the existing threshold, SQL minimum observation/sequence guards, provider approval or financial batches. All 47 affected tests and Nest build pass. Full suite and static review are in progress; this repair is not yet deployed. Four-minute market sample: nine 53-row observations, zero HTTP errors/sequence regressions; temporary stale states recovered naturally. This is bounded evidence, not long-soak or forced-recovery completion.
-
-### Quote-age review verified — 2026-10-08T01:55Z
-All 72 backend suites / 342 tests pass after the freshness repair; Nest build passes. Fallow audit passes with zero introduced findings and the gateway review anchor validates without stale/rejected judgments. CodeScene file score 2.22 reflects existing gateway debt; exact unchanged staged hook exits0. The one-line age calculation changes no thresholds, provider approvals, minimum observation/sequence SQL or financial commands. Reviewed source is ready for Git fan-in and image promotion; current runtime still uses12e8dee.
-
-### Quote-age production promotion — 2026-10-08T04:31Z
-GitHub main, local HEAD, and origin/main are a022ed77473da1561a2d658c4acf417dcdf08018. Cloudflare Wrangler reports Worker version 5d08584c-3fda-4853-aa22-761b87decc65 at 100% with the exact a022 source tag. The active Container application is version79 with one running instance and image digest sha256:ce082070f7eb624f2c3e79179523e3a89e84bbd1879acab4ae1dcbc0f2da18e0; registry tags include a022a9ec. /ops/ready returns status=ready with database=true and redis=true. The recorded 53×5 D1 configuration proof is reused unchanged because this quote-age-only source change made no D1 migration or configuration change; a fresh unauthenticated /binary/config request returned403 and is not treated as proof. No deploy, D1 mutation, or financial command occurred during this verification. Exact live SENTRY_RELEASE and independent container-image source provenance remain unverified. Financial E2E and broader backend closure remain open.
-
-
-### Backend batch deployment diagnosis verified — 2026-10-08T16:45Z
-Backend/Worker batch commit 8dca62514015056235bf1ec00012bb9f16efa8db is deployed. Current GitHub main/local HEAD is 639bffee0e1817edf96308fa682bc810585fe799; its two later commits modify Public/Admin only, and backend/Worker/config paths have no diff from 8dca625. Active Worker version172 / 7b21f6bd-f8c1-4191-95d9-d268485f5886 serves100%. Container application version80 and exact running instance fde387823556b436138bfeac1a031e123de318c86639a5114b2520a8a717298a both use sha256:2aa2291e48175ed5a1ec103eee0a5f9a1c4c00a4913f07c4622b9a7858aa7332. BuildKit completed record hlumtgq5z7el7pobyal7f54l7 identifies VCS revision8dca625, linux/amd64, 24/24 steps,3m20s; local registry digest matches the running instance. Direct official Wrangler SSH confirms SENTRY_RELEASE=8dca625, NODE_ENV=production, Nodev24.21.0; /health,/ops/live,/ops/ready return200 with database/redis true. All40 Worker bindings match preceding version170 except intended SENTRY_RELEASE; no binding additions/removals.
-
-Canceled BuildKit record oc29qnzutzkidihzwbcz3hceb ran15m51s; logs end after successful Nest compile, before remaining runtime COPY/export stages. Earlier export/load diagnosis is superseded: precise stall cause is not proven. Docker daemon logs show BuildKit session transport failures (only one connection allowed), including during the successful retry, so they support a local session problem but do not establish causation. No OOM evidence was found in the inspected kernel window. No active Wrangler/buildx process remains; no new deploy, daemon restart, pruning, source repair or financial mutation was performed during this diagnosis. Aggregate healthy=0 remains an undocumented/legacy counter discrepancy, not proof of application failure: exact instance running and direct readiness pass. Existing SSH host key changed after rollout; old known-host entry preserved and current release pinned under HostKeyAlias nexi-container-v80-2aa2291e through authenticated Wrangler proxy. Wrangler4.127.1 warns that observability.redact_query_string is unrecognized; config was not changed.
-
-Deployment/readiness is proven; Wallet claim/withdrawal, Mining accrual/replay, Loan Workflow/repayment, and async recovery business E2E remain NEEDS_RUNTIME_PROOF. CodeScene remains excluded by current owner instruction. Final Graphify gap classification remains deferred until those proofs. Pre-existing state/ledger edits are preserved; no other repository file was changed by this diagnosis.
-
-
-### Staged-batch runtime continuation — 2026-10-08T17:34Z
-Original32-file backend batch8dca625 remains deployed in Container80, exact running digestsha256:2aa2291e48175ed5a1ec103eee0a5f9a1c4c00a4913f07c4622b9a7858aa7332. Two narrowly scoped Worker corrections landed/pushed:7d9fc0600159f4e69434ef221f5f4c098823eb83 matches loan approval event type decision; f466166ed25c91724bf459ddb54b34f7d48ab3b7 reads Cloudflare WorkflowEvent.payload in withdrawal/mining/loan rather than params. Live API instances reproduced invalid-parameter failure before first step; official Cloudflare Workers API confirms payload contract. Regression fails before and passes after correction. Final focused9/9, Nest build, diff-check, cs staged hook and MCP exact staged safeguard pass; no broad audit, inherited refactor, generated-code metric edit or historical financial writes. Owner renewed CodeScene requirement in latest instruction.
-
-GitHub main=f466166; Worker174/919d85c6-6331-40d2-8922-9eb1cf260fb6 is100% with exact f466166 tag.40 bindings byte-equivalent to Worker172; SENTRY_RELEASE remains backend8dca625. Worker-only deploy skips unchanged Container build/rollout. Health200 and ready200 database/redis true. Container aggregate healthy0 remains causally unresolved; exact instance running, errors empty and readiness true do not justify a speculative configuration change.
-
-Nonfinancial queue correlation nexi-runtime-proof-20261008T1724: six accepted pushes across three queues yield exactly three durable RECEIVED rows, attempts1. Invalid version0 domain envelope reaches dedicated DLQ (message4deeb4571e771e021351c80f6debc6f8), proving scoped retry-to-DLQ; retained diagnostic message. This does not prove downstream notification/integration business processing. Loan probe nexi-proof-loan-payload-20261008 on corrected Workflow version8357b106-ae95-4567-9331-3024421492eb waits for decision and completes REJECTED after event; repeat event rejected10407 terminal state. D1 testLoanRows0, no financial entity/disbursement created. Two earlier failed diagnostic instances retained.
-
-Wallet Admin/network routes exist; eight BTC/ETH/USDT/SOL/TRX network rows all inactive/deposit-disabled/withdrawal-disabled; zero receiving addresses. Schema/query has no account-scoped TEST_ONLY destination isolation, so labeling a public destination TEST_ONLY is insufficient and no fake address was published. Public mining plans3 and loan plans1 read successfully. MiningRewardAccrual0 and historical pending loans do not prove lifecycle/replay. Controlled authenticated Admin and funded test account were not available to operator. Wallet claim/audit/outbox and withdrawal enforcement, mining accrual/Ledger/outbox/replay, loan financial paths remain NEEDS_RUNTIME_PROOF with EXTERNAL_INPUT; wallet receiving configuration is CONFIG_DISABLED. Final read-only Graphify Multi-View is deferred under owner condition until all four capability proofs complete. Automatic git postcommit graph rebuild is not that classification pass. Unrelated paths preserved.
-
-
-## Backend runtime closure update — 2026-10-10 13:00 UTC
-
-This dated evidence supersedes the reported October 10 backend frontier above only where receipts below directly cover it. Git HEAD and origin/main are both `b361aeb2f7b1cae3c44958a753923719b6b7ddb6`. Source repair `c85690fa6652e1887e4c2881cedf5223213d941e` fixed duplicate D1 bindings in conversion debit/credit statements; regression was RED before and PASS after, and Nest build passed. Follow-up `b361aeb` aligns SENTRY_RELEASE config with the backend SHA. GitHub recovery CI run `38053014763` passed. CodeScene installation verification passed, but the pre-commit safeguard timed out and change-set analysis failed argument parsing; CodeScene status is UNVERIFIED.
-
-Cloudflare Wrangler deployment completed exit 0. Worker reports current version `ad95889f-8d41-493d-b6ae-9813fd7a0e6a`; Container application version 88 is at 100% on image digest `sha256:e58785169362904c9f43f223b1ce52fd152f2b53871f628f0971dc6302a5dadd`. Active instance reports running. Live `/health` and `/readyz` returned 200 (D1/Redis ready); `/market/prices` returned 200. Cloudflare's aggregate health field reported healthy=0 at the latest API read despite the running instance and passing routes; retain this as a reporting discrepancy. Runtime SENTRY_RELEASE was not independently read from the Container.
-
-Conversion remains FAILED/PARTIAL at runtime: the pre-deploy TEST_ONLY quote acceptance returned 500 with D1 binding mismatch and readback proved rollback/no financial artifacts. The corrected source is deployed, but subsequent quote-create requests returned 503; the observed Worker error was `D1_ERROR: Network connection lost`. D1 readback found no durable quote for those attempts, no Ledger posting, audit, Activity, Outbox event, or balance change. No acceptance or replay occurred. This is a Cloudflare D1 write-path blocker, not evidence of a partial conversion; do not claim conversion accepted.
-
-Margin reconciliation: TEST_ONLY BTCUSDT order `39bf20f1-21f1-4216-b3f3-b9e314132e5a` is CANCELED, filled=0, reserve released (20.019999999999994711 USDT). No margin position or trade exists. Its MARGIN USDT account is 60 available / 0 locked and its posting deltas total 60: the existing 50 transfer plus an unrepaid 10 `SPOT_MARGIN_BORROW`. The Margin API has close repayment only for an existing position and no standalone orphan-borrow repay command. No repayment, balance edit, or new position was attempted. Margin remains BLOCKED pending a domain-supported resolution.
-
-Mining is PROVEN for one earned reward: the active subscription has one 0.05 USDT accrual, one linked Ledger credit and Activity, one published `MINING_REWARD_POSTED` Outbox event, and one queue delivery. The daily idempotency key is unique; service guard and focused test prevent same-day replay from posting or republishing. Subscription maturity is 2026-10-16; redemption was not attempted. Spot remains PARTIAL: prior cancel/release proofs stand; both relevant BTCUSDT orders have filled=0 and no Gate2 trade rows, so no fill is claimed.
-
-Async/Loan recovery is PROVEN for the representative existing workflow. Application `546f6f97-ef61-5f4e-9bf6-e1116a34bdda` is PAID: exactly one 100 USDT disbursement and one 110 USDT repayment posting, one repayment row, linked Activity/audit, and published Outbox events with one attempt. Workflow `loan-546f6f97-ef61-5f4e-9bf6-e1116a34bdda` is Completed, output PAID. EventInbox RECEIVED is the authenticated ingress receipt; implementation only records that receipt and does not mark it as business processing completion. Authenticated `GET /spot/margin/positions` returned 200 with an empty list.
-
-Targeted D1 ledger readback matched account balances to summed posting deltas: BTC MAIN 0/0; USDT MAIN 928.95 available / 10 locked; USDT MARGIN 60/0. Prior Wallet, Transfer, Binary, Learn, SIWE, Profile, Session, Support, Messages, Notifications, Announcements, KYC, Referral, and Withdrawal proofs are reused unchanged. Backend closure and Admin/Public journey readiness remain OPEN while conversion write acceptance and Margin orphan-debt resolution are blocked. Protected documentation files remain uncommitted; no historical material was rewritten.
-
-
-## Backend runtime continuation — 2026-10-10 13:22 UTC
-
-Source HEAD=origin/main=3d794e5cc32a22a1e0891b735753633d6190babb. Wallet readback correction is 3adcc185828d250e21b193ae14f901313fb434d0; Cloudflare release identifier config is 3d794e5cc32a22a1e0891b735753633d6190babb. GitHub Recovery CI and React Doctor passed for both pushed revisions. Local focused wallet/Public financial tests passed 11/11; backend build passed. The repository hook initially rejected the wallet commit because its test crossed the Code Health size threshold; extracting the account fixture retained the same regression and the subsequent commit completed. No standalone CodeScene campaign was run.
-
-Cloudflare Wrangler rollout completed: Worker version d5602269-3ab7-4d76-a049-03a7d8904afc (100%); Container application nexi-api-staging version 89, digest sha256:705187f2f50d90b0612a3d951fbb387a57cc873778ef3cbde5b6e1abd6e70d9c; instance fde387823556b436138bfeac1a031e123de318c86639a5114b2520a8a717298a is running in sin21. The environment release label is 3adcc185828d250e21b193ae14f901313fb434d0. First post-rollout requests raced the Container reset and timed out; subsequent /health=200 and /readyz=200, with D1=true and Redis=true. Wrangler Container summary still reports healthy=0 while one instance is running and no health errors; retain this aggregate discrepancy as unverified.
-
-Authenticated GET /wallet/me now returns MAIN-only balances: BTC available 0.00012073019553945/locked 0; USDT available 918.95/locked 10. D1 account and posting readback matches BTC MAIN, USDT MAIN and USDT MARGIN (60/0); GET no longer collapses same-asset scopes. Conversion quote 4e1232a2-7d8a-480a-8c24-aa6df2213250 is ACCEPTED for 10 USDT to 0.00012073019553945 BTC; same acceptance-key replay returned replayed=true. D1 shows exactly two conversion postings, two idempotency rows, two LedgerAuditEvent rows, one Activity, one Gate2OperationAudit, and one CONVERSION_ACCEPTED Outbox event PUBLISHED at attempts=1. Read-only D1 queries wrote zero rows. No duplicate economic effect or partial transaction observed.
-
-Margin remains BLOCKED: TEST_ONLY 10 USDT SPOT_MARGIN_BORROW has no position; canceled entry order 39bf20f1-21f1-4216-b3f3-b9e314132e5a released its 20.019999999999994711 USDT reserve. Account/postings reconcile to 60 USDT MARGIN available and zero locked. Existing domain API has no standalone resolution for orphan borrow; no invented repayment or direct balance edit. Mining daily 0.05 reward/posting/Outbox/replay guard remains PROVEN; lockup matures 2026-10-16. Spot cancel/release is PROVEN but no fill is claimed (PARTIAL). Completed Loan Workflow/recovery and repayment, deterministic non-live Withdrawal settlement/release (not blockchain broadcast), and previously accepted domains remain reused. Backend closure is still open only for Margin debt resolution and any required Spot fill contract. Readiness supports Admin/Public journey testing on verified surfaces; the Margin financial journey remains blocked.
-
-## Admin single-directory runtime closure — 2026-10-10
-
-Owner supersession: `/srv/nexi/admin/current` is the only generated Admin build/runtime directory and is a real directory, not a symlink. `/srv/nexi/admin/shared/node_modules` remains the dependency authority and `/srv/nexi/admin/logs` remains the service-log directory. The old Admin `build-*` and `releases/*` trees were removed after copying and byte-verifying the existing artifact into `current`; `/srv/nexi/admin` is root-owned to prevent ordinary sibling build directory creation. `nexi-admin.service` restarted with its process working directory set to `/srv/nexi/admin/current`, and the externally routed `/overview` returned HTTP 200. This is a hosting-path migration, not a new Admin application build: `NEXI_RELEASE_SHA` remains `ed26973fe0556a6d75943b3e296be0a899449d6d`. The next accepted Admin source frontier requires one new build directly in `current` with accurate Sentry build-time release and DSN, followed by rendered acceptance.
-
-Sentry production new/regressed issue email alert `6146426` is active; one-minute Public uptime monitor `10598307` is active. Admin `10598308`, API Health `10598309` and API Readiness `10598311` monitors were created but remain disabled. Sentry returned HTTP 400 (`You don't have enough pay-as-you-go available to create a new seat`) when activation was attempted. Do not claim the three disabled monitors are active or retry their activation without account capacity changing.
-
-The uncommitted Margin source/test candidate is not a deployed or accepted repair; focused tests passed 3 suites/41 cases but the position materialization failure boundary remains to be closed. Preserve all unrelated pending changes and financial test state.
+Next frontier: reconcile current live deployments and final user-facing acceptance only when explicitly in scope. For documentation changes, run link/ownership checks; do not re-test, rebuild or deploy product code.

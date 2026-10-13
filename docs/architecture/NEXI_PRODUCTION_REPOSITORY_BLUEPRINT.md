@@ -1,5 +1,8 @@
 # NEXI Production Repository Blueprint
 
+> **Historical specification / superseded as live authority (2026-10-14).** This document preserves earlier requirements and rationale, not current deployment or completion status. Apply current owner decisions, current GitHub `main`, and [documentation authority](../README.md) before using any older rule or phase gate. Preserve still-applicable financial/security invariants.
+
+
 **Status:** Required production-engineering authority.  
 **Date:** 2026-07-27  
 **Canonical product authority:** `docs/NEXI_FINAL_PRODUCT_PROGRAM_CHARTER.md`  

@@ -1,5 +1,8 @@
 # NEXI durable phase reconciliation
 
+> **Historical specification / superseded as live authority (2026-10-14).** This document preserves earlier requirements and rationale, not current deployment or completion status. Apply current owner decisions, current GitHub `main`, and [documentation authority](../README.md) before using any older rule or phase gate. Preserve still-applicable financial/security invariants.
+
+
 The skill checkpoint previously kept routing leases only in `/tmp`. Phase completion and ledger reconciliation were prose obligations without a mechanical check. The existing checkpoint now invokes `scripts/nexi_phase_checkpoint.py` for NEXI, stores skill fingerprints in persistent local state, and saves phase receipts in the existing continuity capsule.
 
 ## Authority and recovery

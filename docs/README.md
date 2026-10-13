@@ -1,56 +1,35 @@
-# NEXI Documentation Authority Map
+# NEXI Engineering Documentation
 
-This directory contains current contracts plus historical lineage. File presence does not imply current authority.
+**Purpose:** current navigation and ownership, not a phase-completion controller.
+**Source policy:** owner decisions > direct runtime proof for runtime claims > GitHub `main` for durable source > platform/graph/static evidence > historical documents. A document never proves deployment or feature acceptance by itself.
 
-## Current decision path
+## Start here
 
-For substantial NEXI work, use this order:
+- [Current state](../NEXI_CURRENT_STATE.md): compact source/runtime split and next verified frontier; recheck volatile values.
+- [Repository law](../AGENTS.md): active development, operational boundaries, production source/build constraints.
+- [System architecture](architecture/NEXI_SYSTEM_ARCHITECTURE.md) and [cross-surface feature map](architecture/CROSS_SURFACE_FEATURE_MAP.md): ownership and product-to-code interfaces.
+- [Backend](backend/README.md): domain features, NestJS owners, persistence, APIs and events.
+- [Public frontend](frontend/README.md): user journeys, Next.js routes, wallet account display, backend consumers, responsive design.
+- [Admin](admin/README.md): governance, RBAC, Admin routes, backend control authority, audit.
+- [Operational Sentry](operations/NEXI_SENTRY_OBSERVABILITY.md): Sentry SDK/source, release lifecycle, telemetry and failure verification.
+- [Infrastructure](infrastructure/): Cloudflare Worker/Container/D1, R2, Valkey, runtime/build procedures.
+- [Contracts](contracts/): API/event artifacts. Generated API material must be checked against its source revision.
+- [Security](security/): SIWE, ownership, privileged controls, Ledger/financial integrity.
+- [Quality](quality/): retained test and browser evidence. Old receipts prove only their recorded revision and scope.
 
-1. Current explicit owner decisions.
-2. Current runtime/tests for the claim they actually prove.
-3. Current GitHub `main` source.
-4. Direct platform state.
-5. Deterministic graph/static/telemetry evidence.
-6. Inference.
-7. Historical docs, chats, handovers, exports, and archived analysis.
+## Documentation rules
 
-Core current files:
-- `../AGENTS.md` — repository execution/governance contract.
-- `../NEXI_CURRENT_STATE.md` — compact current durable truth.
-- `../NEXI_PRODUCTION_COMPLETION_LEDGER.md` — sole production completion controller.
-- `operations/NEXI_CAPABILITY_ROUTING.md` — NEXI capability/routing overlay.
-- `infrastructure/` — current Cloudflare/backend operator and environment contracts.
-- `contracts/` — API/event/state-machine contract material, subject to current source.
-- `security/` — surviving security/financial-integrity requirements.
-- `quality/NEXI_BROWSER_ACCEPTANCE_MATRIX.md` — current browser evidence contract.
-- `../cloudflare-container-bootstrap/dexi-frontend/AGENTS.md` — Public frontend execution contract.
-- `../cloudflare-container-bootstrap/dexi-frontend/DESIGN.md` — Public visual/interaction authority.
+1. The exact code and tests on current GitHub `main` define what is implemented; live runtime is established separately, per deployed surface.
+2. **One owning explanation per invariant:** financial truth lives under Backend/Contracts; Public and Admin link to it without independently changing rules.
+3. An entry may be `SPECIFIED`, `SOURCE_IMPLEMENTED`, `TESTED`, `RUNTIME_VERIFIED`, `DEPLOYED`, or `OWNER_ACCEPTED`. Do not flatten these states.
+4. Prefer path+symbol/API references over thousands of generated file-level summaries; code is the final implementation detail.
+5. Keep released source identifiers separate for Backend Worker/Container, Public, Admin and Sentry. Do not force one SHA onto different builds.
+6. Git history and `docs/archive/` carry provenance only. Historical charters, ledgers, checkpoints, old visuals and screenshots do not override current owner decisions.
 
-Global Worker-0 mechanics and browser tooling are not duplicated here:
-- `/home/mellonelay1999/RDC_ONBOARDING.md`
-- `/home/mellonelay1999/.agents/BROWSER_FABRIC.md`
+## Supersession notice
 
-## Chronology and supersessions
+`NEXI_PRODUCTION_COMPLETION_LEDGER.md`, `tasks/plan.md`, `tasks/todo.md`, `docs/implementation/` and old phase documents are **historical evidence, not a current workflow gate**, under the latest owner direction. If an old executable hook still refers to them, treat that as a compatibility/dependency to reconcile separately—not authorization to block current work.
 
-Use [the dated documentation and graph register](operations/NEXI_DOCUMENTATION_CHRONOLOGY.md) to distinguish current contracts, historical requirements, and evidence snapshots. The register is navigation/provenance, not another completion controller. Public geometry is closed by the ledger's 2026-10-02 receipt; full production acceptance remains open.
+## Changes to this documentation
 
-## Historical locations
-
-- `archive/` — superseded analysis/design/program artifacts retained for provenance.
-- `archive/recovery-2026-08/` — superseded recovery/forensic handovers.
-- `archive/quality-2026-09/` — dated repo-map/read-coverage evidence; never live readiness or capability proof.
-- dated evidence inside older domain documents remains historical unless current source/runtime reconfirms it.
-
-## Reuse rule
-
-`PROVEN + UNCHANGED = REUSE`.
-
-Do not restart a domain because an older document contains a stale SHA, phase name, or environment snapshot. Resolve conflicts against current owner decisions, current source, current runtime/platform evidence, and the production completion ledger.
-
-## Browser/runtime rule
-
-A browser claim that NEXI works must use the deployed Public generation and the real Cloudflare backend. Preserved authenticated Worker-0 Chrome is the primary NEXI product acceptance surface; Playwright and DevTools support that same profile/tab. Polypane provides secondary responsive breadth; BrowserStack provides targeted real-device/cross-browser evidence when that claim requires it. Do not duplicate acceptance passes or assume secondary sessions inherit wallet authentication.
-
-## Maintenance rule
-
-When durable truth changes, update `NEXI_CURRENT_STATE.md`. When durable completion evidence changes, update the production ledger. Archive or clearly mark superseded planning/recovery material rather than allowing it to compete as a second controller.
+For a domain change, update its owning document and cross-surface map only when the behavior or interface changes. Avoid duplicating transient logs, work-session narratives and release receipts in architectural documents. Preserve historical decisions in Git when replacing old text.

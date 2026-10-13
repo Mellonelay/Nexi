@@ -1,41 +1,46 @@
-# NEXI Frontend Documentation
+# NEXI Public Frontend: Feature, Route and Integration Map
 
-This directory is intentionally small. Current frontend truth is not owned by old planning packs.
+**Canonical source:** `cloudflare-container-bootstrap/dexi-frontend/` (Next.js App Router). **Only production Public build/runtime directory:** `/srv/nexi/public/current`. Never create competing release/build trees. Source and running artifact are different proof targets.
 
-## Current authority
+## Route catalog
 
-Use, in order:
+| Route | User feature / backend dependencies |
+|---|---|
+| `/dashboard` | Quotes Hub: canonical market catalog, category navigation, price/change, custom icons, favorites, search and market selection |
+| `/dashboard/asset/[symbol]` | Category-aware Asset Detail, metadata/provenance, real quotes, responsive chart, trade navigation |
+| `/dashboard/spot` | Spot and Margin trading, chart, order controls, account-scoped balance, real order book and trades, order/position history |
+| `/dashboard/binary` | Options USDT balance, configured durations, UP/DOWN, countdown, WIN/LOSS result, settlement and Activity |
+| `/dashboard/wallet` | Overview, Funding, Spot, Margin, Options, Finance; deposit, withdraw, convert, transfers and comprehensive Activity |
+| `/dashboard/mining` | Available plans, subscriptions, positions, accrual/claims and genuine status |
+| `/dashboard/loans` | Eligibility, applications, repayment, obligations and activity |
+| `/dashboard/settings` | Profile, Security, Notifications, About, KYC upload/status, VIP level at Profile and referral invitation/individual histories |
+| `/dashboard/messages` | Conversations, read/reply/report, backend state and notification linkage |
+| `/dashboard/announcement` | Published announcements and detail |
+| `/dashboard/learn` | Published Learn content/category/search/article |
+| `/dashboard/support` | Support tickets, history and Help Center |
+| `/login`, `/signup` | Wallet-only SIWE connect/sign-in, secure session and wallet provider; no email/password-recovery system |
 
-1. Current owner decisions.
-2. Current Public source under `cloudflare-container-bootstrap/dexi-frontend`.
-3. `AGENTS.md` and the project architecture/contracts.
-4. `NEXI_CURRENT_STATE.md`.
-5. `NEXI_PRODUCTION_COMPLETION_LEDGER.md`.
-6. Current design authority under `docs/design/`.
-7. Current API/event contracts under `docs/contracts/`.
-8. Historical frontend planning/design artifacts only when they remain unchanged and are re-confirmed against current source.
+## Wallet page: explicit owner decisions
 
-## Current Public route surface
+- Tabs **Overview / Funding / Spot / Margin / Options / Finance**; source identifier `BINARY` is presented as “Options.”
+- **Each account:** one compact, mobile-friendly Available | Locked | Total summary; do not stack three oversized balance cards. Use accurate account and asset values, not fabricated ones.
+- Overview: genuine consolidated portfolio valuation in USDT without double counting. Keep **53 market instruments distinct from supported depositable wallet assets**.
+- Funding and Spot: applicable supported assets; Margin and Options: user-facing transferable **USDT only**. Finance: distinguish transferable cash, committed Mining funds and Loan obligations.
+- Two transfer modes: between any eligible internal account pair and to another NEXI user. Transfer amount, asset, scope, status and both sides of account movement must resolve through backend authority.
+- Deposit keeps its existing dedicated architecture, supported networks, real addresses and USDT-specific icon (not USD), QR, verification/claim/proof/status.
+- Withdraw, zero-separate-fee Convert and all financial products must show genuine API responses, errors, results and chronological Ledger-backed Activity.
+- Source entry: `app/dashboard/wallet/page.tsx`, `app/dashboard/wallet/components/TransferModal.tsx`; verify live backend contracts for actual capabilities.
 
-- `/dashboard`
-- `/dashboard/asset/[symbol]`
-- `/dashboard/spot`
-- `/dashboard/binary`
-- `/dashboard/wallet`
-- `/dashboard/mining`
-- `/dashboard/loans`
-- `/dashboard/support`
-- `/dashboard/messages`
-- `/dashboard/announcement`
-- `/dashboard/learn`
-- `/dashboard/settings`
+## Market and chart design
 
-These routes are listed from the current source tree, not from historical planning documents.
+53 identities: 17 crypto, 20 shares, 9 forex, 7 metals. Reuse custom NEXI asset icons. Order book and recent trades must use real authoritative data; never fabricate provider depth, fills or prices. Preserve chart timeframes and chart resizing. Remove redundant BTC/USDT labels beside interval controls where owner directed, remove leftover MA/EMA/BOLL/RSI/MACD/VOL bottom rail on all applicable trading/Asset Detail charts, maximize chart geometry and simplify Options trade bar wording. Binary controlled outcomes must be isolated from global market quotes and unrelated users.
 
-## Historical frontend pack
+## Visual interaction and acceptance
 
-The July 2026 frontend program, route/state/visual specifications, Stitch catalog, and fidelity ledger are preserved under:
+`DESIGN.md` and source components define Quiet Refraction: selective violet glass, clear dense financial panels, five-destination mobile dock, 320px+ reflow, short-height layout (e.g. 360×640/390×650), safe-area/visualViewport/keyboard, responsive charts, accessible focus/targets and readable contrast. Use existing Sonner feedback and backend-truthful persistent statuses, not a second toast framework.
 
-`docs/archive/frontend-2026-07/`
+**Final browser owner:** Polypane + Chrome DevTools with the existing Coinbase Wallet connection, after source closure and coordinated deployment. No obsolete MetaMask test-harness assumptions. Tests, HTTP 200 and build output do not prove rendered acceptance.
 
-They are lineage/reference material only. They must not override current source, current owner decisions, the completion ledger, or newer design/runtime evidence.
+## Source / backend mapping
+
+App route and state consumers live under `app/dashboard/`, `app/lib/`, `app/state/` and `app/hooks/`. Refer to [Backend catalog](../backend/README.md), [cross-surface map](../architecture/CROSS_SURFACE_FEATURE_MAP.md), [Admin controls](../admin/README.md), [Sentry operations](../operations/NEXI_SENTRY_OBSERVABILITY.md). Archived visual packs are historical reference only.
