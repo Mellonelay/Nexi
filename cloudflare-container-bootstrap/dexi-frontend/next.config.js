@@ -11,6 +11,12 @@ const nextConfig = {
   async redirects() {
     return [{ source: '/', destination: '/dashboard', permanent: false }];
   },
+  async headers() {
+    return [{
+      source: '/:path*',
+      headers: [{ key: 'Document-Policy', value: 'js-profiling' }],
+    }];
+  },
   transpilePackages: ['geist'],
   images: {
     remotePatterns: [{ protocol: 'https', hostname: 'cdn.simpleicons.org', pathname: '/**' }],

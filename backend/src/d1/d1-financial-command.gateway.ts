@@ -1354,33 +1354,51 @@ export class D1FinancialCommandGateway {
     if (!position || String(position.status) !== "OPEN")
       throw new BadRequestException("Open margin position not found");
     const eventKey = `margin:event:interest:${idempotencyKey}`;
+    const interestAmount = this.decimal(interest);
+    const prior = await this.bridge.select<{ positionId: string; asset: string; amount: string }>(
+      `SELECT "positionId","asset","amount" FROM "SpotMarginPositionEvent" WHERE "idempotencyKey"=? LIMIT 1`,
+      [eventKey],
+    );
+    if (prior.results[0]) {
+      const existing = prior.results[0];
+      if (existing.positionId !== positionId || existing.asset !== position.debtAsset || !this.decimal(existing.amount).eq(interestAmount)) {
+        throw new BadRequestException("Margin interest idempotency key belongs to another event");
+      }
+      const current = await this.getMarginPosition(positionId, userId);
+      if (!current) throw new BadRequestException("Open margin position not found");
+      return { positionId, interest: existing.amount, activityId: null, replayed: true, position: current };
+    }
     const currentInterest = this.nonNegativeDecimal(
       String(position.interestAccrued ?? "0"),
     );
-    const nextInterest = currentInterest.plus(this.decimal(interest));
+    const nextInterest = currentInterest.plus(interestAmount);
+    const activityId = randomUUID();
     const result = await this.bridge.batch([
       {
-        sql: `UPDATE "SpotMarginPosition" SET "interestAccrued"=? ,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "status"='OPEN' AND "interestAccrued"=?`,
+        sql: `UPDATE "SpotMarginPosition" SET "interestAccrued"=? ,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "status"='OPEN' AND "interestAccrued"=? AND NOT EXISTS (SELECT 1 FROM "SpotMarginPositionEvent" WHERE "idempotencyKey"=?)`,
         params: [
           nextInterest.toString(),
           positionId,
           String(position.interestAccrued ?? "0"),
+          eventKey,
         ],
       },
+      this.rollbackIfNoChanges(idempotencyKey, "MARGIN_INTEREST"),
       {
-        sql: `INSERT OR IGNORE INTO "SpotMarginPositionEvent" ("id","positionId","type","asset","amount","idempotencyKey","metadata","createdAt") SELECT ?,?,'INTEREST',?,?,?, ?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "SpotMarginPosition" WHERE "id"=? AND "status"='OPEN')`,
+        sql: `INSERT OR IGNORE INTO "SpotMarginPositionEvent" ("id","positionId","type","asset","amount","idempotencyKey","metadata","createdAt") SELECT ?,?,'INTEREST',?,?,?, ?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "SpotMarginPosition" WHERE "id"=? AND "status"='OPEN') AND NOT EXISTS (SELECT 1 FROM "SpotMarginPositionEvent" WHERE "idempotencyKey"=?)`,
         params: [
           randomUUID(),
           positionId,
           String(position.debtAsset),
-          interest,
+          interestAmount.toString(),
           eventKey,
           JSON.stringify({ annualRate, elapsedSeconds }),
           positionId,
+          eventKey,
         ],
       },
       {
-        sql: `INSERT OR IGNORE INTO "SpotMarginActivity" ("id","userId","accountId","positionId","type","status","idempotencyKey","details","createdAt") SELECT ?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "SpotMarginPosition" WHERE "id"=?)`,
+        sql: `INSERT OR IGNORE INTO "SpotMarginActivity" ("id","userId","accountId","positionId","type","status","idempotencyKey","details","createdAt") SELECT ?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "SpotMarginPositionEvent" WHERE "idempotencyKey"=? AND "positionId"=?)`,
         params: [
           randomUUID(),
           userId,
@@ -1389,21 +1407,55 @@ export class D1FinancialCommandGateway {
           "INTEREST",
           "COMPLETED",
           idempotencyKey,
-          JSON.stringify({ interest, annualRate, elapsedSeconds }),
+          JSON.stringify({ interest: interestAmount.toString(), annualRate, elapsedSeconds }),
+          eventKey,
           positionId,
         ],
       },
+      {
+        sql: `INSERT OR IGNORE INTO "Activity" ("id","userId","type","status","referenceType","referenceId","idempotencyKey","ledgerCorrelationId","ledgerPostingId","asset","amount","details","createdAt") SELECT ?,?,'SPOT_MARGIN_INTEREST','COMPLETED','SPOT_MARGIN_INTEREST',?,?,?,NULL,?,?,?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "SpotMarginPositionEvent" WHERE "idempotencyKey"=? AND "positionId"=?)`,
+        params: [
+          activityId,
+          userId,
+          positionId,
+          `activity:margin:interest:${positionId}:${idempotencyKey}`,
+          eventKey,
+          String(position.debtAsset),
+          interestAmount.toString(),
+          JSON.stringify({ annualRate, elapsedSeconds, liabilityOnly: true }),
+          eventKey,
+          positionId,
+        ],
+      },
+      this.eventOutboxStatement({
+        idempotencyKey: `event:margin:interest:${positionId}:${idempotencyKey}`,
+        aggregateType: "MARGIN_POSITION",
+        aggregateId: positionId,
+        eventType: "MARGIN_INTEREST_ACCRUED",
+        correlationId: eventKey,
+        payload: {
+          userId,
+          positionId,
+          asset: String(position.debtAsset),
+          amount: interestAmount.toString(),
+          annualRate,
+          elapsedSeconds,
+        },
+        guard: {
+          sql: `EXISTS (SELECT 1 FROM "SpotMarginPositionEvent" WHERE "idempotencyKey"=? AND "positionId"=?)`,
+          params: [eventKey, positionId],
+        },
+      }),
     ]);
     this.requireChanges(result, 0, "D1 margin interest transition");
+    this.requireChanges(result, 4, "D1 margin interest Activity projection");
     const row = await this.getMarginPosition(positionId, userId);
     if (!row)
       throw new BadRequestException("D1 margin interest was not materialized");
     return {
       positionId,
-      interest,
-      activityId:
-        (result.results[2] as BatchResult | undefined)?.meta?.last_row_id ??
-        null,
+      interest: interestAmount.toString(),
+      activityId,
       replayed: false,
       position: row,
     };
@@ -1609,6 +1661,31 @@ export class D1FinancialCommandGateway {
           }),
         ],
       },
+      {
+        sql: `INSERT OR IGNORE INTO "Activity" ("id","userId","type","status","referenceType","referenceId","idempotencyKey","ledgerCorrelationId","ledgerPostingId","asset","amount","details","createdAt") SELECT ?,?,?, 'COMPLETED',?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "LedgerPosting" WHERE "id"=? AND "accountId"=? AND "correlationId"=?)`,
+        params: [
+          command.activityId,
+          command.userId,
+          `SPOT_MARGIN_${eventType}`,
+          `SPOT_MARGIN_${eventType}`,
+          command.positionId,
+          `activity:margin:settlement:${command.positionId}:${command.idempotencyKey}`,
+          command.correlationId,
+          postingId,
+          command.debtAsset,
+          repayment.toString(),
+          JSON.stringify({
+            state: command.state,
+            closeOrderId: command.closeOrderId,
+            realizedPnl: command.realizedPnl,
+            repayment: command.repayment,
+            ledgerPostingId: postingId,
+          }),
+          postingId,
+          account.id,
+          command.correlationId,
+        ],
+      },
       this.eventOutboxStatement({
         idempotencyKey: `event:margin:settle:${command.positionId}:${command.idempotencyKey}`,
         aggregateType: "MARGIN_POSITION",
@@ -1627,6 +1704,7 @@ export class D1FinancialCommandGateway {
     this.requireChanges(result, 3, "D1 margin close debt posting");
     this.requireChanges(result, 4, "D1 margin close idempotency");
     this.requireChanges(result, 7, "D1 margin position settlement");
+    this.requireChanges(result, 10, "D1 margin settlement Activity projection");
     const row = await this.getMarginPosition(
       command.positionId,
       command.userId,

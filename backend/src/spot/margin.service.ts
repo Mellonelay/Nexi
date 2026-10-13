@@ -11,29 +11,35 @@ export class MarginService {
   constructor(private readonly d1: D1FinancialCommandGateway) {}
 
   async transfer(userId: string, input: MarginTransferDto) {
-    const pair = await this.requirePair(input.pair);
-    if (input.asset !== pair.baseAsset && input.asset !== pair.quoteAsset) {
-      throw new BadRequestException('Transfer asset must belong to the isolated pair');
+    const asset = String(input.asset).trim().toUpperCase();
+    if (asset !== 'USDT') {
+      throw new BadRequestException('Margin Wallet transfers support USDT only');
     }
+    const pair = await this.requirePair(input.pair);
     const amount = this.decimal(input.amount);
     const account = await this.d1.ensureMarginAccount({ userId, pair: pair.symbol, baseAsset: pair.baseAsset, quoteAsset: pair.quoteAsset });
-    const main = await this.d1.getAccountForUser(userId, input.asset, 'MAIN');
-    const margin = await this.d1.getAccountForUser(userId, input.asset, 'MARGIN');
+    const main = await this.d1.getAccountForUser(userId, asset, 'MAIN');
+    const margin = await this.d1.getAccountForUser(userId, asset, 'MARGIN');
     const toMargin = input.direction === MarginTransferDirection.TO_MARGIN;
     const result = await this.d1.pairedTransfer({
       debitAccountId: toMargin ? main.id : margin.id,
       creditAccountId: toMargin ? margin.id : main.id,
-      asset: input.asset,
+      asset,
       amount: amount.toString(),
       referenceType: 'SPOT_MARGIN_TRANSFER',
       referenceId: account.id,
       idempotencyKey: input.idempotencyKey,
       correlationId: input.idempotencyKey,
       economicGroup: account.id,
+      sameUserTransfer: {
+        userId,
+        fromScope: toMargin ? LedgerAccountScope.MAIN : LedgerAccountScope.MARGIN,
+        toScope: toMargin ? LedgerAccountScope.MARGIN : LedgerAccountScope.MAIN,
+      },
       marginActivity: {
         activityId: crypto.randomUUID(), userId, accountId: account.id,
         type: toMargin ? 'TRANSFER_IN' : 'TRANSFER_OUT', status: 'COMPLETED',
-        details: { pair: pair.symbol, asset: input.asset, amount: amount.toString() },
+        details: { pair: pair.symbol, asset, amount: amount.toString() },
       },
     });
     return { accountId: account.id, ...result };

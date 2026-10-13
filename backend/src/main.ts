@@ -33,9 +33,9 @@ export async function bootstrap() {
     // Install the adapter before listen(); its Redis client connects in the
     // background so Cloudflare can observe HTTP liveness independently of
     // external TLS dependency startup.
+    app.get(RuntimeLifecycleService).registerSocketAdapter(redisIoAdapter);
     redisIoAdapter.connectToRedis();
     app.useWebSocketAdapter(redisIoAdapter);
-    app.get(RuntimeLifecycleService).registerSocketAdapter(redisIoAdapter);
 
     app.enableCors({
       origin: runtimeConfig.corsOrigins,
@@ -55,7 +55,6 @@ export async function bootstrap() {
     console.log(`NEXI API listening on port ${runtimeConfig.port}`);
     return app;
   } catch (error) {
-    await redisIoAdapter.close();
     await app.close();
     throw error;
   }

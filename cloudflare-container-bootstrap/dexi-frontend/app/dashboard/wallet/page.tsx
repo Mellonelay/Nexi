@@ -26,7 +26,6 @@ type Activity = { id: string; type: unknown; source: unknown; destination: unkno
 
 const tabs: Tab[] = ['Overview', 'Funding', 'Spot', 'Margin', 'Binary', 'Finance'];
 const categories: Category[] = ['All', 'Crypto', 'Stocks', 'Metals', 'Forex'];
-const accountLabels: Record<Exclude<Tab, 'Overview'>, string> = { Funding: 'Funding', Spot: 'Spot', Margin: 'Margin', Binary: 'Binary', Finance: 'Finance' };
 const actionIcons: Record<Action, typeof ArrowDownToLine> = { Deposit: ArrowDownToLine, Withdraw: ArrowUpFromLine, Transfer: ArrowLeftRight, Convert: RefreshCw };
 
 function record(value: unknown): Record<string, unknown> { return value && typeof value === 'object' ? value as Record<string, unknown> : {}; }
@@ -253,7 +252,7 @@ function assetLabel(asset: ReturnType<typeof assetMeta>, key: 'id' | 'symbol' | 
 }
 
 function WalletAssetRow({ item }: { item: WalletAsset }) {
-  const asset = assetMeta(item.name); const iconItem = { assetId: assetLabel(asset, 'id', item.name), symbol: assetLabel(asset, 'symbol', item.name), displaySymbol: assetLabel(asset, 'displaySymbol', item.name), name: assetLabel(asset, 'name', item.name) }; return <div key={item.name} className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(4.5rem,auto)_minmax(4.5rem,auto)] items-center gap-3 bg-[#171022] px-3 py-2.5 sm:grid-cols-[minmax(0,1fr)_repeat(3,minmax(5rem,auto))] sm:px-4"><div className="flex min-w-0 items-center gap-2"><AssetIcon item={iconItem} /><span className="min-w-0"><span className="block truncate text-xs font-semibold sm:text-sm">{assetLabel(asset, 'name', item.name)}</span><span className="block truncate text-[10px] text-[#8C8299] sm:text-xs">{assetLabel(asset, 'displaySymbol', item.name)}</span></span></div><span className="truncate text-right font-mono text-xs tabular-nums">{text(item.available)}</span><span className="hidden truncate text-right font-mono text-xs tabular-nums sm:block">{text(item.locked)}</span><span className="truncate text-right font-mono text-xs font-semibold tabular-nums">{text(item.total)}</span></div>;
+  const asset = assetMeta(item.name); const iconItem = { assetId: assetLabel(asset, 'id', item.name), symbol: assetLabel(asset, 'symbol', item.name), displaySymbol: assetLabel(asset, 'displaySymbol', item.name), name: assetLabel(asset, 'name', item.name) }; return <div key={item.name} className="grid min-w-0 grid-cols-[minmax(3rem,1fr)_repeat(3,minmax(3rem,auto))] items-center gap-1.5 bg-[#171022] px-2 py-2 sm:grid-cols-[minmax(0,1fr)_repeat(3,minmax(5rem,auto))] sm:gap-3 sm:px-4"><div className="flex min-w-0 items-center gap-2"><AssetIcon item={iconItem} /><span className="min-w-0"><span className="block truncate text-xs font-semibold sm:text-sm">{assetLabel(asset, 'name', item.name)}</span><span className="block truncate text-[10px] text-[#8C8299] sm:text-xs">{assetLabel(asset, 'displaySymbol', item.name)}</span></span></div><span className="truncate text-right font-mono text-xs tabular-nums">{text(item.available)}</span><span className="truncate text-right font-mono text-[10px] tabular-nums sm:text-xs">{text(item.locked)}</span><span className="truncate text-right font-mono text-xs font-semibold tabular-nums">{text(item.total)}</span></div>;
 }
 
 function WalletActionButton({ item, action, enabled, onSelect }: { item: Action; action: Action | null; enabled: boolean; onSelect: (action: Action) => void }) {
@@ -270,18 +269,13 @@ function WalletAccountTabs({ tab, onTabChange }: { tab: Tab; onTabChange: (tab: 
   return <section aria-label="Wallet account tabs"><Panel className="p-2 sm:p-3"><div className="nexi-scroll-rail flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Wallet account tabs">{tabs.map((item) => <TabButton key={item} active={tab === item} onClick={() => onTabChange(item)}>{item === 'Binary' ? 'Options' : item}</TabButton>)}</div></Panel></section>;
 }
 
-function accountSummary(accounts: Record<string, unknown>, name: Exclude<Tab, 'Overview'>) {
-  const item = record(accounts[accountLabels[name]] ?? accounts[name.toUpperCase()]); return { available: item.available, locked: item.locked, total: item.total, state: item.status ?? (Object.keys(item).length ? 'LIVE' : 'UNAVAILABLE') };
-}
-
-function WalletAccountPanel({ tab, accountPayload, accounts }: { tab: Tab; accountPayload: unknown; accounts: Record<string, unknown> }) {
-  if (tab === 'Overview') return null;
-  if (tab === 'Finance') return <Panel className="p-4"><PanelHeading title="Finance obligations" description="Finance wallet balances appear in the asset list below." /><p className="text-sm leading-5 text-[#C3BBD0]">Available amounts exclude locked or committed funds. Outstanding loan records and repayment terms are maintained with the Loan product; the Wallet balance response does not include a current liability total.</p><Link href="/dashboard/loans" className="mt-3 inline-flex min-h-11 items-center rounded-lg border border-violet-300/20 px-3 text-sm font-semibold text-[#CFC4FF] hover:bg-[#2A1742]">Review loan obligations</Link></Panel>;
-  return <Panel className="p-4"><PanelHeading title={`${tab} account`} description="Account values appear when they are available." /><div className="grid gap-3 sm:grid-cols-3">{(['available', 'locked', 'total'] as const).map((key) => <Metric key={key} label={key} value={text(accountSummary(accounts, tab)[key])} />)}</div></Panel>;
+function WalletAccountPanel({ tab }: { tab: Tab }) {
+  if (tab !== 'Finance') return null;
+  return <Panel className="flex flex-wrap items-center justify-between gap-2 p-3 sm:p-4"><div><p className="text-sm font-semibold">Finance commitments and loans</p><p className="mt-1 text-xs text-[#8C8299]">Committed or locked funds are not available to transfer. Loan balances and repayment terms remain tied to loan records.</p></div><Link href="/dashboard/loans" className="inline-flex min-h-11 items-center rounded-lg border border-violet-300/20 px-3 text-sm font-semibold text-[#CFC4FF] hover:bg-[#2A1742]">Review loan obligations</Link></Panel>;
 }
 
 function WalletAssets({ tab, category, onCategoryChange, state, userId, error, visibleAssets }: { tab: Tab; category: Category; onCategoryChange: (category: Category) => void; state: ReadState; userId: string | null; error: string; visibleAssets: WalletAsset[] }) {
-  return <Panel className="p-3 sm:p-4"><div className="flex flex-wrap items-center justify-between gap-3"><PanelHeading title={tab === 'Overview' ? 'All account assets' : `${tab} assets`} description={tab === 'Finance' ? 'Available, committed or locked, and total native balances.' : 'Available, reserved and total amounts for this wallet.'} /><label className="shrink-0 text-xs text-[#C3BBD0]">Asset filter <select aria-label="Asset category" value={category} onChange={(event) => onCategoryChange(event.target.value as Category)} className="nexi-input ml-2 min-h-[44px] px-2 text-xs"><option>All</option><option>Crypto</option><option>Stocks</option><option>Metals</option><option>Forex</option></select></label></div>{state !== 'LIVE' ? <DataStatePanel state={state} title={userId ? 'Wallet data unavailable' : 'Wallet is locked'} message={error || 'No authenticated wallet session is available.'} /> : visibleAssets.length === 0 ? <DataStatePanel state="UNAVAILABLE" title="No asset data for this filter" message="No matching wallet assets are available right now." /> : <div className="overflow-hidden rounded-xl border border-[#2B2037]"><div className="grid grid-cols-[minmax(0,1fr)_minmax(4.5rem,auto)_minmax(4.5rem,auto)] gap-3 bg-[#171022] px-3 py-2 text-[9px] uppercase tracking-[0.08em] text-[#8C8299] sm:grid-cols-[minmax(0,1fr)_repeat(3,minmax(5rem,auto))] sm:px-4 sm:text-[10px] sm:tracking-[0.12em]"><span>Asset</span><span className="text-right">Available</span><span className="hidden text-right sm:block">{tab === 'Finance' ? 'Committed / locked' : 'Locked'}</span><span className="text-right">Total</span></div><div className="divide-y divide-[#2B2037]">{visibleAssets.map((item) => <WalletAssetRow key={item.name} item={item} />)}</div></div>}</Panel>;
+  return <Panel className="p-3 sm:p-4"><div className="flex flex-wrap items-center justify-between gap-3"><PanelHeading title={tab === 'Overview' ? 'All account assets' : `${tab === 'Binary' ? 'Options' : tab} assets`} /><label className="shrink-0 text-xs text-[#C3BBD0]">Asset filter <select aria-label="Asset category" value={category} onChange={(event) => onCategoryChange(event.target.value as Category)} className="nexi-input ml-2 min-h-[44px] px-2 text-xs"><option>All</option><option>Crypto</option><option>Stocks</option><option>Metals</option><option>Forex</option></select></label></div>{state !== 'LIVE' ? <DataStatePanel state={state} title={userId ? 'Wallet data unavailable' : 'Wallet is locked'} message={error || 'No authenticated wallet session is available.'} /> : visibleAssets.length === 0 ? <DataStatePanel state="UNAVAILABLE" title="No asset data for this filter" message="No matching wallet assets are available right now." /> : <div className="overflow-hidden rounded-xl border border-[#2B2037]"><div className="grid grid-cols-[minmax(3rem,1fr)_repeat(3,minmax(3rem,auto))] gap-1.5 bg-[#171022] px-2 py-2 text-[9px] uppercase tracking-[0.04em] text-[#8C8299] sm:grid-cols-[minmax(0,1fr)_repeat(3,minmax(5rem,auto))] sm:gap-3 sm:px-4 sm:text-[10px] sm:tracking-[0.12em]"><span>Asset</span><span className="text-right">Available</span><span className="text-right">{tab === 'Finance' ? 'Committed' : 'Locked'}</span><span className="text-right">Total</span></div><div className="divide-y divide-[#2B2037]">{visibleAssets.map((item) => <WalletAssetRow key={item.name} item={item} />)}</div></div>}</Panel>;
 }
 
 export default function WalletPage() {
@@ -293,8 +287,6 @@ export default function WalletPage() {
   const [currency, setCurrency] = useState('');
 
   const root = record(payload);
-  const accounts = record(root.accounts);
-  const accountPayload = tab === 'Overview' ? payload : accounts[accountLabels[tab]] ?? accounts[tab.toUpperCase()];
   const assets = useMemo(() => readAssets(payload, tab), [payload, tab]);
   const overviewAssets = useMemo(() => readAssets(payload, 'Overview'), [payload]);
   const valuation = useMemo(() => estimatePortfolio(overviewAssets, root.currencies, [...marketPairs, ...metal, ...shares, ...forex]), [overviewAssets, root.currencies, marketPairs, metal, shares, forex]);
@@ -323,7 +315,7 @@ export default function WalletPage() {
       <WalletActions authenticated={authenticated} state={state} action={action} onSelect={selectAction} />
       <WalletAccountTabs tab={tab} onTabChange={setTab} />
       <section className="min-w-0"><div className="min-w-0 space-y-3">
-        <WalletAccountPanel tab={tab} accountPayload={accountPayload} accounts={accounts} />
+        <WalletAccountPanel tab={tab} />
         <WalletAssets tab={tab} category={category} onCategoryChange={setCategory} state={state} userId={userId} error={error} visibleAssets={visibleAssets} />
         <WalletActivityHistory state={activityState} activities={activities} />
       </div></section>

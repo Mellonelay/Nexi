@@ -5,15 +5,51 @@ import { MarginPositionDirection, MarginTransferDirection } from '../../src/spot
 describe('Spot isolated margin authority', () => {
   const pair = { id: 'pair-1', symbol: 'BTCUSDT', baseAsset: 'BTC', quoteAsset: 'USDT' };
 
-  it('moves funds through one D1 paired transfer', async () => {
+  it('rejects non-USDT assets on the user-facing Margin Wallet transfer route', async () => {
+    const d1: any = { getActiveMarketPair: jest.fn().mockResolvedValue(pair) };
+    await expect(new MarginService(d1).transfer('user-1', {
+      pair: 'BTC/USDT',
+      direction: MarginTransferDirection.TO_MARGIN,
+      asset: 'BTC',
+      amount: '1',
+      idempotencyKey: 'margin-btc-transfer-1',
+    })).rejects.toThrow('Margin Wallet transfers support USDT only');
+    expect(d1.getActiveMarketPair).not.toHaveBeenCalled();
+  });
+
+  it('transfers USDT in both directions with scoped same-user Activity metadata', async () => {
     const d1: any = {
       getActiveMarketPair: jest.fn().mockResolvedValue(pair),
       ensureMarginAccount: jest.fn().mockResolvedValue({ id: 'margin-account-1' }),
-      getAccountForUser: jest.fn().mockResolvedValueOnce({ id: 'main-usdt' }).mockResolvedValueOnce({ id: 'margin-usdt' }),
-      pairedTransfer: jest.fn().mockResolvedValue({ debitPostingId: 'debit-1', creditPostingId: 'credit-1' }),
+      getAccountForUser: jest.fn()
+        .mockResolvedValueOnce({ id: 'main-usdt' })
+        .mockResolvedValueOnce({ id: 'margin-usdt' })
+        .mockResolvedValueOnce({ id: 'main-usdt' })
+        .mockResolvedValueOnce({ id: 'margin-usdt' }),
+      pairedTransfer: jest.fn()
+        .mockResolvedValueOnce({ debitPostingId: 'debit-in', creditPostingId: 'credit-in' })
+        .mockResolvedValueOnce({ debitPostingId: 'debit-out', creditPostingId: 'credit-out' }),
     };
-    await expect(new MarginService(d1).transfer('user-1', { pair: 'btc/usdt', direction: MarginTransferDirection.TO_MARGIN, asset: 'USDT', amount: '100', idempotencyKey: 'margin-transfer-1' })).resolves.toMatchObject({ accountId: 'margin-account-1', debitPostingId: 'debit-1' });
-    expect(d1.pairedTransfer).toHaveBeenCalledWith(expect.objectContaining({ debitAccountId: 'main-usdt', creditAccountId: 'margin-usdt', amount: '100', referenceType: 'SPOT_MARGIN_TRANSFER' }));
+    const service = new MarginService(d1);
+    await expect(service.transfer('user-1', { pair: 'btc/usdt', direction: MarginTransferDirection.TO_MARGIN, asset: 'USDT', amount: '100', idempotencyKey: 'margin-transfer-in' }))
+      .resolves.toMatchObject({ accountId: 'margin-account-1', debitPostingId: 'debit-in' });
+    await expect(service.transfer('user-1', { pair: 'btc/usdt', direction: MarginTransferDirection.FROM_MARGIN, asset: 'USDT', amount: '25', idempotencyKey: 'margin-transfer-out' }))
+      .resolves.toMatchObject({ accountId: 'margin-account-1', debitPostingId: 'debit-out' });
+
+    expect(d1.pairedTransfer).toHaveBeenNthCalledWith(1, expect.objectContaining({
+      debitAccountId: 'main-usdt',
+      creditAccountId: 'margin-usdt',
+      amount: '100',
+      referenceType: 'SPOT_MARGIN_TRANSFER',
+      sameUserTransfer: { userId: 'user-1', fromScope: LedgerAccountScope.MAIN, toScope: LedgerAccountScope.MARGIN },
+    }));
+    expect(d1.pairedTransfer).toHaveBeenNthCalledWith(2, expect.objectContaining({
+      debitAccountId: 'margin-usdt',
+      creditAccountId: 'main-usdt',
+      amount: '25',
+      referenceType: 'SPOT_MARGIN_TRANSFER',
+      sameUserTransfer: { userId: 'user-1', fromScope: LedgerAccountScope.MARGIN, toScope: LedgerAccountScope.MAIN },
+    }));
   });
 
   it('creates a pending position after borrowing, reserving, and matching through D1', async () => {

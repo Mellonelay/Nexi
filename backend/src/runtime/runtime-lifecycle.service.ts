@@ -16,22 +16,24 @@ export class RuntimeLifecycleService implements BeforeApplicationShutdown, OnApp
 
   async beforeApplicationShutdown(signal?: string): Promise<void> {
     this.logger.log(`Runtime shutdown stage: beforeApplicationShutdown signal=${signal ?? 'unknown'}`);
-    if (this.socketAdapter) {
-      await this.socketAdapter.close();
-      this.logger.log('Socket.IO Redis adapter closed');
-    }
-    this.logActiveHandles('after application shutdown hooks');
   }
 
-  onApplicationShutdown(signal?: string): void {
+  async onApplicationShutdown(signal?: string): Promise<void> {
     this.logger.log(`Runtime shutdown stage: onApplicationShutdown signal=${signal ?? 'unknown'}`);
-    if (!signal) return;
-    this.shutdownFallback = setTimeout(() => {
-      this.logActiveHandles('hard-exit fallback');
-      this.logger.error('Runtime shutdown exceeded 8s; forcing process exit after cleanup evidence.');
-      process.exit(0);
-    }, 8_000);
-    this.shutdownFallback.unref?.();
+    if (signal) {
+      this.shutdownFallback = setTimeout(() => {
+        this.logActiveHandles('hard-exit fallback');
+        this.logger.error('Runtime shutdown exceeded 8s; forcing process exit after cleanup evidence.');
+        process.exit(0);
+      }, 8_000);
+      this.shutdownFallback.unref?.();
+    }
+
+    if (this.socketAdapter) {
+      await this.socketAdapter.close();
+      this.logger.log('Socket.IO Redis adapter closed after transport disposal');
+    }
+    this.logActiveHandles('after application shutdown hooks');
   }
 
   private logActiveHandles(stage: string): void {
