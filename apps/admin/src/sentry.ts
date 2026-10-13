@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/tanstackstart-react";
+import { browserProfilingIntegration } from "@sentry/react";
 
 const dsn = import.meta.env.VITE_SENTRY_DSN as string | undefined;
 
@@ -19,7 +20,7 @@ if (dsn) {
         maskAllText: true,
         blockAllMedia: true,
       }),
-      Sentry.browserProfilingIntegration(),
+      ...(typeof window === "undefined" ? [] : [browserProfilingIntegration()]),
     ],
     sendDefaultPii: false,
   });

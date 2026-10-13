@@ -17,6 +17,7 @@ export default defineConfig({
     sentryTanstackStart({
       org: "mellonelay",
       project: "nexi",
+      authToken: process.env.SENTRY_AUTH_TOKEN,
       telemetry: false,
       autoInstrumentMiddleware: false,
       release: {
