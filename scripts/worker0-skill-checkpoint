@@ -31,26 +31,8 @@ if p.returncode:
     raise SystemExit(p.stderr or p.stdout or p.returncode)
 route = json.loads(p.stdout)
 
-# NEXI owns durable phase proof; other projects retain the existing skill lease.
-top = subprocess.run(["git", "-C", a.cwd, "rev-parse", "--show-toplevel"],
-                     capture_output=True, text=True)
-root = Path(top.stdout.strip()) if top.returncode == 0 else Path(a.cwd).resolve()
+# Historical NEXI phase enforcement retired; maintain active skill continuity only.
 durable = None
-if os.environ.get("NEXI_EXPLICIT_HISTORICAL_PHASE_CHECK") == "1" and all((root / name).is_file() for name in
-       ("NEXI_CURRENT_STATE.md", "NEXI_PRODUCTION_COMPLETION_LEDGER.md")):
-    gate = root / "scripts/nexi_phase_checkpoint.py"
-    cmd = ["python3", str(gate), "--repo", str(root), "--capsule",
-           "/home/mellonelay1999/nexi-work-current-checkpoint.json", "--phase", route["phase"]]
-    for flag, value in (("--receipt", a.phase_receipt), ("--goal", a.goal),
-                        ("--slice", a.slice), ("--next-proof", a.next_proof)):
-        if value:
-            cmd.extend((flag, value))
-    if a.reason == "completion" or a.stage == "completion":
-        cmd.append("--require-closed")
-    checked = subprocess.run(cmd, capture_output=True, text=True)
-    if checked.returncode:
-        raise SystemExit(checked.stderr or checked.stdout or checked.returncode)
-    durable = json.loads(checked.stdout)
 
 skill_hashes = {}
 for item in route.get("selected", []):

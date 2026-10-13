@@ -39,7 +39,7 @@ No historical controller skill has universal primacy. Use a task-specific skill 
 ## Bounded authority maintenance
 Durable-state reconciliation is part of completion, but it is proportional rather than mechanical.
 - Update `NEXI_CURRENT_STATE.md` when a bounded task materially changes current durable NEXI truth: source frontier, deployed baseline, active phase, canonical ownership/routing, or immediate unresolved gates.
-- `NEXI_PRODUCTION_COMPLETION_LEDGER.md` is a historical compatibility pointer; do not use or update it as an active completion gate.
+- The retired completion ledger is available in Git history only and is not an active completion gate.
 - Harmless commands, transient process/session state, one-off timestamps, exploratory notes, and ephemeral diagnostics do not belong in permanent authority.
 
 When reconciliation is required, do it before the completion receipt rather than deferring it to a cleanup session. The bounded loop is:

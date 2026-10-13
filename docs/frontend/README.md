@@ -44,3 +44,11 @@
 ## Source / backend mapping
 
 App route and state consumers live under `app/dashboard/`, `app/lib/`, `app/state/` and `app/hooks/`. Refer to [Backend catalog](../backend/README.md), [cross-surface map](../architecture/CROSS_SURFACE_FEATURE_MAP.md), [Admin controls](../admin/README.md), [Sentry operations](../operations/NEXI_SENTRY_OBSERVABILITY.md). Archived visual packs are historical reference only.
+
+## Detailed trading and account journeys
+
+Spot/Margin is the shared Public route /dashboard/spot, with Spot controls and isolated Margin LONG/SHORT at the configured 2x/3x/5x leverage choices. Options is /dashboard/binary and represents directional Binary trading, not staking. The 53 market identities are distinct from Wallet-supported depositable assets.
+
+A user depositing BTC or ETH holds that asset in Funding until intentionally converted to actual USDT; USDT must then be transferred into Options before Options can use it. Every supported Wallet account shows one compact Available/Locked/Total strip with truthful native units; Overview alone aggregates estimated portfolio value in USDT. Transfer UI distinguishes movement between the same user's accounts from transfers to another NEXI user.
+
+Preserve KYC upload/status, the VIP tier beside Profile, individual referral and reward histories, category-appropriate Asset Detail, actual depth/trades where supplied, truthful chart state and cohesive Activity reporting. Preserve custom NEXI icons and the already approved responsive Quiet Refraction design.

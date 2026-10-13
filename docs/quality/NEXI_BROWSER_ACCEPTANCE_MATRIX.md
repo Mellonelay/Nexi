@@ -17,14 +17,11 @@ Browser acceptance for NEXI completion must exercise:
 A local standalone frontend, mock backend, disconnected fixture, or VM-local NestJS process cannot prove end-to-end production behavior.
 ## Acceptance owners
 
-- **Preserved authenticated Worker-0 Chrome:** primary NEXI rendered/product acceptance against the deployed Public app and real backend.
-- **Playwright CLI/MCP:** deterministic interaction and actual CSS viewport measurements, attached to that same preserved profile/tab; verify attachment rather than assuming standalone MCP calls retain a session.
-- **Chrome DevTools MCP when healthy, raw CDP otherwise:** DOM/computed CSS/geometry/network/console/emulation diagnosis on the same target.
-- **Polypane:** secondary responsive/multi-viewport breadth when it adds evidence.
-- **BrowserStack:** targeted real-device/cross-browser confirmation with its own session identity; never assume inherited local MetaMask/auth state.
-- **BrowserStack Local:** only for private/local targets; not the normal public-production path.
-
-Do not repeat equivalent acceptance across every tool. Toolkit embedded views and secondary-browser sessions are not authenticated product proof unless they independently demonstrate it.
+- Polypane and Chrome DevTools are the primary responsive and live-browser acceptance environment.
+- Recover the existing authenticated Coinbase Wallet and verify real SIWE signatures before protected Public flows.
+- Chrome DevTools MCP supports DOM, network, console, response-header and viewport diagnostics in the actual session.
+- The old standalone Chrome/MetaMask route and duplicated Playwright campaigns are historical, not current test authority.
+- D1/Ledger correctness requires separate backend evidence; a browser screenshot does not prove accounting.
 
 ## Public coverage
 
@@ -58,7 +55,7 @@ Do not weaken auth gates, use real funds, expose private keys, or fabricate bala
 Record only evidence needed to support the claim:
 - deployed source/release identity;
 - target URL + real backend target;
-- preserved Chrome target/profile attachment and actual CSS viewport; BrowserStack build/session/device/browser or Polypane viewport set when used;
+- verified Polypane/DevTools session, Coinbase Wallet identity and actual CSS viewport;
 - tested flow and expected result;
 - actual result;
 - material network/console/runtime errors;
@@ -70,7 +67,3 @@ Browser evidence does not prove ledger correctness, financial invariants, author
 ## Current handoff rule
 
 Current owner acceptance and direct browser/runtime evidence own live pass/fail state; the retired ledger is historical only. This matrix intentionally does not duplicate transient results.
-
-The 2026-09-25 Galaxy S24 `MARKET ERROR` capture is historical evidence, not a current defect assertion. Public geometry is closed in the ledger's 2026-10-02 Section 29 within its recorded authenticated fixture scope. Reopen only on fresh contradictory evidence; broader product, WalletConnect and distinct real-device/cross-browser requirements remain separate.
-
-Final owner manual acceptance occurs only after the required automatable browser and non-browser ledger rows are green or explicitly owner-deferred where allowed.

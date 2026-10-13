@@ -22,9 +22,9 @@ Cloudflare Worker + Container is the backend execution/runtime authority. GitHub
 - `NEXI_API_CONTAINER` — Cloudflare Container/Durable Object binding used for backend execution.
 - Queue bindings — delivery/retry only.
 - Workflow bindings — orchestration only.
-- R2 bindings: approved active object paths only; current production uses DEPOSIT_PROOFS.
+- R2 bindings: verify current private DEPOSIT_PROOFS and KYC_EVIDENCE resources and access rules at the deployed Worker revision.
 - `REDIS_URL` — Aiven Valkey endpoint/secret; never durable financial truth.
-- Current Worker secrets are JWT_SECRET, OBSERVE_APP_KEY, OBSERVE_APP_SECRET, REDIS_URL, and SENTRY_DSN; values are never committed.
+- Secret inventory is version-sensitive: inspect live binding names without disclosing values. Cloudflare Observability remains disabled; Sentry SDK telemetry is retained.
 - Non-secret runtime values such as `NODE_ENV`, `PORT`, CORS, provider enablement, scheduler controls, and feature flags remain explicit Wrangler configuration.
 
 There is no alternate durable database URL or migration target in the active backend contract. D1 schema evolution uses `backend/prisma/migrations-d1` through current Wrangler D1 migration semantics. Application startup must not perform schema mutation.

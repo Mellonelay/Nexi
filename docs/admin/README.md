@@ -34,3 +34,11 @@ All rows map to source route files, **not** automatic claims of complete runtime
 Admin runtime/source SHA and embedded `VITE_SENTRY_RELEASE` must match the actual Admin artifact; verify separately from Public and Backend. Sentry SDK errors/logs/tracing, privacy-safe Replay/profiling, source maps and production release association follow [Sentry operations](../operations/NEXI_SENTRY_OBSERVABILITY.md).
 
 Use actual Admin RBAC negative tests and live readback before claiming a privileged control accepted. See [Backend](../backend/README.md) and [cross-surface map](../architecture/CROSS_SURFACE_FEATURE_MAP.md).
+
+## Authorization and financial audit contract
+
+Admin identity, session, authorization and MFA controls remain separate from Public wallet-only SIWE. Public authentication never grants privileged Admin authority. Consequential Admin commands should record the acting identity, role/permission, target, reason, request/correlation ID, idempotency, approval context where applicable, and durable audit linkage.
+
+Withdrawal review, KYC evidence review, financial adjustments, market configuration, referral rules and sandbox scenario controls remain guarded NestJS actions, not direct database or frontend-authorized mutations. Hiding Admin navigation is not access control: authorization must be enforced by backend guards, DTOs and the actual durable business command.
+
+Separate Sentry and release evidence is required for Admin source/build identity. A present page or API provider is only source evidence, not a claim of runtime acceptance.

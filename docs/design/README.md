@@ -28,8 +28,7 @@ The active frontend design contract preserves:
 
 Older synchronized design-system documents, Stitch packs, Office Agent decks, July targets, Sep-12/13 V2/V3 concepts, and generated concepts are lineage only when superseded by the current Public-local `DESIGN.md` or newer owner decisions.
 
-Historical design material is preserved under:
-`docs/archive/design-lineage/`
+Historical visual references remain retrievable from prior Git revisions. They are not active design authority.
 
 Do not move archived design lineage back into active authority unless the owner explicitly re-adopts it.
 

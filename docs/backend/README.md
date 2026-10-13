@@ -40,3 +40,11 @@ Every movement that affects financial state must be traceable through Ledger, Ac
 - Current Worker/Container, D1 migration and Sentry release identity must be independently verified before claiming deployed behavior.
 
 See [cross-surface map](../architecture/CROSS_SURFACE_FEATURE_MAP.md), [financial integrity](../security/NEXI_FINANCIAL_INTEGRITY_REQUIREMENTS.md), [Sentry operations](../operations/NEXI_SENTRY_OBSERVABILITY.md).
+
+## Financial operation and market contracts
+
+Financial commands require authenticated ownership, scoped account authorization, available/locked restrictions, asset eligibility, idempotency, and atomic or recoverably coordinated Ledger movements. Ledger postings, user-readable Activity and durable EventOutbox publication are distinct evidence targets; no client-constructed balance or synthetic transaction is authoritative.
+
+Spot must reserve and release appropriate native assets, handle partial fills and fees, and settle through Spot balances. Margin presents USDT-only transferable cash but must maintain real borrowed-asset liabilities, repayment, interest and liquidation accounting. Binary Options reserves trade amounts exclusively from the BINARY USDT balance and records WIN/LOSS settlement without modifying other users' market-price feeds. Finance cash, Mining commitments and Loan debts are separate states.
+
+All product movements—deposit, withdrawal, Convert, between-my-wallets transfer, another-user transfer, Spot/Margin, Binary, Mining/Earn, Loans, referral credit, authorized correction—require correctly correlated Activity. Quote metadata, reference display price, Kline/chart source and settlement-price authority are distinct market-provider roles. Provider fallback is not permission to change a trade's recorded settlement source. Source proof is not authenticated runtime proof.

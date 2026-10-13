@@ -1,27 +1,26 @@
-# NEXI Financial Integrity Requirements
+# NEXI Financial and Security Invariants
 
-**Status:** Required production-engineering authority.  
-**Date:** 2026-07-27  
-**Historical charter reference:** `docs/NEXI_FINAL_PRODUCT_PROGRAM_CHARTER.md` (not the current product or completion authority)
-**Current source/navigation authority:** `docs/README.md` and current GitHub `main`; old ledger is historical
-**Public visual authority:** `cloudflare-container-bootstrap/dexi-frontend/DESIGN.md`; older design documents are lineage only
+Current source/owner contract, not a historical phase program. Exact implementation and deployed status must be verified against source and runtime.
 
-This document extends the completed charter and Phase 1 classification. It does not replace them, restart discovery, or claim implementation completion.
+## Financial ownership
 
-## Core invariants
-No negative balance unless explicitly modeled; available and locked reconcile to ledger; one idempotency key causes at most one effective mutation; every domain event traces to postings; duplicate/retry/concurrency cannot duplicate value; administrative corrections are ledger-backed and auditable.
+NestJS owns business decisions; D1 owns durable application and financial truth; Ledger balanced postings own accounting truth; EventOutbox owns durable publication. Valkey is cache/realtime, and Queues/Workflows deliver or orchestrate without creating financial authority. No direct Public/Admin financial database writes.
 
-## Spot integrity
-Funds are reserved before order acceptance; fills, fees, refunds and asset transfer are atomic or recoverably coordinated; partial fills preserve correct remaining reserve; cancellation releases only remaining reserve.
+Each movement requires correct wallet/account ownership, supported asset, available/locked checks, signed numeric precision, idempotency, origin/destination, attributable status and audit linkage. Retries cannot duplicate principal or payouts, and a failed paired transfer cannot leave a one-sided mutation.
 
-## Binary integrity
-Stake reserve precedes OPEN; entry/expiry prices include source and timestamp; configuration version is captured; settlement is deterministic for the recorded inputs; payout/refund postings and position state commit idempotently.
+## Five account model
 
-## Treasury integrity
-Deposits require network/confirmation evidence; withdrawals enforce limits, fees, ownership, status transitions and approval policy; transaction hashes and reconciliation remain traceable.
+Funding (MAIN), Spot, Margin, Options (BINARY) and Finance are independent accounts. A supported same-user transfer moves the same asset atomically between any eligible pair. Separate NEXI-user transfers remain intact. Options and transferable user-facing Margin balances are USDT-only; Margin may have legitimate non-USDT trading liabilities. Mining commitments and Loan obligations cannot be treated as freely transferable funds.
 
-## Verification
-Property/invariant tests, concurrency races, duplicate command tests, crash recovery, reconciliation mismatch injection, authorization denial, and complete domain-to-ledger trace samples.
+## Product rules
 
-## Evidence and completion rule
-Keep `specified → implemented → statically validated → tested → integrated → runtime verified → browser verified → security reviewed → independently reviewed → approved complete` distinct. File presence, plans, generated graphs, and passing static checks alone are not completion.
+- Spot: reserve before accepting orders; partial fills, fees, cancellations and leftover reserves reconcile.
+- Margin: collateral, loans, position/liquidation, interest and repayment are auditable; borrowed funds do not masquerade as unrestricted available balances.
+- Binary: reserve in the Options account precedes trade opening; recorded entry/expiry provenance, duration and configuration determine deterministic WIN/LOSS and payout. Controlled sandbox prices cannot contaminate shared live market feeds.
+- Deposit and withdrawal: address/network confirmation, proof, approval/rejection and credit/debit status must be traceable.
+- Convert: zero separate commission, without assuming zero spread; accepted quote and expiry govern posted amounts.
+- Mining/Earn, Loans and referral: genuine commitments, disbursements, liabilities and earned credits produce correlated accounting and Activity.
+
+## Authorization and verification
+
+Public uses wallet-only SIWE; Admin uses distinct RBAC and guarded privileged commands. KYC document storage is private and scoped to the owner/reviewer. Focused negative authorization, idempotency, insufficient funds, concurrency, recovery and Activity correlation tests prove only their scenarios. Backend runtime, Sentry release evidence, and Polypane/Chrome DevTools/Coinbase Wallet UI acceptance are distinct.
