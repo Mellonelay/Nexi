@@ -27,7 +27,7 @@ export class SpotService {
   async placeOrder(userId: string, input: PlaceSpotOrderInput) {
     this.assertIdempotencyKey(input.idempotencyKey);
     const amount = assertPositiveDecimal(input.amount);
-    const accountScope = input.accountScope ?? LedgerAccountScope.MAIN;
+    const accountScope = input.accountScope ?? LedgerAccountScope.SPOT;
     const order = await this.placeOrderOnD1(userId, input, amount, accountScope);
     await this.broadcastOrderBook(input.pair);
     return order;

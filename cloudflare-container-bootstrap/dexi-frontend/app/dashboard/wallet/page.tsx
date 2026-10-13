@@ -1,10 +1,12 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import { ArrowDownToLine, ArrowLeftRight, ArrowUpFromLine, Clock3, History, RefreshCw, WalletCards } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../lib/api';
 import { sessionPrincipalId } from '../../lib/wallet-auth';
+import { useMarketData } from '../../hooks/useMarketData';
 import { authoritativeValue } from '../../lib/product-states';
 import { ASSET_REGISTRY, findAsset, type AssetCategory } from '../../lib/asset-registry';
 import AssetIcon from '../../components/AssetIcon';
@@ -20,7 +22,7 @@ type Tab = 'Overview' | 'Funding' | 'Spot' | 'Margin' | 'Binary' | 'Finance';
 type Action = 'Deposit' | 'Withdraw' | 'Transfer' | 'Convert';
 type Category = 'All' | AssetCategory;
 type WalletAsset = { name: string; available: unknown; locked: unknown; total: unknown };
-type Activity = { id: string; type: unknown; source: unknown; destination: unknown; asset: unknown; amount: unknown; status: unknown; createdAt: unknown; completedAt: unknown; productId: unknown; txHash: unknown; ledgerId: unknown };
+type Activity = { id: string; type: unknown; source: unknown; destination: unknown; asset: unknown; amount: unknown; status: unknown; createdAt: unknown; ledgerId: unknown; referenceType: unknown; referenceId: unknown; correlationId: unknown; details: Record<string, unknown>; postings: Array<Record<string, unknown>> };
 
 const tabs: Tab[] = ['Overview', 'Funding', 'Spot', 'Margin', 'Binary', 'Finance'];
 const categories: Category[] = ['All', 'Crypto', 'Stocks', 'Metals', 'Forex'];
@@ -30,24 +32,72 @@ const actionIcons: Record<Action, typeof ArrowDownToLine> = { Deposit: ArrowDown
 function record(value: unknown): Record<string, unknown> { return value && typeof value === 'object' ? value as Record<string, unknown> : {}; }
 function text(value: unknown): string { return authoritativeValue(value); }
 
-function readAssets(payload: unknown): WalletAsset[] {
-  const root = record(payload);
-  // The authoritative wallet route currently returns the legacy flat asset
-  // map. Prefer the canonical `balances` envelope when available, while
-  // keeping the overview truthful during contract transition.
-  const source = record(root.balances ?? payload);
-  return Object.entries(source).flatMap(([name, value]) => {
-    const item = record(value);
-    const available = typeof value === 'number' || typeof value === 'string' ? value : item.available;
-    const locked = item.locked;
-    const total = item.total;
-    if ([available, locked, total].every((value) => text(value) === '—')) return [];
-    return [{ name, available, locked, total }];
+function sumDecimalStrings(values: unknown[]): string {
+  const parts = values.map((value) => String(value ?? '0')).map((value) => {
+    const [whole = '0', fraction = ''] = value.split('.');
+    return { whole: whole || '0', fraction };
   });
+  const scale = Math.max(0, ...parts.map((part) => part.fraction.length));
+  const total = parts.reduce((sum, part) => sum + BigInt(`${part.whole}${part.fraction.padEnd(scale, '0')}` || '0'), BigInt(0));
+  const divisor = BigInt(10) ** BigInt(scale);
+  const whole = total / divisor;
+  const fraction = scale ? String(total % divisor).padStart(scale, '0').replace(/0+$/, '') : '';
+  return fraction ? `${whole}.${fraction}` : String(whole);
+}
+
+function readAssets(payload: unknown, selectedTab: Tab): WalletAsset[] {
+  const root = record(payload);
+  const source = Array.isArray(root.assets) ? root.assets : [];
+  const targetScope = selectedTab === 'Overview' ? null : selectedTab === 'Funding' ? 'MAIN' : selectedTab === 'Binary' ? 'BINARY' : selectedTab.toUpperCase();
+  return source.flatMap((value) => {
+    const asset = record(value);
+    const scopes = record(asset.scopes);
+    const balances = (targetScope ? [scopes[targetScope]] : Object.values(scopes)).filter(Boolean).map(record);
+    if (!balances.length) return [];
+    const available = sumDecimalStrings(balances.map((balance) => balance.available));
+    const locked = sumDecimalStrings(balances.map((balance) => balance.locked));
+    const total = sumDecimalStrings(balances.map((balance) => balance.total));
+    const name = String(asset.asset ?? '');
+    return name ? [{ name, available, locked, total }] : [];
+  });
+}
+
+type PortfolioValuation = { available: string; locked: string; total: string; state: 'LIVE' | 'STALE' | 'UNAVAILABLE'; unpriced: number };
+type WalletQuote = ReturnType<typeof useMarketData>['marketPairs'][number];
+
+function estimatePortfolio(assets: WalletAsset[], currencies: unknown, quotes: WalletQuote[]): PortfolioValuation {
+  const supported = Array.isArray(currencies) && currencies.some((value) => String(value).toUpperCase() === 'USDT');
+  let available = 0; let locked = 0; let total = 0; let unpriced = 0; let stale = false;
+  for (const asset of assets) {
+    const nativeTotal = Number(asset.total ?? 0);
+    if (!Number.isFinite(nativeTotal) || nativeTotal <= 0) continue;
+    let price: number | null = null;
+    if (asset.name.toUpperCase() === 'USDT' && supported) price = 1;
+    else {
+      const quote = quotes.find((item) => item.symbol.replaceAll('/', '').toUpperCase() === `${asset.name.toUpperCase()}USDT` || item.pair.replaceAll('/', '').toUpperCase() === `${asset.name.toUpperCase()}USDT`);
+      if (quote?.dataState === 'LIVE' && quote.price !== null && Number.isFinite(quote.price) && quote.price > 0) price = quote.price;
+      else if (quote?.dataState === 'STALE') stale = true;
+    }
+    if (price === null) { unpriced += 1; continue; }
+    const availableAmount = Number(asset.available ?? 0);
+    const lockedAmount = Number(asset.locked ?? 0);
+    if (Number.isFinite(availableAmount)) available += availableAmount * price;
+    if (Number.isFinite(lockedAmount)) locked += lockedAmount * price;
+    total += nativeTotal * price;
+  }
+  const format = (amount: number) => `${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT${unpriced ? ` · ${unpriced} unpriced` : ''}`;
+  return { available: format(available), locked: format(locked), total: format(total), state: unpriced === 0 ? 'LIVE' : stale ? 'STALE' : 'UNAVAILABLE', unpriced };
 }
 
 function isActivityIdentifier(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
+}
+
+function readActivityDetails(value: unknown): Record<string, unknown> {
+  if (typeof value === 'string') {
+    try { return record(JSON.parse(value)); } catch { return {}; }
+  }
+  return record(value);
 }
 
 function readActivities(payload: unknown): Activity[] {
@@ -56,11 +106,18 @@ function readActivities(payload: unknown): Activity[] {
   if (!Array.isArray(source)) throw new Error('Wallet activity collection is unavailable.');
   const activities = source.flatMap((value) => {
     const item = record(value);
+    const details = readActivityDetails(item.details);
+    const postings = Array.isArray(item.relatedLedgerPostings) ? item.relatedLedgerPostings.map(record) : [];
     const id = item.activityId ?? item.id;
-    const ledgerId = item.ledgerTransactionId ?? item.ledgerId ?? item.ledgerCorrelationId ?? item.ledgerPostingId;
-    if (!isActivityIdentifier(id)) return [];
-    if (!isActivityIdentifier(ledgerId)) return [];
-    return [{ id, ledgerId, type: item.type, source: item.sourceAccount, destination: item.destinationAccount, asset: item.asset, amount: item.amount, status: item.status, createdAt: item.createdAt, completedAt: item.completedAt, productId: item.productId, txHash: item.blockchainTransactionHash }];
+    const ledgerId = item.ledgerTransactionId ?? item.ledgerId ?? item.ledgerCorrelationId ?? item.ledgerCorrelationId ?? item.ledgerPostingId ?? details.debitPostingId ?? postings[0]?.id;
+    if (!isActivityIdentifier(id) || !isActivityIdentifier(ledgerId)) return [];
+    return [{
+      id, ledgerId, type: item.type, asset: item.asset, amount: item.amount, status: item.status, createdAt: item.createdAt,
+      source: item.sourceAccount ?? details.sourceScope ?? details.fromScope ?? details.fromUserId,
+      destination: item.destinationAccount ?? details.destinationScope ?? details.toScope ?? details.toUserId,
+      referenceType: item.referenceType, referenceId: item.referenceId, correlationId: item.ledgerCorrelationId,
+      details, postings,
+    }];
   });
   if (activities.length !== source.length) throw new Error('Wallet activity ledger identity is unavailable.');
   return activities;
@@ -88,8 +145,14 @@ function loadWalletData(walletEndpoint: string, activityEndpoint: string) {
 
 function assetMeta(name: string) { return findAsset(name) ?? ASSET_REGISTRY.find((asset) => asset.symbol.toLowerCase() === name.toLowerCase()); }
 
+function activityTypeLabel(value: unknown) {
+  const type = String(value ?? '').toUpperCase();
+  if (type.includes('WALLET_ACCOUNT_TRANSFER') || type.includes('INTERNAL_TRANSFER')) return 'Wallet transfer';
+  return type ? type.replaceAll('_', ' ').toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase()) : 'Financial activity';
+}
+
 function WalletActivityHistory({ state, activities }: { state: ReadState; activities: Activity[] }) {
-  return <div id="wallet-activity"><Panel className="p-3 sm:p-4"><PanelHeading title="Activity History" action={<History size={18} className="text-[#8C8299]" />} />{state !== 'LIVE' ? <DataStatePanel state={state} title="Activity authority unavailable" message="Activity details could not be loaded yet. Refresh to try again." /> : activities.length === 0 ? <DataStatePanel state="EMPTY" title="No wallet activity yet" message="Ledger-backed wallet activity will appear here when it is available." /> : <div className="divide-y divide-[#2B2037] overflow-hidden rounded-xl border border-[#2B2037]">{activities.map((item) => <article key={item.id} className="grid gap-2 bg-[#171022] p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-sm font-semibold">{text(item.type)} · {text(item.asset)}</p><StatusBadge state={text(item.status)} /></div><p className="mt-1 truncate text-xs text-[#8C8299]">{text(item.createdAt)} · Activity {item.id} · Ledger {text(item.ledgerId)}</p></div><div className="flex gap-4 text-xs text-[#C3BBD0] sm:text-right"><span>Amount <strong className="font-mono">{text(item.amount)}</strong></span><span className="hidden sm:inline">{text(item.source)}{text(item.destination) !== '—' ? ` → ${text(item.destination)}` : ''}</span></div></article>)}</div>}</Panel></div>;
+  return <div id="wallet-activity"><Panel className="p-3 sm:p-4"><PanelHeading title="Activity History" action={<History size={18} className="text-[#8C8299]" />} />{state !== 'LIVE' ? <DataStatePanel state={state} title="Activity authority unavailable" message="Activity details could not be loaded yet. Refresh to try again." /> : activities.length === 0 ? <DataStatePanel state="EMPTY" title="No wallet activity yet" message="Ledger-backed wallet activity will appear here when it is available." /> : <div className="divide-y divide-[#2B2037] overflow-hidden rounded-xl border border-[#2B2037]">{activities.map((item) => <article key={item.id} className="bg-[#171022] p-3"><div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-sm font-semibold">{activityTypeLabel(item.type)} · {text(item.asset)}</p><StatusBadge state={text(item.status)} /></div><p className="mt-1 truncate text-xs text-[#8C8299]">{text(item.createdAt)} · Activity {item.id} · Ledger {text(item.ledgerId)}</p></div><div className="flex gap-4 text-xs text-[#C3BBD0] sm:text-right"><span>Amount <strong className="font-mono">{text(item.amount)}</strong></span><span>{text(item.source)}{text(item.destination) !== '—' ? ` → ${text(item.destination)}` : ''}</span></div></div><details className="mt-2 rounded-lg border border-violet-300/10 px-3 py-2 text-xs"><summary className="min-h-7 cursor-pointer text-[#C3BBD0]">Accounting details · {item.postings.length} ledger posting{item.postings.length === 1 ? '' : 's'}</summary><div className="mt-2 space-y-2"><p className="break-all text-[#8C8299]">Reference {text(item.referenceType)} · {text(item.referenceId)} · Correlation {text(item.correlationId)}</p>{Object.keys(item.details).length > 0 && <p className="break-all text-[#8C8299]">{Object.entries(item.details).map(([key, value]) => `${key}: ${typeof value === 'object' ? JSON.stringify(value) : String(value)}`).join(' · ')}</p>}{item.postings.map((posting, index) => <div key={String(posting.id ?? index)} className="grid gap-x-3 gap-y-1 rounded-md bg-[#0B0711] p-2 sm:grid-cols-2"><span>Posting {text(posting.id)} · {text(posting.scope)} · {text(posting.kind)}</span><span>Amount {text(posting.amount)} {text(posting.asset)}</span><span>Available Δ {text(posting.availableDelta)}</span><span>Locked Δ {text(posting.lockedDelta)}</span></div>)}</div></details></article>)}</div>}</Panel></div>;
 }
 
 function useWalletSession(onPrincipalChange: (next: string | null) => void) {
@@ -135,7 +198,7 @@ function useWalletAuthority() {
   const loadWallet = useCallback(async () => {
     if (!sessionChecked || !userId) return;
     setState('LOADING'); setActivityState('LOADING');
-    const [walletResult, activityResult] = await loadWalletData('/wallet/me', '/wallet/activity');
+    const [walletResult, activityResult] = await loadWalletData('/wallet/overview', '/wallet/activity');
     if (sessionPrincipalId() !== userId) return;
     setPayload(walletResult.data);
     setState(walletResult.state);
@@ -167,20 +230,18 @@ function WalletPerformance({ root, state }: { root: Record<string, unknown>; sta
   return <div className="mt-2 grid min-w-0 grid-cols-2 gap-2 border-t border-violet-300/10 pt-2" aria-label="Portfolio performance">{metrics.map((item) => <Metric key={item.label} label={item.label} value={performanceValue(state, item.value, item.percent)} />)}</div>;
 }
 
-function WalletSummary({ root, state }: { root: Record<string, unknown>; state: ReadState }) {
+function WalletSummary({ root, state, valuation }: { root: Record<string, unknown>; state: ReadState; valuation: PortfolioValuation }) {
   return <section aria-label="Total assets and portfolio summary">
         <Panel className="overflow-hidden p-3 sm:p-4">
-          <div className="flex min-w-0 items-start justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#C3BBD0] sm:text-xs"><WalletCards size={16} className="shrink-0 text-[#48C0CC]" /> Total assets</div>
-              <p className="mt-1.5 truncate font-mono text-[1.75rem] font-semibold leading-none tabular-nums sm:mt-2 sm:text-3xl">{walletMetricValue(state, root.total)}</p>
-              <p className="mt-1.5 text-[10px] leading-4 text-[#8C8299] sm:text-xs">Current wallet value.</p>
-            </div>
-            {state !== 'LIVE' && <StatusBadge state={state} />}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#C3BBD0] sm:text-xs"><WalletCards size={16} className="shrink-0 text-[#48C0CC]" /> Wallet balance</div>
+            {valuation.state !== 'LIVE' && <StatusBadge state={valuation.state} />}
           </div>
-          <div className="mt-3 grid min-w-0 grid-cols-2 gap-2">
-            <Metric label="Available" value={walletMetricValue(state, root.available)} />
-            <Metric label="Locked / in orders" value={walletMetricValue(state, root.locked)} />
+          <p className="mt-1 text-[10px] leading-4 text-[#8C8299]">Estimated portfolio value · USDT. Native balances remain unchanged.</p>
+          <div className="mt-3 grid min-w-0 grid-cols-3 gap-2" aria-label="Estimated available, locked and total portfolio value in USDT">
+            <Metric label="Available · USDT" value={state === 'LIVE' ? valuation.available : 'UNAVAILABLE'} />
+            <Metric label="Locked · USDT" value={state === 'LIVE' ? valuation.locked : 'UNAVAILABLE'} />
+            <Metric label="Total · USDT" value={state === 'LIVE' ? valuation.total : 'UNAVAILABLE'} />
           </div>
           <WalletPerformance root={root} state={state} />
         </Panel>
@@ -215,27 +276,32 @@ function accountSummary(accounts: Record<string, unknown>, name: Exclude<Tab, 'O
 
 function WalletAccountPanel({ tab, accountPayload, accounts }: { tab: Tab; accountPayload: unknown; accounts: Record<string, unknown> }) {
   if (tab === 'Overview') return null;
-  return <Panel className="p-4"><PanelHeading title={`${tab} account`} description={tab === 'Finance' ? 'This projection is not available for this account yet.' : 'Account values appear when they are available.'} />{tab === 'Finance' && !Object.keys(record(accountPayload)).length ? <DataStatePanel state="UNAVAILABLE" title={`${tab} account unavailable`} message="Balance and activity are not available for this account yet." /> : <div className="grid gap-3 sm:grid-cols-3">{(['available', 'locked', 'total'] as const).map((key) => <Metric key={key} label={key} value={text(accountSummary(accounts, tab)[key])} />)}</div>}</Panel>;
+  if (tab === 'Finance') return <Panel className="p-4"><PanelHeading title="Finance obligations" description="Finance wallet balances appear in the asset list below." /><p className="text-sm leading-5 text-[#C3BBD0]">Available amounts exclude locked or committed funds. Outstanding loan records and repayment terms are maintained with the Loan product; the Wallet balance response does not include a current liability total.</p><Link href="/dashboard/loans" className="mt-3 inline-flex min-h-11 items-center rounded-lg border border-violet-300/20 px-3 text-sm font-semibold text-[#CFC4FF] hover:bg-[#2A1742]">Review loan obligations</Link></Panel>;
+  return <Panel className="p-4"><PanelHeading title={`${tab} account`} description="Account values appear when they are available." /><div className="grid gap-3 sm:grid-cols-3">{(['available', 'locked', 'total'] as const).map((key) => <Metric key={key} label={key} value={text(accountSummary(accounts, tab)[key])} />)}</div></Panel>;
 }
 
 function WalletAssets({ tab, category, onCategoryChange, state, userId, error, visibleAssets }: { tab: Tab; category: Category; onCategoryChange: (category: Category) => void; state: ReadState; userId: string | null; error: string; visibleAssets: WalletAsset[] }) {
-  return <Panel className="p-3 sm:p-4"><div className="flex flex-wrap items-center justify-between gap-3"><PanelHeading title={tab === 'Overview' ? 'All account assets' : `${tab} assets`} description="Available, reserved and total amounts for this wallet." /><label className="shrink-0 text-xs text-[#C3BBD0]">Asset filter <select aria-label="Asset category" value={category} onChange={(event) => onCategoryChange(event.target.value as Category)} className="nexi-input ml-2 min-h-[44px] px-2 text-xs"><option>All</option><option>Crypto</option><option>Stocks</option><option>Metals</option><option>Forex</option></select></label></div>{state !== 'LIVE' ? <DataStatePanel state={state} title={userId ? 'Wallet data unavailable' : 'Wallet is locked'} message={error || 'No authenticated wallet session is available.'} /> : visibleAssets.length === 0 ? <DataStatePanel state="UNAVAILABLE" title="No asset data for this filter" message="No matching wallet assets are available right now." /> : <div className="overflow-hidden rounded-xl border border-[#2B2037]"><div className="grid grid-cols-[minmax(0,1fr)_minmax(4.5rem,auto)_minmax(4.5rem,auto)] gap-3 bg-[#171022] px-3 py-2 text-[9px] uppercase tracking-[0.08em] text-[#8C8299] sm:grid-cols-[minmax(0,1fr)_repeat(3,minmax(5rem,auto))] sm:px-4 sm:text-[10px] sm:tracking-[0.12em]"><span>Asset</span><span className="text-right">Available</span><span className="hidden text-right sm:block">Locked</span><span className="text-right">Total</span></div><div className="divide-y divide-[#2B2037]">{visibleAssets.map((item) => <WalletAssetRow key={item.name} item={item} />)}</div></div>}</Panel>;
+  return <Panel className="p-3 sm:p-4"><div className="flex flex-wrap items-center justify-between gap-3"><PanelHeading title={tab === 'Overview' ? 'All account assets' : `${tab} assets`} description={tab === 'Finance' ? 'Available, committed or locked, and total native balances.' : 'Available, reserved and total amounts for this wallet.'} /><label className="shrink-0 text-xs text-[#C3BBD0]">Asset filter <select aria-label="Asset category" value={category} onChange={(event) => onCategoryChange(event.target.value as Category)} className="nexi-input ml-2 min-h-[44px] px-2 text-xs"><option>All</option><option>Crypto</option><option>Stocks</option><option>Metals</option><option>Forex</option></select></label></div>{state !== 'LIVE' ? <DataStatePanel state={state} title={userId ? 'Wallet data unavailable' : 'Wallet is locked'} message={error || 'No authenticated wallet session is available.'} /> : visibleAssets.length === 0 ? <DataStatePanel state="UNAVAILABLE" title="No asset data for this filter" message="No matching wallet assets are available right now." /> : <div className="overflow-hidden rounded-xl border border-[#2B2037]"><div className="grid grid-cols-[minmax(0,1fr)_minmax(4.5rem,auto)_minmax(4.5rem,auto)] gap-3 bg-[#171022] px-3 py-2 text-[9px] uppercase tracking-[0.08em] text-[#8C8299] sm:grid-cols-[minmax(0,1fr)_repeat(3,minmax(5rem,auto))] sm:px-4 sm:text-[10px] sm:tracking-[0.12em]"><span>Asset</span><span className="text-right">Available</span><span className="hidden text-right sm:block">{tab === 'Finance' ? 'Committed / locked' : 'Locked'}</span><span className="text-right">Total</span></div><div className="divide-y divide-[#2B2037]">{visibleAssets.map((item) => <WalletAssetRow key={item.name} item={item} />)}</div></div>}</Panel>;
 }
 
 export default function WalletPage() {
   const [tab, setTab] = useState<Tab>('Overview');
   const [category, setCategory] = useState<Category>('All');
   const { userId, sessionChecked, state, payload, activities, activityState, error, loadWallet } = useWalletAuthority();
+  const { marketPairs, metal, shares, forex } = useMarketData();
   const [action, setAction] = useState<Action | null>(null);
   const [currency, setCurrency] = useState('');
 
   const root = record(payload);
   const accounts = record(root.accounts);
   const accountPayload = tab === 'Overview' ? payload : accounts[accountLabels[tab]] ?? accounts[tab.toUpperCase()];
-  const assets = useMemo(() => readAssets(accountPayload), [accountPayload]);
+  const assets = useMemo(() => readAssets(payload, tab), [payload, tab]);
+  const overviewAssets = useMemo(() => readAssets(payload, 'Overview'), [payload]);
+  const valuation = useMemo(() => estimatePortfolio(overviewAssets, root.currencies, [...marketPairs, ...metal, ...shares, ...forex]), [overviewAssets, root.currencies, marketPairs, metal, shares, forex]);
   const visibleAssets = useMemo(() => assets.filter((item) => category === 'All' || assetMeta(item.name)?.category === category), [assets, category]);
   const authenticated = Boolean(userId);
   const currencies = useMemo(() => assets.map((asset) => ({ symbol: asset.name })), [assets]);
+  const transferCurrencies = useMemo(() => Array.isArray(root.currencies) ? root.currencies.map((symbol) => ({ symbol: String(symbol).toUpperCase() })) : currencies, [root.currencies, currencies]);
 
   const selectAction = (next: Action) => {
     setAction(next);
@@ -253,7 +319,7 @@ export default function WalletPage() {
       <div className="flex shrink-0 items-center gap-2"><SecondaryButton onClick={() => void loadWallet()}><RefreshCw size={15} className="sm:mr-2" /><span className="sr-only sm:not-sr-only">Refresh</span></SecondaryButton></div>
     </header>
     <WalletDashboardLayout>
-      <WalletSummary root={root} state={state} />
+      <WalletSummary root={root} state={state} valuation={valuation} />
       <WalletActions authenticated={authenticated} state={state} action={action} onSelect={selectAction} />
       <WalletAccountTabs tab={tab} onTabChange={setTab} />
       <section className="min-w-0"><div className="min-w-0 space-y-3">
@@ -263,7 +329,7 @@ export default function WalletPage() {
       </div></section>
       <DepositModal isOpen={action === 'Deposit'} onClose={() => setAction(null)} currencies={currencies} selectedCurrency={currency} onSelectCurrency={setCurrency} onCompleted={loadWallet} />
       <WithdrawModal isOpen={action === 'Withdraw'} onClose={() => setAction(null)} currencies={currencies} selectedCurrency={currency} onSelectCurrency={setCurrency} onCompleted={loadWallet} />
-      <TransferModal isOpen={action === 'Transfer'} onClose={() => setAction(null)} currencies={currencies} selectedCurrency={currency} onSelectCurrency={setCurrency} onCompleted={loadWallet} />
+      <TransferModal isOpen={action === 'Transfer'} onClose={() => setAction(null)} currencies={transferCurrencies} selectedCurrency={currency} onSelectCurrency={setCurrency} onCompleted={loadWallet} />
       <ConvertModal isOpen={action === 'Convert'} onClose={() => setAction(null)} currencies={currencies} selectedCurrency={currency} onCompleted={loadWallet} />
     </WalletDashboardLayout>
   </PageShell>;

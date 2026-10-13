@@ -25,14 +25,14 @@ describe('Gate 2 Spot authority', () => {
     const { service, d1 } = createService();
     await service.placeOrder('user-1', { pair: 'BTC/USDT', side: OrderSide.BUY, type: Gate2SpotOrderType.LIMIT, amount: '2', price: '100', idempotencyKey: 'order-key-1' });
     expect(d1.reserveSpotOrder).toHaveBeenCalledWith(expect.objectContaining({
-      pair: 'BTCUSDT', side: OrderSide.BUY, amount: '2', price: '100', reserveAsset: 'USDT', reserveScope: LedgerAccountScope.MAIN, reservedAmount: '200.2', feeRate: '0.001',
+      pair: 'BTCUSDT', side: OrderSide.BUY, amount: '2', price: '100', reserveAsset: 'USDT', reserveScope: LedgerAccountScope.SPOT, reservedAmount: '200.2', feeRate: '0.001',
     }));
   });
 
   it('reserves only base quantity for a sell because fee is charged from quote proceeds', async () => {
     const { service, d1 } = createService();
     await service.placeOrder('user-1', { pair: 'BTC/USDT', side: OrderSide.SELL, type: Gate2SpotOrderType.LIMIT, amount: '2', price: '100', idempotencyKey: 'sell-order-1' });
-    expect(d1.reserveSpotOrder).toHaveBeenCalledWith(expect.objectContaining({ side: OrderSide.SELL, reserveAsset: 'BTC', reservedAmount: '2', reserveScope: LedgerAccountScope.MAIN }));
+    expect(d1.reserveSpotOrder).toHaveBeenCalledWith(expect.objectContaining({ side: OrderSide.SELL, reserveAsset: 'BTC', reservedAmount: '2', reserveScope: LedgerAccountScope.SPOT }));
   });
 
   it('returns the D1 idempotent order read-back', async () => {

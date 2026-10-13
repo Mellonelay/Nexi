@@ -140,6 +140,54 @@ export class FinancialOperationsService {
     return { withdrawal: await this.d1.settleWithdrawalAtomic(id, providerReceipt, adminId, reason), replayed: false, providerLive: false };
   }
 
+  async transferBetweenAccounts(userId: string, input: {
+    sourceScope: string; destinationScope: string; asset: string; amount: string; idempotencyKey: string;
+  }) {
+    this.assertIdempotencyKey(input.idempotencyKey);
+    const scopes = new Set(["MAIN", "SPOT", "MARGIN", "BINARY", "FINANCE"]);
+    const sourceScope = input.sourceScope.trim().toUpperCase();
+    const destinationScope = input.destinationScope.trim().toUpperCase();
+    const asset = input.asset.trim().toUpperCase();
+    if (!scopes.has(sourceScope) || !scopes.has(destinationScope)) throw new BadRequestException("Wallet account scope is unsupported");
+    if (sourceScope === destinationScope) throw new BadRequestException("Wallet transfer accounts must differ");
+    const amount = assertPositiveDecimal(input.amount);
+    const [sourceSupported, destinationSupported] = await Promise.all([
+      this.d1.isAssetSupportedForWalletScope(sourceScope, asset),
+      this.d1.isAssetSupportedForWalletScope(destinationScope, asset),
+    ]);
+    if (!sourceSupported || !destinationSupported) throw new BadRequestException("Asset is not supported by both Wallet accounts");
+    const [debit, credit] = await Promise.all([
+      this.d1.getAccountForUser(userId, asset, sourceScope),
+      this.d1.getAccountForUser(userId, asset, destinationScope),
+    ]);
+    const postings = await this.d1.pairedTransfer({
+      debitAccountId: debit.id,
+      creditAccountId: credit.id,
+      asset,
+      amount: amount.toString(),
+      referenceType: "WALLET_ACCOUNT_TRANSFER",
+      referenceId: input.idempotencyKey,
+      idempotencyKey: input.idempotencyKey,
+      correlationId: input.idempotencyKey,
+      economicGroup: input.idempotencyKey,
+      sameUserTransfer: { userId, fromScope: sourceScope, toScope: destinationScope },
+    });
+    const [sourceBalance, destinationBalance] = await Promise.all([
+      this.d1.getBalance(debit.id),
+      this.d1.getBalance(credit.id),
+    ]);
+    const withTotal = (balance: { available: string; locked: string }) => ({
+      ...balance,
+      total: new Prisma.Decimal(balance.available).plus(balance.locked).toString(),
+    });
+    return {
+      transfer: { asset, amount: amount.toString(), sourceScope, destinationScope, sourceAccountId: debit.id, destinationAccountId: credit.id },
+      balances: { source: withTotal(sourceBalance), destination: withTotal(destinationBalance) },
+      postings,
+      replayed: postings.replayed,
+    };
+  }
+
   async transfer(userId: string, input: TransferInput) {
     this.assertIdempotencyKey(input.idempotencyKey);
     const toUserId = input.toUserId?.trim() ?? (input.toUserCode === undefined ? undefined : String((await this.d1.getUserByUserCode(input.toUserCode))?.id ?? ''));

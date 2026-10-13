@@ -116,9 +116,9 @@ function readOptionWalletBalance(payload: unknown): OptionWalletBalance {
   const assets = Array.isArray(overview.assets) ? overview.assets : [];
   const usdt = assets.find((asset) => asset && typeof asset === 'object' && String((asset as { asset?: unknown }).asset).trim().toUpperCase() === 'USDT') as { scopes?: unknown } | undefined;
   if (!usdt?.scopes || typeof usdt.scopes !== 'object') return { state: 'UNSUPPORTED' };
-  const main = (usdt.scopes as Record<string, unknown>).MAIN;
-  if (!main || typeof main !== 'object') return { state: 'UNSUPPORTED' };
-  const account = main as { accountExists?: unknown; state?: unknown; available?: unknown };
+  const options = (usdt.scopes as Record<string, unknown>).BINARY;
+  if (!options || typeof options !== 'object') return { state: 'UNSUPPORTED' };
+  const account = options as { accountExists?: unknown; state?: unknown; available?: unknown };
   if (account.accountExists !== true || String(account.state).toUpperCase() !== 'ACTIVE') return { state: 'UNSUPPORTED' };
   if (typeof account.available !== 'string' || !/^[0-9]+([.][0-9]+)?$/.test(account.available)) return { state: 'ERROR' };
   return /^0+([.]0+)?$/.test(account.available) ? { state: 'ZERO', available: account.available } : { state: 'POSITIVE', available: account.available };
@@ -495,7 +495,7 @@ export default function BinaryPage() {
             <span id="binary-stake-range" className="mt-1 block text-[10px] text-[#8C8299]">{minimumStake !== null && maximumStake !== null ? `Allowed range: ${minimumStake}–${maximumStake} USDT` : 'Stake range unavailable'}</span>
           </label>
           <dl className="mt-4 grid grid-cols-2 gap-3 rounded-xl border border-violet-300/10 bg-[#0B0711] p-3 text-xs">
-            <div><dt className="text-[#8C8299]">Option Wallet (Main)</dt><dd className="mt-1 font-mono" aria-live="polite">{optionWalletBalanceLabel(optionWalletBalance)}</dd></div>
+            <div><dt className="text-[#8C8299]">Options Wallet</dt><dd className="mt-1 font-mono" aria-live="polite">{optionWalletBalanceLabel(optionWalletBalance)}</dd></div>
             <div><dt className="text-[#8C8299]">Payout rate</dt><dd className="mt-1 font-mono">{payoutRate === null ? '—' : `${(payoutRate * 100).toFixed(0)}%`}</dd></div>
             <div><dt className="text-[#8C8299]">Potential return</dt><dd className="mt-1 font-mono">{potentialReturn === null ? '—' : `${potentialReturn.toFixed(2)} USDT`}</dd></div>
             <div><dt className="text-[#8C8299]">Duration</dt><dd className="mt-1 font-mono">{selectedDuration ? formatDuration(duration) : '—'}</dd></div>

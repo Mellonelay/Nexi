@@ -15,7 +15,9 @@ describe('Gate 2 financial operations', () => {
       getActiveMarketPair: jest.fn().mockImplementation(async (symbol: string) => symbol === 'BTCUSDT' ? { id: 'pair-btc-usdt', symbol: 'BTCUSDT', baseAsset: 'BTC', quoteAsset: 'USDT' } : null),
       getLiveMarketQuote: jest.fn().mockResolvedValue({ id: 'market-quote-1', symbol: 'BTCUSDT', price: '40000', provider: 'binance-spot', source: 'websocket' }),
       getUserById: jest.fn().mockImplementation(async (id: string) => ({ id })),
-      getAccountForUser: jest.fn().mockResolvedValue({ id: 'account-1', asset: 'USDT' }),
+      getAccountForUser: jest.fn().mockImplementation(async (_userId: string, asset: string, scope = 'MAIN') => ({ id: `account-${scope}`, asset, scope })),
+      getBalance: jest.fn().mockImplementation(async (accountId: string) => accountId === 'account-MAIN' ? { available: '9.75', locked: '0.5' } : { available: '0.25', locked: '0' }),
+      isAssetSupportedForWalletScope: jest.fn().mockResolvedValue(true),
       pairedTransfer: jest.fn().mockResolvedValue({ debitPostingId: 'debit-1', creditPostingId: 'credit-1' }),
       createConversionQuote: jest.fn().mockImplementation(async (command: any) => ({ id: 'quote-1', ...command })),
     };
@@ -66,6 +68,39 @@ describe('Gate 2 financial operations', () => {
     d1.getActiveMarketPair.mockResolvedValue(null);
     await expect(new FinancialOperationsService(d1).createConversionQuote('user-1', { fromAsset: 'USDT', toAsset: 'BTC', amount: '10', quoteKey: 'market-unavailable-key' })).rejects.toThrow('Conversion market unavailable');
     expect(d1.createConversionQuote).not.toHaveBeenCalled();
+  });
+
+  it('moves funds between this user’s supported Wallet scopes through paired ledger postings', async () => {
+    const { d1 } = createD1();
+    const result = await new FinancialOperationsService(d1).transferBetweenAccounts('user-1', {
+      sourceScope: 'MAIN', destinationScope: 'SPOT', asset: 'BTC', amount: '0.25', idempotencyKey: 'wallet-transfer-001',
+    });
+    expect(d1.getAccountForUser).toHaveBeenNthCalledWith(1, 'user-1', 'BTC', 'MAIN');
+    expect(d1.getAccountForUser).toHaveBeenNthCalledWith(2, 'user-1', 'BTC', 'SPOT');
+    expect(d1.pairedTransfer).toHaveBeenCalledWith(expect.objectContaining({
+      debitAccountId: 'account-MAIN', creditAccountId: 'account-SPOT', amount: '0.25',
+      referenceType: 'WALLET_ACCOUNT_TRANSFER',
+      sameUserTransfer: { userId: 'user-1', fromScope: 'MAIN', toScope: 'SPOT' },
+    }));
+    expect(result).toMatchObject({ transfer: { sourceScope: 'MAIN', destinationScope: 'SPOT' }, balances: { source: { available: '9.75', locked: '0.5', total: '10.25' }, destination: { available: '0.25', locked: '0', total: '0.25' } }, postings: { debitPostingId: 'debit-1', creditPostingId: 'credit-1' } });
+  });
+
+  it('rejects unsupported destination assets before opening or debiting accounts', async () => {
+    const { d1 } = createD1();
+    d1.isAssetSupportedForWalletScope.mockImplementation(async (scope: string, asset: string) => scope !== 'BINARY' || asset === 'USDT');
+    await expect(new FinancialOperationsService(d1).transferBetweenAccounts('user-1', {
+      sourceScope: 'MAIN', destinationScope: 'BINARY', asset: 'BTC', amount: '0.25', idempotencyKey: 'wallet-transfer-002',
+    })).rejects.toThrow('Asset is not supported by both Wallet accounts');
+    expect(d1.getAccountForUser).not.toHaveBeenCalled();
+    expect(d1.pairedTransfer).not.toHaveBeenCalled();
+  });
+
+  it('rejects same-account transfers before reaching the ledger', async () => {
+    const { d1 } = createD1();
+    await expect(new FinancialOperationsService(d1).transferBetweenAccounts('user-1', {
+      sourceScope: 'MAIN', destinationScope: 'MAIN', asset: 'USDT', amount: '1', idempotencyKey: 'wallet-transfer-003',
+    })).rejects.toThrow('Wallet transfer accounts must differ');
+    expect(d1.pairedTransfer).not.toHaveBeenCalled();
   });
 
   it('uses paired D1 ledger postings for an internal transfer', async () => {

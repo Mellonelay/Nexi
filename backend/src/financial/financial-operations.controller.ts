@@ -16,6 +16,7 @@ import {
   Gate2ConversionAcceptDto,
   Gate2ConversionQuoteDto,
   Gate2TransferDto,
+  WalletAccountTransferDto,
   Gate2WithdrawalDto,
   Gate2WithdrawalReviewDto,
   Gate2WithdrawalSettleDto,
@@ -48,6 +49,15 @@ export class FinancialOperationsController {
       amount: body.amount,
       idempotencyKey: body.idempotencyKey,
     });
+  }
+
+  @Post("account-transfers")
+  @UseGuards(JwtAuthGuard)
+  transferBetweenAccounts(
+    @Body() body: WalletAccountTransferDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.financial.transferBetweenAccounts(request.user.userId, body);
   }
 
   @Post("transfers")

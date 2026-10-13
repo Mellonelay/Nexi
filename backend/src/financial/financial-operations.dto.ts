@@ -20,6 +20,14 @@ export class Gate2TransferDto {
   @IsString() @Length(8, 160) idempotencyKey!: string;
 }
 
+export class WalletAccountTransferDto {
+  @IsString() @Length(2, 32) sourceScope!: string;
+  @IsString() @Length(2, 32) destinationScope!: string;
+  @IsString() @Length(2, 32) asset!: string;
+  @IsString() @Matches(DECIMAL) amount!: string;
+  @IsString() @Length(8, 160) idempotencyKey!: string;
+}
+
 export class Gate2ConversionQuoteDto {
   @IsString() @Length(2, 32) fromAsset!: string;
   @IsString() @Length(2, 32) toAsset!: string;

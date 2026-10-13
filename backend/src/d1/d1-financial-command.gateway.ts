@@ -1094,6 +1094,30 @@ export class D1FinancialCommandGateway {
     return result.results.length === 1;
   }
 
+  async isAssetSupportedForWalletScope(scopeValue: string, assetValue: string): Promise<boolean> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const scope = scopeValue.trim().toUpperCase();
+    const asset = this.normalizeAsset(assetValue);
+    if (scope === "MARGIN" || scope === "BINARY") return asset === "USDT";
+    let sql: string;
+    if (scope === "MAIN") {
+      sql = `SELECT 1 FROM "Currency" WHERE "symbol"=? AND "isActive"=1 LIMIT 1`;
+    } else if (scope === "SPOT") {
+      sql = `SELECT 1 FROM "MarketPair" p
+        JOIN "MarketAsset" a ON a."id"=p."baseAssetId" OR a."id"=p."quoteAssetId"
+        JOIN "MarketAssetCapability" c ON c."assetId"=a."id"
+        WHERE a."symbol"=? AND a."status"='ACTIVE' AND p."status"='ACTIVE'
+          AND c."status"='ACTIVE' AND c."tradingEnabled"=1 LIMIT 1`;
+    } else if (scope === "FINANCE") {
+      if (asset === "USDT") return true;
+      sql = `SELECT 1 FROM "MiningPlan" WHERE "currency"=? AND "isActive"=1 LIMIT 1`;
+    } else {
+      return false;
+    }
+    const result = await this.bridge.select<{ ok: number }>(sql, [asset]);
+    return result.results.length > 0;
+  }
+
   async ensureMarginAccount(command: D1MarginAccountCommand): Promise<{
     id: string;
     userId: string;
@@ -1874,6 +1898,7 @@ export class D1FinancialCommandGateway {
     const account = await this.getAccountForUser(
       command.userId,
       String(plan.currency),
+      "FINANCE",
     );
     const current = await this.findAccount(account.id);
     const amount = this.decimal(command.amount);
@@ -2010,6 +2035,7 @@ export class D1FinancialCommandGateway {
     const account = await this.getAccountForUser(
       userId,
       String(subscription.planCurrency),
+      "FINANCE",
     );
     const current = await this.findAccount(account.id);
     const amount = this.decimal(String(subscription.amountDecimal));
@@ -2108,6 +2134,7 @@ export class D1FinancialCommandGateway {
     const account = await this.getAccountForUser(
       String(subscription.userId),
       String(subscription.planCurrency),
+      "FINANCE",
     );
     const current = await this.findAccount(account.id);
     const key = `mining-reward:${subscription.id}:${new Date().toISOString().slice(0, 10)}`;
@@ -2409,6 +2436,7 @@ export class D1FinancialCommandGateway {
     const account = await this.getAccountForUser(
       String(loan.userId),
       String(loan.currency),
+      "FINANCE",
     );
     const current = await this.findAccount(account.id);
     const amount = this.decimal(String(loan.amountDecimal));
@@ -2618,6 +2646,7 @@ export class D1FinancialCommandGateway {
     const account = await this.getAccountForUser(
       command.userId,
       String(loan.currency),
+      "FINANCE",
     );
     const current = await this.findAccount(account.id);
     if (this.nonNegativeDecimal(current.available).lt(amount))
@@ -4796,7 +4825,7 @@ export class D1FinancialCommandGateway {
       [command.userId, command.idempotencyKey],
     );
     if (existing.results[0]) return existing.results[0];
-    const account = await this.getAccountForUser(command.userId, quoteAsset);
+    const account = await this.getAccountForUser(command.userId, quoteAsset, "BINARY");
     const current = await this.findAccount(account.id);
     const stake = this.decimal(command.stake);
     const available = this.nonNegativeDecimal(current.available);
@@ -4812,7 +4841,7 @@ export class D1FinancialCommandGateway {
         sql: `INSERT OR IGNORE INTO "LedgerIdempotency" ("id","idempotencyKey","operation","accountId","createdAt","updatedAt")
           SELECT ?,?,'BINARY_OPEN',?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP
           WHERE NOT EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=?)
-            AND EXISTS (SELECT 1 FROM "LedgerAccount" WHERE "id"=? AND "asset"=? AND "scope"='MAIN' AND "status"='ACTIVE' AND "available"=? AND "locked"=?)`,
+            AND EXISTS (SELECT 1 FROM "LedgerAccount" WHERE "id"=? AND "asset"=? AND "scope"='BINARY' AND "status"='ACTIVE' AND "available"=? AND "locked"=?)`,
         params: [
           idemId,
           command.idempotencyKey,
@@ -4826,7 +4855,7 @@ export class D1FinancialCommandGateway {
       },
       {
         sql: `UPDATE "LedgerAccount" SET "available"=? ,"locked"=? ,"updatedAt"=CURRENT_TIMESTAMP
-          WHERE "id"=? AND "asset"=? AND "scope"='MAIN' AND "status"='ACTIVE' AND "available"=? AND "locked"=?
+          WHERE "id"=? AND "asset"=? AND "scope"='BINARY' AND "status"='ACTIVE' AND "available"=? AND "locked"=?
             AND EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "id"=? AND "idempotencyKey"=? AND "debitPostingId" IS NULL)`,
         params: [
           available.minus(stake).toString(),
@@ -5182,6 +5211,10 @@ export class D1FinancialCommandGateway {
           depositId,
           postingId,
         ],
+      },
+      {
+        sql: `INSERT OR IGNORE INTO "Activity" ("id","userId","type","status","referenceType","referenceId","idempotencyKey","ledgerCorrelationId","ledgerPostingId","asset","amount","details","createdAt") SELECT ?,?,'DEPOSIT','COMPLETED','GATE2_DEPOSIT_CREDIT',?,?,?,?,?,?,?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "Gate2Deposit" WHERE "id"=? AND "state"='CREDITED' AND "creditPostingId"=?)`,
+        params: [randomUUID(), String(deposit.userId), depositId, idempotencyKey, correlationId, postingId, this.normalizeAsset(String(deposit.asset)), amount.toString(), JSON.stringify({ reason, adminId: adminId ?? null, postingId }), depositId, postingId],
       },
       ...(adminId
         ? [
@@ -5572,7 +5605,7 @@ export class D1FinancialCommandGateway {
         command.requestKey,
       ),
       {
-        sql: `INSERT OR IGNORE INTO "Activity" ("id","userId","type","status","referenceType","referenceId","idempotencyKey","ledgerCorrelationId","ledgerPostingId","asset","amount","details","createdAt") SELECT ?,?,'WITHDRAWAL','COMPLETED','GATE2_WITHDRAWAL_RESERVE',?,?,?,?,?,?,?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "debitPostingId"=?)`,
+        sql: `INSERT OR IGNORE INTO "Activity" ("id","userId","type","status","referenceType","referenceId","idempotencyKey","ledgerCorrelationId","ledgerPostingId","asset","amount","details","createdAt") SELECT ?,?,'WITHDRAWAL','PENDING','GATE2_WITHDRAWAL_RESERVE',?,?,?,?,?,?,?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "debitPostingId"=?)`,
         params: [
           randomUUID(),
           command.userId,
@@ -5707,6 +5740,10 @@ export class D1FinancialCommandGateway {
       {
         sql: `UPDATE "Gate2Withdrawal" SET "state"=? ,"reviewReason"=? ,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "state" IN ('PENDING_REVIEW','APPROVED') AND EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "debitPostingId"=?)`,
         params: [terminalState, reason, requestId, key, postingId],
+      },
+      {
+        sql: `UPDATE "Activity" SET "status"=?,"referenceType"='GATE2_WITHDRAWAL_RELEASE',"referenceId"=?,"ledgerCorrelationId"=?,"ledgerPostingId"=?,"asset"=?,"amount"=?,"details"=? WHERE "userId"=? AND "type"='WITHDRAWAL' AND "idempotencyKey"=? AND EXISTS (SELECT 1 FROM "Gate2Withdrawal" WHERE "id"=? AND "state"=? AND EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "debitPostingId"=?))`,
+        params: [terminalState, requestId, requestId, postingId, this.normalizeAsset(String(withdrawal.asset)), amount.toString(), JSON.stringify({ withdrawalId: requestId, reserveIdempotencyKey: String(withdrawal.reserveKey), releasePostingId: postingId, reason }), String(withdrawal.userId), String(withdrawal.reserveKey), requestId, terminalState, key, postingId],
       },
       {
         sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`,
@@ -5852,19 +5889,8 @@ export class D1FinancialCommandGateway {
       },
       this.rollbackIfNoChanges(key, "WITHDRAWAL_SETTLEMENT_STATE"),
       {
-        sql: `INSERT OR IGNORE INTO "Activity" ("id","userId","type","status","referenceType","referenceId","idempotencyKey","ledgerCorrelationId","ledgerPostingId","asset","amount","details","createdAt") SELECT ?,?,'WITHDRAWAL','COMPLETED','GATE2_WITHDRAWAL_SETTLEMENT',?,?,?,?,?,?,?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "Gate2Withdrawal" WHERE "id"=? AND "state"='SETTLED')`,
-        params: [
-          randomUUID(),
-          String(withdrawal.userId),
-          requestId,
-          key,
-          requestId,
-          postingId,
-          this.normalizeAsset(String(withdrawal.asset)),
-          amount.toString(),
-          JSON.stringify({ providerReceipt }),
-          requestId,
-        ],
+        sql: `UPDATE "Activity" SET "status"='COMPLETED',"referenceType"='GATE2_WITHDRAWAL_SETTLEMENT',"referenceId"=?,"ledgerCorrelationId"=?,"ledgerPostingId"=?,"asset"=?,"amount"=?,"details"=? WHERE "userId"=? AND "type"='WITHDRAWAL' AND "idempotencyKey"=? AND EXISTS (SELECT 1 FROM "Gate2Withdrawal" WHERE "id"=? AND "state"='SETTLED')`,
+        params: [requestId, requestId, postingId, this.normalizeAsset(String(withdrawal.asset)), amount.toString(), JSON.stringify({ withdrawalId: requestId, reserveIdempotencyKey: String(withdrawal.reserveKey), settlementPostingId: postingId, providerReceipt }), String(withdrawal.userId), String(withdrawal.reserveKey), requestId],
       },
       ...(adminId
         ? [
@@ -5953,7 +5979,7 @@ export class D1FinancialCommandGateway {
     command: D1BinarySettleCommand,
   ): Promise<Record<string, unknown>> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
-    const account = await this.getAccountForUser(command.userId, command.asset);
+    const account = await this.getAccountForUser(command.userId, command.asset, "BINARY");
     const receipt = `gate2:binary:settlement:${command.positionId}`;
     await this.settle({
       accountId: account.id,
@@ -6018,7 +6044,7 @@ export class D1FinancialCommandGateway {
       throw new BadRequestException("Binary position ownership mismatch");
     if (["WIN", "LOSS", "ERROR"].includes(String(existing.state)))
       return existing;
-    const account = await this.getAccountForUser(command.userId, command.asset);
+    const account = await this.getAccountForUser(command.userId, command.asset, "BINARY");
     const current = await this.findAccount(account.id);
     const stake = this.decimal(command.stake);
     const payout = this.nonNegativeOrSignedDecimal(command.payout);
@@ -7262,7 +7288,7 @@ export class D1FinancialCommandGateway {
 
   async pairedTransfer(
     command: PairedTransferCommand,
-  ): Promise<{ debitPostingId: string; creditPostingId: string }> {
+  ): Promise<{ debitPostingId: string; creditPostingId: string; replayed: boolean }> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     if (command.debitAccountId === command.creditAccountId) {
       throw new BadRequestException("Transfer accounts must differ");
@@ -7281,9 +7307,29 @@ export class D1FinancialCommandGateway {
         );
       }
       if (existing.debitPostingId && existing.creditPostingId) {
+        const postings = await this.bridge.select<{
+          id: string; accountId: string; asset: string; amount: string; referenceType: string; referenceId: string;
+        }>(
+          `SELECT "id","accountId","asset","amount","referenceType","referenceId" FROM "LedgerPosting" WHERE "id" IN (?,?)`,
+          [existing.debitPostingId, existing.creditPostingId],
+        );
+        const debitPosting = postings.results.find((posting) => posting.id === existing.debitPostingId);
+        const creditPosting = postings.results.find((posting) => posting.id === existing.creditPostingId);
+        if (!debitPosting || !creditPosting ||
+          debitPosting.accountId !== command.debitAccountId ||
+          creditPosting.accountId !== command.creditAccountId ||
+          debitPosting.asset !== asset || creditPosting.asset !== asset ||
+          !this.decimal(debitPosting.amount).eq(amount) ||
+          !this.decimal(creditPosting.amount).eq(amount) ||
+          debitPosting.referenceType !== command.referenceType ||
+          creditPosting.referenceType !== command.referenceType ||
+          debitPosting.referenceId !== command.referenceId ||
+          creditPosting.referenceId !== command.referenceId
+        ) throw new BadRequestException("Idempotency key belongs to another financial transfer");
         return {
           debitPostingId: existing.debitPostingId,
           creditPostingId: existing.creditPostingId,
+          replayed: true,
         };
       }
       throw new BadRequestException("Idempotent transfer is still completing");
@@ -7306,6 +7352,14 @@ export class D1FinancialCommandGateway {
       credit.status !== "ACTIVE"
     ) {
       throw new BadRequestException("Transfer account is unavailable");
+    }
+    if (command.sameUserTransfer && (
+      debit.userId !== command.sameUserTransfer.userId ||
+      credit.userId !== command.sameUserTransfer.userId ||
+      debit.scope !== command.sameUserTransfer.fromScope ||
+      credit.scope !== command.sameUserTransfer.toScope
+    )) {
+      throw new BadRequestException("Wallet transfer account ownership or scope mismatch");
     }
     if (debit.asset !== asset || credit.asset !== asset) {
       throw new BadRequestException(
@@ -7480,6 +7534,12 @@ export class D1FinancialCommandGateway {
             debitPostingId,
             creditPostingId,
             direction: "PAIRED_TRANSFER",
+            ...(command.sameUserTransfer ? {
+              sourceScope: command.sameUserTransfer.fromScope,
+              destinationScope: command.sameUserTransfer.toScope,
+              sourceAccountId: debit.id,
+              destinationAccountId: credit.id,
+            } : {}),
           }),
           id,
           debitPostingId,
@@ -7550,6 +7610,19 @@ export class D1FinancialCommandGateway {
           ],
         },
       );
+      if (transfer.fromUserId !== transfer.toUserId) {
+        statements.push({
+          sql: `INSERT OR IGNORE INTO "Activity" ("id","userId","type","status","referenceType","referenceId","idempotencyKey","ledgerCorrelationId","ledgerPostingId","asset","amount","details","createdAt")
+            SELECT ?,?,'GATE2_INTERNAL_TRANSFER_RECEIVED','COMPLETED',?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP
+            WHERE EXISTS (SELECT 1 FROM "Gate2InternalTransfer" WHERE "idempotencyKey"=? AND "debitPostingId"=? AND "creditPostingId"=?)`,
+          params: [
+            randomUUID(), transfer.toUserId, command.referenceType, command.referenceId,
+            `${command.idempotencyKey}:received`, correlationId, creditPostingId,
+            asset, amount.toString(), JSON.stringify({ direction: "RECEIVED", debitPostingId, creditPostingId, fromUserId: transfer.fromUserId }),
+            command.idempotencyKey, debitPostingId, creditPostingId,
+          ],
+        });
+      }
     }
 
     if (command.marginActivity) {
@@ -7587,6 +7660,11 @@ export class D1FinancialCommandGateway {
           amount: amount.toString(),
           debitAccountId: command.debitAccountId,
           creditAccountId: command.creditAccountId,
+          ...(command.sameUserTransfer ? {
+            userId: command.sameUserTransfer.userId,
+            sourceScope: command.sameUserTransfer.fromScope,
+            destinationScope: command.sameUserTransfer.toScope,
+          } : {}),
         },
       }),
     );
@@ -7599,7 +7677,7 @@ export class D1FinancialCommandGateway {
       this.requireChanges(result, 11, "D1 internal transfer record");
     if (command.marginActivity)
       this.requireChanges(result, 11, "D1 margin transfer activity");
-    return { debitPostingId, creditPostingId };
+    return { debitPostingId, creditPostingId, replayed: false };
   }
 
   private async execute(

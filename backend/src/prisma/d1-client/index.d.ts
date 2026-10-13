@@ -730,7 +730,10 @@ export type LedgerAccountStatus = (typeof LedgerAccountStatus)[keyof typeof Ledg
 
 export const LedgerAccountScope: {
   MAIN: 'MAIN',
-  MARGIN: 'MARGIN'
+  SPOT: 'SPOT',
+  MARGIN: 'MARGIN',
+  BINARY: 'BINARY',
+  FINANCE: 'FINANCE'
 };
 
 export type LedgerAccountScope = (typeof LedgerAccountScope)[keyof typeof LedgerAccountScope]

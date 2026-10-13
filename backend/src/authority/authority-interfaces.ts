@@ -19,6 +19,7 @@ export interface PairedTransferCommand {
   idempotencyKey: string;
   correlationId?: string;
   economicGroup?: string;
+  sameUserTransfer?: { userId: string; fromScope: string; toScope: string };
   internalTransfer?: {
     transferId: string;
     fromUserId: string;
@@ -47,7 +48,7 @@ export interface WalletLedgerAuthority {
   credit(command: LedgerPostingCommand): Promise<LedgerMutationResult>;
   debit(command: LedgerPostingCommand): Promise<LedgerMutationResult>;
   compensate(command: LedgerPostingCommand): Promise<LedgerMutationResult>;
-  pairedTransfer(command: PairedTransferCommand): Promise<{ debitPostingId: string; creditPostingId: string }>;
+  pairedTransfer(command: PairedTransferCommand): Promise<{ debitPostingId: string; creditPostingId: string; replayed: boolean }>;
   reconcile(accountId: string, asset: string): Promise<{ available: string; locked: string }>;
 }
 export interface SettlementAuthority { settle(positionId: string, idempotencyKey: string): Promise<{ settlementId: string; auditReference: string }>; }

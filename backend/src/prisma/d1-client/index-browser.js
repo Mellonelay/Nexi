@@ -1578,7 +1578,10 @@ exports.MarketQuoteState = exports.$Enums.MarketQuoteState = {
 
 exports.LedgerAccountScope = exports.$Enums.LedgerAccountScope = {
   MAIN: 'MAIN',
-  MARGIN: 'MARGIN'
+  SPOT: 'SPOT',
+  MARGIN: 'MARGIN',
+  BINARY: 'BINARY',
+  FINANCE: 'FINANCE'
 };
 
 exports.LedgerAccountStatus = exports.$Enums.LedgerAccountStatus = {

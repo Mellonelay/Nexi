@@ -104,6 +104,21 @@ describe('D1 referral event migration', () => {
           "correlationId" TEXT NOT NULL,
           "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
         );
+        CREATE TABLE "Activity" (
+          "id" TEXT PRIMARY KEY,
+          "userId" TEXT NOT NULL,
+          "type" TEXT NOT NULL,
+          "status" TEXT NOT NULL,
+          "referenceType" TEXT NOT NULL,
+          "referenceId" TEXT NOT NULL,
+          "idempotencyKey" TEXT NOT NULL UNIQUE,
+          "ledgerCorrelationId" TEXT NOT NULL,
+          "ledgerPostingId" TEXT,
+          "asset" TEXT,
+          "amount" TEXT,
+          "details" TEXT,
+          "createdAt" DATETIME NOT NULL
+        );
         CREATE TABLE "EventOutbox" (
           "id" TEXT PRIMARY KEY,
           "idempotencyKey" TEXT NOT NULL UNIQUE,
@@ -160,6 +175,18 @@ describe('D1 referral event migration', () => {
       const outbox = db.prepare('SELECT "eventType","payload" FROM "EventOutbox" ORDER BY "eventType"').all();
       expect(outbox.map((row: any) => row.eventType)).toEqual(['AFFILIATE_REWARD_RECORDED', 'REFERRAL_ATTRIBUTED']);
       expect(outbox.every((row: any) => !row.payload.includes('walletAddress'))).toBe(true);
+
+      db.exec(readFileSync('prisma/migrations-d1/0015_referral_reward_activity.sql', 'utf8'));
+      expect(db.prepare('SELECT "userId","type","status","referenceId","ledgerCorrelationId","ledgerPostingId","asset","amount" FROM "Activity"').all()).toEqual([{
+        userId: 'referrer', type: 'REFERRAL_REWARD', status: 'COMPLETED', referenceId: 'referral-reward-posting-valid', ledgerCorrelationId: 'corr-valid', ledgerPostingId: 'posting-valid', asset: 'NEXI', amount: '0.12500000',
+      }]);
+
+      db.prepare(`INSERT INTO "LedgerPosting"
+        ("id","accountId","asset","kind","amount","availableDelta","referenceType","referenceId","correlationId","createdAt")
+        VALUES (?,?,?,?,?,?,?,?,?,?)`).run('posting-triggered','account-referrer','NEXI','CREDIT','0.25','0.25','AFFILIATE_REWARD','referred-new','corr-triggered','2026-10-11 10:16:00');
+      expect(db.prepare('SELECT COUNT(*) AS count FROM "Activity"').get().count).toBe(2);
+      db.exec(readFileSync('prisma/migrations-d1/0015_referral_reward_activity.sql', 'utf8'));
+      expect(db.prepare('SELECT COUNT(*) AS count FROM "Activity"').get().count).toBe(2);
     } finally {
       db.close();
     }

@@ -823,7 +823,10 @@ enum LedgerAccountStatus {
 
 enum LedgerAccountScope {
   MAIN
+  SPOT
   MARGIN
+  BINARY
+  FINANCE
 }
 
 enum LedgerPostingKind {

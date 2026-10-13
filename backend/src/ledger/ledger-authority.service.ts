@@ -65,7 +65,7 @@ export class LedgerAuthorityService implements WalletLedgerAuthority {
   pairedTransfer(
     command: PairedTransferCommand,
     tx?: unknown,
-  ): Promise<{ debitPostingId: string; creditPostingId: string }> {
+  ): Promise<{ debitPostingId: string; creditPostingId: string; replayed: boolean }> {
     this.assertNoTransaction(tx);
     return this.d1.pairedTransfer(command);
   }

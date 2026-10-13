@@ -55,6 +55,40 @@ function SpotRealtimeTradingChart({ symbol, interval, marketStatus }: { symbol: 
 
 type MobileMarketPanel = 'CHART' | 'BOOK' | 'TRADES';
 type SpotSurface = 'SPOT' | 'MARGIN';
+type WalletReadState = 'UNAUTHENTICATED' | 'LOADING' | 'LIVE' | 'ERROR';
+type ScopedBalance = { available: string; locked: string; total: string };
+type WalletOverviewRead = { state: WalletReadState; scopes: Record<string, Record<string, ScopedBalance>> };
+
+function readWalletOverview(payload: unknown): WalletOverviewRead {
+  if (!payload || typeof payload !== 'object' || !Array.isArray((payload as { assets?: unknown }).assets)) return { state: 'ERROR', scopes: {} };
+  const assets = (payload as { assets: unknown[] }).assets;
+  const scopes: WalletOverviewRead['scopes'] = {};
+  for (const value of assets) {
+    if (!value || typeof value !== 'object') continue;
+    const asset = value as { asset?: unknown; scopes?: unknown };
+    const symbol = String(asset.asset ?? '').trim().toUpperCase();
+    if (!symbol || !asset.scopes || typeof asset.scopes !== 'object') continue;
+    for (const [scope, rawBalance] of Object.entries(asset.scopes as Record<string, unknown>)) {
+      if (!rawBalance || typeof rawBalance !== 'object') continue;
+      const balance = rawBalance as { accountExists?: unknown; available?: unknown; locked?: unknown; total?: unknown };
+      if (balance.accountExists !== true) continue;
+      const available = String(balance.available ?? '');
+      const locked = String(balance.locked ?? '');
+      const total = String(balance.total ?? '');
+      if (![available, locked, total].every((amount) => /^[0-9]+([.][0-9]+)?$/.test(amount))) continue;
+      (scopes[scope.toUpperCase()] ??= {})[symbol] = { available, locked, total };
+    }
+  }
+  return { state: 'LIVE', scopes };
+}
+
+function walletAmountLabel(state: WalletReadState, balance: ScopedBalance | undefined, asset: string, kind: 'available' | 'locked' = 'available') {
+  if (state === 'UNAUTHENTICATED') return 'Verify wallet';
+  if (state === 'LOADING') return 'Loading…';
+  if (state === 'ERROR') return 'Balance unavailable';
+  return balance ? `${balance[kind]} ${asset}` : `Account balance unavailable · ${asset}`;
+}
+
 
 const CHART_INTERVALS: ChartInterval[] = ['1m', '5m', '15m', '30m', '1h', '4h', '1d'];
 const numberFormatter = new Intl.NumberFormat('en-US');
@@ -235,7 +269,7 @@ function MarginWorkspace({
   displayPair, normalizedSymbol, chartInterval, setChartInterval, sessionClosed,
   marginDirection, setMarginDirection, marginLeverageOptions, effectiveMarginLeverage, setMarginLeverage,
   marginCollateral, setMarginCollateral, marginQuote, handleOpenMargin, marginReady, marginPositions,
-  userId, marginSubmitting, handleMarkMargin, handleCloseMargin, marginFeedback,
+  userId, marginSubmitting, handleMarkMargin, handleCloseMargin, marginFeedback, walletState, marginUsdtBalance,
 }: {
   displayPair: string; normalizedSymbol: string; chartInterval: ChartInterval;
   setChartInterval: React.Dispatch<React.SetStateAction<ChartInterval>>; sessionClosed: boolean;
@@ -247,6 +281,7 @@ function MarginWorkspace({
   marginPositions: MarginPositionResponse[]; userId: string | null; marginSubmitting: boolean;
   handleMarkMargin: (positionId: string) => void | Promise<void>;
   handleCloseMargin: (positionId: string) => void | Promise<void>; marginFeedback: string | null;
+  walletState: WalletReadState; marginUsdtBalance: ScopedBalance | undefined;
 }) {
   return (
     <section className="nexi-margin-workspace nexi-station-card mx-3 mt-3 min-w-0 rounded-2xl p-3 sm:mx-4 sm:p-5" aria-labelledby="isolated-margin-heading">
@@ -275,6 +310,10 @@ function MarginWorkspace({
             </div>
             <div className="grid min-w-0 grid-cols-3 gap-2" role="tablist" aria-label="Margin leverage">
               {marginLeverageOptions.map((value) => <button key={value} type="button" role="tab" aria-selected={effectiveMarginLeverage === value} onClick={() => setMarginLeverage(value)} className={`min-h-11 rounded-lg border text-xs font-semibold ${effectiveMarginLeverage === value ? 'border-violet-300/35 bg-[#2A1742] text-white' : 'border-violet-300/10 text-[#8C8299]'}`}>{value}x</button>)}
+            </div>
+            <div className="grid grid-cols-2 gap-2 rounded-xl border border-violet-300/10 bg-[#0B0711] px-3 py-2 text-xs" aria-label="Margin wallet USDT balance">
+              <div><p className="text-[#8C8299]">Margin available</p><p className="mt-1 font-mono">{walletAmountLabel(walletState, marginUsdtBalance, 'USDT')}</p></div>
+              <div><p className="text-[#8C8299]">Margin locked</p><p className="mt-1 font-mono">{walletAmountLabel(walletState, marginUsdtBalance, 'USDT', 'locked')}</p></div>
             </div>
             <label className="block text-xs text-[#C3BBD0]">Collateral (USDT)
               <input type="number" inputMode="decimal" min="0" step="any" value={marginCollateral} onChange={(event) => setMarginCollateral(event.target.value)} placeholder="Enter positive collateral" className="mt-1 min-h-11 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 text-right font-mono outline-none focus:border-[#8B5CF6]" />
@@ -311,7 +350,7 @@ type SpotWorkspaceProps = {
   tpSlState: TpSlState; configureTpSl: (enabled: boolean) => void; tp: string;
   setTp: React.Dispatch<React.SetStateAction<string>>; sl: string; setSl: React.Dispatch<React.SetStateAction<string>>;
   total: number | null; orderState: SpotOrderState; feedback: string | null; reviewReady: boolean; ready: boolean;
-  openReview: () => void;
+  availableBalance: string; openReview: () => void;
 };
 
 function SpotChartArea({displayPair, normalizedSymbol, chartInterval, setChartInterval, sessionClosed, mobileMarketPanel, setMobileMarketPanel}: SpotWorkspaceProps) {
@@ -466,7 +505,7 @@ function SpotMarketArea(props: SpotWorkspaceProps) {
   );
 }
 
-function SpotOrderTicket({side, setSide, orderType, setOrderType, price, setPrice, stopPrice, setStopPrice, amount, setAmount, baseSymbol, tpSlState, configureTpSl, tp, setTp, sl, setSl, total, orderState, feedback, reviewReady, ready, openReview}: SpotWorkspaceProps) {
+function SpotOrderTicket({side, setSide, orderType, setOrderType, price, setPrice, stopPrice, setStopPrice, amount, setAmount, baseSymbol, tpSlState, configureTpSl, tp, setTp, sl, setSl, total, orderState, feedback, reviewReady, ready, availableBalance, openReview}: SpotWorkspaceProps) {
   return (
         <aside className="nexi-station-card order-5 h-fit min-w-0 overflow-hidden rounded-xl p-3 sm:rounded-2xl sm:p-5 xl:sticky xl:top-20 xl:order-none" aria-labelledby="spot-ticket-heading">
           <div className="hidden items-start justify-between gap-3 sm:flex">
@@ -507,7 +546,7 @@ function SpotOrderTicket({side, setSide, orderType, setOrderType, price, setPric
           <dl className="mt-1.5 grid min-w-0 grid-cols-3 gap-2 rounded-xl border border-violet-300/10 bg-[#0B0711] p-1.5 text-[10px] sm:mt-3 sm:p-2 sm:text-[11px] md:grid-cols-4 md:p-3 md:text-xs">
             <div className="min-w-0"><dt className="text-[#8C8299]">Total</dt><dd className="mt-0.5 break-words font-mono">{total === null ? '—' : `${total.toFixed(2)} USDT`}</dd></div>
             <div className="min-w-0"><dt className="text-[#8C8299]">Fee</dt><dd className="mt-0.5 break-words font-mono">—</dd></div>
-            <div className="min-w-0"><dt className="text-[#8C8299]">Available</dt><dd className="mt-0.5 break-words font-mono">—</dd></div>
+            <div className="min-w-0"><dt className="text-[#8C8299]">Available</dt><dd className="mt-0.5 break-words font-mono">{availableBalance}</dd></div>
             <div className="hidden min-w-0 md:block"><dt className="text-[#8C8299]">State</dt><dd className="mt-0.5 break-words font-mono">{productStateLabel(orderState)}</dd></div>
           </dl>
 
@@ -876,6 +915,7 @@ function SpotPageBody({
   const marketChange = market?.dataState === 'LIVE' ? market.change : null;
 
   const [userId, setUserId] = useState<string | null>(null);
+  const [walletOverview, setWalletOverview] = useState<WalletOverviewRead>({ state: 'UNAUTHENTICATED', scopes: {} });
   const { bids, asks, trades: marketTrades, tradeStatus, bookStatus } = useSpotMarketFeed({
     backendConfigured,
     displayPair,
@@ -904,8 +944,27 @@ function SpotPageBody({
     return () => window.removeEventListener('nexi:wallet-session', sync);
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    if (!userId) {
+      setWalletOverview({ state: 'UNAUTHENTICATED', scopes: {} });
+      return () => { cancelled = true; };
+    }
+    setWalletOverview({ state: 'LOADING', scopes: {} });
+    api.get('/wallet/overview').then((response) => {
+      if (!cancelled && sessionPrincipalId() === userId) setWalletOverview(readWalletOverview(response.data));
+    }).catch(() => {
+      if (!cancelled && sessionPrincipalId() === userId) setWalletOverview({ state: 'ERROR', scopes: {} });
+    });
+    return () => { cancelled = true; };
+  }, [userId]);
+
 
   const priceStatus = resolvePriceStatus(marketLoading, market?.source, currentPrice, backendConfigured);
+  const spotBalances = walletOverview.scopes.SPOT ?? {};
+  const marginUsdtBalance = walletOverview.scopes.MARGIN?.USDT;
+  const spotSpendAsset = side === 'BUY' ? 'USDT' : baseSymbol.toUpperCase();
+  const spotAvailableBalance = walletAmountLabel(walletOverview.state, spotBalances[spotSpendAsset], spotSpendAsset);
 
   return (
     <main className="nexi-trading-page nexi-page-shell min-h-full w-full min-w-0 overflow-x-clip pb-8 text-[#F8F6FF]">
@@ -925,10 +984,11 @@ function SpotPageBody({
         marginCollateral={marginCollateral} setMarginCollateral={setMarginCollateral} marginQuote={marginQuote}
         handleOpenMargin={handleOpenMargin} marginReady={marginReady} marginPositions={marginPositions} userId={userId}
         marginSubmitting={marginSubmitting} handleMarkMargin={handleMarkMargin} handleCloseMargin={handleCloseMargin}
-        marginFeedback={marginFeedback}
+        marginFeedback={marginFeedback} walletState={walletOverview.state} marginUsdtBalance={marginUsdtBalance}
       />}
 
       {activeSurface === 'SPOT' && <SpotWorkspace
+        availableBalance={spotAvailableBalance}
         displayPair={displayPair} normalizedSymbol={normalizedSymbol} chartInterval={chartInterval} setChartInterval={setChartInterval}
         sessionClosed={market?.sessionState === 'CLOSED'} mobileMarketPanel={mobileMarketPanel} setMobileMarketPanel={setMobileMarketPanel}
         bids={bids} asks={asks} bookStatus={bookStatus} setPrice={setPrice} marketTrades={marketTrades} tradeStatus={tradeStatus}

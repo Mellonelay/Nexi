@@ -306,6 +306,111 @@ describe("D1FinancialCommandGateway", () => {
     expect(statements[1].params).toContain("LOAN_APPLICATION_SUBMITTED");
   });
 
+  it("posts a same-user Wallet transfer once with one Activity and one outbox event", async () => {
+    const bridge = createBridge({
+      select: jest.fn().mockImplementation(async (sql: string) => {
+        if (sql.includes("LedgerIdempotency")) return { results: [] };
+        if (sql.includes("LedgerAccount")) return { results: [
+          account,
+          { ...account, id: "account-2", scope: "SPOT" },
+        ] };
+        return { results: [] };
+      }),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+    const result = await gateway.pairedTransfer({
+      debitAccountId: "account-1", creditAccountId: "account-2", asset: "USDT", amount: "1.25",
+      referenceType: "WALLET_ACCOUNT_TRANSFER", referenceId: "wallet-transfer",
+      idempotencyKey: "wallet-transfer-key", sameUserTransfer: { userId: "user-1", fromScope: "MAIN", toScope: "SPOT" },
+    });
+    expect(result.replayed).toBe(false);
+    const statements = (bridge.batch as jest.Mock).mock.calls[0][0] as D1BridgeBatchStatement[];
+    expect(statements).toHaveLength(12);
+    expect(statements.filter((statement) => statement.sql.includes('INSERT OR IGNORE INTO "Activity"'))).toHaveLength(1);
+    expect(JSON.parse(String(statements[10].params[10]))).toMatchObject({
+      direction: "PAIRED_TRANSFER",
+      sourceScope: "MAIN",
+      destinationScope: "SPOT",
+      sourceAccountId: "account-1",
+      destinationAccountId: "account-2",
+    });
+    expect(statements[11].sql).toContain("EventOutbox");
+  });
+
+  it("replays an identical paired transfer and rejects an idempotency collision", async () => {
+    let idempotencyLookups = 0;
+    const bridge = createBridge({
+      select: jest.fn().mockImplementation(async (sql: string) => {
+        if (sql.includes("LedgerIdempotency")) {
+          idempotencyLookups += 1;
+          return idempotencyLookups === 1 ? { results: [] } : { results: [{
+            id: "ledger-idem-1", operation: "PAIRED_TRANSFER", accountId: "account-1",
+            debitPostingId: "debit-1", creditPostingId: "credit-1",
+          }] };
+        }
+        if (sql.includes('FROM "LedgerPosting"')) return { results: [
+          { id: "debit-1", accountId: "account-1", asset: "USDT", amount: "1.25", referenceType: "WALLET_ACCOUNT_TRANSFER", referenceId: "wallet-transfer" },
+          { id: "credit-1", accountId: "account-2", asset: "USDT", amount: "1.25", referenceType: "WALLET_ACCOUNT_TRANSFER", referenceId: "wallet-transfer" },
+        ] };
+        if (sql.includes("LedgerAccount")) return { results: [
+          account,
+          { ...account, id: "account-2", scope: "SPOT" },
+        ] };
+        return { results: [] };
+      }),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+    const command = {
+      debitAccountId: "account-1", creditAccountId: "account-2", asset: "USDT", amount: "1.25",
+      referenceType: "WALLET_ACCOUNT_TRANSFER", referenceId: "wallet-transfer",
+      idempotencyKey: "wallet-transfer-key", sameUserTransfer: { userId: "user-1", fromScope: "MAIN", toScope: "SPOT" },
+    };
+    await gateway.pairedTransfer(command);
+    expect((await gateway.pairedTransfer(command)).replayed).toBe(true);
+    await expect(gateway.pairedTransfer({ ...command, amount: "1.5" })).rejects.toThrow("Idempotency key belongs to another financial transfer");
+    expect(bridge.batch).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects a same-user transfer whose account owner or scope does not match", async () => {
+    const bridge = createBridge({
+      select: jest.fn().mockImplementation(async (sql: string) => {
+        if (sql.includes("LedgerIdempotency")) return { results: [] };
+        if (sql.includes("LedgerAccount")) return { results: [
+          account,
+          { ...account, id: "account-2", scope: "SPOT" },
+        ] };
+        return { results: [] };
+      }),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+    await expect(gateway.pairedTransfer({
+      debitAccountId: "account-1", creditAccountId: "account-2", asset: "USDT", amount: "1",
+      referenceType: "WALLET_ACCOUNT_TRANSFER", referenceId: "wallet-transfer",
+      idempotencyKey: "wallet-transfer-key", sameUserTransfer: { userId: "user-2", fromScope: "MAIN", toScope: "SPOT" },
+    })).rejects.toThrow("Wallet transfer account ownership or scope mismatch");
+    expect(bridge.batch).not.toHaveBeenCalled();
+  });
+
+  it("rejects a same-user transfer when available funds are insufficient", async () => {
+    const bridge = createBridge({
+      select: jest.fn().mockImplementation(async (sql: string) => {
+        if (sql.includes("LedgerIdempotency")) return { results: [] };
+        if (sql.includes("LedgerAccount")) return { results: [
+          { ...account, available: "0.5", locked: "10" },
+          { ...account, id: "account-2", scope: "SPOT" },
+        ] };
+        return { results: [] };
+      }),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+    await expect(gateway.pairedTransfer({
+      debitAccountId: "account-1", creditAccountId: "account-2", asset: "USDT", amount: "1",
+      referenceType: "WALLET_ACCOUNT_TRANSFER", referenceId: "wallet-transfer",
+      idempotencyKey: "wallet-transfer-key", sameUserTransfer: { userId: "user-1", fromScope: "MAIN", toScope: "SPOT" },
+    })).rejects.toThrow("Insufficient available funds");
+    expect(bridge.batch).not.toHaveBeenCalled();
+  });
+
   it("keeps the internal transfer record and audit in the same D1 batch", async () => {
     const bridge = createBridge({
       select: jest.fn().mockImplementation(async (sql: string) => {
@@ -347,11 +452,12 @@ describe("D1FinancialCommandGateway", () => {
 
     const statements = (bridge.batch as jest.Mock).mock
       .calls[0][0] as D1BridgeBatchStatement[];
-    expect(statements).toHaveLength(15);
+    expect(statements).toHaveLength(16);
     expect(statements[11].sql).toContain("Gate2InternalTransfer");
     expect(statements[12].sql).toContain("TRANSFER_PAIRED");
     expect(statements[13].sql).toContain("TRANSFER_RECEIVED");
-    expect(statements[14].sql).toContain("EventOutbox");
+    expect(statements[14].sql).toContain("GATE2_INTERNAL_TRANSFER_RECEIVED");
+    expect(statements[15].sql).toContain("EventOutbox");
   });
 
   it("reserves funds and creates a Spot order in the same D1 batch", async () => {
@@ -664,11 +770,13 @@ describe("D1FinancialCommandGateway", () => {
     expect(bridge.batch).toHaveBeenCalledTimes(1);
     const statements = (bridge.batch as jest.Mock).mock
       .calls[0][0] as D1BridgeBatchStatement[];
-    expect(statements).toHaveLength(10);
+    expect(statements).toHaveLength(11);
     expect(statements[1].sql).toContain('"available"=?');
     expect(statements[6].sql).toContain("SET \"state\"='CREDITED'");
     expect(statements[8].sql).toContain("Gate2OperationAudit");
-    expect(statements[9].sql).toContain("EventOutbox");
+    expect(statements[9].sql).toContain('INSERT OR IGNORE INTO "Activity"');
+    expect(statements[9].params).toContain("deposit-atomic-1");
+    expect(statements[10].sql).toContain("EventOutbox");
   });
 
   it("rejects a deposit atomically and publishes a replay-safe outbox event", async () => {
