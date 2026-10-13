@@ -7,6 +7,8 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { sentryTanstackStart } from "@sentry/tanstackstart-react/vite";
 
+const adminOutputDir = process.env.NEXI_ADMIN_OUTPUT_DIR ?? "./.output";
+
 export default defineConfig({
   plugins: [
     sentryTanstackStart({
@@ -20,10 +22,14 @@ export default defineConfig({
         finalize: false,
       },
       sourcemaps: {
-        filesToDeleteAfterUpload: ["./.output/public/**/*.map"],
+        filesToDeleteAfterUpload: [`${adminOutputDir}/public/**/*.map`],
       },
     }),
   ],
+  nitro: {
+    preset: "node-server",
+    output: { dir: adminOutputDir },
+  },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
