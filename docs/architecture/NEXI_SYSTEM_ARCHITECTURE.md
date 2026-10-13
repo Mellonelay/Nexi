@@ -41,6 +41,7 @@ Each deployed surface has independently verifiable build/source and Sentry relea
 - [Backend domains and persistence](../backend/README.md)
 - [Public routes and UI](../frontend/README.md)
 - [Admin controls and RBAC](../admin/README.md)
+- [Architecture and routing diagrams](NEXI_ARCHITECTURE_DIAGRAMS.md)
 - [Cross-surface ownership matrix](CROSS_SURFACE_FEATURE_MAP.md)
 - [Sentry observability](../operations/NEXI_SENTRY_OBSERVABILITY.md)
 - [Documentation policy](../README.md)

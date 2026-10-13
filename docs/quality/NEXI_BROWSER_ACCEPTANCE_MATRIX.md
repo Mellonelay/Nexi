@@ -3,7 +3,7 @@
 **Status:** Current production browser-acceptance contract
 **Authority reconciliation date:** 2026-10-03 (Asia/Yangon); requirements lineage began 2026-09-25.
 **Browser workflow owner:** `/home/mellonelay1999/.agents/BROWSER_FABRIC.md`
-**Completion controller:** `NEXI_PRODUCTION_COMPLETION_LEDGER.md`
+**Completion decision:** current owner directive and directly verified source, deployed runtime and browser evidence; the old ledger is historical.
 
 This document defines what browser evidence must prove. It does not own runtime architecture, completion status, or deployment authority.
 
@@ -69,7 +69,7 @@ Record only evidence needed to support the claim:
 Browser evidence does not prove ledger correctness, financial invariants, authorization correctness, durable-state ownership, or accounting truth. Those require backend/domain evidence.
 ## Current handoff rule
 
-The current production ledger and `NEXI_CURRENT_STATE.md` own live pass/fail state. This matrix intentionally does not duplicate transient results.
+Current owner acceptance and direct browser/runtime evidence own live pass/fail state; the retired ledger is historical only. This matrix intentionally does not duplicate transient results.
 
 The 2026-09-25 Galaxy S24 `MARKET ERROR` capture is historical evidence, not a current defect assertion. Public geometry is closed in the ledger's 2026-10-02 Section 29 within its recorded authenticated fixture scope. Reopen only on fresh contradictory evidence; broader product, WalletConnect and distinct real-device/cross-browser requirements remain separate.
 

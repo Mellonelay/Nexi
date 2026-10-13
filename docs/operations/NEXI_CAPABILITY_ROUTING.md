@@ -3,7 +3,7 @@
 Purpose: NEXI-only execution overlay. Global Worker-0 skills, CLI/MCP ownership, browser fabric, Graphify operating guidance, and capability routing live under `/home/mellonelay1999/RDC_ONBOARDING.md` and `/home/mellonelay1999/.agents/`. This file contains only NEXI-specific authority, runtime boundaries, and project routing. It does not authorize production mutation.
 
 ## Dynamic routing model
-Global control stack: `ChatGPT parent -> Selective Intelligence when triggered -> Agent Kernel durable governance -> Agent Skills engineering method -> narrow capability owner -> distinct evidence tools/specialists -> parent fan-in`. Get-Fable and Riqor CLI/plugin/owned-hook runtimes were removed by owner decision on 2026-09-30. Do not route to or reinstall them; retained standalone skill instructions do not establish an active runtime.
+Global control stack: `ChatGPT parent -> Selective Intelligence when triggered -> NEXI Work Kernel current session control -> Agent Skills engineering method -> narrow capability owner -> distinct evidence tools/specialists -> parent fan-in`. Get-Fable and Riqor CLI/plugin/owned-hook runtimes were removed by owner decision on 2026-09-30. Do not route to or reinstall them; retained standalone skill instructions do not establish an active runtime.
 
 NEXI execution overlay:
 `OWNER MESSAGE -> COMPLETE TASK CONTRACT -> CURRENT NEXI AUTHORITY -> CORRECTION/DRIFT HANDLING WHEN REQUIRED -> AGENT SKILLS METHOD -> ONE PRIMARY RESPONSIBILITY OWNER -> 0..N NON-OVERLAPPING SPECIALISTS/EVIDENCE TOOLS -> FASTEST PRECISE TOOL/MCP/CLI -> EXECUTE -> FOCUSED VERIFY -> PARENT FAN-IN -> DURABLE STATE RECONCILIATION WHEN REQUIRED -> REPORT`
@@ -59,19 +59,12 @@ Codex `/mcp` remains authoritative for Codex-visible MCP tools and Codex OAuth s
 Never create Remote-Desktop-Commander-via-Remote-Desktop-Commander recursion.
 
 ## Browser responsibility split
-Final production acceptance follows the global `/home/mellonelay1999/.agents/BROWSER_FABRIC.md` contract and the current owner decision:
 
-1. Polypane + Chrome DevTools on port 5859: PRIMARY visual/responsive discovery and rendered layout acceptance. Verify the actual Polypane page/pane identity on attach.
-2. Preserved headed Worker-0 Chrome + MetaMask on port 5858: PRIMARY wallet-authenticated/session acceptance. Reuse the controlled profile/session and do not repeat SIWE absent fresh regression evidence.
-3. Playwright / Chrome DevTools support only the browser/profile they are attached to for deterministic interaction, DOM, network, console, screenshots, and focused assertions; they are not independent acceptance owners.
-4. Testing Toolkit and BrowserStack remain claim-specific support for bounded accessibility/responsive diagnostics or real-device/cross-browser evidence. Do not infer authenticated state across browser surfaces.
-5. Fallow and Graphify: structural/causal source evidence only; never rendered acceptance.
-6. BrowserStack Local: exception path only when cloud testing must reach localhost/private Worker-0 services.
-7. VNC/noVNC: owner human-GUI/login lane for operating the preserved profile/extensions when native browser automation is insufficient; preserve it as reusable infrastructure.
-
-Tool or attachment failure is a tooling limitation, not product-failure evidence. Do not create a new wallet, browser profile, login flow, or duplicate browser harness unless a fresh causal defect requires one.
-
-For NEXI completion, the browser target is the deployed `https://www.nexitrading.app` generation exercising the real `https://api.nexitrading.app` Cloudflare Worker -> Container -> NestJS backend. A local standalone frontend, mock backend, or VM-local NestJS process cannot prove end-to-end production behavior.
+- Polypane + Chrome DevTools on port 5859 is the approved primary responsive and visual-acceptance environment.
+- Recover the existing Coinbase Wallet authenticated profile through the current browser-fabric contract. Older MetaMask profiles and stale ports are historical, not current acceptance owners.
+- Verify actual page, profile, wallet identity and SIWE authentication before browser claims; do not fabricate sessions or create redundant browser harnesses.
+- Playwright, DevTools and device tools provide scoped interaction/diagnostic evidence only, not independent financial authority.
+- Acceptance must use deployed Public/Cloudflare backend, not VM-local NestJS or mocked financial data.
 
 ## Astra lineage
 `NEXI_ASTRA_FRONTEND_BINDING_MANIFEST.md` and the `nexi-frontend-astra-controller` skill are retained as historical frontend-binding/execution lineage. They are not the active project routing controller. Current owner decisions and this routing model control new work.
@@ -81,9 +74,9 @@ Do not erase valid binding knowledge merely because its historical name contains
 Match proof to the claim: deterministic checks -> runtime observation -> source reconciliation -> independent review. A graph path does not prove behavior; a build does not prove runtime; browser success does not repair a source/contract failure.
 Keep `IMPLEMENTED`, `STATICALLY_VALIDATED`, `TESTED`, `INTEGRATED`, `RUNTIME_VERIFIED`, `DEPLOYED`, and `OWNER_ACCEPTED` distinct.
 
-## CodeScene required gates
+## Maintainability specialists
 
-Use NEXI_CODESCENE_WORKFLOW.md and nexi-codescene-quality-gates for AI code changes. Preserve the three parent-owned lanes; add per-file review, mandatory pre-commit and PR safeguards with measured 10.0 target. Code Health does not replace production acceptance.
+Use Fallow for affected JS/TS risk, Graphify for topology, and official framework checks as relevant. CodeScene historical workflows are retained only as reference; no CodeScene 10.0 score gate applies under current owner direction. Do not re-run unaffected scans or equate static proof with browser or production acceptance.
 
 ## Workspace Memory and cross-session evidence
 

@@ -7,7 +7,7 @@ The skill checkpoint previously kept routing leases only in `/tmp`. Phase comple
 
 ## Authority and recovery
 
-- `NEXI_CURRENT_STATE.md` and `NEXI_PRODUCTION_COMPLETION_LEDGER.md` remain the durable authorities. No additional completion ledger exists.
+- This is a historical account of the old phase gate. Current execution reads the compact `NEXI_CURRENT_STATE.md` and `docs/README.md`; the ledger no longer controls completion.
 - `/home/mellonelay1999/nexi-work-current-checkpoint.json`: `workCycle` owns the active engineering phase; existing production/geometry fields retain product proof.
 - `/home/mellonelay1999/nexi-phase-receipts/`: sealed evidence receipts, referenced by the capsule. They are evidence, not authorization or owner acceptance.
 - `/home/mellonelay1999/.local/state/worker0-skill-continuity/`: cached skill selection/fingerprints; refresh affected entries on contract/authority/phase changes. Cache availability is not current authentication proof.

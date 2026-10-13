@@ -22,7 +22,7 @@ Queue/Workflow/Worker/Container orchestrate; they never own financial truth.
 
 Do not restore any retired database authority. Do not introduce a second Admin plane, second financial authority, direct frontend D1 access, Worker financial logic, or custom VM lifecycle engine.
 ## Capability routing
-Worker-0 global execution law is `/home/mellonelay1999/RDC_ONBOARDING.md` with global capability/router/hook catalogs under `/home/mellonelay1999/.agents/`. The ChatGPT Work parent owns NEXI Work Control Plane reasoning, Agent Skills method selection, Selective Intelligence, Ponytail/Karpathy discipline, phase routing and fan-in. Worker-0 executes/evidences through Fabric/RDC and its local tools. Get-Fable and Riqor runtimes were removed by owner decision on 2026-09-30 and must not be routed to or reinstalled. The Graphify multiview + Fallow + CodeScene + DeepWiki combination remains the structural/static/semantic intelligence stack. NEXI files below are project overlays, not duplicate global authorities.
+Worker-0 global execution law is `/home/mellonelay1999/RDC_ONBOARDING.md` with global capability/router/hook catalogs under `/home/mellonelay1999/.agents/`. The ChatGPT Work parent owns NEXI Work Control Plane reasoning, Agent Skills method selection, Selective Intelligence, Ponytail/Karpathy discipline, phase routing and fan-in. Worker-0 executes/evidences through RDC and currently callable specialist MCP/CLI tools; retired Fabric is not a current execution owner. Get-Fable and Riqor runtimes were removed by owner decision on 2026-09-30 and must not be routed to or reinstalled. Graphify provides topology, Fallow provides static analysis, DeepWiki provides optional semantics; CodeScene is not a mandatory authority. NEXI files below are project overlays, not duplicate global authorities.
 
 Classify the complete owner request before choosing skills or tools. Use `docs/operations/NEXI_CAPABILITY_ROUTING.md` as the project routing owner, `/home/mellonelay1999/RDC_ONBOARDING.md` for Worker-0 mechanics, and `/home/mellonelay1999/.agents/GLOBAL_CAPABILITY_INDEX.md` as the lightweight capability directory. Read only the specialist reference needed for the task.
 
@@ -39,7 +39,7 @@ No historical controller skill has universal primacy. Use a task-specific skill 
 ## Bounded authority maintenance
 Durable-state reconciliation is part of completion, but it is proportional rather than mechanical.
 - Update `NEXI_CURRENT_STATE.md` when a bounded task materially changes current durable NEXI truth: source frontier, deployed baseline, active phase, canonical ownership/routing, or immediate unresolved gates.
-- Update `NEXI_PRODUCTION_COMPLETION_LEDGER.md` only when the task establishes, changes, revokes, or supersedes durable completion evidence.
+- `NEXI_PRODUCTION_COMPLETION_LEDGER.md` is a historical compatibility pointer; do not use or update it as an active completion gate.
 - Harmless commands, transient process/session state, one-off timestamps, exploratory notes, and ephemeral diagnostics do not belong in permanent authority.
 
 When reconciliation is required, do it before the completion receipt rather than deferring it to a cleanup session. The bounded loop is:
@@ -142,11 +142,15 @@ Rules:
 - Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
 - After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
 
+## Current browser execution
+
+Final rendered acceptance uses Polypane, Chrome DevTools and the already connected Coinbase Wallet. Old MetaMask-profile routes are historical and cannot be presumed current.
+
 ## Production closure controller — hard rule
 
-On a fresh NEXI Work session, after continuity loss, or when the relevant durable frontier may have changed, read the live VM `NEXI_CURRENT_STATE.md` and relevant `NEXI_PRODUCTION_COMPLETION_LEDGER.md` rows and cache their identity/freshness. Reuse that proof while unchanged; do not reread the full files before every bounded action. ChatGPT Project uploads, chat exports, handovers, and historical receipts are provenance only when they conflict with current VM/GitHub/Cloudflare evidence.
+On a fresh NEXI Work session, after continuity loss, or when the relevant durable frontier may have changed, read the compact `NEXI_CURRENT_STATE.md`, `docs/README.md` and the task-relevant current domain owner; the old ledger is historical only. Reuse that proof while unchanged; do not reread the full files before every bounded action. ChatGPT Project uploads, chat exports, handovers, and historical receipts are provenance only when they conflict with current VM/GitHub/Cloudflare evidence.
 
-The current owner directive selects the active work. The completion ledger is historical evidence and a reconciliation record; a stale queue row, receipt, phase capsule, or checkpoint cannot block an explicit current owner instruction. Preserve proven completed work and update current-state records proportionally after material source/runtime changes. Never claim verification that has not been performed.
+The current owner directive selects the active work. The completion ledger is historical evidence only; a stale queue row, receipt, phase capsule, or checkpoint cannot block an explicit current owner instruction. Preserve proven completed work and update current-state records proportionally after material source/runtime changes. Never claim verification that has not been performed.
 
 Owner manual testing is a final acceptance gate, never a substitute for automatable verification. Use controlled test wallet/Admin identities when safe; otherwise record an explicit owner deferral. Cloudflare Worker + Container remains the only backend runtime authority, and Public/Admin Worker-0 builds/runtimes remain restricted to their canonical `/srv/nexi/public` and `/srv/nexi/admin` seams.
 
@@ -156,12 +160,6 @@ For market work, do not optimize for a cosmetic `LIVE` count. Open-market assets
 
 Do not make a durable phase checkpoint, stale workCycle capsule, or phase-reconciliation receipt a prerequisite for executing a current owner directive. Use live repository and runtime evidence to preserve completed work; update durable state proportionally after material changes. Do not create a second completion ledger.
 
-## CodeScene MCP mandatory maintainability safeguards
+## Maintainability and focused verification
 
-Code Health is authoritative for maintainability. Target **10.0** for AI-touched scorable code; 9+ and a non-regression PASS do not satisfy that target. Apply worker0-codescene and nexi-codescene-quality-gates through the existing Work Kernel.
-
-After each AI code modification run code_health_review on the affected supported files. Before every commit run pre_commit_code_health_safeguard, inspecting quality_gates and metadata coverage; before a PR run analyze_change_set against the actual base ref (HEAD scope). Compose the deterministic staged guard cs delta --git-hook --staged with existing hooks. On regression or a missed target use the review to guide 3–5 small refactor steps and remeasure; do not claim readiness without meeting the target or explicit scoped owner acceptance. Unsupported/zero eligible files are NOT_SCORED, never 10.0.
-
-Use live select_project and project/file hotspot and goal variants; stale vendor aliases are not callable authority. Project API availability must be proved separately from local analysis. Graphify owns topology, Fallow distinct static findings, and real production/browser tests behavior. Reuse closed geometry; maintainability tools cannot grant production or financial acceptance.
-
-Read docs/operations/NEXI_CODESCENE_WORKFLOW.md for the organized nine official skills, CLI/MCP examples, auth/project boundaries and optional ACE constraints.
+Use relevant direct source, affected tests, Fallow and Graphify when they materially establish correctness or changed-code risk. CodeScene scoring and historic phase-score targets are NOT mandatory gates under the owner's current direction. Preserve non-regressing application behavior and financial invariants, but do not stop at retired tool/score checkpoints. Older CodeScene docs remain provenance only.

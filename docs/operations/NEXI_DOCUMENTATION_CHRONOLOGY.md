@@ -6,7 +6,7 @@ Reconciled 2026-10-03, Asia/Yangon. This is a navigation/provenance register, no
 
 Owner decisions and evidence at the claim's scope outrank historical wording. Use:
 - [Current state](../../NEXI_CURRENT_STATE.md) for durable deployed truth.
-- [Production ledger](../../NEXI_PRODUCTION_COMPLETION_LEDGER.md), Section 0, for the active queue; Section 29 closes Public geometry.
+- [Historical production ledger](../../NEXI_PRODUCTION_COMPLETION_LEDGER.md) for dated evidence only. No historical section or queue is an active completion controller.
 - [Capability routing](NEXI_CAPABILITY_ROUTING.md) for project-specific execution ownership.
 - [Browser acceptance matrix](../quality/NEXI_BROWSER_ACCEPTANCE_MATRIX.md) for evidence scope.
 - Public frontend AGENTS.md / DESIGN.md for current frontend constraints.

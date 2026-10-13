@@ -2,8 +2,8 @@
 
 **Status:** Required production-engineering authority.  
 **Date:** 2026-07-27  
-**Canonical product authority:** `docs/NEXI_FINAL_PRODUCT_PROGRAM_CHARTER.md`  
-**Current-state authority:** `NEXI_CURRENT_STATE.md` + `NEXI_PRODUCTION_COMPLETION_LEDGER.md`
+**Historical charter reference:** `docs/NEXI_FINAL_PRODUCT_PROGRAM_CHARTER.md` (not the current product or completion authority)
+**Current source/navigation authority:** `docs/README.md` and current GitHub `main`; old ledger is historical
 **Public visual authority:** `cloudflare-container-bootstrap/dexi-frontend/DESIGN.md`; older design documents are lineage only
 
 This document extends the completed charter and Phase 1 classification. It does not replace them, restart discovery, or claim implementation completion.

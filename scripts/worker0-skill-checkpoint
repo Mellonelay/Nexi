@@ -36,7 +36,7 @@ top = subprocess.run(["git", "-C", a.cwd, "rev-parse", "--show-toplevel"],
                      capture_output=True, text=True)
 root = Path(top.stdout.strip()) if top.returncode == 0 else Path(a.cwd).resolve()
 durable = None
-if all((root / name).is_file() for name in
+if os.environ.get("NEXI_EXPLICIT_HISTORICAL_PHASE_CHECK") == "1" and all((root / name).is_file() for name in
        ("NEXI_CURRENT_STATE.md", "NEXI_PRODUCTION_COMPLETION_LEDGER.md")):
     gate = root / "scripts/nexi_phase_checkpoint.py"
     cmd = ["python3", str(gate), "--repo", str(root), "--capsule",

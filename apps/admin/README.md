@@ -1,6 +1,6 @@
 # NEXI Admin Control Plane
 
-> HISTORICAL SCAFFOLD SNAPSHOT — retained for provenance, not current route counts, live parity, build commands, or production readiness. Current apps/admin/AGENTS.md, synchronized source and NEXI_PRODUCTION_COMPLETION_LEDGER.md control continuation. The original source generation below is preserved; no original event date is inferred from this reconciliation on 2026-10-03.
+> HISTORICAL SCAFFOLD SNAPSHOT — retained for provenance, not current route counts, live parity, build commands, or production readiness. Current apps/admin/AGENTS.md, synchronized source, and docs/admin/README.md control continuation; the old ledger is historical. The original source generation below is preserved; no original event date is inferred from this reconciliation on 2026-10-03.
 
 Internal, role-gated operations and governance console for the NEXI platform.
 

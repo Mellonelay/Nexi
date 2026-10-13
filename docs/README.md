@@ -7,6 +7,7 @@
 
 - [Current state](../NEXI_CURRENT_STATE.md): compact source/runtime split and next verified frontier; recheck volatile values.
 - [Repository law](../AGENTS.md): active development, operational boundaries, production source/build constraints.
+- [Architecture diagrams](architecture/NEXI_ARCHITECTURE_DIAGRAMS.md) (GitHub-rendered Mermaid topology, financial flows, release and workflow maps).
 - [System architecture](architecture/NEXI_SYSTEM_ARCHITECTURE.md) and [cross-surface feature map](architecture/CROSS_SURFACE_FEATURE_MAP.md): ownership and product-to-code interfaces.
 - [Backend](backend/README.md): domain features, NestJS owners, persistence, APIs and events.
 - [Public frontend](frontend/README.md): user journeys, Next.js routes, wallet account display, backend consumers, responsive design.
