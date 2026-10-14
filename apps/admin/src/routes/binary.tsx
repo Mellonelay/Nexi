@@ -195,16 +195,24 @@ function PairsPanel({ pairs }: { pairs: BinaryPair[] }) {
       key: "exposure",
       header: "Exposure",
       align: "right",
-      cell: (p) => (
-        <div className="flex flex-col text-right leading-tight">
-          <span className="mono text-xs">
-            {p.exposureUsed} / {p.exposureCap}
-          </span>
-          <span className="mono text-[10px] text-muted-foreground">
-            {Math.round((Number(p.exposureUsed) / Number(p.exposureCap)) * 100)}%
-          </span>
-        </div>
-      ),
+      cell: (p) => {
+        const used = p.exposureUsed.trim() === "" ? Number.NaN : Number(p.exposureUsed);
+        const cap = p.exposureCap.trim() === "" ? Number.NaN : Number(p.exposureCap);
+        const exposureAvailable = Number.isFinite(used) && Number.isFinite(cap) && cap > 0;
+
+        return (
+          <div className="flex flex-col text-right leading-tight">
+            <span className="mono text-xs">
+              {exposureAvailable ? `${p.exposureUsed} / ${p.exposureCap}` : "Unavailable"}
+            </span>
+            {exposureAvailable && (
+              <span className="mono text-[10px] text-muted-foreground">
+                {Math.round((used / cap) * 100)}%
+              </span>
+            )}
+          </div>
+        );
+      },
     },
   ];
 
