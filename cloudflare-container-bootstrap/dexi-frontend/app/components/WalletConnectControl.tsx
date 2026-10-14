@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useAccount, useConnect, useDisconnect, useSignMessage } from "wagmi";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { getWalletClient } from "wagmi/actions";
+import type { Address } from "viem";
 import axios from "axios";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -20,30 +22,12 @@ import {
   walletChain,
   walletConnectConfigured,
 } from "../lib/wagmi";
+import { getWalletConnectorOptions } from "../lib/wallet-connector-options";
+import { completeWalletSiwe } from "../lib/wallet-siwe";
 
 function truncateAddress(address: string) {
   return `${address.slice(0, 6)}…${address.slice(-4)}`;
 }
-function walletKey(value: string) {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ");
-}
-
-function walletPriority(name: string, id: string) {
-  const value = walletKey(`${name} ${id}`);
-  if (value.includes("metamask")) return 10;
-  if (value.includes("trust")) return 20;
-  if (value.includes("walletconnect")) return 30;
-  if (value.includes("base")) return 40;
-  if (value.includes("coinbase")) return 50;
-  if (value.includes("rabby")) return 60;
-  if (value.includes("brave")) return 70;
-  if (value.trim() === "injected") return 900;
-  return 100;
-}
-
 function walletErrorMessage(error: unknown) {
   if (axios.isAxiosError(error)) {
     const detail = error.response?.data;
@@ -81,7 +65,6 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
   } = useAccount();
   const { connectors, connectAsync, error: connectionError } = useConnect();
   const { disconnectAsync } = useDisconnect();
-  const { signMessageAsync } = useSignMessage();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -100,27 +83,10 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
     staleTime: 30_000,
   });
 
-  const walletOptions = useMemo(() => {
-    const hasNamedInjected = connectors.some(
-      (connector) =>
-        connector.type === "injected" &&
-        walletKey(connector.name) !== "injected",
-    );
-    const seen = new Set<string>();
-    return [...connectors]
-      .sort(
-        (a, b) =>
-          walletPriority(a.name, a.id) - walletPriority(b.name, b.id) ||
-          a.name.localeCompare(b.name),
-      )
-      .filter((connector) => {
-        const key = walletKey(connector.name);
-        if (key === "injected" && hasNamedInjected) return false;
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      });
-  }, [connectors]);
+  const walletOptions = useMemo(
+    () => getWalletConnectorOptions(connectors),
+    [connectors],
+  );
 
   useEffect(() => {
     const syncSession = () => setSessionPresent(hasAuthSession());
@@ -158,25 +124,42 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
   }, [sessionQuery.error]);
 
   const authenticateConnectedWallet = useCallback(
-    async (selectedAddress: string, selectedChainId: number) => {
-      const challenge = await requestWalletChallenge(
-        selectedAddress,
-        selectedChainId,
-      );
-      const signature = await signMessageAsync({ message: challenge.message });
-      const referralCode = captureReferralCode();
-      const verified = await verifyWalletChallenge(
-        challenge.message,
-        signature,
-        referralCode,
-      );
+    async (
+      connector: (typeof connectors)[number],
+      selectedAddress: Address,
+      selectedChainId: number,
+    ) => {
+      const verified = await completeWalletSiwe<
+        (typeof connectors)[number],
+        Awaited<ReturnType<typeof verifyWalletChallenge>>
+      >({
+        connector,
+        address: selectedAddress,
+        chainId: selectedChainId,
+        referralCode: captureReferralCode(),
+        requestChallenge: requestWalletChallenge,
+        getWalletClient: ({
+          connector: selectedConnector,
+          account,
+          chainId,
+          assertChainId,
+        }) =>
+          getWalletClient(wagmiConfig, {
+            connector: selectedConnector,
+            account: account as Address,
+            chainId: chainId as typeof walletChain.id,
+            assertChainId,
+          }),
+        verifyChallenge: (message, signature, referralCode) =>
+          verifyWalletChallenge(message, signature, referralCode),
+      });
       setWalletSession(verified);
       clearReferralCode();
       await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
       setOpen(false);
       setMessage("Connected");
     },
-    [queryClient, signMessageAsync],
+    [queryClient],
   );
 
   const connect = useCallback(
@@ -194,7 +177,6 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
         );
 
         if (!sameConnector) {
-          if (isConnected) await disconnectAsync();
           const result = await connectAsync({ connector });
           selectedAddress = result.accounts[0];
           selectedChainId = result.chainId;
@@ -202,7 +184,11 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
 
         if (!selectedAddress || !selectedChainId)
           throw new Error("The wallet did not provide an account.");
-        await authenticateConnectedWallet(selectedAddress, selectedChainId);
+        await authenticateConnectedWallet(
+          connector,
+          selectedAddress,
+          selectedChainId,
+        );
       } catch (error) {
         setMessage(walletErrorMessage(error));
       } finally {
@@ -216,7 +202,6 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
       busy,
       chainId,
       connectAsync,
-      disconnectAsync,
       isConnected,
     ],
   );
