@@ -22,7 +22,11 @@ import {
   walletChain,
   walletConnectConfigured,
 } from "../lib/wagmi";
-import { getWalletConnectorOptions } from "../lib/wallet-connector-options";
+import {
+  getWalletConnectorLabel,
+  getWalletConnectorOptions,
+  isCoinbaseInjectedProvider,
+} from "../lib/wallet-connector-options";
 import { completeWalletSiwe } from "../lib/wallet-siwe";
 
 function truncateAddress(address: string) {
@@ -83,9 +87,17 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
     staleTime: 30_000,
   });
 
+  const coinbaseProviderDetected = useMemo(
+    () =>
+      typeof window !== "undefined" &&
+      isCoinbaseInjectedProvider(
+        (window as Window & { ethereum?: unknown }).ethereum,
+      ),
+    [],
+  );
   const walletOptions = useMemo(
-    () => getWalletConnectorOptions(connectors),
-    [connectors],
+    () => getWalletConnectorOptions(connectors, coinbaseProviderDetected),
+    [connectors, coinbaseProviderDetected],
   );
 
   useEffect(() => {
@@ -328,7 +340,12 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
                     disabled={busy}
                     className="flex min-h-12 w-full items-center justify-between gap-3 rounded-xl px-3 text-left text-sm text-[#F8F6FF] transition hover:bg-[#2A1742] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF]"
                   >
-                    <span className="min-w-0 truncate">{connector.name}</span>
+                    <span className="min-w-0 truncate">
+                      {getWalletConnectorLabel(
+                        connector,
+                        coinbaseProviderDetected,
+                      )}
+                    </span>
                     {connected && (
                       <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--nexi-cyan)]">
                         Connected

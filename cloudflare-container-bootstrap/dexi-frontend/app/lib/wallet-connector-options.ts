@@ -25,18 +25,34 @@ function walletPriority(name: string, id: string) {
   return 100;
 }
 
+export function isCoinbaseInjectedProvider(provider: unknown): boolean {
+  if (!provider || typeof provider !== "object") return false;
+  const candidate = provider as {
+    isCoinbaseWallet?: boolean;
+    providers?: unknown;
+  };
+  if (candidate.isCoinbaseWallet === true) return true;
+  return (
+    Array.isArray(candidate.providers) &&
+    candidate.providers.some(isCoinbaseInjectedProvider)
+  );
+}
+
 export function getWalletConnectorOptions<T extends WalletConnectorOption>(
   connectors: readonly T[],
+  coinbaseProviderDetected = false,
 ): T[] {
   const hasNamedInjected = connectors.some(
     (connector) =>
       connector.type === "injected" && walletKey(connector.name) !== "injected",
   );
-  const hasCoinbaseExtension = connectors.some(
-    (connector) =>
-      connector.type === "injected" &&
-      walletKey(connector.name).includes("coinbase"),
-  );
+  const hasCoinbaseExtension =
+    coinbaseProviderDetected ||
+    connectors.some(
+      (connector) =>
+        connector.type === "injected" &&
+        walletKey(connector.name).includes("coinbase"),
+    );
   const seenUids = new Set<string>();
 
   return [...connectors]
@@ -59,4 +75,18 @@ export function getWalletConnectorOptions<T extends WalletConnectorOption>(
         hasNamedInjected
       );
     });
+}
+
+export function getWalletConnectorLabel(
+  connector: WalletConnectorOption,
+  coinbaseProviderDetected = false,
+): string {
+  if (
+    coinbaseProviderDetected &&
+    connector.type === "injected" &&
+    walletKey(connector.name) === "injected"
+  ) {
+    return "Coinbase Wallet";
+  }
+  return connector.name;
 }

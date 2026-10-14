@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { getWalletConnectorOptions } from "./wallet-connector-options.ts";
+import {
+  getWalletConnectorLabel,
+  getWalletConnectorOptions,
+  isCoinbaseInjectedProvider,
+} from "./wallet-connector-options.ts";
 
 const connector = (uid, name, id = "injected", type = "injected") => ({
   uid,
@@ -28,6 +32,32 @@ test("wallet chooser prefers the discovered Coinbase extension over its SDK conn
     getWalletConnectorOptions([coinbaseSdk, coinbaseExtension, metamask]),
     [metamask, coinbaseExtension],
   );
+});
+
+test("wallet chooser routes a Coinbase extension through the generic injected connector", () => {
+  const coinbaseSdk = connector(
+    "coinbase-sdk",
+    "Coinbase Wallet",
+    "coinbaseWallet",
+    "coinbaseWallet",
+  );
+  const injected = connector("injected-fallback", "Injected");
+
+  assert.deepEqual(getWalletConnectorOptions([coinbaseSdk, injected], true), [
+    injected,
+  ]);
+  assert.equal(getWalletConnectorLabel(injected, true), "Coinbase Wallet");
+});
+
+test("Coinbase provider detection handles direct and multi-provider injections", () => {
+  assert.equal(isCoinbaseInjectedProvider({ isCoinbaseWallet: true }), true);
+  assert.equal(
+    isCoinbaseInjectedProvider({
+      providers: [{ isCoinbaseWallet: true }],
+    }),
+    true,
+  );
+  assert.equal(isCoinbaseInjectedProvider({ isMetaMask: true }), false);
 });
 
 test("wallet chooser removes only duplicate connector instances and generic injected fallback", () => {
