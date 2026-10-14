@@ -87,14 +87,15 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
     staleTime: 30_000,
   });
 
-  const coinbaseProviderDetected = useMemo(
-    () =>
-      typeof window !== "undefined" &&
+  const [coinbaseProviderDetected, setCoinbaseProviderDetected] =
+    useState(false);
+  useEffect(() => {
+    setCoinbaseProviderDetected(
       isCoinbaseInjectedProvider(
         (window as Window & { ethereum?: unknown }).ethereum,
       ),
-    [],
-  );
+    );
+  }, []);
   const walletOptions = useMemo(
     () => getWalletConnectorOptions(connectors, coinbaseProviderDetected),
     [connectors, coinbaseProviderDetected],
