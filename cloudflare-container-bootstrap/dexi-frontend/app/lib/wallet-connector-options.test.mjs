@@ -4,6 +4,7 @@ import {
   getWalletConnectorLabel,
   getWalletConnectorOptions,
   isCoinbaseInjectedProvider,
+  requestCoinbaseInjectedAccounts,
 } from "./wallet-connector-options.ts";
 
 const connector = (uid, name, id = "injected", type = "injected") => ({
@@ -72,4 +73,39 @@ test("wallet chooser removes only duplicate connector instances and generic inje
     ),
     ["metamask", "coinbase-extension"],
   );
+});
+
+test("Coinbase injected connector requests account access before Wagmi connector negotiation", async () => {
+  const calls = [];
+  const provider = {
+    isCoinbaseWallet: true,
+    async request(args) {
+      calls.push(args.method);
+      return ["0x0000000000000000000000000000000000000001"];
+    },
+  };
+
+  await requestCoinbaseInjectedAccounts({
+    type: "injected",
+    getProvider: async () => provider,
+  });
+
+  assert.deepEqual(calls, ["eth_requestAccounts"]);
+});
+
+test("account preflight leaves non-Coinbase injected and WalletConnect connectors unchanged", async () => {
+  let calls = 0;
+  const connector = {
+    type: "injected",
+    getProvider: async () => ({
+      isMetaMask: true,
+      request: async () => {
+        calls += 1;
+      },
+    }),
+  };
+
+  await requestCoinbaseInjectedAccounts(connector);
+  await requestCoinbaseInjectedAccounts({ ...connector, type: "walletConnect" });
+  assert.equal(calls, 0);
 });

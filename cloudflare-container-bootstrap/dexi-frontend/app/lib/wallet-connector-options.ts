@@ -38,6 +38,21 @@ export function isCoinbaseInjectedProvider(provider: unknown): boolean {
   );
 }
 
+export async function requestCoinbaseInjectedAccounts(connector: {
+  type: string;
+  getProvider?: () => Promise<unknown>;
+}): Promise<void> {
+  if (connector.type !== "injected") return;
+  const provider = await connector.getProvider?.();
+  if (!isCoinbaseInjectedProvider(provider)) return;
+
+  const request = (provider as { request?: unknown }).request;
+  if (typeof request !== "function")
+    throw new Error("Coinbase Wallet does not expose an EIP-1193 request method.");
+
+  await request.call(provider, { method: "eth_requestAccounts" });
+}
+
 export function getWalletConnectorOptions<T extends WalletConnectorOption>(
   connectors: readonly T[],
   coinbaseProviderDetected = false,

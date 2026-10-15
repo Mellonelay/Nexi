@@ -26,6 +26,7 @@ import {
   getWalletConnectorLabel,
   getWalletConnectorOptions,
   isCoinbaseInjectedProvider,
+  requestCoinbaseInjectedAccounts,
 } from "../lib/wallet-connector-options";
 import { completeWalletSiwe } from "../lib/wallet-siwe";
 
@@ -190,6 +191,7 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
         );
 
         if (!sameConnector) {
+          await requestCoinbaseInjectedAccounts(connector);
           const result = await connectAsync({ connector });
           selectedAddress = result.accounts[0];
           selectedChainId = result.chainId;
