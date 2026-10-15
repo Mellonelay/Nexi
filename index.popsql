@@ -1,3 +1,18 @@
 {
-  "3290048": "3290048-My first shared query.sql"
+  "3290048": "3290048-My first shared query.sql",
+  "3322621": "backend/prisma/migrations-d1/0001_initial.sql",
+  "3322622": "backend/prisma/migrations-d1/0002_event_inbox.sql",
+  "3322623": "backend/prisma/migrations-d1/0003_biquote_market_provider.sql",
+  "3322624": "backend/prisma/migrations-d1/0004_market_top_of_book_and_moex.sql",
+  "3322625": "backend/prisma/migrations-d1/0005_referral_vip_account.sql",
+  "3322626": "backend/prisma/migrations-d1/0006_user_security_mfa/migration.sql",
+  "3322627": "backend/prisma/migrations-d1/0007_user_security_password/migration.sql",
+  "3322628": "backend/prisma/migrations-d1/0008_communications_content_completion/migration.sql",
+  "3322629": "backend/prisma/migrations-d1/0009_market_read_indexes/migration.sql",
+  "3322630": "backend/prisma/migrations-d1/0010_binary_canonical_pair_configs.sql",
+  "3322631": "backend/prisma/migrations-d1/0011_binary_full_market_universe.sql",
+  "3322632": "backend/prisma/migrations-d1/0012_wallet_network_authority.sql",
+  "3322633": "backend/prisma/migrations-d1/0013_wallet_network_uuid_repair.sql",
+  "3322634": "backend/prisma/migrations-d1/0014_referral_history_events.sql",
+  "3322635": "backend/prisma/migrations-d1/0015_referral_reward_activity.sql"
 }
