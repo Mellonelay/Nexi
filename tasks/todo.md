@@ -271,7 +271,7 @@ Remote refs/heads/main verified 9a41b2e; Node v22.23.2 / better-sqlite3 12.11.1 
 
 ## Canonical-main integration and documentation checkpoint — 2026-10-16 21:29 UTC
 
-- [x] INTEGRATED — Migration source patch applied to canonical `main` at recovered base `9a41b2e3da2729173f6d7aac6a1fd2f6c6c4657f`; changes remain uncommitted. Migration worktree kept intact. Existing untracked `apps/admin/pnpm-lock.yaml` and `apps/admin/pnpm-workspace.yaml` were preserved.
+- [x] INTEGRATED — Migration source patch applied and committed locally on canonical `main`, based on `9a41b2e3da2729173f6d7aac6a1fd2f6c6c4657f`; GitHub synchronization is pending. Migration worktree kept intact. Existing untracked `apps/admin/pnpm-lock.yaml` and `apps/admin/pnpm-workspace.yaml` were preserved.
 - [x] VERIFIED — Canonical npm `package.json` and `package-lock.json` match deployed backend package/lock hashes. Fresh `npm ci` completed (923 packages); Node v24.21.0, npm 11.19.0. `npm ls --depth=0` exits 0, Native SQLite loads, and `npm run build` exits 0. Receipt: `tasks/evidence/canonical-main-integration-20261016.md`.
 - [x] VERIFIED — Native SQLite load returned SQLite 3.53.2; `@prisma/adapter-better-sqlite3` resolved 7.3.0. Canonical built `dist/src/main.js` and active `/srv/nexi/backend/dist/src/main.js` have the same SHA-256. Existing systemd API is active and enabled; no restart was made.
 - [x] REVIEWED — Fallow 3.30.0 scoped to the 24 changed backend production TS files (24 paths, tests/generated/deps/manifests excluded): no unresolved imports/cycles/boundary violations. Six unused-member candidates were checked; internal calls and test-only replay surfaces were retained. Policy detector did not run (no rule packs configured). This is static evidence, not type/runtime proof.
