@@ -2,7 +2,7 @@
 
 Timestamp: 2026-10-16T21:29:02Z
 Repository: `/home/mellonelay1999/workspaces/Nexi`
-Branch/base: `main` at `9a41b2e3da2729173f6d7aac6a1fd2f6c6c4657f`; migration integration remains uncommitted in this working tree.
+Branch: canonical `main`, based on `9a41b2e3da2729173f6d7aac6a1fd2f6c6c4657f`; migration integration is committed locally, with GitHub synchronization pending. The separate migration worktree is preserved.
 
 ## Dependency and build proof
 

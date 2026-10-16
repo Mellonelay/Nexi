@@ -170,7 +170,7 @@ This checkpoint supersedes earlier lock/install and Node-runtime uncertainty abo
 
 ## Current canonical-main integration checkpoint — 2026-10-16 21:29 UTC
 
-The recovered repository is `/home/mellonelay1999/workspaces/Nexi`, branch `main`, based on `9a41b2e3da2729173f6d7aac6a1fd2f6c6c4657f`. Migration source changes are integrated into this canonical working tree; they remain uncommitted. The migration worktree and original untracked Admin pnpm workspace files are preserved. The canonical backend uses npm; the migration branch's additional pnpm lock and self-hosted Valkey drafts were not imported.
+The recovered repository is `/home/mellonelay1999/workspaces/Nexi`, branch `main`, based on `9a41b2e3da2729173f6d7aac6a1fd2f6c6c4657f`. Migration source and documentation are committed locally on canonical `main`; GitHub synchronization is pending. The isolated migration worktree remains preserved. The migration worktree and original untracked Admin pnpm workspace files are preserved. The canonical backend uses npm; the migration branch's additional pnpm lock and self-hosted Valkey drafts were not imported.
 
 Canonical-backend dependency install from its checked-in `package-lock.json` completed under Node v24.21.0/npm 11.19.0 (923 packages). `npm run build` passed. Native `better-sqlite3` loaded SQLite 3.53.2; Prisma SQLite adapter resolved 7.3.0. Built `dist/src/main.js` SHA-256 matches active `/srv/nexi/backend/dist/src/main.js`; the existing `nexi-api.service` remains active and enabled, so no restart/deploy was needed. Exact build/dependency/native/runtime evidence: `tasks/evidence/canonical-main-integration-20261016.md`.
 
