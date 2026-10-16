@@ -2,7 +2,7 @@
 
 Timestamp: 2026-10-16T21:29:02Z
 Repository: `/home/mellonelay1999/workspaces/Nexi`
-Branch: canonical `main`, based on `9a41b2e3da2729173f6d7aac6a1fd2f6c6c4657f`; migration integration is committed locally, with GitHub synchronization pending. The separate migration worktree is preserved.
+Branch: canonical `main`; integration was based on `9a41b2e3da2729173f6d7aac6a1fd2f6c6c4657f` and pushed successfully. Worker-0 HEAD and GitHub `origin/main` are `454e4ffda0c8c796fcd24f2dd247ac4f9b3a83a3`. The separate migration worktree is preserved.
 
 ## Dependency and build proof
 
@@ -35,3 +35,5 @@ No Cloudflare production resources, DNS, financial writers, Nginx configuration 
 - Relative Markdown links and fenced-code balance checked in 11 active architecture/instruction docs: zero issues.
 - Stale Cloudflare-only runtime-authority pattern search across the updated core docs returned no false Cloudflare/D1-only authority statements.
 - `npm audit --omit=dev --json`: 27 production dependency advisories (1 low, 10 moderate, 16 high, 0 critical). Full install audit reported 56 total including dev dependencies (2 low, 31 moderate, 22 high, 1 critical). No audit fix or package upgrade was applied in this migration integration slice.
+- GitHub push completed with a repository-wide Dependabot notice of 157 findings (3 critical, 55 high, 87 moderate, 12 low). This scope includes all repo manifests; the notice was recorded without attempting broad upgrades.
+- After the integration push, GitHub `main` advanced by one independent `index.popsql` update (`454e4ff`). Worker-0 fast-forwarded that commit; no migration source or documentation conflict occurred. Local `main` now matches live `origin/main` at the SHA recorded above.

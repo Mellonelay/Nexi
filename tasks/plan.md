@@ -182,7 +182,7 @@ Graphify hosted index is known to predate the current source; it was only used f
 
 1. Finish focused documentation/source consistency and relative-link checks; resolve only verified issues.
 2. Canonical npm install/build/native/dependency checks are complete and recorded; do not rerun unchanged SQLite/financial/workflow proof suites.
-3. Commit/push canonical-main source + accurate current docs after staged-diff and secret checks; verify remote SHA.
+3. [x] Committed canonical source/docs and pushed to GitHub; `main` and `origin/main` both verified at `454e4ffda0c8c796fcd24f2dd247ac4f9b3a83a3`. Original untracked Admin pnpm workspace files remain untouched.
 4. Remaining pre-cutover evidence: trusted API TLS/Nginx route, authorized authenticated acceptance identity, market and Socket.IO recovery acceptance, independent encrypted off-VPS backup/restore, current live D1 delta and controlled freeze/drain/reconciliation/rollback-forward packet.
 5. Owner-only: financial writer/traffic cutover, Name.com nameserver change, and destructive Cloudflare retirement. Keep production Cloudflare/D1 unchanged pending those gates.
 
