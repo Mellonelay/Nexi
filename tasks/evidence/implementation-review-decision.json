@@ -1,0 +1,23 @@
+{
+  "at": "2026-10-16T11:22:33.543132+00:00",
+  "method": "Agent Skills five-axis review + Ponytail full",
+  "scope": "Current opt-in SQLite adapter and inactive durable job/transport increments",
+  "correctness": "Prisma connection10 tests and journal5 tests PASS; real Nest12/BullMQ6/Valkey4 PASS; typecheck passed; no workflow/application-runtime acceptance yet.",
+  "architecture": "Existing EventOutbox retains producer publication authority. LocalDurableJob is transport delivery/retry metadata in the same SQLite file, not Ledger/business authority. Existing EventInbox/domain commands must remain the consumer boundary. Source EventInbox currently records RECEIVED only and lacks lease/availableAt/retry implementation. No new financial writer or replacement EventOutbox introduced.",
+  "security": "Parameterized SQL; bounded logical identity/payload; event shape validation; generic error codes; original domain idempotency required; private staged datasets; no credentials in source.",
+  "simplicity": "Existing financial bridge reused; native SQLite constraints/transactions; standard Node hashes/UUID; only BullMQ plus supported Nest integration added; no new managed architecture.",
+  "performance": "Dispatch bounded10, limits<=1000; no full DB clone; one DB transaction per claim; pending index; production capacity/runtime not yet accepted.",
+  "staticReview": "Fallow first scan reported CLI Jest config unused and estimated CRAP. Explicit package test scripts resolve config discovery; conditional skip removed, separate explicit integration suite passes. Measured SQLite coverage3 files collected. Tool compatibility errors resolved via installed CLI help: coverage expects Istanbul JSON, not LCOV. Subsequent scan included generated coverage HTML/report JSON as source; these are evidence artifacts, not application changes. Scope backend workspace for next static check; no suppressions or automatic cleanup applied.",
+  "requiredBeforeActivation": [
+    "Wire only through existing EventInbox/domain command APIs",
+    "Durable withdrawal/mining/loan checkpoint coordinator still required",
+    "Production cutover remains owner-gated"
+  ],
+  "evidence": [
+    "migration-typecheck.log",
+    "sqlite-measured-coverage.log",
+    "durable-queue-green.log",
+    "migration-fallow-review.json",
+    "migration-fallow-measured-review.json"
+  ]
+}

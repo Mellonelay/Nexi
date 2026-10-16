@@ -36,9 +36,9 @@ import { ObservabilityModule } from "./observability/observability.module";
 import { D1WorkerBridgeModule } from "./d1/d1-worker-bridge.module";
 import { D1PrismaModule } from "./d1/d1-prisma.module";
 import { WorkflowCommandsModule } from "./workflows/workflow-commands.module";
+import { LocalAsyncModule } from "./jobs/local-async.module";
 import { ReferralVipModule } from "./referral-vip/referral-vip.module";
 import { ProfileModule } from "./profile/profile.module";
-import { ObserveModule } from "./observe";
 
 @Module({
   imports: [
@@ -77,13 +77,9 @@ import { ObserveModule } from "./observe";
     D1WorkerBridgeModule,
     D1PrismaModule,
     WorkflowCommandsModule,
+    LocalAsyncModule,
     ReferralVipModule,
     ProfileModule,
-    ObserveModule.forRoot({
-      appKey: process.env.OBSERVE_APP_KEY,
-      appSecret: process.env.OBSERVE_APP_SECRET,
-      serviceId: "nexi",
-    }),
   ],
   controllers: [AppController, FeedbackController],
   providers: [

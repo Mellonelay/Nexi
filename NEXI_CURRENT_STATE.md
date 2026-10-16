@@ -1,15 +1,16 @@
 # NEXI Current State — Compact Authority Capsule
 
-**Reconciled:** 2026-10-14 (Public haptics/dependency pre-deploy checkpoint).
-**Source snapshot observed:** `Mellonelay/Nexi`, `main = origin/main = a74c568196f75f444dca57568806a69491c33c7f` before this state update. Public runtime remains separately identified below. **Inspect HEAD live before future work.**
-**Provenance:** full preceding state narrative is recoverable from Git at `git show 7fbde5c:NEXI_CURRENT_STATE.md`. Its dated receipts are not current runtime state.
+**Reconciled:** 2026-10-16 (VPS backend integration checkpoint).
+**Source snapshot:** `Mellonelay/Nexi`, canonical `main` at the recovered migration base `9a41b2e3da2729173f6d7aac6a1fd2f6c6c4657f` before the current integration changes; verify `git status`/HEAD before any further work. Migration source has been applied to this canonical checkout and the Node 24 build passed. Do not treat this source/build proof as production cutover.
+**Provenance:** earlier history and receipts remain in Git; dated checkpoints are evidence only and must be checked against current runtime.
 
 ## Architecture that remains in force
 
-- ChatGPT Work controller → RDC Worker-0 operator; GitHub main owns durable source; Cloudflare Worker + Container owns backend runtime.
-- Public Next.js and Admin React/TanStack consume the same NestJS domain authority through Cloudflare edge routing.
-- D1 is durable application/financial truth; Ledger is accounting truth; EventOutbox publication boundary. Valkey is realtime/cache only. Queues deliver; Workflows orchestrate. R2 is used for approved private domain objects.
-- Canonical Public source: `cloudflare-container-bootstrap/dexi-frontend`; canonical build/runtime: `/srv/nexi/public/current`. Admin source: `apps/admin`, runtime: `/srv/nexi/admin/current`. Do not create alternative Public build trees.
+- ChatGPT Work parent → RDC/Worker-0 operator; GitHub `main` owns durable source. Target backend is the VPS NestJS service at `/srv/nexi/backend`, supervised by `nexi-api.service`; Cloudflare Worker/Container/D1 remains live production until an owner-approved cutover.
+- Public Next.js and Admin React/TanStack remain existing canonical frontends; Nginx is the intended host/API/WebSocket router.
+- Target data path is SQLite + Prisma/better-sqlite3; Ledger is accounting truth; EventOutbox/EventInbox are durable delivery boundaries. SQLite journal/coordinator own durable job/workflow state, BullMQ transports work over Aiven Valkey. Aiven Valkey also supports Socket.IO Redis Streams, cache and ephemeral coordination only.
+- Private local VPS storage replaces R2 for KYC/deposit evidence. Sentry SDK remains; `@nestjs/observe` is removed.
+- Canonical Public source/build remains `cloudflare-container-bootstrap/dexi-frontend` → `/srv/nexi/public/current`; Admin source/runtime remain `apps/admin` → `/srv/nexi/admin/current`. Do not create alternate frontend build trees.
 
 ## Owner-approved product and UI changes to preserve
 
@@ -18,20 +19,18 @@
 - Markets: 53 catalog identities (17 crypto, 20 shares, 9 forex, 7 metals), distinct from wallet-supported deposit assets. Trade charts retain genuine provider price data. Binary controlled WIN/LOSS may not alter real market feeds.
 - SIWE wallet-only authentication; Public browser campaign uses Polypane and Chrome DevTools with authorized Coinbase Wallet. Old MetaMask test-session assumptions are stale.
 - Public Quiet Refraction, responsive/mobile wallet-browser geometry and final authenticated browser acceptance are distinct from source tests.
-- Admin is an audited, permissioned control plane; financial controls act through NestJS/D1, never independent authority.
+- Admin is an audited, permissioned control plane; financial controls act through NestJS, never independent authority.
 - Sentry SDK telemetry is the intended observability path. **Cloudflare Observability stays disabled.** Backend/Public/Admin artifact SHA, embedded runtime releases and Sentry release lifecycle require separate direct proof.
 
 ## Current completion/evidence frontier
 
-Source files and paths above were inspected for the documentation migration at snapshot `7fbde5c`; Graphify's promoted index matched that SHA (7,058 nodes, 17,236 edges) and was used for mapping only. Previous implementation, focused tests and Sentry completion belong to their individual session receipts. **This documentation pass has not independently asserted their current deployment or authenticated browser acceptance.**
-
-For current runtime, verify the exact Worker/Container version and D1 bindings on Cloudflare, active Public/Admin build IDs on Worker-0, and Sentry ingestion/release directly. Keep `IMPLEMENTED`, `TESTED`, `DEPLOYED`, `RUNTIME_VERIFIED` and `OWNER_ACCEPTED` separate.
+Canonical main source includes the migration changes on top of `9a41b2e`; current `main` changes are not yet committed. Fresh `npm ci` from the canonical npm lock completed, then `npm run build` passed with Node `v24.21.0`. The built `dist/src/main.js` SHA-256 exactly matches `/srv/nexi/backend/dist/src/main.js`; `nexi-api.service` is active and enabled. Prior loopback health/readiness, Swagger, market and Socket.IO checks remain applicable; Lane C directly observed Aiven connections. The promoted Graphify graph is at the pre-integration commit, so it is navigation evidence only for that revision. Public API TLS, authorized authenticated financial acceptance, final live D1 delta, independent encrypted backup/restore and owner cutover remain unproven. Keep `IMPLEMENTED`, `TESTED`, `INTEGRATED`, `RUNTIME_VERIFIED`, `PRODUCTION_CUTOVER` and `OWNER_ACCEPTED` separate.
 
 ## Active navigation and execution
 
 Start at [docs/README.md](docs/README.md), then the owning [Backend](docs/backend/README.md), [Frontend](docs/frontend/README.md), [Admin](docs/admin/README.md), [cross-surface map](docs/architecture/CROSS_SURFACE_FEATURE_MAP.md) or [Sentry operations](docs/operations/NEXI_SENTRY_OBSERVABILITY.md). `AGENTS.md` remains binding repo law, subject to current owner decisions. **The historical production-completion ledger and dated `tasks/` plans are not active gating authorities.**
 
-Next frontier: reconcile current live deployments and final user-facing acceptance only when explicitly in scope. For documentation changes, run link/ownership checks; do not re-test, rebuild or deploy product code.
+Next frontier: finish canonical main-tree review, commit and GitHub synchronization, then close the remaining non-authoritative VPS acceptance gaps: API TLS, authorized authenticated test identity, end-to-end market/financial/WebSocket recovery, independent encrypted off-VPS backup/restore, and current live D1 delta/cutover readiness. Production D1/Cloudflare, public DNS and nameservers remain unchanged; the owner performs the Name.com nameserver change.
 
 
 ## Public haptics and dependency pre-deploy checkpoint — 2026-10-14

@@ -1,50 +1,53 @@
 # NEXI Cross-Surface Feature and Authority Map
 
-**Use:** navigation from user/admin behavior to canonical implementation. Source mappings use repository `main`; actual deployed behavior requires independent proof. This is a cross-reference, **not** a second specification of financial or market rules.
+**Use:** navigation from user/admin behavior to canonical implementation. Source mappings use repository `main`; actual deployed behavior requires independent proof. This is a cross-reference, not a second specification of financial or market rules.
 
 ## Runtime topology
 
-```text
-Public Next.js (user)                Admin React/TanStack (governed controls)
-               \                      /
-                 Cloudflare Worker edge/router
-                              |
-                   Cloudflare Container
-                              |
-                      NestJS domains
-             +----------------+----------------+
-             |                |                |
-        D1 relational     Valkey cache/WS     R2 private objects
-       Ledger + Outbox     realtime only      evidence/proofs
+```mermaid
+flowchart LR
+  P["Public Next.js"] --> N["Nginx host and API routing"]
+  A["Admin React/TanStack"] --> N
+  N --> API["NestJS VPS domain authority"]
+  API --> DB[("SQLite + Prisma")]
+  DB --> L["Ledger + Activity"]
+  DB --> O["EventOutbox + EventInbox"]
+  O --> Q["Durable SQLite journal + BullMQ"]
+  Q --> V[("Aiven Valkey")]
+  API --> S["Socket.IO Redis Streams"]
+  S --> V
+  API --> R["Private VPS evidence storage"]
 ```
 
-Cloudflare Worker routes/orchestrates; NestJS is domain decision authority. D1 owns durable state, Ledger accounting and EventOutbox; Queues/Workflows provide delivery/orchestration. Public and Admin never mutate D1 directly.
+NestJS owns domain decisions; SQLite is the VPS target durable store, Ledger accounting truth and EventOutbox/EventInbox durable delivery boundaries. The SQLite journal/workflow coordinator preserves accepted work; BullMQ transports jobs over Aiven Valkey. Cloudflare Worker/Container/D1 remain live production until the owner-approved cutover, but are not the target VPS architecture. Public and Admin never mutate the database directly.
 
 ## Feature-to-owner matrix
 
 | Capability | Public source route | Backend domain | Admin control | Durable/realtime boundary |
 |---|---|---|---|---|
-| SIWE/security | `/login`, `/signup`, Settings | `auth/`, `users/`, `profile/` | `users`, `sessions`, `roles` | D1 sessions/security events; wallet signature verification |
-| KYC | Settings upload/status | `kyc/` | `kyc` | private R2 evidence, D1 status and Admin audit |
+| SIWE/security | `/login`, `/signup`, Settings | `auth/`, `users/`, `profile/` | `users`, `sessions`, `roles` | SQLite sessions/security events; wallet signature verification |
+| KYC | Settings upload/status | `kyc/` | `kyc` | private VPS evidence files, SQLite status and Admin audit |
 | 53-asset catalog | Dashboard, Asset Detail | `market/` | `assets`, `market-feeds` | provider-backed market data and quote freshness |
-| Wallet accounts | Wallet Overview/Funding/Spot/Margin/Options/Finance | `wallet/`, `financial/`, `d1/` | `wallets`, `ledger`, `reconciliation` | D1 Ledger/Activity; five account scopes |
-| Deposits/withdrawals | Wallet | `wallet/`, `financial/` | `deposits`, `withdrawals`, `networks` | D1 + private proofs + audit/event publication |
-| Same-user and user-to-user transfer | Wallet transfer modal | `financial/`, `d1/` | `wallets`, `audit` | balanced ledger postings, Activity and idempotency |
+| Wallet accounts | Wallet Overview/Funding/Spot/Margin/Options/Finance | `wallet/`, `financial/`, local SQLite gateway | `wallets`, `ledger`, `reconciliation` | SQLite Ledger/Activity; five account scopes |
+| Deposits/withdrawals | Wallet | `wallet/`, `financial/` | `deposits`, `withdrawals`, `networks` | SQLite + private proofs + audit/event publication |
+| Same-user and user-to-user transfer | Wallet transfer modal | `financial/`, local SQLite gateway | `wallets`, `audit` | balanced ledger postings, Activity and idempotency |
 | Convert | Wallet | `conversion/` | governed currency/config controls | backend quote+expiry, zero separate commission, Ledger |
-| Spot | Spot trading surface | `spot/`, `d1/` | `spot`, `settlements` | Spot account, orders/fills, ledger and events |
+| Spot | Spot trading surface | `spot/`, local SQLite gateway | `spot`, `settlements` | Spot account, orders/fills, ledger and events |
 | Margin | Spot/Margin trading surface | `spot/margin.*` | `exposure`, `spot` | USDT transferable account; real base-asset liabilities/repayments |
 | Binary Options | `/dashboard/binary` | `binary/`, `settlement/`, `sandbox/` | `binary`, `settlements` | BINARY USDT reserve and WIN/LOSS settlement; isolated simulation |
 | Mining/Earn | `/dashboard/mining` | `mining/`, `workflows/` | `mining` | Finance commitments, accruals and Activity |
 | Loans | `/dashboard/loans` | `loans/`, `workflows/` | `loans`, `approvals` | Finance disbursement, obligations, repayment |
 | VIP/referral | Settings/Profile | `referral-vip/` | `users`, `audit` | account attribution and reward history, Ledger rewards |
-| Communications | Messages, Support, Learn, Announcements | `communications/`, `notification/` | `messages`, `support`, `learn`, `announcements`, `notifications` | D1 persistence, event delivery/read state |
+| Communications | Messages, Support, Learn, Announcements | `communications/`, `notification/` | `messages`, `support`, `learn`, `announcements`, `notifications` | SQLite persistence, event delivery/read state |
 | Frontend governance | Public routes/components | `admin/`, configuration services | `frontend-control`, `feature-flags`, `maintenance`, `navigation` | explicit audited configuration; Public readback |
-| Monitoring | Browser instrumentation | `instrument.ts`, `observability/` | `src/sentry.ts` | Sentry telemetry only; D1 remains financial truth |
+| Monitoring | Browser instrumentation | `instrument.ts`, `observability/` | `src/sentry.ts` | Sentry telemetry only; SQLite/Ledger remain financial truth |
 
 ## Acceptance/evidence separation
 
-Feature map presence proves **navigation only**. For every feature, record separately when asked: `SOURCE_IMPLEMENTED`, `TESTED`, `DEPLOYED`, `RUNTIME_VERIFIED`, `BROWSER_VERIFIED`, `OWNER_ACCEPTED`. Use actual source SHA and deployed artifact IDs. The final authenticated browser campaign uses Polypane + Chrome DevTools and authorized Coinbase Wallet with real SIWE, after the relevant deployments; it is not a prerequisite to static source closure.
+Feature map presence proves navigation only. For every feature, record separately when asked: `SOURCE_IMPLEMENTED`, `TESTED`, `DEPLOYED`, `RUNTIME_VERIFIED`, `BROWSER_VERIFIED`, `OWNER_ACCEPTED`. Use actual source SHA and deployed artifact IDs. The final authenticated browser campaign uses Polypane + Chrome DevTools and authorized Coinbase Wallet with real SIWE, after the relevant deployments; it is not a prerequisite to static source closure.
+
+The historical 92-table/11,802,372-row export reconciliation is complete but does not prove current D1/SQLite equality. The current D1 delta, authenticated financial acceptance, end-to-end provider/Socket.IO recovery, trusted VPS API TLS, independent encrypted backup/restore and cutover remain separate gates.
 
 ## Ownership routing
 
-Backend domain and contracts: [Backend](../backend/README.md). User behavior/design: [Frontend](../frontend/README.md). Admin permission/control: [Admin](../admin/README.md). Release/telemetry: [Sentry](../operations/NEXI_SENTRY_OBSERVABILITY.md). Older dated phase and production-program records are historical only.
+Backend domain and contracts: [Backend](../backend/README.md). VPS components/data flow: [Runtime map](NEXI_VPS_BACKEND_RUNTIME.md). User behavior/design: [Frontend](../frontend/README.md). Admin permission/control: [Admin](../admin/README.md). Release/telemetry: [Sentry](../operations/NEXI_SENTRY_OBSERVABILITY.md). Older dated phase and production-program records are historical only.

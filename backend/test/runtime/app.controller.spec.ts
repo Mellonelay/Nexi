@@ -5,11 +5,14 @@ import { ReadinessService } from "../../src/observability/readiness.service";
 describe("AppController runtime probes", () => {
   const originalD1RuntimeEnabled = process.env.D1_RUNTIME_ENABLED;
 
-  const createController = (d1: boolean, redis: boolean) =>
+  const createController = (d1: boolean, redis: boolean, localSqlite = false) =>
     new AppController(
       { getHello: jest.fn() } as any,
       new ReadinessService(
-        { isReady: jest.fn().mockResolvedValue(d1) } as any,
+        {
+          isReady: jest.fn().mockResolvedValue(d1),
+          isLocalMode: jest.fn().mockReturnValue(localSqlite),
+        } as any,
         { isReady: jest.fn().mockResolvedValue(redis) } as any,
       ),
     );
@@ -36,6 +39,17 @@ describe("AppController runtime probes", () => {
     ).resolves.toEqual({
       status: "READY",
       dependencies: { database: true, redis: true, authority: "D1" },
+    });
+  });
+
+  it("reports SQLite as the authority when the local adapter is selected", async () => {
+    process.env.D1_RUNTIME_ENABLED = "true";
+
+    await expect(
+      createController(true, true, true).getReadiness(),
+    ).resolves.toEqual({
+      status: "READY",
+      dependencies: { database: true, redis: true, authority: "SQLite" },
     });
   });
 

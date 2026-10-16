@@ -2199,6 +2199,21 @@ export class D1FinancialCommandGateway {
     return row;
   }
 
+  /** Read-only canonical reward watermark for a persisted workflow step. */
+  async getMiningAccrualCheckpoint(subscriptionId: string): Promise<{
+    subscriptionId: string; rewardCount: number; day: string; alreadyRewarded: boolean;
+  }> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const day = new Date().toISOString().slice(0, 10);
+    const row = (await this.bridge.select<{rewardCount: number; alreadyRewarded: number}>(
+      `SELECT COUNT(*) AS rewardCount, COALESCE(MAX(CASE WHEN "idempotencyKey" = ? THEN 1 ELSE 0 END),0) AS alreadyRewarded FROM "MiningRewardAccrual" WHERE "subscriptionId" = ?`,
+      [`mining-reward:${subscriptionId}:${day}`, subscriptionId],
+    )).results[0];
+    if (!row || !Number.isSafeInteger(Number(row.rewardCount)) || Number(row.rewardCount) < 0 || ![0,1].includes(Number(row.alreadyRewarded)))
+      throw new Error("Mining accrual checkpoint is unavailable");
+    return {subscriptionId, rewardCount:Number(row.rewardCount), day, alreadyRewarded:Number(row.alreadyRewarded) === 1};
+  }
+
   async accrueMiningReward(
     subscriptionId: string,
   ): Promise<Record<string, unknown>> {

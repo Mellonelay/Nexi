@@ -15,5 +15,6 @@ import { WorkflowCommandsService } from "./workflow-commands.service";
   ],
   controllers: [WorkflowCommandsController],
   providers: [WorkflowCommandsService],
+  exports: [WorkflowCommandsService],
 })
 export class WorkflowCommandsModule {}

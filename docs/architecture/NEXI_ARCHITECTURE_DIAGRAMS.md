@@ -6,22 +6,20 @@ These Mermaid diagrams are versioned source documentation and render in GitHub M
 
 ```mermaid
 flowchart LR
-  U["Public Next.js"] --> E["Cloudflare Worker edge"]
-  A["Admin Control Plane"] --> E
-  E --> C["Cloudflare Container"]
-  C --> N["NestJS Domain Authority"]
-  N --> D[("Cloudflare D1")]
-  N --> V[("Aiven Valkey")]
-  N --> R[("Private R2")]
-  N --> Q["Queues and Workflows"]
-  D --> L["Ledger and Activity"]
-  D --> O["EventOutbox"]
-  N -. "errors, traces, logs" .-> S["Sentry"]
-  U -. "browser telemetry" .-> S
-  A -. "browser telemetry" .-> S
+  U["Public Next.js"] --> N["Nginx TLS and host routing"]
+  A["Admin Control Plane"] --> N
+  N --> API["NestJS API / Socket.IO"]
+  API --> DB[("SQLite + Prisma")]
+  DB --> L["Ledger and Activity"]
+  DB --> O["EventOutbox / EventInbox"]
+  O --> Q["SQLite journal + BullMQ"]
+  Q --> V[("Aiven Valkey")]
+  API --> V
+  API --> R["Private VPS object storage"]
+  API -. "errors and traces" .-> S["Sentry"]
 ```
 
-NestJS and D1 own domain and durable truth respectively; the Ledger is accounting truth, EventOutbox publication truth, Valkey cache/realtime only, and Public/Admin have no direct financial database write authority. Cloudflare Observability remains disabled; Sentry SDK provides telemetry.
+NestJS owns domain decisions; SQLite is the target durable store, Ledger accounting truth, EventOutbox/EventInbox durable delivery boundaries, and Aiven Valkey transport/realtime only. Cloudflare Worker/Container/D1 remains production until approved cutover; Cloudflare Observability remains disabled.
 
 ## 2. Financial accounts and transaction topology
 
@@ -45,7 +43,7 @@ flowchart TD
   MG --> MP["Margin collateral, debts and positions"]
   OP --> BP["Binary reserves and WIN/LOSS settlement"]
   FI --> FP["Mining and Loan lifecycles"]
-  T --> L["D1 Ledger and Activity"]
+  T --> L["SQLite Ledger and Activity"]
   TP --> L
   MP --> L
   BP --> L
@@ -61,16 +59,18 @@ flowchart TD
 flowchart LR
   P["Public routes and state"] --> API["Guarded NestJS APIs"]
   A["Admin RBAC and audited controls"] --> API
-  API --> MA["Markets, Asset Detail and provider data"]
+  API --> MA["Markets and provider data"]
   API --> FI["Wallet, Spot, Margin, Binary and Finance"]
   API --> AC["SIWE, KYC, VIP and Referral"]
   API --> CO["Communications, Support and Learn"]
-  MA --> DB[("D1 and market-provider records")]
+  MA --> DB[("SQLite / cache")]
   FI --> DB
   AC --> DB
   CO --> DB
-  API --> OUT["EventOutbox, Queues and realtime delivery"]
+  API --> OUT["EventOutbox + BullMQ + Socket.IO"]
 ```
+
+Private KYC/deposit evidence is stored on the VPS; metadata and domain state remain in SQLite.
 
 Use [cross-surface feature matrix](CROSS_SURFACE_FEATURE_MAP.md) for exact domain-to-route ownership and [Backend](../backend/README.md), [Public](../frontend/README.md), [Admin](../admin/README.md) for source paths.
 
@@ -78,18 +78,17 @@ Use [cross-surface feature matrix](CROSS_SURFACE_FEATURE_MAP.md) for exact domai
 
 ```mermaid
 flowchart TD
-  G["GitHub main: authoritative source"] --> B["Backend Worker and Container"]
-  G --> P["Public canonical production build"]
-  G --> A["Admin canonical production build"]
-  B --> R["Record actual artifact identity"]
-  P --> R
-  A --> R
-  R --> S["Sentry SDK release, source maps and deploy"]
-  S --> Q["Current error, trace, log, metric and Replay verification"]
-  Q --> F{"Confirmed defect?"}
-  F -- Yes --> C["Repair causal owner and focused proof"]
+  G["GitHub main"] --> B["VPS NestJS build and systemd runtime"]
+  G --> P["Public canonical runtime"]
+  G --> A["Admin canonical runtime"]
+  B --> N["Nginx API TLS / WebSocket route"]
+  P --> N
+  A --> N
+  N --> Q["Runtime and contract acceptance"]
+  Q --> F{"Cutover evidence complete?"}
+  F -- No --> C["Close remaining verified gap"]
   C --> G
-  F -- No --> T["One consolidated Polypane + DevTools + Coinbase Wallet acceptance"]
+  F -- Yes --> O["Owner approval for financial cutover and DNS"]
 ```
 
 The arrows represent the release procedure, **not a requirement to use one Git SHA for differently built artifacts**. Public, Backend and Admin runtime releases must each match their own actual build source. Browser validation is planned after source closure and deployment, using the existing authorized wallet profile rather than an obsolete MetaMask harness.

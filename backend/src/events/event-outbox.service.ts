@@ -1,6 +1,9 @@
-import { Injectable, ServiceUnavailableException } from "@nestjs/common";
+import { Injectable, Optional, ServiceUnavailableException } from "@nestjs/common";
 import { D1FinancialCommandGateway } from "../d1/d1-financial-command.gateway";
 import { NexiEventEnvelope } from "./event-envelope";
+import { D1WorkerBridgeService } from "../d1/d1-worker-bridge.service";
+import { LocalSqliteBridgeService } from "../d1/local-sqlite-bridge.service";
+import { LocalDurableJobStore } from "../jobs/local-durable-job.store";
 
 export type QueueIngressReceipt = {
   messageId: string;
@@ -17,7 +20,10 @@ export type EventOutboxPublishReceipt = {
 
 @Injectable()
 export class EventOutboxService {
-  constructor(private readonly d1: D1FinancialCommandGateway) {}
+  constructor(
+    private readonly d1: D1FinancialCommandGateway,
+    @Optional() private readonly bridge?: D1WorkerBridgeService,
+  ) {}
 
   async recordQueueIngress(
     queue: string,
@@ -62,6 +68,13 @@ export class EventOutboxService {
     if (!this.d1.isEnabled()) {
       throw new ServiceUnavailableException("D1 event outbox is disabled");
     }
+    const local = process.env.NEXI_SQLITE_LOCAL_ENABLED === "true" &&
+      process.env.NEXI_LOCAL_ASYNC_ENABLED === "true";
+    const localBridge = this.bridge instanceof LocalSqliteBridgeService ? this.bridge : null;
+    if (local && !localBridge) {
+      throw new ServiceUnavailableException("Local durable Outbox publication requires local SQLite");
+    }
+    const journal = local && localBridge ? new LocalDurableJobStore(localBridge) : null;
     const rows = await this.d1.claimPendingEventOutbox(limit);
     const receipt: EventOutboxPublishReceipt = {
       claimed: rows.length,
@@ -80,12 +93,18 @@ export class EventOutboxService {
           correlationId: row.correlationId || row.id,
           payload,
         };
-        const response = await fetch(`http://${host}/domain-events`, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(event),
-        });
-        if (!response.ok) throw new Error(`QUEUE_HTTP_${response.status}`);
+        if (journal) {
+          // Outbox row ID remains the stable journal identity across retry/restart.
+          // A crash between record() and marking published replays the same key.
+          await journal.record("domain-events", row.id, event, Date.now());
+        } else {
+          const response = await fetch(`http://${host}/domain-events`, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(event),
+          });
+          if (!response.ok) throw new Error(`QUEUE_HTTP_${response.status}`);
+        }
         if (await this.d1.markEventOutboxPublished(row.id, row.leaseToken)) {
           receipt.published += 1;
         }

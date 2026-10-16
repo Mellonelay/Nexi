@@ -1,0 +1,32 @@
+{
+  "at": "2026-10-16T10:56:23.425Z",
+  "scope": "Isolated unix socket staging only; no production clients or financial data",
+  "server": [
+    "server_name:valkey",
+    "valkey_version:8.0.1",
+    "process_id:1635190",
+    "tcp_port:0"
+  ],
+  "memory": [
+    "used_memory:467560",
+    "used_memory_rss:16826368",
+    "maxmemory:134217728",
+    "maxmemory_policy:noeviction"
+  ],
+  "persistence": [
+    "aof_enabled:1",
+    "aof_last_write_status:ok"
+  ],
+  "config": [
+    "appendfsync",
+    "everysec",
+    "appendonly",
+    "yes",
+    "port",
+    "0",
+    "maxmemory-policy",
+    "noeviction",
+    "unixsocketperm",
+    "600"
+  ]
+}

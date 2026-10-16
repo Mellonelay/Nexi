@@ -1,0 +1,149 @@
+{
+  "at": "2026-10-16T10:50:48.967581+00:00",
+  "scope": "Live D1 vs historical SQLite; raw data remains in memory; source queries are not a frozen snapshot.",
+  "drift": [
+    {
+      "table": "MarketAsset",
+      "localRows": 55,
+      "sourceRows": 55,
+      "samePrimaryKeys": 55,
+      "unchangedRows": 0,
+      "localOnlyKeys": 0,
+      "sourceOnlyKeys": 0,
+      "changedColumns": {
+        "updatedAt": 55
+      }
+    },
+    {
+      "table": "MarketAssetCapability",
+      "localRows": 55,
+      "sourceRows": 55,
+      "samePrimaryKeys": 55,
+      "unchangedRows": 0,
+      "localOnlyKeys": 0,
+      "sourceOnlyKeys": 0,
+      "changedColumns": {
+        "updatedAt": 55
+      }
+    },
+    {
+      "table": "MarketPair",
+      "localRows": 53,
+      "sourceRows": 53,
+      "samePrimaryKeys": 53,
+      "unchangedRows": 0,
+      "localOnlyKeys": 0,
+      "sourceOnlyKeys": 0,
+      "changedColumns": {
+        "updatedAt": 53
+      }
+    },
+    {
+      "table": "MarketProviderConfig",
+      "localRows": 9,
+      "sourceRows": 9,
+      "samePrimaryKeys": 9,
+      "unchangedRows": 4,
+      "localOnlyKeys": 0,
+      "sourceOnlyKeys": 0,
+      "changedColumns": {
+        "updatedAt": 5
+      }
+    },
+    {
+      "table": "MarketProviderSymbol",
+      "localRows": 270,
+      "sourceRows": 270,
+      "samePrimaryKeys": 270,
+      "unchangedRows": 144,
+      "localOnlyKeys": 0,
+      "sourceOnlyKeys": 0,
+      "changedColumns": {
+        "updatedAt": 126
+      }
+    },
+    {
+      "table": "MarketQuoteLatest",
+      "localRows": 53,
+      "sourceRows": 53,
+      "samePrimaryKeys": 53,
+      "unchangedRows": 0,
+      "localOnlyKeys": 0,
+      "sourceOnlyKeys": 0,
+      "changedColumns": {
+        "sequence": 53,
+        "price": 43,
+        "change24h": 43,
+        "low24h": 17,
+        "observedAt": 46,
+        "receivedAt": 53,
+        "bid": 26,
+        "ask": 26,
+        "volume24h": 17,
+        "high24h": 29,
+        "spread": 21,
+        "provider": 3,
+        "source": 11,
+        "state": 9
+      }
+    }
+  ],
+  "financialAggregates": [
+    {
+      "table": "LedgerAccount",
+      "localRows": 14,
+      "sourceRows": 14,
+      "localTotalsByAsset": {
+        "USDT": {
+          "available": "693019.2",
+          "locked": "10010"
+        },
+        "BTC": {
+          "available": "0.00012073019553945",
+          "locked": "0"
+        }
+      },
+      "sourceTotalsByAsset": {
+        "USDT": {
+          "available": "693019.2",
+          "locked": "10010"
+        },
+        "BTC": {
+          "available": "0.00012073019553945",
+          "locked": "0"
+        }
+      },
+      "exactEqual": true
+    },
+    {
+      "table": "LedgerPosting",
+      "localRows": 46,
+      "sourceRows": 46,
+      "localTotalsByAsset": {
+        "USDT": {
+          "amount": "715844.760019999999989422",
+          "availableDelta": "693019.200000000000000000",
+          "lockedDelta": "10010.000000000000000000"
+        },
+        "BTC": {
+          "amount": "0.00012073019553945",
+          "availableDelta": "0.00012073019553945",
+          "lockedDelta": "0"
+        }
+      },
+      "sourceTotalsByAsset": {
+        "USDT": {
+          "amount": "715844.760019999999989422",
+          "availableDelta": "693019.200000000000000000",
+          "lockedDelta": "10010.000000000000000000"
+        },
+        "BTC": {
+          "amount": "0.00012073019553945",
+          "availableDelta": "0.00012073019553945",
+          "lockedDelta": "0"
+        }
+      },
+      "exactEqual": true
+    }
+  ]
+}

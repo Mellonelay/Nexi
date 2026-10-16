@@ -1,0 +1,82 @@
+{
+  "recoveredAt": "2026-10-16T10:41:24.541Z",
+  "scope": "Recovered native RDC outputs; tests were not rerun.",
+  "receipts": [
+    {
+      "pid": 1630238,
+      "result": {
+        "status": "fulfilled",
+        "value": {
+          "content": [
+            {
+              "type": "text",
+              "text": "[Reading 24 new lines (total: 24 lines)]\n\n(node:1630267) ExperimentalWarning: VM Modules is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\nPASS test/d1/local-sqlite-bridge.service.spec.ts\n  LocalSqliteBridgeService transactional equivalence\n    ✓ returns rows and preserves transaction ordering and effects (77 ms)\n    ✓ rolls back the entire financial batch on a duplicate idempotency key (55 ms)\n    ✓ retains SQLite changes() across consecutive batch statements on one connection (56 ms)\n    ✓ rejects unbounded or multi-statement SQL before execution (59 ms)\n\nPASS test/d1/d1-prisma-local-sqlite.spec.ts\n  D1PrismaService local SQLite backend\n    ✓ uses the local Prisma driver and one-connection financial batch seam (302 ms)\n\nPASS test/d1/local-sqlite-nest-provider.spec.ts\n  NEXI SQLite / D1 Nest provider selection\n    ✓ preserves D1 bridge as the default without an opt-in (482 ms)\n    ✓ routes Nest bridge and Prisma to local SQLite only with explicit opt-in (113 ms)\n\nTest Suites: 3 passed, 3 total\nTests:       7 passed, 7 total\nSnapshots:   0 total\nTime:        5.972 s\nRan all test suites matching test/d1/d1-prisma-local-sqlite.spec.ts|test/d1/local-sqlite-nest-provider.spec.ts|test/d1/local-sqlite-bridge.service.spec.ts.\n\n✅ Process completed with exit code 0 (runtime: 7.19s)"
+            },
+            {
+              "type": "text",
+              "text": "\n[executed on device: mellonelay (d3a8c8e5-dcb5-44c7-9652-24e25d77271a)]"
+            }
+          ],
+          "isError": false
+        }
+      }
+    },
+    {
+      "pid": 1630417,
+      "result": {
+        "status": "fulfilled",
+        "value": {
+          "content": [
+            {
+              "type": "text",
+              "text": "[Reading 76 new lines (total: 76 lines)]\n\n(node:1630446) ExperimentalWarning: VM Modules is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\nPASS test/d1/d1-financial-command.gateway.spec.ts\n  D1FinancialCommandGateway\n    ✓ resolves a six-digit NEXI recipient code through D1 without loading a full user record (3 ms)\n    ✓ uses exact decimal strings and an atomic D1 batch for credit (5 ms)\n    ✓ rejects insufficient funds before emitting a financial batch (5 ms)\n    ✓ returns a completed idempotent posting without issuing another batch (1 ms)\n    ✓ guards withdrawal approval to the pending state and emits audit/outbox statements (3 ms)\n    ✓ marks overdue loans and emits one idempotent outbox event per transition (3 ms)\n    ✓ creates a D1 loan application with a guarded submission outbox event (4 ms)\n    ✓ posts a same-user Wallet transfer once with one Activity and one outbox event (4 ms)\n    ✓ replays an identical paired transfer and rejects an idempotency collision (62 ms)\n    ✓ rejects a same-user transfer whose account owner or scope does not match (3 ms)\n    ✓ rejects a same-user transfer when available funds are insufficient (2 ms)\n    ✓ keeps the internal transfer record and audit in the same D1 batch (20 ms)\n    ✓ reserves funds and creates a Spot order in the same D1 batch (2 ms)\n    ✓ atomically borrows before reserving the margin entry order (2 ms)\n    ✓ repays only an owned canceled and unfilled Margin borrow in one guarded ledger batch (2 ms)\n    ✓ rejects repayment when a Margin entry was not fully canceled and released (2 ms)\n    ✓ matches crossing Spot orders with one atomic D1 batch and no incompatible locking syntax (4 ms)\n    ✓ credits a deposit with ledger, guarded state, audit, and outbox in one batch (4 ms)\n    ✓ rejects a deposit atomically and publishes a replay-safe outbox event (3 ms)\n    ✓ accepts only one concurrent withdrawal settlement and rejects a lost guarded transition (4 ms)\n    ✓ fails closed when a guarded settlement statement reports no account change (3 ms)\n    ✓ executes an approved Admin financial correction atomically with ledger, audit, activity and outbox statements (2 ms)\n    ✓ updates canonical D1 currency controls with audit and outbox evidence (2 ms)\n    ✓ does not emit currency audit or outbox when the symbol already exists (2 ms)\n    ✓ defaults new Wallet currencies to disabled with canonical configuration defaults (1 ms)\n    ✓ creates and updates Mining plans through D1 with Admin audit and EventOutbox (2 ms)\n    ✓ keeps inactive Mining plans visible to Admin without exposing them in the Public list (2 ms)\n    ✓ renames a Binary duration through a versioned D1 config update with audit and outbox (2 ms)\n    ✓ keeps Wallet funding capability independent from market capabilities (1 ms)\n    ✓ creates Wallet networks disabled with atomic Admin audit and outbox (2 ms)\n    ✓ binds new deposit addresses to configured Wallet networks and keeps them inactive (1 ms)\n    ✓ serves deposit destinations only through active Wallet asset, network, and address authority (2 ms)\n    ✓ updates Wallet network controls with replay-safe audit and outbox (2 ms)\n    ✓ includes the loan identity in the committed approval event for workflow dispatch (1 ms)\n    ✓ binds every KYC decision batch statement and timestamps governance commands in D1 (18 ms)\n    ✓ uses a deterministic UTC-day mining reward idempotency key (2 ms)\n    ✓ enforces F7 deposit amount limits with exact decimals (7 ms)\n    ✓ guards KYC resubmission atomically and only emits after the row changes (2 ms)\n    ✓ keeps private KYC object keys and legacy document URLs out of Admin list responses (1 ms)\n    financial quote freshness\n      ✓ rejects stale evidence with observation age 31000 and receipt age 1000 (7 ms)\n      ✓ rejects stale evidence with observation age 1000 and receipt age 31000 (3 ms)\n      ✓ returns fresh evidence with freshness measured from the older timestamp (3 ms)\n\n(node:1630446) ExperimentalWarning: SQLite is an experimental feature and might change at any time\nPASS test/d1/margin-orphan-transaction.spec.ts\n  D1 orphan Margin borrow repayment — real SQLite transaction\n    ✓ debits exactly once, audits, publishes via Outbox and safely replays (12 ms)\n    ✓ rolls back completely if a position appeared before the debit (10 ms)\n    ✓ refuses to repay an order involved in a trade (5 ms)\n    ✓ materializes a valid pending position when the entry is active and debt has not been repaid (5 ms)\n    ✓ blocks delayed position materialization after an orphan borrow was repaid (5 ms)\n    ✓ refuses to repay another user's borrow (2 ms)\n\nPASS test/d1/financial-posting-bindings.spec.ts\n  ✓ binds withdrawal settlement ledger fields in SQL placeholder order (6 ms)\n  ✓ projects Margin interest to canonical Activity and EventOutbox atomically (3 ms)\n  ✓ binds Margin close ledger fields in SQL placeholder order (4 ms)\n\nPASS test/d1/conversion-acceptance-batch.spec.ts\n  conversion acceptance D1 batch\n    ✓ keeps audit and outbox writes within the 16-statement cap (11 ms)\n\nPASS test/d1/deposit-claim-sql.spec.ts\n  ✓ executes claim submission, review and credit against migrated schema with durable lifecycle events and replay (33 ms)\n\nTest Suites: 5 passed, 5 total\nTests:       53 passed, 53 total\nSnapshots:   0 total\nTime:        5.267 s\nRan all test suites matching test/d1/d1-financial-command.gateway.spec.ts|test/d1/financial-posting-bindings.spec.ts|test/d1/conversion-acceptance-batch.spec.ts|test/d1/deposit-claim-sql.spec.ts|test/d1/margin-orphan-transaction.spec.ts.\n\n✅ Process completed with exit code 0 (runtime: 6.55s)"
+            },
+            {
+              "type": "text",
+              "text": "\n[executed on device: mellonelay (d3a8c8e5-dcb5-44c7-9652-24e25d77271a)]"
+            }
+          ],
+          "isError": false
+        }
+      }
+    },
+    {
+      "pid": 1631097,
+      "result": {
+        "status": "fulfilled",
+        "value": {
+          "content": [
+            {
+              "type": "text",
+              "text": "[Reading 5 new lines (total: 5 lines)]\n\n\n> backend@0.0.1 build\n> nest build\n\n\n✅ Process completed with exit code 0 (runtime: 29.87s)"
+            },
+            {
+              "type": "text",
+              "text": "\n[executed on device: mellonelay (d3a8c8e5-dcb5-44c7-9652-24e25d77271a)]"
+            }
+          ],
+          "isError": false
+        }
+      }
+    },
+    {
+      "pid": 1624335,
+      "result": {
+        "status": "fulfilled",
+        "value": {
+          "content": [
+            {
+              "type": "text",
+              "text": "[Reading 11 new lines (total: 11 lines)]\n\nTABLE_TOTAL 92\nBATCH 1 OK []\nBATCH 2 OK []\nBATCH 3 OK []\nBATCH 4 OK []\nBATCH 5 DRIFT [[\"MarketKline\", 2013863, 2022677], [\"MarketQuoteSnapshot\", 9786714, 9850918]]\nBATCH 6 OK []\nBATCH 7 OK []\nBATCH 8 OK []\nALL_TABLE_COUNTS_RECONCILED 92\n\n✅ Process completed with exit code 0 (runtime: 36.77s)"
+            },
+            {
+              "type": "text",
+              "text": "\n[executed on device: mellonelay (d3a8c8e5-dcb5-44c7-9652-24e25d77271a)]"
+            }
+          ],
+          "isError": false
+        }
+      }
+    }
+  ]
+}

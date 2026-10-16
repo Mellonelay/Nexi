@@ -8,12 +8,12 @@
 - [Current state](../NEXI_CURRENT_STATE.md): compact source/runtime split and next verified frontier; recheck volatile values.
 - [Repository law](../AGENTS.md): active development, operational boundaries, production source/build constraints.
 - [Architecture diagrams](architecture/NEXI_ARCHITECTURE_DIAGRAMS.md) (GitHub-rendered Mermaid topology, financial flows, release and workflow maps).
-- [System architecture](architecture/NEXI_SYSTEM_ARCHITECTURE.md) and [cross-surface feature map](architecture/CROSS_SURFACE_FEATURE_MAP.md): ownership and product-to-code interfaces.
+- [System architecture](architecture/NEXI_SYSTEM_ARCHITECTURE.md), [VPS backend runtime and replacement map](architecture/NEXI_VPS_BACKEND_RUNTIME.md), and [cross-surface feature map](architecture/CROSS_SURFACE_FEATURE_MAP.md): ownership and product-to-code interfaces.
 - [Backend](backend/README.md): domain features, NestJS owners, persistence, APIs and events.
 - [Public frontend](frontend/README.md): user journeys, Next.js routes, wallet account display, backend consumers, responsive design.
 - [Admin](admin/README.md): governance, RBAC, Admin routes, backend control authority, audit.
 - [Operational Sentry](operations/NEXI_SENTRY_OBSERVABILITY.md): Sentry SDK/source, release lifecycle, telemetry and failure verification.
-- [Infrastructure](infrastructure/): Cloudflare Worker/Container/D1, R2, Valkey, runtime/build procedures.
+- [Infrastructure](infrastructure/): VPS runtime and the still-live Cloudflare production operator procedures; see the VPS runtime map for component replacements.
 - API contracts are owned by NestJS controllers, DTOs and generated types; verify actual source revision before trusting OpenAPI artifacts.
 - [Security](security/): SIWE, ownership, privileged controls, Ledger/financial integrity.
 - [Quality](quality/): retained test and browser evidence. Old receipts prove only their recorded revision and scope.

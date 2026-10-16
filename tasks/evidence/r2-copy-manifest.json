@@ -1,0 +1,43 @@
+{
+  "at": "2026-10-16T10:54:54.656068+00:00",
+  "scope": "Private isolated local copy, source read-only; not independent backup or retirement acceptance",
+  "buckets": [
+    {
+      "bucket": "nexi-deposit-proofs-staging",
+      "count": 3,
+      "bytes": 6073,
+      "objects": [
+        {
+          "keySha256": "61064b6948dc1066b6bca0e0893c5b54c3f08636b311e062004fc7ed17030e2f",
+          "bytes": 68,
+          "contentSha256": "d126d616641d42ac8b0a07ec302c9fa1ec049f86200931a0a60c8f3080284b77",
+          "independentSecondGetMatches": true,
+          "etagMatchesMd5": true,
+          "metadataPreserved": true
+        },
+        {
+          "keySha256": "4eaaf61cded3fe56bf5a299bae9d406da8aa5570959fa8e7d8363211dc001988",
+          "bytes": 5937,
+          "contentSha256": "0d129959d52d2c0eede68832487c4a7b4e80d35a314989fd19a224b1e04d1e5b",
+          "independentSecondGetMatches": true,
+          "etagMatchesMd5": true,
+          "metadataPreserved": true
+        },
+        {
+          "keySha256": "3290a262db25de09febe965f32bf583f6ac4230196c50298b3c9ff10da78681f",
+          "bytes": 68,
+          "contentSha256": "d126d616641d42ac8b0a07ec302c9fa1ec049f86200931a0a60c8f3080284b77",
+          "independentSecondGetMatches": true,
+          "etagMatchesMd5": true,
+          "metadataPreserved": true
+        }
+      ]
+    },
+    {
+      "bucket": "nexi-kyc-evidence-staging",
+      "count": 0,
+      "bytes": 0,
+      "objects": []
+    }
+  ]
+}

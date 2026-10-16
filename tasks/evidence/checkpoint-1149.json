@@ -1,0 +1,31 @@
+{
+  "at": "2026-10-16T11:49:43.884118+00:00",
+  "head": "9a41b2e3da2729173f6d7aac6a1fd2f6c6c4657f",
+  "dirty": [
+    " M backend/package-lock.json",
+    " M backend/package.json",
+    " M backend/src/d1/d1-financial-command.gateway.ts",
+    " M backend/src/d1/d1-prisma.service.ts",
+    " M backend/src/d1/d1-worker-bridge.module.ts",
+    " M backend/src/workflows/workflow-commands.service.ts",
+    "?? backend/src/d1/local-sqlite-bridge.service.ts",
+    "?? backend/src/jobs/",
+    "?? backend/test/d1/d1-prisma-local-sqlite.spec.ts",
+    "?? backend/test/d1/local-sqlite-bridge.service.spec.ts",
+    "?? backend/test/d1/local-sqlite-nest-provider.spec.ts",
+    "?? backend/test/jest-local-async.config.cjs",
+    "?? backend/test/jest-local-sqlite.config.cjs",
+    "?? backend/test/jobs/",
+    "?? tasks/"
+  ],
+  "active": {
+    "typecheck": 1639475,
+    "valkey": 1635337
+  },
+  "next": "Recover typecheck; prove mining crash window; wire inactive workflow transport only after review",
+  "limits": [
+    "No deployment or financial authority cutover",
+    "Off-VPS backup destination and restore unproven",
+    "Large live market prefix reconciliation open"
+  ]
+}

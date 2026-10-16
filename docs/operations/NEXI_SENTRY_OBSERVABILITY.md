@@ -1,6 +1,6 @@
 # NEXI Production Observability: Sentry
 
-**Objective:** short-term completion: exercise deployed feature → receive Sentry error/trace/log within minutes where instrumented → identify causal source → repair → deploy → observe regression stopped. This file documents source and operational requirements; **it does not assert the present runtime ingest/release status without a fresh query**.
+**Objective:** use Sentry for VPS and frontend runtime faults: exercise an instrumented feature → receive the error/trace/log → identify the causal source → repair and verify. This file documents source and operational requirements; it does not assert current ingestion/release status without fresh evidence. Cloudflare production remains live until cutover, but Cloudflare Observability stays disabled.
 
 ## Telemetry authority
 
@@ -12,7 +12,7 @@ Use the established Worker-0 `mcpc @nexi-sentry` OAuth session and new `sentry` 
 
 | Surface | Source instrumentation | Release identity |
 |---|---|---|
-| NestJS backend | `backend/src/instrument.ts` | runtime `SENTRY_RELEASE` must match exact deployed backend artifact source SHA |
+| NestJS backend | `backend/src/instrument.ts` | VPS runtime `SENTRY_RELEASE` must match the deployed backend artifact source SHA |
 | Public Next.js | `cloudflare-container-bootstrap/dexi-frontend/instrumentation-client.ts`, `sentry.server.config.ts` | build-time `NEXT_PUBLIC_SENTRY_RELEASE`; runtime `SENTRY_RELEASE`; both must match actual Public source/build artifact |
 | Admin React | `apps/admin/src/sentry.ts` | build-time `VITE_SENTRY_RELEASE` must match actual Admin source/build artifact |
 

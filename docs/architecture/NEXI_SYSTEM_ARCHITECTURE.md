@@ -6,28 +6,30 @@
 
 **Public:** Next.js App Router under `cloudflare-container-bootstrap/dexi-frontend`, deployed through the canonical `/srv/nexi/public/current` directory. It is a UI/API consumer only.
 
-**Backend:** Cloudflare Worker edge/routing → Cloudflare Container → NestJS domain modules in `backend/src`. NestJS owns domain and business authorization. Cloudflare Queues/Workflows handle delivery and orchestration, not financial data authority.
+**Backend target:** Existing Nginx routes Public/Admin/API traffic to the canonical NestJS service on the VPS. Source is `backend/src`; runtime is `/srv/nexi/backend/dist/src/main.js` supervised by `nexi-api.service`. Cloudflare Worker/Container remains the current production route until the explicit owner-approved cutover; it is not the target VPS runtime.
 
-**Admin:** React/TanStack under `apps/admin`, deployed via its established canonical runtime. It is the governed control plane and invokes permissioned backend commands; it does not own financial transactions or become a second backend.
+**Admin:** React/TanStack under `apps/admin`, deployed via its established canonical runtime. It is the governed control plane and invokes permissioned NestJS commands; it does not own financial transactions or become a second backend.
+
+The complete current component map, data flows, replacement matrix and unclosed acceptance gates are in [NEXI VPS Backend Runtime](NEXI_VPS_BACKEND_RUNTIME.md).
 
 ## Data and financial ownership
 
-- D1 = durable application and financial relational state; Ledger posting boundary = accounting truth.
-- EventOutbox = durable publication; Queues retry/deliver; Workflows orchestrate.
-- Valkey = realtime/cache/Streams/Socket.IO and ephemeral coordination only.
-- R2 = private eligible domain-object storage, including KYC evidence/proof where configured.
+- SQLite + Prisma 7/better-sqlite3 = target durable application and financial relational store; Ledger postings = accounting truth.
+- EventOutbox = durable publication; EventInbox = idempotent ingress; SQLite journal/workflow coordinator = durable acceptance/checkpoints; BullMQ retries and delivers transport work.
+- Aiven Valkey = BullMQ transport, Socket.IO Redis Streams, cache and ephemeral coordination only.
+- Private local VPS storage = target location for approved KYC/deposit-proof evidence; access remains behind NestJS authorization.
 - Market/provider authority = normalized quote/klines/freshness/provenance; current catalog includes 53 identities across crypto, shares, forex and metals.
 - Funding (`MAIN`), Spot, Margin, Options (`BINARY`) and Finance are distinct financial account scopes. Margin and Options expose USDT-only transferable user balances, not a license to conceal debts.
-- No direct Public/Admin D1 writes, duplicate Ledger writers, fabricated wallet balances, arbitrary provider settlement or unverified market depth/trades.
+- No direct Public/Admin database writes, duplicate Ledger writers, fabricated wallet balances, arbitrary provider settlement or unverified market depth/trades.
 
 ## Core cross-surface flows
 
 1. **Wallet authentication:** authorized wallet/nonce/signature SIWE → NestJS session policies → scoped Public reads; Admin identity/RBAC remains separately protected.
-2. **Wallet transfer:** Public request → NestJS validation/authorization → D1 financial gateway → balanced Ledger + Activity + EventOutbox → Public readback.
+2. **Wallet transfer:** Public request → NestJS validation/authorization → atomic SQLite financial gateway → balanced Ledger + Activity + EventOutbox → Public readback.
 3. **Spot/Margin:** Public chart and order UI → NestJS trading authority → real provider/fill/position records and correct isolated wallet scope → Activity/realtime consumers.
 4. **Binary:** Public Options account → approved USDT reserve → configured expiry/outcome and isolated sandbox scenarios → WIN/LOSS settlement → Activity/Wallet readback.
-5. **Deposits/KYC:** Public user-authorized claims/upload → NestJS state machines/private R2 → permissioned Admin review → durable status and publication.
-6. **Mining/Loans:** Public Finance interactions → NestJS subscription/loan workflows → D1 commitments, liabilities and Ledger/Activity → Admin governance.
+5. **Deposits/KYC:** Public user-authorized claims/upload → NestJS state machines/private VPS storage → permissioned Admin review → durable SQLite status and publication.
+6. **Mining/Loans:** Public Finance interactions → NestJS subscription/loan workflows → SQLite commitments, liabilities and Ledger/Activity → Admin governance.
 7. **Communications:** Admin moderation/publishing → NestJS durable state → events/notifications → Public Learn, messages, announcements, support.
 
 ## Design, delivery and verification

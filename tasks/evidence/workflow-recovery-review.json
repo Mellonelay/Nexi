@@ -1,0 +1,27 @@
+{
+  "at": "2026-10-16T11:55:38.870448+00:00",
+  "typecheck": {
+    "pid": 1639475,
+    "exit": 0,
+    "scope": "source before queue consumer increment"
+  },
+  "checkpointFailure": {
+    "observed": "local-queue-consumer-green.log: store rollback expected exception absent once",
+    "isolated": "workflow-checkpoint-regression.log 6/6 pass",
+    "combined": "workflow-checkpoint-combined-repro.log 10/10 pass",
+    "stress": "workflow-checkpoint-stress-repro.log 11/11 pass incl40 instances",
+    "state": "NOT_REPRODUCED_NOT_EXPLAINED",
+    "productionGate": "BLOCKED pending resolution or sufficient reviewed fault evidence"
+  },
+  "nativeMiningCrash": {
+    "pid": 1639571,
+    "exit": 0,
+    "tests": 6,
+    "artifact": "mining-workflow-native-crash.log",
+    "scope": "synthetic accrual canonical rows; not Ledger effects"
+  },
+  "consumer": {
+    "tests": 4,
+    "scope": "actual SQLite workflow metadata; mocked EventOutboxService; new actual Inbox/Valkey integration running1630196 corrected1640196"
+  }
+}

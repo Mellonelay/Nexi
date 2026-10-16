@@ -1,0 +1,18 @@
+{
+  "at": "2026-10-16T10:56:52.438Z",
+  "scope": "Synthetic private staging only",
+  "expectedSha256": "006c4783dfe662fd04b5c6df8e10a5897609a25bb58f32de855b36952924a975",
+  "waitaof": [
+    1,
+    0
+  ],
+  "pid": 1635190,
+  "recoveredAt": "2026-10-16T10:57:30.169Z",
+  "recoveredAfterSigkill": true,
+  "restartedPid": 1635337,
+  "persistence": [
+    "loading:0",
+    "aof_enabled:1",
+    "aof_last_write_status:ok"
+  ]
+}

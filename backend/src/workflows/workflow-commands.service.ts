@@ -10,7 +10,7 @@ import { MiningService } from "../mining/mining.service";
 import { LoanService } from "../loans/loans.service";
 import { D1FinancialCommandGateway } from "../d1/d1-financial-command.gateway";
 
-type WorkflowCommand = {
+export type WorkflowCommand = {
   workflow: string;
   instanceId: string;
   action: string;
@@ -123,7 +123,7 @@ export class WorkflowCommandsService {
 
   private async miningCommand(
     input: WorkflowCommand,
-    _payload: Record<string, unknown>,
+    payload: Record<string, unknown>,
   ): Promise<Record<string, unknown>> {
     const subscription: any = await this.d1.getMiningSubscription(
       input.entityId,
@@ -144,7 +144,36 @@ export class WorkflowCommandsService {
         subscription,
       };
     }
+    if (input.action === "accrual-checkpoint") {
+      return {
+        done: String(subscription.status) !== "ACTIVE",
+        state: subscription.status,
+        accrualCheckpoint: await this.d1.getMiningAccrualCheckpoint(input.entityId),
+      };
+    }
     if (input.action === "accrue") {
+      // Local workflows persist this native reward watermark BEFORE executing.
+      // On crash replay, canonical accrual rows prove whether work already ran;
+      // a new calendar day must not turn the same step into another credit.
+      if (payload.accrualCheckpoint !== undefined) {
+        const checkpoint = payload.accrualCheckpoint as Record<string, unknown>;
+        if (!checkpoint || Array.isArray(checkpoint) || checkpoint.subscriptionId !== input.entityId
+          || !Number.isSafeInteger(checkpoint.rewardCount) || Number(checkpoint.rewardCount) < 0
+          || typeof checkpoint.day !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(checkpoint.day)
+          || !Number.isFinite(Date.parse(checkpoint.day)) || new Date(checkpoint.day).toISOString().slice(0,10) !== checkpoint.day
+          || typeof checkpoint.alreadyRewarded !== "boolean")
+          throw new BadRequestException("Invalid mining workflow checkpoint");
+        const current = await this.d1.getMiningAccrualCheckpoint(input.entityId);
+        if (current.rewardCount < Number(checkpoint.rewardCount) || current.day < checkpoint.day)
+          throw new BadRequestException("Mining workflow checkpoint requires reconciliation");
+        if (String(subscription.status) !== "ACTIVE" || current.rewardCount > Number(checkpoint.rewardCount) || checkpoint.alreadyRewarded) {
+          return {
+            done: String(subscription.status) !== "ACTIVE", state: subscription.status,
+            nextRunAt: subscription.endDate ?? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            result: {replayed:true, recoveredFromLedger:true},
+          };
+        }
+      }
       const result: any = await this.mining.accrue(input.entityId);
       const current: any = await this.d1.getMiningSubscription(input.entityId);
       return {

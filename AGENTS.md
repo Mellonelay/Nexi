@@ -1,26 +1,24 @@
 # NEXI Work Authoritative Operating Contract
 
 ## Authority
-GitHub `main` is the durable NEXI source authority. Cloudflare Worker + Container is the only active backend execution/runtime authority. Worker 0 is an operator/recovery/tooling plane; after the 2026-09-17 convergence it must never be used as a parallel backend runtime authority.
+GitHub `main` is the durable NEXI source authority. The owner-selected target backend runtime is the existing VPS NestJS service; Cloudflare remains the live production route and D1 financial writer until the separate verified cutover gate is accepted. Worker 0/RDC operates the VPS and preserves the existing Public/Admin service owners.
 
 - ChatGPT remains the parent/controller.
-- Backend runtime inspection, debugging, verification, and authorized backend operation target the live Cloudflare backend (`api.nexitrading.app`) and its Worker/Container/D1/platform resources.
-- Cloudflare resource identifiers that still contain `staging` are historical names, not environment authority. The current production backend is identified by the active `api.nexitrading.app` route, live deployment/runtime evidence, and `NODE_ENV=production`; do not redirect work to a separate staging workflow merely because a resource name contains `staging`.
-- Worker 0 may run Git, Wrangler, Cloudflare MCP, Graphify/static tools, frontend/Admin hosting, and the officially supported Wrangler Container SSH path; a local NestJS/VM backend is not acceptance or runtime truth.
-- Any legitimate backend source edit performed through the Cloudflare execution plane must be reconciled to GitHub `main` immediately when the bounded task finishes.
-- Historical Windows trees, Codespaces, old VM workspaces, branches, stashes, and receipts are reference/evidence only unless fresh verification proves they contain unique accepted work.
+- VPS backend implementation, staging runtime, and acceptance work target `/home/mellonelay1999/workspaces/Nexi`, `/srv/nexi/backend`, and the existing `nexi-api.service`; current non-authoritative runtime evidence must not be presented as production cutover evidence.
+- Public and Admin keep their canonical sources and runtime directories. Nginx is the intended API/host/WebSocket router; API public TLS readiness is a separate gate.
+- Cloudflare production Worker/Container/D1 remains live until an owner-approved financial and traffic cutover. Inspect Cloudflare read-only when required to close parity; do not change production routes, writers, DNS, nameservers, or retire resources without the specific owner gate.
+- Worker 0/RDC may build and operate the authorized VPS backend. Never run a second financial writer or point a non-authoritative service at production financial state.
+- Historical trees, branches, and receipts are evidence only unless fresh verification proves unique accepted work.
 
-Current owner/product decisions and the live Cloudflare runtime outrank stale receipts or chat summaries about backend state. Source implementation truth remains GitHub `main`; runtime truth must be proved on Cloudflare.
+Current owner decisions outrank stale project instructions and checkpoint text. Source truth is GitHub `main`; VPS runtime truth must be proved on the running service, while Cloudflare remains production truth until cutover.
 
 ## Canonical architecture
-Public Frontend / Admin -> Cloudflare Worker -> canonical Cloudflare Container -> NestJS.
-NestJS owns business/domain decisions.
-D1 owns durable application + financial relational truth.
-Aiven Valkey owns cache, Streams, Socket.IO, and ephemeral coordination.
-R2 is retained only for active domain objects such as deposit proofs. The market R2/Data Catalog/Pipelines archive path was retired by owner decision on 2026-09-19.
-Queue/Workflow/Worker/Container orchestrate; they never own financial truth.
+Public/Admin -> existing Nginx hosts -> Next.js frontends and the canonical NestJS VPS API.
+NestJS owns business/domain decisions. SQLite + Prisma/better-sqlite3 is the target durable application store; Ledger is accounting truth and EventOutbox is the durable publication boundary.
+Aiven Valkey serves BullMQ transport, Socket.IO Redis Streams, cache and ephemeral coordination; it never owns financial truth. SQLite job/workflow journals remain durable. Local protected storage replaces private R2 object storage for KYC/deposit evidence.
+Cloudflare currently remains the production Worker/Container/D1 path until the explicit owner-approved cutover; it is not the target VPS backend architecture.
 
-Do not restore any retired database authority. Do not introduce a second Admin plane, second financial authority, direct frontend D1 access, Worker financial logic, or custom VM lifecycle engine.
+Do not restore any retired database authority. Do not introduce a second Admin plane, second financial writer, direct frontend database access, or a second reverse proxy.
 ## Capability routing
 Worker-0 global execution law is `/home/mellonelay1999/RDC_ONBOARDING.md` with global capability/router/hook catalogs under `/home/mellonelay1999/.agents/`. The ChatGPT Work parent owns NEXI Work Control Plane reasoning, Agent Skills method selection, Selective Intelligence, Ponytail/Karpathy discipline, phase routing and fan-in. Worker-0 executes/evidences through RDC and currently callable specialist MCP/CLI tools; retired Fabric is not a current execution owner. Get-Fable and Riqor runtimes were removed by owner decision on 2026-09-30 and must not be routed to or reinstalled. Graphify provides topology, Fallow provides static analysis, DeepWiki provides optional semantics; CodeScene is not a mandatory authority. NEXI files below are project overlays, not duplicate global authorities.
 
@@ -106,7 +104,7 @@ After high-impact changes, refresh once and rerun only the relevant impact/path 
 ## Cloudflare policy
 Before any Cloudflare implementation, configuration change, deployment, configuration-driven debugging, or operator mutation, read the relevant **current official Cloudflare documentation first**. Then inspect the current Wrangler/MCP help or schema for the exact product/command and reconcile it with current NEXI configuration. This gate applies repository-wide to Workers, Wrangler, Containers, D1, Queues, Workflows, R2, Pipelines, Durable Objects, bindings, secrets, routes/domains, versions/deployments/rollback, observability/logging, networking, and later Cloudflare products.
 
-Use `docs/infrastructure/NEXI_CLOUDFLARE_BACKEND_OPERATOR_RUNBOOK.md` as the current NEXI Cloudflare operator reference. For backend runtime work, Cloudflare is the only execution authority. Prefer read-only platform inspection first; use the officially documented Wrangler Container SSH mechanism when shell access is required. Do not use a VM-local backend as a substitute. If a legitimate source repair is made through the Cloudflare execution plane, verify it there and reconcile the exact source change to GitHub `main` before task completion.
+Use `docs/architecture/NEXI_VPS_BACKEND_RUNTIME.md` as the current target-runtime map and `docs/infrastructure/NEXI_CLOUDFLARE_BACKEND_OPERATOR_RUNBOOK.md` only for the still-live Cloudflare production environment. For backend integration work, the canonical VPS source/runtime is the active task target; Cloudflare inspection is read-only parity/current-production evidence unless an owner gate authorizes mutation. Reconcile all source changes to GitHub `main`.
 
 Do not blindly retry a failing Wrangler command: read the real error, consult current official docs/help, identify the causal owner, then retry only when justified. Capability discovery never grants unrelated mutation authority. Unrelated production mutation still requires explicit current owner approval.
 
@@ -152,7 +150,7 @@ On a fresh NEXI Work session, after continuity loss, or when the relevant durabl
 
 The current owner directive selects the active work. The completion ledger is historical evidence only; a stale queue row, receipt, phase capsule, or checkpoint cannot block an explicit current owner instruction. Preserve proven completed work and update current-state records proportionally after material source/runtime changes. Never claim verification that has not been performed.
 
-Owner manual testing is a final acceptance gate, never a substitute for automatable verification. Use controlled test wallet/Admin identities when safe; otherwise record an explicit owner deferral. Cloudflare Worker + Container remains the only backend runtime authority, and Public/Admin Worker-0 builds/runtimes remain restricted to their canonical `/srv/nexi/public` and `/srv/nexi/admin` seams.
+Owner manual testing is a final acceptance gate, never a substitute for automatable verification. Use only authorized controlled wallet/Admin identities; otherwise record the exact owner dependency. VPS backend staging is non-authoritative until the D1-to-SQLite financial and traffic cutover is approved and reconciled. Keep Public/Admin builds in their canonical `/srv/nexi/public` and `/srv/nexi/admin` locations.
 
 For market work, do not optimize for a cosmetic `LIVE` count. Open-market assets must remain fresh or self-recover automatically; legitimate closed-market states must carry a truthful reason; silent frozen prices, fabricated freshness, and manual recovery as normal operation are defects.
 

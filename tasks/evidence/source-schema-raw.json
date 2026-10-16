@@ -1,0 +1,1909 @@
+[
+  {
+    "results": [
+      {
+        "name": "Activity_idempotencyKey_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"Activity_idempotencyKey_key\" ON \"Activity\"(\"idempotencyKey\")"
+      },
+      {
+        "name": "Activity_ledgerCorrelationId_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"Activity_ledgerCorrelationId_idx\" ON \"Activity\"(\"ledgerCorrelationId\")"
+      },
+      {
+        "name": "Activity_referenceType_referenceId_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"Activity_referenceType_referenceId_idx\" ON \"Activity\"(\"referenceType\", \"referenceId\")"
+      },
+      {
+        "name": "Activity_userId_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"Activity_userId_createdAt_idx\" ON \"Activity\"(\"userId\", \"createdAt\")"
+      },
+      {
+        "name": "Activity_userId_type_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"Activity_userId_type_createdAt_idx\" ON \"Activity\"(\"userId\", \"type\", \"createdAt\")"
+      },
+      {
+        "name": "AdminAuditLog_adminId_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"AdminAuditLog_adminId_idx\" ON \"AdminAuditLog\"(\"adminId\")"
+      },
+      {
+        "name": "AdminFeatureFlag_key_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"AdminFeatureFlag_key_key\" ON \"AdminFeatureFlag\"(\"key\")"
+      },
+      {
+        "name": "AdminGovernanceApproval_approverId_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"AdminGovernanceApproval_approverId_createdAt_idx\" ON \"AdminGovernanceApproval\"(\"approverId\", \"createdAt\")"
+      },
+      {
+        "name": "AdminGovernanceApproval_commandId_approverId_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"AdminGovernanceApproval_commandId_approverId_key\" ON \"AdminGovernanceApproval\"(\"commandId\", \"approverId\")"
+      },
+      {
+        "name": "AdminGovernanceCommand_idempotencyKey_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"AdminGovernanceCommand_idempotencyKey_key\" ON \"AdminGovernanceCommand\"(\"idempotencyKey\")"
+      },
+      {
+        "name": "AdminGovernanceCommand_requestedBy_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"AdminGovernanceCommand_requestedBy_createdAt_idx\" ON \"AdminGovernanceCommand\"(\"requestedBy\", \"createdAt\")"
+      },
+      {
+        "name": "AdminGovernanceCommand_status_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"AdminGovernanceCommand_status_createdAt_idx\" ON \"AdminGovernanceCommand\"(\"status\", \"createdAt\")"
+      },
+      {
+        "name": "AdminIncident_acknowledgementIdempotencyKey_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"AdminIncident_acknowledgementIdempotencyKey_key\" ON \"AdminIncident\"(\"acknowledgementIdempotencyKey\")"
+      },
+      {
+        "name": "AdminIncident_active_postedAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"AdminIncident_active_postedAt_idx\" ON \"AdminIncident\"(\"active\", \"postedAt\")"
+      },
+      {
+        "name": "AdminIncident_environment_postedAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"AdminIncident_environment_postedAt_idx\" ON \"AdminIncident\"(\"environment\", \"postedAt\")"
+      },
+      {
+        "name": "AdminMaintenanceWindow_cancelIdempotencyKey_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"AdminMaintenanceWindow_cancelIdempotencyKey_key\" ON \"AdminMaintenanceWindow\"(\"cancelIdempotencyKey\")"
+      },
+      {
+        "name": "AdminMaintenanceWindow_environment_scheduledAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"AdminMaintenanceWindow_environment_scheduledAt_idx\" ON \"AdminMaintenanceWindow\"(\"environment\", \"scheduledAt\")"
+      },
+      {
+        "name": "AdminMaintenanceWindow_idempotencyKey_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"AdminMaintenanceWindow_idempotencyKey_key\" ON \"AdminMaintenanceWindow\"(\"idempotencyKey\")"
+      },
+      {
+        "name": "AdminMaintenanceWindow_scope_target_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"AdminMaintenanceWindow_scope_target_idx\" ON \"AdminMaintenanceWindow\"(\"scope\", \"target\")"
+      },
+      {
+        "name": "AdminMaintenanceWindow_status_scheduledAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"AdminMaintenanceWindow_status_scheduledAt_idx\" ON \"AdminMaintenanceWindow\"(\"status\", \"scheduledAt\")"
+      },
+      {
+        "name": "AdminRoleAssignment_roleId_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"AdminRoleAssignment_roleId_idx\" ON \"AdminRoleAssignment\"(\"roleId\")"
+      },
+      {
+        "name": "AdminRoleAssignment_userId_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"AdminRoleAssignment_userId_key\" ON \"AdminRoleAssignment\"(\"userId\")"
+      },
+      {
+        "name": "Admin_email_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"Admin_email_key\" ON \"Admin\"(\"email\")"
+      },
+      {
+        "name": "Affiliate_referralCode_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"Affiliate_referralCode_key\" ON \"Affiliate\"(\"referralCode\")"
+      },
+      {
+        "name": "Affiliate_userId_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"Affiliate_userId_key\" ON \"Affiliate\"(\"userId\")"
+      },
+      {
+        "name": "Announcement_published_pinned_pinOrder_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"Announcement_published_pinned_pinOrder_idx\"\n  ON \"Announcement\"(\"published\",\"pinned\",\"pinOrder\")"
+      },
+      {
+        "name": "Announcement_published_startsAt_endsAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"Announcement_published_startsAt_endsAt_idx\" ON \"Announcement\"(\"published\", \"startsAt\", \"endsAt\")"
+      },
+      {
+        "name": "AuthSession_absoluteExpiresAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"AuthSession_absoluteExpiresAt_idx\" ON \"AuthSession\"(\"absoluteExpiresAt\")"
+      },
+      {
+        "name": "AuthSession_idleExpiresAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"AuthSession_idleExpiresAt_idx\" ON \"AuthSession\"(\"idleExpiresAt\")"
+      },
+      {
+        "name": "AuthSession_refreshTokenHash_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"AuthSession_refreshTokenHash_key\" ON \"AuthSession\"(\"refreshTokenHash\")"
+      },
+      {
+        "name": "AuthSession_tokenFamilyId_revokedAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"AuthSession_tokenFamilyId_revokedAt_idx\" ON \"AuthSession\"(\"tokenFamilyId\", \"revokedAt\")"
+      },
+      {
+        "name": "AuthSession_userId_surface_revokedAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"AuthSession_userId_surface_revokedAt_idx\" ON \"AuthSession\"(\"userId\", \"surface\", \"revokedAt\")"
+      },
+      {
+        "name": "BinaryOptionPosition_status_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"BinaryOptionPosition_status_idx\" ON \"BinaryOptionPosition\"(\"status\")"
+      },
+      {
+        "name": "BinaryOptionPosition_userId_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"BinaryOptionPosition_userId_idx\" ON \"BinaryOptionPosition\"(\"userId\")"
+      },
+      {
+        "name": "BinaryOptionResult_positionId_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"BinaryOptionResult_positionId_key\" ON \"BinaryOptionResult\"(\"positionId\")"
+      },
+      {
+        "name": "BinaryPair_symbol_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"BinaryPair_symbol_key\" ON \"BinaryPair\"(\"symbol\")"
+      },
+      {
+        "name": "BinaryTimeframe_seconds_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"BinaryTimeframe_seconds_key\" ON \"BinaryTimeframe\"(\"seconds\")"
+      },
+      {
+        "name": "ContractPair_symbol_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"ContractPair_symbol_key\" ON \"ContractPair\"(\"symbol\")"
+      },
+      {
+        "name": "ContractPosition_status_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"ContractPosition_status_idx\" ON \"ContractPosition\"(\"status\")"
+      },
+      {
+        "name": "ContractPosition_userId_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"ContractPosition_userId_idx\" ON \"ContractPosition\"(\"userId\")"
+      },
+      {
+        "name": "Currency_symbol_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"Currency_symbol_key\" ON \"Currency\"(\"symbol\")"
+      },
+      {
+        "name": "DepositAddress_currencyId_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"DepositAddress_currencyId_idx\" ON \"DepositAddress\"(\"currencyId\")"
+      },
+      {
+        "name": "DepositAddress_walletNetworkId_isActive_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"DepositAddress_walletNetworkId_isActive_idx\" ON \"DepositAddress\"(\"walletNetworkId\",\"isActive\")"
+      },
+      {
+        "name": "DepositClaim_idempotencyKey_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"DepositClaim_idempotencyKey_key\" ON \"DepositClaim\"(\"idempotencyKey\")"
+      },
+      {
+        "name": "DepositClaim_state_submittedAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"DepositClaim_state_submittedAt_idx\" ON \"DepositClaim\"(\"state\", \"submittedAt\")"
+      },
+      {
+        "name": "DepositClaim_txHash_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"DepositClaim_txHash_idx\" ON \"DepositClaim\"(\"txHash\")"
+      },
+      {
+        "name": "DepositClaim_userId_state_submittedAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"DepositClaim_userId_state_submittedAt_idx\" ON \"DepositClaim\"(\"userId\", \"state\", \"submittedAt\")"
+      },
+      {
+        "name": "EventInbox_queue_idempotencyKey_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"EventInbox_queue_idempotencyKey_key\" ON \"EventInbox\"(\"queue\", \"idempotencyKey\")"
+      },
+      {
+        "name": "EventInbox_state_receivedAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"EventInbox_state_receivedAt_idx\" ON \"EventInbox\"(\"state\", \"receivedAt\")"
+      },
+      {
+        "name": "EventOutbox_aggregateType_aggregateId_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"EventOutbox_aggregateType_aggregateId_createdAt_idx\" ON \"EventOutbox\"(\"aggregateType\", \"aggregateId\", \"createdAt\")"
+      },
+      {
+        "name": "EventOutbox_correlationId_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"EventOutbox_correlationId_createdAt_idx\" ON \"EventOutbox\"(\"correlationId\", \"createdAt\")"
+      },
+      {
+        "name": "EventOutbox_idempotencyKey_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"EventOutbox_idempotencyKey_key\" ON \"EventOutbox\"(\"idempotencyKey\")"
+      },
+      {
+        "name": "EventOutbox_state_availableAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"EventOutbox_state_availableAt_idx\" ON \"EventOutbox\"(\"state\", \"availableAt\")"
+      },
+      {
+        "name": "Gate2BinaryConfiguration_pair_durationSeconds_version_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"Gate2BinaryConfiguration_pair_durationSeconds_version_key\" ON \"Gate2BinaryConfiguration\"(\"pair\", \"durationSeconds\", \"version\")"
+      },
+      {
+        "name": "Gate2BinaryConfiguration_pair_enabled_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"Gate2BinaryConfiguration_pair_enabled_idx\" ON \"Gate2BinaryConfiguration\"(\"pair\", \"enabled\")"
+      },
+      {
+        "name": "Gate2BinaryPosition_pair_state_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"Gate2BinaryPosition_pair_state_createdAt_idx\" ON \"Gate2BinaryPosition\"(\"pair\", \"state\", \"createdAt\")"
+      },
+      {
+        "name": "Gate2BinaryPosition_settlementReceiptId_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"Gate2BinaryPosition_settlementReceiptId_key\" ON \"Gate2BinaryPosition\"(\"settlementReceiptId\")"
+      },
+      {
+        "name": "Gate2BinaryPosition_userId_idempotencyKey_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"Gate2BinaryPosition_userId_idempotencyKey_key\" ON \"Gate2BinaryPosition\"(\"userId\", \"idempotencyKey\")"
+      },
+      {
+        "name": "Gate2BinaryPosition_userId_state_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"Gate2BinaryPosition_userId_state_createdAt_idx\" ON \"Gate2BinaryPosition\"(\"userId\", \"state\", \"createdAt\")"
+      },
+      {
+        "name": "Gate2ConversionQuote_acceptanceKey_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"Gate2ConversionQuote_acceptanceKey_key\" ON \"Gate2ConversionQuote\"(\"acceptanceKey\")"
+      },
+      {
+        "name": "Gate2ConversionQuote_quoteKey_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"Gate2ConversionQuote_quoteKey_key\" ON \"Gate2ConversionQuote\"(\"quoteKey\")"
+      },
+      {
+        "name": "Gate2ConversionQuote_userId_state_expiresAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"Gate2ConversionQuote_userId_state_expiresAt_idx\" ON \"Gate2ConversionQuote\"(\"userId\", \"state\", \"expiresAt\")"
+      },
+      {
+        "name": "Gate2Deposit_network_txHash_address_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"Gate2Deposit_network_txHash_address_key\" ON \"Gate2Deposit\"(\"network\", \"txHash\", \"address\")"
+      },
+      {
+        "name": "Gate2Deposit_observationKey_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"Gate2Deposit_observationKey_key\" ON \"Gate2Deposit\"(\"observationKey\")"
+      },
+      {
+        "name": "Gate2Deposit_userId_state_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"Gate2Deposit_userId_state_createdAt_idx\" ON \"Gate2Deposit\"(\"userId\", \"state\", \"createdAt\")"
+      },
+      {
+        "name": "Gate2InternalTransfer_fromUserId_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"Gate2InternalTransfer_fromUserId_createdAt_idx\" ON \"Gate2InternalTransfer\"(\"fromUserId\", \"createdAt\")"
+      },
+      {
+        "name": "Gate2InternalTransfer_idempotencyKey_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"Gate2InternalTransfer_idempotencyKey_key\" ON \"Gate2InternalTransfer\"(\"idempotencyKey\")"
+      },
+      {
+        "name": "Gate2InternalTransfer_toUserId_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"Gate2InternalTransfer_toUserId_createdAt_idx\" ON \"Gate2InternalTransfer\"(\"toUserId\", \"createdAt\")"
+      },
+      {
+        "name": "Gate2OperationAudit_idempotencyKey_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"Gate2OperationAudit_idempotencyKey_idx\" ON \"Gate2OperationAudit\"(\"idempotencyKey\")"
+      },
+      {
+        "name": "Gate2OperationAudit_operationType_operationId_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"Gate2OperationAudit_operationType_operationId_createdAt_idx\" ON \"Gate2OperationAudit\"(\"operationType\", \"operationId\", \"createdAt\")"
+      },
+      {
+        "name": "Gate2OperationAudit_userId_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"Gate2OperationAudit_userId_createdAt_idx\" ON \"Gate2OperationAudit\"(\"userId\", \"createdAt\")"
+      },
+      {
+        "name": "Gate2SpotOrder_pair_status_side_price_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"Gate2SpotOrder_pair_status_side_price_createdAt_idx\" ON \"Gate2SpotOrder\"(\"pair\", \"status\", \"side\", \"price\", \"createdAt\")"
+      },
+      {
+        "name": "Gate2SpotOrder_userId_idempotencyKey_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"Gate2SpotOrder_userId_idempotencyKey_key\" ON \"Gate2SpotOrder\"(\"userId\", \"idempotencyKey\")"
+      },
+      {
+        "name": "Gate2SpotOrder_userId_status_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"Gate2SpotOrder_userId_status_createdAt_idx\" ON \"Gate2SpotOrder\"(\"userId\", \"status\", \"createdAt\")"
+      },
+      {
+        "name": "Gate2SpotTrade_buyerOrderId_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"Gate2SpotTrade_buyerOrderId_createdAt_idx\" ON \"Gate2SpotTrade\"(\"buyerOrderId\", \"createdAt\")"
+      },
+      {
+        "name": "Gate2SpotTrade_idempotencyKey_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"Gate2SpotTrade_idempotencyKey_key\" ON \"Gate2SpotTrade\"(\"idempotencyKey\")"
+      },
+      {
+        "name": "Gate2SpotTrade_pair_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"Gate2SpotTrade_pair_createdAt_idx\" ON \"Gate2SpotTrade\"(\"pair\", \"createdAt\")"
+      },
+      {
+        "name": "Gate2SpotTrade_sellerOrderId_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"Gate2SpotTrade_sellerOrderId_createdAt_idx\" ON \"Gate2SpotTrade\"(\"sellerOrderId\", \"createdAt\")"
+      },
+      {
+        "name": "Gate2Withdrawal_requestKey_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"Gate2Withdrawal_requestKey_key\" ON \"Gate2Withdrawal\"(\"requestKey\")"
+      },
+      {
+        "name": "Gate2Withdrawal_reserveKey_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"Gate2Withdrawal_reserveKey_key\" ON \"Gate2Withdrawal\"(\"reserveKey\")"
+      },
+      {
+        "name": "Gate2Withdrawal_userId_state_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"Gate2Withdrawal_userId_state_createdAt_idx\" ON \"Gate2Withdrawal\"(\"userId\", \"state\", \"createdAt\")"
+      },
+      {
+        "name": "KYC_userId_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"KYC_userId_key\" ON \"KYC\"(\"userId\")"
+      },
+      {
+        "name": "LearnArticleRevision_articleId_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"LearnArticleRevision_articleId_createdAt_idx\" ON \"LearnArticleRevision\"(\"articleId\", \"createdAt\")"
+      },
+      {
+        "name": "LearnArticleRevision_articleId_revision_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"LearnArticleRevision_articleId_revision_key\" ON \"LearnArticleRevision\"(\"articleId\", \"revision\")"
+      },
+      {
+        "name": "LearnArticleTag_tagId_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"LearnArticleTag_tagId_idx\" ON \"LearnArticleTag\"(\"tagId\")"
+      },
+      {
+        "name": "LearnCategory_slug_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"LearnCategory_slug_key\" ON \"LearnCategory\"(\"slug\")"
+      },
+      {
+        "name": "LearnContent_categoryId_status_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"LearnContent_categoryId_status_idx\" ON \"LearnContent\"(\"categoryId\", \"status\")"
+      },
+      {
+        "name": "LearnContent_slug_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"LearnContent_slug_key\" ON \"LearnContent\"(\"slug\")"
+      },
+      {
+        "name": "LearnContent_status_publishedAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"LearnContent_status_publishedAt_idx\" ON \"LearnContent\"(\"status\", \"publishedAt\")"
+      },
+      {
+        "name": "LearnMediaAsset_articleId_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"LearnMediaAsset_articleId_createdAt_idx\" ON \"LearnMediaAsset\"(\"articleId\", \"createdAt\")"
+      },
+      {
+        "name": "LearnMediaAsset_revisionId_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"LearnMediaAsset_revisionId_createdAt_idx\" ON \"LearnMediaAsset\"(\"revisionId\", \"createdAt\")"
+      },
+      {
+        "name": "LearnTag_slug_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"LearnTag_slug_key\" ON \"LearnTag\"(\"slug\")"
+      },
+      {
+        "name": "LedgerAccount_userId_asset_scope_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"LedgerAccount_userId_asset_scope_key\" ON \"LedgerAccount\"(\"userId\", \"asset\", \"scope\")"
+      },
+      {
+        "name": "LedgerAccount_userId_status_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"LedgerAccount_userId_status_idx\" ON \"LedgerAccount\"(\"userId\", \"status\")"
+      },
+      {
+        "name": "LedgerAuditEvent_accountId_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"LedgerAuditEvent_accountId_createdAt_idx\" ON \"LedgerAuditEvent\"(\"accountId\", \"createdAt\")"
+      },
+      {
+        "name": "LedgerAuditEvent_idempotencyKey_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"LedgerAuditEvent_idempotencyKey_idx\" ON \"LedgerAuditEvent\"(\"idempotencyKey\")"
+      },
+      {
+        "name": "LedgerIdempotency_accountId_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"LedgerIdempotency_accountId_createdAt_idx\" ON \"LedgerIdempotency\"(\"accountId\", \"createdAt\")"
+      },
+      {
+        "name": "LedgerIdempotency_idempotencyKey_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"LedgerIdempotency_idempotencyKey_key\" ON \"LedgerIdempotency\"(\"idempotencyKey\")"
+      },
+      {
+        "name": "LedgerPosting_accountId_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"LedgerPosting_accountId_createdAt_idx\" ON \"LedgerPosting\"(\"accountId\", \"createdAt\")"
+      },
+      {
+        "name": "LedgerPosting_accountId_idempotencyKey_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"LedgerPosting_accountId_idempotencyKey_key\" ON \"LedgerPosting\"(\"accountId\", \"idempotencyKey\")"
+      },
+      {
+        "name": "LedgerPosting_economicGroup_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"LedgerPosting_economicGroup_idx\" ON \"LedgerPosting\"(\"economicGroup\")"
+      },
+      {
+        "name": "LedgerPosting_referenceType_referenceId_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"LedgerPosting_referenceType_referenceId_idx\" ON \"LedgerPosting\"(\"referenceType\", \"referenceId\")"
+      },
+      {
+        "name": "Ledger_walletId_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"Ledger_walletId_idx\" ON \"Ledger\"(\"walletId\")"
+      },
+      {
+        "name": "LoanApplication_userId_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"LoanApplication_userId_idx\" ON \"LoanApplication\"(\"userId\")"
+      },
+      {
+        "name": "LoanRepayment_activityId_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"LoanRepayment_activityId_key\" ON \"LoanRepayment\"(\"activityId\")"
+      },
+      {
+        "name": "LoanRepayment_ledgerPostingId_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"LoanRepayment_ledgerPostingId_key\" ON \"LoanRepayment\"(\"ledgerPostingId\")"
+      },
+      {
+        "name": "MarketAssetCapability_assetId_status_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"MarketAssetCapability_assetId_status_idx\" ON \"MarketAssetCapability\"(\"assetId\", \"status\")"
+      },
+      {
+        "name": "MarketAssetCapability_capabilityKey_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"MarketAssetCapability_capabilityKey_key\" ON \"MarketAssetCapability\"(\"capabilityKey\")"
+      },
+      {
+        "name": "MarketAssetCapability_networkId_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"MarketAssetCapability_networkId_idx\" ON \"MarketAssetCapability\"(\"networkId\")"
+      },
+      {
+        "name": "MarketAsset_category_status_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"MarketAsset_category_status_idx\" ON \"MarketAsset\"(\"category\", \"status\")"
+      },
+      {
+        "name": "MarketAsset_symbol_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"MarketAsset_symbol_key\" ON \"MarketAsset\"(\"symbol\")"
+      },
+      {
+        "name": "MarketData_symbol_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"MarketData_symbol_key\" ON \"MarketData\"(\"symbol\")"
+      },
+      {
+        "name": "MarketDepthLevel_snapshotId_side_levelIndex_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"MarketDepthLevel_snapshotId_side_levelIndex_key\" ON \"MarketDepthLevel\"(\"snapshotId\", \"side\", \"levelIndex\")"
+      },
+      {
+        "name": "MarketDepthLevel_snapshotId_side_price_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"MarketDepthLevel_snapshotId_side_price_idx\" ON \"MarketDepthLevel\"(\"snapshotId\", \"side\", \"price\")"
+      },
+      {
+        "name": "MarketDepthSnapshot_pairId_observedAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"MarketDepthSnapshot_pairId_observedAt_idx\" ON \"MarketDepthSnapshot\"(\"pairId\", \"observedAt\")"
+      },
+      {
+        "name": "MarketDepthSnapshot_pairId_provider_providerSnapshotId_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"MarketDepthSnapshot_pairId_provider_providerSnapshotId_key\" ON \"MarketDepthSnapshot\"(\"pairId\", \"provider\", \"providerSnapshotId\")"
+      },
+      {
+        "name": "MarketDepthSnapshot_pairId_provider_sequence_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"MarketDepthSnapshot_pairId_provider_sequence_key\" ON \"MarketDepthSnapshot\"(\"pairId\", \"provider\", \"sequence\")"
+      },
+      {
+        "name": "MarketDepthSnapshot_symbol_observedAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"MarketDepthSnapshot_symbol_observedAt_idx\" ON \"MarketDepthSnapshot\"(\"symbol\", \"observedAt\")"
+      },
+      {
+        "name": "MarketKline_interval_openTime_pairId_symbol_close_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"MarketKline_interval_openTime_pairId_symbol_close_idx\"\n  ON \"MarketKline\"(\"interval\", \"openTime\", \"pairId\", \"symbol\", \"close\")"
+      },
+      {
+        "name": "MarketKline_pairId_interval_openTime_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"MarketKline_pairId_interval_openTime_key\" ON \"MarketKline\"(\"pairId\", \"interval\", \"openTime\")"
+      },
+      {
+        "name": "MarketKline_receivedAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"MarketKline_receivedAt_idx\" ON \"MarketKline\"(\"receivedAt\")"
+      },
+      {
+        "name": "MarketKline_symbol_interval_openTime_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"MarketKline_symbol_interval_openTime_idx\" ON \"MarketKline\"(\"symbol\", \"interval\", \"openTime\")"
+      },
+      {
+        "name": "MarketNetwork_assetId_code_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"MarketNetwork_assetId_code_key\" ON \"MarketNetwork\"(\"assetId\", \"code\")"
+      },
+      {
+        "name": "MarketNetwork_code_status_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"MarketNetwork_code_status_idx\" ON \"MarketNetwork\"(\"code\", \"status\")"
+      },
+      {
+        "name": "MarketPair_baseAssetId_quoteAssetId_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"MarketPair_baseAssetId_quoteAssetId_key\" ON \"MarketPair\"(\"baseAssetId\", \"quoteAssetId\")"
+      },
+      {
+        "name": "MarketPair_category_status_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"MarketPair_category_status_idx\" ON \"MarketPair\"(\"category\", \"status\")"
+      },
+      {
+        "name": "MarketPair_symbol_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"MarketPair_symbol_key\" ON \"MarketPair\"(\"symbol\")"
+      },
+      {
+        "name": "MarketProviderConfig_key_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"MarketProviderConfig_key_key\" ON \"MarketProviderConfig\"(\"key\")"
+      },
+      {
+        "name": "MarketProviderConfig_status_priority_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"MarketProviderConfig_status_priority_idx\" ON \"MarketProviderConfig\"(\"status\", \"priority\")"
+      },
+      {
+        "name": "MarketProviderSymbol_pairId_enabled_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"MarketProviderSymbol_pairId_enabled_idx\" ON \"MarketProviderSymbol\"(\"pairId\", \"enabled\")"
+      },
+      {
+        "name": "MarketProviderSymbol_providerId_pairId_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"MarketProviderSymbol_providerId_pairId_key\" ON \"MarketProviderSymbol\"(\"providerId\", \"pairId\")"
+      },
+      {
+        "name": "MarketProviderSymbol_providerId_providerSymbol_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"MarketProviderSymbol_providerId_providerSymbol_key\" ON \"MarketProviderSymbol\"(\"providerId\", \"providerSymbol\")"
+      },
+      {
+        "name": "MarketQuoteLatest_pairId_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"MarketQuoteLatest_pairId_key\" ON \"MarketQuoteLatest\"(\"pairId\")"
+      },
+      {
+        "name": "MarketQuoteLatest_symbol_state_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"MarketQuoteLatest_symbol_state_idx\" ON \"MarketQuoteLatest\"(\"symbol\", \"state\")"
+      },
+      {
+        "name": "MarketQuoteSnapshot_pairId_numericSequence_idx",
+        "type": "index",
+        "sql": "CREATE INDEX MarketQuoteSnapshot_pairId_numericSequence_idx ON \"MarketQuoteSnapshot\"(\"pairId\", CAST(\"sequence\" AS INTEGER))"
+      },
+      {
+        "name": "MarketQuoteSnapshot_pairId_sequence_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"MarketQuoteSnapshot_pairId_sequence_key\" ON \"MarketQuoteSnapshot\"(\"pairId\", \"sequence\")"
+      },
+      {
+        "name": "MarketQuoteSnapshot_receivedAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"MarketQuoteSnapshot_receivedAt_idx\" ON \"MarketQuoteSnapshot\"(\"receivedAt\")"
+      },
+      {
+        "name": "MarketQuoteSnapshot_symbol_sequence_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"MarketQuoteSnapshot_symbol_sequence_idx\" ON \"MarketQuoteSnapshot\"(\"symbol\", \"sequence\")"
+      },
+      {
+        "name": "MarketTrade_pairId_observedAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"MarketTrade_pairId_observedAt_idx\" ON \"MarketTrade\"(\"pairId\", \"observedAt\")"
+      },
+      {
+        "name": "MarketTrade_pairId_provider_providerTradeId_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"MarketTrade_pairId_provider_providerTradeId_key\" ON \"MarketTrade\"(\"pairId\", \"provider\", \"providerTradeId\")"
+      },
+      {
+        "name": "MarketTrade_pairId_provider_sequence_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"MarketTrade_pairId_provider_sequence_key\" ON \"MarketTrade\"(\"pairId\", \"provider\", \"sequence\")"
+      },
+      {
+        "name": "MarketTrade_symbol_observedAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"MarketTrade_symbol_observedAt_idx\" ON \"MarketTrade\"(\"symbol\", \"observedAt\")"
+      },
+      {
+        "name": "MessageConversation_participantAId_participantBId_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"MessageConversation_participantAId_participantBId_key\"\n  ON \"MessageConversation\"(\"participantAId\",\"participantBId\")"
+      },
+      {
+        "name": "MessageConversation_participantAId_updatedAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"MessageConversation_participantAId_updatedAt_idx\"\n  ON \"MessageConversation\"(\"participantAId\",\"updatedAt\")"
+      },
+      {
+        "name": "MessageConversation_participantBId_updatedAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"MessageConversation_participantBId_updatedAt_idx\"\n  ON \"MessageConversation\"(\"participantBId\",\"updatedAt\")"
+      },
+      {
+        "name": "MessageModerationCase_conversationId_status_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"MessageModerationCase_conversationId_status_createdAt_idx\"\n  ON \"MessageModerationCase\"(\"conversationId\",\"status\",\"createdAt\")"
+      },
+      {
+        "name": "MessageModerationCase_status_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"MessageModerationCase_status_createdAt_idx\"\n  ON \"MessageModerationCase\"(\"status\",\"createdAt\")"
+      },
+      {
+        "name": "MiningRewardAccrual_activityId_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"MiningRewardAccrual_activityId_key\" ON \"MiningRewardAccrual\"(\"activityId\")"
+      },
+      {
+        "name": "MiningRewardAccrual_idempotencyKey_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"MiningRewardAccrual_idempotencyKey_key\" ON \"MiningRewardAccrual\"(\"idempotencyKey\")"
+      },
+      {
+        "name": "MiningRewardAccrual_ledgerPostingId_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"MiningRewardAccrual_ledgerPostingId_key\" ON \"MiningRewardAccrual\"(\"ledgerPostingId\")"
+      },
+      {
+        "name": "MiningRewardAccrual_subscriptionId_rewardedAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"MiningRewardAccrual_subscriptionId_rewardedAt_idx\" ON \"MiningRewardAccrual\"(\"subscriptionId\", \"rewardedAt\")"
+      },
+      {
+        "name": "MiningRewardAccrual_userId_rewardedAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"MiningRewardAccrual_userId_rewardedAt_idx\" ON \"MiningRewardAccrual\"(\"userId\", \"rewardedAt\")"
+      },
+      {
+        "name": "MiningSubscription_planId_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"MiningSubscription_planId_idx\" ON \"MiningSubscription\"(\"planId\")"
+      },
+      {
+        "name": "Notification_userId_readAt_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"Notification_userId_readAt_createdAt_idx\" ON \"Notification\"(\"userId\", \"readAt\", \"createdAt\")"
+      },
+      {
+        "name": "PersistentMessage_conversationId_sequence_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"PersistentMessage_conversationId_sequence_idx\"\n  ON \"PersistentMessage\"(\"conversationId\",\"sequence\")"
+      },
+      {
+        "name": "PersistentMessage_recipientId_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"PersistentMessage_recipientId_createdAt_idx\" ON \"PersistentMessage\"(\"recipientId\", \"createdAt\")"
+      },
+      {
+        "name": "PersistentMessage_senderId_recipientId_sequence_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"PersistentMessage_senderId_recipientId_sequence_idx\" ON \"PersistentMessage\"(\"senderId\", \"recipientId\", \"sequence\")"
+      },
+      {
+        "name": "ReferralAttributionEvent_referrer_attributed_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"ReferralAttributionEvent_referrer_attributed_idx\"\n  ON \"ReferralAttributionEvent\"(\"referrerUserId\",\"attributedAt\")"
+      },
+      {
+        "name": "ReferralRewardEvent_referrer_rewarded_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"ReferralRewardEvent_referrer_rewarded_idx\"\n  ON \"ReferralRewardEvent\"(\"referrerUserId\",\"rewardedAt\")"
+      },
+      {
+        "name": "Settings_key_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"Settings_key_key\" ON \"Settings\"(\"key\")"
+      },
+      {
+        "name": "SpotMarginAccount_userId_pair_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"SpotMarginAccount_userId_pair_key\" ON \"SpotMarginAccount\"(\"userId\", \"pair\")"
+      },
+      {
+        "name": "SpotMarginAccount_userId_status_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"SpotMarginAccount_userId_status_idx\" ON \"SpotMarginAccount\"(\"userId\", \"status\")"
+      },
+      {
+        "name": "SpotMarginActivity_accountId_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"SpotMarginActivity_accountId_createdAt_idx\" ON \"SpotMarginActivity\"(\"accountId\", \"createdAt\")"
+      },
+      {
+        "name": "SpotMarginActivity_idempotencyKey_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"SpotMarginActivity_idempotencyKey_key\" ON \"SpotMarginActivity\"(\"idempotencyKey\")"
+      },
+      {
+        "name": "SpotMarginActivity_positionId_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"SpotMarginActivity_positionId_createdAt_idx\" ON \"SpotMarginActivity\"(\"positionId\", \"createdAt\")"
+      },
+      {
+        "name": "SpotMarginActivity_userId_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"SpotMarginActivity_userId_createdAt_idx\" ON \"SpotMarginActivity\"(\"userId\", \"createdAt\")"
+      },
+      {
+        "name": "SpotMarginPositionEvent_idempotencyKey_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"SpotMarginPositionEvent_idempotencyKey_key\" ON \"SpotMarginPositionEvent\"(\"idempotencyKey\")"
+      },
+      {
+        "name": "SpotMarginPositionEvent_positionId_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"SpotMarginPositionEvent_positionId_createdAt_idx\" ON \"SpotMarginPositionEvent\"(\"positionId\", \"createdAt\")"
+      },
+      {
+        "name": "SpotMarginPositionEvent_type_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"SpotMarginPositionEvent_type_createdAt_idx\" ON \"SpotMarginPositionEvent\"(\"type\", \"createdAt\")"
+      },
+      {
+        "name": "SpotMarginPosition_accountId_status_openedAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"SpotMarginPosition_accountId_status_openedAt_idx\" ON \"SpotMarginPosition\"(\"accountId\", \"status\", \"openedAt\")"
+      },
+      {
+        "name": "SpotMarginPosition_closeOrderId_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"SpotMarginPosition_closeOrderId_key\" ON \"SpotMarginPosition\"(\"closeOrderId\")"
+      },
+      {
+        "name": "SpotMarginPosition_entryOrderId_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"SpotMarginPosition_entryOrderId_key\" ON \"SpotMarginPosition\"(\"entryOrderId\")"
+      },
+      {
+        "name": "SpotMarginPosition_openIdempotencyKey_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"SpotMarginPosition_openIdempotencyKey_key\" ON \"SpotMarginPosition\"(\"openIdempotencyKey\")"
+      },
+      {
+        "name": "SpotMarginPosition_status_markPrice_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"SpotMarginPosition_status_markPrice_idx\" ON \"SpotMarginPosition\"(\"status\", \"markPrice\")"
+      },
+      {
+        "name": "SupportTicketReply_ticketId_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"SupportTicketReply_ticketId_createdAt_idx\" ON \"SupportTicketReply\"(\"ticketId\", \"createdAt\")"
+      },
+      {
+        "name": "SupportTicket_status_priority_updatedAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"SupportTicket_status_priority_updatedAt_idx\" ON \"SupportTicket\"(\"status\", \"priority\", \"updatedAt\")"
+      },
+      {
+        "name": "SupportTicket_userId_createdAt_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"SupportTicket_userId_createdAt_idx\" ON \"SupportTicket\"(\"userId\", \"createdAt\")"
+      },
+      {
+        "name": "SystemConfig_key_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"SystemConfig_key_key\" ON \"SystemConfig\"(\"key\")"
+      },
+      {
+        "name": "UserMfa_userId_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"UserMfa_userId_key\" ON \"UserMfa\"(\"userId\")"
+      },
+      {
+        "name": "UserPreference_userId_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"UserPreference_userId_key\" ON \"UserPreference\"(\"userId\")"
+      },
+      {
+        "name": "UserVipState_level_progress_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"UserVipState_level_progress_idx\" ON \"UserVipState\"(\"vipLevelId\",\"progress\")"
+      },
+      {
+        "name": "UserVipState_userId_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"UserVipState_userId_key\" ON \"UserVipState\"(\"userId\")"
+      },
+      {
+        "name": "User_email_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"User_email_key\" ON \"User\"(\"email\")"
+      },
+      {
+        "name": "User_userCode_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"User_userCode_key\" ON \"User\"(\"userCode\")"
+      },
+      {
+        "name": "VipLevel_enabled_level_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"VipLevel_enabled_level_idx\" ON \"VipLevel\"(\"enabled\",\"level\")"
+      },
+      {
+        "name": "VipLevel_level_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"VipLevel_level_key\" ON \"VipLevel\"(\"level\")"
+      },
+      {
+        "name": "WalletIdentity_address_chainId_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"WalletIdentity_address_chainId_idx\" ON \"WalletIdentity\"(\"address\", \"chainId\")"
+      },
+      {
+        "name": "WalletIdentity_address_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"WalletIdentity_address_key\" ON \"WalletIdentity\"(\"address\")"
+      },
+      {
+        "name": "WalletIdentity_userId_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"WalletIdentity_userId_key\" ON \"WalletIdentity\"(\"userId\")"
+      },
+      {
+        "name": "WalletNetwork_currencyId_code_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"WalletNetwork_currencyId_code_key\" ON \"WalletNetwork\"(\"currencyId\",\"code\")"
+      },
+      {
+        "name": "WalletNetwork_currencyId_isActive_idx",
+        "type": "index",
+        "sql": "CREATE INDEX \"WalletNetwork_currencyId_isActive_idx\" ON \"WalletNetwork\"(\"currencyId\",\"isActive\")"
+      },
+      {
+        "name": "Wallet_userId_key",
+        "type": "index",
+        "sql": "CREATE UNIQUE INDEX \"Wallet_userId_key\" ON \"Wallet\"(\"userId\")"
+      },
+      {
+        "name": "sqlite_autoindex_Activity_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_AdminAuditLog_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_AdminFeatureFlag_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_AdminGovernanceApproval_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_AdminGovernanceCommand_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_AdminIncident_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_AdminMaintenanceWindow_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_AdminRoleAssignment_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_Admin_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_Affiliate_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_Announcement_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_AuthSession_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_BinaryOptionPosition_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_BinaryOptionResult_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_ContractPair_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_ContractPosition_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_ConversionTransaction_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_DepositAddress_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_DepositClaim_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_EventInbox_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_EventOutbox_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_Gate2BinaryConfiguration_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_Gate2BinaryPosition_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_Gate2ConversionQuote_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_Gate2Deposit_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_Gate2InternalTransfer_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_Gate2OperationAudit_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_Gate2SpotOrder_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_Gate2SpotTrade_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_Gate2Withdrawal_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_KYC_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_LearnArticleRevision_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_LearnArticleTag_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_LearnCategory_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_LearnContent_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_LearnMediaAsset_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_LearnTag_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_LedgerAccount_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_LedgerAuditEvent_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_LedgerIdempotency_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_LedgerPosting_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_Ledger_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_LoanApplication_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_LoanPlan_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_LoanRepayment_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_MarketAssetCapability_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_MarketAsset_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_MarketData_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_MarketDepthLevel_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_MarketDepthSnapshot_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_MarketKline_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_MarketNetwork_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_MarketPair_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_MarketProviderConfig_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_MarketProviderSymbol_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_MarketQuoteLatest_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_MarketQuoteSnapshot_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_MarketTrade_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_MessageConversation_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_MessageModerationCase_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_MiningPlan_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_MiningRewardAccrual_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_MiningSubscription_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_Notification_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_OptionGameSettings_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_PersistentMessage_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_ReferralAttributionEvent_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_ReferralAttributionEvent_2",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_ReferralRewardEvent_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_ReferralRewardEvent_2",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_Reward_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_Settings_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_SpotMarginAccount_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_SpotMarginActivity_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_SpotMarginPositionEvent_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_SpotMarginPosition_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_SpotOrder_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_SpotTrade_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_SupportTicketReply_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_SupportTicket_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_SystemConfig_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_UserMfa_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_UserPreference_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_UserVipState_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_User_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_VipLevel_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_WalletIdentity_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_WalletNetwork_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_Wallet_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_WithdrawalRequest_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_d1_migrations_1",
+        "type": "index",
+        "sql": null
+      },
+      {
+        "name": "Activity",
+        "type": "table",
+        "sql": "CREATE TABLE \"Activity\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"type\" TEXT NOT NULL,\r\n    \"status\" TEXT NOT NULL DEFAULT 'COMPLETED',\r\n    \"referenceType\" TEXT NOT NULL,\r\n    \"referenceId\" TEXT NOT NULL,\r\n    \"idempotencyKey\" TEXT NOT NULL,\r\n    \"ledgerCorrelationId\" TEXT NOT NULL,\r\n    \"ledgerPostingId\" TEXT,\r\n    \"asset\" TEXT,\r\n    \"amount\" TEXT,\r\n    \"details\" TEXT,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    CONSTRAINT \"Activity_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "Admin",
+        "type": "table",
+        "sql": "CREATE TABLE \"Admin\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"email\" TEXT NOT NULL,\r\n    \"password\" TEXT NOT NULL,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL\r\n)"
+      },
+      {
+        "name": "AdminAuditLog",
+        "type": "table",
+        "sql": "CREATE TABLE \"AdminAuditLog\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"adminId\" TEXT NOT NULL,\r\n    \"action\" TEXT NOT NULL,\r\n    \"target\" TEXT,\r\n    \"details\" TEXT,\r\n    \"ipAddress\" TEXT,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP\r\n)"
+      },
+      {
+        "name": "AdminFeatureFlag",
+        "type": "table",
+        "sql": "CREATE TABLE \"AdminFeatureFlag\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"key\" TEXT NOT NULL,\r\n    \"enabled\" BOOLEAN NOT NULL DEFAULT false,\r\n    \"environment\" TEXT NOT NULL DEFAULT 'sandbox',\r\n    \"reason\" TEXT NOT NULL,\r\n    \"updatedBy\" TEXT NOT NULL,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL\r\n)"
+      },
+      {
+        "name": "AdminGovernanceApproval",
+        "type": "table",
+        "sql": "CREATE TABLE \"AdminGovernanceApproval\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"commandId\" TEXT NOT NULL,\r\n    \"approverId\" TEXT NOT NULL,\r\n    \"decision\" TEXT NOT NULL,\r\n    \"reason\" TEXT NOT NULL,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    CONSTRAINT \"AdminGovernanceApproval_commandId_fkey\" FOREIGN KEY (\"commandId\") REFERENCES \"AdminGovernanceCommand\" (\"id\") ON DELETE CASCADE ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "AdminGovernanceCommand",
+        "type": "table",
+        "sql": "CREATE TABLE \"AdminGovernanceCommand\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"idempotencyKey\" TEXT NOT NULL,\r\n    \"commandType\" TEXT NOT NULL,\r\n    \"target\" TEXT,\r\n    \"reason\" TEXT NOT NULL,\r\n    \"payload\" TEXT,\r\n    \"requestedBy\" TEXT NOT NULL,\r\n    \"status\" TEXT NOT NULL DEFAULT 'PENDING',\r\n    \"approvedBy\" TEXT,\r\n    \"approvedAt\" DATETIME,\r\n    \"executedAt\" DATETIME,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL\r\n)"
+      },
+      {
+        "name": "AdminIncident",
+        "type": "table",
+        "sql": "CREATE TABLE \"AdminIncident\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"title\" TEXT NOT NULL,\r\n    \"body\" TEXT NOT NULL,\r\n    \"severity\" TEXT NOT NULL DEFAULT 'INFO',\r\n    \"active\" BOOLEAN NOT NULL DEFAULT true,\r\n    \"environment\" TEXT NOT NULL,\r\n    \"postedAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"acknowledgedAt\" DATETIME,\r\n    \"acknowledgedBy\" TEXT,\r\n    \"acknowledgementReason\" TEXT,\r\n    \"acknowledgementIdempotencyKey\" TEXT,\r\n    \"correlationId\" TEXT,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL\r\n)"
+      },
+      {
+        "name": "AdminMaintenanceWindow",
+        "type": "table",
+        "sql": "CREATE TABLE \"AdminMaintenanceWindow\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"scope\" TEXT NOT NULL,\r\n    \"target\" TEXT NOT NULL,\r\n    \"status\" TEXT NOT NULL DEFAULT 'SCHEDULED',\r\n    \"scheduledAt\" DATETIME NOT NULL,\r\n    \"endsAt\" DATETIME NOT NULL,\r\n    \"reason\" TEXT NOT NULL,\r\n    \"environment\" TEXT NOT NULL,\r\n    \"createdBy\" TEXT NOT NULL,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"cancelledAt\" DATETIME,\r\n    \"cancelledBy\" TEXT,\r\n    \"cancelReason\" TEXT,\r\n    \"cancelIdempotencyKey\" TEXT,\r\n    \"idempotencyKey\" TEXT NOT NULL,\r\n    \"correlationId\" TEXT,\r\n    \"updatedAt\" DATETIME NOT NULL\r\n)"
+      },
+      {
+        "name": "AdminRoleAssignment",
+        "type": "table",
+        "sql": "CREATE TABLE \"AdminRoleAssignment\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"roleId\" TEXT NOT NULL,\r\n    \"assignedBy\" TEXT,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL,\r\n    CONSTRAINT \"AdminRoleAssignment_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\" (\"id\") ON DELETE CASCADE ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "Affiliate",
+        "type": "table",
+        "sql": "CREATE TABLE \"Affiliate\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"referralCode\" TEXT NOT NULL,\r\n    \"referredBy\" TEXT,\r\n    \"totalEarnings\" TEXT NOT NULL DEFAULT '0',\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL,\r\n    CONSTRAINT \"Affiliate_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "Announcement",
+        "type": "table",
+        "sql": "CREATE TABLE \"Announcement\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"title\" TEXT NOT NULL,\r\n    \"body\" TEXT NOT NULL,\r\n    \"targeting\" TEXT,\r\n    \"startsAt\" DATETIME,\r\n    \"endsAt\" DATETIME,\r\n    \"published\" BOOLEAN NOT NULL DEFAULT false,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL\r\n, \"localizations\" TEXT, \"pinned\" BOOLEAN NOT NULL DEFAULT false, \"pinOrder\" INTEGER NOT NULL DEFAULT 0)"
+      },
+      {
+        "name": "AuthSession",
+        "type": "table",
+        "sql": "CREATE TABLE \"AuthSession\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"surface\" TEXT NOT NULL,\r\n    \"tokenFamilyId\" TEXT NOT NULL,\r\n    \"refreshTokenHash\" TEXT NOT NULL,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"lastUsedAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"absoluteExpiresAt\" DATETIME NOT NULL,\r\n    \"idleExpiresAt\" DATETIME NOT NULL,\r\n    \"revokedAt\" DATETIME,\r\n    \"revokeReason\" TEXT,\r\n    \"replacedById\" TEXT,\r\n    \"userAgentHash\" TEXT,\r\n    \"ipHash\" TEXT,\r\n    CONSTRAINT \"AuthSession_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "BinaryOptionPosition",
+        "type": "table",
+        "sql": "CREATE TABLE \"BinaryOptionPosition\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"symbol\" TEXT NOT NULL,\r\n    \"pair\" TEXT,\r\n    \"side\" TEXT NOT NULL,\r\n    \"amount\" TEXT NOT NULL,\r\n    \"entryPrice\" TEXT NOT NULL,\r\n    \"timeframe\" INTEGER NOT NULL,\r\n    \"payoutRate\" TEXT,\r\n    \"profitRatio\" INTEGER,\r\n    \"lossRatio\" INTEGER,\r\n    \"targetPayout\" TEXT,\r\n    \"closePrice\" TEXT,\r\n    \"realizedProfit\" TEXT,\r\n    \"strikePrice\" TEXT,\r\n    \"payout\" TEXT,\r\n    \"duration\" INTEGER,\r\n    \"status\" TEXT NOT NULL DEFAULT 'OPEN',\r\n    \"expiresAt\" DATETIME NOT NULL,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL,\r\n    CONSTRAINT \"BinaryOptionPosition_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "BinaryOptionResult",
+        "type": "table",
+        "sql": "CREATE TABLE \"BinaryOptionResult\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"positionId\" TEXT NOT NULL,\r\n    \"closePrice\" TEXT NOT NULL,\r\n    \"profit\" TEXT NOT NULL,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    CONSTRAINT \"BinaryOptionResult_positionId_fkey\" FOREIGN KEY (\"positionId\") REFERENCES \"BinaryOptionPosition\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "BinaryPair",
+        "type": "table",
+        "sql": "CREATE TABLE \"BinaryPair\" (\r\n    \"id\" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,\r\n    \"symbol\" TEXT NOT NULL,\r\n    \"baseAsset\" TEXT NOT NULL,\r\n    \"quoteAsset\" TEXT NOT NULL,\r\n    \"rate\" TEXT NOT NULL DEFAULT '1.85',\r\n    \"category\" TEXT NOT NULL DEFAULT 'crypto',\r\n    \"logo\" TEXT,\r\n    \"isActive\" BOOLEAN NOT NULL DEFAULT true,\r\n    \"houseWinRatio\" INTEGER NOT NULL DEFAULT 50,\r\n    \"realId\" INTEGER,\r\n    \"matchId\" INTEGER,\r\n    \"currencyId\" INTEGER,\r\n    \"coinType\" INTEGER DEFAULT 0,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL\r\n)"
+      },
+      {
+        "name": "BinaryTimeframe",
+        "type": "table",
+        "sql": "CREATE TABLE \"BinaryTimeframe\" (\r\n    \"id\" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,\r\n    \"name\" TEXT NOT NULL,\r\n    \"seconds\" INTEGER NOT NULL,\r\n    \"payoutRate\" TEXT NOT NULL,\r\n    \"profitRatio\" INTEGER NOT NULL DEFAULT 85,\r\n    \"lossRatio\" INTEGER NOT NULL DEFAULT 0,\r\n    \"isActive\" BOOLEAN NOT NULL DEFAULT true\r\n)"
+      },
+      {
+        "name": "ContractPair",
+        "type": "table",
+        "sql": "CREATE TABLE \"ContractPair\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"symbol\" TEXT NOT NULL,\r\n    \"minLeverage\" INTEGER NOT NULL DEFAULT 1,\r\n    \"maxLeverage\" INTEGER NOT NULL DEFAULT 100,\r\n    \"makerFee\" TEXT NOT NULL DEFAULT '0.0004',\r\n    \"takerFee\" TEXT NOT NULL DEFAULT '0.0006',\r\n    \"minAmount\" TEXT NOT NULL DEFAULT '10',\r\n    \"isActive\" BOOLEAN NOT NULL DEFAULT true\r\n)"
+      },
+      {
+        "name": "ContractPosition",
+        "type": "table",
+        "sql": "CREATE TABLE \"ContractPosition\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"symbol\" TEXT NOT NULL,\r\n    \"side\" TEXT NOT NULL,\r\n    \"amount\" TEXT NOT NULL,\r\n    \"leverage\" INTEGER NOT NULL,\r\n    \"entryPrice\" TEXT NOT NULL,\r\n    \"currentPrice\" TEXT,\r\n    \"liquidationPrice\" TEXT NOT NULL,\r\n    \"tpPrice\" TEXT,\r\n    \"slPrice\" TEXT,\r\n    \"status\" TEXT NOT NULL,\r\n    \"pnl\" TEXT NOT NULL DEFAULT '0',\r\n    \"fee\" TEXT NOT NULL DEFAULT '0',\r\n    \"marginMode\" TEXT NOT NULL DEFAULT 'ISOLATED',\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL,\r\n    CONSTRAINT \"ContractPosition_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "ConversionTransaction",
+        "type": "table",
+        "sql": "CREATE TABLE \"ConversionTransaction\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"fromCoin\" TEXT NOT NULL,\r\n    \"toCoin\" TEXT NOT NULL,\r\n    \"amount\" TEXT NOT NULL,\r\n    \"rate\" TEXT NOT NULL,\r\n    \"received\" TEXT NOT NULL,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    CONSTRAINT \"ConversionTransaction_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "Currency",
+        "type": "table",
+        "sql": "CREATE TABLE \"Currency\" (\r\n    \"id\" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,\r\n    \"symbol\" TEXT NOT NULL,\r\n    \"name\" TEXT NOT NULL,\r\n    \"logo\" TEXT,\r\n    \"rate\" TEXT NOT NULL DEFAULT '1.0',\r\n    \"minDeposit\" TEXT NOT NULL DEFAULT '10.0',\r\n    \"maxDeposit\" TEXT NOT NULL DEFAULT '10000.0',\r\n    \"minWithdrawal\" TEXT NOT NULL DEFAULT '10.0',\r\n    \"maxWithdrawal\" TEXT NOT NULL DEFAULT '10000.0',\r\n    \"withdrawalFee\" TEXT NOT NULL DEFAULT '1.0',\r\n    \"depositEnabled\" BOOLEAN NOT NULL DEFAULT true,\r\n    \"withdrawEnabled\" BOOLEAN NOT NULL DEFAULT true,\r\n    \"confirmationCount\" INTEGER NOT NULL DEFAULT 3,\r\n    \"decimals\" INTEGER NOT NULL DEFAULT 18,\r\n    \"isActive\" BOOLEAN NOT NULL DEFAULT true,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL\r\n)"
+      },
+      {
+        "name": "DepositAddress",
+        "type": "table",
+        "sql": "CREATE TABLE \"DepositAddress\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"currencyId\" INTEGER NOT NULL,\r\n    \"network\" TEXT NOT NULL,\r\n    \"address\" TEXT NOT NULL,\r\n    \"label\" TEXT,\r\n    \"isActive\" BOOLEAN NOT NULL DEFAULT true,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL, \"walletNetworkId\" TEXT REFERENCES \"WalletNetwork\"(\"id\") ON DELETE RESTRICT ON UPDATE CASCADE,\r\n    CONSTRAINT \"DepositAddress_currencyId_fkey\" FOREIGN KEY (\"currencyId\") REFERENCES \"Currency\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "DepositClaim",
+        "type": "table",
+        "sql": "CREATE TABLE \"DepositClaim\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"asset\" TEXT NOT NULL,\r\n    \"network\" TEXT NOT NULL,\r\n    \"depositAddressId\" TEXT,\r\n    \"destinationAddressSnapshot\" TEXT NOT NULL,\r\n    \"claimedAmount\" TEXT NOT NULL,\r\n    \"proofObjectKey\" TEXT NOT NULL,\r\n    \"proofContentType\" TEXT,\r\n    \"proofByteSize\" INTEGER,\r\n    \"txHash\" TEXT,\r\n    \"state\" TEXT NOT NULL DEFAULT 'PENDING_REVIEW',\r\n    \"idempotencyKey\" TEXT NOT NULL,\r\n    \"submittedAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"reviewedAt\" DATETIME,\r\n    \"reviewedBy\" TEXT,\r\n    \"reviewReason\" TEXT,\r\n    \"creditedLedgerPostingId\" TEXT,\r\n    \"linkedObservedDepositId\" TEXT,\r\n    CONSTRAINT \"DepositClaim_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE,\r\n    CONSTRAINT \"DepositClaim_reviewedBy_fkey\" FOREIGN KEY (\"reviewedBy\") REFERENCES \"User\" (\"id\") ON DELETE SET NULL ON UPDATE CASCADE,\r\n    CONSTRAINT \"DepositClaim_depositAddressId_fkey\" FOREIGN KEY (\"depositAddressId\") REFERENCES \"DepositAddress\" (\"id\") ON DELETE SET NULL ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "EventInbox",
+        "type": "table",
+        "sql": "CREATE TABLE \"EventInbox\" (\n  \"messageId\" TEXT NOT NULL PRIMARY KEY,\n  \"queue\" TEXT NOT NULL,\n  \"attempts\" INTEGER NOT NULL,\n  \"eventType\" TEXT NOT NULL,\n  \"eventVersion\" INTEGER NOT NULL,\n  \"idempotencyKey\" TEXT NOT NULL,\n  \"correlationId\" TEXT NOT NULL,\n  \"payload\" TEXT NOT NULL,\n  \"state\" TEXT NOT NULL DEFAULT 'RECEIVED',\n  \"receivedAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  \"processedAt\" DATETIME,\n  \"lastErrorCode\" TEXT,\n  \"updatedAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP\n)"
+      },
+      {
+        "name": "EventOutbox",
+        "type": "table",
+        "sql": "CREATE TABLE \"EventOutbox\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"idempotencyKey\" TEXT NOT NULL,\r\n    \"aggregateType\" TEXT NOT NULL,\r\n    \"aggregateId\" TEXT NOT NULL,\r\n    \"eventType\" TEXT NOT NULL,\r\n    \"eventVersion\" INTEGER NOT NULL DEFAULT 1,\r\n    \"correlationId\" TEXT,\r\n    \"payload\" TEXT NOT NULL,\r\n    \"state\" TEXT NOT NULL DEFAULT 'PENDING',\r\n    \"availableAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"claimedAt\" DATETIME,\r\n    \"leaseToken\" TEXT,\r\n    \"attempts\" INTEGER NOT NULL DEFAULT 0,\r\n    \"lastErrorCode\" TEXT,\r\n    \"lastErrorAt\" DATETIME,\r\n    \"publishedAt\" DATETIME,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL\r\n)"
+      },
+      {
+        "name": "Gate2BinaryConfiguration",
+        "type": "table",
+        "sql": "CREATE TABLE \"Gate2BinaryConfiguration\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"pair\" TEXT NOT NULL,\r\n    \"durationSeconds\" INTEGER NOT NULL,\r\n    \"payoutRate\" TEXT NOT NULL,\r\n    \"lossRate\" TEXT NOT NULL DEFAULT '0',\r\n    \"minStake\" TEXT NOT NULL,\r\n    \"maxStake\" TEXT NOT NULL,\r\n    \"settlementDelaySeconds\" INTEGER NOT NULL DEFAULT 0,\r\n    \"version\" INTEGER NOT NULL DEFAULT 1,\r\n    \"enabled\" BOOLEAN NOT NULL DEFAULT true,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL\r\n)"
+      },
+      {
+        "name": "Gate2BinaryPosition",
+        "type": "table",
+        "sql": "CREATE TABLE \"Gate2BinaryPosition\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"pair\" TEXT NOT NULL,\r\n    \"side\" TEXT NOT NULL,\r\n    \"stake\" TEXT NOT NULL,\r\n    \"entryPrice\" TEXT NOT NULL,\r\n    \"expiryPrice\" TEXT,\r\n    \"payoutAmount\" TEXT NOT NULL DEFAULT '0',\r\n    \"realizedProfit\" TEXT NOT NULL DEFAULT '0',\r\n    \"durationSeconds\" INTEGER NOT NULL,\r\n    \"expiresAt\" DATETIME NOT NULL,\r\n    \"state\" TEXT NOT NULL DEFAULT 'ACTIVE',\r\n    \"entryQuoteId\" TEXT NOT NULL,\r\n    \"entryProvider\" TEXT NOT NULL,\r\n    \"entrySource\" TEXT NOT NULL,\r\n    \"entryObservedAt\" DATETIME NOT NULL,\r\n    \"entryReceivedAt\" DATETIME NOT NULL,\r\n    \"entrySequence\" TEXT NOT NULL,\r\n    \"expiryQuoteId\" TEXT,\r\n    \"expiryProvider\" TEXT,\r\n    \"expirySource\" TEXT,\r\n    \"expiryObservedAt\" DATETIME,\r\n    \"expiryReceivedAt\" DATETIME,\r\n    \"expirySequence\" TEXT,\r\n    \"quoteFreshnessMs\" INTEGER NOT NULL,\r\n    \"configurationVersion\" INTEGER NOT NULL,\r\n    \"settlementReceiptId\" TEXT,\r\n    \"idempotencyKey\" TEXT NOT NULL,\r\n    \"correlationId\" TEXT NOT NULL,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL,\r\n    CONSTRAINT \"Gate2BinaryPosition_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "Gate2ConversionQuote",
+        "type": "table",
+        "sql": "CREATE TABLE \"Gate2ConversionQuote\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"fromAsset\" TEXT NOT NULL,\r\n    \"toAsset\" TEXT NOT NULL,\r\n    \"inputAmount\" TEXT NOT NULL,\r\n    \"rate\" TEXT NOT NULL,\r\n    \"outputAmount\" TEXT NOT NULL,\r\n    \"provider\" TEXT NOT NULL,\r\n    \"source\" TEXT NOT NULL,\r\n    \"evidenceId\" TEXT NOT NULL,\r\n    \"configurationVersion\" INTEGER NOT NULL,\r\n    \"expiresAt\" DATETIME NOT NULL,\r\n    \"state\" TEXT NOT NULL DEFAULT 'OPEN',\r\n    \"quoteKey\" TEXT NOT NULL,\r\n    \"acceptanceKey\" TEXT,\r\n    \"conversionRef\" TEXT,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL,\r\n    CONSTRAINT \"Gate2ConversionQuote_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "Gate2Deposit",
+        "type": "table",
+        "sql": "CREATE TABLE \"Gate2Deposit\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"asset\" TEXT NOT NULL,\r\n    \"network\" TEXT NOT NULL,\r\n    \"address\" TEXT NOT NULL,\r\n    \"txHash\" TEXT NOT NULL,\r\n    \"amount\" TEXT NOT NULL,\r\n    \"confirmations\" INTEGER NOT NULL DEFAULT 0,\r\n    \"requiredConfirmations\" INTEGER NOT NULL,\r\n    \"state\" TEXT NOT NULL DEFAULT 'OBSERVED',\r\n    \"observationKey\" TEXT NOT NULL,\r\n    \"creditPostingId\" TEXT,\r\n    \"observedAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"creditedAt\" DATETIME,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL,\r\n    CONSTRAINT \"Gate2Deposit_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "Gate2InternalTransfer",
+        "type": "table",
+        "sql": "CREATE TABLE \"Gate2InternalTransfer\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"fromUserId\" TEXT NOT NULL,\r\n    \"toUserId\" TEXT NOT NULL,\r\n    \"asset\" TEXT NOT NULL,\r\n    \"amount\" TEXT NOT NULL,\r\n    \"idempotencyKey\" TEXT NOT NULL,\r\n    \"debitPostingId\" TEXT NOT NULL,\r\n    \"creditPostingId\" TEXT NOT NULL,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    CONSTRAINT \"Gate2InternalTransfer_fromUserId_fkey\" FOREIGN KEY (\"fromUserId\") REFERENCES \"User\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE,\r\n    CONSTRAINT \"Gate2InternalTransfer_toUserId_fkey\" FOREIGN KEY (\"toUserId\") REFERENCES \"User\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "Gate2OperationAudit",
+        "type": "table",
+        "sql": "CREATE TABLE \"Gate2OperationAudit\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"operationType\" TEXT NOT NULL,\r\n    \"operationId\" TEXT NOT NULL,\r\n    \"eventType\" TEXT NOT NULL,\r\n    \"idempotencyKey\" TEXT NOT NULL,\r\n    \"details\" TEXT,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    CONSTRAINT \"Gate2OperationAudit_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "Gate2SpotOrder",
+        "type": "table",
+        "sql": "CREATE TABLE \"Gate2SpotOrder\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"pair\" TEXT NOT NULL,\r\n    \"baseAsset\" TEXT NOT NULL,\r\n    \"quoteAsset\" TEXT NOT NULL,\r\n    \"side\" TEXT NOT NULL,\r\n    \"type\" TEXT NOT NULL,\r\n    \"status\" TEXT NOT NULL DEFAULT 'OPEN',\r\n    \"amount\" TEXT NOT NULL,\r\n    \"filled\" TEXT NOT NULL DEFAULT '0',\r\n    \"remaining\" TEXT NOT NULL,\r\n    \"price\" TEXT,\r\n    \"stopPrice\" TEXT,\r\n    \"triggeredAt\" DATETIME,\r\n    \"triggerQuoteId\" TEXT,\r\n    \"triggerProvider\" TEXT,\r\n    \"triggerSource\" TEXT,\r\n    \"triggerObservedAt\" DATETIME,\r\n    \"triggerSequence\" TEXT,\r\n    \"reserveAsset\" TEXT NOT NULL,\r\n    \"reserveScope\" TEXT NOT NULL DEFAULT 'MAIN',\r\n    \"reservedAmount\" TEXT NOT NULL,\r\n    \"feeRate\" TEXT NOT NULL DEFAULT '0',\r\n    \"idempotencyKey\" TEXT NOT NULL,\r\n    \"correlationId\" TEXT NOT NULL,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL,\r\n    CONSTRAINT \"Gate2SpotOrder_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "Gate2SpotTrade",
+        "type": "table",
+        "sql": "CREATE TABLE \"Gate2SpotTrade\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"buyerOrderId\" TEXT NOT NULL,\r\n    \"sellerOrderId\" TEXT NOT NULL,\r\n    \"pair\" TEXT NOT NULL,\r\n    \"baseAsset\" TEXT NOT NULL,\r\n    \"quoteAsset\" TEXT NOT NULL,\r\n    \"price\" TEXT NOT NULL,\r\n    \"amount\" TEXT NOT NULL,\r\n    \"buyerFee\" TEXT NOT NULL DEFAULT '0',\r\n    \"sellerFee\" TEXT NOT NULL DEFAULT '0',\r\n    \"idempotencyKey\" TEXT NOT NULL,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    CONSTRAINT \"Gate2SpotTrade_buyerOrderId_fkey\" FOREIGN KEY (\"buyerOrderId\") REFERENCES \"Gate2SpotOrder\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE,\r\n    CONSTRAINT \"Gate2SpotTrade_sellerOrderId_fkey\" FOREIGN KEY (\"sellerOrderId\") REFERENCES \"Gate2SpotOrder\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "Gate2Withdrawal",
+        "type": "table",
+        "sql": "CREATE TABLE \"Gate2Withdrawal\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"asset\" TEXT NOT NULL,\r\n    \"network\" TEXT NOT NULL,\r\n    \"address\" TEXT NOT NULL,\r\n    \"amount\" TEXT NOT NULL,\r\n    \"fee\" TEXT NOT NULL,\r\n    \"reservedAmount\" TEXT NOT NULL,\r\n    \"state\" TEXT NOT NULL DEFAULT 'PENDING_REVIEW',\r\n    \"requestKey\" TEXT NOT NULL,\r\n    \"reserveKey\" TEXT NOT NULL,\r\n    \"reviewReason\" TEXT,\r\n    \"txHash\" TEXT,\r\n    \"providerState\" TEXT,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL,\r\n    CONSTRAINT \"Gate2Withdrawal_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "KYC",
+        "type": "table",
+        "sql": "CREATE TABLE \"KYC\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"firstName\" TEXT NOT NULL,\r\n    \"lastName\" TEXT NOT NULL,\r\n    \"dob\" DATETIME NOT NULL,\r\n    \"country\" TEXT NOT NULL,\r\n    \"documentType\" TEXT NOT NULL,\r\n    \"documentUrl\" TEXT NOT NULL,\r\n    \"status\" TEXT NOT NULL DEFAULT 'PENDING',\r\n    \"idFront\" TEXT,\r\n    \"idBack\" TEXT,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    CONSTRAINT \"KYC_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "LearnArticleRevision",
+        "type": "table",
+        "sql": "CREATE TABLE \"LearnArticleRevision\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"articleId\" TEXT NOT NULL,\r\n    \"revision\" INTEGER NOT NULL,\r\n    \"title\" TEXT NOT NULL,\r\n    \"body\" TEXT NOT NULL,\r\n    \"summary\" TEXT,\r\n    \"status\" TEXT NOT NULL DEFAULT 'DRAFT',\r\n    \"attachments\" TEXT,\r\n    \"scheduledAt\" DATETIME,\r\n    \"publishedAt\" DATETIME,\r\n    \"archivedAt\" DATETIME,\r\n    \"createdBy\" TEXT,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, \"localizations\" TEXT,\r\n    CONSTRAINT \"LearnArticleRevision_articleId_fkey\" FOREIGN KEY (\"articleId\") REFERENCES \"LearnContent\" (\"id\") ON DELETE CASCADE ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "LearnArticleTag",
+        "type": "table",
+        "sql": "CREATE TABLE \"LearnArticleTag\" (\r\n    \"articleId\" TEXT NOT NULL,\r\n    \"tagId\" TEXT NOT NULL,\r\n\r\n    PRIMARY KEY (\"articleId\", \"tagId\"),\r\n    CONSTRAINT \"LearnArticleTag_articleId_fkey\" FOREIGN KEY (\"articleId\") REFERENCES \"LearnContent\" (\"id\") ON DELETE CASCADE ON UPDATE CASCADE,\r\n    CONSTRAINT \"LearnArticleTag_tagId_fkey\" FOREIGN KEY (\"tagId\") REFERENCES \"LearnTag\" (\"id\") ON DELETE CASCADE ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "LearnCategory",
+        "type": "table",
+        "sql": "CREATE TABLE \"LearnCategory\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"slug\" TEXT NOT NULL,\r\n    \"name\" TEXT NOT NULL,\r\n    \"description\" TEXT,\r\n    \"sortOrder\" INTEGER NOT NULL DEFAULT 0,\r\n    \"status\" TEXT NOT NULL DEFAULT 'ACTIVE',\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL\r\n)"
+      },
+      {
+        "name": "LearnContent",
+        "type": "table",
+        "sql": "CREATE TABLE \"LearnContent\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"slug\" TEXT NOT NULL,\r\n    \"title\" TEXT NOT NULL,\r\n    \"body\" TEXT NOT NULL,\r\n    \"summary\" TEXT,\r\n    \"status\" TEXT NOT NULL DEFAULT 'DRAFT',\r\n    \"attachments\" TEXT,\r\n    \"categoryId\" TEXT,\r\n    \"scheduledAt\" DATETIME,\r\n    \"publishedAt\" DATETIME,\r\n    \"archivedAt\" DATETIME,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL, \"localizations\" TEXT,\r\n    CONSTRAINT \"LearnContent_categoryId_fkey\" FOREIGN KEY (\"categoryId\") REFERENCES \"LearnCategory\" (\"id\") ON DELETE SET NULL ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "LearnMediaAsset",
+        "type": "table",
+        "sql": "CREATE TABLE \"LearnMediaAsset\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"articleId\" TEXT,\r\n    \"revisionId\" TEXT,\r\n    \"url\" TEXT NOT NULL,\r\n    \"altText\" TEXT,\r\n    \"provider\" TEXT,\r\n    \"metadata\" TEXT,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    CONSTRAINT \"LearnMediaAsset_articleId_fkey\" FOREIGN KEY (\"articleId\") REFERENCES \"LearnContent\" (\"id\") ON DELETE CASCADE ON UPDATE CASCADE,\r\n    CONSTRAINT \"LearnMediaAsset_revisionId_fkey\" FOREIGN KEY (\"revisionId\") REFERENCES \"LearnArticleRevision\" (\"id\") ON DELETE CASCADE ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "LearnTag",
+        "type": "table",
+        "sql": "CREATE TABLE \"LearnTag\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"slug\" TEXT NOT NULL,\r\n    \"name\" TEXT NOT NULL,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL\r\n)"
+      },
+      {
+        "name": "Ledger",
+        "type": "table",
+        "sql": "CREATE TABLE \"Ledger\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"walletId\" TEXT NOT NULL,\r\n    \"type\" TEXT NOT NULL,\r\n    \"amount\" TEXT NOT NULL,\r\n    \"currency\" TEXT NOT NULL,\r\n    \"referenceId\" TEXT,\r\n    \"transactionType\" TEXT NOT NULL DEFAULT 'DEPOSIT',\r\n    \"status\" TEXT NOT NULL DEFAULT 'CONFIRMED',\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    CONSTRAINT \"Ledger_walletId_fkey\" FOREIGN KEY (\"walletId\") REFERENCES \"Wallet\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "LedgerAccount",
+        "type": "table",
+        "sql": "CREATE TABLE \"LedgerAccount\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"asset\" TEXT NOT NULL,\r\n    \"scope\" TEXT NOT NULL DEFAULT 'MAIN',\r\n    \"status\" TEXT NOT NULL DEFAULT 'ACTIVE',\r\n    \"available\" TEXT NOT NULL DEFAULT '0',\r\n    \"locked\" TEXT NOT NULL DEFAULT '0',\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL,\r\n    CONSTRAINT \"LedgerAccount_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "LedgerAuditEvent",
+        "type": "table",
+        "sql": "CREATE TABLE \"LedgerAuditEvent\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"accountId\" TEXT NOT NULL,\r\n    \"postingId\" TEXT,\r\n    \"eventType\" TEXT NOT NULL,\r\n    \"idempotencyKey\" TEXT NOT NULL,\r\n    \"correlationId\" TEXT NOT NULL,\r\n    \"details\" TEXT,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    CONSTRAINT \"LedgerAuditEvent_accountId_fkey\" FOREIGN KEY (\"accountId\") REFERENCES \"LedgerAccount\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE,\r\n    CONSTRAINT \"LedgerAuditEvent_postingId_fkey\" FOREIGN KEY (\"postingId\") REFERENCES \"LedgerPosting\" (\"id\") ON DELETE SET NULL ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "LedgerIdempotency",
+        "type": "table",
+        "sql": "CREATE TABLE \"LedgerIdempotency\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"idempotencyKey\" TEXT NOT NULL,\r\n    \"operation\" TEXT NOT NULL,\r\n    \"accountId\" TEXT,\r\n    \"debitPostingId\" TEXT,\r\n    \"creditPostingId\" TEXT,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL\r\n)"
+      },
+      {
+        "name": "LedgerPosting",
+        "type": "table",
+        "sql": "CREATE TABLE \"LedgerPosting\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"accountId\" TEXT NOT NULL,\r\n    \"asset\" TEXT NOT NULL,\r\n    \"kind\" TEXT NOT NULL,\r\n    \"amount\" TEXT NOT NULL,\r\n    \"availableDelta\" TEXT NOT NULL,\r\n    \"lockedDelta\" TEXT NOT NULL,\r\n    \"referenceType\" TEXT NOT NULL,\r\n    \"referenceId\" TEXT NOT NULL,\r\n    \"idempotencyKey\" TEXT NOT NULL,\r\n    \"correlationId\" TEXT NOT NULL,\r\n    \"economicGroup\" TEXT,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"metadata\" TEXT,\r\n    CONSTRAINT \"LedgerPosting_accountId_fkey\" FOREIGN KEY (\"accountId\") REFERENCES \"LedgerAccount\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "LoanApplication",
+        "type": "table",
+        "sql": "CREATE TABLE \"LoanApplication\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"amount\" TEXT NOT NULL,\r\n    \"amountDecimal\" TEXT NOT NULL DEFAULT '0',\r\n    \"currency\" TEXT NOT NULL DEFAULT 'USDT',\r\n    \"term\" INTEGER NOT NULL,\r\n    \"durationDays\" INTEGER NOT NULL DEFAULT 30,\r\n    \"interestRate\" TEXT NOT NULL DEFAULT '0.1',\r\n    \"interestRateDecimal\" TEXT NOT NULL DEFAULT '0.1',\r\n    \"totalRepayment\" TEXT NOT NULL DEFAULT '0',\r\n    \"totalRepaymentDecimal\" TEXT NOT NULL DEFAULT '0',\r\n    \"collateral\" TEXT,\r\n    \"collateralImg\" TEXT,\r\n    \"status\" TEXT NOT NULL DEFAULT 'PENDING',\r\n    \"approvedAt\" DATETIME,\r\n    \"dueDate\" DATETIME,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"productSnapshot\" TEXT,\r\n    CONSTRAINT \"LoanApplication_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "LoanPlan",
+        "type": "table",
+        "sql": "CREATE TABLE \"LoanPlan\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"name\" TEXT NOT NULL,\r\n    \"durationDays\" INTEGER NOT NULL,\r\n    \"interestRate\" TEXT NOT NULL,\r\n    \"minAmount\" TEXT NOT NULL,\r\n    \"maxAmount\" TEXT NOT NULL,\r\n    \"isActive\" BOOLEAN NOT NULL DEFAULT true,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL\r\n)"
+      },
+      {
+        "name": "LoanRepayment",
+        "type": "table",
+        "sql": "CREATE TABLE \"LoanRepayment\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"loanId\" TEXT NOT NULL,\r\n    \"amount\" TEXT NOT NULL,\r\n    \"amountDecimal\" TEXT NOT NULL DEFAULT '0',\r\n    \"currency\" TEXT NOT NULL,\r\n    \"paidAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"ledgerPostingId\" TEXT,\r\n    \"activityId\" TEXT,\r\n    CONSTRAINT \"LoanRepayment_loanId_fkey\" FOREIGN KEY (\"loanId\") REFERENCES \"LoanApplication\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE,\r\n    CONSTRAINT \"LoanRepayment_ledgerPostingId_fkey\" FOREIGN KEY (\"ledgerPostingId\") REFERENCES \"LedgerPosting\" (\"id\") ON DELETE SET NULL ON UPDATE CASCADE,\r\n    CONSTRAINT \"LoanRepayment_activityId_fkey\" FOREIGN KEY (\"activityId\") REFERENCES \"Activity\" (\"id\") ON DELETE SET NULL ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "MarketAsset",
+        "type": "table",
+        "sql": "CREATE TABLE \"MarketAsset\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"symbol\" TEXT NOT NULL,\r\n    \"displayName\" TEXT NOT NULL,\r\n    \"category\" TEXT NOT NULL DEFAULT 'crypto',\r\n    \"providerSymbol\" TEXT,\r\n    \"status\" TEXT NOT NULL DEFAULT 'ACTIVE',\r\n    \"maintenanceNote\" TEXT,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL\r\n)"
+      },
+      {
+        "name": "MarketAssetCapability",
+        "type": "table",
+        "sql": "CREATE TABLE \"MarketAssetCapability\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"assetId\" TEXT NOT NULL,\r\n    \"networkId\" TEXT,\r\n    \"capabilityKey\" TEXT NOT NULL,\r\n    \"depositEnabled\" BOOLEAN NOT NULL DEFAULT false,\r\n    \"withdrawEnabled\" BOOLEAN NOT NULL DEFAULT false,\r\n    \"tradingEnabled\" BOOLEAN NOT NULL DEFAULT false,\r\n    \"status\" TEXT NOT NULL DEFAULT 'ACTIVE',\r\n    \"maintenanceNote\" TEXT,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL,\r\n    CONSTRAINT \"MarketAssetCapability_assetId_fkey\" FOREIGN KEY (\"assetId\") REFERENCES \"MarketAsset\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE,\r\n    CONSTRAINT \"MarketAssetCapability_networkId_fkey\" FOREIGN KEY (\"networkId\") REFERENCES \"MarketNetwork\" (\"id\") ON DELETE SET NULL ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "MarketData",
+        "type": "table",
+        "sql": "CREATE TABLE \"MarketData\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"symbol\" TEXT NOT NULL,\r\n    \"price\" TEXT NOT NULL,\r\n    \"change\" TEXT NOT NULL,\r\n    \"vol\" TEXT NOT NULL,\r\n    \"high\" TEXT NOT NULL,\r\n    \"low\" TEXT NOT NULL,\r\n    \"rawData\" TEXT,\r\n    \"updatedAt\" DATETIME NOT NULL\r\n)"
+      },
+      {
+        "name": "MarketDepthLevel",
+        "type": "table",
+        "sql": "CREATE TABLE \"MarketDepthLevel\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"snapshotId\" TEXT NOT NULL,\r\n    \"side\" TEXT NOT NULL,\r\n    \"levelIndex\" INTEGER NOT NULL,\r\n    \"price\" TEXT NOT NULL,\r\n    \"quantity\" TEXT NOT NULL,\r\n    CONSTRAINT \"MarketDepthLevel_snapshotId_fkey\" FOREIGN KEY (\"snapshotId\") REFERENCES \"MarketDepthSnapshot\" (\"id\") ON DELETE CASCADE ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "MarketDepthSnapshot",
+        "type": "table",
+        "sql": "CREATE TABLE \"MarketDepthSnapshot\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"pairId\" TEXT NOT NULL,\r\n    \"symbol\" TEXT NOT NULL,\r\n    \"provider\" TEXT NOT NULL,\r\n    \"source\" TEXT NOT NULL,\r\n    \"providerSnapshotId\" TEXT,\r\n    \"sequence\" TEXT,\r\n    \"checksum\" TEXT,\r\n    \"observedAt\" DATETIME NOT NULL,\r\n    \"receivedAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"rawData\" TEXT,\r\n    CONSTRAINT \"MarketDepthSnapshot_pairId_fkey\" FOREIGN KEY (\"pairId\") REFERENCES \"MarketPair\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "MarketKline",
+        "type": "table",
+        "sql": "CREATE TABLE \"MarketKline\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"pairId\" TEXT NOT NULL,\r\n    \"symbol\" TEXT NOT NULL,\r\n    \"interval\" TEXT NOT NULL,\r\n    \"openTime\" DATETIME NOT NULL,\r\n    \"closeTime\" DATETIME,\r\n    \"open\" TEXT NOT NULL,\r\n    \"high\" TEXT NOT NULL,\r\n    \"low\" TEXT NOT NULL,\r\n    \"close\" TEXT NOT NULL,\r\n    \"volume\" TEXT,\r\n    \"provider\" TEXT NOT NULL,\r\n    \"source\" TEXT NOT NULL,\r\n    \"observedAt\" DATETIME NOT NULL,\r\n    \"receivedAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    CONSTRAINT \"MarketKline_pairId_fkey\" FOREIGN KEY (\"pairId\") REFERENCES \"MarketPair\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "MarketNetwork",
+        "type": "table",
+        "sql": "CREATE TABLE \"MarketNetwork\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"assetId\" TEXT NOT NULL,\r\n    \"code\" TEXT NOT NULL,\r\n    \"name\" TEXT NOT NULL,\r\n    \"status\" TEXT NOT NULL DEFAULT 'ACTIVE',\r\n    \"maintenanceNote\" TEXT,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL,\r\n    CONSTRAINT \"MarketNetwork_assetId_fkey\" FOREIGN KEY (\"assetId\") REFERENCES \"MarketAsset\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "MarketPair",
+        "type": "table",
+        "sql": "CREATE TABLE \"MarketPair\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"symbol\" TEXT NOT NULL,\r\n    \"baseAssetId\" TEXT NOT NULL,\r\n    \"quoteAssetId\" TEXT NOT NULL,\r\n    \"category\" TEXT NOT NULL DEFAULT 'crypto',\r\n    \"status\" TEXT NOT NULL DEFAULT 'ACTIVE',\r\n    \"maintenanceNote\" TEXT,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL,\r\n    CONSTRAINT \"MarketPair_baseAssetId_fkey\" FOREIGN KEY (\"baseAssetId\") REFERENCES \"MarketAsset\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE,\r\n    CONSTRAINT \"MarketPair_quoteAssetId_fkey\" FOREIGN KEY (\"quoteAssetId\") REFERENCES \"MarketAsset\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "MarketProviderConfig",
+        "type": "table",
+        "sql": "CREATE TABLE \"MarketProviderConfig\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"key\" TEXT NOT NULL,\r\n    \"displayName\" TEXT NOT NULL,\r\n    \"status\" TEXT NOT NULL DEFAULT 'ACTIVE',\r\n    \"priority\" INTEGER NOT NULL DEFAULT 100,\r\n    \"restBaseUrl\" TEXT,\r\n    \"websocketBaseUrl\" TEXT,\r\n    \"supportsQuotes\" BOOLEAN NOT NULL DEFAULT true,\r\n    \"supportsKlines\" BOOLEAN NOT NULL DEFAULT true,\r\n    \"supportsTrades\" BOOLEAN NOT NULL DEFAULT false,\r\n    \"supportsDepth\" BOOLEAN NOT NULL DEFAULT false,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL\r\n)"
+      },
+      {
+        "name": "MarketProviderSymbol",
+        "type": "table",
+        "sql": "CREATE TABLE \"MarketProviderSymbol\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"providerId\" TEXT NOT NULL,\r\n    \"pairId\" TEXT NOT NULL,\r\n    \"providerSymbol\" TEXT NOT NULL,\r\n    \"enabled\" BOOLEAN NOT NULL DEFAULT true,\r\n    \"priority\" INTEGER NOT NULL DEFAULT 100,\r\n    \"capabilityPolicy\" TEXT,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL,\r\n    CONSTRAINT \"MarketProviderSymbol_providerId_fkey\" FOREIGN KEY (\"providerId\") REFERENCES \"MarketProviderConfig\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE,\r\n    CONSTRAINT \"MarketProviderSymbol_pairId_fkey\" FOREIGN KEY (\"pairId\") REFERENCES \"MarketPair\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "MarketQuoteLatest",
+        "type": "table",
+        "sql": "CREATE TABLE \"MarketQuoteLatest\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"pairId\" TEXT NOT NULL,\r\n    \"symbol\" TEXT NOT NULL,\r\n    \"provider\" TEXT NOT NULL,\r\n    \"source\" TEXT NOT NULL,\r\n    \"sequence\" TEXT NOT NULL,\r\n    \"price\" TEXT,\r\n    \"change24h\" TEXT,\r\n    \"volume24h\" TEXT,\r\n    \"high24h\" TEXT,\r\n    \"low24h\" TEXT,\r\n    \"state\" TEXT NOT NULL DEFAULT 'UNAVAILABLE',\r\n    \"observedAt\" DATETIME,\r\n    \"receivedAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, \"bid\" TEXT, \"ask\" TEXT, \"spread\" TEXT,\r\n    CONSTRAINT \"MarketQuoteLatest_pairId_fkey\" FOREIGN KEY (\"pairId\") REFERENCES \"MarketPair\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "MarketQuoteSnapshot",
+        "type": "table",
+        "sql": "CREATE TABLE \"MarketQuoteSnapshot\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"pairId\" TEXT NOT NULL,\r\n    \"symbol\" TEXT NOT NULL,\r\n    \"provider\" TEXT NOT NULL,\r\n    \"source\" TEXT NOT NULL,\r\n    \"sequence\" TEXT NOT NULL,\r\n    \"price\" TEXT NOT NULL,\r\n    \"change24h\" TEXT,\r\n    \"volume24h\" TEXT,\r\n    \"high24h\" TEXT,\r\n    \"low24h\" TEXT,\r\n    \"observedAt\" DATETIME NOT NULL,\r\n    \"receivedAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"rawData\" TEXT, \"bid\" TEXT, \"ask\" TEXT, \"spread\" TEXT,\r\n    CONSTRAINT \"MarketQuoteSnapshot_pairId_fkey\" FOREIGN KEY (\"pairId\") REFERENCES \"MarketPair\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "MarketTrade",
+        "type": "table",
+        "sql": "CREATE TABLE \"MarketTrade\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"pairId\" TEXT NOT NULL,\r\n    \"symbol\" TEXT NOT NULL,\r\n    \"provider\" TEXT NOT NULL,\r\n    \"source\" TEXT NOT NULL,\r\n    \"providerTradeId\" TEXT,\r\n    \"sequence\" TEXT,\r\n    \"side\" TEXT NOT NULL DEFAULT 'UNKNOWN',\r\n    \"price\" TEXT NOT NULL,\r\n    \"quantity\" TEXT NOT NULL,\r\n    \"observedAt\" DATETIME NOT NULL,\r\n    \"receivedAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"rawData\" TEXT,\r\n    CONSTRAINT \"MarketTrade_pairId_fkey\" FOREIGN KEY (\"pairId\") REFERENCES \"MarketPair\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "MessageConversation",
+        "type": "table",
+        "sql": "CREATE TABLE \"MessageConversation\" (\n  \"id\" TEXT NOT NULL PRIMARY KEY,\n  \"participantAId\" TEXT NOT NULL,\n  \"participantBId\" TEXT NOT NULL,\n  \"state\" TEXT NOT NULL DEFAULT 'ACTIVE',\n  \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  \"updatedAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP\n)"
+      },
+      {
+        "name": "MessageModerationCase",
+        "type": "table",
+        "sql": "CREATE TABLE \"MessageModerationCase\" (\n  \"id\" TEXT NOT NULL PRIMARY KEY,\n  \"conversationId\" TEXT NOT NULL,\n  \"messageId\" TEXT,\n  \"reporterId\" TEXT NOT NULL,\n  \"reportedUserId\" TEXT,\n  \"reason\" TEXT NOT NULL,\n  \"status\" TEXT NOT NULL DEFAULT 'OPEN',\n  \"resolution\" TEXT,\n  \"reviewedById\" TEXT,\n  \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  \"updatedAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  CONSTRAINT \"MessageModerationCase_conversationId_fkey\"\n    FOREIGN KEY (\"conversationId\") REFERENCES \"MessageConversation\"(\"id\")\n    ON DELETE CASCADE ON UPDATE CASCADE\n)"
+      },
+      {
+        "name": "MiningPlan",
+        "type": "table",
+        "sql": "CREATE TABLE \"MiningPlan\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"name\" TEXT NOT NULL,\r\n    \"currency\" TEXT NOT NULL DEFAULT 'USDT',\r\n    \"lockupPeriod\" INTEGER NOT NULL,\r\n    \"dailyYield\" TEXT NOT NULL,\r\n    \"dailyYieldDecimal\" TEXT NOT NULL DEFAULT '0',\r\n    \"minDeposit\" TEXT NOT NULL,\r\n    \"minDepositDecimal\" TEXT NOT NULL DEFAULT '0',\r\n    \"maxDeposit\" TEXT NOT NULL,\r\n    \"maxDepositDecimal\" TEXT NOT NULL DEFAULT '0',\r\n    \"isActive\" BOOLEAN NOT NULL DEFAULT true,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL\r\n)"
+      },
+      {
+        "name": "MiningRewardAccrual",
+        "type": "table",
+        "sql": "CREATE TABLE \"MiningRewardAccrual\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"subscriptionId\" TEXT NOT NULL,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"ledgerPostingId\" TEXT NOT NULL,\r\n    \"activityId\" TEXT NOT NULL,\r\n    \"idempotencyKey\" TEXT NOT NULL,\r\n    \"amount\" TEXT NOT NULL,\r\n    \"currency\" TEXT NOT NULL,\r\n    \"rewardedAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    CONSTRAINT \"MiningRewardAccrual_subscriptionId_fkey\" FOREIGN KEY (\"subscriptionId\") REFERENCES \"MiningSubscription\" (\"id\") ON DELETE CASCADE ON UPDATE CASCADE,\r\n    CONSTRAINT \"MiningRewardAccrual_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE,\r\n    CONSTRAINT \"MiningRewardAccrual_ledgerPostingId_fkey\" FOREIGN KEY (\"ledgerPostingId\") REFERENCES \"LedgerPosting\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE,\r\n    CONSTRAINT \"MiningRewardAccrual_activityId_fkey\" FOREIGN KEY (\"activityId\") REFERENCES \"Activity\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "MiningSubscription",
+        "type": "table",
+        "sql": "CREATE TABLE \"MiningSubscription\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"planId\" TEXT NOT NULL,\r\n    \"amount\" TEXT NOT NULL,\r\n    \"amountDecimal\" TEXT NOT NULL DEFAULT '0',\r\n    \"status\" TEXT NOT NULL DEFAULT 'ACTIVE',\r\n    \"startDate\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"endDate\" DATETIME,\r\n    \"totalRewards\" TEXT NOT NULL DEFAULT '0',\r\n    \"totalRewardsDecimal\" TEXT NOT NULL DEFAULT '0',\r\n    \"lastRewardPaid\" DATETIME,\r\n    \"planSnapshot\" TEXT,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    CONSTRAINT \"MiningSubscription_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE,\r\n    CONSTRAINT \"MiningSubscription_planId_fkey\" FOREIGN KEY (\"planId\") REFERENCES \"MiningPlan\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "Notification",
+        "type": "table",
+        "sql": "CREATE TABLE \"Notification\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"type\" TEXT NOT NULL,\r\n    \"title\" TEXT NOT NULL,\r\n    \"body\" TEXT NOT NULL,\r\n    \"readAt\" DATETIME,\r\n    \"metadata\" TEXT,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP\r\n)"
+      },
+      {
+        "name": "OptionGameSettings",
+        "type": "table",
+        "sql": "CREATE TABLE \"OptionGameSettings\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"currencyId\" INTEGER NOT NULL,\r\n    \"matchId\" INTEGER NOT NULL,\r\n    \"status\" INTEGER NOT NULL,\r\n    \"symbol\" TEXT,\r\n    \"payoutRate\" TEXT,\r\n    \"duration\" INTEGER,\r\n    \"rawData\" TEXT,\r\n    \"dummy\" TEXT,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL\r\n)"
+      },
+      {
+        "name": "PersistentMessage",
+        "type": "table",
+        "sql": "CREATE TABLE \"PersistentMessage\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"senderId\" TEXT NOT NULL,\r\n    \"recipientId\" TEXT NOT NULL,\r\n    \"body\" TEXT NOT NULL,\r\n    \"deliveryState\" TEXT NOT NULL DEFAULT 'SENT',\r\n    \"sequence\" INTEGER NOT NULL DEFAULT 0,\r\n    \"readAt\" DATETIME,\r\n    \"attachments\" TEXT,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP\r\n, \"conversationId\" TEXT)"
+      },
+      {
+        "name": "ReferralAttributionEvent",
+        "type": "table",
+        "sql": "CREATE TABLE \"ReferralAttributionEvent\" (\n  \"id\" TEXT NOT NULL PRIMARY KEY,\n  \"referrerUserId\" TEXT NOT NULL,\n  \"referredUserId\" TEXT NOT NULL UNIQUE,\n  \"referralCode\" TEXT NOT NULL,\n  \"status\" TEXT NOT NULL,\n  \"attributedAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  CONSTRAINT \"ReferralAttributionEvent_referrer_fkey\" FOREIGN KEY (\"referrerUserId\") REFERENCES \"User\"(\"id\") ON DELETE RESTRICT ON UPDATE CASCADE,\n  CONSTRAINT \"ReferralAttributionEvent_referred_fkey\" FOREIGN KEY (\"referredUserId\") REFERENCES \"User\"(\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\n)"
+      },
+      {
+        "name": "ReferralRewardEvent",
+        "type": "table",
+        "sql": "CREATE TABLE \"ReferralRewardEvent\" (\n  \"id\" TEXT NOT NULL PRIMARY KEY,\n  \"referrerUserId\" TEXT NOT NULL,\n  \"referredUserId\" TEXT NOT NULL,\n  \"ledgerPostingId\" TEXT NOT NULL UNIQUE,\n  \"amount\" TEXT NOT NULL,\n  \"asset\" TEXT NOT NULL,\n  \"status\" TEXT NOT NULL,\n  \"rewardedAt\" DATETIME NOT NULL,\n  \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  CONSTRAINT \"ReferralRewardEvent_referrer_fkey\" FOREIGN KEY (\"referrerUserId\") REFERENCES \"User\"(\"id\") ON DELETE RESTRICT ON UPDATE CASCADE,\n  CONSTRAINT \"ReferralRewardEvent_referred_fkey\" FOREIGN KEY (\"referredUserId\") REFERENCES \"User\"(\"id\") ON DELETE RESTRICT ON UPDATE CASCADE,\n  CONSTRAINT \"ReferralRewardEvent_posting_fkey\" FOREIGN KEY (\"ledgerPostingId\") REFERENCES \"LedgerPosting\"(\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\n)"
+      },
+      {
+        "name": "Reward",
+        "type": "table",
+        "sql": "CREATE TABLE \"Reward\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"amount\" TEXT NOT NULL,\r\n    \"currency\" TEXT NOT NULL,\r\n    \"reason\" TEXT NOT NULL,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    CONSTRAINT \"Reward_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "Settings",
+        "type": "table",
+        "sql": "CREATE TABLE \"Settings\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"key\" TEXT NOT NULL,\r\n    \"value\" TEXT NOT NULL,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL\r\n)"
+      },
+      {
+        "name": "SpotMarginAccount",
+        "type": "table",
+        "sql": "CREATE TABLE \"SpotMarginAccount\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"pair\" TEXT NOT NULL,\r\n    \"baseAsset\" TEXT NOT NULL,\r\n    \"quoteAsset\" TEXT NOT NULL,\r\n    \"status\" TEXT NOT NULL DEFAULT 'ACTIVE',\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL,\r\n    CONSTRAINT \"SpotMarginAccount_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "SpotMarginActivity",
+        "type": "table",
+        "sql": "CREATE TABLE \"SpotMarginActivity\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"accountId\" TEXT,\r\n    \"positionId\" TEXT,\r\n    \"type\" TEXT NOT NULL,\r\n    \"status\" TEXT NOT NULL DEFAULT 'COMPLETED',\r\n    \"idempotencyKey\" TEXT NOT NULL,\r\n    \"details\" TEXT,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    CONSTRAINT \"SpotMarginActivity_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE,\r\n    CONSTRAINT \"SpotMarginActivity_accountId_fkey\" FOREIGN KEY (\"accountId\") REFERENCES \"SpotMarginAccount\" (\"id\") ON DELETE SET NULL ON UPDATE CASCADE,\r\n    CONSTRAINT \"SpotMarginActivity_positionId_fkey\" FOREIGN KEY (\"positionId\") REFERENCES \"SpotMarginPosition\" (\"id\") ON DELETE SET NULL ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "SpotMarginPosition",
+        "type": "table",
+        "sql": "CREATE TABLE \"SpotMarginPosition\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"accountId\" TEXT NOT NULL,\r\n    \"direction\" TEXT NOT NULL,\r\n    \"leverage\" INTEGER NOT NULL,\r\n    \"collateral\" TEXT NOT NULL,\r\n    \"quantity\" TEXT NOT NULL DEFAULT '0',\r\n    \"entryPrice\" TEXT NOT NULL,\r\n    \"markPrice\" TEXT,\r\n    \"debtAsset\" TEXT NOT NULL DEFAULT '',\r\n    \"debtPrincipal\" TEXT NOT NULL DEFAULT '0',\r\n    \"interestAccrued\" TEXT NOT NULL DEFAULT '0',\r\n    \"realizedPnl\" TEXT NOT NULL DEFAULT '0',\r\n    \"unrealizedPnl\" TEXT NOT NULL DEFAULT '0',\r\n    \"status\" TEXT NOT NULL DEFAULT 'OPEN',\r\n    \"openIdempotencyKey\" TEXT NOT NULL,\r\n    \"entryOrderId\" TEXT,\r\n    \"closeOrderId\" TEXT,\r\n    \"openedAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"closedAt\" DATETIME,\r\n    \"updatedAt\" DATETIME NOT NULL,\r\n    CONSTRAINT \"SpotMarginPosition_accountId_fkey\" FOREIGN KEY (\"accountId\") REFERENCES \"SpotMarginAccount\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "SpotMarginPositionEvent",
+        "type": "table",
+        "sql": "CREATE TABLE \"SpotMarginPositionEvent\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"positionId\" TEXT NOT NULL,\r\n    \"type\" TEXT NOT NULL,\r\n    \"asset\" TEXT,\r\n    \"amount\" TEXT,\r\n    \"price\" TEXT,\r\n    \"idempotencyKey\" TEXT NOT NULL,\r\n    \"metadata\" TEXT,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    CONSTRAINT \"SpotMarginPositionEvent_positionId_fkey\" FOREIGN KEY (\"positionId\") REFERENCES \"SpotMarginPosition\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "SpotOrder",
+        "type": "table",
+        "sql": "CREATE TABLE \"SpotOrder\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"symbol\" TEXT NOT NULL,\r\n    \"pair\" TEXT NOT NULL,\r\n    \"side\" TEXT NOT NULL,\r\n    \"type\" TEXT NOT NULL,\r\n    \"price\" TEXT,\r\n    \"amount\" TEXT NOT NULL,\r\n    \"filled\" TEXT NOT NULL DEFAULT '0',\r\n    \"remaining\" TEXT NOT NULL DEFAULT '0',\r\n    \"status\" TEXT NOT NULL DEFAULT 'OPEN',\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL,\r\n    CONSTRAINT \"SpotOrder_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "SpotTrade",
+        "type": "table",
+        "sql": "CREATE TABLE \"SpotTrade\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"orderId\" TEXT NOT NULL,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"pair\" TEXT NOT NULL,\r\n    \"side\" TEXT NOT NULL,\r\n    \"price\" TEXT NOT NULL,\r\n    \"amount\" TEXT NOT NULL,\r\n    \"fee\" TEXT NOT NULL DEFAULT '0',\r\n    \"feeCurrency\" TEXT NOT NULL DEFAULT 'USDT',\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    CONSTRAINT \"SpotTrade_orderId_fkey\" FOREIGN KEY (\"orderId\") REFERENCES \"SpotOrder\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE,\r\n    CONSTRAINT \"SpotTrade_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "SupportTicket",
+        "type": "table",
+        "sql": "CREATE TABLE \"SupportTicket\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"subject\" TEXT NOT NULL,\r\n    \"status\" TEXT NOT NULL DEFAULT 'OPEN',\r\n    \"priority\" TEXT NOT NULL DEFAULT 'NORMAL',\r\n    \"assignedToId\" TEXT,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL\r\n)"
+      },
+      {
+        "name": "SupportTicketReply",
+        "type": "table",
+        "sql": "CREATE TABLE \"SupportTicketReply\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"ticketId\" TEXT NOT NULL,\r\n    \"authorId\" TEXT NOT NULL,\r\n    \"body\" TEXT NOT NULL,\r\n    \"internal\" BOOLEAN NOT NULL DEFAULT false,\r\n    \"attachments\" TEXT,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    CONSTRAINT \"SupportTicketReply_ticketId_fkey\" FOREIGN KEY (\"ticketId\") REFERENCES \"SupportTicket\" (\"id\") ON DELETE CASCADE ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "SystemConfig",
+        "type": "table",
+        "sql": "CREATE TABLE \"SystemConfig\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"key\" TEXT NOT NULL,\r\n    \"value\" TEXT NOT NULL,\r\n    \"description\" TEXT,\r\n    \"updatedAt\" DATETIME NOT NULL\r\n)"
+      },
+      {
+        "name": "User",
+        "type": "table",
+        "sql": "CREATE TABLE \"User\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"userCode\" INTEGER NOT NULL,\r\n    \"email\" TEXT,\r\n    \"password\" TEXT,\r\n    \"displayName\" TEXT,\r\n    \"role\" TEXT NOT NULL DEFAULT 'USER',\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL,\r\n    \"lastActive\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"forceOutcome\" TEXT NOT NULL DEFAULT 'NORMAL'\r\n, \"securityPasswordHash\" TEXT)"
+      },
+      {
+        "name": "UserMfa",
+        "type": "table",
+        "sql": "CREATE TABLE \"UserMfa\" (\n    \"id\" TEXT NOT NULL PRIMARY KEY,\n    \"userId\" TEXT NOT NULL,\n    \"enabled\" BOOLEAN NOT NULL DEFAULT false,\n    \"secret\" TEXT,\n    \"backupCodes\" TEXT,\n    \"lastUsedAt\" DATETIME,\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\n    \"updatedAt\" DATETIME NOT NULL,\n    CONSTRAINT \"UserMfa_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\" (\"id\") ON DELETE CASCADE ON UPDATE CASCADE\n)"
+      },
+      {
+        "name": "UserPreference",
+        "type": "table",
+        "sql": "CREATE TABLE \"UserPreference\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"locale\" TEXT NOT NULL DEFAULT 'en',\r\n    \"timezone\" TEXT NOT NULL DEFAULT 'UTC',\r\n    \"theme\" TEXT NOT NULL DEFAULT 'dark',\r\n    \"notificationSettings\" TEXT,\r\n    \"tradingSettings\" TEXT,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL,\r\n    CONSTRAINT \"UserPreference_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\" (\"id\") ON DELETE CASCADE ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "UserVipState",
+        "type": "table",
+        "sql": "CREATE TABLE \"UserVipState\" (\n  \"id\" TEXT NOT NULL PRIMARY KEY,\n  \"userId\" TEXT NOT NULL,\n  \"vipLevelId\" TEXT NOT NULL,\n  \"progress\" TEXT NOT NULL DEFAULT '0',\n  \"evaluatedAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  \"qualifiedAt\" DATETIME,\n  \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  \"updatedAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  CONSTRAINT \"UserVipState_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\"(\"id\") ON DELETE CASCADE ON UPDATE CASCADE,\n  CONSTRAINT \"UserVipState_vipLevelId_fkey\" FOREIGN KEY (\"vipLevelId\") REFERENCES \"VipLevel\"(\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\n)"
+      },
+      {
+        "name": "VipLevel",
+        "type": "table",
+        "sql": "CREATE TABLE \"VipLevel\" (\n  \"id\" TEXT NOT NULL PRIMARY KEY,\n  \"level\" INTEGER NOT NULL,\n  \"name\" TEXT NOT NULL,\n  \"threshold\" TEXT NOT NULL DEFAULT '0',\n  \"benefits\" TEXT,\n  \"enabled\" BOOLEAN NOT NULL DEFAULT true,\n  \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  \"updatedAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP\n)"
+      },
+      {
+        "name": "Wallet",
+        "type": "table",
+        "sql": "CREATE TABLE \"Wallet\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"balance\" TEXT NOT NULL DEFAULT '0',\r\n    \"frozenBalance\" TEXT NOT NULL DEFAULT '0',\r\n    \"balances\" TEXT NOT NULL DEFAULT '{}',\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    CONSTRAINT \"Wallet_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "WalletIdentity",
+        "type": "table",
+        "sql": "CREATE TABLE \"WalletIdentity\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"address\" TEXT NOT NULL,\r\n    \"chainId\" INTEGER NOT NULL,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL,\r\n    CONSTRAINT \"WalletIdentity_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\" (\"id\") ON DELETE CASCADE ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "WalletNetwork",
+        "type": "table",
+        "sql": "CREATE TABLE \"WalletNetwork\" (\n  \"id\" TEXT NOT NULL PRIMARY KEY,\n  \"currencyId\" INTEGER NOT NULL,\n  \"code\" TEXT NOT NULL,\n  \"name\" TEXT NOT NULL,\n  \"isActive\" BOOLEAN NOT NULL DEFAULT 0,\n  \"depositEnabled\" BOOLEAN NOT NULL DEFAULT 0,\n  \"withdrawEnabled\" BOOLEAN NOT NULL DEFAULT 0,\n  \"notice\" TEXT,\n  \"instructions\" TEXT,\n  \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  \"updatedAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  CONSTRAINT \"WalletNetwork_currencyId_fkey\" FOREIGN KEY (\"currencyId\") REFERENCES \"Currency\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\n)"
+      },
+      {
+        "name": "WithdrawalRequest",
+        "type": "table",
+        "sql": "CREATE TABLE \"WithdrawalRequest\" (\r\n    \"id\" TEXT NOT NULL PRIMARY KEY,\r\n    \"userId\" TEXT NOT NULL,\r\n    \"currency\" TEXT NOT NULL,\r\n    \"amount\" TEXT NOT NULL,\r\n    \"address\" TEXT NOT NULL,\r\n    \"status\" TEXT NOT NULL DEFAULT 'PENDING',\r\n    \"txHash\" TEXT,\r\n    \"createdAt\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n    \"updatedAt\" DATETIME NOT NULL,\r\n    CONSTRAINT \"WithdrawalRequest_userId_fkey\" FOREIGN KEY (\"userId\") REFERENCES \"User\" (\"id\") ON DELETE RESTRICT ON UPDATE CASCADE\r\n)"
+      },
+      {
+        "name": "_cf_KV",
+        "type": "table",
+        "sql": "CREATE TABLE _cf_KV (\n        key TEXT PRIMARY KEY,\n        value BLOB\n      ) WITHOUT ROWID"
+      },
+      {
+        "name": "d1_migrations",
+        "type": "table",
+        "sql": "CREATE TABLE d1_migrations(\n\t\tid         INTEGER PRIMARY KEY AUTOINCREMENT,\n\t\tname       TEXT UNIQUE,\n\t\tapplied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL\n)"
+      },
+      {
+        "name": "sqlite_sequence",
+        "type": "table",
+        "sql": "CREATE TABLE sqlite_sequence(name,seq)"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "WNAM",
+      "served_by_colo": "DEN",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 16.3819
+      },
+      "duration": 16.3819,
+      "changes": 0,
+      "last_row_id": 9890665,
+      "changed_db": false,
+      "size_after": 7435718656,
+      "rows_read": 757,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]

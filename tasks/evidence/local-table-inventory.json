@@ -1,0 +1,5387 @@
+[
+  {
+    "table": "Activity",
+    "count": 40,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "type",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "referenceType",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "referenceId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "idempotencyKey",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "ledgerCorrelationId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "ledgerPostingId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "asset",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "amount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "details",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "Admin",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "email",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "password",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "AdminAuditLog",
+    "count": 41,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "adminId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "action",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "target",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "details",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "ipAddress",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "AdminFeatureFlag",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "key",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "enabled",
+        "type": "BOOLEAN",
+        "pk": 0
+      },
+      {
+        "name": "environment",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "reason",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "updatedBy",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "AdminGovernanceApproval",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "commandId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "approverId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "decision",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "reason",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "AdminGovernanceCommand",
+    "count": 2,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "idempotencyKey",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "commandType",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "target",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "reason",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "payload",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "requestedBy",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "approvedBy",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "approvedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "executedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "AdminIncident",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "title",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "body",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "severity",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "active",
+        "type": "BOOLEAN",
+        "pk": 0
+      },
+      {
+        "name": "environment",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "postedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "acknowledgedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "acknowledgedBy",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "acknowledgementReason",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "acknowledgementIdempotencyKey",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "correlationId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "AdminMaintenanceWindow",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "scope",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "target",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "scheduledAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "endsAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "reason",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "environment",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdBy",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "cancelledAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "cancelledBy",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "cancelReason",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "cancelIdempotencyKey",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "idempotencyKey",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "correlationId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "AdminRoleAssignment",
+    "count": 7,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "roleId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "assignedBy",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "Affiliate",
+    "count": 28,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "referralCode",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "referredBy",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "totalEarnings",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "Announcement",
+    "count": 1,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "title",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "body",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "targeting",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "startsAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "endsAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "published",
+        "type": "BOOLEAN",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "localizations",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "pinned",
+        "type": "BOOLEAN",
+        "pk": 0
+      },
+      {
+        "name": "pinOrder",
+        "type": "INTEGER",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "AuthSession",
+    "count": 312,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "surface",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "tokenFamilyId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "refreshTokenHash",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "lastUsedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "absoluteExpiresAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "idleExpiresAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "revokedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "revokeReason",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "replacedById",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "userAgentHash",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "ipHash",
+        "type": "TEXT",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "BinaryOptionPosition",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "symbol",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "pair",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "side",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "amount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "entryPrice",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "timeframe",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "payoutRate",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "profitRatio",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "lossRatio",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "targetPayout",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "closePrice",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "realizedProfit",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "strikePrice",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "payout",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "duration",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "expiresAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "BinaryOptionResult",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "positionId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "closePrice",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "profit",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "BinaryPair",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "pk": 1
+      },
+      {
+        "name": "symbol",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "baseAsset",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "quoteAsset",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "rate",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "category",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "logo",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "isActive",
+        "type": "BOOLEAN",
+        "pk": 0
+      },
+      {
+        "name": "houseWinRatio",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "realId",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "matchId",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "currencyId",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "coinType",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "BinaryTimeframe",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "pk": 1
+      },
+      {
+        "name": "name",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "seconds",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "payoutRate",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "profitRatio",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "lossRatio",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "isActive",
+        "type": "BOOLEAN",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "ContractPair",
+    "count": 3,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "symbol",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "minLeverage",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "maxLeverage",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "makerFee",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "takerFee",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "minAmount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "isActive",
+        "type": "BOOLEAN",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "ContractPosition",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "symbol",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "side",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "amount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "leverage",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "entryPrice",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "currentPrice",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "liquidationPrice",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "tpPrice",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "slPrice",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "pnl",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "fee",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "marginMode",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "ConversionTransaction",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "fromCoin",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "toCoin",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "amount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "rate",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "received",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "Currency",
+    "count": 5,
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "pk": 1
+      },
+      {
+        "name": "symbol",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "name",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "logo",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "rate",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "minDeposit",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "maxDeposit",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "minWithdrawal",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "maxWithdrawal",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "withdrawalFee",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "depositEnabled",
+        "type": "BOOLEAN",
+        "pk": 0
+      },
+      {
+        "name": "withdrawEnabled",
+        "type": "BOOLEAN",
+        "pk": 0
+      },
+      {
+        "name": "confirmationCount",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "decimals",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "isActive",
+        "type": "BOOLEAN",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "DepositAddress",
+    "count": 8,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "currencyId",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "network",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "address",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "label",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "isActive",
+        "type": "BOOLEAN",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "walletNetworkId",
+        "type": "TEXT",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "DepositClaim",
+    "count": 3,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "asset",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "network",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "depositAddressId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "destinationAddressSnapshot",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "claimedAmount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "proofObjectKey",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "proofContentType",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "proofByteSize",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "txHash",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "state",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "idempotencyKey",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "submittedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "reviewedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "reviewedBy",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "reviewReason",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "creditedLedgerPostingId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "linkedObservedDepositId",
+        "type": "TEXT",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "EventInbox",
+    "count": 97,
+    "columns": [
+      {
+        "name": "messageId",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "queue",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "attempts",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "eventType",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "eventVersion",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "idempotencyKey",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "correlationId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "payload",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "state",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "receivedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "processedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "lastErrorCode",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "EventOutbox",
+    "count": 92,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "idempotencyKey",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "aggregateType",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "aggregateId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "eventType",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "eventVersion",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "correlationId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "payload",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "state",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "availableAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "claimedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "leaseToken",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "attempts",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "lastErrorCode",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "lastErrorAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "publishedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "Gate2BinaryConfiguration",
+    "count": 280,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "pair",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "durationSeconds",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "payoutRate",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "lossRate",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "minStake",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "maxStake",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "settlementDelaySeconds",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "version",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "enabled",
+        "type": "BOOLEAN",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "Gate2BinaryPosition",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "pair",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "side",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "stake",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "entryPrice",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "expiryPrice",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "payoutAmount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "realizedProfit",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "durationSeconds",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "expiresAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "state",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "entryQuoteId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "entryProvider",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "entrySource",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "entryObservedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "entryReceivedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "entrySequence",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "expiryQuoteId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "expiryProvider",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "expirySource",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "expiryObservedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "expiryReceivedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "expirySequence",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "quoteFreshnessMs",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "configurationVersion",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "settlementReceiptId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "idempotencyKey",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "correlationId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "Gate2ConversionQuote",
+    "count": 3,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "fromAsset",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "toAsset",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "inputAmount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "rate",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "outputAmount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "provider",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "source",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "evidenceId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "configurationVersion",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "expiresAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "state",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "quoteKey",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "acceptanceKey",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "conversionRef",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "Gate2Deposit",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "asset",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "network",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "address",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "txHash",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "amount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "confirmations",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "requiredConfirmations",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "state",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "observationKey",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "creditPostingId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "observedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "creditedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "Gate2InternalTransfer",
+    "count": 1,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "fromUserId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "toUserId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "asset",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "amount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "idempotencyKey",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "debitPostingId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "creditPostingId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "Gate2OperationAudit",
+    "count": 6,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "operationType",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "operationId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "eventType",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "idempotencyKey",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "details",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "Gate2SpotOrder",
+    "count": 2,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "pair",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "baseAsset",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "quoteAsset",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "side",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "type",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "amount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "filled",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "remaining",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "price",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "stopPrice",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "triggeredAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "triggerQuoteId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "triggerProvider",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "triggerSource",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "triggerObservedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "triggerSequence",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "reserveAsset",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "reserveScope",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "reservedAmount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "feeRate",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "idempotencyKey",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "correlationId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "Gate2SpotTrade",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "buyerOrderId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "sellerOrderId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "pair",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "baseAsset",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "quoteAsset",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "price",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "amount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "buyerFee",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "sellerFee",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "idempotencyKey",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "Gate2Withdrawal",
+    "count": 2,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "asset",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "network",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "address",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "amount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "fee",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "reservedAmount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "state",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "requestKey",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "reserveKey",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "reviewReason",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "txHash",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "providerState",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "KYC",
+    "count": 2,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "firstName",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "lastName",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "dob",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "country",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "documentType",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "documentUrl",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "idFront",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "idBack",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "LearnArticleRevision",
+    "count": 4,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "articleId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "revision",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "title",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "body",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "summary",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "attachments",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "scheduledAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "publishedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "archivedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "createdBy",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "localizations",
+        "type": "TEXT",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "LearnArticleTag",
+    "count": 0,
+    "columns": [
+      {
+        "name": "articleId",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "tagId",
+        "type": "TEXT",
+        "pk": 2
+      }
+    ]
+  },
+  {
+    "table": "LearnCategory",
+    "count": 1,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "slug",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "name",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "description",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "sortOrder",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "LearnContent",
+    "count": 2,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "slug",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "title",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "body",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "summary",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "attachments",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "categoryId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "scheduledAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "publishedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "archivedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "localizations",
+        "type": "TEXT",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "LearnMediaAsset",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "articleId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "revisionId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "url",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "altText",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "provider",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "metadata",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "LearnTag",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "slug",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "name",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "Ledger",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "walletId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "type",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "amount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "currency",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "referenceId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "transactionType",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "LedgerAccount",
+    "count": 14,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "asset",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "scope",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "available",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "locked",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "LedgerAuditEvent",
+    "count": 46,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "accountId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "postingId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "eventType",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "idempotencyKey",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "correlationId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "details",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "LedgerIdempotency",
+    "count": 44,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "idempotencyKey",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "operation",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "accountId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "debitPostingId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "creditPostingId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "LedgerPosting",
+    "count": 46,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "accountId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "asset",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "kind",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "amount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "availableDelta",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "lockedDelta",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "referenceType",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "referenceId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "idempotencyKey",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "correlationId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "economicGroup",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "metadata",
+        "type": "TEXT",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "LoanApplication",
+    "count": 5,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "amount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "amountDecimal",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "currency",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "term",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "durationDays",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "interestRate",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "interestRateDecimal",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "totalRepayment",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "totalRepaymentDecimal",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "collateral",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "collateralImg",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "approvedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "dueDate",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "productSnapshot",
+        "type": "TEXT",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "LoanPlan",
+    "count": 1,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "name",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "durationDays",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "interestRate",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "minAmount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "maxAmount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "isActive",
+        "type": "BOOLEAN",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "LoanRepayment",
+    "count": 1,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "loanId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "amount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "amountDecimal",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "currency",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "paidAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "ledgerPostingId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "activityId",
+        "type": "TEXT",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "MarketAsset",
+    "count": 55,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "symbol",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "displayName",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "category",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "providerSymbol",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "maintenanceNote",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "MarketAssetCapability",
+    "count": 55,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "assetId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "networkId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "capabilityKey",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "depositEnabled",
+        "type": "BOOLEAN",
+        "pk": 0
+      },
+      {
+        "name": "withdrawEnabled",
+        "type": "BOOLEAN",
+        "pk": 0
+      },
+      {
+        "name": "tradingEnabled",
+        "type": "BOOLEAN",
+        "pk": 0
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "maintenanceNote",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "MarketData",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "symbol",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "price",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "change",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "vol",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "high",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "low",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "rawData",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "MarketDepthLevel",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "snapshotId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "side",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "levelIndex",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "price",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "quantity",
+        "type": "TEXT",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "MarketDepthSnapshot",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "pairId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "symbol",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "provider",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "source",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "providerSnapshotId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "sequence",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "checksum",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "observedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "receivedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "rawData",
+        "type": "TEXT",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "MarketNetwork",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "assetId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "code",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "name",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "maintenanceNote",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "MarketPair",
+    "count": 53,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "symbol",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "baseAssetId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "quoteAssetId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "category",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "maintenanceNote",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "MarketProviderConfig",
+    "count": 9,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "key",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "displayName",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "priority",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "restBaseUrl",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "websocketBaseUrl",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "supportsQuotes",
+        "type": "BOOLEAN",
+        "pk": 0
+      },
+      {
+        "name": "supportsKlines",
+        "type": "BOOLEAN",
+        "pk": 0
+      },
+      {
+        "name": "supportsTrades",
+        "type": "BOOLEAN",
+        "pk": 0
+      },
+      {
+        "name": "supportsDepth",
+        "type": "BOOLEAN",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "MarketProviderSymbol",
+    "count": 270,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "providerId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "pairId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "providerSymbol",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "enabled",
+        "type": "BOOLEAN",
+        "pk": 0
+      },
+      {
+        "name": "priority",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "capabilityPolicy",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "MarketQuoteLatest",
+    "count": 53,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "pairId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "symbol",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "provider",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "source",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "sequence",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "price",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "change24h",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "volume24h",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "high24h",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "low24h",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "state",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "observedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "receivedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "bid",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "ask",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "spread",
+        "type": "TEXT",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "MarketTrade",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "pairId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "symbol",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "provider",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "source",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "providerTradeId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "sequence",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "side",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "price",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "quantity",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "observedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "receivedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "rawData",
+        "type": "TEXT",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "MessageConversation",
+    "count": 1,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "participantAId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "participantBId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "state",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "MessageModerationCase",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "conversationId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "messageId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "reporterId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "reportedUserId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "reason",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "resolution",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "reviewedById",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "MiningPlan",
+    "count": 3,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "name",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "currency",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "lockupPeriod",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "dailyYield",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "dailyYieldDecimal",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "minDeposit",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "minDepositDecimal",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "maxDeposit",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "maxDepositDecimal",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "isActive",
+        "type": "BOOLEAN",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "MiningRewardAccrual",
+    "count": 13,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "subscriptionId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "ledgerPostingId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "activityId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "idempotencyKey",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "amount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "currency",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "rewardedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "MiningSubscription",
+    "count": 4,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "planId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "amount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "amountDecimal",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "startDate",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "endDate",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "totalRewards",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "totalRewardsDecimal",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "lastRewardPaid",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "planSnapshot",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "Notification",
+    "count": 3,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "type",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "title",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "body",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "readAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "metadata",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "OptionGameSettings",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "currencyId",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "matchId",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "status",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "symbol",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "payoutRate",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "duration",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "rawData",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "dummy",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "PersistentMessage",
+    "count": 1,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "senderId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "recipientId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "body",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "deliveryState",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "sequence",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "readAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "attachments",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "conversationId",
+        "type": "TEXT",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "ReferralAttributionEvent",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "referrerUserId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "referredUserId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "referralCode",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "attributedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "ReferralRewardEvent",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "referrerUserId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "referredUserId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "ledgerPostingId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "amount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "asset",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "rewardedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "Reward",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "amount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "currency",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "reason",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "Settings",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "key",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "value",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "SpotMarginAccount",
+    "count": 1,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "pair",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "baseAsset",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "quoteAsset",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "SpotMarginActivity",
+    "count": 1,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "accountId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "positionId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "type",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "idempotencyKey",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "details",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "SpotMarginPosition",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "accountId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "direction",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "leverage",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "collateral",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "quantity",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "entryPrice",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "markPrice",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "debtAsset",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "debtPrincipal",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "interestAccrued",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "realizedPnl",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "unrealizedPnl",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "openIdempotencyKey",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "entryOrderId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "closeOrderId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "openedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "closedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "SpotMarginPositionEvent",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "positionId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "type",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "asset",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "amount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "price",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "idempotencyKey",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "metadata",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "SpotOrder",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "symbol",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "pair",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "side",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "type",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "price",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "amount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "filled",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "remaining",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "SpotTrade",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "orderId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "pair",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "side",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "price",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "amount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "fee",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "feeCurrency",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "SupportTicket",
+    "count": 1,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "subject",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "priority",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "assignedToId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "SupportTicketReply",
+    "count": 3,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "ticketId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "authorId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "body",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "internal",
+        "type": "BOOLEAN",
+        "pk": 0
+      },
+      {
+        "name": "attachments",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "SystemConfig",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "key",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "value",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "description",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "User",
+    "count": 34,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userCode",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "email",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "password",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "displayName",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "role",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "lastActive",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "forceOutcome",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "securityPasswordHash",
+        "type": "TEXT",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "UserMfa",
+    "count": 1,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "enabled",
+        "type": "BOOLEAN",
+        "pk": 0
+      },
+      {
+        "name": "secret",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "backupCodes",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "lastUsedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "UserPreference",
+    "count": 28,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "locale",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "timezone",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "theme",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "notificationSettings",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "tradingSettings",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "UserVipState",
+    "count": 28,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "vipLevelId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "progress",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "evaluatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "qualifiedAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "VipLevel",
+    "count": 1,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "level",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "name",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "threshold",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "benefits",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "enabled",
+        "type": "BOOLEAN",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "Wallet",
+    "count": 34,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "balance",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "frozenBalance",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "balances",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "WalletIdentity",
+    "count": 21,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "address",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "chainId",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "WalletNetwork",
+    "count": 8,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "currencyId",
+        "type": "INTEGER",
+        "pk": 0
+      },
+      {
+        "name": "code",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "name",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "isActive",
+        "type": "BOOLEAN",
+        "pk": 0
+      },
+      {
+        "name": "depositEnabled",
+        "type": "BOOLEAN",
+        "pk": 0
+      },
+      {
+        "name": "withdrawEnabled",
+        "type": "BOOLEAN",
+        "pk": 0
+      },
+      {
+        "name": "notice",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "instructions",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "WithdrawalRequest",
+    "count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "type": "TEXT",
+        "pk": 1
+      },
+      {
+        "name": "userId",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "currency",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "amount",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "address",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "txHash",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "createdAt",
+        "type": "DATETIME",
+        "pk": 0
+      },
+      {
+        "name": "updatedAt",
+        "type": "DATETIME",
+        "pk": 0
+      }
+    ]
+  },
+  {
+    "table": "d1_migrations",
+    "count": 15,
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "pk": 1
+      },
+      {
+        "name": "name",
+        "type": "TEXT",
+        "pk": 0
+      },
+      {
+        "name": "applied_at",
+        "type": "TIMESTAMP",
+        "pk": 0
+      }
+    ]
+  }
+]

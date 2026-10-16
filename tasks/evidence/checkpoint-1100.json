@@ -1,0 +1,39 @@
+{
+  "at": "2026-10-16T11:00:22.529293+00:00",
+  "head": "9a41b2e3da2729173f6d7aac6a1fd2f6c6c4657f",
+  "branch": "migration/sqlite-local-bridge",
+  "dirty": [
+    " M backend/package-lock.json",
+    " M backend/package.json",
+    " M backend/src/d1/d1-prisma.service.ts",
+    " M backend/src/d1/d1-worker-bridge.module.ts",
+    "?? backend/src/d1/local-sqlite-bridge.service.ts",
+    "?? backend/test/d1/d1-prisma-local-sqlite.spec.ts",
+    "?? backend/test/d1/local-sqlite-bridge.service.spec.ts",
+    "?? backend/test/d1/local-sqlite-nest-provider.spec.ts",
+    "?? backend/test/jest-local-sqlite.config.cjs",
+    "?? tasks/"
+  ],
+  "handles": {
+    "archiveScanShell": 1634203,
+    "archiveScanPython": 1634206,
+    "privateValkeyStage": 1635337
+  },
+  "proven": [
+    "7 prior bridge tests recovered;3 added durability tests now10pass",
+    "53 financial tests unchanged recovered",
+    "old backend build recovered, changed adapter requires typecheck/new coordinated build",
+    "84/90 smaller live content hashes match;5 timestamp-only market config drift;quote values ongoing",
+    "14 LedgerAccount balances equal46 posting deltas exactly",
+    "3 R2 objects6073bytes private copied;secondGET SHA256 parity",
+    "Valkey8.0.1 privateUnix-only128MiB noeviction AOF everysec;WAITAOF+SIGKILL recovery passed"
+  ],
+  "notProven": [
+    "final frozen D1/SQLite equality",
+    "durable BullMQ transport and workflow replacement",
+    "independent encrypted backup restore",
+    "application staging acceptance",
+    "production cutover/DNS/retirement owner acceptance"
+  ],
+  "next": "Complete active archive scan; typecheck affected SQLite code; then pin compatible BullMQ6/Nest12 Redis integration and durable SQLite async journal. No production writes or DNS changes."
+}

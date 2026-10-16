@@ -1,0 +1,103 @@
+{
+  "observedAt": "2026-10-16T15:35Z",
+  "method": "Read-only Cloudflare API inventory and deployed Worker script read; no resource mutations.",
+  "worker": {
+    "name": "nexi-production",
+    "annotation": "NEXI backend five-wallet integration 7fbde5c",
+    "release": "7fbde5ca82287902cb351546ccae1b632f1aae44",
+    "bindings": {
+      "d1": [
+        "CORE_DB"
+      ],
+      "queues": [
+        "DOMAIN_EVENTS_QUEUE:nexi-domain-events-staging",
+        "INTEGRATION_JOBS_QUEUE:nexi-integration-jobs-staging",
+        "NOTIFICATIONS_QUEUE:nexi-notifications-staging"
+      ],
+      "workflows": [
+        "nexi-withdrawal-staging:NexiWithdrawalWorkflow",
+        "nexi-mining-staging:NexiMiningWorkflow",
+        "nexi-loan-staging:NexiLoanWorkflow"
+      ],
+      "r2": [
+        "nexi-deposit-proofs-staging",
+        "nexi-kyc-evidence-staging"
+      ],
+      "other": [
+        "NEXI_API_CONTAINER durable object binding",
+        "NEXI_CONFIG KV",
+        "NEXI_AUTH_RATE_LIMITER",
+        "NEXI_ANALYTICS",
+        "NEXI_PLATFORM_VALIDATION secrets-store binding",
+        "scheduled supervisor"
+      ]
+    },
+    "queueHandler": "Valid envelopes are forwarded to the Container internal queue ingress using an HMAC signature; non-OK responses retry with capped exponential backoff. LOAN_APPROVED events additionally dispatch the loan Workflow; other event types return from the workflow dispatcher without a side effect. Queue messages are acknowledged only after both ingress and loan dispatch complete successfully."
+  },
+  "queues": [
+    {
+      "name": "nexi-domain-events-staging",
+      "consumerCount": 1,
+      "maxBatchSize": 10,
+      "maxRetries": 5,
+      "maxWaitMs": 5000,
+      "retryDelaySeconds": 15,
+      "deadLetterQueue": "nexi-domain-events-staging-dlq",
+      "backlogCount": 0
+    },
+    {
+      "name": "nexi-integration-jobs-staging",
+      "consumerCount": 1,
+      "maxBatchSize": 10,
+      "maxRetries": 5,
+      "maxWaitMs": 5000,
+      "retryDelaySeconds": 15,
+      "deadLetterQueue": "nexi-integration-jobs-staging-dlq",
+      "backlogCount": 0
+    },
+    {
+      "name": "nexi-notifications-staging",
+      "consumerCount": 1,
+      "maxBatchSize": 10,
+      "maxRetries": 5,
+      "retryDelaySeconds": 15,
+      "deadLetterQueue": "nexi-notifications-staging-dlq",
+      "backlogCount": 0
+    }
+  ],
+  "workflows": {
+    "nexi-loan-staging": {
+      "queued": 0,
+      "running": 0,
+      "waiting": 0,
+      "errored": 2,
+      "complete": 2,
+      "terminated": 0,
+      "paused": 0,
+      "rollingBack": 0,
+      "erroredInstanceIds": [
+        "nexi-proof-loan-eventtype-object-20261008",
+        "nexi-proof-loan-eventtype-20261008T1730"
+      ],
+      "completedInstanceIds": [
+        "loan-546f6f97-ef61-5f4e-9bf6-e1116a34bdda",
+        "nexi-proof-loan-payload-20261008"
+      ]
+    },
+    "nexi-withdrawal-staging": {
+      "queued": 0,
+      "running": 0,
+      "waiting": 0,
+      "errored": 0,
+      "complete": 0
+    },
+    "nexi-mining-staging": {
+      "queued": 0,
+      "running": 0,
+      "waiting": 0,
+      "errored": 0,
+      "complete": 0
+    }
+  },
+  "scopeNote": "All queue backlog metrics were zero at observation. Workflow instance IDs are operational proof IDs; errored entries are historical. No active or waiting Workflow instances were returned. No message payloads, credentials, personal data, or secret values stored."
+}

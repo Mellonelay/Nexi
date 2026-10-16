@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-16T11:39:42.514247+00:00",
+  "binding": "NEXI_CONFIG",
+  "namespaceId": "bc9f4b8c2cca4fbfac94e1ba47339fe1",
+  "keyCount": 0,
+  "hasNextPage": false,
+  "scope": "Cloudflare GET keys, no values/mutations; source consumer replacement remains open"
+}

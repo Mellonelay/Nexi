@@ -3,7 +3,6 @@ import "./instrument";
 
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
-import { ObserveInstrument } from "./observe";
 import { ConsoleLogger, ValidationPipe } from "@nestjs/common";
 import { RedisIoAdapter } from "./prisma/redis-io.adapter";
 import { RuntimeLifecycleService } from "./runtime/runtime-lifecycle.service";
@@ -12,7 +11,6 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 
 export async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    instrument: ObserveInstrument,
     logger: new ConsoleLogger({ forceConsole: true }),
   });
   const runtimeConfig = resolveRuntimeConfig();
@@ -51,8 +49,8 @@ export async function bootstrap() {
       }),
     );
 
-    await app.listen(runtimeConfig.port, "0.0.0.0");
-    console.log(`NEXI API listening on port ${runtimeConfig.port}`);
+    await app.listen(runtimeConfig.port, runtimeConfig.host);
+    console.log(`NEXI API listening on ${runtimeConfig.host}:${runtimeConfig.port}`);
     return app;
   } catch (error) {
     await app.close();

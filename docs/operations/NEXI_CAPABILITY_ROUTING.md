@@ -13,7 +13,7 @@ Compile the complete owner message before execution: required actions/evidence/s
 Do not maintain a second permanent catalog of every installed plugin, skill or version. `@skill`/plugin mentions are capability hints, not a mandatory reading queue: classify them as PRIMARY, SUPPORTING, or AVAILABLE-BUT-NOT-NEEDED. Discover or reread a skill/tool only when its operating contract can materially change the current task; reuse proven capability routing while unchanged.
 
 ## Authority and reuse
-Current owner decision wins. GitHub `main` is durable source authority. Cloudflare Worker + Container is the only active backend execution/runtime authority; Worker 0 is not a parallel backend runtime. NestJS remains domain authority, D1 durable application/financial truth, Ledger accounting truth, EventOutbox publication boundary, and Aiven Valkey realtime/cache/Streams only. `PROVEN + UNCHANGED = REUSE`.
+Current owner decision wins. GitHub `main` is durable source authority. The VPS NestJS backend is the owner-selected target runtime; Cloudflare remains current production until the approved, reconciled cutover. SQLite is the target durable application truth, Ledger accounting truth, EventOutbox publication boundary, and Aiven Valkey supports BullMQ, Socket.IO Streams, cache and ephemeral coordination only. `PROVEN + UNCHANGED = REUSE`. See [VPS backend runtime map](../architecture/NEXI_VPS_BACKEND_RUNTIME.md).
 Third-party skills specialize work; they do not override NEXI architecture, security boundaries, or owner authorization.
 
 ## Responsibility owners
@@ -22,7 +22,7 @@ Third-party skills specialize work; they do not override NEXI architecture, secu
 - Semantic lookup: DeepWiki; cross-check consequential conclusions.
 - Static/change risk: Fallow + CodeScene; add specialist static tools only for distinct risk.
 - External docs: Context7 + current official vendor docs; current web research only when repo/runtime is not authority.
-- Platform/backend runtime: current official Cloudflare docs first, then verified Wrangler/Cloudflare MCP/runtime surfaces; use Wrangler Container SSH when documented shell access is required. `avn` + `redis-cli` remain Valkey realtime/cache only. Never substitute a VM backend for Cloudflare runtime truth.
+- VPS/backend runtime: RDC/Worker-0 systemd, Nginx, SQLite/Prisma and API runtime evidence; use current official docs/Context7 for unresolved framework contracts. Cloudflare MCP/Wrangler are read-only production/parity tools until a specific owner gate authorizes platform mutation. `avn` + `redis-cli` inspect Aiven without exposing credentials.
 - Git/PR/CI: Git + GitHub.
 - Runtime/telemetry: direct service/process/HTTP evidence, Sentry, task-relevant Cloudflare observability.
 - Browser: Polypane on DevTools `127.0.0.1:5859` owns primary visual/responsive discovery and acceptance breadth. Preserved authenticated Worker-0 Chrome on `5858` owns distinct wallet/session acceptance. Playwright/DevTools support only the claim they are attached to; BrowserStack is targeted real-device/cross-browser evidence. Follow the responsibility split below; do not duplicate the same acceptance claim.
@@ -64,7 +64,7 @@ Never create Remote-Desktop-Commander-via-Remote-Desktop-Commander recursion.
 - Recover the existing Coinbase Wallet authenticated profile through the current browser-fabric contract. Older MetaMask profiles and stale ports are historical, not current acceptance owners.
 - Verify actual page, profile, wallet identity and SIWE authentication before browser claims; do not fabricate sessions or create redundant browser harnesses.
 - Playwright, DevTools and device tools provide scoped interaction/diagnostic evidence only, not independent financial authority.
-- Acceptance must use deployed Public/Cloudflare backend, not VM-local NestJS or mocked financial data.
+- VPS acceptance must target the running API in controlled non-authoritative mode and use only authorized test identities. It does not establish Cloudflare production cutover, current D1 equality, public API TLS, DNS or owner acceptance.
 
 ## Astra lineage
 `NEXI_ASTRA_FRONTEND_BINDING_MANIFEST.md` and the `nexi-frontend-astra-controller` skill are retained as historical frontend-binding/execution lineage. They are not the active project routing controller. Current owner decisions and this routing model control new work.

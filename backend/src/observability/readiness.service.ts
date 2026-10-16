@@ -10,7 +10,7 @@ import { RedisService } from '../redis/redis.service';
 export type ReadinessReport = {
   database: boolean;
   redis: boolean;
-  authority: 'D1';
+  authority: 'D1' | 'SQLite';
 };
 
 @Injectable()
@@ -67,7 +67,7 @@ export class ReadinessService {
     return {
       database,
       redis,
-      authority: 'D1',
+      authority: this.d1.isLocalMode() ? 'SQLite' : 'D1',
     };
   }
 

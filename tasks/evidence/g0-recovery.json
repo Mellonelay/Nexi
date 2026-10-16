@@ -1,0 +1,18 @@
+{
+  "observedAt": "2026-10-16T10:39:45.337442+00:00",
+  "sourceHead": "9a41b2e3da2729173f6d7aac6a1fd2f6c6c4657f",
+  "branch": "migration/sqlite-local-bridge",
+  "dirtyStatus": " M backend/package-lock.json\n M backend/package.json\n M backend/src/d1/d1-prisma.service.ts\n M backend/src/d1/d1-worker-bridge.module.ts\n?? backend/src/d1/local-sqlite-bridge.service.ts\n?? backend/test/d1/d1-prisma-local-sqlite.spec.ts\n?? backend/test/d1/local-sqlite-bridge.service.spec.ts\n?? backend/test/d1/local-sqlite-nest-provider.spec.ts\n?? backend/test/jest-local-sqlite.config.cjs\n?? tasks/\n",
+  "files": {
+    "backend/package-lock.json": "acb3e44dfe8711b8838b18e78ef42ad2e8639dbb474fd367634004ff5ad3fc63",
+    "backend/package.json": "467c58a11c2ddaa9c10b23f7f991bbf67b81a8338697a07a744ef67b9c7dc783",
+    "backend/src/d1/d1-prisma.service.ts": "a31c9ae78b9fa9ac19462b1696d1f0d2c5fbe07bd9afdf45a53579bac6270800",
+    "backend/src/d1/d1-worker-bridge.module.ts": "01bc65a851e282e1af6ac7ecae39193deaa80c4bf6634187b1c33a65455d72fa",
+    "backend/src/d1/local-sqlite-bridge.service.ts": "4ce896e434ce9d867f497955ef2a8b4ecc509952313a2e298c7a98ab7c74e7ef",
+    "backend/test/d1/d1-prisma-local-sqlite.spec.ts": "fbf3fae38bd191d4282fae2311792e1fedb6e0198c41a3bb382b78e444abc505",
+    "backend/test/d1/local-sqlite-bridge.service.spec.ts": "eda529117f51e1020951e693e933b05fb9cd2381dc480f8b4bd7519512fd4cdd",
+    "backend/test/d1/local-sqlite-nest-provider.spec.ts": "19237a1d12003fe05e320d363f8c8b00a3a4eed050d603ccc7cd7c47138090c9",
+    "backend/test/jest-local-sqlite.config.cjs": "f46e9f77c90d2a408a103832e13875ff91b50665a8328c3b61a78ac4bda843b8"
+  },
+  "scope": "G0 live source/dirty recovery only; prior tests not freshly invoked"
+}

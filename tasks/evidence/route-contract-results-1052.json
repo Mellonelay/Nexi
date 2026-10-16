@@ -1,0 +1,355 @@
+{
+  "at": "2026-10-16T10:52:05.354Z",
+  "phase": "Verify G1/G2; prepare G3",
+  "authority": "Current owner directive; stale project attachments excluded",
+  "context": "Retain current conversation: active handles and migration evidence needed",
+  "model": {
+    "decision": "defer switching",
+    "reason": "No verified main-context settings/control; no new model claim"
+  },
+  "lanes": {
+    "A": "RDC archive scan PID1634203; SQLite targeted tests",
+    "B": "Graphify EventOutboxService impact index9a41b2e",
+    "C": "Context7 official BullMQ and Cloudflare durability contracts"
+  },
+  "graphify": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\n  \"tenantId\": \"93dde78d-113d-4ad2-b0b1-f94f7c0f593c\",\n  \"repositoryId\": \"0af54e44-df38-413e-bbd4-52f30f3e9790\",\n  \"buildId\": \"753d136e-949e-46a1-a3a8-9182ec749597\",\n  \"commitSha\": \"9a41b2e3da2729173f6d7aac6a1fd2f6c6c4657f\",\n  \"pipelineVersion\": \"production-v1\",\n  \"tool\": \"impact_and_risk\",\n  \"result\": {\n    \"target\": \"EventOutboxService\",\n    \"impact\": {\n      \"target\": \"EventOutboxService\",\n      \"resolved\": {\n        \"label\": \"EventOutboxService\",\n        \"id\": \"backend_src_events_event_outbox_service_eventoutboxservice\",\n        \"src\": \"backend/src/events/event-outbox.service.ts\",\n        \"loc\": \"L19\"\n      },\n      \"seeds\": [\n        {\n          \"label\": \"EventOutboxService\",\n          \"src\": \"backend/src/events/event-outbox.service.ts\",\n          \"loc\": \"L19\"\n        }\n      ],\n      \"contained\": [],\n      \"files\": [\n        {\n          \"src\": \"backend/src/events/event-outbox.service.ts\",\n          \"nodes\": [\n            {\n              \"label\": \"EventOutboxService\",\n              \"id\": \"backend_src_events_event_outbox_service_eventoutboxservice\",\n              \"src\": \"backend/src/events/event-outbox.service.ts\",\n              \"loc\": \"L19\",\n              \"call_site\": \"\",\n              \"via\": \"seed\",\n              \"rel\": \"seed\",\n              \"dir\": \"self\",\n              \"conf\": 1.0\n            },\n            {\n              \"label\": \".constructor()\",\n              \"id\": \"backend_src_events_event_outbox_service_eventoutboxservice_constructor\",\n              \"src\": \"backend/src/events/event-outbox.service.ts\",\n              \"loc\": \"L20\",\n              \"call_site\": \"\",\n              \"via\": \"EventOutboxService\",\n              \"rel\": \"method\",\n              \"dir\": \"out\",\n              \"conf\": 1.0\n            },\n            {\n              \"label\": \".publishPending()\",\n              \"id\": \"backend_src_events_event_outbox_service_eventoutboxservice_publishpending\",\n              \"src\": \"backend/src/events/event-outbox.service.ts\",\n              \"loc\": \"L61\",\n              \"call_site\": \"\",\n              \"via\": \"EventOutboxService\",\n              \"rel\": \"method\",\n              \"dir\": \"out\",\n              \"conf\": 1.0\n            },\n            {\n              \"label\": \".recordEvent()\",\n              \"id\": \"backend_src_events_event_outbox_service_eventoutboxservice_recordevent\",\n              \"src\": \"backend/src/events/event-outbox.service.ts\",\n              \"loc\": \"L45\",\n              \"call_site\": \"\",\n              \"via\": \"EventOutboxService\",\n              \"rel\": \"method\",\n              \"dir\": \"out\",\n              \"conf\": 1.0\n            },\n            {\n              \"label\": \".recordQueueIngress()\",\n              \"id\": \"backend_src_events_event_outbox_service_eventoutboxservice_recordqueueingress\",\n              \"src\": \"backend/src/events/event-outbox.service.ts\",\n              \"loc\": \"L22\",\n              \"call_site\": \"\",\n              \"via\": \"EventOutboxService\",\n              \"rel\": \"method\",\n              \"dir\": \"out\",\n              \"conf\": 1.0\n            }\n          ]\n        },\n        {\n          \"src\": \"backend/src/communications/communications.service.ts\",\n          \"nodes\": [\n            {\n              \"label\": \".constructor()\",\n              \"id\": \"backend_src_communications_communications_service_communicationsservice_constructor\",\n              \"src\": \"backend/src/communications/communications.service.ts\",\n              \"loc\": \"L54\",\n              \"call_site\": \"L54\",\n              \"via\": \"EventOutboxService\",\n              \"rel\": \"references\",\n              \"dir\": \"in\",\n              \"conf\": 1.0\n            }\n          ]\n        },\n        {\n          \"src\": \"backend/src/events/event-outbox.scheduler.ts\",\n          \"nodes\": [\n            {\n              \"label\": \".constructor()\",\n              \"id\": \"backend_src_events_event_outbox_scheduler_eventoutboxscheduler_constructor\",\n              \"src\": \"backend/src/events/event-outbox.scheduler.ts\",\n              \"loc\": \"L9\",\n              \"call_site\": \"L9\",\n              \"via\": \"EventOutboxService\",\n              \"rel\": \"references\",\n              \"dir\": \"in\",\n              \"conf\": 1.0\n            }\n          ]\n        },\n        {\n          \"src\": \"backend/src/events/events.controller.ts\",\n          \"nodes\": [\n            {\n              \"label\": \".constructor()\",\n              \"id\": \"backend_src_events_events_controller_eventscontroller_constructor\",\n              \"src\": \"backend/src/events/events.controller.ts\",\n              \"loc\": \"L19\",\n              \"call_site\": \"L19\",\n              \"via\": \"EventOutboxService\",\n              \"rel\": \"references\",\n              \"dir\": \"in\",\n              \"conf\": 1.0\n            }\n          ]\n        }\n      ],\n      \"n\": 8,\n      \"truncated\": false,\n      \"continuations\": {\n        \"node\": \"gx_node('EventOutboxService', strict_calls=false)\",\n        \"expand\": \"gx_expand(['EventOutboxService'])\"\n      }\n    },\n    \"tests\": [\n      {\n        \"id\": \"backend_test_runtime_event_outbox_service_spec\",\n        \"label\": \"event-outbox.service.spec.ts\",\n        \"src\": \"backend/test/runtime/event-outbox.service.spec.ts\",\n        \"loc\": \"L1\",\n        \"rel\": \"imports\",\n        \"via\": \"EventOutboxService\",\n        \"dir\": \"in\",\n        \"match\": \"edge\",\n        \"conf\": 1.0\n      }\n    ],\n    \"tests_unresolved\": false,\n    \"hotspot_files\": [\n      {\n        \"src\": \"backend/src/events/event-outbox.service.ts\",\n        \"score\": 5.0,\n        \"n_nodes\": 5,\n        \"has_tests\": true\n      },\n      {\n        \"src\": \"backend/src/communications/communications.service.ts\",\n        \"score\": 1.0,\n        \"n_nodes\": 1,\n        \"has_tests\": true\n      },\n      {\n        \"src\": \"backend/src/events/event-outbox.scheduler.ts\",\n        \"score\": 1.0,\n        \"n_nodes\": 1,\n        \"has_tests\": true\n      },\n      {\n        \"src\": \"backend/src/events/events.controller.ts\",\n        \"score\": 1.0,\n        \"n_nodes\": 1,\n        \"has_tests\": true\n      }\n    ],\n    \"untested_hotspots\": [],\n    \"note\": \"static graph-derived blast radius -- not a verification or review verdict\",\n    \"freshness\": {\n      \"indexed_at\": \"2026-10-15T22:02:16.584559Z\",\n      \"age\": \"12h ago\",\n      \"note\": \"answer describes the code at this commit when the index was built; the repository may have moved since\",\n      \"commit\": \"9a41b2e\"\n    },\n    \"continuations\": {\n      \"graphify_tests_for\": \"tests covering the hotspots\",\n      \"graphify_file_neighbors\": \"per-file dependents\"\n    }\n  },\n  \"manifestSha256\": \"9081b59195a1d4687e3cae90f037e70a95ee688c6bf71dc6b20b5e1b1c16f512\"\n}"
+      }
+    ],
+    "structuredContent": {
+      "tenantId": "93dde78d-113d-4ad2-b0b1-f94f7c0f593c",
+      "repositoryId": "0af54e44-df38-413e-bbd4-52f30f3e9790",
+      "buildId": "753d136e-949e-46a1-a3a8-9182ec749597",
+      "commitSha": "9a41b2e3da2729173f6d7aac6a1fd2f6c6c4657f",
+      "pipelineVersion": "production-v1",
+      "tool": "impact_and_risk",
+      "result": {
+        "target": "EventOutboxService",
+        "impact": {
+          "target": "EventOutboxService",
+          "resolved": {
+            "label": "EventOutboxService",
+            "id": "backend_src_events_event_outbox_service_eventoutboxservice",
+            "src": "backend/src/events/event-outbox.service.ts",
+            "loc": "L19"
+          },
+          "seeds": [
+            {
+              "label": "EventOutboxService",
+              "src": "backend/src/events/event-outbox.service.ts",
+              "loc": "L19"
+            }
+          ],
+          "contained": [],
+          "files": [
+            {
+              "src": "backend/src/events/event-outbox.service.ts",
+              "nodes": [
+                {
+                  "label": "EventOutboxService",
+                  "id": "backend_src_events_event_outbox_service_eventoutboxservice",
+                  "src": "backend/src/events/event-outbox.service.ts",
+                  "loc": "L19",
+                  "call_site": "",
+                  "via": "seed",
+                  "rel": "seed",
+                  "dir": "self",
+                  "conf": 1
+                },
+                {
+                  "label": ".constructor()",
+                  "id": "backend_src_events_event_outbox_service_eventoutboxservice_constructor",
+                  "src": "backend/src/events/event-outbox.service.ts",
+                  "loc": "L20",
+                  "call_site": "",
+                  "via": "EventOutboxService",
+                  "rel": "method",
+                  "dir": "out",
+                  "conf": 1
+                },
+                {
+                  "label": ".publishPending()",
+                  "id": "backend_src_events_event_outbox_service_eventoutboxservice_publishpending",
+                  "src": "backend/src/events/event-outbox.service.ts",
+                  "loc": "L61",
+                  "call_site": "",
+                  "via": "EventOutboxService",
+                  "rel": "method",
+                  "dir": "out",
+                  "conf": 1
+                },
+                {
+                  "label": ".recordEvent()",
+                  "id": "backend_src_events_event_outbox_service_eventoutboxservice_recordevent",
+                  "src": "backend/src/events/event-outbox.service.ts",
+                  "loc": "L45",
+                  "call_site": "",
+                  "via": "EventOutboxService",
+                  "rel": "method",
+                  "dir": "out",
+                  "conf": 1
+                },
+                {
+                  "label": ".recordQueueIngress()",
+                  "id": "backend_src_events_event_outbox_service_eventoutboxservice_recordqueueingress",
+                  "src": "backend/src/events/event-outbox.service.ts",
+                  "loc": "L22",
+                  "call_site": "",
+                  "via": "EventOutboxService",
+                  "rel": "method",
+                  "dir": "out",
+                  "conf": 1
+                }
+              ]
+            },
+            {
+              "src": "backend/src/communications/communications.service.ts",
+              "nodes": [
+                {
+                  "label": ".constructor()",
+                  "id": "backend_src_communications_communications_service_communicationsservice_constructor",
+                  "src": "backend/src/communications/communications.service.ts",
+                  "loc": "L54",
+                  "call_site": "L54",
+                  "via": "EventOutboxService",
+                  "rel": "references",
+                  "dir": "in",
+                  "conf": 1
+                }
+              ]
+            },
+            {
+              "src": "backend/src/events/event-outbox.scheduler.ts",
+              "nodes": [
+                {
+                  "label": ".constructor()",
+                  "id": "backend_src_events_event_outbox_scheduler_eventoutboxscheduler_constructor",
+                  "src": "backend/src/events/event-outbox.scheduler.ts",
+                  "loc": "L9",
+                  "call_site": "L9",
+                  "via": "EventOutboxService",
+                  "rel": "references",
+                  "dir": "in",
+                  "conf": 1
+                }
+              ]
+            },
+            {
+              "src": "backend/src/events/events.controller.ts",
+              "nodes": [
+                {
+                  "label": ".constructor()",
+                  "id": "backend_src_events_events_controller_eventscontroller_constructor",
+                  "src": "backend/src/events/events.controller.ts",
+                  "loc": "L19",
+                  "call_site": "L19",
+                  "via": "EventOutboxService",
+                  "rel": "references",
+                  "dir": "in",
+                  "conf": 1
+                }
+              ]
+            }
+          ],
+          "n": 8,
+          "truncated": false,
+          "continuations": {
+            "node": "gx_node('EventOutboxService', strict_calls=false)",
+            "expand": "gx_expand(['EventOutboxService'])"
+          }
+        },
+        "tests": [
+          {
+            "id": "backend_test_runtime_event_outbox_service_spec",
+            "label": "event-outbox.service.spec.ts",
+            "src": "backend/test/runtime/event-outbox.service.spec.ts",
+            "loc": "L1",
+            "rel": "imports",
+            "via": "EventOutboxService",
+            "dir": "in",
+            "match": "edge",
+            "conf": 1
+          }
+        ],
+        "tests_unresolved": false,
+        "hotspot_files": [
+          {
+            "src": "backend/src/events/event-outbox.service.ts",
+            "score": 5,
+            "n_nodes": 5,
+            "has_tests": true
+          },
+          {
+            "src": "backend/src/communications/communications.service.ts",
+            "score": 1,
+            "n_nodes": 1,
+            "has_tests": true
+          },
+          {
+            "src": "backend/src/events/event-outbox.scheduler.ts",
+            "score": 1,
+            "n_nodes": 1,
+            "has_tests": true
+          },
+          {
+            "src": "backend/src/events/events.controller.ts",
+            "score": 1,
+            "n_nodes": 1,
+            "has_tests": true
+          }
+        ],
+        "untested_hotspots": [],
+        "note": "static graph-derived blast radius -- not a verification or review verdict",
+        "freshness": {
+          "indexed_at": "2026-10-15T22:02:16.584559Z",
+          "age": "12h ago",
+          "note": "answer describes the code at this commit when the index was built; the repository may have moved since",
+          "commit": "9a41b2e"
+        },
+        "continuations": {
+          "graphify_tests_for": "tests covering the hotspots",
+          "graphify_file_neighbors": "per-file dependents"
+        }
+      },
+      "manifestSha256": "9081b59195a1d4687e3cae90f037e70a95ee688c6bf71dc6b20b5e1b1c16f512"
+    },
+    "isError": false
+  },
+  "bullmq": {
+    "content": [
+      {
+        "type": "text",
+        "text": "### Reusing IORedis instance with Worker and maxRetriesPerRequest: null\n\nSource: https://github.com/taskforcesh/bullmq/blob/master/bullmq/docs/gitbook/guide/connections.md\n\nShows how to properly create an IORedis connection for reusing between Queue and Worker instances, with the critical maxRetriesPerRequest: null setting for Worker instances to enable indefinite retry behavior during disconnections.\n\n```typescript\nimport { Worker } from 'bullmq';\nimport IORedis from 'ioredis';\n\nconst connection = new IORedis({ maxRetriesPerRequest: null });\n\n// Reuse the ioredis instance in 2 different consumers\nconst myFirstWorker = new Worker('myFirstWorker', async job => {}, {\n  connection,\n});\nconst mySecondWorker = new Worker('mySecondWorker', async job => {}, {\n  connection,\n});\n```\n\n### Persistent connections > Queue\n\nSource: https://github.com/taskforcesh/bullmq/blob/master/docs/gitbook/bull/patterns/persistent-connections.md\n\n### Queue\n\nA simple Queue instance used for managing the queue such as adding jobs, pausing, using getters, etc. usually has different requirements from the worker.\n\nFor example, say that you are adding jobs to a queue as the result of a call to an HTTP endpoint. The caller of this endpoint cannot wait forever if the connection to Redis happens to be down when this call is made.\n\nTherefore the `maxRetriesPerRequest` setting should either be left at its default (which currently is 20) or set it to another value, maybe 1 so that the user gets an error quickly and can retry later.\n\n--------------------------------\n\n### Going to production > Automatic reconnections > maxRetriesPerRequest\n\nSource: https://github.com/taskforcesh/bullmq/blob/master/docs/gitbook/guide/going-to-production.md\n\nThis option sets a limit on the number of times a retry on a failed request will be performed. For `Worker`s using ioredis, it is important to set this option to **`null`**. Otherwise, the exceptions raised by Redis when calling certain commands could break the worker functionality. When instantiating a `Worker` this option will always be set to `null` by default, but it could be overridden, either if passing an existing ioredis instance or by passing a different value for this option when instantiating the `Worker`. In both cases BullMQ will output a warning; please make sure to address this warning as it can have several unintended consequences.\n\n--------------------------------\n\n### Going to production > Max memory policy\n\nSource: https://github.com/taskforcesh/bullmq/blob/master/docs/gitbook/guide/going-to-production.md\n\nRedis is used quite often as a cache, meaning that it will remove keys according to some defined policy when it reaches several levels of memory consumption. BullMQ on the other hand cannot work properly if Redis evicts keys arbitrarily. **Therefore is very important to configure the `maxmemory-policy` setting to `noeviction`.** This is the **only** setting that guarantees the correct behavior of the queues.\n\n--------------------------------\n\n### Introduction > Features\n\nSource: https://github.com/taskforcesh/bullmq/blob/master/elixir/guides/introduction.md\n\n- **High Performance**: Leverages Redis for fast, reliable message passing\n- **Job Scheduling**: Schedule jobs to run at specific times or intervals\n- **Priority Queues**: Process high-priority jobs first\n- **Retry Strategies**: Automatic retries with configurable backoff\n- **Rate Limiting**: Control job processing rates\n- **Parent-Child Jobs**: Create complex job hierarchies with dependencies\n- **Real-time Events**: Subscribe to job lifecycle events via Worker callbacks or QueueEvents\n- **Concurrency Control**: Process multiple jobs simultaneously\n- **Stalled Job Recovery**: Automatically recover jobs from crashed workers\n- **Telemetry Integration**: Built-in observability with Telemetry\n- **OTP Design**: Built using GenServers, Supervisors, and other OTP patterns\n- **Node.js Compatibility**: Share queues between Elixir and Node.js workers"
+      }
+    ],
+    "isError": false
+  },
+  "cloudflare": {
+    "content": [
+      {
+        "type": "text",
+        "text": "### instance.sendEvent(options)\n\nSource: https://github.com/cloudflare/cloudflare-docs/blob/production/src/content/docs/workflows/build/workers-api.mdx\n\nSends an event to a running Workflow instance to resolve a corresponding waitForEvent step. Throws an exception if the Workflow is not running or is in an errored state.\n\n```APIDOC\n## instance.sendEvent(options)\n\n### Description\nSends an event to a running Workflow instance. The event `type` must match the `type` in the corresponding `waitForEvent` call in the Workflow.\n\n### Method Signature\n`sendEvent(options: { type: string; payload: any }): Promise<void>`\n\n### Parameters\n- **options** (object) - Required\n  - **type** (string) - Required - The event type (up to 100 characters, matches `^[a-zA-Z0-9_][a-zA-Z0-9-_]*$`). Must match the type in `waitForEvent`.\n  - **payload** (any) - Required - The payload data to send to the Workflow instance.\n\n### Returns\n`Promise<void>` - Returns `void` on success. Throws an exception if the Workflow is not running or is in an errored state.\n\n### Example\n```ts\nlet instance = await env.MY_WORKFLOW.get(instanceId);\nawait instance.sendEvent({\n  type: \"stripe-webhook\",\n  payload: webhookPayload,\n});\n```\n```\n\n--------------------------------\n\n### Set Workflow instance retention with env.MY_WORKFLOW.create\n\nSource: https://github.com/cloudflare/cloudflare-docs/blob/production/src/content/changelog/workflows/2026-09-10-paid-retention-default.mdx\n\nSpecify successRetention, errorRetention, or both in the retention option when creating a Workflow instance to customize retention durations.\n\n```ts\nconst instance = await env.MY_WORKFLOW.create({\n\tretention: {\n\t\tsuccessRetention: \"2 days\",\n\t\terrorRetention: \"30 days\",\n\t},\n});\n```\n\n--------------------------------\n\n### Wait for an event using step.waitForEvent\n\nSource: https://github.com/cloudflare/cloudflare-docs/blob/production/src/content/docs/workflows/build/workers-api.mdx\n\nPauses the Workflow execution until a matching event is received or the timeout duration expires. The timeout defaults to 24 hours.\n\n```ts\nexport class MyWorkflow extends WorkflowEntrypoint<Env, Params> {\n\tasync run(event: WorkflowEvent<Params>, step: WorkflowStep) {\n\t\t// Other steps in your Workflow\n\t\tlet stripeEvent = await step.waitForEvent<IncomingStripeWebhook>(\n\t\t\t\"receive invoice paid webhook from Stripe\",\n\t\t\t{ type: \"stripe-webhook\", timeout: \"1 hour\" },\n\t\t);\n\t\t// Rest of your Workflow\n\t}\n}\n```\n\n### Wait for events\n\nSource: https://github.com/cloudflare/cloudflare-docs/blob/production/src/content/docs/workflows/build/events-and-parameters.mdx\n\nThe default timeout for a `waitForEvent` call is 24 hours, which can be changed by passing `{ timeout: WorkflowTimeoutDuration }` as the second argument to your `waitForEvent` call.\n\nYou can specify a timeout between 1 second and up to 365 days.\n\n:::caution[Timeout behavior]\n\nWhen `waitForEvent` times out, the Workflow will throw an error and the instance will fail. If you want your Workflow to continue even if the event is not received, wrap the `waitForEvent` call in a `try...catch` block:\n\n:::\n\n--------------------------------\n\n### Durability guarantees\n\nSource: https://github.com/cloudflare/cloudflare-docs/blob/production/src/content/docs/agents/concepts/workflows.mdx\n\nWorkflows provide durability through step-based execution:\n\n1. **Step completion is permanent** — Once a step completes, it will not re-execute even if the workflow restarts\n2. **Automatic retries** — Failed steps retry with configurable backoff\n3. **Event persistence** — Workflows can wait for events for up to one year\n4. **State recovery** — Workflow state survives infrastructure failures\n\nThis durability model means workflows are well-suited for tasks where partial completion must be preserved, such as multi-stage data processing or transactions spanning multiple systems."
+      }
+    ],
+    "isError": false
+  },
+  "brief": {
+    "content": [
+      {
+        "type": "text",
+        "text": "An evidence-backed task brief was generated with each item placed in its specific field."
+      }
+    ],
+    "structuredContent": {
+      "status": "partial",
+      "summary": "An evidence-backed task brief was generated with each item placed in its specific field.",
+      "deliverable": {
+        "task_goal": [
+          "Execute reversible migration implementation and isolated verification; gate irreversible production actions separately."
+        ],
+        "in_scope": [],
+        "out_of_scope": [],
+        "constraints": [],
+        "acceptance_criteria": [],
+        "test_requirements": [],
+        "delivery_requirements": [],
+        "unconfirmed_items": [
+          "scope_boundaries",
+          "out_of_scope",
+          "constraints",
+          "acceptance_criteria",
+          "test_requirements",
+          "delivery_requirements"
+        ]
+      },
+      "included_items": [
+        {
+          "item_id": "owner-scope",
+          "text": "Execute reversible migration implementation and isolated verification; gate irreversible production actions separately.",
+          "status": "confirmed",
+          "evidence_ids": [
+            "current-owner-directive"
+          ]
+        },
+        {
+          "item_id": "task_goal_1",
+          "text": "Execute reversible migration implementation and isolated verification; gate irreversible production actions separately.",
+          "status": "confirmed",
+          "evidence_ids": [
+            "CI_E1"
+          ]
+        }
+      ],
+      "missing_fields": [
+        "scope_boundaries",
+        "out_of_scope",
+        "constraints",
+        "acceptance_criteria",
+        "test_requirements",
+        "delivery_requirements"
+      ],
+      "limitations": [
+        "No repository access, implementation, deployment, or test execution was performed."
+      ],
+      "evidence": [
+        {
+          "evidence_id": "E1",
+          "source_excerpt": "OWNER DIRECTIVE: Continue existing NEXI migration worktree migration/sqlite-local-bridge.",
+          "supports": []
+        },
+        {
+          "evidence_id": "E2",
+          "source_excerpt": "Goal: complete Cloudflare exit to existing VPS, preserve Public/Admin/NestJS/SQLite Ledger/EventOutbox, market data, auth, all workflows and private objects.",
+          "supports": []
+        },
+        {
+          "evidence_id": "E3",
+          "source_excerpt": "Execute bounded reversible code and isolated staging.",
+          "supports": []
+        },
+        {
+          "evidence_id": "E4",
+          "source_excerpt": "Acceptance: reconcile all92 tables and exact financial values; per-connection SQLite WAL/FULL/FK/busy timeout; durable outbox/inbox and workflow restart recovery; object hash parity; complete app runtime acceptance; tested independent encrypted backup.",
+          "supports": []
+        },
+        {
+          "evidence_id": "E5",
+          "source_excerpt": "No live financial writer switch, production DNS/nameservers change, destructive retention, or Cloudflare resource deletion without specific final owner approval.",
+          "supports": []
+        },
+        {
+          "evidence_id": "E6",
+          "source_excerpt": "Keep tasks/plan.md and tasks/todo.md with native evidence.",
+          "supports": []
+        },
+        {
+          "evidence_id": "E7",
+          "source_excerpt": "Do not revive PostgreSQL or managed recurring dependencies.",
+          "supports": []
+        },
+        {
+          "evidence_id": "E8",
+          "source_excerpt": "Current checkpoint: original7SQLite tests plus53financial tests and build recovered; three added durability tests passed,10total.",
+          "supports": []
+        },
+        {
+          "evidence_id": "E9",
+          "source_excerpt": "Final cutover remains unapproved.",
+          "supports": []
+        },
+        {
+          "evidence_id": "CI_E1",
+          "source_excerpt": "Execute reversible migration implementation and isolated verification; gate irreversible production actions separately.",
+          "supports": [
+            "task_goal_1"
+          ]
+        }
+      ],
+      "errors": []
+    },
+    "isError": false
+  }
+}

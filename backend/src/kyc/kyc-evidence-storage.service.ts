@@ -1,3 +1,7 @@
+import { constants } from 'node:fs';
+import { lstat, mkdir, open, readFile, realpath } from 'node:fs/promises';
+import { isAbsolute, join, sep, dirname } from 'node:path';
+import { randomUUID } from 'node:crypto';
 import {
   BadRequestException,
   Injectable,
@@ -35,6 +39,36 @@ export function validateKycEvidence(body: Buffer, contentType: string): string {
 
 @Injectable()
 export class KycEvidenceStorageService {
+  private async localFile(key: string): Promise<string | null> {
+    if (process.env.NEXI_LOCAL_OBJECTS_ENABLED !== 'true') return null;
+    const root = process.env.NEXI_LOCAL_OBJECTS_ROOT;
+    if (!root || !isAbsolute(root) || !/^kyc-evidence\/[A-Za-z0-9._%~-]+\/[A-Za-z0-9._:-]+$/.test(key)
+        || key.includes('..') || key.length > 512) {
+      throw new ServiceUnavailableException('Private local evidence storage is misconfigured');
+    }
+    let rootDir: string;
+    try {
+      if ((await lstat(root)).isSymbolicLink()) throw Error('Object root symlink');
+      rootDir = await realpath(root);
+      const file = join(rootDir, ...key.split('/'));
+      if (!file.startsWith(rootDir + sep)) throw Error('Unsafe object key');
+      await mkdir(dirname(file), {recursive:true,mode:0o700});
+      const parent = await realpath(dirname(file));
+      if (!parent.startsWith(rootDir + sep)) throw Error('Unsafe object directory');
+      return join(parent, key.split('/').at(-1)!);
+    } catch {
+      throw new ServiceUnavailableException('Private local evidence storage is unavailable');
+    }
+  }
+
+  private contentTypeOf(body: Buffer): string {
+    const formats=['image/png','image/jpeg','image/webp','application/pdf'];
+    for(const type of formats) {
+      try { validateKycEvidence(body,type); return type; } catch { /* next signature */ }
+    }
+    throw new ServiceUnavailableException('Private evidence content does not match an allowed format');
+  }
+
   private objectUrl(key: string): string {
     const url = new URL('/objects', EVIDENCE_HOST);
     url.searchParams.set('key', key);
@@ -55,6 +89,21 @@ export class KycEvidenceStorageService {
   }
 
   async put(key: string, body: Buffer, contentType: string): Promise<void> {
+    const local = await this.localFile(key);
+    if (local) {
+      validateKycEvidence(body,contentType);
+      // UUID object keys are immutable; refuse overwrite and follow no symlinks.
+      let handle;
+      try {
+        handle = await open(local,constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY | constants.O_NOFOLLOW,0o600);
+        await handle.writeFile(body);
+      } catch {
+        throw new ServiceUnavailableException('Private local evidence could not be stored');
+      } finally {
+        await handle?.close();
+      }
+      return;
+    }
     const response = await this.request(this.objectUrl(key), {
       method: 'PUT',
       headers: { 'content-type': contentType },
@@ -64,6 +113,11 @@ export class KycEvidenceStorageService {
   }
 
   async head(key: string): Promise<boolean> {
+    const local = await this.localFile(key);
+    if (local) {
+      try { const stat=await lstat(local);return stat.isFile() && stat.size>0 && stat.size<=KYC_EVIDENCE_MAX_BYTES; }
+      catch(e) {if((e as NodeJS.ErrnoException).code==='ENOENT')return false;throw new ServiceUnavailableException('Private local evidence is unavailable');}
+    }
     const response = await this.request(this.objectUrl(key), { method: 'HEAD' });
     if (response.status === 404) return false;
     if (!response.ok) throw new ServiceUnavailableException('Private KYC evidence could not be verified');
@@ -71,6 +125,15 @@ export class KycEvidenceStorageService {
   }
 
   async get(key: string): Promise<PrivateKycEvidence | null> {
+    const local = await this.localFile(key);
+    if (local) {
+      if (!await this.head(key)) return null;
+      let body: Buffer;
+      try {body=await readFile(local);}
+      catch {throw new ServiceUnavailableException('Private local evidence could not be retrieved');}
+      const contentType=this.contentTypeOf(body);
+      return {body,contentType};
+    }
     const response = await this.request(this.objectUrl(key), { method: 'GET' });
     if (response.status === 404) return null;
     if (!response.ok) throw new ServiceUnavailableException('Private KYC evidence could not be retrieved');

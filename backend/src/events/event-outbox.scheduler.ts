@@ -16,6 +16,12 @@ export class EventOutboxScheduler {
     if (process.env.NEXI_SCHEDULER_ENABLED !== "true") {
       return { skipped: true, reason: "scheduler-disabled" };
     }
+    // Local publication is durably serialized by SQLite Outbox claim and job identity.
+    // It must not depend on the old external Redis scheduler lock.
+    if (process.env.NEXI_SQLITE_LOCAL_ENABLED === "true" &&
+        process.env.NEXI_LOCAL_ASYNC_ENABLED === "true") {
+      return this.outbox.publishPending(25);
+    }
     if (!this.redis || !this.redis.isAvailable()) {
       Sentry.metrics.count("nexi.scheduler.skipped", 1, {
         attributes: { scheduler: "event-outbox", reason: "redis-unavailable" },

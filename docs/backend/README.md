@@ -1,20 +1,20 @@
 # NEXI Backend: Current Source and Domain Map
 
-**Source:** `backend/src/`, `backend/prisma/`, `backend/test/`, `cloudflare-container-bootstrap/`; authoritative revision is current GitHub `main`. This catalog maps responsibilities. It is **not** a claim that every journey passed production acceptance.
+**Source:** `backend/src/`, `backend/prisma/`, `backend/test/`; canonical source is GitHub `main`. The Cloudflare bootstrap directory remains production/platform compatibility source during migration. This catalog maps responsibilities and does not claim every journey passed production acceptance.
 
 ## Runtime and authority
 
-Public/Admin consumers → Cloudflare Worker → Cloudflare Container → NestJS domain services. NestJS owns business decisions. D1 owns durable application and financial records. Ledger postings own accounting truth, EventOutbox owns durable publication; Valkey owns realtime/cache/Streams, not accounting. Queues deliver/retry; Workflows orchestrate. R2 stores approved private domain objects such as KYC evidence. Never revive retired PostgreSQL/Prisma-Postgres financial authority or permit direct frontend D1 mutations.
+Public/Admin consumers → existing Nginx hosts → Next.js frontends and the NestJS VPS API. NestJS owns business decisions. SQLite/Prisma is the target durable application store; Ledger postings own accounting truth and EventOutbox/EventInbox own durable delivery boundaries. Aiven Valkey backs BullMQ and Socket.IO Redis Streams plus ephemeral cache, never accounting. SQLite journals/coordinator preserve job and workflow state; private local storage replaces R2 for evidence files. Cloudflare remains live production until approved cutover. Never restore retired PostgreSQL authority, create a second financial writer, or permit direct frontend database mutations.
 
 ## Domain feature inventory
 
 | Domain | Main source owner(s) | Contract / persistence / invariants |
 |---|---|---|
 | Identity and SIWE | `auth/`, `users/`, `profile/` | Wallet-only SIWE, session/JWT policies, ownership checks, logout/security controls; no standalone password recovery |
-| User verification | `kyc/`, Worker private R2 binding | Authenticated document upload/submit; private evidence storage; Admin review and permission boundary |
+| User verification | `kyc/`, local evidence-storage adapter | Authenticated document upload/submit; private VPS evidence storage; Admin review and permission boundary |
 | Assets and market | `market/` | 53 market identities (17 crypto, 20 shares, 9 forex, 7 metals); provider normalization, quote freshness/provenance, klines, realtime streams, category-sensitive metadata |
 | Wallet and transfers | `wallet/`, `financial/` | Funding (`MAIN`), Spot, Margin, Options (`BINARY`), Finance; account-scoped available/locked/total; authenticated same-user cross-account transfers; separate NEXI-user transfers |
-| Accounting | `ledger/`, `d1/d1-financial-command.gateway.ts`, `events/` | Balanced debits/credits, reserves/releases, idempotency, durable Activity and EventOutbox correlation; no financial truth in Valkey |
+| Accounting | `ledger/`, local SQLite financial-command gateway, `events/` | Balanced debits/credits, reserves/releases, idempotency, durable Activity and EventOutbox correlation; no financial truth in Valkey |
 | Deposit/withdrawal | `wallet/`, `financial/`, `d1/` | Currency/network/address/QR, claims/proofs, approval or rejection, verification, settlement and Activity |
 | Convert | `conversion/`, `financial/` | Backend quotes and expiry, source/destination eligibility, **zero separate commission**, atomic financial postings |
 | Spot | `spot/spot.*`, `d1/` | Orders, fills, fees, cancellations, isolated Spot account balance and trade reporting |
@@ -37,9 +37,9 @@ Every movement that affects financial state must be traceable through Ledger, Ac
 - Controllers/DTOs and `docs/contracts/openapi.json` map endpoint names; check generation provenance before claiming API completeness.
 - `backend/test/` and colocated specs are focused source proof, not real-wallet UI proof.
 - Graphify can locate structural dependencies and affected paths; use direct source and real runtime for correctness claims.
-- Current Worker/Container, D1 migration and Sentry release identity must be independently verified before claiming deployed behavior.
+- Current VPS runtime, any still-live Cloudflare production dependencies, SQLite/D1 migration evidence and Sentry release identity must be independently verified before claiming deployed behavior.
 
-See [cross-surface map](../architecture/CROSS_SURFACE_FEATURE_MAP.md), [financial integrity](../security/NEXI_FINANCIAL_INTEGRITY_REQUIREMENTS.md), [Sentry operations](../operations/NEXI_SENTRY_OBSERVABILITY.md).
+See [VPS backend runtime map](../architecture/NEXI_VPS_BACKEND_RUNTIME.md), [system architecture](../architecture/NEXI_SYSTEM_ARCHITECTURE.md), [cross-surface map](../architecture/CROSS_SURFACE_FEATURE_MAP.md), [financial integrity](../security/NEXI_FINANCIAL_INTEGRITY_REQUIREMENTS.md), and [Sentry operations](../operations/NEXI_SENTRY_OBSERVABILITY.md).
 
 ## Financial operation and market contracts
 

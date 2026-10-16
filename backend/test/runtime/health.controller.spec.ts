@@ -10,7 +10,10 @@ describe('HealthController', () => {
   it('reports readiness when D1 and Redis are healthy', async () => {
     const controller = new HealthController(
       new ReadinessService(
-        { isReady: jest.fn().mockResolvedValue(true) } as any,
+        {
+          isReady: jest.fn().mockResolvedValue(true),
+          isLocalMode: jest.fn().mockReturnValue(false),
+        } as any,
         { isReady: jest.fn().mockResolvedValue(true) } as any,
       ),
     );
@@ -23,7 +26,10 @@ describe('HealthController', () => {
   it('returns a service-unavailable error when a dependency is down', async () => {
     const controller = new HealthController(
       new ReadinessService(
-        { isReady: jest.fn().mockResolvedValue(false) } as any,
+        {
+          isReady: jest.fn().mockResolvedValue(false),
+          isLocalMode: jest.fn().mockReturnValue(false),
+        } as any,
         { isReady: jest.fn().mockResolvedValue(true) } as any,
       ),
     );

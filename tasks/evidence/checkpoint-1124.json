@@ -1,0 +1,62 @@
+{
+  "at": "2026-10-16T11:24:23.001949+00:00",
+  "repo": "/home/mellonelay1999/workspaces/Nexi-sqlite-migration",
+  "branch": "migration/sqlite-local-bridge",
+  "head": "9a41b2e3da2729173f6d7aac6a1fd2f6c6c4657f",
+  "dirty": [
+    " M backend/package-lock.json",
+    " M backend/package.json",
+    " M backend/src/d1/d1-prisma.service.ts",
+    " M backend/src/d1/d1-worker-bridge.module.ts",
+    "?? backend/src/d1/local-sqlite-bridge.service.ts",
+    "?? backend/src/jobs/",
+    "?? backend/test/d1/d1-prisma-local-sqlite.spec.ts",
+    "?? backend/test/d1/local-sqlite-bridge.service.spec.ts",
+    "?? backend/test/d1/local-sqlite-nest-provider.spec.ts",
+    "?? backend/test/jest-local-async.config.cjs",
+    "?? backend/test/jest-local-sqlite.config.cjs",
+    "?? backend/test/jobs/",
+    "?? tasks/"
+  ],
+  "completedHandles": {
+    "archive92tablePASS": 1634203,
+    "typescriptPASS": 1636645,
+    "sqliteCoverage15PASS": 1637053,
+    "asyncCoverage4PASS": 1637500,
+    "fallowBackendReview": 1637575
+  },
+  "activeHandles": {
+    "isolatedValkeyUnixOnly": 1635337
+  },
+  "methods": {
+    "parent": "nexi-work-kernel",
+    "lifecycle": "using-agent-skills \u2192 incremental/TDD/source-driven/deprecation \u2192 review",
+    "coding": "Ponytail full",
+    "cache": "Work guard migration-20261016; fingerprints verified after current installed reads"
+  },
+  "lanes": {
+    "A": {
+      "owner": "parent/RDC only semantic writer",
+      "current": "Next durable workflow SQLite persistence increment; preserve tested journal/transport"
+    },
+    "B": {
+      "owner": "read-only Graphify/current-source/official contracts",
+      "result": "Existing EventInbox/domain commands retained; deployed workflow waits/retries/source command keys recovered; no alternate financial authority",
+      "next": "Verify domain command idempotency at checkpoint replay boundary"
+    },
+    "C": {
+      "owner": "read-only data/platform/test continuity",
+      "result": "92/92 restore fidelity + gzipCRC + unchanged inputs;19 focused tests and measured coverage;no final live cutover equality",
+      "next": "Track remaining bindings and exact frontier;no heavy re-export"
+    }
+  },
+  "review": {
+    "newProductionComplexityFindings": 0,
+    "newDeadCodeFindings": 0,
+    "inheritedDependencyFindings": 10,
+    "testTeardownEstimatedComplexityFindings": 1,
+    "fullFallowVerdict": "fail; reconciled limitations, not clean gate claim",
+    "note": "Generated report strings/HTML are not source suppressions. No automatic cleanup or metric-only code refactor."
+  },
+  "next": "Create and test minimal durable workflow checkpoints/events/step results using same SQLite bridge, then reuse existing NestJS WorkflowCommandsService. No production deployment or authority change."
+}

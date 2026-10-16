@@ -1,0 +1,27 @@
+[Unit]
+Description=NEXI NestJS VPS API (non-authoritative staging until cutover acceptance)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mellonelay1999
+Group=mellonelay1999
+WorkingDirectory=/srv/nexi/backend
+EnvironmentFile=/etc/nexi/backend.env
+Environment=NODE_ENV=production
+Environment=HOST=127.0.0.1
+Environment=PORT=3002
+ExecStart=/usr/local/bin/node /srv/nexi/backend/dist/src/main.js
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/nexi/sqlite /var/lib/nexi/storage
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

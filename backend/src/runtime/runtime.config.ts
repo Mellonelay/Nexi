@@ -1,5 +1,6 @@
 export interface RuntimeConfig {
   nodeEnv: string;
+  host: string;
   port: number;
   d1RuntimeEnabled: boolean;
   d1BridgeEnabled: boolean;
@@ -61,6 +62,7 @@ export function resolveRuntimeConfig(environment: NodeJS.ProcessEnv = process.en
 
   return {
     nodeEnv,
+    host: environment.HOST?.trim() || '0.0.0.0',
     port: parsePort(environment.PORT),
     d1RuntimeEnabled: true,
     d1BridgeEnabled: true,

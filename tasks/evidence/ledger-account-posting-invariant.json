@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-16T10:53:04.522536+00:00",
+  "scope": "Historical SQLite, exact Decimal precision100, account balances compared with all posting deltas; raw account ids omitted. Previous live full-content comparison matched both tables.",
+  "accounts": 14,
+  "postings": 46,
+  "balanceMismatchAccounts": 0,
+  "postingAccountsWithoutAccount": 0
+}

@@ -1,0 +1,72 @@
+{
+  "at": "2026-10-16T10:54:16.562Z",
+  "scope": "Node better-sqlite3 read-only real-dataset smoke; no Prisma/NestJS runtime deployment claim",
+  "engine": "3.53.2",
+  "bytes": 7164264448,
+  "tables": [
+    {
+      "table": "LedgerAccount",
+      "primaryKeyColumns": [
+        "id"
+      ],
+      "foundRow": true,
+      "lookups": 1000,
+      "elapsedMs": 34.83
+    },
+    {
+      "table": "LedgerPosting",
+      "primaryKeyColumns": [
+        "id"
+      ],
+      "foundRow": true,
+      "lookups": 1000,
+      "elapsedMs": 52.92
+    },
+    {
+      "table": "EventOutbox",
+      "primaryKeyColumns": [
+        "id"
+      ],
+      "foundRow": true,
+      "lookups": 1000,
+      "elapsedMs": 32.8
+    },
+    {
+      "table": "EventInbox",
+      "primaryKeyColumns": [
+        "messageId"
+      ],
+      "foundRow": true,
+      "lookups": 1000,
+      "elapsedMs": 26.51
+    },
+    {
+      "table": "AuthSession",
+      "primaryKeyColumns": [
+        "id"
+      ],
+      "foundRow": true,
+      "lookups": 1000,
+      "elapsedMs": 28.38
+    },
+    {
+      "table": "MarketKline",
+      "primaryKeyColumns": [
+        "id"
+      ],
+      "foundRow": true,
+      "lookups": 1000,
+      "elapsedMs": 132.83
+    },
+    {
+      "table": "MarketQuoteSnapshot",
+      "primaryKeyColumns": [
+        "id"
+      ],
+      "foundRow": true,
+      "lookups": 1000,
+      "elapsedMs": 96.12
+    }
+  ],
+  "elapsedMs": 488.76
+}

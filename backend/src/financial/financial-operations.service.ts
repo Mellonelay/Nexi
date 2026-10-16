@@ -1,7 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, Optional, ServiceUnavailableException } from '@nestjs/common';
 import { Gate2ConversionQuoteState, Gate2DepositState, Gate2WithdrawalState, Prisma } from '../prisma/d1-client';
 import { randomUUID } from 'node:crypto';
 import { D1FinancialCommandGateway, type D1MarketPairRow } from '../d1/d1-financial-command.gateway';
+import { LocalDepositProofStore } from './local-deposit-proof.store';
 import { assertNonNegativeDecimal, assertPositiveDecimal, decimalProduct } from '../gate2/gate2-rules';
 
 export interface DepositObservation { userId: string; asset: string; network: string; address: string; txHash: string; amount: string; confirmations: number; requiredConfirmations: number; observationKey: string; provider: 'deterministic-test'; }
@@ -17,7 +18,7 @@ export interface DepositClaimInput { asset: string; network: string; depositAddr
 
 @Injectable()
 export class FinancialOperationsService {
-  constructor(private readonly d1: D1FinancialCommandGateway) {}
+  constructor(private readonly d1: D1FinancialCommandGateway, @Optional() private readonly localProofs?: LocalDepositProofStore) {}
 
   async observeDeposit(input: DepositObservation): Promise<any> {
     if (input.provider !== 'deterministic-test') throw new ServiceUnavailableException('External deposit providers are disabled in Gate 2');
@@ -259,6 +260,11 @@ export class FinancialOperationsService {
     const amount = assertPositiveDecimal(input.claimedAmount);
     if (!input.proofObjectKey.trim()) throw new BadRequestException('Deposit proof is required');
     this.authorizeDepositProofUpload(userId, input.proofObjectKey.trim());
+    if (process.env.NEXI_LOCAL_OBJECTS_ENABLED === 'true') {
+      if (!this.localProofs || !await this.localProofs.head(input.proofObjectKey.trim())) {
+        throw new BadRequestException('Deposit proof object is not available');
+      }
+    }
     const claim: any = await this.d1.submitDepositClaim({ id: randomUUID(), userId, asset: input.asset, network: input.network, depositAddressId: input.depositAddressId, claimedAmount: amount.toString(), proofObjectKey: input.proofObjectKey.trim(), txHash: input.txHash?.trim(), idempotencyKey: input.idempotencyKey });
     return { depositRequestId: claim.id, status: claim.state, claim, replayed: false };
   }

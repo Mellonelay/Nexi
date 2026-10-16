@@ -1,0 +1,1179 @@
+{
+  "startedAt": "2026-10-16T10:44:05.156524+00:00",
+  "scope": "Live D1 vs isolated historical snapshot, 90 smaller application tables; two large market tables require snapshot-boundary reconciliation. No raw rows persisted.",
+  "schemaDifferences": [],
+  "tables": [
+    {
+      "table": "Activity",
+      "local": {
+        "count": 40,
+        "sha256": "831179c05bb5c6e18264fec19389883d95104e8fedab7b243e33cac4b2180f2d"
+      },
+      "source": {
+        "count": 40,
+        "sha256": "831179c05bb5c6e18264fec19389883d95104e8fedab7b243e33cac4b2180f2d"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "Admin",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "AdminAuditLog",
+      "local": {
+        "count": 41,
+        "sha256": "d48d21c6fc80e2257040d16e665cc4c33f76bdcd6226d3ac14c40bfde95bbc42"
+      },
+      "source": {
+        "count": 41,
+        "sha256": "d48d21c6fc80e2257040d16e665cc4c33f76bdcd6226d3ac14c40bfde95bbc42"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "AdminFeatureFlag",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "AdminGovernanceApproval",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "AdminGovernanceCommand",
+      "local": {
+        "count": 2,
+        "sha256": "76e29004609794ce068ba0606e6f558ab080ecd9d8d987c2c924659986661662"
+      },
+      "source": {
+        "count": 2,
+        "sha256": "76e29004609794ce068ba0606e6f558ab080ecd9d8d987c2c924659986661662"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "AdminIncident",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "AdminMaintenanceWindow",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "AdminRoleAssignment",
+      "local": {
+        "count": 7,
+        "sha256": "86d31940b80fba541d4a2e8479955cce51ed206c39e1ec5af0e018cdecffb217"
+      },
+      "source": {
+        "count": 7,
+        "sha256": "86d31940b80fba541d4a2e8479955cce51ed206c39e1ec5af0e018cdecffb217"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "Affiliate",
+      "local": {
+        "count": 28,
+        "sha256": "a7073c99afec55338e989ec7b0f5d78132f786c19b498c8b30c7ac7008c383ec"
+      },
+      "source": {
+        "count": 28,
+        "sha256": "a7073c99afec55338e989ec7b0f5d78132f786c19b498c8b30c7ac7008c383ec"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "Announcement",
+      "local": {
+        "count": 1,
+        "sha256": "547a1f94b6e1c22edf180d12977cbdca18f2c52ffcefe36c95a35082b45593bd"
+      },
+      "source": {
+        "count": 1,
+        "sha256": "547a1f94b6e1c22edf180d12977cbdca18f2c52ffcefe36c95a35082b45593bd"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "AuthSession",
+      "local": {
+        "count": 312,
+        "sha256": "a2e378bebee8d64c9a91c3fdd863c192264a43ca97cd4c63883054d7877a70fc"
+      },
+      "source": {
+        "count": 312,
+        "sha256": "a2e378bebee8d64c9a91c3fdd863c192264a43ca97cd4c63883054d7877a70fc"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "BinaryOptionPosition",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "BinaryOptionResult",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "BinaryPair",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "BinaryTimeframe",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "ContractPair",
+      "local": {
+        "count": 3,
+        "sha256": "6b71f9cc800153efd013092f9d67896f80cdb70c82fd8eeb06f1dd9ffc32f80f"
+      },
+      "source": {
+        "count": 3,
+        "sha256": "6b71f9cc800153efd013092f9d67896f80cdb70c82fd8eeb06f1dd9ffc32f80f"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "ContractPosition",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "ConversionTransaction",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "Currency",
+      "local": {
+        "count": 5,
+        "sha256": "6c65f686b85dc3db164b4574541dc2b78a5d983a80624cf07fc4a4d375ab2169"
+      },
+      "source": {
+        "count": 5,
+        "sha256": "6c65f686b85dc3db164b4574541dc2b78a5d983a80624cf07fc4a4d375ab2169"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "DepositAddress",
+      "local": {
+        "count": 8,
+        "sha256": "e67f08b9516432608392fadf6ed5a3f24e21718e24621d5dec3a34754ab01751"
+      },
+      "source": {
+        "count": 8,
+        "sha256": "e67f08b9516432608392fadf6ed5a3f24e21718e24621d5dec3a34754ab01751"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "DepositClaim",
+      "local": {
+        "count": 3,
+        "sha256": "018a907b5558b9789c0dfeead8f0fc884f1ed9c32fb0f48b719335dcd55172e0"
+      },
+      "source": {
+        "count": 3,
+        "sha256": "018a907b5558b9789c0dfeead8f0fc884f1ed9c32fb0f48b719335dcd55172e0"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "EventInbox",
+      "local": {
+        "count": 97,
+        "sha256": "41ed1682ffea73ce350a423d497de79f0e70e0ffa359988d807e3a637f500b0e"
+      },
+      "source": {
+        "count": 97,
+        "sha256": "41ed1682ffea73ce350a423d497de79f0e70e0ffa359988d807e3a637f500b0e"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "EventOutbox",
+      "local": {
+        "count": 92,
+        "sha256": "5b02b57b6ebe868074d4fc166f3e3c7e7cb42a49b4fa499701fcf3cd2db5729e"
+      },
+      "source": {
+        "count": 92,
+        "sha256": "5b02b57b6ebe868074d4fc166f3e3c7e7cb42a49b4fa499701fcf3cd2db5729e"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "Gate2BinaryConfiguration",
+      "local": {
+        "count": 280,
+        "sha256": "6da520f55207ca7f89000be21f4fd55218f7a23f4e2a8b7a3fff99f66ed45305"
+      },
+      "source": {
+        "count": 280,
+        "sha256": "6da520f55207ca7f89000be21f4fd55218f7a23f4e2a8b7a3fff99f66ed45305"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "Gate2BinaryPosition",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "Gate2ConversionQuote",
+      "local": {
+        "count": 3,
+        "sha256": "e8c45bd87df037bbed496254c0a87b1c00ad588ad8ab11b54e8a69e411df47d0"
+      },
+      "source": {
+        "count": 3,
+        "sha256": "e8c45bd87df037bbed496254c0a87b1c00ad588ad8ab11b54e8a69e411df47d0"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "Gate2Deposit",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "Gate2InternalTransfer",
+      "local": {
+        "count": 1,
+        "sha256": "d5722e9b14f57f28177756a48cfeb01efc050be00011eab7b4d0c70779fd9940"
+      },
+      "source": {
+        "count": 1,
+        "sha256": "d5722e9b14f57f28177756a48cfeb01efc050be00011eab7b4d0c70779fd9940"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "Gate2OperationAudit",
+      "local": {
+        "count": 6,
+        "sha256": "079ed42688623443c959679559092f0303d28344c2c93c809d34344f16870fdb"
+      },
+      "source": {
+        "count": 6,
+        "sha256": "079ed42688623443c959679559092f0303d28344c2c93c809d34344f16870fdb"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "Gate2SpotOrder",
+      "local": {
+        "count": 2,
+        "sha256": "f24336df2b61eeba689cd3bfd1c7e8a464370ad95caae78cb630b7e6b0726217"
+      },
+      "source": {
+        "count": 2,
+        "sha256": "f24336df2b61eeba689cd3bfd1c7e8a464370ad95caae78cb630b7e6b0726217"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "Gate2SpotTrade",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "Gate2Withdrawal",
+      "local": {
+        "count": 2,
+        "sha256": "267066f3348f3928c0cec60d154f9400bdd0d0c7b15a9c4c1b1a5f9b8cf4f325"
+      },
+      "source": {
+        "count": 2,
+        "sha256": "267066f3348f3928c0cec60d154f9400bdd0d0c7b15a9c4c1b1a5f9b8cf4f325"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "KYC",
+      "local": {
+        "count": 2,
+        "sha256": "2752148fa6e4cb6dd607493cce47e03dee397e2a3408c2e15468c632fea75527"
+      },
+      "source": {
+        "count": 2,
+        "sha256": "2752148fa6e4cb6dd607493cce47e03dee397e2a3408c2e15468c632fea75527"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "LearnArticleRevision",
+      "local": {
+        "count": 4,
+        "sha256": "cbaad1b82530aebeebb45e38720267a11305548f97039ff95800e9f01800b9a4"
+      },
+      "source": {
+        "count": 4,
+        "sha256": "cbaad1b82530aebeebb45e38720267a11305548f97039ff95800e9f01800b9a4"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "LearnArticleTag",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "LearnCategory",
+      "local": {
+        "count": 1,
+        "sha256": "5dba7843db174f25a692de02a602568043faa1b773fd5497968cd4bcc9b416d2"
+      },
+      "source": {
+        "count": 1,
+        "sha256": "5dba7843db174f25a692de02a602568043faa1b773fd5497968cd4bcc9b416d2"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "LearnContent",
+      "local": {
+        "count": 2,
+        "sha256": "f11eb1dd12ca08df3b329074dd5d79548120a4cffa388326c2abf54ff02f5f48"
+      },
+      "source": {
+        "count": 2,
+        "sha256": "f11eb1dd12ca08df3b329074dd5d79548120a4cffa388326c2abf54ff02f5f48"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "LearnMediaAsset",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "LearnTag",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "Ledger",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "LedgerAccount",
+      "local": {
+        "count": 14,
+        "sha256": "61c73e8552d974bd3816d0c73b0cd3331796c3cf9a7f2d51d50811d47c35a665"
+      },
+      "source": {
+        "count": 14,
+        "sha256": "61c73e8552d974bd3816d0c73b0cd3331796c3cf9a7f2d51d50811d47c35a665"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "LedgerAuditEvent",
+      "local": {
+        "count": 46,
+        "sha256": "7ee8a13184d60cfb9b6ea04ebbf7d2e64069beb90f8e81083e22ef96159d82cf"
+      },
+      "source": {
+        "count": 46,
+        "sha256": "7ee8a13184d60cfb9b6ea04ebbf7d2e64069beb90f8e81083e22ef96159d82cf"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "LedgerIdempotency",
+      "local": {
+        "count": 44,
+        "sha256": "b6baebb13f5d828243b245416423ae431e051fa2ee77893f432803d4db2be63f"
+      },
+      "source": {
+        "count": 44,
+        "sha256": "b6baebb13f5d828243b245416423ae431e051fa2ee77893f432803d4db2be63f"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "LedgerPosting",
+      "local": {
+        "count": 46,
+        "sha256": "1595f0d91b9557075b96b327571ad23559ecd0435d1914c4e561ff28f2eb6dc5"
+      },
+      "source": {
+        "count": 46,
+        "sha256": "1595f0d91b9557075b96b327571ad23559ecd0435d1914c4e561ff28f2eb6dc5"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "LoanApplication",
+      "local": {
+        "count": 5,
+        "sha256": "8bef2a704264ebb857730f23f21caba9ef1ac4e55a3cb23861836a4d9c6749c8"
+      },
+      "source": {
+        "count": 5,
+        "sha256": "8bef2a704264ebb857730f23f21caba9ef1ac4e55a3cb23861836a4d9c6749c8"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "LoanPlan",
+      "local": {
+        "count": 1,
+        "sha256": "a6a96d88e1ca6e0a5a8b44773ae751550f079f6785e2719d1ea044f249b388f2"
+      },
+      "source": {
+        "count": 1,
+        "sha256": "a6a96d88e1ca6e0a5a8b44773ae751550f079f6785e2719d1ea044f249b388f2"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "LoanRepayment",
+      "local": {
+        "count": 1,
+        "sha256": "ce6876b9303596d669689497fd1ef90399323e1fa15226b1ff81097803f246c4"
+      },
+      "source": {
+        "count": 1,
+        "sha256": "ce6876b9303596d669689497fd1ef90399323e1fa15226b1ff81097803f246c4"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "MarketAsset",
+      "local": {
+        "count": 55,
+        "sha256": "8ffbbb857ed69db2769bfb586faebb9e7525376e057ca1a6c457737406a72106"
+      },
+      "source": {
+        "count": 55,
+        "sha256": "c5bcaaf62c9303e4efe75f540cf382e335b92a27bcb8f959d7cd58e109dc765d"
+      },
+      "equal": false,
+      "truncated": false
+    },
+    {
+      "table": "MarketAssetCapability",
+      "local": {
+        "count": 55,
+        "sha256": "d61b1a5cbdde89fa29974a5f59f83cd6da02a0761ec108580b7108a6139904f1"
+      },
+      "source": {
+        "count": 55,
+        "sha256": "13c73bc613a6be6be037170d419c1b61134df6b325f161125029942b63ac07f8"
+      },
+      "equal": false,
+      "truncated": false
+    },
+    {
+      "table": "MarketData",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "MarketDepthLevel",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "MarketDepthSnapshot",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "MarketNetwork",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "MarketPair",
+      "local": {
+        "count": 53,
+        "sha256": "7d4007259679aa66ce157051725adc1ad427afc5ece183fa0fbfc47daf588e10"
+      },
+      "source": {
+        "count": 53,
+        "sha256": "14e185dc6630f15de0477e7e371427d44a2b65e624c18948806eb31baf8ee446"
+      },
+      "equal": false,
+      "truncated": false
+    },
+    {
+      "table": "MarketProviderConfig",
+      "local": {
+        "count": 9,
+        "sha256": "67244a9e6c3053110cc17f17620154f61c5d3fc47003a2762483ca9b1ba86704"
+      },
+      "source": {
+        "count": 9,
+        "sha256": "9480e7390cd462c1df853614a7d7ead3d65fdf3d86d54d488384d42a3d293cf4"
+      },
+      "equal": false,
+      "truncated": false
+    },
+    {
+      "table": "MarketProviderSymbol",
+      "local": {
+        "count": 270,
+        "sha256": "de665cbb279cdab4da15bb7e2daef74677ac05dc6f9b85616b5f80a6d36c4e60"
+      },
+      "source": {
+        "count": 270,
+        "sha256": "eb1fb2c6831db7ca49a859950943eb7407f6aa68dead9c115c5c398732bbb6db"
+      },
+      "equal": false,
+      "truncated": false
+    },
+    {
+      "table": "MarketQuoteLatest",
+      "local": {
+        "count": 53,
+        "sha256": "4ef3237dd109daa6ecefdec3fd006a7507b9a99751457e9b8909954f383feec1"
+      },
+      "source": {
+        "count": 53,
+        "sha256": "4118e188e0fcc9c3dc3687ec8330cc6d31e8d4a1f35ab3ba9de645cd1e95995b"
+      },
+      "equal": false,
+      "truncated": false
+    },
+    {
+      "table": "MarketTrade",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "MessageConversation",
+      "local": {
+        "count": 1,
+        "sha256": "7b88c0ebaec77b29f5b540dfb920a9b49b7ec4ef66b37497f79b31450c6dc3df"
+      },
+      "source": {
+        "count": 1,
+        "sha256": "7b88c0ebaec77b29f5b540dfb920a9b49b7ec4ef66b37497f79b31450c6dc3df"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "MessageModerationCase",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "MiningPlan",
+      "local": {
+        "count": 3,
+        "sha256": "d58147f461ad34fbe907da0d12579661bb4e59e3b1b8a2031bb5c762ad2b408e"
+      },
+      "source": {
+        "count": 3,
+        "sha256": "d58147f461ad34fbe907da0d12579661bb4e59e3b1b8a2031bb5c762ad2b408e"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "MiningRewardAccrual",
+      "local": {
+        "count": 13,
+        "sha256": "e555dd5aa4fedb6ee419a26132cf5e875c89682d13b270d316423229447c7af5"
+      },
+      "source": {
+        "count": 13,
+        "sha256": "e555dd5aa4fedb6ee419a26132cf5e875c89682d13b270d316423229447c7af5"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "MiningSubscription",
+      "local": {
+        "count": 4,
+        "sha256": "52db5bdddee0ceece5e561755521d55460b6187ba4173de3b3a39cfb13ba7e89"
+      },
+      "source": {
+        "count": 4,
+        "sha256": "52db5bdddee0ceece5e561755521d55460b6187ba4173de3b3a39cfb13ba7e89"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "Notification",
+      "local": {
+        "count": 3,
+        "sha256": "32da5dc9acf226025ab70ccf8b02f428ac5c0a0d4b574b91abb8e36ba73529f1"
+      },
+      "source": {
+        "count": 3,
+        "sha256": "32da5dc9acf226025ab70ccf8b02f428ac5c0a0d4b574b91abb8e36ba73529f1"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "OptionGameSettings",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "PersistentMessage",
+      "local": {
+        "count": 1,
+        "sha256": "b0672c860222b93bc7c7038ec3bf95e3a855c194e9be361d75b6224191587d9c"
+      },
+      "source": {
+        "count": 1,
+        "sha256": "b0672c860222b93bc7c7038ec3bf95e3a855c194e9be361d75b6224191587d9c"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "ReferralAttributionEvent",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "ReferralRewardEvent",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "Reward",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "Settings",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "SpotMarginAccount",
+      "local": {
+        "count": 1,
+        "sha256": "0ed9ee31eab67fb50ea594f32a01fc8fac0139405523d616ce518f2667d5bc63"
+      },
+      "source": {
+        "count": 1,
+        "sha256": "0ed9ee31eab67fb50ea594f32a01fc8fac0139405523d616ce518f2667d5bc63"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "SpotMarginActivity",
+      "local": {
+        "count": 1,
+        "sha256": "d3e072a3e31e0c0305e642fba28f955e3d27f9d211fc8c93421c0ebf1e1a319b"
+      },
+      "source": {
+        "count": 1,
+        "sha256": "d3e072a3e31e0c0305e642fba28f955e3d27f9d211fc8c93421c0ebf1e1a319b"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "SpotMarginPosition",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "SpotMarginPositionEvent",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "SpotOrder",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "SpotTrade",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "SupportTicket",
+      "local": {
+        "count": 1,
+        "sha256": "c323ef3f7c8fda23789254b0603e51e2d2e632af6d294fb7042cb549fab5740f"
+      },
+      "source": {
+        "count": 1,
+        "sha256": "c323ef3f7c8fda23789254b0603e51e2d2e632af6d294fb7042cb549fab5740f"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "SupportTicketReply",
+      "local": {
+        "count": 3,
+        "sha256": "a6cde5c989deefa9ab4739b791e65c1947163ee606bc47abb31ae797998433f8"
+      },
+      "source": {
+        "count": 3,
+        "sha256": "a6cde5c989deefa9ab4739b791e65c1947163ee606bc47abb31ae797998433f8"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "SystemConfig",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "User",
+      "local": {
+        "count": 34,
+        "sha256": "fa2616db6851d14ef11a9023f3b5cbd0bebc50c9ec8739751dfe64ebb56aa95e"
+      },
+      "source": {
+        "count": 34,
+        "sha256": "fa2616db6851d14ef11a9023f3b5cbd0bebc50c9ec8739751dfe64ebb56aa95e"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "UserMfa",
+      "local": {
+        "count": 1,
+        "sha256": "1f3446b6756c72423a87afa05d09dea60ed1ad8b8c1d9f1bb78fdab30824a9c5"
+      },
+      "source": {
+        "count": 1,
+        "sha256": "1f3446b6756c72423a87afa05d09dea60ed1ad8b8c1d9f1bb78fdab30824a9c5"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "UserPreference",
+      "local": {
+        "count": 28,
+        "sha256": "e79fbc7b2c5c3cf360943c985843bb2fa2a15304d706399500e0f7703d7ed012"
+      },
+      "source": {
+        "count": 28,
+        "sha256": "e79fbc7b2c5c3cf360943c985843bb2fa2a15304d706399500e0f7703d7ed012"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "UserVipState",
+      "local": {
+        "count": 28,
+        "sha256": "131afe2d3440f19275978fb1bb414cd2ce44b8f0aec8a4b8939e53c22664fdbf"
+      },
+      "source": {
+        "count": 28,
+        "sha256": "131afe2d3440f19275978fb1bb414cd2ce44b8f0aec8a4b8939e53c22664fdbf"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "VipLevel",
+      "local": {
+        "count": 1,
+        "sha256": "1fb850a7a47aba6229c35d92c38264f1c8a45da012014b79e833ca46399f2399"
+      },
+      "source": {
+        "count": 1,
+        "sha256": "1fb850a7a47aba6229c35d92c38264f1c8a45da012014b79e833ca46399f2399"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "Wallet",
+      "local": {
+        "count": 34,
+        "sha256": "07472070485f2e9a35f5cc34f4d5af6af627f93d814a0162f74ea4ed7cdffc28"
+      },
+      "source": {
+        "count": 34,
+        "sha256": "07472070485f2e9a35f5cc34f4d5af6af627f93d814a0162f74ea4ed7cdffc28"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "WalletIdentity",
+      "local": {
+        "count": 21,
+        "sha256": "06ecb6c7f3bcc25849a1794b6affb7a942b0c4afe219526f692c2354af80b074"
+      },
+      "source": {
+        "count": 21,
+        "sha256": "06ecb6c7f3bcc25849a1794b6affb7a942b0c4afe219526f692c2354af80b074"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "WalletNetwork",
+      "local": {
+        "count": 8,
+        "sha256": "487d981b8eb95ac9e13d587470b6b8c6121bb3eb64591599c2ae98ac4607618b"
+      },
+      "source": {
+        "count": 8,
+        "sha256": "487d981b8eb95ac9e13d587470b6b8c6121bb3eb64591599c2ae98ac4607618b"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "WithdrawalRequest",
+      "local": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "equal": true,
+      "truncated": false
+    },
+    {
+      "table": "d1_migrations",
+      "local": {
+        "count": 15,
+        "sha256": "f04f988e7589c1eb0593832034e5f0b3f8944e86013ac8b5a0b681620010fb86"
+      },
+      "source": {
+        "count": 15,
+        "sha256": "f04f988e7589c1eb0593832034e5f0b3f8944e86013ac8b5a0b681620010fb86"
+      },
+      "equal": true,
+      "truncated": false
+    }
+  ],
+  "finishedAt": "2026-10-16T10:44:22.103898+00:00",
+  "equalTables": 84
+}

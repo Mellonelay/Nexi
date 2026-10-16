@@ -1,0 +1,25 @@
+{
+  "at": "2026-10-16T11:13:24.110625+00:00",
+  "scope": "SQLite internal sequence separate from92 application tables; live read not frozen cutover",
+  "local": [
+    {
+      "name": "Currency",
+      "seq": 5
+    },
+    {
+      "name": "d1_migrations",
+      "seq": 15
+    }
+  ],
+  "source": [
+    {
+      "name": "Currency",
+      "seq": 5
+    },
+    {
+      "name": "d1_migrations",
+      "seq": 15
+    }
+  ],
+  "equal": true
+}

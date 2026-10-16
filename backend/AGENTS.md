@@ -3,15 +3,15 @@
 These rules extend the repository root `AGENTS.md` and govern the authoritative NestJS backend in the current synchronized NEXI checkout.
 
 ## Current backend authority
-- Cloudflare Worker + Container is the only active backend execution/runtime authority; do not start or use a Worker-0/VM NestJS backend as backend truth or acceptance evidence.
-- GitHub `main` is durable backend source authority. Legitimate live/container source repairs must be reconciled to `main` immediately when the bounded task finishes.
-- NestJS is the business/domain authority.
-- D1 is the canonical durable application and financial relational authority.
-- Aiven Valkey is cache, Redis Streams, Socket.IO, and ephemeral coordination only.
-- Worker, Queue, Workflow, KV, R2, and Durable Objects do not own financial truth.
+- GitHub `main` is durable backend source authority; the canonical backend source is `backend/` and the VPS runtime is `/srv/nexi/backend` under `nexi-api.service`.
+- NestJS is the sole business/domain authority.
+- SQLite + Prisma 7/better-sqlite3 is the target durable application database. Ledger remains accounting truth; EventOutbox/EventInbox preserve durable publication/idempotent ingress.
+- Aiven Valkey is the selected Redis-compatible service for BullMQ and Socket.IO Redis Streams, plus cache/ephemeral coordination; it is never financial truth.
+- SQLite journal/workflow state is durable; BullMQ transports work. Private local storage holds KYC/deposit evidence.
+- Cloudflare production remains live until separately approved/reconciled cutover; its bindings are parity evidence, not the target runtime architecture.
 
 ## Current implementation objective
-Finish EventOutbox coverage, Workflow-facing NestJS commands, Admin/API contract parity, and realtime recovery/contracts without rebuilding working domains. D1 is the only durable application/financial database path.
+Complete the VPS NestJS runtime and parity acceptance while reusing existing domain modules, focused migration proofs and the canonical Public/Admin services. Do not redesign working domains or activate a second financial writer.
 
 Do not restart broad architecture discovery or restore old Gate/B1-B10 assumptions as current authority.
 Current source/runtime and the root `AGENTS.md` control the execution model.
@@ -20,11 +20,9 @@ Current source/runtime and the root `AGENTS.md` control the execution model.
 Preserve NestJS module ownership, authorization, ownership checks, DTO validation, exact monetary precision, idempotency, ledger invariants, audit/activity linkage, EventOutbox semantics, public/Admin separation, and safe retry/recovery.
 Do not mutate scalar wallet balances as financial authority when canonical ledger/reservation/posting methods exist.
 Do not invent economic behavior, lifecycle states, settlement rules, or acceptance data.
-## D1 and Prisma handling
-Before any D1/Cloudflare operation, read the relevant current official Cloudflare documentation and inspect current Wrangler help. Use the verified Wrangler/Cloudflare operator path against the remote Cloudflare resource; do not use sqlite3/direct SQLite files or a VM-local database as D1 authority.
-Inside application code, use the existing D1 Prisma adapter/gateway/private bridge patterns; do not shell out to Wrangler at runtime.
-
-No retired database fallback/compatibility path is allowed in active backend source. Prisma usage is permitted only through the current D1 adapter/client path.
+## SQLite and Prisma handling
+The VPS target uses the existing Prisma better-sqlite3 adapter and local financial command gateway. Preserve per-connection WAL/FULL durability, foreign keys, busy timeout, atomic transaction and exact decimal/idempotency behavior. Keep Ledger, EventOutbox, EventInbox and durable workflow/job rows in the same SQLite authority where required.
+Cloudflare D1 reads/inspection while it remains production must use project-local Wrangler and current official docs. Do not shell out to Wrangler at runtime or treat SQLite staging as current production equality.
 
 ## High-impact change workflow
 Before changing high-centrality nodes such as `D1FinancialCommandGateway`, `AdminService`, `EventOutboxService`, realtime gateways, or shared financial services:
@@ -37,7 +35,7 @@ Before changing high-centrality nodes such as `D1FinancialCommandGateway`, `Admi
 
 Graphify is not proof. Direct source and focused tests/runtime decide correctness.
 ## Remaining join requirements
-- Implement the NestJS `_internal/workflows/*` command surface required by Withdrawal, Mining, and Loan Cloudflare Workflows.
+- Preserve the NestJS durable workflow command surface for Withdrawal, Mining and Loan as local SQLite-coordinated workflows; keep business effects in the existing domain command services.
 - Complete consequential EventOutbox coverage without duplicating financial authority.
 - Finish Admin live API parity against canonical `/admin/*`; preserve the existing Admin application rather than rebuilding it.
 - Finish realtime recovery/reconnect/dedupe/event contracts over Aiven Streams + Socket.IO.
@@ -45,7 +43,7 @@ Graphify is not proof. Direct source and focused tests/runtime decide correctnes
 - Feed API Documentation Checker/API Impact Mapper actual generated OpenAPI/controller/DTO changes when those tools are used; never progress summaries.
 
 ## Validation
-Use focused TypeScript/tests for source correctness, then prove applicable runtime behavior against the Cloudflare-authoritative backend. A VM build/test is never backend runtime proof. The Cloudflare Container image/runtime is the canonical backend integration/runtime path.
+Use focused TypeScript/tests for source correctness and prove runtime behavior against the running non-authoritative VPS service where applicable. Keep build, test, staging-runtime, production-deployment and owner-accepted-cutover evidence separate. Never point the staging API at production D1 or claim migration completion from a VM build alone.
 
 Do not perform unrelated production mutation. Cloudflare/platform mutation requires the current task to own that boundary and to pass the official-documentation gate. Do not create a second backend runtime on Worker 0.
 

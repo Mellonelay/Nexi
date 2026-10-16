@@ -8,6 +8,11 @@ const baseEnvironment = {
 };
 
 describe('runtime configuration', () => {
+  it('defaults the bind host to all interfaces and honors an explicit host', () => {
+    expect(resolveRuntimeConfig(baseEnvironment).host).toBe('0.0.0.0');
+    expect(resolveRuntimeConfig({ ...baseEnvironment, HOST: '127.0.0.1' }).host).toBe('127.0.0.1');
+  });
+
   it('rejects missing D1 runtime dependencies without using fallbacks', () => {
     expect(() => resolveRuntimeConfig({ REDIS_URL: baseEnvironment.REDIS_URL })).toThrow('D1_RUNTIME_ENABLED');
     expect(() => resolveRuntimeConfig({ ...baseEnvironment, D1_RUNTIME_ENABLED: 'false' })).toThrow('D1_RUNTIME_ENABLED must be true');
