@@ -14,5 +14,7 @@
   "3322632": "backend/prisma/migrations-d1/0012_wallet_network_authority.sql",
   "3322633": "backend/prisma/migrations-d1/0013_wallet_network_uuid_repair.sql",
   "3322634": "backend/prisma/migrations-d1/0014_referral_history_events.sql",
-  "3322635": "backend/prisma/migrations-d1/0015_referral_reward_activity.sql"
+  "3322635": "backend/prisma/migrations-d1/0015_referral_reward_activity.sql",
+  "3322989": "backend/src/jobs/local-durable-job.schema.sql",
+  "3322990": "backend/src/jobs/local-workflow.schema.sql"
 }
