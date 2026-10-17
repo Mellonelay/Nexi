@@ -27,6 +27,6 @@
 
 ## Recovery artifacts and cleanup
 
-Keep the original historical gzip, the existing final D1 gzip and import manifest, and the pre-promotion SQLite rollback database. No bulk cleanup or removal of unique data was performed. Only confirmed temporary files/orphaned sidecars may be removed after confirming their owning database/process is absent.
+Keep the original historical gzip, the existing final D1 gzip and import manifest, and the pre-promotion SQLite rollback database. Removed the superseded 329,150,464-byte onestep staging snapshot after confirming no User, Activity, AuthSession, Wallet, Ledger, Outbox, Inbox, Loan or Mining rows and no process held it; the newer 342,663,168-byte pre-promotion database remains as rollback. Removed its sidecars, the orphan sidecars for absent temporary DBs, and the temporary readiness file. Other export/restore artifacts remain preserved.
 
-**Next frontier:** record the promoted state in docs/tasks; finish a bounded final-data reconciliation decision, verify required application flows, and obtain/establish an authorized encrypted off-VPS backup destination. Cloudflare retirement and any production financial authority declaration require their own direct evidence.
+**Next frontier:** finish the bounded final-data reconciliation, complete authenticated application acceptance with an authorized test identity, and establish an authorized encrypted off-VPS backup destination with a verified restore. Cloudflare retirement and any production financial authority declaration require their own direct evidence.

@@ -350,5 +350,6 @@ Superseded historical rows remain above for provenance. Do not revive old statem
 - [ ] PENDING — Prove whether any post-export D1 updates/deletes remain and establish a defensible final data watermark; the current import manifest does not answer this.
 - [ ] PENDING — Complete authenticated application acceptance using an authorized test identity; do not fabricate financial data.
 - [ ] BLOCKED_WITH_EVIDENCE — Independent encrypted off-VPS backup/restore: no authorized destination found. Existing local exports and rollback DB are not independent DR.
-- [ ] PENDING — Update remaining runtime/runbook docs, then preserve only recovery artifacts and remove confirmed temporary files/orphan sidecars. Cloudflare resources are not retired.
+- [x] COMPLETED — Updated current-state/runtime/operating/task docs; removed confirmed orphan sidecars and the superseded 329,150,464-byte empty-core staging snapshot after confirming the newer rollback DB is intact. Historical/final exports, manifest and rollback DB are preserved.
+- [ ] PENDING — Cloudflare resource inventory/retirement remains separate; no Cloudflare resource was deleted.
 - [ ] PENDING_OWNER_ACTION — Any explicit final production financial authority declaration and destructive Cloudflare retirement remain separate from this SQLite file promotion.
