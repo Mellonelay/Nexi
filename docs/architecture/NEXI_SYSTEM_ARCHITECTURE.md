@@ -49,3 +49,19 @@ Each deployed surface has independently verifiable build/source and Sentry relea
 - [Documentation policy](../README.md)
 
 The July 2026 architecture/program documents and former completion ledger are historical evidence, not active feature or completion definitions. Preserve old text through Git history and dated archive while maintaining this file as the current architecture entry.
+
+## 2026-10-18 financial-command closure matrix (latest source checkpoint)
+
+Current main: `577f5c1ae69071648cee1c2c8e00480792efd186`. Promoted VPS SQLite/Prisma and LedgerPosting are durable financial/accounting authority; EventOutbox is the durable publication boundary. Historical statements below describing empty VPS SQLite financial tables or Cloudflare D1 as current financial writer are superseded by the promoted October 17 SQLite checkpoint (14 LedgerAccount, 48 LedgerPosting). This source repair is **not yet deployed or authenticated accepted**.
+
+| Domain | Proven unchanged / source tested | Remaining unproven |
+|---|---|---|
+| Five wallet scopes / transfer | SQLite exact debit/credit, owner/scope/asset checks, idempotency, Activity and Outbox | Deployed authenticated API journeys |
+| Spot | Resting-price matching, paired Ledger postings, trade history and Outbox | Full deployed order lifecycle |
+| Margin | Close-request CAS and replay; late **entry** fills update linked position within same Spot trade transaction; two partial fills and forced rollback tested, 23/23 focused tests | Late **close** fill, repayment/liquidation, interest, deployed reconciliation |
+| Binary | Local reserve, WIN/LOSS settlement, Activity and Outbox rollback, focused service tests | Persisted provider/config and expiry runtime |
+| Withdrawal/deposit | Local review/reserve/approve/reject/refund and proof byte roundtrip evidence | Authenticated Admin review/actual broadcast |
+| Mining | Local subscription, accrual/release and replay checkpoint tests | Real workflow recovery and payout acceptance |
+| Loans | Local cumulative repayment CAS and workflow tests | Migration 0016 live application, repayment acceptance |
+
+Evidence: `NEXI_PROOF_REUSE_REGISTER.md`, `tasks/evidence/margin-late-entry-atomic-20261018.md`, `tasks/todo.md`. Prior valid proof is reused; no new requirements from exploratory scans. Graphify's cloud graph at `36d5332` is stale; direct source and focused tests control conclusions. No worktrees, direct main commits only. This section supersedes conflicting historical status assertions below.

@@ -123,3 +123,7 @@ Current evidence does not establish a source SHA for Public build. The backend c
 - For financial write acceptance, preserve real auth/RBAC, idempotency, Ledger conservation, durable EventOutbox and the existing supported test pathway; no direct database balance manufacture.
 - Sentry uptime entitlement is not an application correctness gate. Market history is refillable and not a financial gate.
 - The latest RDC active handle is PID `1752581`; inspect it before an overlapping command. Do not relaunch an action whose execution handle is still unresolved.
+
+## 2026-10-18 finite-coverage reconciliation receipt
+
+Current `main` at `577f5c1` (source only). Seven financial domains cataloged in `docs/architecture/NEXI_SYSTEM_ARCHITECTURE.md`. Three bounded repair areas completed in the recent sequence: (1) Governance replay/decision CAS, (2) Admin fallback and RBAC, (3) Margin close-request CAS and late ENTRY fill projection (two partial fills and atomic failure rollback). The latter has 23/23 recorded focused tests, with independent TypeScript check exit 0. Earlier entries calling these defects still open are historical/superseded. Margin late CLOSE settlement remains **UNPROVEN**. All seven domains require their listed remaining runtime/acceptance gates; no domain is fully owner accepted by this evidence.

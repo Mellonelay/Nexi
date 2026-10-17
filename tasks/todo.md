@@ -486,3 +486,13 @@ Execution order and release gates are specified in `tasks/plan.md` under “Acti
 - [ ] PENDING — One coordinated build/deploy after the market repair set is closed; verify deployed USD/RUB state, reference endpoint recovery, runtime identity, then continue outstanding authenticated financial/workflow and backup gates.
 
 Receipt: `tasks/evidence/market-provider-runtime-20261017.md`.
+
+## Latest source frontier — 2026-10-18
+
+- [x] Governance idempotency/approval race; Admin fallback, focused local proof
+- [x] Margin close request CAS and changed-order replay
+- [x] Margin late ENTRY partial fills, 23/23 tests with rollback proof (`577f5c1`)
+- [ ] Margin late CLOSE settlement and repayment/liquidation recovery
+- [ ] Loan 0016 migration controlled application and proof
+- [ ] Authenticated financial/Admin, durable workflow recovery, off-VPS encrypted backup/restore, deployed artifact
+- [ ] One coordinated release after affected source closure; no BiQuote market freshness rework

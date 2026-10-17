@@ -109,3 +109,7 @@ flowchart TD
 Historical docs are recoverable from Git; do not revive them as live completion controllers. Update diagrams when architecture or routing changes, not for each transient process/release timestamp.
 
 **Interactive companion:** [NEXI Architecture and Documentation Ownership mind map](https://mindmapai.app/canvas/d694e5a692fd022ace0b80cc4a437239956fb6bbb5cb833ffd00b1235783abda/edit) (owner-saved MindMap AI project; access may require its original account). Mapify can render the [documentation index](../README.md) as a hierarchy, but Git-hosted Markdown and Mermaid remain durable source authority.
+
+## Current authority correction — 2026-10-18
+
+The runtime diagram's SQLite/Ledger/Outbox structure remains the intended/current authority; historical prose below claiming D1 remains the current financial writer and the VPS SQLite core tables are empty is superseded by the promoted SQLite checkpoint. Source commit `577f5c1` includes atomic Margin late-entry fill projection, not deployed runtime proof. Refer to the seven-domain matrix in `NEXI_SYSTEM_ARCHITECTURE.md` and the proof reuse register.

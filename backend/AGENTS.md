@@ -52,3 +52,6 @@ Use focused TypeScript/tests for source correctness and prove runtime behavior a
 Do not perform unrelated production mutation. Cloudflare/platform mutation requires the current task to own that boundary and to pass the official-documentation gate. Do not create a second backend runtime on Worker 0.
 
 Report only meaningful milestones or genuine blockers.
+## Current authority addendum — 2026-10-18
+
+Root `AGENTS.md` and latest owner decisions override historical D1/current-empty-DB claims further down this file. Promoted VPS SQLite is durable financial authority; no D1 duplicate writer. The new source-only Margin late-entry atomic fill patch at `577f5c1` has 23/23 focused test evidence, but late Margin CLOSE recovery and deployed acceptance are unproven. See `docs/architecture/NEXI_SYSTEM_ARCHITECTURE.md` (finite financial-command matrix) and `NEXI_PROOF_REUSE_REGISTER.md`. Use direct Worker-0 CLI/MCP, bounded Graphify/Fallow impact and focused tests. One main worktree, no Codex delegation, no parallel shared Git/financial mutations.
