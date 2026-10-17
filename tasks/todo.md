@@ -1,3 +1,4 @@
+- [x] SOURCE TESTED — Binary already-open positions retain settlement access to historical pair metadata after delisting; 18/18 service tests, 1/1 disposable gateway test PASS. Provider quote/configuration checks remain enforced; deployed authenticated acceptance pending.
 - [x] SOURCE TESTED 2026-10-18 — Margin late CLOSE recovery: same close order/key, executed trade VWAP, scheduler, failure-atomic Ledger/Activity/Outbox and focused tests PASS. No deployed claim. Receipt: tasks/evidence/margin-late-close-recovery-20261018.md.
 - [ ] BACKEND RELEASE GATE — Prove deployment/source identity and authenticated Margin repayment/close, plus other existing finite seven-domain runtime contracts; apply Loan migration 0016 only with current authorized backup/rollback evidence.
 - [ ] OPERATIONAL GATE — Encrypted off-VPS backup + isolated restore not yet proven. Current 7 GB SQLite DB exceeds available free VPS space for a second full local copy.

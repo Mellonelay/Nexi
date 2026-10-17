@@ -43,7 +43,7 @@ export class BinaryService {
     if (terminal) return { position: this.withPersistedSandboxSimulation(raw), replayed: true };
     const expiresAt = new Date(String(raw.expiresAt));
     if (expiresAt.getTime() > Date.now()) throw new BadRequestException('Binary position has not expired');
-    const pair = await this.d1.getActiveMarketPair(String(raw.pair));
+    const pair = await this.d1.getMarketPairForSettlement(String(raw.pair));
     if (!pair) return { position: raw, delayed: true };
     const configuration: any = await this.d1.getBinaryConfiguration(String(raw.pair), Number(raw.durationSeconds), Number(raw.configurationVersion));
     if (!configuration) return { position: raw, error: true };

@@ -1005,6 +1005,21 @@ export class D1FinancialCommandGateway {
     return result.results[0] ?? null;
   }
 
+  /** Resolve a historical trade's pair without reapplying new-order enablement gates. */
+  async getMarketPairForSettlement(symbolValue: string): Promise<D1MarketPairRow | null> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const symbol = symbolValue.trim().toUpperCase().replaceAll("/", "").replaceAll(".", "");
+    const result = await this.bridge.select<D1MarketPairRow>(
+      `SELECT p."id",p."symbol",base."symbol" AS "baseAsset",quote."symbol" AS "quoteAsset"
+       FROM "MarketPair" p
+       JOIN "MarketAsset" base ON base."id"=p."baseAssetId"
+       JOIN "MarketAsset" quote ON quote."id"=p."quoteAssetId"
+       WHERE p."symbol"=? LIMIT 1`,
+      [symbol],
+    );
+    return result.results[0] ?? null;
+  }
+
   async getLiveMarketQuote(
     pairId: string,
     minimumObservedAt?: string,

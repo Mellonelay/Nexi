@@ -1,3 +1,7 @@
+## Historical Binary trade financial obligation — 2026-10-18 source proof
+
+New Binary orders use `getActiveMarketPair` and configured provider/asset trading enablement. A previously opened and expired Binary position instead loads historical pair metadata through `getMarketPairForSettlement`, without removing configuration-version/payout authority or approved expiry quote requirements. This avoids indefinite non-settlement solely because the pair is disabled after opening. Focused source tests passed; actual deployed financial settlement and owner acceptance remain unproven.
+
 ## Margin settlement continuity — 2026-10-18 source-only note
 
 The canonical Spot matching gateway commits trade and linked Margin ENTRY effects atomically. The later Margin CLOSE recovery takes the persisted `SpotMarginPosition.closeOrderId` and accepted request key, selects only FILLED orders, and derives realized close mark from actual `Gate2SpotTrade` VWAP without allocating another order or requiring a fresh market quote. `MarginRecoveryScheduler` uses existing scheduler flag + Redis lock. The existing SQLite financial command gateway commits debt repayment, position CLOSED/LIQUIDATED, unified Activity and EventOutbox in one batch; disposable SQLite fault injection verified full rollback. This is **source and focused test proof only**, not deployed authenticated financial acceptance. No new financial authority owner.

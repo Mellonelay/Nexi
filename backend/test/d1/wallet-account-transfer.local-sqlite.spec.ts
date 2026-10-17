@@ -309,6 +309,22 @@ describe('financial operations on local SQLite', () => {
     )).resolves.toMatchObject({results:[{count:2}]});
   });
 
+
+  it('retains historical Binary pair metadata for settlement when new trading is disabled', async () => {
+    const db = new Database(join(directory, 'fixture.sqlite'));
+    const asset = db.prepare(`INSERT INTO MarketAsset
+      (id,symbol,displayName,status,updatedAt) VALUES (?,?,?,'ACTIVE',CURRENT_TIMESTAMP)`);
+    asset.run('historical-btc','BTC','Bitcoin');
+    asset.run('historical-usdt','USDT','Tether');
+    db.prepare(`INSERT INTO MarketPair
+      (id,symbol,baseAssetId,quoteAssetId,status,updatedAt)
+      VALUES ('historical-btcusdt','BTCUSDT','historical-btc','historical-usdt','MAINTENANCE',CURRENT_TIMESTAMP)`).run();
+    db.close();
+    expect(await gateway.getActiveMarketPair('BTCUSDT')).toBeNull();
+    expect(await gateway.getMarketPairForSettlement('BTC/USDT'))
+      .toMatchObject({id:'historical-btcusdt',symbol:'BTCUSDT',baseAsset:'BTC',quoteAsset:'USDT'});
+  });
+
   it('records Margin position opening in unified Activity and EventOutbox', async () => {
     const db = new Database(join(directory, 'fixture.sqlite'));
     db.prepare(`INSERT INTO SpotMarginAccount (id,userId,pair,baseAsset,quoteAsset,status,updatedAt) VALUES ('margin-account-1','user-1','BTCUSDT','BTC','USDT','ACTIVE',CURRENT_TIMESTAMP)`).run();

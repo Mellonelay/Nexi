@@ -132,6 +132,7 @@ describe('D1 binary settlement sandbox directive', () => {
       listBinaryPositions: jest.fn().mockResolvedValue([]),
       getBinaryPosition: jest.fn().mockResolvedValue({ ...rawPosition, side }),
       getActiveMarketPair: jest.fn().mockResolvedValue({ id: 'pair-1', symbol: 'BTCUSDT', baseAsset: 'BTC', quoteAsset: 'USDT' }),
+      getMarketPairForSettlement: jest.fn().mockResolvedValue({ id: 'pair-1', symbol: 'BTCUSDT', baseAsset: 'BTC', quoteAsset: 'USDT' }),
       getLiveMarketQuote: jest.fn().mockResolvedValue({ id: 'quote-1', price: quotePrice, provider: 'deterministic-test', source: 'gate2', observedAt: new Date().toISOString(), receivedAt: new Date().toISOString(), sequence: 4, freshnessMs: 2 }),
       getBinaryConfiguration: jest.fn().mockResolvedValue(config),
       settleBinaryPositionAtomic: jest.fn().mockResolvedValue({ ...rawPosition, state: 'WIN' }),
@@ -215,6 +216,17 @@ describe('D1 binary settlement sandbox directive', () => {
     expect(result).toMatchObject({ replayed: true, position: { state: 'WIN' } });
     expect(result.position.sandboxSimulation.candles.at(-1).close).toBe('100.1');
     expect(d1.settleBinaryPositionAtomic).not.toHaveBeenCalled();
+  });
+
+  it('settles an existing expired trade when its pair is no longer enabled for new orders', async () => {
+    const { service, d1 } = createD1Service(null, '110');
+    d1.getActiveMarketPair.mockResolvedValue(null);
+    await service.settlePosition('position-d1-1');
+    expect(d1.getMarketPairForSettlement).toHaveBeenCalledWith('BTCUSDT');
+    expect(d1.getActiveMarketPair).not.toHaveBeenCalled();
+    expect(d1.settleBinaryPositionAtomic).toHaveBeenCalledWith(expect.objectContaining({
+      positionId: 'position-d1-1', state: 'WIN', payout: '18.5',
+    }));
   });
 
   it('settles from the opened configuration version after that version is disabled', async () => {

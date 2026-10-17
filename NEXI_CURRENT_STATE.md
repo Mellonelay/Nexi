@@ -1,3 +1,7 @@
+## 2026-10-18 — Binary historical-pair settlement source continuity
+
+New closed-source repair allows expiry settlement of previously opened Binary trades after pair enablement changes, without allowing new disabled-pair orders. Focused Binary 18/18 and disposable SQLite 1/1 PASS; backend TypeScript validation PASS. This remains **source only**, not a deployed settlement proof. `tasks/evidence/binary-inactive-pair-settlement-20261018.md` is authoritative for this bounded change.
+
 ## 2026-10-18 — Margin late-close recovery source proof (newest)
 
 Margin CLOSING order replay, filled-close selection, price from executed Spot trades, and Redis-locked scheduler implemented on canonical main (commit identity follows Git integration). Focused Margin 13/13, disposable gateway 2/2, and full-schema repayment Ledger/Activity/Outbox atomic failure/retry 1/1 PASS. Current source typecheck PASS. Details in `NEXI_PROOF_REUSE_REGISTER.md` and `tasks/evidence/margin-late-close-recovery-20261018.md`. **Not deployed**; authenticated runtime settlement and live Loan migration 0016 remain unproven. Existing off-VPS encrypted backup and isolated restore destination remains unconfirmed. Historical empty-SQLite and D1 writer claims are superseded.

@@ -1,3 +1,9 @@
+## Binary historical-pair settlement — 2026-10-18 (NEWEST)
+
+- **SOURCE TESTED:** Existing expired Binary positions no longer depend on new-order pair/asset trading enablement. The financial gateway reads persisted historical market pair metadata while the new open-position path still requires active capability and an approved entry quote. Persisted configuration-version payout and provider approval remain required.
+- **Proof:** 18/18 Binary service tests and 1/1 disposable SQLite historical pair test PASS; build TypeScript validation exit 0. Evidence: `tasks/evidence/binary-inactive-pair-settlement-20261018.md`.
+- **UNPROVEN:** Deployed expiry quote/provider execution, authenticated balance settlement and operator acceptance. No speculative market freshness campaign required.
+
 ## Margin late-close source recovery — 2026-10-18 (NEWEST)
 
 - **TESTED:** Reuses the existing CLOSING order and original idempotency key; detects FILLED closes through gateway SQLite query; calculates actual executed order VWAP; skips new order/funding reservation and stale live-quote dependencies; feature-gated Redis-locked scheduler resumes up to 25 cases per run.
