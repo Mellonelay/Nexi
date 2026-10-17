@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Post,
   Body,
@@ -46,11 +47,13 @@ export class SpotController {
 
   @Get("orderbook")
   async getOrderBook(@Query("pair") pair: string) {
+    if (!pair) throw new BadRequestException("pair query parameter is required");
     return this.spotService.getOrderBook(pair);
   }
 
   @Get("market-trades")
   async getMarketTrades(@Query("pair") pair: string) {
+    if (!pair) throw new BadRequestException("pair query parameter is required");
     return this.spotService.getMarketTrades(pair);
   }
 
