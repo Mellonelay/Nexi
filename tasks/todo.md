@@ -296,14 +296,14 @@ Superseded historical rows remain above for provenance. Do not revive old statem
 
 
 ### 2026-10-17 live authority recheck — Wrangler + active VPS
-- [x] PROVEN — Canonical source rechecked: `/home/mellonelay1999/workspaces/Nexi`, branch `main`, HEAD and `origin/main` both `bbc849b16291b034b596b80f77790d13112f4cb2`. Preserved untracked Admin pnpm files remain untouched.
+- [x] PROVEN — At the live-authority recheck, canonical source was `/home/mellonelay1999/workspaces/Nexi`, branch `main`, HEAD and `origin/main` both `bbc849b16291b034b596b80f77790d13112f4cb2`; docs/evidence reconciliation is now committed and pushed as `89244628428176cc81239321291799333866caef`. Preserved untracked Admin pnpm files remain untouched.
 - [x] PROVEN_UNCHANGED — Name.com public DNS and trusted HTTPS checkpoint reused from prior direct checks; no DNS/TLS mutations in this pass.
 - [x] COMPLETED — D1 operational counts revalidated with project-local Wrangler 4.127.1 (required operator path), read-only SELECTs only. Evidence: `tasks/evidence/wrangler-live-d1-vps-authority-mismatch-20261017.json`. Reused prior 92-table historical restore reconciliation; no export/replay.
 - [x] COMPLETED — Active service config/source confirms local SQLite adapter is selected and the financial command gateway is enabled; active DB core rows are zero across the sampled financial/auth set. D1 still contains users, wallets, ledger postings/idempotency/audit, outbox/inbox, loan/mining records. No financial command was issued.
 - [ ] BLOCKED_WITH_EVIDENCE — Live production API/data authority mismatch: DNS sends public hostnames to VPS; active VPS financial DB has zero core records while Cloudflare D1 has existing records; local financial gateway config is enabled. No writer switch or record copy performed. Evidence above. Next: owner-controlled decision for protecting active public financial command paths, followed by controlled final delta/cutover packet. Do not proceed with financial tests against production.
 - [ ] BLOCKED_WITH_EVIDENCE — Independent encrypted off-VPS backup/restore unavailable: prior read-only lane found no configured authorized destination; Google bucket listing denied for active VM identity. Next: owner supplies approved destination and least-privilege credentials; encryption key remains separate.
 - [ ] PENDING_OWNER_ACTION — Authenticated API/financial acceptance needs an authorized test identity; no credentials or synthetic financial state will be created.
-- [ ] BLOCKED_WITH_EVIDENCE — Cloudflare retirement remains blocked: active one-minute Worker cron/queue handlers and D1 authority; three NEXI queues have reported zero backlog, but loan workflow has two errored historical instances not yet payload-reconciled. No resources stopped/deleted.
+- [ ] BLOCKED_WITH_EVIDENCE — Cloudflare retirement remains blocked: active one-minute Worker cron/queue handlers, D1 authority, backup and cutover gates. Wrangler read-only review confirmed the two errored loan instances were invalid-`loanId` test/probe triggers with no steps; see `tasks/evidence/cloudflare-loan-workflow-error-review-20261017.md`. No resources stopped/deleted.
 - [ ] PENDING_OWNER_ACTION — Final D1-to-SQLite financial writer cutover and destructive Cloudflare retirement remain separate owner approval gates; manual Name.com DNS action already completed by owner.
 
 
@@ -312,3 +312,8 @@ Superseded historical rows remain above for provenance. Do not revive old statem
 - [x] VERIFIED — Authenticated financial mutation paths can write through the local gateway to the empty VPS DB. Representative route families include withdrawals/transfers/conversion, loans, binary, spot/margin, mining and deposit claims. JWT-protected /lever/* endpoints include direct Prisma writes outside the gateway. No write requests were sent.
 - [x] VERIFIED — Turning off D1_RUNTIME_ENABLED alone does not establish a complete write freeze. Schedulers are disabled but async workers are enabled. D1 bridge reachability from VPS remains unverified, so do not flip adapter mode blindly. Detailed source handoff: tasks/evidence/vps-financial-write-path-risk-20261017.md.
 - [ ] PENDING_OWNER_ACTION — Choose coordinated temporary production write freeze/maintenance covering HTTP and local async consumers, or authorize a verified D1-backed route after its transport is proven. Preserve read-only/auth behavior and verify bounded effects. Then continue controlled D1 delta and separate writer-cutover gate.
+
+
+### 2026-10-17 Cloudflare loan workflow error classification
+- [x] VERIFIED — Wrangler 4.127.1 read-only descriptions show both errored loan workflow IDs were explicit proof probes failing immediately on invalid `loanId`; no steps executed. No payload was retained and no instance was mutated. Evidence: `tasks/evidence/cloudflare-loan-workflow-error-review-20261017.md`.
+- [ ] BLOCKED_WITH_EVIDENCE — Remaining Cloudflare retirement gates are active Worker cron/queue consumers, D1 authority mismatch, missing approved off-VPS encrypted backup destination, and owner-controlled financial write protection/cutover.
