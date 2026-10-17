@@ -1510,9 +1510,9 @@ export class D1FinancialCommandGateway {
   ): Promise<Record<string, unknown>> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const type = liquidation ? "LIQUIDATION" : "CLOSE";
-    const result = await this.bridge.batch([
+    const result = await this.guardedGovernanceBatch([
       {
-        sql: `UPDATE "SpotMarginPosition" SET "status"='CLOSING',"closeOrderId"=? ,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "status"='OPEN'`,
+        sql: `UPDATE "SpotMarginPosition" SET "status"='CLOSING',"closeOrderId"=? ,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "status"='OPEN' RETURNING "id"`,
         params: [orderId, positionId],
       },
       {
