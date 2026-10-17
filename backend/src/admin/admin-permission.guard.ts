@@ -17,7 +17,21 @@ export class AdminPermissionGuard implements CanActivate {
     ]);
     if (!permission) return true;
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
-    const identity = await this.d1.getAdminIdentity(request.user.userId);
+    const identity = this.d1?.isEnabled()
+      ? await this.d1.getAdminIdentity(request.user.userId)
+      : await this.prisma.user
+          .findFirst({
+            where: { id: request.user.userId, role: 'ADMIN' },
+            select: {
+              id: true,
+              adminRoleAssignment: { select: { roleId: true } },
+            },
+          })
+          .then((user) =>
+            user
+              ? { id: user.id, roleId: user.adminRoleAssignment?.roleId }
+              : null,
+          );
     return hasAdminPermission(identity?.roleId as any, permission);
   }
 }

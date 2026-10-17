@@ -79,6 +79,67 @@ type AdminWithdrawalDecision = (
   idempotencyKey: string,
 ) => Promise<unknown>;
 
+function canonicalize(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonicalize);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, nested]) => [key, canonicalize(nested)]),
+    );
+  }
+  return value;
+}
+
+function governancePayload(value: unknown): string {
+  if (value === null || value === undefined) return "null";
+  if (typeof value === "string") {
+    try {
+      return JSON.stringify(canonicalize(JSON.parse(value)));
+    } catch {
+      return JSON.stringify(value);
+    }
+  }
+  return JSON.stringify(canonicalize(value));
+}
+
+function assertGovernanceReplayMatches(
+  existing: {
+    commandType: string;
+    target: string | null;
+    reason: string;
+    requestedBy: string;
+    payload: unknown;
+  },
+  input: {
+    commandType: string;
+    target?: string;
+    reason: string;
+    requestedBy: string;
+    payload?: Record<string, unknown>;
+  },
+) {
+  if (
+    existing.commandType !== input.commandType ||
+    (existing.target ?? null) !== (input.target ?? null) ||
+    existing.reason !== input.reason ||
+    existing.requestedBy !== input.requestedBy ||
+    governancePayload(existing.payload) !== governancePayload(input.payload)
+  ) {
+    throw new BadRequestException(
+      "Governance idempotency key was reused with changed command terms",
+    );
+  }
+}
+
+function isUniqueConstraintError(error: unknown): boolean {
+  return (
+    Boolean(error) &&
+    typeof error === "object" &&
+    (error as { code?: unknown }).code === "P2002"
+  );
+}
+
 @Injectable()
 export class AdminService {
   private readonly logger = new Logger(AdminService.name);
@@ -836,33 +897,51 @@ export class AdminService {
       throw new BadRequestException("A reason is required");
     if (this.d1?.isEnabled())
       return this.d1.createGovernanceCommand({ id: randomUUID(), ...input });
-    const existing = await this.prisma.adminGovernanceCommand.findUnique({
-      where: { idempotencyKey: input.idempotencyKey },
-    });
-    if (existing) return existing;
-    const command = await this.prisma.adminGovernanceCommand.create({
-      data: {
-        commandType: input.commandType,
-        target: input.target,
-        reason: input.reason,
-        idempotencyKey: input.idempotencyKey,
-        payload: input.payload as Prisma.InputJsonValue | undefined,
-        requestedBy: input.requestedBy,
-      },
-    });
-    await this.prisma.adminAuditLog.create({
-      data: {
-        adminId: input.requestedBy,
-        action: "GOVERNANCE_COMMAND_REQUESTED",
-        target: input.target,
-        details: {
-          commandId: command.id,
-          commandType: input.commandType,
-          reason: input.reason,
-        },
-      },
-    });
-    return command;
+    try {
+      return await this.prisma.$transaction(async (tx: any) => {
+        const existing = await tx.adminGovernanceCommand.findUnique({
+          where: { idempotencyKey: input.idempotencyKey },
+        });
+        if (existing) {
+          assertGovernanceReplayMatches(existing, input);
+          return existing;
+        }
+        const command = await tx.adminGovernanceCommand.create({
+          data: {
+            commandType: input.commandType,
+            target: input.target,
+            reason: input.reason,
+            idempotencyKey: input.idempotencyKey,
+            payload: input.payload
+              ? JSON.stringify(canonicalize(input.payload))
+              : null,
+            requestedBy: input.requestedBy,
+          },
+        });
+        await tx.adminAuditLog.create({
+          data: {
+            adminId: input.requestedBy,
+            action: "GOVERNANCE_COMMAND_REQUESTED",
+            target: input.target,
+            details: {
+              commandId: command.id,
+              commandType: input.commandType,
+              reason: input.reason,
+              idempotencyKey: input.idempotencyKey,
+            },
+          },
+        });
+        return command;
+      });
+    } catch (error) {
+      if (!isUniqueConstraintError(error)) throw error;
+      const existing = await this.prisma.adminGovernanceCommand.findUnique({
+        where: { idempotencyKey: input.idempotencyKey },
+      });
+      if (!existing) throw error;
+      assertGovernanceReplayMatches(existing, input);
+      return existing;
+    }
   }
 
   async decideGovernanceCommand(
@@ -873,6 +952,13 @@ export class AdminService {
   ) {
     if (!reason?.trim())
       throw new BadRequestException("A decision reason is required");
+    if (this.d1?.isEnabled())
+      return this.d1.decideGovernanceCommand(
+        commandId,
+        approverId,
+        decision,
+        reason,
+      );
     const command = await this.prisma.adminGovernanceCommand.findUnique({
       where: { id: commandId },
     });
@@ -881,22 +967,16 @@ export class AdminService {
       throw new ForbiddenException(
         "The requester cannot approve their own command",
       );
-    if (this.d1?.isEnabled())
-      return this.d1.decideGovernanceCommand(
-        commandId,
-        approverId,
-        decision,
-        reason,
-      );
-    if (command.status !== "PENDING") return command;
-    const updated = await this.prisma.$transaction(async (tx) => {
-      await tx.adminGovernanceApproval.upsert({
-        where: { commandId_approverId: { commandId, approverId } },
-        update: { decision, reason },
-        create: { commandId, approverId, decision, reason },
-      });
-      return tx.adminGovernanceCommand.update({
-        where: { id: commandId },
+    if (command.status !== "PENDING") {
+      if (command.status !== decision)
+        throw new BadRequestException(
+          `Governance command is already ${String(command.status).toLowerCase()}`,
+        );
+      return command;
+    }
+    return this.prisma.$transaction(async (tx: any) => {
+      const claimed = await tx.adminGovernanceCommand.updateMany({
+        where: { id: commandId, status: "PENDING" },
         data:
           decision === "APPROVED"
             ? {
@@ -906,16 +986,30 @@ export class AdminService {
               }
             : { status: "REJECTED" },
       });
+      if (claimed.count !== 1) {
+        const current = await tx.adminGovernanceCommand.findUnique({
+          where: { id: commandId },
+        });
+        if (!current) throw new NotFoundException("Governance command not found");
+        if (current.status !== decision)
+          throw new BadRequestException(
+            `Governance command is already ${String(current.status).toLowerCase()}`,
+          );
+        return current;
+      }
+      await tx.adminGovernanceApproval.create({
+        data: { commandId, approverId, decision, reason },
+      });
+      await tx.adminAuditLog.create({
+        data: {
+          adminId: approverId,
+          action: `GOVERNANCE_COMMAND_${decision}`,
+          target: commandId,
+          details: { reason },
+        },
+      });
+      return tx.adminGovernanceCommand.findUnique({ where: { id: commandId } });
     });
-    await this.prisma.adminAuditLog.create({
-      data: {
-        adminId: approverId,
-        action: `GOVERNANCE_COMMAND_${decision}`,
-        target: commandId,
-        details: { reason },
-      },
-    });
-    return updated;
   }
 
   async listGovernanceCommands() {

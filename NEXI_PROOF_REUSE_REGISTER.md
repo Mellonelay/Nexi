@@ -1,5 +1,11 @@
 # NEXI Proof Reuse Register
 
+## Admin governance Prisma fallback — 2026-10-18 (source only)
+
+- **TESTED:** The Admin fallback and prior promoted SQLite Governance contract passed 6/6 focused Jest tests in 2 suites under Node 22 with `NODE_OPTIONS=--experimental-vm-modules`. Backend TypeScript build config check (`tsc --noEmit -p tsconfig.build.json`) passed after isolating an unverified concurrent Margin source patch.
+- **SCOPE:** Admin permission guard's alternative Prisma RBAC lookup, legacy Prisma governance replay payload binding and competing approval transaction path, tested only on focused service fixtures. No authenticated deployment or financial data mutation proven.
+- **DEFERRED:** Concurrent Margin code was preserved in `/home/mellonelay1999/.cache/nexi-margin-unverified-20261018.patch` because it failed TypeScript validation and lacked accounting tests. No claim of Margin completion.
+
 ## Governance SQLite replay and competing decision — 2026-10-18 (source only)
 
 - **TESTED** after handover commit `68f0f386`: `backend/test/d1/governance.local-sqlite.spec.ts` **2/2 passed** using the local promoted-architecture bridge on disposable SQLite. Full `backend/tsconfig.build.json` TypeScript check passed (`tsc --noEmit`); `git diff --check` passed.
