@@ -399,3 +399,15 @@ Superseded historical rows remain above for provenance. Do not revive old statem
 ### 2026-10-17 REST contract surface
 - [x] VERIFIED — Live `/docs-json` returns OpenAPI 3.0.0 with 221 paths and expected Auth/Wallet/Transfer/Withdrawal/Convert/Spot/Margin/Binary/Mining/Loan/Admin route families.
 - [ ] PENDING — Contract path presence does not replace authenticated API/business-flow acceptance.
+
+
+### 2026-10-17 final runtime continuation (market + auth + async + Sentry)
+- [x] FIXED — MarketQuoteLatest sequence seed now continues from indexed historical max; commit 41837777432f5926ffd2c0a0e7ae390a61284010 is built, deployed, and pushed to main.
+- [x] VERIFIED — Live market projection recovered (0 active pairs with history but no latest row); no post-start uniqueness warnings; /market/prices 200.
+- [x] VERIFIED — Disposable SIWE challenge/login, authenticated wallet/profile/activity reads, logout; no Ledger or EventOutbox count change.
+- [x] VERIFIED — Isolated Aiven TLS/BullMQ job completed after exactly one controlled retry; temporary prefix removed.
+- [x] VERIFIED — Backend Sentry release now equals deployed code SHA; release finalized/deployed, 20 backend-path commits associated, and an info event was received under the exact release.
+- [ ] BLOCKED_WITH_EVIDENCE — Successful authenticated financial/Admin workflows with test balances need an authorized Admin test credential or a supported existing fixture route. No synthetic balance was written directly to SQLite.
+- [ ] BLOCKED_WITH_EVIDENCE — Independent encrypted off-VPS backup and restore still lacks an authorized destination and independent key-custody location; local snapshots are not DR.
+- [ ] PENDING — Authenticated Socket.IO event delivery/recovery, private-object upload/read round trip, natural backend exception attribution/source-map resolution, and deferred market catalog/config mismatch acceptance remain unproven. Reuse existing transport/market evidence; do not re-export or rerun historical reconciliation.
+- [ ] PRESERVED — Existing dirty Wrangler file and untracked Admin pnpm files untouched. No cleanup or destructive Cloudflare operation performed.
