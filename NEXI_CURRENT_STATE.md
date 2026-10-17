@@ -1,3 +1,7 @@
+## 2026-10-18 — Margin late-close recovery source proof (newest)
+
+Margin CLOSING order replay, filled-close selection, price from executed Spot trades, and Redis-locked scheduler implemented on canonical main (commit identity follows Git integration). Focused Margin 13/13, disposable gateway 2/2, and full-schema repayment Ledger/Activity/Outbox atomic failure/retry 1/1 PASS. Current source typecheck PASS. Details in `NEXI_PROOF_REUSE_REGISTER.md` and `tasks/evidence/margin-late-close-recovery-20261018.md`. **Not deployed**; authenticated runtime settlement and live Loan migration 0016 remain unproven. Existing off-VPS encrypted backup and isolated restore destination remains unconfirmed. Historical empty-SQLite and D1 writer claims are superseded.
+
 # NEXI Current State — SQLite Promotion Checkpoint
 
 **Updated:** 2026-10-18 UTC (financial source/test increment; not deployed)

@@ -122,17 +122,26 @@ export class MarginService {
   private async closePositionOnD1(userId: string, positionId: string, idempotencyKey: string, liquidation: boolean) {
     const position: any = await this.d1.getMarginPosition(positionId, userId);
     if (!position || !['OPEN', 'CLOSING'].includes(String(position.status))) throw new NotFoundException('Open margin position not found');
-    const ratio = liquidation ? await this.resolveMaintenanceRatio() : null;
-    if (liquidation && !isLiquidatable(new Prisma.Decimal(String(position.collateral)), new Prisma.Decimal(String(position.unrealizedPnl)), new Prisma.Decimal(String(position.interestAccrued)), ratio!)) throw new BadRequestException('Margin position is above the liquidation threshold');
-    const pair = await this.requirePair(String(position.accountPair));
-    const quote = await this.requireQuote(pair.id, pair.symbol);
+    const closing = String(position.status) === 'CLOSING';
+    const ratio = liquidation && !closing ? await this.resolveMaintenanceRatio() : null;
+    if (liquidation && !closing && !isLiquidatable(new Prisma.Decimal(String(position.collateral)), new Prisma.Decimal(String(position.unrealizedPnl)), new Prisma.Decimal(String(position.interestAccrued)), ratio!)) throw new BadRequestException('Margin position is above the liquidation threshold');
+    const pair = closing ? null : await this.requirePair(String(position.accountPair));
+    const quote = closing ? null : await this.requireQuote(pair!.id, pair!.symbol);
     const side = String(position.direction) === MarginPositionDirection.LONG ? OrderSide.SELL : OrderSide.BUY;
-    const order = await this.d1.reserveSpotOrder({ userId, pair: pair.symbol, baseAsset: pair.baseAsset, quoteAsset: pair.quoteAsset, side, type: Gate2SpotOrderType.LIMIT, amount: String(position.quantity), price: quote.price, stopPrice: null, reserveAsset: side === OrderSide.BUY ? pair.quoteAsset : pair.baseAsset, reserveScope: LedgerAccountScope.MARGIN, reservedAmount: side === OrderSide.BUY ? new Prisma.Decimal(String(position.quantity)).mul(new Prisma.Decimal(quote.price)).toString() : String(position.quantity), feeRate: '0', idempotencyKey: `margin:${liquidation ? 'liquidation' : 'close'}:${idempotencyKey}`, correlationId: idempotencyKey });
-    await this.d1.markMarginClosing(positionId, userId, String(position.accountId), crypto.randomUUID(), String(order.id), idempotencyKey, liquidation);
-    for (let attempt = 0; attempt < 128; attempt += 1) if (!await this.d1.matchSpotOrder({ pair: pair.symbol })) break;
+    // An existing close owns its reserved order; never reserve a second order on retry.
+    const order = closing
+      ? { id: String(position.closeOrderId ?? '') }
+      : await this.d1.reserveSpotOrder({ userId, pair: pair!.symbol, baseAsset: pair!.baseAsset, quoteAsset: pair!.quoteAsset, side, type: Gate2SpotOrderType.LIMIT, amount: String(position.quantity), price: quote!.price, stopPrice: null, reserveAsset: side === OrderSide.BUY ? pair!.quoteAsset : pair!.baseAsset, reserveScope: LedgerAccountScope.MARGIN, reservedAmount: side === OrderSide.BUY ? new Prisma.Decimal(String(position.quantity)).mul(new Prisma.Decimal(quote!.price)).toString() : String(position.quantity), feeRate: '0', idempotencyKey: `margin:${liquidation ? 'liquidation' : 'close'}:${idempotencyKey}`, correlationId: idempotencyKey });
+    if (!order.id) throw new BadRequestException('Margin closing order is missing');
+    if (!closing) await this.d1.markMarginClosing(positionId, userId, String(position.accountId), crypto.randomUUID(), String(order.id), idempotencyKey, liquidation);
+    if (!closing) {
+      for (let attempt = 0; attempt < 128; attempt += 1) {
+        if (!await this.d1.matchSpotOrder({ pair: pair!.symbol })) break;
+      }
+    }
     const filled: any = await this.d1.getSpotOrder(userId, String(order.id));
     if (!filled || String(filled.status) !== 'FILLED') return { positionId, closeOrderId: order.id, state: 'CLOSING', replayed: false };
-    const closePrice = new Prisma.Decimal(String(filled.price ?? quote.price));
+    const closePrice = new Prisma.Decimal(await this.d1.getSpotOrderExecutionPrice(String(order.id)));
     const pnl = marginPnl(String(position.direction) as MarginPositionDirection, new Prisma.Decimal(String(position.quantity)), new Prisma.Decimal(String(position.entryPrice)), closePrice);
     const repayment = new Prisma.Decimal(String(position.debtPrincipal)).add(new Prisma.Decimal(String(position.interestAccrued ?? '0')));
     return this.d1.settleMarginClose({ positionId, userId, closeOrderId: String(filled.id), state: liquidation ? 'LIQUIDATED' : 'CLOSED', markPrice: closePrice.toString(), realizedPnl: pnl.toString(), repayment: repayment.toString(), debtAsset: String(position.debtAsset), activityId: crypto.randomUUID(), idempotencyKey, correlationId: idempotencyKey, maintenanceRatio: ratio?.toString() });

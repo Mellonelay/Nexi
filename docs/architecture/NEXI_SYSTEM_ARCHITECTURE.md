@@ -1,3 +1,7 @@
+## Margin settlement continuity — 2026-10-18 source-only note
+
+The canonical Spot matching gateway commits trade and linked Margin ENTRY effects atomically. The later Margin CLOSE recovery takes the persisted `SpotMarginPosition.closeOrderId` and accepted request key, selects only FILLED orders, and derives realized close mark from actual `Gate2SpotTrade` VWAP without allocating another order or requiring a fresh market quote. `MarginRecoveryScheduler` uses existing scheduler flag + Redis lock. The existing SQLite financial command gateway commits debt repayment, position CLOSED/LIQUIDATED, unified Activity and EventOutbox in one batch; disposable SQLite fault injection verified full rollback. This is **source and focused test proof only**, not deployed authenticated financial acceptance. No new financial authority owner.
+
 # NEXI System Architecture — Current Responsibility Model
 
 **Status:** source-oriented architecture reference. **Live deployment and acceptance require separate evidence.** Current owner decisions and canonical GitHub `main` outrank the historical July program/phase documents.

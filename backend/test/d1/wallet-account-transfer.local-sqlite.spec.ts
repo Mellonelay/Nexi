@@ -319,6 +319,71 @@ describe('financial operations on local SQLite', () => {
     await expect(bridge.select<{ eventType: string }>(`SELECT eventType FROM EventOutbox WHERE aggregateId='position-1'`)).resolves.toMatchObject({ results: [{ eventType: 'MARGIN_POSITION_OPENED' }] });
   });
 
+
+  it('atomically closes a filled Margin position and rolls back Ledger, Activity and Outbox on projection failure', async () => {
+    const db = new Database(join(directory, 'fixture.sqlite'));
+    db.prepare(`INSERT INTO SpotMarginAccount (id,userId,pair,baseAsset,quoteAsset,status,updatedAt)
+      VALUES ('margin-account-close','user-1','BTCUSDT','BTC','USDT','ACTIVE',CURRENT_TIMESTAMP)`).run();
+    db.prepare(`INSERT INTO Gate2SpotOrder
+      (id,userId,pair,baseAsset,quoteAsset,side,type,status,amount,filled,remaining,price,
+      reserveAsset,reserveScope,reservedAmount,feeRate,idempotencyKey,correlationId,updatedAt)
+      VALUES ('margin-entry-close','user-1','BTCUSDT','BTC','USDT','BUY','LIMIT','FILLED',
+        '1','1','0','10','USDT','MARGIN','10','0','margin:entry:margin-open-close-key','margin-entry-close-key',CURRENT_TIMESTAMP)`).run();
+    db.close();
+
+    await gateway.createMarginPosition({
+      positionId: 'margin-position-close', accountId:'margin-account-close',
+      userId:'user-1', direction:'LONG', leverage:2, collateral:'5',
+      quantity:'1',entryPrice:'10',markPrice:'10',status:'OPEN',
+      debtAsset:'USDT',debtPrincipal:'2',
+      openIdempotencyKey:'margin-open-close-key',entryOrderId:'margin-entry-close',
+      pair:'BTCUSDT',positionAsset:'BTC',activityId:'margin-open-close-activity',
+      positionEventId:'margin-open-close-event',
+    });
+    await bridge.batch([{
+      sql:`UPDATE SpotMarginPosition SET status='CLOSING',closeOrderId='margin-close-order' WHERE id='margin-position-close'`,
+    }]);
+    const command = {
+      positionId:'margin-position-close',userId:'user-1',closeOrderId:'margin-close-order',
+      state:'CLOSED' as const,markPrice:'11',realizedPnl:'1',repayment:'2',
+      debtAsset:'USDT',activityId:'margin-settlement-activity-1',
+      idempotencyKey:'margin-settlement-key-1',correlationId:'margin-settlement-key-1',
+    };
+    const baseline = await bridge.select<{available:string}>(
+      `SELECT available FROM LedgerAccount WHERE id='margin-1'`);
+    const before = await bridge.select<{count:number}>(`SELECT COUNT(*) AS count FROM LedgerPosting`);
+
+    const failedDb = new Database(join(directory,'fixture.sqlite'));
+    failedDb.exec(`CREATE TRIGGER synthetic_margin_settlement_projection_failure
+      BEFORE INSERT ON Activity WHEN NEW.type='SPOT_MARGIN_REPAYMENT'
+      BEGIN SELECT RAISE(ABORT,'synthetic Margin Activity failure'); END`);
+    failedDb.close();
+    await expect(gateway.settleMarginClose(command)).rejects.toThrow('synthetic Margin Activity failure');
+    expect((await bridge.select<{available:string}>(`SELECT available FROM LedgerAccount WHERE id='margin-1'`)).results)
+      .toEqual(baseline.results);
+    expect((await bridge.select<{count:number}>(`SELECT COUNT(*) AS count FROM LedgerPosting`)).results)
+      .toEqual(before.results);
+    expect(await gateway.getMarginPosition('margin-position-close','user-1'))
+      .toMatchObject({status:'CLOSING'});
+    const restored = new Database(join(directory,'fixture.sqlite'));
+    restored.exec('DROP TRIGGER synthetic_margin_settlement_projection_failure');
+    restored.close();
+
+    const result = await gateway.settleMarginClose(command);
+    expect(result).toMatchObject({state:'CLOSED',realizedPnl:'1',closeOrderId:'margin-close-order'});
+    expect((await bridge.select<{available:string}>(`SELECT available FROM LedgerAccount WHERE id='margin-1'`)).results)
+      .toEqual([{available:'1'}]);
+    await expect(bridge.select<{count:number}>(
+      `SELECT COUNT(*) AS count FROM LedgerPosting WHERE referenceId='margin-position-close'`
+    )).resolves.toMatchObject({results:[{count:1}]});
+    await expect(bridge.select<{count:number}>(
+      `SELECT COUNT(*) AS count FROM Activity WHERE referenceId='margin-position-close' AND type='SPOT_MARGIN_REPAYMENT'`
+    )).resolves.toMatchObject({results:[{count:1}]});
+    await expect(bridge.select<{count:number}>(
+      `SELECT COUNT(*) AS count FROM EventOutbox WHERE aggregateId='margin-position-close' AND eventType='MARGIN_CLOSED'`
+    )).resolves.toMatchObject({results:[{count:1}]});
+  });
+
   it('rejects unsupported scope assets, cross-user accounts, idempotency collisions, and overdrafts without partial writes', async () => {
     await expect(operations.transferBetweenAccounts('user-1', {
       sourceScope: 'MAIN', destinationScope: 'BINARY', asset: 'BTC', amount: '1',

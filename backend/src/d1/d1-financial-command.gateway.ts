@@ -7539,6 +7539,51 @@ export class D1FinancialCommandGateway {
     return statements;
   }
 
+  async listPendingMarginCloses(take = 25): Promise<Array<{
+    positionId: string; userId: string; closeOrderId: string;
+    idempotencyKey: string; liquidation: boolean;
+  }>> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const result = await this.bridge.select<Record<string, unknown>>(
+      `SELECT p."id" AS "positionId", m."userId",p."closeOrderId",
+              a."idempotencyKey",a."type"
+       FROM "SpotMarginPosition" p
+       JOIN "SpotMarginAccount" m ON m."id"=p."accountId"
+       JOIN "SpotMarginActivity" a ON a."positionId"=p."id"
+           AND a."type" IN ('CLOSE','LIQUIDATION')
+           AND a."status"='ACCEPTED'
+       JOIN "Gate2SpotOrder" o ON o."id"=p."closeOrderId"
+           AND o."userId"=m."userId" AND o."status"='FILLED'
+       WHERE p."status"='CLOSING'
+       ORDER BY p."updatedAt" ASC LIMIT ?`,
+      [Math.max(1, Math.min(25, Math.trunc(take)))],
+    );
+    return result.results.map((row) => ({
+      positionId: String(row.positionId), userId: String(row.userId),
+      closeOrderId: String(row.closeOrderId),
+      idempotencyKey: String(row.idempotencyKey),
+      liquidation: String(row.type) === 'LIQUIDATION',
+    }));
+  }
+
+  async getSpotOrderExecutionPrice(orderId: string): Promise<string> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const trades = await this.bridge.select<{ price: string; amount: string }>(
+      `SELECT "price","amount" FROM "Gate2SpotTrade"
+        WHERE "buyerOrderId"=? OR "sellerOrderId"=? ORDER BY "createdAt","id"`,
+      [orderId, orderId],
+    );
+    let total = new Prisma.Decimal(0);
+    let notional = new Prisma.Decimal(0);
+    for (const trade of trades.results) {
+      const amount = this.decimal(trade.amount);
+      total = total.plus(amount);
+      notional = notional.plus(amount.mul(this.decimal(trade.price)));
+    }
+    if (total.isZero()) throw new BadRequestException("Margin close has no executed trades");
+    return notional.div(total).toString();
+  }
+
   async getSpotOrder(
     userId: string,
     orderId: string,

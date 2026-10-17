@@ -121,11 +121,57 @@ describe('Spot isolated margin authority', () => {
       markMarginClosing: jest.fn().mockResolvedValue(undefined),
       matchSpotOrder: jest.fn().mockResolvedValue(false),
       getSpotOrder: jest.fn().mockResolvedValue({ id: 'liquidation-order-1', status: 'FILLED', price: '35000' }),
+      getSpotOrderExecutionPrice: jest.fn().mockResolvedValue('35000'),
       settleMarginClose: jest.fn().mockResolvedValue({ state: 'LIQUIDATED', liquidationOrderId: 'liquidation-order-1' }),
     };
     await expect(new MarginService(d1).liquidatePosition('user-1', position.id, 'margin-liquidation-1')).resolves.toMatchObject({ state: 'LIQUIDATED' });
     expect(d1.markMarginClosing).toHaveBeenCalledWith('position-1', 'user-1', 'margin-account-1', expect.any(String), 'liquidation-order-1', 'margin-liquidation-1', true);
     expect(d1.settleMarginClose).toHaveBeenCalledWith(expect.objectContaining({ state: 'LIQUIDATED', debtAsset: 'USDT', maintenanceRatio: '0.5' }));
+  });
+
+  it('reuses an existing closing order without reserving another order or changing its close request', async () => {
+    const position = { id: 'position-1', accountId: 'margin-account-1', accountPair: 'BTCUSDT', status: 'CLOSING', closeOrderId: 'close-order-1', direction: MarginPositionDirection.LONG, collateral: '50', quantity: '1', entryPrice: '100', debtPrincipal: '50', debtAsset: 'USDT', interestAccrued: '0', unrealizedPnl: '0' };
+    const d1: any = {
+      getMarginPosition: jest.fn().mockResolvedValue(position),
+      getActiveMarketPair: jest.fn().mockResolvedValue(pair),
+      getLiveMarketQuote: jest.fn().mockResolvedValue({ price: '100' }),
+      reserveSpotOrder: jest.fn(),
+      markMarginClosing: jest.fn(),
+      matchSpotOrder: jest.fn().mockResolvedValue(false),
+      getSpotOrder: jest.fn().mockResolvedValue({ id: 'close-order-1', status: 'OPEN', price: '100' }),
+      settleMarginClose: jest.fn(),
+    };
+    await expect(new MarginService(d1).closePosition('user-1', 'position-1', 'close-retry')).resolves.toMatchObject({ state: 'CLOSING', closeOrderId: 'close-order-1' });
+    expect(d1.getActiveMarketPair).not.toHaveBeenCalled();
+    expect(d1.reserveSpotOrder).not.toHaveBeenCalled();
+    expect(d1.markMarginClosing).not.toHaveBeenCalled();
+    expect(d1.matchSpotOrder).not.toHaveBeenCalled();
+    expect(d1.settleMarginClose).not.toHaveBeenCalled();
+  });
+
+  it('settles a delayed filled close using executed VWAP with no new reserve or quote', async () => {
+    const position = { id:'late-position',accountId:'margin-account-1',accountPair:'BTCUSDT',
+      status:'CLOSING',closeOrderId:'late-close-order',direction:MarginPositionDirection.LONG,
+      quantity:'3',entryPrice:'100',collateral:'50',debtPrincipal:'50',debtAsset:'USDT',
+      interestAccrued:'1',unrealizedPnl:'0' };
+    const d1: any = {
+      getMarginPosition:jest.fn().mockResolvedValue(position),
+      getActiveMarketPair:jest.fn().mockResolvedValue(pair),
+      getLiveMarketQuote:jest.fn(),reserveSpotOrder:jest.fn(),markMarginClosing:jest.fn(),
+      matchSpotOrder:jest.fn().mockResolvedValue(null),
+      getSpotOrder:jest.fn().mockResolvedValue({id:'late-close-order',status:'FILLED'}),
+      getSpotOrderExecutionPrice:jest.fn().mockResolvedValue('106.66666666666666667'),
+      settleMarginClose:jest.fn().mockResolvedValue({state:'CLOSED'}),
+    };
+    await expect(new MarginService(d1).closePosition('owner','late-position','original-close')).resolves.toMatchObject({state:'CLOSED'});
+    expect(d1.getActiveMarketPair).not.toHaveBeenCalled();
+    expect(d1.reserveSpotOrder).not.toHaveBeenCalled();
+    expect(d1.markMarginClosing).not.toHaveBeenCalled();
+    expect(d1.getLiveMarketQuote).not.toHaveBeenCalled();
+    expect(d1.settleMarginClose).toHaveBeenCalledWith(expect.objectContaining({
+      closeOrderId:'late-close-order', markPrice:'106.66666666666666667',
+      realizedPnl:'20.00000000000000001',repayment:'51', idempotencyKey:'original-close',
+    }));
   });
 
   it('uses D1-backed Admin margin configuration', async () => {

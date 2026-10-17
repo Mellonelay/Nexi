@@ -1,3 +1,9 @@
+## Margin late-close source recovery — 2026-10-18 (NEWEST)
+
+- **TESTED:** Reuses the existing CLOSING order and original idempotency key; detects FILLED closes through gateway SQLite query; calculates actual executed order VWAP; skips new order/funding reservation and stale live-quote dependencies; feature-gated Redis-locked scheduler resumes up to 25 cases per run.
+- **Verification:** Margin service and recovery scheduler 13/13, close-recovery disposable SQLite 2/2, and end-to-end gateway Ledger/position/unified Activity/EventOutbox rollback/retry focused test 1/1 PASS. Relevant build-typecheck 0 errors; Fallow import-zone guard clean. Details: `tasks/evidence/margin-late-close-recovery-20261018.md`.
+- **RECHECK_AFFECTED_ONLY:** This supersedes the historical "late Margin close recovery missing" source claim. A real live-financial request/settlement was **NOT** performed; deployment and authenticated API acceptance remain **UNPROVEN**. A failed debt repayment remains an explicit retryable error, not a successful close.
+
 ## Margin late-entry fills — atomic Spot reconciliation (2026-10-18, source only)
 
 - **TESTED:** 2 focused suites, **23/23 tests PASS**: `test/d1/wallet-account-transfer.local-sqlite.spec.ts` and `test/gate2/margin.service.spec.ts`. `tsc --noEmit -p tsconfig.build.json` exited 0.
