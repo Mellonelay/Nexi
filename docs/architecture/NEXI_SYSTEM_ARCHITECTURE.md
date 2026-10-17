@@ -6,15 +6,15 @@
 
 **Public:** Next.js App Router under `cloudflare-container-bootstrap/dexi-frontend`, deployed through the canonical `/srv/nexi/public/current` directory. It is a UI/API consumer only.
 
-**Backend target:** Existing Nginx routes Public/Admin/API traffic to the canonical NestJS service on the VPS. Source is `backend/src`; runtime is `/srv/nexi/backend/dist/src/main.js` supervised by `nexi-api.service`. Cloudflare Worker/Container remains the current production route until the explicit owner-approved cutover; it is not the target VPS runtime.
+**Backend/runtime:** Name.com public DNS now routes the three hostnames to the VPS. Existing Nginx serves Public/Admin and proxies API/WebSocket traffic to the canonical NestJS service at `/srv/nexi/backend/dist/src/main.js`, supervised by `nexi-api.service`. Cloudflare Worker/Container and async resources remain active, but are no longer described as the current public DNS route. Cloudflare D1 remains populated and authoritative for existing financial data; the VPS SQLite DB is not synchronized.
 
 **Admin:** React/TanStack under `apps/admin`, deployed via its established canonical runtime. It is the governed control plane and invokes permissioned NestJS commands; it does not own financial transactions or become a second backend.
 
-The complete current component map, data flows, replacement matrix and unclosed acceptance gates are in [NEXI VPS Backend Runtime](NEXI_VPS_BACKEND_RUNTIME.md).
+The current component map, data flows, replacement matrix and unclosed acceptance gates are in [NEXI VPS Backend Runtime](NEXI_VPS_BACKEND_RUNTIME.md). Current public traffic reaches the VPS; D1 remains populated/current financial authority while sampled core VPS SQLite tables are empty. Do not infer that public DNS migration completed financial cutover.
 
 ## Data and financial ownership
 
-- SQLite + Prisma 7/better-sqlite3 = target durable application and financial relational store; Ledger postings = accounting truth.
+- SQLite + Prisma 7/better-sqlite3 = intended VPS durable application and financial relational store; Ledger postings = accounting truth. Live check (2026-10-17): the VPS DB has zero rows in sampled core financial tables while Cloudflare D1 remains populated. Do not accept financial writes or claim cutover; see [current state](../../NEXI_CURRENT_STATE.md).
 - EventOutbox = durable publication; EventInbox = idempotent ingress; SQLite journal/workflow coordinator = durable acceptance/checkpoints; BullMQ retries and delivers transport work.
 - Aiven Valkey = BullMQ transport, Socket.IO Redis Streams, cache and ephemeral coordination only.
 - Private local VPS storage = target location for approved KYC/deposit-proof evidence; access remains behind NestJS authorization.

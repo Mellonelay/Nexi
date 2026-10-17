@@ -13,7 +13,7 @@
 - [Public frontend](frontend/README.md): user journeys, Next.js routes, wallet account display, backend consumers, responsive design.
 - [Admin](admin/README.md): governance, RBAC, Admin routes, backend control authority, audit.
 - [Operational Sentry](operations/NEXI_SENTRY_OBSERVABILITY.md): Sentry SDK/source, release lifecycle, telemetry and failure verification.
-- [Infrastructure](infrastructure/): VPS runtime and the still-live Cloudflare production operator procedures; see the VPS runtime map for component replacements.
+- [Infrastructure](infrastructure/): VPS runtime and remaining Cloudflare resource operator procedures; public DNS now points to the VPS, while D1/Worker async resources remain active pending gated closure. See the VPS runtime map for the component replacement matrix.
 - API contracts are owned by NestJS controllers, DTOs and generated types; verify actual source revision before trusting OpenAPI artifacts.
 - [Security](security/): SIWE, ownership, privileged controls, Ledger/financial integrity.
 - [Quality](quality/): retained test and browser evidence. Old receipts prove only their recorded revision and scope.

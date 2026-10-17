@@ -1,22 +1,22 @@
 # NEXI Work Authoritative Operating Contract
 
 ## Authority
-GitHub `main` is the durable NEXI source authority. The owner-selected target backend runtime is the existing VPS NestJS service; Cloudflare remains the live production route and D1 financial writer until the separate verified cutover gate is accepted. Worker 0/RDC operates the VPS and preserves the existing Public/Admin service owners.
+GitHub `main` is the durable NEXI source authority. Name.com public DNS now routes the three hostnames to the existing VPS NestJS service. Cloudflare Worker/Container/async resources remain active and D1 remains the populated financial data authority until the separate verified writer-cutover gate is accepted. The active VPS SQLite core financial tables are empty in the 2026-10-17 sample; do not claim public financial readiness. Worker 0/RDC operates the VPS and preserves the existing Public/Admin service owners.
 
 - ChatGPT remains the parent/controller.
 - VPS backend implementation, staging runtime, and acceptance work target `/home/mellonelay1999/workspaces/Nexi`, `/srv/nexi/backend`, and the existing `nexi-api.service`; current non-authoritative runtime evidence must not be presented as production cutover evidence.
-- Public and Admin keep their canonical sources and runtime directories. Nginx is the intended API/host/WebSocket router; API public TLS readiness is a separate gate.
-- Cloudflare production Worker/Container/D1 remains live until an owner-approved financial and traffic cutover. Inspect Cloudflare read-only when required to close parity; do not change production routes, writers, DNS, nameservers, or retire resources without the specific owner gate.
+- Public and Admin keep their canonical sources and runtime directories. Existing Nginx is the API/host/WebSocket router; prior direct checks verified trusted HTTPS. Financial write safety remains blocked by unsynchronized D1/SQLite state.
+- Owner has already switched public DNS to Name.com/VPS. Cloudflare Worker cron/queue/workflow and Container resources remain active; D1 remains populated/current financial data authority. Inspect Cloudflare read-only when required to close parity; do not change writers, routes, DNS, nameservers, or retire resources without the specific owner gate.
 - Worker 0/RDC may build and operate the authorized VPS backend. Never run a second financial writer or point a non-authoritative service at production financial state.
 - Historical trees, branches, and receipts are evidence only unless fresh verification proves unique accepted work.
 
-Current owner decisions outrank stale project instructions and checkpoint text. Source truth is GitHub `main`; VPS runtime truth must be proved on the running service, while Cloudflare remains production truth until cutover.
+Current owner decisions outrank stale project instructions and checkpoint text. Source truth is GitHub `main`; public runtime truth must be proved on the running VPS service. D1 remains current financial data authority, while the publicly routed VPS SQLite database is not synchronized; preserve this mismatch as an active write-safety block until controlled delta and owner acceptance.
 
 ## Canonical architecture
 Public/Admin -> existing Nginx hosts -> Next.js frontends and the canonical NestJS VPS API.
 NestJS owns business/domain decisions. SQLite + Prisma/better-sqlite3 is the target durable application store; Ledger is accounting truth and EventOutbox is the durable publication boundary.
 Aiven Valkey serves BullMQ transport, Socket.IO Redis Streams, cache and ephemeral coordination; it never owns financial truth. SQLite job/workflow journals remain durable. Local protected storage replaces private R2 object storage for KYC/deposit evidence.
-Cloudflare currently remains the production Worker/Container/D1 path until the explicit owner-approved cutover; it is not the target VPS backend architecture.
+Name.com/VPS is now the public traffic path. Cloudflare Worker/Container and async resources remain active, and D1 remains current financial authority until the explicit owner-approved writer cutover; these are distinct states. The VPS remains the selected backend runtime target.
 
 Do not restore any retired database authority. Do not introduce a second Admin plane, second financial writer, direct frontend database access, or a second reverse proxy.
 ## Capability routing
@@ -104,7 +104,7 @@ After high-impact changes, refresh once and rerun only the relevant impact/path 
 ## Cloudflare policy
 Before any Cloudflare implementation, configuration change, deployment, configuration-driven debugging, or operator mutation, read the relevant **current official Cloudflare documentation first**. Then inspect the current Wrangler/MCP help or schema for the exact product/command and reconcile it with current NEXI configuration. This gate applies repository-wide to Workers, Wrangler, Containers, D1, Queues, Workflows, R2, Pipelines, Durable Objects, bindings, secrets, routes/domains, versions/deployments/rollback, observability/logging, networking, and later Cloudflare products.
 
-Use `docs/architecture/NEXI_VPS_BACKEND_RUNTIME.md` as the current target-runtime map and `docs/infrastructure/NEXI_CLOUDFLARE_BACKEND_OPERATOR_RUNBOOK.md` only for the still-live Cloudflare production environment. For backend integration work, the canonical VPS source/runtime is the active task target; Cloudflare inspection is read-only parity/current-production evidence unless an owner gate authorizes mutation. Reconcile all source changes to GitHub `main`.
+Use `docs/architecture/NEXI_VPS_BACKEND_RUNTIME.md` as the current VPS runtime map and `docs/infrastructure/NEXI_CLOUDFLARE_BACKEND_OPERATOR_RUNBOOK.md` for remaining active Cloudflare resources, parity and gated retirement. Public DNS points to the VPS; D1 remains financial data authority. For backend integration work, the canonical VPS source/runtime is the active task target; Cloudflare inspection is read-only parity/current-production evidence unless an owner gate authorizes mutation. Reconcile all source changes to GitHub `main`.
 
 Do not blindly retry a failing Wrangler command: read the real error, consult current official docs/help, identify the causal owner, then retry only when justified. Capability discovery never grants unrelated mutation authority. Unrelated production mutation still requires explicit current owner approval.
 
@@ -150,7 +150,7 @@ On a fresh NEXI Work session, after continuity loss, or when the relevant durabl
 
 The current owner directive selects the active work. The completion ledger is historical evidence only; a stale queue row, receipt, phase capsule, or checkpoint cannot block an explicit current owner instruction. Preserve proven completed work and update current-state records proportionally after material source/runtime changes. Never claim verification that has not been performed.
 
-Owner manual testing is a final acceptance gate, never a substitute for automatable verification. Use only authorized controlled wallet/Admin identities; otherwise record the exact owner dependency. VPS backend staging is non-authoritative until the D1-to-SQLite financial and traffic cutover is approved and reconciled. Keep Public/Admin builds in their canonical `/srv/nexi/public` and `/srv/nexi/admin` locations.
+Owner manual testing is a final acceptance gate, never a substitute for automatable verification. Use only authorized controlled wallet/Admin identities; otherwise record the exact owner dependency. Public DNS already routes traffic to the VPS. The active VPS SQLite financial database remains non-authoritative and unsynchronized until the D1-to-SQLite data delta and financial writer cutover are approved and reconciled. Keep Public/Admin builds in their canonical `/srv/nexi/public` and `/srv/nexi/admin` locations.
 
 For market work, do not optimize for a cosmetic `LIVE` count. Open-market assets must remain fresh or self-recover automatically; legitimate closed-market states must carry a truthful reason; silent frozen prices, fabricated freshness, and manual recovery as normal operation are defects.
 

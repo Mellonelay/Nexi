@@ -10,7 +10,7 @@
 | `admins`, `roles`, `sessions`, `audit`, `approvals` | Admin identity, RBAC, privileged sessions, approval chains and immutable audit context |
 | `users`, `kyc` | Account lookup/status and private evidence-review control |
 | `assets`, `networks`, `market-feeds` | Market instrument/provider catalog, wallet currency/network configuration, freshness/source policy |
-| `wallets`, `ledger`, `reconciliation` | Governed financial oversight, corrections and reconciliation; NestJS + D1 Ledger remain authoritative |
+| `wallets`, `ledger`, `reconciliation` | Governed financial oversight, corrections and reconciliation; NestJS is the domain authority and Cloudflare D1 remains current financial data authority until controlled SQLite delta and explicit writer cutover |
 | `deposits`, `withdrawals`, `settlements` | Claim/review/approval or rejection, verification and settlement status |
 | `spot`, `binary` | Trade configuration; Binary fixed supported durations and editable enablement/payout/stake bounds where implemented |
 | `mining`, `loans` | Plan governance, accrual/repayment lifecycle and backend-confirmed positions |
@@ -27,7 +27,7 @@ All rows map to source route files, **not** automatic claims of complete runtime
 - Admin auth/authorization: NestJS guards, explicit role permissions and user/account isolation. Admin UI hiding alone is never sufficient.
 - Mutations must be validated/audited, carry correct actor and reason, and preserve idempotency/financial integrity where relevant.
 - Admin config propagates to Public through the single backend read contract, not duplicated hard-coded state.
-- All KYC evidence remains in private R2 with backend-controlled access.
+- Local KYC/deposit evidence storage and staged R2 copies exist. Do not claim R2 is retired or every object migrated until the live object manifest, metadata/access parity and recovery backup are verified.
 
 ## Release and verification
 

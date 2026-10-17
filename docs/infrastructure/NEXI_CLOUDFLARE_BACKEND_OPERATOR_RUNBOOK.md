@@ -1,19 +1,16 @@
 # NEXI Cloudflare Backend Operator Runbook
 
-**Authority date:** 2026-09-26
-**Status:** CURRENT backend runtime/operator authority
+**Authority date:** 2026-10-17
+**Status:** CURRENT operator runbook for remaining Cloudflare resources; not the public VPS runtime authority.
 
 ## Authority
 
 - GitHub `main` = durable source authority.
-- Cloudflare Worker + Container = the only active backend execution/runtime authority.
-- NestJS = business/domain authority inside the Cloudflare backend.
-- D1 = durable application/financial relational truth.
-- Ledger = accounting truth.
-- EventOutbox = durable publication boundary.
-- Aiven Valkey = realtime/cache/Streams only.
-- Queues = delivery/retry; Workflows = orchestration; Worker = edge/routing.
-- Worker 0 / VM = operator, recovery, source-analysis, and tooling plane only. It must not host a competing backend runtime after the 2026-09-17 convergence.
+- Name.com public DNS routes browser/API traffic to the VPS Nginx/NestJS runtime; prior live checks verified trusted HTTPS.
+- VPS NestJS is the public API process. The active local SQLite database has zero rows in sampled core financial tables while D1 remains populated. Do not accept financial writes or claim writer cutover until the owner-directed protection and controlled delta are complete.
+- Cloudflare Worker cron/queue handlers, Container, D1, R2, KV and other bindings/resources remain active and are documented here for read-only inspection, parity closure and later gated retirement. DNS change does not prove their shutdown.
+- NestJS remains sole business/domain authority; Ledger remains accounting truth; EventOutbox/EventInbox remain durable delivery boundaries. Aiven Valkey is transport/realtime/cache only; Queues deliver/retry and Workflows orchestrate.
+- Worker-0 VM hosts the intended VPS runtime as well as operator/recovery tooling; it is not a second financial authority until the owner-approved cutover is completed.
 
 ## Permanent Cloudflare documentation gate
 
@@ -89,7 +86,7 @@ For a legitimate backend source change:
 
 `READ OFFICIAL CLOUDFLARE DOCS IF PLATFORM-INVOLVED -> INSPECT LIVE CLOUDFLARE STATE -> CHANGE CANONICAL SOURCE / OR BOUNDED LIVE REPAIR WHEN REQUIRED -> VERIFY ON CLOUDFLARE -> RECONCILE EXACT SOURCE TO GITHUB MAIN -> PUSH -> CONFIRM NO CLOUDFARE-ONLY SOURCE DRIFT`
 
-A VM-local NestJS process is never used as backend acceptance proof. Local builds/tests/static analysis may prove source properties only.
+The VPS NestJS process is the public API runtime and may prove VPS behavior when directly observed. It does not prove Cloudflare resource retirement, D1/SQLite equality, production financial cutover, or Cloudflare/Worker parity.
 
 ## Safe read-only production checks
 

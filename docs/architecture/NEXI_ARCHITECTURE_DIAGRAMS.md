@@ -19,7 +19,7 @@ flowchart LR
   API -. "errors and traces" .-> S["Sentry"]
 ```
 
-NestJS owns domain decisions; SQLite is the target durable store, Ledger accounting truth, EventOutbox/EventInbox durable delivery boundaries, and Aiven Valkey transport/realtime only. Cloudflare Worker/Container/D1 remains production until approved cutover; Cloudflare Observability remains disabled.
+NestJS owns domain decisions. Name.com DNS routes public hostnames to the VPS Nginx/NestJS path; SQLite is the intended VPS durable store, Ledger accounting truth, EventOutbox/EventInbox durable delivery boundaries, and Aiven Valkey transport/realtime only. Cloudflare D1 remains populated and financially authoritative pending controlled delta and owner-approved writer cutover; Worker cron/queues/workflows remain active. Cloudflare Observability remains disabled. The current VPS SQLite core financial tables are empty; do not infer synchronized production behavior.
 
 ## 2. Financial accounts and transaction topology
 
@@ -88,7 +88,7 @@ flowchart TD
   Q --> F{"Cutover evidence complete?"}
   F -- No --> C["Close remaining verified gap"]
   C --> G
-  F -- Yes --> O["Owner approval for financial cutover and DNS"]
+  F -- Yes --> O["Owner approval for financial cutover; DNS already at Name.com"]
 ```
 
 The arrows represent the release procedure, **not a requirement to use one Git SHA for differently built artifacts**. Public, Backend and Admin runtime releases must each match their own actual build source. Browser validation is planned after source closure and deployment, using the existing authorized wallet profile rather than an obsolete MetaMask harness.

@@ -1,9 +1,9 @@
 # NEXI Cloudflare Exit — Owner-Directed Migration Plan
 
 ## Authority and scope
-Current owner directive (2026-10-16) governs conflicting repository/VM/skill instructions. This plan and todo.md are the living migration controller. The old production ledger and ChatGPT Project uploads are historical only. Preserve NestJS/Public/Admin and every existing domain behavior. Target one existing VPS, SQLite durable application/financial truth, Ledger accounting, EventOutbox durable publication. PostgreSQL/Timescale/managed-service research is superseded exploration. No framework rewrite.
+Current owner directive governs conflicting repository/VM/skill instructions. This plan and todo.md are living migration controllers. Older checkpoints below are preserved historical evidence; the newest dated checkpoint at the end governs live state. The old production ledger and ChatGPT Project uploads are historical only. Preserve NestJS/Public/Admin and every existing domain behavior. Target one existing VPS, SQLite durable application/financial truth after controlled cutover, Ledger accounting, EventOutbox durable publication. PostgreSQL/Timescale/managed-service research is superseded exploration. No framework rewrite.
 
-## Recovered baseline (2026-10-16 UTC; exact observations in evidence/g0-recovery.json)
+## Historical recovered baseline (2026-10-16 UTC; superseded by the current checkpoint below; exact observations in evidence/g0-recovery.json)
 Migration worktree: /home/mellonelay1999/workspaces/Nexi-sqlite-migration; branch migration/sqlite-local-bridge; HEAD and cached origin/main 9a41b2e3da2729173f6d7aac6a1fd2f6c6c4657f. Existing nine migration files preserved, uncommitted. Remote main still requires exact live SHA check. Original checkout main@d24862f preserved with its two untracked Admin pnpm files. No prior tasks directory/files found in either checkout. Public/Admin active. Snapshot SQL gzip 863748144 bytes; restored SQLite 7164264448 bytes; both isolated historical data, not current production. Disk 8.7G available, RAM 5120MiB available, swap 2036MiB used. Previously reported 7/7 SQLite + 53/53 financial + backend build remain historical pending exact native evidence recovery; no automatic repeat. Previous 90/92 count comparison is not content equality.
 
 ## Replacements and closure proof
@@ -11,24 +11,24 @@ Migration worktree: /home/mellonelay1999/workspaces/Nexi-sqlite-migration; branc
 |---|---|---|
 | D1/private HTTP bridge | Prisma better-sqlite3 + local financial gateway | All schema/data/financial reconciliation; ordered atomic rollback; exact decimals/idempotency; PRAGMAs on every connection |
 | Worker/Container/DO routing | Existing Nginx + NestJS systemd | Auth/cookies/CORS/SIWE/WSS parity, fail-closed upstreams, resource/restart proof |
-| Three queues + DLQ policy | Local Valkey + BullMQ, durable Outbox/Inbox | Retry, replay, duplicate delivery, lost-queue recovery, durable failure inspection |
+| Three queues + DLQ policy | Aiven Valkey + BullMQ, durable Outbox/Inbox | Retry, replay, duplicate delivery, lost-queue recovery, durable failure inspection |
 | Withdrawal/mining/loan Workflows | SQLite checkpoints + BullMQ steps | Approval/provider waits/due dates/retries; in-flight manifest; restart and exactly-once financial effects |
 | R2 proof/KYC objects | Private local filesystem adapter | Key/MIME/auth parity; count/content hashes; copy/recovery; outside webroot |
 | KV/config | SQLite SystemConfig, Valkey ephemeral only | Each actual consumer mapped and parity verified |
 | Secrets/rate limit/cron/analytics | Root-owned env, existing Nest/Nginx, bounded jobs/logs | Actual deployed binding inventory and consumers closed |
 | Aiven Valkey | Aiven Valkey is final for BullMQ, Socket.IO and ephemeral cache/realtime; loopback Valkey is temporary test-only | TLS/auth, DB/prefix isolation, reconnect and queue recovery; never financial truth |
-| Cloudflare DNS | Name.com authoritative DNS | Full record sheet/DNSSEC/ACME and owner-approved nameserver change; registration stays at Name.com |
+| Public DNS | Name.com authoritative; owner has switched NS and prepared `www`, `api`, `admin` A records to VPS | Live delegation/A/TLS and service checks; DNSSEC remains disabled per owner report; no NS action pending |
 | Backups/operations | SQLite consistent backup + encrypted independent copy | Restore tested; retention/resource budget and runbooks |
 
 ## Ordered critical path
 G0 recover handles, instructions, source/dirty state, artifacts, prior proof; establish tasks controller.
 G1 schema plus all-table canonical key/content reconciliation; migration history, exact money/Ledger, outbox/inbox, auth/domain/config state; explicit source snapshot boundary and market coverage, separately internal SQLite tables. Reuse export, no giant duplicate.
 G2 validate local adapter/financial gateway/Prisma, each connection WAL/FULL/FK/busy timeout, SQLITE_BUSY/concurrency, rollback, fault injection/idempotency/restart and real-dataset reads. No production connection.
-G3 local Valkey/BullMQ and durable workflow coordinator; inventory and preserve active source queue/workflow state.
+G3 Aiven Valkey/BullMQ and durable SQLite workflow coordinator; inventory and preserve active source queue/workflow state.
 G4 verify R2 copies/manifest and all remaining bindings/consumers.
 G5 isolated non-authoritative full backend/Public/Admin/market/auth/browser parity; bounded resource/load/recovery checks; encrypted independent backup/restore. Focused verification before coordinated final build.
 G6 exact financial freeze/drain/snapshot/delta/reconciliation and rollback-forward protocol; PENDING_OWNER_ACTION before changing live financial writers or endpoints.
-G7 Name.com DNS + Cloudflare per-resource retirement after owner approval, independent backup and rollback window. Billing review separate.
+G7 Verify Name.com DNS/TLS (owner change already complete); retire Cloudflare per resource only after dependency closure, independent backup and rollback window, plus explicit owner approval. Billing review separate.
 
 ## Parallelism and capacity
 One parent; RDC executes; one writer. Independent source/structural, platform and data evidence may run concurrently. Serialize database/schema/Ledger/Outbox/shared contracts, lockfiles, graph writes, Git fan-in, build/deploy and final acceptance. Default one heavy CPU/I/O process on this 2-vCPU/8GB VPS. Preserve existing handles and canonical Public/Admin deployments. Do not create duplicate dependencies/exports/restores. Measure disk/WAL/queue lag/latency/headroom before any justified spending recommendation. No destructive market retention without owner signoff.
@@ -196,3 +196,19 @@ Historical records below preserve the chronology and are superseded where their 
 - VERIFIED — Certbot timer active; NEXI deploy hook syntax/manual execution passed; certbot renew --dry-run passed.
 - VERIFIED — Canonical main remains 927d313b5f873eaf814fb3e1d2a00e8a101dc37b = origin/main. Only preserved untracked Admin pnpm files remain. Runtime local SQLite, async and object flags are enabled.
 - OPEN — Authenticated financial acceptance, independent encrypted off-VPS backup/restore, final live D1 delta, single-writer cutover and Cloudflare retirement. Cloudflare resources remain deployed; D1 remains financial authority. No financial writer or Cloudflare resource changed.
+
+
+## 2026-10-17 live public-routing and authority checkpoint
+
+Current source checkpoint: canonical `main` and `origin/main` both `bbc849b16291b034b596b80f77790d13112f4cb2`; preserve the two untracked Admin pnpm files. Public DNS was changed by the owner to Name.com and routes all three public hostnames to the VPS; prior direct checks verified trusted Let's Encrypt HTTPS and API/Public/Admin/WebSocket reachability. Reuse those results unless a deployment or DNS change invalidates them.
+
+**New decision-driving evidence:** project-local Wrangler 4.127.1 read-only queries confirm Cloudflare D1 still has nonzero User/Wallet/WalletIdentity, LedgerAccount/Posting/Idempotency/Audit, EventOutbox/EventInbox, Loan and Mining records. Active `nexi-api.service` uses `/var/lib/nexi/sqlite/nexi-staging.sqlite`, whose sampled core rows are zero. Runtime configuration enables the local SQLite adapter and the local-backed financial gateway. This is a public endpoint/data-authority mismatch. No write was sent, no database changed, and no historical export reconciliation was repeated. Detailed counts and source/config references: `tasks/evidence/wrangler-live-d1-vps-authority-mismatch-20261017.json`.
+
+**Critical path adjustment:** pause production financial acceptance/cutover claims. Before financial actions can safely be accepted, the owner must decide how to protect public financial command paths while the active VPS DB is empty; then complete controlled delta, verification and explicit writer-cutover acceptance. Continue unrelated read-only/docs/backup-preparation work. Off-VPS independent backup is blocked by absence of an approved destination and denied bucket-list permission. Cloudflare retirement remains blocked by active one-minute Worker cron/queue handlers and two errored loan workflow instances needing reconciliation. No DNS, database writer, queue/workflow or Cloudflare resource mutation is authorized by this checkpoint.
+
+
+## 2026-10-17 authenticated-write risk clarification
+
+Source review confirms the active public NestJS API can write authenticated financial mutations to the empty local SQLite database. The local adapter is selected in D1PrismaService; D1FinancialCommandGateway also enables because its bridge resolves to LocalSqliteBridgeService. Some JWT-protected /lever routes use direct Prisma mutation paths and bypass that gateway. NEXI_SCHEDULER_ENABLED=false is confirmed but NEXI_LOCAL_ASYNC_ENABLED=true remains active. Therefore changing only D1_RUNTIME_ENABLED is not a complete write freeze. Source refs and representative routes are recorded in tasks/evidence/vps-financial-write-path-risk-20261017.md. No API financial request, config change, process stop, or database mutation was performed.
+
+Owner choice is required for the live write-safety action: coordinated temporary maintenance/write freeze that covers HTTP and local async consumers, or verified return to a working D1-backed API after bridge reachability and parity are proven. Do not switch adapter flags blindly. Preserve existing data and proceed with safe documentation/backup preparation while awaiting this operational decision; then require explicit one-writer cutover acceptance separately.

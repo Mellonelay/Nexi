@@ -8,7 +8,7 @@ These rules extend the repository root `AGENTS.md` and govern the authoritative 
 - SQLite + Prisma 7/better-sqlite3 is the target durable application database. Ledger remains accounting truth; EventOutbox/EventInbox preserve durable publication/idempotent ingress.
 - Aiven Valkey is the selected Redis-compatible service for BullMQ and Socket.IO Redis Streams, plus cache/ephemeral coordination; it is never financial truth.
 - SQLite journal/workflow state is durable; BullMQ transports work. Private local storage holds KYC/deposit evidence.
-- Cloudflare production remains live until separately approved/reconciled cutover; its bindings are parity evidence, not the target runtime architecture.
+- Public DNS now routes to the VPS API. Cloudflare Worker/Container/async resources remain active and D1 remains populated/current financial data authority until separately approved/reconciled writer cutover; bindings are parity evidence and remaining active dependencies, not the public host route.
 
 ## Current implementation objective
 Complete the VPS NestJS runtime and parity acceptance while reusing existing domain modules, focused migration proofs and the canonical Public/Admin services. Do not redesign working domains or activate a second financial writer.
@@ -43,7 +43,7 @@ Graphify is not proof. Direct source and focused tests/runtime decide correctnes
 - Feed API Documentation Checker/API Impact Mapper actual generated OpenAPI/controller/DTO changes when those tools are used; never progress summaries.
 
 ## Validation
-Use focused TypeScript/tests for source correctness and prove runtime behavior against the running non-authoritative VPS service where applicable. Keep build, test, staging-runtime, production-deployment and owner-accepted-cutover evidence separate. Never point the staging API at production D1 or claim migration completion from a VM build alone.
+Use focused TypeScript/tests for source correctness and prove runtime behavior against the running VPS API where applicable. Public hostnames currently route to that service, but its local SQLite core financial tables are empty while D1 is populated; perform only read-only/nonfinancial acceptance until the owner-directed write-safety action and controlled delta are complete. Keep build, test, VPS runtime, production cutover and owner-accepted-cutover evidence separate. Never point a staging API at production D1 or claim migration completion from a VM build alone.
 
 Do not perform unrelated production mutation. Cloudflare/platform mutation requires the current task to own that boundary and to pass the official-documentation gate. Do not create a second backend runtime on Worker 0.
 

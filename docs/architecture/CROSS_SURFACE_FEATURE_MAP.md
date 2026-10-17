@@ -19,7 +19,7 @@ flowchart LR
   API --> R["Private VPS evidence storage"]
 ```
 
-NestJS owns domain decisions; SQLite is the VPS target durable store, Ledger accounting truth and EventOutbox/EventInbox durable delivery boundaries. The SQLite journal/workflow coordinator preserves accepted work; BullMQ transports jobs over Aiven Valkey. Cloudflare Worker/Container/D1 remain live production until the owner-approved cutover, but are not the target VPS architecture. Public and Admin never mutate the database directly.
+NestJS owns domain decisions; SQLite is the intended VPS durable store, Ledger accounting truth and EventOutbox/EventInbox durable delivery boundaries. The SQLite journal/workflow coordinator preserves accepted work; BullMQ transports jobs over Aiven Valkey. Name.com DNS now routes public requests to VPS Nginx/NestJS; Cloudflare D1 remains populated/current financial authority, and Worker cron/queue/workflow resources remain active. Sampled core rows in active VPS SQLite are zero, so financial write acceptance/cutover remains blocked. Public and Admin never mutate the database directly.
 
 ## Feature-to-owner matrix
 
@@ -46,7 +46,7 @@ NestJS owns domain decisions; SQLite is the VPS target durable store, Ledger acc
 
 Feature map presence proves navigation only. For every feature, record separately when asked: `SOURCE_IMPLEMENTED`, `TESTED`, `DEPLOYED`, `RUNTIME_VERIFIED`, `BROWSER_VERIFIED`, `OWNER_ACCEPTED`. Use actual source SHA and deployed artifact IDs. The final authenticated browser campaign uses Polypane + Chrome DevTools and authorized Coinbase Wallet with real SIWE, after the relevant deployments; it is not a prerequisite to static source closure.
 
-The historical 92-table/11,802,372-row export reconciliation is complete but does not prove current D1/SQLite equality. The current D1 delta, authenticated financial acceptance, end-to-end provider/Socket.IO recovery, trusted VPS API TLS, independent encrypted backup/restore and cutover remain separate gates.
+The historical 92-table/11,802,372-row export reconciliation is complete but does not prove current D1/SQLite equality. The live 2026-10-17 sample confirms D1 core financial rows and zero sampled rows in active VPS SQLite; current delta, authorized authenticated financial acceptance, independent encrypted backup/restore and owner-controlled cutover remain open. Trusted VPS TLS and basic Socket.IO transport are verified in prior direct checks; full provider/Socket.IO recovery remains separate.
 
 ## Ownership routing
 

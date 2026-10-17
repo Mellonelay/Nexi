@@ -1,6 +1,6 @@
 # NEXI Production Observability: Sentry
 
-**Objective:** use Sentry for VPS and frontend runtime faults: exercise an instrumented feature → receive the error/trace/log → identify the causal source → repair and verify. This file documents source and operational requirements; it does not assert current ingestion/release status without fresh evidence. Cloudflare production remains live until cutover, but Cloudflare Observability stays disabled.
+**Objective:** use Sentry for VPS and frontend runtime faults: exercise an instrumented feature → receive the error/trace/log → identify the causal source → repair and verify. This file documents source and operational requirements; it does not assert current ingestion/release status without fresh evidence. Public DNS routes to the VPS; Cloudflare Worker/Container/async resources remain active and D1 remains populated/current financial data authority until the gated writer cutover. Cloudflare Observability stays disabled.
 
 ## Telemetry authority
 

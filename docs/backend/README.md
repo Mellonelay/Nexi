@@ -1,10 +1,10 @@
 # NEXI Backend: Current Source and Domain Map
 
-**Source:** `backend/src/`, `backend/prisma/`, `backend/test/`; canonical source is GitHub `main`. The Cloudflare bootstrap directory remains production/platform compatibility source during migration. This catalog maps responsibilities and does not claim every journey passed production acceptance.
+**Source:** `backend/src/`, `backend/prisma/`, `backend/test/`; canonical source is GitHub `main`. `cloudflare-container-bootstrap/` retains Cloudflare platform/runtime configuration and compatibility source while remaining resources are active; public DNS now routes to the VPS. This catalog maps responsibilities and does not claim every journey passed production acceptance.
 
 ## Runtime and authority
 
-Public/Admin consumers → existing Nginx hosts → Next.js frontends and the NestJS VPS API. NestJS owns business decisions. SQLite/Prisma is the target durable application store; Ledger postings own accounting truth and EventOutbox/EventInbox own durable delivery boundaries. Aiven Valkey backs BullMQ and Socket.IO Redis Streams plus ephemeral cache, never accounting. SQLite journals/coordinator preserve job and workflow state; private local storage replaces R2 for evidence files. Cloudflare remains live production until approved cutover. Never restore retired PostgreSQL authority, create a second financial writer, or permit direct frontend database mutations.
+Public/Admin DNS now reaches the VPS Nginx hosts and NestJS API. NestJS owns business decisions. SQLite/Prisma is the intended VPS durable application store; Ledger postings own accounting truth and EventOutbox/EventInbox own durable delivery boundaries. Aiven Valkey backs BullMQ and Socket.IO Redis Streams plus ephemeral cache, never accounting. SQLite journals/coordinator preserve job and workflow state; private local storage replaces R2 where verified. Cloudflare D1 remains populated and authoritative for current financial data, while active VPS SQLite core financial tables are empty (2026-10-17); do not accept or claim production financial writes/cutover until reconciled. Never restore retired PostgreSQL authority, create a second financial writer, or permit direct frontend database mutations.
 
 ## Domain feature inventory
 

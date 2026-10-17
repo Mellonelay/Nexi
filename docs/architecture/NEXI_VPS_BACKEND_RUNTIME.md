@@ -1,7 +1,7 @@
 # NEXI VPS Backend Runtime
 
-**Status date:** 2026-10-16
-**Scope:** canonical VPS backend target and currently verified non-authoritative runtime. This describes the intended post-migration topology while distinguishing it from production cutover. Cloudflare production remains live until the owner-approved financial and traffic cutover and later retirement gates.
+**Status date:** 2026-10-17
+**Scope:** canonical VPS backend runtime after the owner switched Name.com DNS. Public hostnames now resolve to the VPS and trusted HTTPS is verified. Cloudflare D1 remains populated and is still the financial data authority; the active VPS SQLite database has zero rows in the checked core financial tables. Therefore this is a live endpoint/data-authority mismatch, not a completed financial cutover.
 
 ## Runtime authority and service map
 
@@ -9,7 +9,7 @@
 |---|---|---|
 | Public Next.js | User interface and API client | Uses the canonical Public build/runtime at `/srv/nexi/public`; no financial database writes |
 | Admin React/TanStack | Permissioned governance interface | Uses canonical Admin runtime at `/srv/nexi/admin`; actions call NestJS and preserve authorization/audit checks |
-| Nginx | TLS termination, host routing, HTTP and WebSocket reverse proxy | Routes `www`, `admin`, and `api` hostnames to existing services; API public TLS vhost still requires trusted certificate verification |
+| Nginx | TLS termination, host routing, HTTP and WebSocket reverse proxy | Public `www`, `admin`, and `api` hostnames route to existing VPS services; prior live checks verified Let's Encrypt trust and Socket.IO WebSocket upgrade |
 | NestJS API | Sole domain and business-decision authority | Canonical source `backend/`; systemd service `nexi-api.service`; loopback API currently observed at `127.0.0.1:3002` |
 | Prisma 7 + better-sqlite3 | Application data access | SQLite database on persistent VPS storage; WAL, FULL durability, foreign keys, busy timeout and the existing atomic financial gateway |
 | Ledger and Activity | Financial accounting and user-visible movement history | Ledger postings remain accounting truth; all financial mutations run through existing NestJS commands and atomic SQLite transactions |
@@ -21,7 +21,7 @@
 | Local protected object storage | KYC and deposit-proof files | Private directories under `/var/lib/nexi/storage`; application authorization and metadata remain enforced by NestJS |
 | Market providers | External quote, candle and stream inputs | Binance remains the crypto source; BiQuote's SignalR adapter and REST fallback serve supported non-crypto instruments, with existing approved fallbacks retained |
 | Sentry | Runtime error and performance telemetry | SDK integration is retained; a tagged staging event was delivered. This does not by itself prove automatic exception capture from every runtime path |
-| systemd | Process supervision and restart | Owns API lifecycle and boot policy; service is loopback-only until API TLS/routing acceptance is complete |
+| systemd | Process supervision and restart | Owns API lifecycle and boot policy; NestJS listens on loopback behind public Nginx TLS termination |
 
 ## Request and data flows
 
@@ -61,8 +61,8 @@
 
 | Existing Cloudflare capability | VPS target | Current status |
 |---|---|---|
-| Worker public/API routing | Existing Nginx + Public/Admin services + NestJS | API process is healthy on loopback; trusted public API TLS/routing remains unresolved |
-| D1 + Prisma D1 adapter | SQLite + Prisma better-sqlite3 adapter + local transaction gateway | Historical 92-table / 11,802,372-row snapshot reconciliation is complete; it is not a current production delta or cutover proof |
+| Worker public/API routing | Name.com DNS + existing Nginx + Public/Admin services + NestJS | Owner switched DNS; current checks route the three public hostnames to VPS IP 34.143.137.221 with trusted HTTPS. Cloudflare account resources still exist; Worker custom-domain status must be checked independently |
+| D1 + Prisma D1 adapter | SQLite + Prisma better-sqlite3 adapter + local transaction gateway | Historical 92-table / 11,802,372-row snapshot reconciliation is complete. On 2026-10-17 Wrangler found populated core financial/auth rows in D1 while the active VPS SQLite core tables are empty. No final delta or writer cutover; see `tasks/evidence/wrangler-live-d1-vps-authority-mismatch-20261017.json` |
 | Queues and DLQ | Durable SQLite journal + BullMQ + Aiven Valkey | Focused transport, workflow, replay and Nest integration proofs are recorded; live outstanding Cloudflare work still needs final controlled reconciliation |
 | Workflows | SQLite workflow coordinator/checkpoints + BullMQ steps | Withdrawal, mining and loan paths have focused replay/recovery evidence; current in-flight instance synchronization remains a cutover task |
 | R2 | Private local storage under `/var/lib/nexi/storage` | KYC/deposit-proof implementation and staged copy evidence exist; final object manifest/backup and source retirement are pending |
@@ -76,13 +76,13 @@
 
 ## Current verified state and acceptance boundary
 
-- Canonical source is the NEXI GitHub `main` checkout at `/home/mellonelay1999/workspaces/Nexi`; the migration branch remains preserved as evidence.
-- The VPS runs Node 24.21.0 and an active NestJS systemd process from `/srv/nexi/backend/dist/src/main.js`.
-- Loopback health/readiness, Swagger JSON, public market reads and Socket.IO handshake checks have passed in the current evidence set.
-- Aiven Valkey connectivity is observed; API sockets to the endpoint were established and the queue counts were read-only/empty at the recorded check.
-- Public and Admin remain active on the VPS. Name.com is authoritative per owner action; public A records for the hostnames point to 34.143.137.221. The VPS serves the forced-IP routes, while D1 remains the production financial writer until explicit owner-approved cutover. Cloudflare resources remain deployed.
-- Existing historical migration proofs are retained. Canonical main build and loopback API readiness are proven. Public TLS now uses the issued Let's Encrypt SAN certificate for www/api/admin; strict HTTPS checks returned verify=0 for each hostname, HTTP redirects to HTTPS, and the ACME challenge path remains reachable. Certbot HTTP-01 staging succeeded. Authenticated financial acceptance, full Socket.IO recovery, independent off-VPS encrypted backup/restore and current D1 delta remain separate proof items.
-- Owner switched the domain to Name.com nameservers. Current DNS checks return 34.143.137.221 for www and api; earlier independent resolution confirmed admin as well. DNSSEC is not enabled per owner report. The owner created GCP ingress TCP/80 for the NEXI VM tag; HTTP-01 succeeded. Certbot timer is enabled, the NEXI-scoped Nginx reload deploy hook was tested, and certbot renew --dry-run succeeded. Do not change DNS, switch financial writers, or delete Cloudflare resources.
+- Canonical source is `/home/mellonelay1999/workspaces/Nexi`, branch `main` at `bbc849b16291b034b596b80f77790d13112f4cb2`, matching `origin/main`; preserve the two untracked Admin pnpm files.
+- The VPS runs Node 24.21.0 and active `nexi-api.service` from `/srv/nexi/backend/dist/src/main.js`, bound to `127.0.0.1:3002`; Nginx is the public TLS/WebSocket edge.
+- Previously verified: Name.com DNS for all three hostnames to `34.143.137.221`; trusted Let's Encrypt certificates; public API readiness, Public/Admin routes, market reads, Socket.IO polling/WebSocket, and Certbot renewal dry-run. Reuse these proofs unless affected by a change.
+- On 2026-10-17, project-local Wrangler 4.127.1 read-only SELECTs confirmed D1 still contains users/wallets, ledger postings/idempotency/audit, outbox/inbox, loan and mining rows. The active `/var/lib/nexi/sqlite/nexi-staging.sqlite` has zero rows across the same checked core tables. Environment enables local SQLite and the local-backed financial command gateway. No financial command or copy was issued. See `tasks/evidence/wrangler-live-d1-vps-authority-mismatch-20261017.json`.
+- The historical 92-table / 11,802,372-row snapshot reconciliation is retained and was not repeated. It is not proof of this live delta. Authenticated financial acceptance, live D1 delta, one-writer cutover, independent encrypted off-VPS backup/restore and owner acceptance remain incomplete.
+- Name.com DNSSEC is not enabled per owner report. TCP/80 ingress, HTTP-01 issuance, Certbot timer, scoped Nginx deploy hook and renewal dry-run were previously verified. No nameserver change is pending; do not switch financial writers or delete Cloudflare resources without the separate owner gates.
+- Cloudflare Worker cron/queue consumers and account resources remain active; queue backlogs were previously zero, but two errored loan workflow instances have not yet been reconciled. D1 remains populated; DNS routing to the VPS does not itself synchronize data or retire Cloudflare execution.
 
 ## Operational references
 

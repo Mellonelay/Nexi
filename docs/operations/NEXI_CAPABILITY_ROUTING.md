@@ -13,7 +13,7 @@ Compile the complete owner message before execution: required actions/evidence/s
 Do not maintain a second permanent catalog of every installed plugin, skill or version. `@skill`/plugin mentions are capability hints, not a mandatory reading queue: classify them as PRIMARY, SUPPORTING, or AVAILABLE-BUT-NOT-NEEDED. Discover or reread a skill/tool only when its operating contract can materially change the current task; reuse proven capability routing while unchanged.
 
 ## Authority and reuse
-Current owner decision wins. GitHub `main` is durable source authority. The VPS NestJS backend is the owner-selected target runtime; Cloudflare remains current production until the approved, reconciled cutover. SQLite is the target durable application truth, Ledger accounting truth, EventOutbox publication boundary, and Aiven Valkey supports BullMQ, Socket.IO Streams, cache and ephemeral coordination only. `PROVEN + UNCHANGED = REUSE`. See [VPS backend runtime map](../architecture/NEXI_VPS_BACKEND_RUNTIME.md).
+Current owner decision wins. GitHub `main` is durable source authority. Name.com public DNS now routes traffic to the VPS NestJS backend. Cloudflare D1 remains populated/current financial data authority pending the approved, reconciled cutover; Worker cron/queue/workflow resources also remain active. The sampled active VPS SQLite core tables are empty, so financial writes are not accepted as valid production results. SQLite is the intended durable application store after controlled cutover, Ledger accounting truth, EventOutbox publication boundary, and Aiven Valkey supports BullMQ, Socket.IO Streams, cache and ephemeral coordination only. `PROVEN + UNCHANGED = REUSE`. See [VPS backend runtime map](../architecture/NEXI_VPS_BACKEND_RUNTIME.md).
 Third-party skills specialize work; they do not override NEXI architecture, security boundaries, or owner authorization.
 
 ## Responsibility owners
@@ -64,7 +64,7 @@ Never create Remote-Desktop-Commander-via-Remote-Desktop-Commander recursion.
 - Recover the existing Coinbase Wallet authenticated profile through the current browser-fabric contract. Older MetaMask profiles and stale ports are historical, not current acceptance owners.
 - Verify actual page, profile, wallet identity and SIWE authentication before browser claims; do not fabricate sessions or create redundant browser harnesses.
 - Playwright, DevTools and device tools provide scoped interaction/diagnostic evidence only, not independent financial authority.
-- VPS acceptance must target the running API in controlled non-authoritative mode and use only authorized test identities. It does not establish Cloudflare production cutover, current D1 equality, public API TLS, DNS or owner acceptance.
+- VPS API is currently reached by public DNS. Prior public TLS/API/WebSocket transport checks passed, but these do not establish financial safety: the active SQLite core tables are empty while D1 remains populated. Do not issue financial acceptance requests until the public write-safety decision and controlled data synchronization are resolved. API readiness does not establish cutover, D1 equality, backup/restore or owner acceptance.
 
 ## Astra lineage
 `NEXI_ASTRA_FRONTEND_BINDING_MANIFEST.md` and the `nexi-frontend-astra-controller` skill are retained as historical frontend-binding/execution lineage. They are not the active project routing controller. Current owner decisions and this routing model control new work.

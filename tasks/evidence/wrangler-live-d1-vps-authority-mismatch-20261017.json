@@ -1,0 +1,75 @@
+{
+  "observed_at": "2026-10-17",
+  "source": {
+    "repository": "/home/mellonelay1999/workspaces/Nexi",
+    "branch": "main",
+    "head": "bbc849b16291b034b596b80f77790d13112f4cb2",
+    "origin_main_matches": true,
+    "worktree_untracked_preserved": [
+      "apps/admin/pnpm-lock.yaml",
+      "apps/admin/pnpm-workspace.yaml"
+    ]
+  },
+  "collection": {
+    "operator": "Worker-0 Wrangler CLI",
+    "wrangler_version": "4.127.1",
+    "command_scope": "read-only SELECT COUNT(*) on selected core tables",
+    "database": "nexi-core-staging",
+    "database_id": "522177fa-ac42-4d8f-a6a8-b34eed262f15",
+    "d1_size_bytes_reported_by_list": 7707795456,
+    "d1_list_num_tables_metadata": 0,
+    "metadata_note": "Wrangler d1 list metadata reports num_tables=0 although named-table SELECTs succeed; do not use this metadata as table-count evidence."
+  },
+  "d1_selected_counts": {
+    "User": 34,
+    "Wallet": 34,
+    "WalletIdentity": 21,
+    "Ledger": 0,
+    "LedgerAccount": 14,
+    "LedgerPosting": 48,
+    "LedgerIdempotency": 46,
+    "LedgerAuditEvent": 48,
+    "EventOutbox": 94,
+    "EventInbox": 99,
+    "WithdrawalRequest": 0,
+    "ConversionTransaction": 0,
+    "SpotOrder": 0,
+    "SpotTrade": 0,
+    "SpotMarginPosition": 0,
+    "BinaryOptionPosition": 0,
+    "LoanApplication": 5,
+    "LoanRepayment": 1,
+    "MiningSubscription": 4,
+    "MiningRewardAccrual": 14
+  },
+  "active_vps_sqlite": {
+    "path": "/var/lib/nexi/sqlite/nexi-staging.sqlite",
+    "size_bytes": 301326336,
+    "core_counts": "zero across the same checked table set",
+    "service": "nexi-api.service",
+    "listen_address": "127.0.0.1:3002",
+    "environment": {
+      "D1_RUNTIME_ENABLED": true,
+      "D1_BRIDGE_ENABLED": true,
+      "NEXI_SQLITE_LOCAL_ENABLED": true,
+      "NEXI_LOCAL_ASYNC_ENABLED": true,
+      "NEXI_LOCAL_OBJECTS_ENABLED": true
+    },
+    "source_confirmation": "NEXI_SQLITE_LOCAL_ENABLED selects the local Prisma better-sqlite3 adapter; D1FinancialCommandGateway is enabled when D1_RUNTIME_ENABLED and its bridge are enabled. No financial command was sent."
+  },
+  "status": {
+    "dns": "Owner changed Name.com nameservers; previous live checks resolved www/api/admin to 34.143.137.221.",
+    "tls": "Previous direct public TLS checks validated Let's Encrypt; re-use prior verified evidence.",
+    "production_writer_cutover": "not performed",
+    "cloudflare_resources": "not retired",
+    "financial_write_test": "not performed",
+    "historical_snapshot_reconciliation": "reused; not rerun"
+  },
+  "severity": "LIVE AUTHORITY/DATA MISMATCH: public DNS reaches VPS whose active local financial database has zero core rows while Cloudflare D1 still has nonzero records. VPS configuration enables local SQLite financial gateway. Halt further financial cutover claims and do not write/migrate either database until owner-approved controlled reconciliation and authority decision.",
+  "next": [
+    "Owner decision required for handling current public financial write paths before allowing any such writes to the empty VPS database.",
+    "Obtain authorized authenticated test identity for isolated acceptance.",
+    "Provide an approved off-VPS backup destination with least-privilege access; keep encryption key separate.",
+    "Perform final live D1 delta only under controlled freeze/drain and explicit owner cutover authorization."
+  ]
+}

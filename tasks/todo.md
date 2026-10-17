@@ -1,6 +1,6 @@
 # NEXI Migration — Executable Frontier
 
-Owner authority: current 2026-10-16 directive. See plan.md. States are claim-scoped; test PASS is not deployed/runtime/owner acceptance.
+Owner authority: latest 2026-10-17 directive/checkpoint. See plan.md. States are claim-scoped; test PASS is not deployed/runtime/owner acceptance. Entries above the dated 2026-10-17 live-authority checkpoint are retained historical checkpoints; use the newest dated checkpoint below as the active frontier. Name.com DNS/NS and trusted TLS are complete; the current blocker is financial authority mismatch and the still-populated Cloudflare D1/async resources, not DNS.
 
 - [x] G0 worktree/dirty/source preservation — COMPLETED; owner RDC; proof evidence/g0-recovery.json; migration HEAD 9a41b2e, original d24862f and two pnpm files preserved.
 - [x] G0 task controller — COMPLETED; owner parent/RDC; plan.md + todo.md created only after absence check; no prior tasks overwritten.
@@ -16,7 +16,7 @@ Owner authority: current 2026-10-16 directive. See plan.md. States are claim-sco
 - [ ] G5 full isolated app/domain/browser parity + measured capacity — BLOCKED_WITH_EVIDENCE (G3/G4 runtime closure incomplete); owner runtime/DevTools; prerequisites G1-G4; proof domain acceptance + resource readings; no live financial writer.
 - [ ] G5 independent encrypted backup restore — BLOCKED_WITH_EVIDENCE; destination not established in supplied material; prepare consistent local backup/restore tooling and determine authorized independent destination before final acceptance.
 - [ ] G6 financial/public-endpoint cutover — PENDING_OWNER_ACTION; prerequisite G1-G5 + exact freeze/drain/hash/rollback-forward packet; obtain specific signoff, no switch yet.
-- [ ] G7 Name.com DNS/nameservers — PENDING_OWNER_ACTION; owner manually confirms/performs unless expressly delegated; prepare full record sheet/DNSSEC/ACME after G5.
+- [x] G7 Name.com DNS/nameservers — COMPLETED by owner 2026-10-17; Name.com authoritative, A records to VPS, DNSSEC not enabled per owner; prior HTTPS/ACME proof retained. No nameserver action remains.
 - [ ] G7 Cloudflare resource retirement — PENDING_OWNER_ACTION; each destructive action requires approval after backup/dependency/rollback-window closure.
 
 ## Current next action
@@ -293,3 +293,22 @@ Superseded historical rows remain above for provenance. Do not revive old statem
 - [ ] OPEN — Establish an authorized independent encrypted off-VPS backup destination and verify restore.
 - [ ] OPEN — Reconcile final live D1 delta and prepare controlled freeze/drain/one-writer cutover. Production cutover still requires owner approval.
 - [ ] OPEN — Retire Cloudflare resources only after dependency closure, backup/retention and approved cutover. No resources retired.
+
+
+### 2026-10-17 live authority recheck — Wrangler + active VPS
+- [x] PROVEN — Canonical source rechecked: `/home/mellonelay1999/workspaces/Nexi`, branch `main`, HEAD and `origin/main` both `bbc849b16291b034b596b80f77790d13112f4cb2`. Preserved untracked Admin pnpm files remain untouched.
+- [x] PROVEN_UNCHANGED — Name.com public DNS and trusted HTTPS checkpoint reused from prior direct checks; no DNS/TLS mutations in this pass.
+- [x] COMPLETED — D1 operational counts revalidated with project-local Wrangler 4.127.1 (required operator path), read-only SELECTs only. Evidence: `tasks/evidence/wrangler-live-d1-vps-authority-mismatch-20261017.json`. Reused prior 92-table historical restore reconciliation; no export/replay.
+- [x] COMPLETED — Active service config/source confirms local SQLite adapter is selected and the financial command gateway is enabled; active DB core rows are zero across the sampled financial/auth set. D1 still contains users, wallets, ledger postings/idempotency/audit, outbox/inbox, loan/mining records. No financial command was issued.
+- [ ] BLOCKED_WITH_EVIDENCE — Live production API/data authority mismatch: DNS sends public hostnames to VPS; active VPS financial DB has zero core records while Cloudflare D1 has existing records; local financial gateway config is enabled. No writer switch or record copy performed. Evidence above. Next: owner-controlled decision for protecting active public financial command paths, followed by controlled final delta/cutover packet. Do not proceed with financial tests against production.
+- [ ] BLOCKED_WITH_EVIDENCE — Independent encrypted off-VPS backup/restore unavailable: prior read-only lane found no configured authorized destination; Google bucket listing denied for active VM identity. Next: owner supplies approved destination and least-privilege credentials; encryption key remains separate.
+- [ ] PENDING_OWNER_ACTION — Authenticated API/financial acceptance needs an authorized test identity; no credentials or synthetic financial state will be created.
+- [ ] BLOCKED_WITH_EVIDENCE — Cloudflare retirement remains blocked: active one-minute Worker cron/queue handlers and D1 authority; three NEXI queues have reported zero backlog, but loan workflow has two errored historical instances not yet payload-reconciled. No resources stopped/deleted.
+- [ ] PENDING_OWNER_ACTION — Final D1-to-SQLite financial writer cutover and destructive Cloudflare retirement remain separate owner approval gates; manual Name.com DNS action already completed by owner.
+
+
+### 2026-10-17 write-path reachability review — source-only, no requests
+- [x] VERIFIED — Active service env: local SQLite=true, D1 runtime/bridge compatibility flags=true, NEXI_SCHEDULER_ENABLED=false, NEXI_LOCAL_ASYNC_ENABLED=true; no secrets captured. Local SQLite adapter and local bridge are selected by source.
+- [x] VERIFIED — Authenticated financial mutation paths can write through the local gateway to the empty VPS DB. Representative route families include withdrawals/transfers/conversion, loans, binary, spot/margin, mining and deposit claims. JWT-protected /lever/* endpoints include direct Prisma writes outside the gateway. No write requests were sent.
+- [x] VERIFIED — Turning off D1_RUNTIME_ENABLED alone does not establish a complete write freeze. Schedulers are disabled but async workers are enabled. D1 bridge reachability from VPS remains unverified, so do not flip adapter mode blindly. Detailed source handoff: tasks/evidence/vps-financial-write-path-risk-20261017.md.
+- [ ] PENDING_OWNER_ACTION — Choose coordinated temporary production write freeze/maintenance covering HTTP and local async consumers, or authorize a verified D1-backed route after its transport is proven. Preserve read-only/auth behavior and verify bounded effects. Then continue controlled D1 delta and separate writer-cutover gate.
