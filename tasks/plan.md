@@ -294,3 +294,11 @@ This inventory does not establish that the remaining NEXI resources are safe to 
 
 - **PROVEN_UNCHANGED:** Deployed source baseline `2a1cffef69049a12fee533f2905fbbcbf1f40105` has no `backend/` changes through code checkpoint `8570a39a01534a71960b6189443ec78fcf198a3d`. Later commits in this session change only documentation/evidence. Runtime entrypoint resolves to `/srv/nexi/backend/dist/src/main.js`; SHA-256 `95f8934947e2a4bb7df6e7beacc5ea57e20ede1de78930bd5c899a2d71997608`; service Node `v24.21.0`. No rebuild required for documentation-only commits.
 - **VERIFIED:** `NEXI_LOCAL_OBJECTS_ENABLED=true`, root `/var/lib/nexi/storage`; KYC and deposit-proof directories exist with service-user access (root 0750, child directories 0750); canonical SQLite mode 0600; backend.env root:service-group mode 0640. systemd runs as `mellonelay1999`. Storage source routes deposit proofs under the configured root and KYC to the same root. This verifies configuration/filesystem permissions, not that every historical R2 object has been copied.
+
+
+## 2026-10-17 canonical backend source/runtime alignment
+
+- **VERIFIED:** Main/origin were at `6d36d5b` before this evidence-only update. Backend source and deployed backend have npm `backend/package-lock.json`; checked lock versions equal installed packages for NestJS 12.0.3, Prisma/client/adapter 7.3.0, better-sqlite3 12.11.1, BullMQ 6.3.15, ioredis 5.10.1, Socket.IO 4.8.3 and Redis Streams adapter 0.3.0. No package mismatch was found.
+- **VERIFIED:** systemd runs Node 24.21.0 with Node 24 first in PATH. Prisma CLI under that PATH reports Node 24.21.0. The login shell's default Node 22 does not represent API runtime. better-sqlite3 opened successfully under Node ABI 137; embedded SQLite version 3.53.2.
+- **VERIFIED:** `NEXI_LOCAL_SQLITE_PATH=/var/lib/nexi/sqlite/nexi-staging.sqlite` resolves to the same file opened by the active API PID; its main DB, WAL and SHM descriptors are open. See runtime binding receipt.
+- **NEXT:** No rebuild/reinstall is warranted by this check. Resume only the actual acceptance frontier: authorized authenticated identity, off-VPS encrypted backup/restore destination, and safe consumer execution proof.

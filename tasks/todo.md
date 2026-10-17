@@ -387,3 +387,10 @@ Superseded historical rows remain above for provenance. Do not revive old statem
 ### 2026-10-17 runtime source/storage proof
 - [x] PROVEN_UNCHANGED — Deployed backend source commit has no backend path differences through code checkpoint 8570a39; current documentation commits do not require build/redeploy. Runtime entry, binary hash and Node 24.21.0 recorded in plan.
 - [x] VERIFIED — Local object storage enabled at /var/lib/nexi/storage; KYC/deposit dirs 0750, DB 0600, env 0640; systemd service identity matches owner. Object-copy completeness remains separate and unproven.
+
+
+### 2026-10-17 package and canonical DB identity
+- [x] VERIFIED — backend `package-lock.json` declarations/lock/installed versions match for NestJS 12, Prisma 7.3, better-sqlite3, BullMQ 6, ioredis, Socket.IO 4 and Redis Streams adapter.
+- [x] VERIFIED — systemd Node and Prisma CLI under service PATH are v24.21.0; native better-sqlite3 loaded on Node ABI 137 with SQLite 3.53.2. Interactive shell default Node 22 is not the API runtime.
+- [x] VERIFIED — configured canonical SQLite file matches active API process open DB/WAL/SHM descriptors.
+- [x] PROVEN_UNCHANGED — no package changes/reinstall/rebuild required; this evidence-only update does not change backend source.

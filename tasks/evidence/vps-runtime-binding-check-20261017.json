@@ -5,8 +5,27 @@
     "active": true,
     "node": "v24.21.0",
     "entrypoint": "/srv/nexi/backend/dist/src/main.js",
-    "readiness": {"status": "READY", "database": true, "redis": true, "authority": "SQLite"},
-    "other_services_active": ["nginx", "nexi-public", "nexi-admin"]
+    "readiness": {
+      "status": "READY",
+      "database": true,
+      "redis": true,
+      "authority": "SQLite"
+    },
+    "other_services_active": [
+      "nginx",
+      "nexi-public",
+      "nexi-admin"
+    ],
+    "canonical_database": {
+      "configured_path": "/var/lib/nexi/sqlite/nexi-staging.sqlite",
+      "open_by_service_pid": 1737512,
+      "open_file_descriptors": [
+        "/var/lib/nexi/sqlite/nexi-staging.sqlite",
+        "/var/lib/nexi/sqlite/nexi-staging.sqlite-wal",
+        "/var/lib/nexi/sqlite/nexi-staging.sqlite-shm"
+      ],
+      "configured_path_matches_open_database": true
+    }
   },
   "effective_binding_flags": {
     "NEXI_SQLITE_LOCAL_ENABLED": true,
@@ -31,9 +50,30 @@
     "backend": "Aiven Valkey TLS",
     "prefix": "nexi-vps-staging-20261017",
     "queues": {
-      "domain-events": {"wait": 0, "active": 0, "completed": 0, "failed": 0, "delayed": 0, "paused": 0},
-      "integration-jobs": {"wait": 0, "active": 0, "completed": 0, "failed": 0, "delayed": 0, "paused": 0},
-      "notifications": {"wait": 0, "active": 0, "completed": 0, "failed": 0, "delayed": 0, "paused": 0}
+      "domain-events": {
+        "wait": 0,
+        "active": 0,
+        "completed": 0,
+        "failed": 0,
+        "delayed": 0,
+        "paused": 0
+      },
+      "integration-jobs": {
+        "wait": 0,
+        "active": 0,
+        "completed": 0,
+        "failed": 0,
+        "delayed": 0,
+        "paused": 0
+      },
+      "notifications": {
+        "wait": 0,
+        "active": 0,
+        "completed": 0,
+        "failed": 0,
+        "delayed": 0,
+        "paused": 0
+      }
     },
     "interpretation": "Connection and read-only counts verified; no synthetic job dispatched and consumer execution is not proven by this check."
   },
@@ -45,10 +85,53 @@
     "indexes_triggers_foreign_keys_compared": false,
     "row_content_receipt": "d1-sqlite-nonmarket-content-check-20261017.json",
     "exact_common_nonmarket_table_hashes": 84,
-    "market_catalog_config_mismatches_deferred": ["MarketAsset", "MarketAssetCapability", "MarketPair", "MarketProviderConfig", "MarketProviderSymbol"],
+    "market_catalog_config_mismatches_deferred": [
+      "MarketAsset",
+      "MarketAssetCapability",
+      "MarketPair",
+      "MarketProviderConfig",
+      "MarketProviderSymbol"
+    ],
     "market_history_compared": false,
     "cf_kv_classification": "unclassified; no SQLite counterpart; excluded from application parity pending owner/consumer classification"
   },
-  "not_performed": ["D1 export/import", "market-history comparison", "financial write", "synthetic BullMQ job", "full SQLite integrity scan"],
-  "remaining": ["authorized authenticated test identity", "independent encrypted off-VPS backup/restore destination", "safe non-financial job execution proof", "final cutover watermark"]
+  "not_performed": [
+    "D1 export/import",
+    "market-history comparison",
+    "financial write",
+    "synthetic BullMQ job",
+    "full SQLite integrity scan"
+  ],
+  "remaining": [
+    "authorized authenticated test identity",
+    "independent encrypted off-VPS backup/restore destination",
+    "safe non-financial job execution proof",
+    "final cutover watermark"
+  ],
+  "package_runtime_alignment": {
+    "package_manager": "npm",
+    "backend_lockfile": "backend/package-lock.json",
+    "source_lock_matches_deployed_lock_for_checked_packages": true,
+    "systemd_node": "v24.21.0",
+    "systemd_path_prefers_node24": true,
+    "prisma_cli_under_systemd_node_path": "7.3.0 on Node v24.21.0",
+    "native_runtime": {
+      "better_sqlite3": "12.11.1",
+      "sqlite": "3.53.2",
+      "node_abi": "137"
+    },
+    "locked_and_installed": {
+      "@nestjs/core": "12.0.3",
+      "@nestjs/platform-socket.io": "12.0.3",
+      "prisma": "7.3.0",
+      "@prisma/client": "7.3.0",
+      "@prisma/adapter-better-sqlite3": "7.3.0",
+      "better-sqlite3": "12.11.1",
+      "bullmq": "6.3.15",
+      "ioredis": "5.10.1",
+      "socket.io": "4.8.3",
+      "@socket.io/redis-streams-adapter": "0.3.0"
+    },
+    "note": "The interactive shell default resolves Node 22; the service unit explicitly sets Node 24 in PATH and ExecStart. No lockfile or package changes required."
+  }
 }
