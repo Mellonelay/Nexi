@@ -278,8 +278,8 @@ Remote refs/heads/main verified 9a41b2e; Node v22.23.2 / better-sqlite3 12.11.1 
 - [x] VERIFIED — Local Graphify refresh on canonical integrated source: 7,962 nodes / 19,141 edges. Focused extracted path recorded in `tasks/evidence/canonical-main-integration-20261016.md`; hosted graph is pre-integration.
 - [x] UPDATED — Added `docs/architecture/NEXI_VPS_BACKEND_RUNTIME.md` with component map, data flow, Cloudflare-to-VPS replacement matrix and exact remaining acceptance/owner gates. Updated backend, system architecture, cross-surface map, diagrams, docs index, Sentry operations, capability routing, root/backend instructions and current-state docs to describe VPS target while recording Cloudflare as still-live production. Relative-link/fence check passed 11 docs with zero issues.
 - [x] COMPLETED — 11-doc relative-link/fence check returned zero issues; staged diff/secret checks passed; source and docs committed and pushed. the later GitHub `index.popsql` update was fast-forwarded and the reconciliation checkpoint was pushed. Original untracked Admin pnpm files remain untouched.
-- [ ] BLOCKED_WITH_EVIDENCE — Nginx API trusted TLS; authenticated financial REST acceptance identity; end-to-end market + Socket.IO recovery acceptance; independent encrypted off-VPS backup/restore; current live D1 delta and cutover protocol remain open.
-- [ ] PENDING_OWNER_ACTION — Final financial writer/traffic cutover, manual Name.com nameserver change, destructive Cloudflare resource retirement. Do not mutate production Cloudflare/DNS/writer.
+- [x] SUPERSEDED — Nginx API trusted TLS is closed in the 2026-10-17 Public DNS/TLS checkpoint below. Still open: authenticated financial REST acceptance identity; end-to-end market + Socket.IO recovery acceptance; independent encrypted off-VPS backup/restore; current live D1 delta and cutover protocol.
+- [ ] PENDING_OWNER_ACTION — Final financial writer/traffic cutover and destructive Cloudflare resource retirement. Name.com nameserver change is complete. Do not mutate production Cloudflare/DNS/writer.
 
 Superseded historical rows remain above for provenance. Do not revive old statements that the API is inactive, Node is v22, self-hosted Valkey is the final target, Container image parity is unknown (in-container inspection is recorded above), or the main source remains isolated on a migration branch.
 
@@ -287,7 +287,7 @@ Superseded historical rows remain above for provenance. Do not revive old statem
 
 - [x] VERIFIED — Name.com DNS sends www/api/admin to 34.143.137.221. Owner-created GCP ingress ALLOW TCP/80 rule is enabled for tag singbox-chatgpt-24443; screenshot and live Nginx/ACME results agree.
 - [x] COMPLETED — HTTP-01 staging and production issuance succeeded; SAN certificate installed for all three hostnames, expires 2027-01-15. Active Nginx configs updated with backups; nginx -t/reload passed.
-- [x] VERIFIED — Strict HTTPS returns Public/Admin 200 final routes, API readiness 200, market prices 200, Socket.IO polling handshake and actual WSS connect; TLS verify result 0 and VPS remote IP.
+- [x] VERIFIED — HTTP redirects with 301 to HTTPS for all three hosts; ACME challenge remains reachable on HTTP. Strict HTTPS returns Public/Admin 200 final routes, API readiness 200, market prices 200, Socket.IO polling handshake and actual WSS connect; TLS verify result 0 and VPS remote IP.
 - [x] VERIFIED — Certbot timer, NEXI-only Nginx deploy hook, manual hook invocation and certbot renew --dry-run all passed.
 - [ ] OPEN — Find authorized test identity for financial API acceptance; do not create financial test balances without the established owner-approved path.
 - [ ] OPEN — Establish an authorized independent encrypted off-VPS backup destination and verify restore.
