@@ -1,3 +1,7 @@
+# CURRENT BACKEND OWNER OVERRIDE (2026-10-17)
+
+Root `AGENTS.md` current owner override controls execution. Single `main` checkout only; direct VPS SSH local shell; no worktrees, alternate writers, or repeated migrations. Current authoritative durable DB is promoted VPS SQLite, not Cloudflare D1. Historic empty-SQLite/D1-active assertions below are superseded. Use `NEXI_PROOF_REUSE_REGISTER.md` and latest task receipts to reuse proved tests. For financial work trace Wallet scopes (MAIN/Funding, SPOT, MARGIN, BINARY/Options, FINANCE), LedgerPosting, authorization, idempotency, unified Activity, EventOutbox, settlement and recovery with bounded Graphify Agent Workflows + Fallow, then focused tests and applicable runtime proof. Margin/Options user-facing wallet transfers are USDT-only; separate Margin borrowing/debt assets remain legitimate. Deposit-proof byte round-trip and current market release are already proved within their scope; do not re-test without invalidation. Unsupported noncrypto freshness is accepted by owner. No concurrent main writers.
+
 # NEXI Backend Instructions
 
 These rules extend the repository root `AGENTS.md` and govern the authoritative NestJS backend in the current synchronized NEXI checkout.
