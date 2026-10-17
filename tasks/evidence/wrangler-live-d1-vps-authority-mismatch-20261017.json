@@ -3,7 +3,7 @@
   "source": {
     "repository": "/home/mellonelay1999/workspaces/Nexi",
     "branch": "main",
-    "head": "bbc849b16291b034b596b80f77790d13112f4cb2",
+    "head": "1962dc73efda25d4562ddd52a63fb6e477f1c52f",
     "origin_main_matches": true,
     "worktree_untracked_preserved": [
       "apps/admin/pnpm-lock.yaml",
@@ -44,7 +44,12 @@
   },
   "active_vps_sqlite": {
     "path": "/var/lib/nexi/sqlite/nexi-staging.sqlite",
-    "size_bytes": 301326336,
+    "size_bytes": 322699264,
+    "inode": 421320,
+    "wal_size_bytes_observed": 36622712,
+    "shm_size_bytes_observed": 98304,
+    "schema_tables": 96,
+    "runtime_only_tables": ["LocalDurableJob", "LocalDurableJobReplayHistory", "LocalWorkflowEvent", "LocalWorkflowInstance", "LocalWorkflowStep"],
     "core_counts": "zero across the same checked table set",
     "service": "nexi-api.service",
     "listen_address": "127.0.0.1:3002",
@@ -56,6 +61,41 @@
       "NEXI_LOCAL_OBJECTS_ENABLED": true
     },
     "source_confirmation": "NEXI_SQLITE_LOCAL_ENABLED selects the local Prisma better-sqlite3 adapter; D1FinancialCommandGateway is enabled when D1_RUNTIME_ENABLED and its bridge are enabled. No financial command was sent."
+  },
+  "restored_historical_artifact": {
+    "path": "/home/mellonelay1999/nexi-migration-snapshots/nexi-core-restored-20261016.sqlite",
+    "size_bytes": 7164264448,
+    "schema_tables": 92,
+    "source_rows_reconciled": 11802372,
+    "archive_path": "/home/mellonelay1999/nexi-migration-snapshots/nexi-core-full-20261016.sql.gz",
+    "archive_size_bytes": 863748144,
+    "archive_sha256": "f65862bbd8359329e3b0db410e941462b8d77d0947024cc6205cb8a88ffa4661",
+    "restored_only_table": "d1_migrations",
+    "historical_financial_counts": {"User": 34, "Wallet": 34, "WalletIdentity": 21, "LedgerAccount": 14, "LedgerPosting": 46, "LedgerIdempotency": 44, "LedgerAuditEvent": 46, "EventOutbox": 92, "EventInbox": 97, "LoanApplication": 5, "LoanRepayment": 1, "MiningSubscription": 4, "MiningRewardAccrual": 13},
+    "content_fingerprint_receipt": "tasks/evidence/export-restored-content-reconciliation.json",
+    "integrity_check": "running read-only validation as of 2026-10-17T05:41:44Z; no saved direct PRAGMA receipt had been located before this check",
+    "provenance_limit": "Export-to-restored equality proves historical artifact fidelity, not equality with current D1 or a final cutover snapshot."
+  },
+  "active_vps_runtime_schema": {
+    "restored_only_table": "d1_migrations",
+    "runtime_workflow_table_counts": {"LocalDurableJob": 0, "LocalDurableJobReplayHistory": 0, "LocalWorkflowEvent": 0, "LocalWorkflowInstance": 0, "LocalWorkflowStep": 0},
+    "files_are_distinct": true,
+    "promotion_status": "not performed; active service holds file/WAL descriptors, and controlled write quiescence plus final D1 delta and backup/restore proof are required"
+  },
+  "d1_latest_watermarks_read_only": {
+    "queried_at": "2026-10-17T05:41:44Z",
+    "database_id": "522177fa-ac42-4d8f-a6a8-b34eed262f15",
+    "query_meta": {"served_by_primary": true, "changed_db": false, "rows_written": 0},
+    "User.updatedAt": "2026-10-09 11:44:45",
+    "Wallet.updatedAt": "2026-10-09 11:44:39",
+    "LedgerPosting.createdAt": "2026-10-17 00:00:04",
+    "LedgerIdempotency.updatedAt": "2026-10-17 00:00:04",
+    "LedgerAuditEvent.createdAt": "2026-10-17 00:00:04",
+    "EventOutbox.updatedAt": "2026-10-17 00:00:13",
+    "EventInbox.updatedAt": "2026-10-17 00:00:19",
+    "LoanApplication.updatedAt": "2026-10-10 06:15:34",
+    "MiningRewardAccrual.rewardedAt": "2026-10-17 00:00:01",
+    "limitation": "Row timestamp maxima are not a transaction-consistent export boundary; deletes and edits require a frozen delta or equivalent source change-log coverage."
   },
   "status": {
     "dns": "Owner changed Name.com nameservers; previous live checks resolved www/api/admin to 34.143.137.221.",
