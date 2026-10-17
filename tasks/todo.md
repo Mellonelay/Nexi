@@ -353,3 +353,15 @@ Superseded historical rows remain above for provenance. Do not revive old statem
 - [x] COMPLETED — Updated current-state/runtime/operating/task docs; removed confirmed orphan sidecars and the superseded 329,150,464-byte empty-core staging snapshot after confirming the newer rollback DB is intact. Historical/final exports, manifest and rollback DB are preserved.
 - [ ] PENDING — Cloudflare resource inventory/retirement remains separate; no Cloudflare resource was deleted.
 - [ ] PENDING_OWNER_ACTION — Any explicit final production financial authority declaration and destructive Cloudflare retirement remain separate from this SQLite file promotion.
+
+
+### 2026-10-17 continuation frontier — current live evidence
+- [x] COMPLETED — Existing scheduler enabled in backend.env; API restarted once and recovered. SQLite and local async remain active; retention is off.
+- [x] VERIFIED — Post-restart public/API/Admin HTTPS, trusted certificate status, readiness and Socket.IO polling handshake; relevant systemd services active. No authenticated financial write performed.
+- [x] VERIFIED — Current bounded core counts and EventOutbox status recorded in tasks/plan.md; reuse prior Ledger decimal proof. No full DB scan or export repeated.
+- [ ] BLOCKED_WITH_EVIDENCE — Final D1 delta / updates / deletes / watermark not proven against promoted SQLite. Historical reconciliation is not a final-live proof.
+- [ ] PENDING_OWNER_ACTION — Authorized non-production identity needed for authenticated end-to-end route acceptance; no credentials or synthetic financial state created.
+- [ ] BLOCKED_WITH_EVIDENCE — Independent encrypted off-VPS backup/restore lacks an authorized destination. Current local rollback/export files are not offsite DR.
+- [ ] PENDING — Verify BullMQ job execution (Aiven TCP only is insufficient), provider recovery, and Sentry automatic fault capture. Market feed presently unavailable; keep it lower priority than financial/data closure.
+- [ ] PENDING — Verify actual Cloudflare resource/billing inventory. Owner reports Workers/Containers retired; this is not evidence that D1/Queues/Workflows/R2/KV/DO/Analytics/Secrets were retired.
+- [ ] PRESERVED — Existing modified Wrangler config and untracked Admin pnpm files remain untouched; classify before any cleanup.
