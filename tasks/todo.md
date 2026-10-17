@@ -411,3 +411,10 @@ Superseded historical rows remain above for provenance. Do not revive old statem
 - [ ] BLOCKED_WITH_EVIDENCE — Independent encrypted off-VPS backup and restore still lacks an authorized destination and independent key-custody location; local snapshots are not DR.
 - [ ] PENDING — Authenticated Socket.IO event delivery/recovery, private-object upload/read round trip, natural backend exception attribution/source-map resolution, and deferred market catalog/config mismatch acceptance remain unproven. Reuse existing transport/market evidence; do not re-export or rerun historical reconciliation.
 - [ ] PRESERVED — Existing dirty Wrangler file and untracked Admin pnpm files untouched. No cleanup or destructive Cloudflare operation performed.
+
+
+### 2026-10-17 authenticated local storage and realtime
+- [x] VERIFIED — SIWE test identity authenticated the deposit-proof intent/authorize/upload routes; returned 201/201/200, verified stored bytes, then removed the exact test object and empty directory.
+- [x] VERIFIED — Authenticated Socket.IO WebSocket connected to /communications; snapshot acknowledged; session logged out.
+- [x] VERIFIED — SQLite financial posting/idempotency/outbox/inbox counts unchanged; API readiness and four systemd services remained healthy.
+- [ ] PENDING — Cross-instance Socket.IO reconnect/event replay remains unproven; no second backend instance was started.
