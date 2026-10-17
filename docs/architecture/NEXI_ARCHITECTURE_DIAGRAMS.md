@@ -19,7 +19,7 @@ flowchart LR
   API -. "errors and traces" .-> S["Sentry"]
 ```
 
-NestJS owns domain decisions. Name.com DNS routes public hostnames to the VPS Nginx/NestJS path; SQLite is the intended VPS durable store, Ledger accounting truth, EventOutbox/EventInbox durable delivery boundaries, and Aiven Valkey transport/realtime only. Cloudflare D1 remains populated and financially authoritative pending controlled delta and owner-approved writer cutover; Worker cron/queues/workflows remain active. Cloudflare Observability remains disabled. The current VPS SQLite core financial tables are empty; do not infer synchronized production behavior.
+NestJS owns domain decisions. Name.com DNS routes public hostnames to the VPS Nginx/NestJS path; SQLite is the intended VPS durable store, Ledger accounting truth, EventOutbox/EventInbox durable delivery boundaries, and Aiven Valkey transport/realtime only. Under the latest owner decision the promoted VPS SQLite store is durable financial authority. Cloudflare D1 is historical migration comparison evidence; no duplicate D1 writer is authorized. This does not prove that the latest source repair is deployed. Cloudflare Observability remains disabled.
 
 ## 2. Financial accounts and transaction topology
 
