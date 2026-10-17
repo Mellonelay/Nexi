@@ -376,3 +376,9 @@ Superseded historical rows remain above for provenance. Do not revive old statem
 ### 2026-10-17 selected data parity checkpoint
 - [x] VERIFIED — 38 selected non-market domain tables matched D1 to active SQLite by both row count and canonical content SHA-256; receipt: `tasks/evidence/d1-sqlite-selected-domain-content-check-20261017.json`. Query was read-only (D1 rows_written=0).
 - [ ] BLOCKED_WITH_EVIDENCE — This bounded match is not a frozen global snapshot and does not cover every non-market table or establish a final D1 watermark. Do not describe it as whole-database equality.
+
+
+### 2026-10-17 expanded D1-to-SQLite non-market reconciliation
+- [x] VERIFIED — 89 common non-market tables compared, 1,754 rows on each side; 84 tables have exact row-content SHA-256 and counts. Receipt: `tasks/evidence/d1-sqlite-nonmarket-content-check-20261017.json`. No writes or export/import.
+- [ ] DEFERRED — Five same-count content mismatches are market catalog/config (`MarketAsset`, `MarketAssetCapability`, `MarketPair`, `MarketProviderConfig`, `MarketProviderSymbol`); market-history tables were excluded. Revisit only after financial/domain acceptance.
+- [ ] BLOCKED_WITH_EVIDENCE — Independent encrypted backup/restore and authorized authenticated acceptance remain unresolved. This sequential read is not a final cutover watermark.

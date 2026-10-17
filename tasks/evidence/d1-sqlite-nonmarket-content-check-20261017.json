@@ -1,0 +1,748 @@
+{
+  "checked_on": "2026-10-17 UTC",
+  "source": "Worker-0 Wrangler 4.147.0 --remote --json; SQLite Python sqlite3 read-only URI",
+  "d1_database": "nexi-core-staging",
+  "d1_database_uuid": "522177fa-ac42-4d8f-a6a8-b34eed262f15",
+  "sqlite_path": "/var/lib/nexi/sqlite/nexi-staging.sqlite",
+  "code_head_during_check": "8570a39a01534a71960b6189443ec78fcf198a3d",
+  "method": "Read D1 sqlite_master table list, then batch SELECT * for all common non-market tables. Per table, canonicalize rows to JSON with sorted object keys, sort row encodings, compare row count and SHA-256. No record content is saved.",
+  "excluded_tables": [
+    "MarketKline",
+    "MarketQuoteLatest",
+    "MarketQuoteSnapshot"
+  ],
+  "source_only_nonmarket_tables": [
+    "_cf_KV"
+  ],
+  "target_only_tables": [],
+  "common_nonmarket_table_count": 89,
+  "mismatch_tables": [
+    "MarketAsset",
+    "MarketAssetCapability",
+    "MarketPair",
+    "MarketProviderConfig",
+    "MarketProviderSymbol"
+  ],
+  "all_common_nonmarket_rows_match": false,
+  "total_rows_hashed_both_sides": 3508,
+  "limits": [
+    "D1 and SQLite reads were not a quiesced cross-system transaction snapshot; table reads were sequential within each database operation.",
+    "Market history tables were intentionally excluded.",
+    "Hash equality proves the observed row contents for common non-market tables only; it does not establish a final global transaction watermark or equality for market tables.",
+    "No export/import or database writes were performed."
+  ],
+  "tables": [
+    {
+      "table": "Activity",
+      "sqlite_count": 41,
+      "d1_count": 41,
+      "sqlite_sha256": "c3596e77aa32573783b607a539595010681f8843484a4308371bcee3d7e2c1a7",
+      "d1_sha256": "c3596e77aa32573783b607a539595010681f8843484a4308371bcee3d7e2c1a7",
+      "match": true
+    },
+    {
+      "table": "Admin",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "AdminAuditLog",
+      "sqlite_count": 41,
+      "d1_count": 41,
+      "sqlite_sha256": "6e634376b16780a25b1bb930a0c5e2698376a2f966a8e715c7046e647ccca54b",
+      "d1_sha256": "6e634376b16780a25b1bb930a0c5e2698376a2f966a8e715c7046e647ccca54b",
+      "match": true
+    },
+    {
+      "table": "AdminFeatureFlag",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "AdminGovernanceApproval",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "AdminGovernanceCommand",
+      "sqlite_count": 2,
+      "d1_count": 2,
+      "sqlite_sha256": "d6535ea435659b224de34e6ea5c73942772d9f979aab786d49d41586ebdfe1f9",
+      "d1_sha256": "d6535ea435659b224de34e6ea5c73942772d9f979aab786d49d41586ebdfe1f9",
+      "match": true
+    },
+    {
+      "table": "AdminIncident",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "AdminMaintenanceWindow",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "AdminRoleAssignment",
+      "sqlite_count": 7,
+      "d1_count": 7,
+      "sqlite_sha256": "cd403a25fd4ee8b3b1e4565808413dc4d0b0de81c1ed01c72ed758abdea2dd3f",
+      "d1_sha256": "cd403a25fd4ee8b3b1e4565808413dc4d0b0de81c1ed01c72ed758abdea2dd3f",
+      "match": true
+    },
+    {
+      "table": "Affiliate",
+      "sqlite_count": 28,
+      "d1_count": 28,
+      "sqlite_sha256": "858c0cbb9598e849d2c26a323247ac53eb539babe69e8b0acbce008629445b84",
+      "d1_sha256": "858c0cbb9598e849d2c26a323247ac53eb539babe69e8b0acbce008629445b84",
+      "match": true
+    },
+    {
+      "table": "Announcement",
+      "sqlite_count": 1,
+      "d1_count": 1,
+      "sqlite_sha256": "747e0eebb6f3ce70fc3d672d8072ff8e9c7902c79c9208d1c5cadb81900dae23",
+      "d1_sha256": "747e0eebb6f3ce70fc3d672d8072ff8e9c7902c79c9208d1c5cadb81900dae23",
+      "match": true
+    },
+    {
+      "table": "AuthSession",
+      "sqlite_count": 312,
+      "d1_count": 312,
+      "sqlite_sha256": "51dfa4c84732bb283aa9444beb3ca6f2d191e06297e9ed75abf257cb5b5296e5",
+      "d1_sha256": "51dfa4c84732bb283aa9444beb3ca6f2d191e06297e9ed75abf257cb5b5296e5",
+      "match": true
+    },
+    {
+      "table": "BinaryOptionPosition",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "BinaryOptionResult",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "BinaryPair",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "BinaryTimeframe",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "ContractPair",
+      "sqlite_count": 3,
+      "d1_count": 3,
+      "sqlite_sha256": "6ad83037dab1c19fbdb716e33e231462517d0524d0c30fe636b4d6d0b57a938e",
+      "d1_sha256": "6ad83037dab1c19fbdb716e33e231462517d0524d0c30fe636b4d6d0b57a938e",
+      "match": true
+    },
+    {
+      "table": "ContractPosition",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "ConversionTransaction",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "Currency",
+      "sqlite_count": 5,
+      "d1_count": 5,
+      "sqlite_sha256": "3bfa09ea30e1cfc7ebb2bab671a250f43e5553187f1d1764d30b04d4a1a3ae8b",
+      "d1_sha256": "3bfa09ea30e1cfc7ebb2bab671a250f43e5553187f1d1764d30b04d4a1a3ae8b",
+      "match": true
+    },
+    {
+      "table": "DepositAddress",
+      "sqlite_count": 8,
+      "d1_count": 8,
+      "sqlite_sha256": "120e850d07012e54485f6aeff5fa6da7a6c3d3fe6c16c1268b6a8ad167a12b83",
+      "d1_sha256": "120e850d07012e54485f6aeff5fa6da7a6c3d3fe6c16c1268b6a8ad167a12b83",
+      "match": true
+    },
+    {
+      "table": "DepositClaim",
+      "sqlite_count": 3,
+      "d1_count": 3,
+      "sqlite_sha256": "4af843cc08ad96297c90b8ef5c41bd55aeb498e251585e647dbe727a638ff252",
+      "d1_sha256": "4af843cc08ad96297c90b8ef5c41bd55aeb498e251585e647dbe727a638ff252",
+      "match": true
+    },
+    {
+      "table": "EventInbox",
+      "sqlite_count": 99,
+      "d1_count": 99,
+      "sqlite_sha256": "5d1f3eaf8d2fe0d2b5d62dd1fbc2358b601af10d63fc095b29c7f22b169fdb21",
+      "d1_sha256": "5d1f3eaf8d2fe0d2b5d62dd1fbc2358b601af10d63fc095b29c7f22b169fdb21",
+      "match": true
+    },
+    {
+      "table": "EventOutbox",
+      "sqlite_count": 94,
+      "d1_count": 94,
+      "sqlite_sha256": "4eb69ad55d01fc115298bd6a2ff0e7b54c9bb401543315e8ab19555f8b9d315c",
+      "d1_sha256": "4eb69ad55d01fc115298bd6a2ff0e7b54c9bb401543315e8ab19555f8b9d315c",
+      "match": true
+    },
+    {
+      "table": "Gate2BinaryConfiguration",
+      "sqlite_count": 280,
+      "d1_count": 280,
+      "sqlite_sha256": "548f5000624cd56318c2dbe323428e0bff83c0b3fe013eaf47b3013076ce9573",
+      "d1_sha256": "548f5000624cd56318c2dbe323428e0bff83c0b3fe013eaf47b3013076ce9573",
+      "match": true
+    },
+    {
+      "table": "Gate2BinaryPosition",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "Gate2ConversionQuote",
+      "sqlite_count": 3,
+      "d1_count": 3,
+      "sqlite_sha256": "bc45a8233fcf46a68cb921d9701fc122b5b1a091961713687825372e3b412dbb",
+      "d1_sha256": "bc45a8233fcf46a68cb921d9701fc122b5b1a091961713687825372e3b412dbb",
+      "match": true
+    },
+    {
+      "table": "Gate2Deposit",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "Gate2InternalTransfer",
+      "sqlite_count": 1,
+      "d1_count": 1,
+      "sqlite_sha256": "5ca4a32c09267c97994230990ac4665b4c437134b86acbc49799a03f3296dcd1",
+      "d1_sha256": "5ca4a32c09267c97994230990ac4665b4c437134b86acbc49799a03f3296dcd1",
+      "match": true
+    },
+    {
+      "table": "Gate2OperationAudit",
+      "sqlite_count": 6,
+      "d1_count": 6,
+      "sqlite_sha256": "32c13f1a310d3915c284a1de812ba3e1a36f2af5852f7af092bcedf460ad651a",
+      "d1_sha256": "32c13f1a310d3915c284a1de812ba3e1a36f2af5852f7af092bcedf460ad651a",
+      "match": true
+    },
+    {
+      "table": "Gate2SpotOrder",
+      "sqlite_count": 2,
+      "d1_count": 2,
+      "sqlite_sha256": "f3a4f87a023290cbd0eccb15f23998697185da727e48e3820e5f7724933bcd42",
+      "d1_sha256": "f3a4f87a023290cbd0eccb15f23998697185da727e48e3820e5f7724933bcd42",
+      "match": true
+    },
+    {
+      "table": "Gate2SpotTrade",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "Gate2Withdrawal",
+      "sqlite_count": 2,
+      "d1_count": 2,
+      "sqlite_sha256": "00f0076abff51d082b2d90c27f97fc3cc4cfa3ce9ed8e744642551e3766a4087",
+      "d1_sha256": "00f0076abff51d082b2d90c27f97fc3cc4cfa3ce9ed8e744642551e3766a4087",
+      "match": true
+    },
+    {
+      "table": "KYC",
+      "sqlite_count": 2,
+      "d1_count": 2,
+      "sqlite_sha256": "7bbbbfe1b02b2bc39f106cf76baa3f53545efef3a808d7976e2f0de50c603158",
+      "d1_sha256": "7bbbbfe1b02b2bc39f106cf76baa3f53545efef3a808d7976e2f0de50c603158",
+      "match": true
+    },
+    {
+      "table": "LearnArticleRevision",
+      "sqlite_count": 4,
+      "d1_count": 4,
+      "sqlite_sha256": "360712b1c9a98627582fefec97e845b88d737fafa60f1e58a75ddde76874f017",
+      "d1_sha256": "360712b1c9a98627582fefec97e845b88d737fafa60f1e58a75ddde76874f017",
+      "match": true
+    },
+    {
+      "table": "LearnArticleTag",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "LearnCategory",
+      "sqlite_count": 1,
+      "d1_count": 1,
+      "sqlite_sha256": "597fd85d1e80400a966ebd6c9c00e50ab195495ed77f41c3ac97573105e55472",
+      "d1_sha256": "597fd85d1e80400a966ebd6c9c00e50ab195495ed77f41c3ac97573105e55472",
+      "match": true
+    },
+    {
+      "table": "LearnContent",
+      "sqlite_count": 2,
+      "d1_count": 2,
+      "sqlite_sha256": "7a41e91f41cd22d06cf4354d7f9e3adaf423edeb58820d5f81c6756385dcae7b",
+      "d1_sha256": "7a41e91f41cd22d06cf4354d7f9e3adaf423edeb58820d5f81c6756385dcae7b",
+      "match": true
+    },
+    {
+      "table": "LearnMediaAsset",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "LearnTag",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "Ledger",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "LedgerAccount",
+      "sqlite_count": 14,
+      "d1_count": 14,
+      "sqlite_sha256": "497240b5a921bbf305e5890abd5cbc20e72591903fe7fce3cefc3438b9cf9ec2",
+      "d1_sha256": "497240b5a921bbf305e5890abd5cbc20e72591903fe7fce3cefc3438b9cf9ec2",
+      "match": true
+    },
+    {
+      "table": "LedgerAuditEvent",
+      "sqlite_count": 48,
+      "d1_count": 48,
+      "sqlite_sha256": "97f391213e6f6daa0255bd2c1a34a90e3880090f9d38ae37103781f397e21e7b",
+      "d1_sha256": "97f391213e6f6daa0255bd2c1a34a90e3880090f9d38ae37103781f397e21e7b",
+      "match": true
+    },
+    {
+      "table": "LedgerIdempotency",
+      "sqlite_count": 46,
+      "d1_count": 46,
+      "sqlite_sha256": "0fcfe4b10a7092faaf9a6cd4dd17c0332331657ec533b52b96e4ba614abdb5f9",
+      "d1_sha256": "0fcfe4b10a7092faaf9a6cd4dd17c0332331657ec533b52b96e4ba614abdb5f9",
+      "match": true
+    },
+    {
+      "table": "LedgerPosting",
+      "sqlite_count": 48,
+      "d1_count": 48,
+      "sqlite_sha256": "d569431baf7b2173f927f4f02cce5d1e277dac85f8f3333ecee050ef5c8bdcb3",
+      "d1_sha256": "d569431baf7b2173f927f4f02cce5d1e277dac85f8f3333ecee050ef5c8bdcb3",
+      "match": true
+    },
+    {
+      "table": "LoanApplication",
+      "sqlite_count": 5,
+      "d1_count": 5,
+      "sqlite_sha256": "7aebe65be73d961e92a3d93da834e6feb61c9b1d66102d0937b0f8754a4d1edd",
+      "d1_sha256": "7aebe65be73d961e92a3d93da834e6feb61c9b1d66102d0937b0f8754a4d1edd",
+      "match": true
+    },
+    {
+      "table": "LoanPlan",
+      "sqlite_count": 1,
+      "d1_count": 1,
+      "sqlite_sha256": "602381669c01fe86a900ea5e4a657786df3a417f63079e96ae2568e49bd1c71e",
+      "d1_sha256": "602381669c01fe86a900ea5e4a657786df3a417f63079e96ae2568e49bd1c71e",
+      "match": true
+    },
+    {
+      "table": "LoanRepayment",
+      "sqlite_count": 1,
+      "d1_count": 1,
+      "sqlite_sha256": "3079d097670efed4a1b422afdf24b52608a01d7c03d771ac2d9e71a971625627",
+      "d1_sha256": "3079d097670efed4a1b422afdf24b52608a01d7c03d771ac2d9e71a971625627",
+      "match": true
+    },
+    {
+      "table": "MarketAsset",
+      "sqlite_count": 55,
+      "d1_count": 55,
+      "sqlite_sha256": "af225ef518461b4711055c714f9d96d87c9201b58c19a6e65cef796c3c7755b0",
+      "d1_sha256": "b0448eccb3b397b840f83cfb277481b080cf9770cdd4d0d50cd5adb98cfcbee7",
+      "match": false
+    },
+    {
+      "table": "MarketAssetCapability",
+      "sqlite_count": 55,
+      "d1_count": 55,
+      "sqlite_sha256": "a5f5046934f90358e5f4fa5fff8e42bf965186e9bded6d8ce741533f984e42f7",
+      "d1_sha256": "827b9c7794155ba1eabfe6d935c819d5350ac410c50d1b720a66800d1c437ecf",
+      "match": false
+    },
+    {
+      "table": "MarketData",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "MarketDepthLevel",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "MarketDepthSnapshot",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "MarketNetwork",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "MarketPair",
+      "sqlite_count": 53,
+      "d1_count": 53,
+      "sqlite_sha256": "27637e0961778c21ad741132ba0f8efad06d78d4f1674c8f1bae50aa254f837f",
+      "d1_sha256": "eba3f9cad00929fdbec86fb241de04834eb28b647a070f85ac3c0b180560e4fd",
+      "match": false
+    },
+    {
+      "table": "MarketProviderConfig",
+      "sqlite_count": 9,
+      "d1_count": 9,
+      "sqlite_sha256": "7eff5cb2b56d40c068515852bb6679d4df0f1f892bae0cdc7be10930388f383c",
+      "d1_sha256": "d027175f25103d7c1547901fd550d1bc31699219de1397da1068d3260727eec6",
+      "match": false
+    },
+    {
+      "table": "MarketProviderSymbol",
+      "sqlite_count": 270,
+      "d1_count": 270,
+      "sqlite_sha256": "6390cbe8d7e776df487a139be60ad7f9aef791725da3e4136ed31ba70d1799ad",
+      "d1_sha256": "61fdceb97487be0f5c2966b38f2f708ed755cd4d7b118717e3a96c7f85ae1d4c",
+      "match": false
+    },
+    {
+      "table": "MarketTrade",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "MessageConversation",
+      "sqlite_count": 1,
+      "d1_count": 1,
+      "sqlite_sha256": "70ecf9f6745c9448bf6e38087f0f7bd41b3309f5ee06cf039d2858a125e922c0",
+      "d1_sha256": "70ecf9f6745c9448bf6e38087f0f7bd41b3309f5ee06cf039d2858a125e922c0",
+      "match": true
+    },
+    {
+      "table": "MessageModerationCase",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "MiningPlan",
+      "sqlite_count": 3,
+      "d1_count": 3,
+      "sqlite_sha256": "af7c360a1c048a45d15e543975517743f2d4dc41bef8ce32fecaf1f39ffb36c7",
+      "d1_sha256": "af7c360a1c048a45d15e543975517743f2d4dc41bef8ce32fecaf1f39ffb36c7",
+      "match": true
+    },
+    {
+      "table": "MiningRewardAccrual",
+      "sqlite_count": 14,
+      "d1_count": 14,
+      "sqlite_sha256": "de8f9ed730870f5d6583c72a88befd8ad2eecb1e3e6b4cecdafd0343dfdcf199",
+      "d1_sha256": "de8f9ed730870f5d6583c72a88befd8ad2eecb1e3e6b4cecdafd0343dfdcf199",
+      "match": true
+    },
+    {
+      "table": "MiningSubscription",
+      "sqlite_count": 4,
+      "d1_count": 4,
+      "sqlite_sha256": "4a90fb8bf7d681deebde1851d7b2de8f714c997f6cdbd3e526488a7e0afa1afd",
+      "d1_sha256": "4a90fb8bf7d681deebde1851d7b2de8f714c997f6cdbd3e526488a7e0afa1afd",
+      "match": true
+    },
+    {
+      "table": "Notification",
+      "sqlite_count": 3,
+      "d1_count": 3,
+      "sqlite_sha256": "48d38123dd7d9cd63b7d253ead068b570208b9f5836d4efde7a4d5f9fac0970e",
+      "d1_sha256": "48d38123dd7d9cd63b7d253ead068b570208b9f5836d4efde7a4d5f9fac0970e",
+      "match": true
+    },
+    {
+      "table": "OptionGameSettings",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "PersistentMessage",
+      "sqlite_count": 1,
+      "d1_count": 1,
+      "sqlite_sha256": "9323c63e13fb40222df61d1c6d890d74a66cf4d82f400b620bd9f22a7143729a",
+      "d1_sha256": "9323c63e13fb40222df61d1c6d890d74a66cf4d82f400b620bd9f22a7143729a",
+      "match": true
+    },
+    {
+      "table": "ReferralAttributionEvent",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "ReferralRewardEvent",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "Reward",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "Settings",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "SpotMarginAccount",
+      "sqlite_count": 1,
+      "d1_count": 1,
+      "sqlite_sha256": "a37557786449f0dbba9d8991d527dd62b354f35f5d75c154089ee76b116bbfb8",
+      "d1_sha256": "a37557786449f0dbba9d8991d527dd62b354f35f5d75c154089ee76b116bbfb8",
+      "match": true
+    },
+    {
+      "table": "SpotMarginActivity",
+      "sqlite_count": 1,
+      "d1_count": 1,
+      "sqlite_sha256": "64e9dacf5d9679793f18c7e57f0807dffd8c0d304829a8c5fca44e57166783f0",
+      "d1_sha256": "64e9dacf5d9679793f18c7e57f0807dffd8c0d304829a8c5fca44e57166783f0",
+      "match": true
+    },
+    {
+      "table": "SpotMarginPosition",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "SpotMarginPositionEvent",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "SpotOrder",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "SpotTrade",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "SupportTicket",
+      "sqlite_count": 1,
+      "d1_count": 1,
+      "sqlite_sha256": "2130f0b1f396b2660e63daaec64978473346a6be4f507c8211b2f9c62506657c",
+      "d1_sha256": "2130f0b1f396b2660e63daaec64978473346a6be4f507c8211b2f9c62506657c",
+      "match": true
+    },
+    {
+      "table": "SupportTicketReply",
+      "sqlite_count": 3,
+      "d1_count": 3,
+      "sqlite_sha256": "f5842dcac19c9d4032f9dcc73a0c24fc91a3a4384e919449fb91cd7b21bdfa96",
+      "d1_sha256": "f5842dcac19c9d4032f9dcc73a0c24fc91a3a4384e919449fb91cd7b21bdfa96",
+      "match": true
+    },
+    {
+      "table": "SystemConfig",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "User",
+      "sqlite_count": 34,
+      "d1_count": 34,
+      "sqlite_sha256": "af253e271d4243d915ae45f40605fcc7b653d64d29a939760ffa08d436c48781",
+      "d1_sha256": "af253e271d4243d915ae45f40605fcc7b653d64d29a939760ffa08d436c48781",
+      "match": true
+    },
+    {
+      "table": "UserMfa",
+      "sqlite_count": 1,
+      "d1_count": 1,
+      "sqlite_sha256": "23bd0a7dd4f279ef93e587317912dd45a7bae51b78dc4d0acbd573cf57df44df",
+      "d1_sha256": "23bd0a7dd4f279ef93e587317912dd45a7bae51b78dc4d0acbd573cf57df44df",
+      "match": true
+    },
+    {
+      "table": "UserPreference",
+      "sqlite_count": 28,
+      "d1_count": 28,
+      "sqlite_sha256": "841a164802e433bc51304cb3e8f086229084953f9a0dbb0e4eb247d41678ccb0",
+      "d1_sha256": "841a164802e433bc51304cb3e8f086229084953f9a0dbb0e4eb247d41678ccb0",
+      "match": true
+    },
+    {
+      "table": "UserVipState",
+      "sqlite_count": 28,
+      "d1_count": 28,
+      "sqlite_sha256": "7d43a13416042f686cc9208d40121bded3c37e9e379312d4d7e4adeddef67ba9",
+      "d1_sha256": "7d43a13416042f686cc9208d40121bded3c37e9e379312d4d7e4adeddef67ba9",
+      "match": true
+    },
+    {
+      "table": "VipLevel",
+      "sqlite_count": 1,
+      "d1_count": 1,
+      "sqlite_sha256": "3762697decbf6a315dd9c863cbb97514daefaf3b9b48bb6522d2d92ed740d09e",
+      "d1_sha256": "3762697decbf6a315dd9c863cbb97514daefaf3b9b48bb6522d2d92ed740d09e",
+      "match": true
+    },
+    {
+      "table": "Wallet",
+      "sqlite_count": 34,
+      "d1_count": 34,
+      "sqlite_sha256": "5df9a349d3ddd6569cc9c62e451e56998e3c236f9191c0737e62cb8c56e6a9cc",
+      "d1_sha256": "5df9a349d3ddd6569cc9c62e451e56998e3c236f9191c0737e62cb8c56e6a9cc",
+      "match": true
+    },
+    {
+      "table": "WalletIdentity",
+      "sqlite_count": 21,
+      "d1_count": 21,
+      "sqlite_sha256": "4449e0650d441382acfe5080031b5ba80fefd8b8d8f77ff09803de4b3ab9f6f4",
+      "d1_sha256": "4449e0650d441382acfe5080031b5ba80fefd8b8d8f77ff09803de4b3ab9f6f4",
+      "match": true
+    },
+    {
+      "table": "WalletNetwork",
+      "sqlite_count": 8,
+      "d1_count": 8,
+      "sqlite_sha256": "d8e3047f2f44e083e7341dabe37775e739bb9f01904d5ee7922eb57263240754",
+      "d1_sha256": "d8e3047f2f44e083e7341dabe37775e739bb9f01904d5ee7922eb57263240754",
+      "match": true
+    },
+    {
+      "table": "WithdrawalRequest",
+      "sqlite_count": 0,
+      "d1_count": 0,
+      "sqlite_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "d1_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "table": "d1_migrations",
+      "sqlite_count": 15,
+      "d1_count": 15,
+      "sqlite_sha256": "a8c5fe46f5ab88b049cc7245391c3b6ebe55383fd9b6fa0ab2564bbe3bcbe821",
+      "d1_sha256": "a8c5fe46f5ab88b049cc7245391c3b6ebe55383fd9b6fa0ab2564bbe3bcbe821",
+      "match": true
+    }
+  ]
+}
