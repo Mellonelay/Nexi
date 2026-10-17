@@ -1539,8 +1539,20 @@ export class D1FinancialCommandGateway {
         `SELECT * FROM "SpotMarginActivity" WHERE "idempotencyKey"=? LIMIT 1`,
         [idempotencyKey],
       );
-      if (existing.results[0])
-        return { ...existing.results[0], replayed: true };
+      if (existing.results[0]) {
+        const prior = existing.results[0];
+        const details = JSON.parse(String(prior.details ?? '{}')) as Record<string, unknown>;
+        if (
+          String(prior.userId) !== userId ||
+          String(prior.accountId) !== accountId ||
+          String(prior.positionId) !== positionId ||
+          String(prior.type) !== type ||
+          String(details.orderId ?? '') !== orderId
+        ) {
+          throw new BadRequestException('Margin close idempotency key was reused with changed terms');
+        }
+        return { ...prior, replayed: true };
+      }
       throw new BadRequestException("D1 margin close transition was rejected");
     }
     return {

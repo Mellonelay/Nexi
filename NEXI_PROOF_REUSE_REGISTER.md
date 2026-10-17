@@ -1,7 +1,7 @@
 ## Margin close-request guarded CAS — 2026-10-18 (source only)
 
 - **TESTED:** `backend/test/d1/margin-closing-guard.local-sqlite.spec.ts` 1/1 PASS using disposable SQLite. Backend build TypeScript `tsc --noEmit -p tsconfig.build.json` exit 0.
-- `markMarginClosing` guards OPEN→CLOSING by `UPDATE ... RETURNING id` and conditional subsequent Activity in the same immediate transaction, rejecting a competing close key without an extraneous Activity, while allowing exact replay.
+- `markMarginClosing` guards OPEN→CLOSING by `UPDATE ... RETURNING id` and conditional subsequent Activity in the same immediate transaction, rejecting a competing close key without an extraneous Activity, allowing exact replay while rejecting changed-order reuse of that same close key.
 - **UNPROVEN:** Margin partial-fill and late-settlement reconciliation, actual deployed runtime and financial accounting on full live database. The earlier unverified large Margin patch remains preserved outside checkout, not integrated.
 
 # NEXI Proof Reuse Register

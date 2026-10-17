@@ -52,6 +52,8 @@ describe('Margin close CAS on disposable SQLite', () => {
     expect(current.results[0]).toEqual({ status: 'CLOSING', closeOrderId: 'close-order-1' });
     const replay = await gateway.markMarginClosing('position-1', 'user-1', 'account-1', 'activity-3', 'close-order-1', 'close-key-1');
     expect(replay.replayed).toBe(true);
+    await expect(gateway.markMarginClosing('position-1', 'user-1', 'account-1', 'activity-4', 'different-order', 'close-key-1'))
+      .rejects.toThrow('changed terms');
     const finalRows = await bridge.select<{id:string}>('SELECT id FROM SpotMarginActivity');
     expect(finalRows.results).toHaveLength(1);
   });
