@@ -1,0 +1,530 @@
+{
+  "checked_on": "2026-10-17 UTC",
+  "source": "Wrangler 4.147.0 read-only D1 PRAGMA table_info; SQLite Python read-only PRAGMA table_info",
+  "d1_database": "nexi-core-staging",
+  "sqlite_path": "/var/lib/nexi/sqlite/nexi-staging.sqlite",
+  "scope": "All common application tables except market catalog/history (refillable) and D1 internal _cf_KV; compares ordered column name/type/notnull/default/primary-key ordinal.",
+  "table_count": 84,
+  "tables_missing_from_sqlite": [],
+  "sqlite_only_tables": [
+    "LocalDurableJob",
+    "LocalDurableJobReplayHistory",
+    "LocalWorkflowEvent",
+    "LocalWorkflowInstance",
+    "LocalWorkflowStep"
+  ],
+  "mismatch_tables": [],
+  "all_columns_match": true,
+  "tables": [
+    {
+      "table": "Activity",
+      "d1_column_count": 13,
+      "sqlite_column_count": 13,
+      "match": true
+    },
+    {
+      "table": "Admin",
+      "d1_column_count": 5,
+      "sqlite_column_count": 5,
+      "match": true
+    },
+    {
+      "table": "AdminAuditLog",
+      "d1_column_count": 7,
+      "sqlite_column_count": 7,
+      "match": true
+    },
+    {
+      "table": "AdminFeatureFlag",
+      "d1_column_count": 8,
+      "sqlite_column_count": 8,
+      "match": true
+    },
+    {
+      "table": "AdminGovernanceApproval",
+      "d1_column_count": 6,
+      "sqlite_column_count": 6,
+      "match": true
+    },
+    {
+      "table": "AdminGovernanceCommand",
+      "d1_column_count": 13,
+      "sqlite_column_count": 13,
+      "match": true
+    },
+    {
+      "table": "AdminIncident",
+      "d1_column_count": 14,
+      "sqlite_column_count": 14,
+      "match": true
+    },
+    {
+      "table": "AdminMaintenanceWindow",
+      "d1_column_count": 17,
+      "sqlite_column_count": 17,
+      "match": true
+    },
+    {
+      "table": "AdminRoleAssignment",
+      "d1_column_count": 6,
+      "sqlite_column_count": 6,
+      "match": true
+    },
+    {
+      "table": "Affiliate",
+      "d1_column_count": 7,
+      "sqlite_column_count": 7,
+      "match": true
+    },
+    {
+      "table": "Announcement",
+      "d1_column_count": 12,
+      "sqlite_column_count": 12,
+      "match": true
+    },
+    {
+      "table": "AuthSession",
+      "d1_column_count": 14,
+      "sqlite_column_count": 14,
+      "match": true
+    },
+    {
+      "table": "BinaryOptionPosition",
+      "d1_column_count": 21,
+      "sqlite_column_count": 21,
+      "match": true
+    },
+    {
+      "table": "BinaryOptionResult",
+      "d1_column_count": 5,
+      "sqlite_column_count": 5,
+      "match": true
+    },
+    {
+      "table": "BinaryPair",
+      "d1_column_count": 15,
+      "sqlite_column_count": 15,
+      "match": true
+    },
+    {
+      "table": "BinaryTimeframe",
+      "d1_column_count": 7,
+      "sqlite_column_count": 7,
+      "match": true
+    },
+    {
+      "table": "ContractPair",
+      "d1_column_count": 8,
+      "sqlite_column_count": 8,
+      "match": true
+    },
+    {
+      "table": "ContractPosition",
+      "d1_column_count": 17,
+      "sqlite_column_count": 17,
+      "match": true
+    },
+    {
+      "table": "ConversionTransaction",
+      "d1_column_count": 8,
+      "sqlite_column_count": 8,
+      "match": true
+    },
+    {
+      "table": "Currency",
+      "d1_column_count": 17,
+      "sqlite_column_count": 17,
+      "match": true
+    },
+    {
+      "table": "DepositAddress",
+      "d1_column_count": 9,
+      "sqlite_column_count": 9,
+      "match": true
+    },
+    {
+      "table": "DepositClaim",
+      "d1_column_count": 19,
+      "sqlite_column_count": 19,
+      "match": true
+    },
+    {
+      "table": "EventInbox",
+      "d1_column_count": 13,
+      "sqlite_column_count": 13,
+      "match": true
+    },
+    {
+      "table": "EventOutbox",
+      "d1_column_count": 18,
+      "sqlite_column_count": 18,
+      "match": true
+    },
+    {
+      "table": "Gate2BinaryConfiguration",
+      "d1_column_count": 12,
+      "sqlite_column_count": 12,
+      "match": true
+    },
+    {
+      "table": "Gate2BinaryPosition",
+      "d1_column_count": 31,
+      "sqlite_column_count": 31,
+      "match": true
+    },
+    {
+      "table": "Gate2ConversionQuote",
+      "d1_column_count": 18,
+      "sqlite_column_count": 18,
+      "match": true
+    },
+    {
+      "table": "Gate2Deposit",
+      "d1_column_count": 16,
+      "sqlite_column_count": 16,
+      "match": true
+    },
+    {
+      "table": "Gate2InternalTransfer",
+      "d1_column_count": 9,
+      "sqlite_column_count": 9,
+      "match": true
+    },
+    {
+      "table": "Gate2OperationAudit",
+      "d1_column_count": 8,
+      "sqlite_column_count": 8,
+      "match": true
+    },
+    {
+      "table": "Gate2SpotOrder",
+      "d1_column_count": 27,
+      "sqlite_column_count": 27,
+      "match": true
+    },
+    {
+      "table": "Gate2SpotTrade",
+      "d1_column_count": 12,
+      "sqlite_column_count": 12,
+      "match": true
+    },
+    {
+      "table": "Gate2Withdrawal",
+      "d1_column_count": 16,
+      "sqlite_column_count": 16,
+      "match": true
+    },
+    {
+      "table": "KYC",
+      "d1_column_count": 13,
+      "sqlite_column_count": 13,
+      "match": true
+    },
+    {
+      "table": "LearnArticleRevision",
+      "d1_column_count": 14,
+      "sqlite_column_count": 14,
+      "match": true
+    },
+    {
+      "table": "LearnArticleTag",
+      "d1_column_count": 2,
+      "sqlite_column_count": 2,
+      "match": true
+    },
+    {
+      "table": "LearnCategory",
+      "d1_column_count": 8,
+      "sqlite_column_count": 8,
+      "match": true
+    },
+    {
+      "table": "LearnContent",
+      "d1_column_count": 14,
+      "sqlite_column_count": 14,
+      "match": true
+    },
+    {
+      "table": "LearnMediaAsset",
+      "d1_column_count": 8,
+      "sqlite_column_count": 8,
+      "match": true
+    },
+    {
+      "table": "LearnTag",
+      "d1_column_count": 5,
+      "sqlite_column_count": 5,
+      "match": true
+    },
+    {
+      "table": "Ledger",
+      "d1_column_count": 9,
+      "sqlite_column_count": 9,
+      "match": true
+    },
+    {
+      "table": "LedgerAccount",
+      "d1_column_count": 9,
+      "sqlite_column_count": 9,
+      "match": true
+    },
+    {
+      "table": "LedgerAuditEvent",
+      "d1_column_count": 8,
+      "sqlite_column_count": 8,
+      "match": true
+    },
+    {
+      "table": "LedgerIdempotency",
+      "d1_column_count": 8,
+      "sqlite_column_count": 8,
+      "match": true
+    },
+    {
+      "table": "LedgerPosting",
+      "d1_column_count": 14,
+      "sqlite_column_count": 14,
+      "match": true
+    },
+    {
+      "table": "LoanApplication",
+      "d1_column_count": 19,
+      "sqlite_column_count": 19,
+      "match": true
+    },
+    {
+      "table": "LoanPlan",
+      "d1_column_count": 9,
+      "sqlite_column_count": 9,
+      "match": true
+    },
+    {
+      "table": "LoanRepayment",
+      "d1_column_count": 8,
+      "sqlite_column_count": 8,
+      "match": true
+    },
+    {
+      "table": "MarketData",
+      "d1_column_count": 9,
+      "sqlite_column_count": 9,
+      "match": true
+    },
+    {
+      "table": "MarketDepthLevel",
+      "d1_column_count": 6,
+      "sqlite_column_count": 6,
+      "match": true
+    },
+    {
+      "table": "MarketDepthSnapshot",
+      "d1_column_count": 11,
+      "sqlite_column_count": 11,
+      "match": true
+    },
+    {
+      "table": "MarketNetwork",
+      "d1_column_count": 8,
+      "sqlite_column_count": 8,
+      "match": true
+    },
+    {
+      "table": "MarketTrade",
+      "d1_column_count": 13,
+      "sqlite_column_count": 13,
+      "match": true
+    },
+    {
+      "table": "MessageConversation",
+      "d1_column_count": 6,
+      "sqlite_column_count": 6,
+      "match": true
+    },
+    {
+      "table": "MessageModerationCase",
+      "d1_column_count": 11,
+      "sqlite_column_count": 11,
+      "match": true
+    },
+    {
+      "table": "MiningPlan",
+      "d1_column_count": 13,
+      "sqlite_column_count": 13,
+      "match": true
+    },
+    {
+      "table": "MiningRewardAccrual",
+      "d1_column_count": 9,
+      "sqlite_column_count": 9,
+      "match": true
+    },
+    {
+      "table": "MiningSubscription",
+      "d1_column_count": 14,
+      "sqlite_column_count": 14,
+      "match": true
+    },
+    {
+      "table": "Notification",
+      "d1_column_count": 8,
+      "sqlite_column_count": 8,
+      "match": true
+    },
+    {
+      "table": "OptionGameSettings",
+      "d1_column_count": 11,
+      "sqlite_column_count": 11,
+      "match": true
+    },
+    {
+      "table": "PersistentMessage",
+      "d1_column_count": 10,
+      "sqlite_column_count": 10,
+      "match": true
+    },
+    {
+      "table": "ReferralAttributionEvent",
+      "d1_column_count": 7,
+      "sqlite_column_count": 7,
+      "match": true
+    },
+    {
+      "table": "ReferralRewardEvent",
+      "d1_column_count": 9,
+      "sqlite_column_count": 9,
+      "match": true
+    },
+    {
+      "table": "Reward",
+      "d1_column_count": 6,
+      "sqlite_column_count": 6,
+      "match": true
+    },
+    {
+      "table": "Settings",
+      "d1_column_count": 5,
+      "sqlite_column_count": 5,
+      "match": true
+    },
+    {
+      "table": "SpotMarginAccount",
+      "d1_column_count": 8,
+      "sqlite_column_count": 8,
+      "match": true
+    },
+    {
+      "table": "SpotMarginActivity",
+      "d1_column_count": 9,
+      "sqlite_column_count": 9,
+      "match": true
+    },
+    {
+      "table": "SpotMarginPosition",
+      "d1_column_count": 20,
+      "sqlite_column_count": 20,
+      "match": true
+    },
+    {
+      "table": "SpotMarginPositionEvent",
+      "d1_column_count": 9,
+      "sqlite_column_count": 9,
+      "match": true
+    },
+    {
+      "table": "SpotOrder",
+      "d1_column_count": 13,
+      "sqlite_column_count": 13,
+      "match": true
+    },
+    {
+      "table": "SpotTrade",
+      "d1_column_count": 10,
+      "sqlite_column_count": 10,
+      "match": true
+    },
+    {
+      "table": "SupportTicket",
+      "d1_column_count": 8,
+      "sqlite_column_count": 8,
+      "match": true
+    },
+    {
+      "table": "SupportTicketReply",
+      "d1_column_count": 7,
+      "sqlite_column_count": 7,
+      "match": true
+    },
+    {
+      "table": "SystemConfig",
+      "d1_column_count": 5,
+      "sqlite_column_count": 5,
+      "match": true
+    },
+    {
+      "table": "User",
+      "d1_column_count": 11,
+      "sqlite_column_count": 11,
+      "match": true
+    },
+    {
+      "table": "UserMfa",
+      "d1_column_count": 8,
+      "sqlite_column_count": 8,
+      "match": true
+    },
+    {
+      "table": "UserPreference",
+      "d1_column_count": 9,
+      "sqlite_column_count": 9,
+      "match": true
+    },
+    {
+      "table": "UserVipState",
+      "d1_column_count": 8,
+      "sqlite_column_count": 8,
+      "match": true
+    },
+    {
+      "table": "VipLevel",
+      "d1_column_count": 8,
+      "sqlite_column_count": 8,
+      "match": true
+    },
+    {
+      "table": "Wallet",
+      "d1_column_count": 7,
+      "sqlite_column_count": 7,
+      "match": true
+    },
+    {
+      "table": "WalletIdentity",
+      "d1_column_count": 6,
+      "sqlite_column_count": 6,
+      "match": true
+    },
+    {
+      "table": "WalletNetwork",
+      "d1_column_count": 11,
+      "sqlite_column_count": 11,
+      "match": true
+    },
+    {
+      "table": "WithdrawalRequest",
+      "d1_column_count": 9,
+      "sqlite_column_count": 9,
+      "match": true
+    },
+    {
+      "table": "d1_migrations",
+      "d1_column_count": 3,
+      "sqlite_column_count": 3,
+      "match": true
+    }
+  ],
+  "schema_mismatches": [],
+  "limits": [
+    "Does not compare indexes, triggers or foreign-key constraints.",
+    "Market catalog/history columns are deferred with market data.",
+    "No database writes or export/import performed."
+  ]
+}

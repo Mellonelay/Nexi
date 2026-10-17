@@ -1,0 +1,54 @@
+{
+  "observed_at": "2026-10-17 UTC",
+  "runtime": {
+    "service": "nexi-api.service",
+    "active": true,
+    "node": "v24.21.0",
+    "entrypoint": "/srv/nexi/backend/dist/src/main.js",
+    "readiness": {"status": "READY", "database": true, "redis": true, "authority": "SQLite"},
+    "other_services_active": ["nginx", "nexi-public", "nexi-admin"]
+  },
+  "effective_binding_flags": {
+    "NEXI_SQLITE_LOCAL_ENABLED": true,
+    "NEXI_LOCAL_ASYNC_ENABLED": true,
+    "D1_RUNTIME_ENABLED": true,
+    "D1_BRIDGE_ENABLED": true,
+    "NEXI_SCHEDULER_ENABLED": true,
+    "NEXI_LOCAL_OBJECTS_ENABLED": true,
+    "NEXI_LOCAL_OBJECTS_ROOT": "/var/lib/nexi/storage",
+    "redis_url_scheme": "rediss",
+    "redis_url_host": "nexi-staging-valkey-nexi-infra-staging.h.aivencloud.com",
+    "redis_url_port": 25164
+  },
+  "source_confirmation": {
+    "sqlite": "D1PrismaService uses DurableSqliteAdapter and fileMustExist when NEXI_SQLITE_LOCAL_ENABLED=true",
+    "bridge": "D1WorkerBridgeModule selects LocalSqliteBridgeService in local mode",
+    "async": "LocalAsyncRuntimeService creates three BullMQ queues/workers and SQLite-backed journal/workflow coordinator",
+    "socket_io": "Redis Streams adapter with connection-state recovery",
+    "outbox": "Local mode records durable journal entries from committed EventOutbox rows"
+  },
+  "bullmq_read_only_counts": {
+    "backend": "Aiven Valkey TLS",
+    "prefix": "nexi-vps-staging-20261017",
+    "queues": {
+      "domain-events": {"wait": 0, "active": 0, "completed": 0, "failed": 0, "delayed": 0, "paused": 0},
+      "integration-jobs": {"wait": 0, "active": 0, "completed": 0, "failed": 0, "delayed": 0, "paused": 0},
+      "notifications": {"wait": 0, "active": 0, "completed": 0, "failed": 0, "delayed": 0, "paused": 0}
+    },
+    "interpretation": "Connection and read-only counts verified; no synthetic job dispatched and consumer execution is not proven by this check."
+  },
+  "database_parity": {
+    "column_schema_receipt": "d1-sqlite-application-column-schema-check-20261017.json",
+    "common_application_tables_checked": 84,
+    "missing_from_sqlite": 0,
+    "column_mismatches": 0,
+    "indexes_triggers_foreign_keys_compared": false,
+    "row_content_receipt": "d1-sqlite-nonmarket-content-check-20261017.json",
+    "exact_common_nonmarket_table_hashes": 84,
+    "market_catalog_config_mismatches_deferred": ["MarketAsset", "MarketAssetCapability", "MarketPair", "MarketProviderConfig", "MarketProviderSymbol"],
+    "market_history_compared": false,
+    "cf_kv_classification": "unclassified; no SQLite counterpart; excluded from application parity pending owner/consumer classification"
+  },
+  "not_performed": ["D1 export/import", "market-history comparison", "financial write", "synthetic BullMQ job", "full SQLite integrity scan"],
+  "remaining": ["authorized authenticated test identity", "independent encrypted off-VPS backup/restore destination", "safe non-financial job execution proof", "final cutover watermark"]
+}

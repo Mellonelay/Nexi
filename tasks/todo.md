@@ -382,3 +382,8 @@ Superseded historical rows remain above for provenance. Do not revive old statem
 - [x] VERIFIED — 89 common non-market tables compared, 1,754 rows on each side; 84 tables have exact row-content SHA-256 and counts. Receipt: `tasks/evidence/d1-sqlite-nonmarket-content-check-20261017.json`. No writes or export/import.
 - [ ] DEFERRED — Five same-count content mismatches are market catalog/config (`MarketAsset`, `MarketAssetCapability`, `MarketPair`, `MarketProviderConfig`, `MarketProviderSymbol`); market-history tables were excluded. Revisit only after financial/domain acceptance.
 - [ ] BLOCKED_WITH_EVIDENCE — Independent encrypted backup/restore and authorized authenticated acceptance remain unresolved. This sequential read is not a final cutover watermark.
+
+
+### 2026-10-17 runtime source/storage proof
+- [x] PROVEN_UNCHANGED — Deployed backend source commit has no backend path differences through code checkpoint 8570a39; current documentation commits do not require build/redeploy. Runtime entry, binary hash and Node 24.21.0 recorded in plan.
+- [x] VERIFIED — Local object storage enabled at /var/lib/nexi/storage; KYC/deposit dirs 0750, DB 0600, env 0640; systemd service identity matches owner. Object-copy completeness remains separate and unproven.
