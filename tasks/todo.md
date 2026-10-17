@@ -1,3 +1,4 @@
+- [x] TESTED 2026-10-18 — Atomic Margin late-entry fill projection and rollback, 23/23 focused tests + TypeScript check; pending late-close settlement. Receipt: tasks/evidence/margin-late-entry-atomic-20261018.md.
 - [x] SOURCE TESTED 2026-10-18 — Governance command key altered-payload replay and concurrent loser approval/audit repaired on local SQLite; 2/2 focused tests + TypeScript check passed. Deployment, authenticated Admin and legacy Prisma alternative remain UNPROVEN. Receipt: tasks/evidence/governance-command-local-sqlite-20261018.md.
 # NEXI Migration — Executable Frontier
 

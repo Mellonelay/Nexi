@@ -7416,6 +7416,12 @@ export class D1FinancialCommandGateway {
         guard: { sql: `EXISTS (SELECT 1 FROM "Gate2SpotTrade" WHERE "idempotencyKey"=?)`, params: [fillKey] },
       }),
     ];
+    const marginEntryStatements = await this.buildMarginEntryFillStatements(
+      [{ id: String(buy.id), status: buyerStatus },
+       { id: String(sell.id), status: sellerStatus }],
+      amount, tradePrice, fillKey,
+    );
+    statements.push(...marginEntryStatements);
     const batch = await this.bridge.batch(statements);
     this.requireChanges(batch, 2, "D1 Spot buyer quote transition");
     this.requireChanges(batch, 3, "D1 Spot seller base transition");
@@ -7443,6 +7449,94 @@ export class D1FinancialCommandGateway {
       [fillKey],
     );
     return created.results[0] ?? null;
+  }
+
+  /**
+   * Append linked Margin entry-position effects to the same atomic Spot fill
+   * batch. Initial immediate fills precede position creation and are handled by
+   * createMarginPosition; subsequent fills must be reflected in that position.
+   * A failed CAS rolls the entire Spot fill back, including Ledger and Outbox.
+   */
+  private async buildMarginEntryFillStatements(
+    orders: Array<{ id: string; status: string }>,
+    amount: Prisma.Decimal,
+    tradePrice: Prisma.Decimal,
+    fillKey: string,
+  ): Promise<D1BridgeBatchStatement[]> {
+    const statements: D1BridgeBatchStatement[] = [];
+    for (const order of orders) {
+      const matches = await this.bridge.select<Record<string, unknown>>(
+        `SELECT p.*,a."userId" AS "marginUserId",a."baseAsset" AS "marginBaseAsset"
+         FROM "SpotMarginPosition" p JOIN "SpotMarginAccount" a ON a."id"=p."accountId"
+         WHERE p."entryOrderId"=? AND p."status" IN ('PENDING','OPEN') LIMIT 1`,
+        [order.id],
+      );
+      const position = matches.results[0];
+      if (!position) continue;
+      const currentQuantity = this.nonNegativeDecimal(String(position.quantity ?? '0'));
+      const nextQuantity = currentQuantity.plus(amount);
+      const currentEntryPrice = this.nonNegativeDecimal(String(position.entryPrice));
+      const averagePrice = currentQuantity.isZero()
+        ? tradePrice
+        : currentEntryPrice.mul(currentQuantity).plus(tradePrice.mul(amount)).div(nextQuantity);
+      const status = order.status === 'FILLED' ? 'OPEN' : 'PENDING';
+      const positionId = String(position.id);
+      const userId = String(position.marginUserId);
+      const eventKey = `margin:entry-fill:${order.id}:${fillKey}`;
+      const details = JSON.stringify({
+        orderId: order.id, tradeKey: fillKey, amount: amount.toString(),
+        price: tradePrice.toString(), cumulativeQuantity: nextQuantity.toString(),
+      });
+      statements.push(
+        {
+          sql: `UPDATE "SpotMarginPosition" SET "quantity"=?,"entryPrice"=?,"markPrice"=?,
+                 "status"=?,"updatedAt"=CURRENT_TIMESTAMP
+                 WHERE "id"=? AND "quantity"=? AND "status" IN ('PENDING','OPEN')
+                   AND EXISTS (SELECT 1 FROM "Gate2SpotTrade" WHERE "idempotencyKey"=?)
+                 RETURNING "id"`,
+          params: [nextQuantity.toString(), averagePrice.toString(), tradePrice.toString(),
+            status, positionId, String(position.quantity ?? '0'), fillKey],
+        },
+        this.rollbackIfNoChanges(fillKey, 'MARGIN_POSITION_FILL_CAS'),
+        {
+          sql: `INSERT INTO "SpotMarginPositionEvent"
+            ("id","positionId","type","asset","amount","price","idempotencyKey","metadata","createdAt")
+            VALUES (?,?,'OPEN',?,?,?,?,?,CURRENT_TIMESTAMP)`,
+          params: [randomUUID(), positionId, String(position.marginBaseAsset),
+            amount.toString(), tradePrice.toString(), eventKey, details],
+        },
+        {
+          sql: `INSERT INTO "SpotMarginActivity"
+            ("id","userId","accountId","positionId","type","status","idempotencyKey","details","createdAt")
+            VALUES (?,?,?,?,'OPEN','COMPLETED',?,?,CURRENT_TIMESTAMP)`,
+          params: [randomUUID(), userId, String(position.accountId),
+            positionId, eventKey, details],
+        },
+        {
+          sql: `INSERT INTO "Activity"
+            ("id","userId","type","status","referenceType","referenceId","idempotencyKey",
+             "ledgerCorrelationId","ledgerPostingId","asset","amount","details","createdAt")
+            VALUES (?,?,'MARGIN_ENTRY_FILL','COMPLETED','MARGIN_POSITION',?,?,?,NULL,?,?,?,CURRENT_TIMESTAMP)`,
+          params: [randomUUID(), userId, positionId, eventKey, fillKey,
+            String(position.marginBaseAsset), amount.toString(), details],
+        },
+        this.eventOutboxStatement({
+          idempotencyKey: `event:margin:entry-fill:${order.id}:${fillKey}`,
+          aggregateType: 'MARGIN_POSITION',
+          aggregateId: positionId,
+          eventType: 'MARGIN_POSITION_FILL_RECONCILED',
+          correlationId: fillKey,
+          payload: { positionId, orderId: order.id, amount: amount.toString(),
+            price: tradePrice.toString(), cumulativeQuantity: nextQuantity.toString(), status },
+          strict: true,
+          guard: {
+            sql: `EXISTS (SELECT 1 FROM "SpotMarginPositionEvent" WHERE "idempotencyKey"=?)`,
+            params: [eventKey],
+          },
+        }),
+      );
+    }
+    return statements;
   }
 
   async getSpotOrder(

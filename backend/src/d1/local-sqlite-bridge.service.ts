@@ -72,8 +72,8 @@ export class LocalSqliteBridgeService implements OnModuleDestroy {
   }
 
   private async executeBatch(statements: D1BridgeBatchStatement[], guardFirstRow: boolean): Promise<D1BridgeBatchResult> {
-    if (!Array.isArray(statements) || statements.length < 1 || statements.length > 16) {
-      throw new Error('Local SQLite batch requires between 1 and 16 statements');
+    if (!Array.isArray(statements) || statements.length < 1 || statements.length > 28) {
+      throw new Error('Local SQLite batch requires between 1 and 28 statements');
     }
     for (const entry of statements) {
       const sql = entry?.sql?.trim() ?? '';

@@ -254,6 +254,61 @@ describe('financial operations on local SQLite', () => {
     await expect(bridge.select<{ available: string; locked: string }>(`SELECT available,locked FROM LedgerAccount WHERE id IN ('main-1','spot-buyer-base','spot-seller-base','spot-seller-quote') ORDER BY id`)).resolves.toMatchObject({ results: [{ available: buyFirst ? '0' : '1', locked: '0' }, { available: '1', locked: '0' }, { available: '0', locked: '0' }, { available: expectedPrice, locked: '0' }] });
   });
 
+
+  it('reconciles a late matched Margin entry fill into its linked position', async () => {
+    const db = new Database(join(directory, 'fixture.sqlite'));
+    db.prepare("UPDATE LedgerAccount SET available='0',locked='20' WHERE id='margin-1'").run();
+    for (const [id, userId, asset, scope, locked] of [
+      ['margin-btc-1','user-1','BTC','MARGIN','0'],
+      ['seller-btc-1','user-2','BTC','MAIN','2'],
+      ['seller-usdt-1','user-2','USDT','MAIN','0'],
+    ]) db.prepare("INSERT INTO LedgerAccount (id,userId,asset,scope,status,available,locked,updatedAt) VALUES (?,?,?,?,'ACTIVE','0',?,CURRENT_TIMESTAMP)")
+      .run(id,userId,asset,scope,locked);
+    db.prepare("INSERT INTO SpotMarginAccount (id,userId,pair,baseAsset,quoteAsset,status,updatedAt) VALUES ('margin-account-late','user-1','BTCUSDT','BTC','USDT','ACTIVE',CURRENT_TIMESTAMP)").run();
+    const insertOrder = db.prepare("INSERT INTO Gate2SpotOrder (id,userId,pair,baseAsset,quoteAsset,side,type,status,amount,filled,remaining,price,reserveAsset,reserveScope,reservedAmount,feeRate,idempotencyKey,correlationId,createdAt,updatedAt) VALUES (?,?, 'BTCUSDT','BTC','USDT',?,'LIMIT','OPEN','1','0','1','10',?,?,?,'0',?,?,?,CURRENT_TIMESTAMP)");
+    insertOrder.run('margin-entry-late','user-1','BUY','USDT','MARGIN','10','margin:entry:late-key','late-key','2026-01-01T00:00:00.000Z');
+    insertOrder.run('seller-late','user-2','SELL','BTC','MAIN','1','seller-late-key','seller-late-key','2026-01-02T00:00:00.000Z');
+    db.prepare("UPDATE Gate2SpotOrder SET amount='2',remaining='2',reservedAmount='20' WHERE id='margin-entry-late'").run();
+    db.close();
+    const created = await gateway.createMarginPosition({
+      positionId:'margin-position-late',accountId:'margin-account-late',userId:'user-1',
+      direction:'LONG',leverage:2,collateral:'5',quantity:'0',entryPrice:'10',
+      markPrice:'10',status:'PENDING',debtAsset:'USDT',debtPrincipal:'5',
+      openIdempotencyKey:'late-key',entryOrderId:'margin-entry-late',
+      pair:'BTCUSDT',positionAsset:'BTC',activityId:'margin-open-activity-late',
+      positionEventId:'margin-open-event-late',
+    });
+    expect(created.quantity).toBe('0');
+    const failureDb = new Database(join(directory, 'fixture.sqlite'));
+    failureDb.exec("CREATE TRIGGER synthetic_margin_fill_failure BEFORE INSERT ON SpotMarginPositionEvent WHEN NEW.idempotencyKey LIKE 'margin:entry-fill:%' BEGIN SELECT RAISE(ABORT,'synthetic margin projection failure'); END");
+    failureDb.close();
+    await expect(gateway.matchSpotOrder({pair:'BTCUSDT'}))
+      .rejects.toThrow('synthetic margin projection failure');
+    await expect(bridge.select<{count:number}>('SELECT COUNT(*) AS count FROM Gate2SpotTrade'))
+      .resolves.toMatchObject({results:[{count:0}]});
+    await expect(bridge.select<{count:number}>('SELECT COUNT(*) AS count FROM LedgerPosting'))
+      .resolves.toMatchObject({results:[{count:0}]});
+    expect(await gateway.getMarginPosition('margin-position-late','user-1'))
+      .toMatchObject({quantity:'0',status:'PENDING'});
+    const recoveryDb = new Database(join(directory, 'fixture.sqlite'));
+    recoveryDb.exec('DROP TRIGGER synthetic_margin_fill_failure');
+    recoveryDb.close();
+    const fill = await gateway.matchSpotOrder({pair:'BTCUSDT'});
+    expect(fill).toMatchObject({amount:'1',buyerOrderId:'margin-entry-late'});
+    const position = await gateway.getMarginPosition('margin-position-late','user-1');
+    expect(position).toMatchObject({quantity:'1',status:'PENDING'});
+    const secondDb = new Database(join(directory, 'fixture.sqlite'));
+    secondDb.prepare("INSERT INTO Gate2SpotOrder (id,userId,pair,baseAsset,quoteAsset,side,type,status,amount,filled,remaining,price,reserveAsset,reserveScope,reservedAmount,feeRate,idempotencyKey,correlationId,createdAt,updatedAt) VALUES ('seller-late-second','user-2','BTCUSDT','BTC','USDT','SELL','LIMIT','OPEN','1','0','1','10','BTC','MAIN','1','0','seller-late-second-key','seller-late-second-key','2026-01-03T00:00:00.000Z',CURRENT_TIMESTAMP)").run();
+    secondDb.close();
+    const secondFill = await gateway.matchSpotOrder({pair:'BTCUSDT'});
+    expect(secondFill).toMatchObject({amount:'1',buyerOrderId:'margin-entry-late'});
+    expect(await gateway.getMarginPosition('margin-position-late','user-1'))
+      .toMatchObject({quantity:'2',entryPrice:'10',status:'OPEN'});
+    await expect(bridge.select<{count:number}>(
+      "SELECT COUNT(*) AS count FROM EventOutbox WHERE aggregateId='margin-position-late' AND eventType='MARGIN_POSITION_FILL_RECONCILED'"
+    )).resolves.toMatchObject({results:[{count:2}]});
+  });
+
   it('records Margin position opening in unified Activity and EventOutbox', async () => {
     const db = new Database(join(directory, 'fixture.sqlite'));
     db.prepare(`INSERT INTO SpotMarginAccount (id,userId,pair,baseAsset,quoteAsset,status,updatedAt) VALUES ('margin-account-1','user-1','BTCUSDT','BTC','USDT','ACTIVE',CURRENT_TIMESTAMP)`).run();

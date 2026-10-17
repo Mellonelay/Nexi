@@ -1,3 +1,10 @@
+## Margin late-entry fills — atomic Spot reconciliation (2026-10-18, source only)
+
+- **TESTED:** 2 focused suites, **23/23 tests PASS**: `test/d1/wallet-account-transfer.local-sqlite.spec.ts` and `test/gate2/margin.service.spec.ts`. `tsc --noEmit -p tsconfig.build.json` exited 0.
+- Late partially matched Margin entry fills now update the linked position quantity, weighted execution price and PENDING/OPEN status inside the same local SQLite batch that creates Spot trade/Ledger/Activity/Outbox effects. The affected batch also creates Margin position event, Margin Activity, unified Activity and Outbox, with guarded compare-and-swap rollback on conflicting position state.
+- **Failure injection:** A disposable SQLite trigger aborting Margin event insertion rolled the entire Spot fill transaction back (zero Spot trade and Ledger postings); removing the fault allowed successful matching and exactly two partial-fill reconciliation Outbox records.
+- **Limits:** This proves late **entry** fills, not late **close** settlement, liquidation, interest/debt reconciliation under partial closing, live SQLite deployment or authenticated API. The previous unverified post-trade Margin patch was *not* imported. Local SQLite financial batch ceiling increased from 16 to 28 to accommodate two linked Margin positions without splitting economic atomicity; the old Cloudflare D1 bridge retains its historical cap and is not current financial authority.
+
 ## Margin close-request guarded CAS — 2026-10-18 (source only)
 
 - **TESTED:** `backend/test/d1/margin-closing-guard.local-sqlite.spec.ts` 1/1 PASS using disposable SQLite. Backend build TypeScript `tsc --noEmit -p tsconfig.build.json` exit 0.
