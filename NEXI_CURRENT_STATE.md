@@ -1,3 +1,7 @@
+## 2026-10-18 — Loan historical repayment migration preflight
+
+Read-only current promoted SQLite inspection: five LoanApplications, one historical LoanRepayment and `totalRepaidDecimal` not yet present. The exact-decimal backfill operator `backend/scripts/loan-repayment-cas-migrate.py` is source-tested 6/6, with read-only live preflight successful. It is **not applied** pending independent encrypted off-VPS backup/restore and controlled coordinated migration. See proof reuse register and `tasks/evidence/loan-cas-exact-backfill-20261018.md`.
+
 ## 2026-10-18 — Binary historical-pair settlement source continuity
 
 New closed-source repair allows expiry settlement of previously opened Binary trades after pair enablement changes, without allowing new disabled-pair orders. Focused Binary 18/18 and disposable SQLite 1/1 PASS; backend TypeScript validation PASS. This remains **source only**, not a deployed settlement proof. `tasks/evidence/binary-inactive-pair-settlement-20261018.md` is authoritative for this bounded change.

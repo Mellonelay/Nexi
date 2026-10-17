@@ -1,3 +1,7 @@
+## Historical Loan repayment preservation — 2026-10-18 source contract
+
+The current loan repayment CAS command uses `LoanApplication.totalRepaidDecimal` to serialize competing repayment keys, while existing `LoanRepayment` rows remain historical accounting evidence. An additive default-zero column alone would not represent earlier repayments. The canonical controlled 0016 operator in `backend/scripts/loan-repayment-cas-migrate.py` performs exact-decimal historical backfill and schema change atomically under SQLite IMMEDIATE lock. Its live application requires independent off-VPS recovery proof and maintenance; source tests and live read-only preflight passed. Do not construe this as deployed migration or authorized live financial acceptance.
+
 ## Historical Binary trade financial obligation — 2026-10-18 source proof
 
 New Binary orders use `getActiveMarketPair` and configured provider/asset trading enablement. A previously opened and expired Binary position instead loads historical pair metadata through `getMarketPairForSettlement`, without removing configuration-version/payout authority or approved expiry quote requirements. This avoids indefinite non-settlement solely because the pair is disabled after opening. Focused source tests passed; actual deployed financial settlement and owner acceptance remain unproven.

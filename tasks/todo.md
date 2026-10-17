@@ -1,3 +1,6 @@
+- [x] SOURCE TESTED 2026-10-18 — Loan 0016 historical cumulative repayment preflight and exact-decimal atomic backfill script; 6/6 fixture tests PASS, live dry-run only. Receipt: tasks/evidence/loan-cas-exact-backfill-20261018.md.
+- [ ] OWNER/OPERATOR GATE — Prove independent encrypted off-VPS backup and isolated restore, quiesce live API and execute the **complete** 0016 schema/backfill once using the canonical script; do not separately double-apply 0016 SQL. Confirm Loan repayment historical total and ledger accuracy after controlled migration.
+
 - [x] SOURCE TESTED — Binary already-open positions retain settlement access to historical pair metadata after delisting; 18/18 service tests, 1/1 disposable gateway test PASS. Provider quote/configuration checks remain enforced; deployed authenticated acceptance pending.
 - [x] SOURCE TESTED 2026-10-18 — Margin late CLOSE recovery: same close order/key, executed trade VWAP, scheduler, failure-atomic Ledger/Activity/Outbox and focused tests PASS. No deployed claim. Receipt: tasks/evidence/margin-late-close-recovery-20261018.md.
 - [ ] BACKEND RELEASE GATE — Prove deployment/source identity and authenticated Margin repayment/close, plus other existing finite seven-domain runtime contracts; apply Loan migration 0016 only with current authorized backup/rollback evidence.

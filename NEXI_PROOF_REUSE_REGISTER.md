@@ -1,3 +1,9 @@
+## Loan repayment CAS migration exact historical backfill — 2026-10-18 (NEWEST)
+
+- **SOURCE TESTED:** The previous `0016_loan_repayment_cas.sql` bare add-column default0 would not reflect existing historic repayments. The companion safe migration script now performs atomic schema addition plus exact Decimal cumulative backfill and handles an already-added column idempotently.
+- **Proof:** 6/6 Python fixture tests PASS; read-only promoted SQLite preflight `loans=5 repayments=1 existing_cas_column=False` PASS. See `tasks/evidence/loan-cas-exact-backfill-20261018.md`.
+- **UNPROVEN/BLOCKED:** Live script `--apply` not executed: independent off-VPS encrypted backup/isolated restore and quiesced service receipts are missing. A CLI acknowledgment flag is not itself recovery evidence. Do not separately apply the bare 0016 SQL and then claim full accounting migration.
+
 ## Binary historical-pair settlement — 2026-10-18 (NEWEST)
 
 - **SOURCE TESTED:** Existing expired Binary positions no longer depend on new-order pair/asset trading enablement. The financial gateway reads persisted historical market pair metadata while the new open-position path still requires active capability and an approved entry quote. Persisted configuration-version payout and provider approval remain required.
