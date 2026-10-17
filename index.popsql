@@ -16,5 +16,6 @@
   "3322634": "backend/prisma/migrations-d1/0014_referral_history_events.sql",
   "3322635": "backend/prisma/migrations-d1/0015_referral_reward_activity.sql",
   "3322989": "backend/src/jobs/local-durable-job.schema.sql",
-  "3322990": "backend/src/jobs/local-workflow.schema.sql"
+  "3322990": "backend/src/jobs/local-workflow.schema.sql",
+  "3323425": "backend/prisma/migrations-d1/0016_loan_repayment_cas.sql"
 }
