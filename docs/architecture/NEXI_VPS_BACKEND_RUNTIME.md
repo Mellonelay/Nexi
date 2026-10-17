@@ -1,7 +1,7 @@
 # NEXI VPS Backend Runtime
 
-**Status date:** 2026-10-17
-**Scope:** canonical VPS backend runtime after the owner switched Name.com DNS. Public hostnames now resolve to the VPS and trusted HTTPS is verified. Cloudflare D1 remains populated and is still the financial data authority; the active VPS SQLite database has zero rows in the checked core financial tables. Therefore this is a live endpoint/data-authority mismatch, not a completed financial cutover.
+**Status date:** 2026-10-17 (SQLite promotion checkpoint)
+**Scope:** canonical VPS backend runtime after the owner switched Name.com DNS. Public hostnames resolve to the VPS and trusted HTTPS is verified. The restored SQLite database plus the recorded final D1 import is now at the active service path and the NestJS process reports SQLite readiness. This proves runtime activation and selected imported state, not complete reconciliation of every post-export D1 update/delete or a transaction-consistent final cutover watermark.
 
 ## Runtime authority and service map
 
@@ -62,7 +62,7 @@
 | Existing Cloudflare capability | VPS target | Current status |
 |---|---|---|
 | Worker public/API routing | Name.com DNS + existing Nginx + Public/Admin services + NestJS | Owner switched DNS; current checks route the three public hostnames to VPS IP 34.143.137.221 with trusted HTTPS. Cloudflare account resources still exist; Worker custom-domain status must be checked independently |
-| D1 + Prisma D1 adapter | SQLite + Prisma better-sqlite3 adapter + local transaction gateway | Historical 92-table / 11,802,372-row snapshot reconciliation is complete. On 2026-10-17 Wrangler found populated core financial/auth rows in D1 while the active VPS SQLite core tables are empty. No final delta or writer cutover; see `tasks/evidence/wrangler-live-d1-vps-authority-mismatch-20261017.json` |
+| D1 + Prisma D1 adapter | SQLite + Prisma better-sqlite3 adapter + local transaction gateway | Historical 92-table / 11,802,372-row snapshot reused; existing final export manifest records 1,754 imported rows, 3 deferred market tables and 0 FK violations. Promoted file is `/var/lib/nexi/sqlite/nexi-staging.sqlite`; exact LedgerAccount/LedgerPosting reconciliation passes (14 accounts / 48 postings). Later updates/deletes and final live watermark remain unproven; preserve original export/manifest and rollback DB |
 | Queues and DLQ | Durable SQLite journal + BullMQ + Aiven Valkey | Focused transport, workflow, replay and Nest integration proofs are recorded; live outstanding Cloudflare work still needs final controlled reconciliation |
 | Workflows | SQLite workflow coordinator/checkpoints + BullMQ steps | Withdrawal, mining and loan paths have focused replay/recovery evidence; current in-flight instance synchronization remains a cutover task |
 | R2 | Private local storage under `/var/lib/nexi/storage` | KYC/deposit-proof implementation and staged copy evidence exist; final object manifest/backup and source retirement are pending |

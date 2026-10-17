@@ -1,22 +1,22 @@
 # NEXI Work Authoritative Operating Contract
 
 ## Authority
-GitHub `main` is the durable NEXI source authority. Name.com public DNS now routes the three hostnames to the existing VPS NestJS service. Cloudflare Worker/Container/async resources remain active and D1 remains the populated financial data authority until the separate verified writer-cutover gate is accepted. The active VPS SQLite core financial tables are empty in the 2026-10-17 sample; do not claim public financial readiness. Worker 0/RDC operates the VPS and preserves the existing Public/Admin service owners.
+GitHub `main` is the durable NEXI source authority. Name.com public DNS routes the three hostnames to the existing VPS NestJS service. On 2026-10-17, the existing restored SQLite candidate plus the recorded final D1 import was promoted to `/var/lib/nexi/sqlite/nexi-staging.sqlite`; the active API now reports SQLite readiness. This supersedes earlier statements that the VPS financial tables were empty or that no promotion occurred. The import does not prove later D1 updates/deletes are reconciled or establish a final live watermark. Worker 0/RDC operates the VPS and preserves the existing Public/Admin service owners.
 
 - ChatGPT remains the parent/controller.
-- VPS backend implementation, staging runtime, and acceptance work target `/home/mellonelay1999/workspaces/Nexi`, `/srv/nexi/backend`, and the existing `nexi-api.service`; current non-authoritative runtime evidence must not be presented as production cutover evidence.
-- Public and Admin keep their canonical sources and runtime directories. Existing Nginx is the API/host/WebSocket router; prior direct checks verified trusted HTTPS. Financial write safety remains blocked by unsynchronized D1/SQLite state.
-- Owner has already switched public DNS to Name.com/VPS. Cloudflare Worker cron/queue/workflow and Container resources remain active; D1 remains populated/current financial data authority. Inspect Cloudflare read-only when required to close parity; do not change writers, routes, DNS, nameservers, or retire resources without the specific owner gate.
+- VPS backend implementation, runtime, and acceptance work target `/home/mellonelay1999/workspaces/Nexi`, `/srv/nexi/backend`, and the existing `nexi-api.service`; distinguish live SQLite runtime readiness from full data reconciliation and final cutover evidence.
+- Public and Admin keep their canonical sources and runtime directories. Existing Nginx is the API/host/WebSocket router; direct checks and Certbot dry-run verified trusted HTTPS and renewal. The promoted SQLite DB is live; final D1 update/delete reconciliation and independent recovery remain open.
+- Owner has already switched public DNS to Name.com/VPS. Cloudflare resources are a separate service plane; VPS readiness and the open SQLite file establish that the VPS API uses its local database, not that Cloudflare resources were retired. Preserve existing export evidence and verify remaining D1 deltas/resources by their live state; do not infer retirement from DNS changes.
 - Worker 0/RDC may build and operate the authorized VPS backend. Never run a second financial writer or point a non-authoritative service at production financial state.
 - Historical trees, branches, and receipts are evidence only unless fresh verification proves unique accepted work.
 
-Current owner decisions outrank stale project instructions and checkpoint text. Source truth is GitHub `main`; public runtime truth must be proved on the running VPS service. D1 remains current financial data authority, while the publicly routed VPS SQLite database is not synchronized; preserve this mismatch as an active write-safety block until controlled delta and owner acceptance.
+Current owner decisions outrank stale project instructions and checkpoint text. Source truth is GitHub `main`; public runtime truth must be proved on the running VPS service. The promoted SQLite file is live and reports ready. Treat the existing final export import and historical snapshot as loaded data, while separately tracking whether post-export D1 updates/deletes remain and whether the live source boundary is final. Do not claim complete reconciliation or Cloudflare retirement without direct evidence.
 
 ## Canonical architecture
 Public/Admin -> existing Nginx hosts -> Next.js frontends and the canonical NestJS VPS API.
 NestJS owns business/domain decisions. SQLite + Prisma/better-sqlite3 is the target durable application store; Ledger is accounting truth and EventOutbox is the durable publication boundary.
 Aiven Valkey serves BullMQ transport, Socket.IO Redis Streams, cache and ephemeral coordination; it never owns financial truth. SQLite job/workflow journals remain durable. Local protected storage replaces private R2 object storage for KYC/deposit evidence.
-Name.com/VPS is now the public traffic path. Cloudflare Worker/Container and async resources remain active, and D1 remains current financial authority until the explicit owner-approved writer cutover; these are distinct states. The VPS remains the selected backend runtime target.
+Name.com/VPS is now the public traffic path. The promoted VPS SQLite database is open in NestJS and readiness reports SQLite authority. Cloudflare resources may still exist independently; track their live service and data state without treating them as writers to the VPS-local SQLite file.
 
 Do not restore any retired database authority. Do not introduce a second Admin plane, second financial writer, direct frontend database access, or a second reverse proxy.
 ## Capability routing
@@ -150,7 +150,7 @@ On a fresh NEXI Work session, after continuity loss, or when the relevant durabl
 
 The current owner directive selects the active work. The completion ledger is historical evidence only; a stale queue row, receipt, phase capsule, or checkpoint cannot block an explicit current owner instruction. Preserve proven completed work and update current-state records proportionally after material source/runtime changes. Never claim verification that has not been performed.
 
-Owner manual testing is a final acceptance gate, never a substitute for automatable verification. Use only authorized controlled wallet/Admin identities; otherwise record the exact owner dependency. Public DNS already routes traffic to the VPS. The active VPS SQLite financial database remains non-authoritative and unsynchronized until the D1-to-SQLite data delta and financial writer cutover are approved and reconciled. Keep Public/Admin builds in their canonical `/srv/nexi/public` and `/srv/nexi/admin` locations.
+Owner manual testing is a final acceptance gate, never a substitute for automatable verification. Use only authorized controlled wallet/Admin identities; otherwise record the exact owner dependency. Public DNS already routes traffic to the VPS. The active VPS SQLite database contains the reused historical snapshot plus the recorded final import and has passed the focused LedgerAccount/LedgerPosting exact-decimal check; full later-delta reconciliation and independent encrypted off-VPS restore remain unproven. Keep Public/Admin builds in their canonical `/srv/nexi/public` and `/srv/nexi/admin` locations.
 
 For market work, do not optimize for a cosmetic `LIVE` count. Open-market assets must remain fresh or self-recover automatically; legitimate closed-market states must carry a truthful reason; silent frozen prices, fabricated freshness, and manual recovery as normal operation are defects.
 

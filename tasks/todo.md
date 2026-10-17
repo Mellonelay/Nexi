@@ -340,3 +340,15 @@ Superseded historical rows remain above for provenance. Do not revive old statem
 - [x] PROVEN_UNCHANGED — Historical owner-reported integrity/FK result reused. A redundant reread was stopped without a result after 17m14s / 3.19GB read; no fresh pass is claimed.
 - [ ] BLOCKED_WITH_EVIDENCE — No authorized independent off-VPS backup target exists; local snapshot does not satisfy disaster recovery.
 - [ ] PENDING_OWNER_ACTION — Provide/authorize a no-extra-paid off-VPS destination and an acceptable bounded financial write-protection window; final D1 delta and single-writer cutover remain separately gated.
+
+
+### 2026-10-17 — current SQLite promotion frontier (supersedes prior unpromoted/empty-runtime rows)
+- [x] COMPLETED — Reused and atomically promoted existing restored candidate to `/var/lib/nexi/sqlite/nexi-staging.sqlite`; existing pre-promotion DB retained at `/var/lib/nexi/sqlite/nexi-staging.pre-promotion-20261017.sqlite`. No new export or duplicate 7 GB restore.
+- [x] VERIFIED — API active, Node 24.21.0, canonical file/WAL/SHM open; `/readyz` database+Redis healthy; trusted HTTPS, Public/Admin pages, API/market routes, Socket.IO polling/WSS and Certbot renewal dry-run passed.
+- [x] VERIFIED — Existing final export manifest records source `nexi-core-staging`, SHA-256 `4eea2b5e3ebcd591d771cad064a005ffce4744bcf80996597fb2c23fc15d478b`, 92 schema tables, 1,754 imported rows, three deferred market tables and 0 import FK violations.
+- [x] VERIFIED — Exact decimal LedgerAccount/LedgerPosting reconciliation: 14 accounts, 48 postings, zero mismatches; 46 idempotency rows have zero dangling posting references. Source authority is LedgerAccount/LedgerPosting, not the legacy Ledger table.
+- [ ] PENDING — Prove whether any post-export D1 updates/deletes remain and establish a defensible final data watermark; the current import manifest does not answer this.
+- [ ] PENDING — Complete authenticated application acceptance using an authorized test identity; do not fabricate financial data.
+- [ ] BLOCKED_WITH_EVIDENCE — Independent encrypted off-VPS backup/restore: no authorized destination found. Existing local exports and rollback DB are not independent DR.
+- [ ] PENDING — Update remaining runtime/runbook docs, then preserve only recovery artifacts and remove confirmed temporary files/orphan sidecars. Cloudflare resources are not retired.
+- [ ] PENDING_OWNER_ACTION — Any explicit final production financial authority declaration and destructive Cloudflare retirement remain separate from this SQLite file promotion.
