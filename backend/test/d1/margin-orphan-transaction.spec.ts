@@ -16,6 +16,8 @@ function fixture() {
     'CREATE TABLE "Gate2SpotTrade" ("buyerOrderId" TEXT, "sellerOrderId" TEXT)',
     'CREATE TABLE "SpotMarginAccount" ("id" TEXT NOT NULL PRIMARY KEY, "userId" TEXT, "pair" TEXT, "quoteAsset" TEXT)',
     'CREATE TABLE "SpotMarginPosition" ("id" TEXT NOT NULL PRIMARY KEY, "accountId" TEXT, "direction" TEXT, "leverage" INTEGER, "collateral" TEXT, "quantity" TEXT, "entryPrice" TEXT, "markPrice" TEXT, "debtAsset" TEXT, "debtPrincipal" TEXT, "interestAccrued" TEXT, "realizedPnl" TEXT, "unrealizedPnl" TEXT, "status" TEXT, "openIdempotencyKey" TEXT, "entryOrderId" TEXT, "openedAt" TEXT, "updatedAt" TEXT)',
+    'CREATE TABLE "SpotMarginPositionEvent" ("id" TEXT NOT NULL PRIMARY KEY, "positionId" TEXT, "type" TEXT, "asset" TEXT, "amount" TEXT, "price" TEXT, "idempotencyKey" TEXT, "metadata" TEXT, "createdAt" TEXT)',
+    'CREATE TABLE "SpotMarginActivity" ("id" TEXT NOT NULL PRIMARY KEY, "userId" TEXT, "accountId" TEXT, "positionId" TEXT, "type" TEXT, "status" TEXT, "idempotencyKey" TEXT, "details" TEXT, "createdAt" TEXT)',
     'CREATE TABLE "LedgerAuditEvent" ("id" TEXT NOT NULL PRIMARY KEY, "accountId" TEXT, "postingId" TEXT, "eventType" TEXT, "idempotencyKey" TEXT, "correlationId" TEXT, "details" TEXT, "createdAt" TEXT)',
     'CREATE TABLE "Activity" ("id" TEXT NOT NULL PRIMARY KEY, "userId" TEXT, "type" TEXT, "status" TEXT, "referenceType" TEXT, "referenceId" TEXT, "idempotencyKey" TEXT, "ledgerCorrelationId" TEXT, "ledgerPostingId" TEXT, "asset" TEXT, "amount" TEXT, "details" TEXT, "createdAt" TEXT)',
     'CREATE TABLE "EventOutbox" ("id" TEXT NOT NULL PRIMARY KEY, "idempotencyKey" TEXT UNIQUE, "aggregateType" TEXT, "aggregateId" TEXT, "eventType" TEXT, "eventVersion" INTEGER, "correlationId" TEXT, "payload" TEXT, "state" TEXT, "availableAt" TEXT, "attempts" INTEGER, "createdAt" TEXT, "updatedAt" TEXT)',
@@ -112,6 +114,28 @@ describe("D1 orphan Margin borrow repayment — real SQLite transaction", () => 
       });
       expect(inserted).toBe(1);
       expect(position).toMatchObject({ id: "valid-position-1", status: "PENDING" });
+    } finally { db.close(); }
+  });
+
+  it("returns the original Margin position on retry and rejects changed opening terms", async () => {
+    const { db, bridge, gateway } = fixture();
+    try {
+      db.exec("INSERT INTO \"SpotMarginAccount\" (\"id\",\"userId\",\"pair\",\"quoteAsset\") VALUES ('isolated-1','user-1','BTCUSDT','USDT')");
+      db.exec("UPDATE \"Gate2SpotOrder\" SET \"status\"='OPEN' WHERE \"id\"='entry-old'");
+      const command = {
+        positionId: "valid-position-1", accountId: "isolated-1", userId: "user-1",
+        direction: "LONG", leverage: 2, collateral: "10", quantity: "0",
+        entryPrice: "100", markPrice: "100", status: "PENDING",
+        debtAsset: "USDT", debtPrincipal: "10", openIdempotencyKey: openingKey,
+        entryOrderId: "entry-old", pair: "BTCUSDT", positionAsset: "BTC",
+        activityId: "valid-activity-1", positionEventId: "valid-event-1",
+      };
+      const created = await gateway.createMarginPosition(command);
+      const replay = await gateway.createMarginPosition({ ...command, positionId: "retry-position-id", activityId: "retry-activity-id", positionEventId: "retry-event-id" });
+      expect(replay.id).toBe(created.id);
+      await expect(gateway.createMarginPosition({ ...command, collateral: "11" })).rejects.toThrow("idempotency key was reused");
+      expect(bridge.batch).toHaveBeenCalledTimes(1);
+      expect(db.prepare('SELECT count(*) AS n FROM "SpotMarginPosition"').get().n).toBe(1);
     } finally { db.close(); }
   });
 

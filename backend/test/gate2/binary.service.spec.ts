@@ -234,4 +234,13 @@ describe('D1 binary settlement sandbox directive', () => {
       expect.objectContaining({ state: 'WIN' }),
     );
   });
+
+  it('calculates the configured nonzero LOSS payout with exact decimal amounts', async () => {
+    const { service, d1 } = createD1Service(null, '90');
+    d1.getBinaryConfiguration.mockResolvedValueOnce({ ...config, lossRate: '0.15' });
+    await service.settlePosition('position-d1-1');
+    expect(d1.settleBinaryPositionAtomic).toHaveBeenCalledWith(
+      expect.objectContaining({ state: 'LOSS', payout: '1.5', realizedProfit: '-8.5' }),
+    );
+  });
 });

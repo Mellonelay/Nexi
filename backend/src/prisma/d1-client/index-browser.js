@@ -313,6 +313,7 @@ exports.Prisma.LoanApplicationScalarFieldEnum = {
   interestRateDecimal: 'interestRateDecimal',
   totalRepayment: 'totalRepayment',
   totalRepaymentDecimal: 'totalRepaymentDecimal',
+  totalRepaidDecimal: 'totalRepaidDecimal',
   collateral: 'collateral',
   collateralImg: 'collateralImg',
   status: 'status',
@@ -1680,6 +1681,7 @@ exports.Gate2DepositState = exports.$Enums.Gate2DepositState = {
 
 exports.Gate2WithdrawalState = exports.$Enums.Gate2WithdrawalState = {
   PENDING_REVIEW: 'PENDING_REVIEW',
+  ADDITIONAL_REVIEW: 'ADDITIONAL_REVIEW',
   REJECTED: 'REJECTED',
   APPROVED: 'APPROVED',
   SETTLED: 'SETTLED',

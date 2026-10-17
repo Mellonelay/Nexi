@@ -888,6 +888,7 @@ export type Gate2DepositState = (typeof Gate2DepositState)[keyof typeof Gate2Dep
 
 export const Gate2WithdrawalState: {
   PENDING_REVIEW: 'PENDING_REVIEW',
+  ADDITIONAL_REVIEW: 'ADDITIONAL_REVIEW',
   REJECTED: 'REJECTED',
   APPROVED: 'APPROVED',
   SETTLED: 'SETTLED',
@@ -26916,6 +26917,7 @@ export namespace Prisma {
     interestRateDecimal: string | null
     totalRepayment: string | null
     totalRepaymentDecimal: string | null
+    totalRepaidDecimal: string | null
     collateral: string | null
     collateralImg: string | null
     status: $Enums.LoanStatus | null
@@ -26938,6 +26940,7 @@ export namespace Prisma {
     interestRateDecimal: string | null
     totalRepayment: string | null
     totalRepaymentDecimal: string | null
+    totalRepaidDecimal: string | null
     collateral: string | null
     collateralImg: string | null
     status: $Enums.LoanStatus | null
@@ -26960,6 +26963,7 @@ export namespace Prisma {
     interestRateDecimal: number
     totalRepayment: number
     totalRepaymentDecimal: number
+    totalRepaidDecimal: number
     collateral: number
     collateralImg: number
     status: number
@@ -26994,6 +26998,7 @@ export namespace Prisma {
     interestRateDecimal?: true
     totalRepayment?: true
     totalRepaymentDecimal?: true
+    totalRepaidDecimal?: true
     collateral?: true
     collateralImg?: true
     status?: true
@@ -27016,6 +27021,7 @@ export namespace Prisma {
     interestRateDecimal?: true
     totalRepayment?: true
     totalRepaymentDecimal?: true
+    totalRepaidDecimal?: true
     collateral?: true
     collateralImg?: true
     status?: true
@@ -27038,6 +27044,7 @@ export namespace Prisma {
     interestRateDecimal?: true
     totalRepayment?: true
     totalRepaymentDecimal?: true
+    totalRepaidDecimal?: true
     collateral?: true
     collateralImg?: true
     status?: true
@@ -27147,6 +27154,7 @@ export namespace Prisma {
     interestRateDecimal: string
     totalRepayment: string
     totalRepaymentDecimal: string
+    totalRepaidDecimal: string
     collateral: string | null
     collateralImg: string | null
     status: $Enums.LoanStatus
@@ -27188,6 +27196,7 @@ export namespace Prisma {
     interestRateDecimal?: boolean
     totalRepayment?: boolean
     totalRepaymentDecimal?: boolean
+    totalRepaidDecimal?: boolean
     collateral?: boolean
     collateralImg?: boolean
     status?: boolean
@@ -27213,6 +27222,7 @@ export namespace Prisma {
     interestRateDecimal?: boolean
     totalRepayment?: boolean
     totalRepaymentDecimal?: boolean
+    totalRepaidDecimal?: boolean
     collateral?: boolean
     collateralImg?: boolean
     status?: boolean
@@ -27236,6 +27246,7 @@ export namespace Prisma {
     interestRateDecimal?: boolean
     totalRepayment?: boolean
     totalRepaymentDecimal?: boolean
+    totalRepaidDecimal?: boolean
     collateral?: boolean
     collateralImg?: boolean
     status?: boolean
@@ -27259,6 +27270,7 @@ export namespace Prisma {
     interestRateDecimal?: boolean
     totalRepayment?: boolean
     totalRepaymentDecimal?: boolean
+    totalRepaidDecimal?: boolean
     collateral?: boolean
     collateralImg?: boolean
     status?: boolean
@@ -27269,7 +27281,7 @@ export namespace Prisma {
     productSnapshot?: boolean
   }
 
-  export type LoanApplicationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "amount" | "amountDecimal" | "currency" | "term" | "durationDays" | "interestRate" | "interestRateDecimal" | "totalRepayment" | "totalRepaymentDecimal" | "collateral" | "collateralImg" | "status" | "approvedAt" | "dueDate" | "createdAt" | "updatedAt" | "productSnapshot", ExtArgs["result"]["loanApplication"]>
+  export type LoanApplicationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "amount" | "amountDecimal" | "currency" | "term" | "durationDays" | "interestRate" | "interestRateDecimal" | "totalRepayment" | "totalRepaymentDecimal" | "totalRepaidDecimal" | "collateral" | "collateralImg" | "status" | "approvedAt" | "dueDate" | "createdAt" | "updatedAt" | "productSnapshot", ExtArgs["result"]["loanApplication"]>
   export type LoanApplicationInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     repayments?: boolean | LoanApplication$repaymentsArgs<ExtArgs>
@@ -27300,6 +27312,7 @@ export namespace Prisma {
       interestRateDecimal: string
       totalRepayment: string
       totalRepaymentDecimal: string
+      totalRepaidDecimal: string
       collateral: string | null
       collateralImg: string | null
       status: $Enums.LoanStatus
@@ -27744,6 +27757,7 @@ export namespace Prisma {
     readonly interestRateDecimal: FieldRef<"LoanApplication", 'String'>
     readonly totalRepayment: FieldRef<"LoanApplication", 'String'>
     readonly totalRepaymentDecimal: FieldRef<"LoanApplication", 'String'>
+    readonly totalRepaidDecimal: FieldRef<"LoanApplication", 'String'>
     readonly collateral: FieldRef<"LoanApplication", 'String'>
     readonly collateralImg: FieldRef<"LoanApplication", 'String'>
     readonly status: FieldRef<"LoanApplication", 'LoanStatus'>
@@ -116844,6 +116858,7 @@ export namespace Prisma {
     interestRateDecimal: 'interestRateDecimal',
     totalRepayment: 'totalRepayment',
     totalRepaymentDecimal: 'totalRepaymentDecimal',
+    totalRepaidDecimal: 'totalRepaidDecimal',
     collateral: 'collateral',
     collateralImg: 'collateralImg',
     status: 'status',
@@ -119749,6 +119764,7 @@ export namespace Prisma {
     interestRateDecimal?: StringFilter<"LoanApplication"> | string
     totalRepayment?: StringFilter<"LoanApplication"> | string
     totalRepaymentDecimal?: StringFilter<"LoanApplication"> | string
+    totalRepaidDecimal?: StringFilter<"LoanApplication"> | string
     collateral?: StringNullableFilter<"LoanApplication"> | string | null
     collateralImg?: StringNullableFilter<"LoanApplication"> | string | null
     status?: EnumLoanStatusFilter<"LoanApplication"> | $Enums.LoanStatus
@@ -119773,6 +119789,7 @@ export namespace Prisma {
     interestRateDecimal?: SortOrder
     totalRepayment?: SortOrder
     totalRepaymentDecimal?: SortOrder
+    totalRepaidDecimal?: SortOrder
     collateral?: SortOrderInput | SortOrder
     collateralImg?: SortOrderInput | SortOrder
     status?: SortOrder
@@ -119800,6 +119817,7 @@ export namespace Prisma {
     interestRateDecimal?: StringFilter<"LoanApplication"> | string
     totalRepayment?: StringFilter<"LoanApplication"> | string
     totalRepaymentDecimal?: StringFilter<"LoanApplication"> | string
+    totalRepaidDecimal?: StringFilter<"LoanApplication"> | string
     collateral?: StringNullableFilter<"LoanApplication"> | string | null
     collateralImg?: StringNullableFilter<"LoanApplication"> | string | null
     status?: EnumLoanStatusFilter<"LoanApplication"> | $Enums.LoanStatus
@@ -119824,6 +119842,7 @@ export namespace Prisma {
     interestRateDecimal?: SortOrder
     totalRepayment?: SortOrder
     totalRepaymentDecimal?: SortOrder
+    totalRepaidDecimal?: SortOrder
     collateral?: SortOrderInput | SortOrder
     collateralImg?: SortOrderInput | SortOrder
     status?: SortOrder
@@ -119854,6 +119873,7 @@ export namespace Prisma {
     interestRateDecimal?: StringWithAggregatesFilter<"LoanApplication"> | string
     totalRepayment?: StringWithAggregatesFilter<"LoanApplication"> | string
     totalRepaymentDecimal?: StringWithAggregatesFilter<"LoanApplication"> | string
+    totalRepaidDecimal?: StringWithAggregatesFilter<"LoanApplication"> | string
     collateral?: StringNullableWithAggregatesFilter<"LoanApplication"> | string | null
     collateralImg?: StringNullableWithAggregatesFilter<"LoanApplication"> | string | null
     status?: EnumLoanStatusWithAggregatesFilter<"LoanApplication"> | $Enums.LoanStatus
@@ -127980,6 +128000,7 @@ export namespace Prisma {
     interestRateDecimal?: string
     totalRepayment?: string
     totalRepaymentDecimal?: string
+    totalRepaidDecimal?: string
     collateral?: string | null
     collateralImg?: string | null
     status?: $Enums.LoanStatus
@@ -128004,6 +128025,7 @@ export namespace Prisma {
     interestRateDecimal?: string
     totalRepayment?: string
     totalRepaymentDecimal?: string
+    totalRepaidDecimal?: string
     collateral?: string | null
     collateralImg?: string | null
     status?: $Enums.LoanStatus
@@ -128026,6 +128048,7 @@ export namespace Prisma {
     interestRateDecimal?: StringFieldUpdateOperationsInput | string
     totalRepayment?: StringFieldUpdateOperationsInput | string
     totalRepaymentDecimal?: StringFieldUpdateOperationsInput | string
+    totalRepaidDecimal?: StringFieldUpdateOperationsInput | string
     collateral?: NullableStringFieldUpdateOperationsInput | string | null
     collateralImg?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumLoanStatusFieldUpdateOperationsInput | $Enums.LoanStatus
@@ -128050,6 +128073,7 @@ export namespace Prisma {
     interestRateDecimal?: StringFieldUpdateOperationsInput | string
     totalRepayment?: StringFieldUpdateOperationsInput | string
     totalRepaymentDecimal?: StringFieldUpdateOperationsInput | string
+    totalRepaidDecimal?: StringFieldUpdateOperationsInput | string
     collateral?: NullableStringFieldUpdateOperationsInput | string | null
     collateralImg?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumLoanStatusFieldUpdateOperationsInput | $Enums.LoanStatus
@@ -128073,6 +128097,7 @@ export namespace Prisma {
     interestRateDecimal?: string
     totalRepayment?: string
     totalRepaymentDecimal?: string
+    totalRepaidDecimal?: string
     collateral?: string | null
     collateralImg?: string | null
     status?: $Enums.LoanStatus
@@ -128094,6 +128119,7 @@ export namespace Prisma {
     interestRateDecimal?: StringFieldUpdateOperationsInput | string
     totalRepayment?: StringFieldUpdateOperationsInput | string
     totalRepaymentDecimal?: StringFieldUpdateOperationsInput | string
+    totalRepaidDecimal?: StringFieldUpdateOperationsInput | string
     collateral?: NullableStringFieldUpdateOperationsInput | string | null
     collateralImg?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumLoanStatusFieldUpdateOperationsInput | $Enums.LoanStatus
@@ -128116,6 +128142,7 @@ export namespace Prisma {
     interestRateDecimal?: StringFieldUpdateOperationsInput | string
     totalRepayment?: StringFieldUpdateOperationsInput | string
     totalRepaymentDecimal?: StringFieldUpdateOperationsInput | string
+    totalRepaidDecimal?: StringFieldUpdateOperationsInput | string
     collateral?: NullableStringFieldUpdateOperationsInput | string | null
     collateralImg?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumLoanStatusFieldUpdateOperationsInput | $Enums.LoanStatus
@@ -136985,6 +137012,7 @@ export namespace Prisma {
     interestRateDecimal?: SortOrder
     totalRepayment?: SortOrder
     totalRepaymentDecimal?: SortOrder
+    totalRepaidDecimal?: SortOrder
     collateral?: SortOrder
     collateralImg?: SortOrder
     status?: SortOrder
@@ -137012,6 +137040,7 @@ export namespace Prisma {
     interestRateDecimal?: SortOrder
     totalRepayment?: SortOrder
     totalRepaymentDecimal?: SortOrder
+    totalRepaidDecimal?: SortOrder
     collateral?: SortOrder
     collateralImg?: SortOrder
     status?: SortOrder
@@ -137034,6 +137063,7 @@ export namespace Prisma {
     interestRateDecimal?: SortOrder
     totalRepayment?: SortOrder
     totalRepaymentDecimal?: SortOrder
+    totalRepaidDecimal?: SortOrder
     collateral?: SortOrder
     collateralImg?: SortOrder
     status?: SortOrder
@@ -147369,6 +147399,7 @@ export namespace Prisma {
     interestRateDecimal?: string
     totalRepayment?: string
     totalRepaymentDecimal?: string
+    totalRepaidDecimal?: string
     collateral?: string | null
     collateralImg?: string | null
     status?: $Enums.LoanStatus
@@ -147391,6 +147422,7 @@ export namespace Prisma {
     interestRateDecimal?: string
     totalRepayment?: string
     totalRepaymentDecimal?: string
+    totalRepaidDecimal?: string
     collateral?: string | null
     collateralImg?: string | null
     status?: $Enums.LoanStatus
@@ -148750,6 +148782,7 @@ export namespace Prisma {
     interestRateDecimal?: StringFilter<"LoanApplication"> | string
     totalRepayment?: StringFilter<"LoanApplication"> | string
     totalRepaymentDecimal?: StringFilter<"LoanApplication"> | string
+    totalRepaidDecimal?: StringFilter<"LoanApplication"> | string
     collateral?: StringNullableFilter<"LoanApplication"> | string | null
     collateralImg?: StringNullableFilter<"LoanApplication"> | string | null
     status?: EnumLoanStatusFilter<"LoanApplication"> | $Enums.LoanStatus
@@ -160079,6 +160112,7 @@ export namespace Prisma {
     interestRateDecimal?: string
     totalRepayment?: string
     totalRepaymentDecimal?: string
+    totalRepaidDecimal?: string
     collateral?: string | null
     collateralImg?: string | null
     status?: $Enums.LoanStatus
@@ -160102,6 +160136,7 @@ export namespace Prisma {
     interestRateDecimal?: string
     totalRepayment?: string
     totalRepaymentDecimal?: string
+    totalRepaidDecimal?: string
     collateral?: string | null
     collateralImg?: string | null
     status?: $Enums.LoanStatus
@@ -160223,6 +160258,7 @@ export namespace Prisma {
     interestRateDecimal?: StringFieldUpdateOperationsInput | string
     totalRepayment?: StringFieldUpdateOperationsInput | string
     totalRepaymentDecimal?: StringFieldUpdateOperationsInput | string
+    totalRepaidDecimal?: StringFieldUpdateOperationsInput | string
     collateral?: NullableStringFieldUpdateOperationsInput | string | null
     collateralImg?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumLoanStatusFieldUpdateOperationsInput | $Enums.LoanStatus
@@ -160246,6 +160282,7 @@ export namespace Prisma {
     interestRateDecimal?: StringFieldUpdateOperationsInput | string
     totalRepayment?: StringFieldUpdateOperationsInput | string
     totalRepaymentDecimal?: StringFieldUpdateOperationsInput | string
+    totalRepaidDecimal?: StringFieldUpdateOperationsInput | string
     collateral?: NullableStringFieldUpdateOperationsInput | string | null
     collateralImg?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumLoanStatusFieldUpdateOperationsInput | $Enums.LoanStatus
@@ -164786,6 +164823,7 @@ export namespace Prisma {
     interestRateDecimal?: string
     totalRepayment?: string
     totalRepaymentDecimal?: string
+    totalRepaidDecimal?: string
     collateral?: string | null
     collateralImg?: string | null
     status?: $Enums.LoanStatus
@@ -165275,6 +165313,7 @@ export namespace Prisma {
     interestRateDecimal?: StringFieldUpdateOperationsInput | string
     totalRepayment?: StringFieldUpdateOperationsInput | string
     totalRepaymentDecimal?: StringFieldUpdateOperationsInput | string
+    totalRepaidDecimal?: StringFieldUpdateOperationsInput | string
     collateral?: NullableStringFieldUpdateOperationsInput | string | null
     collateralImg?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumLoanStatusFieldUpdateOperationsInput | $Enums.LoanStatus
@@ -165297,6 +165336,7 @@ export namespace Prisma {
     interestRateDecimal?: StringFieldUpdateOperationsInput | string
     totalRepayment?: StringFieldUpdateOperationsInput | string
     totalRepaymentDecimal?: StringFieldUpdateOperationsInput | string
+    totalRepaidDecimal?: StringFieldUpdateOperationsInput | string
     collateral?: NullableStringFieldUpdateOperationsInput | string | null
     collateralImg?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumLoanStatusFieldUpdateOperationsInput | $Enums.LoanStatus
@@ -165319,6 +165359,7 @@ export namespace Prisma {
     interestRateDecimal?: StringFieldUpdateOperationsInput | string
     totalRepayment?: StringFieldUpdateOperationsInput | string
     totalRepaymentDecimal?: StringFieldUpdateOperationsInput | string
+    totalRepaidDecimal?: StringFieldUpdateOperationsInput | string
     collateral?: NullableStringFieldUpdateOperationsInput | string | null
     collateralImg?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumLoanStatusFieldUpdateOperationsInput | $Enums.LoanStatus

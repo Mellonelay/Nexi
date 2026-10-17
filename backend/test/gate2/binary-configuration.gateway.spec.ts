@@ -50,6 +50,7 @@ describe('D1 Binary configuration reads', () => {
     const next = { ...current, id: 'config-3', version: 3, enabled: 1 };
     const gateway = createGateway(current);
     gateway.bridge.select
+      .mockResolvedValueOnce({ results: [] })
       .mockResolvedValueOnce({ results: [current] })
       .mockResolvedValueOnce({ results: [next] });
     gateway.bridge.batch = jest.fn().mockResolvedValue({ results: [{ meta: { changes: 1 } }] });

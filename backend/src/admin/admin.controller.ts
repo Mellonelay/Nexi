@@ -785,6 +785,21 @@ export class AdminController {
     );
   }
 
+  @Post("withdrawals/:id/review/return")
+  @RequireAdminPermission("withdrawals.approve")
+  returnAdminWithdrawalFromReview(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() body: AdminIncidentAcknowledgeDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.adminService.returnAdminWithdrawalFromReview(
+      id,
+      request.user.userId,
+      body.reason,
+      body.idempotencyKey,
+    );
+  }
+
   @Post("withdrawals/:id/fail")
   @RequireAdminPermission("withdrawals.approve")
   failAdminWithdrawal(

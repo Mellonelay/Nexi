@@ -37,6 +37,24 @@ describe("AdminService sandbox source contract", () => {
     ).rejects.toThrow("approved sandbox account/entity");
   });
 
+  it("persists LoanPlan monetary config as strings and replays its audited idempotency key", async () => {
+    const plan = { id: "plan-1", name: "Test", durationDays: 30, interestRate: "0.05", minAmount: "10", maxAmount: "100", isActive: true };
+    const audit = { id: "audit-1", adminId: "admin-1", action: "LOAN_PLAN_CREATED", target: "plan-1", details: JSON.stringify({ reason: "test", idempotencyKey: "loan-plan-key-1", payload: { name: "Test", durationDays: 30, interestRate: "0.05", minAmount: "10", maxAmount: "100", isActive: true } }) };
+    const tx = {
+      loanPlan: { create: jest.fn().mockResolvedValue(plan), findUnique: jest.fn().mockResolvedValue(plan) },
+      adminAuditLog: { findFirst: jest.fn().mockResolvedValueOnce(null).mockResolvedValueOnce(audit), create: jest.fn().mockResolvedValue(audit) },
+    };
+    const prisma = { $transaction: jest.fn(async (work: any) => work(tx)) };
+    const subject = new AdminService(prisma as never, {} as never, {} as never, {} as never, {} as never, {} as never, {} as never);
+    const input = { name: "Test", durationDays: 30, interestRate: 0.05, minAmount: 10, maxAmount: 100, isActive: true };
+    const context = { adminId: "admin-1", reason: "test", idempotencyKey: "loan-plan-key-1" };
+    await subject.createLoanPlan(input, context);
+    await subject.createLoanPlan(input, context);
+    expect(tx.loanPlan.create).toHaveBeenCalledWith({ data: expect.objectContaining({ interestRate: "0.05", minAmount: "10", maxAmount: "100" }) });
+    expect(tx.adminAuditLog.create).toHaveBeenCalledWith({ data: expect.objectContaining({ details: expect.any(String) }) });
+    expect(tx.loanPlan.create).toHaveBeenCalledTimes(1);
+  });
+
   it.each(["spot", "balance"] as const)(
     "fails closed for unsupported sandbox scope '%s'",
     async (scope) => {

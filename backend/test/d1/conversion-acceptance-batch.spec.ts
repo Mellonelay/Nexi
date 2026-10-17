@@ -99,6 +99,7 @@ describe("conversion acceptance D1 batch", () => {
     // only the quoted output amount, with no third fee posting.
     expect(statements[2].params?.[0]).toBe("9");
     expect(statements[4].params?.[0]).toBe("0.00001");
+    expect(statements.find((statement) => statement.sql.includes('UPDATE "Gate2ConversionQuote"'))?.sql).toContain('julianday("expiresAt")>julianday(\'now\')');
     const conversionPostings = statements.filter((statement) =>
       statement.sql.includes('INSERT INTO "LedgerPosting"'),
     );

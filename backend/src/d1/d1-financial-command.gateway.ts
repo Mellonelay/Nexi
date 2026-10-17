@@ -939,7 +939,7 @@ export class D1FinancialCommandGateway {
       },
       {
         sql: `UPDATE "Gate2ConversionQuote" SET "state"='ACCEPTED',"acceptanceKey"=?,"conversionRef"=?,"updatedAt"=CURRENT_TIMESTAMP
-          WHERE "id"=? AND "userId"=? AND "state"='OPEN' AND "acceptanceKey" IS NULL`,
+          WHERE "id"=? AND "userId"=? AND "state"='OPEN' AND "acceptanceKey" IS NULL AND julianday("expiresAt")>julianday('now')`,
         params: [
           command.acceptanceKey,
           reference,
@@ -1225,6 +1225,26 @@ export class D1FinancialCommandGateway {
     positionEventId: string;
   }): Promise<Record<string, unknown>> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const assertSameOpen = (row: Record<string, unknown>) => {
+      if (
+        String(row.accountId) !== command.accountId ||
+        String(row.direction) !== command.direction ||
+        Number(row.leverage) !== command.leverage ||
+        String(row.collateral) !== command.collateral ||
+        String(row.debtAsset).toUpperCase() !== command.debtAsset.toUpperCase() ||
+        String(row.debtPrincipal) !== command.debtPrincipal ||
+        String(row.entryOrderId) !== command.entryOrderId
+      ) throw new BadRequestException("Margin position idempotency key was reused with different parameters");
+    };
+    const existing = await this.bridge.select<Record<string, unknown>>(
+      `SELECT * FROM "SpotMarginPosition" WHERE "openIdempotencyKey"=? LIMIT 1`,
+      [command.openIdempotencyKey],
+    );
+    const replay = existing.results[0];
+    if (replay) {
+      assertSameOpen(replay);
+      return replay;
+    }
     const result = await this.bridge.batch([
       {
         sql: `INSERT OR IGNORE INTO "SpotMarginPosition" ("id","accountId","direction","leverage","collateral","quantity","entryPrice","markPrice","debtAsset","debtPrincipal","interestAccrued","realizedPnl","unrealizedPnl","status","openIdempotencyKey","entryOrderId","openedAt","updatedAt") SELECT ?,?,?,?,?,?,?,?,?,?, '0','0','0',?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP
@@ -1288,10 +1308,28 @@ export class D1FinancialCommandGateway {
           command.positionId,
         ],
       },
+      {
+        sql: `INSERT OR IGNORE INTO "Activity" ("id","userId","type","status","referenceType","referenceId","idempotencyKey","ledgerCorrelationId","ledgerPostingId","asset","amount","details","createdAt") SELECT ?,?,'MARGIN_POSITION_OPENED','ACCEPTED','MARGIN_POSITION',?,?,?,NULL,?,?,?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "SpotMarginPosition" WHERE "id"=?)`,
+        params: [command.activityId, command.userId, command.positionId, `margin:position-open:${command.openIdempotencyKey}`, command.openIdempotencyKey, command.positionAsset, command.collateral, JSON.stringify({ pair: command.pair, direction: command.direction, leverage: command.leverage, entryOrderId: command.entryOrderId }), command.positionId],
+      },
+      this.eventOutboxStatement({
+        idempotencyKey: `event:margin:position-open:${command.openIdempotencyKey}`,
+        aggregateType: "MARGIN_POSITION",
+        aggregateId: command.positionId,
+        eventType: "MARGIN_POSITION_OPENED",
+        correlationId: command.openIdempotencyKey,
+        payload: { userId: command.userId, pair: command.pair, positionId: command.positionId, entryOrderId: command.entryOrderId },
+        guard: { sql: `EXISTS (SELECT 1 FROM "SpotMarginPosition" WHERE "id"=?)`, params: [command.positionId] },
+      }),
     ]);
-    const row = await this.getMarginPosition(command.positionId);
+    const created = await this.bridge.select<Record<string, unknown>>(
+      `SELECT * FROM "SpotMarginPosition" WHERE "openIdempotencyKey"=? LIMIT 1`,
+      [command.openIdempotencyKey],
+    );
+    const row = created.results[0];
     if (!row)
       throw new BadRequestException("D1 margin position was not materialized");
+    assertSameOpen(row);
     return row;
   }
 
@@ -1740,8 +1778,9 @@ export class D1FinancialCommandGateway {
     correlationId?: string | null;
     payload: Record<string, unknown>;
     guard?: { sql: string; params: D1BridgeParameter[] };
+    strict?: boolean;
   }): D1BridgeBatchStatement {
-    const prefix = `INSERT OR IGNORE INTO "EventOutbox" ("id","idempotencyKey","aggregateType","aggregateId","eventType","eventVersion","correlationId","payload","state","availableAt","attempts","createdAt","updatedAt")`;
+    const prefix = `INSERT${command.strict ? "" : " OR IGNORE"} INTO "EventOutbox" ("id","idempotencyKey","aggregateType","aggregateId","eventType","eventVersion","correlationId","payload","state","availableAt","attempts","createdAt","updatedAt")`;
     const values = `?,?,?,?,?,1,?,?,'PENDING',CURRENT_TIMESTAMP,0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP`;
     return {
       sql: `${prefix} ${command.guard ? `SELECT ${values} WHERE ${command.guard.sql}` : `VALUES (${values})`}`,
@@ -1972,7 +2011,19 @@ export class D1FinancialCommandGateway {
       command.subscriptionId,
       command.userId,
     );
-    if (existing) return existing;
+    if (existing) {
+      const snapshot = typeof existing.planSnapshot === "string"
+        ? existing.planSnapshot
+        : JSON.stringify(existing.planSnapshot ?? {});
+      if (
+        String(existing.planId) !== command.planId ||
+        !this.decimal(String(existing.amountDecimal ?? existing.amount)).eq(command.amount) ||
+        snapshot !== JSON.stringify(command.planSnapshot)
+      ) {
+        throw new BadRequestException("Mining subscription idempotency key was already used with different terms");
+      }
+      return existing;
+    }
     const account = await this.getAccountForUser(
       command.userId,
       String(plan.currency),
@@ -2177,6 +2228,10 @@ export class D1FinancialCommandGateway {
         subscriptionId,
       ),
       {
+        sql: `INSERT OR IGNORE INTO "Activity" ("id","userId","type","status","referenceType","referenceId","idempotencyKey","ledgerCorrelationId","ledgerPostingId","asset","amount","details","createdAt") SELECT ?,?,'MINING_REDEMPTION','COMPLETED','MINING_REDEMPTION',?,?,?,?,?,?,?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "id"=? AND "debitPostingId"=?)`,
+        params: [randomUUID(), userId, subscriptionId, idem, idem, postingId, String(subscription.planCurrency), amount.toString(), JSON.stringify({ status }), ledgerId, postingId],
+      },
+      {
         sql: `UPDATE "MiningSubscription" SET "status"=? ,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "status"='ACTIVE'`,
         params: [status, subscriptionId],
       },
@@ -2192,7 +2247,9 @@ export class D1FinancialCommandGateway {
     ]);
     this.requireChanges(result, 1, "D1 mining release");
     this.requireChanges(result, 3, "D1 mining release posting");
-    this.requireChanges(result, 6, "D1 mining subscription completion");
+    this.requireChanges(result, 6, "D1 mining release activity");
+    this.requireChanges(result, 7, "D1 mining subscription completion");
+    this.requireChanges(result, 8, "D1 mining release outbox");
     const row = await this.getMiningSubscription(subscriptionId, userId);
     if (!row)
       throw new BadRequestException("D1 mining release was not materialized");
@@ -2222,7 +2279,8 @@ export class D1FinancialCommandGateway {
     if (!subscription || String(subscription.status) !== "ACTIVE")
       throw new NotFoundException("Active mining subscription not found");
     const principal = this.decimal(String(subscription.amountDecimal));
-    const rate = this.decimal(String(subscription.planDailyYieldDecimal));
+    const rate = this.nonNegativeDecimal(String(subscription.planDailyYieldDecimal));
+    if (rate.isZero()) return { subscriptionId, replayed: true, skipped: true, reason: "zero-yield" };
     const reward = principal.times(rate);
     const account = await this.getAccountForUser(
       String(subscription.userId),
@@ -2511,6 +2569,16 @@ export class D1FinancialCommandGateway {
     const row = await this.getLoanApplication(command.id, command.userId);
     if (!row)
       throw new BadRequestException("D1 loan application was not materialized");
+    if (
+      this.decimal(String(row.amountDecimal)) .comparedTo(this.decimal(command.amount)) !== 0 ||
+      String(row.currency) !== this.normalizeAsset(command.currency) ||
+      Number(row.term) !== command.term ||
+      Number(row.durationDays) !== command.durationDays ||
+      this.decimal(String(row.interestRateDecimal)).comparedTo(this.decimal(command.interestRate)) !== 0 ||
+      this.decimal(String(row.totalRepaymentDecimal)).comparedTo(this.decimal(command.totalRepayment)) !== 0 ||
+      String(row.collateral ?? "") !== String(command.collateral ?? "") ||
+      String(row.collateralImg ?? "") !== String(command.collateralImg ?? "")
+    ) throw new BadRequestException("Loan application idempotency key was reused with different parameters");
     return row;
   }
 
@@ -2716,10 +2784,13 @@ export class D1FinancialCommandGateway {
       command.idempotencyKey,
     );
     const existing = await this.bridge.select<any>(
-      `SELECT "id" FROM "LoanRepayment" WHERE "id"=? LIMIT 1`,
+      `SELECT "id","amountDecimal" FROM "LoanRepayment" WHERE "id"=? LIMIT 1`,
       [repaymentId],
     );
-    if (existing.results[0]) return loan;
+    if (existing.results[0]) {
+      if (this.decimal(String(existing.results[0].amountDecimal)).comparedTo(amount) !== 0) throw new BadRequestException("Loan repayment idempotency key was reused with a different amount");
+      return loan;
+    }
     const paidRows = await this.bridge.select<any>(
       `SELECT "amountDecimal" FROM "LoanRepayment" WHERE "loanId"=?`,
       [loan.id],
@@ -2750,7 +2821,11 @@ export class D1FinancialCommandGateway {
     const nextStatus = amount.eq(outstanding) ? "PAID" : String(loan.status);
     const result = await this.bridge.batch([
       {
-        sql: `INSERT OR IGNORE INTO "LedgerIdempotency" ("id","idempotencyKey","operation","accountId","createdAt","updatedAt") SELECT ?,?,'DEBIT',?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP WHERE NOT EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=?) AND EXISTS (SELECT 1 FROM "LedgerAccount" WHERE "id"=? AND "asset"=? AND "status"='ACTIVE' AND "available"=? AND "locked"=?)`,
+        sql: `UPDATE "LoanApplication" SET "totalRepaidDecimal"=?,"status"=? ,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "userId"=? AND "status" IN ('ACTIVE','OVERDUE') AND "totalRepaidDecimal"=?`,
+        params: [paid.plus(amount).toString(), nextStatus, loan.id, command.userId, String(loan.totalRepaidDecimal ?? "0")],
+      },
+      {
+        sql: `INSERT OR IGNORE INTO "LedgerIdempotency" ("id","idempotencyKey","operation","accountId","createdAt","updatedAt") SELECT ?,?,'DEBIT',?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP WHERE changes()=1 AND NOT EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=?) AND EXISTS (SELECT 1 FROM "LedgerAccount" WHERE "id"=? AND "asset"=? AND "status"='ACTIVE' AND "available"=? AND "locked"=?)`,
         params: [
           idemId,
           key,
@@ -2833,10 +2908,6 @@ export class D1FinancialCommandGateway {
           postingId,
         ],
       },
-      {
-        sql: `UPDATE "LoanApplication" SET "status"=?,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "userId"=? AND "status" IN ('ACTIVE','OVERDUE')`,
-        params: [nextStatus, loan.id, command.userId],
-      },
       this.eventOutboxStatement({
         idempotencyKey: `event:loan:repay:${loan.id}:${command.idempotencyKey}`,
         aggregateType: "LOAN_APPLICATION",
@@ -2849,11 +2920,13 @@ export class D1FinancialCommandGateway {
           amount: amount.toString(),
           status: nextStatus,
         },
+        strict: true,
       }),
     ]);
-    this.requireChanges(result, 1, "D1 loan repayment account transition");
-    this.requireChanges(result, 3, "D1 loan repayment posting");
-    this.requireChanges(result, 7, "D1 loan repayment record");
+    this.requireChanges(result, 0, "D1 loan repayment outstanding transition");
+    this.requireChanges(result, 2, "D1 loan repayment account transition");
+    this.requireChanges(result, 4, "D1 loan repayment posting");
+    this.requireChanges(result, 8, "D1 loan repayment record");
     const row = await this.getLoanApplication(loan.id, command.userId);
     if (!row)
       throw new BadRequestException("D1 loan repayment was not materialized");
@@ -4281,9 +4354,10 @@ export class D1FinancialCommandGateway {
         sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`,
         params: [auditId, command.adminId, "DEPOSIT_ADDRESS_CREATED", id, JSON.stringify({ reason: command.reason, idempotencyKey: command.idempotencyKey, payload })],
       },
-      this.eventOutboxStatement({ idempotencyKey: `event:${command.idempotencyKey}`, aggregateType: "DepositAddress", aggregateId: id, eventType: "DEPOSIT_ADDRESS_CREATED", correlationId: command.idempotencyKey, payload: { depositAddressId: id, currencyId: command.currencyId, network: command.network } }),
+      this.eventOutboxStatement({ idempotencyKey: `event:${command.idempotencyKey}`, aggregateType: "DepositAddress", aggregateId: id, eventType: "DEPOSIT_ADDRESS_CREATED", correlationId: command.idempotencyKey, payload: { depositAddressId: id, currencyId: command.currencyId, network: command.network }, strict: true }),
     ]);
     this.requireChanges(result, 0, "D1 deposit address create");
+    this.requireChanges(result, 2, "D1 deposit address outbox");
     const row = await this.bridge.select<Record<string, unknown>>(`SELECT * FROM "DepositAddress" WHERE "id"=? LIMIT 1`, [id]);
     return { ...(row.results[0] ?? {}), auditId };
   }
@@ -4739,6 +4813,26 @@ export class D1FinancialCommandGateway {
         "The requester cannot execute their own financial correction",
       );
     }
+    let approvedPayload: Record<string, unknown>;
+    try {
+      approvedPayload = typeof governance.payload === "string" ? JSON.parse(governance.payload) : governance.payload;
+    } catch {
+      throw new BadRequestException("Approved financial correction payload is invalid");
+    }
+    const approvedAmount = this.decimal(String(approvedPayload?.amount ?? ""));
+    if (
+      !approvedPayload ||
+      String(governance.target ?? "") !== command.userId ||
+      String(governance.reason) !== command.reason ||
+      String(approvedPayload.userId ?? "") !== command.userId ||
+      this.normalizeAsset(String(approvedPayload.asset ?? "")) !== this.normalizeAsset(command.asset) ||
+      approvedAmount.comparedTo(this.decimal(command.amount)) !== 0 ||
+      String(approvedPayload.direction ?? "") !== command.direction ||
+      String(approvedPayload.idempotencyKey ?? "") !== command.idempotencyKey ||
+      String(approvedPayload.reason ?? "") !== command.reason
+    ) {
+      throw new BadRequestException("Financial correction does not match the approved command");
+    }
     const referenceId = `admin-correction:${command.idempotencyKey}`;
     const existing = await this.findIdempotency(referenceId);
     if (String(governance.status) === "EXECUTED") {
@@ -4999,7 +5093,7 @@ export class D1FinancialCommandGateway {
       ),
       {
         sql: `INSERT INTO "Gate2BinaryPosition" ("id","userId","pair","side","stake","entryPrice","payoutAmount","realizedProfit","durationSeconds","expiresAt","state","entryQuoteId","entryProvider","entrySource","entryObservedAt","entryReceivedAt","entrySequence","quoteFreshnessMs","configurationVersion","idempotencyKey","correlationId","createdAt","updatedAt")
-          SELECT ?,?,?,?,?,?,'0','0',?,?,'ACTIVE',?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP
+          SELECT ?,?,?,?,?,?,'0','0',?,?,'ACTIVE',?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP
           WHERE EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "id"=? AND "debitPostingId"=?)
             AND NOT EXISTS (SELECT 1 FROM "Gate2BinaryPosition" WHERE "userId"=? AND "idempotencyKey"=?)`,
         params: [
@@ -5109,6 +5203,30 @@ export class D1FinancialCommandGateway {
     idempotencyKey: string;
   }): Promise<Record<string, unknown>> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const target = `${command.pair}:${command.durationSeconds}`;
+    const payload = {
+      pair: command.pair,
+      sourceDurationSeconds: command.sourceDurationSeconds,
+      durationSeconds: command.durationSeconds,
+      payoutRate: command.payoutRate,
+      minStake: command.minStake,
+      maxStake: command.maxStake,
+      enabled: command.enabled,
+    };
+    const prior = await this.bridge.select<{ adminId: string; target: string; details: string }>(
+      `SELECT "adminId","target","details" FROM "AdminAuditLog" WHERE "action"='BINARY_CONFIGURATION_UPDATED' AND json_extract("details",'$.idempotencyKey')=? ORDER BY "createdAt" DESC LIMIT 1`,
+      [command.idempotencyKey],
+    );
+    if (prior.results[0]) {
+      let details: Record<string, unknown>;
+      try { details = JSON.parse(prior.results[0].details); }
+      catch { throw new BadRequestException("Binary configuration idempotency key was already used"); }
+      if (prior.results[0].adminId !== command.adminId || prior.results[0].target !== target || details.reason !== command.reason || JSON.stringify(details.payload) !== JSON.stringify(payload))
+        throw new BadRequestException("Binary configuration idempotency key was already used");
+      const replay = await this.getBinaryConfiguration(command.pair, command.durationSeconds, Number(details.version));
+      if (!replay) throw new BadRequestException("Binary configuration update replay no longer resolves");
+      return { ...replay, replayed: true };
+    }
     const currentResult = await this.bridge.select<Record<string, unknown>>(
       `SELECT * FROM "Gate2BinaryConfiguration" WHERE "pair"=? AND "durationSeconds"=? ORDER BY "version" DESC LIMIT 1`,
       [command.pair, command.sourceDurationSeconds],
@@ -5127,8 +5245,8 @@ export class D1FinancialCommandGateway {
     const result = await this.bridge.batch([
       { sql: `UPDATE "Gate2BinaryConfiguration" SET "enabled"=0,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=?`, params: [String(current.id)] },
       { sql: `INSERT INTO "Gate2BinaryConfiguration" ("id","pair","durationSeconds","payoutRate","lossRate","minStake","maxStake","settlementDelaySeconds","version","enabled","createdAt","updatedAt") VALUES (?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`, params: [nextId, command.pair, command.durationSeconds, command.payoutRate, Number(current.lossRate ?? 0), command.minStake, command.maxStake, Number(current.settlementDelaySeconds ?? 0), nextVersion, command.enabled ? 1 : 0] },
-      { sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`, params: [randomUUID(), command.adminId, "BINARY_CONFIGURATION_UPDATED", `${command.pair}:${command.durationSeconds}`, JSON.stringify({ reason: command.reason, idempotencyKey: command.idempotencyKey, sourceDurationSeconds: command.sourceDurationSeconds, durationSeconds: command.durationSeconds, version: nextVersion })] },
-      this.eventOutboxStatement({ idempotencyKey: `event:${command.idempotencyKey}`, aggregateType: "Gate2BinaryConfiguration", aggregateId: nextId, eventType: "BINARY_CONFIGURATION_UPDATED", correlationId: command.idempotencyKey, payload: { pair: command.pair, sourceDurationSeconds: command.sourceDurationSeconds, durationSeconds: command.durationSeconds, version: nextVersion } }),
+      { sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`, params: [randomUUID(), command.adminId, "BINARY_CONFIGURATION_UPDATED", target, JSON.stringify({ reason: command.reason, idempotencyKey: command.idempotencyKey, payload, version: nextVersion })] },
+      this.eventOutboxStatement({ idempotencyKey: `event:${command.idempotencyKey}`, aggregateType: "Gate2BinaryConfiguration", aggregateId: nextId, eventType: "BINARY_CONFIGURATION_UPDATED", correlationId: command.idempotencyKey, payload: { ...payload, version: nextVersion }, strict: true }),
     ]);
     this.requireChanges(result, 0, "D1 Binary configuration update");
     const row = await this.bridge.select<Record<string, unknown>>(`SELECT * FROM "Gate2BinaryConfiguration" WHERE "id"=? LIMIT 1`, [nextId]);
@@ -5461,7 +5579,8 @@ export class D1FinancialCommandGateway {
     if (existing) {
       if (String(existing.userId) !== command.userId)
         throw new BadRequestException("Deposit claim ownership mismatch");
-      return existing;
+      if (String(existing.asset).toUpperCase() !== this.normalizeAsset(command.asset) || String(existing.network).toUpperCase() !== command.network.trim().toUpperCase() || String(existing.depositAddressId) !== command.depositAddressId || String(existing.claimedAmount) !== this.decimal(command.claimedAmount).toString() || String(existing.proofObjectKey) !== command.proofObjectKey || String(existing.txHash ?? "") !== String(command.txHash ?? "")) throw new BadRequestException("Deposit claim idempotency key was reused with different parameters");
+      return { ...existing, replayed: true };
     }
     const address = await this.bridge.select<any>(
       `SELECT d."id",d."address",c."symbol",c."minDeposit",c."maxDeposit",w."code" AS "network" FROM "DepositAddress" d JOIN "Currency" c ON c."id"=d."currencyId" JOIN "WalletNetwork" w ON w."id"=d."walletNetworkId" WHERE d."id"=? AND w."code"=? AND d."isActive"=1 AND c."symbol"=? AND c."isActive"=1 AND c."depositEnabled"=1 AND w."isActive"=1 AND w."depositEnabled"=1 LIMIT 1`,
@@ -5472,10 +5591,10 @@ export class D1FinancialCommandGateway {
       ],
     );
     assertDepositClaimDestination(address.results[0], command.claimedAmount);
-    const result = await this.bridge.batch(depositClaimSubmissionStatements(command, address.results[0], this.eventOutboxStatement({ idempotencyKey: `event:${command.idempotencyKey}`, aggregateType: "DepositClaim", aggregateId: command.id, eventType: "DEPOSIT_CLAIM_SUBMITTED", correlationId: command.idempotencyKey, payload: { userId: command.userId, asset: address.results[0].symbol, network: address.results[0].network, claimedAmount: command.claimedAmount } })));
+    const result = await this.bridge.batch(depositClaimSubmissionStatements(command, address.results[0], this.eventOutboxStatement({ idempotencyKey: `event:deposit-claim:submitted:${command.id}`, aggregateType: "DepositClaim", aggregateId: command.id, eventType: "DEPOSIT_CLAIM_SUBMITTED", correlationId: command.idempotencyKey, payload: { userId: command.userId, asset: address.results[0].symbol, network: address.results[0].network, claimedAmount: command.claimedAmount } })));
     this.requireChanges(result, 0, "D1 deposit claim creation");
     this.requireChanges(result, 2, "D1 deposit claim outbox");
-    return readDepositClaim({bridge: this.bridge, id: command.id});
+    return { ...(await readDepositClaim({bridge: this.bridge, id: command.id})), replayed: false };
   }
 
   async listDepositClaims(userId?: string): Promise<Record<string, unknown>[]> {
@@ -5502,10 +5621,11 @@ export class D1FinancialCommandGateway {
       )
     ).results[0];
     if (!claim) throw new NotFoundException("Deposit claim not found");
-    if (String(claim.state) === state) return claim;
+    if (String(claim.state) === state) return { ...claim, replayed: true };
     assertDepositClaimReview(String(claim.state));
-    const result = await this.bridge.batch(depositClaimReviewStatements({id, state, adminId, reason, idempotencyKey}, this.eventOutboxStatement({ idempotencyKey: `event:${idempotencyKey}`, aggregateType: "DepositClaim", aggregateId: id, eventType: `DEPOSIT_CLAIM_${state}`, correlationId: idempotencyKey, payload: { userId: claim.userId, state, adminId, reason } })));
+    const result = await this.bridge.batch(depositClaimReviewStatements({id, state, adminId, reason, idempotencyKey}, this.eventOutboxStatement({ idempotencyKey: `event:deposit-claim:${id}:${state}`, aggregateType: "DepositClaim", aggregateId: id, eventType: `DEPOSIT_CLAIM_${state}`, correlationId: idempotencyKey, payload: { userId: claim.userId, state, adminId, reason }, guard: { sql: "changes()=1", params: [] }, strict: true })));
     this.requireChanges(result, 0, "D1 deposit claim state transition");
+    this.requireChanges(result, 1, "D1 deposit claim audit");
     this.requireChanges(result, 2, "D1 deposit claim outbox");
     return readDepositClaim({bridge: this.bridge, id});
   }
@@ -5524,7 +5644,7 @@ export class D1FinancialCommandGateway {
       )
     ).results[0];
     if (!claim) throw new NotFoundException("Deposit claim not found");
-    if (String(claim.state) === "CREDITED") return claim;
+    if (String(claim.state) === "CREDITED") return { ...claim, replayed: true };
     if (String(claim.state) !== "APPROVED")
       throw new BadRequestException(
         "Deposit claim must be approved before credit",
@@ -5533,21 +5653,29 @@ export class D1FinancialCommandGateway {
       String(claim.userId),
       String(claim.asset),
     );
-    const posting = await this.credit({
-      accountId: account.id,
-      asset: String(claim.asset),
-      amount: String(claim.claimedAmount),
-      referenceType: "MANUAL_DEPOSIT_CLAIM_CREDIT",
-      referenceId: id,
-      idempotencyKey: `deposit-claim:credit:${id}`,
-      correlationId: id,
-      economicGroup: id,
-      metadata: { adminId, reason },
-    });
-    const result = await this.bridge.batch(depositClaimCreditStatements({id, postingId: posting.postingId, adminId, reason, idempotencyKey}, this.eventOutboxStatement({ idempotencyKey: `event:${idempotencyKey}`, aggregateType: "DepositClaim", aggregateId: id, eventType: "DEPOSIT_CLAIM_CREDITED", correlationId: idempotencyKey, payload: { userId: claim.userId, asset: claim.asset, amount: claim.claimedAmount, postingId: posting.postingId, adminId, reason } })));
-    this.requireChanges(result, 0, "D1 deposit claim credit");
-    this.requireChanges(result, 2, "D1 deposit claim outbox");
-    return readDepositClaim({bridge: this.bridge, id});
+    const ledgerKey = `deposit-claim:credit:${id}`;
+    const existing = await this.findIdempotency(ledgerKey);
+    if (existing) {
+      if (existing.operation !== "CREDIT" || existing.accountId !== account.id || !existing.debitPostingId) throw new BadRequestException("Deposit claim credit is still completing");
+      const result = await this.bridge.batch(depositClaimCreditStatements({id, postingId: existing.debitPostingId, adminId, reason, idempotencyKey}, this.eventOutboxStatement({ idempotencyKey: `event:deposit-claim:${id}:CREDITED`, aggregateType: "DepositClaim", aggregateId: id, eventType: "DEPOSIT_CLAIM_CREDITED", correlationId: idempotencyKey, payload: { userId: claim.userId, asset: claim.asset, amount: claim.claimedAmount, postingId: existing.debitPostingId, adminId, reason } })));
+      this.requireChanges(result, 0, "D1 deposit claim credit");
+      this.requireChanges(result, 2, "D1 deposit claim outbox");
+      return { ...(await readDepositClaim({bridge: this.bridge, id})), replayed: true };
+    }
+    const accountRow = await this.findAccount(account.id);
+    const amount = this.decimal(String(claim.claimedAmount));
+    const postingId = randomUUID();
+    const ledgerId = randomUUID();
+    const mutation = this.buildLedgerMutationStatements({ accountId: account.id, asset: String(claim.asset), amount: amount.toString(), referenceType: "MANUAL_DEPOSIT_CLAIM_CREDIT", referenceId: id, idempotencyKey: ledgerKey, correlationId: id, economicGroup: id, metadata: { adminId, reason } }, "CREDIT", { availableDelta: "amount", lockedDelta: "zero" }, accountRow, amount, ledgerId, postingId);
+    mutation.statements[0].sql += ` AND EXISTS (SELECT 1 FROM "DepositClaim" WHERE "id"=? AND "state"='APPROVED')`;
+    mutation.statements[0].params = [...(mutation.statements[0].params ?? []), id];
+    const statements = [...mutation.statements, ...depositClaimCreditStatements({id, postingId, adminId, reason, idempotencyKey}, this.eventOutboxStatement({ idempotencyKey: `event:deposit-claim:${id}:CREDITED`, aggregateType: "DepositClaim", aggregateId: id, eventType: "DEPOSIT_CLAIM_CREDITED", correlationId: idempotencyKey, payload: { userId: claim.userId, asset: claim.asset, amount: claim.claimedAmount, postingId, adminId, reason }, guard: { sql: `EXISTS (SELECT 1 FROM "LedgerPosting" WHERE "id"=?)`, params: [postingId] } }))];
+    const result = await this.bridge.batch(statements);
+    this.requireChanges(result, 1, "D1 deposit claim ledger transition");
+    this.requireChanges(result, 3, "D1 deposit claim ledger posting");
+    this.requireChanges(result, 7, "D1 deposit claim state transition");
+    this.requireChanges(result, 9, "D1 deposit claim outbox");
+    return { ...(await readDepositClaim({bridge: this.bridge, id})), replayed: false };
   }
 
   async getWithdrawalById(
@@ -6068,6 +6196,106 @@ export class D1FinancialCommandGateway {
     return row;
   }
 
+  async requestWithdrawalReview(
+    requestId: string,
+    reason: string,
+    adminId: string,
+    idempotencyKey: string,
+  ): Promise<{ withdrawal: Record<string, unknown>; replayed: boolean }> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    if (!idempotencyKey?.trim()) throw new BadRequestException("Idempotency key is required");
+    const existing = await this.bridge.select<Record<string, unknown>>(
+      `SELECT "adminId","details" FROM "AdminAuditLog" WHERE "action"='WITHDRAWAL_REVIEW_REQUESTED' AND "target"=? AND json_extract("details",'$.idempotencyKey')=? LIMIT 1`,
+      [requestId, idempotencyKey],
+    );
+    const audit = existing.results[0];
+    if (audit) {
+      let details: Record<string, unknown>;
+      try { details = JSON.parse(String(audit.details ?? "{}")) as Record<string, unknown>; }
+      catch { throw new BadRequestException("Withdrawal review idempotency record is invalid"); }
+      if (audit.adminId !== adminId || details.reason !== reason)
+        throw new BadRequestException("Withdrawal review idempotency key was already used");
+      const withdrawal = await this.getWithdrawalById(requestId);
+      if (!withdrawal) throw new NotFoundException("Withdrawal not found");
+      return { withdrawal, replayed: true };
+    }
+    const result = await this.bridge.batch([
+      {
+        sql: `UPDATE "Gate2Withdrawal" SET "state"='ADDITIONAL_REVIEW',"reviewReason"=?,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "state"='PENDING_REVIEW'`,
+        params: [reason, requestId],
+      },
+      {
+        sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") SELECT ?,?,'WITHDRAWAL_REVIEW_REQUESTED',?,?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "Gate2Withdrawal" WHERE "id"=? AND "state"='ADDITIONAL_REVIEW')`,
+        params: [randomUUID(), adminId, requestId, JSON.stringify({ reason, idempotencyKey }), requestId],
+      },
+      this.eventOutboxStatement({
+        idempotencyKey: `event:withdrawal:review:${requestId}:${idempotencyKey}`,
+        aggregateType: "WITHDRAWAL",
+        aggregateId: requestId,
+        eventType: "WITHDRAWAL_REVIEW_REQUESTED",
+        correlationId: idempotencyKey,
+        payload: { adminId, reason },
+        guard: { sql: `EXISTS (SELECT 1 FROM "Gate2Withdrawal" WHERE "id"=? AND "state"='ADDITIONAL_REVIEW')`, params: [requestId] },
+      }),
+    ]);
+    this.requireChanges(result, 0, "D1 withdrawal review request");
+    this.requireChanges(result, 1, "D1 withdrawal review audit");
+    this.requireChanges(result, 2, "D1 withdrawal review outbox");
+    const withdrawal = await this.getWithdrawalById(requestId);
+    if (!withdrawal) throw new NotFoundException("Withdrawal not found");
+    return { withdrawal, replayed: false };
+  }
+
+  async returnWithdrawalFromReview(
+    requestId: string,
+    reason: string,
+    adminId: string,
+    idempotencyKey: string,
+  ): Promise<{ withdrawal: Record<string, unknown>; replayed: boolean }> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    if (!idempotencyKey?.trim()) throw new BadRequestException("Idempotency key is required");
+    const existing = await this.bridge.select<Record<string, unknown>>(
+      `SELECT "adminId","details" FROM "AdminAuditLog" WHERE "action"='WITHDRAWAL_REVIEW_RETURNED' AND "target"=? AND json_extract("details",'$.idempotencyKey')=? LIMIT 1`,
+      [requestId, idempotencyKey],
+    );
+    const audit = existing.results[0];
+    if (audit) {
+      let details: Record<string, unknown>;
+      try { details = JSON.parse(String(audit.details ?? "{}")) as Record<string, unknown>; }
+      catch { throw new BadRequestException("Withdrawal review return idempotency record is invalid"); }
+      if (audit.adminId !== adminId || details.reason !== reason)
+        throw new BadRequestException("Withdrawal review return idempotency key was already used");
+      const withdrawal = await this.getWithdrawalById(requestId);
+      if (!withdrawal) throw new NotFoundException("Withdrawal not found");
+      return { withdrawal, replayed: true };
+    }
+    const result = await this.bridge.batch([
+      {
+        sql: `UPDATE "Gate2Withdrawal" SET "state"='PENDING_REVIEW',"reviewReason"=?,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "state"='ADDITIONAL_REVIEW'`,
+        params: [reason, requestId],
+      },
+      {
+        sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") SELECT ?,?,'WITHDRAWAL_REVIEW_RETURNED',?,?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "Gate2Withdrawal" WHERE "id"=? AND "state"='PENDING_REVIEW')`,
+        params: [randomUUID(), adminId, requestId, JSON.stringify({ reason, idempotencyKey }), requestId],
+      },
+      this.eventOutboxStatement({
+        idempotencyKey: `event:withdrawal:review-return:${requestId}:${idempotencyKey}`,
+        aggregateType: "WITHDRAWAL",
+        aggregateId: requestId,
+        eventType: "WITHDRAWAL_REVIEW_RETURNED",
+        correlationId: idempotencyKey,
+        payload: { adminId, reason },
+        guard: { sql: `EXISTS (SELECT 1 FROM "Gate2Withdrawal" WHERE "id"=? AND "state"='PENDING_REVIEW')`, params: [requestId] },
+      }),
+    ]);
+    this.requireChanges(result, 0, "D1 withdrawal review return");
+    this.requireChanges(result, 1, "D1 withdrawal review return audit");
+    this.requireChanges(result, 2, "D1 withdrawal review return outbox");
+    const withdrawal = await this.getWithdrawalById(requestId);
+    if (!withdrawal) throw new NotFoundException("Withdrawal not found");
+    return { withdrawal, replayed: false };
+  }
+
   async settleBinaryPosition(
     command: D1BinarySettleCommand,
   ): Promise<Record<string, unknown>> {
@@ -6293,12 +6521,42 @@ export class D1FinancialCommandGateway {
         stakePostingId,
       ],
     });
+    const outboxIndex = statements.length;
+    statements.push(
+      this.eventOutboxStatement({
+        idempotencyKey: `event:binary:settle:${command.positionId}:${command.idempotencyKey}`,
+        aggregateType: "BINARY_POSITION",
+        aggregateId: command.positionId,
+        eventType: "BINARY_POSITION_SETTLED",
+        correlationId: command.correlationId,
+        strict: true,
+        payload: {
+          userId: command.userId,
+          state: command.state,
+          asset: command.asset,
+          stake: stake.toString(),
+          payout: payout.toString(),
+          realizedProfit: command.realizedProfit,
+          expiryPrice: command.expiryPrice,
+          expiryQuoteId: command.expiryQuoteId,
+          expiryProvider: command.expiryProvider,
+          expirySource: command.expirySource,
+          expiryObservedAt: command.expiryObservedAt,
+          expirySequence: command.expirySequence,
+        },
+        guard: {
+          sql: `EXISTS (SELECT 1 FROM "Gate2BinaryPosition" WHERE "id"=? AND "userId"=? AND "state"=? AND "settlementReceiptId"=?)`,
+          params: [command.positionId, command.userId, command.state, receipt],
+        },
+      }),
+    );
     const result = await this.bridge.batch(statements);
     const accountIndex = payout.isZero() ? 1 : 2;
     const stakePostingIndex = accountIndex + 2;
     this.requireChanges(result, accountIndex, "D1 binary account settlement");
     this.requireChanges(result, stakePostingIndex, "D1 binary stake posting");
     this.requireChanges(result, positionIndex, "D1 binary position settlement");
+    this.requireChanges(result, outboxIndex, "D1 binary settlement EventOutbox publication");
     const row = await this.getBinaryPosition(command.positionId);
     if (!row)
       throw new BadRequestException(
@@ -6313,7 +6571,27 @@ export class D1FinancialCommandGateway {
       `SELECT * FROM "Gate2SpotOrder" WHERE "userId" = ? AND "idempotencyKey" = ? LIMIT 1`,
       [command.userId, command.idempotencyKey],
     );
-    if (existing.results[0]) return existing.results[0];
+    if (existing.results[0]) {
+      const row = existing.results[0];
+      const sameDecimal = (stored: unknown, requested: string | null) =>
+        requested === null ? stored === null || stored === undefined : this.decimal(String(stored)).eq(this.decimal(requested));
+      if (
+        String(row.pair).toUpperCase() !== command.pair.toUpperCase() ||
+        String(row.baseAsset).toUpperCase() !== command.baseAsset.toUpperCase() ||
+        String(row.quoteAsset).toUpperCase() !== command.quoteAsset.toUpperCase() ||
+        String(row.side).toUpperCase() !== command.side.toUpperCase() ||
+        String(row.type).toUpperCase() !== command.type.toUpperCase() ||
+        !sameDecimal(row.amount, command.amount) ||
+        !sameDecimal(row.price, command.price) ||
+        !sameDecimal(row.stopPrice, command.stopPrice) ||
+        String(row.reserveAsset).toUpperCase() !== command.reserveAsset.toUpperCase() ||
+        String(row.reserveScope ?? "MAIN").toUpperCase() !== command.reserveScope.toUpperCase() ||
+        !sameDecimal(row.reservedAmount, command.reservedAmount) ||
+        !sameDecimal(row.feeRate, command.feeRate) ||
+        String(row.correlationId) !== command.correlationId
+      ) throw new BadRequestException("Spot order idempotency key was reused with different parameters");
+      return row;
+    }
 
     const account = await this.getAccountForUser(
       command.userId,
@@ -6536,8 +6814,15 @@ export class D1FinancialCommandGateway {
           WHERE "id" = ? AND "userId" = ? AND "status" IN ('OPEN', 'PARTIALLY_FILLED')`,
           params: [orderId, userId],
         },
+        {
+          sql: `INSERT OR IGNORE INTO "Activity" ("id","userId","type","status","referenceType","referenceId","idempotencyKey","ledgerCorrelationId","ledgerPostingId","asset","amount","details","createdAt") VALUES (?,?,'GATE2_SPOT_ORDER','COMPLETED','GATE2_SPOT_ORDER_CANCEL',?,?,?,NULL,?,'0',?,CURRENT_TIMESTAMP)`,
+          params: [randomUUID(), userId, orderId, `activity:gate2:spot:cancel:${orderId}`, String(order.correlationId), String(order.reserveAsset).toUpperCase(), JSON.stringify({ orderId, reserveReleased: false })],
+        },
+        this.eventOutboxStatement({ idempotencyKey: `event:spot:cancel:${orderId}`, aggregateType: "SPOT_ORDER", aggregateId: orderId, eventType: "SPOT_ORDER_CANCELLED", correlationId: String(order.correlationId), payload: { userId, orderId }, strict: true, guard: { sql: `EXISTS (SELECT 1 FROM "Gate2SpotOrder" WHERE "id"=? AND "status"='CANCELED')`, params: [orderId] } }),
       ]);
       this.requireChanges(result, 0, "D1 Spot zero-reserve cancellation");
+      this.requireChanges(result, 1, "D1 Spot zero-reserve cancellation activity");
+      this.requireChanges(result, 2, "D1 Spot zero-reserve cancellation outbox");
       const updated = await this.bridge.select<any>(
         `SELECT * FROM "Gate2SpotOrder" WHERE "id" = ? LIMIT 1`,
         [orderId],
@@ -6636,11 +6921,13 @@ export class D1FinancialCommandGateway {
           WHERE "id" = ? AND "userId" = ? AND "status" IN ('OPEN', 'PARTIALLY_FILLED') AND EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "id" = ? AND "debitPostingId" = ?)`,
         params: [orderId, userId, idem, postingId],
       },
+      this.eventOutboxStatement({ idempotencyKey: `event:spot:cancel:${orderId}`, aggregateType: "SPOT_ORDER", aggregateId: orderId, eventType: "SPOT_ORDER_CANCELLED", correlationId: String(order.correlationId), payload: { userId, orderId, released: release.toString(), asset: String(order.reserveAsset).toUpperCase() }, strict: true, guard: { sql: `EXISTS (SELECT 1 FROM "Gate2SpotOrder" WHERE "id"=? AND "status"='CANCELED')`, params: [orderId] } }),
     ];
     const result = await this.bridge.batch(statements);
     this.requireChanges(result, 1, "D1 Spot cancellation release");
     this.requireChanges(result, 3, "D1 Spot cancellation posting");
     this.requireChanges(result, 7, "D1 Spot cancellation order transition");
+    this.requireChanges(result, 8, "D1 Spot cancellation outbox");
     const updated = await this.bridge.select<any>(
       `SELECT * FROM "Gate2SpotOrder" WHERE "id" = ? LIMIT 1`,
       [orderId],
@@ -6698,7 +6985,8 @@ export class D1FinancialCommandGateway {
       this.decimal(String(sell.remaining)),
     );
     if (amount.isZero()) return null;
-    const tradePrice = price(sell);
+    const buyRestedFirst = (String(buy.createdAt).localeCompare(String(sell.createdAt)) || String(buy.id).localeCompare(String(sell.id))) <= 0;
+    const tradePrice = price(buyRestedFirst ? buy : sell);
     const buyerFee = amount
       .mul(tradePrice)
       .mul(this.nonNegativeDecimal(String(buy.feeRate)))
@@ -6908,7 +7196,6 @@ export class D1FinancialCommandGateway {
           fillKey,
         ] as D1BridgeParameter[],
       },
-      this.rollbackIfNoChanges(fillKey, "SPOT_FILL_BUYER_QUOTE"),
       {
         sql: `UPDATE "LedgerAccount" SET "available"=?,"locked"=?,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "asset"=? AND "scope"=? AND "available"=? AND "locked"=? AND EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "operation"='SPOT_FILL' AND "debitPostingId" IS NULL)`,
         params: [
@@ -6922,7 +7209,6 @@ export class D1FinancialCommandGateway {
           fillKey,
         ] as D1BridgeParameter[],
       },
-      this.rollbackIfNoChanges(fillKey, "SPOT_FILL_SELLER_BASE"),
       {
         sql: `UPDATE "LedgerAccount" SET "available"=?,"locked"=?,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "asset"=? AND "scope"=? AND "available"=? AND "locked"=? AND EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "operation"='SPOT_FILL' AND "debitPostingId" IS NULL)`,
         params: [
@@ -6936,7 +7222,6 @@ export class D1FinancialCommandGateway {
           fillKey,
         ] as D1BridgeParameter[],
       },
-      this.rollbackIfNoChanges(fillKey, "SPOT_FILL_BUYER_BASE"),
       {
         sql: `UPDATE "LedgerAccount" SET "available"=?,"locked"=?,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "asset"=? AND "scope"=? AND "available"=? AND "locked"=? AND EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "operation"='SPOT_FILL' AND "debitPostingId" IS NULL)`,
         params: [
@@ -6950,7 +7235,10 @@ export class D1FinancialCommandGateway {
           fillKey,
         ] as D1BridgeParameter[],
       },
-      this.rollbackIfNoChanges(fillKey, "SPOT_FILL_SELLER_QUOTE"),
+      {
+        sql: `INSERT INTO "LedgerIdempotency" ("id","idempotencyKey","operation") SELECT NULL,?,'SPOT_FILL' WHERE (SELECT COUNT(*) FROM "LedgerAccount" WHERE ("id"=? AND "asset"=? AND "scope"=? AND "status"='ACTIVE' AND "available"=? AND "locked"=?) OR ("id"=? AND "asset"=? AND "scope"=? AND "status"='ACTIVE' AND "available"=? AND "locked"=?) OR ("id"=? AND "asset"=? AND "scope"=? AND "status"='ACTIVE' AND "available"=? AND "locked"=?) OR ("id"=? AND "asset"=? AND "scope"=? AND "status"='ACTIVE' AND "available"=? AND "locked"=?))<>4`,
+        params: [fillKey, buyerQuoteRow.id, buyerQuoteRow.asset, buyerQuoteRow.scope ?? "MAIN", buyerQuoteNext.available.toString(), buyerQuoteNext.locked.toString(), sellerBaseRow.id, sellerBaseRow.asset, sellerBaseRow.scope ?? "MAIN", sellerBaseNext.available.toString(), sellerBaseNext.locked.toString(), buyerBaseRow.id, buyerBaseRow.asset, buyerBaseRow.scope ?? "MAIN", buyerBaseNext.available.toString(), buyerBaseNext.locked.toString(), sellerQuoteRow.id, sellerQuoteRow.asset, sellerQuoteRow.scope ?? "MAIN", sellerQuoteNext.available.toString(), sellerQuoteNext.locked.toString()],
+      },
       {
         sql: `INSERT INTO "LedgerPosting" ("id","accountId","asset","kind","amount","availableDelta","lockedDelta","referenceType","referenceId","idempotencyKey","correlationId","economicGroup","createdAt","metadata") VALUES ${postingRows.map(() => "(?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,?)").join(",")}`,
         params: postingRows.flatMap((p) => [
@@ -7013,6 +7301,7 @@ export class D1FinancialCommandGateway {
         params: [
           randomUUID(),
           String(buy.userId),
+          String(buy.id),
           `${fillKey}:buyer`,
           fillKey,
           postingRows[0].id,
@@ -7021,6 +7310,7 @@ export class D1FinancialCommandGateway {
           JSON.stringify({ orderId: buy.id, tradeId: fillKey }),
           randomUUID(),
           String(sell.userId),
+          String(sell.id),
           `${fillKey}:seller`,
           fillKey,
           postingRows[postingRows.length - 1].id,
@@ -7072,27 +7362,39 @@ export class D1FinancialCommandGateway {
           String(sell.reservedAmount),
         ] as D1BridgeParameter[],
       },
+      this.eventOutboxStatement({
+        idempotencyKey: `event:spot-fill:${fillKey}`,
+        aggregateType: "SPOT_TRADE",
+        aggregateId: fillKey,
+        eventType: "SPOT_TRADE_EXECUTED",
+        correlationId: fillKey,
+        payload: { tradeId: fillKey, buyerUserId: buy.userId, sellerUserId: sell.userId, pair, price: tradePrice.toString(), amount: amount.toString() },
+        strict: true,
+        guard: { sql: `EXISTS (SELECT 1 FROM "Gate2SpotTrade" WHERE "idempotencyKey"=?)`, params: [fillKey] },
+      }),
     ];
     const batch = await this.bridge.batch(statements);
     this.requireChanges(batch, 2, "D1 Spot buyer quote transition");
-    this.requireChanges(batch, 4, "D1 Spot seller base transition");
-    this.requireChanges(batch, 6, "D1 Spot buyer base transition");
-    this.requireChanges(batch, 8, "D1 Spot seller quote transition");
+    this.requireChanges(batch, 3, "D1 Spot seller base transition");
+    this.requireChanges(batch, 4, "D1 Spot buyer base transition");
+    this.requireChanges(batch, 5, "D1 Spot seller quote transition");
     this.requireAtLeastChanges(
       batch,
-      10,
+      7,
       postingRows.length,
       "D1 Spot fill postings",
     );
-    this.requireChanges(batch, 11, "D1 Spot fill idempotency completion");
+    this.requireChanges(batch, 8, "D1 Spot fill idempotency completion");
     this.requireAtLeastChanges(
       batch,
-      12,
+      9,
       postingRows.length,
       "D1 Spot fill audit",
     );
-    this.requireChanges(batch, 13, "D1 Spot trade record");
-    this.requireAtLeastChanges(batch, 15, 2, "D1 Spot order transitions");
+    this.requireChanges(batch, 10, "D1 Spot trade record");
+    this.requireAtLeastChanges(batch, 11, 2, "D1 Spot Activity records");
+    this.requireAtLeastChanges(batch, 12, 2, "D1 Spot order transitions");
+    this.requireChanges(batch, 13, "D1 Spot fill outbox");
     const created = await this.bridge.select<Record<string, unknown>>(
       `SELECT * FROM "Gate2SpotTrade" WHERE "idempotencyKey"=? LIMIT 1`,
       [fillKey],

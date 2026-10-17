@@ -5,6 +5,7 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  ServiceUnavailableException,
   Optional,
 } from "@nestjs/common";
 import * as fs from "node:fs";
@@ -998,86 +999,7 @@ export class AdminService {
     if (this.d1?.isEnabled()) {
       return this.d1.applyAdminFinancialCorrection(input);
     }
-    const command = await this.prisma.adminGovernanceCommand.findUnique({
-      where: { id: input.governanceCommandId },
-    });
-    if (!command || command.commandType !== "FINANCIAL_CORRECTION")
-      throw new ForbiddenException(
-        "An independently approved financial correction command is required",
-      );
-    if (command.requestedBy === input.adminId)
-      throw new ForbiddenException(
-        "The requester cannot execute their own financial correction",
-      );
-    const asset = input.asset.trim().toUpperCase();
-    const referenceId = `admin-correction:${input.idempotencyKey}`;
-    if (command.status === "EXECUTED") {
-      const posting = await this.prisma.ledgerPosting.findFirst({
-        where: { idempotencyKey: referenceId },
-      });
-      return { command, posting, replayed: true };
-    }
-    if (command.status !== "APPROVED")
-      throw new ForbiddenException(
-        "An independently approved financial correction command is required",
-      );
-    return this.prisma.$transaction(async (tx) => {
-      const account = await this.ledgerAuthority.getAccountForUser(
-        input.userId,
-        asset,
-        tx,
-      );
-      const posting =
-        input.direction === "CREDIT"
-          ? await this.ledgerAuthority.credit(
-              {
-                accountId: account.id,
-                asset,
-                amount: input.amount,
-                referenceType: "ADMIN_FINANCIAL_CORRECTION",
-                referenceId,
-                idempotencyKey: referenceId,
-                correlationId: referenceId,
-                economicGroup: referenceId,
-                metadata: { adminId: input.adminId, reason: input.reason },
-              },
-              tx,
-            )
-          : await this.ledgerAuthority.debit(
-              {
-                accountId: account.id,
-                asset,
-                amount: input.amount,
-                referenceType: "ADMIN_FINANCIAL_CORRECTION",
-                referenceId,
-                idempotencyKey: referenceId,
-                correlationId: referenceId,
-                economicGroup: referenceId,
-                metadata: { adminId: input.adminId, reason: input.reason },
-              },
-              tx,
-            );
-      const executed = await tx.adminGovernanceCommand.update({
-        where: { id: command.id },
-        data: { status: "EXECUTED", executedAt: new Date() },
-      });
-      await tx.adminAuditLog.create({
-        data: {
-          adminId: input.adminId,
-          action: "FINANCIAL_CORRECTION_EXECUTED",
-          target: input.userId,
-          details: {
-            commandId: command.id,
-            asset,
-            amount: input.amount,
-            direction: input.direction,
-            reason: input.reason,
-            postingId: posting.postingId,
-          },
-        },
-      });
-      return { command: executed, posting, replayed: false };
-    });
+    throw new ServiceUnavailableException("Canonical financial correction authority is unavailable");
   }
 
   async requestSandboxControl(input: {
@@ -1812,6 +1734,20 @@ export class AdminService {
     );
   }
 
+  async returnAdminWithdrawalFromReview(
+    id: string,
+    adminId: string,
+    reason: string,
+    idempotencyKey: string,
+  ) {
+    return this.financialOperations.returnWithdrawalFromReview(
+      id,
+      reason,
+      adminId,
+      idempotencyKey,
+    );
+  }
+
   async failAdminWithdrawal(
     id: string,
     adminId: string,
@@ -2067,19 +2003,30 @@ export class AdminService {
     data: any,
     context?: AdminPlanMutationContext,
   ) {
+    const planData = { ...data, interestRate: String(data.interestRate), minAmount: String(data.minAmount), maxAmount: String(data.maxAmount) };
     return this.prisma.$transaction(async (tx) => {
-      const plan = await tx.loanPlan.create({ data });
+      if (context) {
+        const prior = await tx.adminAuditLog.findFirst({ where: { adminId: context.adminId, action: "LOAN_PLAN_CREATED", details: { contains: `"idempotencyKey":"${context.idempotencyKey}"` } } });
+        if (prior) {
+          const expected = JSON.stringify({ reason: context.reason, idempotencyKey: context.idempotencyKey, payload: planData });
+          if (prior.details !== expected) throw new BadRequestException("Loan plan idempotency key was reused with different parameters");
+          const existing = await tx.loanPlan.findUnique({ where: { id: prior.target! } });
+          if (!existing) throw new NotFoundException("Loan plan replay no longer resolves");
+          return existing;
+        }
+      }
+      const plan = await tx.loanPlan.create({ data: planData });
       if (!context) return plan;
       const audit = await tx.adminAuditLog.create({
         data: {
           adminId: context.adminId,
           action: "LOAN_PLAN_CREATED",
           target: plan.id,
-          details: {
+          details: JSON.stringify({
             reason: context.reason,
             idempotencyKey: context.idempotencyKey,
-            name: plan.name,
-          },
+            payload: planData,
+          }),
         },
       });
       return { ...plan, ok: true, auditId: audit.id };
@@ -2091,18 +2038,31 @@ export class AdminService {
     data: any,
     context?: AdminPlanMutationContext,
   ) {
+    const planData = { ...data };
+    for (const field of ["interestRate", "minAmount", "maxAmount"] as const) if (planData[field] !== undefined) planData[field] = String(planData[field]);
     return this.prisma.$transaction(async (tx) => {
-      const plan = await tx.loanPlan.update({ where: { id }, data });
+      if (context) {
+        const prior = await tx.adminAuditLog.findFirst({ where: { adminId: context.adminId, action: "LOAN_PLAN_UPDATED", target: id, details: { contains: `"idempotencyKey":"${context.idempotencyKey}"` } } });
+        if (prior) {
+          const expected = JSON.stringify({ reason: context.reason, idempotencyKey: context.idempotencyKey, payload: planData });
+          if (prior.details !== expected) throw new BadRequestException("Loan plan idempotency key was reused with different parameters");
+          const existing = await tx.loanPlan.findUnique({ where: { id } });
+          if (!existing) throw new NotFoundException("Loan plan replay no longer resolves");
+          return existing;
+        }
+      }
+      const plan = await tx.loanPlan.update({ where: { id }, data: planData });
       if (!context) return plan;
       const audit = await tx.adminAuditLog.create({
         data: {
           adminId: context.adminId,
           action: "LOAN_PLAN_UPDATED",
           target: id,
-          details: {
+          details: JSON.stringify({
             reason: context.reason,
             idempotencyKey: context.idempotencyKey,
-          },
+            payload: planData,
+          }),
         },
       });
       return { ...plan, ok: true, auditId: audit.id };

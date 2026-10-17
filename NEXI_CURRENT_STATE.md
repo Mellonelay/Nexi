@@ -1,5 +1,14 @@
 # NEXI Current State — SQLite Promotion Checkpoint
 
+**Updated:** 2026-10-18 UTC (financial source/test increment; not deployed)
+
+## 2026-10-18 wallet, Binary and withdrawal financial proof increment
+
+- Canonical branch is `main` at source commit `a0a014f` (based on `e09a33172dc1d14f6d379bac8b969e20d22ac9ea`); source, tests, and task/evidence updates are committed but not deployed. The pre-existing Wrangler/Admin dirty paths remain preserved. No service, live database, external financial state, Git commit, or deployment was changed.
+- Focused disposable-SQLite suite now passes 5/5: wallet MAIN/BINARY/MARGIN transfers; Binary reserve, exact WIN and zero-payout LOSS settlement, Ledger/audit/Activity/EventOutbox/replay and full rollback on settlement Outbox key collision; and withdrawal reserve/approve/settle/reject/refund. Binary service suite passes 17/17.
+- Fixed a Binary position INSERT values/columns mismatch and added state/receipt-guarded `BINARY_POSITION_SETTLED` EventOutbox publication using strict insertion so event collision rolls back the entire settlement batch. Receipt: `tasks/evidence/wallet-account-transfer-local-sqlite-20261018.md`; proof reuse boundaries updated in `NEXI_PROOF_REUSE_REGISTER.md`.
+- Withdrawal request/reserve, approval, deterministic non-live settlement, rejection/refund, replay, Ledger, Activity, AdminAuditLog and Outbox are tested against disposable SQLite. No broadcast was attempted. Binary direct-gateway WIN/zero-payout LOSS and exact-decimal configured-loss service behavior are tested; provider quote/expiry and persisted-configuration end-to-end remain open. Authenticated financial API and live-database acceptance remain open. Continue backend work; do not infer deployment or owner acceptance from local tests.
+
 **Updated:** 2026-10-17 UTC
 
 **Canonical source:** /home/mellonelay1999/workspaces/Nexi, branch main. The repository code checkpoint at promotion was 2a1cffef69049a12fee533f2905fbbcbf1f40105; later commits 9333a63 and the next state-record commit contain documentation only, with no backend code change. Preserve existing user changes in cloudflare-container-bootstrap/wrangler.jsonc and untracked Admin pnpm files.
@@ -124,3 +133,17 @@ NestJS source configures Swagger JSON at `/docs-json`. The live public API retur
 - Current Saturday market snapshot accounts for all 36 non-crypto assets: 31 BiQuote-mapped symbols are `UNAVAILABLE/CLOSED/MARKET_CLOSED` with `biquote:rest:closed-market`; four Gate reference symbols (AXP, DIS, SONY, UBER) report fresh `LIVE/OPEN`; MOEX USD/RUB is `UNAVAILABLE/CLOSED/MARKET_CLOSED`. This verifies truthful closed-session labeling and coverage accounting, not weekday BiQuote freshness or Gate instrument semantics.
 - Initial HTTPS checks saw transient 502s during restart; readiness recovered within the bounded window. No financial data, provider mappings, Cloudflare resources, or frontend source changed.
 - Current outstanding gates remain: authenticated financial/admin end-to-end mutations (authorized test identity/fixture needed), durable queue/workflow execution and crash recovery, exact Socket.IO gap replay, current Sentry event ingestion/stack-frame attribution, final D1 update/delete watermark, and independent encrypted off-VPS backup/restore with authorized destination/key custody. Do not label backend complete.
+# 2026-10-18 wallet transfer proof increment
+
+- **SOURCE:** Canonical checkout is still `main` at `e09a33172dc1d14f6d379bac8b969e20d22ac9ea`; one checkout/worktree. The existing API runtime and deployed artifact were not changed.
+- **TESTED:** New `backend/test/d1/wallet-account-transfer.local-sqlite.spec.ts` passes 2/2 focused tests under Node 24 against disposable SQLite. It verifies same-user MAIN/BINARY/MARGIN USDT transfer accounting, audit/activity/outbox, replay, scope asset and ownership rejection, idempotency collision, and overdraft atomicity. Receipt: `tasks/evidence/wallet-account-transfer-local-sqlite-20261018.md`.
+- **LIMIT:** Does not prove authenticated live/API financial acceptance or owner acceptance. No live financial rows, external service, or deployed artifact was changed. The source tree now contains a test-only change, not yet committed or deployed.
+- **NEXT:** Continue another independent, genuinely unproven financial operation on disposable state; retain authorized test-funding, queue/workflow recovery, final D1 watermark, and encrypted off-VPS backup/restore gates as open.
+
+
+## 2026-10-18 consolidated backend source frontier
+
+- Canonical source is `main` at `a0a014f`, based on `e09a33172dc1d14f6d379bac8b969e20d22ac9ea`; the repair batch is committed but not deployed. The deployed API artifact remains unchanged. No live schema migration, financial write, service restart or deployment occurred.
+- Current changed-boundary checks: local-SQLite batch 14/14; focused deposit-address gateway test 1/1; backend build typecheck and `git diff --check` passed. Tests used disposable SQLite under Node 22.23.2. The `0016_loan_repayment_cas.sql` migration has not been applied to the live database.
+- Repairs include Spot fill Activity/Outbox, reservation replay and resting-price execution; Margin open Activity/Outbox and replay; Mining subscription replay intent; Binary settlement Outbox and configuration replay binding; DepositClaim review CAS/credit boundary and strict deposit-address Outbox; Loan cumulative repayment CAS; conversion expiry; Admin financial payload binding; and withdrawal additional-review/return audit and Outbox. Details and proof scope: `NEXI_PROOF_REUSE_REGISTER.md` and `tasks/evidence/wallet-account-transfer-local-sqlite-20261018.md`.
+- The stopped bounded audit left confirmed Governance replay/decision-race gaps and Margin partial-entry/close-fill recovery gaps. Other open requirements include authenticated API/Admin acceptance, deeper Margin debt/interest/liquidation, full Loan/Mining lifecycle, Binary provider/config integration, D1 update/delete watermark, durable workflow recovery, deployed identity and encrypted off-VPS restore. The next controller owns these; do not deploy this partial source batch.

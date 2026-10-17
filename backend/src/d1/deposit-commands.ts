@@ -45,13 +45,13 @@ export function depositClaimSubmissionStatements(command: DepositClaimSubmission
 type ClaimMutation = {update: D1BridgeBatchStatement; adminId:string; id:string; action:string; details:Record<string,unknown>; outbox:D1BridgeBatchStatement};
 function depositClaimMutationStatements(input: ClaimMutation): D1BridgeBatchStatement[] {
   return [input.update, {
-    sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`,
+    sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") SELECT ?,?,?,?,?,CURRENT_TIMESTAMP WHERE changes()=1`,
     params: [randomUUID(),input.adminId,input.action,input.id,JSON.stringify(input.details)],
   }, input.outbox];
 }
 export function depositClaimReviewStatements({id,state,adminId,reason,idempotencyKey}: {id:string; state:string; adminId:string; reason:string; idempotencyKey:string}, outbox:D1BridgeBatchStatement): D1BridgeBatchStatement[] {
   return depositClaimMutationStatements({id,adminId,action:`DEPOSIT_CLAIM_${state}`,details:{reason,idempotencyKey},outbox,
-    update:{sql:`UPDATE "DepositClaim" SET "state"=?,"reviewedAt"=CURRENT_TIMESTAMP,"reviewedBy"=?,"reviewReason"=? WHERE "id"=?`,params:[state,adminId,reason,id]},
+    update:{sql:`UPDATE "DepositClaim" SET "state"=?,"reviewedAt"=CURRENT_TIMESTAMP,"reviewedBy"=?,"reviewReason"=? WHERE "id"=? AND "state"='PENDING_REVIEW'`,params:[state,adminId,reason,id]},
   });
 }
 export function depositClaimCreditStatements({id,postingId,adminId,reason,idempotencyKey}: {id:string; postingId:string; adminId:string; reason:string; idempotencyKey:string}, outbox:D1BridgeBatchStatement): D1BridgeBatchStatement[] {

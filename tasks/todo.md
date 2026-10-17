@@ -1,5 +1,20 @@
 # NEXI Migration — Executable Frontier
 
+## 2026-10-18 backend closeout handoff — owner stopped the campaign
+
+- [x] TESTED — Final affected local-SQLite suite passed 14/14; focused deposit-address gateway test passed 1/1; `npx tsc --noEmit -p tsconfig.build.json` and `git diff --check` passed. The prior consolidated 9-suite / 106-test proof was reused for unchanged contracts; affected current paths were rechecked separately. Exact results: `tasks/evidence/wallet-account-transfer-local-sqlite-20261018.md`.
+- [x] IMPLEMENTED — Current batch includes Spot Activity/Outbox, stable replay and resting-price matching; Margin open projection/replay; Mining subscription intent replay; Binary settlement event and configuration replay binding; atomic deposit claim review/credit and strict deposit-address Outbox; Loan cumulative repayment CAS with migration; withdrawal additional-review/return; Admin command payload binding and conversion expiry guard.
+- [ ] OPEN — Source is committed on canonical `main` at `a0a014f`, based on `e09a33172dc1d14f6d379bac8b969e20d22ac9ea`. No deployment, service restart, live database migration or financial write occurred. Owner directed stop after this reconciliation; no further campaign work is authorized in this task.
+- [ ] BLOCKED_WITH_EVIDENCE — Current audit has confirmed unresolved Governance command payload collision and decision race, plus Margin partial-entry position projection and close-fill recovery gaps. Full authenticated Admin/API acceptance, other Margin debt/interest/liquidation, full Loan/Mining lifecycles, Binary provider/config integration, D1 delta watermark, durable workflow recovery and encrypted off-VPS restore remain unproven. CodeScene token remains expired (3/6 installation checks passed).
+- [ ] NEXT — Next controller: conduct the owner's planned finite financial-command coverage and closure campaign. Apply migration `0016_loan_repayment_cas.sql` only as part of coordinated release. Do not deploy from this handoff.
+
+## 2026-10-18 backend financial continuation
+
+- [x] TESTED — Isolated local-SQLite proof covers same-user MAIN/BINARY/MARGIN wallet transfers, Binary reserve/WIN/LOSS settlement and withdrawal request/reserve/approve/settle/reject/refund. Exact Ledger, audit, Activity, AdminAuditLog, Outbox, replay and overdraft/collision rollback checks pass. Receipt: `tasks/evidence/wallet-account-transfer-local-sqlite-20261018.md`.
+- [x] IMPLEMENTED — Fixed Binary open-position SQL value count and added idempotent, state/receipt-guarded `BINARY_POSITION_SETTLED` EventOutbox insertion in the settlement batch. Strict insertion makes an occupied event key roll back the entire settlement batch. Focused local SQLite suite passes 5/5; Binary service suite passes 17/17, including exact-decimal LOSS payout calculation.
+- [ ] OPEN — Authenticated live/API financial acceptance remains separate; use only an authorized test-balance identity or supported accounting-backed fixture. No live database write occurred in this proof.
+- [ ] NEXT — Continue with deposit claim/review/credit or conversion on disposable state. Keep Binary provider/configuration and authenticated API acceptance, external withdrawal broadcast, and off-VPS backup destination/key-custody gates open.
+
 Owner authority: latest 2026-10-17 directive/checkpoint. See plan.md. States are claim-scoped; test PASS is not deployed/runtime/owner acceptance. Entries above the dated 2026-10-17 live-authority checkpoint are retained historical checkpoints; use the newest dated checkpoint below as the active frontier. Name.com DNS/NS and trusted TLS are complete; the current blocker is financial authority mismatch and the still-populated Cloudflare D1/async resources, not DNS.
 
 - [x] G0 worktree/dirty/source preservation — COMPLETED; owner RDC; proof evidence/g0-recovery.json; migration HEAD 9a41b2e, original d24862f and two pnpm files preserved.

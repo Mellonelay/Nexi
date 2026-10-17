@@ -64,6 +64,7 @@ export class FinancialOperationsService {
     const existing = await this.d1.getWithdrawal(input.idempotencyKey);
     if (existing) {
       if (String(existing.userId) !== userId) throw new BadRequestException('Withdrawal ownership mismatch');
+      if (String(existing.asset).toUpperCase() !== input.asset.trim().toUpperCase() || String(existing.network).toUpperCase() !== input.network.trim().toUpperCase() || String(existing.address) !== input.address || String(existing.amount) !== amount.toString() || String(existing.fee) !== fee.toString() || String(existing.reservedAmount) !== amount.add(fee).toString()) throw new BadRequestException('Withdrawal idempotency key was reused with different parameters');
       return { withdrawal: existing, replayed: true, providerLive: false };
     }
     return { withdrawal: await this.d1.reserveWithdrawal({ userId, asset: input.asset, network: input.network, address: input.address, amount: amount.toString(), fee: fee.toString(), reservedAmount: amount.add(fee).toString(), requestKey: input.idempotencyKey, reserveKey: `gate2:withdrawal:reserve:${input.idempotencyKey}`, providerState: 'DETERMINISTIC_TEST_NON_LIVE' }), replayed: false, providerLive: false };
@@ -89,10 +90,20 @@ export class FinancialOperationsService {
 
   async requestWithdrawalReview(id: string, reason: string, adminId: string, idempotencyKey: string): Promise<any> {
     if (!reason?.trim()) throw new BadRequestException('Review reason is required');
+    this.assertIdempotencyKey(idempotencyKey);
     const withdrawal: any = await this.d1.getWithdrawalById(id);
     if (!withdrawal) throw new NotFoundException('Withdrawal not found');
-    if (withdrawal.state !== Gate2WithdrawalState.PENDING_REVIEW) throw new BadRequestException('Withdrawal is not pending review');
-    return { withdrawal, replayed: false, providerLive: false };
+    if (![Gate2WithdrawalState.PENDING_REVIEW, Gate2WithdrawalState.ADDITIONAL_REVIEW].includes(withdrawal.state)) throw new BadRequestException('Withdrawal is not pending review');
+    return { ...(await this.d1.requestWithdrawalReview(id, reason, adminId, idempotencyKey)), providerLive: false };
+  }
+
+  async returnWithdrawalFromReview(id: string, reason: string, adminId: string, idempotencyKey: string): Promise<any> {
+    if (!reason?.trim()) throw new BadRequestException('Review return reason is required');
+    this.assertIdempotencyKey(idempotencyKey);
+    const withdrawal: any = await this.d1.getWithdrawalById(id);
+    if (!withdrawal) throw new NotFoundException('Withdrawal not found');
+    if (![Gate2WithdrawalState.ADDITIONAL_REVIEW, Gate2WithdrawalState.PENDING_REVIEW].includes(withdrawal.state)) throw new BadRequestException('Withdrawal is not in additional review');
+    return { ...(await this.d1.returnWithdrawalFromReview(id, reason, adminId, idempotencyKey)), providerLive: false };
   }
 
   async failWithdrawal(id: string, reason: string, adminId: string, idempotencyKey: string): Promise<any> {
@@ -198,6 +209,7 @@ export class FinancialOperationsService {
     const existing = await this.d1.getInternalTransfer(input.idempotencyKey);
     if (existing) {
       if (existing.fromUserId !== userId) throw new BadRequestException('Transfer ownership mismatch');
+      if (String(existing.toUserId) !== toUserId || String(existing.asset).toUpperCase() !== input.asset.trim().toUpperCase() || String(existing.amount) !== amount.toString()) throw new BadRequestException('Transfer idempotency key was reused with different parameters');
       return { transfer: existing, replayed: true };
     }
     const [from, to] = await Promise.all([this.d1.getUserById(userId), this.d1.getUserById(toUserId)]);
@@ -218,6 +230,7 @@ export class FinancialOperationsService {
     const existing = await this.d1.getConversionQuoteByKey(input.quoteKey);
     if (existing) {
       if (String(existing.userId) !== userId) throw new BadRequestException('Conversion quote ownership mismatch');
+      if (String(existing.fromAsset).toUpperCase() !== fromAsset || String(existing.toAsset).toUpperCase() !== toAsset || String(existing.inputAmount) !== amount.toString()) throw new BadRequestException('Conversion quote key was reused with different parameters');
       return { quote: existing, replayed: true };
     }
     const rateKey = `gate2.conversion.rate.${fromAsset}.${toAsset}`;
@@ -266,14 +279,14 @@ export class FinancialOperationsService {
       }
     }
     const claim: any = await this.d1.submitDepositClaim({ id: randomUUID(), userId, asset: input.asset, network: input.network, depositAddressId: input.depositAddressId, claimedAmount: amount.toString(), proofObjectKey: input.proofObjectKey.trim(), txHash: input.txHash?.trim(), idempotencyKey: input.idempotencyKey });
-    return { depositRequestId: claim.id, status: claim.state, claim, replayed: false };
+    return { depositRequestId: claim.id, status: claim.state, claim, replayed: Boolean(claim.replayed) };
   }
 
   getDepositClaims(userId: string) { return this.d1.listDepositClaims(userId); }
   getAdminDepositClaims() { return this.d1.listDepositClaims(); }
-  async confirmDepositClaim(id: string, reason: string, adminId: string, idempotencyKey: string) { if (!reason?.trim()) throw new BadRequestException('Confirmation reason is required'); return { claim: await this.d1.updateDepositClaimState(id, 'APPROVED', adminId, reason, idempotencyKey), replayed: false }; }
-  async creditDepositClaim(id: string, reason: string, adminId: string, idempotencyKey: string) { if (!reason?.trim()) throw new BadRequestException('Credit reason is required'); return { claim: await this.d1.creditDepositClaim(id, adminId, reason, idempotencyKey), replayed: false }; }
-  async rejectDepositClaim(id: string, reason: string, adminId: string, idempotencyKey: string) { if (!reason?.trim()) throw new BadRequestException('Rejection reason is required'); return { claim: await this.d1.updateDepositClaimState(id, 'REJECTED', adminId, reason, idempotencyKey), replayed: false }; }
+  async confirmDepositClaim(id: string, reason: string, adminId: string, idempotencyKey: string) { if (!reason?.trim()) throw new BadRequestException('Confirmation reason is required'); const claim: any = await this.d1.updateDepositClaimState(id, 'APPROVED', adminId, reason, idempotencyKey); return { claim, replayed: Boolean(claim.replayed) }; }
+  async creditDepositClaim(id: string, reason: string, adminId: string, idempotencyKey: string) { if (!reason?.trim()) throw new BadRequestException('Credit reason is required'); const claim: any = await this.d1.creditDepositClaim(id, adminId, reason, idempotencyKey); return { claim, replayed: Boolean(claim.replayed) }; }
+  async rejectDepositClaim(id: string, reason: string, adminId: string, idempotencyKey: string) { if (!reason?.trim()) throw new BadRequestException('Rejection reason is required'); const claim: any = await this.d1.updateDepositClaimState(id, 'REJECTED', adminId, reason, idempotencyKey); return { claim, replayed: Boolean(claim.replayed) }; }
   getDeposits(userId: string) { return this.d1.listDeposits(userId); }
   getWithdrawals(userId: string) { return this.d1.listWithdrawals(userId); }
   getTransfers(userId: string) { return this.d1.listInternalTransfers(userId); }

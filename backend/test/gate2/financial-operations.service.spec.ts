@@ -20,6 +20,7 @@ describe('Gate 2 financial operations', () => {
       isAssetSupportedForWalletScope: jest.fn().mockResolvedValue(true),
       pairedTransfer: jest.fn().mockResolvedValue({ debitPostingId: 'debit-1', creditPostingId: 'credit-1' }),
       createConversionQuote: jest.fn().mockImplementation(async (command: any) => ({ id: 'quote-1', ...command })),
+      submitDepositClaim: jest.fn().mockResolvedValue({ id: 'claim-1', state: 'PENDING_REVIEW', replayed: true }),
     };
     return { d1, withdrawal, transfer };
   }
@@ -31,11 +32,23 @@ describe('Gate 2 financial operations', () => {
     expect(result.providerLive).toBe(false);
   });
 
+  it('rejects changed withdrawal parameters under an existing idempotency key', async () => {
+    const { d1, withdrawal } = createD1();
+    d1.getWithdrawal.mockResolvedValue(withdrawal);
+    await expect(new FinancialOperationsService(d1).requestWithdrawal('user-1', { asset: 'USDT', network: 'TRC20', address: 'other-address', amount: '10', idempotencyKey: 'withdraw-key-1' })).rejects.toThrow('different parameters');
+  });
+
   it('creates an exact conversion quote from D1 configuration evidence', async () => {
     const { d1 } = createD1();
     const result = await new FinancialOperationsService(d1).createConversionQuote('user-1', { fromAsset: 'USDT', toAsset: 'BTC', amount: '10', quoteKey: 'quote-key-1' });
     expect(result.replayed).toBe(false);
     expect(d1.createConversionQuote).toHaveBeenCalledWith(expect.objectContaining({ inputAmount: '10', rate: '0.000025', outputAmount: '0.00025', source: 'gate2.conversion.rate.USDT.BTC', quoteKey: 'quote-key-1' }));
+  });
+
+  it('rejects changed conversion parameters under an existing quote key', async () => {
+    const { d1 } = createD1();
+    d1.getConversionQuoteByKey.mockResolvedValue({ userId: 'user-1', fromAsset: 'USDT', toAsset: 'BTC', inputAmount: '10' });
+    await expect(new FinancialOperationsService(d1).createConversionQuote('user-1', { fromAsset: 'USDT', toAsset: 'BTC', amount: '11', quoteKey: 'quote-key-1' })).rejects.toThrow('different parameters');
   });
 
   it('uses a fresh D1 market quote and its lineage when conversion config is absent', async () => {
@@ -109,6 +122,20 @@ describe('Gate 2 financial operations', () => {
     const result = await new FinancialOperationsService(d1).transfer('user-1', { toUserId: 'user-2', asset: 'USDT', amount: '5', idempotencyKey: 'transfer-key-1' });
     expect(result.transfer).toMatchObject({ id: 'transfer-1' });
     expect(d1.pairedTransfer).toHaveBeenCalledWith(expect.objectContaining({ amount: '5', referenceType: 'GATE2_INTERNAL_TRANSFER', internalTransfer: expect.objectContaining({ fromUserId: 'user-1', toUserId: 'user-2' }) }));
+  });
+
+  it('rejects a changed destination under an existing internal transfer key', async () => {
+    const { d1, transfer } = createD1();
+    d1.getInternalTransfer.mockResolvedValue(transfer);
+    await expect(new FinancialOperationsService(d1).transfer('user-1', { toUserId: 'user-3', asset: 'USDT', amount: '5', idempotencyKey: 'transfer-key-1' })).rejects.toThrow('different parameters');
+  });
+
+  it('reports exact deposit claim replay and rejects changed payloads', async () => {
+    const { d1 } = createD1();
+    const service = new FinancialOperationsService(d1);
+    const input = { asset: 'USDT', network: 'TRC20', depositAddressId: 'address-1', claimedAmount: '10', proofObjectKey: 'deposit-proofs/user-1/123e4567-e89b-12d3-a456-426614174000', idempotencyKey: 'deposit-key-123' };
+    await expect(service.submitDepositClaim('user-1', input)).resolves.toMatchObject({ replayed: true });
+    expect(d1.submitDepositClaim).toHaveBeenCalledWith(expect.objectContaining({ claimedAmount: '10' }));
   });
 
   it('rejects another user’s proof key when submitting a deposit claim', async () => {

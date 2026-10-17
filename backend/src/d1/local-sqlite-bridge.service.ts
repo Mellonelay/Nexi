@@ -82,7 +82,7 @@ export class LocalSqliteBridgeService implements OnModuleDestroy {
         || !/^(SELECT|INSERT|UPDATE|DELETE|REPLACE)\b/i.test(sql)) {
         throw new Error('Local SQLite batch accepts only one bounded data statement per item');
       }
-      if (!Array.isArray(params) || params.length > 64 ||
+      if (!Array.isArray(params) || params.length > 128 ||
         params.some(v => v !== null && !['string', 'number', 'boolean'].includes(typeof v))) {
         throw new Error('Unsupported local SQLite bridge parameter');
       }

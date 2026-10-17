@@ -273,7 +273,7 @@ describe("D1FinancialCommandGateway", () => {
   it("creates a D1 loan application with a guarded submission outbox event", async () => {
     const bridge = createBridge({
       select: jest.fn().mockResolvedValue({
-        results: [{ id: "loan-apply-1", userId: "user-1", status: "PENDING" }],
+        results: [{ id: "loan-apply-1", userId: "user-1", status: "PENDING", amountDecimal: "10", currency: "USDT", term: 30, durationDays: 30, interestRateDecimal: "0.1", totalRepaymentDecimal: "11", collateral: null, collateralImg: null }],
       }),
       batch: jest.fn().mockResolvedValue({
         results: [
@@ -304,6 +304,26 @@ describe("D1FinancialCommandGateway", () => {
     expect(statements[0].sql).toContain("LoanApplication");
     expect(statements[1].sql).toContain("EventOutbox");
     expect(statements[1].params).toContain("LOAN_APPLICATION_SUBMITTED");
+  });
+
+  it("rejects changed loan parameters when the deterministic application id already exists", async () => {
+    const bridge = createBridge({
+      select: jest.fn().mockResolvedValue({ results: [{ id: "loan-apply-1", userId: "user-1", amountDecimal: "10", currency: "USDT", term: 30, durationDays: 30, interestRateDecimal: "0.1", totalRepaymentDecimal: "11", collateral: null, collateralImg: null }] }),
+      batch: jest.fn().mockResolvedValue({ results: [{ success: true, meta: { changes: 0 } }, { success: true, meta: { changes: 0 } }] }),
+    });
+    await expect(new D1FinancialCommandGateway(bridge).applyLoan({
+      id: "loan-apply-1", userId: "user-1", amount: "12", currency: "USDT", term: 30, durationDays: 30,
+      interestRate: "0.1", totalRepayment: "13.2", productSnapshot: { currency: "USDT", durationDays: 30 },
+    })).rejects.toThrow("different parameters");
+  });
+
+  it("rejects a changed repayment amount under an existing loan repayment key", async () => {
+    const bridge = createBridge({ select: jest.fn().mockImplementation(async (sql: string) => {
+      if (sql.includes('FROM "LoanApplication"')) return { results: [{ id: "loan-1", userId: "user-1", status: "ACTIVE", currency: "USDT", totalRepaymentDecimal: "11" }] };
+      if (sql.includes('FROM "LoanRepayment" WHERE "id"')) return { results: [{ id: "repayment-1", amountDecimal: "2" }] };
+      return { results: [] };
+    }) });
+    await expect(new D1FinancialCommandGateway(bridge).repayLoan({ userId: "user-1", loanId: "loan-1", amount: "1", idempotencyKey: "loan-repay-key-1" })).rejects.toThrow("different amount");
   });
 
   it("posts a same-user Wallet transfer once with one Activity and one outbox event", async () => {
@@ -518,6 +538,29 @@ describe("D1FinancialCommandGateway", () => {
     expect(statements[8].sql).toContain("EventOutbox");
   });
 
+  it("replays a Spot reservation only when the original order terms match", async () => {
+    const order = {
+      id: "order-1", userId: "user-1", pair: "BTCUSDT", baseAsset: "BTC", quoteAsset: "USDT",
+      side: "BUY", type: "LIMIT", amount: "0.1", price: "100", stopPrice: null,
+      reserveAsset: "USDT", reserveScope: "MAIN", reservedAmount: "9.01", feeRate: "0.001",
+      correlationId: "spot-order-key-1", idempotencyKey: "spot-order-key-1", status: "OPEN",
+    };
+    const bridge = createBridge({
+      select: jest.fn().mockImplementation(async (sql: string) =>
+        sql.includes("Gate2SpotOrder") ? { results: [order] } : { results: [] },
+      ),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+    const command = {
+      userId: "user-1", pair: "BTCUSDT", baseAsset: "BTC", quoteAsset: "USDT", side: "BUY", type: "LIMIT",
+      amount: "0.10", price: "100.00", stopPrice: null, reserveAsset: "USDT", reserveScope: "MAIN",
+      reservedAmount: "9.010", feeRate: "0.0010", idempotencyKey: "spot-order-key-1", correlationId: "spot-order-key-1",
+    };
+    await expect(gateway.reserveSpotOrder(command)).resolves.toMatchObject({ id: "order-1" });
+    await expect(gateway.reserveSpotOrder({ ...command, amount: "0.2" })).rejects.toThrow("idempotency key was reused");
+    expect(bridge.batch).not.toHaveBeenCalled();
+  });
+
   it("atomically borrows before reserving the margin entry order", async () => {
     let orderLookup = 0;
     const bridge = createBridge({
@@ -707,15 +750,16 @@ describe("D1FinancialCommandGateway", () => {
                 (
                   {
                     2: 1,
+                    3: 1,
                     4: 1,
-                    6: 1,
+                    5: 1,
+                    7: 5,
                     8: 1,
-                    10: 5,
-                    11: 1,
-                    12: 5,
+                    9: 5,
+                    10: 1,
+                    11: 2,
+                    12: 2,
                     13: 1,
-                    14: 2,
-                    15: 2,
                   } as Record<number, number>
                 )[index] ?? 0,
             },
@@ -731,8 +775,12 @@ describe("D1FinancialCommandGateway", () => {
     );
     const statements = (bridge.batch as jest.Mock).mock
       .calls[0][0] as D1BridgeBatchStatement[];
-    expect(statements).toHaveLength(16);
-    expect(statements[15].sql).toContain("Gate2SpotOrder");
+    expect(statements).toHaveLength(14);
+    for (const [index, statement] of statements.entries()) {
+      expect(statement.params ?? []).toHaveLength(statement.sql.match(/\?/g)?.length ?? 0);
+    }
+    expect(statements[12].sql).toContain("Gate2SpotOrder");
+    expect(statements[13].sql).toContain('"EventOutbox"');
   });
 
   it("credits a deposit with ledger, guarded state, audit, and outbox in one batch", async () => {
@@ -922,6 +970,9 @@ describe("D1FinancialCommandGateway", () => {
                 commandType: "FINANCIAL_CORRECTION",
                 status: batchStatements.length ? "EXECUTED" : "APPROVED",
                 requestedBy: "admin-requester",
+                target: "user-1",
+                reason: "reconcile",
+                payload: JSON.stringify({ userId: "user-1", asset: "USDT", amount: "2", direction: "CREDIT", idempotencyKey: "corr-1", reason: "reconcile" }),
               },
             ],
           };
@@ -942,6 +993,11 @@ describe("D1FinancialCommandGateway", () => {
         }),
     });
     const gateway = new D1FinancialCommandGateway(bridge);
+    await expect(gateway.applyAdminFinancialCorrection({
+      governanceCommandId: "gov-1", userId: "user-2", asset: "USDT", amount: "2",
+      direction: "CREDIT", idempotencyKey: "corr-1", reason: "reconcile", adminId: "admin-executor",
+    })).rejects.toThrow("does not match the approved command");
+    expect(bridge.batch).not.toHaveBeenCalled();
     const result = await gateway.applyAdminFinancialCorrection({
       governanceCommandId: "gov-1",
       userId: "user-1",
