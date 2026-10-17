@@ -33,6 +33,12 @@ export class PlaceOrderDto {
   idempotencyKey!: string;
 }
 
+export class SpotPairQueryDto {
+  @IsString()
+  @Length(3, 64)
+  pair!: string;
+}
+
 export class CancelOrderDto {
   @IsString()
   @Length(1, 128)

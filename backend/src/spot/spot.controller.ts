@@ -11,7 +11,7 @@ import { ApiTags } from "@nestjs/swagger";
 import type { AuthenticatedRequest } from "../auth/auth.types";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { SpotService } from "./spot.service";
-import { CancelOrderDto, PlaceOrderDto } from "./spot.dto";
+import { CancelOrderDto, PlaceOrderDto, SpotPairQueryDto } from "./spot.dto";
 
 @ApiTags("Spot Trading")
 @Controller("spot")
@@ -45,13 +45,13 @@ export class SpotController {
   }
 
   @Get("orderbook")
-  async getOrderBook(@Query("pair") pair: string) {
-    return this.spotService.getOrderBook(pair);
+  async getOrderBook(@Query() query: SpotPairQueryDto) {
+    return this.spotService.getOrderBook(query.pair);
   }
 
   @Get("market-trades")
-  async getMarketTrades(@Query("pair") pair: string) {
-    return this.spotService.getMarketTrades(pair);
+  async getMarketTrades(@Query() query: SpotPairQueryDto) {
+    return this.spotService.getMarketTrades(query.pair);
   }
 
   @Get("orders/open")
