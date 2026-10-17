@@ -1965,8 +1965,8 @@ export class NexiAdminApiProvider implements AdminDataProvider {
         updatedAt,
       },
       {
-        id: "d1",
-        name: "D1 (durable relational)",
+        id: "sqlite",
+        name: "SQLite (durable relational)",
         status: dependencyStatus(ready.dependencies?.database),
         latencyMs: readyLatencyMs,
         updatedAt,
