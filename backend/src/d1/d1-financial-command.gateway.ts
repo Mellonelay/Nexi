@@ -4676,6 +4676,47 @@ export class D1FinancialCommandGateway {
     return result.results;
   }
 
+  private verifyGovernanceReplay(
+    existing: Record<string, unknown>,
+    command: {
+      commandType: string; target?: string; reason: string;
+      idempotencyKey: string; payload?: Record<string, unknown>; requestedBy: string;
+    },
+  ): void {
+    const payload = typeof existing.payload === "string"
+      ? JSON.parse(existing.payload) : (existing.payload ?? null);
+    const normalize = (value: unknown): unknown => Array.isArray(value)
+      ? value.map(normalize)
+      : value && typeof value === "object"
+        ? Object.fromEntries(Object.entries(value as Record<string, unknown>)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([key, entry]) => [key, normalize(entry)]))
+        : value;
+    if (
+      String(existing.commandType) !== command.commandType ||
+      String(existing.target ?? "") !== (command.target ?? "") ||
+      String(existing.reason) !== command.reason ||
+      String(existing.requestedBy) !== command.requestedBy ||
+      JSON.stringify(normalize(payload)) !== JSON.stringify(normalize(command.payload ?? null))
+    ) {
+      throw new BadRequestException("Governance idempotency key was reused with changed command terms");
+    }
+  }
+
+  private async guardedGovernanceBatch(
+    statements: D1BridgeBatchStatement[],
+  ): Promise<D1BridgeBatchResult> {
+    // The promoted SQLite bridge runs this guarded batch in one BEGIN IMMEDIATE transaction.
+    // Never split state change from approval/audit inserts into separate transactions.
+    const local = this.bridge as unknown as {
+      batchGuardedByFirstRow?: (items: D1BridgeBatchStatement[]) => Promise<D1BridgeBatchResult>;
+    };
+    if (!local.batchGuardedByFirstRow) {
+      throw new BadRequestException("Governance transition requires atomic guarded batch support");
+    }
+    return local.batchGuardedByFirstRow(statements);
+  }
+
   async createGovernanceCommand(command: {
     id: string;
     commandType: string;
@@ -4686,20 +4727,19 @@ export class D1FinancialCommandGateway {
     requestedBy: string;
   }): Promise<Record<string, unknown>> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
-    const existing = await findCommandByIdempotencyKey(this.bridge,
-      "AdminGovernanceCommand",
-      command.idempotencyKey,
+    const existing = await findCommandByIdempotencyKey(
+      this.bridge, "AdminGovernanceCommand", command.idempotencyKey,
     );
-    if (existing) return existing;
-    const result = await this.bridge.batch([
+    if (existing) {
+      this.verifyGovernanceReplay(existing, command);
+      return existing;
+    }
+    const result = await this.guardedGovernanceBatch([
       {
-        sql: `INSERT INTO "AdminGovernanceCommand" ("id","idempotencyKey","commandType","target","reason","payload","requestedBy","status","createdAt","updatedAt") VALUES (?,?,?,?,?,?,?,'PENDING',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`,
+        sql: `INSERT INTO "AdminGovernanceCommand" ("id","idempotencyKey","commandType","target","reason","payload","requestedBy","status","createdAt","updatedAt") VALUES (?,?,?,?,?,?,?,'PENDING',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ON CONFLICT ("idempotencyKey") DO NOTHING RETURNING "id"`,
         params: [
-          command.id,
-          command.idempotencyKey,
-          command.commandType,
-          command.target ?? null,
-          command.reason,
+          command.id, command.idempotencyKey, command.commandType,
+          command.target ?? null, command.reason,
           command.payload ? JSON.stringify(command.payload) : null,
           command.requestedBy,
         ],
@@ -4707,29 +4747,23 @@ export class D1FinancialCommandGateway {
       {
         sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`,
         params: [
-          randomUUID(),
-          command.requestedBy,
-          "GOVERNANCE_COMMAND_REQUESTED",
+          randomUUID(), command.requestedBy, "GOVERNANCE_COMMAND_REQUESTED",
           command.target ?? null,
           JSON.stringify({
-            commandId: command.id,
-            commandType: command.commandType,
-            reason: command.reason,
-            idempotencyKey: command.idempotencyKey,
+            commandId: command.id, commandType: command.commandType,
+            reason: command.reason, idempotencyKey: command.idempotencyKey,
           }),
         ],
       },
     ]);
-    this.requireChanges(result, 0, "D1 governance command creation");
-    const row = await this.bridge.select<Record<string, unknown>>(
-      `SELECT * FROM "AdminGovernanceCommand" WHERE "id"=? LIMIT 1`,
-      [command.id],
+    const row = await findCommandByIdempotencyKey(
+      this.bridge, "AdminGovernanceCommand", command.idempotencyKey,
     );
-    if (!row.results[0])
-      throw new BadRequestException(
-        "D1 governance command was not materialized",
-      );
-    return row.results[0];
+    if (!row) throw new BadRequestException("Governance command was not materialized");
+    if ((result.results[0]?.results?.length ?? 0) === 0) {
+      this.verifyGovernanceReplay(row, command);
+    }
+    return row;
   }
 
   async decideGovernanceCommand(
@@ -4739,48 +4773,45 @@ export class D1FinancialCommandGateway {
     reason: string,
   ): Promise<Record<string, unknown>> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
-    const command: any = (
+    const read = async () => (
       await this.bridge.select<Record<string, unknown>>(
-        `SELECT * FROM "AdminGovernanceCommand" WHERE "id"=? LIMIT 1`,
-        [commandId],
+        `SELECT * FROM "AdminGovernanceCommand" WHERE "id"=? LIMIT 1`, [commandId],
       )
     ).results[0];
+    const command = await read();
     if (!command) throw new NotFoundException("Governance command not found");
-    if (String(command.requestedBy) === approverId)
-      throw new BadRequestException(
-        "The requester cannot approve their own command",
-      );
-    if (String(command.status) !== "PENDING") return command;
-    const result = await this.bridge.batch([
+    if (String(command.requestedBy) === approverId) {
+      throw new BadRequestException("The requester cannot approve their own command");
+    }
+    if (String(command.status) !== "PENDING") {
+      if (String(command.status) !== decision) {
+        throw new BadRequestException("Governance command already has a different decision");
+      }
+      return command;
+    }
+    const result = await this.guardedGovernanceBatch([
       {
-        sql: `INSERT OR REPLACE INTO "AdminGovernanceApproval" ("id","commandId","approverId","decision","reason","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`,
-        params: [randomUUID(), commandId, approverId, decision, reason],
+        sql: `UPDATE "AdminGovernanceCommand" SET "status"=?,"approvedBy"=CASE WHEN ?='APPROVED' THEN ? ELSE "approvedBy" END,"approvedAt"=CASE WHEN ?='APPROVED' THEN CURRENT_TIMESTAMP ELSE "approvedAt" END,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "status"='PENDING' RETURNING "id"`,
+        params: [decision, decision, approverId, decision, commandId],
       },
       {
-        sql: `UPDATE "AdminGovernanceCommand" SET "status"=?,"approvedBy"=CASE WHEN ?='APPROVED' THEN ? ELSE "approvedBy" END,"approvedAt"=CASE WHEN ?='APPROVED' THEN CURRENT_TIMESTAMP ELSE "approvedAt" END,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "status"='PENDING'`,
-        params: [decision, decision, approverId, decision, commandId],
+        sql: `INSERT INTO "AdminGovernanceApproval" ("id","commandId","approverId","decision","reason","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`,
+        params: [randomUUID(), commandId, approverId, decision, reason],
       },
       {
         sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`,
         params: [
-          randomUUID(),
-          approverId,
-          `GOVERNANCE_COMMAND_${decision}`,
-          commandId,
+          randomUUID(), approverId, `GOVERNANCE_COMMAND_${decision}`, commandId,
           JSON.stringify({ reason }),
         ],
       },
     ]);
-    this.requireChanges(result, 1, "D1 governance command decision");
-    const row = await this.bridge.select<Record<string, unknown>>(
-      `SELECT * FROM "AdminGovernanceCommand" WHERE "id"=? LIMIT 1`,
-      [commandId],
-    );
-    if (!row.results[0])
-      throw new BadRequestException(
-        "D1 governance decision was not materialized",
-      );
-    return row.results[0];
+    const row = await read();
+    if (!row) throw new BadRequestException("Governance decision was not materialized");
+    if ((result.results[0]?.results?.length ?? 0) === 0 && String(row.status) !== decision) {
+      throw new BadRequestException("Governance command already has a different decision");
+    }
+    return row;
   }
 
   async applyAdminFinancialCorrection(command: {

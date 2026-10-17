@@ -1,5 +1,14 @@
 # NEXI Proof Reuse Register
 
+## Governance SQLite replay and competing decision — 2026-10-18 (source only)
+
+- **TESTED** after handover commit `68f0f386`: `backend/test/d1/governance.local-sqlite.spec.ts` **2/2 passed** using the local promoted-architecture bridge on disposable SQLite. Full `backend/tsconfig.build.json` TypeScript check passed (`tsc --noEmit`); `git diff --check` passed.
+- `D1FinancialCommandGateway.createGovernanceCommand` compares original command type, target, reason, requester and canonicalized payload for idempotent replay; guarded `INSERT ... RETURNING` makes request audit conditional on a newly inserted command.
+- `decideGovernanceCommand` uses one guarded `UPDATE ... RETURNING` transaction for the winning decision plus its approval and audit; a losing simultaneous decision leaves neither. Existing terminal status with a different decision is rejected.
+- **LIMIT:** Tests prove only disposable local SQLite gateway contract, not authenticated Admin API, alternative legacy Prisma path, deployed runtime, or financial correction execution. No live migration or deployment occurred. Recheck only affected tests after source change.
+
+
+
 **Snapshot date:** 2026-10-18 UTC
 **Scope:** Proof recovered from Worker-0 task receipts, RDC history, direct GitHub, read-only live checks, and the 2026-10-18 consolidated local verification batch. Historical owner/task-receipt evidence is distinguished from tests invoked in this session.
 
