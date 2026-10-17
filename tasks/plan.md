@@ -259,3 +259,17 @@ Project-local Wrangler 4.127.1 read-only list/describe of the two errored `nexi-
 - **REMAINING:** Final D1 insert/update/delete watermark and full data completeness; authenticated end-to-end acceptance (authorized test identity not documented); independent encrypted off-VPS backup and verified restore (no authorized destination established); full fresh post-promotion integrity check (not claimed); BullMQ execution beyond TCP connectivity; current market provider feed is unavailable and quote-sequence uniqueness warnings were observed. Market history retention remains off.
 - **CLOUDFLARE:** Owner reports Workers and Containers retired. This checkpoint did not verify account-level status or D1/Queues/Workflows/R2/KV/DO/Analytics/Secrets retirement; no destructive Cloudflare action performed.
 - **NEXT:** Resolve the remaining controlled data-completeness/financial-authority boundary and backup destination, then use an authorized test identity for targeted application acceptance. Do not repeat the historical export/import or 92-table reconciliation.
+
+
+## 2026-10-17 Cloudflare resource inventory — read-only MCP verification
+
+Cloudflare account API listing was read-only. The account had 3 Worker scripts, none named `nexi-production`; it returned 0 Container applications. This corroborates that the NEXI Worker/Container deployment is absent from the listed resources, but does not prove account-wide usage or billing has stopped. The same account still lists:
+
+- D1: `nexi-core-staging`.
+- Queues: `nexi-domain-events-staging`, `nexi-domain-events-staging-dlq`, `nexi-integration-jobs-staging`, `nexi-integration-jobs-staging-dlq`, `nexi-notifications-staging`, `nexi-notifications-staging-dlq`; each listed with zero configured consumers. Queue message depth was not checked.
+- Workflows: `nexi-loan-staging`, `nexi-withdrawal-staging`, `nexi-mining-staging`.
+- R2: `nexi-deposit-proofs-staging`, `nexi-kyc-evidence-staging`.
+- KV: `nexi-config-staging`.
+- A Durable Object namespace `ipbl-graphify-intelligence_GraphifyIntelligenceState` is also listed; it is not identified as NEXI.
+
+This inventory does not establish that the remaining NEXI resources are safe to delete: D1 contents, queue depth, workflow instances and evidence-object retention were not reconciled by this listing. No Cloudflare resource was changed or deleted. Preserve data and evidence until their current consumers, counts and retention obligations are proven closed. Other listed account workers and buckets are outside NEXI scope.

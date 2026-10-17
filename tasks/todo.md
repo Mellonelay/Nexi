@@ -365,3 +365,9 @@ Superseded historical rows remain above for provenance. Do not revive old statem
 - [ ] PENDING — Verify BullMQ job execution (Aiven TCP only is insufficient), provider recovery, and Sentry automatic fault capture. Market feed presently unavailable; keep it lower priority than financial/data closure.
 - [ ] PENDING — Verify actual Cloudflare resource/billing inventory. Owner reports Workers/Containers retired; this is not evidence that D1/Queues/Workflows/R2/KV/DO/Analytics/Secrets were retired.
 - [ ] PRESERVED — Existing modified Wrangler config and untracked Admin pnpm files remain untouched; classify before any cleanup.
+
+
+### 2026-10-17 Cloudflare closure evidence (read-only account listing)
+- [x] VERIFIED — Cloudflare MCP account listing: 0 Container applications; 3 account Worker scripts and none named nexi-production. This is scoped resource inventory, not proof account-level billing stopped.
+- [x] VERIFIED — NEXI D1, 6 queues/DLQs (zero configured consumers), 3 workflows, 2 R2 evidence buckets, and nexi-config-staging KV still exist. Queue depth, live workflow instances and evidence object retention remain unknown.
+- [ ] BLOCKED_WITH_EVIDENCE — Preserve remaining D1/queues/workflows/evidence until their contents, pending work, retention and final financial delta are reconciled. No deletion or account-wide cleanup performed.
