@@ -1,4 +1,8 @@
 import { jest } from "@jest/globals";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import Database from "better-sqlite3";
 // The D1 service imports the remote adapter, which is outside this unit's
 // boundary and ships as ESM. Its behavior is represented by the local fixture
 // below instead.
@@ -89,10 +93,10 @@ describe("MarketAuthorityService", () => {
     d1.atomicBatch = jest.fn(async (statements: any[]) => {
       const latestParams = statements[0]?.params ?? [];
       const pairId = latestParams[1];
-      const observedAt = new Date(latestParams[10]);
+      const observedAt = new Date(latestParams[11]);
       const current = latest.get(pairId);
-      const primaryProvider = latestParams[15];
-      const primaryFreshAfter = latestParams[17] ? new Date(latestParams[17]) : null;
+      const primaryProvider = latestParams[16];
+      const primaryFreshAfter = latestParams[18] ? new Date(latestParams[18]) : null;
       const healthyPrimaryOwnsQuote = Boolean(
         primaryProvider
         && current?.provider === primaryProvider
@@ -117,16 +121,16 @@ describe("MarketAuthorityService", () => {
         provider: latestParams[3],
         source: latestParams[4],
         sequence: sequenceText,
-        price: latestParams[5],
-        change24h: latestParams[6],
-        volume24h: latestParams[7],
-        high24h: latestParams[8],
-        low24h: latestParams[9],
+        price: latestParams[6],
+        change24h: latestParams[7],
+        volume24h: latestParams[8],
+        high24h: latestParams[9],
+        low24h: latestParams[10],
         observedAt,
-        receivedAt: new Date(latestParams[11]),
-        bid: latestParams[12],
-        ask: latestParams[13],
-        spread: latestParams[14],
+        receivedAt: new Date(latestParams[12]),
+        bid: latestParams[13],
+        ask: latestParams[14],
+        spread: latestParams[15],
         state: "LIVE",
       };
       // Update the canonical latest row before the awaited snapshot mock so a
@@ -259,6 +263,81 @@ describe("MarketAuthorityService", () => {
     expect(first.accepted).toBe(true);
     expect(second.accepted).toBe(true);
     expect(d1.marketQuoteSnapshot.create.mock.calls.map(([args]: any[]) => args.data.sequence)).toEqual(["1", "2"]);
+  });
+
+  it("seeds a missing latest row after its existing snapshot sequence", async () => {
+    const { service, d1, snapshotMax } = createService();
+    snapshotMax.set("pair-BTCUSDT", 432889n);
+
+    const result = await service.ingestQuote({
+      symbol: "BTCUSDT",
+      provider: "binance-spot",
+      source: "websocket",
+      price: "100",
+      observedAt: new Date("2026-09-14T00:00:00.000Z"),
+    });
+
+    expect(result.accepted).toBe(true);
+    const [latestInsert] = d1.atomicBatch.mock.calls[0][0];
+    expect(latestInsert.sql.split('ON CONFLICT')[0]).toContain('SELECT MAX(CAST("MarketQuoteSnapshot"."sequence" AS INTEGER))');
+    expect(latestInsert.params[5]).toBe("pair-BTCUSDT");
+    expect(d1.marketQuoteSnapshot.create.mock.calls[0][0].data.sequence).toBe("432890");
+  });
+
+  it("persists the next quote after historical snapshots when the latest projection is absent", async () => {
+    const root = mkdtempSync(join(tmpdir(), "nexi-market-sqlite-"));
+    const db = new Database(join(root, "market.sqlite"));
+    try {
+      db.exec(`
+        CREATE TABLE MarketQuoteLatest (
+          id TEXT PRIMARY KEY, pairId TEXT UNIQUE, symbol TEXT, provider TEXT, source TEXT,
+          sequence TEXT, price TEXT, change24h TEXT, volume24h TEXT, high24h TEXT, low24h TEXT,
+          state TEXT, observedAt TEXT, receivedAt TEXT, bid TEXT, ask TEXT, spread TEXT
+        );
+        CREATE TABLE MarketQuoteSnapshot (
+          id TEXT PRIMARY KEY, pairId TEXT, symbol TEXT, provider TEXT, source TEXT, sequence TEXT,
+          price TEXT, change24h TEXT, volume24h TEXT, high24h TEXT, low24h TEXT,
+          observedAt TEXT, receivedAt TEXT, rawData TEXT, bid TEXT, ask TEXT, spread TEXT,
+          UNIQUE(pairId, sequence)
+        );
+        CREATE INDEX MarketQuoteSnapshot_pairId_numericSequence_idx
+          ON MarketQuoteSnapshot(pairId, CAST(sequence AS INTEGER));
+        INSERT INTO MarketQuoteSnapshot (
+          id,pairId,symbol,provider,source,sequence,price,observedAt,receivedAt,rawData
+        ) VALUES ('old-snapshot','pair-BTCUSDT','BTCUSDT','binance-spot','websocket','432889','99','2026-09-13T00:00:00.000Z','2026-09-13T00:00:01.000Z','{}');
+      `);
+      const d1: any = {
+        isEnabled: () => true,
+        marketPair: { findUnique: async () => ({ id: "pair-BTCUSDT", symbol: "BTCUSDT" }) },
+        atomicBatch: async (statements: any[]) => db.transaction(() => statements.map((entry) => {
+          const statement = db.prepare(entry.sql);
+          if (statement.reader) {
+            const results = statement.all(...entry.params);
+            return { success: true, results, meta: { changes: results.length } };
+          }
+          const result = statement.run(...entry.params);
+          return { success: true, results: [], meta: { changes: result.changes } };
+        })).immediate(),
+      };
+      const redis: any = { isAvailable: () => true, publish: async () => 1 };
+      const router: any = { isProviderEnabled: () => true };
+      const service = new MarketAuthorityService(redis, d1, router);
+
+      const result = await service.ingestQuote({
+        symbol: "BTCUSDT",
+        provider: "binance-spot",
+        source: "websocket",
+        price: "100",
+        observedAt: new Date("2026-09-14T00:00:00.000Z"),
+      });
+
+      expect(result.accepted).toBe(true);
+      expect(db.prepare('SELECT sequence FROM MarketQuoteLatest WHERE pairId=?').get("pair-BTCUSDT")).toEqual({ sequence: "432890" });
+      expect(db.prepare('SELECT sequence FROM MarketQuoteSnapshot WHERE pairId=? ORDER BY CAST(sequence AS INTEGER) DESC LIMIT 1').get("pair-BTCUSDT")).toEqual({ sequence: "432890" });
+    } finally {
+      db.close();
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 
   it("repairs historical latest/snapshot sequence drift before the next production quote", async () => {

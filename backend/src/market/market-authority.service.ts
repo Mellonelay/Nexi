@@ -722,7 +722,11 @@ export class MarketAuthorityService implements OnModuleInit {
       {
         sql: `INSERT INTO "MarketQuoteLatest" (
           "id","pairId","symbol","provider","source","sequence","price","change24h","volume24h","high24h","low24h","state","observedAt","receivedAt","bid","ask","spread"
-        ) VALUES (?,?,?,?,?,'1',?,?,?,?,?,'LIVE',?,?,?,?,?)
+        ) VALUES (?,?,?,?,?,CAST(COALESCE((
+          SELECT MAX(CAST("MarketQuoteSnapshot"."sequence" AS INTEGER))
+          FROM "MarketQuoteSnapshot"
+          WHERE "MarketQuoteSnapshot"."pairId"=?
+        ),0)+1 AS TEXT),?,?,?,?,?,'LIVE',?,?,?,?,?)
         ON CONFLICT("pairId") DO UPDATE SET
           "symbol"=excluded."symbol",
           "provider"=excluded."provider",
@@ -760,7 +764,7 @@ export class MarketAuthorityService implements OnModuleInit {
           )
         RETURNING "sequence"`,
         params: [
-          latestId, pair.id, symbol, provider, source,
+          latestId, pair.id, symbol, provider, source, pair.id,
           scalar.price, scalar.change24h, scalar.volume24h, scalar.high24h, scalar.low24h,
           observedAtSql, receivedAtSql, scalar.bid, scalar.ask, scalar.spread,
           primaryProvider, primaryProvider, primaryFreshAfterSql, primaryProvider,
