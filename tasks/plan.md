@@ -273,3 +273,10 @@ Cloudflare account API listing was read-only. The account had 3 Worker scripts, 
 - A Durable Object namespace `ipbl-graphify-intelligence_GraphifyIntelligenceState` is also listed; it is not identified as NEXI.
 
 This inventory does not establish that the remaining NEXI resources are safe to delete: D1 contents, queue depth, workflow instances and evidence-object retention were not reconciled by this listing. No Cloudflare resource was changed or deleted. Preserve data and evidence until their current consumers, counts and retention obligations are proven closed. Other listed account workers and buckets are outside NEXI scope.
+
+
+## 2026-10-17 selected D1/SQLite content reconciliation
+
+- **VERIFIED:** Using Wrangler 4.147.0 and read-only SQLite, 38 selected non-market tables covering identity/activity, wallets, Ledger/Idempotency/Audit, Outbox/Inbox, deposit, transfers, withdrawals, Spot/Margin/Binary configuration and positions, loans, mining and referrals had identical row counts and canonical row-content SHA-256 in their respective reads. All 38 matched; no row contents were emitted or persisted. Receipt: `tasks/evidence/d1-sqlite-selected-domain-content-check-20261017.json`. The D1 count query reports 0 rows written.
+- **LIMITS:** Reads were sequential, not one quiesced cross-database snapshot. This proves selected-table equality at observation time only; it does not prove all-table parity or final transaction watermark. Market tables intentionally excluded. Historical 92-table snapshot work was not repeated.
+- **NEXT:** Preserve the matched production records; close remaining authenticated acceptance, independent off-VPS backup/restore, and queue/workflow/object retention evidence before any destructive resource retirement.

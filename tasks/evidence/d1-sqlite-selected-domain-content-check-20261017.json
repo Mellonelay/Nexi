@@ -1,0 +1,246 @@
+{
+  "checked_on": "2026-10-17 UTC",
+  "source": "Wrangler 4.147.0 read-only D1 queries; SQLite read-only connection",
+  "d1_name": "nexi-core-staging",
+  "d1_id": "522177fa-ac42-4d8f-a6a8-b34eed262f15",
+  "sqlite_path": "/var/lib/nexi/sqlite/nexi-staging.sqlite",
+  "code_head_during_check": "8570a39a01534a71960b6189443ec78fcf198a3d",
+  "comparison": "For each table, SELECT * rows canonicalized to JSON with sorted object keys; canonical row strings sorted; SHA-256 and row counts compared.",
+  "result": "All 38 selected non-market tables had equal counts and equal row-content SHA-256 in their respective observations.",
+  "limits": [
+    "This is not a transactionally frozen cross-database snapshot; queries were sequential and live writes were not quiesced.",
+    "Only the listed 38 non-market tables were compared; three market tables and other unlisted tables are outside this receipt.",
+    "Matching selected-table content does not prove whole-database parity or a final cutover watermark.",
+    "No export/import or database writes were performed by this comparison."
+  ],
+  "tables": [
+    {
+      "name": "User",
+      "row_count": 34,
+      "sha256": "af253e271d4243d915ae45f40605fcc7b653d64d29a939760ffa08d436c48781",
+      "match": true
+    },
+    {
+      "name": "Activity",
+      "row_count": 41,
+      "sha256": "c3596e77aa32573783b607a539595010681f8843484a4308371bcee3d7e2c1a7",
+      "match": true
+    },
+    {
+      "name": "AuthSession",
+      "row_count": 312,
+      "sha256": "51dfa4c84732bb283aa9444beb3ca6f2d191e06297e9ed75abf257cb5b5296e5",
+      "match": true
+    },
+    {
+      "name": "Wallet",
+      "row_count": 34,
+      "sha256": "5df9a349d3ddd6569cc9c62e451e56998e3c236f9191c0737e62cb8c56e6a9cc",
+      "match": true
+    },
+    {
+      "name": "WalletIdentity",
+      "row_count": 21,
+      "sha256": "4449e0650d441382acfe5080031b5ba80fefd8b8d8f77ff09803de4b3ab9f6f4",
+      "match": true
+    },
+    {
+      "name": "LedgerAccount",
+      "row_count": 14,
+      "sha256": "497240b5a921bbf305e5890abd5cbc20e72591903fe7fce3cefc3438b9cf9ec2",
+      "match": true
+    },
+    {
+      "name": "LedgerPosting",
+      "row_count": 48,
+      "sha256": "d569431baf7b2173f927f4f02cce5d1e277dac85f8f3333ecee050ef5c8bdcb3",
+      "match": true
+    },
+    {
+      "name": "LedgerIdempotency",
+      "row_count": 46,
+      "sha256": "0fcfe4b10a7092faaf9a6cd4dd17c0332331657ec533b52b96e4ba614abdb5f9",
+      "match": true
+    },
+    {
+      "name": "LedgerAuditEvent",
+      "row_count": 48,
+      "sha256": "97f391213e6f6daa0255bd2c1a34a90e3880090f9d38ae37103781f397e21e7b",
+      "match": true
+    },
+    {
+      "name": "EventOutbox",
+      "row_count": 94,
+      "sha256": "4eb69ad55d01fc115298bd6a2ff0e7b54c9bb401543315e8ab19555f8b9d315c",
+      "match": true
+    },
+    {
+      "name": "EventInbox",
+      "row_count": 99,
+      "sha256": "5d1f3eaf8d2fe0d2b5d62dd1fbc2358b601af10d63fc095b29c7f22b169fdb21",
+      "match": true
+    },
+    {
+      "name": "LoanApplication",
+      "row_count": 5,
+      "sha256": "7aebe65be73d961e92a3d93da834e6feb61c9b1d66102d0937b0f8754a4d1edd",
+      "match": true
+    },
+    {
+      "name": "LoanRepayment",
+      "row_count": 1,
+      "sha256": "3079d097670efed4a1b422afdf24b52608a01d7c03d771ac2d9e71a971625627",
+      "match": true
+    },
+    {
+      "name": "MiningSubscription",
+      "row_count": 4,
+      "sha256": "4a90fb8bf7d681deebde1851d7b2de8f714c997f6cdbd3e526488a7e0afa1afd",
+      "match": true
+    },
+    {
+      "name": "MiningRewardAccrual",
+      "row_count": 14,
+      "sha256": "de8f9ed730870f5d6583c72a88befd8ad2eecb1e3e6b4cecdafd0343dfdcf199",
+      "match": true
+    },
+    {
+      "name": "BinaryOptionPosition",
+      "row_count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "name": "BinaryOptionResult",
+      "row_count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "name": "DepositAddress",
+      "row_count": 8,
+      "sha256": "120e850d07012e54485f6aeff5fa6da7a6c3d3fe6c16c1268b6a8ad167a12b83",
+      "match": true
+    },
+    {
+      "name": "DepositClaim",
+      "row_count": 3,
+      "sha256": "4af843cc08ad96297c90b8ef5c41bd55aeb498e251585e647dbe727a638ff252",
+      "match": true
+    },
+    {
+      "name": "Gate2BinaryConfiguration",
+      "row_count": 280,
+      "sha256": "548f5000624cd56318c2dbe323428e0bff83c0b3fe013eaf47b3013076ce9573",
+      "match": true
+    },
+    {
+      "name": "Gate2BinaryPosition",
+      "row_count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "name": "Gate2Deposit",
+      "row_count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "name": "Gate2InternalTransfer",
+      "row_count": 1,
+      "sha256": "5ca4a32c09267c97994230990ac4665b4c437134b86acbc49799a03f3296dcd1",
+      "match": true
+    },
+    {
+      "name": "Gate2SpotOrder",
+      "row_count": 2,
+      "sha256": "f3a4f87a023290cbd0eccb15f23998697185da727e48e3820e5f7724933bcd42",
+      "match": true
+    },
+    {
+      "name": "Gate2SpotTrade",
+      "row_count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "name": "Gate2Withdrawal",
+      "row_count": 2,
+      "sha256": "00f0076abff51d082b2d90c27f97fc3cc4cfa3ce9ed8e744642551e3766a4087",
+      "match": true
+    },
+    {
+      "name": "LoanPlan",
+      "row_count": 1,
+      "sha256": "602381669c01fe86a900ea5e4a657786df3a417f63079e96ae2568e49bd1c71e",
+      "match": true
+    },
+    {
+      "name": "MiningPlan",
+      "row_count": 3,
+      "sha256": "af7c360a1c048a45d15e543975517743f2d4dc41bef8ce32fecaf1f39ffb36c7",
+      "match": true
+    },
+    {
+      "name": "ReferralAttributionEvent",
+      "row_count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "name": "ReferralRewardEvent",
+      "row_count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "name": "SpotMarginAccount",
+      "row_count": 1,
+      "sha256": "a37557786449f0dbba9d8991d527dd62b354f35f5d75c154089ee76b116bbfb8",
+      "match": true
+    },
+    {
+      "name": "SpotMarginActivity",
+      "row_count": 1,
+      "sha256": "64e9dacf5d9679793f18c7e57f0807dffd8c0d304829a8c5fca44e57166783f0",
+      "match": true
+    },
+    {
+      "name": "SpotMarginPosition",
+      "row_count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "name": "SpotMarginPositionEvent",
+      "row_count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "name": "SpotOrder",
+      "row_count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "name": "SpotTrade",
+      "row_count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    },
+    {
+      "name": "WalletNetwork",
+      "row_count": 8,
+      "sha256": "d8e3047f2f44e083e7341dabe37775e739bb9f01904d5ee7922eb57263240754",
+      "match": true
+    },
+    {
+      "name": "WithdrawalRequest",
+      "row_count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "match": true
+    }
+  ]
+}

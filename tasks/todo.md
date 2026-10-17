@@ -371,3 +371,8 @@ Superseded historical rows remain above for provenance. Do not revive old statem
 - [x] VERIFIED — Cloudflare MCP account listing: 0 Container applications; 3 account Worker scripts and none named nexi-production. This is scoped resource inventory, not proof account-level billing stopped.
 - [x] VERIFIED — NEXI D1, 6 queues/DLQs (zero configured consumers), 3 workflows, 2 R2 evidence buckets, and nexi-config-staging KV still exist. Queue depth, live workflow instances and evidence object retention remain unknown.
 - [ ] BLOCKED_WITH_EVIDENCE — Preserve remaining D1/queues/workflows/evidence until their contents, pending work, retention and final financial delta are reconciled. No deletion or account-wide cleanup performed.
+
+
+### 2026-10-17 selected data parity checkpoint
+- [x] VERIFIED — 38 selected non-market domain tables matched D1 to active SQLite by both row count and canonical content SHA-256; receipt: `tasks/evidence/d1-sqlite-selected-domain-content-check-20261017.json`. Query was read-only (D1 rows_written=0).
+- [ ] BLOCKED_WITH_EVIDENCE — This bounded match is not a frozen global snapshot and does not cover every non-market table or establish a final D1 watermark. Do not describe it as whole-database equality.
