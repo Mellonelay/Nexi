@@ -2,7 +2,7 @@
 
 **Updated:** 2026-10-17 UTC
 
-**Canonical source:** /home/mellonelay1999/workspaces/Nexi, branch main, HEAD 2a1cffef69049a12fee533f2905fbbcbf1f40105. Preserve existing user changes in cloudflare-container-bootstrap/wrangler.jsonc and untracked Admin pnpm files.
+**Canonical source:** /home/mellonelay1999/workspaces/Nexi, branch main. The repository code checkpoint at promotion was 2a1cffef69049a12fee533f2905fbbcbf1f40105; later commits 9333a63 and the next state-record commit contain documentation only, with no backend code change. Preserve existing user changes in cloudflare-container-bootstrap/wrangler.jsonc and untracked Admin pnpm files.
 
 ## Current runtime
 
