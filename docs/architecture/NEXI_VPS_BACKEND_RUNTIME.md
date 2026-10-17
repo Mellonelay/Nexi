@@ -3,6 +3,8 @@
 **Status date:** 2026-10-17 (SQLite promotion checkpoint)
 **Scope:** canonical VPS backend runtime after the owner switched Name.com DNS. Public hostnames resolve to the VPS and trusted HTTPS is verified. The restored SQLite database plus the recorded final D1 import is now at the active service path and the NestJS process reports SQLite readiness. This proves runtime activation and selected imported state, not complete reconciliation of every post-export D1 update/delete or a transaction-consistent final cutover watermark.
 
+> **Current-state correction (2026-10-17):** The historical “Current verified state” notes below describe earlier observations and must not be used as present runtime truth. The current owner contract and `NEXI_CURRENT_STATE.md` supersede those older D1-empty/runtime statements: `/var/lib/nexi/sqlite/nexi-staging.sqlite` is open in the active API process, readiness reports SQLite authority, and the process runs `/srv/nexi/backend/dist/src/main.js`. SQLite runtime readiness does not prove final D1 update/delete reconciliation, a final cutover watermark, or completed external backup/restore. D1 remains a separate populated data plane until its remaining reconciliation/retirement gates are completed.
+
 ## Runtime authority and service map
 
 | Component | Responsibility | Authority and boundary |
@@ -74,7 +76,7 @@
 | Secrets Store | Protected systemd environment file and VPS secret handling | Credentials must be provisioned without copying unverified production secrets into reports or source |
 | Worker event delivery | EventOutbox + BullMQ consumers + Socket.IO | Durable boundaries are implemented; final live delivery/in-flight work reconciliation is pending |
 
-## Current verified state and acceptance boundary
+## Historical verified state and acceptance boundary (superseded by the current-state correction above)
 
 - Application source baseline was verified in `/home/mellonelay1999/workspaces/Nexi` on `main` at `1962dc73efda25d4562ddd52a63fb6e477f1c52f`. The documentation/evidence checkpoint is pushed as `d6b6ac2012a683b334eae1750028b80135c63f42`; it did not change the backend application or deployed artifact. Preserve the two untracked Admin pnpm files.
 - The VPS runs Node 24.21.0 and active `nexi-api.service` from `/srv/nexi/backend/dist/src/main.js`, bound to `127.0.0.1:3002`; Nginx is the public TLS/WebSocket edge.

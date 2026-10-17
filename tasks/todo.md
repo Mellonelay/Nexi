@@ -418,3 +418,37 @@ Superseded historical rows remain above for provenance. Do not revive old statem
 - [x] VERIFIED — Authenticated Socket.IO WebSocket connected to /communications; snapshot acknowledged; session logged out.
 - [x] VERIFIED — SQLite financial posting/idempotency/outbox/inbox counts unchanged; API readiness and four systemd services remained healthy.
 - [ ] PENDING — Cross-instance Socket.IO reconnect/event replay remains unproven; no second backend instance was started.
+
+
+### 2026-10-17 resumed backend market frontier
+
+- [x] PROVEN_UNCHANGED — Five historical market catalog/config D1/SQLite content mismatches reduce to `updatedAt` differences only; counts and primary-key sets match. Sequential evidence is not a final global watermark.
+- [x] VERIFIED — Public Binance BTC/ETH/ADA quotes, BTC depth/trades, and a Margin quote were current at observation. Internal Spot orderbook/trades were separately empty; no provider liquidity was presented as internal execution state.
+- [ ] IN_PROGRESS — USD/RUB stale-session classification: MOEX reports `TRADINGSTATUS=N` while the live API used a stale Yahoo daily quote and reported `sessionState=OPEN`. Local adapter repair requests/handles MOEX trading status; focused Node 24 test passed 17/17. Build, deployment, and actual post-deploy runtime proof remain pending.
+- [ ] IN_PROGRESS — Market reference event backpressure: queue saturation drops provider trade events; REST snapshots are available, but client sequence-gap detection and recovery/replay after pressure remain unproven. These are reference events, not durable financial postings.
+- [ ] PENDING — After the coherent backend repair set is closed, perform one build/deployment and verify deployed quote/session state, market event recovery, and source/runtime identity.
+- [ ] BLOCKED_WITH_EVIDENCE — Authenticated financial/Admin end-to-end acceptance still needs an authorized test balance identity or supported fixture route; independent encrypted off-VPS backup/restore still needs an authorized destination and key-custody path.
+- [ ] PRESERVED — No frontend edits, API restart, deployment, Git integration, D1 write, or financial operation occurred in this slice; pre-existing Wrangler/Admin changes and migration worktree remain untouched.
+
+Receipt: `tasks/evidence/market-provider-runtime-20261017.md`.
+
+### 2026-10-17 market repair execution workflow update
+
+- [x] VERIFIED — BiQuote source coverage distinguished: 36/36 catalog representations, 35/36 returned candidate quotes, 31 configured in NEXI; AXP has no BiQuote tick/history/OHLC but is returned by NEXI's Gate fallback.
+- [x] TESTED — MOEX `TRADINGSTATUS` follows MOEX Currency53 codes; N/C/B closed, T/S active, unknown ignored. Focused Node 24 Jest: 18/18 passed.
+- [x] RUNTIME_VERIFIED — After a logged queue-drop at 15:52:04 UTC, fresh readiness/prices/depth/trades REST reads at 15:53 UTC all passed; Binance depth was 20×20 and 50 trades spanned 15:52:48–15:53:14 UTC.
+- [ ] IN_PROGRESS — Build/deploy the tested backend correction once source review is closed; validate exact deployed artifact and USD/RUB session response.
+- [ ] PENDING — Continue queue/reconnect verification from snapshot read-back; exact reference event replay is not provided by current contract and is not yet proven.
+- [ ] BLOCKED_WITH_EVIDENCE — Financial/Admin end-to-end writes require an authorized test-balance identity or supported fixture; encrypted off-VPS restore requires authorized destination and key custody.
+
+Execution order and release gates are specified in `tasks/plan.md` under “Active execution workflow (reconciled 2026-10-17)”.
+
+### 2026-10-17 BiQuote coverage recheck and market next action
+
+- [x] VERIFIED — Full BiQuote symbol catalog read returned 2,061 entries and represented all 36 NEXI non-crypto assets (20 stocks, 9 FX, 7 metals), using explicit aliases for Disney, Uber, Sony and American Express.
+- [x] VERIFIED — Latest quote probe returned closed/stale retained quotes for the 31 currently BiQuote-configured symbols; also returned quotes for `DISUSDT`, `UBERUSDT`, `SONYUSDT`, and `USDRUB_HKN`. American Express is listed but has no quote, tick history, or OHLC bars. Exact `USDRUB` has only historical data through 2025-06-20; NEXI's MOEX primary repair is still pending deploy.
+- [x] VERIFIED — Live NEXI `/market/prices` returned Gate quotes for AXP/DIS/UBER/SONY; those symbols are not absent from the overall NEXI market response. No Biquote config, source mapping, or frontend change was made from catalog discovery alone.
+- [ ] IN_PROGRESS — Finish the already-tested MOEX closed-session repair; then prove queue-pressure recovery using the actual backend REST snapshots and the reconnect/re-anchor behavior already present in the source frontend. Keep the frontend unchanged in this backend phase.
+- [ ] PENDING — One coordinated build/deploy after the market repair set is closed; verify deployed USD/RUB state, reference endpoint recovery, runtime identity, then continue outstanding authenticated financial/workflow and backup gates.
+
+Receipt: `tasks/evidence/market-provider-runtime-20261017.md`.

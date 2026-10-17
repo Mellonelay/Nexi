@@ -322,6 +322,27 @@ This inventory does not establish that the remaining NEXI resources are safe to 
 - **SOURCE/DEPLOY IDENTITY:** Worker-0 main and origin/main were both 41837777432f5926ffd2c0a0e7ae390a61284010 before this task-status append; deployed JS SHA-256 c15ef0210c65ba5935449f40d153cfcced52f0ac772f8276dec76e3ca9f3c5de matched canonical dist. Existing unrelated dirty paths remain untouched: modified cloudflare-container-bootstrap/wrangler.jsonc; untracked apps/admin/pnpm-lock.yaml and apps/admin/pnpm-workspace.yaml.
 
 
+### 2026-10-17 resumed market backend causal verification
+
+- **PROVEN_UNCHANGED:** Read-only Wrangler 4.127.1 plus SQLite all-column comparison of MarketAsset (55), MarketAssetCapability (55), MarketPair (53), MarketProviderConfig (9), and MarketProviderSymbol (270) found identical key sets/counts and no differences except `updatedAt` (244 rows). The prior five content mismatches are timestamp-only; this is not a final global D1 watermark.
+- **VERIFIED:** At 15:11 UTC, public BTC/ETH/ADA quotes were current Binance WebSocket data; BTC public depth returned a live 20×20 Binance REST book and `/market/trades` returned 50 current trades. `/spot/orderbook` and `/spot/market-trades` are internal Spot execution surfaces and were empty; `/spot/margin/quote` returned a live Binance quote. Closed-market AAPL/EURUSD/XAUUSD rows had an explicit closed state. `XAUUSDT` is not a canonical symbol; XAUUSD is.
+- **CAUSE:** USDRUB was shown as `STALE` from Yahoo `rest:chart:1d` with `sessionState=OPEN`. MOEX ISS returned `TRADINGSTATUS=N` (“Not traded right now”) and Friday's last `SYSTIME` during the Saturday observation. The adapter did not request `TRADINGSTATUS`, so the runtime could not mark the USD/RUB market closed.
+- **IN_PROGRESS:** `backend/src/market/moex-usdrub.adapter.ts` now requests MOEX `TRADINGSTATUS` and uses the existing closed-session marker for N/C/B; T remains open and unknown statuses are ignored. `backend/test/market/non-crypto-market.adapters.spec.ts` covers closed, open, and unknown status. Focused test result: 17/17 under Node 24.21.0. No source build, deployment, service restart, or post-change runtime proof yet.
+- **IN_PROGRESS:** Bounded queue pressure is directly observed dropping best-effort provider trade events. Quotes/Klines are prioritized and reference depth/trades are non-durable; Binance depth is a full top-20 snapshot and REST endpoints work, but client gap detection/replay/resynchronization remains unproven. No durable financial loss was observed or implied.
+- **PRESERVED:** Modified Wrangler config and untracked Admin pnpm files remain untouched; migration worktree remains untouched. No frontend file changed and no Git commit/push or Cloudflare/D1 write occurred.
+- **NEXT:** Complete the market realtime recovery proof and remaining backend gates. Build, integrate and deploy once the backend repair set is coherent, then verify the actual deployed USDRUB session state and current provider recovery. Receipt: `tasks/evidence/market-provider-runtime-20261017.md`.
+
+#### Active execution workflow (reconciled 2026-10-17)
+
+1. **Provider coverage:** Distinguish catalog rows, returned quotes, active NEXI mappings and live/closed status. Current BiQuote evidence: catalog 36/36, returned probes 35/36 candidate mappings, NEXI configured 31; do not promote aliases or change authority from catalog presence alone.
+2. **Bounded source repair:** Finish MOEX status classification, focused test and source review. Preserve unrelated dirty Wrangler/Admin files and migration worktree.
+3. **Market recovery proof:** For dropped realtime-only reference events, verify fresh provider REST depth/trade read-back after pressure and quote snapshot on socket connect. Exact replay is not the current contract. Do not introduce durable storage or frontend changes without evidence that the existing read-back contract fails.
+4. **Release once:** Build the coherent backend change once, deploy to the existing `nexi-api.service`, and verify readiness, USD/RUB `CLOSED/MARKET_CLOSED`, supported market snapshots, process/artifact identity and no new blocking runtime faults.
+5. **Continue backend gates:** Use existing authorized non-production identities/fixtures. Close authenticated flows only with durable ledger/outbox evidence. Keep unknown owner credentials, off-VPS backup destination/key custody, and any other external dependency as evidence-backed blockers; continue independent domains.
+
+Current progress and exact test/runtime outcomes are recorded in `tasks/evidence/market-provider-runtime-20261017.md` and the 2026-10-17 tail of `NEXI_CURRENT_STATE.md`.
+
+
 ## 2026-10-17 — authenticated storage and Socket.IO acceptance
 
 - **VERIFIED:** A second disposable SIWE identity completed challenge/verify/logout. Authenticated deposit-proof intent and authorization returned 201/201; PUT /storage/deposit-proof returned 200. The private VPS file bytes matched the test PNG SHA-256, then the exact temporary file and empty user directory were removed (0 recent test files remain). No deposit claim was submitted.

@@ -5,6 +5,8 @@ import type { MarketProviderAdapter, MarketProviderEvent, MarketProviderRuntimeS
 const MOEX_SYMBOL = 'USD000UTSTOM';
 const MOEX_BASE = 'https://iss.moex.com';
 const CORE_INTERVALS = new Set<MarketKlineInterval>(['1m', '5m', '15m', '30m', '1h', '4h', '1d']);
+const MOEX_TRADING_STATUSES = new Set(['N', 'O', 'C', 'F', 'B', 'T', 'I', 'S', 'A', 'a', 'b', 'p', 'P']);
+const MOEX_CLOSED_STATUSES = new Set(['N', 'C', 'B']);
 
 type MoexTable = { columns?: string[]; data?: unknown[][] };
 type MoexPayload = { marketdata?: MoexTable; candles?: MoexTable };
@@ -66,22 +68,28 @@ export class MoexUsdRubAdapter implements MarketProviderAdapter {
       const url = new URL(`/iss/engines/currency/markets/selt/boards/CETS/securities/${MOEX_SYMBOL}.json`, MOEX_BASE);
       url.searchParams.set('iss.meta', 'off');
       url.searchParams.set('iss.only', 'marketdata');
-      url.searchParams.set('marketdata.columns', 'SECID,LAST,BID,OFFER,TIME,SYSTIME');
+      url.searchParams.set('marketdata.columns', 'SECID,LAST,BID,OFFER,TIME,SYSTIME,TRADINGSTATUS');
       const payload = await this.request<MoexPayload>(url);
       const row = this.tableRows(payload.marketdata)[0];
       if (!row) return;
+      const tradingStatus = String(row.TRADINGSTATUS ?? '');
+      if (!MOEX_TRADING_STATUSES.has(tradingStatus)) return;
+      const closed = MOEX_CLOSED_STATUSES.has(tradingStatus);
       const last = Number(row.LAST);
       const bid = Number(row.BID);
       const ask = Number(row.OFFER);
-      if (!Number.isFinite(last) || last <= 0) return;
+      if (!closed && (!Number.isFinite(last) || last <= 0)) return;
       const observedAt = this.parseMoexSystemTime(String(row.SYSTIME ?? '')) ?? new Date();
       const spread = Number.isFinite(bid) && Number.isFinite(ask) && ask >= bid ? ask - bid : undefined;
       const event: ProviderQuoteEvent = {
-        kind: 'ticker', symbol: 'USDRUB', provider: this.provider, source: 'moex:iss:delayed',
-        providerInstrument: MOEX_SYMBOL, priceType: 'REFERENCE', eventTime: observedAt.getTime(), price: String(last),
+        kind: 'ticker', symbol: 'USDRUB', provider: this.provider,
+        source: closed ? 'moex:iss:delayed:closed-market' : 'moex:iss:delayed',
+        providerInstrument: MOEX_SYMBOL, priceType: 'REFERENCE', eventTime: observedAt.getTime(),
+        price: Number.isFinite(last) && last > 0 ? String(last) : undefined,
         bid: Number.isFinite(bid) && bid > 0 ? String(bid) : undefined,
         ask: Number.isFinite(ask) && ask > 0 ? String(ask) : undefined,
         spread: spread === undefined ? undefined : String(spread),
+        sessionState: closed ? 'CLOSED' : 'OPEN',
       };
       onEvent(event);
     } catch (error) {

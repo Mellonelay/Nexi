@@ -90,6 +90,26 @@ The active backend source and `/srv/nexi/backend` both use npm `package-lock.jso
 The configured SQLite path `/var/lib/nexi/sqlite/nexi-staging.sqlite` was matched against the active API PID's open database, WAL and SHM descriptors. This is direct evidence that the current process opens the canonical configured file. Receipt: `tasks/evidence/vps-runtime-binding-check-20261017.json`.
 
 
+## 2026-10-17 resumed market backend verification
+
+- **PROVEN_UNCHANGED:** The five catalog/config tables previously reported as D1/SQLite content mismatches have matching primary-key sets and row counts. A bounded read-only all-column comparison found only `updatedAt` drift across 244 rows; all other compared columns match. This does not establish a final cross-database watermark.
+- **VERIFIED:** Current public market behavior includes live Binance BTC/ETH/ADA quotes, 20×20 live BTC depth, current provider trades, and a live Margin quote. Internal Spot book and trade-history routes are separate contracts and correctly returned empty internal state at observation. Closed equity/FX/metals quotes carry `UNAVAILABLE`, `CLOSED`, and `MARKET_CLOSED`.
+- **IN_PROGRESS:** The live USD/RUB response was `STALE` from Yahoo daily chart data but incorrectly reported `sessionState=OPEN`. MOEX ISS reported `TRADINGSTATUS=N` (“Not traded right now”) on Saturday. Local source/test changes now map MOEX non-trading states to the existing closed-session contract; focused adapter tests pass 17/17. The change is not built, deployed, or runtime-verified.
+- **IN_PROGRESS:** Market reference trade events are intentionally realtime-only and queue-pressure logs confirm some trade events are dropped to keep ingestion bounded. REST depth/trade snapshots are available, but socket gap detection/replay/resynchronization remains unproven. This is not durable financial data loss.
+- **LIMITS:** API/runtime evidence and exact request examples are recorded in `tasks/evidence/market-provider-runtime-20261017.md`. No API restart, production deployment, financial operation, D1 mutation, or frontend edit occurred. The active API is still the pre-change binary identified in the receipt.
+- **NEXT:** Complete market reference recovery acceptance and the remaining backend proof. Perform one coordinated build/deploy after the coherent backend repair set is closed; verify the deployed USD/RUB closed state and market recovery before declaring runtime acceptance.
+
+
 ## 2026-10-17 live OpenAPI route registration
 
 NestJS source configures Swagger JSON at `/docs-json`. The live public API returned HTTP 200 with OpenAPI 3.0.0 and 221 paths. Expected route families are present: auth 21, wallet 19, transfers 3, withdrawals 13, convert 1, spot 20, margin 9, binary 10, mining 12, loans 12 and admin 111 (counts are substring matches in paths and may overlap). This proves contract registration only, not authenticated endpoint behavior. Hash/count receipt is included in `tasks/evidence/vps-runtime-binding-check-20261017.json`.
+
+
+## 2026-10-17 market repair continuation
+
+- **VERIFIED:** BiQuote catalog representation is 36/36 NEXI non-crypto assets; returned quote probes cover 35/36 candidate mappings (AXP has no BiQuote tick/history/OHLC; NEXI has a configured Gate quote). BiQuote remains configured for 31 assets. No provider priority or mapping changed.
+- **IMPLEMENTED, TESTED:** MOEX USD/RUB adapter uses the documented Currency53 `TRADINGSTATUS` enum. Only N/C/B mark a closed session; T and S (opening auction) remain active; unknown values are ignored. Focused Node 24 suite: 18/18 passed. Official schema: https://ftp.moex.com/pub/ClientsAPI/ASTS/Bridge_Interfaces/MarketData/Currency53_Info_English.htm.
+- **RUNTIME_VERIFIED:** A queue-drop warning was logged at 15:52:04 UTC. At 15:53 UTC, readiness, 53-symbol market prices, live BTC depth (20×20) and 50 recent BTC reference trades all returned HTTP 200 and passed schema checks. This is snapshot read-back after reference event pressure, not exact Socket.IO replay or client auto-refetch proof.
+- **IN_PROGRESS:** Source has not been built/deployed; service remains PID 1749407 with the pre-change binary. One coordinated backend release remains next after focused source review and preserving the active runtime boundaries.
+- **NEXT WORKFLOW:** Focused source/test closure → one backend build → canonical deployment/restart → verify deployed USD/RUB closed state, readiness, market REST snapshot recovery, and artifact identity → resume remaining authenticated workflow gates. Do not add replay infrastructure for reference-only events without a proven contract need.
+- **BLOCKED_WITH_EVIDENCE:** Authenticated financial/Admin mutations need an authorized test-balance identity or supported fixture. Independent encrypted backup/restore needs an authorized off-VPS destination and separate key custody. Continue other backend domains while these remain open.

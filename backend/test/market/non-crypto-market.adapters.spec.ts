@@ -5,6 +5,7 @@ import { FawazCurrencyMarketAdapter } from '../../src/market/fawaz-currency-mark
 import { RzzroIndustrialMetalsMarketAdapter } from '../../src/market/rzzro-industrial-metals-market.adapter';
 import { resolveProviderInstrument } from '../../src/market/market-source-registry';
 import { YahooMarketAdapter } from '../../src/market/yahoo-market.adapter';
+import { MoexUsdRubAdapter } from '../../src/market/moex-usdrub.adapter';
 import { OkxMarketAdapter, BitgetMarketAdapter, HtxMarketAdapter, BybitMarketAdapter, GateMarketAdapter } from '../../src/market/public-exchange-market.adapter';
 
 describe('non-crypto market adapters', () => {
@@ -41,6 +42,77 @@ describe('non-crypto market adapters', () => {
     await expect(adapter.fetchQuote('XZNUSD')).resolves.toMatchObject({
       provider: 'yahoo', providerInstrument: 'ZNC=F', priceType: 'CANDLE_CLOSE', price: '52.36', source: 'rest:chart:1d',
     });
+  });
+
+  it('emits a closed-session marker when MOEX says USD/RUB is not trading', async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({ ok: true, json: async () => ({
+      marketdata: {
+        columns: ['SECID', 'LAST', 'BID', 'OFFER', 'TIME', 'SYSTIME', 'TRADINGSTATUS'],
+        data: [['USD000UTSTOM', 83.73, null, null, '18:43:23', '2026-10-16 23:55:02', 'N']],
+      },
+    }) });
+    const adapter = new MoexUsdRubAdapter();
+    adapter.configure([{ symbol: 'USDRUB', providerInstrument: 'USD000UTSTOM' }]);
+    const events: any[] = [];
+    await adapter.start((event) => events.push(event));
+    adapter.stop();
+
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      symbol: 'USDRUB', provider: 'moex', sessionState: 'CLOSED',
+      source: 'moex:iss:delayed:closed-market', price: '83.73',
+    });
+    expect((global.fetch as jest.Mock).mock.calls[0][0].toString()).toContain('TRADINGSTATUS');
+  });
+
+  it('keeps MOEX USD/RUB live while the exchange reports its trading session', async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({ ok: true, json: async () => ({
+      marketdata: {
+        columns: ['SECID', 'LAST', 'BID', 'OFFER', 'TIME', 'SYSTIME', 'TRADINGSTATUS'],
+        data: [['USD000UTSTOM', 83.73, 83.72, 83.74, '12:00:00', '2026-10-16 12:00:00', 'T']],
+      },
+    }) });
+    const adapter = new MoexUsdRubAdapter();
+    adapter.configure([{ symbol: 'USDRUB', providerInstrument: 'USD000UTSTOM' }]);
+    const events: any[] = [];
+    await adapter.start((event) => events.push(event));
+    adapter.stop();
+
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({ sessionState: 'OPEN', source: 'moex:iss:delayed', price: '83.73' });
+  });
+
+  it('keeps MOEX USD/RUB open during its opening auction status', async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({ ok: true, json: async () => ({
+      marketdata: {
+        columns: ['SECID', 'LAST', 'BID', 'OFFER', 'TIME', 'SYSTIME', 'TRADINGSTATUS'],
+        data: [['USD000UTSTOM', 83.73, null, null, '09:50:00', '2026-10-16 09:50:00', 'S']],
+      },
+    }) });
+    const adapter = new MoexUsdRubAdapter();
+    adapter.configure([{ symbol: 'USDRUB', providerInstrument: 'USD000UTSTOM' }]);
+    const events: any[] = [];
+    await adapter.start((event) => events.push(event));
+    adapter.stop();
+
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({ sessionState: 'OPEN', source: 'moex:iss:delayed' });
+  });
+
+  it('does not infer a MOEX session when its status is missing or unknown', async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({ ok: true, json: async () => ({
+      marketdata: {
+        columns: ['SECID', 'LAST', 'BID', 'OFFER', 'TIME', 'SYSTIME', 'TRADINGSTATUS'],
+        data: [['USD000UTSTOM', 83.73, 83.72, 83.74, '12:00:00', '2026-10-16 12:00:00', 'X']],
+      },
+    }) });
+    const adapter = new MoexUsdRubAdapter();
+    adapter.configure([{ symbol: 'USDRUB', providerInstrument: 'USD000UTSTOM' }]);
+    const events: any[] = [];
+    await adapter.start((event) => events.push(event));
+    adapter.stop();
+
+    expect(events).toHaveLength(0);
   });
 
   it('uses OANDA bid/ask midpoint only when the provider response is coherent', async () => {
