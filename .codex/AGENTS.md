@@ -9,3 +9,7 @@ This file is a **NEXI project overlay**, not the globally Agent-Kernel-generated
 - Project `hooks.json`: Graphify `PreToolUse/Bash`, Worker-0 skill harness `UserPromptSubmit`; user `~/.codex/hooks.json` loads Agent Skills at session start. Ponytail plugin's SessionStart/UserPromptSubmit/SubagentStart hooks appear enabled in Desktop UI; verify effective hooks before making claims. Do not reset hook timeout settings without evidence of a failure.
 - Domain safety: NestJS owns business; SQLite is current durable financial application truth; Ledger postings account for economic moves and EventOutbox publishes them durably. No second DB/writer, fabricated funding, or unauthorized production mutation.
 - Owner has closed BiQuote freshness work; prioritize backend five-wallet USDT restrictions, complete financial events/settlement and durable recovery without restarting already proven tests.
+
+## Distinct Cloud Work / RDC parallel lane
+
+Owner explicitly permits Cloud Work to inspect or implement a *different* bounded responsibility via RDC alongside this Codex SSH session. Coordinate exact changed paths and active handles before mutation. Read-only evidence can overlap. Serialize shared files, SQLite/financial operations, service restarts, release, Git index/commit/push. No second worktree, branch or repo clone. The Cloud Work app does not automatically use this Desktop SSH connection.
