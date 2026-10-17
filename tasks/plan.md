@@ -342,6 +342,21 @@ This inventory does not establish that the remaining NEXI resources are safe to 
 
 Current progress and exact test/runtime outcomes are recorded in `tasks/evidence/market-provider-runtime-20261017.md` and the 2026-10-17 tail of `NEXI_CURRENT_STATE.md`.
 
+#### 2026-10-17 MOEX release result
+
+- **COMPLETED:** MOEX source correction is committed/pushed as `44d7a0a47b82b226f7895230e38e644c2951ba0a`; focused suite 18/18; backend build exit 0; deployed JS hash matches source build.
+- **RUNTIME_VERIFIED:** Service PID 1788896 is healthy (`NRestarts=0`); USD/RUB reports `UNAVAILABLE/CLOSED/MARKET_CLOSED`; Binance BTC remains live; fresh depth/trades and Socket.IO snapshot validated after deployment.
+- **LIMIT:** First rollout attempt rolled back after a 30-second readiness timeout. Graceful stop hit systemd's configured 30-second timeout; second rollout's 90-second readiness window passed. No database rows or frontend code changed.
+- **NEXT:** Continue authenticated financial/workflow domains and current Sentry/recovery checks that do not require new owner credentials or backup destinations. Keep exact market-event replay and external blockers unclaimed.
+
+#### 2026-10-17 Sentry linkage and post-Sentry runtime recheck
+
+- **DEPLOYED:** The runtime release environment now matches source SHA `44d7a0a47b82b226f7895230e38e644c2951ba0a`; Sentry has one associated backend commit and one production deploy record. The changed MOEX adapter source map was injected with debug ID `cf0666cc-ba41-4515-afa3-5dfbcadf2ef3` and uploaded to that release.
+- **RUNTIME_VERIFIED:** Post-restart service PID 1790362 is active with `NRestarts=0`; `/readyz` reports SQLite and Redis healthy. Closed USD/RUB, live BTC quote/depth/trades, and provider capability differences were rechecked. Full detail: `tasks/evidence/market-provider-runtime-20261017.md`.
+- **SENTRY PROOF:** A controlled production `level=info` event was emitted and found under the exact release; issue `NEXI-Y` now groups three controlled info checks and contains no exception type/value. No production error-level event or matching application log was found. Source-map artifact/debug-ID resolution is verified, but event-based original-file/line mapping remains unproven because the controlled event stack came from Node's inline evaluator. Release API status remains `open` despite a release timestamp and production deploy record.
+- **NOT_PROVEN:** Authenticated financial operations, queue execution/recovery, exact Socket.IO replay, final D1 watermark, and independent encrypted off-VPS restore remain outstanding or blocked.
+- **NEXT WORKFLOW:** Continue one independent, read-only/runtime backend gate at a time. Do not perform financial mutations without authorized test-balance identity/fixture or backup work without approved destination and key custody. Keep the current backend deployed; do not start frontend work until backend gates are closed or explicitly evidence-blocked.
+
 
 ## 2026-10-17 — authenticated storage and Socket.IO acceptance
 

@@ -443,6 +443,23 @@ Receipt: `tasks/evidence/market-provider-runtime-20261017.md`.
 
 Execution order and release gates are specified in `tasks/plan.md` under “Active execution workflow (reconciled 2026-10-17)”.
 
+### 2026-10-17 MOEX release result
+
+- [x] DEPLOYED — Commit `44d7a0a47b82b226f7895230e38e644c2951ba0a` pushed to `origin/main`; backend build exited 0. Compiled MOEX JS SHA-256: `d7acabdd9015d5a65a2dfbad4a77f4d938ac5a4d7cb3639dc6bdcf53c473e285`.
+- [x] RUNTIME_VERIFIED — API readiness healthy; `/market/prices` now reports USD/RUB `UNAVAILABLE/CLOSED/MARKET_CLOSED` from MOEX. BTC remains live; depth 20×20; 50 current trades; Socket.IO delivered a valid 53-symbol snapshot with matching USD/RUB/BTC states.
+- [x] PRESERVED — Only the compiled MOEX adapter JS and source map were deployed. Generated D1 Prisma client and other runtime files remain intact; rollback copies are under `/srv/nexi/backend/rollback/moex-usdrub-20261017/`.
+- [ ] PENDING — Resume remaining authorized backend acceptance. Exact Socket.IO event replay/client auto-refetch remains unproven; authenticated financial/Admin workflows and independent encrypted off-VPS restore remain blocked by the documented owner dependencies.
+- [!] OBSERVATION — Graceful stop reached the configured 30-second timeout once; first bounded readiness window was too short and rollback restored prior files. Second rollout with 90-second readiness window succeeded. Current service is healthy, PID 1788896, `NRestarts=0`.
+
+### 2026-10-17 Sentry release alignment and post-restart proof
+
+- [x] DEPLOYED — Runtime `SENTRY_RELEASE` now matches backend source SHA `44d7a0a47b82b226f7895230e38e644c2951ba0a`; Sentry release has one associated commit and a production deploy record.
+- [x] SOURCE_MAP_UPLOADED — Changed MOEX adapter map uploaded with debug ID `cf0666cc-ba41-4515-afa3-5dfbcadf2ef3`; deployed JS resolves to it and `node --check` passed. This is map resolution, not event-based stack-frame mapping.
+- [x] RUNTIME_VERIFIED — Service restarted to PID 1790362, `NRestarts=0`; readiness recovered with SQLite+Redis. USD/RUB remains truthfully closed; Binance quote, 20x20 depth, and current trades verified. Full evidence in `tasks/evidence/market-provider-runtime-20261017.md`.
+- [x] VERIFIED — Controlled production `level=info` event `554d7ce8b68a405ea37ff993342f4b47` flushed and appeared under the exact release. It is grouped with two prior controlled checks as `NEXI-Y`; all are informational, without exception type/value. No production error-level event or matching application log was found.
+- [ ] IN_PROGRESS — Adapter source-map pair/debug-ID resolves, but event-based original-file/line mapping remains unverified because the safe info event stack points to the inline evaluator. Sentry API release status remains `open` despite release timestamp/deploy record.
+- [ ] BLOCKED_WITH_EVIDENCE — Authenticated financial mutations require an authorized test-balance identity or supported fixture; independent encrypted backup/restore requires approved off-VPS destination and key custody. Continue independent backend gates while blocked.
+
 ### 2026-10-17 BiQuote coverage recheck and market next action
 
 - [x] VERIFIED — Full BiQuote symbol catalog read returned 2,061 entries and represented all 36 NEXI non-crypto assets (20 stocks, 9 FX, 7 metals), using explicit aliases for Disney, Uber, Sony and American Express.
