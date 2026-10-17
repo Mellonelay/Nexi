@@ -394,3 +394,8 @@ Superseded historical rows remain above for provenance. Do not revive old statem
 - [x] VERIFIED — systemd Node and Prisma CLI under service PATH are v24.21.0; native better-sqlite3 loaded on Node ABI 137 with SQLite 3.53.2. Interactive shell default Node 22 is not the API runtime.
 - [x] VERIFIED — configured canonical SQLite file matches active API process open DB/WAL/SHM descriptors.
 - [x] PROVEN_UNCHANGED — no package changes/reinstall/rebuild required; this evidence-only update does not change backend source.
+
+
+### 2026-10-17 REST contract surface
+- [x] VERIFIED — Live `/docs-json` returns OpenAPI 3.0.0 with 221 paths and expected Auth/Wallet/Transfer/Withdrawal/Convert/Spot/Margin/Binary/Mining/Loan/Admin route families.
+- [ ] PENDING — Contract path presence does not replace authenticated API/business-flow acceptance.

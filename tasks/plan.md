@@ -302,3 +302,9 @@ This inventory does not establish that the remaining NEXI resources are safe to 
 - **VERIFIED:** systemd runs Node 24.21.0 with Node 24 first in PATH. Prisma CLI under that PATH reports Node 24.21.0. The login shell's default Node 22 does not represent API runtime. better-sqlite3 opened successfully under Node ABI 137; embedded SQLite version 3.53.2.
 - **VERIFIED:** `NEXI_LOCAL_SQLITE_PATH=/var/lib/nexi/sqlite/nexi-staging.sqlite` resolves to the same file opened by the active API PID; its main DB, WAL and SHM descriptors are open. See runtime binding receipt.
 - **NEXT:** No rebuild/reinstall is warranted by this check. Resume only the actual acceptance frontier: authorized authenticated identity, off-VPS encrypted backup/restore destination, and safe consumer execution proof.
+
+
+## 2026-10-17 live API contract surface
+
+- **VERIFIED:** Source configures Swagger JSON at `/docs-json`; live endpoint returns OpenAPI 3.0.0 with 221 routes. Auth, wallet, transfer, withdrawal, convert, spot, margin, binary, mining, loan and admin route families are registered. Domain counts are path-substring matches and may overlap.
+- **LIMIT:** Route registration does not prove authentication, RBAC or successful business operations. Authenticated runtime acceptance remains pending authorized test identity.

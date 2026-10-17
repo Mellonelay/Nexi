@@ -88,3 +88,8 @@ The running unit uses Node v24.21.0 and `/srv/nexi/backend/dist/src/main.js` (SH
 The active backend source and `/srv/nexi/backend` both use npm `package-lock.json`; the checked declarations, lock entries and installed packages match: NestJS core/platform 12.0.3, Prisma/client/SQLite adapter 7.3.0, better-sqlite3 12.11.1, BullMQ 6.3.15, ioredis 5.10.1, Socket.IO 4.8.3 and Redis Streams adapter 0.3.0. The systemd unit sets Node 24.21.0 in both `ExecStart` and `PATH`. Prisma CLI reports Node 24 when run with the unit PATH; the interactive shell defaults to Node 22, which does not describe the service runtime. better-sqlite3 loaded natively under Node 24 ABI 137 with SQLite 3.53.2. No source/package changes or rebuild were needed.
 
 The configured SQLite path `/var/lib/nexi/sqlite/nexi-staging.sqlite` was matched against the active API PID's open database, WAL and SHM descriptors. This is direct evidence that the current process opens the canonical configured file. Receipt: `tasks/evidence/vps-runtime-binding-check-20261017.json`.
+
+
+## 2026-10-17 live OpenAPI route registration
+
+NestJS source configures Swagger JSON at `/docs-json`. The live public API returned HTTP 200 with OpenAPI 3.0.0 and 221 paths. Expected route families are present: auth 21, wallet 19, transfers 3, withdrawals 13, convert 1, spot 20, margin 9, binary 10, mining 12, loans 12 and admin 111 (counts are substring matches in paths and may overlap). This proves contract registration only, not authenticated endpoint behavior. Hash/count receipt is included in `tasks/evidence/vps-runtime-binding-check-20261017.json`.

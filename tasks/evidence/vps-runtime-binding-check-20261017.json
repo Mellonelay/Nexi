@@ -133,5 +133,27 @@
       "@socket.io/redis-streams-adapter": "0.3.0"
     },
     "note": "The interactive shell default resolves Node 22; the service unit explicitly sets Node 24 in PATH and ExecStart. No lockfile or package changes required."
+  },
+  "openapi_runtime": {
+    "source_route": "/docs-json (configured by NestJS SwaggerModule.setup(\"docs\", ..., {jsonDocumentUrl:\"docs-json\"}))",
+    "https_status": 200,
+    "openapi_version": "3.0.0",
+    "path_count": 221,
+    "path_counts_by_domain_substring": {
+      "admin": 111,
+      "auth": 21,
+      "wallet": 19,
+      "transfer": 3,
+      "withdraw": 13,
+      "convert": 1,
+      "spot": 20,
+      "margin": 9,
+      "binary": 10,
+      "mining": 12,
+      "loan": 12,
+      "market": 16,
+      "notification": 3
+    },
+    "interpretation": "Live OpenAPI contract exposes expected application/Admin route families; endpoint registration is not authenticated behavior acceptance."
   }
 }
