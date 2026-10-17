@@ -187,3 +187,12 @@ Graphify hosted index is known to predate the current source; it was only used f
 5. Owner-only: financial writer/traffic cutover, Name.com nameserver change, and destructive Cloudflare retirement. Keep production Cloudflare/D1 unchanged pending those gates.
 
 Historical records below preserve the chronology and are superseded where their branch, runtime, Node version, Aiven target or pending task contradicts this checkpoint.
+
+## 2026-10-17 Checkpoint — Public DNS/TLS routed to VPS
+
+- VERIFIED — Name.com is authoritative by owner action; all three hostnames route to VPS IP 34.143.137.221. Screenshot and GCP rule describe confirm enabled ingress ALLOW TCP/80 at priority 1000 for tag singbox-chatgpt-24443; TCP/443 already reached Nginx.
+- VERIFIED — Certbot staging and production HTTP-01 succeeded. SAN certificate for www/api/admin is installed; expiry 2027-01-15. Active Nginx certificate references were changed with pre-change backups retained. nginx -t and reload passed.
+- VERIFIED — Strict HTTPS reached Public/Admin final routes (HTTP 200), API /ops/ready (200; SQLite/Redis ready), /market/prices (200), Socket.IO polling, and a real Socket.IO WSS session. All returned TLS verify result 0 and the VPS IP.
+- VERIFIED — Certbot timer active; NEXI deploy hook syntax/manual execution passed; certbot renew --dry-run passed.
+- VERIFIED — Canonical main remains 927d313b5f873eaf814fb3e1d2a00e8a101dc37b = origin/main. Only preserved untracked Admin pnpm files remain. Runtime local SQLite, async and object flags are enabled.
+- OPEN — Authenticated financial acceptance, independent encrypted off-VPS backup/restore, final live D1 delta, single-writer cutover and Cloudflare retirement. Cloudflare resources remain deployed; D1 remains financial authority. No financial writer or Cloudflare resource changed.

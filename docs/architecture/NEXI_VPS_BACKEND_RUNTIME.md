@@ -80,9 +80,9 @@
 - The VPS runs Node 24.21.0 and an active NestJS systemd process from `/srv/nexi/backend/dist/src/main.js`.
 - Loopback health/readiness, Swagger JSON, public market reads and Socket.IO handshake checks have passed in the current evidence set.
 - Aiven Valkey connectivity is observed; API sockets to the endpoint were established and the queue counts were read-only/empty at the recorded check.
-- Public and Admin remain active. Cloudflare production still serves the authoritative public route and D1 remains the production financial writer until explicit owner-approved cutover.
-- Existing historical migration proofs are retained; source build on canonical main, public API TLS, authenticated financial acceptance, full Socket.IO recovery, independent off-VPS encrypted backup/restore and current D1 delta remain separate proof items.
-- Name.com nameserver changes are owner-performed. Do not change DNS, switch financial writers, or delete Cloudflare resources as part of ordinary VPS implementation.
+- Public and Admin remain active on the VPS. Name.com is authoritative per owner action; public A records for the hostnames point to 34.143.137.221. The VPS serves the forced-IP routes, while D1 remains the production financial writer until explicit owner-approved cutover. Cloudflare resources remain deployed.
+- Existing historical migration proofs are retained. Canonical main build and loopback API readiness are proven. Public TLS now uses the issued Let's Encrypt SAN certificate for www/api/admin; strict HTTPS checks returned verify=0 for each hostname, and Certbot HTTP-01 staging succeeded. Authenticated financial acceptance, full Socket.IO recovery, independent off-VPS encrypted backup/restore and current D1 delta remain separate proof items.
+- Owner switched the domain to Name.com nameservers. Current DNS checks return 34.143.137.221 for www and api; earlier independent resolution confirmed admin as well. DNSSEC is not enabled per owner report. The owner created GCP ingress TCP/80 for the NEXI VM tag; HTTP-01 succeeded. Certbot timer is enabled, the NEXI-scoped Nginx reload deploy hook was tested, and certbot renew --dry-run succeeded. Do not change DNS, switch financial writers, or delete Cloudflare resources.
 
 ## Operational references
 

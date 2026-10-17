@@ -282,3 +282,14 @@ Remote refs/heads/main verified 9a41b2e; Node v22.23.2 / better-sqlite3 12.11.1 
 - [ ] PENDING_OWNER_ACTION — Final financial writer/traffic cutover, manual Name.com nameserver change, destructive Cloudflare resource retirement. Do not mutate production Cloudflare/DNS/writer.
 
 Superseded historical rows remain above for provenance. Do not revive old statements that the API is inactive, Node is v22, self-hosted Valkey is the final target, Container image parity is unknown (in-container inspection is recorded above), or the main source remains isolated on a migration branch.
+
+## 2026-10-17 TODO — Public DNS/TLS routed to VPS
+
+- [x] VERIFIED — Name.com DNS sends www/api/admin to 34.143.137.221. Owner-created GCP ingress ALLOW TCP/80 rule is enabled for tag singbox-chatgpt-24443; screenshot and live Nginx/ACME results agree.
+- [x] COMPLETED — HTTP-01 staging and production issuance succeeded; SAN certificate installed for all three hostnames, expires 2027-01-15. Active Nginx configs updated with backups; nginx -t/reload passed.
+- [x] VERIFIED — Strict HTTPS returns Public/Admin 200 final routes, API readiness 200, market prices 200, Socket.IO polling handshake and actual WSS connect; TLS verify result 0 and VPS remote IP.
+- [x] VERIFIED — Certbot timer, NEXI-only Nginx deploy hook, manual hook invocation and certbot renew --dry-run all passed.
+- [ ] OPEN — Find authorized test identity for financial API acceptance; do not create financial test balances without the established owner-approved path.
+- [ ] OPEN — Establish an authorized independent encrypted off-VPS backup destination and verify restore.
+- [ ] OPEN — Reconcile final live D1 delta and prepare controlled freeze/drain/one-writer cutover. Production cutover still requires owner approval.
+- [ ] OPEN — Retire Cloudflare resources only after dependency closure, backup/retention and approved cutover. No resources retired.
