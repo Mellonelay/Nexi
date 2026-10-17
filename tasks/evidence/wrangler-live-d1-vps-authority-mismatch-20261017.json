@@ -44,12 +44,18 @@
   },
   "active_vps_sqlite": {
     "path": "/var/lib/nexi/sqlite/nexi-staging.sqlite",
-    "size_bytes": 322699264,
+    "size_bytes": 330125312,
     "inode": 421320,
     "wal_size_bytes_observed": 36622712,
     "shm_size_bytes_observed": 98304,
     "schema_tables": 96,
-    "runtime_only_tables": ["LocalDurableJob", "LocalDurableJobReplayHistory", "LocalWorkflowEvent", "LocalWorkflowInstance", "LocalWorkflowStep"],
+    "runtime_only_tables": [
+      "LocalDurableJob",
+      "LocalDurableJobReplayHistory",
+      "LocalWorkflowEvent",
+      "LocalWorkflowInstance",
+      "LocalWorkflowStep"
+    ],
     "core_counts": "zero across the same checked table set",
     "service": "nexi-api.service",
     "listen_address": "127.0.0.1:3002",
@@ -60,7 +66,25 @@
       "NEXI_LOCAL_ASYNC_ENABLED": true,
       "NEXI_LOCAL_OBJECTS_ENABLED": true
     },
-    "source_confirmation": "NEXI_SQLITE_LOCAL_ENABLED selects the local Prisma better-sqlite3 adapter; D1FinancialCommandGateway is enabled when D1_RUNTIME_ENABLED and its bridge are enabled. No financial command was sent."
+    "source_confirmation": "NEXI_SQLITE_LOCAL_ENABLED selects the local Prisma better-sqlite3 adapter; D1FinancialCommandGateway is enabled when D1_RUNTIME_ENABLED and its bridge are enabled. No financial command was sent.",
+    "last_observed_at": "2026-10-17T05:56:13Z",
+    "service_main_pid": 1680547,
+    "consistent_snapshot": {
+      "path": "/home/mellonelay1999/nexi-migration-snapshots/nexi-active-vps-staging-20261017-onestep.sqlite",
+      "bytes": 329150464,
+      "sha256": "ac5aa8d23094d04bab0392185caabd237b6a953927401cacfb68cd7dc4c849ce",
+      "mode": "0600",
+      "integrity_check": "ok",
+      "foreign_key_violation_count": 0,
+      "page_count": 80359,
+      "page_size": 4096,
+      "journal_mode": "wal",
+      "sqlite_cli_engine": "3.40.1",
+      "restore_smoke": "one-step SQLite backup API copy restored to a separate temporary file; integrity ok, foreign-key violations 0, User/Wallet/LedgerPosting counts 0; exact temporary file removed after validation",
+      "source_service_state": "nexi-api.service remained active at PID 1680547; backup did not alter source DB inode 421320; normal runtime writes continued",
+      "completed_file_mtime": "2026-10-17T05:53:33Z",
+      "limitations": "Local VPS snapshot only; not an independent off-VPS backup and not the populated historical candidate."
+    }
   },
   "restored_historical_artifact": {
     "path": "/home/mellonelay1999/nexi-migration-snapshots/nexi-core-restored-20261016.sqlite",
@@ -71,21 +95,54 @@
     "archive_size_bytes": 863748144,
     "archive_sha256": "f65862bbd8359329e3b0db410e941462b8d77d0947024cc6205cb8a88ffa4661",
     "restored_only_table": "d1_migrations",
-    "historical_financial_counts": {"User": 34, "Wallet": 34, "WalletIdentity": 21, "LedgerAccount": 14, "LedgerPosting": 46, "LedgerIdempotency": 44, "LedgerAuditEvent": 46, "EventOutbox": 92, "EventInbox": 97, "LoanApplication": 5, "LoanRepayment": 1, "MiningSubscription": 4, "MiningRewardAccrual": 13},
+    "historical_financial_counts": {
+      "User": 34,
+      "Wallet": 34,
+      "WalletIdentity": 21,
+      "LedgerAccount": 14,
+      "LedgerPosting": 46,
+      "LedgerIdempotency": 44,
+      "LedgerAuditEvent": 46,
+      "EventOutbox": 92,
+      "EventInbox": 97,
+      "LoanApplication": 5,
+      "LoanRepayment": 1,
+      "MiningSubscription": 4,
+      "MiningRewardAccrual": 13
+    },
     "content_fingerprint_receipt": "tasks/evidence/export-restored-content-reconciliation.json",
-    "integrity_check": "running read-only validation as of 2026-10-17T05:41:44Z; no saved direct PRAGMA receipt had been located before this check",
+    "integrity_check": "Historical owner checkpoint reports SQLite integrity_check and foreign_key_check passed. A redundant live rerun was stopped after 17m 14s and 3,185,134,762 bytes read without producing a result; no new pass is claimed.",
     "provenance_limit": "Export-to-restored equality proves historical artifact fidelity, not equality with current D1 or a final cutover snapshot."
   },
   "active_vps_runtime_schema": {
     "restored_only_table": "d1_migrations",
-    "runtime_workflow_table_counts": {"LocalDurableJob": 0, "LocalDurableJobReplayHistory": 0, "LocalWorkflowEvent": 0, "LocalWorkflowInstance": 0, "LocalWorkflowStep": 0},
+    "runtime_workflow_table_counts": {
+      "LocalDurableJob": 0,
+      "LocalDurableJobReplayHistory": 0,
+      "LocalWorkflowEvent": 0,
+      "LocalWorkflowInstance": 0,
+      "LocalWorkflowStep": 0
+    },
     "files_are_distinct": true,
-    "promotion_status": "not performed; active service holds file/WAL descriptors, and controlled write quiescence plus final D1 delta and backup/restore proof are required"
+    "promotion_status": "not performed; active service remains on empty staging DB. Candidate requires verified current D1 delta and additive VPS async schema before startup; controlled write quiescence/owner cutover and independent backup remain open.",
+    "async_schema_preflight": {
+      "source": "backend/src/jobs/local-async-runtime.service.ts onModuleInit",
+      "behavior": "fails closed unless LocalDurableJob, LocalDurableJobReplayHistory, LocalWorkflowInstance, LocalWorkflowEvent, LocalWorkflowStep and EventInbox exist, and required replay columns are present",
+      "schema_files": [
+        "backend/src/jobs/local-durable-job.schema.sql",
+        "backend/src/jobs/local-workflow.schema.sql"
+      ],
+      "candidate_state": "the five Local* tables are absent from the historical restore; EventInbox exists. No schema was applied to the candidate."
+    }
   },
   "d1_latest_watermarks_read_only": {
     "queried_at": "2026-10-17T05:41:44Z",
     "database_id": "522177fa-ac42-4d8f-a6a8-b34eed262f15",
-    "query_meta": {"served_by_primary": true, "changed_db": false, "rows_written": 0},
+    "query_meta": {
+      "served_by_primary": true,
+      "changed_db": false,
+      "rows_written": 0
+    },
     "User.updatedAt": "2026-10-09 11:44:45",
     "Wallet.updatedAt": "2026-10-09 11:44:39",
     "LedgerPosting.createdAt": "2026-10-17 00:00:04",
@@ -103,13 +160,16 @@
     "production_writer_cutover": "not performed",
     "cloudflare_resources": "not retired",
     "financial_write_test": "not performed",
-    "historical_snapshot_reconciliation": "reused; not rerun"
+    "historical_snapshot_reconciliation": "reused; not rerun",
+    "active_staging_snapshot": "consistent local SQLite snapshot and separate restore smoke passed; source database/service unchanged",
+    "historical_integrity_rerun": "not completed; prior proof reused, no new pass claimed"
   },
   "severity": "LIVE AUTHORITY/DATA MISMATCH: public DNS reaches VPS whose active local financial database has zero core rows while Cloudflare D1 still has nonzero records. VPS configuration enables local SQLite financial gateway. Halt further financial cutover claims and do not write/migrate either database until owner-approved controlled reconciliation and authority decision.",
   "next": [
-    "Owner decision required for handling current public financial write paths before allowing any such writes to the empty VPS database.",
-    "Obtain authorized authenticated test identity for isolated acceptance.",
-    "Provide an approved off-VPS backup destination with least-privilege access; keep encryption key separate.",
-    "Perform final live D1 delta only under controlled freeze/drain and explicit owner cutover authorization."
+    "Obtain an approved no-extra-paid off-VPS backup destination and verify encrypted backup plus restore.",
+    "Protect current public financial write paths through an owner-approved bounded freeze or a verified safe serving mode.",
+    "Under a consistent frozen D1 boundary, reconcile final inserts/updates/deletes for financial and dependent tables, apply only the evidenced delta, install the additive VPS schemas on the candidate, and verify invariants.",
+    "Request explicit owner acceptance for production SQLite writer cutover after the exact delta/rollback packet is ready.",
+    "Keep Cloudflare resource retirement separate and pending until all dependencies and recovery gates close."
   ]
 }
