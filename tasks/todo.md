@@ -1,3 +1,8 @@
+- [x] Lane B Graphify cloud impact/tests + Worker-0 mcpc actual shortest path; Fallow no backend boundary violations; no source repair needed.
+- [x] Lane C deployed API READY and Sentry current release scoped issue search returned no matching grouped issues; SQLite Inbox/Job state captured (not workflow completion).
+- [ ] BLOCKED_WITH_EVIDENCE: positive Admin credential and Ledger-funded disposable Public identity. Existing `backend/src/staging-fixture.ts` is the canonical staging-only operator; current direct invocation was blocked by remote tool safety. No fixture executed, no credits issued.
+- [ ] NEXT: use an allowed execution surface for canonical fixture; then continue serialized live economic scenarios and record Ledger/Activity/Outbox/idempotency per domain.
+
 - [x] Lane A: fresh legitimate disposable Public SIWE session; 8/8 authenticated HTTP reads, Public token rejected by Admin endpoint HTTP 403; no financial postings (Ledger 49, Outbox 95 unchanged). Receipt: tasks/evidence/authenticated-financial-campaign-siwe-20261018.md.
 - [ ] Lane A: positive ADMIN login test authority/controlled funding; do not use Public JWT as ADMIN or manually fabricate Ledger balances.
 
