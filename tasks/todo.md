@@ -1,3 +1,6 @@
+- [x] Lane A: fresh legitimate disposable Public SIWE session; 8/8 authenticated HTTP reads, Public token rejected by Admin endpoint HTTP 403; no financial postings (Ledger 49, Outbox 95 unchanged). Receipt: tasks/evidence/authenticated-financial-campaign-siwe-20261018.md.
+- [ ] Lane A: positive ADMIN login test authority/controlled funding; do not use Public JWT as ADMIN or manually fabricate Ledger balances.
+
 # ACTIVE CHECKLIST — Backend Authenticated Financial/Admin Runtime Acceptance
 
 - [x] Owner scope confirmed: backend-only, no browser/new migration, reuse prior SIWE read + financial SQLite + workflow receipts, commit on main.

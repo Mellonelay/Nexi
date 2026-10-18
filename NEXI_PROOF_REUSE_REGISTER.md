@@ -1,3 +1,15 @@
+## 2026-10-18T09:02:59Z — Live disposable SIWE Public/API contract verified
+
+**PROVEN live HTTP:** Newly generated disposable Ethereum-mainnet wallet completed actual `POST /auth/wallet/challenge` + signed `POST /auth/wallet/verify` (HTTP 201). Same legitimate short-lived PUBLIC bearer token returned HTTP **200** from `/auth/me`, `/wallet/me`, `/wallet/activity`, `/financial/withdrawals`, `/financial/transfers`, `/spot/margin/positions`, `/binary/positions/current`, and `/mining/summary` (8/8 authenticated reads). Against `POST /financial/admin/withdrawals/approve`, PUBLIC token correctly rejected with HTTP **403**; no Admin financial decision executed. Runner process 1903190 returned exit 0. No private key/signature/bearer token was printed or saved; temporary runner was deleted.
+
+**SQLite bounded before/after:** Before this session: User 37, AuthSession 317, LedgerAccount 14, LedgerPosting 49, EventOutbox 95, AdminAuditLog 41. After challenge/verify/read: User 38, Wallet 38, AuthSession 318; LedgerAccount 14, LedgerPosting 49, EventOutbox 95, AdminAuditLog 41 unchanged. This demonstrates authenticated routing and no spurious economic postings; it does **not** show an actual financial transfer/settlement or a successful ADMIN login.
+
+**Existing controlled Admin authority:** Seven ADMIN user records already exist, but Admin authentication uses `/admin/auth/login` with email/password and `validateAdmin`. A legitimate working Admin test credential/provisioning path has not yet been independently demonstrated. The protected `/admin/financial-corrections` and `/admin/sandbox/controls` routes exist but cannot be treated as unauthenticated test funding shortcuts. No Ledger manual seeding, new Admin session or financial transaction was performed.
+
+**Reusable status:** SIWE end-to-end Public login and eight reads: RUNTIME_VERIFIED. PUBLIC-to-ADMIN rejection: RUNTIME_VERIFIED. Actual domain financial economic operation, funded identity, Admin positive-role login and Admin approval: UNPROVEN. Subsequent work should resume specifically from the controlled Admin authority/funding frontier, not repeat SIWE setup or prior Local SQLite finance suites.
+
+---
+
 ## 2026-10-18 — All financial domain HTTP surface guards repaired and VPS-deployed (LATEST)
 
 # NEXI financial-domain JWT surface closure — 2026-10-18
