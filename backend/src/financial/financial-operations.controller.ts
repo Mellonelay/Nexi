@@ -52,7 +52,8 @@ export class FinancialOperationsController {
   }
 
   @Post("account-transfers")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   transferBetweenAccounts(
     @Body() body: WalletAccountTransferDto,
     @Req() request: AuthenticatedRequest,
@@ -61,7 +62,8 @@ export class FinancialOperationsController {
   }
 
   @Post("transfers")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   transfer(
     @Body() body: Gate2TransferDto,
     @Req() request: AuthenticatedRequest,
@@ -70,7 +72,8 @@ export class FinancialOperationsController {
   }
 
   @Post("conversion/quote")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   quote(
     @Body() body: Gate2ConversionQuoteDto,
     @Req() request: AuthenticatedRequest,
@@ -79,7 +82,8 @@ export class FinancialOperationsController {
   }
 
   @Post("conversion/accept")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   accept(
     @Body() body: Gate2ConversionAcceptDto,
     @Req() request: AuthenticatedRequest,
@@ -92,7 +96,8 @@ export class FinancialOperationsController {
   }
 
   @Get("deposits")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   deposits(@Req() request: AuthenticatedRequest) {
     return this.financial.getDeposits(request.user.userId);
   }
@@ -103,7 +108,8 @@ export class FinancialOperationsController {
   }
 
   @Post("deposit-proof-intents")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   createDepositProofIntent(
     @Body() body: DepositProofIntentDto,
     @Req() request: AuthenticatedRequest,
@@ -116,7 +122,8 @@ export class FinancialOperationsController {
   }
 
   @Post("deposit-proof-upload/authorize")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   authorizeDepositProofUpload(
     @Body() body: DepositProofAuthorizationDto,
     @Req() request: AuthenticatedRequest,
@@ -128,7 +135,8 @@ export class FinancialOperationsController {
   }
 
   @Post("deposit-claims")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   submitDepositClaim(
     @Body() body: DepositClaimDto,
     @Req() request: AuthenticatedRequest,
@@ -137,19 +145,22 @@ export class FinancialOperationsController {
   }
 
   @Get("deposit-claims")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   getDepositClaims(@Req() request: AuthenticatedRequest) {
     return this.financial.getDepositClaims(request.user.userId);
   }
 
   @Get("withdrawals")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   withdrawals(@Req() request: AuthenticatedRequest) {
     return this.financial.getWithdrawals(request.user.userId);
   }
 
   @Get("transfers")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   transfers(@Req() request: AuthenticatedRequest) {
     return this.financial.getTransfers(request.user.userId);
   }
