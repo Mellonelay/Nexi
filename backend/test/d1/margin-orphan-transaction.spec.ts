@@ -163,6 +163,91 @@ describe("D1 orphan Margin borrow repayment — real SQLite transaction", () => 
     } finally { db.close(); }
   });
 
+  it("atomically releases an OPEN zero-fill entry, repays its borrow, closes the position, and reconciles Ledger", async () => {
+    const { db, gateway } = fixture();
+    try {
+      db.exec('ALTER TABLE "SpotMarginPosition" ADD COLUMN "closedAt" TEXT');
+      db.exec('ALTER TABLE "Gate2SpotOrder" ADD COLUMN "reserveAsset" TEXT');
+      db.exec('ALTER TABLE "Gate2SpotOrder" ADD COLUMN "correlationId" TEXT');
+      db.exec('ALTER TABLE "Gate2SpotOrder" ADD COLUMN "updatedAt" TEXT');
+      db.exec("INSERT INTO \"SpotMarginAccount\" (\"id\",\"userId\",\"pair\",\"quoteAsset\") VALUES ('isolated-1','user-1','BTCUSDT','USDT')");
+      db.exec("INSERT INTO \"SpotMarginPosition\" (\"id\",\"accountId\",\"direction\",\"quantity\",\"debtAsset\",\"debtPrincipal\",\"status\",\"openIdempotencyKey\",\"entryOrderId\") VALUES ('pending-1','isolated-1','LONG','0','USDT','10','PENDING','margin-open-old','entry-old')");
+      db.exec("UPDATE \"Gate2SpotOrder\" SET \"status\"='OPEN',\"reserveAsset\"='USDT',\"correlationId\"='margin-open-old',\"reservedAmount\"='12.002' WHERE \"id\"='entry-old'");
+      db.exec("UPDATE \"LedgerAccount\" SET \"available\"='47.998',\"locked\"='12.002' WHERE \"id\"='account-1'");
+      db.exec("INSERT INTO \"LedgerPosting\" (\"id\",\"accountId\",\"asset\",\"kind\",\"amount\",\"availableDelta\",\"lockedDelta\",\"referenceType\",\"referenceId\",\"idempotencyKey\",\"correlationId\") VALUES ('seed-1','account-1','USDT','CREDIT','50','50','0','TEST_FIXTURE','seed','seed-key','seed')");
+      db.exec("INSERT INTO \"LedgerPosting\" (\"id\",\"accountId\",\"asset\",\"kind\",\"amount\",\"availableDelta\",\"lockedDelta\",\"referenceType\",\"referenceId\",\"idempotencyKey\",\"correlationId\") VALUES ('reserve-1','account-1','USDT','RESERVE','12.002','-12.002','12.002','TEST_FIXTURE','entry-old','reserve-key','margin-open-old')");
+      expect(await gateway.reconcile("account-1", "USDT")).toMatchObject({ available: "47.998", locked: "12.002" });
+      const result = await gateway.cancelPendingMarginPosition("user-1", "pending-1", "margin-cancel-key-03");
+      expect(result).toMatchObject({ state: "CLOSED", replayed: false });
+      expect(db.prepare('SELECT "status","reservedAmount" FROM "Gate2SpotOrder"').get()).toMatchObject({ status: "CANCELED", reservedAmount: "0" });
+      expect(db.prepare('SELECT "status" FROM "SpotMarginPosition"').get().status).toBe("CLOSED");
+      expect(await gateway.reconcile("account-1", "USDT")).toMatchObject({ available: "50", locked: "0" });
+      expect(db.prepare('SELECT count(*) AS n FROM "LedgerPosting" WHERE "kind"=\'DEBIT\'').get().n).toBe(1);
+      expect(db.prepare('SELECT count(*) AS n FROM "LedgerPosting" WHERE "kind"=\'RELEASE\'').get().n).toBe(1);
+      expect(db.prepare('SELECT count(*) AS n FROM "EventOutbox"').get().n).toBe(3);
+      const replay = await gateway.cancelPendingMarginPosition("user-1", "pending-1", "margin-cancel-key-03");
+      expect(replay.replayed).toBe(true);
+      expect(await gateway.reconcile("account-1", "USDT")).toMatchObject({ available: "50", locked: "0" });
+    } finally { db.close(); }
+  });
+
+  it("rolls back release and repayment if a pending entry fills before its guarded cancellation", async () => {
+    const { db, bridge, gateway } = fixture();
+    try {
+      db.exec('ALTER TABLE "SpotMarginPosition" ADD COLUMN "closedAt" TEXT');
+      db.exec('ALTER TABLE "Gate2SpotOrder" ADD COLUMN "reserveAsset" TEXT');
+      db.exec('ALTER TABLE "Gate2SpotOrder" ADD COLUMN "correlationId" TEXT');
+      db.exec('ALTER TABLE "Gate2SpotOrder" ADD COLUMN "updatedAt" TEXT');
+      db.exec("INSERT INTO \"SpotMarginAccount\" (\"id\",\"userId\") VALUES ('isolated-1','user-1')");
+      db.exec("INSERT INTO \"SpotMarginPosition\" (\"id\",\"accountId\",\"quantity\",\"debtAsset\",\"status\",\"openIdempotencyKey\",\"entryOrderId\") VALUES ('pending-1','isolated-1','0','USDT','PENDING','margin-open-old','entry-old')");
+      db.exec("UPDATE \"Gate2SpotOrder\" SET \"status\"='OPEN',\"reserveAsset\"='USDT',\"correlationId\"='margin-open-old',\"reservedAmount\"='12.002' WHERE \"id\"='entry-old'");
+      db.exec("UPDATE \"LedgerAccount\" SET \"available\"='47.998',\"locked\"='12.002' WHERE \"id\"='account-1'");
+      const actualBatch = (bridge.batch as jest.Mock).getMockImplementation()!;
+      (bridge.batch as jest.Mock).mockImplementationOnce(async (statements: D1BridgeBatchStatement[]) => {
+        db.exec("UPDATE \"Gate2SpotOrder\" SET \"status\"='PARTIALLY_FILLED',\"filled\"='0.00001' WHERE \"id\"='entry-old'");
+        return actualBatch(statements);
+      });
+      await expect(gateway.cancelPendingMarginPosition("user-1", "pending-1", "margin-cancel-race-01")).rejects.toThrow();
+      expect(db.prepare('SELECT "available","locked" FROM "LedgerAccount"').get()).toMatchObject({ available: "47.998", locked: "12.002" });
+      expect(db.prepare('SELECT "status" FROM "SpotMarginPosition"').get().status).toBe("PENDING");
+      expect(db.prepare('SELECT count(*) AS n FROM "LedgerPosting" WHERE "kind"=\'DEBIT\'').get().n).toBe(0);
+      expect(db.prepare('SELECT count(*) AS n FROM "LedgerPosting" WHERE "kind"=\'RELEASE\'').get().n).toBe(0);
+    } finally { db.close(); }
+  });
+
+  it("cancels a zero-fill pending position after reserve release and repays the borrow exactly once", async () => {
+    const { db, gateway } = fixture();
+    try {
+      db.exec('ALTER TABLE "SpotMarginPosition" ADD COLUMN "closedAt" TEXT');
+      db.exec("INSERT INTO \"SpotMarginAccount\" (\"id\",\"userId\",\"pair\",\"quoteAsset\") VALUES ('isolated-1','user-1','BTCUSDT','USDT')");
+      db.exec("INSERT INTO \"SpotMarginPosition\" (\"id\",\"accountId\",\"direction\",\"quantity\",\"debtAsset\",\"debtPrincipal\",\"status\",\"openIdempotencyKey\",\"entryOrderId\") VALUES ('pending-1','isolated-1','LONG','0','USDT','10','PENDING','margin-open-old','entry-old')");
+      const first = await gateway.cancelPendingMarginPosition("user-1", "pending-1", "margin-cancel-key-01");
+      expect(first).toMatchObject({ positionId: "pending-1", state: "CLOSED", replayed: false });
+      expect(db.prepare('SELECT "available" FROM "LedgerAccount"').get().available).toBe("50");
+      expect(db.prepare('SELECT "status" FROM "SpotMarginPosition"').get().status).toBe("CLOSED");
+      expect(db.prepare('SELECT count(*) AS n FROM "LedgerPosting" WHERE "kind"=\'DEBIT\'').get().n).toBe(1);
+      expect(db.prepare('SELECT count(*) AS n FROM "Activity"').get().n).toBe(2);
+      expect(db.prepare('SELECT count(*) AS n FROM "EventOutbox"').get().n).toBe(2);
+      const replay = await gateway.cancelPendingMarginPosition("user-1", "pending-1", "margin-cancel-key-01");
+      expect(replay.replayed).toBe(true);
+      expect(db.prepare('SELECT count(*) AS n FROM "LedgerPosting" WHERE "kind"=\'DEBIT\'').get().n).toBe(1);
+    } finally { db.close(); }
+  });
+
+  it("rejects pending cancellation if the entry has executed trades or belongs to another user", async () => {
+    const { db, gateway } = fixture();
+    try {
+      db.exec('ALTER TABLE "SpotMarginPosition" ADD COLUMN "closedAt" TEXT');
+      db.exec("INSERT INTO \"SpotMarginAccount\" (\"id\",\"userId\") VALUES ('isolated-1','user-1')");
+      db.exec("INSERT INTO \"SpotMarginPosition\" (\"id\",\"accountId\",\"quantity\",\"debtAsset\",\"status\",\"openIdempotencyKey\",\"entryOrderId\") VALUES ('pending-1','isolated-1','0','USDT','PENDING','margin-open-old','entry-old')");
+      await expect(gateway.cancelPendingMarginPosition("user-2", "pending-1", "margin-cancel-key-02")).rejects.toThrow();
+      db.exec("INSERT INTO \"Gate2SpotTrade\" (\"buyerOrderId\",\"sellerOrderId\") VALUES ('entry-old','trade-peer')");
+      await expect(gateway.cancelPendingMarginPosition("user-1", "pending-1", "margin-cancel-key-02")).rejects.toThrow("Margin entry has executed trades");
+      expect(db.prepare('SELECT "available" FROM "LedgerAccount"').get().available).toBe("60");
+      expect(db.prepare('SELECT count(*) AS n FROM "LedgerPosting" WHERE "kind"=\'DEBIT\'').get().n).toBe(0);
+    } finally { db.close(); }
+  });
+
   it("refuses to repay another user's borrow", async () => {
     const { db, gateway } = fixture();
     try {

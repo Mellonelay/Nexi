@@ -94,6 +94,16 @@ describe('Spot isolated margin authority', () => {
     }));
   });
 
+  it('routes pending entry cancellation through the owned D1 gateway without a duplicate balance writer', async () => {
+    const d1: any = {
+      cancelPendingMarginPosition: jest.fn().mockResolvedValue({ positionId: 'pending-1', state: 'CLOSED', replayed: false }),
+    };
+    const service = new MarginService(d1);
+    await expect(service.cancelPendingPosition('user-1', 'pending-1', 'cancel-pending-key-1'))
+      .resolves.toMatchObject({ state: 'CLOSED' });
+    expect(d1.cancelPendingMarginPosition).toHaveBeenCalledWith('user-1', 'pending-1', 'cancel-pending-key-1');
+  });
+
   it('routes orphan-borrow repayment through the owned D1 financial authority', async () => {
     const d1: any = { repayUnmatchedMarginBorrow: jest.fn().mockResolvedValue({ postingId: 'repay-1', replayed: false }) };
     await expect(new MarginService(d1).repayUnmatchedBorrow('user-1', 'margin-open-1'))

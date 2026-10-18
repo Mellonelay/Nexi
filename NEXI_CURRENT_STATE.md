@@ -219,3 +219,26 @@ NestJS source configures Swagger JSON at `/docs-json`. The live public API retur
 ## Current financial source supplement — 2026-10-18
 
 `main` source `577f5c1` includes verified SQLite atomic Margin entry-fill projection. Focused Margin+wallet testing reported 23/23 pass, and new TypeScript source check exited 0. No deployed financial acceptance follows from this. Historical older SHA, D1-primary, or empty-SQLite descriptions are superseded by current live/source authority. Remaining Margin late CLOSE settlement/debt recovery, Loan migration 0016, authenticated financial/Admin acceptance, durable recovery and encrypted independent restore are unproven. See architecture matrix and proof register.
+
+
+## 2026-10-18 — Owner-directed dirty-tree consolidation / backend build checkpoint
+
+Owner decision: ChatGPT via RDC is the current Worker-0 execution owner; ChatGPT Work credit is exhausted, so the superseded Codex-SSH preference in historical onboarding is not the selected execution route for this task. This is an execution preference, not a claim that the host setup was removed.
+
+Source at entry: canonical single checkout `/home/mellonelay1999/workspaces/Nexi`, branch `main`, HEAD `04eb876d6751aa319969411a7c5b698afdfa6870`. Seventeen dirty paths (15 tracked edits and 2 untracked admin pnpm artifacts) were explicitly requested to be preserved and committed, including unrelated Wrangler cron/preview changes and task tracking. No second worktree created.
+
+Included backend edits present in checkout: pending Margin cancellation through owned D1/SQLite financial gateway, guarded Ledger/Activity/EventOutbox transitions and focused tests; KYC/local deposit proof upload stream service extraction; Learn media DTO nested validation; awaited market provider shutdown cleanup; financial controller auth-surface coverage updated for added Margin route. These are source changes, not proof of live deployed behavior.
+
+Verification reused and targeted: Margin gateway/service tests 23/23 passed; JWT financial surface test passed after updating expected route count from 8 to 9; identity authorization and local deposit proof related suites passed. NestJS Doctor source scan 84/100, zero error-severity diagnostics, 370 non-error observations; this is not a claim that warnings are defects or that runtime acceptance is complete. TypeScript build project no-emit check passed. Fallow CLI installed and evaluated; CodeScene MCP connected and code_health_score returned 7.4 on `backend/src/spot/margin.service.ts` without sign-in. Worker-0 Graphify local graph observed 8236 nodes, 19543 edges at entry commit, and graph refresh remains part of this consolidation.
+
+Remaining acceptance: validate deployed identity separately, complete controlled financial lifecycle/ledger correlation and owner acceptance; do not infer deployment from build or Git commit. The staged pnpm workspace artifact was created earlier with `allowBuilds` placeholder and needs configuration review before treating it as production package policy. Cloudflare Wrangler cron configuration is historical/superseded by VPS authority, and committing it is not Cloudflare deployment.
+
+
+### Build / graph / static tooling confirmation (2026-10-18)
+
+- Exactly one backend NestJS build in this consolidation: `cd backend && npm run build` **PASS, exit 0**, runtime 68.30s. This built checkout artifacts, not `/srv/nexi/backend`; no service restart or deployment.
+- Graphify CLI `graphify update .` **PASS** (96.15s): 8,208 nodes, 19,583 edges, 429 communities; verified independently using Worker-0 `mcpc @nexi-graphify tools-call graph_stats`. The graph is untracked/ignored generated output, not an edited source file, and is labeled with precommit `04eb876`; refresh on new commit when required.
+- Fallow CLI `fallow review --base HEAD --brief` **EXECUTED**: high change risk, API contract fanout involving D1 gateway (22 consumers), KYC, Margin and local deposit storage. This is review-risk evidence, not a failed compiler gate.
+- CodeScene was available as **Worker-0 `mcpc @nexi-codescene` MCP** even though no `codescene` or `codesense` command was on PATH; `code_health_score` succeeded for Margin service with **7.4**. No additional OAuth sign-in was needed. MCP is v1.5.6 and advertises v1.5.10, left unchanged.
+- Focused test receipts remain: 23/23 Margin unit/transaction tests, financial controller guard-surface test, related KYC/deposit/identity suites (no full live-money acceptance). Doctor source report 84/100 and zero errors at the previously scanned checkout.
+- Git consolidation intentionally includes prior two untracked admin pnpm files, the Wrangler configuration and all tracked backend source/tests. Note `apps/admin/pnpm-workspace.yaml` currently contains a placeholder `allowBuilds` value; it is preserved by owner request and must not be interpreted as verified pnpm build policy. No cloud deployment executed.

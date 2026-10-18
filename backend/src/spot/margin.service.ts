@@ -71,6 +71,10 @@ export class MarginService {
     return this.d1.repayUnmatchedMarginBorrow(userId, openIdempotencyKey);
   }
 
+  cancelPendingPosition(userId: string, positionId: string, idempotencyKey: string) {
+    return this.d1.cancelPendingMarginPosition(userId, positionId, idempotencyKey);
+  }
+
   listPositions(userId: string, status?: SpotMarginPositionStatus) {
     return this.d1.listMarginPositions(userId, status);
   }

@@ -1,4 +1,5 @@
-import { IsArray, IsBoolean, IsDateString, IsInt, IsIn, IsOptional, IsString, IsUUID, Length, Max, Min } from 'class-validator';
+import { IsArray, IsBoolean, IsDateString, IsInt, IsIn, IsOptional, IsString, IsUUID, Length, Max, Min, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateTicketDto {
   @IsString() @Length(1, 200) subject!: string;
@@ -96,7 +97,7 @@ export class CreateLearnContentDto {
   @IsOptional() @IsUUID() categoryId?: string;
   @IsOptional() @IsDateString() scheduledAt?: string;
   @IsOptional() @IsArray() @IsString({ each: true }) tags?: string[];
-  @IsOptional() @IsArray() media?: LearnMediaAssetDto[];
+  @IsOptional() @IsArray() @ValidateNested({ each: true }) @Type(() => LearnMediaAssetDto) media?: LearnMediaAssetDto[];
 }
 
 export class UpdateLearnContentDto {
@@ -111,7 +112,7 @@ export class UpdateLearnContentDto {
   @IsOptional() @IsUUID() categoryId?: string;
   @IsOptional() @IsDateString() scheduledAt?: string;
   @IsOptional() @IsArray() @IsString({ each: true }) tags?: string[];
-  @IsOptional() @IsArray() media?: LearnMediaAssetDto[];
+  @IsOptional() @IsArray() @ValidateNested({ each: true }) @Type(() => LearnMediaAssetDto) media?: LearnMediaAssetDto[];
 }
 
 export class LearnMediaAssetDto {

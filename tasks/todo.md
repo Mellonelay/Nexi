@@ -10,7 +10,7 @@
 # ACTIVE CHECKLIST — Backend Authenticated Financial/Admin Runtime Acceptance
 
 - [x] Owner scope confirmed: backend-only, no browser/new migration, reuse prior SIWE read + financial SQLite + workflow receipts, commit on main.
-- [ ] Lane A: recover controlled Public + Admin legitimate test authority and test funding; prove fresh authenticated Public/Admin identity and RBAC only as needed.
+- [x] Lane A: funded SIWE Public principal authenticated 201; wallet reads 200, account transfer 201 and replay 201 replayed=true. Previously verified controlled Admin login. See VPS receipt /home/mellonelay1999/nexi-acceptance-result.json.
 - [ ] Wallet: HTTP transfer and exact Ledger/Activity/Outbox/replay.
 - [ ] Withdrawals: Public request, Admin review/approval/rejection and internal (non-broadcast) settlement, Ledger/Activity/Outbox/replay.
 - [ ] Convert: quote/accept and accounting/expiry/replay.
@@ -537,3 +537,13 @@ Receipt: `tasks/evidence/market-provider-runtime-20261017.md`.
 - [ ] Loan 0016 migration controlled application and proof
 - [ ] Authenticated financial/Admin, durable workflow recovery, off-VPS encrypted backup/restore, deployed artifact
 - [ ] One coordinated release after affected source closure; no BiQuote market freshness rework
+
+
+### Build / graph / static tooling confirmation (2026-10-18)
+
+- Exactly one backend NestJS build in this consolidation: `cd backend && npm run build` **PASS, exit 0**, runtime 68.30s. This built checkout artifacts, not `/srv/nexi/backend`; no service restart or deployment.
+- Graphify CLI `graphify update .` **PASS** (96.15s): 8,208 nodes, 19,583 edges, 429 communities; verified independently using Worker-0 `mcpc @nexi-graphify tools-call graph_stats`. The graph is untracked/ignored generated output, not an edited source file, and is labeled with precommit `04eb876`; refresh on new commit when required.
+- Fallow CLI `fallow review --base HEAD --brief` **EXECUTED**: high change risk, API contract fanout involving D1 gateway (22 consumers), KYC, Margin and local deposit storage. This is review-risk evidence, not a failed compiler gate.
+- CodeScene was available as **Worker-0 `mcpc @nexi-codescene` MCP** even though no `codescene` or `codesense` command was on PATH; `code_health_score` succeeded for Margin service with **7.4**. No additional OAuth sign-in was needed. MCP is v1.5.6 and advertises v1.5.10, left unchanged.
+- Focused test receipts remain: 23/23 Margin unit/transaction tests, financial controller guard-surface test, related KYC/deposit/identity suites (no full live-money acceptance). Doctor source report 84/100 and zero errors at the previously scanned checkout.
+- Git consolidation intentionally includes prior two untracked admin pnpm files, the Wrangler configuration and all tracked backend source/tests. Note `apps/admin/pnpm-workspace.yaml` currently contains a placeholder `allowBuilds` value; it is preserved by owner request and must not be interpreted as verified pnpm build policy. No cloud deployment executed.

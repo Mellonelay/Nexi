@@ -6841,7 +6841,7 @@ export class D1FinancialCommandGateway {
     return created.results[0];
   }
 
-  async cancelSpotOrder(userId: string, orderId: string): Promise<any> {
+  async cancelSpotOrder(userId: string, orderId: string, requireUnfilled = false): Promise<any> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const found = await this.bridge.select<any>(
       `SELECT * FROM "Gate2SpotOrder" WHERE "id" = ? AND "userId" = ? LIMIT 1`,
@@ -6852,6 +6852,11 @@ export class D1FinancialCommandGateway {
     if (order.status === "CANCELED") return { ...order, replayed: true };
     if (!["OPEN", "PARTIALLY_FILLED"].includes(String(order.status))) {
       throw new BadRequestException("Order is already terminal");
+    }
+    if (requireUnfilled && (String(order.status) !== "OPEN" ||
+        !this.nonNegativeDecimal(String(order.filled)).isZero() ||
+        String(order.reserveScope) !== "MARGIN")) {
+      throw new BadRequestException("Margin entry must be open, unfilled and reserved in MARGIN");
     }
     const release = this.nonNegativeDecimal(String(order.reservedAmount));
     const account = await this.getAccountForUser(
@@ -6869,9 +6874,12 @@ export class D1FinancialCommandGateway {
       const result = await this.bridge.batch([
         {
           sql: `UPDATE "Gate2SpotOrder" SET "status" = 'CANCELED', "reservedAmount" = '0', "updatedAt" = CURRENT_TIMESTAMP
-          WHERE "id" = ? AND "userId" = ? AND "status" IN ('OPEN', 'PARTIALLY_FILLED')`,
-          params: [orderId, userId],
+          WHERE "id" = ? AND "userId" = ? AND "status" IN ('OPEN', 'PARTIALLY_FILLED')
+          ${requireUnfilled ? `AND "status"='OPEN' AND CAST("filled" AS REAL)=0 AND "reserveScope"='MARGIN'
+            AND NOT EXISTS (SELECT 1 FROM "Gate2SpotTrade" t WHERE t."buyerOrderId"=? OR t."sellerOrderId"=?)` : ''}`,
+          params: requireUnfilled ? [orderId, userId, orderId, orderId] : [orderId, userId],
         },
+        ...(requireUnfilled ? [this.rollbackIfNoChanges(key, "MARGIN_UNFILLED_CANCEL")] : []),
         {
           sql: `INSERT OR IGNORE INTO "Activity" ("id","userId","type","status","referenceType","referenceId","idempotencyKey","ledgerCorrelationId","ledgerPostingId","asset","amount","details","createdAt") VALUES (?,?,'GATE2_SPOT_ORDER','COMPLETED','GATE2_SPOT_ORDER_CANCEL',?,?,?,NULL,?,'0',?,CURRENT_TIMESTAMP)`,
           params: [randomUUID(), userId, orderId, `activity:gate2:spot:cancel:${orderId}`, String(order.correlationId), String(order.reserveAsset).toUpperCase(), JSON.stringify({ orderId, reserveReleased: false })],
@@ -6879,8 +6887,8 @@ export class D1FinancialCommandGateway {
         this.eventOutboxStatement({ idempotencyKey: `event:spot:cancel:${orderId}`, aggregateType: "SPOT_ORDER", aggregateId: orderId, eventType: "SPOT_ORDER_CANCELLED", correlationId: String(order.correlationId), payload: { userId, orderId }, strict: true, guard: { sql: `EXISTS (SELECT 1 FROM "Gate2SpotOrder" WHERE "id"=? AND "status"='CANCELED')`, params: [orderId] } }),
       ]);
       this.requireChanges(result, 0, "D1 Spot zero-reserve cancellation");
-      this.requireChanges(result, 1, "D1 Spot zero-reserve cancellation activity");
-      this.requireChanges(result, 2, "D1 Spot zero-reserve cancellation outbox");
+      this.requireChanges(result, 1 + Number(requireUnfilled), "D1 Spot zero-reserve cancellation activity");
+      this.requireChanges(result, 2 + Number(requireUnfilled), "D1 Spot zero-reserve cancellation outbox");
       const updated = await this.bridge.select<any>(
         `SELECT * FROM "Gate2SpotOrder" WHERE "id" = ? LIMIT 1`,
         [orderId],
@@ -6976,16 +6984,19 @@ export class D1FinancialCommandGateway {
       },
       {
         sql: `UPDATE "Gate2SpotOrder" SET "status" = 'CANCELED', "reservedAmount" = '0', "updatedAt" = CURRENT_TIMESTAMP
-          WHERE "id" = ? AND "userId" = ? AND "status" IN ('OPEN', 'PARTIALLY_FILLED') AND EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "id" = ? AND "debitPostingId" = ?)`,
-        params: [orderId, userId, idem, postingId],
+          WHERE "id" = ? AND "userId" = ? AND "status" IN ('OPEN', 'PARTIALLY_FILLED') AND EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "id" = ? AND "debitPostingId" = ?)
+          ${requireUnfilled ? `AND "status"='OPEN' AND CAST("filled" AS REAL)=0 AND "reserveScope"='MARGIN'
+             AND NOT EXISTS (SELECT 1 FROM "Gate2SpotTrade" t WHERE t."buyerOrderId"=? OR t."sellerOrderId"=?)` : ''}`,
+        params: requireUnfilled ? [orderId, userId, idem, postingId, orderId, orderId] : [orderId, userId, idem, postingId],
       },
+      ...(requireUnfilled ? [this.rollbackIfNoChanges(key, "MARGIN_UNFILLED_CANCEL")] : []),
       this.eventOutboxStatement({ idempotencyKey: `event:spot:cancel:${orderId}`, aggregateType: "SPOT_ORDER", aggregateId: orderId, eventType: "SPOT_ORDER_CANCELLED", correlationId: String(order.correlationId), payload: { userId, orderId, released: release.toString(), asset: String(order.reserveAsset).toUpperCase() }, strict: true, guard: { sql: `EXISTS (SELECT 1 FROM "Gate2SpotOrder" WHERE "id"=? AND "status"='CANCELED')`, params: [orderId] } }),
     ];
     const result = await this.bridge.batch(statements);
     this.requireChanges(result, 1, "D1 Spot cancellation release");
     this.requireChanges(result, 3, "D1 Spot cancellation posting");
     this.requireChanges(result, 7, "D1 Spot cancellation order transition");
-    this.requireChanges(result, 8, "D1 Spot cancellation outbox");
+    this.requireChanges(result, 8 + Number(requireUnfilled), "D1 Spot cancellation outbox");
     const updated = await this.bridge.select<any>(
       `SELECT * FROM "Gate2SpotOrder" WHERE "id" = ? LIMIT 1`,
       [orderId],
@@ -7797,6 +7808,140 @@ export class D1FinancialCommandGateway {
   // A canceled, unfilled Margin entry may retain its previously credited borrow
   // if position materialization failed. Recover it only through an ownership-
   // checked, conditionally atomic Ledger debit; never adjust balances directly.
+  /**
+   * Resume-safe cancellation for a PENDING Margin entry with no fills.
+   * Existing Spot cancellation releases its Ledger reserve. The owned
+   * borrow is then debited through execute() with a conditional guard;
+   * finally we close the zero-quantity position with durable projections.
+   * Every phase is idempotent, so interruption can be resumed.
+   */
+  async cancelPendingMarginPosition(userId: string, positionId: string, idempotencyKey: string) {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    if (!/^[A-Za-z0-9._:-]{8,160}$/.test(idempotencyKey)) {
+      throw new BadRequestException("Margin cancellation idempotency key is invalid");
+    }
+    const eventKey = `margin:pending-cancel:${positionId}:${idempotencyKey}`;
+    const position: any = await this.getMarginPosition(positionId, userId);
+    if (!position) throw new BadRequestException("Owned Margin position not found");
+    if (String(position.status) === "CLOSED") {
+      const prior = await this.bridge.select<any>(
+        `SELECT "id" FROM "SpotMarginPositionEvent" WHERE "positionId"=? AND "idempotencyKey"=? LIMIT 1`,
+        [positionId, eventKey],
+      );
+      if (prior.results.length) return { positionId, state: "CLOSED", replayed: true };
+    }
+    if (String(position.status) !== "PENDING" || !this.nonNegativeDecimal(String(position.quantity)).isZero()) {
+      throw new BadRequestException("Only an unfilled PENDING Margin position can be canceled");
+    }
+    const entryOrderId = String(position.entryOrderId);
+    const order: any = await this.getSpotOrder(userId, entryOrderId);
+    if (!order || String(order.reserveScope) !== "MARGIN" ||
+        !["OPEN", "CANCELED"].includes(String(order.status)) ||
+        !this.nonNegativeDecimal(String(order.filled)).isZero()) {
+      throw new BadRequestException("Margin entry is not a cancellable unfilled order");
+    }
+    const trades = await this.bridge.select<any>(
+      `SELECT 1 FROM "Gate2SpotTrade" WHERE "buyerOrderId"=? OR "sellerOrderId"=? LIMIT 1`,
+      [entryOrderId, entryOrderId],
+    );
+    if (trades.results.length) throw new BadRequestException("Margin entry has executed trades");
+    if (String(order.status) === "OPEN") {
+      await this.cancelSpotOrder(userId, entryOrderId, true);
+    }
+    const openingKey = String(position.openIdempotencyKey);
+    const borrow = await this.bridge.select<{
+      id: string; accountId: string; asset: string; amount: string; economicGroup: string | null;
+    }>(
+      `SELECT p."id",p."accountId",p."asset",p."amount",p."economicGroup"
+       FROM "LedgerPosting" p JOIN "LedgerAccount" a ON a."id"=p."accountId"
+       WHERE p."idempotencyKey"=? AND p."referenceType"='SPOT_MARGIN_BORROW'
+         AND p."kind"='CREDIT' AND a."userId"=? AND a."scope"='MARGIN' LIMIT 1`,
+      [`margin:borrow:${openingKey}`, userId],
+    );
+    const original = borrow.results[0];
+    if (!original) throw new BadRequestException("Owned Margin borrow not found");
+    const repayKey = `margin:pending-cancel:repay:${positionId}`;
+    const repayment = await this.execute(
+      {
+        accountId: original.accountId, asset: original.asset, amount: original.amount,
+        referenceType: "SPOT_MARGIN_PENDING_CANCEL_REPAYMENT", referenceId: positionId,
+        idempotencyKey: repayKey, correlationId: idempotencyKey,
+        economicGroup: original.economicGroup ?? undefined,
+        metadata: { entryOrderId, originalBorrowPostingId: original.id },
+      },
+      "DEBIT",
+      { availableDelta: "-amount", lockedDelta: "zero" },
+      {
+        sql: `EXISTS (
+          SELECT 1 FROM "SpotMarginPosition" p JOIN "SpotMarginAccount" a ON a."id"=p."accountId"
+          WHERE p."id"=? AND a."userId"=? AND p."status"='PENDING'
+            AND CAST(p."quantity" AS REAL)=0 AND p."entryOrderId"=?
+        ) AND EXISTS (
+          SELECT 1 FROM "Gate2SpotOrder" o WHERE o."id"=? AND o."userId"=?
+            AND o."status"='CANCELED' AND o."reserveScope"='MARGIN'
+            AND CAST(o."filled" AS REAL)=0 AND CAST(o."reservedAmount" AS REAL)=0
+        ) AND NOT EXISTS (
+          SELECT 1 FROM "Gate2SpotTrade" t WHERE t."buyerOrderId"=? OR t."sellerOrderId"=?
+        )`,
+        params: [positionId, userId, entryOrderId, entryOrderId, userId, entryOrderId, entryOrderId],
+      },
+      {
+        aggregateType: "MARGIN_POSITION", aggregateId: positionId,
+        eventType: "MARGIN_PENDING_BORROW_REPAID",
+        payload: { userId, entryOrderId, originalBorrowPostingId: original.id, asset: original.asset, amount: original.amount },
+      },
+    );
+    const update = await this.bridge.batch([
+      {
+        sql: `UPDATE "SpotMarginPosition" SET "status"='CLOSED',"closedAt"=CURRENT_TIMESTAMP,
+                "updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "status"='PENDING'
+              AND CAST("quantity" AS REAL)=0
+              AND EXISTS (SELECT 1 FROM "SpotMarginAccount" a WHERE a."id"="SpotMarginPosition"."accountId" AND a."userId"=?)
+              AND EXISTS (SELECT 1 FROM "LedgerPosting" p WHERE p."idempotencyKey"=? AND p."kind"='DEBIT')
+              AND EXISTS (SELECT 1 FROM "Gate2SpotOrder" o WHERE o."id"=? AND o."status"='CANCELED'
+                AND CAST(o."filled" AS REAL)=0 AND CAST(o."reservedAmount" AS REAL)=0)
+              AND NOT EXISTS (SELECT 1 FROM "Gate2SpotTrade" t WHERE t."buyerOrderId"=? OR t."sellerOrderId"=?)
+              RETURNING "id"`,
+        params: [positionId, userId, repayKey, entryOrderId, entryOrderId, entryOrderId],
+      },
+      this.rollbackIfNoChanges(eventKey, "MARGIN_PENDING_CANCEL"),
+      {
+        sql: `INSERT INTO "SpotMarginPositionEvent"
+          ("id","positionId","type","asset","amount","idempotencyKey","metadata","createdAt")
+          VALUES (?,?,'CLOSE',?,?,?, ?,CURRENT_TIMESTAMP)`,
+        params: [randomUUID(), positionId, String(position.debtAsset), "0", eventKey,
+          JSON.stringify({ reason: "UNFILLED_ENTRY_CANCELED", entryOrderId })],
+      },
+      {
+        sql: `INSERT INTO "SpotMarginActivity"
+          ("id","userId","accountId","positionId","type","status","idempotencyKey","details","createdAt")
+          VALUES (?,?,?,?,'CLOSE','COMPLETED',?,?,CURRENT_TIMESTAMP)`,
+        params: [randomUUID(), userId, String(position.accountId), positionId, eventKey,
+          JSON.stringify({ reason: "UNFILLED_ENTRY_CANCELED", entryOrderId })],
+      },
+      {
+        sql: `INSERT INTO "Activity"
+          ("id","userId","type","status","referenceType","referenceId","idempotencyKey",
+           "ledgerCorrelationId","ledgerPostingId","asset","amount","details","createdAt")
+          VALUES (?,?,'MARGIN_POSITION_CANCELED','COMPLETED','MARGIN_POSITION',?,?,?,NULL,?,'0',?,CURRENT_TIMESTAMP)`,
+        params: [randomUUID(), userId, positionId, eventKey, idempotencyKey,
+          String(position.debtAsset), JSON.stringify({ entryOrderId, reason: "UNFILLED_ENTRY_CANCELED" })],
+      },
+      this.eventOutboxStatement({
+        idempotencyKey: `event:margin:pending-cancel:${positionId}`,
+        aggregateType: "MARGIN_POSITION", aggregateId: positionId,
+        eventType: "MARGIN_PENDING_ENTRY_CANCELED", correlationId: idempotencyKey,
+        payload: { userId, positionId, entryOrderId },
+        strict: true,
+        guard: { sql: `EXISTS (SELECT 1 FROM "SpotMarginPositionEvent" WHERE "positionId"=? AND "idempotencyKey"=?)`,
+          params: [positionId, eventKey] },
+      }),
+    ]);
+    this.requireChanges(update, 0, "D1 pending Margin cancellation");
+    this.requireChanges(update, 5, "D1 pending Margin cancellation outbox");
+    return { positionId, state: "CLOSED", replayed: false, repayment };
+  }
+
   async repayUnmatchedMarginBorrow(
     userId: string,
     openIdempotencyKey: string,

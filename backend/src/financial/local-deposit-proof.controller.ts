@@ -26,13 +26,12 @@ export class LocalDepositProofController {
     this.financial.authorizeDepositProofUpload(request.user.userId,key);
     const declared=Number((request as unknown as {headers?:Record<string,string>}).headers?.['content-length']);
     if(Number.isFinite(declared)&&declared>MAX_BYTES)throw new PayloadTooLargeException('Deposit proof exceeds 10 MiB');
-    const parts:Buffer[]=[];let size=0;
-    for await(const chunk of request){
-      const b=Buffer.from(chunk);size+=b.length;
-      if(size>MAX_BYTES)throw new PayloadTooLargeException('Deposit proof exceeds 10 MiB');
-      parts.push(b);
-    }
-    await this.objects.put(key,Buffer.concat(parts,size),type);
-    return {key,status:'UPLOADED'};
+    return this.objects.uploadStream(
+      request.user.userId,
+      key,
+      request,
+      type,
+      (request as unknown as {headers?:Record<string,string>}).headers?.['content-length'],
+    );
   }
 }

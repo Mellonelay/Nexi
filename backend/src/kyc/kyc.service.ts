@@ -31,6 +31,26 @@ export class KycService {
     return this.evidenceStorage;
   }
 
+  async uploadEvidenceStream(userId: string, stream: AsyncIterable<Uint8Array>, contentType?: string, contentLength?: string) {
+    const { PayloadTooLargeException } = await import('@nestjs/common');
+    const KYC_EVIDENCE_MAX_BYTES = 5 * 1024 * 1024;
+    const normalizedType = contentType?.split(';', 1)[0].trim().toLowerCase();
+    if (!normalizedType) throw new BadRequestException('KYC evidence content type is required');
+    const declaredSize = Number(contentLength);
+    if (Number.isFinite(declaredSize) && declaredSize > KYC_EVIDENCE_MAX_BYTES) {
+      throw new PayloadTooLargeException('KYC evidence exceeds the 5 MiB limit');
+    }
+    const chunks: Buffer[] = [];
+    let size = 0;
+    for await (const chunk of stream) {
+      const bytes = Buffer.from(chunk);
+      size += bytes.length;
+      if (size > KYC_EVIDENCE_MAX_BYTES) throw new PayloadTooLargeException('KYC evidence exceeds the 5 MiB limit');
+      chunks.push(bytes);
+    }
+    return this.uploadEvidence(userId, Buffer.concat(chunks, size), normalizedType);
+  }
+
   async uploadEvidence(userId: string, body: Buffer, contentType: string) {
     const normalizedType = validateKycEvidence(body, contentType);
     const id = randomUUID();

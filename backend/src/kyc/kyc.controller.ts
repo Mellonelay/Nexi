@@ -30,26 +30,11 @@ export class KycController {
     @Req() request: AuthenticatedRequest & AsyncIterable<Uint8Array>,
     @Headers('content-type') contentType?: string,
   ) {
-    const normalizedType = contentType?.split(';', 1)[0].trim().toLowerCase();
-    if (!normalizedType) throw new BadRequestException('KYC evidence content type is required');
-    const declaredSize = Number((request as unknown as { headers?: Record<string, string> }).headers?.['content-length']);
-    if (Number.isFinite(declaredSize) && declaredSize > KYC_EVIDENCE_MAX_BYTES) {
-      throw new PayloadTooLargeException('KYC evidence exceeds the 5 MiB limit');
-    }
-    const chunks: Buffer[] = [];
-    let size = 0;
-    for await (const chunk of request) {
-      const bytes = Buffer.from(chunk);
-      size += bytes.length;
-      if (size > KYC_EVIDENCE_MAX_BYTES) {
-        throw new PayloadTooLargeException('KYC evidence exceeds the 5 MiB limit');
-      }
-      chunks.push(bytes);
-    }
-    return this.kycService.uploadEvidence(
+    return this.kycService.uploadEvidenceStream(
       request.user.userId,
-      Buffer.concat(chunks, size),
-      normalizedType,
+      request,
+      contentType,
+      (request as unknown as { headers?: Record<string, string> }).headers?.['content-length'],
     );
   }
 

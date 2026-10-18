@@ -99,3 +99,9 @@ export class LiquidateMarginPositionDto {
   @Length(8, 160)
   idempotencyKey!: string;
 }
+
+export class CancelPendingMarginPositionDto {
+  @IsString()
+  @Length(8, 160)
+  idempotencyKey!: string;
+}

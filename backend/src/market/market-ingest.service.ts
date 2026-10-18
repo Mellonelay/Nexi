@@ -53,7 +53,11 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
         this.logger.log('Market provider disabled or not configured; serving persisted catalog and explicit unavailable states.');
       }
     } catch (error) {
-      this.providers.stop();
+      try {
+        await this.providers.stop();
+      } catch (stopError) {
+        this.logger.error(`Market provider cleanup failed: ${stopError instanceof Error ? stopError.message : 'unknown error'}`);
+      }
       if (this.destroyed) return;
       const delay = Math.min(5_000 * (2 ** this.providerStartAttempt), 30_000);
       this.providerStartAttempt += 1;

@@ -15,7 +15,7 @@ describe('Seven financial controller HTTP JWT surfaces', () => {
   const controllers = [
     [BinaryController, 4],
     [SpotController, 5],
-    [MarginController, 8],
+    [MarginController, 9],
     [MiningController, 8],
     [LoansController, 6],
     [WalletController, 13],

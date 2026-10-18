@@ -40,6 +40,23 @@ export class LocalDepositProofStore {
     }
   }
 
+  async uploadStream(userId: string, key: string, stream: AsyncIterable<Uint8Array>, contentType?: string, contentLength?: string): Promise<{key:string;status:'UPLOADED'}> {
+    if (process.env.NEXI_LOCAL_OBJECTS_ENABLED !== 'true') throw new BadRequestException('Local proof upload is disabled');
+    if (!contentType) throw new BadRequestException('Content type required');
+    const declared = Number(contentLength);
+    if (Number.isFinite(declared) && declared > MAX_BYTES) throw new BadRequestException('Deposit proof exceeds 10 MiB');
+    const parts: Buffer[] = [];
+    let size = 0;
+    for await (const chunk of stream) {
+      const bytes = Buffer.from(chunk);
+      size += bytes.length;
+      if (size > MAX_BYTES) throw new BadRequestException('Deposit proof exceeds 10 MiB');
+      parts.push(bytes);
+    }
+    await this.put(key, Buffer.concat(parts, size), contentType);
+    return { key, status: 'UPLOADED' };
+  }
+
   async put(key:string,bytes:Buffer,contentType:string):Promise<void>{
     const filename=await this.file(key);
     this.check(bytes,contentType);

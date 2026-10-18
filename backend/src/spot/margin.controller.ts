@@ -16,6 +16,7 @@ import type { AuthenticatedRequest } from "../auth/auth.types";
 import { MarginService } from "./margin.service";
 import {
   CloseMarginPositionDto,
+  CancelPendingMarginPositionDto,
   LiquidateMarginPositionDto,
   MarginTransferDto,
   OpenMarginPositionDto,
@@ -47,6 +48,19 @@ export class MarginController {
     @Req() request: AuthenticatedRequest,
   ) {
     return this.marginService.openPosition(request.user.userId, body);
+  }
+
+  @Post("positions/:positionId/cancel-pending")
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
+  cancelPendingPosition(
+    @Param("positionId") positionId: string,
+    @Body() body: CancelPendingMarginPositionDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.marginService.cancelPendingPosition(
+      request.user.userId, positionId, body.idempotencyKey,
+    );
   }
 
   @Post("positions/:positionId/close")
