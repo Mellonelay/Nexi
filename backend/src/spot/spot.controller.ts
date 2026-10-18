@@ -10,6 +10,8 @@ import {
 import { ApiTags } from "@nestjs/swagger";
 import type { AuthenticatedRequest } from "../auth/auth.types";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
+import { AuthSurfaceGuard } from "../auth/auth-surface.guard";
+import { RequireAuthSurface } from "../auth/auth-surface.decorator";
 import { SpotService } from "./spot.service";
 import { CancelOrderDto, PlaceOrderDto } from "./spot.dto";
 
@@ -19,7 +21,8 @@ export class SpotController {
   constructor(private readonly spotService: SpotService) {}
 
   @Post("order")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   async placeOrder(
     @Body() body: PlaceOrderDto,
     @Req() request: AuthenticatedRequest,
@@ -36,7 +39,8 @@ export class SpotController {
   }
 
   @Post("cancel")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   async cancelOrder(
     @Body() body: CancelOrderDto,
     @Req() request: AuthenticatedRequest,
@@ -55,19 +59,22 @@ export class SpotController {
   }
 
   @Get("orders/open")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   async getOpenOrders(@Req() request: AuthenticatedRequest) {
     return this.spotService.getOpenOrders(request.user.userId);
   }
 
   @Get("orders/history")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   async getOrderHistory(@Req() request: AuthenticatedRequest) {
     return this.spotService.getOrderHistory(request.user.userId);
   }
 
   @Get("trades/history")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   async getTradeHistory(@Req() request: AuthenticatedRequest) {
     return this.spotService.getTradeHistory(request.user.userId);
   }

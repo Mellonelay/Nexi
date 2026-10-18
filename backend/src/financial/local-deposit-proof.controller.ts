@@ -1,6 +1,8 @@
 import { BadRequestException, Controller, Headers, PayloadTooLargeException, Put, Query, Req, UseGuards } from '@nestjs/common';
 import type { AuthenticatedRequest } from '../auth/auth.types';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { AuthSurfaceGuard } from '../auth/auth-surface.guard';
+import { RequireAuthSurface } from '../auth/auth-surface.decorator';
 import { FinancialOperationsService } from './financial-operations.service';
 import { LocalDepositProofStore } from './local-deposit-proof.store';
 
@@ -12,7 +14,8 @@ export class LocalDepositProofController {
   constructor(private readonly financial:FinancialOperationsService,private readonly objects:LocalDepositProofStore){}
 
   @Put('deposit-proof')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   async upload(
     @Query('key') key:string,
     @Req() request:AuthenticatedRequest & AsyncIterable<Uint8Array>,

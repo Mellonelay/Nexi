@@ -2,6 +2,8 @@ import { Body, Controller, Get, Post, Req, UseGuards } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import type { AuthenticatedRequest } from "../auth/auth.types";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
+import { AuthSurfaceGuard } from "../auth/auth-surface.guard";
+import { RequireAuthSurface } from "../auth/auth-surface.decorator";
 import { BinaryService } from "./binary.service";
 import { OpenBinaryPositionDto, SettleBinaryPositionDto } from "./binary.dto";
 
@@ -16,7 +18,8 @@ export class BinaryController {
   }
 
   @Post("position")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   openPosition(
     @Body() body: OpenBinaryPositionDto,
     @Req() request: AuthenticatedRequest,
@@ -25,7 +28,8 @@ export class BinaryController {
   }
 
   @Post("settle")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   settlePosition(
     @Body() body: SettleBinaryPositionDto,
     @Req() request: AuthenticatedRequest,
@@ -37,13 +41,15 @@ export class BinaryController {
   }
 
   @Get("positions/current")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   currentPositions(@Req() request: AuthenticatedRequest) {
     return this.binaryService.getCurrentPositions(request.user.userId);
   }
 
   @Get("positions/history")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   history(@Req() request: AuthenticatedRequest) {
     return this.binaryService.getHistory(request.user.userId);
   }

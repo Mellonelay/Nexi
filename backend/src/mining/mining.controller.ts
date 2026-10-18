@@ -13,6 +13,8 @@ import { Role } from "../prisma/d1-client";
 import type { AuthenticatedRequest } from "../auth/auth.types";
 import { DevelopmentOnlyGuard } from "../auth/development-only.guard";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
+import { AuthSurfaceGuard } from "../auth/auth-surface.guard";
+import { RequireAuthSurface } from "../auth/auth-surface.decorator";
 import { OwnershipGuard } from "../auth/ownership.guard";
 import { Roles } from "../auth/roles.decorator";
 import { RolesGuard } from "../auth/roles.guard";
@@ -34,13 +36,15 @@ export class MiningController {
   }
 
   @Get("summary")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   async getSummary(@Req() request: AuthenticatedRequest) {
     return this.miningService.getSummary(request.user.userId);
   }
 
   @Get("rewards/:userId")
-  @UseGuards(JwtAuthGuard, OwnershipGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, OwnershipGuard)
+  @RequireAuthSurface("PUBLIC")
   async getRewards(
     @Param("userId") _userId: string,
     @Req() request: AuthenticatedRequest,
@@ -49,7 +53,8 @@ export class MiningController {
   }
 
   @Post("subscribe")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   async subscribe(
     @Body() body: MiningSubscribeDto,
     @Req() request: AuthenticatedRequest,
@@ -63,7 +68,8 @@ export class MiningController {
   }
 
   @Get("my/:userId")
-  @UseGuards(JwtAuthGuard, OwnershipGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, OwnershipGuard)
+  @RequireAuthSurface("PUBLIC")
   async getMySubs(
     @Param("userId") _userId: string,
     @Req() request: AuthenticatedRequest,
@@ -72,7 +78,8 @@ export class MiningController {
   }
 
   @Post("redeem")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   async redeem(
     @Body() body: MiningSubscriptionActionDto,
     @Req() request: AuthenticatedRequest,
@@ -85,7 +92,8 @@ export class MiningController {
   }
 
   @Post("cancel")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   async cancel(
     @Body() body: MiningSubscriptionActionDto,
     @Req() request: AuthenticatedRequest,
@@ -99,7 +107,8 @@ export class MiningController {
 
   // Admin: Create Plan
   @Post("admin/plan")
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard)
+  @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
   async createPlan(
     @Body() body: CreateMiningPlanRequestDto,
@@ -122,7 +131,8 @@ export class MiningController {
 
   // Dev: Force Yield Distribution
   @Post("admin/distribute")
-  @UseGuards(JwtAuthGuard, RolesGuard, DevelopmentOnlyGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, DevelopmentOnlyGuard)
+  @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
   async forceDistribute() {
     return this.miningService.distributeRewards();

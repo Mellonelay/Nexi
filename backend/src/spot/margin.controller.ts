@@ -10,6 +10,8 @@ import {
 } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
+import { AuthSurfaceGuard } from "../auth/auth-surface.guard";
+import { RequireAuthSurface } from "../auth/auth-surface.decorator";
 import type { AuthenticatedRequest } from "../auth/auth.types";
 import { MarginService } from "./margin.service";
 import {
@@ -31,13 +33,15 @@ export class MarginController {
   }
 
   @Get("positions")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   listPositions(@Req() request: AuthenticatedRequest) {
     return this.marginService.listPositions(request.user.userId);
   }
 
   @Post("positions")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   openPosition(
     @Body() body: OpenMarginPositionDto,
     @Req() request: AuthenticatedRequest,
@@ -46,7 +50,8 @@ export class MarginController {
   }
 
   @Post("positions/:positionId/close")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   closePosition(
     @Param("positionId") positionId: string,
     @Body() body: CloseMarginPositionDto,
@@ -60,7 +65,8 @@ export class MarginController {
   }
 
   @Post("positions/mark")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   markPosition(
     @Body("positionId") positionId: string,
     @Req() request: AuthenticatedRequest,
@@ -69,7 +75,8 @@ export class MarginController {
   }
 
   @Post("positions/:positionId/liquidate")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   liquidatePosition(
     @Param("positionId") positionId: string,
     @Body() body: LiquidateMarginPositionDto,
@@ -83,7 +90,8 @@ export class MarginController {
   }
 
   @Post("transfer")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   transfer(
     @Body() body: MarginTransferDto,
     @Req() request: AuthenticatedRequest,
@@ -92,7 +100,8 @@ export class MarginController {
   }
 
   @Post("borrows/orphan/repay")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   repayUnmatchedBorrow(
     @Body() body: RepayUnmatchedMarginBorrowDto,
     @Req() request: AuthenticatedRequest,
@@ -104,7 +113,8 @@ export class MarginController {
   }
 
   @Get("activity")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   history(@Req() request: AuthenticatedRequest, @Query("take") take?: string) {
     const parsedTake = take === undefined ? undefined : Number(take);
     return this.marginService.history(request.user.userId, parsedTake ?? 50);

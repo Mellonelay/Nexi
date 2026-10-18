@@ -11,6 +11,8 @@ import { ApiTags } from "@nestjs/swagger";
 import { Role } from "../prisma/d1-client";
 import type { AuthenticatedRequest } from "../auth/auth.types";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
+import { AuthSurfaceGuard } from "../auth/auth-surface.guard";
+import { RequireAuthSurface } from "../auth/auth-surface.decorator";
 import { OwnershipGuard } from "../auth/ownership.guard";
 import { Roles } from "../auth/roles.decorator";
 import { RolesGuard } from "../auth/roles.guard";
@@ -32,7 +34,8 @@ export class LoansController {
   }
 
   @Post("apply")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   async apply(
     @Body() body: ApplyLoanDto,
     @Req() request: AuthenticatedRequest,
@@ -49,7 +52,8 @@ export class LoansController {
   }
 
   @Get("my/:userId")
-  @UseGuards(JwtAuthGuard, OwnershipGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, OwnershipGuard)
+  @RequireAuthSurface("PUBLIC")
   async getMyLoans(
     @Param("userId") _userId: string,
     @Req() request: AuthenticatedRequest,
@@ -59,14 +63,16 @@ export class LoansController {
 
   // Admin Endpoints
   @Get("admin/all")
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard)
+  @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
   async getAllLoans() {
     return this.loanService.getAllLoans();
   }
 
   @Post("admin/approve")
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard)
+  @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
   async approve(
     @Body() body: LoanLegacyAdminDecisionDto,
@@ -79,7 +85,8 @@ export class LoansController {
   }
 
   @Post("admin/reject")
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard)
+  @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
   async reject(
     @Body() body: LoanLegacyAdminDecisionDto,
@@ -92,7 +99,8 @@ export class LoansController {
   }
 
   @Post("repay")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   async repay(
     @Body() body: LoanRepaymentDto,
     @Req() request: AuthenticatedRequest,
