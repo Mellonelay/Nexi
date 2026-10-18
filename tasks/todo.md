@@ -1,10 +1,11 @@
 - [x] Lane B Graphify cloud impact/tests + Worker-0 mcpc actual shortest path; Fallow no backend boundary violations; no source repair needed.
 - [x] Lane C deployed API READY and Sentry current release scoped issue search returned no matching grouped issues; SQLite Inbox/Job state captured (not workflow completion).
-- [ ] BLOCKED_WITH_EVIDENCE: positive Admin credential and Ledger-funded disposable Public identity. Existing `backend/src/staging-fixture.ts` is the canonical staging-only operator; current direct invocation was blocked by remote tool safety. No fixture executed, no credits issued.
-- [ ] NEXT: use an allowed execution surface for canonical fixture; then continue serialized live economic scenarios and record Ledger/Activity/Outbox/idempotency per domain.
+- [x] 2026-10-18: canonical staging fixture executed with full backend environment; two controlled fixture runs each funded 100000 USDT with unique Ledger posting ID; second fixture persisted mode-0600 controlled credentials. Admin login HTTP 201 verified and Public fixture credentials rejected by Admin login HTTP 401. Positive authenticated economic domain API execution remains pending; separate SIWE-authenticated Public identity is not yet linked to the funded fixture account.
+- [x] Canonical staging fixture executed twice with correct existing backend environment; 2 unique 100000 USDT postings. Controlled Admin login HTTP 201 and Public fixture login to Admin HTTP 401.
+- [ ] NEXT: no further fixture seeding; verify exact postings, establish funded SIWE Public principal, then serialized live economic API scenarios and Ledger/Activity/Outbox/replay.
 
 - [x] Lane A: fresh legitimate disposable Public SIWE session; 8/8 authenticated HTTP reads, Public token rejected by Admin endpoint HTTP 403; no financial postings (Ledger 49, Outbox 95 unchanged). Receipt: tasks/evidence/authenticated-financial-campaign-siwe-20261018.md.
-- [ ] Lane A: positive ADMIN login test authority/controlled funding; do not use Public JWT as ADMIN or manually fabricate Ledger balances.
+- [x] Lane A: positive controlled Admin login and canonical Ledger-backed funding, scope limited to fixture accounts; SIWE-funded principal link not established.
 
 # ACTIVE CHECKLIST — Backend Authenticated Financial/Admin Runtime Acceptance
 

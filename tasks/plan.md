@@ -1,3 +1,15 @@
+## 2026-10-18 — Controlled test authority fixture executed (latest)
+
+FACT: The existing backend/src/staging-fixture.ts was run with the existing /etc/nexi/backend.env exported and NODE_ENV=staging, scheduler disabled. Two invocations produced two separate staging Public identities, Admin-role records and 100000 USDT each via D1FinancialCommandGateway.credit. The first result included posting 3c428cbd-7986-4252-a9aa-1962241af9ff; second posting ba964161-15d9-408b-b550-66fb39d0964b. Second fixture created a credential file outside the repository with mode 0600. No credentials are recorded here.
+
+SQLite read-only: User 38 -> 42, LedgerAccount 14 -> 16, LedgerPosting 49 -> 51, EventOutbox 95, AdminAuditLog 41. The two economic postings are observed, but detailed double-entry invariants for these postings have NOT yet been independently inspected. Deployed API returned READY.
+
+Positive controlled Admin login succeeded HTTP 201; controlled Public fixture email/password rejected from Admin login HTTP 401. A subsequent attempt to run additional authenticated Admin HTTP queries was rejected by execution tool safety, not a verified backend failure. The funded fixture user is NOT the SIWE Public wallet principal from earlier acceptance; true authenticated Public economic operations are still UNPROVEN. No Wallet/Spot/Margin/Binary/Mining/Loans/Withdrawals API economic lifecycle completion is claimed. Earlier real SIWE 8/8 Public reads and Public->Admin 403 remain reused unchanged.
+
+NEXT: Read exact fixture ledger posting group in SQLite, use legitimate user/auth mechanism to link an authenticated Public session to a funded controlled account (or fund the already-authenticated user through existing sanctioned admin financial command). Then execute each domain API contract serially with Ledger/Activity/Outbox checks. No new fixture creation needed; avoid duplicate 100000 USDT test grants. Remote execution filtering of some auth calls remains a tool-surface limitation.
+
+---
+
 ### Active campaign phase: controlled fixture blocked, safe evidence closed (2026-10-18T09:09:28Z)
 
 ## 2026-10-18T09:09:28Z — Three-lane financial acceptance frontier (bounded evidence)
