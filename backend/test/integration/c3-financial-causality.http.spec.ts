@@ -9,6 +9,7 @@ import { AdminService } from "../../src/admin/admin.service";
 import { AdminWalletConfigurationService } from "../../src/admin/admin-wallet-configuration.service";
 import { MiningService } from "../../src/mining/mining.service";
 import { LoanService } from "../../src/loans/loans.service";
+import { KycService } from "../../src/kyc/kyc.service";
 import { JwtAuthGuard } from "../../src/auth/jwt-auth.guard";
 import { AuthService } from "../../src/auth/auth.service";
 import { AuthSurfaceGuard } from "../../src/auth/auth-surface.guard";
@@ -126,6 +127,7 @@ describe("C3 Public ↔ Backend ↔ Admin financial causality", () => {
         { provide: AdminWalletConfigurationService, useValue: {} },
         { provide: MiningService, useValue: {} },
         { provide: LoanService, useValue: {} },
+        { provide: KycService, useValue: {} },
         { provide: D1FinancialCommandGateway, useValue: state },
         { provide: MarketProviderRouterService, useValue: { currentStatus: jest.fn() } },
         { provide: AuthService, useValue: { verifySensitiveAction: jest.fn().mockResolvedValue(undefined) } },
