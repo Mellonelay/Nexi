@@ -1,3 +1,22 @@
+# ACTIVE CHECKLIST — Backend Authenticated Financial/Admin Runtime Acceptance
+
+- [x] Owner scope confirmed: backend-only, no browser/new migration, reuse prior SIWE read + financial SQLite + workflow receipts, commit on main.
+- [ ] Lane A: recover controlled Public + Admin legitimate test authority and test funding; prove fresh authenticated Public/Admin identity and RBAC only as needed.
+- [ ] Wallet: HTTP transfer and exact Ledger/Activity/Outbox/replay.
+- [ ] Withdrawals: Public request, Admin review/approval/rejection and internal (non-broadcast) settlement, Ledger/Activity/Outbox/replay.
+- [ ] Convert: quote/accept and accounting/expiry/replay.
+- [ ] Spot: order reserve/match/fill, activity/accounting/replay.
+- [ ] Margin: open/close/repayment and liquidation contract as supported, accounting/Outbox/recovery.
+- [ ] Binary: open/expiry/settlement using current provider config, Ledger/Outbox/replay.
+- [ ] Mining: subscribe/accrue/reward/restart idempotence, Ledger/Outbox.
+- [ ] Loans: approval/disbursement/repayment/paid-state retry and accounting.
+- [ ] Admin: actual authorized financial decisions and unauthorized Public rejection, AdminAuditLog/Outbox.
+- [ ] Lane B: Graphify exact call-path/test mapping and Fallow only on invalidated source; report graph-index limits.
+- [ ] Lane C: deployed runtime/Sentry/Valkey workflow/inbox/outbox checks tied to requests; independent full restore remains a separate operational proof.
+- [ ] After each proof: update NEXI_PROOF_REUSE_REGISTER.md, NEXI_CURRENT_STATE.md, plan/todo and commit/push main.
+- [ ] Finish: domain matrix reconciled with evidence; unresolved scenarios explicitly BLOCKED_WITH_EVIDENCE, no silent completion.
+
+---
 - [x] SOURCE+DEPLOYED 2026-10-18: JWT PUBLIC/ADMIN auth surface correction across all 45 financial-domain protected controller handlers; 26/26 metadata+guard tests, 9/9 linked HTTP integration tests PASS; build+VPS READY; Sentry release match. Receipt: tasks/evidence/financial-domain-surface-closure-20261018.md.
 - [ ] Authenticated live seven-domain economic and Admin side-effect acceptance (legitimate test account/session required; local SIWE tool attempt blocked), durable workflow runtime replay, and independent off-VPS full restore remain UNPROVEN.
 

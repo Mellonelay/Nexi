@@ -1,3 +1,23 @@
+# ACTIVE OWNER CAMPAIGN — Authenticated NEXI Backend Financial/Admin Acceptance
+
+Started: 2026-10-18T08:57:18Z. Authority: owner decision, current VPS SQLite runtime, GitHub main, NEXI proof reuse register. Scope is backend HTTP/API + canonical SQLite Ledger/Activity/Outbox and durable Valkey workflows; **no frontend/browser, no new infrastructure, no migration repeat**.
+
+## Fixed objective and no-drift execution method
+Complete the finite missing *live authenticated* economic contracts for controlled Public and Admin identities, making no unsupported claims. Existing 2026-10-17 SIWE authenticated read/logout and deposit-proof upload receipts, 2026-10-18 financial-command SQLite unit/integration receipts, 45+11 financial authorization guard proofs and workflow integration are **PROVEN + UNCHANGED = REUSE**. Existing controlled identities and legitimate Admin authority are discovered before creating new credentials. If provisioning is required, use existing authorized NestJS/SQLite mechanisms, never bypass guards, generate nonpersistent secrets, protect account balances and avoid external financial broadcasts.
+
+**One parent, three concurrent task-fit lanes** (overlap reads; serialize all shared finance DB mutation, production restarts and Git commits):
+- **Lane A — Financial API owner (primary):** recover SIWE and Admin test authority, obtain controlled authenticated sessions, then one bounded scenario per domain: Wallet transfer, Withdrawal Public request/Admin review and settlement, Convert, Spot, Margin, Binary, Mining, Loans, plus Admin RBAC. At each command compare exact pre/post SQLite LedgerAccount, LedgerPosting, domain row, Activity, EventOutbox and idempotent replay; record only validated outcomes; use safe local/sandbox settlement where real broadcast isn't needed. Do not re-run already-proven local tests.
+- **Lane B — Causal map/support:** latest Graphify graph state and affected-only callers/callees/test links; local mcpc/Graphify hook; Fallow structural change-risk. Map one API -> command gateway -> Ledger/Activity/Outbox -> queue/workflow for each accepted operation. Identify missing runtime seam without reopening old security audit.
+- **Lane C — Runtime/telemetry support:** current deployed artifact/Sentry release, NestJS logs, SQLite integrity predicates, Valkey/BullMQ/LocalWorkflow status, queue/inbox/outbox receipts and recovery, pre-existing backup state. Correlate errors specifically with test request/time. No browser and no repeated migration.
+
+**Serial economic gate:** Only one active SQLite economic scenario at a time; reconcile its exact Ledger and EventOutbox effects and retry result before the next. Other lanes may inspect read-only at the same time. Use Graphify/Fallow/Sentry as distinct support, not substitutes for DB/runtime proof. Avoid logging tokens or private keys.
+
+## Durable progress and completion rule
+Immediately after each verified scenario mark its ledger row TESTED/RUNTIME_VERIFIED/BLOCKED_WITH_EVIDENCE; prepend a compact dated entry to `NEXI_PROOF_REUSE_REGISTER.md`, update `NEXI_CURRENT_STATE.md`, and amend this active plan and `tasks/todo.md` with exact IDs/commands/receipt, avoiding stale historical controls. Commit/fast-forward push only to main; preserve `cloudflare-container-bootstrap/wrangler.jsonc`, `apps/admin/pnpm-lock.yaml`, `apps/admin/pnpm-workspace.yaml`. No 'COMPLETED' on auth metadata or mocked HTTP alone; outcome requires real session and economic SQLite side effects. Final owner acceptance separate.
+
+**Start frontier:** current main at 852216b; active VPS `nexi-api` READY; authenticated SIWE/read and local financial tests already proven, but live financial/Admin economic journeys are unproven. First read-only: current controlled users/admin roles and routes; no new credentials unless needed.
+
+---
 # NEXI Cloudflare Exit — Owner-Directed Migration Plan
 
 ## Authority and scope
