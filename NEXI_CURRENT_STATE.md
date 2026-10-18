@@ -1,3 +1,7 @@
+## 2026-10-18 — latest source-build versus running backend proof
+
+Current committed `main` `5da9884`: Loan PAID exact-retry and Margin persisted close intent source repairs; affected NestJS build passed, focused tests 19/19 financial, 28/28 Margin+Binary. Current live API ready with SQLite/Valkey, but compiled financial gateway hash differs from newly built source and cannot be called deployed-complete. Workflow coordinator 6/6 passed isolated; combined store/coordinator 3/14 tests failed fault-injection expectations, unresolved test interaction. Existing Loan additive compatibility/backfill is not applied, **not a platform migration**. No new Cloudflare infrastructure or live financial mutation. Receipt: `tasks/evidence/backend-release-frontier-20261018.md`.
+
 ## 2026-10-18 — Margin accepted-close replay continuity source proof
 
 Persisted Margin close request key, referenced order and CLOSE-vs-LIQUIDATION intent now bind all CLOSING retries. Changed calls cannot switch settlement to liquidation using the existing reserved order. Focused Margin 11/11, SQLite 2/2 and TypeScript check PASS. Source-only; deployed acceptance remains open. Evidence: `tasks/evidence/margin-close-request-binding-20261018.md`.

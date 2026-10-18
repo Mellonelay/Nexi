@@ -1,3 +1,10 @@
+## Backend current-source versus deployed-runtime separation — 2026-10-18
+
+- **STATICALLY VALIDATED:** canonical source `5da9884`, NestJS source build exit 0. Focused financial disposable SQLite 19/19 and Margin+Binary service 28/28 PASS. Reuse unchanged tests, do not broaden.
+- **RUNTIME HEALTH ONLY:** existing VPS NestJS/Nginx active, `/readyz` SQLite/Valkey READY. Running financial gateway JS differs from current built source; latest source repairs are **not deployed**.
+- **UNRESOLVED:** combined LocalWorkflowStore/Coordinator run 3/14 failed expectations in workflow rollback tests, despite isolated coordinator 6/6; report the contradiction, do not claim complete workflow recovery.
+- **COMPATIBILITY/ACCEPTANCE:** Loan 0016 schema/backfill not applied; authenticated financial/Admin, independent recovery and final deployment evidence remain outstanding. No platform migration and no Cloudflare setup. See `tasks/evidence/backend-release-frontier-20261018.md`.
+
 ## Margin CLOSING key/type continuity — 2026-10-18 (latest source)
 
 - **TESTED:** Only the originally accepted user-scoped `CLOSE` or `LIQUIDATION` request may resume a persisted CLOSING position. A changed idempotency key, mismatched close-order reference, or switch from CLOSE to LIQUIDATION is rejected before settlement.
