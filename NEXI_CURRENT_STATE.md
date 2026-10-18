@@ -1,3 +1,9 @@
+## 2026-10-19 — Previously omitted remaining-acceptance receipt and KYC config source check
+
+11:39 UTC older remaining-acceptance JSON found; 3 FAIL / 5 BLOCKED are earlier overlapping observations, not active post-11:50 acceptance defects. Later receipt A proves Spot order and Margin open succeeded. KYC storage source correction is locally tested (3/3) and not deployed. See proof register.
+
+---
+
 ## 2026-10-19 — Coordinated GitHub source publication and VPS backend deployment proof
 
 GitHub main = cce014dd79f3865f5e1f5d5f932b2140e78af8eb, with b10138c source changes and cce014d Loan CAS read-only reconciliation. GitHub Recovery CI at this commit: backend, frontend, admin, graphify and cloudflare-dry-run jobs all SUCCESS; React Doctor reported success. Six relevant changed-contract test suites, 33/33 tests PASS; Node 24 Nest build exit 0. VPS active /srv/nexi/backend/dist copied from canonical build with preserved rollback /srv/nexi/backend/rollback/pre-doctor-cce014d-20261019/dist; queue-ingress controller compiled artifact SHA256 matched source and deployed. Initial systemctl restart without sudo was denied (no service change); sudo restart succeeded. SENTRY_RELEASE in /etc/nexi/backend.env updated to cce014d with permission-preserving backup, followed by successful restart. Service MainPID=1959490, NRestarts=0, /readyz HTTP 200 READY SQLite+Redis, error-level service journal empty in immediate 2-minute check. No financial/SQLite/Valkey mutation, user fixture creation, or acceptance campaign replay. PROVEN: source build, deploy artifact sample identity, service readiness. NOT PROVEN by this deploy: all files byte-identical, full financial economic lifecycles, delayed runtime faults, independent backup restore, 100/100 Doctor score, or owner manual acceptance. Backend deployed and healthy; stop treating b10138c as undeployed from older receipt. Outstanding acceptance/test waivers remain explicit.

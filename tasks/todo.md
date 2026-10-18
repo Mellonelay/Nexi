@@ -1,3 +1,11 @@
+## 2026-10-19 — Previously omitted remaining-acceptance receipt and KYC config source check
+
+- Earlier 11:39 UTC remaining-acceptance report recovered and reconciled; do not repeat old Spot/Margin/Binary failures when subsequent proof supersedes.
+- KYC source ConfigService correction typed and focused 3/3 passed; commit/deploy boundary remains separate.
+- Remaining four financial/Admin flows need positive authenticated runtime evidence (Binary, Mining, Loans and Withdrawal lifecycle), not merely Doctor warnings.
+
+---
+
 ## 2026-10-19 — Coordinated GitHub source publication and VPS backend deployment proof
 
 - [x] Push source and Loan CAS documentation main commit cce014d; five Recovery CI jobs pass; changed-contract targeted Jest 33/33 and Nest build PASS.

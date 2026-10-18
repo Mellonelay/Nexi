@@ -1,3 +1,11 @@
+## 2026-10-19 — Previously omitted remaining-acceptance receipt and KYC config source check
+
+- Earlier 11:39 UTC remaining-acceptance report recovered and reconciled; do not repeat old Spot/Margin/Binary failures when subsequent proof supersedes.
+- KYC source ConfigService correction typed and focused 3/3 passed; commit/deploy boundary remains separate.
+- Remaining four financial/Admin flows need positive authenticated runtime evidence (Binary, Mining, Loans and Withdrawal lifecycle), not merely Doctor warnings.
+
+---
+
 ## 2026-10-19 — Coordinated GitHub source publication and VPS backend deployment proof
 
 Release fan-in complete at GitHub main cce014d and VPS backend compiled dist, readiness READY. Future action only on genuinely new contradictory evidence; do not restart owner-closed financial test campaign or blindly apply 0016 Loan CAS, which already has correct live column and backfilled values. Preserve rollback. Doctor diagnostics remain advisory until causal remediation is justified.

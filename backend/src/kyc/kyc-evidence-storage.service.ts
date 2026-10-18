@@ -2,6 +2,7 @@ import { constants } from 'node:fs';
 import { lstat, mkdir, open, readFile, realpath } from 'node:fs/promises';
 import { isAbsolute, join, sep, dirname } from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { ConfigService } from '@nestjs/config';
 import {
   BadRequestException,
   Injectable,
@@ -39,9 +40,10 @@ export function validateKycEvidence(body: Buffer, contentType: string): string {
 
 @Injectable()
 export class KycEvidenceStorageService {
+  constructor(private readonly config: ConfigService = new ConfigService()) {}
   private async localFile(key: string): Promise<string | null> {
-    if (process.env.NEXI_LOCAL_OBJECTS_ENABLED !== 'true') return null;
-    const root = process.env.NEXI_LOCAL_OBJECTS_ROOT;
+    if (this.config.get<string>('NEXI_LOCAL_OBJECTS_ENABLED') !== 'true') return null;
+    const root = this.config.get<string>('NEXI_LOCAL_OBJECTS_ROOT');
     if (!root || !isAbsolute(root) || !/^kyc-evidence\/[A-Za-z0-9._%~-]+\/[A-Za-z0-9._:-]+$/.test(key)
         || key.includes('..') || key.length > 512) {
       throw new ServiceUnavailableException('Private local evidence storage is misconfigured');
