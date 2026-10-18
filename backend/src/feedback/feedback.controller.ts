@@ -7,7 +7,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
-import * as fs from "fs";
+import { mkdir, writeFile } from "node:fs/promises";
 import * as path from "path";
 import { DevelopmentOnlyGuard } from "../auth/development-only.guard";
 import {
@@ -27,9 +27,7 @@ export class FeedbackController {
 
     // Create feedback directory if it doesn't exist in project root
     const feedbackDir = path.join(process.cwd(), "..", "visual-feedback");
-    if (!fs.existsSync(feedbackDir)) {
-      fs.mkdirSync(feedbackDir, { recursive: true });
-    }
+    await mkdir(feedbackDir, { recursive: true });
 
     // Save image
     const match = data.image.match(VISUAL_FEEDBACK_IMAGE_DATA_URI);
@@ -43,11 +41,11 @@ export class FeedbackController {
     const fileName = `feedback-${Date.now()}.${extension}`;
     const filePath = path.join(feedbackDir, fileName);
 
-    fs.writeFileSync(filePath, base64Data, "base64");
+    await writeFile(filePath, Buffer.from(base64Data, "base64"));
 
     // Save metadata
     const metaPath = filePath.replace(path.extname(filePath), ".json");
-    fs.writeFileSync(
+    await writeFile(
       metaPath,
       JSON.stringify(
         {

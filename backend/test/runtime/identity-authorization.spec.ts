@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { ConfigService } from '@nestjs/config';
 import { ExecutionContext, ForbiddenException, ServiceUnavailableException, UnauthorizedException, ValidationPipe } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Role } from '../../src/prisma/d1-client';
@@ -212,7 +213,7 @@ describe('B1 identity and authorization foundation', () => {
   });
 
   it('keeps development-only routes unavailable outside development', () => {
-    const guard = new DevelopmentOnlyGuard();
+    const guard = new DevelopmentOnlyGuard(new ConfigService());
     const originalEnvironment = process.env.NODE_ENV;
 
     process.env.NODE_ENV = 'test';

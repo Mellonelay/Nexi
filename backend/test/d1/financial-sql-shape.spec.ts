@@ -24,7 +24,7 @@ it("prepares the financial posting and Margin SQL against SQLite column definiti
     ] as const) {
       db.exec(`CREATE TABLE "${name}" (${columns.map((column) => `"${column}" TEXT`).join(",")})`);
     }
-    db.exec('CREATE TABLE "LedgerIdempotency" ("id" TEXT, "idempotencyKey" TEXT, "debitPostingId" TEXT)');
+    db.exec('CREATE TABLE "LedgerIdempotency" ("id" TEXT, "idempotencyKey" TEXT, "debitPostingId" TEXT, "creditPostingId" TEXT)');
     db.exec('CREATE TABLE "Gate2SpotOrder" ("id" TEXT, "userId" TEXT, "idempotencyKey" TEXT, "status" TEXT)');
 
     const postingStatements = Array.from(

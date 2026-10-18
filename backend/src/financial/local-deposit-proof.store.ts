@@ -1,4 +1,5 @@
-import { Injectable, ServiceUnavailableException, BadRequestException } from '@nestjs/common';
+import { Injectable, Optional, ServiceUnavailableException, BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { constants } from 'node:fs';
 import { lstat, mkdir, open, realpath } from 'node:fs/promises';
 import { isAbsolute, dirname, join, sep } from 'node:path';
@@ -8,9 +9,10 @@ const objectKey=/^deposit-proofs\/[A-Za-z0-9._:-]{1,160}\/[0-9a-f-]{36}$/;
 
 @Injectable()
 export class LocalDepositProofStore {
+  constructor(@Optional() private readonly config: ConfigService = new ConfigService()) {}
   private async file(key:string):Promise<string> {
-    const root=process.env.NEXI_LOCAL_OBJECTS_ROOT;
-    if(process.env.NEXI_LOCAL_OBJECTS_ENABLED!=='true'||!root||!isAbsolute(root)||
+    const root=this.config.get<string>('NEXI_LOCAL_OBJECTS_ROOT');
+    if(this.config.get<string>('NEXI_LOCAL_OBJECTS_ENABLED')!=='true'||!root||!isAbsolute(root)||
       key.includes('..')||!objectKey.test(key)){
       throw new ServiceUnavailableException('Private local deposit proof storage is unavailable');
     }
@@ -41,7 +43,7 @@ export class LocalDepositProofStore {
   }
 
   async uploadStream(userId: string, key: string, stream: AsyncIterable<Uint8Array>, contentType?: string, contentLength?: string): Promise<{key:string;status:'UPLOADED'}> {
-    if (process.env.NEXI_LOCAL_OBJECTS_ENABLED !== 'true') throw new BadRequestException('Local proof upload is disabled');
+    if (this.config.get<string>('NEXI_LOCAL_OBJECTS_ENABLED') !== 'true') throw new BadRequestException('Local proof upload is disabled');
     if (!contentType) throw new BadRequestException('Content type required');
     const declared = Number(contentLength);
     if (Number.isFinite(declared) && declared > MAX_BYTES) throw new BadRequestException('Deposit proof exceeds 10 MiB');

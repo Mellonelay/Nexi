@@ -5,6 +5,8 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import { createHmac, timingSafeEqual } from "crypto";
+import { ConfigService } from "@nestjs/config";
+import { Optional } from "@nestjs/common";
 import { FinancialOperationsService } from "../financial/financial-operations.service";
 import { MiningService } from "../mining/mining.service";
 import { LoanService } from "../loans/loans.service";
@@ -26,6 +28,7 @@ export class WorkflowCommandsService {
     private readonly mining: MiningService,
     private readonly loans: LoanService,
     private readonly d1: D1FinancialCommandGateway,
+    @Optional() private readonly config: ConfigService = new ConfigService(),
   ) {}
 
   assertSignature(
@@ -33,7 +36,7 @@ export class WorkflowCommandsService {
     signature: string | undefined,
     timestampHeader: string | undefined,
   ): void {
-    const secret = process.env.JWT_SECRET;
+    const secret = this.config.get<string>("JWT_SECRET");
     const timestamp = Number(timestampHeader);
     if (
       !secret ||

@@ -1,0 +1,12 @@
+{
+  "telemetry": false,
+  "report": {
+    "telemetry": false
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "src/prisma/d1-client/**"
+  ]
+}

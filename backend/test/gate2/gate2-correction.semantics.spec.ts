@@ -12,6 +12,7 @@ describe('Gate 2 binary settlement correction semantics', () => {
     const d1: any = {
       getBinaryPosition: jest.fn().mockResolvedValue(position),
       getActiveMarketPair: jest.fn().mockResolvedValue({ id: 'pair-1', symbol: 'BTCUSDT', baseAsset: 'BTC', quoteAsset: 'USDT' }),
+      getMarketPairForSettlement: jest.fn().mockResolvedValue({ id: 'pair-1', symbol: 'BTCUSDT', baseAsset: 'BTC', quoteAsset: 'USDT' }),
       getLiveMarketQuote: jest.fn().mockResolvedValue(quote),
       getBinaryConfiguration: jest.fn().mockResolvedValue(config),
       settleBinaryPositionAtomic: jest.fn().mockResolvedValue({ ...position, state: 'WIN' }),
@@ -34,7 +35,7 @@ describe('Gate 2 binary settlement correction semantics', () => {
     d1.getLiveMarketQuote.mockResolvedValue(null);
     const result = await service.settlePosition('position-1');
     expect(result.delayed).toBe(true);
-    expect(d1.getBinaryConfiguration).not.toHaveBeenCalled();
+    expect(d1.getBinaryConfiguration).toHaveBeenCalledWith('BTCUSDT', 30, 7);
   });
 
   it('compensates a terminal settlement error through the D1 state result', async () => {

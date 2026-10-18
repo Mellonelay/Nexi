@@ -8,8 +8,8 @@ export class ContractService {
   private readonly logger = new Logger(ContractService.name);
 
   constructor(
-    private prisma: any,
-    private walletService: WalletService,
+    private readonly prisma: any,
+    private readonly walletService: WalletService,
   ) {}
 
   // Open a Contract Position (Futures)

@@ -72,6 +72,10 @@ export class LocalWorkflowStore {
  }
  async checkpoint(id:string,token:string,revision:number,state:WorkflowState,now:number,step?:{name:string;commandKey:string;result:unknown},eventKey?:string):Promise<boolean>{
   this.validate(state,now);validTime(revision);if(state.id!==id)throw Error('Conflicting checkpoint identity');
+  if (step && (typeof step.name !== 'string' || !/^[A-Za-z0-9._:-]{1,160}$/.test(step.name)
+    || typeof step.commandKey !== 'string' || !step.commandKey.trim() || step.commandKey.length > 512)) {
+    throw Error('Invalid workflow checkpoint step');
+  }
   const batch:D1BridgeBatchStatement[]=[{sql:"UPDATE LocalWorkflowInstance SET status = ?,phase = ?,nextAt = CASE WHEN ? = 'WAITING' AND EXISTS (SELECT 1 FROM LocalWorkflowEvent WHERE instanceId = ? AND eventType = ? AND consumedAt IS NULL) THEN ? ELSE ? END,awaitedEvent = ?,context = ?,revision = revision + 1,leaseToken = NULL,leaseUntil = NULL,updatedAt = ? WHERE id = ? AND revision = ? AND leaseToken = ? AND leaseUntil > ? AND (? IS NULL OR EXISTS (SELECT 1 FROM LocalWorkflowEvent WHERE instanceId = ? AND eventKey = ? AND consumedAt IS NULL)) RETURNING *",params:[state.status,state.phase,state.status,id,state.awaitedEvent??null,now,state.nextAt,state.awaitedEvent??null,body(state.context),now,id,revision,token,now,eventKey??null,id,eventKey??null]}];
   // The bridge fences dependent effects by the first UPDATE RETURNING row count inside one IMMEDIATE transaction; no changes() chain.
   if(eventKey)batch.push({sql:'UPDATE LocalWorkflowEvent SET consumedAt = ? WHERE instanceId = ? AND eventKey = ? AND consumedAt IS NULL',params:[now,id,eventKey]});

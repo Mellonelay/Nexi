@@ -1,5 +1,6 @@
 import { Injectable, Optional } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
+import { ConfigService } from "@nestjs/config";
 import { RedisService } from "../redis/redis.service";
 import { EventOutboxService } from "./event-outbox.service";
 import * as Sentry from "@sentry/nestjs";
@@ -9,17 +10,18 @@ export class EventOutboxScheduler {
   constructor(
     private readonly outbox: EventOutboxService,
     @Optional() private readonly redis?: RedisService,
+    @Optional() private readonly config: ConfigService = new ConfigService(),
   ) {}
 
   @Cron(CronExpression.EVERY_10_SECONDS)
   async publishPending() {
-    if (process.env.NEXI_SCHEDULER_ENABLED !== "true") {
+    if (this.config.get<string>("NEXI_SCHEDULER_ENABLED") !== "true") {
       return { skipped: true, reason: "scheduler-disabled" };
     }
     // Local publication is durably serialized by SQLite Outbox claim and job identity.
     // It must not depend on the old external Redis scheduler lock.
-    if (process.env.NEXI_SQLITE_LOCAL_ENABLED === "true" &&
-        process.env.NEXI_LOCAL_ASYNC_ENABLED === "true") {
+    if (this.config.get<string>("NEXI_SQLITE_LOCAL_ENABLED") === "true" &&
+        this.config.get<string>("NEXI_LOCAL_ASYNC_ENABLED") === "true") {
       return this.outbox.publishPending(25);
     }
     if (!this.redis || !this.redis.isAvailable()) {

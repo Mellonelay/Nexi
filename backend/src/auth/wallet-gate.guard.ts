@@ -5,7 +5,7 @@ import { D1PrismaService } from '../d1/d1-prisma.service';
 
 @Injectable()
 export class WalletGateGuard implements CanActivate {
-  constructor(private prisma: D1PrismaService) {}
+  constructor(private readonly prisma: D1PrismaService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();

@@ -1,4 +1,5 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Optional } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { randomUUID } from "crypto";
 import {
   D1BridgeBatchStatement,
@@ -16,10 +17,10 @@ type NotificationEvent = {
 /** Native D1 command boundary for communication mutations that publish events. */
 @Injectable()
 export class D1CommunicationsCommandGateway {
-  constructor(private readonly bridge: D1WorkerBridgeService) {}
+  constructor(private readonly bridge: D1WorkerBridgeService, @Optional() private readonly config: ConfigService = new ConfigService()) {}
 
   isEnabled(): boolean {
-    return process.env.D1_RUNTIME_ENABLED === "true" && this.bridge.isEnabled();
+    return this.config.get<string>("D1_RUNTIME_ENABLED") === "true" && this.bridge.isEnabled();
   }
 
   async markMessageRead(userId: string, messageId: string): Promise<boolean> {

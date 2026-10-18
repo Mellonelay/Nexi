@@ -1,3 +1,12 @@
+## 2026-10-19 — NestJS source-focused remediation and diagnostics (no backend acceptance rerun)
+Parent control: same NEXI single owner, source-only bounded remediation, reuse existing finite backend financial acceptance receipts. Doctor's 87/100 339-finding result is post-change diagnostic, not backend test. Follow `NEXI_PROOF_REUSE_REGISTER.md` first for exact proof identity. Remaining work sorted by actual risk: (1) audit unresolved Doctor candidates with exact location and contract; (2) resolve Loan 0016 recovery/migration authorization and isolated off-VPS restore separately; (3) BullMQ/Valkey domain consumer/recovery defects only with release-matched direct evidence, do not rerun known retry; (4) serialized Git fan-in and source/deployed release identity. Current changes not deployed. Avoid any new full Jest, financial live acceptance, broad market freshness tests or blanket Doctor scoring refactors.
+
+---
+
+## 2026-10-19 — Owner acceptance receipts reconciled; testing campaign stopped
+One parent, parallel nonmutating lanes: A Data/proof receipt comparison; B Doctor+NestJS skills+Context7 current diagnostics; C Graphify/Fallow schema, queue and Redis ownership; D runtime/Sentry release evidence. Serialize source mutation, financial DB/schema, final Git and release. Reuse 22/1/6 acceptance and 6/1/5 follow-on investigation without retesting or additive pass counts. Owner directed terminal backend testing stop. Fix only demonstrated backend source defects; preserve four pre-existing modified files and untracked Doctor config. Loan CAS migration prohibited until independent backup/restore and controlled migration proof. Each claim scoped to source test vs running deployment.
+
+---
 ## 2026-10-18 — Controlled test authority fixture executed (latest)
 
 FACT: The existing backend/src/staging-fixture.ts was run with the existing /etc/nexi/backend.env exported and NODE_ENV=staging, scheduler disabled. Two invocations produced two separate staging Public identities, Admin-role records and 100000 USDT each via D1FinancialCommandGateway.credit. The first result included posting 3c428cbd-7986-4252-a9aa-1962241af9ff; second posting ba964161-15d9-408b-b550-66fb39d0964b. Second fixture created a credential file outside the repository with mode 0600. No credentials are recorded here.

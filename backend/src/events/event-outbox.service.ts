@@ -1,5 +1,6 @@
 import { Injectable, Optional, ServiceUnavailableException } from "@nestjs/common";
 import { D1FinancialCommandGateway } from "../d1/d1-financial-command.gateway";
+import { ConfigService } from "@nestjs/config";
 import { NexiEventEnvelope } from "./event-envelope";
 import { D1WorkerBridgeService } from "../d1/d1-worker-bridge.service";
 import { LocalSqliteBridgeService } from "../d1/local-sqlite-bridge.service";
@@ -23,6 +24,7 @@ export class EventOutboxService {
   constructor(
     private readonly d1: D1FinancialCommandGateway,
     @Optional() private readonly bridge?: D1WorkerBridgeService,
+    @Optional() private readonly config: ConfigService = new ConfigService(),
   ) {}
 
   async recordQueueIngress(
@@ -68,8 +70,8 @@ export class EventOutboxService {
     if (!this.d1.isEnabled()) {
       throw new ServiceUnavailableException("D1 event outbox is disabled");
     }
-    const local = process.env.NEXI_SQLITE_LOCAL_ENABLED === "true" &&
-      process.env.NEXI_LOCAL_ASYNC_ENABLED === "true";
+    const local = this.config.get<string>("NEXI_SQLITE_LOCAL_ENABLED") === "true" &&
+      this.config.get<string>("NEXI_LOCAL_ASYNC_ENABLED") === "true";
     const localBridge = this.bridge instanceof LocalSqliteBridgeService ? this.bridge : null;
     if (local && !localBridge) {
       throw new ServiceUnavailableException("Local durable Outbox publication requires local SQLite");
@@ -82,7 +84,7 @@ export class EventOutboxService {
       retried: 0,
       deadLettered: 0,
     };
-    const host = process.env.QUEUE_BRIDGE_HOST || "nexi.queue";
+    const host = this.config.get<string>("QUEUE_BRIDGE_HOST") || "nexi.queue";
     for (const row of rows) {
       try {
         const payload = JSON.parse(row.payload) as Record<string, unknown>;

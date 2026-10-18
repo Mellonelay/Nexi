@@ -8,7 +8,7 @@ import {
   ServiceUnavailableException,
   Optional,
 } from "@nestjs/common";
-import * as fs from "node:fs";
+import { readFile } from "node:fs/promises";
 import * as path from "node:path";
 import {
   AdminMaintenanceScope,
@@ -2186,11 +2186,15 @@ export class AdminService {
       "hb_list.json",
     );
 
-    if (!fs.existsSync(dumpPath)) {
-      throw new NotFoundException("Market dump file not found");
+    let raw: string;
+    try {
+      raw = await readFile(dumpPath, "utf-8");
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+        throw new NotFoundException("Market dump file not found");
+      }
+      throw error;
     }
-
-    const raw = fs.readFileSync(dumpPath, "utf-8");
     const data = JSON.parse(raw);
     const markets = data.message || [];
     const categoryMap: Record<number, string> = {

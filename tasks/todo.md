@@ -1,3 +1,24 @@
+## 2026-10-19 — NestJS source-focused remediation and diagnostics (no backend acceptance rerun)
+- [x] Source-oriented fixes: async feedback/admin dump filesystem operations, authenticated ConfigService for queue/workflow secrets and guarded scheduler/Outbox/config paths, local object storage config, readonly injections.
+- [x] Source TypeScript validation PASS after these edits; git diff --check PASS. No full Jest or authenticated acceptance rerun.
+- [x] One justified new Doctor diagnostic scan: 87/100, 339 diagnostics, 0 error (not comparable as an exact improvement to older root/config snapshot).
+- [x] Fallow guard + changed-source static inspection run; no dependency boundary/cycle/unresolved import finding; 53 package-dependency observations require explicit ownership before removal.
+- [ ] Review remaining Doctor warnings per rule using source behavior, not score-chasing; do not change intentionally public/HMAC-authenticated endpoints or financial schema cascade behavior without causal evidence.
+- [ ] Establish independent off-VPS encrypted backup/restore for Loan 0016 and confirm schema migration authority BEFORE any live application; remains blocked on operator-owned recovery proof.
+- [ ] Reconcile local commit/GitHub main/deployed artifact identities separately; no Git push or deployment claimed by this source remediation receipt. Any final release requires specifically authorized production mutation.
+
+---
+
+## 2026-10-19 — Owner acceptance receipts reconciled; testing campaign stopped
+- [x] Reconcile A/B acceptance reports without adding counts; preserve PASS and later proof scope.
+- [x] Stop repetitive whole-backend and authenticated acceptance test campaigns by owner decision.
+- [ ] Classify genuine Doctor source findings against current code and scoped configuration, with justified security/performance corrections only.
+- [ ] Confirm schema 0016 migration status; no application without recovery/backup prerequisites.
+- [ ] Review current BullMQ/Valkey domain consumer and reconnect defects against release-matched logs; reuse isolated successful TLS retry.
+- [ ] Preserve and integrate existing dirty source edits and Doctor config after provenance/ownership review.
+- [ ] Reconcile final source/compiled deploy SHA, explicit unverified accounting/recovery gates, and owner acceptance without fabricating missing proofs.
+
+---
 - [x] Lane B Graphify cloud impact/tests + Worker-0 mcpc actual shortest path; Fallow no backend boundary violations; no source repair needed.
 - [x] Lane C deployed API READY and Sentry current release scoped issue search returned no matching grouped issues; SQLite Inbox/Job state captured (not workflow completion).
 - [x] 2026-10-18: canonical staging fixture executed with full backend environment; two controlled fixture runs each funded 100000 USDT with unique Ledger posting ID; second fixture persisted mode-0600 controlled credentials. Admin login HTTP 201 verified and Public fixture credentials rejected by Admin login HTTP 401. Positive authenticated economic domain API execution remains pending; separate SIWE-authenticated Public identity is not yet linked to the funded fixture account.

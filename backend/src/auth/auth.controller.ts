@@ -80,8 +80,8 @@ function clearPublicRefreshCookie(response: Response) {
 @Controller("auth")
 export class AuthController {
   constructor(
-    private authService: AuthService,
-    private walletAuthService?: WalletAuthService,
+    private readonly authService: AuthService,
+    private readonly walletAuthService?: WalletAuthService,
   ) {}
 
   @Post("wallet/challenge")

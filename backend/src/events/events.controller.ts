@@ -7,6 +7,7 @@ import {
   BadRequestException,
 } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
+import { ConfigService } from "@nestjs/config";
 import { createHmac, timingSafeEqual } from "crypto";
 import { EventOutboxService } from "./event-outbox.service";
 import { isNexiEventEnvelope, NexiEventEnvelope } from "./event-envelope";
@@ -16,7 +17,10 @@ const MAX_QUEUE_AGE_MS = 5 * 60 * 1000;
 @ApiTags("Internal Events")
 @Controller("_internal/events")
 export class EventsController {
-  constructor(private readonly events: EventOutboxService) {}
+  constructor(
+    private readonly events: EventOutboxService,
+    private readonly config: ConfigService,
+  ) {}
 
   @Post("queue")
   async ingestQueue(
@@ -67,7 +71,7 @@ export class EventsController {
     signature: string | undefined,
     timestampHeader: string | undefined,
   ): void {
-    const secret = process.env.JWT_SECRET;
+    const secret = this.config.get<string>("JWT_SECRET");
     const timestamp = Number(timestampHeader);
     if (
       !secret ||

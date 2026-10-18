@@ -1,4 +1,5 @@
 import { BinarySettlementScheduler } from '../../src/binary/binary-settlement.scheduler';
+import { ConfigService } from '@nestjs/config';
 
 describe('BinarySettlementScheduler', () => {
   afterEach(() => {
@@ -14,7 +15,7 @@ describe('BinarySettlementScheduler', () => {
       tryAcquireLock: jest.fn().mockResolvedValue(true),
       releaseLock: jest.fn().mockResolvedValue(undefined),
     };
-    const result = await new BinarySettlementScheduler(binary as never, redis as never).settleExpiredPositions();
+    const result = await new BinarySettlementScheduler(binary as never, new ConfigService(), redis as never).settleExpiredPositions();
     expect(result).toEqual({ processed: 2 });
     expect(redis.tryAcquireLock).toHaveBeenCalledWith(
       'nexi:scheduler:binary-settlement:poll',
@@ -32,7 +33,7 @@ describe('BinarySettlementScheduler', () => {
       tryAcquireLock: jest.fn().mockResolvedValue(false),
       releaseLock: jest.fn(),
     };
-    const result = await new BinarySettlementScheduler(binary as never, redis as never).settleExpiredPositions();
+    const result = await new BinarySettlementScheduler(binary as never, new ConfigService(), redis as never).settleExpiredPositions();
     expect(result).toEqual({ skipped: true, reason: 'scheduler-lock-unavailable' });
     expect(binary.checkExpiredPositions).not.toHaveBeenCalled();
   });

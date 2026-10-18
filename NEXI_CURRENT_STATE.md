@@ -1,3 +1,12 @@
+## 2026-10-19 — NestJS source-focused remediation and diagnostics (no backend acceptance rerun)
+At intake, canonical `main` was at 842e4fe with previously dirty source/test/docs; the source remediation changes were validated before Git fan-in. Current HEAD/remote alignment must be discovered from Git, not inferred from this historical receipt. This work was NOT deployed to the running API. Receipt reconciliation preserved: A 22 PASS/1 FAIL/6 BLOCKED, later overlapping B 6 PASS/1 FAIL/5 remaining. Owner stopped repeated acceptance campaigns. Current backend Doctor JSON score 87/100, 339 diagnostics / 0 errors, with independent untracked Doctor config; not a claim of 100/100. Source typecheck PASS, Fallow changed-source no structural violations. See latest proof register section for exact changed-source and caveats. Loan migration 0016/off-VPS restore and released runtime identity are still OPEN evidence gates, not completion.
+
+---
+
+## 2026-10-19 — Owner acceptance receipts reconciled; testing campaign stopped
+Current testing STOP is an owner scope decision, not a proof of complete success. A: 22/1/6 at 2026-10-18T11:50:23.788Z; B: 6/1/5 at 2026-10-18T12:19:45.121Z; overlapping. Retain original receipts. Later Margin and isolated financial proofs supersede older source-failure suspicions only within verified scope. Source edits/untracked Doctor config remain dirty. Loan 0016 off-VPS recovery precondition, deployed financial acceptance and per-operation accounting are unproven. Do not retest already proven scopes.
+
+---
 ## 2026-10-18 — Controlled test authority fixture executed (latest)
 
 FACT: The existing backend/src/staging-fixture.ts was run with the existing /etc/nexi/backend.env exported and NODE_ENV=staging, scheduler disabled. Two invocations produced two separate staging Public identities, Admin-role records and 100000 USDT each via D1FinancialCommandGateway.credit. The first result included posting 3c428cbd-7986-4252-a9aa-1962241af9ff; second posting ba964161-15d9-408b-b550-66fb39d0964b. Second fixture created a credential file outside the repository with mode 0600. No credentials are recorded here.

@@ -1,5 +1,6 @@
 import { Injectable, Optional } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'node:crypto';
 import { RedisService } from '../redis/redis.service';
 import { BinaryService } from './binary.service';
@@ -9,12 +10,13 @@ import * as Sentry from '@sentry/nestjs';
 export class BinarySettlementScheduler {
   constructor(
     private readonly binary: BinaryService,
+    private readonly config: ConfigService,
     @Optional() private readonly redis?: RedisService,
   ) {}
 
   @Cron(CronExpression.EVERY_10_SECONDS)
   async settleExpiredPositions() {
-    if (process.env.NEXI_SCHEDULER_ENABLED !== 'true') {
+    if (this.config.get<string>('NEXI_SCHEDULER_ENABLED') !== 'true') {
       return { skipped: true, reason: 'scheduler-disabled' };
     }
     if (!this.redis) {

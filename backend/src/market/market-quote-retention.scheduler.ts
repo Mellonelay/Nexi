@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { D1PrismaService } from '../d1/d1-prisma.service';
 
@@ -16,12 +17,15 @@ export class MarketQuoteRetentionScheduler {
   private static readonly BATCH_LIMIT = 1000;
   private inFlight = false;
 
-  constructor(private readonly d1: D1PrismaService) {}
+  constructor(
+    private readonly d1: D1PrismaService,
+    @Optional() private readonly config: ConfigService = new ConfigService(),
+  ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
   async removeExpiredQuoteSnapshots(): Promise<number> {
-    if (process.env.NEXI_SCHEDULER_ENABLED !== 'true') return 0;
-    if (process.env.NEXI_MARKET_QUOTE_RETENTION_ENABLED !== 'true') return 0;
+    if (this.config.get<string>('NEXI_SCHEDULER_ENABLED') !== 'true') return 0;
+    if (this.config.get<string>('NEXI_MARKET_QUOTE_RETENTION_ENABLED') !== 'true') return 0;
     if (!this.d1.isEnabled()) return 0;
     if (this.inFlight) return 0;
 

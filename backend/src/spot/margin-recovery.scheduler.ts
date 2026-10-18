@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { randomUUID } from 'node:crypto';
 import { RedisService } from '../redis/redis.service';
@@ -12,11 +13,12 @@ export class MarginRecoveryScheduler {
     private readonly margin: MarginService,
     private readonly gateway: D1FinancialCommandGateway,
     private readonly redis: RedisService,
+    @Optional() private readonly config: ConfigService = new ConfigService(),
   ) {}
 
   @Cron(CronExpression.EVERY_10_SECONDS)
   async recoverFilledCloses(): Promise<{ processed: number; failed: number; skipped?: string }> {
-    if (process.env.NEXI_SCHEDULER_ENABLED !== 'true') {
+    if (this.config.get<string>('NEXI_SCHEDULER_ENABLED') !== 'true') {
       return { processed: 0, failed: 0, skipped: 'scheduler-disabled' };
     }
     const owner = randomUUID();

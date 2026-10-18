@@ -14,8 +14,8 @@ import { TOTP } from 'otpauth';
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UsersService,
-    private jwtService: JwtService,
+    private readonly usersService: UsersService,
+    private readonly jwtService: JwtService,
     @Optional() private readonly authSessionService?: AuthSessionService,
     @Optional() private readonly securityEvents?: AuthSecurityEventsService,
   ) {}
