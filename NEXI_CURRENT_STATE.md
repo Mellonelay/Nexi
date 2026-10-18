@@ -1,3 +1,7 @@
+## 2026-10-18 — latest financial-domain authorization source/deployment checkpoint
+
+Current source and runtime `4bab682`: 45 JWT-protected handlers across Binary/Spot/Margin/Mining/Loans/Wallet/LocalDepositProof now bind PUBLIC/ADMIN auth surfaces, complementing `321e45e` FinancialOperations fix. 26/26 route/guard tests, 9/9 linked HTTP tests, backend typecheck/build PASS, VPS API READY, matching source/deployed controller hash and Sentry release. Actual authenticated live economic transactions are **not yet proven**. Receipt: `tasks/evidence/financial-domain-surface-closure-20261018.md`.
+
 ## 2026-10-18 — Financial Public/Admin auth surface source + deployment
 
 GitHub main `321e45e` guard changes deployed on existing VPS. 11 Public financial endpoints now explicitly bind PUBLIC JWT surface; Admin guards preserved; 19/19 security/causality tests and dedicated 19/19 metadata/guard tests PASS. Nest build and deployed controller JS hash verified; API READY, Sentry release aligned. Workflow store/coordinator 14/14 unchanged PASS. Authenticated seven-domain economic/Admin runtime acceptance is NOT yet proven. Evidence: `tasks/evidence/financial-auth-surface-release-20261018.md`.

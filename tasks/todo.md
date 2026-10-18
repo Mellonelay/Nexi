@@ -1,3 +1,6 @@
+- [x] SOURCE+DEPLOYED 2026-10-18: JWT PUBLIC/ADMIN auth surface correction across all 45 financial-domain protected controller handlers; 26/26 metadata+guard tests, 9/9 linked HTTP integration tests PASS; build+VPS READY; Sentry release match. Receipt: tasks/evidence/financial-domain-surface-closure-20261018.md.
+- [ ] Authenticated live seven-domain economic and Admin side-effect acceptance (legitimate test account/session required; local SIWE tool attempt blocked), durable workflow runtime replay, and independent off-VPS full restore remain UNPROVEN.
+
 - [x] SOURCE TESTED — Margin CLOSING replay cannot change accepted key or switch close to liquidation; 11/11 service and 2/2 SQLite tests PASS. Evidence: tasks/evidence/margin-close-request-binding-20261018.md.
 - [x] SOURCE TESTED — Loan exact-key replay after final payment changes status to PAID; previously returned incorrect 400, now returns original without duplicate Ledger/repayment; targeted test 1/1 PASS and typecheck exit 0. Receipt: `tasks/evidence/loan-repayment-paid-replay-20261018.md`.
 - [x] SOURCE TESTED 2026-10-18 — Loan 0016 historical cumulative repayment preflight and exact-decimal atomic backfill script; 6/6 fixture tests PASS, live dry-run only. Receipt: tasks/evidence/loan-cas-exact-backfill-20261018.md.
