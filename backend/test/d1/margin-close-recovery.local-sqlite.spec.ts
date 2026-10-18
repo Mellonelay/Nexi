@@ -25,7 +25,7 @@ describe('Margin filled-close recovery with disposable SQLite', () => {
       );
       CREATE TABLE SpotMarginActivity (
         id TEXT PRIMARY KEY, positionId TEXT, idempotencyKey TEXT,
-        type TEXT, status TEXT
+        type TEXT, status TEXT, details TEXT
       );
       CREATE TABLE Gate2SpotOrder (
         id TEXT PRIMARY KEY, userId TEXT, status TEXT
@@ -36,7 +36,7 @@ describe('Margin filled-close recovery with disposable SQLite', () => {
       );
       INSERT INTO SpotMarginAccount VALUES ('margin-account','owner');
       INSERT INTO SpotMarginPosition VALUES ('position','margin-account','close-order','CLOSING','2026-01-01');
-      INSERT INTO SpotMarginActivity VALUES ('request','position','original-close-key','CLOSE','ACCEPTED');
+      INSERT INTO SpotMarginActivity VALUES ('request','position','original-close-key','CLOSE','ACCEPTED','{"orderId":"close-order"}');
       INSERT INTO Gate2SpotOrder VALUES ('close-order','owner','PARTIALLY_FILLED');
       INSERT INTO Gate2SpotTrade VALUES ('fill-one','close-order','counter-order','100','1','2026-01-01');
       INSERT INTO Gate2SpotTrade VALUES ('fill-two','close-order','counter-order-2','110','2','2026-01-02');
@@ -53,6 +53,10 @@ describe('Margin filled-close recovery with disposable SQLite', () => {
   });
   it('does not schedule a partial close and computes realized weighted fill price', async () => {
     expect(await gateway.listPendingMarginCloses()).toEqual([]);
+    await expect(gateway.getMarginCloseRequest('position','owner')).resolves.toEqual({
+      closeOrderId:'close-order',idempotencyKey:'original-close-key',liquidation:false,
+    });
+    await expect(gateway.getMarginCloseRequest('position','another-user')).resolves.toBeNull();
     expect(await gateway.getSpotOrderExecutionPrice('close-order')).toBe('106.66666666666666667');
   });
   it('recovers only FILLED positions with their original close idempotency key', async () => {

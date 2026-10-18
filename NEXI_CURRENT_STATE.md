@@ -1,3 +1,7 @@
+## 2026-10-18 — Margin accepted-close replay continuity source proof
+
+Persisted Margin close request key, referenced order and CLOSE-vs-LIQUIDATION intent now bind all CLOSING retries. Changed calls cannot switch settlement to liquidation using the existing reserved order. Focused Margin 11/11, SQLite 2/2 and TypeScript check PASS. Source-only; deployed acceptance remains open. Evidence: `tasks/evidence/margin-close-request-binding-20261018.md`.
+
 ## 2026-10-18 — Loan completed-repayment retry source repair
 
 Same-key, same-amount replay after Loan status becomes PAID now returns existing operation without a duplicate posting. Bounded RED/green SQLite proof 1/1 and backend typecheck passed. See `tasks/evidence/loan-repayment-paid-replay-20261018.md`. Source-only; neither runtime deployment nor a new platform migration occurred. The existing VPS/SQLite authority is unchanged.

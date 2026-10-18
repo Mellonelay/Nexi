@@ -7554,6 +7554,29 @@ export class D1FinancialCommandGateway {
     return statements;
   }
 
+  async getMarginCloseRequest(positionId: string, userId: string): Promise<{
+    closeOrderId: string; idempotencyKey: string; liquidation: boolean;
+  } | null> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const result = await this.bridge.select<{closeOrderId:string;idempotencyKey:string;type:string}>(
+      `SELECT p."closeOrderId",a."idempotencyKey",a."type"
+       FROM "SpotMarginPosition" p
+       JOIN "SpotMarginAccount" m ON m."id"=p."accountId"
+       JOIN "SpotMarginActivity" a ON a."positionId"=p."id"
+         AND a."type" IN ('CLOSE','LIQUIDATION') AND a."status"='ACCEPTED'
+         AND json_extract(a."details",'$.orderId')=p."closeOrderId"
+       WHERE p."id"=? AND m."userId"=? AND p."status"='CLOSING'
+       LIMIT 1`,
+      [positionId,userId],
+    );
+    const row = result.results[0];
+    return row ? {
+      closeOrderId:String(row.closeOrderId),
+      idempotencyKey:String(row.idempotencyKey),
+      liquidation:row.type==='LIQUIDATION',
+    } : null;
+  }
+
   async listPendingMarginCloses(take = 25): Promise<Array<{
     positionId: string; userId: string; closeOrderId: string;
     idempotencyKey: string; liquidation: boolean;

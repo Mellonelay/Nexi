@@ -1,3 +1,9 @@
+## Margin CLOSING key/type continuity — 2026-10-18 (latest source)
+
+- **TESTED:** Only the originally accepted user-scoped `CLOSE` or `LIQUIDATION` request may resume a persisted CLOSING position. A changed idempotency key, mismatched close-order reference, or switch from CLOSE to LIQUIDATION is rejected before settlement.
+- **Proof:** Margin service 11/11, disposable SQLite recovery 2/2, TypeScript check exit 0. `tasks/evidence/margin-close-request-binding-20261018.md`.
+- **UNPROVEN:** Deployed authenticated financial settlement; no live database mutation.
+
 ## Loan PAID-state exact-retry idempotency — 2026-10-18 (latest source)
 
 - **TESTED:** A completed Loan becomes `PAID`; an exact same-key/same-amount repayment retry returns the existing paid Loan without a second debit, posting or repayment record, while changed amount under the same key is rejected.

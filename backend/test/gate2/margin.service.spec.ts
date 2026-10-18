@@ -133,6 +133,7 @@ describe('Spot isolated margin authority', () => {
     const position = { id: 'position-1', accountId: 'margin-account-1', accountPair: 'BTCUSDT', status: 'CLOSING', closeOrderId: 'close-order-1', direction: MarginPositionDirection.LONG, collateral: '50', quantity: '1', entryPrice: '100', debtPrincipal: '50', debtAsset: 'USDT', interestAccrued: '0', unrealizedPnl: '0' };
     const d1: any = {
       getMarginPosition: jest.fn().mockResolvedValue(position),
+      getMarginCloseRequest: jest.fn().mockResolvedValue({idempotencyKey:'close-retry',closeOrderId:'close-order-1',liquidation:false}),
       getActiveMarketPair: jest.fn().mockResolvedValue(pair),
       getLiveMarketQuote: jest.fn().mockResolvedValue({ price: '100' }),
       reserveSpotOrder: jest.fn(),
@@ -149,6 +150,26 @@ describe('Spot isolated margin authority', () => {
     expect(d1.settleMarginClose).not.toHaveBeenCalled();
   });
 
+  it('rejects changed close keys or liquidation mode on an already CLOSING position', async () => {
+    const position = { id:'position-1',accountId:'margin-account-1',accountPair:'BTCUSDT',
+      status:'CLOSING',closeOrderId:'close-1',direction:MarginPositionDirection.LONG,
+      quantity:'1',entryPrice:'100',collateral:'50',debtPrincipal:'50',
+      debtAsset:'USDT',interestAccrued:'0',unrealizedPnl:'0' };
+    const d1:any = {
+      getMarginPosition:jest.fn().mockResolvedValue(position),
+      getMarginCloseRequest:jest.fn().mockResolvedValue({
+        idempotencyKey:'original-close',closeOrderId:'close-1',liquidation:false,
+      }),
+      getSpotOrder:jest.fn().mockResolvedValue({id:'close-1',status:'FILLED'}),
+      getSpotOrderExecutionPrice:jest.fn().mockResolvedValue('105'),
+      settleMarginClose:jest.fn(),
+    };
+    const service = new MarginService(d1);
+    await expect(service.closePosition('owner','position-1','changed-key')).rejects.toThrow('different close request');
+    await expect(service.liquidatePosition('owner','position-1','original-close')).rejects.toThrow('different close request');
+    expect(d1.settleMarginClose).not.toHaveBeenCalled();
+  });
+
   it('settles a delayed filled close using executed VWAP with no new reserve or quote', async () => {
     const position = { id:'late-position',accountId:'margin-account-1',accountPair:'BTCUSDT',
       status:'CLOSING',closeOrderId:'late-close-order',direction:MarginPositionDirection.LONG,
@@ -156,6 +177,7 @@ describe('Spot isolated margin authority', () => {
       interestAccrued:'1',unrealizedPnl:'0' };
     const d1: any = {
       getMarginPosition:jest.fn().mockResolvedValue(position),
+      getMarginCloseRequest:jest.fn().mockResolvedValue({idempotencyKey:'original-close',closeOrderId:'late-close-order',liquidation:false}),
       getActiveMarketPair:jest.fn().mockResolvedValue(pair),
       getLiveMarketQuote:jest.fn(),reserveSpotOrder:jest.fn(),markMarginClosing:jest.fn(),
       matchSpotOrder:jest.fn().mockResolvedValue(null),

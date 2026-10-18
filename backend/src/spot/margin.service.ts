@@ -123,6 +123,13 @@ export class MarginService {
     const position: any = await this.d1.getMarginPosition(positionId, userId);
     if (!position || !['OPEN', 'CLOSING'].includes(String(position.status))) throw new NotFoundException('Open margin position not found');
     const closing = String(position.status) === 'CLOSING';
+    if (closing) {
+      const original = await this.d1.getMarginCloseRequest(positionId, userId);
+      if (!original || original.closeOrderId !== String(position.closeOrderId ?? '') ||
+          original.idempotencyKey !== idempotencyKey || original.liquidation !== liquidation) {
+        throw new BadRequestException('Margin position already has a different close request');
+      }
+    }
     const ratio = liquidation && !closing ? await this.resolveMaintenanceRatio() : null;
     if (liquidation && !closing && !isLiquidatable(new Prisma.Decimal(String(position.collateral)), new Prisma.Decimal(String(position.unrealizedPnl)), new Prisma.Decimal(String(position.interestAccrued)), ratio!)) throw new BadRequestException('Margin position is above the liquidation threshold');
     const pair = closing ? null : await this.requirePair(String(position.accountPair));
