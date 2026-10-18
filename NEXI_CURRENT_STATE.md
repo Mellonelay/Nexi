@@ -1,3 +1,7 @@
+## 2026-10-19 — Read-only Loan CAS schema correction
+
+Promoted SQLite currently contains LoanApplication.totalRepaidDecimal, and all five LoanApplication values agree with the exact sum of historical repayments (one repayment, 110 USDT). Earlier descriptions of the column as absent are superseded. d1_migrations lists only through 0015; the standalone backfill script does not itself record a migration row. Migration provenance and independent off-VPS recovery remain unverified. Do not apply 0016 again without resolving provenance. No database write was performed.
+
 ## 2026-10-19 — NestJS source-focused remediation and diagnostics (no backend acceptance rerun)
 At intake, canonical `main` was at 842e4fe with previously dirty source/test/docs; the source remediation changes were validated before Git fan-in. Current HEAD/remote alignment must be discovered from Git, not inferred from this historical receipt. This work was NOT deployed to the running API. Receipt reconciliation preserved: A 22 PASS/1 FAIL/6 BLOCKED, later overlapping B 6 PASS/1 FAIL/5 remaining. Owner stopped repeated acceptance campaigns. Current backend Doctor JSON score 87/100, 339 diagnostics / 0 errors, with independent untracked Doctor config; not a claim of 100/100. Source typecheck PASS, Fallow changed-source no structural violations. See latest proof register section for exact changed-source and caveats. Loan migration 0016/off-VPS restore and released runtime identity are still OPEN evidence gates, not completion.
 

@@ -1,3 +1,6 @@
+## 2026-10-19 — Loan CAS live schema
+Current CAS column and five matching repayment totals are observed in promoted SQLite. Migration provenance and independent restore are separate open evidence gates. Do not repeat backfill or testing.
+
 ## 2026-10-19 — NestJS source-focused remediation and diagnostics (no backend acceptance rerun)
 Parent control: same NEXI single owner, source-only bounded remediation, reuse existing finite backend financial acceptance receipts. Doctor's 87/100 339-finding result is post-change diagnostic, not backend test. Follow `NEXI_PROOF_REUSE_REGISTER.md` first for exact proof identity. Remaining work sorted by actual risk: (1) audit unresolved Doctor candidates with exact location and contract; (2) resolve Loan 0016 recovery/migration authorization and isolated off-VPS restore separately; (3) BullMQ/Valkey domain consumer/recovery defects only with release-matched direct evidence, do not rerun known retry; (4) serialized Git fan-in and source/deployed release identity. Current changes not deployed. Avoid any new full Jest, financial live acceptance, broad market freshness tests or blanket Doctor scoring refactors.
 

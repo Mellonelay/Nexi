@@ -1,3 +1,7 @@
+## 2026-10-19 — Loan CAS observation
+- [x] Current database: CAS column exists; 5/5 stored repayment totals match historical sums.
+- [ ] Verify migration provenance and independent restore before attempting any 0016 operation.
+
 ## 2026-10-19 — NestJS source-focused remediation and diagnostics (no backend acceptance rerun)
 - [x] Source-oriented fixes: async feedback/admin dump filesystem operations, authenticated ConfigService for queue/workflow secrets and guarded scheduler/Outbox/config paths, local object storage config, readonly injections.
 - [x] Source TypeScript validation PASS after these edits; git diff --check PASS. No full Jest or authenticated acceptance rerun.

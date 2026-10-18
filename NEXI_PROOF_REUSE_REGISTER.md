@@ -1,3 +1,7 @@
+## 2026-10-19 — Loan CAS current SQLite read-only proof
+
+The current promoted SQLite has the LoanApplication.totalRepaidDecimal column. Five of five loan rows match the exact-decimal sum of their historical LoanRepayment rows, including the paid 110 USDT loan. The d1_migrations table ends at 0015; the standalone 0016 backfill script does not insert a migration receipt. Therefore earlier missing-column assertions are superseded, but execution provenance and independent off-VPS restore remain unknown. No migration or financial write performed. Do not reapply the CAS column/backfill blindly.
+
 ## 2026-10-19 — NestJS source-focused remediation and diagnostics (no backend acceptance rerun)
 - Current owner decision remains STOP for broad/backend financial acceptance reruns. No further `nexi-final-acceptance` or `nexi-closure-report` execution happened in this source repair.
 - Verified NestJS Doctor v0.9.10 backend-targeted 2026-10-19 final-source output `/tmp/nexi-doctor-final-diagnostics-20261019.json`: score **87/100 Good**, 339 diagnostics, 0 errors / 223 warnings / 116 info, 190 scanned files. Prior `/tmp/nexi-doctor-current.json` 84/100, 370 findings was generated before an explicit, untracked src-only Doctor config appeared; DO NOT infer exact causal score delta without verifying identical resolved configuration. The owner-shared 89/100 output is separately scoped.
