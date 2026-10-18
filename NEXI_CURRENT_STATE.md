@@ -1,3 +1,7 @@
+## 2026-10-18 — Financial Public/Admin auth surface source + deployment
+
+GitHub main `321e45e` guard changes deployed on existing VPS. 11 Public financial endpoints now explicitly bind PUBLIC JWT surface; Admin guards preserved; 19/19 security/causality tests and dedicated 19/19 metadata/guard tests PASS. Nest build and deployed controller JS hash verified; API READY, Sentry release aligned. Workflow store/coordinator 14/14 unchanged PASS. Authenticated seven-domain economic/Admin runtime acceptance is NOT yet proven. Evidence: `tasks/evidence/financial-auth-surface-release-20261018.md`.
+
 ## 2026-10-18 — latest source-build versus running backend proof
 
 Current committed `main` `5da9884`: Loan PAID exact-retry and Margin persisted close intent source repairs; affected NestJS build passed, focused tests 19/19 financial, 28/28 Margin+Binary. Current live API ready with SQLite/Valkey, but compiled financial gateway hash differs from newly built source and cannot be called deployed-complete. Workflow coordinator 6/6 passed isolated; combined store/coordinator run first failed three rollback expectations (11/14), then passed 14/14 during read-only diagnostic instrumentation; source restored; intermittent behavior is not certified runtime recovery. Existing Loan additive compatibility/backfill is not applied, **not a platform migration**. No new Cloudflare infrastructure or live financial mutation. Receipt: `tasks/evidence/backend-release-frontier-20261018.md`.
