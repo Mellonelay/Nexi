@@ -2,7 +2,7 @@
 
 - **STATICALLY VALIDATED:** canonical source `5da9884`, NestJS source build exit 0. Focused financial disposable SQLite 19/19 and Margin+Binary service 28/28 PASS. Reuse unchanged tests, do not broaden.
 - **RUNTIME HEALTH ONLY:** existing VPS NestJS/Nginx active, `/readyz` SQLite/Valkey READY. Running financial gateway JS differs from current built source; latest source repairs are **not deployed**.
-- **UNRESOLVED:** combined LocalWorkflowStore/Coordinator run 3/14 failed expectations in workflow rollback tests, despite isolated coordinator 6/6; report the contradiction, do not claim complete workflow recovery.
+- **UNRESOLVED:** combined LocalWorkflowStore/Coordinator run first failed three rollback assertions (11/14), then passed 14/14 with temporary read-only diagnostic instrumentation; source restored. Isolated store 8/8 and coordinator 6/6 passed. INTERMITTENT test behavior unresolved; do not claim deployed recovery.
 - **COMPATIBILITY/ACCEPTANCE:** Loan 0016 schema/backfill not applied; authenticated financial/Admin, independent recovery and final deployment evidence remain outstanding. No platform migration and no Cloudflare setup. See `tasks/evidence/backend-release-frontier-20261018.md`.
 
 ## Margin CLOSING key/type continuity — 2026-10-18 (latest source)
