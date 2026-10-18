@@ -1,3 +1,11 @@
+## 2026-10-19 — Coordinated GitHub source publication and VPS backend deployment proof
+
+- [x] Push source and Loan CAS documentation main commit cce014d; five Recovery CI jobs pass; changed-contract targeted Jest 33/33 and Nest build PASS.
+- [x] Deploy compiled backend on existing VPS with rollback; update Sentry release identity; readiness proves SQLite+Redis active and immediate error-level journal clean.
+- [ ] Evidence-limited economic/Admin lifecycles, off-VPS isolated restore, remaining Doctor warnings and eventual manual owner acceptance are not falsely marked completed.
+
+---
+
 ## 2026-10-19 — Loan CAS observation
 - [x] Current database: CAS column exists; 5/5 stored repayment totals match historical sums.
 - [ ] Verify migration provenance and independent restore before attempting any 0016 operation.

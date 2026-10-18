@@ -1,3 +1,9 @@
+## 2026-10-19 — Coordinated GitHub source publication and VPS backend deployment proof
+
+Release fan-in complete at GitHub main cce014d and VPS backend compiled dist, readiness READY. Future action only on genuinely new contradictory evidence; do not restart owner-closed financial test campaign or blindly apply 0016 Loan CAS, which already has correct live column and backfilled values. Preserve rollback. Doctor diagnostics remain advisory until causal remediation is justified.
+
+---
+
 ## 2026-10-19 — Loan CAS live schema
 Current CAS column and five matching repayment totals are observed in promoted SQLite. Migration provenance and independent restore are separate open evidence gates. Do not repeat backfill or testing.
 
