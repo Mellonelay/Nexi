@@ -1,3 +1,7 @@
+## Completed Loan replay invariant — source repair (2026-10-18)
+
+An idempotent Loan repayment replay must remain readable after the Loan transitions to `PAID`; the controller scopes the Loan owner, compares the previously recorded key and amount, and returns the original economic state. New repayment eligibility remains `ACTIVE`/`OVERDUE`. This guards against a false retry failure after a financially completed command. Focused SQLite proof passed, but live deployed financial acceptance remains separate.
+
 ## Historical Loan repayment preservation — 2026-10-18 source contract
 
 The current loan repayment CAS command uses `LoanApplication.totalRepaidDecimal` to serialize competing repayment keys, while existing `LoanRepayment` rows remain historical accounting evidence. An additive default-zero column alone would not represent earlier repayments. The canonical controlled 0016 operator in `backend/scripts/loan-repayment-cas-migrate.py` performs exact-decimal historical backfill and schema change atomically under SQLite IMMEDIATE lock. Its live application requires independent off-VPS recovery proof and maintenance; source tests and live read-only preflight passed. Do not construe this as deployed migration or authorized live financial acceptance.

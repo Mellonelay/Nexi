@@ -2803,8 +2803,6 @@ export class D1FinancialCommandGateway {
       command.userId,
     );
     if (!loan) throw new NotFoundException("Loan not found");
-    if (!["ACTIVE", "OVERDUE"].includes(String(loan.status)))
-      throw new BadRequestException("Loan is not repayable");
     const amount = this.decimal(command.amount);
     const repaymentId = this.hashId(
       `repayment:${loan.id}`,
@@ -2818,6 +2816,8 @@ export class D1FinancialCommandGateway {
       if (this.decimal(String(existing.results[0].amountDecimal)).comparedTo(amount) !== 0) throw new BadRequestException("Loan repayment idempotency key was reused with a different amount");
       return loan;
     }
+    if (!["ACTIVE", "OVERDUE"].includes(String(loan.status)))
+      throw new BadRequestException("Loan is not repayable");
     const paidRows = await this.bridge.select<any>(
       `SELECT "amountDecimal" FROM "LoanRepayment" WHERE "loanId"=?`,
       [loan.id],

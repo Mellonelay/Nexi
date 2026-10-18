@@ -1,3 +1,7 @@
+## 2026-10-18 — Loan completed-repayment retry source repair
+
+Same-key, same-amount replay after Loan status becomes PAID now returns existing operation without a duplicate posting. Bounded RED/green SQLite proof 1/1 and backend typecheck passed. See `tasks/evidence/loan-repayment-paid-replay-20261018.md`. Source-only; neither runtime deployment nor a new platform migration occurred. The existing VPS/SQLite authority is unchanged.
+
 ## 2026-10-18 — Loan historical repayment migration preflight
 
 Read-only current promoted SQLite inspection: five LoanApplications, one historical LoanRepayment and `totalRepaidDecimal` not yet present. The exact-decimal backfill operator `backend/scripts/loan-repayment-cas-migrate.py` is source-tested 6/6, with read-only live preflight successful. It is **not applied** pending independent encrypted off-VPS backup/restore and controlled coordinated migration. See proof reuse register and `tasks/evidence/loan-cas-exact-backfill-20261018.md`.

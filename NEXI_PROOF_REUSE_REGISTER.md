@@ -1,3 +1,10 @@
+## Loan PAID-state exact-retry idempotency — 2026-10-18 (latest source)
+
+- **TESTED:** A completed Loan becomes `PAID`; an exact same-key/same-amount repayment retry returns the existing paid Loan without a second debit, posting or repayment record, while changed amount under the same key is rejected.
+- **Causal repair:** Authenticate and find the user's Loan, then verify previously executed idempotency key and request amount *before* the new-repayment status eligibility rule. Existing `ACTIVE`/`OVERDUE` gate still applies to new commands.
+- **Proof:** RED/green targeted SQLite 1/1, TypeScript build configuration exit 0, Fallow boundary check clear; previous 19/19 financial tests remain reused. `tasks/evidence/loan-repayment-paid-replay-20261018.md`.
+- **Unproven:** Deployed authenticated API and controlled finance runtime; no platform migration/deployment or live DB write performed.
+
 ## Loan repayment CAS migration exact historical backfill — 2026-10-18 (NEWEST)
 
 - **SOURCE TESTED:** The previous `0016_loan_repayment_cas.sql` bare add-column default0 would not reflect existing historic repayments. The companion safe migration script now performs atomic schema addition plus exact Decimal cumulative backfill and handles an already-added column idempotently.

@@ -142,6 +142,21 @@ describe('financial operations on local SQLite', () => {
     await expect(bridge.select<{ count: number }>(`SELECT COUNT(*) AS count FROM EventOutbox WHERE eventType='BINARY_CONFIGURATION_UPDATED'`)).resolves.toMatchObject({ results: [{ count: 1 }] });
   });
 
+  it('replays the same final Loan repayment after the loan becomes PAID without double posting', async () => {
+    const db = new Database(join(directory, 'fixture.sqlite'));
+    db.prepare("UPDATE LedgerAccount SET available='20',locked='0' WHERE id='finance-1'").run();
+    db.prepare("INSERT INTO LoanApplication (id,userId,amount,amountDecimal,currency,term,durationDays,interestRate,interestRateDecimal,totalRepayment,totalRepaymentDecimal,totalRepaidDecimal,status,updatedAt) VALUES ('loan-completed-replay','user-1','10','10','USDT',30,30,'0','0','10','10','0','ACTIVE',CURRENT_TIMESTAMP)").run();
+    db.close();
+    const command = {userId:'user-1',loanId:'loan-completed-replay',amount:'10',idempotencyKey:'loan-final-replay-key'};
+    const first = await gateway.repayLoan(command);
+    expect(first.status).toBe('PAID');
+    const replay = await gateway.repayLoan(command);
+    expect(replay.status).toBe('PAID');
+    await expect(gateway.repayLoan({...command,amount:'9'})).rejects.toThrow('different amount');
+    await expect(bridge.select<{count:number}>("SELECT COUNT(*) AS count FROM LedgerPosting WHERE referenceType='LOAN_REPAYMENT'")).resolves.toMatchObject({results:[{count:1}]});
+    await expect(bridge.select<{count:number}>("SELECT COUNT(*) AS count FROM LoanRepayment WHERE loanId='loan-completed-replay'")).resolves.toMatchObject({results:[{count:1}]});
+  });
+
   it('compare-and-sets cumulative Loan repayments so concurrent keys cannot exceed the cap', async () => {
     const db = new Database(join(directory, 'fixture.sqlite'));
     db.prepare(`UPDATE LedgerAccount SET available='20',locked='0' WHERE id='finance-1'`).run();
