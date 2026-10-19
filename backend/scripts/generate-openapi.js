@@ -6,8 +6,8 @@ const { NestFactory } = require('@nestjs/core');
 const { DocumentBuilder, SwaggerModule } = require('@nestjs/swagger');
 
 process.env.NODE_ENV ??= 'development';
-process.env.D1_RUNTIME_ENABLED = 'true';
-process.env.D1_BRIDGE_ENABLED = 'true';
+process.env.NEXI_SQLITE_LOCAL_ENABLED = 'true';
+process.env.NEXI_LOCAL_SQLITE_PATH ??= resolve(process.cwd(), '.openapi-preview.sqlite');
 process.env.REDIS_URL ??= 'redis://openapi-generator.invalid:6379';
 process.env.JWT_SECRET ??= 'openapi-generator-only';
 

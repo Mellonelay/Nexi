@@ -1,3 +1,25 @@
+# NEXI CURRENT EXECUTION — SOURCE CONTRACT CLOSURE (owner decision 2026-10-20)
+
+Authority: this block supersedes contradictory historical plans below. Source checkout main at c3a0738 at campaign start; do not assume running deployment equals source. Goal: complete source-level backend interconnection review, scoped documentation correction, Public/Admin contract alignment, and pre-deploy source/Sentry readiness. STOP before production deployment/restart/schema/financial mutation.
+
+Evidence law: PROVEN + UNCHANGED = REUSE. Existing SQLite promotion, NestJS/BullMQ/Valkey behavior and prior verified receipts are not retested. Four financial business acceptance gates (Mining maturity/accrual/redeem; Loan collateral/Admin approve/repay; Withdrawal security/network/Admin settlement; Ledger/Activity/Outbox per-operation reconciliation) are CLOSED_BY_OWNER_ACCEPTANCE for testing but OPEN_FOR_SOURCE_CONTRACT_REVIEW where paths have missing/contradictory or changed evidence. Never represent untested financial outcomes as PASSED.
+
+Phase 1 — BACKEND SOURCE ASSURANCE: Graphify CLI/local mcpc primary topology, bounded file/call/path/impact traces and proof register compare; Fallow changed/source static risk; inspect SQL adapter, DTO/controller/guard → services → financial gateway → SQLite/Ledger/EventOutbox/EventInbox → durable-journal/BullMQ/Valkey connections. Preserve unchanged proofs. Record concrete mismatches only.
+
+Phase 2 — DOC CORRECTION: reconcile current API/SQLite/Valkey architecture, security/runbooks, AGENTS.md, Worker-0 onboarding and active catalogs. Preserve historical evidence without presenting obsolete D1 flags or Cloudflare paths as active.
+
+Phase 3 — PUBLIC/ADMIN ALIGNMENT: use current NestJS controllers, DTOs and contracts as authority, compare Public Next.js + Admin clients and UI callsites, routes/methods/payloads/auth/response/status/error/realtime; repair only verified mismatches, no general UI redesign. Backend authority is SQLite via NestJS; Public/Admin never write direct SQLite or Valkey financial state.
+
+Phase 4 — FAN-IN/PRE-DEPLOY: source-integrity static/typecheck and affected build only if changes invalidate proofs (NO repetitive financial/live acceptance). Reconcile OpenAPI/source contracts, Git main, one writer; prepare Sentry release=immutable artifact identity and environment for backend, Public, Admin. Record unresolved blockers truthfully, then STOP. No deployment in this instruction.
+
+Execution lanes: A backend Graphify/source/financial (read-only), B Public/Admin cross-surface (read-only), C documentation/Sentry/runtime release identity (read-only). Shared mutations serial, one owner, no parallel builds or database operations. Later deployment authorized separately: Backend → Public → Admin one build/rollout at a time with release-specific Sentry and old-consumer compatibility.
+
+Statuses: PLANNED → INSPECTING → SOURCE_CORRECTED → STATICALLY_VALIDATED → GIT_RECONCILED → PREPARED_FOR_DEPLOY; DEPLOYED never inferred.
+
+Source-campaign evidence checkpoint (2026-10-20): Phase 1 source-integration review completed within limited source-proof scope; four financial economic acceptance gates remain CLOSED_BY_OWNER_ACCEPTANCE / UNTESTED, not reopened. Phase 2 stale authority/security/onboarding documents and legacy comments corrected. Phase 3 Public/Admin route/auth/DTO wiring reviewed against NestJS source and regenerated OpenAPI. Phase 4 safe Swagger preview regenerated 223 paths/245 operations; Fallow static analysis recorded existing baseline findings, no broad refactor; Sentry build-time release contract documented without altering deployed environment. Git publication and backend/Public/Admin deployments are separate outcomes, deployment remains FORBIDDEN in this campaign. See docs/architecture/NEXI_SOURCE_ONLY_ASSURANCE_20261020.md and docs/operations/NEXI_THREE_SURFACE_RELEASE_READINESS.md.
+
+---
+
 ## 2026-10-19 — Owner acceptance: four outstanding backend gates closed for current phase
 
 CURRENT OWNER DECISION: Mark remaining four gate rows CLOSED_BY_OWNER_ACCEPTANCE and stop further live backend acceptance for this phase. The owner accepts existing backend/NestJS/schema implementation plus authenticated receipt 20 PASS / 0 FAIL / 4 BLOCKED as sufficient to close the present backend testing campaign. This closes the **work requirement**, not the historical test outcomes. Status per gate: Mining maturity/accrual/redeem = OWNER_ACCEPTED_UNTESTED; Loan collateral/apply/Admin approve/repay = OWNER_ACCEPTED_UNTESTED; Withdrawal security/network/request/Admin settlement = OWNER_ACCEPTED_UNTESTED; Ledger/Activity/EventOutbox per-operation reconciliation = OWNER_ACCEPTED_UNTESTED. Verified receipt remains `fullyAccepted=false` and is immutable; do not assert that blocked HTTP actions passed, that financial postings were reconciled, or that the four lifecycles were runtime verified. Reopen only upon a new owner decision or contradictory production evidence. No financial, schema, or deployment changes occur in this owner-acceptance documentation operation.

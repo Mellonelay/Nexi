@@ -4,7 +4,7 @@
 
 ## Endpoint contract inventory
 
-OpenAPI paths: 213; operations: 234; NestJS controllers found: 25; modules found: 30.
+OpenAPI paths: 223; operations: 245; NestJS controllers found: 25; modules found: 30.
 
 | HTTP | OpenAPI path | Operation ID | Tags |
 |---|---|---|---|
@@ -62,12 +62,14 @@ OpenAPI paths: 213; operations: 234; NestJS controllers found: 25; modules found
 | GET | `/auth/security/mfa/status` | `AuthController_mfaStatus` | Authentication |
 | GET | `/auth/security/status` | `AuthController_securityStatus` | Authentication |
 | GET | `/referral/me` | `ReferralVipController_referral` | Referral and VIP |
+| GET | `/referral/history` | `ReferralVipController_referralHistory` | Referral and VIP |
 | POST | `/referral/claim` | `ReferralVipController_claim` | Referral and VIP |
 | GET | `/vip/me` | `ReferralVipController_vip` | Referral and VIP |
 | GET | `/vip/levels` | `ReferralVipController_levels` | Referral and VIP |
 | POST | `/_internal/events/queue` | `EventsController_ingestQueue` | Internal Events |
 | GET | `/wallet/currencies/list` | `WalletController_getCurrencies` | Wallet |
 | GET | `/wallet/activity` | `WalletController_getActivity` | Wallet |
+| GET | `/wallet/overview` | `WalletController_getOverview` | Wallet |
 | GET | `/wallet/me` | `WalletController_getMyWallet` | Wallet |
 | GET | `/wallet/me/ledger` | `WalletController_getMyLedger` | Wallet |
 | GET | `/wallet/{userId}` | `WalletController_getWallet` | Wallet |
@@ -94,10 +96,12 @@ OpenAPI paths: 213; operations: 234; NestJS controllers found: 25; modules found
 | GET | `/spot/margin/quote` | `MarginController_getQuote` | Margin Trading |
 | GET | `/spot/margin/positions` | `MarginController_listPositions` | Margin Trading |
 | POST | `/spot/margin/positions` | `MarginController_openPosition` | Margin Trading |
+| POST | `/spot/margin/positions/{positionId}/cancel-pending` | `MarginController_cancelPendingPosition` | Margin Trading |
 | POST | `/spot/margin/positions/{positionId}/close` | `MarginController_closePosition` | Margin Trading |
 | POST | `/spot/margin/positions/mark` | `MarginController_markPosition` | Margin Trading |
 | POST | `/spot/margin/positions/{positionId}/liquidate` | `MarginController_liquidatePosition` | Margin Trading |
 | POST | `/spot/margin/transfer` | `MarginController_transfer` | Margin Trading |
+| POST | `/spot/margin/borrows/orphan/repay` | `MarginController_repayUnmatchedBorrow` | Margin Trading |
 | GET | `/spot/margin/activity` | `MarginController_history` | Margin Trading |
 | GET | `/market/klines` | `MarketKlineController_list` | Market Data |
 | GET | `/market/assets` | `MarketPublicController_listAssets` | Market Data |
@@ -121,11 +125,10 @@ OpenAPI paths: 213; operations: 234; NestJS controllers found: 25; modules found
 | POST | `/loans/admin/approve` | `LoansController_approve` | Loans |
 | POST | `/loans/admin/reject` | `LoansController_reject` | Loans |
 | POST | `/loans/repay` | `LoansController_repay` | Loans |
+| POST | `/kyc/evidence` | `KycController_uploadEvidence` | KYC |
 | POST | `/kyc/submit` | `KycController_submitKyc` | KYC |
 | GET | `/kyc/status` | `KycController_getMyStatus` | KYC |
 | GET | `/kyc/status/{userId}` | `KycController_getStatus` | KYC |
-| POST | `/kyc/admin/approve` | `KycController_approve` | KYC |
-| POST | `/kyc/admin/reject` | `KycController_reject` | KYC |
 | GET | `/conversion/rate` | `ConversionController_getRate` | Conversion |
 | POST | `/conversion/convert` | `ConversionController_convert` | Conversion |
 | POST | `/conversion/admin/rate` | `ConversionController_setRate` | Conversion |
@@ -155,6 +158,7 @@ OpenAPI paths: 213; operations: 234; NestJS controllers found: 25; modules found
 | POST | `/admin/sandbox/controls/{id}/execute` | `AdminController_executeSandboxControl` | Admin Control Plane |
 | GET | `/admin/users` | `AdminController_getUsers` | Admin Control Plane |
 | GET | `/admin/kyc` | `AdminController_getKycReviews` | Admin Control Plane |
+| GET | `/admin/kyc/{userId}/evidence/{side}` | `AdminController_getKycEvidence` | Admin Control Plane |
 | POST | `/admin/kyc/decision` | `AdminController_decideKyc` | Admin Control Plane |
 | GET | `/admin/sessions` | `AdminController_getAuthSessions` | Admin Control Plane |
 | POST | `/admin/sessions/{id}/revoke` | `AdminController_revokeAuthSession` | Admin Control Plane |
@@ -192,12 +196,17 @@ OpenAPI paths: 213; operations: 234; NestJS controllers found: 25; modules found
 | POST | `/admin/withdrawals/{id}/approve` | `AdminController_approveAdminWithdrawal` | Admin Control Plane |
 | POST | `/admin/withdrawals/{id}/reject` | `AdminController_rejectAdminWithdrawal` | Admin Control Plane |
 | POST | `/admin/withdrawals/{id}/review` | `AdminController_requestAdminWithdrawalReview` | Admin Control Plane |
+| POST | `/admin/withdrawals/{id}/review/return` | `AdminController_returnAdminWithdrawalFromReview` | Admin Control Plane |
 | POST | `/admin/withdrawals/{id}/fail` | `AdminController_failAdminWithdrawal` | Admin Control Plane |
 | GET | `/admin/tickets` | `AdminController_getAdminTickets` | Admin Control Plane |
 | GET | `/admin/announcements` | `AdminController_getAdminAnnouncements` | Admin Control Plane |
 | PATCH | `/admin/currencies/{id}` | `AdminController_updateCurrency` | Admin Control Plane |
 | POST | `/admin/currencies/{id}/address` | `AdminController_addDepositAddress` | Admin Control Plane |
 | POST | `/admin/address/{id}/disable` | `AdminController_deleteDepositAddress` | Admin Control Plane |
+| GET | `/admin/wallet-networks` | `AdminController_getWalletNetworks` | Admin Control Plane |
+| POST | `/admin/wallet-networks` | `AdminController_createWalletNetwork` | Admin Control Plane |
+| PATCH | `/admin/wallet-networks/{id}` | `AdminController_updateWalletNetwork` | Admin Control Plane |
+| PATCH | `/admin/address/{id}/state` | `AdminController_updateDepositAddressState` | Admin Control Plane |
 | GET | `/admin/mining-plans` | `AdminController_getMiningPlans` | Admin Control Plane |
 | POST | `/admin/mining-plans` | `AdminController_createMiningPlan` | Admin Control Plane |
 | PATCH | `/admin/mining-plans/{id}` | `AdminController_updateMiningPlan` | Admin Control Plane |
@@ -222,6 +231,7 @@ OpenAPI paths: 213; operations: 234; NestJS controllers found: 25; modules found
 | POST | `/admin/vip/assign` | `ReferralVipAdminController_assign` | Admin Referral and VIP |
 | POST | `/financial/withdrawals` | `FinancialOperationsController_requestWithdrawal` | Financial Operations |
 | GET | `/financial/withdrawals` | `FinancialOperationsController_withdrawals` | Financial Operations |
+| POST | `/financial/account-transfers` | `FinancialOperationsController_transferBetweenAccounts` | Financial Operations |
 | POST | `/financial/transfers` | `FinancialOperationsController_transfer` | Financial Operations |
 | GET | `/financial/transfers` | `FinancialOperationsController_transfers` | Financial Operations |
 | POST | `/financial/conversion/quote` | `FinancialOperationsController_quote` | Financial Operations |
@@ -235,6 +245,7 @@ OpenAPI paths: 213; operations: 234; NestJS controllers found: 25; modules found
 | POST | `/financial/admin/withdrawals/approve` | `FinancialOperationsController_approve` | Financial Operations |
 | POST | `/financial/admin/withdrawals/reject` | `FinancialOperationsController_reject` | Financial Operations |
 | POST | `/financial/admin/withdrawals/settle` | `FinancialOperationsController_settle` | Financial Operations |
+| PUT | `/storage/deposit-proof` | `LocalDepositProofController_upload` | LocalDepositProof |
 | GET | `/ops/live` | `HealthController_live` | Operations |
 | GET | `/ops/ready` | `HealthController_ready` | Operations |
 | POST | `/_internal/workflows/{workflow}/{action}` | `WorkflowCommandsController_execute` | Internal Workflows |

@@ -1,4 +1,4 @@
--- VPS-only additive runtime schema. Never apply to live Cloudflare D1.
+-- VPS SQLite durable-job schema; change only through an authorized migration, never a cleanup.
 -- The journal shares the application SQLite file; jobs remain replayable if Valkey is lost.
 CREATE TABLE IF NOT EXISTS LocalDurableJob (
  id TEXT PRIMARY KEY,

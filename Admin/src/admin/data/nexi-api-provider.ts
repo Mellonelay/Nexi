@@ -218,9 +218,9 @@ function scope(commandType: string): ApprovalRequest["scope"] {
  * NexiAdminApiProvider
  * -----------------------------------
  * Explicit live adapter for the currently published Admin identity, role,
- * approval, and audit contracts. It is intentionally not the default provider.
+ * approval, and audit contracts. It is the configured AdminDataProvider.
  *
- * Contract for the eventual implementation:
+ * Current contract:
  *   - Accept a base URL + bearer token acquired via NEXI Admin SSO.
  *   - Implement every AdminDataProvider method using typed fetch calls.
  *   - Translate NEXI API errors into typed domain errors.

@@ -1,3 +1,20 @@
+# NEXI CURRENT TODO — 2026-10-20 source-only closure
+
+- [x] Owner scope captured; repeat testing forbidden for proven unchanged or four closed business acceptance gates
+- [x] Phase 1: cross-check proof reuse register vs current Git HEAD, graph local source, record unresolved/contradictory backend paths only
+- [x] Phase 1: source-only review of four closed financial workflows (no HTTP/Jest/financial execution)
+- [x] Phase 1: inspect NestJS DTO/guards/controllers, SQLite/Prisma financial gateway, Ledger/EventOutbox/Inbox, BullMQ/Valkey journal and shutdown relationships
+- [x] Phase 2: correct obsolete financial-security D1/empty SQLite warning, active Worker-0 onboarding conflict, legacy comments without erasing immutable migration receipts
+- [x] Phase 3: compare Public and Admin API clients, route/DTO/auth/error/event/financial contracts against NestJS and OpenAPI; repair verified mismatches only
+- [x] Phase 4: focused static/typechecks and affected builds only if source changed; record no unnecessary financial test reruns
+- [x] Phase 4: Sentry release/environment mapping in all three projects confirmed or blockers documented before any deployment
+- [ ] Phase 4: reconcile current proof/state/docs, commit/push Git main, verify clean worktree; STOP before deployment
+- [ ] LATER AUTHORIZATION ONLY: sequential backend → Public → Admin release, with rollback and release-matched Sentry; avoid concurrent CPU/RAM-intensive builds
+
+DO NOT reopen owner-closed financial testing, touch promoted SQLite, restart services, deploy, or claim runtime verification from source analysis.
+
+---
+
 ## 2026-10-19 — Owner acceptance: four outstanding backend gates closed for current phase
 
 CURRENT OWNER DECISION: Mark remaining four gate rows CLOSED_BY_OWNER_ACCEPTANCE and stop further live backend acceptance for this phase. The owner accepts existing backend/NestJS/schema implementation plus authenticated receipt 20 PASS / 0 FAIL / 4 BLOCKED as sufficient to close the present backend testing campaign. This closes the **work requirement**, not the historical test outcomes. Status per gate: Mining maturity/accrual/redeem = OWNER_ACCEPTED_UNTESTED; Loan collateral/apply/Admin approve/repay = OWNER_ACCEPTED_UNTESTED; Withdrawal security/network/request/Admin settlement = OWNER_ACCEPTED_UNTESTED; Ledger/Activity/EventOutbox per-operation reconciliation = OWNER_ACCEPTED_UNTESTED. Verified receipt remains `fullyAccepted=false` and is immutable; do not assert that blocked HTTP actions passed, that financial postings were reconciled, or that the four lifecycles were runtime verified. Reopen only upon a new owner decision or contradictory production evidence. No financial, schema, or deployment changes occur in this owner-acceptance documentation operation.

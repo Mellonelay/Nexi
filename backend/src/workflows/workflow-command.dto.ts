@@ -2,13 +2,13 @@ import { ApiProperty } from "@nestjs/swagger";
 import { IsNotEmpty, IsObject, IsString, MaxLength } from "class-validator";
 
 export class WorkflowCommandDto {
-  @ApiProperty({ description: "Cloudflare Workflow instance identifier" })
+  @ApiProperty({ description: "Persisted local SQLite workflow instance identifier" })
   @IsString()
   @IsNotEmpty()
   @MaxLength(160)
   instanceId!: string;
 
-  @ApiProperty({ description: "D1 aggregate identifier" })
+  @ApiProperty({ description: "Domain aggregate identifier (persisted by SQLite authority)" })
   @IsString()
   @IsNotEmpty()
   @MaxLength(160)

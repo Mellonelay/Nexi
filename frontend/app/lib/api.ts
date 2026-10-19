@@ -6,8 +6,8 @@ import {
   type AuthSessionPayload,
 } from './auth-session';
 
-// Local wallet-auth verification uses the existing non-production backend
-// tunnel. Keep explicit deployment configuration authoritative, but do not
+// Local wallet-auth verification uses a local NestJS API instance.
+// Keep explicit deployment configuration authoritative, but do not
 // route a local production build's wallet challenge back to the frontend's
 // own `/api` path.
 const isLocalBrowser = typeof window !== 'undefined'
@@ -21,8 +21,7 @@ export const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || defaultApiBase;
 const api = axios.create({
   baseURL: apiBaseUrl,
   withCredentials: true,
-  // Prevent reference panels and authenticated reloads from remaining in a
-  // perpetual LOADING state when the staging tunnel drops a request.
+  // Bound API latency so reference panels and authenticated reloads can report failures.
   timeout: 15_000,
 });
 

@@ -8,6 +8,7 @@ on:
       - 'Admin/**'
       - '.github/workflows/nexi-recovery-ci.yml'
       - '.fallowrc.jsonc'
+      - 'docs/contracts/openapi.json'
   pull_request:
     branches: [main]
     paths:
@@ -16,6 +17,7 @@ on:
       - 'Admin/**'
       - '.github/workflows/nexi-recovery-ci.yml'
       - '.fallowrc.jsonc'
+      - 'docs/contracts/openapi.json'
   workflow_dispatch:
 permissions:
   contents: read
@@ -51,7 +53,7 @@ jobs:
           git diff --name-only "$base" "$head" > /tmp/nexi-changed-paths
           for component in backend frontend Admin; do
             name="${component,,}"
-            if grep -Eq "^(${component}/|\.github/workflows/nexi-recovery-ci\.yml$|\.fallowrc\.jsonc$)" /tmp/nexi-changed-paths; then
+            if grep -Eq "^(${component}/|\.github/workflows/nexi-recovery-ci\.yml$|\.fallowrc\.jsonc$|docs/contracts/openapi\.json$)" /tmp/nexi-changed-paths; then
               echo "${name}=true" >> "$GITHUB_OUTPUT"
             else
               echo "${name}=false" >> "$GITHUB_OUTPUT"
@@ -139,6 +141,10 @@ jobs:
           cache: npm
           cache-dependency-path: backend/package-lock.json
       - run: npm ci --legacy-peer-deps
+      - name: Verify OpenAPI snapshot from current NestJS source
+        run: |
+          NEXI_LOCAL_SQLITE_PATH=/tmp/nexi-openapi-ci-preview.sqlite npm run generate:openapi
+          git diff --exit-code -- ../docs/contracts/openapi.json
       - name: Source and dependency contracts
         run: |
           node -e "const p=require('./package.json'); if(p.dependencies['@prisma/adapter-d1'])process.exit(1)"

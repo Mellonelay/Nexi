@@ -1,6 +1,6 @@
 # NEXI SQLite backend routing map
 
-The full source-derived 213-path API and controller mapping is [here](../../docs/architecture/NEXI_BACKEND_API_SQLITE_SOURCE_MAP.md).
+The full source-derived 223-path API and controller mapping is [here](../../docs/architecture/NEXI_BACKEND_API_SQLITE_SOURCE_MAP.md).
 
 ## Architecture diagram
 

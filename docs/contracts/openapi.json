@@ -1110,6 +1110,43 @@
         ]
       }
     },
+    "/referral/history": {
+      "get": {
+        "operationId": "ReferralVipController_referralHistory",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Return account-scoped referral attribution and ledger-backed reward history.",
+        "tags": [
+          "Referral and VIP"
+        ]
+      }
+    },
     "/referral/claim": {
       "post": {
         "operationId": "ReferralVipController_claim",
@@ -1228,6 +1265,61 @@
     "/wallet/activity": {
       "get": {
         "operationId": "WalletController_getActivity",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "asset",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Wallet"
+        ]
+      }
+    },
+    "/wallet/overview": {
+      "get": {
+        "operationId": "WalletController_getOverview",
         "parameters": [],
         "responses": {
           "200": {
@@ -1696,6 +1788,39 @@
         ]
       }
     },
+    "/spot/margin/positions/{positionId}/cancel-pending": {
+      "post": {
+        "operationId": "MarginController_cancelPendingPosition",
+        "parameters": [
+          {
+            "name": "positionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelPendingMarginPositionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Margin Trading"
+        ]
+      }
+    },
     "/spot/margin/positions/{positionId}/close": {
       "post": {
         "operationId": "MarginController_closePosition",
@@ -1786,6 +1911,30 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/MarginTransferDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Margin Trading"
+        ]
+      }
+    },
+    "/spot/margin/borrows/orphan/repay": {
+      "post": {
+        "operationId": "MarginController_repayUnmatchedBorrow",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RepayUnmatchedMarginBorrowDto"
               }
             }
           }
@@ -2374,6 +2523,29 @@
         ]
       }
     },
+    "/kyc/evidence": {
+      "post": {
+        "operationId": "KycController_uploadEvidence",
+        "parameters": [
+          {
+            "name": "content-type",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "KYC"
+        ]
+      }
+    },
     "/kyc/submit": {
       "post": {
         "operationId": "KycController_submitKyc",
@@ -2427,54 +2599,6 @@
         ],
         "responses": {
           "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "KYC"
-        ]
-      }
-    },
-    "/kyc/admin/approve": {
-      "post": {
-        "operationId": "KycController_approve",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/KycAdminTargetDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "KYC"
-        ]
-      }
-    },
-    "/kyc/admin/reject": {
-      "post": {
-        "operationId": "KycController_reject",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/KycAdminTargetDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
             "description": ""
           }
         },
@@ -3191,6 +3315,37 @@
       "get": {
         "operationId": "AdminController_getKycReviews",
         "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/kyc/{userId}/evidence/{side}": {
+      "get": {
+        "operationId": "AdminController_getKycEvidence",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "side",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -4042,6 +4197,39 @@
         ]
       }
     },
+    "/admin/withdrawals/{id}/review/return": {
+      "post": {
+        "operationId": "AdminController_returnAdminWithdrawalFromReview",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminIncidentAcknowledgeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
     "/admin/withdrawals/{id}/fail": {
       "post": {
         "operationId": "AdminController_failAdminWithdrawal",
@@ -4194,6 +4382,108 @@
         },
         "responses": {
           "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/wallet-networks": {
+      "get": {
+        "operationId": "AdminController_getWalletNetworks",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      },
+      "post": {
+        "operationId": "AdminController_createWalletNetwork",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWalletNetworkDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/wallet-networks/{id}": {
+      "patch": {
+        "operationId": "AdminController_updateWalletNetwork",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWalletNetworkDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/address/{id}/state": {
+      "patch": {
+        "operationId": "AdminController_updateDepositAddressState",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDepositAddressStateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
             "description": ""
           }
         },
@@ -4741,6 +5031,30 @@
         ]
       }
     },
+    "/financial/account-transfers": {
+      "post": {
+        "operationId": "FinancialOperationsController_transferBetweenAccounts",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WalletAccountTransferDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Financial Operations"
+        ]
+      }
+    },
     "/financial/transfers": {
       "post": {
         "operationId": "FinancialOperationsController_transfer",
@@ -5006,6 +5320,37 @@
         },
         "tags": [
           "Financial Operations"
+        ]
+      }
+    },
+    "/storage/deposit-proof": {
+      "put": {
+        "operationId": "LocalDepositProofController_upload",
+        "parameters": [
+          {
+            "name": "key",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "content-type",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "LocalDepositProof"
         ]
       }
     },
@@ -5370,6 +5715,10 @@
         "type": "object",
         "properties": {}
       },
+      "CancelPendingMarginPositionDto": {
+        "type": "object",
+        "properties": {}
+      },
       "CloseMarginPositionDto": {
         "type": "object",
         "properties": {}
@@ -5379,6 +5728,10 @@
         "properties": {}
       },
       "MarginTransferDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "RepayUnmatchedMarginBorrowDto": {
         "type": "object",
         "properties": {}
       },
@@ -5562,10 +5915,6 @@
         "type": "object",
         "properties": {}
       },
-      "KycAdminTargetDto": {
-        "type": "object",
-        "properties": {}
-      },
       "ConvertDto": {
         "type": "object",
         "properties": {}
@@ -5654,6 +6003,18 @@
         "type": "object",
         "properties": {}
       },
+      "CreateWalletNetworkDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateWalletNetworkDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateDepositAddressStateDto": {
+        "type": "object",
+        "properties": {}
+      },
       "CreateMiningPlanDto": {
         "type": "object",
         "properties": {}
@@ -5698,6 +6059,10 @@
         "type": "object",
         "properties": {}
       },
+      "WalletAccountTransferDto": {
+        "type": "object",
+        "properties": {}
+      },
       "Gate2TransferDto": {
         "type": "object",
         "properties": {}
@@ -5735,11 +6100,11 @@
         "properties": {
           "instanceId": {
             "type": "string",
-            "description": "Workflow instance identifier"
+            "description": "Persisted local SQLite workflow instance identifier"
           },
           "entityId": {
             "type": "string",
-            "description": "D1 aggregate identifier"
+            "description": "Domain aggregate identifier (persisted by SQLite authority)"
           },
           "idempotencyKey": {
             "type": "string",

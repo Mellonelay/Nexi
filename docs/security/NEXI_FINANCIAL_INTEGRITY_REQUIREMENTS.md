@@ -7,7 +7,7 @@ Current source/owner contract, not a historical phase program. Exact implementat
 
 Each movement requires correct wallet/account ownership, supported asset, available/locked checks, signed numeric precision, idempotency, origin/destination, attributable status and audit linkage. Retries cannot duplicate principal or payouts, and a failed paired transfer cannot leave a one-sided mutation.
 
-**Live operational block (2026-10-17):** authenticated financial mutation routes can reach the active VPS SQLite database, whose sampled core rows are empty. `D1_RUNTIME_ENABLED=false` alone is not a complete write freeze because some direct Prisma mutation paths bypass the financial gateway. `NEXI_SCHEDULER_ENABLED=false` is verified; local async workers remain enabled. Do not send financial commands or change flags blindly. A coordinated owner-directed write freeze/maintenance action or a verified return to D1 is required before public financial writes can be considered safe.
+**Current SQLite authority (owner decision 2026-10-20):** NestJS uses the promoted VPS SQLite database and existing Ledger/EventOutbox contracts. The 2026-10-17 empty-SQLite observation and `D1_RUNTIME_ENABLED`/return-to-D1 write-freeze language are superseded migration history, not active instructions. Source-only assurance must trace writes through the configured SQLite adapter, financial gateway, Ledger, EventOutbox and idempotency. No claims of full financial reconciliation, new write safety, live workflow completion or migration restoration follow from source inspection. Owner-closed business acceptance is not reopened; do not change production database, flags, or deployed services without a separate deployment decision.
 
 ## Five account model
 
