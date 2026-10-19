@@ -416,7 +416,7 @@ Remote refs/heads/main verified 9a41b2e; Node v22.23.2 / better-sqlite3 12.11.1 
 
 ## Canonical-main integration and documentation checkpoint — 2026-10-16 21:29 UTC
 
-- [x] INTEGRATED — Migration source patch applied and committed locally on canonical `main`, based on `9a41b2e3da2729173f6d7aac6a1fd2f6c6c4657f`; GitHub synchronization is pending. Migration worktree kept intact. Existing untracked `apps/admin/pnpm-lock.yaml` and `apps/admin/pnpm-workspace.yaml` were preserved.
+- [x] INTEGRATED — Migration source patch applied and committed locally on canonical `main`, based on `9a41b2e3da2729173f6d7aac6a1fd2f6c6c4657f`; GitHub synchronization is pending. Migration worktree kept intact. Existing untracked `Admin/pnpm-lock.yaml` and `Admin/pnpm-workspace.yaml` were preserved.
 - [x] VERIFIED — Canonical npm `package.json` and `package-lock.json` match deployed backend package/lock hashes. Fresh `npm ci` completed (923 packages); Node v24.21.0, npm 11.19.0. `npm ls --depth=0` exits 0, Native SQLite loads, and `npm run build` exits 0. Receipt: `tasks/evidence/canonical-main-integration-20261016.md`.
 - [x] VERIFIED — Native SQLite load returned SQLite 3.53.2; `@prisma/adapter-better-sqlite3` resolved 7.3.0. Canonical built `dist/src/main.js` and active `/srv/nexi/backend/dist/src/main.js` have the same SHA-256. Existing systemd API is active and enabled; no restart was made.
 - [x] REVIEWED — Fallow 3.30.0 scoped to the 24 changed backend production TS files (24 paths, tests/generated/deps/manifests excluded): no unresolved imports/cycles/boundary violations. Six unused-member candidates were checked; internal calls and test-only replay surfaces were retained. Policy detector did not run (no rule packs configured). This is static evidence, not type/runtime proof.
@@ -633,7 +633,7 @@ Receipt: `tasks/evidence/market-provider-runtime-20261017.md`.
 - Fallow CLI `fallow review --base HEAD --brief` **EXECUTED**: high change risk, API contract fanout involving D1 gateway (22 consumers), KYC, Margin and local deposit storage. This is review-risk evidence, not a failed compiler gate.
 - CodeScene was available as **Worker-0 `mcpc @nexi-codescene` MCP** even though no `codescene` or `codesense` command was on PATH; `code_health_score` succeeded for Margin service with **7.4**. No additional OAuth sign-in was needed. MCP is v1.5.6 and advertises v1.5.10, left unchanged.
 - Focused test receipts remain: 23/23 Margin unit/transaction tests, financial controller guard-surface test, related KYC/deposit/identity suites (no full live-money acceptance). Doctor source report 84/100 and zero errors at the previously scanned checkout.
-- Git consolidation intentionally includes prior two untracked admin pnpm files, the Wrangler configuration and all tracked backend source/tests. Note `apps/admin/pnpm-workspace.yaml` currently contains a placeholder `allowBuilds` value; it is preserved by owner request and must not be interpreted as verified pnpm build policy. No cloud deployment executed.
+- Git consolidation intentionally includes prior two untracked admin pnpm files, the Wrangler configuration and all tracked backend source/tests. Note `Admin/pnpm-workspace.yaml` currently contains a placeholder `allowBuilds` value; it is preserved by owner request and must not be interpreted as verified pnpm build policy. No cloud deployment executed.
 
 ### 2026-10-19 — Backend component assurance reconciliation
 

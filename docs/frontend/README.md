@@ -1,6 +1,6 @@
 # NEXI Public Frontend: Feature, Route and Integration Map
 
-**Canonical source:** `cloudflare-container-bootstrap/dexi-frontend/` (Next.js App Router). **Only production Public build/runtime directory:** `/srv/nexi/public/current`. Never create competing release/build trees. Source and running artifact are different proof targets.
+**Canonical source:** `frontend/` (Next.js App Router). **Only production Public build/runtime directory:** `/srv/nexi/public/current`. Never create competing release/build trees. Source and running artifact are different proof targets.
 
 ## Route catalog
 

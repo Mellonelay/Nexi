@@ -5735,7 +5735,7 @@
         "properties": {
           "instanceId": {
             "type": "string",
-            "description": "Cloudflare Workflow instance identifier"
+            "description": "Workflow instance identifier"
           },
           "entityId": {
             "type": "string",

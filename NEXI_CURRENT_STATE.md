@@ -302,7 +302,7 @@ Remaining acceptance: validate deployed identity separately, complete controlled
 - Fallow CLI `fallow review --base HEAD --brief` **EXECUTED**: high change risk, API contract fanout involving D1 gateway (22 consumers), KYC, Margin and local deposit storage. This is review-risk evidence, not a failed compiler gate.
 - CodeScene was available as **Worker-0 `mcpc @nexi-codescene` MCP** even though no `codescene` or `codesense` command was on PATH; `code_health_score` succeeded for Margin service with **7.4**. No additional OAuth sign-in was needed. MCP is v1.5.6 and advertises v1.5.10, left unchanged.
 - Focused test receipts remain: 23/23 Margin unit/transaction tests, financial controller guard-surface test, related KYC/deposit/identity suites (no full live-money acceptance). Doctor source report 84/100 and zero errors at the previously scanned checkout.
-- Git consolidation intentionally includes prior two untracked admin pnpm files, the Wrangler configuration and all tracked backend source/tests. Note `apps/admin/pnpm-workspace.yaml` currently contains a placeholder `allowBuilds` value; it is preserved by owner request and must not be interpreted as verified pnpm build policy. No cloud deployment executed.
+- Git consolidation intentionally includes prior two untracked admin pnpm files, the Wrangler configuration and all tracked backend source/tests. Note `Admin/pnpm-workspace.yaml` currently contains a placeholder `allowBuilds` value; it is preserved by owner request and must not be interpreted as verified pnpm build policy. No cloud deployment executed.
 
 
 ## 2026-10-19 — Receipt inventory and owner-acceptance reconciliation
@@ -333,3 +333,10 @@ Read and hashed 120 phase JSON receipts, 22 temp receipt/checkpoint/digest files
 - SECURITY: npm audit --omit=dev (backend package lock) found 27 advisories: 0 critical, 16 high, 10 moderate, 1 low. Distinct from GitHub's full-repository 161 Dependabot alerts. No blind dependency upgrades deployed.
 - BLOCKED: independent encrypted off-VPS SQLite backup/isolated restore lacks approved destination and independently controlled encryption key. Full SQLite whole-database integrity and deployed hard-crash workflow recovery also remain unverified.
 - NEXT: root-cause workflow guard/fault injection with disposable DB; assess high production vulnerabilities with compatibility and focused tests; verify clean shutdown of newly deployed PID at next controlled maintenance; obtain off-VPS encrypted backup destination and key custody. Preserve owner-closed financial acceptance.
+
+## 2026-10-19 owner source-directory and platform retirement
+
+Canonical source paths are frontend/, Admin/, and backend/ in the sole main checkout. Active serving is VPS Nginx/NestJS with SQLite durable authority and Aiven Valkey transport. The old Worker infrastructure, Wrangler CLI, and retired deployment workflows must not be reintroduced. Historical D1-labelled SQLite adapters and financial migration receipts remain compatibility/migration evidence, not active Cloudflare runtime writers.
+
+## 2026-10-19 source-only platform retirement checkpoint
+Source directories renamed to frontend/, Admin/, backend/. Worker/bootstrap source and obsolete platform runbooks removed. Worker-0 platform skills and CLI retired; active VPS remains Nginx, NestJS, SQLite, Valkey and BullMQ. Historical D1-related proof records and compatibility adapter source are not active infrastructure instructions. No production service restart or financial migration was done. Source-only cleanup awaits Git commit/push; deployed release remains distinct.

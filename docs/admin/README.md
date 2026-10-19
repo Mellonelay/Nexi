@@ -1,16 +1,15 @@
 # NEXI Admin: Current Control Plane and Feature Map
 
-**Canonical source:** `apps/admin/` (React/TanStack/Vite deployment path). Admin is a **governed consumer** of the NestJS backend, never an alternate financial owner.
+**Canonical source:** `Admin/` (React/TanStack/Vite deployment path). Admin is a **governed consumer** of the NestJS backend, never an alternate financial owner.
 
 ## Controls by current route
 
-| Routes under `apps/admin/src/routes/` | Administrative responsibility |
+| Routes under `Admin/src/routes/` | Administrative responsibility |
 |---|---|
 | `overview`, `health`, `exposure` | Operational/account-wide health, risk and exposure signals |
 | `admins`, `roles`, `sessions`, `audit`, `approvals` | Admin identity, RBAC, privileged sessions, approval chains and immutable audit context |
 | `users`, `kyc` | Account lookup/status and private evidence-review control |
 | `assets`, `networks`, `market-feeds` | Market instrument/provider catalog, wallet currency/network configuration, freshness/source policy |
-| `wallets`, `ledger`, `reconciliation` | Governed financial oversight, corrections and reconciliation; NestJS is the domain authority and Cloudflare D1 remains current financial data authority until controlled SQLite delta and explicit writer cutover |
 | `deposits`, `withdrawals`, `settlements` | Claim/review/approval or rejection, verification and settlement status |
 | `spot`, `binary` | Trade configuration; Binary fixed supported durations and editable enablement/payout/stake bounds where implemented |
 | `mining`, `loans` | Plan governance, accrual/repayment lifecycle and backend-confirmed positions |
@@ -22,8 +21,8 @@ All rows map to source route files, **not** automatic claims of complete runtime
 
 ## Authority and access model
 
-- UI navigation: `apps/admin/src/admin/config/navigation.ts`; role and permission declarations under `apps/admin/src/admin/config/`.
-- Backend consumer: `apps/admin/src/admin/data/nexi-api-provider.ts`, related types/provider files.
+- UI navigation: `Admin/src/admin/config/navigation.ts`; role and permission declarations under `Admin/src/admin/config/`.
+- Backend consumer: `Admin/src/admin/data/nexi-api-provider.ts`, related types/provider files.
 - Admin auth/authorization: NestJS guards, explicit role permissions and user/account isolation. Admin UI hiding alone is never sufficient.
 - Mutations must be validated/audited, carry correct actor and reason, and preserve idempotency/financial integrity where relevant.
 - Admin config propagates to Public through the single backend read contract, not duplicated hard-coded state.

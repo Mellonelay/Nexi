@@ -19,7 +19,6 @@ flowchart LR
   API --> R["Private VPS evidence storage"]
 ```
 
-NestJS owns domain decisions; SQLite is the intended VPS durable store, Ledger accounting truth and EventOutbox/EventInbox durable delivery boundaries. The SQLite journal/workflow coordinator preserves accepted work; BullMQ transports jobs over Aiven Valkey. Name.com DNS now routes public requests to VPS Nginx/NestJS; Cloudflare D1 remains populated/current financial authority, and Worker cron/queue/workflow resources remain active. Sampled core rows in active VPS SQLite are zero, so financial write acceptance/cutover remains blocked. Public and Admin never mutate the database directly.
 
 ## Feature-to-owner matrix
 

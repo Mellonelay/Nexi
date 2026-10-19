@@ -13,7 +13,6 @@ Compile the complete owner message before execution: required actions/evidence/s
 Do not maintain a second permanent catalog of every installed plugin, skill or version. `@skill`/plugin mentions are capability hints, not a mandatory reading queue: classify them as PRIMARY, SUPPORTING, or AVAILABLE-BUT-NOT-NEEDED. Discover or reread a skill/tool only when its operating contract can materially change the current task; reuse proven capability routing while unchanged.
 
 ## Authority and reuse
-Current owner decision wins. GitHub `main` is durable source authority. Name.com public DNS now routes traffic to the VPS NestJS backend. Cloudflare D1 remains populated/current financial data authority pending the approved, reconciled cutover; Worker cron/queue/workflow resources also remain active. The sampled active VPS SQLite core tables are empty, so financial writes are not accepted as valid production results. SQLite is the intended durable application store after controlled cutover, Ledger accounting truth, EventOutbox publication boundary, and Aiven Valkey supports BullMQ, Socket.IO Streams, cache and ephemeral coordination only. `PROVEN + UNCHANGED = REUSE`. See [VPS backend runtime map](../architecture/NEXI_VPS_BACKEND_RUNTIME.md).
 Third-party skills specialize work; they do not override NEXI architecture, security boundaries, or owner authorization.
 
 ## Responsibility owners
@@ -22,9 +21,7 @@ Third-party skills specialize work; they do not override NEXI architecture, secu
 - Semantic lookup: DeepWiki; cross-check consequential conclusions.
 - Static/change risk: Fallow + CodeScene; add specialist static tools only for distinct risk.
 - External docs: Context7 + current official vendor docs; current web research only when repo/runtime is not authority.
-- VPS/backend runtime: RDC/Worker-0 systemd, Nginx, SQLite/Prisma and API runtime evidence; use current official docs/Context7 for unresolved framework contracts. Cloudflare MCP/Wrangler are read-only production/parity tools until a specific owner gate authorizes platform mutation. `avn` + `redis-cli` inspect Aiven without exposing credentials.
 - Git/PR/CI: Git + GitHub.
-- Runtime/telemetry: direct service/process/HTTP evidence, Sentry, task-relevant Cloudflare observability.
 - Browser: Polypane on DevTools `127.0.0.1:5859` owns primary visual/responsive discovery and acceptance breadth. Preserved authenticated Worker-0 Chrome on `5858` owns distinct wallet/session acceptance. Playwright/DevTools support only the claim they are attached to; BrowserStack is targeted real-device/cross-browser evidence. Follow the responsibility split below; do not duplicate the same acceptance claim.
 - Direct bounded editing: parent/RDC when owner and proof are deterministic.
 - Heavy workers: Codex/Kilo only for substantial bounded work or independent review where separate reasoning context adds value.

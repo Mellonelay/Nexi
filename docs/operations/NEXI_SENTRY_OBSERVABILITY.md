@@ -1,20 +1,18 @@
 # NEXI Production Observability: Sentry
 
-**Objective:** use Sentry for VPS and frontend runtime faults: exercise an instrumented feature → receive the error/trace/log → identify the causal source → repair and verify. This file documents source and operational requirements; it does not assert current ingestion/release status without fresh evidence. Public DNS routes to the VPS; Cloudflare Worker/Container/async resources remain active and D1 remains populated/current financial data authority until the gated writer cutover. Cloudflare Observability stays disabled.
 
 ## Telemetry authority
 
 Use the established Worker-0 `mcpc @nexi-sentry` OAuth session and new `sentry` CLI for live inspection; classic `sentry-cli` only for suitable CI/build/release operations. Inspect live schemas/CLI help. Organization `mellonelay`, project `nexi`.
 
-**Cloudflare Observability stays disabled:** do not activate Worker logging/tracing persistence, drains or Cloudflare-based OpenTelemetry sinks. Use Sentry SDK-native errors, spans/traces, logs, metrics, Cron monitoring.
 
 ## Source owners and privacy
 
 | Surface | Source instrumentation | Release identity |
 |---|---|---|
 | NestJS backend | `backend/src/instrument.ts` | VPS runtime `SENTRY_RELEASE` must match the deployed backend artifact source SHA |
-| Public Next.js | `cloudflare-container-bootstrap/dexi-frontend/instrumentation-client.ts`, `sentry.server.config.ts` | build-time `NEXT_PUBLIC_SENTRY_RELEASE`; runtime `SENTRY_RELEASE`; both must match actual Public source/build artifact |
-| Admin React | `apps/admin/src/sentry.ts` | build-time `VITE_SENTRY_RELEASE` must match actual Admin source/build artifact |
+| Public Next.js | `frontend/instrumentation-client.ts`, `sentry.server.config.ts` | build-time `NEXT_PUBLIC_SENTRY_RELEASE`; runtime `SENTRY_RELEASE`; both must match actual Public source/build artifact |
+| Admin React | `Admin/src/sentry.ts` | build-time `VITE_SENTRY_RELEASE` must match actual Admin source/build artifact |
 
 Keep error and warn console logging and tracing; privacy defaults disable PII and mask/block Replay sensitive content. Source-configured browser Replay: 2% ordinary sessions, 100% error sessions. Browser profiling is sampled and requires a supported Chromium-based browser plus `Document-Policy: js-profiling` on the document response. Verify the header and actual ingestion; absence of a sample at low sampling is not automatically failure.
 

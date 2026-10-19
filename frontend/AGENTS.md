@@ -5,9 +5,9 @@ This file governs only the canonical Public frontend at this directory.
 GitHub `main` is durable source authority. ChatGPT is the parent/controller. Worker 0 is the execution/evidence plane.
 
 Current backend authority is:
-`Public -> Cloudflare Worker -> Cloudflare Container -> NestJS -> D1 / Ledger / EventOutbox`.
+Public → VPS Nginx → NestJS → promoted SQLite / Ledger / EventOutbox.
 
-Never use a VM-local NestJS process as production truth. Never add frontend-owned financial, market, settlement, authorization, or ledger authority.
+Verify the deployed VPS NestJS process and release before production claims. Never add frontend-owned financial, market, settlement, authorization, or ledger authority.
 Current owner decisions outrank old screenshots, old chats, old frontend programs, archived docs, and generated concept images.
 
 ## Current owner correction — market work
@@ -177,7 +177,6 @@ Before deployment, run only the focused deterministic source/build gates invalid
 
 Minimum affected-flow proof:
 - typecheck / affected unit-contract tests / production build as required by the change;
-- deployed `https://www.nexitrading.app` using the real `https://api.nexitrading.app` Cloudflare backend;
 - Polypane rendered/interaction evidence for affected visual/responsive claims;
 - preserved Chrome rendered/session evidence when the affected claim requires wallet/application authentication;
 - responsive evidence at the required CSS viewport probes in Polypane, with BrowserStack only when the claim specifically requires targeted real-device/cross-browser confirmation;

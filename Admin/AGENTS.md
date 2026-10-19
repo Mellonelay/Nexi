@@ -2,12 +2,11 @@
 
 ## Single Admin build and runtime authority — owner decision 2026-10-10
 
-The only generated Admin build/runtime directory is the real directory `/srv/nexi/admin/current` (never a symlink). Preserve `/srv/nexi/admin/shared/node_modules` as the canonical dependency directory and `/srv/nexi/admin/logs` for service logs. Do not create or reintroduce `/srv/nexi/admin/build-*`, `/srv/nexi/admin/releases/*`, candidate, temporary, rollback, or copied build-output directories. Source remains `apps/admin` in the authoritative repository. Perform focused source/type/test verification before the one authorized production Admin build inside `/srv/nexi/admin/current`; then restart and verify `nexi-admin.service` and rendered live behavior. The release identifier must describe the source actually built, never a newer commit merely because HEAD advanced. This supersedes historical Admin immutable-release-tree instructions.
+The only generated Admin build/runtime directory is the real directory `/srv/nexi/admin/current` (never a symlink). Preserve `/srv/nexi/admin/shared/node_modules` as the canonical dependency directory and `/srv/nexi/admin/logs` for service logs. Do not create or reintroduce `/srv/nexi/admin/build-*`, `/srv/nexi/admin/releases/*`, candidate, temporary, rollback, or copied build-output directories. Source remains `Admin` in the authoritative repository. Perform focused source/type/test verification before the one authorized production Admin build inside `/srv/nexi/admin/current`; then restart and verify `nexi-admin.service` and rendered live behavior. The release identifier must describe the source actually built, never a newer commit merely because HEAD advanced. This supersedes historical Admin immutable-release-tree instructions.
 
 ## Authority
 - GitHub `main` is the durable source authority for Admin and the rest of NEXI.
 - The current synchronized VM/RDC checkout is the execution workspace for this task; historical Windows/Codespace/old-VM trees are evidence only.
-- Backend/API/D1/Cloudflare contracts must be read from the same accepted source frontier rather than stale mirrors.
 - Preserve unrelated parallel work and reconcile any unique accepted changes before fan-in.
 - Production mutation requires explicit owner approval.
 
@@ -27,8 +26,7 @@ Prioritize live parity for auth/identity, sessions, users/KYC, market controls, 
 Do not invent persistence for public routes, banners, localization, exposure, reconciliation, user entitlements, role mutations, or other currently unsupported authorities. Record an exact backend dependency instead.
 
 ## Current corrections
-- D1 is canonical durable application/financial authority. Do not label it as any retired database dependency.
-- Use the D1-aware Cloudflare readiness contract. Do not hard-code retired database health labels.
+- Promoted VPS SQLite is canonical durable application/financial authority; Ledger is accounting truth. Verify `/readyz` against the deployed API.
 - `NexiAdminApiProvider` already fails unsupported methods with HTTP-style 501 errors; preserve fail-closed behavior.
 - Provider mode may remain `mock` or `live`, but production-path work must exercise `live` explicitly.
 

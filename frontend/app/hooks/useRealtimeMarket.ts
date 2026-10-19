@@ -106,7 +106,7 @@ export function useRealtimeMarket(symbol: string, interval = "1m") {
       }
 
       socket = io(`${apiUrl}/market`, {
-        // Staging is reached through a Cloudflare tunnel. Start with the
+        // The API is reached through the VPS Nginx proxy. Start with the
         // reliable polling handshake, then allow websocket upgrade and retry
         // all transports after an authenticated page reload.
         transports: ["polling", "websocket"],

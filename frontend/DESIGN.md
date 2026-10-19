@@ -2,7 +2,7 @@
 
 ## 1. Purpose
 
-This document is the current frontend-local visual and interaction authority for `cloudflare-container-bootstrap/dexi-frontend`.
+This document is the current frontend-local visual and interaction authority for `frontend`.
 
 It exists to stop visual drift, accidental revival of rejected concepts, and generic redesigns that ignore the accepted NEXI product language.
 

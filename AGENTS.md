@@ -4,7 +4,6 @@
 
 - **Execution:** The owner activated ChatGPT Desktop/Codex Remote SSH against the existing Worker-0 VPS. The one active execution agent must use its **native local Linux shell** for filesystem, CLI, Git, `mcpc`, Graphify and Fallow operations. RDC is fallback/recovery for a distinct ChatGPT cloud session, not a mandatory intermediary or concurrent writer. Historical directives declaring Codex retired or RDC-exclusive are superseded.
 - **Git topology:** Exactly **one canonical checkout** at `/home/mellonelay1999/workspaces/Nexi`, on `main`. **Never create Git worktrees**, alternate migration checkouts, feature-branch workspaces or cloned writers. Edit the canonical checkout; commit approved changes **directly to main** after focused verification. Coordinate with the active executor before shared writes, commit or push. Preserve unrelated dirty files and never discard another session's work.
-- **Current data authority:** VPS NestJS owns domain logic; promoted SQLite at `/var/lib/nexi/sqlite/nexi-staging.sqlite` is current durable application/financial data authority; LedgerAccount/LedgerPosting is accounting truth, EventOutbox durable publication, Aiven Valkey cache/realtime/transport only. Former D1/Cloudflare resources are historical/parity or separate retirement concerns, not current financial writer authority. Do not infer a complete historical D1 watermark or off-VPS restore from readiness alone.
 - **Proof reuse:** Read `NEXI_PROOF_REUSE_REGISTER.md`, `NEXI_CURRENT_STATE.md`, and task-relevant latest `tasks/todo.md` / `tasks/plan.md` once at entry or meaningful phase/authority change. Newer receipts supersede older checklist entries. `PROVEN + UNCHANGED = REUSE`; verify only invalidated contracts. Do not repeat migration, market or auth tests without contradictory evidence.
 - **Market owner decision:** The MOEX closed-session repair and validated Binance snapshots are accepted within their proven scope. Closed/stale/nonfresh noncrypto instruments are acceptable when truthfully labeled. Do not launch another mandatory BiQuote weekday/Gate freshness campaign or invent reference trades/depth for unsupported providers. Focus remaining backend work on financial operations, workflow recovery and operational closure.
 - **Parallel execution:** Owner authorizes the Codex Desktop direct-SSH lane and a separate ChatGPT Cloud Work/RDC lane concurrently for distinct bounded responsibilities. Assign non-overlapping file/operation ownership before writes; read-only discovery can run independently. Only one owner at a time may mutate a shared source, Ledger/SQLite, dependencies, deployed services or Git index/commit/push. Do not use RDC to duplicate an operation already running via SSH; never create another worktree. Cloud Work does not inherit Desktop SSH transport automatically.
@@ -22,17 +21,14 @@ GitHub `main` is the durable NEXI source authority. Name.com public DNS routes t
 - ChatGPT remains the parent/controller.
 - VPS backend implementation, runtime, and acceptance work target `/home/mellonelay1999/workspaces/Nexi`, `/srv/nexi/backend`, and the existing `nexi-api.service`; distinguish live SQLite runtime readiness from full data reconciliation and final cutover evidence.
 - Public and Admin keep their canonical sources and runtime directories. Existing Nginx is the API/host/WebSocket router; direct checks and Certbot dry-run verified trusted HTTPS and renewal. The promoted SQLite DB is live; final D1 update/delete reconciliation and independent recovery remain open.
-- Owner has already switched public DNS to Name.com/VPS. Cloudflare resources are a separate service plane; VPS readiness and the open SQLite file establish that the VPS API uses its local database, not that Cloudflare resources were retired. Preserve existing export evidence and verify remaining D1 deltas/resources by their live state; do not infer retirement from DNS changes.
 - The owner-selected direct-SSH Worker-0 executor may build and operate the authorized VPS backend. Never run a second financial writer or point a non-authoritative service at production financial state.
 - Historical trees, branches, and receipts are evidence only unless fresh verification proves unique accepted work.
 
-Current owner decisions outrank stale project instructions and checkpoint text. Source truth is GitHub `main`; public runtime truth must be proved on the running VPS service. The promoted SQLite file is live and reports ready. Treat the existing final export import and historical snapshot as loaded data, while separately tracking whether post-export D1 updates/deletes remain and whether the live source boundary is final. Do not claim complete reconciliation or Cloudflare retirement without direct evidence.
 
 ## Canonical architecture
 Public/Admin -> existing Nginx hosts -> Next.js frontends and the canonical NestJS VPS API.
 NestJS owns business/domain decisions. SQLite + Prisma/better-sqlite3 is the target durable application store; Ledger is accounting truth and EventOutbox is the durable publication boundary.
 Aiven Valkey serves BullMQ transport, Socket.IO Redis Streams, cache and ephemeral coordination; it never owns financial truth. SQLite job/workflow journals remain durable. Local protected storage replaces private R2 object storage for KYC/deposit evidence.
-Name.com/VPS is now the public traffic path. The promoted VPS SQLite database is open in NestJS and readiness reports SQLite authority. Cloudflare resources may still exist independently; track their live service and data state without treating them as writers to the VPS-local SQLite file.
 
 Do not restore any retired database authority. Do not introduce a second Admin plane, second financial writer, direct frontend database access, or a second reverse proxy.
 ## Capability routing
@@ -62,10 +58,10 @@ If source authority advances without deployment, record the new GitHub source SH
 
 ## Worker-0 Public/Admin hosting and dependency ownership
 On Worker 0, always use the dedicated hosting/runtime seams instead of creating session-local frontend/admin dependency trees:
-- Public source: `/home/mellonelay1999/workspaces/Nexi/cloudflare-container-bootstrap/dexi-frontend`
+- Public source: `/home/mellonelay1999/workspaces/Nexi/frontend`
 - Public canonical dependencies: `/srv/nexi/public/shared/node_modules`
 - Public canonical build/runtime directory: `/srv/nexi/public/current`
-- Admin source: `/home/mellonelay1999/workspaces/Nexi/apps/admin`
+- Admin source: `/home/mellonelay1999/workspaces/Nexi/Admin`
 - Admin canonical dependencies: `/srv/nexi/admin/shared/node_modules`
 - Admin runtime remains governed by its current task-specific authority.
 
@@ -79,7 +75,6 @@ Use Graphify for topology, ownership, dependency paths, and blast radius.
 Use Codebase Memory or bounded `rg`/`fd` for exact symbols/callers/snippets.
 Use Forensic Graphify only for unclear structural failures, drift, hidden paths, or competing hypotheses.
 Use current official docs/Context7 only when external framework/provider semantics are uncertain.
-Use Cloudflare docs + project-local Wrangler for Cloudflare-sensitive work.
 Use API contract tools only against real controller/DTO/OpenAPI artifacts, not progress summaries.
 
 Default loop:
@@ -90,14 +85,6 @@ Do not run every skill/tool mechanically.
 
 ## Worker-0 capability knowledge
 Do not duplicate the Worker-0 tool inventory here. Route through `/home/mellonelay1999/.agents/GLOBAL_CAPABILITY_INDEX.md`; use `/home/mellonelay1999/.agents/GLOBAL_MCP_CATALOG.md`, `/home/mellonelay1999/.agents/GLOBAL_CLI_CATALOG.md`, `/home/mellonelay1999/.agents/BROWSER_FABRIC.md`, and the Graphify/DeepWiki complete guides only when that capability is relevant. Discover mutable versions/auth/schema/health live.
-
-## D1 operator policy
-All D1 operator inspection/migration/verification must use project-local Wrangler from `cloudflare-container-bootstrap`.
-Preferred form: `npx --no-install wrangler ...`.
-Current canonical Wrangler is `4.127.1`; verify version before consequential operator work.
-Do not use dashboard SQL, direct REST, sqlite3, or another DB client as D1 operator authority.
-Runtime application access remains through the official D1 Workers binding/private bridge.
-Use migrations for schema changes. Use bounded remote Wrangler queries/PRAGMAs for inspection.
 
 ## Graphify policy
 Installed VM Graphify CLI is command authority; use `graphify --help` before assuming syntax.
@@ -117,12 +104,8 @@ Fast analysis:
 - `diagnose multigraph` -> suspicious graph ambiguity.
 
 After high-impact changes, refresh once and rerun only the relevant impact/path checks, then verify source/tests/runtime.
-## Cloudflare policy
-Before any Cloudflare implementation, configuration change, deployment, configuration-driven debugging, or operator mutation, read the relevant **current official Cloudflare documentation first**. Then inspect the current Wrangler/MCP help or schema for the exact product/command and reconcile it with current NEXI configuration. This gate applies repository-wide to Workers, Wrangler, Containers, D1, Queues, Workflows, R2, Pipelines, Durable Objects, bindings, secrets, routes/domains, versions/deployments/rollback, observability/logging, networking, and later Cloudflare products.
 
-Use `docs/architecture/NEXI_VPS_BACKEND_RUNTIME.md` as the current VPS runtime map and `docs/infrastructure/NEXI_CLOUDFLARE_BACKEND_OPERATOR_RUNBOOK.md` for remaining active Cloudflare resources, parity and gated retirement. Public DNS points to the VPS; Cloudflare D1 retains historical/parity state; current financial authority is promoted VPS SQLite. For backend integration work, the canonical VPS source/runtime is the active task target; Cloudflare inspection is read-only parity/current-production evidence unless an owner gate authorizes mutation. Reconcile all source changes to GitHub `main`.
 
-Do not blindly retry a failing Wrangler command: read the real error, consult current official docs/help, identify the causal owner, then retry only when justified. Capability discovery never grants unrelated mutation authority. Unrelated production mutation still requires explicit current owner approval.
 
 ## Financial and event invariants
 Consequential financial commands must preserve authorization, validation, idempotency, atomic domain + ledger semantics, audit/activity linkage, EventOutbox publication, and safe retry/recovery.
@@ -137,11 +120,9 @@ Do not overwrite parallel work or another active lane; GitHub `main` remains the
 
 ## Verification and reporting
 Keep `IMPLEMENTED`, `STATICALLY_VALIDATED`, `TESTED`, `INTEGRATED`, and `RUNTIME_VERIFIED` distinct.
-A passing focused compile does not prove runtime. A graph path does not prove behavior. A Cloudflare resource existing does not prove integration.
 Before a completion claim, verify the exact changed boundary with fresh evidence appropriate to that layer.
 Report compactly: outcome, decisive evidence, changed files/resources, remaining unverified surfaces, production-changed status, next dependency-ready action.
 ## Historical artifact policy
-Windows `work/` receipts and VM backup artifacts are evidence/history only, not current execution authority. Consult them only when the current baton, fresh source/runtime evidence, or the owner explicitly requires them. Never let an old receipt or prompt override current GitHub source or Cloudflare runtime evidence.
 
 ## graphify
 
@@ -162,7 +143,6 @@ Final rendered acceptance uses Polypane, Chrome DevTools and the already connect
 
 ## Production closure controller — hard rule
 
-On a fresh NEXI Work session, after continuity loss, or when the relevant durable frontier may have changed, read the compact `NEXI_CURRENT_STATE.md`, `docs/README.md` and the task-relevant current domain owner; the old ledger is historical only. Reuse that proof while unchanged; do not reread the full files before every bounded action. ChatGPT Project uploads, chat exports, handovers, and historical receipts are provenance only when they conflict with current VM/GitHub/Cloudflare evidence.
 
 The current owner directive selects the active work. The completion ledger is historical evidence only; a stale queue row, receipt, phase capsule, or checkpoint cannot block an explicit current owner instruction. Preserve proven completed work and update current-state records proportionally after material source/runtime changes. Never claim verification that has not been performed.
 
@@ -177,3 +157,5 @@ Do not make a durable phase checkpoint, stale workCycle capsule, or phase-reconc
 ## Maintainability and focused verification
 
 Use relevant direct source, affected tests, Fallow and Graphify when they materially establish correctness or changed-code risk. CodeScene scoring and historic phase-score targets are NOT mandatory gates under the owner's current direction. Preserve non-regressing application behavior and financial invariants, but do not stop at retired tool/score checkpoints. Older CodeScene docs remain provenance only.
+
+## 2026-10-19 owner source-directory and platform retirement

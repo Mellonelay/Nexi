@@ -45,3 +45,5 @@ Thumbs.db
 .mcp.json
 CLAUDE.md
 ruvector.db
+.impeccable/
+/frontend/node_modules

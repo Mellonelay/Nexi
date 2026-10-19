@@ -39,25 +39,11 @@ jobs:
       - run: graphify --version
       - run: graphify update backend --no-cluster
 
-  cloudflare-dry-run:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: cloudflare-container-bootstrap
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-      - run: npm install
-      - run: npx --no-install wrangler --version
-      - run: npm run validate:worker
-
   frontend:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: cloudflare-container-bootstrap/dexi-frontend
+        working-directory: frontend
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -71,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: apps/admin
+        working-directory: Admin
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

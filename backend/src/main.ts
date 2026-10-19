@@ -29,7 +29,7 @@ export async function bootstrap() {
   const redisIoAdapter = new RedisIoAdapter(app);
   try {
     // Install the adapter before listen(); its Redis client connects in the
-    // background so Cloudflare can observe HTTP liveness independently of
+    // background so VPS readiness can observe HTTP liveness independently of
     // external TLS dependency startup.
     app.get(RuntimeLifecycleService).registerSocketAdapter(redisIoAdapter);
     redisIoAdapter.connectToRedis();

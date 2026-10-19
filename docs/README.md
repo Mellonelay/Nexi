@@ -1,36 +1,7 @@
-# NEXI Engineering Documentation
+# NEXI Documentation
 
-**Purpose:** current navigation and ownership, not a phase-completion controller.
-**Source policy:** owner decisions > direct runtime proof for runtime claims > GitHub `main` for durable source > platform/graph/static evidence > historical documents. A document never proves deployment or feature acceptance by itself.
+Current architecture: [system](architecture/NEXI_SYSTEM_ARCHITECTURE.md), [VPS runtime](architecture/NEXI_VPS_BACKEND_RUNTIME.md), [diagram](architecture/NEXI_ARCHITECTURE_DIAGRAMS.md).
 
-## Start here
+Surface references: [Public](frontend/README.md), [Admin](admin/README.md), [Backend](backend/README.md).
 
-- [Current state](../NEXI_CURRENT_STATE.md): compact source/runtime split and next verified frontier; recheck volatile values.
-- [Repository law](../AGENTS.md): active development, operational boundaries, production source/build constraints.
-- [Architecture diagrams](architecture/NEXI_ARCHITECTURE_DIAGRAMS.md) (GitHub-rendered Mermaid topology, financial flows, release and workflow maps).
-- [System architecture](architecture/NEXI_SYSTEM_ARCHITECTURE.md), [VPS backend runtime and replacement map](architecture/NEXI_VPS_BACKEND_RUNTIME.md), and [cross-surface feature map](architecture/CROSS_SURFACE_FEATURE_MAP.md): ownership and product-to-code interfaces.
-- [Backend](backend/README.md): domain features, NestJS owners, persistence, APIs and events.
-- [Public frontend](frontend/README.md): user journeys, Next.js routes, wallet account display, backend consumers, responsive design.
-- [Admin](admin/README.md): governance, RBAC, Admin routes, backend control authority, audit.
-- [Operational Sentry](operations/NEXI_SENTRY_OBSERVABILITY.md): Sentry SDK/source, release lifecycle, telemetry and failure verification.
-- [Infrastructure](infrastructure/): VPS runtime and remaining Cloudflare resource operator procedures; public DNS now points to the VPS, while D1/Worker async resources remain active pending gated closure. See the VPS runtime map for the component replacement matrix.
-- API contracts are owned by NestJS controllers, DTOs and generated types; verify actual source revision before trusting OpenAPI artifacts.
-- [Security](security/): SIWE, ownership, privileged controls, Ledger/financial integrity.
-- [Quality](quality/): retained test and browser evidence. Old receipts prove only their recorded revision and scope.
-
-## Documentation rules
-
-1. The exact code and tests on current GitHub `main` define what is implemented; live runtime is established separately, per deployed surface.
-2. **One owning explanation per invariant:** financial truth lives under Backend/Contracts; Public and Admin link to it without independently changing rules.
-3. An entry may be `SPECIFIED`, `SOURCE_IMPLEMENTED`, `TESTED`, `RUNTIME_VERIFIED`, `DEPLOYED`, or `OWNER_ACCEPTED`. Do not flatten these states.
-4. Prefer path+symbol/API references over thousands of generated file-level summaries; code is the final implementation detail.
-5. Keep released source identifiers separate for Backend Worker/Container, Public, Admin and Sentry. Do not force one SHA onto different builds.
-6. Git history carries historical documentation provenance only. Historical charters, ledgers, checkpoints, old visuals and screenshots do not override current owner decisions.
-
-## Historical material
-
-Retired phase plans, completion ledgers, visual experiments, release receipts and task checklists are preserved in Git history, not retained as current repository documents. Recover them only for a specific historical decision. None is an execution or acceptance gate.
-
-## Changes to this documentation
-
-For a domain change, update its owning document and cross-surface map only when the behavior or interface changes. Avoid duplicating transient logs, work-session narratives and release receipts in architectural documents. Preserve historical decisions in Git when replacing old text.
+Operations: [routing](operations/NEXI_CAPABILITY_ROUTING.md), [Sentry](operations/NEXI_SENTRY_OBSERVABILITY.md), [financial integrity](security/NEXI_FINANCIAL_INTEGRITY_REQUIREMENTS.md).

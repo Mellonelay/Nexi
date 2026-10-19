@@ -4,7 +4,7 @@
 
 The canonical Public frontend visual and interaction authority is:
 
-`cloudflare-container-bootstrap/dexi-frontend/DESIGN.md`
+`frontend/DESIGN.md`
 
 Apply it together with:
 1. current explicit owner decisions;

@@ -33,8 +33,8 @@ These are infrastructure and control hubs, not visual-authority nodes.
 Connected sources:
 
 - `DESIGN.md`
-- `cloudflare-container-bootstrap/dexi-frontend/DESIGN.md` (current Public visual/interaction authority)
-- `cloudflare-container-bootstrap/dexi-frontend/design-tokens/figma/nexi-foundations-extracted.json`
+- `frontend/DESIGN.md` (current Public visual/interaction authority)
+- `frontend/design-tokens/figma/nexi-foundations-extracted.json`
 - `NexiPrimitives.tsx`
 - `ProductPrimitives.tsx`
 - `AppHeader.tsx`

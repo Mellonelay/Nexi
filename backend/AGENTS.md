@@ -1,6 +1,5 @@
 # CURRENT BACKEND OWNER OVERRIDE (2026-10-17)
 
-Root `AGENTS.md` current owner override controls execution. Single `main` checkout only; direct VPS SSH local shell; no worktrees, alternate writers, or repeated migrations. Current authoritative durable DB is promoted VPS SQLite, not Cloudflare D1. Historic empty-SQLite/D1-active assertions below are superseded. Use `NEXI_PROOF_REUSE_REGISTER.md` and latest task receipts to reuse proved tests. For financial work trace Wallet scopes (MAIN/Funding, SPOT, MARGIN, BINARY/Options, FINANCE), LedgerPosting, authorization, idempotency, unified Activity, EventOutbox, settlement and recovery with bounded Graphify Agent Workflows + Fallow, then focused tests and applicable runtime proof. Margin/Options user-facing wallet transfers are USDT-only; separate Margin borrowing/debt assets remain legitimate. Deposit-proof byte round-trip and current market release are already proved within their scope; do not re-test without invalidation. Unsupported noncrypto freshness is accepted by owner. No concurrent main writers.
 
 # NEXI Backend Instructions
 
@@ -9,10 +8,9 @@ These rules extend the repository root `AGENTS.md` and govern the authoritative 
 ## Current backend authority
 - GitHub `main` is durable backend source authority; the canonical backend source is `backend/` and the VPS runtime is `/srv/nexi/backend` under `nexi-api.service`.
 - NestJS is the sole business/domain authority.
-- SQLite + Prisma 7/better-sqlite3 is the target durable application database. Ledger remains accounting truth; EventOutbox/EventInbox preserve durable publication/idempotent ingress.
+- SQLite + Prisma 7/better-sqlite3 is the promoted current durable application database. Ledger remains accounting truth; EventOutbox/EventInbox preserve durable publication/idempotent ingress.
 - Aiven Valkey is the selected Redis-compatible service for BullMQ and Socket.IO Redis Streams, plus cache/ephemeral coordination; it is never financial truth.
 - SQLite journal/workflow state is durable; BullMQ transports work. Private local storage holds KYC/deposit evidence.
-- Public DNS now routes to the VPS API. Cloudflare resources and D1 remain historical/migration comparison evidence; latest owner authority declares promoted VPS SQLite the durable financial writer. Never create a competing D1 writer.
 
 ## Current implementation objective
 Complete the VPS NestJS runtime and parity acceptance while reusing existing domain modules, focused migration proofs and the canonical Public/Admin services. Do not redesign working domains or activate a second financial writer.
@@ -26,7 +24,6 @@ Do not mutate scalar wallet balances as financial authority when canonical ledge
 Do not invent economic behavior, lifecycle states, settlement rules, or acceptance data.
 ## SQLite and Prisma handling
 The VPS target uses the existing Prisma better-sqlite3 adapter and local financial command gateway. Preserve per-connection WAL/FULL durability, foreign keys, busy timeout, atomic transaction and exact decimal/idempotency behavior. Keep Ledger, EventOutbox, EventInbox and durable workflow/job rows in the same SQLite authority where required.
-Cloudflare D1 reads/inspection while it remains production must use project-local Wrangler and current official docs. Do not shell out to Wrangler at runtime or treat SQLite staging as current production equality.
 
 ## High-impact change workflow
 Before changing high-centrality nodes such as `D1FinancialCommandGateway`, `AdminService`, `EventOutboxService`, realtime gateways, or shared financial services:
@@ -47,11 +44,12 @@ Graphify is not proof. Direct source and focused tests/runtime decide correctnes
 - Feed API Documentation Checker/API Impact Mapper actual generated OpenAPI/controller/DTO changes when those tools are used; never progress summaries.
 
 ## Validation
-Use focused TypeScript/tests for source correctness and prove runtime behavior against the running VPS API where applicable. Public hostnames currently route to that service, and promoted SQLite contains financial rows. Use authorized controlled test identities, Ledger-backed test funding and verified deployed financial commands; do not create artificial balances or infer acceptance from tests alone. Keep build, test, VPS runtime, production cutover and owner-accepted-cutover evidence separate. Never point a staging API at production D1 or claim migration completion from a VM build alone.
 
-Do not perform unrelated production mutation. Cloudflare/platform mutation requires the current task to own that boundary and to pass the official-documentation gate. Do not create a second backend runtime on Worker 0.
 
 Report only meaningful milestones or genuine blockers.
 ## Current authority addendum — 2026-10-18
 
 Root `AGENTS.md` and latest owner decisions override historical D1/current-empty-DB claims further down this file. Promoted VPS SQLite is durable financial authority; no D1 duplicate writer. The new source-only Margin late-entry atomic fill patch at `577f5c1` has 23/23 focused test evidence, but late Margin CLOSE recovery and deployed acceptance are unproven. See `docs/architecture/NEXI_SYSTEM_ARCHITECTURE.md` (finite financial-command matrix) and `NEXI_PROOF_REUSE_REGISTER.md`. Use direct Worker-0 CLI/MCP, bounded Graphify/Fallow impact and focused tests. One main worktree, no Codex delegation, no parallel shared Git/financial mutations.
+
+## Current SQLite and BullMQ operational contract
+Current NEXI VPS authority (2026-10-19): Name.com DNS -> VPS Nginx -> Public Next.js / Admin / NestJS nexi-api.service -> promoted SQLite /var/lib/nexi/sqlite/nexi-staging.sqlite. NestJS owns domain logic; LedgerAccount/LedgerPosting accounting; EventOutbox/EventInbox and SQLite job/workflow journals durability. Aiven Valkey carries BullMQ, Socket.IO Redis Streams and cache, never financial truth. Sentry and journald provide telemetry. Read docs/architecture/NEXI_SYSTEM_ARCHITECTURE.md and docs/operations/NEXI_VPS_SQLITE_BULLMQ_RUNBOOK.md. Preserve SQLite WAL/SHM, backups, migrations and durable history.

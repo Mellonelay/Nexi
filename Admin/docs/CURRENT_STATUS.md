@@ -1,6 +1,6 @@
 # NEXI Admin Control Plane — Current Status
 
-> HISTORICAL SCAFFOLD SNAPSHOT — retained for provenance, not current route counts, live parity, build commands, or production readiness. Current apps/admin/AGENTS.md, synchronized source, and docs/admin/README.md control continuation; the old ledger is historical. The original source generation below is preserved; no original event date is inferred from this reconciliation on 2026-10-03.
+> HISTORICAL SCAFFOLD SNAPSHOT — retained for provenance, not current route counts, live parity, build commands, or production readiness. Current Admin/AGENTS.md, synchronized source, and docs/admin/README.md control continuation; the old ledger is historical. The original source generation below is preserved; no original event date is inferred from this reconciliation on 2026-10-03.
 
 **Canonical cleanup branch:** `admin/canonical-clean`  
 **Source basis:** latest verified `replit/admin-completion` Finance fix (`c798e3bcd5c8b352f30e100209ea8b2ef1390a15`)  

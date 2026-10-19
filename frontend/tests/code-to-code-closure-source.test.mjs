@@ -8,16 +8,16 @@ const hasAll = (text, needles) => {
   for (const needle of needles) assert.ok(text.includes(needle), `missing source edge: ${needle}`);
 };
 
-const assetRegistry = read('cloudflare-container-bootstrap/dexi-frontend/app/lib/asset-registry.ts');
-const assetDetail = read('cloudflare-container-bootstrap/dexi-frontend/app/dashboard/asset/[symbol]/page.tsx');
-const realtime = read('cloudflare-container-bootstrap/dexi-frontend/app/hooks/useRealtimeMarket.ts');
-const marketProxy = read('cloudflare-container-bootstrap/dexi-frontend/app/api/market/klines/route.ts');
+const assetRegistry = read('frontend/app/lib/asset-registry.ts');
+const assetDetail = read('frontend/app/dashboard/asset/[symbol]/page.tsx');
+const realtime = read('frontend/app/hooks/useRealtimeMarket.ts');
+const marketProxy = read('frontend/app/api/market/klines/route.ts');
 const marketContract = read('backend/src/market/market-kline.contract.ts');
 const marketController = read('backend/src/market/market-kline.controller.ts');
-const spotPublic = read('cloudflare-container-bootstrap/dexi-frontend/app/dashboard/spot/page.tsx');
-const marginApi = read('cloudflare-container-bootstrap/dexi-frontend/app/lib/margin-api.ts');
-const binaryPublic = read('cloudflare-container-bootstrap/dexi-frontend/app/dashboard/binary/page.tsx');
-const walletPublic = read('cloudflare-container-bootstrap/dexi-frontend/app/dashboard/wallet/page.tsx');
+const spotPublic = read('frontend/app/dashboard/spot/page.tsx');
+const marginApi = read('frontend/app/lib/margin-api.ts');
+const binaryPublic = read('frontend/app/dashboard/binary/page.tsx');
+const walletPublic = read('frontend/app/dashboard/wallet/page.tsx');
 const walletReadback = [
   'async function readAuthority',
   'const response = await api.get(endpoint)',
@@ -25,12 +25,12 @@ const walletReadback = [
   'readAuthority(activityEndpoint',
   "loadWalletData('/wallet/me', '/wallet/activity')",
 ];
-const depositPublic = read('cloudflare-container-bootstrap/dexi-frontend/app/dashboard/wallet/components/DepositModal.tsx');
-const withdrawPublic = read('cloudflare-container-bootstrap/dexi-frontend/app/dashboard/wallet/components/WithdrawModal.tsx');
-const transferPublic = read('cloudflare-container-bootstrap/dexi-frontend/app/dashboard/wallet/components/TransferModal.tsx');
-const convertPublic = read('cloudflare-container-bootstrap/dexi-frontend/app/dashboard/wallet/components/ConvertModal.tsx');
-const miningPublic = read('cloudflare-container-bootstrap/dexi-frontend/app/dashboard/mining/page.tsx');
-const loansPublic = read('cloudflare-container-bootstrap/dexi-frontend/app/dashboard/loans/page.tsx');
+const depositPublic = read('frontend/app/dashboard/wallet/components/DepositModal.tsx');
+const withdrawPublic = read('frontend/app/dashboard/wallet/components/WithdrawModal.tsx');
+const transferPublic = read('frontend/app/dashboard/wallet/components/TransferModal.tsx');
+const convertPublic = read('frontend/app/dashboard/wallet/components/ConvertModal.tsx');
+const miningPublic = read('frontend/app/dashboard/mining/page.tsx');
+const loansPublic = read('frontend/app/dashboard/loans/page.tsx');
 const spotController = read('backend/src/spot/spot.controller.ts');
 const spotService = read('backend/src/spot/spot.service.ts');
 const marginController = read('backend/src/spot/margin.controller.ts');
@@ -46,7 +46,7 @@ const loansService = read('backend/src/loans/loans.service.ts');
 const adminController = read('backend/src/admin/admin.controller.ts');
 const adminService = read('backend/src/admin/admin.service.ts');
 const adminRbac = read('backend/src/admin/admin-rbac.ts');
-const adminProvider = read('apps/admin/src/admin/data/nexi-api-provider.ts');
+const adminProvider = read('Admin/src/admin/data/nexi-api-provider.ts');
 const d1 = read('backend/src/d1/d1-financial-command.gateway.ts');
 const sandboxScenario = read('backend/src/sandbox/sandbox-scenario.service.ts');
 const sandboxExecution = read('backend/src/sandbox/sandbox-execution.service.ts');

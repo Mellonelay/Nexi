@@ -4,7 +4,6 @@ Current source/owner contract, not a historical phase program. Exact implementat
 
 ## Financial ownership
 
-NestJS owns business decisions; Cloudflare D1 remains current durable application and financial data authority; Ledger balanced postings own accounting truth; EventOutbox owns durable publication. Valkey is cache/realtime, and Queues/Workflows deliver or orchestrate without creating financial authority. Public DNS now routes requests to the VPS, but the active local SQLite core tables are empty while D1 remains populated (2026-10-17). Do not accept/perform financial commands or claim cutover until controlled data reconciliation and the owner gate are complete. No direct Public/Admin financial database writes.
 
 Each movement requires correct wallet/account ownership, supported asset, available/locked checks, signed numeric precision, idempotency, origin/destination, attributable status and audit linkage. Retries cannot duplicate principal or payouts, and a failed paired transfer cannot leave a one-sided mutation.
 

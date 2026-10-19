@@ -7,11 +7,8 @@ graphify-out/
 backend/node_modules/
 backend/dist/
 backend/src/prisma/d1-client/
-cloudflare-container-bootstrap/node_modules/
-cloudflare-container-bootstrap/dist/
-cloudflare-container-bootstrap/.wrangler/
-cloudflare-container-bootstrap/dexi-frontend/node_modules/
-cloudflare-container-bootstrap/dexi-frontend/.next/
+frontend/node_modules/
+frontend/.next/
 *.tsbuildinfo
 
 # Agent, plugin, telemetry, and visual-tool control surfaces
