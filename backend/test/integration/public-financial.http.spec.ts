@@ -1,5 +1,6 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { FinancialOperationsController } from '../../src/financial/financial-operations.controller';
 import { FinancialOperationsService } from '../../src/financial/financial-operations.service';
 import { WalletController } from '../../src/wallet/wallet.controller';
@@ -47,7 +48,7 @@ describe('Public financial C2 contract path', () => {
     d1 = new D1FinancialHarness();
     const module = await Test.createTestingModule({
       controllers: [FinancialOperationsController, WalletController],
-      providers: [FinancialOperationsService, WalletService, { provide: LedgerAuthorityService, useValue: {} }, { provide: D1FinancialCommandGateway, useValue: d1 }, { provide: D1PrismaService, useValue: d1 }, { provide: AuthService, useValue: { verifySensitiveAction: jest.fn().mockResolvedValue(undefined) } }],
+      providers: [FinancialOperationsService, WalletService, { provide: LedgerAuthorityService, useValue: {} }, { provide: D1FinancialCommandGateway, useValue: d1 }, { provide: D1PrismaService, useValue: d1 }, { provide: AuthService, useValue: { verifySensitiveAction: jest.fn().mockResolvedValue(undefined) } }, { provide: ConfigService, useValue: { get: (name: string) => name === 'NODE_ENV' ? 'test' : undefined } }],
     }).overrideGuard(JwtAuthGuard).useValue({ canActivate: (context: any) => { context.switchToHttp().getRequest().user = requestUser.user; return true; } }).overrideGuard(AuthSurfaceGuard).useValue({ canActivate: () => true }).compile();
     app = module.createNestApplication();
     await app.init();

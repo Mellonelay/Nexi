@@ -50,6 +50,23 @@ describe("D1FinancialCommandGateway", () => {
     delete process.env.D1_RUNTIME_ENABLED;
   });
 
+  describe("public market pair query validation", () => {
+    it.each([undefined, "", "   "])("rejects missing/empty active pair %s without hitting SQLite", async (pair) => {
+      const bridge = createBridge();
+      const gateway = new D1FinancialCommandGateway(bridge);
+      await expect(gateway.getActiveMarketPair(pair as string)).rejects.toThrow(BadRequestException);
+      expect(bridge.select).not.toHaveBeenCalled();
+    });
+
+    it.each([undefined, "", "   "])("rejects missing/empty Spot book and trades %s without hitting SQLite", async (pair) => {
+      const bridge = createBridge();
+      const gateway = new D1FinancialCommandGateway(bridge);
+      await expect(gateway.getSpotOrderBook(pair as string)).rejects.toThrow(BadRequestException);
+      await expect(gateway.listSpotTradesForPair(pair as string)).rejects.toThrow(BadRequestException);
+      expect(bridge.select).not.toHaveBeenCalled();
+    });
+  });
+
   describe("financial quote freshness", () => {
     const now = Date.parse("2026-10-08T01:00:00Z");
     let clock: jest.SpyInstance;

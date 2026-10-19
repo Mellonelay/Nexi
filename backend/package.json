@@ -20,7 +20,8 @@
     "test:cov": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "test:debug": "node --experimental-vm-modules --inspect-brk -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "NODE_OPTIONS=--experimental-vm-modules jest --config ./test/jest-e2e.json",
-    "test:local-sqlite": "NODE_OPTIONS=--experimental-vm-modules jest --config test/jest-local-sqlite.config.cjs test/d1/d1-prisma-local-sqlite.spec.ts test/d1/local-sqlite-nest-provider.spec.ts test/d1/local-sqlite-bridge.service.spec.ts test/jobs/local-durable-job.store.spec.ts --runInBand",
+    "test:local-sqlite": "NODE_OPTIONS=--experimental-vm-modules jest --config test/jest-local-sqlite.config.cjs test/d1/d1-prisma-local-sqlite.spec.ts test/d1/local-sqlite-nest-provider.spec.ts test/d1/local-sqlite-bridge.service.spec.ts test/jobs/local-durable-job.store.spec.ts test/d1/wallet-account-transfer.local-sqlite.spec.ts test/d1/governance.local-sqlite.spec.ts test/d1/margin-closing-guard.local-sqlite.spec.ts test/d1/margin-close-recovery.local-sqlite.spec.ts test/jobs/local-workflow.store.spec.ts --runInBand",
+    "test:all": "npm test -- --runInBand && npm run test:local-sqlite",
     "test:local-async": "NODE_OPTIONS=--experimental-vm-modules jest --config test/jest-local-async.config.cjs --runInBand"
   },
   "dependencies": {
@@ -128,6 +129,17 @@
     "transformIgnorePatterns": [],
     "modulePathIgnorePatterns": [
       "<rootDir>/dist/"
+    ],
+    "testPathIgnorePatterns": [
+      "<rootDir>/test/d1/d1-prisma-local-sqlite.spec.ts",
+      "<rootDir>/test/d1/local-sqlite-nest-provider.spec.ts",
+      "<rootDir>/test/d1/local-sqlite-bridge.service.spec.ts",
+      "<rootDir>/test/jobs/local-durable-job.store.spec.ts",
+      "<rootDir>/test/d1/wallet-account-transfer.local-sqlite.spec.ts",
+      "<rootDir>/test/d1/governance.local-sqlite.spec.ts",
+      "<rootDir>/test/d1/margin-closing-guard.local-sqlite.spec.ts",
+      "<rootDir>/test/d1/margin-close-recovery.local-sqlite.spec.ts",
+      "<rootDir>/test/jobs/local-workflow.store.spec.ts"
     ]
   }
 }

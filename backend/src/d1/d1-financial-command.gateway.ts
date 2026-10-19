@@ -987,6 +987,7 @@ export class D1FinancialCommandGateway {
     symbolValue: string,
   ): Promise<D1MarketPairRow | null> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    if (typeof symbolValue !== "string" || !symbolValue.trim()) throw new BadRequestException("Pair is required");
     const symbol = symbolValue
       .trim()
       .toUpperCase()
@@ -7647,6 +7648,7 @@ export class D1FinancialCommandGateway {
 
   async getSpotOrderBook(pairInput: string): Promise<Record<string, unknown>> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    if (typeof pairInput !== "string" || !pairInput.trim()) throw new BadRequestException("Pair is required");
     const pair = pairInput.trim().toUpperCase().replaceAll("/", "");
     const result = await this.bridge.select<Record<string, unknown>>(
       `SELECT * FROM "Gate2SpotOrder" WHERE "pair"=? AND "status" IN ('OPEN','PARTIALLY_FILLED') AND ("type" <> 'STOP' OR "triggeredAt" IS NOT NULL)`,
@@ -7712,6 +7714,7 @@ export class D1FinancialCommandGateway {
     pairInput: string,
   ): Promise<Record<string, unknown>[]> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    if (typeof pairInput !== "string" || !pairInput.trim()) throw new BadRequestException("Pair is required");
     const pair = pairInput.trim().toUpperCase().replaceAll("/", "");
     const result = await this.bridge.select<Record<string, unknown>>(
       `SELECT * FROM "Gate2SpotTrade" WHERE "pair"=? ORDER BY "createdAt" DESC LIMIT 50`,

@@ -43,6 +43,25 @@ describe('BullMQ Valkey connection configuration', () => {
 });
 
 describe('Local async runtime activation gate', () => {
+  it('does not shut down the provider while an already-running journal cycle remains in flight', async () => {
+    const runtime = make({});
+    let release!: () => void;
+    const pending = new Promise<void>(resolve => { release = resolve; });
+    (runtime as any).transport = { dispatchPending: () => pending };
+    (runtime as any).workflowStore = { due: async () => [] };
+    (runtime as any).workflows = { tick: async () => undefined };
+    const running = (runtime as any).cycle() as Promise<void>;
+    let shutdownFinished = false;
+    const shutdown = runtime.onModuleDestroy().then(() => { shutdownFinished = true; });
+    await Promise.resolve();
+    try {
+      expect(shutdownFinished).toBe(false);
+    } finally {
+      release();
+      await Promise.all([running, shutdown]);
+    }
+  });
+
   it('does not connect to queues or initialize a worker under the default configuration', async () => {
     const runtime = make({});
     await expect(runtime.onModuleInit()).resolves.toBeUndefined();

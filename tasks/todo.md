@@ -634,3 +634,16 @@ Receipt: `tasks/evidence/market-provider-runtime-20261017.md`.
 - CodeScene was available as **Worker-0 `mcpc @nexi-codescene` MCP** even though no `codescene` or `codesense` command was on PATH; `code_health_score` succeeded for Margin service with **7.4**. No additional OAuth sign-in was needed. MCP is v1.5.6 and advertises v1.5.10, left unchanged.
 - Focused test receipts remain: 23/23 Margin unit/transaction tests, financial controller guard-surface test, related KYC/deposit/identity suites (no full live-money acceptance). Doctor source report 84/100 and zero errors at the previously scanned checkout.
 - Git consolidation intentionally includes prior two untracked admin pnpm files, the Wrangler configuration and all tracked backend source/tests. Note `apps/admin/pnpm-workspace.yaml` currently contains a placeholder `allowBuilds` value; it is preserved by owner request and must not be interpreted as verified pnpm build policy. No cloud deployment executed.
+
+### 2026-10-19 — Backend component assurance reconciliation
+
+- [x] Preserve owner-closed financial acceptance; record bounded source/runtime/test evidence in NEXI_PROOF_REUSE_REGISTER.md and NEXI_CURRENT_STATE.md.
+- [x] Repair missing public read pair input and local async shutdown drain in source, focused RED/GREEN verified (not deployed).
+- [x] Isolated SQLite rollback suite 18/18; isolated async Valkey 4/4; workflow store alone 8/8.
+- [ ] CONTRADICTED: combined workflow trigger test 27/28; resolve causal reason before marking pass.
+- [ ] Finish independent off-VPS encrypted SQLite backup/restore, current-release deployment/recovery validation when prerequisites authorized.
+- [ ] Stage/fan-in only owned changes; no unrelated dirty-file overwrite. Evidence: tasks/evidence/nexi-backend-component-assurance-20261019.md.
+
+### 2026-10-19 diagnostic combination rerun (newer than 27/28 receipt)
+- [x] Instrumented combined local SQLite test 28/28 PASS (RDC PID 2016625); keep prior 27/28 contradiction visible.
+- [ ] Determine whether uninstrumented combined test is stable and identify the cause of intermittent trigger bypass; do not mark full runtime verified.

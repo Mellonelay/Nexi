@@ -1,5 +1,6 @@
 import { INestApplication, ValidationPipe } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
+import { ConfigService } from "@nestjs/config";
 import { FinancialOperationsController } from "../../src/financial/financial-operations.controller";
 import { FinancialOperationsService } from "../../src/financial/financial-operations.service";
 import { WalletController } from "../../src/wallet/wallet.controller";
@@ -131,6 +132,7 @@ describe("C3 Public ↔ Backend ↔ Admin financial causality", () => {
         { provide: D1FinancialCommandGateway, useValue: state },
         { provide: MarketProviderRouterService, useValue: { currentStatus: jest.fn() } },
         { provide: AuthService, useValue: { verifySensitiveAction: jest.fn().mockResolvedValue(undefined) } },
+        { provide: ConfigService, useValue: { get: (name: string) => name === "NODE_ENV" ? "test" : undefined } },
       ],
     })
       .overrideGuard(JwtAuthGuard)

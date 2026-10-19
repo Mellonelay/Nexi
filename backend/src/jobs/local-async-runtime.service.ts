@@ -93,6 +93,7 @@ export class LocalAsyncRuntimeService implements OnModuleInit, OnModuleDestroy {
   private readonly workers: Worker[] = [];
   private timer?: ReturnType<typeof setInterval>;
   private polling = false;
+  private cycleDone?: Promise<void>;
   private transport?: DurableQueueTransport;
   private workflows?: LocalWorkflowCoordinator;
   private workflowStore?: LocalWorkflowStore;
@@ -154,21 +155,27 @@ export class LocalAsyncRuntimeService implements OnModuleInit, OnModuleDestroy {
     await this.cycle();
   }
 
-  private async cycle(): Promise<void> {
-    if (this.polling || !this.transport || !this.workflowStore || !this.workflows) return;
-    this.polling = true;
-    try {
-      await this.transport.dispatchPending();
-      for (const row of await this.workflowStore.due(Date.now())) await this.workflows.tick(row.id);
-    } catch {
-      this.logger.warn('Local async cycle failed; persisted jobs will be retried');
-    } finally {
-      this.polling = false;
+  private cycle(): Promise<void> {
+    if (this.polling || !this.transport || !this.workflowStore || !this.workflows) {
+      return this.cycleDone ?? Promise.resolve();
     }
+    this.polling = true;
+    this.cycleDone = (async () => {
+      try {
+        await this.transport!.dispatchPending();
+        for (const row of await this.workflowStore!.due(Date.now())) await this.workflows!.tick(row.id);
+      } catch {
+        this.logger.warn('Local async cycle failed; persisted jobs will be retried');
+      } finally {
+        this.polling = false;
+      }
+    })();
+    return this.cycleDone;
   }
 
   async onModuleDestroy(): Promise<void> {
     if (this.timer) clearInterval(this.timer);
+    if (this.cycleDone) await this.cycleDone;
     for (const worker of this.workers) await worker.close();
     for (const queue of this.queues) await queue.close();
   }
