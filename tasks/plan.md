@@ -1,3 +1,9 @@
+## 2026-10-19 — Worker-0 graph-backed Doctor remediation and four-domain frontier
+
+Next: serialize current Binary/Mining focused changes and 334-diagnostic classification into canonical main; check affected CI, deploy one bounded backend build with rollback and running-release hash; preserve financial mutability boundary. No rerun of earlier 22/1/6 and 6/1/5 campaigns. For Binary/Mining/Loan/Withdrawal, only an explicitly permitted credential/session operation with verified economic accounting can close live acceptance; never call an unverified old blocked condition PASSED. Off-VPS restore deferred, not proof of failure.
+
+---
+
 ## 2026-10-19 — Previously omitted remaining-acceptance receipt and KYC config source check
 
 - Earlier 11:39 UTC remaining-acceptance report recovered and reconciled; do not repeat old Spot/Margin/Binary failures when subsequent proof supersedes.

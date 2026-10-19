@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException, Optional } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Prisma } from '../prisma/d1-client';
 import { createHash, randomUUID } from 'crypto';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -14,6 +15,7 @@ export class MiningService {
   constructor(
     private readonly redis: RedisService,
     private readonly d1: D1FinancialCommandGateway,
+    @Optional() private readonly config: ConfigService = new ConfigService(),
   ) {}
 
   private async publish(type: string, referenceId: string, payload: Record<string, unknown>): Promise<void> {
@@ -101,7 +103,7 @@ export class MiningService {
     timezone: 'UTC',
   })
   async distributeRewards() {
-    if (process.env.NEXI_SCHEDULER_ENABLED !== 'true') return { skipped: true };
+    if (this.config.get<string>('NEXI_SCHEDULER_ENABLED') !== 'true') return { skipped: true };
     const d1 = this.requireD1FinancialAuthority();
     const owner = randomUUID();
     const lockKey = 'nexi:scheduler:mining-rewards:daily';

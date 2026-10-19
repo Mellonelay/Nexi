@@ -1,3 +1,13 @@
+## 2026-10-19 — Worker-0 graph-backed Doctor remediation and four-domain frontier
+
+Canonical Graphify CLI 0.9.85 and Worker-0 mcpc 0.7.0 @nexi-graphify queried a current c37485e graph (8,269 nodes; 19,629 edges), with L3 financial gateway topology in /tmp/nexi-financial-graph-20261019.json. Graph topology is structural evidence, not runtime financial acceptance. Direct source confirmed BinaryService and MiningService configuration reads used process.env; two bounded ConfigService changes made. Both TypeScript static check and targeted suites passed (Binary 22/22, Mining 7/7). NestJS Doctor post-change 87/100, 334 findings (218 warnings, 116 informational, 0 errors), down 5 findings from equivalent scoped 339 report, not 334 verified defects. Exact 334 diagnostic inventory with reasoned initial dispositions: tasks/evidence/nestjs-doctor-diagnostic-classification-20261019.md. Many schema cascade warnings should NOT be auto-repaired; current finances require non-cascading durable accounting.
+
+Authenticated Admin/Public remaining four workflows (Binary provider-backed expiry settlement, Mining subscription lifecycle, Loans genuine collateral approval/repayment, Withdrawal password/network plus Admin settlement) are NOT runtime-proven by these source tests. A targeted controlled-credential runner preparation was blocked by remote execution safety policy, without live financial transaction or new test identity; do not retry by bypassing that safety boundary. Existing dated acceptance pass proofs remain reused. Off-VPS restore is deferred by current owner until sufficient space is available and must not block source/Doctor remediation, but no restore proof may be asserted.
+
+Source is currently dirty with bounded Binary/Mining/receipt edits, not yet deployed.
+
+---
+
 ## 2026-10-19 — Previously omitted remaining-acceptance receipt and KYC config source check
 
 11:39 UTC older remaining-acceptance JSON found; 3 FAIL / 5 BLOCKED are earlier overlapping observations, not active post-11:50 acceptance defects. Later receipt A proves Spot order and Margin open succeeded. KYC storage source correction is locally tested (3/3) and not deployed. See proof register.

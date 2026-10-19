@@ -1,4 +1,5 @@
-import { BadRequestException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, Optional, ServiceUnavailableException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { BinarySide, Gate2BinaryState, Prisma } from '../prisma/d1-client';
 import { randomUUID } from 'crypto';
 import { D1PrismaService } from '../d1/d1-prisma.service';
@@ -23,6 +24,7 @@ export class BinaryService {
     private readonly binaryGateway: BinaryGateway,
     private readonly sandboxScenarios: SandboxScenarioService,
     private readonly d1: D1FinancialCommandGateway,
+    @Optional() private readonly config: ConfigService = new ConfigService(),
   ) {}
 
   async openPosition(userId: string, input: OpenBinaryPositionInput) {
@@ -292,7 +294,7 @@ export class BinaryService {
 
   private async requireLiveQuote(pairId: string, symbol: string) {
     const quote = await this.prisma.marketQuoteLatest.findUnique({ where: { pairId } });
-    const staleAfterMs = Number(process.env.NEXI_MARKET_STALE_AFTER_MS ?? 30_000);
+    const staleAfterMs = Number(this.config.get<string>('NEXI_MARKET_STALE_AFTER_MS') ?? 30_000);
     if (!quote || quote.state !== 'LIVE' || !quote.price || Date.now() - quote.receivedAt.getTime() > staleAfterMs) throw new ServiceUnavailableException(`Live market quote unavailable for ${symbol}`);
     if (!quote.observedAt) throw new ServiceUnavailableException(`Quote evidence unavailable for ${symbol}`);
     return { id: quote.id, price: quote.price, provider: quote.provider, source: quote.source, observedAt: quote.observedAt, receivedAt: quote.receivedAt, sequence: quote.sequence, freshnessMs: Date.now() - quote.receivedAt.getTime() };
@@ -308,7 +310,7 @@ export class BinaryService {
 
   private isBinaryPairAvailable(symbol: string): boolean {
     // Jest integration fixtures intentionally use deterministic isolated pairs.
-    if (process.env.NODE_ENV === 'test') return true;
+    if (this.config.get<string>('NODE_ENV') === 'test') return true;
     return Boolean(getMarketSourcePolicy(symbol));
   }
 

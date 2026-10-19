@@ -1,3 +1,15 @@
+## 2026-10-19 — Worker-0 graph-backed Doctor remediation and four-domain frontier
+
+- [x] Worker-0 current graph CLI/mcpc and L3 targeted topology used; direct source owner confirmed.
+- [x] Binary/Mining ConfigService corrections pass TypeScript and 29/29 focused tests.
+- [x] All 334 current Doctor observations indexed and assigned provisional dispositions; 0 errors.
+- [ ] Four live financial/Admin positive lifecycles remain evidence-limited; no secret runner bypass.
+- [ ] 334 Doctor findings are not all fixed; review actionable configuration/guard/DI findings with source evidence, preserving financial schema constraints.
+- [ ] Coordinated Git/CI/build/deploy and exact source/runtime identity.
+- [ ] Off-VPS restore deferred by owner to after disk cleanup, not claimed tested.
+
+---
+
 ## 2026-10-19 — Previously omitted remaining-acceptance receipt and KYC config source check
 
 - Earlier 11:39 UTC remaining-acceptance report recovered and reconciled; do not repeat old Spot/Margin/Binary failures when subsequent proof supersedes.
