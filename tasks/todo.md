@@ -1,3 +1,9 @@
+## 2026-10-19 — Owner acceptance: four outstanding backend gates closed for current phase
+
+CURRENT OWNER DECISION: Mark remaining four gate rows CLOSED_BY_OWNER_ACCEPTANCE and stop further live backend acceptance for this phase. The owner accepts existing backend/NestJS/schema implementation plus authenticated receipt 20 PASS / 0 FAIL / 4 BLOCKED as sufficient to close the present backend testing campaign. This closes the **work requirement**, not the historical test outcomes. Status per gate: Mining maturity/accrual/redeem = OWNER_ACCEPTED_UNTESTED; Loan collateral/apply/Admin approve/repay = OWNER_ACCEPTED_UNTESTED; Withdrawal security/network/request/Admin settlement = OWNER_ACCEPTED_UNTESTED; Ledger/Activity/EventOutbox per-operation reconciliation = OWNER_ACCEPTED_UNTESTED. Verified receipt remains `fullyAccepted=false` and is immutable; do not assert that blocked HTTP actions passed, that financial postings were reconciled, or that the four lifecycles were runtime verified. Reopen only upon a new owner decision or contradictory production evidence. No financial, schema, or deployment changes occur in this owner-acceptance documentation operation.
+
+---
+
 ## 2026-10-19 — Authenticated four-lifecycle receipt (20 PASS / 0 FAIL / 4 BLOCKED)
 
 - [x] Authenticated Binary full open/settle/history and Mining subscribe/replay/cancel: live receipt 20 pass, 0 fail.
