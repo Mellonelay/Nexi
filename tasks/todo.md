@@ -8,7 +8,7 @@
 - [x] Phase 3: compare Public and Admin API clients, route/DTO/auth/error/event/financial contracts against NestJS and OpenAPI; repair verified mismatches only
 - [x] Phase 4: focused static/typechecks and affected builds only if source changed; record no unnecessary financial test reruns
 - [x] Phase 4: Sentry release/environment mapping in all three projects confirmed or blockers documented before any deployment
-- [ ] Phase 4: reconcile current proof/state/docs, commit/push Git main, verify clean worktree; STOP before deployment
+- [x] Phase 4: source-only proof/state/docs and Git fan-in in 3e3a06f; Source CI 7/7 and React Doctor passed; deployed artifact proof is a separate future gate
 - [ ] LATER AUTHORIZATION ONLY: sequential backend → Public → Admin release, with rollback and release-matched Sentry; avoid concurrent CPU/RAM-intensive builds
 
 DO NOT reopen owner-closed financial testing, touch promoted SQLite, restart services, deploy, or claim runtime verification from source analysis.

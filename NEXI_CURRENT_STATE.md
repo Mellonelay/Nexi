@@ -350,3 +350,7 @@ Source directories renamed to frontend/, Admin/, backend/. Worker/bootstrap sour
 ## Source documentation checkpoint — 2026-10-19
 
 Source-only contract documentation now inventories 213 OpenAPI paths / 234 HTTP operations, 25 NestJS controller source files, and 30 NestJS module source files in `docs/architecture/NEXI_BACKEND_API_SQLITE_SOURCE_MAP.md`. Companion backend diagram: `backend/docs/NEXI_SQLITE_API_ROUTING_MAP.md`. This is an API/code inventory, not deployed behavioral verification. Canonical paths remain `frontend/`, `Admin/`, `backend/`; no services, SQLite state, queues or schema were mutated in this documentation slice.
+
+## 2026-10-20 Source-only phases 1–4 completion receipt
+
+GitHub main source-only commit 3e3a06f published. NestJS Swagger preview deterministically regenerated 223 paths / 245 operations, with 245 matching route-map rows. GitHub NEXI VPS Source CI 39310172747 completed 7/7 and React Doctor 39310172470 passed. Source-level SQLite, Ledger, EventOutbox, BullMQ/Valkey, the four owner-closed financial business workflows and Public/Admin API contracts were reconciled without replaying financial acceptance or mutating production SQLite. No service restart or deployment. Sentry release/environment source configuration is documented but new deployed artifact identity remains UNVERIFIED pending the later separately authorized sequential backend/Public/Admin rollout. Four financial acceptance workflows remain CLOSED_BY_OWNER_ACCEPTANCE; untested outcomes are not PASSED.
