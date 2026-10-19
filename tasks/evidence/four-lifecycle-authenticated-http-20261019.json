@@ -1,0 +1,152 @@
+{
+  "runId": "565068f6-3cd7-4c83-a576-0db585d521ba",
+  "at": "2026-10-19T05:35:22.419Z",
+  "counts": {
+    "pass": 20,
+    "fail": 0,
+    "blocked": 4
+  },
+  "results": [
+    {
+      "area": "RUNTIME",
+      "operation": "ready",
+      "http": 200,
+      "status": "PASS"
+    },
+    {
+      "area": "AUTH",
+      "operation": "public",
+      "http": 200,
+      "status": "PASS"
+    },
+    {
+      "area": "AUTH",
+      "operation": "admin",
+      "http": 200,
+      "status": "PASS"
+    },
+    {
+      "area": "BINARY",
+      "operation": "config",
+      "http": 200,
+      "status": "PASS"
+    },
+    {
+      "area": "BINARY",
+      "operation": "fund",
+      "http": 201,
+      "status": "PASS"
+    },
+    {
+      "area": "BINARY",
+      "operation": "open",
+      "http": 201,
+      "status": "PASS"
+    },
+    {
+      "area": "BINARY",
+      "operation": "settle",
+      "http": 201,
+      "status": "PASS"
+    },
+    {
+      "area": "BINARY",
+      "operation": "history",
+      "http": 200,
+      "status": "PASS"
+    },
+    {
+      "area": "MINING",
+      "operation": "plans",
+      "http": 200,
+      "status": "PASS"
+    },
+    {
+      "area": "MINING",
+      "operation": "fund",
+      "http": 201,
+      "status": "PASS"
+    },
+    {
+      "area": "MINING",
+      "operation": "subscribe",
+      "http": 201,
+      "status": "PASS"
+    },
+    {
+      "area": "MINING",
+      "operation": "subscribe-replay",
+      "http": 201,
+      "status": "PASS"
+    },
+    {
+      "area": "MINING",
+      "operation": "cancel",
+      "http": 201,
+      "status": "PASS"
+    },
+    {
+      "area": "MINING_ECONOMIC_COMPLETION",
+      "status": "BLOCKED",
+      "reason": "Full accrual/redeem requires eligible maturity and is not established by subscribe/cancel"
+    },
+    {
+      "area": "LOANS",
+      "operation": "plans",
+      "http": 200,
+      "status": "PASS"
+    },
+    {
+      "area": "LOANS",
+      "status": "BLOCKED",
+      "reason": "Genuine collateral statement and accessible evidence image required (NEXI_COLLATERAL, NEXI_COLLATERAL_IMG)"
+    },
+    {
+      "area": "WITHDRAWAL",
+      "operation": "list",
+      "http": 200,
+      "status": "PASS"
+    },
+    {
+      "area": "WITHDRAWAL",
+      "status": "BLOCKED",
+      "reason": "Configured security password and approved destination network/address required"
+    },
+    {
+      "area": "READBACK",
+      "operation": "wallet",
+      "http": 200,
+      "status": "PASS"
+    },
+    {
+      "area": "READBACK",
+      "operation": "activity",
+      "http": 200,
+      "status": "PASS"
+    },
+    {
+      "area": "READBACK",
+      "operation": "ledger",
+      "http": 200,
+      "status": "PASS"
+    },
+    {
+      "area": "READBACK",
+      "operation": "admin-withdrawals",
+      "http": 200,
+      "status": "PASS"
+    },
+    {
+      "area": "READBACK",
+      "operation": "admin-loans",
+      "http": 200,
+      "status": "PASS"
+    },
+    {
+      "area": "ACCOUNTING_CORRELATION",
+      "status": "BLOCKED",
+      "reason": "HTTP readbacks do not prove per-economic-group Ledger/Activity/Outbox equality; reconcile recorded IDs using read-only SQLite"
+    }
+  ],
+  "fullyAccepted": false
+}

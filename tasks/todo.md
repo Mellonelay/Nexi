@@ -1,3 +1,21 @@
+## 2026-10-19 — Authenticated four-lifecycle receipt (20 PASS / 0 FAIL / 4 BLOCKED)
+
+- [x] Authenticated Binary full open/settle/history and Mining subscribe/replay/cancel: live receipt 20 pass, 0 fail.
+- [ ] Mining accrual/redeem after eligible maturity.
+- [ ] Loan collateral/application/Admin approval/repay.
+- [ ] Withdrawal configured security/network request and Admin settlement.
+- [ ] Ledger/Activity/Outbox economic-group correlation.
+
+---
+
+## 2026-10-19 — Controlled authenticated four-lifecycle receipt (partial acceptance, proof reused)
+
+Direct Worker-0 acceptance receipt: `/tmp/nexi-four-lifecycle-565068f6-3cd7-4c83-a576-0db585d521ba.json`, at `2026-10-19T05:35:22.419Z`, records **20 PASS / 0 FAIL / 4 BLOCKED** and `fullyAccepted: false`. Public SIWE and Admin login passed; `/readyz` 200; Binary config, finance wallet funding, opening, settling, history passed; Mining plan, funding, subscribe, same-idempotency replay, cancel passed; Loan plan list and Withdrawal list passed; Public wallet, Activity, Ledger and Admin withdrawal/loan HTTP reads passed. These HTTP status checks establish endpoint success; exact expiry WIN/LOSS, cashflow equality and durable postings have not been independently proven by this receipt. The current live backend test pass subset is `AUTHENTICATED_HTTP_VERIFIED`; overall economic/Admin test completion remains **PARTIALLY_VERIFIED, NOT CLOSED**.
+
+Explicit outstanding gates: (1) Mining reward accrual/maturity and redeem, (2) Loan genuine collateral + accessible image and Admin approve/repay, (3) Withdrawal configured security password/network/destination and Admin review/settle, (4) read-only per-economic-group Ledger/Activity/EventOutbox correlation. `fullyAccepted=false` is retained exactly. Owner considers live backend testing finished for now; stop repeating already proven HTTP paths, record remaining gates as `BLOCKED_WITH_EVIDENCE`/deferred, not `COMPLETED`.
+
+---
+
 ## 2026-10-19 — Final bounded Binary/Mining deployment and outstanding acceptance gate
 
 - [x] GitHub 033f6f2 CI 5/5, built/deployed verified Binary and Mining JS, healthy API SQLite/Redis release.
