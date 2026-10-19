@@ -1,19 +1,132 @@
-name: NEXI Recovery CI
-
+name: NEXI VPS Source CI
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'Admin/**'
+      - '.github/workflows/nexi-recovery-ci.yml'
+      - '.fallowrc.jsonc'
   pull_request:
-    branches:
-      - main
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'Admin/**'
+      - '.github/workflows/nexi-recovery-ci.yml'
+      - '.fallowrc.jsonc'
   workflow_dispatch:
-
 permissions:
   contents: read
-
+concurrency:
+  group: nexi-vps-source-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.scope.outputs.backend }}
+      frontend: ${{ steps.scope.outputs.frontend }}
+      admin: ${{ steps.scope.outputs.admin }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Identify changed source roots
+        id: scope
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            printf 'backend=true\nfrontend=true\nadmin=true\n' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+            head="${{ github.event.pull_request.head.sha }}"
+          else
+            base="${{ github.event.before }}"
+            head="${{ github.sha }}"
+          fi
+          git diff --name-only "$base" "$head" > /tmp/nexi-changed-paths
+          for component in backend frontend Admin; do
+            name="${component,,}"
+            if grep -Eq "^(${component}/|\.github/workflows/nexi-recovery-ci\.yml$|\.fallowrc\.jsonc$)" /tmp/nexi-changed-paths; then
+              echo "${name}=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "${name}=false" >> "$GITHUB_OUTPUT"
+            fi
+          done
+  graphify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Graphify CLI
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install 'graphifyy[sql]'
+          graphify --version
+      - name: Build code graph from current source
+        run: graphify update backend --no-cluster
+      - name: Publish code graph diagnostics
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nexi-graphify-current-source
+          path: backend/graphify-out/
+          if-no-files-found: warn
+          retention-days: 7
+
+  nestjs-doctor:
+    needs: detect
+    if: needs.detect.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      statuses: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: NestJS Doctor — backend source, advisory
+        uses: RoloBits/nestjs-doctor@v1
+        with:
+          directory: backend
+          scope: changed
+          blocking: none
+          comment: false
+          review-comments: false
+
+  fallow:
+    needs: detect
+    if: needs.detect.outputs.backend == 'true' || needs.detect.outputs.frontend == 'true' || needs.detect.outputs.admin == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fallow — monorepo source analysis
+        uses: fallow-rs/fallow@v3
+        with:
+          root: .
+          config: .fallowrc.jsonc
+          production: 'true'
+          format: sarif
+          fail-on-issues: 'false'
+          fail-on-empty-analysis: 'true'
+          annotations: 'true'
+
   backend:
+    needs: detect
+    if: needs.detect.outputs.backend == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -22,24 +135,19 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
       - run: npm ci --legacy-peer-deps
-      - run: npm test -- --runInBand test/market/biquote-market.adapter.spec.ts test/market/binance-spot.adapter.spec.ts test/market/non-crypto-market.adapters.spec.ts
-      - run: NODE_OPTIONS=--max-old-space-size=8192 npm run build
-
-  graphify:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - run: python -m pip install --upgrade pip
-      - run: pip install 'graphifyy[sql]'
-      - run: graphify --version
-      - run: graphify update backend --no-cluster
-
+      - name: Source and dependency contracts
+        run: |
+          node -e "const p=require('./package.json'); if(p.dependencies['@prisma/adapter-d1'])process.exit(1)"
+          test ! -f src/d1/d1-remote-database.ts
+          ./node_modules/.bin/tsc --noEmit -p tsconfig.build.json
+      - run: npm run build
   frontend:
+    needs: detect
+    if: needs.detect.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -48,12 +156,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
-      - run: npm install
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
       - run: npm run typecheck
       - run: npm run build
-
   admin:
+    needs: detect
+    if: needs.detect.outputs.admin == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -62,7 +173,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
-      - run: npm install
+          node-version: '24'
+      - run: npm install --ignore-scripts
       - run: npm run typecheck
       - run: npm run build

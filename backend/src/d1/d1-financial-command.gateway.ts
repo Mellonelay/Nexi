@@ -239,7 +239,7 @@ export class D1FinancialCommandGateway {
   constructor(private readonly bridge: D1WorkerBridgeService) {}
 
   isEnabled(): boolean {
-    return process.env.D1_RUNTIME_ENABLED === "true" && this.bridge.isEnabled();
+    return this.bridge.isEnabled();
   }
 
   async ensureAccount(

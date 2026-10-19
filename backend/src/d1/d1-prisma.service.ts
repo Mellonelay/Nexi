@@ -1,12 +1,10 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PrismaD1 } from '@prisma/adapter-d1';
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
 import { existsSync } from 'node:fs';
 import { isAbsolute } from 'node:path';
 import { PrismaClient as D1PrismaClient } from '../prisma/d1-client/index.js';
-import { D1RemoteDatabase, type D1RunResult } from './d1-remote-database';
-import { D1WorkerBridgeService, type D1BridgeBatchStatement } from './d1-worker-bridge.service';
+import { D1WorkerBridgeService, type D1BridgeBatchStatement, type D1BridgeBatchResult } from './d1-worker-bridge.service';
 
 /** Initialize every physical Prisma connection before any application query. */
 class DurableSqliteAdapter extends PrismaBetterSqlite3 {
@@ -40,38 +38,18 @@ class DurableSqliteAdapter extends PrismaBetterSqlite3 {
   }
 }
 
-/**
- * The existing Prisma schema is SQLite for both Cloudflare D1 and local SQLite.
- * Live D1 remains the default; local SQLite is an explicit, fail-closed opt-in.
- * Financial commands keep their separate atomic batch boundary in both modes.
- */
+/** Promoted VPS SQLite is the only current Prisma authority. */
 @Injectable()
 export class D1PrismaService extends D1PrismaClient implements OnModuleInit, OnModuleDestroy {
-  private readonly enabled: boolean;
-  private readonly localMode: boolean;
-  private readonly database: D1RemoteDatabase | null;
+  private readonly enabled = true;
+  private readonly localMode = true;
 
-  constructor(
-    private readonly bridge: D1WorkerBridgeService,
-    config: ConfigService,
-  ) {
-    const localMode = config.get<string>('NEXI_SQLITE_LOCAL_ENABLED', 'false') === 'true';
-    let database: D1RemoteDatabase | null = null;
-    let adapter: PrismaD1 | PrismaBetterSqlite3;
-    if (localMode) {
-      const filename = config.get<string>('NEXI_LOCAL_SQLITE_PATH', '');
-      if (!filename || !isAbsolute(filename) || !existsSync(filename)) {
-        throw new Error('NEXI_LOCAL_SQLITE_PATH must identify an existing absolute SQLite file');
-      }
-      adapter = new DurableSqliteAdapter({ url: `file:${filename}`, timeout: 5000, fileMustExist: true });
-    } else {
-      database = new D1RemoteDatabase();
-      adapter = new PrismaD1(database as never);
+  constructor(private readonly bridge: D1WorkerBridgeService, config: ConfigService) {
+    const filename = config.get<string>('NEXI_LOCAL_SQLITE_PATH', '');
+    if (!filename || !isAbsolute(filename) || !existsSync(filename)) {
+      throw new Error('NEXI_LOCAL_SQLITE_PATH must identify an existing absolute SQLite file');
     }
-    super({ adapter } as never);
-    this.database = database;
-    this.localMode = localMode;
-    this.enabled = localMode || config.get<string>('D1_RUNTIME_ENABLED', 'false') === 'true';
+    super({ adapter: new DurableSqliteAdapter({ url: `file:${filename}`, timeout: 5000, fileMustExist: true }) } as never);
   }
 
   async onModuleInit(): Promise<void> {
@@ -94,25 +72,10 @@ export class D1PrismaService extends D1PrismaClient implements OnModuleInit, OnM
    * Preserve one-connection atomic batch semantics. In local mode the bridge
    * instance uses BEGIN IMMEDIATE, not Prisma interactive transactions.
    */
-  async atomicBatch(statements: readonly D1BridgeBatchStatement[]): Promise<D1RunResult[]> {
-    if (!this.enabled) throw new Error('D1 / SQLite runtime is disabled');
-    if (statements.length < 1 || statements.length > 16) {
-      throw new Error('Atomic batch requires between 1 and 16 statements');
-    }
-    if (this.localMode) {
-      if (!this.bridge.isEnabled()) throw new Error('Local SQLite batch bridge is disabled');
-      const batch = await this.bridge.batch([...statements]);
-      return batch.results.map(result => ({
-        success: result.success !== false,
-        meta: result.meta,
-        results: result.results as Record<string, unknown>[] | undefined,
-      }));
-    }
-    const database = this.database;
-    if (!database) throw new Error('D1 database adapter unavailable');
-    return database.batch(statements.map(statement =>
-      database.prepare(statement.sql).bind(...(statement.params ?? [])),
-    ));
+  async atomicBatch(statements: readonly D1BridgeBatchStatement[]): Promise<D1BridgeBatchResult['results']> {
+    if (!this.bridge.isEnabled()) throw new Error('Local SQLite batch bridge is disabled');
+    if (statements.length < 1 || statements.length > 16) throw new Error('Atomic batch requires between 1 and 16 statements');
+    return (await this.bridge.batch([...statements])).results;
   }
 
   async isReady(): Promise<boolean> {

@@ -2,8 +2,6 @@ export interface RuntimeConfig {
   nodeEnv: string;
   host: string;
   port: number;
-  d1RuntimeEnabled: boolean;
-  d1BridgeEnabled: boolean;
   redisUrl: string;
   jwtSecret: string;
   corsOrigins: string[];
@@ -55,17 +53,14 @@ function parseCorsOrigins(rawOrigins: string | undefined, isProduction: boolean)
 export function resolveRuntimeConfig(environment: NodeJS.ProcessEnv = process.env): RuntimeConfig {
   const nodeEnv = environment.NODE_ENV?.trim() || 'development';
   const isProduction = nodeEnv === 'production';
-  const d1RuntimeEnabled = requiredValue(environment, 'D1_RUNTIME_ENABLED');
-  const d1BridgeEnabled = requiredValue(environment, 'D1_BRIDGE_ENABLED');
-  if (d1RuntimeEnabled !== 'true') throw new Error('D1_RUNTIME_ENABLED must be true');
-  if (d1BridgeEnabled !== 'true') throw new Error('D1_BRIDGE_ENABLED must be true');
+  if (environment.NEXI_SQLITE_LOCAL_ENABLED !== 'true') throw new Error('NEXI_SQLITE_LOCAL_ENABLED must be true');
+  const sqlitePath = requiredValue(environment, 'NEXI_LOCAL_SQLITE_PATH');
+  if (!sqlitePath.startsWith('/')) throw new Error('NEXI_LOCAL_SQLITE_PATH must be absolute');
 
   return {
     nodeEnv,
     host: environment.HOST?.trim() || '0.0.0.0',
     port: parsePort(environment.PORT),
-    d1RuntimeEnabled: true,
-    d1BridgeEnabled: true,
     redisUrl: requiredValue(environment, 'REDIS_URL'),
     jwtSecret: requiredValue(environment, 'JWT_SECRET'),
     corsOrigins: parseCorsOrigins(environment.CORS_ORIGINS, isProduction),

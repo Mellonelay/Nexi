@@ -20,7 +20,7 @@ export class D1CommunicationsCommandGateway {
   constructor(private readonly bridge: D1WorkerBridgeService, @Optional() private readonly config: ConfigService = new ConfigService()) {}
 
   isEnabled(): boolean {
-    return this.config.get<string>("D1_RUNTIME_ENABLED") === "true" && this.bridge.isEnabled();
+    return this.bridge.isEnabled();
   }
 
   async markMessageRead(userId: string, messageId: string): Promise<boolean> {

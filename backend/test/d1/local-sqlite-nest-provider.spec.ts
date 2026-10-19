@@ -9,7 +9,7 @@ import { D1PrismaModule } from '../../src/d1/d1-prisma.module';
 import { D1PrismaService } from '../../src/d1/d1-prisma.service';
 import { LocalSqliteBridgeService } from '../../src/d1/local-sqlite-bridge.service';
 
-describe('NEXI SQLite / D1 Nest provider selection', () => {
+describe('NEXI SQLite Nest provider selection', () => {
   let root: string;
   const original = {
     mode: process.env.NEXI_SQLITE_LOCAL_ENABLED,
@@ -49,19 +49,18 @@ describe('NEXI SQLite / D1 Nest provider selection', () => {
     return module;
   }
 
-  it('preserves D1 bridge as the default without an opt-in', async () => {
+  it('uses SQLite bridge without a remote opt-in', async () => {
     const module = await initialize();
     try {
       const bridge = module.get(D1WorkerBridgeService);
-      expect(bridge).toBeInstanceOf(D1WorkerBridgeService);
-      expect(bridge).not.toBeInstanceOf(LocalSqliteBridgeService);
-      expect(module.get(D1PrismaService).isEnabled()).toBe(false);
+      expect(bridge).toBeInstanceOf(LocalSqliteBridgeService);
+      expect(module.get(D1PrismaService).isEnabled()).toBe(true);
     } finally {
       await module.close();
     }
   });
 
-  it('routes Nest bridge and Prisma to local SQLite only with explicit opt-in', async () => {
+  it('routes Nest bridge and Prisma to promoted SQLite when configured', async () => {
     process.env.NEXI_SQLITE_LOCAL_ENABLED = 'true';
     const module = await initialize();
     try {

@@ -11,7 +11,7 @@ const FAIL = (message: string): never => { throw new Error(`STAGING_FIXTURE_${me
 
 async function main() {
   if (process.env.NODE_ENV !== 'staging') FAIL('REQUIRES_NODE_ENV_STAGING');
-  if (process.env.D1_RUNTIME_ENABLED !== 'true' || process.env.D1_BRIDGE_ENABLED !== 'true') FAIL('REQUIRES_D1_RUNTIME_AND_BRIDGE');
+  if (process.env.NEXI_SQLITE_LOCAL_ENABLED !== 'true') FAIL('REQUIRES_SQLITE_LOCAL_ENABLED');
   const app = await NestFactory.createApplicationContext(AppModule, { logger: false });
   try {
     const d1 = app.get(D1FinancialCommandGateway);

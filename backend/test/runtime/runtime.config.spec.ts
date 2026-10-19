@@ -1,8 +1,8 @@
 import { isCorsOriginAllowed, resolveRuntimeConfig } from '../../src/runtime/runtime.config';
 
 const baseEnvironment = {
-  D1_RUNTIME_ENABLED: 'true',
-  D1_BRIDGE_ENABLED: 'true',
+  NEXI_SQLITE_LOCAL_ENABLED: 'true',
+  NEXI_LOCAL_SQLITE_PATH: '/tmp/nexi-test.sqlite',
   REDIS_URL: 'redis://example.invalid:6379',
   JWT_SECRET: 'test-only-jwt-secret-with-sufficient-length',
 };
@@ -13,16 +13,16 @@ describe('runtime configuration', () => {
     expect(resolveRuntimeConfig({ ...baseEnvironment, HOST: '127.0.0.1' }).host).toBe('127.0.0.1');
   });
 
-  it('rejects missing D1 runtime dependencies without using fallbacks', () => {
-    expect(() => resolveRuntimeConfig({ REDIS_URL: baseEnvironment.REDIS_URL })).toThrow('D1_RUNTIME_ENABLED');
-    expect(() => resolveRuntimeConfig({ ...baseEnvironment, D1_RUNTIME_ENABLED: 'false' })).toThrow('D1_RUNTIME_ENABLED must be true');
+  it('requires explicit local SQLite authority', () => {
+    expect(() => resolveRuntimeConfig({ REDIS_URL: baseEnvironment.REDIS_URL })).toThrow('NEXI_SQLITE_LOCAL_ENABLED');
+    expect(() => resolveRuntimeConfig({ ...baseEnvironment, NEXI_SQLITE_LOCAL_ENABLED: 'false' })).toThrow('NEXI_SQLITE_LOCAL_ENABLED must be true');
   });
 
   it('rejects a missing JWT secret instead of using a fallback', () => {
     expect(() => resolveRuntimeConfig({
       REDIS_URL: baseEnvironment.REDIS_URL,
-      D1_RUNTIME_ENABLED: baseEnvironment.D1_RUNTIME_ENABLED,
-      D1_BRIDGE_ENABLED: baseEnvironment.D1_BRIDGE_ENABLED,
+      NEXI_SQLITE_LOCAL_ENABLED: baseEnvironment.NEXI_SQLITE_LOCAL_ENABLED,
+      NEXI_LOCAL_SQLITE_PATH: baseEnvironment.NEXI_LOCAL_SQLITE_PATH,
     })).toThrow('JWT_SECRET');
   });
 
