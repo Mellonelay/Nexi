@@ -1,1 +1,3 @@
-{}
+{
+  "3324171": "backend/src/jobs/local-durable-job.schema.sql"
+}
