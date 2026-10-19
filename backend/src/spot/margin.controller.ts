@@ -29,7 +29,7 @@ export class MarginController {
   constructor(private readonly marginService: MarginService) {}
 
   @Get("quote")
-  getQuote(@Query("pair") pair: string) {
+  getQuote(@Query("pair") pair?: string) {
     return this.marginService.getQuote(pair);
   }
 

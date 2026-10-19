@@ -1,4 +1,5 @@
 import { LedgerAccountScope, OrderSide, Prisma, SpotMarginPositionStatus } from '../../src/prisma/d1-client';
+import { BadRequestException } from '@nestjs/common';
 import { MarginService } from '../../src/spot/margin.service';
 import { MarginPositionDirection, MarginTransferDirection } from '../../src/spot/margin.dto';
 
@@ -212,5 +213,14 @@ describe('Spot isolated margin authority', () => {
     await expect((service as any).resolveAllowedLeverages()).resolves.toEqual([2, 4, 8]);
     await expect((service as any).resolveMaintenanceRatio()).resolves.toEqual(new Prisma.Decimal('0.35'));
     await expect((service as any).assertConfiguredLeverage(5)).rejects.toThrow('Margin leverage is not supported');
+  });
+
+  it.each([undefined, '', '   '])('rejects a missing or blank quote pair (%p) with 400 before any D1 lookup', async (pairInput) => {
+    const d1: any = { getActiveMarketPair: jest.fn(), getLiveMarketQuote: jest.fn() };
+    const request = new MarginService(d1).getQuote(pairInput);
+    await expect(request).rejects.toBeInstanceOf(BadRequestException);
+    await expect(request).rejects.toThrow('Pair is required');
+    expect(d1.getActiveMarketPair).not.toHaveBeenCalled();
+    expect(d1.getLiveMarketQuote).not.toHaveBeenCalled();
   });
 });

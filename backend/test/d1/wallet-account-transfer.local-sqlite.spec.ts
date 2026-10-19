@@ -336,6 +336,8 @@ describe('financial operations on local SQLite', () => {
       VALUES ('historical-btcusdt','BTCUSDT','historical-btc','historical-usdt','MAINTENANCE',CURRENT_TIMESTAMP)`).run();
     db.close();
     expect(await gateway.getActiveMarketPair('BTCUSDT')).toBeNull();
+    expect(await gateway.getActiveMarketPair(undefined as unknown as string)).toBeNull();
+    expect(await gateway.getActiveMarketPair('  ')).toBeNull();
     expect(await gateway.getMarketPairForSettlement('BTC/USDT'))
       .toMatchObject({id:'historical-btcusdt',symbol:'BTCUSDT',baseAsset:'BTC',quoteAsset:'USDT'});
   });

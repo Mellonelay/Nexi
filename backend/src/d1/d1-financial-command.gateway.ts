@@ -987,6 +987,8 @@ export class D1FinancialCommandGateway {
     symbolValue: string,
   ): Promise<D1MarketPairRow | null> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    if (typeof symbolValue !== "string" || symbolValue.trim() === "")
+      return null;
     const symbol = symbolValue
       .trim()
       .toUpperCase()

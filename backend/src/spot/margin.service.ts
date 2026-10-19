@@ -88,7 +88,7 @@ export class MarginService {
     return { accountId: account.id, pair: pair.symbol, quoteState: quote?.state ?? 'UNAVAILABLE', markPrice: quote?.price ?? null, positions: positions.filter((position) => position.accountId === account.id) };
   }
 
-  async getQuote(pairInput: string) {
+  async getQuote(pairInput: string | undefined) {
     const pair = await this.requirePair(pairInput);
     const quote = await this.requireQuote(pair.id, pair.symbol);
     return { pair: pair.symbol, state: quote.state, price: String(quote.price), quoteId: quote.id, provider: quote.provider, source: quote.source, observedAt: quote.observedAt, receivedAt: quote.receivedAt, maintenanceRatio: (await this.resolveMaintenanceRatio()).toString(), leverageOptions: await this.resolveAllowedLeverages() };
@@ -158,7 +158,8 @@ export class MarginService {
     return this.d1.settleMarginClose({ positionId, userId, closeOrderId: String(filled.id), state: liquidation ? 'LIQUIDATED' : 'CLOSED', markPrice: closePrice.toString(), realizedPnl: pnl.toString(), repayment: repayment.toString(), debtAsset: String(position.debtAsset), activityId: crypto.randomUUID(), idempotencyKey, correlationId: idempotencyKey, maintenanceRatio: ratio?.toString() });
   }
 
-  private async requirePair(value: string) {
+  private async requirePair(value: string | undefined) {
+    if (typeof value !== 'string' || value.trim() === '') throw new BadRequestException('Pair is required');
     const pair = await this.d1.getActiveMarketPair(value);
     if (!pair) throw new BadRequestException('Pair is unavailable or under maintenance');
     return pair;
