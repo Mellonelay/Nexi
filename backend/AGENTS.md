@@ -53,3 +53,7 @@ Root `AGENTS.md` and latest owner decisions override historical D1/current-empty
 
 ## Current SQLite and BullMQ operational contract
 Current NEXI VPS authority (2026-10-19): Name.com DNS -> VPS Nginx -> Public Next.js / Admin / NestJS nexi-api.service -> promoted SQLite /var/lib/nexi/sqlite/nexi-staging.sqlite. NestJS owns domain logic; LedgerAccount/LedgerPosting accounting; EventOutbox/EventInbox and SQLite job/workflow journals durability. Aiven Valkey carries BullMQ, Socket.IO Redis Streams and cache, never financial truth. Sentry and journald provide telemetry. Read docs/architecture/NEXI_SYSTEM_ARCHITECTURE.md and docs/operations/NEXI_VPS_SQLITE_BULLMQ_RUNBOOK.md. Preserve SQLite WAL/SHM, backups, migrations and durable history.
+
+## API and SQLite source map
+
+Use `backend/docs/NEXI_SQLITE_API_ROUTING_MAP.md` and `docs/architecture/NEXI_BACKEND_API_SQLITE_SOURCE_MAP.md` for source-derived controllers, route prefixes, DTO imports and OpenAPI operations. NestJS owns authorization/business logic; promoted SQLite owns durable data; Ledger/Outbox/Inbox and job/workflow journals are SQLite-backed; Valkey/BullMQ is transport only. Reuse proven tests and do not rerun acceptance without owner authorization.

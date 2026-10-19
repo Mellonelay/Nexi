@@ -31,3 +31,7 @@ Public Next.js and Admin → VPS Nginx → NestJS service `nexi-api.service`. Pr
 - BullMQ workers: https://docs.bullmq.io/guide/workers/
 - BullMQ NestJS: https://docs.bullmq.io/guide/nestjs/
 - BullMQ API: https://docs.bullmq.io/api/index.html
+
+## Source-derived API mapping
+
+For all current OpenAPI routes, method operationIds, source controller decorators, module registrations and DTO import references see [NEXI backend map](../architecture/NEXI_BACKEND_API_SQLITE_SOURCE_MAP.md) and `backend/docs/NEXI_SQLITE_API_ROUTING_MAP.md`. Generated from the checked source; no claim of route-to-service join completeness beyond listed imports.

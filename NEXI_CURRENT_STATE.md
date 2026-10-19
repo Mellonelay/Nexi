@@ -340,3 +340,7 @@ Canonical source paths are frontend/, Admin/, and backend/ in the sole main chec
 
 ## 2026-10-19 source-only platform retirement checkpoint
 Source directories renamed to frontend/, Admin/, backend/. Worker/bootstrap source and obsolete platform runbooks removed. Worker-0 platform skills and CLI retired; active VPS remains Nginx, NestJS, SQLite, Valkey and BullMQ. Historical D1-related proof records and compatibility adapter source are not active infrastructure instructions. No production service restart or financial migration was done. Source-only cleanup awaits Git commit/push; deployed release remains distinct.
+
+## Source documentation checkpoint — 2026-10-19
+
+Source-only contract documentation now inventories 213 OpenAPI paths / 234 HTTP operations, 25 NestJS controller source files, and 30 NestJS module source files in `docs/architecture/NEXI_BACKEND_API_SQLITE_SOURCE_MAP.md`. Companion backend diagram: `backend/docs/NEXI_SQLITE_API_ROUTING_MAP.md`. This is an API/code inventory, not deployed behavioral verification. Canonical paths remain `frontend/`, `Admin/`, `backend/`; no services, SQLite state, queues or schema were mutated in this documentation slice.
