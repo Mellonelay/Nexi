@@ -647,3 +647,12 @@ Receipt: `tasks/evidence/market-provider-runtime-20261017.md`.
 ### 2026-10-19 diagnostic combination rerun (newer than 27/28 receipt)
 - [x] Instrumented combined local SQLite test 28/28 PASS (RDC PID 2016625); keep prior 27/28 contradiction visible.
 - [ ] Determine whether uninstrumented combined test is stable and identify the cause of intermittent trigger bypass; do not mark full runtime verified.
+
+## 2026-10-19 — VPS deployment and post-release verification (bae05aa)
+
+- [x] Deploy bae05aa with Prisma client preserved, previous artifact retained and release Sentry tagged.
+- [x] Live HTTPS readyz SQLite/Redis; pair query missing gives HTTP 400; deployed module hash equality.
+- [ ] Resolve uninstrumented combined SQLite rollback 27/28 fault-test failure without reopening closed financial acceptance.
+- [ ] Investigate old shutdown SIGKILL, verify new-version graceful lifecycle at controlled maintenance.
+- [ ] Address 16 high production npm advisories with focused safe dependency resolution.
+- [ ] Independently prove encrypted off-VPS SQLite restore; external destination/key custody unprovided.
