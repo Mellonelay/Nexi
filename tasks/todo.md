@@ -1,3 +1,13 @@
+## 2026-10-19 — Final bounded Binary/Mining deployment and outstanding acceptance gate
+
+- [x] GitHub 033f6f2 CI 5/5, built/deployed verified Binary and Mining JS, healthy API SQLite/Redis release.
+- [x] Doctor 334 findings indexed with source-level categories, zero errors; not equivalent to 334 fixes.
+- [ ] Four positive authenticated economic/Admin lifecycles require permitted controlled execution and full accounting evidence.
+- [ ] Remaining Doctor warning candidates require further justified source proof.
+- [ ] Off-VPS restore deferred by owner.
+
+---
+
 ## 2026-10-19 — Worker-0 graph-backed Doctor remediation and four-domain frontier
 
 - [x] Worker-0 current graph CLI/mcpc and L3 targeted topology used; direct source owner confirmed.
