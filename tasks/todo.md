@@ -1,5 +1,18 @@
 # NEXI CURRENT TODO — 2026-10-20 source-only closure
 
+## Current owner override — 2026-10-20 four-phase Public completion
+
+- [x] Phase 1 Coinbase popup discrepancy localized: deployed Polypane page exposed a Coinbase injected provider and left the chooser request pending; current source suppressed the SDK popup connector in that state. GitHub commit `266e7e6` shows the prior direct SDK `connectAsync` flow.
+- [x] Prefer the existing Coinbase SDK connector when available; retain injected fallback when SDK is absent. Focused connector tests pass 7/7; source change is not deployed or browser-verified.
+- [x] Temporary dev server stopped and generated `frontend/.next/dev` removed at owner direction; no dev server retry. Production service remains untouched until the source frontier is ready.
+- [x] Repair the existing wallet/auth test's incorrect backend-controller path; focused wallet/auth tests pass 21/21.
+- [ ] Continue Public functional and responsive acceptance through the deployed Polypane target after the in-place production build. Dedicated MCP enumeration works; do not substitute Chrome 5858.
+- [ ] Continue Admin source/API parity; authenticated Admin UI acceptance remains owned by Work Cloud Browser.
+- [ ] Complete focused source checks, serialized Git fan-in, in-place Public deployment, then affected Polypane acceptance; no alternate build roots or rollback copies.
+- [ ] Keep the four economic gates `OWNER_ACCEPTED_UNTESTED`; do not repeat broad financial acceptance.
+
+Current run also changes `frontend/app/lib/wallet-connector-options.ts` and its tests. The Coinbase popup correction is source-only and not deployed; no wallet connection/signature was completed. Phase completion, responsive browser acceptance, Admin browser acceptance, final release and release-matched Sentry remain unverified.
+
 - [x] Owner scope captured; repeat testing forbidden for proven unchanged or four closed business acceptance gates
 - [x] Phase 1: cross-check proof reuse register vs current Git HEAD, graph local source, record unresolved/contradictory backend paths only
 - [x] Phase 1: source-only review of four closed financial workflows (no HTTP/Jest/financial execution)

@@ -14,7 +14,7 @@ const connector = (uid, name, id = "injected", type = "injected") => ({
   type,
 });
 
-test("wallet chooser prefers the discovered Coinbase extension over its SDK connector", () => {
+test("wallet chooser prefers the Coinbase SDK popup over an injected Coinbase provider", () => {
   const coinbaseSdk = connector(
     "coinbase-sdk",
     "Coinbase Wallet",
@@ -31,11 +31,11 @@ test("wallet chooser prefers the discovered Coinbase extension over its SDK conn
 
   assert.deepEqual(
     getWalletConnectorOptions([coinbaseSdk, coinbaseExtension, metamask]),
-    [metamask, coinbaseExtension],
+    [metamask, coinbaseSdk],
   );
 });
 
-test("wallet chooser routes a Coinbase extension through the generic injected connector", () => {
+test("wallet chooser uses the SDK popup when Coinbase is the generic injected provider", () => {
   const coinbaseSdk = connector(
     "coinbase-sdk",
     "Coinbase Wallet",
@@ -45,8 +45,13 @@ test("wallet chooser routes a Coinbase extension through the generic injected co
   const injected = connector("injected-fallback", "Injected");
 
   assert.deepEqual(getWalletConnectorOptions([coinbaseSdk, injected], true), [
-    injected,
+    coinbaseSdk,
   ]);
+});
+
+test("wallet chooser keeps the injected Coinbase fallback when the SDK is absent", () => {
+  const injected = connector("injected-fallback", "Injected");
+  assert.deepEqual(getWalletConnectorOptions([injected], true), [injected]);
   assert.equal(getWalletConnectorLabel(injected, true), "Coinbase Wallet");
 });
 

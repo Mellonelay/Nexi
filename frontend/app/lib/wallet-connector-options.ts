@@ -61,13 +61,11 @@ export function getWalletConnectorOptions<T extends WalletConnectorOption>(
     (connector) =>
       connector.type === "injected" && walletKey(connector.name) !== "injected",
   );
-  const hasCoinbaseExtension =
-    coinbaseProviderDetected ||
-    connectors.some(
-      (connector) =>
-        connector.type === "injected" &&
-        walletKey(connector.name).includes("coinbase"),
-    );
+  const hasCoinbaseSdk = connectors.some(
+    (connector) =>
+      connector.type !== "injected" &&
+      walletKey(connector.name).includes("coinbase"),
+  );
   const seenUids = new Set<string>();
 
   return [...connectors]
@@ -80,10 +78,15 @@ export function getWalletConnectorOptions<T extends WalletConnectorOption>(
     .filter((connector) => {
       if (seenUids.has(connector.uid)) return false;
       seenUids.add(connector.uid);
-      const isCoinbaseSdk =
-        connector.type !== "injected" &&
+      const isCoinbaseInjected =
+        connector.type === "injected" &&
         walletKey(connector.name).includes("coinbase");
-      if (hasCoinbaseExtension && isCoinbaseSdk) return false;
+      const isGenericCoinbaseInjection =
+        coinbaseProviderDetected &&
+        connector.type === "injected" &&
+        walletKey(connector.name) === "injected";
+      if (hasCoinbaseSdk && (isCoinbaseInjected || isGenericCoinbaseInjection))
+        return false;
       return !(
         connector.type === "injected" &&
         walletKey(connector.name) === "injected" &&
