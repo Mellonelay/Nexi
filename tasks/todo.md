@@ -1,4 +1,23 @@
+## Latest release checkpoint — 2026-10-20 (supersedes pending build/deploy rows below)
+
+- [x] Production build completed in `/srv/nexi/public/current` with `/srv/nexi/public/shared/node_modules`; Next.js 16.4.1 optimized production build and standalone asset preparation exited successfully.
+- [x] Public service restarted and active; `MainPID=2187369`, `NRestarts=0`, process cwd `/srv/nexi/public/current`, dependency symlink resolves to `/srv/nexi/public/shared/node_modules`.
+- [x] Deployed build/source identity is `db802761a97eee1b9739e146a8cf95d2cd83bed8` in `.next/BUILD_ID`, `RELEASE_SHA`, and `source-provenance.json`; local `main` and `origin/main` match.
+- [x] Local HTTP and `https://www.nexitrading.app` both returned 307 to `/dashboard`; no Public service error-level journal entries in the first 10 minutes.
+- [ ] Browser verification intentionally deferred until owner discussion; no browser, wallet connect, signature, or authenticated flow was exercised. Admin browser acceptance and release-matched Sentry review are also not part of this stop point.
+
 # NEXI CURRENT TODO — 2026-10-20 source-only closure
+
+## Current owner override — injected Ethereum wallet release (2026-10-20)
+
+- [x] Keep Coinbase SDK plus EIP-1193 injected connection; retain Wagmi EIP-6963 multi-provider discovery; remove the asynchronous preflight that delayed selected injected-provider connections.
+- [x] Remove the WalletConnect connector, project-ID branch, chooser wording, and direct package dependency as requested. Wagmi's connector package still carries WalletConnect as a transitive dependency; NEXI does not register or invoke that connector.
+- [x] Focused wallet/SIWE/session tests 19/19, frontend TypeScript check, changed-source Fallow (0 findings), Graphify refresh, and targeted React Doctor (0 errors, 4 existing warnings).
+- [x] Commit `db802761a97eee1b9739e146a8cf95d2cd83bed8` pushed to `main`; GitHub CI is running.
+- [ ] Finish the single production build in `/srv/nexi/public/current` using `/srv/nexi/public/shared/node_modules`, then verify service readiness and served release identity.
+- [ ] Reattach the live Public Polypane target for post-deploy browser verification; do not use another browser owner.
+
+Wallet source is deployed only after the above build/restart gate. No wallet connection or signature was performed; post-deploy browser acceptance remains separate.
 
 ## Current owner override — 2026-10-20 four-phase Public completion
 

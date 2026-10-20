@@ -1,4 +1,14 @@
+## Latest owner execution checkpoint — 2026-10-20
+
+Public wallet connector source at `db802761a97eee1b9739e146a8cf95d2cd83bed8` is pushed to `main`, built once in the canonical `/srv/nexi/public/current` directory using shared dependencies, and running as the Public service. Exact build/source identity matches; local and public HTTPS root requests redirect to `/dashboard`. The owner requested a stop before browser testing to discuss first. Next action after that discussion: resume Public Polypane browser verification; do not repeat backend campaigns or rebuild unchanged source. Admin Cloud Browser acceptance and new-release Sentry review remain separate open gates.
+
 # NEXI CURRENT EXECUTION — SOURCE CONTRACT CLOSURE (owner decision 2026-10-20)
+
+## Newer owner override — all EVM wallet compatibility (2026-10-20)
+
+The current frontier is Public wallet compatibility before the one final Public deployment. Source now calls the selected Wagmi connector directly from the click handler; the asynchronous injected-provider preflight was removed because it delayed every injected wallet path. Wagmi v2's `multiInjectedProviderDiscovery` remains enabled for EIP-6963 and the chooser tests retain named MetaMask, Trust Wallet, Rabby, Brave, and generic EVM connectors. Focused wallet/SIWE/session tests are 19/19, typecheck passes, changed-source Fallow reports 0 findings, and targeted React Doctor reports 0 errors / 4 warnings. Graphify was refreshed against the changed source.
+
+Two release gates remain open: `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is absent from `/etc/nexi/public.env`, so WalletConnect is not configured; and the live Polypane 5859 MCP currently enumerates only internal app pages, with no Public target available after the prior target detach. Recover those exact gates without switching to another browser. Source is still uncommitted at `e0038853ed214846db65d70ac0e4ab7079bae663`; retain the unrelated dirty files. Do not build in dev mode or create another build directory. Only after required provider coverage is ready, use `/srv/nexi/public/current` for one final production build and verify that exact deployed release.
 
 ## Newer owner override — four-phase Public completion (2026-10-20)
 

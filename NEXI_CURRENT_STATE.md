@@ -1,3 +1,19 @@
+## Latest Public release state — 2026-10-20
+
+GitHub `main` and local `main` are at `db802761a97eee1b9739e146a8cf95d2cd83bed8`. The Public wallet source change removes NEXI's WalletConnect connector and direct dependency while retaining Coinbase SDK and Wagmi injected/EIP-6963 discovery. The one final optimized build completed in `/srv/nexi/public/current` with canonical dependencies `/srv/nexi/public/shared/node_modules`; standalone asset preparation succeeded. `nexi-public.service` is active with zero restarts, working directory `/srv/nexi/public/current`, and the shared dependency symlink resolves correctly. Build ID, release SHA, and source provenance all identify the same commit. Local and public HTTPS root requests return 307 to `/dashboard`; no service error-level journal entries were present in the initial 10-minute observation.
+
+Owner requested stopping after build/deploy and before browser testing. Therefore no browser, wallet connection/signature, authenticated route, responsive acceptance, or Admin UI acceptance is claimed. Resume Public Polypane verification only after the owner's discussion. New-release Sentry review and Admin Cloud Browser acceptance remain open. Four economic acceptance exceptions remain `OWNER_ACCEPTED_UNTESTED`.
+
+---
+
+## 2026-10-20 — Public EVM wallet compatibility frontier (source only)
+
+Current source frontier is an uncommitted working-tree change on `main` at base SHA `e0038853ed214846db65d70ac0e4ab7079bae663`. `WalletConnectControl` now calls the selected Wagmi connector directly from the click handler; the extra async preflight was removed for every injected connector. Wagmi `multiInjectedProviderDiscovery` is enabled, the named EIP-6963 connectors remain selectable, and account/chain/disconnect handling stays with Wagmi. Focused wallet/SIWE/session tests: 19/19; frontend `tsc --noEmit --incremental false`: pass; changed-source Fallow: 0 findings; focused React Doctor: 0 errors and 4 warnings. Graphify was refreshed to the working tree.
+
+NOT deployed or browser-verified. The live Polypane MCP at 5859 is reachable but only lists internal Polypane pages; the prior Public targets detached and creating a new target is unsupported by this route. Public environment check found `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` absent, so the WalletConnect connector is disabled. Coinbase/MetaMask wallet login or signature was not performed. Preserve unrelated dirty paths and do not claim universal compatibility; resume at WalletConnect configuration and Public Polypane target recovery, then perform the one authorized production build in `/srv/nexi/public/current` only after the frontier is ready.
+
+---
+
 ## 2026-10-20 — Source-only backend/Public/Admin closure checkpoint
 
 Owner-directed phases 1–4, no production deployment: source relationships examined with local Graphify CLI/mcpc, proof reuse register and Fallow. Four owner-closed economic acceptance workflows were reviewed as source wiring ONLY; no financial test, SQLite write, API acceptance, queue operation or backend restart was run. The NestJS preview OpenAPI generator was corrected for current SQLite source mode and produced 223 paths / 245 HTTP operations without creating a SQLite preview database. Public transfer, withdrawal, loans and mining DTOs match current controller contracts; Admin uses its live NexiAdminApiProvider. Obsolete 2026-10-17 empty-SQLite/D1/Cloudflare operator guidance corrected, including protected Worker-0 onboarding. Sentry release names for Backend/Public/Admin are prepared as build-time contracts; previous deployed release SHA is NOT this source SHA. Full evidence and exclusions: docs/architecture/NEXI_SOURCE_ONLY_ASSURANCE_20261020.md; deployment preparation: docs/operations/NEXI_THREE_SURFACE_RELEASE_READINESS.md. Git push, next build and release remain separate proof states.

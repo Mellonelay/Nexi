@@ -1,3 +1,35 @@
+## CURRENT VPS BUILD AND SHARED DEPENDENCY PATHS — 2026-10-20
+
+Current source: /home/mellonelay1999/workspaces/Nexi (single main checkout). Source paths are frontend/ (Public Next.js), Admin/ (Admin React/TanStack/Nitro), backend/ (NestJS/Prisma 7). Live deployed bytes and source SHA must be verified independently.
+
+Public: /srv/nexi/public/current is the single real production build and runtime directory; /srv/nexi/public/current/.next is generated output. Its current/node_modules is a symlink to /srv/nexi/public/shared/node_modules. nexi-public.service runs npm start from /srv/nexi/public/current. The cache subdirectory .next/cache can be regenerated and was selectively cleared; never delete other .next assets during cleanup.
+
+Admin: /srv/nexi/admin/current is the single real Nitro output/runtime tree (not a symlink), with server/index.mjs and public/ assets. Its independent install/store is /srv/nexi/admin/shared/node_modules. The Admin standalone runtime does not need a node_modules symlink inside current; do not add one without demonstrated need. nexi-admin.service runs node /srv/nexi/admin/current/server/index.mjs. Preserve existing no extra build/release directories policy.
+
+Backend: /srv/nexi/backend is the live service working directory, with built code at /srv/nexi/backend/dist/src/main.js. Its node_modules is now a symlink to /srv/nexi/backend/shared/node_modules (moved, not duplicated). nexi-api.service runs the installed Node 24.21.0 entry. Module resolution for NestJS, Prisma and better-sqlite3, native SQLite smoke, and API readyz returned successful evidence after this relocation.
+
+Sharing boundary: These are THREE separate app-specific physical node_modules stores in stable shared/ locations, NOT a single cross-application node_modules directory or content-addressable dedup store. Backend relocation by itself saves no physical bytes. Do not blindly merge incompatible Next/Nitro/NestJS versions, Prisma native dependencies or lockfiles. Any cross-project dedup or package-manager change needs its own scoped dependency/ABI/rollback verification.
+
+Storage: Root filesystem measured about 6.1 GiB available (88% used) after bounded cache cleanup on 2026-10-20; remeasure before assuming freshness. Preserve all live SQLite database/WAL/SHM files, financial data, backups, evidence, active Polypane mounts and runtime artifacts. Never blanket-clear /tmp or delete running-session files. Existing Public .next/cache was cleared; caches may regenerate. Prior npm cache had already been cleared by another operation. Permission-denied temp entries were not forcibly removed. Build, install, restart, push or deployment remain separately authorized actions.
+
+This current owner-verified map supersedes older conflicting path or sharing claims below. For protected docs use worker0-protect unlock, bounded change, diff verification, refresh-lock, and status.
+
+---
+# CURRENT OWNER WORK/CODEX/HOOKS ROUTE — 2026-10-20
+
+These are the rules for EVERY agent operating in the NEXI repository. They are separate from user-global Codex instructions in ~/.codex/AGENTS.md and the project-specific Codex overlay in .codex/AGENTS.md. Newer owner decisions supersede contradictory dated clauses below.
+
+**Parent/controller:** ChatGPT Work -> NEXI Work Control Plane -> Work Kernel -> Capability Router -> Addy Agent Skills using-agent-skills -> selected specialist and actual execution. Work maintains phase/session capability caching, task/owner decisions, verification and serialized fan-in. Direct Remote SSH is the preferred authorized Worker-0 transport when the active Work session actually exposes it; the native Linux shell/CLI/mcpc performs assigned work, never becomes a second lifecycle controller. RDC is recovery/bounded fallback, no duplicate writes.
+
+**Continuity:** use tasks/todo.md AND tasks/plan.md for the active frontier, NEXI_CURRENT_STATE.md and NEXI_PROOF_REUSE_REGISTER.md for state/proof. Inspect HEAD, deployment identity, dirty files and active handles before changes. Historical unchecked task rows are not authorization to redo owner-accepted backend work. No new worktrees or financial/SQLite/deploy writer.
+
+**Skills and hooks:** use installed protected 25-workflow Agent Skills vendor source via using-agent-skills, phase-fit methods, Ponytail/Karpathy minimal code discipline; Graphify Agent Workflows only for topology/impact, Fallow for TS/JS risk. The actual hook config lives in user ~/.codex/hooks.json (Addy SessionStart) and repository .codex/hooks.json (Graphify PreToolUse/Bash; Worker-0 harness UserPromptSubmit). Desktop UI shows plugin-managed Ponytail and Capability Orchestrator hooks; inspect current enablement/effects, never duplicate/reset them. Hook enabled != skill invoked/test passed.
+
+**Browser owners:** Public www.nexitrading.app -> Polypane browser + Chrome DevTools MCP 4 Polypane skill, live @nexi-chrome-devtools-polypane MCP/CDP 5859 with verified target/panes. Admin admin.nexitrading.app -> ChatGPT Work Cloud Browser only, independent authenticated Admin session. Worker-0 Codex/SSH/RDC cannot inherit Cloud Browser and cannot use Polypane to claim Admin UI acceptance. Wallet signatures require owner-controlled approval.
+
+**Global documentation:** for approved protected edits run worker0-protect unlock, verify diff and status, then worker0-protect refresh-lock and recheck locks. Do NOT run Agent Kernel proposal/compile/sync/publish to maintain these rules; retired generated instructions must not overwrite this owner decision.
+
+---
 # CURRENT OWNER OVERRIDE — 2026-10-17 (supersedes contradictory older sections)
 
 **Authority precedence:** CURRENT OWNER DECISION WINS over all repository/agent/hook/skill rules, subject to platform permissions and protection of actual durable state. Newer direct runtime/test evidence outranks historical notes. Hooks and scripts cannot silently veto explicit owner decisions.
@@ -136,6 +168,18 @@ Rules:
 - If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
 - Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
 - After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+
+## CURRENT OWNER NEXI WORK CONTROLLER — 2026-10-20
+
+NEXI tasks in ChatGPT Work follow NEXI Work Control Plane -> NEXI Work Kernel -> Capability Router and selected Agent Skills. Maintain Work phase/session capability cache, authority, proof reuse and relevant knowledge contracts. Native shell, Codex SSH, RDC and mcpc are execution capabilities, not lifecycle owners. Chat-side Capability Cache v1.4.0 cannot authorize or execute Work tasks. Agent Kernel and its global generated Codex AGENTS.md are retired as NEXI controllers; never use agent-kernel CLI to publish NEXI rules. Use worker0-protect unlock/refresh-lock for authorized VM documentation edits. Respect Public Polypane DevTools and Admin Work Cloud Browser separation below.
+
+## CURRENT OWNER BROWSER ROUTING — 2026-10-20
+
+Public (www.nexitrading.app) browser verification uses Worker-0 Polypane with installed Chrome DevTools MCP 4 Polypane skill and live chrome-devtools-polypane MCP; verify actual target/pane/endpoint. No automatic Chrome 5858, Playwright or Cloud Browser fallback.
+
+Admin (admin.nexitrading.app) browser verification is owned solely by ChatGPT Work Cloud Browser using its independent existing authenticated Admin session, checked live. Codex/VM/RDC/Polypane/Chrome DevTools cannot inherit credentials, cookies or control and cannot claim Admin browser acceptance. If unavailable, record the Work/owner login dependency. VM Admin source/API inspection is separate from Cloud Browser proof.
+
+Keep release, browser/session, URL, authenticated state and observed rendered/network result separately for each surface. Wallet signatures and financial operations need task-specific owner authorization. Supersedes incompatible historical browser notes below; see ~/.agents/BROWSER_FABRIC.md and ~/RDC_ONBOARDING.md.
 
 ## Current browser execution
 
