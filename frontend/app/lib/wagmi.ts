@@ -2,15 +2,13 @@
 
 import { mainnet, sepolia } from 'viem/chains';
 import { createConfig, http, type Config } from 'wagmi';
-import { coinbaseWallet, injected, walletConnect } from 'wagmi/connectors';
+import { coinbaseWallet, injected } from 'wagmi/connectors';
 
 const configuredRpcUrl = process.env.NEXT_PUBLIC_WALLET_RPC_URL;
-const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID?.trim();
 
 // Production wallet authentication uses Ethereum Mainnet; Sepolia remains for non-production.
 // A dedicated RPC is optional; viem can use the selected chain's public fallback.
 export const walletChain = process.env.NODE_ENV === 'production' ? mainnet : sepolia;
-export const walletConnectConfigured = Boolean(walletConnectProjectId);
 
 const connectors = [
   // Coinbase Wallet also covers the Coinbase/Base wallet path when no injected
@@ -18,9 +16,6 @@ const connectors = [
   coinbaseWallet({ appName: 'NEXI' }),
   // Legacy EIP-1193 fallback for wallets that do not yet announce through EIP-6963.
   injected({ unstable_shimAsyncInject: 2_000 }),
-  ...(walletConnectProjectId
-    ? [walletConnect({ projectId: walletConnectProjectId, showQrModal: true })]
-    : []),
 ];
 export const config: Config = createConfig({
   chains: [walletChain],

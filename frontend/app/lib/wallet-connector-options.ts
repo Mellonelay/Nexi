@@ -16,7 +16,6 @@ function walletPriority(name: string, id: string) {
   const value = walletKey(`${name} ${id}`);
   if (value.includes("metamask")) return 10;
   if (value.includes("trust")) return 20;
-  if (value.includes("walletconnect")) return 30;
   if (value.includes("base")) return 40;
   if (value.includes("coinbase")) return 50;
   if (value.includes("rabby")) return 60;
@@ -36,21 +35,6 @@ export function isCoinbaseInjectedProvider(provider: unknown): boolean {
     Array.isArray(candidate.providers) &&
     candidate.providers.some(isCoinbaseInjectedProvider)
   );
-}
-
-export async function requestCoinbaseInjectedAccounts(connector: {
-  type: string;
-  getProvider?: () => Promise<unknown>;
-}): Promise<void> {
-  if (connector.type !== "injected") return;
-  const provider = await connector.getProvider?.();
-  if (!isCoinbaseInjectedProvider(provider)) return;
-
-  const request = (provider as { request?: unknown }).request;
-  if (typeof request !== "function")
-    throw new Error("Coinbase Wallet does not expose an EIP-1193 request method.");
-
-  await request.call(provider, { method: "eth_requestAccounts" });
 }
 
 export function getWalletConnectorOptions<T extends WalletConnectorOption>(

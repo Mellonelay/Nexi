@@ -108,7 +108,7 @@ test('public session establishment keeps only the access token in memory and pub
 });
 
 test('public refresh uses the HttpOnly cookie contract and never accepts a browser refresh token', async () => {
-  const controller = await readFile(new URL('../../backend/src/auth/auth.controller.ts', frontendRoot), 'utf8');
+  const controller = await readFile(new URL('../backend/src/auth/auth.controller.ts', frontendRoot), 'utf8');
   assert.match(controller, /@Post\("refresh"\)/);
   assert.doesNotMatch(controller, /body\.refreshToken/);
   assert.match(controller, /cookie/);

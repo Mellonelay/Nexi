@@ -20,13 +20,11 @@ import { hasAuthSession } from "../lib/auth-session";
 import {
   config as wagmiConfig,
   walletChain,
-  walletConnectConfigured,
 } from "../lib/wagmi";
 import {
   getWalletConnectorLabel,
   getWalletConnectorOptions,
   isCoinbaseInjectedProvider,
-  requestCoinbaseInjectedAccounts,
 } from "../lib/wallet-connector-options";
 import { completeWalletSiwe } from "../lib/wallet-siwe";
 
@@ -191,7 +189,6 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
         );
 
         if (!sameConnector) {
-          await requestCoinbaseInjectedAccounts(connector);
           const result = await connectAsync({ connector });
           selectedAddress = result.accounts[0];
           selectedChainId = result.chainId;
@@ -313,11 +310,7 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
                   Choose an Ethereum wallet
                 </p>
                 <p className="mt-1 text-xs leading-5 text-[#8C8299]">
-                  Installed EVM wallets are discovered automatically
-                  {walletConnectConfigured
-                    ? "; mobile wallets can also use WalletConnect"
-                    : ""}
-                  .
+                  Installed EVM wallets are discovered automatically.
                 </p>
               </div>
               <button
