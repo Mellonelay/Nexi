@@ -24,6 +24,8 @@ import {
 } from "../state/active-instrument";
 import { useActiveInstrument } from "../state/ActivePairProvider";
 import { useLocale } from "../state/LocaleProvider";
+import { filterQuotePairs } from "../state/public-settings";
+import { usePublicQuoteCategories } from "../state/public-quote-categories";
 import {
   AssetMark,
   MarketSparkline,
@@ -65,7 +67,17 @@ export default function Dashboard() {
   const { t } = useLocale();
   const favorites = useFavoriteAssets();
   const isFavorite = favorites.isFavorite;
-  const [activeTab, setActiveTab] = useState<Tab>("Crypto");
+  const quoteCategories = usePublicQuoteCategories();
+  const [requestedTab, setRequestedTab] = useState<Tab>("Crypto");
+  const visibleTabs = [
+    tabs[0],
+    ...quoteCategories
+      .map((category) => tabs.find(({ label }) => label === category))
+      .filter((tab): tab is (typeof tabs)[number] => tab !== undefined),
+  ];
+  const activeTab = visibleTabs.some(({ label }) => label === requestedTab)
+    ? requestedTab
+    : (visibleTabs[0]?.label ?? "Favorites");
   const [query, setQuery] = useState("");
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const {
@@ -85,13 +97,7 @@ export default function Dashboard() {
     const source =
       activeTab === "Favorites"
         ? allMarketPairs.filter((item) => isFavorite(item.symbol))
-        : activeTab === "Metals"
-          ? metal
-          : activeTab === "Forex"
-            ? forex
-            : activeTab === "Stocks"
-              ? shares
-              : marketPairs;
+        : filterQuotePairs(allMarketPairs, activeTab as Exclude<Tab, "Favorites">);
     const normalizedQuery = query.trim().toLowerCase();
     if (!normalizedQuery) return source;
     return source.filter((item) =>
@@ -99,7 +105,7 @@ export default function Dashboard() {
         .toLowerCase()
         .includes(normalizedQuery),
     );
-  }, [activeTab, allMarketPairs, isFavorite, forex, marketPairs, metal, query, shares]);
+  }, [activeTab, allMarketPairs, isFavorite, query]);
 
   const activePair =
     [...marketPairs, ...metal, ...shares, ...forex].find(
@@ -116,7 +122,7 @@ export default function Dashboard() {
   };
 
   const selectTab = (tab: Tab) => {
-    setActiveTab(tab);
+    setRequestedTab(tab);
   };
 
   return (
@@ -221,7 +227,7 @@ export default function Dashboard() {
             role="tablist"
             aria-label="Market categories"
           >
-            {tabs.map(({ label, icon: Icon }, index) => {
+            {visibleTabs.map(({ label, icon: Icon }, index) => {
               const active = activeTab === label;
               return (
                 <button

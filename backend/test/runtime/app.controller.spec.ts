@@ -116,4 +116,63 @@ describe("AppController runtime probes", () => {
       select: { value: true },
     });
   });
+
+  it("returns only supported Quotes categories and falls back when config is absent or malformed", async () => {
+    const prisma = {
+      systemConfig: {
+        findUnique: jest.fn()
+          .mockResolvedValueOnce({ value: JSON.stringify([
+            { id: "Stocks", label: "Stocks", visible: true, order: 3 },
+            { id: "Crypto", label: "Crypto", visible: false, order: 1 },
+            { id: "external", label: "External", visible: true, order: 0 },
+            { id: "Forex", label: "Forex", visible: true, order: 2 },
+          ]) })
+          .mockResolvedValueOnce(null)
+          .mockResolvedValueOnce({ value: "{" }),
+      },
+    };
+    const controller = new AppController(
+      { getHello: jest.fn() } as any,
+      {} as ReadinessService,
+      prisma as any,
+    );
+
+    await expect(controller.getPublicQuotesCategories()).resolves.toEqual([
+      { id: "Forex", visible: true, order: 2 },
+      { id: "Stocks", visible: true, order: 3 },
+    ]);
+    await expect(controller.getPublicQuotesCategories()).resolves.toEqual([
+      { id: "Crypto", visible: true, order: 1 },
+      { id: "Metals", visible: true, order: 2 },
+      { id: "Forex", visible: true, order: 3 },
+      { id: "Stocks", visible: true, order: 4 },
+    ]);
+    await expect(controller.getPublicQuotesCategories()).resolves.toEqual([
+      { id: "Crypto", visible: true, order: 1 },
+      { id: "Metals", visible: true, order: 2 },
+      { id: "Forex", visible: true, order: 3 },
+      { id: "Stocks", visible: true, order: 4 },
+    ]);
+  });
+
+  it("serves only existing Public message keys and supported locales", async () => {
+    const prisma = {
+      systemConfig: {
+        findUnique: jest.fn().mockResolvedValue({ value: JSON.stringify([
+          { key: "dashboard", values: { en: "Home", fr: "Accueil" } },
+          { key: "admin.secret", values: { en: "hidden" } },
+          { key: "spot", values: "invalid" },
+        ]) }),
+      },
+    };
+    const controller = new AppController(
+      { getHello: jest.fn() } as any,
+      {} as ReadinessService,
+      prisma as any,
+    );
+
+    await expect(controller.getPublicLocalization()).resolves.toEqual([
+      { key: "dashboard", values: { en: "Home" } },
+    ]);
+  });
 });

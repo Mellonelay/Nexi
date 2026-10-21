@@ -85,6 +85,13 @@ const DEFAULT_NAV_ITEMS: NavItem[] = [
   order: index + 1,
 }));
 
+const DEFAULT_QUOTES_CATEGORIES: QuotesCategory[] = [
+  { id: "Crypto", label: "Crypto", visible: true, order: 1 },
+  { id: "Metals", label: "Metals", visible: true, order: 2 },
+  { id: "Forex", label: "Forex", visible: true, order: 3 },
+  { id: "Stocks", label: "Stocks", visible: true, order: 4 },
+];
+
 const UNSUPPORTED_OPERATIONS = new Set<keyof AdminDataProvider>([
   "setUserStatus",
   "updateUserEntitlements",
@@ -1682,7 +1689,10 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     return this.writeJsonConfig("admin.frontend.routes", next, "Public route ordering", ctx);
   }
   listQuotesCategories(): Promise<QuotesCategory[]> {
-    return this.readJsonConfig<QuotesCategory[]>("admin.frontend.quoteCategories", []);
+    return this.readJsonConfig(
+      "admin.frontend.quoteCategories",
+      DEFAULT_QUOTES_CATEGORIES.map((category) => ({ ...category })),
+    );
   }
   async toggleQuotesCategory(id: string, ctx: ConsequentialContext): Promise<MutationResult> {
     const categories = await this.listQuotesCategories();
