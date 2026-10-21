@@ -1,5 +1,7 @@
 # NEXI Admin: Current Control Plane and Feature Map
 
+**Current source-derived TanStack architecture and complete route inventory:** [Admin TanStack Architecture and Route Map](../../Admin/docs/TANSTACK_ARCHITECTURE_AND_ROUTE_MAP.md). That document identifies 33 sidebar destinations plus the non-sidebar `/reconciliation` route, the proposed eight-workspace navigation, actual Router/Start/provider ownership, and the distinction between observed source and future design. Consult it before changing Admin UI structure. This README describes existing administrative domain responsibility, not a completed eight-workspace rollout.
+
 **Canonical source:** `Admin/` (React/TanStack/Vite deployment path). Admin is a **governed consumer** of the NestJS backend, never an alternate financial owner.
 
 ## Controls by current route

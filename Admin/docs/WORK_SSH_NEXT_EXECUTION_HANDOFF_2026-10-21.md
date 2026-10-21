@@ -1,0 +1,30 @@
+# NEXI Admin — Work Remote SSH next execution handoff
+Status: handoff instructions only, not product acceptance or deployment.
+Authority: current owner decision; current repo AGENTS.md and Admin/AGENTS.md; live source; focused tests. Graphify cloud snapshot 6da0847 is static and excludes uncommitted changes.
+
+## Ownership and environment
+Work Local is the single parent. Preferred remote execution: existing authorized SSH alias nexi-vps, canonical /home/mellonelay1999/workspaces/Nexi, current main checkout. Use Remote Desktop Commander only as a transport fallback; never run duplicate mutations by SSH and RDC. Work Local in-app browser is reserved for later owner-directed browser proof. No subagents required; use parallel independent read/review lanes and one shared writer.
+
+## Owner UI intent
+Keep eight compact workspaces: Overview, Clients, Trading, Wallet & Finance, Markets, Products, Communications, Administration & Settings. Retain all existing working route destinations and deep links; /reconciliation remains hidden/unavailable until canonical durable authority exists. Simple UI language: Binary Trading, Binary Trading Control, Trades, Settings, Win, Loss, Normal. Do not restore the sidebar's confusing global Test/Production selector. Preserve 53 assets, price feed mapping, Wallet/Deposit Network configuration, Ledger, mining/loan plans, notifications/content and two-way Messages intent. UI appearance and wording can be simplified without bypassing backend authority.
+
+Binary controls desired at two contextual locations: client detail default for future eligible research positions; ongoing Binary position detail for a pre-settlement test choice. Preserve Normal provider-derived result for ordinary positions. Do not imply these new account/position methods exist: their DTOs, storage, transition guards, version checks, settlement paths and readback must be inspected and built deliberately. Avoid silent manipulation of independent market feeds or other products. Existing /sandbox creates test scenarios, NOT a per-position override. The proposed mechanisms are currently design-only.
+
+## Current source state, verify live before changes
+Last inspected 2026-10-21: HEAD 6da08471ef200b6cadf96ef3d49ed85fc0f12fc4; Admin/AGENTS.md, docs/admin/README.md, Admin/src/admin/components/shell/AdminShell.tsx, Admin/src/admin/config/navigation.ts, Admin/src/routes/binary.tsx and sandbox.tsx modified. Four untracked Admin/docs materials include TANSTACK_ARCHITECTURE_AND_ROUTE_MAP.md, OPERATOR_WORKSPACE_IMPLEMENTATION_MAP.md, ADMIN_VERIFIED_DIAGRAMS_AND_HANDOFF.md and owner Mermaid PNG. Preserve all these; do not reset, overwrite or selectively commit unrelated work.
+Earlier in session UI source edits passed Admin tsc typecheck, focused ESLint on four files and git diff --check. These are not build/browser/deploy proof.
+
+## Critical correction before release
+AdminSessionProvider currently initializes environment=SANDBOX. Global SessionControls selector was removed from AdminShell while action metadata continues to depend on session.environment. Inspect all consumers and choose an explicit safe action-context contract that matches canonical NestJS authorization and live admin identity; no hidden global state determining unrelated operations. Keep test controls discoverable in Trading but do not bypass current server permission or account eligibility merely by changing a label. Scope test mode to the relevant contextual control and display its effective state.
+
+## Causal map and implementation order
+1. Discover live HEAD, origin, dirty files, active session/processes and task/proof references once; read relevant AGENTS.md, Admin docs, exact controller/service/DTO, provider and frontend routes. Existing graph is static support; confirm graph revision and source coverage.
+2. Review scope of local UI diff and keep existing work. Map each sidebar route to eight groups, direct URL, permission, provider read/write method, backend endpoint and SQLite authority; no route tree manual changes.
+3. Repair Admin session/action environment semantics. Verify production actions never silently carry SANDBOX metadata and test controls remain controlled by backend permissions.
+4. Finish compact Admin workspace UX and relevant contextual navigation; preserve responsive layouts and existing operational tabs. Account/position Binary choice only after proving and implementing exact single backend policy/position contract; use focused tests and consistent audit/readback. Never claim scenario-based tests implement account default/position control.
+5. Run affected TypeScript/lint and focused tests; Nest/SQLite/ledger/Outbox checks only if changed; Fallow diff review and Graphify impact where needed. Validate TanStack Start/Router generated route tree ownership; no added second router/cache/data writer.
+6. Report source proof and precise limitations. Commit/push only task-owned changes after owner-approved boundary; any build/deploy must preserve one verified Admin rollback archive and follow current deployment instructions. No unrequested release.
+7. Later browser acceptance: use existing authenticated in-app Admin tab separately from Public. Verify desktop/mobile navigation, direct links, dialogs, settings readbacks and error cases. Separate source, tested, deployed, browser and owner acceptance states.
+
+## Drift controls
+Read relevant engineering skill contracts before edit (Agent Skills, Next/TanStack, browser, Ponytail). Plugin installed != callable; skill read != tool invoked; static graph != runtime proof. Use Work Control Plane/Kernel + Capability Router where currently callable, not as ceremonial @mentions. Prefer native SSH ownership, not simultaneous RDC write operations. Reuse unchanged evidence; update documentation only for decisions/proofs actually established. Stop at a precise blocker rather than inventing contracts or reviving retired Cloudflare/D1 application runtime. Owner-accepted financial exceptions remain OWNER_ACCEPTED_UNTESTED.

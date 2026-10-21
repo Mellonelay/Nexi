@@ -93,75 +93,58 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       {
         to: "/overview",
-        label: "Operations Overview",
+        label: "Dashboard",
         icon: LayoutDashboard,
         permission: "overview.view",
       },
     ],
   },
   {
-    id: "identity",
-    label: "Identity",
+    id: "clients",
+    label: "Clients",
     items: [
-      { to: "/users", label: "Users", icon: Users, permission: "users.view" },
+      { to: "/users", label: "Clients", icon: Users, permission: "users.view" },
       { to: "/kyc", label: "KYC Reviews", icon: ShieldCheck, permission: "kyc.view" },
       { to: "/sessions", label: "Sessions", icon: MonitorSmartphone, permission: "sessions.view" },
     ],
   },
   {
-    id: "platform",
-    label: "Platform",
+    id: "trading",
+    label: "Trading",
     items: [
-      {
-        to: "/frontend-control",
-        label: "Frontend Control",
-        icon: LayoutTemplate,
-        permission: "frontend.view",
-      },
-      {
-        to: "/navigation",
-        label: "Public Navigation Settings",
-        icon: MenuIcon,
-        permission: "navigation.view",
-      },
-      {
-        to: "/localization",
-        label: "Localization",
-        icon: Languages,
-        permission: "localization.view",
-      },
-      { to: "/feature-flags", label: "Feature Controls", icon: Flag, permission: "flags.view" },
-    ],
-  },
-  {
-    id: "markets",
-    label: "Markets",
-    items: [
-      { to: "/assets", label: "Assets", icon: Coins, permission: "assets.view" },
-      { to: "/networks", label: "Networks", icon: Network, permission: "networks.view" },
-      { to: "/market-feeds", label: "Price Data Sources", icon: Radio, permission: "feeds.view" },
+      { to: "/binary", label: "Binary Trading", icon: Timer, permission: "binary.view" },
       {
         to: "/spot",
-        label: "Spot Administration",
+        label: "Spot Trading",
         icon: CandlestickChart,
         permission: "spot.view",
       },
-      { to: "/binary", label: "Binary Trading Settings", icon: Timer, permission: "binary.view" },
       {
         to: "/settlements",
-        label: "Trade Settlements",
+        label: "Trade History & Settlements",
         icon: Scale,
         permission: "settlements.view",
       },
       { to: "/exposure", label: "Trading Risk", icon: TrendingUp, permission: "exposure.view" },
+      {
+        to: "/sandbox",
+        label: "Binary Trading Control",
+        icon: FlaskConical,
+        permission: "sandbox.view",
+      },
     ],
   },
   {
-    id: "finance",
-    label: "Finance",
+    id: "wallet-finance",
+    label: "Wallet & Finance",
     items: [
       { to: "/wallets", label: "Wallets", icon: Wallet, permission: "wallets.view" },
-      { to: "/ledger", label: "Ledger", icon: BookOpen, permission: "ledger.view" },
+      {
+        to: "/networks",
+        label: "Deposit Wallet Settings",
+        icon: Network,
+        permission: "networks.view",
+      },
       { to: "/deposits", label: "Deposits", icon: ArrowDownToLine, permission: "deposits.view" },
       {
         to: "/withdrawals",
@@ -169,6 +152,15 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: ArrowUpToLine,
         permission: "withdrawals.view",
       },
+      { to: "/ledger", label: "Ledger", icon: BookOpen, permission: "ledger.view" },
+    ],
+  },
+  {
+    id: "markets",
+    label: "Markets",
+    items: [
+      { to: "/assets", label: "Assets", icon: Coins, permission: "assets.view" },
+      { to: "/market-feeds", label: "Price Data Sources", icon: Radio, permission: "feeds.view" },
     ],
   },
   {
@@ -180,11 +172,17 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    id: "comms",
-    label: "Communication",
+    id: "communications",
+    label: "Communications",
     items: [
-      { to: "/support", label: "Support", icon: LifeBuoy, permission: "support.view" },
       { to: "/messages", label: "Messages", icon: MessageSquare, permission: "messages.view" },
+      { to: "/support", label: "Support", icon: LifeBuoy, permission: "support.view" },
+      {
+        to: "/notifications",
+        label: "Notifications",
+        icon: Bell,
+        permission: "notifications.view",
+      },
       {
         to: "/announcements",
         label: "Announcements",
@@ -192,31 +190,37 @@ export const NAV_GROUPS: NavGroup[] = [
         permission: "announcements.view",
       },
       { to: "/learn", label: "Learn Content", icon: GraduationCap, permission: "learn.view" },
-      {
-        to: "/notifications",
-        label: "Notifications",
-        icon: Bell,
-        permission: "notifications.view",
-      },
     ],
   },
   {
-    id: "governance",
-    label: "Governance",
+    id: "settings",
+    label: "Administration & Settings",
     items: [
+      {
+        to: "/frontend-control",
+        label: "Public App Settings",
+        icon: LayoutTemplate,
+        permission: "frontend.view",
+      },
+      {
+        to: "/navigation",
+        label: "Public Navigation",
+        icon: MenuIcon,
+        permission: "navigation.view",
+      },
+      {
+        to: "/localization",
+        label: "Localization",
+        icon: Languages,
+        permission: "localization.view",
+      },
+      { to: "/feature-flags", label: "Feature Controls", icon: Flag, permission: "flags.view" },
       { to: "/admins", label: "Admin Accounts", icon: UserCog, permission: "admins.view" },
       { to: "/roles", label: "Roles & Permissions", icon: KeyRound, permission: "roles.view" },
       { to: "/approvals", label: "Approvals", icon: CheckCheck, permission: "approvals.view" },
       { to: "/audit", label: "Audit Logs", icon: ScrollText, permission: "audit.view" },
       { to: "/health", label: "System Health", icon: Activity, permission: "health.view" },
       { to: "/maintenance", label: "Maintenance", icon: Wrench, permission: "maintenance.view" },
-      {
-        to: "/sandbox",
-        label: "Binary Test Controls",
-        icon: FlaskConical,
-        permission: "sandbox.view",
-        sandboxOnly: true,
-      },
     ],
   },
 ];

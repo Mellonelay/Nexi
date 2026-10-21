@@ -113,14 +113,25 @@ function Inner() {
 
   return (
     <GovernanceShell
-      title="Binary Test Controls"
+      title="Binary Trading Control"
       description="Create controlled Binary tests for approved test accounts."
     >
       <div className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-foreground">
         Test accounts only. All actions are recorded. Real customer trades cannot be changed.
       </div>
+      <div className="flex items-center gap-3 text-sm">
+        <span>Test controls</span>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => session.setEnvironment("SANDBOX")}
+          disabled={session.environment === "SANDBOX"}
+        >
+          {session.environment === "SANDBOX" ? "Test mode ready" : "Open test controls"}
+        </Button>
+      </div>
       {session.environment !== "SANDBOX" ? (
-        <MaintenanceState description="Execution is denied unless the environment selector is SANDBOX." />
+        <MaintenanceState description="Select Open test controls to use approved test accounts." />
       ) : !session.can("sandbox.force") ? (
         <UnauthorizedState requiredPermission="sandbox.force" />
       ) : (

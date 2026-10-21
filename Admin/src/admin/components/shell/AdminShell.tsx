@@ -3,7 +3,6 @@ import { NAV_GROUPS } from "@/admin/config/navigation";
 import { useAdminSession } from "@/admin/session/session";
 import { cn } from "@/lib/utils";
 import { ROLE_LIST } from "@/admin/config/roles";
-import { ENVIRONMENTS } from "@/admin/config/environments";
 import { EnvironmentBadge } from "@/admin/components/EnvironmentBadge";
 import { ProviderBadge } from "@/admin/components/ProviderBadge";
 import { useAdminData } from "@/admin/data/context";
@@ -11,10 +10,10 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, ShieldAlert } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import type { Environment, RoleId } from "@/admin/types";
+import type { RoleId } from "@/admin/types";
 
 function NavList({ onNavigate }: { onNavigate?: () => void }) {
-  const { can, environment, roleId } = useAdminSession();
+  const { can } = useAdminSession();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
@@ -22,12 +21,6 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
       {NAV_GROUPS.map((g) => {
         const items = g.items.filter((i) => {
           if (!can(i.permission)) return false;
-          if (i.sandboxOnly) {
-            const ok =
-              environment === "SANDBOX" &&
-              (roleId === "sandbox_operator" || roleId === "super_admin");
-            if (!ok) return false;
-          }
           return true;
         });
         if (items.length === 0) return null;
@@ -77,20 +70,6 @@ function SessionControls() {
       <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
         Session
       </div>
-      <label className="flex flex-col gap-1 text-[11px] text-muted-foreground">
-        Test mode (request metadata only)
-        <select
-          value={s.environment}
-          onChange={(e) => s.setEnvironment(e.target.value as Environment)}
-          className="h-8 rounded-md border border-input bg-background px-2 text-sm text-foreground"
-        >
-          {ENVIRONMENTS.map((e) => (
-            <option key={e} value={e}>
-              {e === "SANDBOX" ? "Test" : "Production"}
-            </option>
-          ))}
-        </select>
-      </label>
       {provider.getAdminIdentity ? (
         <div className="flex flex-col gap-1 text-[11px] text-muted-foreground">
           Role
@@ -114,9 +93,6 @@ function SessionControls() {
           </select>
         </label>
       )}
-      <div className="text-[10px] text-muted-foreground">
-        This selection does not choose a backend or database.
-      </div>
       <div
         className={cn(
           "mt-1 flex items-center gap-2 rounded-md border px-2 py-1.5 text-[10px]",

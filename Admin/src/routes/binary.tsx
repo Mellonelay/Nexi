@@ -70,13 +70,13 @@ function Inner() {
         backend-configured per pair.
       </div>
 
-      <Tabs defaultValue="pairs">
+      <Tabs defaultValue="positions">
         <TabsList className="mb-4">
           <TabsTrigger value="pairs" data-testid="bin-tab-pairs">
-            Pairs ({pairs.length})
+            Settings ({pairs.length})
           </TabsTrigger>
           <TabsTrigger value="positions" data-testid="bin-tab-positions">
-            Positions ({positions.length})
+            Trades ({positions.length})
           </TabsTrigger>
           <TabsTrigger value="audit" data-testid="bin-tab-audit">
             Audit
@@ -110,8 +110,8 @@ function Shell({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Binary Trading Settings"
-        description="Backend-configured duration, payout and stake limits, price-source rules, settlement delay, and position inspection."
+        title="Binary Trading"
+        description="Manage trading pairs, settings and ongoing trades."
         badges={
           <>
             <ProviderBadge />
