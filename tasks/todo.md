@@ -730,4 +730,4 @@ Receipt: `tasks/evidence/market-provider-runtime-20261017.md`.
 
 - [x] Source implemented: backend `GET /public/config/quotes-categories` and `/public/config/localization`; Admin empty-config category defaults; Public category order/filter and safe localization fallback.
 - [x] Focused tests and checks: controller 7/7; disposable SQLite Admin-write/Public-readback 2/2; Public settings/locale/message 6/6; backend/Admin/Public TypeScript pass; focused Public ESLint has no errors and one existing LocaleProvider warning. No browser or runtime acceptance is claimed.
-- [x] Reviewed and pushed implementation commit `0107eccca1f6990bef579ea9c2e43ca89423ddbe` and evidence commit `8ed8fa1de6fa6c64b4c95eeeb7c081d8478f4f12` to GitHub `main`; final remote/local SHA matched. Production deployment, service/database changes, and browser acceptance are excluded.
+- [x] Reviewed and pushed implementation commit `0107eccca1f6990bef579ea9c2e43ca89423ddbe` and evidence-only task-state updates to GitHub `main`; final remote/local SHA was checked after task integration. Production deployment, service/database changes, and browser acceptance are excluded.
