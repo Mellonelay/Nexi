@@ -7,6 +7,7 @@ import { AdminSessionProvider } from "@/admin/session/session";
 import { AdminAuthGate } from "@/admin/session/AdminAuthGate";
 import { AdminDataProviderScope, getConfiguredAdminProvider } from "@/admin/data/context";
 import { AdminShell } from "@/admin/components/shell/AdminShell";
+import { AdminDevtools } from "@/admin/devtools/AdminDevtools";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
@@ -64,6 +65,7 @@ function RootComponent() {
             </AdminShell>
           </AdminAuthGate>
           <Toaster position="top-right" richColors />
+          {import.meta.env.DEV && <AdminDevtools />}
         </AdminDataProviderScope>
       </AdminSessionProvider>
     </QueryClientProvider>

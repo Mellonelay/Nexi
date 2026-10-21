@@ -78,7 +78,7 @@ function SessionControls() {
         Session
       </div>
       <label className="flex flex-col gap-1 text-[11px] text-muted-foreground">
-        Environment
+        Test mode (request metadata only)
         <select
           value={s.environment}
           onChange={(e) => s.setEnvironment(e.target.value as Environment)}
@@ -86,7 +86,7 @@ function SessionControls() {
         >
           {ENVIRONMENTS.map((e) => (
             <option key={e} value={e}>
-              {e}
+              {e === "SANDBOX" ? "Test" : "Production"}
             </option>
           ))}
         </select>
@@ -114,19 +114,28 @@ function SessionControls() {
           </select>
         </label>
       )}
+      <div className="text-[10px] text-muted-foreground">
+        This selection does not choose a backend or database.
+      </div>
       <div
         className={cn(
           "mt-1 flex items-center gap-2 rounded-md border px-2 py-1.5 text-[10px]",
-          provider.getAdminIdentity
+          s.identityStatus === "ready"
             ? "border-success/40 bg-success/10 text-success"
             : "border-warning/40 bg-warning/10 text-warning",
         )}
+        role="status"
+        aria-live="polite"
       >
         <ShieldAlert className="h-3 w-3" />
         <span>
-          {provider.getAdminIdentity
-            ? "Admin API identity and permissions are server-managed."
-            : "Local/demo data is explicit. Live mode uses the configured Admin API provider."}
+          {s.identityStatus === "ready"
+            ? "Admin API connected; your identity and permissions are confirmed by the server."
+            : s.identityStatus === "loading"
+              ? "Checking Admin API connection and access…"
+              : s.identityStatus === "unavailable"
+                ? "Admin API identity is unavailable; protected actions remain disabled."
+                : "Local/demo mode; no live Admin API identity is connected."}
         </span>
       </div>
       <div className="mt-1">

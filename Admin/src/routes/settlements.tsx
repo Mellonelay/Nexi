@@ -334,7 +334,7 @@ function Shell({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Settlements"
+        title="Trade Settlements"
         description="Binary settlement history and investigation queue. Corrections are governed and audited."
         badges={
           <>

@@ -668,7 +668,7 @@ export interface SettlementRecord {
   notes?: string;
 }
 
-export type ExposureStatus = "ok" | "warning" | "over_limit";
+export type ExposureStatus = "ok" | "warning" | "over_limit" | "unavailable";
 
 export interface ExposureRow {
   id: string;

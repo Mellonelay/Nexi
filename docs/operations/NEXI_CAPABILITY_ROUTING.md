@@ -1,3 +1,7 @@
+# CURRENT OWNER ROUTING OVERRIDE — 2026-10-21
+
+For this Work Local session, ChatGPT Work is the sole parent controller: NEXI Work Control Plane -> Work Kernel -> Capability Router -> Agent Skills -> task-fit specialists. Use authorized Windows SSH alias nexi-vps as the preferred Worker-0 transport; RDC is fallback and must not duplicate a live operation. Public and Admin browser acceptance use their distinct existing ChatGPT in-app browser tabs. Polypane/CDP 5859 is optional historical tooling. Current application truth is NestJS plus promoted VPS SQLite/Ledger/Outbox; Cloudflare Worker/D1/Queues/Workflows are retired. Historical completion ledgers and task checkboxes do not override current owner decisions or accepted proof. Select skills for the responsibility; no ceremonial three-lane/subagent requirement, one writer for shared mutations.
+
 # NEXI Capability and Execution Routing
 
 Purpose: NEXI-only execution overlay. Global Worker-0 skills, CLI/MCP ownership, browser fabric, Graphify operating guidance, and capability routing live under `/home/mellonelay1999/RDC_ONBOARDING.md` and `/home/mellonelay1999/.agents/`. This file contains only NEXI-specific authority, runtime boundaries, and project routing. It does not authorize production mutation.

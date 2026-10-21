@@ -242,30 +242,54 @@ export class NexiAdminApiProvider implements AdminDataProvider {
   private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const token = await this.config.getToken();
     if (!token.trim()) throw new NexiAdminApiError(401, "Admin session token is unavailable");
-    const response = await fetch(`${this.config.baseUrl.replace(/\/$/, "")}${path}`, {
-      ...init,
-      headers: {
-        Accept: "application/json",
-        ...(init.body ? { "Content-Type": "application/json" } : {}),
-        ...(init.headers ?? {}),
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    const body = await response.text();
-    let payload: unknown = undefined;
+    const method = (init.method ?? "GET").toUpperCase();
+    const startedAt = Date.now();
+    let status: number | null = null;
+    let outcome: "success" | "http-error" | "network-error" | "response-error" = "success";
     try {
-      payload = body ? JSON.parse(body) : undefined;
-    } catch {
-      payload = undefined;
+      const response = await fetch(`${this.config.baseUrl.replace(/\/$/, "")}${path}`, {
+        ...init,
+        headers: {
+          Accept: "application/json",
+          ...(init.body ? { "Content-Type": "application/json" } : {}),
+          ...(init.headers ?? {}),
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      status = response.status;
+      const body = await response.text();
+      let payload: unknown = undefined;
+      try {
+        payload = body ? JSON.parse(body) : undefined;
+      } catch {
+        payload = undefined;
+      }
+      if (!response.ok) {
+        outcome = "http-error";
+        const detail = record(payload).message;
+        throw new NexiAdminApiError(
+          response.status,
+          typeof detail === "string" ? detail : `Admin API request failed (${response.status})`,
+        );
+      }
+      return payload as T;
+    } catch (error) {
+      if (outcome === "success") outcome = status === null ? "network-error" : "response-error";
+      throw error;
+    } finally {
+      if (import.meta.env.DEV) {
+        void import("@/admin/devtools/events")
+          .then(({ adminDevtoolsEvents }) => {
+            adminDevtoolsEvents?.emit("api-request", {
+              method,
+              status,
+              outcome,
+              durationMs: Date.now() - startedAt,
+            });
+          })
+          .catch(() => undefined);
+      }
     }
-    if (!response.ok) {
-      const detail = record(payload).message;
-      throw new NexiAdminApiError(
-        response.status,
-        typeof detail === "string" ? detail : `Admin API request failed (${response.status})`,
-      );
-    }
-    return payload as T;
   }
 
   private async requestMutation(
@@ -1523,9 +1547,10 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       };
     });
     const binary = binaryPairs.map((pair) => {
-      const used = Number(pair.exposureUsed || 0);
-      const cap = Number(pair.exposureCap || 0);
-      const utilisation = cap > 0 ? used / cap : 0;
+      const used = Number(pair.exposureUsed);
+      const cap = Number(pair.exposureCap);
+      const known = Number.isFinite(used) && Number.isFinite(cap) && cap > 0;
+      const utilisation = known ? used / cap : 0;
       return {
         id: `binary:${pair.id}`,
         pair: pair.symbol,
@@ -1533,7 +1558,7 @@ export class NexiAdminApiProvider implements AdminDataProvider {
         used: pair.exposureUsed,
         cap: pair.exposureCap,
         utilisation,
-        status: utilisation >= 1 ? "over_limit" as const : utilisation >= 0.8 ? "warning" as const : "ok" as const,
+        status: !known ? "unavailable" as const : utilisation >= 1 ? "over_limit" as const : utilisation >= 0.8 ? "warning" as const : "ok" as const,
       };
     });
     return [...spot, ...binary];

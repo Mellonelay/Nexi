@@ -1,3 +1,7 @@
+# CURRENT OWNER ROUTING OVERRIDE — 2026-10-21
+
+For NEXI Work Local, ChatGPT Work is the single parent; use authorized direct SSH alias nexi-vps as the preferred Worker-0 route and RDC only as fallback. Public and Admin acceptance use distinct existing ChatGPT in-app browser tabs. Polypane/CDP 5859 is optional historical tooling. Promoted VPS SQLite with NestJS/Ledger/Outbox is current application/financial authority; Cloudflare application infrastructure and historical completion ledgers are retired/non-authoritative. Apply task-fit skills; do not require three parallel agents. One shared mutation owner.
+
 ## CURRENT VPS BUILD AND SHARED DEPENDENCY PATHS — 2026-10-20
 
 Current source: /home/mellonelay1999/workspaces/Nexi (single main checkout). Source paths are frontend/ (Public Next.js), Admin/ (Admin React/TanStack/Nitro), backend/ (NestJS/Prisma 7). Live deployed bytes and source SHA must be verified independently.

@@ -1,3 +1,7 @@
+# CURRENT OWNER ROUTING OVERRIDE — 2026-10-21
+
+For NEXI Work Local, Work remains the parent controller. Preferred Worker-0 route is authorized direct SSH alias nexi-vps; RDC is fallback. Public/Admin browser evidence uses separate existing ChatGPT in-app browser tabs; Polypane 5859 is optional. Use task-fit skills and only genuinely independent evidence lanes; no routine subagent requirement.
+
 # NEXI Codex Remote SSH — execution overlay
 
 Repository-wide NEXI AGENTS.md is the governing rule for all agents; this overlay applies to Codex only, alongside the separate ~/.codex/AGENTS.md. Current owner decisions and present source/runtime authority supersede old historical language.

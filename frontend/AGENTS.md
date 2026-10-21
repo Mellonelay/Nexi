@@ -1,3 +1,7 @@
+# CURRENT OWNER BROWSER OVERRIDE — 2026-10-21
+
+For NEXI Work Local, Public rendered acceptance uses the existing ChatGPT in-app browser session. Polypane/CDP 5859 is optional historical tooling, not a gate. Use task-fit frontend/browser skills and evidence; do not require routine subagents. Wallet signing and financial actions remain separately authorized.
+
 ## CURRENT VPS BUILD AND SHARED DEPENDENCY PATHS — 2026-10-20
 
 Current source: /home/mellonelay1999/workspaces/Nexi (single main checkout). Source paths are frontend/ (Public Next.js), Admin/ (Admin React/TanStack/Nitro), backend/ (NestJS/Prisma 7). Live deployed bytes and source SHA must be verified independently.

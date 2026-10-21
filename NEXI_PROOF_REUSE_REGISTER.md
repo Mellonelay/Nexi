@@ -402,3 +402,12 @@ Read and hashed 120 phase JSON receipts, 22 temp receipt/checkpoint/digest files
 ## 2026-10-19 owner source-directory and platform retirement
 
 Canonical source paths are frontend/, Admin/, and backend/ in the sole main checkout. Active serving is VPS Nginx/NestJS with SQLite durable authority and Aiven Valkey transport. The old Worker infrastructure, Wrangler CLI, and retired deployment workflows must not be reintroduced. Historical D1-labelled SQLite adapters and financial migration receipts remain compatibility/migration evidence, not active Cloudflare runtime writers.
+
+## 2026-10-21 — Admin UX source-only evidence
+- Admin TypeScript typecheck: PASS.
+- Admin Vite/Nitro production build: PASS. Sentry release/source-map upload did not run because no auth token is configured in this local build; no release is claimed.
+- Changed Admin UI lint subset: PASS after formatting the two changed navigation entries. Broader targeted lint reports inherited/pre-existing formatting and explicit-any issues; no clean full lint claim.
+- Focused Mining SQL SQLite regression: 1 passed, 51 skipped; no broad backend suite claim.
+- Graphify impact and Fallow review were invoked for Admin scope; Fallow reports high review risk and existing broader findings, so manual review remains required.
+- Browser: current deployed Admin routes were inspected read-only. The deployed UI shows the defects addressed in source. Public and Admin announcement labels match but statuses differ (published vs draft); record IDs were not exposed in the inspected UI. No write action or production content change occurred.
+- Not proven: changed-source browser acceptance, same-ID parity, Admin responsive acceptance, deployed artifact identity for this source, release-matched Sentry.

@@ -1,0 +1,54 @@
+diff --git a/dist/index.cjs b/dist/index.cjs
+index 2ca243033632812786802717501e1b5f32b62925..a3f1b431d02f93b7eb448f86867f7bc2f7a6babd 100644
+--- a/dist/index.cjs
++++ b/dist/index.cjs
+@@ -1213,16 +1213,17 @@ function defineConfig(configOrOptions = {}) {
+ 		}
+ 		const internalPlugins = [];
+ 		let exitWatchdog;
+-		if (mode === "development") {
++		if (mode === "development" || command === "build") {
+ 			const { devtools } = await import("@tanstack/devtools-vite");
++			const isDevServer = command === "serve";
+ 			internalPlugins.push(devtools({
+ 				logging: false,
+-				eventBusConfig: { enabled: false },
++				eventBusConfig: { enabled: isDevServer },
+ 				enhancedLogs: { enabled: false },
+-				consolePiping: { enabled: false },
+-				removeDevtoolsOnBuild: false,
++				consolePiping: { enabled: isDevServer },
++				removeDevtoolsOnBuild: command === "build" && mode !== "development",
+ 				injectSource: {
+-					enabled: true,
++					enabled: isDevServer,
+ 					ignore: reactThreeSourceTagIgnore()
+ 				}
+ 			}));
+diff --git a/dist/index.js b/dist/index.js
+index f5777a14174a4bbe5acb264bb6334168716b41e3..3aa8129c130aecd0bd650ec14ae2683e6b6ce6ef 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -1189,16 +1189,17 @@ function defineConfig(configOrOptions = {}) {
+ 		}
+ 		const internalPlugins = [];
+ 		let exitWatchdog;
+-		if (mode === "development") {
++		if (mode === "development" || command === "build") {
+ 			const { devtools } = await import("@tanstack/devtools-vite");
++			const isDevServer = command === "serve";
+ 			internalPlugins.push(devtools({
+ 				logging: false,
+-				eventBusConfig: { enabled: false },
++				eventBusConfig: { enabled: isDevServer },
+ 				enhancedLogs: { enabled: false },
+-				consolePiping: { enabled: false },
+-				removeDevtoolsOnBuild: false,
++				consolePiping: { enabled: isDevServer },
++				removeDevtoolsOnBuild: command === "build" && mode !== "development",
+ 				injectSource: {
+-					enabled: true,
++					enabled: isDevServer,
+ 					ignore: reactThreeSourceTagIgnore()
+ 				}
+ 			}));

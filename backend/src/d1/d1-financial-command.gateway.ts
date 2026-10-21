@@ -2017,7 +2017,7 @@ export class D1FinancialCommandGateway {
        FROM "MiningSubscription" s
        JOIN "MiningPlan" p ON p."id"=s."planId"
        JOIN "User" u ON u."id"=s."userId"
-       ORDER BY s."createdAt" DESC"`,
+       ORDER BY s."createdAt" DESC`,
     );
     return result.results;
   }

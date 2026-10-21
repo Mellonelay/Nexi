@@ -46,11 +46,11 @@ function Inner() {
   const [executing, setExecuting] = useState<Record<string, boolean>>({});
   const [form, setForm] = useState<Scenario>({
     id: "draft",
-    name: "Options sandbox scenario",
+    name: "Binary test",
     scope: "binary",
-    target: "bin_ethusdt",
+    target: "",
     seed: "QA-001",
-    duration: "15 minutes",
+    duration: "15",
     expectedResult: "",
     mode: "normal",
     expiresAt: isoInput(30),
@@ -79,38 +79,6 @@ function Inner() {
   const getApprovalStatus = (commandId?: string) => {
     if (!commandId) return undefined;
     return approvals.find((a) => a.id === commandId)?.status;
-  };
-
-  const handleConfirm = async (reason: string) => {
-    if (!pending) return;
-    const result = await provider.applySandboxOverride(
-      {
-        scope: pending.scope,
-        target: pending.target,
-        mode: pending.mode,
-        seed: pending.seed,
-        expectedResult: pending.expectedResult,
-        expiresAt: new Date(pending.expiresAt).toISOString(),
-      },
-      {
-        actor: session.actorName,
-        role: session.roleId,
-        environment: session.environment,
-        reason,
-      },
-    );
-    const completed: Scenario = {
-      ...pending,
-      id: `${Date.now()}`,
-      commandId: result.auditId,
-      result: "Awaiting governance approval and sandbox execution",
-      auditId: result.auditId,
-      status: "requested",
-    };
-    setHistory((items) => [completed, ...items]);
-    receipt.record("sandbox.request", result);
-    setPending(null);
-    return result;
   };
 
   const handleExecute = async (commandId: string) => {
@@ -145,13 +113,11 @@ function Inner() {
 
   return (
     <GovernanceShell
-      title="Sandbox Controls"
-      description="Sandbox-only scenarios. No public or production authority."
+      title="Binary Test Controls"
+      description="Create controlled Binary tests for approved test accounts."
     >
-      <div className="grid gap-2 sm:grid-cols-3">
-        <StatusBadge tone="destructive">SANDBOX_ONLY</StatusBadge>
-        <StatusBadge tone="destructive">NOT_FOR_REAL_USER_PRODUCTION</StatusBadge>
-        <StatusBadge tone="warning">AUDIT_LOG_REQUIRED</StatusBadge>
+      <div className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-foreground">
+        Test accounts only. All actions are recorded. Real customer trades cannot be changed.
       </div>
       {session.environment !== "SANDBOX" ? (
         <MaintenanceState description="Execution is denied unless the environment selector is SANDBOX." />
@@ -162,81 +128,84 @@ function Inner() {
           <ReceiptBanner receipt={receipt.receipt} onDismiss={receipt.clear} />
           <div className="surface-1 grid gap-3 rounded-lg border border-border/60 p-4 md:grid-cols-3">
             <div className="md:col-span-2">
-              <Label>Scenario name / preset</Label>
+              <Label>Test name</Label>
               <Input
                 className="mt-1"
                 value={form.name}
                 onChange={(e) => update("name", e.target.value)}
               />
             </div>
-            <div>
-              <Label>Target scope</Label>
-              <select
-                className="mt-1 h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
-                value={form.scope}
-                aria-label="Sandbox target scope"
-                onChange={(e) => update("scope", e.target.value as Scenario["scope"])}
-              >
-                <option value="binary">Binary</option>
-                <option value="spot">Spot</option>
-                <option value="balance">Balance simulation</option>
-              </select>
+            <div className="flex flex-col gap-1 text-sm">
+              <Label>Test type</Label>
+              <span className="flex h-9 items-center text-muted-foreground">Binary</span>
             </div>
             <div>
-              <Label>Target account / entity</Label>
+              <Label>Test account</Label>
               <Input
+                placeholder="Approved Binary test account ID"
                 className="mt-1"
                 value={form.target}
                 onChange={(e) => update("target", e.target.value)}
               />
             </div>
             <div>
-              <Label>Deterministic seed</Label>
+              <Label>Duration (minutes)</Label>
               <Input
                 className="mt-1"
-                value={form.seed}
-                onChange={(e) => update("seed", e.target.value)}
-              />
-            </div>
-            <div>
-              <Label>Expiry / duration</Label>
-              <Input
-                className="mt-1"
+                type="number"
+                min="1"
+                step="1"
                 value={form.duration}
                 onChange={(e) => update("duration", e.target.value)}
               />
             </div>
+            <details className="rounded-md border border-border/60 p-3 md:col-span-3">
+              <summary className="cursor-pointer text-sm font-medium">Advanced</summary>
+              <div className="mt-3 max-w-sm">
+                <Label htmlFor="sandbox-seed">Deterministic seed</Label>
+                <Input
+                  id="sandbox-seed"
+                  className="mt-1"
+                  value={form.seed}
+                  onChange={(e) => update("seed", e.target.value)}
+                />
+              </div>
+            </details>
             <div>
-              <Label>Forced outcome / mode</Label>
+              <Label>Test result</Label>
               <select
                 className="mt-1 h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
                 value={form.mode}
-                aria-label="Sandbox forced outcome mode"
+                aria-label="Test result"
                 onChange={(e) => update("mode", e.target.value as Scenario["mode"])}
               >
-                {["normal", "forced_win", "forced_loss"].map((m) => (
+                {["forced_win", "forced_loss", "normal"].map((m) => (
                   <option key={m} value={m}>
-                    {m}
+                    {m === "forced_win" ? "Win" : m === "forced_loss" ? "Loss" : "Normal"}
                   </option>
                 ))}
               </select>
             </div>
-            <div>
-              <Label>Expires at</Label>
-              <Input
-                className="mt-1"
-                type="datetime-local"
-                value={form.expiresAt}
-                onChange={(e) => update("expiresAt", e.target.value)}
-              />
-            </div>
+
             <div className="flex items-end">
               <Button
                 className="w-full"
-                disabled={!form.name.trim() || !form.target.trim() || !form.seed.trim()}
-                onClick={() => setPending({ ...form })}
+                disabled={
+                  !form.name.trim() ||
+                  !form.target.trim() ||
+                  !form.seed.trim() ||
+                  !Number.isInteger(Number(form.duration)) ||
+                  Number(form.duration) < 1
+                }
+                onClick={() =>
+                  setPending({
+                    ...form,
+                    scope: "binary",
+                    expiresAt: isoInput(Number(form.duration)),
+                  })
+                }
               >
-                Request scenario
+                Create test
               </Button>
             </div>
           </div>
@@ -296,7 +265,12 @@ function Inner() {
                         audit <span className="mono">{s.auditId}</span>
                         {s.commandId ? ` · command ${s.commandId}` : ""}
                       </div>
-                      <JsonState value={s} />
+                      <details className="mt-2">
+                        <summary className="cursor-pointer text-[10px] text-muted-foreground">
+                          Technical audit details
+                        </summary>
+                        <JsonState value={s} />
+                      </details>
                     </div>
                   );
                 })}
@@ -311,15 +285,17 @@ function Inner() {
           <ConsequentialActionDialog
             open={!!pending}
             onOpenChange={(o) => !o && setPending(null)}
-            title="Request sandbox scenario"
-            description="Exact parameters are shown before governance approval. This request cannot affect real users or production."
+            title="Create Binary test"
+            description="This request is recorded and remains subject to server-side approval and test-account restrictions."
             target={pending?.target ?? ""}
             targetId={pending?.target ?? "sandbox"}
             action="sandbox.request"
             permission="sandbox.force"
             currentState="normal"
             proposedState={
-              pending ? `${pending.mode} · seed ${pending.seed} · expires ${pending.expiresAt}` : ""
+              pending
+                ? `${labelMode(pending.mode)} · ${pending.duration} minutes · test account ${pending.target}`
+                : ""
             }
             onConfirm={async (reason) => {
               if (!pending) return;
@@ -357,6 +333,10 @@ function Inner() {
     </GovernanceShell>
   );
 }
+function labelMode(mode: Scenario["mode"]) {
+  return mode === "forced_win" ? "Win" : mode === "forced_loss" ? "Loss" : "Normal";
+}
+
 function isoInput(minutes: number) {
   const d = new Date(Date.now() + minutes * 60_000);
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);

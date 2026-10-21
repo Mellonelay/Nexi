@@ -48,16 +48,29 @@ function Inner() {
       </Shell>
     );
 
-  const global = rows.reduce(
-    (acc, r) => ({
-      used: acc.used + Number(r.used),
-      cap: acc.cap + Number(r.cap),
-    }),
-    { used: 0, cap: 0 },
-  );
-  const globalUtil = global.cap > 0 ? global.used / global.cap : 0;
+  const completeExposureData =
+    rows.length > 0 &&
+    rows.every(
+      (row) =>
+        Number.isFinite(Number(row.used)) &&
+        Number.isFinite(Number(row.cap)) &&
+        Number(row.cap) > 0,
+    );
+  const global = completeExposureData
+    ? rows.reduce(
+        (acc, row) => ({ used: acc.used + Number(row.used), cap: acc.cap + Number(row.cap) }),
+        { used: 0, cap: 0 },
+      )
+    : null;
+  const globalUtil = global ? global.used / global.cap : null;
   const globalStatus: ExposureStatus =
-    globalUtil >= 0.9 ? "over_limit" : globalUtil >= 0.7 ? "warning" : "ok";
+    globalUtil === null
+      ? "unavailable"
+      : globalUtil >= 0.9
+        ? "over_limit"
+        : globalUtil >= 0.7
+          ? "warning"
+          : "ok";
 
   const warningCount = rows.filter((r) => r.status === "warning").length;
   const overCount = rows.filter((r) => r.status === "over_limit").length;
@@ -100,13 +113,17 @@ function Inner() {
       sortValue: (r) => r.utilisation,
       cell: (r) => (
         <div className="flex min-w-32 flex-col items-end gap-1">
-          <span className={utilClass(r.status)}>{Math.round(r.utilisation * 100)}%</span>
-          <div className="h-1.5 w-full rounded bg-muted/40">
-            <div
-              className={barClass(r.status)}
-              style={{ width: `${Math.min(100, Math.round(r.utilisation * 100))}%` }}
-            />
-          </div>
+          <span className={utilClass(r.status)}>
+            {r.status === "unavailable" ? "Unavailable" : `${Math.round(r.utilisation * 100)}%`}
+          </span>
+          {r.status !== "unavailable" ? (
+            <div className="h-1.5 w-full rounded bg-muted/40">
+              <div
+                className={barClass(r.status)}
+                style={{ width: `${Math.min(100, Math.round(r.utilisation * 100))}%` }}
+              />
+            </div>
+          ) : null}
         </div>
       ),
     },
@@ -145,11 +162,19 @@ function Inner() {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <SummaryCard
           label="Global utilisation"
-          value={`${Math.round(globalUtil * 100)}%`}
-          tone={statusTone(globalStatus)}
+          value={globalUtil === null ? "Unavailable" : `${Math.round(globalUtil * 100)}%`}
+          tone={
+            globalStatus === "unavailable"
+              ? "info"
+              : globalStatus === "over_limit"
+                ? "destructive"
+                : globalStatus === "warning"
+                  ? "warning"
+                  : "success"
+          }
         />
-        <SummaryCard label="Used" value={fmt(global.used)} />
-        <SummaryCard label="Cap" value={fmt(global.cap)} />
+        <SummaryCard label="Used" value={global ? fmt(global.used) : "Unavailable"} />
+        <SummaryCard label="Cap" value={global ? fmt(global.cap) : "Unavailable"} />
       </div>
 
       <DataTable
@@ -207,11 +232,13 @@ function Inner() {
                   title: "Guidance",
                   content: (
                     <p className="text-xs text-muted-foreground">
-                      {selected.status === "over_limit"
-                        ? "Utilisation is at or above the configured cap. Pause new orders/positions on this pair and hedge or de-risk before accepting more flow."
-                        : selected.status === "warning"
-                          ? "Utilisation is approaching the cap. Notify Market Operator on-call and prepare fallback rules."
-                          : "Utilisation is within nominal range."}
+                      {selected.status === "unavailable"
+                        ? "Exposure limits are not available for this pair; its risk cannot be assessed here."
+                        : selected.status === "over_limit"
+                          ? "Utilisation is at or above the configured cap. Pause new orders/positions on this pair and hedge or de-risk before accepting more flow."
+                          : selected.status === "warning"
+                            ? "Utilisation is approaching the cap. Notify Market Operator on-call and prepare fallback rules."
+                            : "Utilisation is within nominal range."}
                     </p>
                   ),
                 },
@@ -237,7 +264,7 @@ function Shell({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Exposure"
+        title="Trading Risk"
         description="Pair-level and global exposure across Spot and Binary. Warning and limit states drive maintenance decisions."
         badges={
           <>
@@ -289,27 +316,31 @@ function SummaryCard({
 }
 
 function statusTone(s: ExposureStatus) {
-  return s === "over_limit"
-    ? ("destructive" as const)
-    : s === "warning"
-      ? ("warning" as const)
-      : ("success" as const);
+  return s === "unavailable"
+    ? ("neutral" as const)
+    : s === "over_limit"
+      ? ("destructive" as const)
+      : s === "warning"
+        ? ("warning" as const)
+        : ("success" as const);
 }
 function utilClass(s: ExposureStatus) {
-  return s === "over_limit"
-    ? "mono text-xs text-destructive"
-    : s === "warning"
-      ? "mono text-xs text-warning"
-      : "mono text-xs text-foreground";
+  return s === "unavailable"
+    ? "text-xs text-muted-foreground"
+    : s === "over_limit"
+      ? "mono text-xs text-destructive"
+      : s === "warning"
+        ? "mono text-xs text-warning"
+        : "mono text-xs text-foreground";
 }
 function barClass(s: ExposureStatus) {
   return `h-full rounded ${s === "over_limit" ? "bg-destructive" : s === "warning" ? "bg-warning" : "bg-success"}`;
 }
 function label(s: ExposureStatus) {
-  return s === "over_limit" ? "over limit" : s;
+  return s === "over_limit" ? "over limit" : s === "unavailable" ? "unavailable" : s;
 }
 function fmt(v: string | number) {
   const n = typeof v === "string" ? Number(v) : v;
-  if (Number.isNaN(n)) return String(v);
+  if (!Number.isFinite(n)) return "Unavailable";
   return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(n);
 }

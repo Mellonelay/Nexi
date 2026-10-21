@@ -1,4 +1,5 @@
 import { BadRequestException } from "@nestjs/common";
+import Database from "better-sqlite3";
 import { D1FinancialCommandGateway } from "../../src/d1/d1-financial-command.gateway";
 import {
   D1BridgeBatchStatement,
@@ -65,6 +66,19 @@ describe("D1FinancialCommandGateway", () => {
       await expect(gateway.listSpotTradesForPair(pair as string)).rejects.toThrow(BadRequestException);
       expect(bridge.select).not.toHaveBeenCalled();
     });
+  });
+
+  it("executes the Admin mining subscription query against SQLite", async () => {
+    const db = new Database(":memory:");
+    db.exec('CREATE TABLE "MiningSubscription" ("id" TEXT, "planId" TEXT, "userId" TEXT, "createdAt" TEXT); CREATE TABLE "MiningPlan" ("id" TEXT, "name" TEXT, "currency" TEXT, "dailyYieldDecimal" TEXT, "lockupPeriod" INTEGER); CREATE TABLE "User" ("id" TEXT, "email" TEXT);');
+    const bridge = createBridge({
+      select: jest.fn(async (sql: string) => ({ results: db.prepare(sql).all() })),
+    });
+    try {
+      await expect(new D1FinancialCommandGateway(bridge).listAllMiningSubscriptions()).resolves.toEqual([]);
+    } finally {
+      db.close();
+    }
   });
 
   describe("financial quote freshness", () => {

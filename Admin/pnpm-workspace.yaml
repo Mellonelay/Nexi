@@ -1,2 +1,4 @@
 allowBuilds:
   '@sentry/cli': set this to true or false
+patchedDependencies:
+  '@lovable.dev/vite-tanstack-config@2.26.7': patches/@lovable.dev__vite-tanstack-config@2.26.7.patch

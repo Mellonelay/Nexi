@@ -110,7 +110,7 @@ function Shell({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Binary Administration"
+        title="Binary Trading Settings"
         description="Backend-configured duration, payout and stake limits, price-source rules, settlement delay, and position inspection."
         badges={
           <>

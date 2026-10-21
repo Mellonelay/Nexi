@@ -83,8 +83,8 @@ function Shell({ children, total }: { children: React.ReactNode; total?: number 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Navigation"
-        description="Compose bottom navigation and the left drawer. Reorder, toggle visibility, and target by audience. Changes stage until saved."
+        title="Public Navigation Settings"
+        description="Public navigation currently uses built-in menus. Admin overrides shown here are not currently applied by the Public app."
         badges={
           <>
             <ProviderBadge />
@@ -150,8 +150,8 @@ function SurfaceEditor({ surface, items }: { surface: NavSurface; items: NavItem
   if (staged.length === 0) {
     return (
       <EmptyState
-        title="No items"
-        description={`No items configured for the ${surface} surface.`}
+        title="No Admin overrides"
+        description={`The ${surface} Public menu still uses its built-in items; an empty override list does not mean the menu is empty.`}
       />
     );
   }

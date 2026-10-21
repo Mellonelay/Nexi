@@ -358,7 +358,7 @@ function Shell({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Feature Flags"
+        title="Feature Controls"
         description="Environment-scoped flags with rollout percentage and role/user targeting."
         badges={
           <>

@@ -342,7 +342,7 @@ function Shell({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Market Feeds"
+        title="Price Data Sources"
         description="Provider mapping, latency, freshness, and manual failover/maintenance controls."
         badges={
           <>
