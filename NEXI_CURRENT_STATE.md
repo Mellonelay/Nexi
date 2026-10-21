@@ -1,3 +1,13 @@
+## Latest source-only frontier — 2026-10-22 — Admin/Public P3 settings
+
+GitHub `main`, local `HEAD`, and `origin/main` are at `0107eccca1f6990bef579ea9c2e43ca89423ddbe`, containing the bounded Public Settings integration. Admin quote-category settings now reach the existing Public Quotes Hub through an allowlisted NestJS read; ordering and visibility apply to the existing 53-asset catalog. Admin localization values reach only existing Public shell message keys and the six existing locales, with bundled strings as fallback. Existing navigation, Binary, Messages, market-source, Mining, Loan, and wallet/network behavior was reused and not reworked.
+
+Focused proof: backend and Admin/Public TypeScript checks pass; AppController tests 7/7; disposable SQLite Admin system-config write/audit and Public readback tests 2/2; Public settings/locale/message tests 6/6. Public focused ESLint exits 0 with one existing LocaleProvider state-in-effect warning. Admin provider focused ESLint still reports three unchanged explicit-`any` errors at lines 221–226. Fallow review reports existing provider/API findings plus expected complexity on new allowlist/sanitizer code; those parsers have focused tests and are retained for trust-boundary validation. Graphify refreshed at 6,273 nodes / 17,406 edges; its broad natural-language query was overinclusive and used only for navigation, not proof.
+
+`admin.frontend.routes`, `admin.frontend.banners`, and Admin feature flags remain unexposed because current source does not establish Public route-state effects, banner placement/fields, or named public flag consumers. Exact mappings are recorded in `tasks/plan.md` and `tasks/todo.md`. This source frontier is not deployed, browser-tested, or owner-accepted. No service, production SQLite, Sentry release, source-map upload, or live financial state was changed.
+
+---
+
 ## Latest Admin release state — 2026-10-21
 
 Admin release source SHA `e2f7a65ea4ac870c6ea1ff6e299502430ecf5570` was pushed to GitHub `main` and built in the canonical `/srv/nexi/admin/current` output. TanStack resolution now uses lockfile versions `@tanstack/router-core@1.171.37` and `@tanstack/history@1.162.5`; `Admin/pnpm-workspace.yaml` narrowly public-hoists those packages for the Vite integration. TypeScript, Vite client, SSR and Nitro production bundling passed. `/srv/nexi/admin/current/NEXI_RELEASE_SHA`, `/etc/nexi/admin.env` release values and the embedded client release all identify `e2f7a65ea4ac870c6ea1ff6e299502430ecf5570`.
