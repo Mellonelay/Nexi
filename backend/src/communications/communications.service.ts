@@ -513,6 +513,52 @@ export class CommunicationsService {
     });
   }
 
+  async sendAdminMessage(
+    adminId: string,
+    input: { recipientId: string; body: string; reason: string; idempotencyKey: string },
+  ) {
+    const reason = input.reason.trim();
+    const body = input.body.trim();
+    if (!reason) throw new BadRequestException("An audit reason is required");
+    if (!body) throw new BadRequestException("Message body is required");
+    if (input.recipientId === adminId) throw new BadRequestException("An admin cannot message their own account");
+    const recipient = await this.database.user.findFirst({
+      where: { id: input.recipientId, role: Role.USER },
+      select: { id: true },
+    });
+    if (!recipient) throw new NotFoundException("Client not found");
+    const message = await this.sendMessage(
+      adminId,
+      input.recipientId,
+      body,
+      input.idempotencyKey,
+    );
+    if (
+      message.senderId !== adminId ||
+      message.recipientId !== input.recipientId ||
+      message.body !== body
+    ) {
+      throw new BadRequestException("Message idempotency key was already used");
+    }
+    const messageId = this.id(`message:${adminId}:${input.recipientId}`, input.idempotencyKey);
+    const details = JSON.stringify({ messageId, reason, idempotencyKey: input.idempotencyKey });
+    const audit = await this.database.adminAuditLog.upsert({
+      where: { id: this.id(`admin-message-audit:${adminId}:${input.recipientId}`, input.idempotencyKey) },
+      update: {},
+      create: {
+        id: this.id(`admin-message-audit:${adminId}:${input.recipientId}`, input.idempotencyKey),
+        adminId,
+        action: "ADMIN_MESSAGE_SENT",
+        target: input.recipientId,
+        details,
+      },
+    });
+    if (audit.details !== details) {
+      throw new BadRequestException("Message idempotency key was already used");
+    }
+    return { ...message, auditId: audit.id };
+  }
+
   async adminNotifications(page = 1, limit = 100) {
     return this.database.notification.findMany({
       skip: (page - 1) * limit, take: limit,

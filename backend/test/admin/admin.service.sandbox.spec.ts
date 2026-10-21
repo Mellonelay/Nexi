@@ -114,4 +114,61 @@ describe("AdminService sandbox source contract", () => {
       }),
     );
   });
+
+  it("persists and replays an audited default for an approved Binary research account", async () => {
+    process.env.NEXI_SANDBOX_ACCOUNT_IDS = "research-user";
+    const command = {
+      id: "research-command-1",
+      commandType: "BINARY_RESEARCH_CONTROL",
+      target: "account:research-user",
+      requestedBy: "admin-1",
+      reason: "research account default",
+      payload: JSON.stringify({ scope: "account", mode: "WIN" }),
+    };
+    const tx = {
+      adminGovernanceCommand: {
+        findUnique: jest.fn().mockResolvedValueOnce(null).mockResolvedValueOnce(command),
+        create: jest.fn().mockResolvedValue(command),
+      },
+      user: { updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
+      adminAuditLog: { create: jest.fn().mockResolvedValue({ id: "research-audit-1" }) },
+    };
+    const prisma = { $transaction: jest.fn((work: (value: typeof tx) => unknown) => work(tx)) };
+    const subject = new AdminService(prisma as never, {} as never, {} as never, {} as never, {} as never, {} as never, {} as never);
+    const input = {
+      userId: "research-user", mode: "WIN" as const, adminId: "admin-1",
+      reason: "research account default", idempotencyKey: "research-default-key-1",
+    };
+
+    await expect(subject.setBinaryResearchDefault(input)).resolves.toMatchObject({ replayed: false });
+    await expect(subject.setBinaryResearchDefault(input)).resolves.toMatchObject({ replayed: true });
+    expect(tx.user.updateMany).toHaveBeenCalledWith({
+      where: { id: "research-user" },
+      data: { binaryResearchDefault: "WIN" },
+    });
+    expect(tx.adminGovernanceCommand.create).toHaveBeenCalledTimes(1);
+    expect(tx.adminAuditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ action: "BINARY_RESEARCH_DEFAULT_UPDATED", target: "research-user" }),
+    });
+  });
+
+  it("reports the API deployment environment for live Admin action context", async () => {
+    const previous = process.env.NODE_ENV;
+    process.env.NODE_ENV = "production";
+    const prisma = {
+      user: { findUnique: jest.fn().mockResolvedValue({ id: "admin-1", email: "admin@example.invalid", role: "ADMIN" }) },
+      adminRoleAssignment: { findUnique: jest.fn().mockResolvedValue({ roleId: "super_admin" }) },
+    };
+    const subject = new AdminService(
+      prisma as never, {} as never, {} as never, {} as never, {} as never, {} as never,
+      { isEnabled: () => false } as never,
+    );
+    try {
+      await expect(subject.getAdminIdentity({ userId: "admin-1", email: "admin@example.invalid", role: "ADMIN" }))
+        .resolves.toMatchObject({ environment: "PRODUCTION" });
+    } finally {
+      if (previous === undefined) delete process.env.NODE_ENV;
+      else process.env.NODE_ENV = previous;
+    }
+  });
 });

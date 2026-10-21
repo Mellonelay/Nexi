@@ -24,6 +24,7 @@ model User {
   wallet                Wallet?
   withdrawalRequests    WithdrawalRequest[]
   forceOutcome          String                  @default("NORMAL")
+  binaryResearchDefault String                  @default("NORMAL")
   contractPositions     ContractPosition[]
   authSessions          AuthSession[]
   spotOrders            SpotOrder[]
@@ -1841,6 +1842,9 @@ model Gate2BinaryPosition {
   durationSeconds      Int
   expiresAt            DateTime
   state                Gate2BinaryState @default(ACTIVE)
+  researchDefault      String           @default("NORMAL")
+  researchOverride    String?
+  researchControlVersion Int            @default(0)
   entryQuoteId         String
   entryProvider        String
   entrySource          String

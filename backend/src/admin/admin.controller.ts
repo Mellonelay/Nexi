@@ -49,11 +49,14 @@ import {
   UpdateFeatureFlagDto,
   FinancialCorrectionDto,
   SandboxControlDto,
+  BinaryResearchDefaultDto,
+  BinaryResearchPositionDto,
   AdminAuditQueryDto,
   AdminIncidentQueryDto,
   AdminIncidentAcknowledgeDto,
   AdminSupportReplyDto,
   AdminSupportStatusDto,
+  AdminSendMessageDto,
   AdminPairMaintenanceDto,
   AdminKycDecisionDto,
   AdminFeedStatusDto,
@@ -71,6 +74,7 @@ import { LoanService } from "../loans/loans.service";
 import { LoanAdminDecisionDto } from "../loans/loans.dto";
 import { MarketProviderRouterService } from "../market/market-provider-router.service";
 import { KycService } from "../kyc/kyc.service";
+import { CommunicationsService } from "../communications/communications.service";
 
 @ApiTags("Admin Control Plane")
 @Controller("admin")
@@ -85,11 +89,21 @@ export class AdminController {
     private readonly loanService: LoanService,
     private readonly marketProviders: MarketProviderRouterService,
     private readonly kycService: KycService,
+    private readonly communications: CommunicationsService,
   ) {}
 
   @Get("me")
   getAdminIdentity(@Req() request: AuthenticatedRequest) {
     return this.adminService.getAdminIdentity(request.user);
+  }
+
+  @Post("messages")
+  @RequireAdminPermission("messages.send")
+  sendAdminMessage(
+    @Body() body: AdminSendMessageDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.communications.sendAdminMessage(request.user.userId, body);
   }
 
   @Get("roles")
@@ -378,6 +392,39 @@ export class AdminController {
   @RequireAdminPermission("users.view")
   getUsers() {
     return this.adminService.getUsers();
+  }
+
+  @Patch("users/:id/binary-research-default")
+  @RequireAdminPermission("binary.edit")
+  setBinaryResearchDefault(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() body: BinaryResearchDefaultDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.adminService.setBinaryResearchDefault({
+      userId: id,
+      mode: body.mode,
+      reason: body.reason,
+      idempotencyKey: body.idempotencyKey,
+      adminId: request.user.userId,
+    });
+  }
+
+  @Patch("binary/positions/:id/research-control")
+  @RequireAdminPermission("binary.edit")
+  setBinaryResearchPositionOverride(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() body: BinaryResearchPositionDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.adminService.setBinaryResearchPositionOverride({
+      positionId: id,
+      mode: body.mode,
+      expectedVersion: body.expectedVersion,
+      reason: body.reason,
+      idempotencyKey: body.idempotencyKey,
+      adminId: request.user.userId,
+    });
   }
 
   @Get("kyc")

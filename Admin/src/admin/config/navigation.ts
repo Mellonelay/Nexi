@@ -83,6 +83,7 @@ export interface NavItem {
 export interface NavGroup {
   id: string;
   label: string;
+  primary: RoutePath;
   items: NavItem[];
 }
 
@@ -90,6 +91,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     id: "overview",
     label: "Overview",
+    primary: "/overview",
     items: [
       {
         to: "/overview",
@@ -102,6 +104,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     id: "clients",
     label: "Clients",
+    primary: "/users",
     items: [
       { to: "/users", label: "Clients", icon: Users, permission: "users.view" },
       { to: "/kyc", label: "KYC Reviews", icon: ShieldCheck, permission: "kyc.view" },
@@ -111,6 +114,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     id: "trading",
     label: "Trading",
+    primary: "/binary",
     items: [
       { to: "/binary", label: "Binary Trading", icon: Timer, permission: "binary.view" },
       {
@@ -137,6 +141,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     id: "wallet-finance",
     label: "Wallet & Finance",
+    primary: "/wallets",
     items: [
       { to: "/wallets", label: "Wallets", icon: Wallet, permission: "wallets.view" },
       {
@@ -158,6 +163,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     id: "markets",
     label: "Markets",
+    primary: "/assets",
     items: [
       { to: "/assets", label: "Assets", icon: Coins, permission: "assets.view" },
       { to: "/market-feeds", label: "Price Data Sources", icon: Radio, permission: "feeds.view" },
@@ -166,6 +172,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     id: "products",
     label: "Products",
+    primary: "/mining",
     items: [
       { to: "/mining", label: "Mining", icon: Pickaxe, permission: "mining.view" },
       { to: "/loans", label: "Loans", icon: Landmark, permission: "loans.view" },
@@ -174,6 +181,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     id: "communications",
     label: "Communications",
+    primary: "/messages",
     items: [
       { to: "/messages", label: "Messages", icon: MessageSquare, permission: "messages.view" },
       { to: "/support", label: "Support", icon: LifeBuoy, permission: "support.view" },
@@ -195,6 +203,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     id: "settings",
     label: "Administration & Settings",
+    primary: "/frontend-control",
     items: [
       {
         to: "/frontend-control",

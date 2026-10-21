@@ -10946,6 +10946,7 @@ export namespace Prisma {
     updatedAt: Date | null
     lastActive: Date | null
     forceOutcome: string | null
+    binaryResearchDefault: string | null
   }
 
   export type UserMaxAggregateOutputType = {
@@ -10960,6 +10961,7 @@ export namespace Prisma {
     updatedAt: Date | null
     lastActive: Date | null
     forceOutcome: string | null
+    binaryResearchDefault: string | null
   }
 
   export type UserCountAggregateOutputType = {
@@ -10974,6 +10976,7 @@ export namespace Prisma {
     updatedAt: number
     lastActive: number
     forceOutcome: number
+    binaryResearchDefault: number
     _all: number
   }
 
@@ -10998,6 +11001,7 @@ export namespace Prisma {
     updatedAt?: true
     lastActive?: true
     forceOutcome?: true
+    binaryResearchDefault?: true
   }
 
   export type UserMaxAggregateInputType = {
@@ -11012,6 +11016,7 @@ export namespace Prisma {
     updatedAt?: true
     lastActive?: true
     forceOutcome?: true
+    binaryResearchDefault?: true
   }
 
   export type UserCountAggregateInputType = {
@@ -11026,6 +11031,7 @@ export namespace Prisma {
     updatedAt?: true
     lastActive?: true
     forceOutcome?: true
+    binaryResearchDefault?: true
     _all?: true
   }
 
@@ -11127,6 +11133,7 @@ export namespace Prisma {
     updatedAt: Date
     lastActive: Date
     forceOutcome: string
+    binaryResearchDefault: string
     _count: UserCountAggregateOutputType | null
     _avg: UserAvgAggregateOutputType | null
     _sum: UserSumAggregateOutputType | null
@@ -11160,6 +11167,7 @@ export namespace Prisma {
     updatedAt?: boolean
     lastActive?: boolean
     forceOutcome?: boolean
+    binaryResearchDefault?: boolean
     binaryPositions?: boolean | User$binaryPositionsArgs<ExtArgs>
     kyc?: boolean | User$kycArgs<ExtArgs>
     loans?: boolean | User$loansArgs<ExtArgs>
@@ -11212,6 +11220,7 @@ export namespace Prisma {
     updatedAt?: boolean
     lastActive?: boolean
     forceOutcome?: boolean
+    binaryResearchDefault?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -11226,6 +11235,7 @@ export namespace Prisma {
     updatedAt?: boolean
     lastActive?: boolean
     forceOutcome?: boolean
+    binaryResearchDefault?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectScalar = {
@@ -11240,9 +11250,10 @@ export namespace Prisma {
     updatedAt?: boolean
     lastActive?: boolean
     forceOutcome?: boolean
+    binaryResearchDefault?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userCode" | "email" | "password" | "securityPasswordHash" | "displayName" | "role" | "createdAt" | "updatedAt" | "lastActive" | "forceOutcome", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userCode" | "email" | "password" | "securityPasswordHash" | "displayName" | "role" | "createdAt" | "updatedAt" | "lastActive" | "forceOutcome" | "binaryResearchDefault", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     binaryPositions?: boolean | User$binaryPositionsArgs<ExtArgs>
     kyc?: boolean | User$kycArgs<ExtArgs>
@@ -11339,6 +11350,7 @@ export namespace Prisma {
       updatedAt: Date
       lastActive: Date
       forceOutcome: string
+      binaryResearchDefault: string
     }, ExtArgs["result"]["user"]>
     composites: {}
   }
@@ -11810,6 +11822,7 @@ export namespace Prisma {
     readonly updatedAt: FieldRef<"User", 'DateTime'>
     readonly lastActive: FieldRef<"User", 'DateTime'>
     readonly forceOutcome: FieldRef<"User", 'String'>
+    readonly binaryResearchDefault: FieldRef<"User", 'String'>
   }
     
 
@@ -109284,12 +109297,14 @@ export namespace Prisma {
 
   export type Gate2BinaryPositionAvgAggregateOutputType = {
     durationSeconds: number | null
+    researchControlVersion: number | null
     quoteFreshnessMs: number | null
     configurationVersion: number | null
   }
 
   export type Gate2BinaryPositionSumAggregateOutputType = {
     durationSeconds: number | null
+    researchControlVersion: number | null
     quoteFreshnessMs: number | null
     configurationVersion: number | null
   }
@@ -109307,6 +109322,9 @@ export namespace Prisma {
     durationSeconds: number | null
     expiresAt: Date | null
     state: $Enums.Gate2BinaryState | null
+    researchDefault: string | null
+    researchOverride: string | null
+    researchControlVersion: number | null
     entryQuoteId: string | null
     entryProvider: string | null
     entrySource: string | null
@@ -109341,6 +109359,9 @@ export namespace Prisma {
     durationSeconds: number | null
     expiresAt: Date | null
     state: $Enums.Gate2BinaryState | null
+    researchDefault: string | null
+    researchOverride: string | null
+    researchControlVersion: number | null
     entryQuoteId: string | null
     entryProvider: string | null
     entrySource: string | null
@@ -109375,6 +109396,9 @@ export namespace Prisma {
     durationSeconds: number
     expiresAt: number
     state: number
+    researchDefault: number
+    researchOverride: number
+    researchControlVersion: number
     entryQuoteId: number
     entryProvider: number
     entrySource: number
@@ -109400,12 +109424,14 @@ export namespace Prisma {
 
   export type Gate2BinaryPositionAvgAggregateInputType = {
     durationSeconds?: true
+    researchControlVersion?: true
     quoteFreshnessMs?: true
     configurationVersion?: true
   }
 
   export type Gate2BinaryPositionSumAggregateInputType = {
     durationSeconds?: true
+    researchControlVersion?: true
     quoteFreshnessMs?: true
     configurationVersion?: true
   }
@@ -109423,6 +109449,9 @@ export namespace Prisma {
     durationSeconds?: true
     expiresAt?: true
     state?: true
+    researchDefault?: true
+    researchOverride?: true
+    researchControlVersion?: true
     entryQuoteId?: true
     entryProvider?: true
     entrySource?: true
@@ -109457,6 +109486,9 @@ export namespace Prisma {
     durationSeconds?: true
     expiresAt?: true
     state?: true
+    researchDefault?: true
+    researchOverride?: true
+    researchControlVersion?: true
     entryQuoteId?: true
     entryProvider?: true
     entrySource?: true
@@ -109491,6 +109523,9 @@ export namespace Prisma {
     durationSeconds?: true
     expiresAt?: true
     state?: true
+    researchDefault?: true
+    researchOverride?: true
+    researchControlVersion?: true
     entryQuoteId?: true
     entryProvider?: true
     entrySource?: true
@@ -109612,6 +109647,9 @@ export namespace Prisma {
     durationSeconds: number
     expiresAt: Date
     state: $Enums.Gate2BinaryState
+    researchDefault: string
+    researchOverride: string | null
+    researchControlVersion: number
     entryQuoteId: string
     entryProvider: string
     entrySource: string
@@ -109665,6 +109703,9 @@ export namespace Prisma {
     durationSeconds?: boolean
     expiresAt?: boolean
     state?: boolean
+    researchDefault?: boolean
+    researchOverride?: boolean
+    researchControlVersion?: boolean
     entryQuoteId?: boolean
     entryProvider?: boolean
     entrySource?: boolean
@@ -109700,6 +109741,9 @@ export namespace Prisma {
     durationSeconds?: boolean
     expiresAt?: boolean
     state?: boolean
+    researchDefault?: boolean
+    researchOverride?: boolean
+    researchControlVersion?: boolean
     entryQuoteId?: boolean
     entryProvider?: boolean
     entrySource?: boolean
@@ -109735,6 +109779,9 @@ export namespace Prisma {
     durationSeconds?: boolean
     expiresAt?: boolean
     state?: boolean
+    researchDefault?: boolean
+    researchOverride?: boolean
+    researchControlVersion?: boolean
     entryQuoteId?: boolean
     entryProvider?: boolean
     entrySource?: boolean
@@ -109770,6 +109817,9 @@ export namespace Prisma {
     durationSeconds?: boolean
     expiresAt?: boolean
     state?: boolean
+    researchDefault?: boolean
+    researchOverride?: boolean
+    researchControlVersion?: boolean
     entryQuoteId?: boolean
     entryProvider?: boolean
     entrySource?: boolean
@@ -109791,7 +109841,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type Gate2BinaryPositionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "pair" | "side" | "stake" | "entryPrice" | "expiryPrice" | "payoutAmount" | "realizedProfit" | "durationSeconds" | "expiresAt" | "state" | "entryQuoteId" | "entryProvider" | "entrySource" | "entryObservedAt" | "entryReceivedAt" | "entrySequence" | "expiryQuoteId" | "expiryProvider" | "expirySource" | "expiryObservedAt" | "expiryReceivedAt" | "expirySequence" | "quoteFreshnessMs" | "configurationVersion" | "settlementReceiptId" | "idempotencyKey" | "correlationId" | "createdAt" | "updatedAt", ExtArgs["result"]["gate2BinaryPosition"]>
+  export type Gate2BinaryPositionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "pair" | "side" | "stake" | "entryPrice" | "expiryPrice" | "payoutAmount" | "realizedProfit" | "durationSeconds" | "expiresAt" | "state" | "researchDefault" | "researchOverride" | "researchControlVersion" | "entryQuoteId" | "entryProvider" | "entrySource" | "entryObservedAt" | "entryReceivedAt" | "entrySequence" | "expiryQuoteId" | "expiryProvider" | "expirySource" | "expiryObservedAt" | "expiryReceivedAt" | "expirySequence" | "quoteFreshnessMs" | "configurationVersion" | "settlementReceiptId" | "idempotencyKey" | "correlationId" | "createdAt" | "updatedAt", ExtArgs["result"]["gate2BinaryPosition"]>
   export type Gate2BinaryPositionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
   }
@@ -109820,6 +109870,9 @@ export namespace Prisma {
       durationSeconds: number
       expiresAt: Date
       state: $Enums.Gate2BinaryState
+      researchDefault: string
+      researchOverride: string | null
+      researchControlVersion: number
       entryQuoteId: string
       entryProvider: string
       entrySource: string
@@ -110275,6 +110328,9 @@ export namespace Prisma {
     readonly durationSeconds: FieldRef<"Gate2BinaryPosition", 'Int'>
     readonly expiresAt: FieldRef<"Gate2BinaryPosition", 'DateTime'>
     readonly state: FieldRef<"Gate2BinaryPosition", 'Gate2BinaryState'>
+    readonly researchDefault: FieldRef<"Gate2BinaryPosition", 'String'>
+    readonly researchOverride: FieldRef<"Gate2BinaryPosition", 'String'>
+    readonly researchControlVersion: FieldRef<"Gate2BinaryPosition", 'Int'>
     readonly entryQuoteId: FieldRef<"Gate2BinaryPosition", 'String'>
     readonly entryProvider: FieldRef<"Gate2BinaryPosition", 'String'>
     readonly entrySource: FieldRef<"Gate2BinaryPosition", 'String'>
@@ -116634,7 +116690,8 @@ export namespace Prisma {
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
     lastActive: 'lastActive',
-    forceOutcome: 'forceOutcome'
+    forceOutcome: 'forceOutcome',
+    binaryResearchDefault: 'binaryResearchDefault'
   };
 
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -118047,6 +118104,9 @@ export namespace Prisma {
     durationSeconds: 'durationSeconds',
     expiresAt: 'expiresAt',
     state: 'state',
+    researchDefault: 'researchDefault',
+    researchOverride: 'researchOverride',
+    researchControlVersion: 'researchControlVersion',
     entryQuoteId: 'entryQuoteId',
     entryProvider: 'entryProvider',
     entrySource: 'entrySource',
@@ -118522,6 +118582,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"User"> | Date | string
     lastActive?: DateTimeFilter<"User"> | Date | string
     forceOutcome?: StringFilter<"User"> | string
+    binaryResearchDefault?: StringFilter<"User"> | string
     binaryPositions?: BinaryOptionPositionListRelationFilter
     kyc?: XOR<KYCNullableScalarRelationFilter, KYCWhereInput> | null
     loans?: LoanApplicationListRelationFilter
@@ -118573,6 +118634,7 @@ export namespace Prisma {
     updatedAt?: SortOrder
     lastActive?: SortOrder
     forceOutcome?: SortOrder
+    binaryResearchDefault?: SortOrder
     binaryPositions?: BinaryOptionPositionOrderByRelationAggregateInput
     kyc?: KYCOrderByWithRelationInput
     loans?: LoanApplicationOrderByRelationAggregateInput
@@ -118627,6 +118689,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"User"> | Date | string
     lastActive?: DateTimeFilter<"User"> | Date | string
     forceOutcome?: StringFilter<"User"> | string
+    binaryResearchDefault?: StringFilter<"User"> | string
     binaryPositions?: BinaryOptionPositionListRelationFilter
     kyc?: XOR<KYCNullableScalarRelationFilter, KYCWhereInput> | null
     loans?: LoanApplicationListRelationFilter
@@ -118678,6 +118741,7 @@ export namespace Prisma {
     updatedAt?: SortOrder
     lastActive?: SortOrder
     forceOutcome?: SortOrder
+    binaryResearchDefault?: SortOrder
     _count?: UserCountOrderByAggregateInput
     _avg?: UserAvgOrderByAggregateInput
     _max?: UserMaxOrderByAggregateInput
@@ -118700,6 +118764,7 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     lastActive?: DateTimeWithAggregatesFilter<"User"> | Date | string
     forceOutcome?: StringWithAggregatesFilter<"User"> | string
+    binaryResearchDefault?: StringWithAggregatesFilter<"User"> | string
   }
 
   export type UserMfaWhereInput = {
@@ -125888,6 +125953,9 @@ export namespace Prisma {
     durationSeconds?: IntFilter<"Gate2BinaryPosition"> | number
     expiresAt?: DateTimeFilter<"Gate2BinaryPosition"> | Date | string
     state?: EnumGate2BinaryStateFilter<"Gate2BinaryPosition"> | $Enums.Gate2BinaryState
+    researchDefault?: StringFilter<"Gate2BinaryPosition"> | string
+    researchOverride?: StringNullableFilter<"Gate2BinaryPosition"> | string | null
+    researchControlVersion?: IntFilter<"Gate2BinaryPosition"> | number
     entryQuoteId?: StringFilter<"Gate2BinaryPosition"> | string
     entryProvider?: StringFilter<"Gate2BinaryPosition"> | string
     entrySource?: StringFilter<"Gate2BinaryPosition"> | string
@@ -125923,6 +125991,9 @@ export namespace Prisma {
     durationSeconds?: SortOrder
     expiresAt?: SortOrder
     state?: SortOrder
+    researchDefault?: SortOrder
+    researchOverride?: SortOrderInput | SortOrder
+    researchControlVersion?: SortOrder
     entryQuoteId?: SortOrder
     entryProvider?: SortOrder
     entrySource?: SortOrder
@@ -125963,6 +126034,9 @@ export namespace Prisma {
     durationSeconds?: IntFilter<"Gate2BinaryPosition"> | number
     expiresAt?: DateTimeFilter<"Gate2BinaryPosition"> | Date | string
     state?: EnumGate2BinaryStateFilter<"Gate2BinaryPosition"> | $Enums.Gate2BinaryState
+    researchDefault?: StringFilter<"Gate2BinaryPosition"> | string
+    researchOverride?: StringNullableFilter<"Gate2BinaryPosition"> | string | null
+    researchControlVersion?: IntFilter<"Gate2BinaryPosition"> | number
     entryQuoteId?: StringFilter<"Gate2BinaryPosition"> | string
     entryProvider?: StringFilter<"Gate2BinaryPosition"> | string
     entrySource?: StringFilter<"Gate2BinaryPosition"> | string
@@ -125997,6 +126071,9 @@ export namespace Prisma {
     durationSeconds?: SortOrder
     expiresAt?: SortOrder
     state?: SortOrder
+    researchDefault?: SortOrder
+    researchOverride?: SortOrderInput | SortOrder
+    researchControlVersion?: SortOrder
     entryQuoteId?: SortOrder
     entryProvider?: SortOrder
     entrySource?: SortOrder
@@ -126039,6 +126116,9 @@ export namespace Prisma {
     durationSeconds?: IntWithAggregatesFilter<"Gate2BinaryPosition"> | number
     expiresAt?: DateTimeWithAggregatesFilter<"Gate2BinaryPosition"> | Date | string
     state?: EnumGate2BinaryStateWithAggregatesFilter<"Gate2BinaryPosition"> | $Enums.Gate2BinaryState
+    researchDefault?: StringWithAggregatesFilter<"Gate2BinaryPosition"> | string
+    researchOverride?: StringNullableWithAggregatesFilter<"Gate2BinaryPosition"> | string | null
+    researchControlVersion?: IntWithAggregatesFilter<"Gate2BinaryPosition"> | number
     entryQuoteId?: StringWithAggregatesFilter<"Gate2BinaryPosition"> | string
     entryProvider?: StringWithAggregatesFilter<"Gate2BinaryPosition"> | string
     entrySource?: StringWithAggregatesFilter<"Gate2BinaryPosition"> | string
@@ -126565,6 +126645,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -126616,6 +126697,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -126667,6 +126749,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -126718,6 +126801,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -126769,6 +126853,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
   }
 
   export type UserUpdateManyMutationInput = {
@@ -126783,6 +126868,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
   }
 
   export type UserUncheckedUpdateManyInput = {
@@ -126797,6 +126883,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
   }
 
   export type UserMfaCreateInput = {
@@ -134911,6 +134998,9 @@ export namespace Prisma {
     durationSeconds: number
     expiresAt: Date | string
     state?: $Enums.Gate2BinaryState
+    researchDefault?: string
+    researchOverride?: string | null
+    researchControlVersion?: number
     entryQuoteId: string
     entryProvider: string
     entrySource: string
@@ -134946,6 +135036,9 @@ export namespace Prisma {
     durationSeconds: number
     expiresAt: Date | string
     state?: $Enums.Gate2BinaryState
+    researchDefault?: string
+    researchOverride?: string | null
+    researchControlVersion?: number
     entryQuoteId: string
     entryProvider: string
     entrySource: string
@@ -134979,6 +135072,9 @@ export namespace Prisma {
     durationSeconds?: IntFieldUpdateOperationsInput | number
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     state?: EnumGate2BinaryStateFieldUpdateOperationsInput | $Enums.Gate2BinaryState
+    researchDefault?: StringFieldUpdateOperationsInput | string
+    researchOverride?: NullableStringFieldUpdateOperationsInput | string | null
+    researchControlVersion?: IntFieldUpdateOperationsInput | number
     entryQuoteId?: StringFieldUpdateOperationsInput | string
     entryProvider?: StringFieldUpdateOperationsInput | string
     entrySource?: StringFieldUpdateOperationsInput | string
@@ -135014,6 +135110,9 @@ export namespace Prisma {
     durationSeconds?: IntFieldUpdateOperationsInput | number
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     state?: EnumGate2BinaryStateFieldUpdateOperationsInput | $Enums.Gate2BinaryState
+    researchDefault?: StringFieldUpdateOperationsInput | string
+    researchOverride?: NullableStringFieldUpdateOperationsInput | string | null
+    researchControlVersion?: IntFieldUpdateOperationsInput | number
     entryQuoteId?: StringFieldUpdateOperationsInput | string
     entryProvider?: StringFieldUpdateOperationsInput | string
     entrySource?: StringFieldUpdateOperationsInput | string
@@ -135048,6 +135147,9 @@ export namespace Prisma {
     durationSeconds: number
     expiresAt: Date | string
     state?: $Enums.Gate2BinaryState
+    researchDefault?: string
+    researchOverride?: string | null
+    researchControlVersion?: number
     entryQuoteId: string
     entryProvider: string
     entrySource: string
@@ -135081,6 +135183,9 @@ export namespace Prisma {
     durationSeconds?: IntFieldUpdateOperationsInput | number
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     state?: EnumGate2BinaryStateFieldUpdateOperationsInput | $Enums.Gate2BinaryState
+    researchDefault?: StringFieldUpdateOperationsInput | string
+    researchOverride?: NullableStringFieldUpdateOperationsInput | string | null
+    researchControlVersion?: IntFieldUpdateOperationsInput | number
     entryQuoteId?: StringFieldUpdateOperationsInput | string
     entryProvider?: StringFieldUpdateOperationsInput | string
     entrySource?: StringFieldUpdateOperationsInput | string
@@ -135115,6 +135220,9 @@ export namespace Prisma {
     durationSeconds?: IntFieldUpdateOperationsInput | number
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     state?: EnumGate2BinaryStateFieldUpdateOperationsInput | $Enums.Gate2BinaryState
+    researchDefault?: StringFieldUpdateOperationsInput | string
+    researchOverride?: NullableStringFieldUpdateOperationsInput | string | null
+    researchControlVersion?: IntFieldUpdateOperationsInput | number
     entryQuoteId?: StringFieldUpdateOperationsInput | string
     entryProvider?: StringFieldUpdateOperationsInput | string
     entrySource?: StringFieldUpdateOperationsInput | string
@@ -136068,6 +136176,7 @@ export namespace Prisma {
     updatedAt?: SortOrder
     lastActive?: SortOrder
     forceOutcome?: SortOrder
+    binaryResearchDefault?: SortOrder
   }
 
   export type UserAvgOrderByAggregateInput = {
@@ -136086,6 +136195,7 @@ export namespace Prisma {
     updatedAt?: SortOrder
     lastActive?: SortOrder
     forceOutcome?: SortOrder
+    binaryResearchDefault?: SortOrder
   }
 
   export type UserMinOrderByAggregateInput = {
@@ -136100,6 +136210,7 @@ export namespace Prisma {
     updatedAt?: SortOrder
     lastActive?: SortOrder
     forceOutcome?: SortOrder
+    binaryResearchDefault?: SortOrder
   }
 
   export type UserSumOrderByAggregateInput = {
@@ -141141,6 +141252,9 @@ export namespace Prisma {
     durationSeconds?: SortOrder
     expiresAt?: SortOrder
     state?: SortOrder
+    researchDefault?: SortOrder
+    researchOverride?: SortOrder
+    researchControlVersion?: SortOrder
     entryQuoteId?: SortOrder
     entryProvider?: SortOrder
     entrySource?: SortOrder
@@ -141164,6 +141278,7 @@ export namespace Prisma {
 
   export type Gate2BinaryPositionAvgOrderByAggregateInput = {
     durationSeconds?: SortOrder
+    researchControlVersion?: SortOrder
     quoteFreshnessMs?: SortOrder
     configurationVersion?: SortOrder
   }
@@ -141181,6 +141296,9 @@ export namespace Prisma {
     durationSeconds?: SortOrder
     expiresAt?: SortOrder
     state?: SortOrder
+    researchDefault?: SortOrder
+    researchOverride?: SortOrder
+    researchControlVersion?: SortOrder
     entryQuoteId?: SortOrder
     entryProvider?: SortOrder
     entrySource?: SortOrder
@@ -141215,6 +141333,9 @@ export namespace Prisma {
     durationSeconds?: SortOrder
     expiresAt?: SortOrder
     state?: SortOrder
+    researchDefault?: SortOrder
+    researchOverride?: SortOrder
+    researchControlVersion?: SortOrder
     entryQuoteId?: SortOrder
     entryProvider?: SortOrder
     entrySource?: SortOrder
@@ -141238,6 +141359,7 @@ export namespace Prisma {
 
   export type Gate2BinaryPositionSumOrderByAggregateInput = {
     durationSeconds?: SortOrder
+    researchControlVersion?: SortOrder
     quoteFreshnessMs?: SortOrder
     configurationVersion?: SortOrder
   }
@@ -147930,6 +148052,9 @@ export namespace Prisma {
     durationSeconds: number
     expiresAt: Date | string
     state?: $Enums.Gate2BinaryState
+    researchDefault?: string
+    researchOverride?: string | null
+    researchControlVersion?: number
     entryQuoteId: string
     entryProvider: string
     entrySource: string
@@ -147963,6 +148088,9 @@ export namespace Prisma {
     durationSeconds: number
     expiresAt: Date | string
     state?: $Enums.Gate2BinaryState
+    researchDefault?: string
+    researchOverride?: string | null
+    researchControlVersion?: number
     entryQuoteId: string
     entryProvider: string
     entrySource: string
@@ -149263,6 +149391,9 @@ export namespace Prisma {
     durationSeconds?: IntFilter<"Gate2BinaryPosition"> | number
     expiresAt?: DateTimeFilter<"Gate2BinaryPosition"> | Date | string
     state?: EnumGate2BinaryStateFilter<"Gate2BinaryPosition"> | $Enums.Gate2BinaryState
+    researchDefault?: StringFilter<"Gate2BinaryPosition"> | string
+    researchOverride?: StringNullableFilter<"Gate2BinaryPosition"> | string | null
+    researchControlVersion?: IntFilter<"Gate2BinaryPosition"> | number
     entryQuoteId?: StringFilter<"Gate2BinaryPosition"> | string
     entryProvider?: StringFilter<"Gate2BinaryPosition"> | string
     entrySource?: StringFilter<"Gate2BinaryPosition"> | string
@@ -149883,6 +150014,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -149933,6 +150065,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -149999,6 +150132,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -150049,6 +150183,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -150099,6 +150234,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -150149,6 +150285,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -150215,6 +150352,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -150265,6 +150403,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -150315,6 +150454,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -150365,6 +150505,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -150431,6 +150572,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -150481,6 +150623,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -150531,6 +150674,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
     wallet?: WalletCreateNestedOneWithoutUserInput
@@ -150581,6 +150725,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
     wallet?: WalletUncheckedCreateNestedOneWithoutUserInput
@@ -150647,6 +150792,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
     wallet?: WalletUpdateOneWithoutUserNestedInput
@@ -150697,6 +150843,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
     wallet?: WalletUncheckedUpdateOneWithoutUserNestedInput
@@ -150778,6 +150925,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -150828,6 +150976,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -150925,6 +151074,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -150975,6 +151125,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -151081,6 +151232,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -151131,6 +151283,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -151230,6 +151383,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -151280,6 +151434,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -151383,6 +151538,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -151433,6 +151589,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -151542,6 +151699,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -151592,6 +151750,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -151642,6 +151801,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
     wallet?: WalletCreateNestedOneWithoutUserInput
@@ -151692,6 +151852,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
     wallet?: WalletUncheckedCreateNestedOneWithoutUserInput
@@ -151781,6 +151942,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
     wallet?: WalletUpdateOneWithoutUserNestedInput
@@ -151831,6 +151993,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
     wallet?: WalletUncheckedUpdateOneWithoutUserNestedInput
@@ -151908,6 +152071,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -151958,6 +152122,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -152024,6 +152189,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -152074,6 +152240,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -152124,6 +152291,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -152174,6 +152342,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -152240,6 +152409,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -152290,6 +152460,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -152340,6 +152511,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     wallet?: WalletCreateNestedOneWithoutUserInput
@@ -152390,6 +152562,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     wallet?: WalletUncheckedCreateNestedOneWithoutUserInput
@@ -152485,6 +152658,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     wallet?: WalletUpdateOneWithoutUserNestedInput
@@ -152535,6 +152709,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     wallet?: WalletUncheckedUpdateOneWithoutUserNestedInput
@@ -152674,6 +152849,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -152724,6 +152900,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -152858,6 +153035,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -152908,6 +153086,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -153056,6 +153235,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -153106,6 +153286,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -153301,6 +153482,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -153351,6 +153533,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -154015,6 +154198,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -154065,6 +154249,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -154120,6 +154305,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -154170,6 +154356,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -154265,6 +154452,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -154315,6 +154503,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -154376,6 +154565,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -154426,6 +154616,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -154511,6 +154702,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -154561,6 +154753,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -154627,6 +154820,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -154677,6 +154871,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -154860,6 +155055,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -154910,6 +155106,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -154976,6 +155173,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -155026,6 +155224,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -156973,6 +157172,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -157023,6 +157223,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -157167,6 +157368,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -157217,6 +157419,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -157333,6 +157536,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -157383,6 +157587,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -157537,6 +157742,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -157587,6 +157793,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -157980,6 +158187,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -158030,6 +158238,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -158178,6 +158387,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -158228,6 +158438,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -158825,6 +159036,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -158875,6 +159087,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -158941,6 +159154,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -158991,6 +159205,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -159041,6 +159256,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -159091,6 +159307,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -159146,6 +159363,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -159196,6 +159414,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -159262,6 +159481,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -159312,6 +159532,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -159373,6 +159594,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -159423,6 +159645,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -159473,6 +159696,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -159523,6 +159747,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -159578,6 +159803,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -159628,6 +159854,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -159739,6 +159966,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -159789,6 +160017,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -159850,6 +160079,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -159900,6 +160130,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -160401,6 +160632,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -160451,6 +160683,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -160517,6 +160750,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -160567,6 +160801,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -160978,6 +161213,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -161028,6 +161264,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -161146,6 +161383,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -161196,6 +161434,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -162118,6 +162357,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -162168,6 +162408,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -162234,6 +162475,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -162284,6 +162526,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -162393,6 +162636,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -162443,6 +162687,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -162536,6 +162781,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -162586,6 +162832,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -162669,6 +162916,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -162719,6 +162967,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -162859,6 +163108,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -162909,6 +163159,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -163289,6 +163540,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -163339,6 +163591,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -163405,6 +163658,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -163455,6 +163709,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -163505,6 +163760,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -163555,6 +163811,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -163621,6 +163878,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -163671,6 +163929,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -163721,6 +163980,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -163771,6 +164031,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -163837,6 +164098,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -163887,6 +164149,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -163937,6 +164200,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -163987,6 +164251,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -164042,6 +164307,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -164092,6 +164358,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -164158,6 +164425,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -164208,6 +164476,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -164269,6 +164538,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -164319,6 +164589,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -164369,6 +164640,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -164419,6 +164691,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -164485,6 +164758,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -164535,6 +164809,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -164585,6 +164860,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionCreateNestedManyWithoutUserInput
     kyc?: KYCCreateNestedOneWithoutUserInput
     loans?: LoanApplicationCreateNestedManyWithoutUserInput
@@ -164635,6 +164911,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     lastActive?: Date | string
     forceOutcome?: string
+    binaryResearchDefault?: string
     binaryPositions?: BinaryOptionPositionUncheckedCreateNestedManyWithoutUserInput
     kyc?: KYCUncheckedCreateNestedOneWithoutUserInput
     loans?: LoanApplicationUncheckedCreateNestedManyWithoutUserInput
@@ -164701,6 +164978,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUpdateManyWithoutUserNestedInput
     kyc?: KYCUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUpdateManyWithoutUserNestedInput
@@ -164751,6 +165029,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActive?: DateTimeFieldUpdateOperationsInput | Date | string
     forceOutcome?: StringFieldUpdateOperationsInput | string
+    binaryResearchDefault?: StringFieldUpdateOperationsInput | string
     binaryPositions?: BinaryOptionPositionUncheckedUpdateManyWithoutUserNestedInput
     kyc?: KYCUncheckedUpdateOneWithoutUserNestedInput
     loans?: LoanApplicationUncheckedUpdateManyWithoutUserNestedInput
@@ -165004,6 +165283,9 @@ export namespace Prisma {
     durationSeconds: number
     expiresAt: Date | string
     state?: $Enums.Gate2BinaryState
+    researchDefault?: string
+    researchOverride?: string | null
+    researchControlVersion?: number
     entryQuoteId: string
     entryProvider: string
     entrySource: string
@@ -165868,6 +166150,9 @@ export namespace Prisma {
     durationSeconds?: IntFieldUpdateOperationsInput | number
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     state?: EnumGate2BinaryStateFieldUpdateOperationsInput | $Enums.Gate2BinaryState
+    researchDefault?: StringFieldUpdateOperationsInput | string
+    researchOverride?: NullableStringFieldUpdateOperationsInput | string | null
+    researchControlVersion?: IntFieldUpdateOperationsInput | number
     entryQuoteId?: StringFieldUpdateOperationsInput | string
     entryProvider?: StringFieldUpdateOperationsInput | string
     entrySource?: StringFieldUpdateOperationsInput | string
@@ -165901,6 +166186,9 @@ export namespace Prisma {
     durationSeconds?: IntFieldUpdateOperationsInput | number
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     state?: EnumGate2BinaryStateFieldUpdateOperationsInput | $Enums.Gate2BinaryState
+    researchDefault?: StringFieldUpdateOperationsInput | string
+    researchOverride?: NullableStringFieldUpdateOperationsInput | string | null
+    researchControlVersion?: IntFieldUpdateOperationsInput | number
     entryQuoteId?: StringFieldUpdateOperationsInput | string
     entryProvider?: StringFieldUpdateOperationsInput | string
     entrySource?: StringFieldUpdateOperationsInput | string
@@ -165934,6 +166222,9 @@ export namespace Prisma {
     durationSeconds?: IntFieldUpdateOperationsInput | number
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     state?: EnumGate2BinaryStateFieldUpdateOperationsInput | $Enums.Gate2BinaryState
+    researchDefault?: StringFieldUpdateOperationsInput | string
+    researchOverride?: NullableStringFieldUpdateOperationsInput | string | null
+    researchControlVersion?: IntFieldUpdateOperationsInput | number
     entryQuoteId?: StringFieldUpdateOperationsInput | string
     entryProvider?: StringFieldUpdateOperationsInput | string
     entrySource?: StringFieldUpdateOperationsInput | string

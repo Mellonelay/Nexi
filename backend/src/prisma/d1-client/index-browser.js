@@ -128,7 +128,8 @@ exports.Prisma.UserScalarFieldEnum = {
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   lastActive: 'lastActive',
-  forceOutcome: 'forceOutcome'
+  forceOutcome: 'forceOutcome',
+  binaryResearchDefault: 'binaryResearchDefault'
 };
 
 exports.Prisma.UserMfaScalarFieldEnum = {
@@ -1286,6 +1287,9 @@ exports.Prisma.Gate2BinaryPositionScalarFieldEnum = {
   durationSeconds: 'durationSeconds',
   expiresAt: 'expiresAt',
   state: 'state',
+  researchDefault: 'researchDefault',
+  researchOverride: 'researchOverride',
+  researchControlVersion: 'researchControlVersion',
   entryQuoteId: 'entryQuoteId',
   entryProvider: 'entryProvider',
   entrySource: 'entrySource',

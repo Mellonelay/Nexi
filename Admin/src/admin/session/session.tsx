@@ -5,6 +5,7 @@ import type { Permission } from "../types";
 import type { AdminDataProvider } from "../data/provider";
 
 interface AdminSession {
+  actorId: string | null;
   environment: Environment;
   setEnvironment: (e: Environment) => void;
   roleId: RoleId;
@@ -27,6 +28,7 @@ export function AdminSessionProvider({
 }) {
   const isLiveProvider = Boolean(provider.getAdminIdentity);
   const [environment, setEnvironment] = useState<Environment>("SANDBOX");
+  const [actorId, setActorId] = useState<string | null>(null);
   const [roleId, setRoleId] = useState<RoleId>("super_admin");
   const [roleLabel, setRoleLabel] = useState(
     isLiveProvider ? "Loading identity…" : ROLES.super_admin.label,
@@ -56,6 +58,7 @@ export function AdminSessionProvider({
       .getAdminIdentity()
       .then((identity) => {
         if (!active) return;
+        setActorId(identity.id);
         if (identity.roleId && identity.roleId in ROLES) {
           setRoleId(identity.roleId);
         }
@@ -67,6 +70,7 @@ export function AdminSessionProvider({
               : "Unassigned"),
         );
         setEffectivePermissions(identity.effectivePermissions);
+        setEnvironment(identity.environment ?? "SANDBOX");
         setIdentityReady(true);
         setIdentityStatus("ready");
       })
@@ -85,6 +89,7 @@ export function AdminSessionProvider({
 
   const value = useMemo<AdminSession>(() => {
     return {
+      actorId,
       environment,
       setEnvironment,
       roleId,
@@ -99,6 +104,7 @@ export function AdminSessionProvider({
     };
   }, [
     actorName,
+    actorId,
     effectivePermissions,
     environment,
     identityReady,

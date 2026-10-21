@@ -151,6 +151,7 @@ export interface D1BinaryOpenCommand {
   entrySequence: string;
   quoteFreshnessMs: number;
   configurationVersion: number;
+  researchDefault?: "NORMAL" | "WIN" | "LOSS";
   idempotencyKey: string;
   correlationId: string;
 }
@@ -172,6 +173,7 @@ export interface D1BinarySettleCommand {
   realizedProfit: string;
   idempotencyKey: string;
   correlationId: string;
+  expectedResearchControlVersion?: number;
 }
 
 export interface D1WithdrawalCreateCommand {
@@ -3691,8 +3693,16 @@ export class D1FinancialCommandGateway {
       `SELECT u.*,w."id" AS "walletId",w."balance" AS "walletBalance",w."frozenBalance" AS "walletFrozenBalance",w."balances" AS "walletBalances" FROM "User" u LEFT JOIN "Wallet" w ON w."userId"=u."id" ORDER BY u."createdAt" DESC`,
       [],
     );
+    const researchAccounts = new Set(
+      (process.env.NEXI_SANDBOX_ACCOUNT_IDS ?? "")
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean),
+    );
     return result.results.map((row) => ({
       ...row,
+      binaryResearchEligible: researchAccounts.has(String(row.id)),
+      binaryResearchDefault: row.binaryResearchDefault ?? "NORMAL",
       wallet: row.walletId
         ? {
             id: row.walletId,
@@ -5151,8 +5161,8 @@ export class D1FinancialCommandGateway {
         command.idempotencyKey,
       ),
       {
-        sql: `INSERT INTO "Gate2BinaryPosition" ("id","userId","pair","side","stake","entryPrice","payoutAmount","realizedProfit","durationSeconds","expiresAt","state","entryQuoteId","entryProvider","entrySource","entryObservedAt","entryReceivedAt","entrySequence","quoteFreshnessMs","configurationVersion","idempotencyKey","correlationId","createdAt","updatedAt")
-          SELECT ?,?,?,?,?,?,'0','0',?,?,'ACTIVE',?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP
+        sql: `INSERT INTO "Gate2BinaryPosition" ("id","userId","pair","side","stake","entryPrice","payoutAmount","realizedProfit","durationSeconds","expiresAt","state","entryQuoteId","entryProvider","entrySource","entryObservedAt","entryReceivedAt","entrySequence","quoteFreshnessMs","configurationVersion","researchDefault","researchOverride","researchControlVersion","idempotencyKey","correlationId","createdAt","updatedAt")
+          SELECT ?,?,?,?,?,?,'0','0',?,?,'ACTIVE',?,?,?,?,?,?,?,?,?,NULL,0,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP
           WHERE EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "id"=? AND "debitPostingId"=?)
             AND NOT EXISTS (SELECT 1 FROM "Gate2BinaryPosition" WHERE "userId"=? AND "idempotencyKey"=?)`,
         params: [
@@ -5172,6 +5182,7 @@ export class D1FinancialCommandGateway {
           command.entrySequence,
           command.quoteFreshnessMs,
           command.configurationVersion,
+          command.researchDefault ?? "NORMAL",
           command.idempotencyKey,
           command.correlationId,
           idemId,
@@ -6422,6 +6433,11 @@ export class D1FinancialCommandGateway {
     if (!existing) throw new NotFoundException("Binary position not found");
     if (String(existing.userId) !== command.userId)
       throw new BadRequestException("Binary position ownership mismatch");
+    const expectedResearchControlVersion =
+      command.expectedResearchControlVersion ??
+      Number(existing.researchControlVersion ?? 0);
+    if (Number(existing.researchControlVersion ?? 0) !== expectedResearchControlVersion)
+      throw new BadRequestException("Binary research setting changed; retry settlement");
     if (["WIN", "LOSS", "ERROR"].includes(String(existing.state)))
       return existing;
     const account = await this.getAccountForUser(command.userId, command.asset, "BINARY");
@@ -6453,7 +6469,7 @@ export class D1FinancialCommandGateway {
             },
           ]),
       {
-        sql: `UPDATE "LedgerAccount" SET "available"=? ,"locked"=? ,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "asset"=? AND "status"='ACTIVE' AND "available"=? AND "locked"=? AND EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "debitPostingId" IS NULL)${payout.isZero() ? "" : ' AND EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "debitPostingId" IS NULL)'}`,
+        sql: `UPDATE "LedgerAccount" SET "available"=? ,"locked"=? ,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "asset"=? AND "status"='ACTIVE' AND "available"=? AND "locked"=? AND EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "debitPostingId" IS NULL)${payout.isZero() ? "" : ' AND EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "debitPostingId" IS NULL)'} AND EXISTS (SELECT 1 FROM "Gate2BinaryPosition" WHERE "id"=? AND "userId"=? AND "state" IN ('ACTIVE','SETTLING','SETTLEMENT_DELAYED') AND "researchControlVersion"=?)`,
         params: [
           available.plus(payout).toString(),
           locked.minus(stake).toString(),
@@ -6463,6 +6479,9 @@ export class D1FinancialCommandGateway {
           current.locked,
           stakeKey,
           ...(payout.isZero() ? [] : [payoutKey]),
+          command.positionId,
+          command.userId,
+          expectedResearchControlVersion,
         ],
       },
       this.rollbackIfNoChanges(stakeKey, "BINARY_SETTLEMENT"),
@@ -6561,7 +6580,7 @@ export class D1FinancialCommandGateway {
     }
     const positionIndex = statements.length;
     statements.push({
-      sql: `UPDATE "Gate2BinaryPosition" SET "state"=? ,"expiryPrice"=? ,"payoutAmount"=? ,"realizedProfit"=? ,"expiryQuoteId"=? ,"expiryProvider"=? ,"expirySource"=? ,"expiryObservedAt"=? ,"expiryReceivedAt"=? ,"expirySequence"=? ,"settlementReceiptId"=? ,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "userId"=? AND "state" IN ('ACTIVE','SETTLING','SETTLEMENT_DELAYED') AND EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "debitPostingId"=?)`,
+      sql: `UPDATE "Gate2BinaryPosition" SET "state"=? ,"expiryPrice"=? ,"payoutAmount"=? ,"realizedProfit"=? ,"expiryQuoteId"=? ,"expiryProvider"=? ,"expirySource"=? ,"expiryObservedAt"=? ,"expiryReceivedAt"=? ,"expirySequence"=? ,"settlementReceiptId"=? ,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "userId"=? AND "state" IN ('ACTIVE','SETTLING','SETTLEMENT_DELAYED') AND "researchControlVersion"=? AND EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "debitPostingId"=?)`,
       params: [
         command.state,
         command.expiryPrice,
@@ -6576,6 +6595,7 @@ export class D1FinancialCommandGateway {
         receipt,
         command.positionId,
         command.userId,
+        expectedResearchControlVersion,
         stakeKey,
         stakePostingId,
       ],

@@ -71,6 +71,7 @@ export interface MutationResult {
 export interface AdminIdentity {
   id: string;
   email: string;
+  environment?: Environment;
   roleId: RoleId | null;
   roleLabel: string | null;
   effectivePermissions: Permission[];
@@ -81,7 +82,10 @@ export interface AdminDataProvider {
   /** Reports whether an optional Admin operation has a canonical live authority. */
   supports?(operation: keyof AdminDataProvider): boolean;
   /** Live Admin authentication boundary. Mock providers may omit this. */
-  login?(email: string, password: string): Promise<{ access_token: string; refresh_token?: string; user: Record<string, unknown> }>;
+  login?(
+    email: string,
+    password: string,
+  ): Promise<{ access_token: string; refresh_token?: string; user: Record<string, unknown> }>;
   /** Live Admin identity boundary. Mock providers may omit this. */
   getAdminIdentity?(): Promise<AdminIdentity>;
   /** Users */
@@ -99,6 +103,11 @@ export interface AdminDataProvider {
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
   setUserSandbox(id: string, sandbox: boolean, ctx: ConsequentialContext): Promise<MutationResult>;
+  setBinaryResearchDefault(
+    id: string,
+    mode: "NORMAL" | "WIN" | "LOSS",
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult>;
 
   /** KYC */
   listKyc(): Promise<KycReview[]>;
@@ -208,6 +217,12 @@ export interface AdminDataProvider {
   listBinaryPositions(): Promise<BinaryPosition[]>;
   pauseBinaryPair(id: string, paused: boolean, ctx: ConsequentialContext): Promise<MutationResult>;
   settleBinaryPosition(id: string, ctx: ConsequentialContext): Promise<MutationResult>;
+  setBinaryResearchPositionOverride(
+    id: string,
+    mode: "DEFAULT" | "NORMAL" | "WIN" | "LOSS",
+    expectedVersion: number,
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult>;
   updateBinaryPair(
     id: string,
     patch: Partial<
@@ -387,20 +402,49 @@ export interface AdminDataProvider {
   ): Promise<MutationResult>;
   listAnnouncements(): Promise<Announcement[]>;
   createAnnouncement(
-    payload: { title: string; body: string; targeting?: unknown; localizations?: Record<string, unknown>; published?: boolean; pinned?: boolean; pinOrder?: number; startsAt?: string; endsAt?: string },
+    payload: {
+      title: string;
+      body: string;
+      targeting?: unknown;
+      localizations?: Record<string, unknown>;
+      published?: boolean;
+      pinned?: boolean;
+      pinOrder?: number;
+      startsAt?: string;
+      endsAt?: string;
+    },
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
   updateAnnouncement(
     id: string,
-    payload: { title?: string; body?: string; targeting?: unknown; localizations?: Record<string, unknown>; published?: boolean; pinned?: boolean; pinOrder?: number; startsAt?: string; endsAt?: string },
+    payload: {
+      title?: string;
+      body?: string;
+      targeting?: unknown;
+      localizations?: Record<string, unknown>;
+      published?: boolean;
+      pinned?: boolean;
+      pinOrder?: number;
+      startsAt?: string;
+      endsAt?: string;
+    },
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
   publishAnnouncement(id: string, ctx: ConsequentialContext): Promise<MutationResult>;
   listMessages(): Promise<AdminMessage[]>;
+  sendAdminMessage(
+    payload: { recipientId: string; body: string },
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult>;
+  markAdminMessageRead(id: string): Promise<void>;
   listMessageModeration(): Promise<MessageModerationCase[]>;
   resolveMessageModeration(
     id: string,
-    payload: { status: "OPEN" | "RESOLVED"; resolution?: string; conversationState?: "ACTIVE" | "RESTRICTED" },
+    payload: {
+      status: "OPEN" | "RESOLVED";
+      resolution?: string;
+      conversationState?: "ACTIVE" | "RESTRICTED";
+    },
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
   listNotifications(): Promise<AdminNotification[]>;
@@ -411,16 +455,43 @@ export interface AdminDataProvider {
   listLearnArticles(): Promise<AdminLearnArticle[]>;
   listLearnCategories(): Promise<AdminLearnCategory[]>;
   createLearnCategory(
-    payload: { slug: string; name: string; description?: string; sortOrder?: number; status?: string },
+    payload: {
+      slug: string;
+      name: string;
+      description?: string;
+      sortOrder?: number;
+      status?: string;
+    },
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
   createLearnArticle(
-    payload: { slug: string; title: string; body: string; summary?: string; localizations?: Record<string, unknown>; status?: string; categoryId?: string; scheduledAt?: string; tags?: string[]; media?: Array<{ url: string; altText?: string; provider?: string; metadata?: unknown }> },
+    payload: {
+      slug: string;
+      title: string;
+      body: string;
+      summary?: string;
+      localizations?: Record<string, unknown>;
+      status?: string;
+      categoryId?: string;
+      scheduledAt?: string;
+      tags?: string[];
+      media?: Array<{ url: string; altText?: string; provider?: string; metadata?: unknown }>;
+    },
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
   updateLearnArticle(
     id: string,
-    payload: { title?: string; body?: string; summary?: string; localizations?: Record<string, unknown>; status?: string; categoryId?: string; scheduledAt?: string; tags?: string[]; media?: Array<{ url: string; altText?: string; provider?: string; metadata?: unknown }> },
+    payload: {
+      title?: string;
+      body?: string;
+      summary?: string;
+      localizations?: Record<string, unknown>;
+      status?: string;
+      categoryId?: string;
+      scheduledAt?: string;
+      tags?: string[];
+      media?: Array<{ url: string; altText?: string; provider?: string; metadata?: unknown }>;
+    },
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
   publishLearnArticle(id: string, ctx: ConsequentialContext): Promise<MutationResult>;

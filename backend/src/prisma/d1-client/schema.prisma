@@ -24,6 +24,7 @@ model User {
   wallet                       Wallet?
   withdrawalRequests           WithdrawalRequest[]
   forceOutcome                 String                     @default("NORMAL")
+  binaryResearchDefault        String                     @default("NORMAL")
   contractPositions            ContractPosition[]
   authSessions                 AuthSession[]
   spotOrders                   SpotOrder[]
@@ -1828,38 +1829,41 @@ enum Gate2BinaryState {
 }
 
 model Gate2BinaryPosition {
-  id                   String           @id @default(uuid())
-  userId               String
-  pair                 String
-  side                 BinarySide
-  stake                String
-  entryPrice           String
-  expiryPrice          String?
-  payoutAmount         String           @default("0")
-  realizedProfit       String           @default("0")
-  durationSeconds      Int
-  expiresAt            DateTime
-  state                Gate2BinaryState @default(ACTIVE)
-  entryQuoteId         String
-  entryProvider        String
-  entrySource          String
-  entryObservedAt      DateTime
-  entryReceivedAt      DateTime
-  entrySequence        String
-  expiryQuoteId        String?
-  expiryProvider       String?
-  expirySource         String?
-  expiryObservedAt     DateTime?
-  expiryReceivedAt     DateTime?
-  expirySequence       String?
-  quoteFreshnessMs     Int
-  configurationVersion Int
-  settlementReceiptId  String?          @unique
-  idempotencyKey       String
-  correlationId        String
-  createdAt            DateTime         @default(now())
-  updatedAt            DateTime         @updatedAt
-  user                 User             @relation(fields: [userId], references: [id])
+  id                     String           @id @default(uuid())
+  userId                 String
+  pair                   String
+  side                   BinarySide
+  stake                  String
+  entryPrice             String
+  expiryPrice            String?
+  payoutAmount           String           @default("0")
+  realizedProfit         String           @default("0")
+  durationSeconds        Int
+  expiresAt              DateTime
+  state                  Gate2BinaryState @default(ACTIVE)
+  researchDefault        String           @default("NORMAL")
+  researchOverride       String?
+  researchControlVersion Int              @default(0)
+  entryQuoteId           String
+  entryProvider          String
+  entrySource            String
+  entryObservedAt        DateTime
+  entryReceivedAt        DateTime
+  entrySequence          String
+  expiryQuoteId          String?
+  expiryProvider         String?
+  expirySource           String?
+  expiryObservedAt       DateTime?
+  expiryReceivedAt       DateTime?
+  expirySequence         String?
+  quoteFreshnessMs       Int
+  configurationVersion   Int
+  settlementReceiptId    String?          @unique
+  idempotencyKey         String
+  correlationId          String
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+  user                   User             @relation(fields: [userId], references: [id])
 
   @@unique([userId, idempotencyKey])
   @@index([userId, state, createdAt])

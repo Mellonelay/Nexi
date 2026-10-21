@@ -49,6 +49,18 @@ export class BinaryService {
     if (!pair) return { position: raw, delayed: true };
     const configuration: any = await this.d1.getBinaryConfiguration(String(raw.pair), Number(raw.durationSeconds), Number(raw.configurationVersion));
     if (!configuration) return { position: raw, error: true };
+    const researchMode = this.isBinaryResearchAccount(String(raw.userId))
+      ? this.binaryMode(raw.researchOverride ?? raw.researchDefault)
+      : "NORMAL";
+    if (researchMode !== "NORMAL") {
+      const directive = {
+        commandId: `position-${raw.id}-v${Number(raw.researchControlVersion ?? 0)}`,
+        mode: researchMode === "WIN" ? "forced_win" : "forced_loss",
+        result: researchMode,
+        expiresAt,
+      } as const;
+      return this.settleSandboxPosition({ raw, pair, configuration, expiresAt, sandbox: directive });
+    }
     const sandbox = await this.sandboxScenarios.findBinaryDirective(this.prisma, String(raw.userId), String(raw.id));
     if (sandbox) return this.settleSandboxPosition({ raw, pair, configuration, expiresAt, sandbox });
     const quote = await this.getApprovedSettlementQuote(pair, {
@@ -115,6 +127,7 @@ export class BinaryService {
       realizedProfit: payout.sub(new Prisma.Decimal(String(context.raw.stake))).toString(),
       idempotencyKey: String(context.raw.idempotencyKey),
       correlationId: String(context.raw.correlationId),
+      expectedResearchControlVersion: Number(context.raw.researchControlVersion ?? 0),
     });
     const position = simulated
       ? { ...settled, sandboxSimulation: this.buildSandboxSimulation(context.raw, context.sandbox!, context.expiryPrice, true) }
@@ -135,6 +148,12 @@ export class BinaryService {
     }
     const quote = await this.getApprovedSettlementQuote(pair);
     if (!quote) throw new ServiceUnavailableException(`Approved settlement quote unavailable for ${pair.symbol}`);
+    const researchDefault = this.isBinaryResearchAccount(userId)
+      ? this.binaryMode((await this.prisma.user.findUnique({
+          where: { id: userId },
+          select: { binaryResearchDefault: true },
+        }))?.binaryResearchDefault)
+      : "NORMAL";
     const expiresAt = new Date(Date.now() + input.durationSeconds * 1000);
     const position: any = await this.d1.openBinaryPosition({
       userId, pair: pair.symbol, asset: pair.quoteAsset, side: input.side, stake: stake.toString(), durationSeconds: input.durationSeconds,
@@ -142,6 +161,7 @@ export class BinaryService {
       entryProvider: quote.provider, entrySource: quote.source, entryObservedAt: quote.observedAt,
       entryReceivedAt: quote.receivedAt, entrySequence: quote.sequence, quoteFreshnessMs: quote.freshnessMs,
       configurationVersion: Number(configuration.version), idempotencyKey: input.idempotencyKey, correlationId: input.idempotencyKey,
+      researchDefault,
     });
     this.binaryGateway.emitPositionUpdate(userId, { event: 'binary.position.opened', position });
     return position;
@@ -155,6 +175,26 @@ export class BinaryService {
   async getCurrentPositions(userId: string) {
     const positions: any[] = await this.d1.listBinaryPositions(userId, true);
     return Promise.all(positions.map(async (position) => {
+      const researchMode = this.isBinaryResearchAccount(userId)
+        ? this.binaryMode(position.researchOverride ?? position.researchDefault)
+        : "NORMAL";
+      if (researchMode !== "NORMAL") {
+        const directive = {
+          commandId: `position-${position.id}-v${Number(position.researchControlVersion ?? 0)}`,
+          mode: researchMode === "WIN" ? "forced_win" : "forced_loss",
+          result: researchMode,
+          expiresAt: new Date(String(position.expiresAt)),
+        } as const;
+        const expiryPrice = this.sandboxExpiryPrice(
+          new Prisma.Decimal(String(position.entryPrice)),
+          String(position.side) as BinarySide,
+          directive.result,
+        );
+        return {
+          ...position,
+          sandboxSimulation: this.buildSandboxSimulation(position, directive, expiryPrice, false),
+        };
+      }
       const directive = await this.sandboxScenarios.findBinaryDirective(this.prisma, userId, String(position.id));
       if (!directive) return position;
       const expiryPrice = this.sandboxExpiryPrice(
@@ -193,6 +233,17 @@ export class BinaryService {
       throw new BadRequestException('Sandbox outcome cannot produce a positive expiry price');
     }
     return expiry;
+  }
+
+  private isBinaryResearchAccount(userId: string): boolean {
+    return (process.env.NEXI_SANDBOX_ACCOUNT_IDS ?? "")
+      .split(",")
+      .map((value) => value.trim())
+      .includes(userId);
+  }
+
+  private binaryMode(value: unknown): "NORMAL" | "WIN" | "LOSS" {
+    return value === "WIN" || value === "LOSS" ? value : "NORMAL";
   }
 
   private buildSandboxSimulation(

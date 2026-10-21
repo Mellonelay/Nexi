@@ -4,18 +4,34 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BarChart3, Coins, Home, LineChart, Wallet } from "lucide-react";
 import { useLocale } from "../state/LocaleProvider";
+import { usePublicNavigation } from "../state/public-navigation";
 
 const navItems = [
   { key: "dashboard", label: "Dashboard", href: "/dashboard", icon: Home },
-  { key: "spot", label: "Spot/Margin", href: "/dashboard/spot", icon: LineChart },
-  { key: "options", label: "Options", href: "/dashboard/binary", icon: BarChart3 },
+  {
+    key: "spot",
+    label: "Spot/Margin",
+    href: "/dashboard/spot",
+    icon: LineChart,
+  },
+  {
+    key: "options",
+    label: "Options",
+    href: "/dashboard/binary",
+    icon: BarChart3,
+  },
   { key: "wallet", label: "Wallet", href: "/dashboard/wallet", icon: Wallet },
   { key: "earn", label: "Earn", href: "/dashboard/mining", icon: Coins },
 ];
+const navTargets = navItems.map((item) => item.href);
 
 export default function BottomNav() {
   const pathname = usePathname();
   const { t } = useLocale();
+  const configuredTargets = usePublicNavigation("bottom", navTargets);
+  const configuredItems = configuredTargets.flatMap((target) =>
+    navItems.filter((item) => item.href === target),
+  );
 
   return (
     <nav
@@ -23,7 +39,7 @@ export default function BottomNav() {
       className="relative z-50 shrink-0 px-3 pb-[calc(4px+env(safe-area-inset-bottom))] pt-1 lg:hidden"
     >
       <div className="nexi-bottom-nav mx-auto grid h-[60px] max-w-[420px] grid-cols-5 items-center rounded-[18px] border px-1">
-        {navItems.map((item) => {
+        {configuredItems.map((item) => {
           const Icon = item.icon;
           const active =
             pathname === item.href ||
@@ -48,7 +64,9 @@ export default function BottomNav() {
                 aria-hidden="true"
               />
               <span className="relative">
-                {item.key === "spot" ? item.label : t(item.key as Parameters<typeof t>[0])}
+                {item.key === "spot"
+                  ? item.label
+                  : t(item.key as Parameters<typeof t>[0])}
               </span>
             </Link>
           );

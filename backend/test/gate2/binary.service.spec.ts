@@ -115,6 +115,24 @@ describe('Gate 2 Binary authority', () => {
     expect(result).toEqual(existing);
     expect(d1.openBinaryPosition).toHaveBeenCalledTimes(1);
   });
+
+  it('captures the saved default only for an allowlisted research account', async () => {
+    const oldAllowlist = process.env.NEXI_SANDBOX_ACCOUNT_IDS;
+    process.env.NEXI_SANDBOX_ACCOUNT_IDS = 'user-1';
+    const { service, d1 } = createService();
+    (service as any).prisma = {
+      user: { findUnique: jest.fn().mockResolvedValue({ binaryResearchDefault: 'WIN' }) },
+    };
+    try {
+      await service.openPosition('user-1', {
+        pair: 'BTCUSDT', side: BinarySide.CALL, stake: '10', durationSeconds: 30, idempotencyKey: 'binary-research-open-1',
+      });
+      expect(d1.openBinaryPosition).toHaveBeenCalledWith(expect.objectContaining({ researchDefault: 'WIN' }));
+    } finally {
+      if (oldAllowlist === undefined) delete process.env.NEXI_SANDBOX_ACCOUNT_IDS;
+      else process.env.NEXI_SANDBOX_ACCOUNT_IDS = oldAllowlist;
+    }
+  });
 });
 
 describe('D1 binary settlement sandbox directive', () => {
@@ -245,6 +263,32 @@ describe('D1 binary settlement sandbox directive', () => {
     expect(d1.settleBinaryPositionAtomic).toHaveBeenCalledWith(
       expect.objectContaining({ state: 'WIN' }),
     );
+  });
+
+  it('applies the eligible position research override and sends its version fence into settlement', async () => {
+    const oldAllowlist = process.env.NEXI_SANDBOX_ACCOUNT_IDS;
+    process.env.NEXI_SANDBOX_ACCOUNT_IDS = 'user-1';
+    const { service, d1 } = createD1Service(null, '90');
+    d1.getBinaryPosition.mockResolvedValue({
+      ...rawPosition,
+      researchDefault: 'NORMAL',
+      researchOverride: 'WIN',
+      researchControlVersion: 4,
+    });
+    try {
+      const result: any = await service.settlePosition('position-d1-1');
+      expect(d1.getLiveMarketQuote).not.toHaveBeenCalled();
+      expect(d1.settleBinaryPositionAtomic).toHaveBeenCalledWith(expect.objectContaining({
+        state: 'WIN',
+        expectedResearchControlVersion: 4,
+        expiryProvider: 'nexi-sandbox-simulation',
+      }));
+      const command = d1.settleBinaryPositionAtomic.mock.calls[0][0];
+      expect(result.position.sandboxSimulation.candles.at(-1).close).toBe(command.expiryPrice);
+    } finally {
+      if (oldAllowlist === undefined) delete process.env.NEXI_SANDBOX_ACCOUNT_IDS;
+      else process.env.NEXI_SANDBOX_ACCOUNT_IDS = oldAllowlist;
+    }
   });
 
   it('calculates the configured nonzero LOSS payout with exact decimal amounts', async () => {

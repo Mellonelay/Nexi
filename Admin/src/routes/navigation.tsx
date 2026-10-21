@@ -84,7 +84,7 @@ function Shell({ children, total }: { children: React.ReactNode; total?: number 
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Public Navigation Settings"
-        description="Public navigation currently uses built-in menus. Admin overrides shown here are not currently applied by the Public app."
+        description="Saved changes apply to the Public app when users next load its menus. Public and signed-in audiences are supported; VIP and internal targeting remains unavailable."
         badges={
           <>
             <ProviderBadge />
@@ -209,8 +209,9 @@ function SurfaceEditor({ surface, items }: { surface: NavSurface; items: NavItem
               className="h-8 rounded-md border border-input bg-background px-2 text-xs text-foreground"
             >
               {AUDIENCES.map((a) => (
-                <option key={a} value={a}>
+                <option key={a} value={a} disabled={a === "vip" || a === "internal"}>
                   {a}
+                  {a === "vip" || a === "internal" ? " (unavailable)" : ""}
                 </option>
               ))}
             </select>

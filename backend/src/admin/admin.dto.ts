@@ -241,6 +241,21 @@ export class SandboxControlDto {
   @IsString() @Length(8, 128) idempotencyKey!: string;
 }
 
+export class BinaryResearchDefaultDto {
+  @IsIn(["NORMAL", "WIN", "LOSS"])
+  mode!: "NORMAL" | "WIN" | "LOSS";
+  @IsString() @Length(3, 500) reason!: string;
+  @IsString() @Length(8, 128) idempotencyKey!: string;
+}
+
+export class BinaryResearchPositionDto {
+  @IsIn(["DEFAULT", "NORMAL", "WIN", "LOSS"])
+  mode!: "DEFAULT" | "NORMAL" | "WIN" | "LOSS";
+  @IsInt() @Min(0) expectedVersion!: number;
+  @IsString() @Length(3, 500) reason!: string;
+  @IsString() @Length(8, 128) idempotencyKey!: string;
+}
+
 export class AdminKycDecisionDto {
   @IsUUID() id!: string;
   @IsIn(["approved", "rejected"]) decision!: "approved" | "rejected";
@@ -308,6 +323,13 @@ export class AdminSupportStatusDto {
   @IsString()
   @IsIn(["open", "pending_user", "resolved", "escalated"])
   status!: string;
+  @IsString() @Length(3, 500) reason!: string;
+  @IsString() @Length(8, 128) idempotencyKey!: string;
+}
+
+export class AdminSendMessageDto {
+  @IsUUID() recipientId!: string;
+  @IsString() @Length(1, 10000) body!: string;
   @IsString() @Length(3, 500) reason!: string;
   @IsString() @Length(8, 128) idempotencyKey!: string;
 }

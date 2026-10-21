@@ -61,6 +61,7 @@ export type Permission =
   | "support.view"
   | "support.reply"
   | "messages.view"
+  | "messages.send"
   | "announcements.view"
   | "announcements.publish"
   | "learn.view"
@@ -166,7 +167,8 @@ export interface User {
   lastLoginAt: string;
   entitlements: { spot: boolean; binary: boolean; mining: boolean; loans: boolean };
   restrictions: string[];
-  sandbox?: boolean;
+  binaryResearchEligible?: boolean;
+  binaryResearchDefault?: "NORMAL" | "WIN" | "LOSS";
 }
 
 export const USER_RESTRICTION_TAGS = [
@@ -393,6 +395,10 @@ export interface BinaryPosition {
   strikeAt: string;
   status: "open" | "won" | "lost" | "error";
   payout?: string;
+  researchDefault?: "NORMAL" | "WIN" | "LOSS";
+  researchOverride?: "WIN" | "LOSS" | null;
+  researchControlVersion?: number;
+  researchEligible?: boolean;
 }
 
 /** Internal side mapping for Binary. Public shows long/short. */
@@ -701,6 +707,7 @@ export interface AdminMessage {
   body: string;
   conversationId?: string;
   deliveryState: string;
+  readAt?: string | null;
   createdAt: string;
 }
 
@@ -742,7 +749,13 @@ export interface AdminLearnArticle {
   scheduledAt?: string;
   publishedAt?: string;
   tags: Array<{ tag?: { id?: string; name?: string; slug?: string } }>;
-  media: Array<{ id?: string; url: string; altText?: string; provider?: string; metadata?: unknown }>;
+  media: Array<{
+    id?: string;
+    url: string;
+    altText?: string;
+    provider?: string;
+    metadata?: unknown;
+  }>;
   revisions: Array<{ id?: string; revision?: number; createdAt?: string }>;
   updatedAt: string;
 }

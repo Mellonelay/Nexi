@@ -26,15 +26,7 @@ import {
   type UserRestrictionTag,
   type UserStatus,
 } from "@/admin/types";
-import {
-  Ban,
-  ShieldCheck,
-  ShieldOff,
-  FlaskConical,
-  KeyRound,
-  LogOut,
-  UserRound,
-} from "lucide-react";
+import { Ban, ShieldCheck, ShieldOff, KeyRound, LogOut, UserRound } from "lucide-react";
 
 export const Route = createFileRoute("/users")({ component: Page });
 
@@ -43,9 +35,8 @@ type PendingStatusAction = {
   user: User;
   status: UserStatus;
 };
-type PendingSandboxAction = { kind: "sandbox"; user: User; sandbox: boolean };
 type PendingRevokeAllAction = { kind: "revoke-all"; user: User; activeSessions: number };
-type PendingAction = PendingStatusAction | PendingSandboxAction | PendingRevokeAllAction;
+type PendingAction = PendingStatusAction | PendingRevokeAllAction;
 
 function Page() {
   return (
@@ -65,6 +56,11 @@ function Inner() {
   const [entitlementUser, setEntitlementUser] = useState<User | null>(null);
   const [restrictionUser, setRestrictionUser] = useState<User | null>(null);
   const [pending, setPending] = useState<PendingAction | null>(null);
+  const [binaryDefaultDraft, setBinaryDefaultDraft] = useState<"NORMAL" | "WIN" | "LOSS">("NORMAL");
+  const [pendingBinaryDefault, setPendingBinaryDefault] = useState<{
+    user: User;
+    mode: "NORMAL" | "WIN" | "LOSS";
+  } | null>(null);
 
   const users = useMemo(() => usersQ.data ?? [], [usersQ.data]);
   const sessions = useMemo(() => sessionsQ.data ?? [], [sessionsQ.data]);
@@ -73,6 +69,10 @@ function Inner() {
     () => (selectedId ? (users.find((u) => u.id === selectedId) ?? null) : null),
     [users, selectedId],
   );
+
+  useEffect(() => {
+    setBinaryDefaultDraft(selected?.binaryResearchDefault ?? "NORMAL");
+  }, [selected?.id, selected?.binaryResearchDefault]);
 
   if (usersQ.loading)
     return (
@@ -98,7 +98,6 @@ function Inner() {
     canEntitlements && provider.supports?.("updateUserEntitlements") !== false;
   const canUpdateRestrictions =
     canRestrict && provider.supports?.("updateUserRestrictions") !== false;
-  const canSetSandbox = canEntitlements && provider.supports?.("setUserSandbox") !== false;
 
   const columns: DataTableColumn<User>[] = [
     {
@@ -143,9 +142,9 @@ function Inner() {
       cell: (u) => (
         <div className="flex items-center gap-1.5">
           <StatusBadge tone={statusTone(u.status)}>{u.status}</StatusBadge>
-          {u.sandbox ? (
+          {u.binaryResearchEligible ? (
             <StatusBadge tone="warning" dot={false}>
-              SBX
+              Research
             </StatusBadge>
           ) : null}
         </div>
@@ -206,10 +205,10 @@ function Inner() {
   ];
 
   const restrictedCount = users.filter((u) => u.status !== "active").length;
-  const sandboxCount = users.filter((u) => u.sandbox).length;
+  const researchCount = users.filter((u) => u.binaryResearchEligible).length;
 
   return (
-    <PageShell restrictedCount={restrictedCount} sandboxCount={sandboxCount} total={users.length}>
+    <PageShell restrictedCount={restrictedCount} researchCount={researchCount} total={users.length}>
       <DataTable
         data={users}
         columns={columns}
@@ -252,7 +251,9 @@ function Inner() {
             <>
               <StatusBadge tone={statusTone(selected.status)}>{selected.status}</StatusBadge>
               <StatusBadge tone={kycTone(selected.kyc)}>KYC {selected.kyc}</StatusBadge>
-              {selected.sandbox ? <StatusBadge tone="warning">Sandbox user</StatusBadge> : null}
+              {selected.binaryResearchEligible ? (
+                <StatusBadge tone="warning">Approved research account</StatusBadge>
+              ) : null}
             </>
           ) : null
         }
@@ -279,13 +280,60 @@ function Inner() {
                     { label: "Binary", value: <BoolPill on={selected.entitlements.binary} /> },
                     { label: "Mining", value: <BoolPill on={selected.entitlements.mining} /> },
                     { label: "Loans", value: <BoolPill on={selected.entitlements.loans} /> },
-                    { label: "Sandbox user", value: <BoolPill on={!!selected.sandbox} /> },
+                    {
+                      label: "Approved research account",
+                      value: <BoolPill on={!!selected.binaryResearchEligible} />,
+                    },
                     {
                       label: "Active sessions",
                       value: <span className="mono">{activeSessionsFor(selected.id)}</span>,
                     },
                   ],
                 },
+                ...(selected.binaryResearchEligible
+                  ? [
+                      {
+                        id: "binary-research",
+                        title: "Binary Trading Control",
+                        content: (
+                          <div className="flex flex-wrap items-end gap-2">
+                            <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+                              Default for future eligible trades
+                              <select
+                                aria-label="Binary account default"
+                                value={binaryDefaultDraft}
+                                onChange={(event) =>
+                                  setBinaryDefaultDraft(
+                                    event.target.value as typeof binaryDefaultDraft,
+                                  )
+                                }
+                                className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
+                              >
+                                <option value="NORMAL">Normal</option>
+                                <option value="WIN">Win</option>
+                                <option value="LOSS">Lose</option>
+                              </select>
+                            </label>
+                            <Button
+                              size="sm"
+                              disabled={
+                                !session.can("binary.edit") ||
+                                binaryDefaultDraft === (selected.binaryResearchDefault ?? "NORMAL")
+                              }
+                              onClick={() =>
+                                setPendingBinaryDefault({
+                                  user: selected,
+                                  mode: binaryDefaultDraft,
+                                })
+                              }
+                            >
+                              Save default
+                            </Button>
+                          </div>
+                        ),
+                      },
+                    ]
+                  : []),
                 {
                   id: "restrictions",
                   title: "Restrictions",
@@ -336,18 +384,6 @@ function Inner() {
               >
                 <ShieldOff className="mr-1 h-3.5 w-3.5" />
                 Restrictions
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                data-testid="user-detail-sandbox"
-                disabled={!canSetSandbox}
-                onClick={() =>
-                  setPending({ kind: "sandbox", user: selected, sandbox: !selected.sandbox })
-                }
-              >
-                <FlaskConical className="mr-1 h-3.5 w-3.5" />
-                {selected.sandbox ? "Unmark sandbox" : "Mark sandbox"}
               </Button>
               <Button
                 variant="outline"
@@ -492,42 +528,6 @@ function Inner() {
         />
       ) : null}
 
-      {pending?.kind === "sandbox" ? (
-        <ConsequentialActionDialog
-          open
-          onOpenChange={(o) => {
-            if (!o) setPending(null);
-          }}
-          title={pending.sandbox ? "Mark as sandbox user" : "Remove sandbox flag"}
-          description="Sandbox users are excluded from production flows and reporting."
-          target={<span>{pending.user.displayName}</span>}
-          targetId={pending.user.id}
-          action={pending.sandbox ? "users.mark_sandbox" : "users.unmark_sandbox"}
-          permission="users.entitlements"
-          currentState={
-            <StatusBadge tone={pending.user.sandbox ? "warning" : "neutral"}>
-              {pending.user.sandbox ? "sandbox" : "regular"}
-            </StatusBadge>
-          }
-          proposedState={
-            <StatusBadge tone={pending.sandbox ? "warning" : "neutral"}>
-              {pending.sandbox ? "sandbox" : "regular"}
-            </StatusBadge>
-          }
-          submitLabel={pending.sandbox ? "Mark sandbox" : "Remove flag"}
-          successMessage="Sandbox flag updated"
-          onConfirm={(reason) =>
-            provider.setUserSandbox(pending.user.id, pending.sandbox, {
-              actor: session.actorName,
-              role: session.roleId,
-              environment: session.environment,
-              reason,
-            })
-          }
-          onSuccess={() => setPending(null)}
-        />
-      ) : null}
-
       {pending?.kind === "revoke-all" ? (
         <ConsequentialActionDialog
           open
@@ -556,6 +556,45 @@ function Inner() {
           onSuccess={() => setPending(null)}
         />
       ) : null}
+
+      {pendingBinaryDefault ? (
+        <ConsequentialActionDialog
+          open
+          onOpenChange={(open) => {
+            if (!open) setPendingBinaryDefault(null);
+          }}
+          title="Save Binary default"
+          description="Applies to future eligible research trades for this approved account."
+          target={<span>{pendingBinaryDefault.user.displayName}</span>}
+          targetId={pendingBinaryDefault.user.id}
+          action="binary.research_account_default"
+          permission="binary.edit"
+          currentState={
+            <StatusBadge tone="info">
+              {pendingBinaryDefault.user.binaryResearchDefault ?? "NORMAL"}
+            </StatusBadge>
+          }
+          proposedState={<StatusBadge tone="warning">{pendingBinaryDefault.mode}</StatusBadge>}
+          submitLabel="Save default"
+          successMessage="Binary default saved"
+          onConfirm={(reason) =>
+            provider.setBinaryResearchDefault(
+              pendingBinaryDefault.user.id,
+              pendingBinaryDefault.mode,
+              {
+                actor: session.actorName,
+                role: session.roleId,
+                environment: session.environment,
+                reason,
+              },
+            )
+          }
+          onSuccess={() => {
+            setPendingBinaryDefault(null);
+            usersQ.refresh();
+          }}
+        />
+      ) : null}
     </PageShell>
   );
 }
@@ -563,19 +602,19 @@ function Inner() {
 function PageShell({
   children,
   restrictedCount,
-  sandboxCount,
+  researchCount,
   total,
 }: {
   children: React.ReactNode;
   restrictedCount?: number;
-  sandboxCount?: number;
+  researchCount?: number;
   total?: number;
 }) {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Users"
-        description="Search, inspect, and administer end users. All actions are auditable."
+        title="Clients"
+        description="Search, inspect, and administer client accounts. All actions are auditable."
         badges={
           <>
             <ProviderBadge />
@@ -589,9 +628,9 @@ function PageShell({
                 {restrictedCount} non-active
               </StatusBadge>
             ) : null}
-            {sandboxCount ? (
+            {researchCount ? (
               <StatusBadge tone="primary" dot={false}>
-                {sandboxCount} sandbox
+                {researchCount} research accounts
               </StatusBadge>
             ) : null}
           </>

@@ -15,6 +15,9 @@ describe("AppController runtime probes", () => {
         } as any,
         { isReady: jest.fn().mockResolvedValue(redis) } as any,
       ),
+      {
+        systemConfig: { findUnique: jest.fn().mockResolvedValue(null) },
+      } as any,
     );
 
   afterEach(() => {
@@ -34,9 +37,7 @@ describe("AppController runtime probes", () => {
   it("reports readiness from D1 only when it and Redis are ready", async () => {
     process.env.D1_RUNTIME_ENABLED = "true";
 
-    await expect(
-      createController(true, true).getReadiness(),
-    ).resolves.toEqual({
+    await expect(createController(true, true).getReadiness()).resolves.toEqual({
       status: "READY",
       dependencies: { database: true, redis: true, authority: "D1" },
     });
@@ -59,5 +60,60 @@ describe("AppController runtime probes", () => {
     await expect(
       createController(false, true).getReadiness(),
     ).rejects.toBeInstanceOf(ServiceUnavailableException);
+  });
+
+  it("serves only allowlisted public navigation settings", async () => {
+    const prisma = {
+      systemConfig: {
+        findUnique: jest.fn().mockResolvedValue({
+          value: JSON.stringify([
+            {
+              id: "bottom:wallet",
+              target: "/dashboard/wallet",
+              surface: "bottom",
+              audience: "public",
+              visible: true,
+              order: 2,
+            },
+            {
+              id: "bottom:external",
+              target: "https://example.com",
+              surface: "bottom",
+              audience: "public",
+              visible: true,
+              order: 1,
+            },
+            {
+              id: "drawer:internal",
+              target: "/dashboard/settings",
+              surface: "drawer",
+              audience: "internal",
+              visible: true,
+              order: 1,
+            },
+          ]),
+        }),
+      },
+    };
+    const controller = new AppController(
+      { getHello: jest.fn() } as any,
+      {} as ReadinessService,
+      prisma as any,
+    );
+
+    await expect(controller.getPublicNavigation()).resolves.toEqual([
+      {
+        id: "bottom:wallet",
+        surface: "bottom",
+        target: "/dashboard/wallet",
+        audience: "public",
+        visible: true,
+        order: 2,
+      },
+    ]);
+    expect(prisma.systemConfig.findUnique).toHaveBeenCalledWith({
+      where: { key: "admin.navigation.items" },
+      select: { value: true },
+    });
   });
 });

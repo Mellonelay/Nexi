@@ -1,5 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import Database from 'better-sqlite3';
+import { jest } from '@jest/globals';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -22,6 +23,7 @@ describe('financial operations on local SQLite', () => {
     db.exec(readFileSync(new URL('../../prisma/migrations-d1/0001_initial.sql', import.meta.url), 'utf8'));
     db.exec(readFileSync(new URL('../../prisma/migrations-d1/0012_wallet_network_authority.sql', import.meta.url), 'utf8'));
     db.exec(readFileSync(new URL('../../prisma/migrations-d1/0016_loan_repayment_cas.sql', import.meta.url), 'utf8'));
+    db.exec(readFileSync(new URL('../../prisma/migrations-d1/0017_binary_research_controls.sql', import.meta.url), 'utf8'));
     db.prepare('INSERT INTO "User" ("id","userCode","email","updatedAt") VALUES (?,?,?,CURRENT_TIMESTAMP)')
       .run('user-1', 791000001, 'wallet-transfer-1@example.invalid');
     db.prepare('INSERT INTO "User" ("id","userCode","email","updatedAt") VALUES (?,?,?,CURRENT_TIMESTAMP)')
@@ -639,6 +641,49 @@ describe('financial operations on local SQLite', () => {
       'SELECT count(*) AS count FROM "EventOutbox" WHERE "aggregateId"=?', [String(lossPosition.id)],
     );
     expect(lossOutbox.results[0].count).toBe(2);
+  });
+
+  it('rolls back the stake release when a research control changes after settlement readback', async () => {
+    const idempotencyKey = 'binary-research-version-race-001';
+    const position = await gateway.openBinaryPosition({
+      userId: 'user-1', pair: 'BTCUSDT', asset: 'USDT', side: 'CALL', stake: '0.25',
+      durationSeconds: 60, expiresAt: '2020-01-01T00:01:00.000Z', entryPrice: '60000',
+      entryQuoteId: 'entry-quote-race', entryProvider: 'binance', entrySource: 'rest',
+      entryObservedAt: '2020-01-01T00:00:00.000Z', entryReceivedAt: '2020-01-01T00:00:00.010Z',
+      entrySequence: '301', quoteFreshnessMs: 10, configurationVersion: 1,
+      researchDefault: 'WIN', idempotencyKey, correlationId: idempotencyKey,
+    });
+    const originalGet = gateway.getBinaryPosition.bind(gateway);
+    let raced = false;
+    jest.spyOn(gateway, 'getBinaryPosition').mockImplementation(async (id) => {
+      const read = await originalGet(id);
+      if (!raced && id === position.id) {
+        raced = true;
+        const db = new Database(join(directory, 'fixture.sqlite'));
+        db.prepare("UPDATE \"Gate2BinaryPosition\" SET \"researchControlVersion\"=1,\"researchOverride\"='LOSS' WHERE \"id\"=?").run(id);
+        db.close();
+      }
+      return read;
+    });
+
+    await expect(gateway.settleBinaryPositionAtomic({
+      positionId: String(position.id), userId: 'user-1', asset: 'USDT', stake: '0.25', payout: '0.5',
+      state: 'WIN', expiryPrice: '60001', expiryQuoteId: null, expiryProvider: 'nexi-sandbox-simulation',
+      expirySource: 'binary-research:WIN', expiryObservedAt: '2020-01-01T00:01:00.000Z',
+      expiryReceivedAt: '2020-01-01T00:01:00.010Z', expirySequence: '302', realizedProfit: '0.25',
+      idempotencyKey, correlationId: idempotencyKey, expectedResearchControlVersion: 0,
+    })).rejects.toThrow();
+
+    await expect(bridge.select<{ available: string; locked: string }>(
+      'SELECT "available","locked" FROM "LedgerAccount" WHERE "id"=?', ['binary-1'],
+    )).resolves.toMatchObject({ results: [{ available: '1.75', locked: '0.25' }] });
+    await expect(gateway.getBinaryPosition(String(position.id))).resolves.toMatchObject({
+      state: 'ACTIVE', researchDefault: 'WIN', researchOverride: 'LOSS', researchControlVersion: 1,
+    });
+    await expect(bridge.select<{ count: number }>(
+      'SELECT count(*) AS count FROM "LedgerPosting" WHERE "referenceId"=? AND "referenceType"<>\'GATE2_BINARY_STAKE_RESERVE\'',
+      [String(position.id)],
+    )).resolves.toMatchObject({ results: [{ count: 0 }] });
   });
 
   it('rolls back Binary settlement when its Outbox idempotency key is occupied', async () => {

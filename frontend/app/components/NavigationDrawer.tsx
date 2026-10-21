@@ -25,6 +25,7 @@ import {
 import { localeLabel } from "../state/locale";
 import { useLocale } from "../state/LocaleProvider";
 import type { UiMessageKey } from "../state/messages";
+import { usePublicNavigation } from "../state/public-navigation";
 import AccountIdentityHeader from "./AccountIdentityHeader";
 
 type DrawerItem = { key: UiMessageKey; href: string; icon: typeof Home };
@@ -58,6 +59,7 @@ const groups: Array<{ titleKey: UiMessageKey; items: DrawerItem[] }> = [
     items: [{ key: "settings", href: "/dashboard/settings", icon: Settings }],
   },
 ];
+const drawerTargets = groups.flatMap((group) => group.items.map((item) => item.href));
 const isActive = (pathname: string, href: string) =>
   pathname === href ||
   (href !== "/dashboard" && pathname.startsWith(`${href}/`));
@@ -69,6 +71,17 @@ export default function NavigationDrawer({
 }) {
   const pathname = usePathname();
   const { locale, setLocale, languages, t } = useLocale();
+  const configuredTargets = usePublicNavigation("drawer", drawerTargets);
+  const navOrder = new Map(configuredTargets.map((target, index) => [target, index]));
+  const orderedGroups = groups
+    .map((group) => ({
+      ...group,
+      items: group.items
+        .filter((item) => navOrder.has(item.href))
+        .sort((left, right) => navOrder.get(left.href)! - navOrder.get(right.href)!),
+    }))
+    .filter((group) => group.items.length > 0)
+    .sort((left, right) => navOrder.get(left.items[0].href)! - navOrder.get(right.items[0].href)!);
   const [open, setOpen] = useState(false);
   const [language, setLanguage] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -175,7 +188,7 @@ export default function NavigationDrawer({
             </div>
           ) : (
             <>
-                  {groups.map((group) => (
+                  {orderedGroups.map((group) => (
                     <div key={group.titleKey} className="mb-5">
                       <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8C8299]">
                         {t(group.titleKey)}

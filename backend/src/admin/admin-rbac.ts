@@ -12,7 +12,7 @@ export const ADMIN_PERMISSION_KEYS = [
   'settlements.view', 'exposure.view', 'wallets.view', 'ledger.view',
   'deposits.view', 'deposits.confirm', 'withdrawals.view', 'withdrawals.approve',
   'reconciliation.view', 'reconciliation.resolve', 'mining.view', 'mining.edit',
-  'loans.view', 'loans.edit', 'support.view', 'support.reply', 'messages.view',
+  'loans.view', 'loans.edit', 'support.view', 'support.reply', 'messages.view', 'messages.send',
   'announcements.view', 'announcements.publish', 'learn.view', 'learn.publish',
   'notifications.view', 'notifications.send', 'admins.view', 'admins.edit',
   'roles.view', 'roles.edit', 'approvals.view', 'approvals.decide', 'audit.view',
@@ -26,7 +26,7 @@ const pick = (...permissions: AdminPermission[]) => permissions;
 
 export const ADMIN_ROLE_DEFINITIONS: Record<AdminRoleId, { label: string; description: string; permissions: readonly AdminPermission[] }> = {
   readonly_operator: { label: 'Read-only Operator', description: 'Inspect governed state without mutations.', permissions: viewPermissions },
-  support_agent: { label: 'Support Agent', description: 'Support and user-context operations.', permissions: pick('overview.view', 'users.view', 'sessions.view', 'sessions.revoke', 'wallets.view', 'ledger.view', 'deposits.view', 'withdrawals.view', 'support.view', 'support.reply', 'messages.view', 'notifications.view', 'audit.view') },
+  support_agent: { label: 'Support Agent', description: 'Support and user-context operations.', permissions: pick('overview.view', 'users.view', 'sessions.view', 'sessions.revoke', 'wallets.view', 'ledger.view', 'deposits.view', 'withdrawals.view', 'support.view', 'support.reply', 'messages.view', 'messages.send', 'notifications.view', 'audit.view') },
   kyc_reviewer: { label: 'KYC Reviewer', description: 'Identity review operations.', permissions: pick('overview.view', 'users.view', 'kyc.view', 'kyc.decide', 'sessions.view', 'audit.view') },
   finance_operator: { label: 'Finance Operator', description: 'Deposits, withdrawals, ledger, and reconciliation.', permissions: pick('overview.view', 'users.view', 'wallets.view', 'ledger.view', 'deposits.view', 'deposits.confirm', 'withdrawals.view', 'withdrawals.approve', 'reconciliation.view', 'reconciliation.resolve', 'settlements.view', 'exposure.view', 'approvals.view', 'audit.view') },
   market_operator: { label: 'Market Operator', description: 'Assets, networks, feeds, Spot, and Binary administration.', permissions: pick('overview.view', 'assets.view', 'assets.edit', 'networks.view', 'networks.edit', 'feeds.view', 'feeds.edit', 'spot.view', 'spot.edit', 'spot.pause', 'spot.cancel_order', 'binary.view', 'binary.edit', 'binary.settle', 'settlements.view', 'exposure.view', 'audit.view') },

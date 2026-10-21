@@ -12,6 +12,10 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import type { RoleId } from "@/admin/types";
 
+function routeMatches(pathname: string, route: string) {
+  return pathname === route || pathname.startsWith(`${route}/`);
+}
+
 function NavList({ onNavigate }: { onNavigate?: () => void }) {
   const { can } = useAdminSession();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -24,38 +28,69 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
           return true;
         });
         if (items.length === 0) return null;
+        const primary = items.find((item) => item.to === g.primary) ?? items[0];
+        const active = items.some((item) => routeMatches(pathname, item.to));
         return (
           <div key={g.id} className="flex flex-col gap-1">
             <div className="px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80">
               {g.label}
             </div>
-            {items.map((i) => {
-              const active =
-                pathname === i.to || (i.to !== "/overview" && pathname.startsWith(i.to));
-              const Icon = i.icon;
-              return (
-                <Link
-                  key={i.to}
-                  to={i.to}
-                  onClick={onNavigate}
-                  className={cn(
-                    "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
-                    active
-                      ? "bg-primary/15 text-primary"
-                      : "text-sidebar-foreground/85 hover:bg-sidebar-accent/40 hover:text-sidebar-foreground",
-                  )}
-                >
-                  <Icon
-                    className={cn(
-                      "h-4 w-4 shrink-0",
-                      active ? "text-primary" : "text-muted-foreground",
-                    )}
-                  />
-                  <span className="truncate">{i.label}</span>
-                </Link>
-              );
-            })}
+            <Link
+              to={primary.to}
+              onClick={onNavigate}
+              className={cn(
+                "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
+                active
+                  ? "bg-primary/15 text-primary"
+                  : "text-sidebar-foreground/85 hover:bg-sidebar-accent/40 hover:text-sidebar-foreground",
+              )}
+            >
+              <primary.icon
+                className={cn(
+                  "h-4 w-4 shrink-0",
+                  active ? "text-primary" : "text-muted-foreground",
+                )}
+              />
+              <span className="truncate">{primary.label}</span>
+            </Link>
           </div>
+        );
+      })}
+    </nav>
+  );
+}
+
+function ContextualNavigation() {
+  const { can } = useAdminSession();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const group = NAV_GROUPS.find((item) =>
+    item.items.some((route) => routeMatches(pathname, route.to)),
+  );
+  if (!group) return null;
+  const items = group.items.filter((item) => can(item.permission));
+  if (items.length < 2) return null;
+
+  return (
+    <nav
+      aria-label={`${group.label} sections`}
+      className="flex min-w-0 gap-1 overflow-x-auto border-b border-border/60 px-4 py-2 lg:px-6"
+    >
+      {items.map((item) => {
+        const active = routeMatches(pathname, item.to);
+        return (
+          <Link
+            key={item.to}
+            to={item.to}
+            aria-current={active ? "page" : undefined}
+            className={cn(
+              "shrink-0 rounded-md px-3 py-1.5 text-xs transition-colors",
+              active
+                ? "bg-primary/15 font-medium text-primary"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground",
+            )}
+          >
+            {item.label}
+          </Link>
         );
       })}
     </nav>
@@ -218,6 +253,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
             </Sheet>
           }
         />
+        <ContextualNavigation />
         <main className="flex-1 overflow-x-hidden">
           <div className="mx-auto flex max-w-[1600px] flex-col gap-6 px-4 py-6 lg:px-6">
             {children}

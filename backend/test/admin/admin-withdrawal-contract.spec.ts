@@ -9,7 +9,7 @@ describe('Admin withdrawal idempotency contract', () => {
     const adminService = {
       decideAdminWithdrawal: jest.fn().mockResolvedValue({ ok: true }),
     };
-    const controller = new AdminController(adminService as any, {} as any, {} as any);
+    const controller = new AdminController(adminService as any, {} as any, {} as any, {} as any, {} as any, {} as any, {} as any);
 
     await controller.approveAdminWithdrawal('withdrawal-1', body, request);
 
@@ -24,7 +24,7 @@ describe('Admin withdrawal idempotency contract', () => {
 
   it('passes the return-from-review command through the authenticated controller boundary', async () => {
     const adminService = { returnAdminWithdrawalFromReview: jest.fn().mockResolvedValue({ ok: true }) };
-    const controller = new AdminController(adminService as any, {} as any, {} as any);
+    const controller = new AdminController(adminService as any, {} as any, {} as any, {} as any, {} as any, {} as any, {} as any);
     await controller.returnAdminWithdrawalFromReview('withdrawal-1', body, request);
     expect(adminService.returnAdminWithdrawalFromReview).toHaveBeenCalledWith(
       'withdrawal-1', 'admin-1', 'manual review', 'admin-withdrawal-001',

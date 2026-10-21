@@ -174,6 +174,30 @@ describe('CommunicationsService', () => {
     expect(findMany).toHaveBeenNthCalledWith(1, expect.objectContaining({ skip: 10, take: 10 }));
     expect(findMany).toHaveBeenNthCalledWith(2, expect.objectContaining({ skip: 10, take: 5 }));
   });
+  it('sends Admin messages through the conversation store with an idempotent audit record', async () => {
+    const message = { id: 'message-1', senderId: 'admin-1', recipientId: 'user-1', body: 'Hello' };
+    const auditUpsert = jest.fn(async ({ create }: any) => create);
+    const prisma: any = {
+      user: { findFirst: jest.fn().mockResolvedValue({ id: 'user-1' }) },
+      adminAuditLog: { upsert: auditUpsert },
+    };
+    const service = new CommunicationsService(prisma, outbox as any, d1Communications as any, redis as any);
+    const send = jest.spyOn(service, 'sendMessage').mockResolvedValue(message as any);
+
+    await expect(service.sendAdminMessage('admin-1', {
+      recipientId: 'user-1', body: 'Hello', reason: 'Customer follow-up', idempotencyKey: 'message-key-1',
+    })).resolves.toEqual(expect.objectContaining({ ...message, auditId: expect.any(String) }));
+
+    expect(send).toHaveBeenCalledWith('admin-1', 'user-1', 'Hello', 'message-key-1');
+    expect(auditUpsert).toHaveBeenCalledWith(expect.objectContaining({
+      create: expect.objectContaining({
+        action: 'ADMIN_MESSAGE_SENT',
+        adminId: 'admin-1',
+        target: 'user-1',
+        details: expect.stringContaining('Customer follow-up'),
+      }),
+    }));
+  });
   it('hides internal replies from the public ticket timeline', async () => {
     const findMany = jest.fn(async () => []);
     const prisma: any = { supportTicket: { findMany } };

@@ -86,7 +86,7 @@ function Inner() {
           <PairsPanel pairs={pairs} />
         </TabsContent>
         <TabsContent value="positions">
-          <PositionsPanel positions={positions} />
+          <PositionsPanel positions={positions} onRefresh={posQ.refresh} />
         </TabsContent>
         <TabsContent value="audit">
           <AuditTimeline actionPrefix="binary." limit={40} />
@@ -436,16 +436,31 @@ function PairsPanel({ pairs }: { pairs: BinaryPair[] }) {
   );
 }
 
-function PositionsPanel({ positions }: { positions: BinaryPosition[] }) {
+function PositionsPanel({
+  positions,
+  onRefresh,
+}: {
+  positions: BinaryPosition[];
+  onRefresh: () => void;
+}) {
   const provider = useAdminData();
   const session = useAdminSession();
   const canSettle = session.can("binary.settle");
+  const canEdit = session.can("binary.edit");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [pending, setPending] = useState<PendingSettle | null>(null);
+  const [researchDraft, setResearchDraft] = useState<"DEFAULT" | "NORMAL" | "WIN" | "LOSS">(
+    "DEFAULT",
+  );
+  const [pendingResearch, setPendingResearch] = useState<BinaryPosition | null>(null);
   const selected = useMemo(
     () => (selectedId ? (positions.find((p) => p.id === selectedId) ?? null) : null),
     [positions, selectedId],
   );
+
+  useEffect(() => {
+    setResearchDraft(selected?.researchOverride ?? "DEFAULT");
+  }, [selected?.id, selected?.researchControlVersion, selected?.researchOverride]);
 
   const columns: DataTableColumn<BinaryPosition>[] = [
     {
@@ -581,6 +596,61 @@ function PositionsPanel({ positions }: { positions: BinaryPosition[] }) {
                     { label: "Payout", value: selected.payout ?? "—", mono: true },
                   ],
                 },
+                ...(selected.researchEligible && selected.status === "open"
+                  ? [
+                      {
+                        id: "binary-control",
+                        title: "Binary Trading Control",
+                        fields: [
+                          { label: "Account default", value: selected.researchDefault ?? "NORMAL" },
+                          {
+                            label: "Position setting",
+                            value: selected.researchOverride ?? "Default",
+                          },
+                          {
+                            label: "Effective setting",
+                            value:
+                              selected.researchOverride ?? selected.researchDefault ?? "NORMAL",
+                          },
+                          {
+                            label: "Control version",
+                            value: String(selected.researchControlVersion ?? 0),
+                            mono: true,
+                          },
+                        ],
+                        content: (
+                          <div className="flex flex-wrap items-end gap-2">
+                            <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+                              This trade
+                              <select
+                                aria-label="Binary position control"
+                                value={researchDraft}
+                                onChange={(event) =>
+                                  setResearchDraft(event.target.value as typeof researchDraft)
+                                }
+                                className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
+                              >
+                                <option value="DEFAULT">Default</option>
+                                <option value="NORMAL">Normal</option>
+                                <option value="WIN">Win</option>
+                                <option value="LOSS">Lose</option>
+                              </select>
+                            </label>
+                            <Button
+                              size="sm"
+                              disabled={
+                                !canEdit ||
+                                researchDraft === (selected.researchOverride ?? "DEFAULT")
+                              }
+                              onClick={() => setPendingResearch(selected)}
+                            >
+                              Save setting
+                            </Button>
+                          </div>
+                        ),
+                      },
+                    ]
+                  : []),
                 {
                   id: "audit",
                   title: "Audit timeline",
@@ -591,14 +661,16 @@ function PositionsPanel({ positions }: { positions: BinaryPosition[] }) {
         }
         actions={
           selected && selected.status === "open" ? (
-            <Button
-              size="sm"
-              data-testid="bpos-detail-settle"
-              disabled={!canSettle}
-              onClick={() => setPending({ pos: selected })}
-            >
-              Settle now
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                data-testid="bpos-detail-settle"
+                disabled={!canSettle}
+                onClick={() => setPending({ pos: selected })}
+              >
+                Settle now
+              </Button>
+            </div>
           ) : null
         }
       />
@@ -632,6 +704,47 @@ function PositionsPanel({ positions }: { positions: BinaryPosition[] }) {
             })
           }
           onSuccess={() => setPending(null)}
+        />
+      ) : null}
+      {pendingResearch ? (
+        <ConsequentialActionDialog
+          open
+          onOpenChange={(open) => {
+            if (!open) setPendingResearch(null);
+          }}
+          title="Save Binary trade setting"
+          description="Available only for an open trade on an approved research account. The setting is version-checked before settlement."
+          target={
+            <span className="mono">
+              {pendingResearch.id} · {pendingResearch.pair}
+            </span>
+          }
+          targetId={pendingResearch.id}
+          action="binary.research_position_override"
+          permission="binary.edit"
+          currentState={
+            <StatusBadge tone="info">{pendingResearch.researchOverride ?? "Default"}</StatusBadge>
+          }
+          proposedState={<StatusBadge tone="warning">{researchDraft}</StatusBadge>}
+          submitLabel="Save setting"
+          successMessage="Binary trade setting saved"
+          onConfirm={(reason) =>
+            provider.setBinaryResearchPositionOverride(
+              pendingResearch.id,
+              researchDraft,
+              pendingResearch.researchControlVersion ?? 0,
+              {
+                actor: session.actorName,
+                role: session.roleId,
+                environment: session.environment,
+                reason,
+              },
+            )
+          }
+          onSuccess={() => {
+            setPendingResearch(null);
+            onRefresh();
+          }}
         />
       ) : null}
     </>

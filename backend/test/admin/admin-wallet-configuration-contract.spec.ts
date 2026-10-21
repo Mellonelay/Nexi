@@ -111,6 +111,8 @@ describe("Admin Wallet funding authority contract", () => {
       {} as any,
       {} as any,
       {} as any,
+      {} as any,
+      {} as any,
     );
     const request = { user: { userId: "admin-7" } } as any;
     const currency = { symbol: "BTC", name: "Bitcoin", reason: "reviewed", idempotencyKey: "wallet-currency-003" };

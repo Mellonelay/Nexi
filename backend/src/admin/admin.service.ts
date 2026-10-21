@@ -5,6 +5,7 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  ConflictException,
   ServiceUnavailableException,
   Optional,
 } from "@nestjs/common";
@@ -174,6 +175,7 @@ export class AdminService {
         email: row?.email ?? request.email,
         backendRole: row?.role ?? request.role,
         authSurface: request.surface ?? "ADMIN",
+        environment: this.adminEnvironment(),
         permissionModel: "ADMIN_ROLE_ASSIGNMENT",
         roleId: role ?? null,
         roleLabel: role ? ADMIN_ROLE_DEFINITIONS[role].label : null,
@@ -198,6 +200,7 @@ export class AdminService {
       email: user?.email ?? request.email,
       backendRole: user?.role ?? request.role,
       authSurface: request.surface ?? "ADMIN",
+      environment: this.adminEnvironment(),
       permissionModel: "ADMIN_ROLE_ASSIGNMENT",
       roleId: role ?? null,
       roleLabel: role ? ADMIN_ROLE_DEFINITIONS[role].label : null,
@@ -208,6 +211,12 @@ export class AdminService {
         ? "ASSIGNED"
         : "UNASSIGNED_ADMIN_REQUIRES_ROLE_ASSIGNMENT",
     };
+  }
+
+  private adminEnvironment(): "DEVELOPMENT" | "SANDBOX" | "PRODUCTION" {
+    if (process.env.NODE_ENV === "production") return "PRODUCTION";
+    if (process.env.NODE_ENV === "development") return "DEVELOPMENT";
+    return "SANDBOX";
   }
 
   listAdminRoleDefinitions() {
@@ -1230,10 +1239,14 @@ export class AdminService {
 
   async getUsers() {
     if (this.d1?.isEnabled()) return this.d1.listUsers();
-    return this.prisma.user.findMany({
+    const users = await this.prisma.user.findMany({
       include: { wallet: true },
       orderBy: { createdAt: "desc" },
     });
+    return users.map((user) => ({
+      ...user,
+      binaryResearchEligible: this.isBinaryResearchAccount(user.id),
+    }));
   }
 
   async getKycReviews() {
@@ -1537,11 +1550,127 @@ export class AdminService {
   }
 
   async getBinaryPositions() {
-    if (this.d1?.isEnabled()) return this.d1.listBinaryPositions();
-    return this.prisma.gate2BinaryPosition.findMany({
+    const rows = this.d1?.isEnabled()
+      ? await this.d1.listBinaryPositions()
+      : await this.prisma.gate2BinaryPosition.findMany({
       orderBy: { createdAt: "desc" },
       take: 500,
     });
+    return rows.map((position) => ({
+      ...position,
+      researchEligible: this.isBinaryResearchAccount(String(position.userId)),
+    }));
+  }
+
+  private isBinaryResearchAccount(userId: string): boolean {
+    return (process.env.NEXI_SANDBOX_ACCOUNT_IDS ?? "")
+      .split(",")
+      .map((value) => value.trim())
+      .includes(userId);
+  }
+
+  private async persistBinaryResearchControl(input: {
+    target: string;
+    scope: "account" | "position";
+    mode: "NORMAL" | "WIN" | "LOSS" | "DEFAULT";
+    adminId: string;
+    reason: string;
+    idempotencyKey: string;
+    expectedVersion?: number;
+  }) {
+    if (!input.reason.trim()) throw new BadRequestException("A reason is required");
+    if (input.scope === "account" && !this.isBinaryResearchAccount(input.target)) {
+      throw new ForbiddenException("Binary control is limited to approved research accounts");
+    }
+    const payload = JSON.stringify({
+      scope: input.scope,
+      mode: input.mode,
+      expectedVersion: input.expectedVersion,
+    });
+    return this.prisma.$transaction(async (tx) => {
+      const existing = await tx.adminGovernanceCommand.findUnique({
+        where: { idempotencyKey: input.idempotencyKey },
+      });
+      const target = `${input.scope}:${input.target}`;
+      if (existing) {
+        if (
+          existing.commandType !== "BINARY_RESEARCH_CONTROL" ||
+          existing.target !== target ||
+          existing.requestedBy !== input.adminId ||
+          existing.reason !== input.reason.trim() ||
+          existing.payload !== payload
+        ) {
+          throw new BadRequestException("Binary control idempotency key was already used");
+        }
+        return { ok: true, auditId: existing.id, replayed: true };
+      }
+
+      const command = await tx.adminGovernanceCommand.create({
+        data: {
+          commandType: "BINARY_RESEARCH_CONTROL",
+          target,
+          reason: input.reason.trim(),
+          idempotencyKey: input.idempotencyKey,
+          payload,
+          requestedBy: input.adminId,
+          status: "EXECUTED",
+          executedAt: new Date(),
+        },
+      });
+      if (input.scope === "account") {
+        const changed = await tx.user.updateMany({
+          where: { id: input.target },
+          data: { binaryResearchDefault: input.mode },
+        });
+        if (changed.count !== 1) throw new NotFoundException("Research account not found");
+      } else {
+        const position = await tx.gate2BinaryPosition.findUnique({
+          where: { id: input.target },
+          select: { userId: true },
+        });
+        if (!position) throw new NotFoundException("Binary position not found");
+        if (!this.isBinaryResearchAccount(position.userId)) {
+          throw new ForbiddenException("Binary control is limited to approved research accounts");
+        }
+        const changed = await tx.gate2BinaryPosition.updateMany({
+          where: {
+            id: input.target,
+            userId: position.userId,
+            state: "ACTIVE",
+            expiresAt: { gt: new Date() },
+            researchControlVersion: input.expectedVersion,
+          },
+          data: {
+            researchOverride: input.mode === "DEFAULT" ? null : input.mode,
+            researchControlVersion: { increment: 1 },
+          },
+        });
+        if (changed.count !== 1) {
+          throw new ConflictException("Position changed, expired, or is no longer open; refresh and retry");
+        }
+      }
+      const audit = await tx.adminAuditLog.create({
+        data: {
+          adminId: input.adminId,
+          action: input.scope === "account" ? "BINARY_RESEARCH_DEFAULT_UPDATED" : "BINARY_RESEARCH_POSITION_UPDATED",
+          target: input.target,
+          details: JSON.stringify({ scope: input.scope, mode: input.mode, reason: input.reason.trim(), idempotencyKey: input.idempotencyKey, expectedVersion: input.expectedVersion }),
+        },
+      });
+      return { ok: true, auditId: audit.id, replayed: false };
+    });
+  }
+
+  setBinaryResearchDefault(input: {
+    userId: string; mode: "NORMAL" | "WIN" | "LOSS"; adminId: string; reason: string; idempotencyKey: string;
+  }) {
+    return this.persistBinaryResearchControl({ ...input, target: input.userId, scope: "account" });
+  }
+
+  setBinaryResearchPositionOverride(input: {
+    positionId: string; mode: "DEFAULT" | "NORMAL" | "WIN" | "LOSS"; expectedVersion: number; adminId: string; reason: string; idempotencyKey: string;
+  }) {
+    return this.persistBinaryResearchControl({ ...input, target: input.positionId, scope: "position" });
   }
 
   async getAdminSettlements() {
