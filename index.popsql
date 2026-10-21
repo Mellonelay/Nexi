@@ -1,3 +1,4 @@
 {
-  "3324171": "backend/src/jobs/local-durable-job.schema.sql"
+  "3324171": "backend/src/jobs/local-durable-job.schema.sql",
+  "3324892": "backend/prisma/migrations-d1/0017_binary_research_controls.sql"
 }
