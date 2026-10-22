@@ -11,6 +11,15 @@ const adminOutputDir = process.env.NEXI_ADMIN_OUTPUT_DIR ?? "./.output";
 const adminBuildDir = process.env.NEXI_ADMIN_OUTPUT_DIR
   ? `${adminOutputDir}/.nitro`
   : adminOutputDir;
+const adminNitroConfig = {
+  preset: "node-server",
+  sourcemap: true,
+  output: {
+    dir: adminBuildDir,
+    serverDir: `${adminOutputDir}/server`,
+    publicDir: `${adminOutputDir}/public`,
+  },
+};
 
 export default defineConfig({
   plugins: [
@@ -26,18 +35,11 @@ export default defineConfig({
         finalize: false,
       },
       sourcemaps: {
-        filesToDeleteAfterUpload: [`${adminOutputDir}/public/**/*.map`],
+        filesToDeleteAfterUpload: [`${adminOutputDir}/**/*.map`],
       },
     }),
   ],
-  nitro: {
-    preset: "node-server",
-    output: {
-      dir: adminBuildDir,
-      serverDir: `${adminOutputDir}/server`,
-      publicDir: `${adminOutputDir}/public`,
-    },
-  },
+  nitro: adminNitroConfig,
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
