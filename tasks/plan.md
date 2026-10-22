@@ -643,3 +643,10 @@ Changed-boundary evidence: `backend/test/gate2/binary.service.spec.ts`, `backend
 - [x] Canonical Admin production build and rollout completed at `/srv/nexi/admin/current`; Vite client, SSR and Nitro passed. The release marker matches the source SHA; `nexi-admin.service` is active with zero restarts. HTTPS root redirects to `/overview`, `/overview` is 200, API readiness is 200, and unauthenticated admin API access is 401. Rollback archive remains preserved.
 - [x] Sentry artifact uploads for client, SSR and Nitro completed for the exact release; release issue search returned none. Some generated chunks lack a source-map reference; full mapping remains unverified.
 - [ ] Authenticated rendered desktop/mobile comparison and owner acceptance remain open. The Admin browser endpoint was unavailable in this execution; no screenshot or browser verification is claimed. Do not update Backend/Public or migrate SQLite for this Admin-only slice.
+
+### Admin UI follow-on release — 2026-10-22
+
+- [x] Source commit `8977545dfca13f83d6bd63b4bcd4fe069d3ce2c9` pushed; focused typecheck, 9/9 Admin tests, changed-file ESLint/Prettier, and diff check passed.
+- [x] Canonical Admin client/SSR/Nitro build passed using pnpm 12.14.0 and `/srv/nexi/admin/shared/node_modules`; exact release marker and Sentry client/SSR uploads verified.
+- [x] Admin service active with zero restarts; HTTPS Overview 200, Messages bundle served, unauthenticated API boundary 401; no release-matched Sentry issues found. Rollback archive retained and verified.
+- [ ] Authenticated browser and owner acceptance remain open. Backend/Public and SQLite were not changed.
