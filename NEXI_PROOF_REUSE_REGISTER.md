@@ -231,6 +231,14 @@ Authority: direct VPS `main` at `5a8d8d7606538e8c322641c0137c5596ab925289`. Reco
 
 # NEXI Proof Reuse Register
 
+## 2026-10-22 — Quotes last-visible-category closure
+
+- **SOURCE_INTEGRATED:** commit `24cf931ced0535a6793253a8bf53e87bdaeff34f` is pushed to `main`. Changed: `Admin/src/routes/frontend-control.tsx`, `backend/src/admin/admin.service.ts`, `backend/test/integration/public-settings.integration.spec.ts`, `backend/test/runtime/app.controller.spec.ts`, `frontend/app/state/public-settings.test.mjs`.
+- **TESTED:** Disposable-SQLite Admin write/Public readback integration 3/3; AppController runtime 7/7; Public settings tests 3/3; backend build-scope TypeScript, Admin and Public TypeScript, changed-file Admin ESLint, and `git diff --check` passed.
+- **STATIC:** Fallow introduced-only gate reports zero introduced dead-code, complexity, duplication, or styling findings; one inherited unused-file finding remains for the existing directly-run Public Node test file. Graphify refreshed to 6,286 nodes / 17,422 edges. Neither tool is behavioral proof.
+- **LIMIT:** Root test-inclusive backend `tsc --noEmit` fails on unrelated existing test/Jest typing errors; only build-scope backend typecheck passed. Public route states, banners, and feature flags lack approved product contracts. Previously proven P1/P2/P4 code was unchanged and reused; Binary migration remains source-only and was only exercised on disposable SQLite.
+- **NOT_PROVEN:** No deployment/runtime check, production migration/write, Sentry release/source-map check, browser acceptance, or owner acceptance. Last recorded deployed Admin SHA remains `e2f7a65ea4ac870c6ea1ff6e299502430ecf5570`.
+
 ## Admin governance Prisma fallback — 2026-10-18 (source only)
 
 - **TESTED:** The Admin fallback and prior promoted SQLite Governance contract passed 6/6 focused Jest tests in 2 suites under Node 22 with `NODE_OPTIONS=--experimental-vm-modules`. Backend TypeScript build config check (`tsc --noEmit -p tsconfig.build.json`) passed after isolating an unverified concurrent Margin source patch.
