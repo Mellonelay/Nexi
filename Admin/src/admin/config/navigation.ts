@@ -32,7 +32,6 @@ import {
   ScrollText,
   Activity,
   Wrench,
-  FlaskConical,
 } from "lucide-react";
 import type { Permission } from "../types";
 
@@ -116,26 +115,20 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Trading",
     primary: "/binary",
     items: [
-      { to: "/binary", label: "Binary Trading", icon: Timer, permission: "binary.view" },
-      {
-        to: "/spot",
-        label: "Spot Trading",
-        icon: CandlestickChart,
-        permission: "spot.view",
-      },
+      { to: "/binary", label: "Binary · Ongoing", icon: Timer, permission: "binary.view" },
       {
         to: "/settlements",
-        label: "Trade History & Settlements",
+        label: "History & Settlements",
         icon: Scale,
         permission: "settlements.view",
       },
-      { to: "/exposure", label: "Trading Risk", icon: TrendingUp, permission: "exposure.view" },
       {
-        to: "/sandbox",
-        label: "Binary Trading Control",
-        icon: FlaskConical,
-        permission: "sandbox.view",
+        to: "/spot",
+        label: "Spot & Margin",
+        icon: CandlestickChart,
+        permission: "spot.view",
       },
+      { to: "/exposure", label: "Trading Risk", icon: TrendingUp, permission: "exposure.view" },
     ],
   },
   {

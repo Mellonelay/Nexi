@@ -55,6 +55,7 @@ import type {
   TranslationKey,
 } from "../types";
 import { reorderByIds } from "./banner-order";
+import { mapBinaryPositionStatus } from "../types";
 
 type ApiConfig = { baseUrl: string; getToken: () => Promise<string> };
 type JsonRecord = Record<string, unknown>;
@@ -987,14 +988,6 @@ export class NexiAdminApiProvider implements AdminDataProvider {
         const row = record(value);
         const state = stringValue(row.state).toLowerCase();
         const side = stringValue(row.side);
-        const status =
-          state === "active" || state === "settling" || state === "settlement_delayed"
-            ? "open"
-            : state === "win"
-              ? "won"
-              : state === "loss"
-                ? "lost"
-                : "error";
         return {
           id: stringValue(row.id),
           userId: stringValue(row.userId),
@@ -1003,8 +996,8 @@ export class NexiAdminApiProvider implements AdminDataProvider {
           duration: Number(row.durationSeconds) as BinaryPosition["duration"],
           stake: stringValue(row.stake),
           openPrice: stringValue(row.entryPrice),
-          strikeAt: stringValue(row.expiresAt, new Date(0).toISOString()),
-          status,
+          expiresAt: stringValue(row.expiresAt, new Date(0).toISOString()),
+          status: mapBinaryPositionStatus(state),
           payout: typeof row.payoutAmount === "string" ? row.payoutAmount : undefined,
           researchDefault:
             row.researchDefault === "WIN" || row.researchDefault === "LOSS"

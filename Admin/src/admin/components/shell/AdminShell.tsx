@@ -9,6 +9,7 @@ import { useAdminData } from "@/admin/data/context";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, ShieldAlert } from "lucide-react";
 import type { ReactNode } from "react";
+import { Fragment } from "react";
 import { useState } from "react";
 import type { RoleId } from "@/admin/types";
 
@@ -31,29 +32,22 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
         const primary = items.find((item) => item.to === g.primary) ?? items[0];
         const active = items.some((item) => routeMatches(pathname, item.to));
         return (
-          <div key={g.id} className="flex flex-col gap-1">
-            <div className="px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80">
-              {g.label}
-            </div>
-            <Link
-              to={primary.to}
-              onClick={onNavigate}
-              className={cn(
-                "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
-                active
-                  ? "bg-primary/15 text-primary"
-                  : "text-sidebar-foreground/85 hover:bg-sidebar-accent/40 hover:text-sidebar-foreground",
-              )}
-            >
-              <primary.icon
-                className={cn(
-                  "h-4 w-4 shrink-0",
-                  active ? "text-primary" : "text-muted-foreground",
-                )}
-              />
-              <span className="truncate">{primary.label}</span>
-            </Link>
-          </div>
+          <Link
+            key={g.id}
+            to={primary.to}
+            onClick={onNavigate}
+            className={cn(
+              "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
+              active
+                ? "bg-primary/15 text-primary"
+                : "text-sidebar-foreground/85 hover:bg-sidebar-accent/40 hover:text-sidebar-foreground",
+            )}
+          >
+            <primary.icon
+              className={cn("h-4 w-4 shrink-0", active ? "text-primary" : "text-muted-foreground")}
+            />
+            <span className="truncate">{g.label}</span>
+          </Link>
         );
       })}
     </nav>
@@ -63,6 +57,7 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
 function ContextualNavigation() {
   const { can } = useAdminSession();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const search = useRouterState({ select: (s) => s.location.search as { view?: string } });
   const group = NAV_GROUPS.find((item) =>
     item.items.some((route) => routeMatches(pathname, route.to)),
   );
@@ -75,25 +70,72 @@ function ContextualNavigation() {
       aria-label={`${group.label} sections`}
       className="flex min-w-0 gap-1 overflow-x-auto border-b border-border/60 px-4 py-2 lg:px-6"
     >
-      {items.map((item) => {
-        const active = routeMatches(pathname, item.to);
-        return (
-          <Link
-            key={item.to}
-            to={item.to}
-            aria-current={active ? "page" : undefined}
-            className={cn(
-              "shrink-0 rounded-md px-3 py-1.5 text-xs transition-colors",
-              active
-                ? "bg-primary/15 font-medium text-primary"
-                : "text-muted-foreground hover:bg-accent hover:text-foreground",
-            )}
-          >
-            {item.label}
-          </Link>
-        );
-      })}
+      {items.map((item) => (
+        <Fragment key={item.to}>
+          <ContextualRouteLink item={item} pathname={pathname} view={search.view} />
+          {item.to === "/settlements" ? (
+            <BinarySettingsLink
+              trading={group.id === "trading"}
+              active={pathname === "/binary" && search.view === "pairs"}
+            />
+          ) : null}
+        </Fragment>
+      ))}
     </nav>
+  );
+}
+
+function ContextualRouteLink({
+  item,
+  pathname,
+  view,
+}: {
+  item: (typeof NAV_GROUPS)[number]["items"][number];
+  pathname: string;
+  view?: string;
+}) {
+  if (item.to === "/binary") {
+    const active = pathname === "/binary" && view !== "pairs";
+    return (
+      <Link
+        to="/binary"
+        search={{}}
+        aria-current={active ? "page" : undefined}
+        className={navClass(active)}
+      >
+        {item.label}
+      </Link>
+    );
+  }
+  const active = routeMatches(pathname, item.to);
+  return (
+    <Link to={item.to} aria-current={active ? "page" : undefined} className={navClass(active)}>
+      {item.label}
+    </Link>
+  );
+}
+
+function BinarySettingsLink({ trading, active }: { trading: boolean; active: boolean }) {
+  const { can } = useAdminSession();
+  if (!trading || !can("binary.view")) return null;
+  return (
+    <Link
+      to="/binary"
+      search={{ view: "pairs" }}
+      aria-current={active ? "page" : undefined}
+      className={navClass(active)}
+    >
+      Binary Settings
+    </Link>
+  );
+}
+
+function navClass(active: boolean) {
+  return cn(
+    "shrink-0 rounded-md px-3 py-1.5 text-xs transition-colors",
+    active
+      ? "bg-primary/15 font-medium text-primary"
+      : "text-muted-foreground hover:bg-accent hover:text-foreground",
   );
 }
 

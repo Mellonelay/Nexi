@@ -37,6 +37,7 @@ export interface DataTableProps<T> {
   searchable?: (row: T) => string;
   searchPlaceholder?: string;
   rowKey: (row: T) => string;
+  selectedKey?: string | null;
   onRowClick?: (row: T) => void;
   rowActions?: (row: T) => ReactNode;
   pageSize?: number;
@@ -53,6 +54,7 @@ export function DataTable<T>({
   searchable,
   searchPlaceholder = "Search…",
   rowKey,
+  selectedKey,
   onRowClick,
   rowActions,
   pageSize = 10,
@@ -206,8 +208,29 @@ export function DataTable<T>({
                 pageRows.map((row) => (
                   <TableRow
                     key={rowKey(row)}
-                    className={cn("border-border/50", onRowClick && "cursor-pointer")}
+                    className={cn(
+                      "border-border/50",
+                      onRowClick && "cursor-pointer",
+                      selectedKey === rowKey(row) && "bg-primary/10",
+                      onRowClick &&
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary",
+                    )}
+                    tabIndex={onRowClick ? 0 : undefined}
+                    aria-selected={onRowClick ? selectedKey === rowKey(row) : undefined}
                     onClick={onRowClick ? () => onRowClick(row) : undefined}
+                    onKeyDown={
+                      onRowClick
+                        ? (event) => {
+                            if (
+                              (event.key === "Enter" || event.key === " ") &&
+                              event.target === event.currentTarget
+                            ) {
+                              event.preventDefault();
+                              onRowClick(row);
+                            }
+                          }
+                        : undefined
+                    }
                   >
                     {columns.map((c) => (
                       <TableCell

@@ -392,13 +392,27 @@ export interface BinaryPosition {
   duration: BinaryDuration;
   stake: string;
   openPrice: string;
-  strikeAt: string;
-  status: "open" | "won" | "lost" | "error";
+  expiresAt: string;
+  status: "open" | "settling" | "won" | "lost" | "error";
   payout?: string;
   researchDefault?: "NORMAL" | "WIN" | "LOSS";
   researchOverride?: "WIN" | "LOSS" | null;
   researchControlVersion?: number;
   researchEligible?: boolean;
+}
+
+export function mapBinaryPositionStatus(state: string): BinaryPosition["status"] {
+  return (
+    (
+      {
+        active: "open",
+        settling: "settling",
+        settlement_delayed: "settling",
+        win: "won",
+        loss: "lost",
+      } satisfies Record<string, BinaryPosition["status"]>
+    )[state] ?? "error"
+  );
 }
 
 /** Internal side mapping for Binary. Public shows long/short. */

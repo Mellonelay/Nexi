@@ -20,12 +20,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import type { BinaryPair, BinaryPosition, BinaryDuration } from "@/admin/types";
 import { mapBinaryInternal } from "@/admin/types";
-import { Pause, Play } from "lucide-react";
+import { Pause, Play, RefreshCw } from "lucide-react";
+import { z } from "zod";
 
-export const Route = createFileRoute("/binary")({ component: Page });
+const binarySearchSchema = z.object({ view: z.enum(["positions", "pairs", "audit"]).optional() });
+
+export const Route = createFileRoute("/binary")({
+  validateSearch: binarySearchSchema,
+  component: Page,
+});
 
 type PendingSettle = { pos: BinaryPosition };
 
@@ -38,6 +43,7 @@ function Page() {
 }
 
 function Inner() {
+  const { view = "positions" } = Route.useSearch();
   const pairsQ = useAdminQuery((p) => p.listBinaryPairs());
   const posQ = useAdminQuery((p) => p.listBinaryPositions());
 
@@ -47,10 +53,13 @@ function Inner() {
         <LoadingSkeleton rows={5} />
       </Shell>
     );
-  if (pairsQ.error)
+  if (pairsQ.error || posQ.error)
     return (
       <Shell>
-        <ErrorState title="Could not load binary" description={pairsQ.error.message} />
+        <ErrorState
+          title="Could not load binary"
+          description={(pairsQ.error ?? posQ.error)?.message ?? "Binary data is unavailable."}
+        />
       </Shell>
     );
 
@@ -70,28 +79,21 @@ function Inner() {
         backend-configured per pair.
       </div>
 
-      <Tabs defaultValue="positions">
-        <TabsList className="mb-4">
-          <TabsTrigger value="pairs" data-testid="bin-tab-pairs">
-            Settings ({pairs.length})
-          </TabsTrigger>
-          <TabsTrigger value="positions" data-testid="bin-tab-positions">
-            Trades ({positions.length})
-          </TabsTrigger>
-          <TabsTrigger value="audit" data-testid="bin-tab-audit">
-            Audit
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="pairs">
-          <PairsPanel pairs={pairs} />
-        </TabsContent>
-        <TabsContent value="positions">
-          <PositionsPanel positions={positions} onRefresh={posQ.refresh} />
-        </TabsContent>
-        <TabsContent value="audit">
-          <AuditTimeline actionPrefix="binary." limit={40} />
-        </TabsContent>
-      </Tabs>
+      {view === "pairs" ? (
+        <PairsPanel pairs={pairs} />
+      ) : view === "audit" ? (
+        <AuditTimeline actionPrefix="binary." limit={40} />
+      ) : (
+        <PositionsPanel positions={positions} onRefresh={posQ.refresh} />
+      )}
+      {view !== "audit" ? (
+        <details className="border-t border-border/60 pt-3">
+          <summary className="cursor-pointer text-xs font-medium">Binary audit history</summary>
+          <div className="pt-3">
+            <AuditTimeline actionPrefix="binary." limit={40} />
+          </div>
+        </details>
+      ) : null}
     </Shell>
   );
 }
@@ -447,16 +449,15 @@ function PositionsPanel({
   const session = useAdminSession();
   const canSettle = session.can("binary.settle");
   const canEdit = session.can("binary.edit");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(
+    () => positions.find((position) => position.status === "open")?.id ?? null,
+  );
   const [pending, setPending] = useState<PendingSettle | null>(null);
   const [researchDraft, setResearchDraft] = useState<"DEFAULT" | "NORMAL" | "WIN" | "LOSS">(
     "DEFAULT",
   );
   const [pendingResearch, setPendingResearch] = useState<BinaryPosition | null>(null);
-  const selected = useMemo(
-    () => (selectedId ? (positions.find((p) => p.id === selectedId) ?? null) : null),
-    [positions, selectedId],
-  );
+  const selected = positions.find((position) => position.id === selectedId) ?? null;
 
   useEffect(() => {
     setResearchDraft(selected?.researchOverride ?? "DEFAULT");
@@ -475,7 +476,7 @@ function PositionsPanel({
       header: "Direction",
       cell: (p) => (
         <div className="flex flex-col text-xs leading-tight">
-          <StatusBadge tone={p.direction === "long" ? "success" : "destructive"} dot={false}>
+          <StatusBadge tone={directionTone(p.direction)} dot={false}>
             {p.direction}
           </StatusBadge>
           <span className="mono text-[10px] text-muted-foreground">
@@ -503,6 +504,11 @@ function PositionsPanel({
       cell: (p) => <span className="mono text-xs">{p.openPrice}</span>,
     },
     {
+      key: "expiresAt",
+      header: "Expires",
+      cell: (p) => <span className="mono text-xs">{formatPositionExpiry(p.expiresAt)}</span>,
+    },
+    {
       key: "status",
       header: "Status",
       cell: (p) => <StatusBadge tone={posTone(p.status)}>{p.status}</StatusBadge>,
@@ -515,172 +521,107 @@ function PositionsPanel({
       label: "status",
       options: [
         { value: "open", label: "Open" },
+        { value: "settling", label: "Settling" },
         { value: "won", label: "Won" },
         { value: "lost", label: "Lost" },
         { value: "error", label: "Error" },
       ],
       match: (p, v) => p.status === v,
     },
+    {
+      key: "user",
+      label: "client",
+      options: Array.from(new Set(positions.map((position) => position.userId)))
+        .sort()
+        .map((userId) => ({ value: userId, label: userId })),
+      match: (position, userId) => position.userId === userId,
+    },
+    {
+      key: "pair",
+      label: "pair",
+      options: Array.from(new Set(positions.map((position) => position.pair)))
+        .sort()
+        .map((pair) => ({ value: pair, label: pair })),
+      match: (position, pair) => position.pair === pair,
+    },
   ];
 
   return (
     <>
-      <DataTable
-        data={positions}
-        columns={columns}
-        filters={filters}
-        searchable={(p) => `${p.id} ${p.userId} ${p.pair}`}
-        searchPlaceholder="Search position, user, pair…"
-        rowKey={(p) => p.id}
-        onRowClick={(p) => setSelectedId(p.id)}
-        rowActions={(p) => (
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              data-testid={`bpos-inspect-${p.id}`}
-              onClick={() => setSelectedId(p.id)}
-            >
-              Inspect
+      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
+        <DataTable
+          data={positions}
+          columns={columns}
+          filters={filters}
+          selectedKey={selectedId}
+          searchable={(p) => `${p.id} ${p.userId} ${p.pair}`}
+          searchPlaceholder="Search position, user, pair…"
+          rowKey={(p) => p.id}
+          toolbarRight={
+            <Button variant="outline" size="sm" onClick={onRefresh}>
+              <RefreshCw className="mr-2 h-3.5 w-3.5" />
+              Refresh view
             </Button>
-            {p.status === "open" ? (
-              <Button
-                variant="outline"
-                size="sm"
-                data-testid={`bpos-settle-${p.id}`}
-                disabled={!canSettle}
-                onClick={() => setPending({ pos: p })}
-              >
-                Settle now
-              </Button>
-            ) : null}
-          </div>
-        )}
-      />
-
-      <DetailDrawer
-        open={!!selected}
-        onOpenChange={(o) => {
-          if (!o) setSelectedId(null);
-        }}
-        title={selected ? <span className="mono">{selected.id}</span> : ""}
-        subtitle={
-          selected
-            ? `${selected.pair} · ${selected.direction} → ${mapBinaryInternal(selected.direction)} · ${selected.duration}s`
-            : undefined
-        }
-        badges={
-          selected ? (
-            <StatusBadge tone={posTone(selected.status)}>{selected.status}</StatusBadge>
-          ) : null
-        }
-        sections={
-          selected
-            ? [
-                {
-                  id: "pos",
-                  title: "Position",
-                  fields: [
-                    { label: "User", value: selected.userId, mono: true },
-                    { label: "Pair", value: selected.pair, mono: true },
-                    { label: "Direction (public)", value: selected.direction, mono: true },
-                    {
-                      label: "Direction (internal)",
-                      value: mapBinaryInternal(selected.direction),
-                      mono: true,
-                    },
-                    { label: "Duration", value: `${selected.duration}s`, mono: true },
-                    { label: "Stake", value: selected.stake, mono: true },
-                    { label: "Open price", value: selected.openPrice, mono: true },
-                    { label: "Strike at", value: selected.strikeAt, mono: true },
-                    { label: "Payout", value: selected.payout ?? "—", mono: true },
-                  ],
-                },
-                ...(selected.researchEligible && selected.status === "open"
-                  ? [
-                      {
-                        id: "binary-control",
-                        title: "Binary Trading Control",
-                        fields: [
-                          { label: "Account default", value: selected.researchDefault ?? "NORMAL" },
-                          {
-                            label: "Position setting",
-                            value: selected.researchOverride ?? "Default",
-                          },
-                          {
-                            label: "Effective setting",
-                            value:
-                              selected.researchOverride ?? selected.researchDefault ?? "NORMAL",
-                          },
-                          {
-                            label: "Control version",
-                            value: String(selected.researchControlVersion ?? 0),
-                            mono: true,
-                          },
-                        ],
-                        content: (
-                          <div className="flex flex-wrap items-end gap-2">
-                            <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-                              This trade
-                              <select
-                                aria-label="Binary position control"
-                                value={researchDraft}
-                                onChange={(event) =>
-                                  setResearchDraft(event.target.value as typeof researchDraft)
-                                }
-                                className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
-                              >
-                                <option value="DEFAULT">Default</option>
-                                <option value="NORMAL">Normal</option>
-                                <option value="WIN">Win</option>
-                                <option value="LOSS">Lose</option>
-                              </select>
-                            </label>
-                            <Button
-                              size="sm"
-                              disabled={
-                                !canEdit ||
-                                researchDraft === (selected.researchOverride ?? "DEFAULT")
-                              }
-                              onClick={() => setPendingResearch(selected)}
-                            >
-                              Save setting
-                            </Button>
-                          </div>
-                        ),
-                      },
-                    ]
-                  : []),
-                {
-                  id: "audit",
-                  title: "Audit timeline",
-                  content: <AuditTimeline targetId={selected.id} heading="" limit={15} />,
-                },
-              ]
-            : []
-        }
-        actions={
-          selected && selected.status === "open" ? (
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                data-testid="bpos-detail-settle"
-                disabled={!canSettle}
-                onClick={() => setPending({ pos: selected })}
-              >
-                Settle now
-              </Button>
+          }
+          onRowClick={(p) => setSelectedId(p.id)}
+          rowActions={(p) => (
+            <div className="flex justify-end gap-2">
+              <PositionSettleAction
+                position={p}
+                canSettle={canSettle}
+                onSettle={() => setPending({ pos: p })}
+                label="Settle"
+              />
             </div>
-          ) : null
-        }
-      />
+          )}
+        />
 
+        <PositionInspector
+          position={selected}
+          researchDraft={researchDraft}
+          canEdit={canEdit}
+          canSettle={canSettle}
+          onResearchDraftChange={setResearchDraft}
+          onSaveResearch={setPendingResearch}
+          onSettle={(position) => setPending({ pos: position })}
+        />
+      </div>
+
+      <PositionActionDialogs
+        pending={pending}
+        pendingResearch={pendingResearch}
+        researchDraft={researchDraft}
+        onCloseSettlement={() => setPending(null)}
+        onCloseResearch={() => setPendingResearch(null)}
+        onRefresh={onRefresh}
+      />
+    </>
+  );
+}
+
+function PositionActionDialogs({
+  pending,
+  pendingResearch,
+  researchDraft,
+  onCloseSettlement,
+  onCloseResearch,
+  onRefresh,
+}: {
+  pending: PendingSettle | null;
+  pendingResearch: BinaryPosition | null;
+  researchDraft: "DEFAULT" | "NORMAL" | "WIN" | "LOSS";
+  onCloseSettlement: () => void;
+  onCloseResearch: () => void;
+  onRefresh: () => void;
+}) {
+  const provider = useAdminData();
+  const session = useAdminSession();
+  return (
+    <>
       {pending ? (
         <ConsequentialActionDialog
           open
-          onOpenChange={(o) => {
-            if (!o) setPending(null);
-          }}
+          onOpenChange={onCloseSettlement}
           title="Settle position"
           description="Requests settlement through the active provider. The Admin does not choose the trade outcome."
           target={
@@ -703,15 +644,13 @@ function PositionsPanel({
               reason,
             })
           }
-          onSuccess={() => setPending(null)}
+          onSuccess={onCloseSettlement}
         />
       ) : null}
       {pendingResearch ? (
         <ConsequentialActionDialog
           open
-          onOpenChange={(open) => {
-            if (!open) setPendingResearch(null);
-          }}
+          onOpenChange={onCloseResearch}
           title="Save Binary trade setting"
           description="Available only for an open trade on an approved research account. The setting is version-checked before settlement."
           target={
@@ -742,12 +681,256 @@ function PositionsPanel({
             )
           }
           onSuccess={() => {
-            setPendingResearch(null);
+            onCloseResearch();
             onRefresh();
           }}
         />
       ) : null}
     </>
+  );
+}
+
+function PositionInspector({
+  position,
+  researchDraft,
+  canEdit,
+  canSettle,
+  onResearchDraftChange,
+  onSaveResearch,
+  onSettle,
+}: {
+  position: BinaryPosition | null;
+  researchDraft: "DEFAULT" | "NORMAL" | "WIN" | "LOSS";
+  canEdit: boolean;
+  canSettle: boolean;
+  onResearchDraftChange: (value: "DEFAULT" | "NORMAL" | "WIN" | "LOSS") => void;
+  onSaveResearch: (position: BinaryPosition) => void;
+  onSettle: (position: BinaryPosition) => void;
+}) {
+  if (!position) {
+    return (
+      <aside
+        aria-label="Selected position details"
+        className="surface-1 rounded-lg border border-border/60 p-4"
+      >
+        <div className="py-8 text-sm text-muted-foreground">
+          Select a position to inspect its details and available controls.
+        </div>
+      </aside>
+    );
+  }
+
+  return (
+    <aside
+      aria-label="Selected position details"
+      className="surface-1 min-w-0 rounded-lg border border-border/60 p-4"
+      data-testid="binary-position-inspector"
+    >
+      <div className="flex flex-col gap-4">
+        <header className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="truncate font-semibold">{position.pair} position</h2>
+            <p className="mono truncate text-xs text-muted-foreground">{position.id}</p>
+          </div>
+          <StatusBadge tone={posTone(position.status)}>{position.status}</StatusBadge>
+        </header>
+        <PositionFacts position={position} />
+        <PositionResearchControl
+          position={position}
+          draft={researchDraft}
+          canEdit={canEdit}
+          onDraftChange={onResearchDraftChange}
+          onSave={() => onSaveResearch(position)}
+        />
+        <PositionSettleAction
+          position={position}
+          canSettle={canSettle}
+          onSettle={() => onSettle(position)}
+          label="Settle through market result"
+        />
+        <details className="border-t border-border/60 pt-3">
+          <summary className="cursor-pointer text-xs font-medium">Position audit history</summary>
+          <div className="pt-3">
+            <AuditTimeline targetId={position.id} heading="" limit={15} />
+          </div>
+        </details>
+      </div>
+    </aside>
+  );
+}
+
+function PositionFacts({ position }: { position: BinaryPosition }) {
+  return (
+    <dl className="grid grid-cols-2 gap-3 text-sm">
+      <PositionFact label="Client" value={position.userId} />
+      <PositionFact
+        label="Direction"
+        value={`${position.direction} · ${mapBinaryInternal(position.direction)}`}
+      />
+      <PositionFact label="Duration" value={`${position.duration}s`} />
+      <PositionFact label="Stake" value={position.stake} />
+      <PositionFact label="Open price" value={position.openPrice} />
+      <PositionFact label="Expires" value={formatPositionExpiry(position.expiresAt)} />
+      <PositionFact label="Payout" value={position.payout ?? "—"} />
+    </dl>
+  );
+}
+
+function PositionFact({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</dt>
+      <dd className="break-all text-xs text-foreground">{value}</dd>
+    </div>
+  );
+}
+
+function PositionResearchControl({
+  position,
+  draft,
+  canEdit,
+  onDraftChange,
+  onSave,
+}: {
+  position: BinaryPosition;
+  draft: "DEFAULT" | "NORMAL" | "WIN" | "LOSS";
+  canEdit: boolean;
+  onDraftChange: (value: "DEFAULT" | "NORMAL" | "WIN" | "LOSS") => void;
+  onSave: () => void;
+}) {
+  if (position.status !== "open") {
+    return (
+      <ResearchControlNotice message="This position is no longer open, so its research setting cannot be changed." />
+    );
+  }
+  if (!position.researchEligible) {
+    return (
+      <ResearchControlNotice message="This account is not approved for isolated Binary research controls." />
+    );
+  }
+  return (
+    <PositionResearchEditor
+      position={position}
+      draft={draft}
+      canEdit={canEdit}
+      onDraftChange={onDraftChange}
+      onSave={onSave}
+    />
+  );
+}
+
+function ResearchControlNotice({ message }: { message: string }) {
+  return (
+    <section className="border-t border-border/60 pt-4">
+      <h3 className="text-sm font-semibold">Binary Trading Control</h3>
+      <p className="text-xs text-muted-foreground">{message}</p>
+    </section>
+  );
+}
+
+function PositionResearchEditor({
+  position,
+  draft,
+  canEdit,
+  onDraftChange,
+  onSave,
+}: {
+  position: BinaryPosition;
+  draft: "DEFAULT" | "NORMAL" | "WIN" | "LOSS";
+  canEdit: boolean;
+  onDraftChange: (value: "DEFAULT" | "NORMAL" | "WIN" | "LOSS") => void;
+  onSave: () => void;
+}) {
+  return (
+    <section className="flex flex-col gap-3 border-t border-border/60 pt-4">
+      <div>
+        <h3 className="text-sm font-semibold">Binary Trading Control</h3>
+        <p className="text-xs text-muted-foreground">
+          Applies only to this eligible open test position before settlement.
+        </p>
+      </div>
+      <PositionResearchSummary position={position} />
+      <PositionResearchInput
+        position={position}
+        draft={draft}
+        canEdit={canEdit}
+        onDraftChange={onDraftChange}
+        onSave={onSave}
+      />
+    </section>
+  );
+}
+
+function PositionResearchSummary({ position }: { position: BinaryPosition }) {
+  return (
+    <dl className="grid grid-cols-2 gap-2 text-xs">
+      <PositionFact label="Account default" value={position.researchDefault ?? "NORMAL"} />
+      <PositionFact label="Position override" value={position.researchOverride ?? "Default"} />
+      <PositionFact
+        label="Effective mode"
+        value={position.researchOverride ?? position.researchDefault ?? "NORMAL"}
+      />
+      <PositionFact label="Control version" value={String(position.researchControlVersion ?? 0)} />
+    </dl>
+  );
+}
+
+function PositionResearchInput({
+  position,
+  draft,
+  canEdit,
+  onDraftChange,
+  onSave,
+}: {
+  position: BinaryPosition;
+  draft: "DEFAULT" | "NORMAL" | "WIN" | "LOSS";
+  canEdit: boolean;
+  onDraftChange: (value: "DEFAULT" | "NORMAL" | "WIN" | "LOSS") => void;
+  onSave: () => void;
+}) {
+  return (
+    <div className="flex flex-col gap-3">
+      <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+        This position
+        <select
+          aria-label="Binary position control"
+          value={draft}
+          onChange={(event) => onDraftChange(event.target.value as typeof draft)}
+          className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
+        >
+          <option value="DEFAULT">Default</option>
+          <option value="NORMAL">Normal</option>
+          <option value="WIN">Win</option>
+          <option value="LOSS">Lose</option>
+        </select>
+      </label>
+      <Button
+        size="sm"
+        disabled={!canEdit || draft === (position.researchOverride ?? "DEFAULT")}
+        onClick={onSave}
+      >
+        Save position setting
+      </Button>
+    </div>
+  );
+}
+
+function PositionSettleAction({
+  position,
+  canSettle,
+  onSettle,
+  label,
+}: {
+  position: BinaryPosition;
+  canSettle: boolean;
+  onSettle: () => void;
+  label: string;
+}) {
+  if (position.status !== "open") return null;
+  return (
+    <Button variant="outline" disabled={!canSettle} onClick={onSettle}>
+      {label}
+    </Button>
   );
 }
 
@@ -964,6 +1147,8 @@ function posTone(s: BinaryPosition["status"]) {
   switch (s) {
     case "open":
       return "info" as const;
+    case "settling":
+      return "warning" as const;
     case "won":
       return "success" as const;
     case "lost":
@@ -973,4 +1158,13 @@ function posTone(s: BinaryPosition["status"]) {
     default:
       return "neutral" as const;
   }
+}
+
+function directionTone(direction: BinaryPosition["direction"]) {
+  return direction === "long" ? ("success" as const) : ("destructive" as const);
+}
+
+function formatPositionExpiry(value: string) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "Unavailable" : date.toLocaleString();
 }
