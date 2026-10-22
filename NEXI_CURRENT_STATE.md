@@ -1,3 +1,13 @@
+## Current integrated release state — 2026-10-22
+
+Build source `6507cf16a8cd863048b12aa56b23fd43435695ec` is deployed in canonical Public `/srv/nexi/public/current` and Admin `/srv/nexi/admin/current`; both runtime markers match. Public Next.js Webpack/standalone and Admin Vite client/SSR/Nitro builds succeeded. Backend runtime is unchanged and remains at marker `9473e1393ada0c7398ad1aca27e822b2d6d00975`; API readiness returns 200. All five Public Settings endpoints return 200; Admin unauthenticated API access returns 401.
+
+The read-only guarded Binary migration runner reports `ALREADY_APPLIED schema_matches=yes`; this task made no promoted SQLite write. Public and Admin services are active with zero systemd restarts. Sentry uploads completed for both frontend artifacts under release `6507cf16a8cd863048b12aa56b23fd43435695ec`; exact release has zero new issues and no matching production errors over 24 hours, but no Sentry deploy record and incomplete source-map association.
+
+Public/Admin/Backend retain separate shared dependency stores. The ignored 1.1 GB `frontend/.next` duplicate and noncanonical `Admin/.output` diagnostic build were removed; verified Public/Admin rollback archives remain until owner browser acceptance. Browser behavior, including wallet connector interactions, is not verified.
+
+---
+
 ## Live Admin/Public integration gate — 2026-10-22
 
 ### Migration readiness source update — 2026-10-22
