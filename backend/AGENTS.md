@@ -1,3 +1,7 @@
+## CANONICAL BACKEND BUILD — 2026-10-22
+
+Build/deploy only from committed source in the canonical `main` checkout. `/srv/nexi/backend` is the single runtime/build working tree, `/srv/nexi/backend/dist` is the service output, and `/srv/nexi/backend/node_modules` must remain a symlink to `/srv/nexi/backend/shared/node_modules`. Use `backend/package.json` plus `backend/package-lock.json`; build with the existing Node 24 runtime and `npm run build` from `/srv/nexi/backend`. Do not install a second dependency tree or replace the symlink. Before an in-place build, verify the live release and recovery copy, stop only `nexi-api.service`, sync the committed backend source while preserving `shared/`, `node_modules`, and the verified rollback artifact, build once, set the release marker to the exact built source SHA, restart the API, then verify SQLite/Redis readiness, API contracts, PID/restart stability, and release identity.
+
 ## CURRENT VPS BUILD AND SHARED DEPENDENCY PATHS — 2026-10-20
 
 Current source: /home/mellonelay1999/workspaces/Nexi (single main checkout). Source paths are frontend/ (Public Next.js), Admin/ (Admin React/TanStack/Nitro), backend/ (NestJS/Prisma 7). Live deployed bytes and source SHA must be verified independently.

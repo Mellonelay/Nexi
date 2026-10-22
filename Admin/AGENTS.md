@@ -2,6 +2,10 @@
 
 For NEXI Work Local, Admin rendered acceptance uses the existing owner-authorized ChatGPT in-app browser Admin tab, independently of Public. Work Cloud Browser is not required. Use authorized direct SSH alias nexi-vps for Worker-0 source/CLI work, with RDC as fallback. Do not transfer credentials or session material between surfaces.
 
+## CANONICAL ADMIN BUILD — 2026-10-22
+
+Build/deploy only from committed source in the canonical `main` checkout. `/srv/nexi/admin/current` is the only Nitro output/runtime directory and must remain a real directory; `/srv/nexi/admin/shared/node_modules` is the only Admin dependency store. `Admin/node_modules` must stay linked to that store. Use `Admin/pnpm-lock.yaml` with pnpm `12.14.0`; do not use the checked-in non-authoritative npm/Bun resolutions or install from the source checkout. For the one final build, verify the current artifact and rollback first, stop only `nexi-admin.service`, sync committed Admin source while preserving `shared/node_modules` and logs, then run `NEXI_ADMIN_OUTPUT_DIR=/srv/nexi/admin/current pnpm run build` from `Admin/` with the existing secret wrapper when Sentry upload is configured. Keep Nitro output in `current`; do not create alternate/candidate build roots. Restart Admin and verify server/artifact SHA, login/API boundary, routes, service stability, and Sentry identity.
+
 ## CURRENT VPS BUILD AND SHARED DEPENDENCY PATHS — 2026-10-20
 
 Current source: /home/mellonelay1999/workspaces/Nexi (single main checkout). Source paths are frontend/ (Public Next.js), Admin/ (Admin React/TanStack/Nitro), backend/ (NestJS/Prisma 7). Live deployed bytes and source SHA must be verified independently.

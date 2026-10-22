@@ -2,6 +2,17 @@
 
 For NEXI Work Local, ChatGPT Work is the single parent; use authorized direct SSH alias nexi-vps as the preferred Worker-0 route and RDC only as fallback. Public and Admin acceptance use distinct existing ChatGPT in-app browser tabs. Polypane/CDP 5859 is optional historical tooling. Promoted VPS SQLite with NestJS/Ledger/Outbox is current application/financial authority; Cloudflare application infrastructure and historical completion ledgers are retired/non-authoritative. Apply task-fit skills; do not require three parallel agents. One shared mutation owner.
 
+
+## CANONICAL WORKER-0 BUILD CONTRACT — 2026-10-22
+
+All release builds use this one canonical checkout on `main`; do not create worktrees, cloned/staging checkouts, candidate roots, or extra release directories. Build one surface at a time only after its source is ready and committed. The three dependency stores remain separate: `/srv/nexi/backend/shared/node_modules`, `/srv/nexi/public/shared/node_modules`, and `/srv/nexi/admin/shared/node_modules`. The backend runtime link and Public/Admin source links must keep pointing to their own store. Manifests and their active lockfiles define dependency authority; never merge stores or install from a Public/Admin source checkout.
+
+- Backend runtime/build: `/srv/nexi/backend`, output `/srv/nexi/backend/dist`, service `nexi-api.service`; use the backend `package-lock.json` and `npm run build` from the runtime working directory.
+- Public runtime/build: `/srv/nexi/public/current`, output `/srv/nexi/public/current/.next`, service `nexi-public.service`; use Public `package-lock.json`, the existing `current/node_modules` shared-store link, `next build --webpack`, then `node scripts/prepare-standalone-assets.mjs`.
+- Admin runtime/build: real directory `/srv/nexi/admin/current` (never a symlink), service `nexi-admin.service`; use `Admin/pnpm-lock.yaml`, pnpm `12.14.0`, `/srv/nexi/admin/shared/node_modules`, and `NEXI_ADMIN_OUTPUT_DIR=/srv/nexi/admin/current pnpm run build`.
+
+Before replacing in-place outputs, verify the current release identity and the surface-specific recovery procedure; stop only that surface, preserve the authorized rollback artifact, sync source without replacing shared dependency links, build once at its canonical path, restart that service, and verify runtime identity/health before proceeding. Do not overwrite a live output with a source-tree diagnostic build.
+
 ## CURRENT VPS BUILD AND SHARED DEPENDENCY PATHS — 2026-10-20
 
 Current source: /home/mellonelay1999/workspaces/Nexi (single main checkout). Source paths are frontend/ (Public Next.js), Admin/ (Admin React/TanStack/Nitro), backend/ (NestJS/Prisma 7). Live deployed bytes and source SHA must be verified independently.

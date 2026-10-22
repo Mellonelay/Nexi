@@ -2,6 +2,10 @@
 
 For NEXI Work Local, Public rendered acceptance uses the existing ChatGPT in-app browser session. Polypane/CDP 5859 is optional historical tooling, not a gate. Use task-fit frontend/browser skills and evidence; do not require routine subagents. Wallet signing and financial actions remain separately authorized.
 
+## CANONICAL PUBLIC BUILD — 2026-10-22
+
+Build/deploy only from committed source in the canonical `main` checkout. `/srv/nexi/public/current` is the only Public build/runtime directory and must remain a real directory; its `node_modules` link must continue to point to `/srv/nexi/public/shared/node_modules`. Use `frontend/package.json` and `frontend/package-lock.json`; do not run an install from the source checkout or replace the shared link. For the one final build, stop only `nexi-public.service`, sync committed Public source into `current` while preserving the shared dependency link, then run `./node_modules/.bin/next build --webpack && node scripts/prepare-standalone-assets.mjs` from `/srv/nexi/public/current`. Keep `.next` as the generated output there; do not create alternate/candidate/copy build roots. Restart Public and verify its marker, HTTPS routes, settings API consumers, service stability, and release-matched Sentry before building another surface.
+
 ## CURRENT VPS BUILD AND SHARED DEPENDENCY PATHS — 2026-10-20
 
 Current source: /home/mellonelay1999/workspaces/Nexi (single main checkout). Source paths are frontend/ (Public Next.js), Admin/ (Admin React/TanStack/Nitro), backend/ (NestJS/Prisma 7). Live deployed bytes and source SHA must be verified independently.

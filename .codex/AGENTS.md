@@ -2,6 +2,11 @@
 
 For NEXI Work Local, Work remains the parent controller. Preferred Worker-0 route is authorized direct SSH alias nexi-vps; RDC is fallback. Public/Admin browser evidence uses separate existing ChatGPT in-app browser tabs; Polypane 5859 is optional. Use task-fit skills and only genuinely independent evidence lanes; no routine subagent requirement.
 
+
+## CANONICAL BUILD EXECUTION
+
+The single checkout on `main` is the only source workspace. No worktrees, clones, staging builds, candidate roots, or duplicate dependency stores. Release builds are serialized, use the app's active lockfile and pre-existing shared dependency owner, and write only to the canonical VPS paths documented in root `AGENTS.md`: Backend `/srv/nexi/backend/dist`, Public `/srv/nexi/public/current/.next`, Admin `/srv/nexi/admin/current`. Follow the per-app service-stop, rollback, source-sync, build, restart, and identity checks before replacing output. Never infer runtime identity from Git HEAD or a diagnostic source-tree output.
+
 # NEXI Codex Remote SSH — execution overlay
 
 Repository-wide NEXI AGENTS.md is the governing rule for all agents; this overlay applies to Codex only, alongside the separate ~/.codex/AGENTS.md. Current owner decisions and present source/runtime authority supersede old historical language.
