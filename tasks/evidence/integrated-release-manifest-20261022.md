@@ -44,7 +44,7 @@ The production migration is the only identified data-protection dependency. The 
 
 ## Follow-up — Admin source maps and build-path correction (2026-10-22)
 
-- Source is now `cbb52c196b94abe05f87bbf779f3b5b69152af62` locally; this commit adds Nitro source-map generation and post-upload map cleanup to `Admin/vite.config.ts`. It has not yet been pushed as of this receipt.
+- Source commit `cbb52c196b94abe05f87bbf779f3b5b69152af62` adds Nitro source-map generation and post-upload map cleanup to `Admin/vite.config.ts`; it was pushed to `main` in the subsequent documentation/evidence commit `d5692a818b5ba3556693c085a1ff9d70dd805d1a`.
 - `pnpm exec tsc --noEmit --incremental false` passed. The existing 1Password wrapper ran `pnpm run build` through Vite client, SSR and Nitro successfully for this source, and uploaded three bundles under the matching Sentry release. This was **not a canonical release build**: `NEXI_ADMIN_OUTPUT_DIR` was omitted, so output went to `Admin/.output` instead of `/srv/nexi/admin/current`. Do not deploy or identify this artifact as canonical.
 - Diagnostic Nitro entry SHA-256: `9cd2bd52f2a6970b7288188dbe8dfe5db13a1cf100244dabf378d3cd3ce52575`. The source-tree output has no remaining `.map` files after upload. The build also created/updated `Admin/node_modules/.nitro/vite/` inside the symlinked shared Admin dependency store (59 maps, 121 files, 2.9 MB); it is retained and must not be removed by broad cleanup.
 - Sentry release `cbb52c196b94abe05f87bbf779f3b5b69152af62` exists; three bundles completed processing, release has no deploys/commits, and the new-issue lookup returned zero. Map associations were partial and unmatched-script warnings remained; full symbolication is unverified. No Sentry credential was printed.
