@@ -615,3 +615,10 @@ Changed-boundary evidence: `backend/test/gate2/binary.service.spec.ts`, `backend
 - [x] Recorded retained artifact identities, hashes, build/dependency notes, live service markers, API checks, Sentry findings and deployment order in `tasks/evidence/integrated-release-manifest-20261022.md`.
 - [x] Sentry upload reports 64 client scripts with maps and one client script without a map reference; SSR (61) and Nitro (82) scripts have no maps. The unmatched client chunk cannot be identified from retained outputs, so full browser source-map coverage remains unverified. No rebuild or speculative source correction was made.
 - [ ] Migration 0017 remains the specific protected-backup/quiescence dependency. The current API returns 404 for the five new Public Settings endpoints; do not deploy a single frontend against incompatible API behavior.
+
+#### Admin build/dependency rule correction — 2026-10-22
+
+- [x] Re-read root, Codex overlay, Public, Backend and Admin instructions. Confirmed Public/Admin source dependency symlinks and the separate backend runtime symlink; checkout `backend/node_modules` is not covered by the runtime-link rule and was left untouched.
+- [x] Verified Admin's active pnpm lock resolves router-core `1.171.37` and history `1.162.5`, matching the shared Admin tree. Declared pnpm `12.14.0` in `Admin/package.json` and `Admin/pnpm-lock.yaml` as the Worker-0 lock authority; refreshed stale Public framework-version guidance. No library versions were upgraded.
+- [x] Corrected the Admin build instructions to specify the canonical output target. The preceding Admin build omitted `NEXI_ADMIN_OUTPUT_DIR`, wrote a diagnostic output under `Admin/.output`, and is not canonical release evidence; exact artifacts and Sentry scope are recorded in the release manifest.
+- [ ] Push the Admin source-map correction and these verified instruction/evidence updates after final diff review. No new build or production operation is required for this correction.

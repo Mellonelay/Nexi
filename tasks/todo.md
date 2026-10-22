@@ -774,3 +774,10 @@ Receipt: `tasks/evidence/market-provider-runtime-20261017.md`.
 - [x] Recorded retained artifact identities, hashes, build/dependency notes, active service markers, API results and rollout order in `tasks/evidence/integrated-release-manifest-20261022.md`.
 - [x] Sentry release `8f1d830...` exists, processing completed, with no deploys or matching issues. Client bundle: 64 mapped/1 unmatched; SSR 61 and Nitro 82 without maps. Public source-map upload was not run. The unmatched client chunk cannot be tied to an emitted asset from retained evidence; browser map coverage remains unverified.
 - [ ] Migration 0017 alone remains blocked on a protected, restorable backup destination and safe quiescence. No services, live artifacts or promoted SQLite were changed. The current API returns 404 for all five new Public Settings endpoints, so integrated rollout remains pending.
+
+#### Admin build/dependency rule correction — 2026-10-22
+
+- [x] Re-read root, Codex overlay, Public, Backend and Admin instructions. Verified Public/Admin source symlinks and backend runtime symlink; left checkout `backend/node_modules` unchanged because that runtime rule does not govern it.
+- [x] Confirmed Admin pnpm lock/shared tree alignment (`@tanstack/router-core@1.171.37`, `@tanstack/history@1.162.5`); pinned pnpm `12.14.0`, named `pnpm-lock.yaml` as the Worker-0 lock authority, and refreshed stale Public version guidance. No library dependencies were upgraded.
+- [x] Recorded that the prior Admin build was diagnostic because it wrote to `Admin/.output`; updated Admin instructions with the canonical output environment variable and retained the limitation in the release manifest.
+- [ ] Final diff review and Git integration remain. No canonical production build, deployment, service restart, SQLite migration or browser acceptance occurred.

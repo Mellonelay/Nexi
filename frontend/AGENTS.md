@@ -60,17 +60,9 @@ Do not redesign completed screens from taste alone.
 Use screenshots to check hierarchy, density, spacing, composition, and interaction intent; use current source/runtime for functional truth.
 
 ## Stack
-Current package authority:
-- Next.js `16.3.5`
-- React / React DOM `19.3.0`
-- TypeScript 5
-- ESLint 9 + `eslint-config-next` 16.3.5
-- Tailwind CSS 3.3
-- Lightweight Charts 4
-- TanStack Query 5
-- Socket.IO client 4.7
-- RainbowKit / wagmi / viem for wallet integration
-- Node.js `>=20.9.0`
+The checked-in `package.json` and `package-lock.json` are the dependency authority. At the 2026-10-22 verification, the installed tree resolves Next.js `16.4.1`, React/React DOM `19.3.0`, TanStack Query `5.90.19`, and Socket.IO client `4.8.3`; `eslint-config-next` is pinned by the lockfile to the Next.js `16.4.1` line. Other dependency ranges and resolved versions must be read from those files rather than copied from this summary. Do not upgrade dependencies to refresh this note.
+
+Node.js must be `>=20.9.0`; verify the package engine and current runtime before framework-sensitive work.
 
 Do not describe this frontend as Next.js 12 or 14. Read `package.json` before framework-sensitive work.
 ## Next.js App Router rules
