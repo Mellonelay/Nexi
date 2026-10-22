@@ -69,6 +69,43 @@ const ADMIN_ACCOUNT_SELECT = {
   },
 } satisfies Prisma.UserSelect;
 
+const PUBLIC_QUOTES_CATEGORY_IDS = new Set(["Crypto", "Metals", "Forex", "Stocks"]);
+
+function isPublicQuotesCategory(
+  value: unknown,
+): value is { id: string; visible: boolean; order: number } {
+  if (!value || typeof value !== "object") return false;
+  const item = value as Record<string, unknown>;
+  return typeof item.id === "string" &&
+    PUBLIC_QUOTES_CATEGORY_IDS.has(item.id) &&
+    typeof item.visible === "boolean" &&
+    typeof item.order === "number" &&
+    Number.isSafeInteger(item.order) &&
+    item.order >= 0 &&
+    item.order <= 1000;
+}
+
+function hasVisiblePublicQuotesCategory(value: unknown): boolean {
+  if (!Array.isArray(value)) return false;
+  const visibility = new Map<string, boolean>();
+  for (const item of value.filter(isPublicQuotesCategory))
+    visibility.set(item.id, item.visible);
+  return [...visibility.values()].some(Boolean);
+}
+
+function assertVisiblePublicQuotesCategory(value: string): void {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(value);
+  } catch {
+    throw new BadRequestException("Invalid Quotes category configuration");
+  }
+  if (!hasVisiblePublicQuotesCategory(parsed))
+    throw new BadRequestException(
+      "At least one Quotes category must remain visible",
+    );
+}
+
 type AdminAccountRecord = Prisma.UserGetPayload<{
   select: typeof ADMIN_ACCOUNT_SELECT;
 }>;
@@ -870,6 +907,8 @@ export class AdminService {
       throw new BadRequestException(
         "A reason is required for Admin configuration changes",
       );
+    if (key === "admin.frontend.quoteCategories")
+      assertVisiblePublicQuotesCategory(value);
     if (this.d1?.isEnabled())
       return this.d1.updateSystemConfig({
         key,

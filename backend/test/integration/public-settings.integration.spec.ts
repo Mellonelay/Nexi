@@ -72,6 +72,46 @@ describe("Admin Public settings SQLite readback", () => {
     await expect(prisma.adminAuditLog.count({ where: { target: "admin.frontend.quoteCategories" } })).resolves.toBe(1);
   });
 
+  it("rejects hiding the final visible Quotes category and preserves the saved setting", async () => {
+    await prisma.$connect();
+    const gateway = new D1FinancialCommandGateway(bridge as never);
+    const admin = Object.assign(Object.create(AdminService.prototype), { d1: gateway }) as AdminService;
+    const categories = ["Crypto", "Metals", "Forex", "Stocks"].map((id) => ({
+      id,
+      label: id,
+      visible: id === "Stocks",
+      order: 1,
+    }));
+    await admin.updateSystemConfig(
+      "admin.frontend.quoteCategories",
+      JSON.stringify(categories),
+      "Public Quotes categories",
+      "operator test",
+      "admin-test",
+    );
+
+    await expect(admin.updateSystemConfig(
+      "admin.frontend.quoteCategories",
+      JSON.stringify(categories.map((category) => ({ ...category, visible: false }))),
+      "Public Quotes categories",
+      "hide all categories",
+      "admin-test",
+    )).rejects.toThrow("At least one Quotes category must remain visible");
+    await expect(admin.updateSystemConfig(
+      "admin.frontend.quoteCategories",
+      "{",
+      "Public Quotes categories",
+      "invalid config test",
+      "admin-test",
+    )).rejects.toThrow("Invalid Quotes category configuration");
+
+    const controller = new AppController({} as never, {} as never, prisma);
+    await expect(controller.getPublicQuotesCategories()).resolves.toEqual([
+      { id: "Stocks", visible: true, order: 1 },
+    ]);
+    await expect(prisma.adminAuditLog.count({ where: { target: "admin.frontend.quoteCategories" } })).resolves.toBe(1);
+  });
+
   it("persists Admin translations and limits Public readback to supported shell keys and locales", async () => {
     await prisma.$connect();
     const gateway = new D1FinancialCommandGateway(bridge as never);

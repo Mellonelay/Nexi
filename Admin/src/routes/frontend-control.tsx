@@ -364,6 +364,7 @@ function QuotesPanel({ cats }: { cats: QuotesCategory[] }) {
   const session = useAdminSession();
   const canEdit = session.can("frontend.edit");
   const sorted = useMemo(() => [...cats].sort((a, b) => a.order - b.order), [cats]);
+  const visibleCount = cats.filter((category) => category.visible).length;
   const [pendingToggle, setPendingToggle] = useState<QuotesCategory | null>(null);
 
   async function move(id: string, dir: -1 | 1) {
@@ -437,7 +438,10 @@ function QuotesPanel({ cats }: { cats: QuotesCategory[] }) {
               variant={c.visible ? "destructive" : "default"}
               size="sm"
               data-testid={`cat-toggle-${c.id}`}
-              disabled={!canEdit}
+              disabled={!canEdit || (c.visible && visibleCount === 1)}
+              aria-describedby={
+                c.visible && visibleCount === 1 ? "quotes-category-visibility-help" : undefined
+              }
               onClick={() => setPendingToggle(c)}
             >
               {c.visible ? "Hide" : "Show"}
@@ -445,6 +449,13 @@ function QuotesPanel({ cats }: { cats: QuotesCategory[] }) {
           </div>
         )}
       />
+      <p
+        id="quotes-category-visibility-help"
+        role="note"
+        className="mt-2 text-xs text-muted-foreground"
+      >
+        At least one Quotes category must remain visible.
+      </p>
       {pendingToggle ? (
         <ConsequentialActionDialog
           open

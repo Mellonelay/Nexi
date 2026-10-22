@@ -117,7 +117,7 @@ describe("AppController runtime probes", () => {
     });
   });
 
-  it("returns only supported Quotes categories and falls back when config is absent or malformed", async () => {
+  it("returns selected Quotes categories and uses defaults for absent, malformed, or fully hidden config", async () => {
     const prisma = {
       systemConfig: {
         findUnique: jest.fn()
@@ -128,7 +128,13 @@ describe("AppController runtime probes", () => {
             { id: "Forex", label: "Forex", visible: true, order: 2 },
           ]) })
           .mockResolvedValueOnce(null)
-          .mockResolvedValueOnce({ value: "{" }),
+          .mockResolvedValueOnce({ value: "{" })
+          .mockResolvedValueOnce({ value: JSON.stringify([
+            { id: "Crypto", visible: false, order: 1 },
+            { id: "Metals", visible: false, order: 2 },
+            { id: "Forex", visible: false, order: 3 },
+            { id: "Stocks", visible: false, order: 4 },
+          ]) }),
       },
     };
     const controller = new AppController(
@@ -140,6 +146,12 @@ describe("AppController runtime probes", () => {
     await expect(controller.getPublicQuotesCategories()).resolves.toEqual([
       { id: "Forex", visible: true, order: 2 },
       { id: "Stocks", visible: true, order: 3 },
+    ]);
+    await expect(controller.getPublicQuotesCategories()).resolves.toEqual([
+      { id: "Crypto", visible: true, order: 1 },
+      { id: "Metals", visible: true, order: 2 },
+      { id: "Forex", visible: true, order: 3 },
+      { id: "Stocks", visible: true, order: 4 },
     ]);
     await expect(controller.getPublicQuotesCategories()).resolves.toEqual([
       { id: "Crypto", visible: true, order: 1 },

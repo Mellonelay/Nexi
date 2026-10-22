@@ -12,6 +12,10 @@ test('normalizes Quotes categories to the four existing catalog categories', () 
     { id: 'Forex', visible: true, order: 2 },
   ]);
   assert.deepEqual(categories, ['Forex', 'Stocks']);
+  assert.deepEqual(normalizePublicQuoteCategories([
+    { id: 'Stocks', visible: true, order: 1 },
+    { id: 'Crypto', visible: false, order: 2 },
+  ]), ['Stocks']);
   assert.equal(ASSET_REGISTRY.length, 53);
   assert.equal(filterQuotePairs(ASSET_REGISTRY, 'Forex').length, 9);
 });
