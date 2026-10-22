@@ -575,4 +575,11 @@ Scope: current owner handoff's Admin/Public/Binary source integration and non-br
 - [x] Source commit `24cf931ced0535a6793253a8bf53e87bdaeff34f` pushed to `main`; no source build/deployment or production database change.
 - [ ] Release and browser acceptance are separate pending gates. Route states, banners, and feature flags remain unimplemented until their Public product contracts are approved. Root test-inclusive backend `tsc --noEmit` has unrelated existing test/Jest typing errors; build-scope TypeScript passes.
 
+#### Live release gate — 2026-10-22
+
+- [x] Verified service identities and health: Admin `e2f7a65`, Public `db802761`, API configured release `a6b5c85`; all active with zero restarts; public roots 307, API readyz 200.
+- [x] Verified production API 404s for Public Quotes/localization/navigation endpoints. Read-only SQLite confirmed Binary research columns and migration 0017 absent. Focused source regression suite for NEXI-17 passed 52/52; the source repair exists at `a8b32ec...`, but live backend remains on older release.
+- [ ] Do not ship Admin ahead of its missing backend/Public read contracts. No current authorization for backend/Public rollout or promoted SQLite migration; Admin-only authorization does not satisfy ordered integrated release prerequisites. No build/deployment/restart/browser test run.
+- [ ] Release prerequisites: owner authorization for backend/Public deployment and controlled migration; sufficient disk headroom; existing Admin Sentry secret injection for source-map upload; authenticated ChatGPT Work browser availability. Unspecified route/banner/feature-flag contracts remain excluded rather than a release blocker.
+
 Changed-boundary evidence: `backend/test/gate2/binary.service.spec.ts`, `backend/test/admin/admin.service.sandbox.spec.ts`, `backend/test/communications/communications.service.spec.ts`, `backend/test/runtime/app.controller.spec.ts`, Admin binary/messages/users/navigation source, and `frontend/app/state/public-navigation.ts` plus Public navigation components. Last verified source checks: backend 51/51 focused tests and typecheck PASS; SQLite 19/19 PASS; Public 6/6 chart tests and typecheck PASS; Admin typecheck PASS. Re-run checks invalidated by any later source edits before commit.

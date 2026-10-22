@@ -231,6 +231,14 @@ Authority: direct VPS `main` at `5a8d8d7606538e8c322641c0137c5596ab925289`. Reco
 
 # NEXI Proof Reuse Register
 
+## 2026-10-22 — Live release gate and current Sentry
+
+- **RUNTIME_OBSERVED:** `nexi-admin.service`, `nexi-public.service`, and `nexi-api.service` active; each reported zero restarts. Admin marker/env release `e2f7a65ea4ac870c6ea1ff6e299502430ecf5570`; Public `.next/BUILD_ID` `db802761a97eee1b9739e146a8cf95d2cd83bed8`; API process entry `/srv/nexi/backend/dist/src/main.js`, env `SENTRY_RELEASE=a6b5c8535d4384d309b05f2102846a8717319acf`; HTTPS roots returned 307 and API `/readyz` returned 200. Backend compiled artifact SHA is not independently marked.
+- **INTEGRATION_GAP:** production API GET `/public/config/quotes-categories`, `/public/config/localization`, and `/public/config/navigation` each returned 404. These source endpoints are not deployed.
+- **DATABASE_READ_ONLY:** `/var/lib/nexi/sqlite/nexi-staging.sqlite` was queried via SQLite read-only/query-only mode. The Binary research-control columns are absent from `User` and `Gate2BinaryPosition`; no `0017_binary_research_controls` row exists in `d1_migrations`. Database size observed 11.7 GB with WAL/SHM present. No production mutation occurred.
+- **SENTRY:** release searches for Admin `e2f7a65...` and Public `db802761...` returned no issues. Backend `a6b5c853...` has unresolved NEXI-17 (2 events, last seen 2026-10-21 04:39 UTC) and NEXI-15 (2 events). NEXI-17's malformed Mining SQL was repaired in source commit `a8b32ec4738902f74ea2fbd16ec26f1cdeba83e9`; targeted `NODE_OPTIONS=--experimental-vm-modules ./node_modules/.bin/jest --runInBand test/d1/d1-financial-command.gateway.spec.ts` passed 52/52. The fix is not deployed.
+- **RELEASE_BLOCKED:** the source requires backend and Public releases before Admin can provide working Public settings; the Binary migration is absent. Existing explicit production authorization is Admin-only and does not cover backend/Public deployment or production migration. No build/restart/deploy performed. Free disk was 2.0 GiB. The requested ChatGPT Work browser was not in the current tool surface; no browser acceptance occurred. Admin SENTRY_AUTH_TOKEN is not configured, so new source maps cannot be uploaded by the current environment.
+
 ## 2026-10-22 — Quotes last-visible-category closure
 
 - **SOURCE_INTEGRATED:** commit `24cf931ced0535a6793253a8bf53e87bdaeff34f` is pushed to `main`. Changed: `Admin/src/routes/frontend-control.tsx`, `backend/src/admin/admin.service.ts`, `backend/test/integration/public-settings.integration.spec.ts`, `backend/test/runtime/app.controller.spec.ts`, `frontend/app/state/public-settings.test.mjs`.

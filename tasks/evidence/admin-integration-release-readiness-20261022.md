@@ -2,6 +2,15 @@
 
 **State:** source-only verification and release preparation. This record is not deployment or browser acceptance authorization.
 
+## Live deployment inspection — 2026-10-22
+
+- Admin: active, zero restarts, `/srv/nexi/admin/current/NEXI_RELEASE_SHA` and `/etc/nexi/admin.env` agree on `e2f7a65ea4ac870c6ea1ff6e299502430ecf5570`; HTTPS root 307. Rollback archive checksum remains `300795ebdda9d09bdca7d17a8197c53f75a00a7144982921cdc2148c0e0c2632`.
+- Public: active, zero restarts, `/srv/nexi/public/current/.next/BUILD_ID` is `db802761a97eee1b9739e146a8cf95d2cd83bed8`; HTTPS root 307. Public `env` file was not readable to this session; no secret values were printed.
+- API: active, zero restarts, process runs `/srv/nexi/backend/dist/src/main.js`, `/readyz` 200, configured `SENTRY_RELEASE=a6b5c8535d4384d309b05f2102846a8717319acf`. No independent deployed-source marker was found. Production API returned 404 for Public Quotes categories, localization and navigation.
+- Read-only schema check on promoted `/var/lib/nexi/sqlite/nexi-staging.sqlite` (11.7 GB) found no Binary research-control columns and no migration 0017 history row. No write/migration was attempted.
+- Current Sentry search: Admin release `e2f7a65...` and Public `db802761...` had no matching issues. Backend release `a6b5c853...` has NEXI-17 (malformed Mining SQL, 2 events; last seen 2026-10-21 04:39 UTC) and NEXI-15 (market data unavailable, 2 events). NEXI-17 is fixed in source `a8b32ec4738902f74ea2fbd16ec26f1cdeba83e9`; its focused gateway suite passed 52/52, but the fix is not deployed.
+- No release build/deployment was started: production integration depends on missing backend/Public endpoints and Binary schema migration, while only Admin deployment is currently authorized. Disk had 2.0 GiB free (96% used); Admin SENTRY_AUTH_TOKEN is absent; requested ChatGPT Work browser controls are unavailable in this session. Nginx CLI/config target was unavailable (`nginx` not installed; `sites-enabled` empty), although the public HTTPS probes responded.
+
 ## Source and deployed identities
 
 - Source at this task's intake: `c5ad539568700fe1ed786ae2ef75e9fa0dcc0baa` (`main`, equal to `origin/main`). Quotes last-visible-category source fix: `24cf931ced0535a6793253a8bf53e87bdaeff34f`, pushed to GitHub `main`.
