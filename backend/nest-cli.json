@@ -3,6 +3,7 @@
   "sourceRoot": "src",
   "compilerOptions": {
     "deleteOutDir": true,
+    "assets": ["prisma/d1-client/**/*"],
     "plugins": [
       {
         "name": "@nestjs/swagger/plugin",
