@@ -1,5 +1,9 @@
 ## Live Admin/Public integration gate — 2026-10-22
 
+### Migration readiness source update — 2026-10-22
+
+Source commit `0c92f90a4b0a8824369de26b184eae3574a23f89` adds a guarded runner for Binary research migration 0017 and temporary-SQLite tests. The runner is dry-run/read-only by default, requires explicit `--apply` plus quiesced-and-backed-up acknowledgment, uses `BEGIN IMMEDIATE`, accepts only absent or complete matching schema, rejects partial/incompatible schema, verifies post-migration columns, and is idempotent for an already-applied schema. Its focused suite passed 6/6 on 2026-10-22. The source commit is pushed to GitHub `main`; no promoted database was opened or mutated by the runner or tests. This is migration preparation, not proof that migration 0017 is deployed. Existing coordinated Backend/Public/Admin authorization and production migration/backup gates remain unresolved.
+
 ### Source frontier update — 2026-10-22
 
 GitHub `main` contains the focused Public Settings source batch at `f2777b150f8643fcd7ff09268b11eff9a4322ef6` (local `HEAD`, `origin/main`, and remote `main` matched; worktree clean at verification). It adds allowlisted NestJS route/banner validation and reads, Admin banner ordering, and Public route-state/navigation and scoped-banner consumers. Focused tests and backend/Admin/Public typechecks plus the Nest build passed; changed Public lint passed. No Admin or Public production build, migration, restart, deployment, browser acceptance, or production database write occurred. Generic feature flags remain unexposed pending an approved named consumer contract. Release still needs current authorization for coordinated Backend/Public deployment and the unapplied Binary migration; do not deploy Admin alone.

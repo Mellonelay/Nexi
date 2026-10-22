@@ -33,6 +33,12 @@
 
 ## Binary SQLite migration gate
 
+### Guarded source runner — 2026-10-22
+
+- Commit `0c92f90a4b0a8824369de26b184eae3574a23f89` adds `backend/scripts/binary_research_controls_migrate.py`. It defaults to read-only dry-run; apply requires both `--apply` and `--acknowledge-quiesced-and-backed-up`, takes `BEGIN IMMEDIATE`, validates absent-or-complete matching schema, rejects partial/incompatible columns, verifies the resulting schema, and treats a matching applied schema as a no-op.
+- Focused tests passed 6/6 against temporary SQLite databases. They cover dry-run nonmutation, the acknowledgment guard, expected defaults and existing-row reads, idempotent rerun preserving operator values, partial-schema rejection, and rollback after injected DDL failure.
+- The runner has **not** been invoked on the promoted database. This does not satisfy backup, migration-history, production authorization, or deployment gates; no production DB was modified.
+
 - `backend/prisma/migrations-d1/0017_binary_research_controls.sql` adds `User.binaryResearchDefault` (`NORMAL`), `Gate2BinaryPosition.researchDefault` (`NORMAL`), nullable `researchOverride`, and `researchControlVersion` (`0`). Those fields are present in `backend/prisma/schema.d1.prisma` and the generated Prisma client; the installed Prisma client and CLI are both 7.3.0.
 - The migration was exercised against disposable in-memory SQLite: it applied to pre-change `User` and `Gate2BinaryPosition` tables and produced the expected defaults/nullability. Reapplying it failed with `duplicate column name: binaryResearchDefault`; it is a one-shot migration and must not be blindly retried.
 - Existing position indexes cover `(userId,state,createdAt)` and `(pair,state,createdAt)`; the migration adds no queried/indexed field that requires a new index. Existing unique `(userId,idempotencyKey)` and source version comparisons/settlement fencing remain in place; prior P2 focused tests are reused because those sources are unchanged.

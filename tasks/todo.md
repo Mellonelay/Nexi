@@ -753,3 +753,9 @@ Receipt: `tasks/evidence/market-provider-runtime-20261017.md`.
 - [x] Focused checks: backend controller 10/10; disposable SQLite persistence/readback integration 4/4; Public state tests 7/7; Admin provider reorder 2/2; backend/Admin/Public TypeScript and Nest build pass; changed Public ESLint passes. Admin focused lint has only three baseline `no-explicit-any` diagnostics in `jsonRecordValue`. Graphify topology refreshed and checked; Fallow reports no unresolved imports/cycles/boundary violations but includes baseline workspace findings.
 - [ ] Public feature flags remain unintegrated because no named public-safe flag/value/consumer contract is defined. This is excluded, not a source defect.
 - [ ] These source changes are not deployed or browser-verified. Production release still needs coordinated Backend/Public/Admin authorization and the unapplied Binary migration decision.
+
+#### Binary migration preparation — 2026-10-22
+
+- [x] Added/pushed dry-run-first, transaction-guarded migration runner at `backend/scripts/binary_research_controls_migrate.py` (`0c92f90a4b0a8824369de26b184eae3574a23f89`) and disposable-SQLite tests at `backend/test/scripts/test_binary_research_controls_migrate.py`.
+- [x] Focused migration tests rerun: 6/6 passed, including idempotency, fail-closed partial schema, and rollback on injected SQL failure.
+- [ ] Production SQLite remains unmodified; migration status must be refreshed and backup/quiescence plus current authorization verified before use. No deploy, service restart, or browser acceptance occurred.

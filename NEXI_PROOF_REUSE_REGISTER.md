@@ -452,3 +452,8 @@ Canonical source paths are frontend/, Admin/, and backend/ in the sole main chec
 - **RELEASE_BLOCKED:** Existing production authorization is scoped to Admin. The integrated release also requires Backend/Public deployment and the unapplied Binary migration; current authorization does not cover those operations. Do not deploy Admin alone while its Public dependencies return 404. No production build, migration, restart, deployment, browser acceptance, or owner acceptance is claimed. Authenticated ChatGPT Work browser control is not available in this session.
 
 ---
+# 2026-10-22 — Guarded Binary research migration runner
+
+- **SOURCE_IMPLEMENTED / INTEGRATED:** `0c92f90a4b0a8824369de26b184eae3574a23f89` adds `backend/scripts/binary_research_controls_migrate.py` and `backend/test/scripts/test_binary_research_controls_migrate.py`; pushed to GitHub `main`.
+- **TESTED:** Focused disposable-SQLite suite rerun 6/6 passed. It covers read-only dry-run, explicit apply acknowledgment, additive defaults for existing rows, already-applied idempotency preserving operator values, fail-closed partial schema, and rollback after injected SQL failure. Python compilation also passed in the implementation checkpoint.
+- **NOT PROVEN:** The script was not run against promoted SQLite. No production migration, backup, service stop, deployment, runtime, Sentry, or browser action occurred. Existing read-only evidence says migration 0017 is absent; verify again and follow protected backup/quiescence procedure only under current authorization.
