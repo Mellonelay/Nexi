@@ -30,7 +30,7 @@ export default function BottomNav() {
   const { t } = useLocale();
   const configuredTargets = usePublicNavigation("bottom", navTargets);
   const configuredItems = configuredTargets.flatMap((target) =>
-    navItems.filter((item) => item.href === target),
+    navItems.filter((item) => item.href === target.target).map((item) => ({ ...item, ...target })),
   );
 
   return (
@@ -41,6 +41,7 @@ export default function BottomNav() {
       <div className="nexi-bottom-nav mx-auto grid h-[60px] max-w-[420px] grid-cols-5 items-center rounded-[18px] border px-1">
         {configuredItems.map((item) => {
           const Icon = item.icon;
+          const disabled = item.state === "maintenance";
           const active =
             pathname === item.href ||
             (item.href !== "/dashboard" &&
@@ -49,8 +50,14 @@ export default function BottomNav() {
             <Link
               key={item.href}
               href={item.href}
+              aria-disabled={disabled || undefined}
               aria-current={active ? "page" : undefined}
-              className={`nexi-interactive relative flex min-h-[44px] flex-col items-center justify-center gap-0.5 rounded-[12px] px-1 text-[10px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)] ${active ? "text-violet-300" : "text-[var(--nexi-text-secondary)] hover:bg-white/[0.03] hover:text-white"}`}
+              aria-label={disabled ? `${item.label ?? t(item.key as Parameters<typeof t>[0])} — ${item.unavailableMessage}` : undefined}
+              title={disabled ? item.unavailableMessage : undefined}
+              onClick={(event) => {
+                if (disabled) event.preventDefault();
+              }}
+              className={`nexi-interactive relative flex min-h-[44px] flex-col items-center justify-center gap-0.5 rounded-[12px] px-1 text-[10px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)] ${disabled ? "cursor-not-allowed opacity-55" : ""} ${active ? "text-violet-300" : "text-[var(--nexi-text-secondary)] hover:bg-white/[0.03] hover:text-white"}`}
             >
               {active && (
                 <span

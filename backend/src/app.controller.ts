@@ -4,6 +4,7 @@ import { AppService } from "./app.service";
 import { MarketAuthorityService } from "./market/market-authority.service";
 import { ReadinessService } from "./observability/readiness.service";
 import { D1PrismaService } from "./d1/d1-prisma.service";
+import { normalizePublicBanners, normalizePublicRouteSettings } from "./admin/public-ui-config";
 
 const PUBLIC_NAVIGATION_TARGETS = new Set([
   "/dashboard",
@@ -118,6 +119,36 @@ export class AppController {
     } catch {
       return null;
     }
+  }
+
+  @Get("public/config/routes")
+  async getPublicRouteSettings() {
+    const row = await this.prisma?.systemConfig.findUnique({
+      where: { key: "admin.frontend.routes" },
+      select: { value: true },
+    });
+    let value: unknown;
+    try {
+      value = row ? JSON.parse(row.value) : null;
+    } catch {
+      value = null;
+    }
+    return normalizePublicRouteSettings(value);
+  }
+
+  @Get("public/config/banners")
+  async getPublicBanners() {
+    const row = await this.prisma?.systemConfig.findUnique({
+      where: { key: "admin.frontend.banners" },
+      select: { value: true },
+    });
+    let value: unknown;
+    try {
+      value = row ? JSON.parse(row.value) : null;
+    } catch {
+      value = null;
+    }
+    return normalizePublicBanners(value);
   }
 
   @Get("public/config/quotes-categories")

@@ -506,21 +506,40 @@ function BannersPanel({
   const provider = useAdminData();
   const session = useAdminSession();
   const canEdit = session.can("frontend.edit");
+  const [sortedBanners, setSortedBanners] = useState(banners);
   const [pending, setPending] = useState<
     { kind: "banner"; row: PublicBanner } | { kind: "incident"; row: IncidentMessage } | null
   >(null);
+
+  useEffect(() => setSortedBanners(banners), [banners]);
+
+  async function moveBanner(id: string, direction: -1 | 1) {
+    const index = sortedBanners.findIndex((banner) => banner.id === id);
+    const other = sortedBanners[index + direction];
+    if (!other) return;
+    const order = sortedBanners.map((banner) => banner.id);
+    [order[index], order[index + direction]] = [order[index + direction], order[index]];
+    await provider.reorderBanners(order, {
+      actor: session.actorName,
+      role: session.roleId,
+      environment: session.environment,
+      reason: `Reordered banner ${id}`,
+    });
+    setSortedBanners(
+      order.map((bannerId) => sortedBanners.find((banner) => banner.id === bannerId)!),
+    );
+    toast.success("Banner order updated");
+  }
 
   const bColumns: DataTableColumn<PublicBanner>[] = [
     {
       key: "scope",
       header: "Scope",
-      sortValue: (b) => b.scope,
       cell: (b) => <span className="mono text-xs">{b.scope}</span>,
     },
     {
       key: "severity",
       header: "Severity",
-      sortValue: (b) => b.severity,
       cell: (b) => <StatusBadge tone={sevTone(b.severity)}>{b.severity}</StatusBadge>,
     },
     {
@@ -584,19 +603,42 @@ function BannersPanel({
           Banners
         </h3>
         <DataTable
-          data={banners}
+          data={sortedBanners}
           columns={bColumns}
           rowKey={(b) => b.id}
+          pageSize={50}
           rowActions={(b) => (
-            <Button
-              variant={b.active ? "destructive" : "default"}
-              size="sm"
-              data-testid={`banner-toggle-${b.id}`}
-              disabled={!canEdit}
-              onClick={() => setPending({ kind: "banner", row: b })}
-            >
-              {b.active ? "Deactivate" : "Activate"}
-            </Button>
+            <div className="flex justify-end gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={`Move ${b.message} up`}
+                data-testid={`banner-up-${b.id}`}
+                disabled={!canEdit || sortedBanners[0]?.id === b.id}
+                onClick={() => moveBanner(b.id, -1)}
+              >
+                <ArrowUp className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={`Move ${b.message} down`}
+                data-testid={`banner-down-${b.id}`}
+                disabled={!canEdit || sortedBanners[sortedBanners.length - 1]?.id === b.id}
+                onClick={() => moveBanner(b.id, 1)}
+              >
+                <ArrowDown className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant={b.active ? "destructive" : "default"}
+                size="sm"
+                data-testid={`banner-toggle-${b.id}`}
+                disabled={!canEdit}
+                onClick={() => setPending({ kind: "banner", row: b })}
+              >
+                {b.active ? "Deactivate" : "Activate"}
+              </Button>
+            </div>
           )}
         />
       </div>
@@ -655,7 +697,18 @@ function BannersPanel({
               reason,
             })
           }
-          onSuccess={() => setPending(null)}
+          onSuccess={() => {
+            if (pending.kind === "banner") {
+              setSortedBanners((current) =>
+                current.map((banner) =>
+                  banner.id === pending.row.id
+                    ? { ...banner, active: !pending.row.active }
+                    : banner,
+                ),
+              );
+            }
+            setPending(null);
+          }}
         />
       ) : null}
 

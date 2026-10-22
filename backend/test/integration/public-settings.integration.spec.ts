@@ -147,4 +147,76 @@ describe("Admin Public settings SQLite readback", () => {
     ]);
     await expect(prisma.adminAuditLog.count({ where: { target: "admin.localization.translations" } })).resolves.toBe(1);
   });
+
+  it("persists allowlisted route states and banners for Public readback", async () => {
+    await prisma.$connect();
+    const gateway = new D1FinancialCommandGateway(bridge as never);
+    const admin = Object.assign(Object.create(AdminService.prototype), { d1: gateway }) as AdminService;
+    const definitions = [
+      ["dashboard", "/dashboard", "Dashboard"],
+      ["spot", "/dashboard/spot", "Spot/Margin"],
+      ["binary", "/dashboard/binary", "Options"],
+      ["wallet", "/dashboard/wallet", "Wallet"],
+      ["mining", "/dashboard/mining", "Earn"],
+      ["loans", "/dashboard/loans", "Loans"],
+      ["messages", "/dashboard/messages", "Messages"],
+      ["announcements", "/dashboard/announcement", "Announcements"],
+      ["learn", "/dashboard/learn", "Learn"],
+      ["support", "/dashboard/support", "Support"],
+      ["settings", "/dashboard/settings", "Settings"],
+    ];
+    const routes = definitions.map(([id, path, label], index) => ({
+      id,
+      path,
+      label,
+      state: id === "wallet" ? "maintenance" : "public",
+      unavailableMessage: id === "wallet" ? "Wallet maintenance" : undefined,
+      order: index + 1,
+    }));
+    await admin.updateSystemConfig(
+      "admin.frontend.routes",
+      JSON.stringify(routes),
+      "Public route states",
+      "operator test",
+      "admin-test",
+    );
+    await expect(admin.updateSystemConfig(
+      "admin.frontend.routes",
+      JSON.stringify([...routes, { id: "external", path: "/admin", label: "Admin", state: "hidden", order: 12 }]),
+      "Public route states",
+      "invalid route test",
+      "admin-test",
+    )).rejects.toThrow();
+
+    const banners = [
+      { id: "spot-notice", message: "Spot maintenance", severity: "warning", active: true, scope: "spot" },
+      { id: "global-notice", message: "Service update", severity: "info", active: true, scope: "global" },
+      { id: "disabled-notice", message: "Hidden notice", severity: "critical", active: false, scope: "global" },
+    ];
+    await admin.updateSystemConfig(
+      "admin.frontend.banners",
+      JSON.stringify(banners),
+      "Public banners",
+      "operator test",
+      "admin-test",
+    );
+    await expect(admin.updateSystemConfig(
+      "admin.frontend.banners",
+      JSON.stringify([{ ...banners[0], scope: "internal" }]),
+      "Public banners",
+      "reject unsupported banner scope",
+      "admin-test",
+    )).rejects.toThrow();
+
+    const controller = new AppController({} as never, {} as never, prisma);
+    await expect(controller.getPublicRouteSettings()).resolves.toEqual(
+      routes.map(({ id, path, state, unavailableMessage, order }) => ({ id, path, state, unavailableMessage, order })),
+    );
+    await expect(controller.getPublicBanners()).resolves.toEqual([
+      { id: "spot-notice", message: "Spot maintenance", severity: "warning", scope: "spot", active: true },
+      { id: "global-notice", message: "Service update", severity: "info", scope: "global", active: true },
+    ]);
+    await expect(prisma.adminAuditLog.count({ where: { target: "admin.frontend.routes" } })).resolves.toBe(1);
+    await expect(prisma.adminAuditLog.count({ where: { target: "admin.frontend.banners" } })).resolves.toBe(1);
+  });
 });

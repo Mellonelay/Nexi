@@ -72,7 +72,8 @@ export default function NavigationDrawer({
   const pathname = usePathname();
   const { locale, setLocale, languages, t } = useLocale();
   const configuredTargets = usePublicNavigation("drawer", drawerTargets);
-  const navOrder = new Map(configuredTargets.map((target, index) => [target, index]));
+  const navOrder = new Map(configuredTargets.map(({ target }, index) => [target, index]));
+  const routeStateByTarget = new Map(configuredTargets.map((item) => [item.target, item]));
   const orderedGroups = groups
     .map((group) => ({
       ...group,
@@ -194,15 +195,22 @@ export default function NavigationDrawer({
                         {t(group.titleKey)}
                       </p>
                       <div className="space-y-1">
-                        {group.items.map(({ key, href, icon: Icon }) => (
+                        {group.items.map(({ key, href, icon: Icon }) => {
+                          const routeState = routeStateByTarget.get(href);
+                          const disabled = routeState?.state === "maintenance";
+                          return (
                           <Link
                             key={href}
                             href={href}
-                            onClick={close}
-                            aria-current={
-                              isActive(pathname, href) ? "page" : undefined
-                            }
-                            className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm ${isActive(pathname, href) ? "border border-violet-300/25 bg-[#2A1742] text-white" : "text-[#C3BBD0] hover:bg-white/5 hover:text-white"}`}
+                            onClick={(event) => {
+                              if (disabled) event.preventDefault();
+                              else close();
+                            }}
+                            aria-disabled={disabled || undefined}
+                            aria-label={disabled ? `${t(key)} — ${routeState?.unavailableMessage}` : undefined}
+                            aria-current={isActive(pathname, href) ? "page" : undefined}
+                            title={disabled ? routeState?.unavailableMessage : undefined}
+                            className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm ${disabled ? "cursor-not-allowed opacity-55" : ""} ${isActive(pathname, href) ? "border border-violet-300/25 bg-[#2A1742] text-white" : "text-[#C3BBD0] hover:bg-white/5 hover:text-white"}`}
                           >
                             <Icon
                               className="h-4 w-4 text-[#A995FF]"
@@ -210,7 +218,8 @@ export default function NavigationDrawer({
                             />
                             {t(key)}
                           </Link>
-                        ))}
+                          );
+                        })}
                         {group.titleKey === "accountSystem" && (
                           <button
                             type="button"

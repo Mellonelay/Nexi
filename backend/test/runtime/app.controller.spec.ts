@@ -117,6 +117,93 @@ describe("AppController runtime probes", () => {
     });
   });
 
+  it("applies configured Public route states only to known dashboard paths", async () => {
+    const controller = new AppController(
+      { getHello: jest.fn() } as any,
+      {} as ReadinessService,
+      {
+        systemConfig: {
+          findUnique: jest.fn().mockResolvedValue({
+            value: JSON.stringify([
+              {
+                id: "wallet",
+                path: "/dashboard/wallet",
+                state: "maintenance",
+                unavailableMessage: "Wallet maintenance",
+                order: 4,
+              },
+              {
+                id: "external",
+                path: "/admin",
+                state: "hidden",
+                unavailableMessage: "Private",
+                order: 0,
+              },
+              {
+                id: "spot",
+                path: "/dashboard/spot",
+                state: "unknown",
+                order: 2,
+              },
+            ]),
+          }),
+        },
+      } as any,
+    );
+
+    const routes = await controller.getPublicRouteSettings();
+    expect(routes.find((route) => route.id === "wallet")).toEqual({
+      id: "wallet",
+      path: "/dashboard/wallet",
+      state: "maintenance",
+      unavailableMessage: "Wallet maintenance",
+      order: 4,
+    });
+    expect(routes.find((route) => route.id === "spot")?.state).toBe("public");
+    expect(routes).toHaveLength(11);
+    expect(routes.some((route) => route.id === "external")).toBe(false);
+  });
+
+  it("serves only active, current, allowlisted Public banners in saved order", async () => {
+    const controller = new AppController(
+      { getHello: jest.fn() } as any,
+      {} as ReadinessService,
+      {
+        systemConfig: {
+          findUnique: jest.fn().mockResolvedValue({
+            value: JSON.stringify([
+              { id: "first", message: "Market notice", severity: "warning", active: true, scope: "spot" },
+              { id: "expired", message: "Old notice", severity: "info", active: true, scope: "global", endsAt: "2020-01-01T00:00:00.000Z" },
+              { id: "internal", message: "Do not expose", severity: "critical", active: true, scope: "admin" },
+              { id: "inactive", message: "Disabled", severity: "info", active: false, scope: "global" },
+            ]),
+          }),
+        },
+      } as any,
+    );
+
+    await expect(controller.getPublicBanners()).resolves.toEqual([
+      { id: "first", message: "Market notice", severity: "warning", scope: "spot", active: true },
+    ]);
+  });
+
+  it("uses an empty Public banner list for missing or malformed configuration", async () => {
+    const controller = new AppController(
+      { getHello: jest.fn() } as any,
+      {} as ReadinessService,
+      {
+        systemConfig: {
+          findUnique: jest.fn()
+            .mockResolvedValueOnce(null)
+            .mockResolvedValueOnce({ value: "{" }),
+        },
+      } as any,
+    );
+
+    await expect(controller.getPublicBanners()).resolves.toEqual([]);
+    await expect(controller.getPublicBanners()).resolves.toEqual([]);
+  });
+
   it("returns selected Quotes categories and uses defaults for absent, malformed, or fully hidden config", async () => {
     const prisma = {
       systemConfig: {

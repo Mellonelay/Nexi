@@ -1,6 +1,8 @@
 import Sidebar from "../components/Sidebar";
 import BottomNav from "../components/BottomNav";
 import AppHeader from "../components/AppHeader";
+import PublicBanners from "../components/PublicBanners";
+import PublicRouteGate from "../components/PublicRouteGate";
 import { Suspense } from "react";
 import { RouteHistoryTracker } from "../components/SafeBackButton";
 
@@ -19,7 +21,10 @@ export default function DashboardLayout({
       </div>
       <main className="min-h-0 min-w-0 flex flex-1 flex-col overflow-x-clip overflow-y-auto">
         <AppHeader />
-        <div className="min-h-0 w-full min-w-0 flex-1">{children}</div>
+        <PublicRouteGate>
+          <PublicBanners />
+          <div className="min-h-0 w-full min-w-0 flex-1">{children}</div>
+        </PublicRouteGate>
       </main>
       <BottomNav />
     </div>

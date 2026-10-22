@@ -54,6 +54,7 @@ import type {
   SupportEntryPoint,
   TranslationKey,
 } from "../types";
+import { reorderByIds } from "./banner-order";
 
 type ApiConfig = { baseUrl: string; getToken: () => Promise<string> };
 type JsonRecord = Record<string, unknown>;
@@ -82,6 +83,26 @@ const DEFAULT_NAV_ITEMS: NavItem[] = [
   surface: surface as NavItem["surface"],
   audience: "authenticated",
   visible: true,
+  order: index + 1,
+}));
+
+const DEFAULT_PUBLIC_ROUTES: PublicRoute[] = [
+  ["dashboard", "/dashboard", "Dashboard"],
+  ["spot", "/dashboard/spot", "Spot/Margin"],
+  ["binary", "/dashboard/binary", "Options"],
+  ["wallet", "/dashboard/wallet", "Wallet"],
+  ["mining", "/dashboard/mining", "Earn"],
+  ["loans", "/dashboard/loans", "Loans"],
+  ["messages", "/dashboard/messages", "Messages"],
+  ["announcements", "/dashboard/announcement", "Announcements"],
+  ["learn", "/dashboard/learn", "Learn"],
+  ["support", "/dashboard/support", "Support"],
+  ["settings", "/dashboard/settings", "Settings"],
+].map(([id, path, label], index) => ({
+  id,
+  path,
+  label,
+  state: "public" as const,
   order: index + 1,
 }));
 
@@ -1660,8 +1681,42 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     });
     return [...spot, ...binary];
   }
-  listPublicRoutes(): Promise<PublicRoute[]> {
-    return this.readJsonConfig<PublicRoute[]>("admin.frontend.routes", []);
+  async listPublicRoutes(): Promise<PublicRoute[]> {
+    const configured = await this.readJsonConfig<unknown>("admin.frontend.routes", []);
+    const entries = Array.isArray(configured) ? configured : [];
+    const byId = new Map<string, Record<string, unknown>>();
+    for (const entry of entries) {
+      if (
+        typeof entry === "object" &&
+        entry !== null &&
+        typeof (entry as Record<string, unknown>).id === "string"
+      ) {
+        byId.set((entry as Record<string, unknown>).id as string, entry as Record<string, unknown>);
+      }
+    }
+    return DEFAULT_PUBLIC_ROUTES.map((route) => {
+      const item = byId.get(route.id);
+      if (
+        !item ||
+        item.path !== route.path ||
+        !["public", "authenticated", "hidden", "maintenance"].includes(String(item.state))
+      )
+        return { ...route };
+      const state = item.state as PublicRoute["state"];
+      const unavailableMessage = item.unavailableMessage;
+      return {
+        ...route,
+        state,
+        order:
+          typeof item.order === "number" && Number.isSafeInteger(item.order) && item.order > 0
+            ? item.order
+            : route.order,
+        unavailableMessage:
+          (state === "hidden" || state === "maintenance") && typeof unavailableMessage === "string"
+            ? unavailableMessage
+            : undefined,
+      };
+    });
   }
   async setPublicRouteState(
     id: string,
@@ -1721,6 +1776,16 @@ export class NexiAdminApiProvider implements AdminDataProvider {
   }
   listBanners(): Promise<PublicBanner[]> {
     return this.readJsonConfig<PublicBanner[]>("admin.frontend.banners", []);
+  }
+  async reorderBanners(order: string[], ctx: ConsequentialContext): Promise<MutationResult> {
+    const banners = reorderByIds(await this.listBanners(), order);
+    if (!banners) {
+      throw new NexiAdminApiError(
+        400,
+        "Banner order must include every configured banner exactly once",
+      );
+    }
+    return this.writeJsonConfig("admin.frontend.banners", banners, "Public banner ordering", ctx);
   }
   async setBannerActive(
     id: string,

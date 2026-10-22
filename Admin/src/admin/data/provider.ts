@@ -273,6 +273,7 @@ export interface AdminDataProvider {
   ): Promise<MutationResult>;
 
   listBanners(): Promise<PublicBanner[]>;
+  reorderBanners(order: string[], ctx: ConsequentialContext): Promise<MutationResult>;
   setBannerActive(id: string, active: boolean, ctx: ConsequentialContext): Promise<MutationResult>;
   upsertBanner(banner: PublicBanner, ctx: ConsequentialContext): Promise<MutationResult>;
 
