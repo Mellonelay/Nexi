@@ -66,6 +66,76 @@
         ]
       }
     },
+    "/public/config/navigation": {
+      "get": {
+        "operationId": "AppController_getPublicNavigation",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Application"
+        ]
+      }
+    },
+    "/public/config/routes": {
+      "get": {
+        "operationId": "AppController_getPublicRouteSettings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Application"
+        ]
+      }
+    },
+    "/public/config/banners": {
+      "get": {
+        "operationId": "AppController_getPublicBanners",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Application"
+        ]
+      }
+    },
+    "/public/config/quotes-categories": {
+      "get": {
+        "operationId": "AppController_getPublicQuotesCategories",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Application"
+        ]
+      }
+    },
+    "/public/config/localization": {
+      "get": {
+        "operationId": "AppController_getPublicLocalization",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Application"
+        ]
+      }
+    },
     "/healthz": {
       "get": {
         "operationId": "AppController_getLiveness",
@@ -2683,6 +2753,30 @@
         ]
       }
     },
+    "/admin/messages": {
+      "post": {
+        "operationId": "AdminController_sendAdminMessage",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminSendMessageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
     "/admin/roles": {
       "get": {
         "operationId": "AdminController_listAdminRoleDefinitions",
@@ -3301,6 +3395,72 @@
       "get": {
         "operationId": "AdminController_getUsers",
         "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/users/{id}/binary-research-default": {
+      "patch": {
+        "operationId": "AdminController_setBinaryResearchDefault",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BinaryResearchDefaultDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/binary/positions/{id}/research-control": {
+      "patch": {
+        "operationId": "AdminController_setBinaryResearchPositionOverride",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BinaryResearchPositionDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": ""
@@ -5923,6 +6083,10 @@
         "type": "object",
         "properties": {}
       },
+      "AdminSendMessageDto": {
+        "type": "object",
+        "properties": {}
+      },
       "AdminIncidentAcknowledgeDto": {
         "type": "object",
         "properties": {}
@@ -5964,6 +6128,14 @@
         "properties": {}
       },
       "SandboxControlDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "BinaryResearchDefaultDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "BinaryResearchPositionDto": {
         "type": "object",
         "properties": {}
       },
