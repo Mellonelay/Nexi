@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/admin/components/PageHeader";
 import { RouteGuard } from "@/admin/components/RouteGuard";
 import { StatusBadge } from "@/admin/components/StatusBadge";
@@ -9,6 +9,7 @@ import { DataTable, type DataTableColumn } from "@/admin/components/DataTable";
 import { useAdminData, useAdminQuery } from "@/admin/data/context";
 import { useAdminSession } from "@/admin/session/session";
 import type { AdminMessage, MessageModerationCase } from "@/admin/types";
+import { groupAdminMessageConversations } from "@/admin/data/message-conversations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -25,6 +26,8 @@ function Page() {
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [recipientId, setRecipientId] = useState("");
+  const [conversationSearch, setConversationSearch] = useState("");
+  const [conversationStatus, setConversationStatus] = useState<"all" | "unread">("all");
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -91,6 +94,28 @@ function Page() {
           (message.recipientId === session.actorId && message.senderId === recipientId)),
     )
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+
+  const conversations = useMemo(
+    () => groupAdminMessageConversations(messages.data ?? [], session.actorId ?? ""),
+    [messages.data, session.actorId],
+  );
+  const visibleConversations = conversations.filter((conversation) => {
+    if (conversationStatus === "unread" && conversation.unreadCount === 0) return false;
+    const client = (users.data ?? []).find((user) => user.id === conversation.clientId);
+    const query = conversationSearch.trim().toLowerCase();
+    return (
+      !query ||
+      `${client?.displayName ?? ""} ${client?.email ?? ""} ${conversation.clientId}`
+        .toLowerCase()
+        .includes(query)
+    );
+  });
+  const selectedClient = (users.data ?? []).find((user) => user.id === recipientId);
+  const selectedClientLabel = selectedClient?.displayName || selectedClient?.email || recipientId;
+
+  useEffect(() => {
+    if (!recipientId && conversations.length) setRecipientId(conversations[0].clientId);
+  }, [conversations, recipientId]);
 
   const openThread = async (id: string) => {
     setRecipientId(id);
@@ -222,24 +247,104 @@ function Page() {
           description="Observe durable conversations and resolve user-reported moderation cases."
           badges={<ProviderBadge />}
         />
-        <Input
-          value={reason}
-          onChange={(event) => setReason(event.target.value)}
-          placeholder="Audit / moderation reason"
-          aria-label="Message moderation reason"
-          disabled={busy}
-        />
+        <label className="flex max-w-2xl flex-col gap-1 text-xs text-muted-foreground">
+          Audit reason for replies or moderation actions
+          <Input
+            id="messages-audit-reason"
+            name="messages-audit-reason"
+            value={reason}
+            onChange={(event) => setReason(event.target.value)}
+            placeholder="Enter the reason for this action"
+            disabled={busy || sending}
+          />
+        </label>
         {feedback && (
           <p role="status" className="text-sm text-muted-foreground">
             {feedback}
           </p>
         )}
-        <section className="rounded-lg border border-border/60 p-4" aria-label="Admin conversation">
-          <h2 className="mb-3 text-sm font-semibold">Admin and client messages</h2>
-          <div className="grid gap-3 md:grid-cols-[minmax(12rem,0.7fr)_minmax(0,1.3fr)]">
-            <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-              Client
+        <section className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(20rem,0.8fr)]">
+          <section
+            className="min-w-0 rounded-lg border border-border/60 p-4"
+            aria-label="Message conversations"
+          >
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-sm font-semibold">Conversations</h2>
+              <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                Status
+                <select
+                  id="message-conversation-status"
+                  name="message-conversation-status"
+                  aria-label="Conversation status filter"
+                  value={conversationStatus}
+                  onChange={(event) =>
+                    setConversationStatus(event.target.value as "all" | "unread")
+                  }
+                  className="h-8 rounded-md border border-input bg-background px-2 text-sm text-foreground"
+                >
+                  <option value="all">All</option>
+                  <option value="unread">Unread</option>
+                </select>
+              </label>
+            </div>
+            <Input
+              id="message-conversation-search"
+              name="message-conversation-search"
+              value={conversationSearch}
+              onChange={(event) => setConversationSearch(event.target.value)}
+              placeholder="Search client or ID"
+              aria-label="Search message conversations"
+            />
+            <div className="mt-3 max-h-[30rem] space-y-1 overflow-auto" role="list">
+              {visibleConversations.map((conversation) => {
+                const client = (users.data ?? []).find((user) => user.id === conversation.clientId);
+                const name = client?.displayName || client?.email || conversation.clientId;
+                const selected = recipientId === conversation.clientId;
+                return (
+                  <div key={conversation.clientId} role="listitem">
+                    <button
+                      type="button"
+                      aria-current={selected ? "true" : undefined}
+                      onClick={() => void openThread(conversation.clientId)}
+                      className={`flex w-full items-start justify-between gap-3 rounded-md border-b border-border/50 p-3 text-left hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${selected ? "bg-primary/10" : ""}`}
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-medium text-foreground">
+                          {name}
+                        </span>
+                        <span className="mt-1 block truncate text-xs text-muted-foreground">
+                          {conversation.latestMessage.body}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-right">
+                        <span className="block text-[11px] text-muted-foreground">
+                          {new Date(conversation.latestMessage.createdAt).toLocaleDateString()}
+                        </span>
+                        {conversation.unreadCount ? (
+                          <StatusBadge tone="primary">
+                            {conversation.unreadCount} unread
+                          </StatusBadge>
+                        ) : (
+                          <StatusBadge tone="success">Read</StatusBadge>
+                        )}
+                      </span>
+                    </button>
+                  </div>
+                );
+              })}
+              {!visibleConversations.length ? (
+                <p className="p-3 text-sm text-muted-foreground">
+                  {conversations.length
+                    ? "No conversations match these filters."
+                    : "No conversations yet."}
+                </p>
+              ) : null}
+            </div>
+            <label className="mt-4 flex flex-col gap-1 text-xs text-muted-foreground">
+              Open or start a conversation
               <select
+                id="message-client"
+                name="message-client"
                 aria-label="Message client"
                 value={recipientId}
                 onChange={(event) => void openThread(event.target.value)}
@@ -256,10 +361,23 @@ function Page() {
                   ))}
               </select>
             </label>
-            <div
-              className="max-h-56 space-y-2 overflow-auto rounded-md bg-muted/30 p-3"
-              aria-live="polite"
-            >
+            {users.error ? (
+              <p className="mt-2 text-xs text-destructive">
+                Client list unavailable: {users.error.message}
+              </p>
+            ) : null}
+          </section>
+          <section
+            className="flex min-h-80 min-w-0 flex-col rounded-lg border border-border/60 p-4"
+            aria-label="Selected client conversation"
+          >
+            <h2 className="text-sm font-semibold">
+              {recipientId ? `Conversation · ${selectedClientLabel}` : "Select a conversation"}
+            </h2>
+            <p className="mt-1 border-b border-border/50 pb-3 text-xs text-muted-foreground">
+              Client identity · message history · delivery status
+            </p>
+            <div className="my-3 min-h-32 flex-1 space-y-2 overflow-y-auto" aria-live="polite">
               {!session.actorId ? (
                 <p className="text-sm text-muted-foreground">Admin identity is unavailable.</p>
               ) : null}
@@ -271,84 +389,97 @@ function Page() {
               {threadMessages.map((message) => (
                 <article
                   key={message.id}
-                  className="rounded-md border border-border/50 bg-background p-2 text-sm"
+                  className={`max-w-[92%] rounded-md border border-border/50 p-3 text-sm ${message.senderId === session.actorId ? "ml-auto bg-primary/10" : "bg-muted/30"}`}
                 >
                   <p className="mb-1 text-[11px] text-muted-foreground">
                     {message.senderId === session.actorId ? "You" : "Client"} ·{" "}
                     {new Date(message.createdAt).toLocaleString()}
+                    {` · ${message.deliveryState}`}
                     {message.recipientId === session.actorId && !message.readAt ? " · Unread" : ""}
                   </p>
                   <p className="whitespace-pre-wrap">{message.body}</p>
                 </article>
               ))}
             </div>
-          </div>
-          <div className="mt-3 flex flex-col gap-2">
-            <textarea
-              aria-label="Message to client"
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              rows={3}
-              maxLength={10000}
-              className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
-              placeholder="Write a message"
-              disabled={!session.can("messages.send") || sending}
-            />
-            <Button
-              className="self-start"
-              disabled={
-                !session.can("messages.send") ||
-                !recipientId ||
-                !draft.trim() ||
-                !reason.trim() ||
-                sending
-              }
-              onClick={() => void sendMessage()}
-            >
-              {sending ? "Sending…" : "Send message"}
-            </Button>
-            {users.error ? (
-              <p className="text-xs text-destructive">
-                Client list unavailable: {users.error.message}
-              </p>
-            ) : null}
-          </div>
-        </section>
-        <DataTable
-          data={moderation.data ?? []}
-          columns={moderationColumns}
-          rowKey={(item) => item.id}
-          searchable={(item) =>
-            `${item.conversationId} ${item.reporterId} ${item.reason} ${item.status}`
-          }
-          searchPlaceholder="Search moderation cases…"
-          rowActions={(item) => (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-col gap-2 border-t border-border/50 pt-3">
+              <label htmlFor="message-to-client" className="text-xs text-muted-foreground">
+                Reply to client
+              </label>
+              <textarea
+                id="message-to-client"
+                name="message-to-client"
+                aria-label="Message to client"
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                rows={3}
+                maxLength={10000}
+                className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+                placeholder="Write a message"
+                disabled={!session.can("messages.send") || sending}
+              />
               <Button
-                size="sm"
-                variant="outline"
-                disabled={busy}
-                onClick={() => void decide(item, "OPEN", "RESTRICTED")}
+                className="self-start"
+                disabled={
+                  !session.can("messages.send") ||
+                  !recipientId ||
+                  !draft.trim() ||
+                  !reason.trim() ||
+                  sending
+                }
+                onClick={() => void sendMessage()}
               >
-                Restrict
-              </Button>
-              <Button
-                size="sm"
-                disabled={busy}
-                onClick={() => void decide(item, "RESOLVED", "ACTIVE")}
-              >
-                Resolve + restore
+                {sending ? "Sending…" : "Send message"}
               </Button>
             </div>
-          )}
-        />
-        <DataTable
-          data={messages.data ?? []}
-          columns={messageColumns}
-          rowKey={(m) => m.id}
-          searchable={(m) => `${m.conversationId ?? ""} ${m.senderId} ${m.recipientId} ${m.body}`}
-          searchPlaceholder="Search messages…"
-        />
+          </section>
+        </section>
+        <details className="border-t border-border/60 pt-3">
+          <summary className="cursor-pointer text-sm font-medium">Message moderation cases</summary>
+          <div className="pt-3">
+            <DataTable
+              data={moderation.data ?? []}
+              columns={moderationColumns}
+              rowKey={(item) => item.id}
+              searchable={(item) =>
+                `${item.conversationId} ${item.reporterId} ${item.reason} ${item.status}`
+              }
+              searchPlaceholder="Search moderation cases…"
+              rowActions={(item) => (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={busy}
+                    onClick={() => void decide(item, "OPEN", "RESTRICTED")}
+                  >
+                    Restrict
+                  </Button>
+                  <Button
+                    size="sm"
+                    disabled={busy}
+                    onClick={() => void decide(item, "RESOLVED", "ACTIVE")}
+                  >
+                    Resolve + restore
+                  </Button>
+                </div>
+              )}
+            />
+          </div>
+        </details>
+        <details className="border-t border-border/60 pt-3">
+          <summary className="cursor-pointer text-sm font-medium">All message records</summary>
+          <div className="pt-3">
+            <DataTable
+              data={messages.data ?? []}
+              columns={messageColumns}
+              rowKey={(message) => message.id}
+              searchable={(message) =>
+                `${message.conversationId ?? ""} ${message.senderId} ${message.recipientId} ${message.body}`
+              }
+              searchPlaceholder="Search messages…"
+            />
+          </div>
+        </details>
       </div>
     </RouteGuard>
   );

@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useId, useMemo, useState, type ReactNode } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,6 +45,7 @@ export interface DataTableProps<T> {
   emptyDescription?: string;
   toolbarLeft?: ReactNode;
   toolbarRight?: ReactNode;
+  initialFilterValues?: Record<string, string>;
 }
 
 export function DataTable<T>({
@@ -62,9 +63,11 @@ export function DataTable<T>({
   emptyDescription = "Try adjusting your search or filters.",
   toolbarLeft,
   toolbarRight,
+  initialFilterValues = {},
 }: DataTableProps<T>) {
+  const filterId = useId();
   const [query, setQuery] = useState("");
-  const [filterValues, setFilterValues] = useState<Record<string, string>>({});
+  const [filterValues, setFilterValues] = useState<Record<string, string>>(initialFilterValues);
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [page, setPage] = useState(0);
@@ -120,12 +123,15 @@ export function DataTable<T>({
             <div className="relative">
               <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
+                id={`${filterId}-search`}
+                name={`${filterId}-search`}
                 value={query}
                 onChange={(e) => {
                   setQuery(e.target.value);
                   setPage(0);
                 }}
                 placeholder={searchPlaceholder}
+                aria-label={searchPlaceholder}
                 className="h-8 w-56 pl-8 text-sm"
               />
             </div>
@@ -133,6 +139,9 @@ export function DataTable<T>({
           {filters.map((f) => (
             <select
               key={f.key}
+              id={`${filterId}-${f.key}`}
+              name={`${filterId}-${f.key}`}
+              aria-label={`${f.label} filter`}
               value={filterValues[f.key] ?? "__all"}
               onChange={(e) => {
                 setFilterValues((v) => ({ ...v, [f.key]: e.target.value }));

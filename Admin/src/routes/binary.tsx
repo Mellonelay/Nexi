@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import type { BinaryPair, BinaryPosition, BinaryDuration } from "@/admin/types";
 import { mapBinaryInternal } from "@/admin/types";
+import { isOngoingBinaryPositionStatus } from "@/admin/data/binary-position-view";
 import { Pause, Play, RefreshCw } from "lucide-react";
 import { z } from "zod";
 
@@ -450,7 +451,7 @@ function PositionsPanel({
   const canSettle = session.can("binary.settle");
   const canEdit = session.can("binary.edit");
   const [selectedId, setSelectedId] = useState<string | null>(
-    () => positions.find((position) => position.status === "open")?.id ?? null,
+    () => positions.find((position) => isOngoingBinaryPositionStatus(position.status))?.id ?? null,
   );
   const [pending, setPending] = useState<PendingSettle | null>(null);
   const [researchDraft, setResearchDraft] = useState<"DEFAULT" | "NORMAL" | "WIN" | "LOSS">(
@@ -458,6 +459,14 @@ function PositionsPanel({
   );
   const [pendingResearch, setPendingResearch] = useState<BinaryPosition | null>(null);
   const selected = positions.find((position) => position.id === selectedId) ?? null;
+
+  useEffect(() => {
+    if (!selectedId || !positions.some((position) => position.id === selectedId)) {
+      setSelectedId(
+        positions.find((position) => isOngoingBinaryPositionStatus(position.status))?.id ?? null,
+      );
+    }
+  }, [positions, selectedId]);
 
   useEffect(() => {
     setResearchDraft(selected?.researchOverride ?? "DEFAULT");
@@ -520,13 +529,14 @@ function PositionsPanel({
       key: "status",
       label: "status",
       options: [
+        { value: "ongoing", label: "Ongoing" },
         { value: "open", label: "Open" },
         { value: "settling", label: "Settling" },
         { value: "won", label: "Won" },
         { value: "lost", label: "Lost" },
         { value: "error", label: "Error" },
       ],
-      match: (p, v) => p.status === v,
+      match: (p, v) => (v === "ongoing" ? isOngoingBinaryPositionStatus(p.status) : p.status === v),
     },
     {
       key: "user",
@@ -553,6 +563,7 @@ function PositionsPanel({
           data={positions}
           columns={columns}
           filters={filters}
+          initialFilterValues={{ status: "ongoing" }}
           selectedKey={selectedId}
           searchable={(p) => `${p.id} ${p.userId} ${p.pair}`}
           searchPlaceholder="Search position, user, pair…"

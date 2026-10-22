@@ -4,6 +4,9 @@ import test from "node:test";
 import { reorderByIds } from "../src/admin/data/banner-order.ts";
 import { ALL_ROUTES, findRoute, NAV_GROUPS } from "../src/admin/config/navigation.ts";
 import { mapBinaryPositionStatus } from "../src/admin/types/index.ts";
+import { isOngoingBinaryPositionStatus } from "../src/admin/data/binary-position-view.ts";
+import { groupAdminMessageConversations } from "../src/admin/data/message-conversations.ts";
+import { buildOverviewWorkItems } from "../src/admin/data/overview-work-items.ts";
 
 test("reorders banners by a complete ID permutation and preserves each record", () => {
   const banners = [
@@ -57,13 +60,142 @@ test("settling Binary positions are not exposed as open research-control targets
   assert.equal(mapBinaryPositionStatus("unknown"), "error");
 });
 
+test("the Binary ongoing view includes open and settling positions, but not completed positions", () => {
+  assert.equal(isOngoingBinaryPositionStatus("open"), true);
+  assert.equal(isOngoingBinaryPositionStatus("settling"), true);
+  assert.equal(isOngoingBinaryPositionStatus("won"), false);
+  assert.equal(isOngoingBinaryPositionStatus("lost"), false);
+  assert.equal(isOngoingBinaryPositionStatus("error"), false);
+});
+
+test("Admin messages are grouped into recent conversations with unread counts", () => {
+  const messages = [
+    {
+      id: "one",
+      senderId: "admin",
+      recipientId: "client-a",
+      body: "Earlier",
+      deliveryState: "DELIVERED",
+      createdAt: "2026-10-20T10:00:00.000Z",
+      readAt: null,
+    },
+    {
+      id: "two",
+      senderId: "client-a",
+      recipientId: "admin",
+      body: "Latest",
+      deliveryState: "DELIVERED",
+      createdAt: "2026-10-20T10:02:00.000Z",
+      readAt: null,
+    },
+    {
+      id: "three",
+      senderId: "client-b",
+      recipientId: "admin",
+      body: "Read thread",
+      deliveryState: "DELIVERED",
+      createdAt: "2026-10-20T10:01:00.000Z",
+      readAt: "2026-10-20T10:03:00.000Z",
+    },
+    {
+      id: "unrelated",
+      senderId: "client-a",
+      recipientId: "client-b",
+      body: "Not an Admin conversation",
+      deliveryState: "DELIVERED",
+      createdAt: "2026-10-20T10:04:00.000Z",
+      readAt: null,
+    },
+  ];
+
+  assert.deepEqual(
+    groupAdminMessageConversations(messages, "admin").map((conversation) => ({
+      clientId: conversation.clientId,
+      latestMessageId: conversation.latestMessage.id,
+      unreadCount: conversation.unreadCount,
+    })),
+    [
+      { clientId: "client-a", latestMessageId: "two", unreadCount: 1 },
+      { clientId: "client-b", latestMessageId: "three", unreadCount: 0 },
+    ],
+  );
+});
+
 test("Trading Binary opens on positions and separates the two control contexts", async () => {
   const source = await readFile(new URL("../src/routes/binary.tsx", import.meta.url), "utf8");
   const clients = await readFile(new URL("../src/routes/users.tsx", import.meta.url), "utf8");
   assert.match(source, /view = "positions"/);
+  assert.match(source, /initialFilterValues=\{\{ status: "ongoing" \}\}/);
+  assert.match(
+    source,
+    /positions\.find\(\(position\) => isOngoingBinaryPositionStatus\(position\.status\)\)/,
+  );
   assert.match(source, /validateSearch: binarySearchSchema/);
   assert.match(source, /data-testid="binary-position-inspector"/);
   assert.match(source, /if \(position\.status !== "open"\)/);
   assert.match(source, /if \(!position\.researchEligible\)/);
   assert.match(clients, /aria-label="Binary account default"/);
+});
+
+test("Messages renders a conversation inbox and selected thread from live messages", async () => {
+  const source = await readFile(new URL("../src/routes/messages.tsx", import.meta.url), "utf8");
+  assert.match(source, /groupAdminMessageConversations/);
+  assert.match(source, /aria-label="Message conversations"/);
+  assert.match(source, /aria-label="Selected client conversation"/);
+  assert.match(source, /onChange=\{\(event\) => void openThread\(event\.target\.value\)\}/);
+});
+
+test("Overview queues only actionable live records visible to the operator", () => {
+  const items = buildOverviewWorkItems({
+    kyc: [
+      {
+        id: "kyc",
+        userId: "client",
+        documentType: "id_card",
+        status: "pending",
+        submittedAt: "2026-10-22T00:00:00Z",
+        country: "US",
+      },
+      {
+        id: "approved",
+        userId: "client",
+        documentType: "passport",
+        status: "approved",
+        submittedAt: "2026-10-22T00:00:00Z",
+        country: "US",
+      },
+    ],
+    withdrawals: [
+      {
+        id: "withdrawal",
+        userId: "client",
+        amount: "2",
+        asset: "BTC",
+        network: "mainnet",
+        status: "pending",
+      },
+      {
+        id: "paid",
+        userId: "client",
+        amount: "1",
+        asset: "BTC",
+        network: "mainnet",
+        status: "confirmed",
+      },
+    ],
+    tickets: [
+      { id: "ticket", userId: "client", subject: "Needs help", status: "escalated" },
+      { id: "resolved", userId: "client", subject: "Done", status: "resolved" },
+    ],
+    health: [
+      { id: "api", name: "API", status: "down", latencyMs: 100, updatedAt: "2026-10-22T00:00:00Z" },
+      { id: "db", name: "SQLite", status: "ok", latencyMs: 1, updatedAt: "2026-10-22T00:00:00Z" },
+    ],
+    access: { kyc: true, withdrawals: false, support: true, health: true },
+  });
+
+  assert.deepEqual(
+    items.map(({ id }) => id),
+    ["kyc:kyc", "ticket:ticket", "health:api"],
+  );
 });
