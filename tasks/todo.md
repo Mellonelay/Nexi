@@ -868,3 +868,8 @@ Receipt: `tasks/evidence/market-provider-runtime-20261017.md`.
 
 - [x] P2.5/P2.7 partial: Profile rendered Identity verification/VIP/Referral; Security rendered Sessions/password/MFA controls; Notifications rendered four controls with 50px rows and no horizontal overflow at 440×956. Keyboard ArrowRight moved Notifications selection to About. No account or security mutation. Receipt: [browser progress](evidence/nexi-browser-acceptance-progress-20261023.md).
 - [ ] Continue P2.5/P2.7 with KYC status semantics and remaining service/settings states; do not use wallet or security write controls without explicit authorization.
+
+## 2026-10-23 12:14 UTC — Wallet and accessibility slice
+
+- [x] P2.4 partial: Wallet showed five accounts and Activity History at 440×956 without a locked/unavailable/no-auth fallback. Five-item mobile dock links measured 81×44px with no horizontal overflow. Lighthouse accessibility snapshot scored 100; no wallet values/actions were inspected. Receipt: [browser progress](evidence/nexi-browser-acceptance-progress-20261023.md).
+- [ ] P2.4 remains open for fresh wallet API/body proof, all five account read states, and read-only deposit/withdrawal/transfer/convert/Activity flows; no financial writes without explicit authorization.
