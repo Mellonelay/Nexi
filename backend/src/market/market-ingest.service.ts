@@ -12,6 +12,7 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
   private static readonly MAX_CONCURRENT_EVENT_WORKERS = 8;
   private readonly logger = new Logger(MarketIngestService.name);
   private readonly eventQueue: MarketProviderEvent[] = [];
+  private readonly activeDrains = new Set<Promise<void>>();
   private activeWorkers = 0;
   private lastSaturationLogAt = 0;
   private providerStartRetryTimer?: NodeJS.Timeout;
@@ -40,6 +41,7 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
     this.logger.log('Market shutdown: stopping providers.');
     await this.providers.stop();
     this.eventQueue.length = 0;
+    await Promise.allSettled([...this.activeDrains]);
     this.logger.log('Market shutdown: providers stopped and ingest queue discarded.');
   }
 
@@ -47,7 +49,9 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
     try {
       await this.marketSeeder.ensureReconciled();
       if (this.destroyed) return;
-      const started = await this.providers.start((event) => this.enqueue(event));
+      const started = await this.providers.start((event) => {
+        if (!this.destroyed) this.enqueue(event);
+      });
       this.providerStartAttempt = 0;
       if (!started) {
         this.logger.log('Market provider disabled or not configured; serving persisted catalog and explicit unavailable states.');
@@ -93,20 +97,28 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
       }
     }
     this.eventQueue.push(event);
-    void this.drainQueue();
+    this.drainQueue();
   }
 
-  private async drainQueue(): Promise<void> {
-    if (this.activeWorkers >= MarketIngestService.MAX_CONCURRENT_EVENT_WORKERS) return;
+  private drainQueue(): void {
+    if (this.destroyed || this.activeWorkers >= MarketIngestService.MAX_CONCURRENT_EVENT_WORKERS) return;
     this.activeWorkers += 1;
-    try {
-      while (this.eventQueue.length > 0) {
-        const event = this.dequeueNextEvent();
-        if (event) await this.handleProviderEvent(event);
-      }
-    } finally {
+    let drain: Promise<void>;
+    drain = this.drainEvents().finally(() => {
       this.activeWorkers -= 1;
-      if (this.eventQueue.length > 0 && this.activeWorkers < MarketIngestService.MAX_CONCURRENT_EVENT_WORKERS) void this.drainQueue();
+      this.activeDrains.delete(drain);
+      if (this.destroyed) return;
+      if (this.eventQueue.length === 0) return;
+      if (this.activeWorkers >= MarketIngestService.MAX_CONCURRENT_EVENT_WORKERS) return;
+      this.drainQueue();
+    });
+    this.activeDrains.add(drain);
+  }
+
+  private async drainEvents(): Promise<void> {
+    while (!this.destroyed && this.eventQueue.length > 0) {
+      const event = this.dequeueNextEvent();
+      if (event) await this.handleProviderEvent(event);
     }
   }
 

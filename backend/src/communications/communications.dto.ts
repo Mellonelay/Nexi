@@ -130,6 +130,13 @@ export class CreateLearnCategoryDto {
   @IsOptional() @IsIn(['ACTIVE', 'INACTIVE']) status?: string;
 }
 
+export class UpdateLearnCategoryStatusDto {
+  @IsIn(['ACTIVE', 'INACTIVE']) expectedStatus!: 'ACTIVE' | 'INACTIVE';
+  @IsIn(['ACTIVE', 'INACTIVE']) status!: 'ACTIVE' | 'INACTIVE';
+  @IsString() @Length(1, 500) reason!: string;
+  @IsString() @Length(8, 128) idempotencyKey!: string;
+}
+
 export class AssignTicketDto {
   @IsUUID() assignedToId!: string;
 }

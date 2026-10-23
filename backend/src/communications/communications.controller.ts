@@ -34,6 +34,7 @@ import {
   ReplyTicketDto,
   SendMessageDto,
   UpdateAnnouncementDto,
+  UpdateLearnCategoryStatusDto,
   UpdateLearnContentDto,
   SendNotificationDto,
 } from "./communications.dto";
@@ -205,11 +206,31 @@ export class CommunicationsController {
   adminLearnArticles() {
     return this.service.adminLearnArticles();
   }
+  @Get("admin/learn/categories")
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
+  @RequireAuthSurface("ADMIN")
+  @Roles(Role.ADMIN)
+  @RequireAdminPermission("learn.view")
+  adminLearnCategories() {
+    return this.service.adminLearnCategories();
+  }
   @Post("admin/learn/categories")
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   createLearnCategory(@Body() dto: CreateLearnCategoryDto) {
     return this.service.createLearnCategory(dto);
+  }
+  @Patch("admin/learn/categories/:id")
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
+  @RequireAuthSurface("ADMIN")
+  @Roles(Role.ADMIN)
+  @RequireAdminPermission("learn.publish")
+  updateLearnCategoryStatus(
+    @Req() req: AuthenticatedRequest,
+    @Param("id") id: string,
+    @Body() dto: UpdateLearnCategoryStatusDto,
+  ) {
+    return this.service.updateLearnCategoryStatus(id, req.user.userId, dto);
   }
   @Post("admin/learn")
   @UseGuards(JwtAuthGuard, RolesGuard)

@@ -1,3 +1,15 @@
+## Final completion campaign — source-only checkpoint — 2026-10-23
+
+At source checkpoint `cf9a6ac05ad171e9f8d72a1da2e2b5d46a85414`, the accepted deployed release remains `3bb57e02ea921531975124ce2c827382a9f1ec6b` for Backend, Public, and Admin. This task's application changes are uncommitted and not deployed.
+
+The new Learn category lifecycle path lists active and inactive categories only on the authenticated Admin surface and supports audited, idempotent status changes with `expectedStatus` concurrency fencing. The Admin Learn page exposes Hide/Show and prevents assigning inactive categories to articles. Public category listing retains its ACTIVE filter. No production content or SQLite data was changed. A read-only Public lane found no new source defect; it reused the existing Public proof and did not rerun tests.
+
+`MarketIngestService` stops accepting callbacks, stops providers, drops queued work, and awaits active persistence drains before module teardown. This addresses the observed Prisma-close race. It does not yet prove the systemd 30-second shutdown timeout is resolved; that needs a controlled release/shutdown observation.
+
+Focused proof: Backend Learn/shutdown tests 7/7; backend `tsconfig.build.json` check exit 0; Admin typecheck exit 0; Admin provider/navigation suite 10/10. Admin changed-hunk ESLint has no added-line findings; Backend has no ESLint configuration. Graphify refreshed to 6,624 nodes / 18,011 edges, with missing SQL parser/source-symbol coverage. Fallow reported 16 unused exports/dependencies/class members and one missing-node-modules degraded-analysis warning. CodeScene found no final complex-method signal after a small refactor, but reports `communications.service.ts` at 1,006 LOC (threshold 1,000), up from 928; no broad service split was done.
+
+No production build, migration, service restart, deployment, public-data update, financial operation, or browser interaction occurred in this source checkpoint. Browser acceptance remains partial; Messages lacks an approved controlled conversation fixture, and Admin lower-role / eligible OPEN Binary fixtures remain absent. See [final completion source receipt](tasks/evidence/nexi-final-completion-source-20261023.md).
+
 ## Browser acceptance update — 2026-10-23 10:55 UTC
 
 The live source remains `main@8084d860d9672c4de5c3bdbee2b96513db4b2b14`, equal to `origin/main`. Backend and Admin release markers are `c74b3c02c948ceac2df92a76acc4f3c5c19c540d`; Public `.next/BUILD_ID` is `6507cf16a8cd863048b12aa56b23fd43435695ec`. All three services were active, HTTPS `/ops/ready` returned 200, and root free space was 5.0 GiB. No deployment or service change occurred.

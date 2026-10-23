@@ -228,3 +228,10 @@ Do not make a durable phase checkpoint, stale workCycle capsule, or phase-reconc
 Use relevant direct source, affected tests, Fallow and Graphify when they materially establish correctness or changed-code risk. CodeScene scoring and historic phase-score targets are NOT mandatory gates under the owner's current direction. Preserve non-regressing application behavior and financial invariants, but do not stop at retired tool/score checkpoints. Older CodeScene docs remain provenance only.
 
 ## 2026-10-19 owner source-directory and platform retirement
+
+## Codex task-boundary board
+
+- This repository uses the opt-in Codex task-boundary board in `.codex/coordination/project.yaml`.
+- Before substantial writes, load the installed `codex-coordinator` skill, list active claims from the primary worktree, and publish only this task's bounded claim.
+- Native Codex tasks remain the execution, messaging, and transcript authority; an explicitly requested goal Coordinator is on demand, with no heartbeat or mandatory pull-request workflow.
+- Reject cross-project notices and never store transcripts, reasoning, prompts, or tool output in Coordinator state.

@@ -2163,7 +2163,7 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     );
   }
   listLearnCategories(): Promise<AdminLearnCategory[]> {
-    return this.request<unknown[]>("/communications/learn/categories").then((rows) =>
+    return this.request<unknown[]>("/communications/admin/learn/categories").then((rows) =>
       rows.map((value) => {
         const row = record(value);
         return {
@@ -2188,6 +2188,20 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     ctx: ConsequentialContext,
   ) {
     return this.requestMutation("/communications/admin/learn/categories", ctx, payload);
+  }
+  updateLearnCategoryStatus(
+    id: string,
+    expectedStatus: "ACTIVE" | "INACTIVE",
+    status: "ACTIVE" | "INACTIVE",
+    ctx: ConsequentialContext,
+  ) {
+    return this.requestMutation(
+      `/communications/admin/learn/categories/${encodeURIComponent(id)}`,
+      ctx,
+      { expectedStatus, status },
+      [id, expectedStatus, status],
+      "PATCH",
+    );
   }
   createLearnArticle(
     payload: {

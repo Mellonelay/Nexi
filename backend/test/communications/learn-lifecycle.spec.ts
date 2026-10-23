@@ -3,6 +3,10 @@ import { CommunicationsController } from '../../src/communications/communication
 import { CommunicationsService } from '../../src/communications/communications.service';
 import { JwtAuthGuard } from '../../src/auth/jwt-auth.guard';
 import { RolesGuard } from '../../src/auth/roles.guard';
+import { AuthSurfaceGuard } from '../../src/auth/auth-surface.guard';
+import { AdminPermissionGuard } from '../../src/admin/admin-permission.guard';
+import { ADMIN_PERMISSION_KEY } from '../../src/admin/admin-permission.decorator';
+import { AUTH_SURFACE_METADATA } from '../../src/auth/auth-surface.decorator';
 
 describe('A18 Learn lifecycle closure', () => {
   const previous = process.env.D1_RUNTIME_ENABLED;
@@ -70,5 +74,84 @@ describe('A18 Learn lifecycle closure', () => {
     expect(Reflect.getMetadata(PATH_METADATA, controller.publishLearn)).toBe('admin/learn/:id/publish');
     expect(Reflect.getMetadata(GUARDS_METADATA, controller.updateLearn)).toEqual(expect.arrayContaining([JwtAuthGuard, RolesGuard]));
     expect(Reflect.getMetadata(GUARDS_METADATA, controller.publishLearn)).toEqual(expect.arrayContaining([JwtAuthGuard, RolesGuard]));
+  });
+
+  it('changes category visibility with Admin audit, optimistic status check, and durable event', async () => {
+    let category: any = { id: 'category-1', slug: 'test-only-prelive', status: 'ACTIVE' };
+    const tx: any = {
+      adminAuditLog: {
+        findUnique: jest.fn(async () => null),
+        upsert: jest.fn(async ({ create }: any) => create),
+      },
+      learnCategory: {
+        findUnique: jest.fn(async () => category),
+        updateMany: jest.fn(async ({ where, data }: any) => {
+          if (where.id !== category.id || where.status !== category.status) return { count: 0 };
+          category = { ...category, ...data };
+          return { count: 1 };
+        }),
+      },
+    };
+    const prisma: any = { $transaction: jest.fn((work: any) => work(tx)) };
+    const outbox: any = { recordEvent: jest.fn(async () => ({ id: 'event-1' })) };
+    const service = new CommunicationsService(prisma, outbox, {} as any, { isAvailable: () => false } as any);
+
+    await expect(service.updateLearnCategoryStatus('category-1', 'admin-1', {
+      expectedStatus: 'ACTIVE', status: 'INACTIVE', reason: 'Hide test content', idempotencyKey: 'category-hide-1',
+    })).resolves.toEqual(expect.objectContaining({ id: 'category-1', status: 'INACTIVE', auditId: expect.any(String) }));
+    expect(tx.learnCategory.updateMany).toHaveBeenCalledWith({
+      where: { id: 'category-1', status: 'ACTIVE' }, data: { status: 'INACTIVE' },
+    });
+    expect(tx.adminAuditLog.upsert).toHaveBeenCalledWith(expect.objectContaining({
+      create: expect.objectContaining({ adminId: 'admin-1', action: 'LEARN_CATEGORY_STATUS_UPDATED', target: 'category-1' }),
+    }));
+    expect(outbox.recordEvent).toHaveBeenCalledWith(expect.objectContaining({
+      eventType: 'LEARN_CATEGORY_STATUS_UPDATED', aggregateId: 'category-1',
+    }));
+  });
+
+  it('rejects a reused category idempotency key with a different request', async () => {
+    const tx: any = {
+      adminAuditLog: { findUnique: jest.fn(async () => ({ details: 'different request' })) },
+      learnCategory: { findUnique: jest.fn(), updateMany: jest.fn() },
+    };
+    const prisma: any = { $transaction: jest.fn((work: any) => work(tx)) };
+    const service = new CommunicationsService(prisma, { recordEvent: jest.fn() } as any, {} as any, {} as any);
+
+    await expect(service.updateLearnCategoryStatus('category-1', 'admin-1', {
+      expectedStatus: 'ACTIVE', status: 'INACTIVE', reason: 'Hide test content', idempotencyKey: 'category-hide-1',
+    })).rejects.toThrow('idempotency key was already used');
+    expect(tx.learnCategory.findUnique).not.toHaveBeenCalled();
+    expect(tx.learnCategory.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('rejects a stale category status instead of overwriting a newer change', async () => {
+    const tx: any = {
+      adminAuditLog: { findUnique: jest.fn(async () => null) },
+      learnCategory: {
+        findUnique: jest.fn(async () => ({ id: 'category-1', status: 'INACTIVE' })),
+        updateMany: jest.fn(),
+      },
+    };
+    const service = new CommunicationsService({ $transaction: (work: any) => work(tx) } as any, {} as any, {} as any, {} as any);
+
+    await expect(service.updateLearnCategoryStatus('category-1', 'admin-1', {
+      expectedStatus: 'ACTIVE', status: 'INACTIVE', reason: 'Hide test content', idempotencyKey: 'category-hide-stale',
+    })).rejects.toThrow('changed; refresh and retry');
+    expect(tx.learnCategory.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('restricts category status reads and writes to Admin surface permissions', () => {
+    const controller = new CommunicationsController({} as any);
+    expect(Reflect.getMetadata(PATH_METADATA, controller.adminLearnCategories)).toBe('admin/learn/categories');
+    expect(Reflect.getMetadata(PATH_METADATA, controller.updateLearnCategoryStatus)).toBe('admin/learn/categories/:id');
+    expect(Reflect.getMetadata(GUARDS_METADATA, controller.adminLearnCategories)).toEqual(
+      expect.arrayContaining([JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard]),
+    );
+    expect(Reflect.getMetadata(GUARDS_METADATA, controller.updateLearnCategoryStatus)).toEqual(
+      expect.arrayContaining([JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard]),
+    );
+    expect(Reflect.getMetadata(AUTH_SURFACE_METADATA, controller.updateLearnCategoryStatus)).toBe('ADMIN');
+    expect(Reflect.getMetadata(ADMIN_PERMISSION_KEY, controller.updateLearnCategoryStatus)).toBe('learn.publish');
   });
 });

@@ -547,6 +547,15 @@ Newest instrumented combined SQLite receipt is 28/28 PASS, but earlier uninstrum
 ### 2026-10-21 — Admin UX acceptance status
 Current slice is source implemented and typechecked/built; it is not deployed or browser-verified at the changed source revision. Read-only browser evidence and exact release/source identities are recorded in tasks/todo.md. Admin/Public announcement state differs by title, but identical record ID is not yet established. Preserve the existing SQLite/Ledger/Outbox boundaries and unrelated dirty files. Next gate is same-ID readback evidence; changed-screen desktop/mobile acceptance requires an approved release. No deployment or financial mutation was performed.
 
+### 2026-10-23 — Final completion campaign source checkpoint
+
+- Preserve the accepted `3bb57e02ea921531975124ce2c827382a9f1ec6b` release and all earlier scoped browser/test receipts; do not repeat the completed October 23 deployment.
+- Source-only batch in progress: authenticated Admin Learn category status control/API (no schema change) and awaited MarketIngest shutdown drain. Focused evidence: Backend 7/7; backend `tsconfig.build.json` no-emit check exit 0; Admin typecheck exit 0; Admin provider suite 10/10. Admin changed-hunk lint has zero findings; Backend ESLint config is absent. Final Graphify: 6,624 nodes / 18,011 edges, with SQL-parser/source-symbol coverage warnings. Fallow reports 16 findings (unused exports/dependencies/class members) and one missing-node-modules degraded-analysis warning. Final CodeScene found no new complex-method signal, but records `communications.service.ts` at 1,006 LOC (threshold 1,000); no broad split is justified for this bounded change.
+- Public read-only lane found no new source defect; it reused scoped evidence and did not rerun tests. Public files remain unchanged.
+- Exact category mutation now carries `expectedStatus`; stale Admin state receives conflict rather than overwriting a newer choice. Production category data remains unchanged until a reviewed authenticated Admin operation after deployment.
+- Current remaining sequence: finish Public read-only lane; final diff check/review and evidence record; commit only task-owned application/docs files; preserve rollback and perform canonical Backend then Admin build/release once if prerequisites remain valid; Public artifact is reused unless its lane finds an accepted source defect; then run scoped runtime/Chrome checks. No database migration is part of this change.
+- Open proof: Messages has no controlled conversation fixture; eligible OPEN Binary position and lower-role Admin fixtures are absent; final desktop/mobile acceptance and owner acceptance remain open. Backend shutdown source behavior is tested but the 30-second systemd exit is not yet runtime-verified.
+
 ## NEXI-ADMIN-INTEGRATION — source implementation (2026-10-21)
 
 Scope: current owner handoff's Admin/Public/Binary source integration and non-browser verification on canonical `main`. Browser acceptance, deployment/restart, promoted SQLite mutation, and live economic transactions are excluded.

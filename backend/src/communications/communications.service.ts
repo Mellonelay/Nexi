@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -824,6 +825,12 @@ export class CommunicationsService {
     });
   }
 
+  async adminLearnCategories() {
+    return this.database.learnCategory.findMany({
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    });
+  }
+
   async adminLearnArticles() {
     const articles = await this.database.learnArticle.findMany({
       orderBy: { updatedAt: "desc" },
@@ -853,6 +860,86 @@ export class CommunicationsService {
       { slug: category.slug, status: category.status },
     );
     return category;
+  }
+
+  async updateLearnCategoryStatus(
+    id: string,
+    adminId: string,
+    input: { expectedStatus: "ACTIVE" | "INACTIVE"; status: "ACTIVE" | "INACTIVE"; reason: string; idempotencyKey: string },
+  ) {
+    const reason = input.reason.trim();
+    if (!reason) throw new BadRequestException("An audit reason is required");
+    if (!["ACTIVE", "INACTIVE"].includes(input.status))
+      throw new BadRequestException("Learn category status is invalid");
+    const auditId = this.id(`learn-category-status:${id}:${adminId}`, input.idempotencyKey);
+    const details = JSON.stringify({ reason, idempotencyKey: input.idempotencyKey, expectedStatus: input.expectedStatus, status: input.status });
+    const updated = await this.database.$transaction((tx: any) =>
+      this.updateLearnCategoryStatusTransaction(tx, { id, adminId, auditId, details, expectedStatus: input.expectedStatus, status: input.status }),
+    );
+    if (!updated) throw new NotFoundException("Learn category not found");
+    await this.durableEvent(
+      `learn-category-status:${id}:${input.idempotencyKey}`,
+      "LEARN_CATEGORY",
+      id,
+      "LEARN_CATEGORY_STATUS_UPDATED",
+      { status: updated.status, adminId, auditId },
+    );
+    return { ...updated, auditId };
+  }
+
+  private async updateLearnCategoryStatusTransaction(
+    tx: any,
+    input: { id: string; adminId: string; auditId: string; details: string; expectedStatus: "ACTIVE" | "INACTIVE"; status: "ACTIVE" | "INACTIVE" },
+  ) {
+    const previous = await this.previousLearnCategoryStatusRequest(tx, input);
+    if (previous) return previous;
+
+    const current = await tx.learnCategory.findUnique({ where: { id: input.id } });
+    if (!current) throw new NotFoundException("Learn category not found");
+    if (current.status !== input.expectedStatus)
+      throw new ConflictException("Learn category changed; refresh and retry");
+
+    const changed = await tx.learnCategory.updateMany({
+      where: { id: input.id, status: input.expectedStatus },
+      data: { status: input.status },
+    });
+    if (changed.count !== 1)
+      throw new ConflictException("Learn category changed; refresh and retry");
+
+    await this.recordLearnCategoryStatusAudit(tx, input);
+    return tx.learnCategory.findUnique({ where: { id: input.id } });
+  }
+
+  private async previousLearnCategoryStatusRequest(
+    tx: any,
+    input: { id: string; auditId: string; details: string },
+  ) {
+    const priorAudit = await tx.adminAuditLog.findUnique({ where: { id: input.auditId } });
+    if (!priorAudit) return null;
+    if (priorAudit.details !== input.details)
+      throw new BadRequestException("Learn category idempotency key was already used");
+    const current = await tx.learnCategory.findUnique({ where: { id: input.id } });
+    if (!current) throw new NotFoundException("Learn category not found");
+    return current;
+  }
+
+  private async recordLearnCategoryStatusAudit(
+    tx: any,
+    input: { id: string; adminId: string; auditId: string; details: string },
+  ) {
+    const audit = await tx.adminAuditLog.upsert({
+      where: { id: input.auditId },
+      update: {},
+      create: {
+        id: input.auditId,
+        adminId: input.adminId,
+        action: "LEARN_CATEGORY_STATUS_UPDATED",
+        target: input.id,
+        details: input.details,
+      },
+    });
+    if (audit.details !== input.details)
+      throw new BadRequestException("Learn category idempotency key was already used");
   }
 
   async createLearn(data: LearnArticleCreateData) {

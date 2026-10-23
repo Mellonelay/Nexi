@@ -47,3 +47,6 @@ CLAUDE.md
 ruvector.db
 .impeccable/
 /frontend/node_modules
+
+.codex/coordination/*
+!.codex/coordination/project.yaml

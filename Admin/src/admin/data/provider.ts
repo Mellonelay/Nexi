@@ -465,6 +465,12 @@ export interface AdminDataProvider {
     },
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
+  updateLearnCategoryStatus(
+    id: string,
+    expectedStatus: "ACTIVE" | "INACTIVE",
+    status: "ACTIVE" | "INACTIVE",
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult>;
   createLearnArticle(
     payload: {
       slug: string;

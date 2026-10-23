@@ -34,15 +34,16 @@ function Page() {
   const [categorySlug, setCategorySlug] = useState("");
   const [categoryName, setCategoryName] = useState("");
   const [categoryDescription, setCategoryDescription] = useState("");
+  const [categoryReason, setCategoryReason] = useState("");
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const canPublish = session.can("learn.publish");
-  const ctx = () => ({
+  const ctx = (auditReason = reason) => ({
     actor: session.actorName,
     role: session.roleId,
     environment: session.environment,
-    reason: reason.trim(),
+    reason: auditReason.trim(),
   });
 
   const reset = () => {
@@ -105,8 +106,8 @@ function Page() {
   };
 
   const createCategory = async () => {
-    if (!canPublish || !categorySlug.trim() || !categoryName.trim() || !reason.trim()) {
-      setFeedback("Category slug, name, permission, and audit reason are required.");
+    if (!canPublish || !categorySlug.trim() || !categoryName.trim() || !categoryReason.trim()) {
+      setFeedback("Category slug, name, permission, and category audit reason are required.");
       return;
     }
     setBusy(true);
@@ -117,7 +118,7 @@ function Page() {
         name: categoryName.trim(),
         ...(categoryDescription.trim() ? { description: categoryDescription.trim() } : {}),
         status: "ACTIVE",
-      }, ctx());
+      }, ctx(categoryReason));
       setCategorySlug("");
       setCategoryName("");
       setCategoryDescription("");
@@ -125,6 +126,25 @@ function Page() {
       setFeedback("Learn category created.");
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Learn category creation failed.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const updateCategoryStatus = async (categoryId: string, expectedStatus: "ACTIVE" | "INACTIVE") => {
+    if (!canPublish || !categoryReason.trim()) {
+      setFeedback("Learn publish permission and a category audit reason are required.");
+      return;
+    }
+    setBusy(true);
+    setFeedback(null);
+    try {
+      const status = expectedStatus === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+      await provider.updateLearnCategoryStatus(categoryId, expectedStatus, status, ctx(categoryReason));
+      categoriesQ.refresh();
+      setFeedback(status === "INACTIVE" ? "Category hidden from Public Learn." : "Category visible on Public Learn.");
+    } catch (error) {
+      setFeedback(error instanceof Error ? error.message : "Learn category update failed.");
     } finally {
       setBusy(false);
     }
@@ -208,7 +228,7 @@ function Page() {
           </select>
           <select className="min-h-10 rounded-md border border-border bg-background px-3 text-sm" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} disabled={!canPublish || busy} aria-label="Learn category">
             <option value="">No category</option>
-            {(categoriesQ.data ?? []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+            {(categoriesQ.data ?? []).filter((item) => item.status === "ACTIVE").map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
           </select>
           <Input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} disabled={!canPublish || busy} aria-label="Learn scheduled at" />
           <Input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="Tags, comma separated" disabled={!canPublish || busy} />
@@ -220,10 +240,21 @@ function Page() {
         </section>
 
         <section className="grid gap-3 rounded-xl border border-border bg-card p-4 md:grid-cols-3" aria-label="Learn category controls">
+          <Input className="md:col-span-3" value={categoryReason} onChange={(e) => setCategoryReason(e.target.value)} placeholder="Category status audit reason" disabled={!canPublish || busy} />
           <Input value={categorySlug} onChange={(e) => setCategorySlug(e.target.value)} placeholder="Category slug" disabled={!canPublish || busy} />
           <Input value={categoryName} onChange={(e) => setCategoryName(e.target.value)} placeholder="Category name" disabled={!canPublish || busy} />
           <Input value={categoryDescription} onChange={(e) => setCategoryDescription(e.target.value)} placeholder="Category description" disabled={!canPublish || busy} />
           <div className="md:col-span-3"><Button variant="outline" onClick={() => void createCategory()} disabled={!canPublish || busy}>Create category</Button></div>
+          <div className="md:col-span-3 divide-y divide-border" aria-label="Learn category status list">
+            {(categoriesQ.data ?? []).map((category) => (
+              <div key={category.id} className="flex flex-wrap items-center justify-between gap-3 py-2">
+                <div><span>{category.name}</span> <span className="mono text-xs text-muted-foreground">{category.slug}</span> <StatusBadge tone={category.status === "ACTIVE" ? "success" : "warning"}>{category.status}</StatusBadge></div>
+                <Button variant="outline" size="sm" disabled={!canPublish || busy || !categoryReason.trim()} onClick={() => void updateCategoryStatus(category.id, category.status === "ACTIVE" ? "INACTIVE" : "ACTIVE")}>
+                  {category.status === "ACTIVE" ? "Hide from Public" : "Show on Public"}
+                </Button>
+              </div>
+            ))}
+          </div>
         </section>
 
         {feedback && <p className="text-sm text-muted-foreground" role="status">{feedback}</p>}
