@@ -1,6 +1,10 @@
-# CURRENT OWNER ROUTING OVERRIDE — 2026-10-21
+# CURRENT PAIRED CODEX CLI OWNER ROUTE — 2026-10-23
 
-For NEXI Work Local, ChatGPT Work is the single parent; use authorized direct SSH alias nexi-vps as the preferred Worker-0 route and RDC only as fallback. Public and Admin acceptance use distinct existing ChatGPT in-app browser tabs. Polypane/CDP 5859 is optional historical tooling. Promoted VPS SQLite with NestJS/Ledger/Outbox is current application/financial authority; Cloudflare application infrastructure and historical completion ledgers are retired/non-authoritative. Apply task-fit skills; do not require three parallel agents. One shared mutation owner.
+For NEXI work from the paired Worker-0 Codex CLI, this Codex session is the single lifecycle parent and operates in the verified local shell. Do not route through ChatGPT Work, RDC, or SSH-to-self. Use NEXI Work Kernel for lifecycle, Agent Skills for phase methods, and Capability Router for discovery. Codex Tasks/Coordinator may provide separate task windows only when a same-checkout Worker-0 environment and exact task identity are verified; no subagents by default, no overlapping writers, and one owner for Git, production, services, financial/database state, and shared generated outputs. Browser acceptance uses the existing Chrome session through Chrome DevTools MCP at 127.0.0.1:5858 only; Polypane/5859 is retired for this workflow. The promoted VPS SQLite/NestJS/Ledger/Outbox architecture remains current; Cloudflare app runtime and historical ledgers are retired.
+
+For tool execution, preserve the native handle type (`functions.exec` cell ID, shell session ID, MCP task ID, or Codex task/thread ID) and inspect the original result before retrying. Await independent reads; serialize dependent and shared mutations. Discover the live tool schema/version before calls that depend on it. Hook registration is not proof of execution or interception; claim enforcement only after observing the effective hook run and its result. Apply owner, platform, tool, and domain authorization separately.
+
+Older dated Work/RDC/Polypane routing clauses below are historical and superseded where they conflict with this override.
 
 
 ## CANONICAL WORKER-0 BUILD AND RELEASE CONTRACT — 2026-10-23
@@ -36,7 +40,7 @@ Storage: Root filesystem measured about 6.1 GiB available (88% used) after bound
 This current owner-verified map supersedes older conflicting path or sharing claims below. For protected docs use worker0-protect unlock, bounded change, diff verification, refresh-lock, and status.
 
 ---
-# CURRENT OWNER WORK/CODEX/HOOKS ROUTE — 2026-10-20
+# HISTORICAL WORK/CODEX/HOOKS ROUTE — superseded for paired Codex CLI 2026-10-23
 
 These are the rules for EVERY agent operating in the NEXI repository. They are separate from user-global Codex instructions in ~/.codex/AGENTS.md and the project-specific Codex overlay in .codex/AGENTS.md. Newer owner decisions supersede contradictory dated clauses below.
 
@@ -190,11 +194,11 @@ Rules:
 - Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
 - After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
 
-## CURRENT OWNER NEXI WORK CONTROLLER — 2026-10-20
+## HISTORICAL NEXI WORK CONTROLLER — superseded for paired Codex CLI 2026-10-23
 
 NEXI tasks in ChatGPT Work follow NEXI Work Control Plane -> NEXI Work Kernel -> Capability Router and selected Agent Skills. Maintain Work phase/session capability cache, authority, proof reuse and relevant knowledge contracts. Native shell, Codex SSH, RDC and mcpc are execution capabilities, not lifecycle owners. Chat-side Capability Cache v1.4.0 cannot authorize or execute Work tasks. Agent Kernel and its global generated Codex AGENTS.md are retired as NEXI controllers; never use agent-kernel CLI to publish NEXI rules. Use worker0-protect unlock/refresh-lock for authorized VM documentation edits. Respect Public Polypane DevTools and Admin Work Cloud Browser separation below.
 
-## CURRENT OWNER BROWSER ROUTING — 2026-10-20
+## HISTORICAL BROWSER ROUTING — superseded for paired Codex CLI 2026-10-23
 
 Public (www.nexitrading.app) browser verification uses Worker-0 Polypane with installed Chrome DevTools MCP 4 Polypane skill and live chrome-devtools-polypane MCP; verify actual target/pane/endpoint. No automatic Chrome 5858, Playwright or Cloud Browser fallback.
 
@@ -202,7 +206,7 @@ Admin (admin.nexitrading.app) browser verification is owned solely by ChatGPT Wo
 
 Keep release, browser/session, URL, authenticated state and observed rendered/network result separately for each surface. Wallet signatures and financial operations need task-specific owner authorization. Supersedes incompatible historical browser notes below; see ~/.agents/BROWSER_FABRIC.md and ~/RDC_ONBOARDING.md.
 
-## Current browser execution
+## Historical browser execution — superseded for paired Codex CLI 2026-10-23
 
 Final rendered acceptance uses Polypane, Chrome DevTools and the already connected Coinbase Wallet. Old MetaMask-profile routes are historical and cannot be presumed current.
 
