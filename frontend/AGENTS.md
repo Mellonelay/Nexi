@@ -2,27 +2,18 @@
 
 For NEXI Work Local, Public rendered acceptance uses the existing ChatGPT in-app browser session. Polypane/CDP 5859 is optional historical tooling, not a gate. Use task-fit frontend/browser skills and evidence; do not require routine subagents. Wallet signing and financial actions remain separately authorized.
 
-## CANONICAL PUBLIC BUILD — 2026-10-22
+## CANONICAL PUBLIC BUILD — 2026-10-23
 
-Build/deploy only from committed source in the canonical `main` checkout. `/srv/nexi/public/current` is the only Public build/runtime directory and must remain a real directory; its `node_modules` link must continue to point to `/srv/nexi/public/shared/node_modules`. Use `frontend/package.json` and `frontend/package-lock.json`; do not run an install from the source checkout or replace the shared link. For the one final build, stop only `nexi-public.service`, sync committed Public source into `current` while preserving the shared dependency link, then run `./node_modules/.bin/next build --webpack && node scripts/prepare-standalone-assets.mjs` from `/srv/nexi/public/current`. Keep `.next` as the generated output there; do not create alternate/candidate/copy build roots. Restart Public and verify its marker, HTTPS routes, settings API consumers, service stability, and release-matched Sentry before building another surface.
+Follow the root `AGENTS.md` **Canonical Worker-0 Build and Release Contract** for the shared release sequence. Public source is the canonical checkout's `frontend/`; dependency authority is `frontend/package.json` plus `frontend/package-lock.json`. `frontend/node_modules` and `/srv/nexi/public/current/node_modules` must resolve to `/srv/nexi/public/shared/node_modules`. Keep this store separate from Admin and Backend. Normal builds reuse the verified store. If the locked dependency set changed or required packages are absent, verify the store recovery path, stop only `nexi-public.service`, stage the committed Public `package.json` and `package-lock.json` into `/srv/nexi/public/shared`, then run `npm ci --no-audit --no-fund` there with the Public runtime-compatible Node/npm. Never run `npm ci` from `frontend/` or `/srv/nexi/public/current`, and verify both links after store reconstruction.
 
-## CURRENT VPS BUILD AND SHARED DEPENDENCY PATHS — 2026-10-20
+`/srv/nexi/public/current` is the only Public build/runtime directory and must remain a real directory. Its generated Next output is `/srv/nexi/public/current/.next`; do not create candidate, temporary, copied, or alternate build roots. For the one final production build, verify the exact source SHA, running artifact and tested rollback, stop only `nexi-public.service`, sync committed Public source into `current` without replacing the dependency link, then run from `/srv/nexi/public/current`:
 
-Current source: /home/mellonelay1999/workspaces/Nexi (single main checkout). Source paths are frontend/ (Public Next.js), Admin/ (Admin React/TanStack/Nitro), backend/ (NestJS/Prisma 7). Live deployed bytes and source SHA must be verified independently.
+```bash
+./node_modules/.bin/next build --webpack && node scripts/prepare-standalone-assets.mjs
+```
 
-Public: /srv/nexi/public/current is the single real production build and runtime directory; /srv/nexi/public/current/.next is generated output. Its current/node_modules is a symlink to /srv/nexi/public/shared/node_modules. nexi-public.service runs npm start from /srv/nexi/public/current. The cache subdirectory .next/cache can be regenerated and was selectively cleared; never delete other .next assets during cleanup.
+This explicit command is the canonical Worker-0 build: it uses the required Webpack mode and runs the package's standalone-assets step. Restart only Public after a successful build. Verify the release marker, actual HTTPS pages and API consumers, process stability, and Sentry release/source-map association before moving to another surface. Keep the verified rollback until acceptance; restore it if defined health checks fail.
 
-Admin: /srv/nexi/admin/current is the single real Nitro output/runtime tree (not a symlink), with server/index.mjs and public/ assets. Its independent install/store is /srv/nexi/admin/shared/node_modules. The Admin standalone runtime does not need a node_modules symlink inside current; do not add one without demonstrated need. nexi-admin.service runs node /srv/nexi/admin/current/server/index.mjs. Preserve existing no extra build/release directories policy.
-
-Backend: /srv/nexi/backend is the live service working directory, with built code at /srv/nexi/backend/dist/src/main.js. Its node_modules is now a symlink to /srv/nexi/backend/shared/node_modules (moved, not duplicated). nexi-api.service runs the installed Node 24.21.0 entry. Module resolution for NestJS, Prisma and better-sqlite3, native SQLite smoke, and API readyz returned successful evidence after this relocation.
-
-Sharing boundary: These are THREE separate app-specific physical node_modules stores in stable shared/ locations, NOT a single cross-application node_modules directory or content-addressable dedup store. Backend relocation by itself saves no physical bytes. Do not blindly merge incompatible Next/Nitro/NestJS versions, Prisma native dependencies or lockfiles. Any cross-project dedup or package-manager change needs its own scoped dependency/ABI/rollback verification.
-
-Storage: Root filesystem measured about 6.1 GiB available (88% used) after bounded cache cleanup on 2026-10-20; remeasure before assuming freshness. Preserve all live SQLite database/WAL/SHM files, financial data, backups, evidence, active Polypane mounts and runtime artifacts. Never blanket-clear /tmp or delete running-session files. Existing Public .next/cache was cleared; caches may regenerate. Prior npm cache had already been cleared by another operation. Permission-denied temp entries were not forcibly removed. Build, install, restart, push or deployment remain separately authorized actions.
-
-This current owner-verified map supersedes older conflicting path or sharing claims below. For protected docs use worker0-protect unlock, bounded change, diff verification, refresh-lock, and status.
-
----
 # NEXI Public Frontend — Agent Contract
 
 ## Scope and authority
