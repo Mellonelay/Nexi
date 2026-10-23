@@ -539,3 +539,7 @@ The existing Public session rendered Settings Profile at 440×956 with Identity 
 ## Public Wallet/accessibility browser slice — 2026-10-23 12:14 UTC
 
 At 440×956, the existing Wallet page showed all five account tabs and Activity History with no locked/unavailable/no-auth fallback state or document overflow; account amounts/activity details were not read. The five-item mobile dock measured 440×68px with 81×44px links and 12px bottom clearance; the emulated safe-area inset was not independently verified. DevTools Lighthouse snapshot reported accessibility 100 (35 checks passed; the only failed audit was SEO meta-description), Best Practices 100, Agentic Browsing 100. No financial action occurred. Receipt: [browser acceptance progress](tasks/evidence/nexi-browser-acceptance-progress-20261023.md).
+
+## KYC profile browser slice — 2026-10-23 12:16 UTC
+
+The existing Public Settings Profile at 440×956 rendered the Identity verification section/status field, two file inputs and one action control without horizontal overflow. `/auth/refresh` returned 201; `/auth/me` and `/kyc/status` returned 304. Actual KYC status and personal data were not recorded; no file was selected or submitted. KYC review/submission/persistence remain unverified. Public restored to Wallet. See [browser acceptance receipt](tasks/evidence/nexi-browser-acceptance-progress-20261023.md).

@@ -577,3 +577,8 @@ Sentry artifact uploads completed for both frontend builds under release `6507cf
 - **BROWSER_VERIFIED, partial:** Existing Public Wallet at 440×956 showed five account tabs and Activity History with no locked/unavailable/no-auth fallback and no horizontal overflow. No balance/activity values or wallet actions were inspected.
 - **Mobile geometry:** Primary dock has five required links; measured 440×68px, each link 81×44px, 12px link-bottom clearance. Safe-area inset itself remains unverified.
 - **DevTools audit:** Lighthouse snapshot, mobile device, existing page: Accessibility 100 (35 checks passed; one total failed audit was SEO meta-description), Best Practices 100, Agentic Browsing 100, SEO 80. No accessibility audit failed. No app setting, transaction, or wallet signature changed.
+
+## 2026-10-23 12:16 UTC — P2.5 KYC profile structure
+
+- **BROWSER_VERIFIED, rendered structure only:** Existing Public Profile showed the Identity verification section/status field, two document inputs and one action control at 440×956, with no horizontal overflow. Refresh returned 201; `/auth/me` and `/kyc/status` returned 304. The KYC status and personal data were intentionally not recorded; no upload or submit occurred.
+- KYC workflow acceptance remains open for an owner-authorized controlled submission/review path and persisted readback.

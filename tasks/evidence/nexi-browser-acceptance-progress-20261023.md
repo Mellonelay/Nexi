@@ -119,3 +119,8 @@
 - **Mobile dock geometry:** The visible Primary nav contained exactly Dashboard, Spot/Margin, Options, Wallet, and Earn. At 440×956 the dock measured 440×68px; each link measured 81×44px, with 12px between link bottom and viewport bottom. No document overflow. The simulated safe-area inset itself was not independently measured.
 - **Accessibility snapshot:** Direct Chrome DevTools MCP 5858 Lighthouse snapshot on the existing Wallet screen scored Accessibility 100, Best Practices 100, Agentic Browsing 100; SEO 80, with the sole failed audit being missing meta description. No accessibility audit failed. React DevTools and Requestly were not used because no component-state or interception diagnosis was needed; the Accessibility Toolkit extension panel was not invoked. No user data was included in the recorded measurements.
 - **Browser state restored:** Public returned to `/dashboard/wallet` at 440×956; Admin remained open at `/binary`. No transaction, preference change, or wallet signature occurred.
+
+## KYC profile section — 2026-10-23 12:16 UTC
+
+- **P2.5 — `BROWSER_VERIFIED` rendered structure only:** On the existing Public Settings Profile route at 440×956, the Identity verification section and status field rendered with two document file inputs and one action control; the document width fit the viewport. `/auth/refresh` returned 201; `/auth/me` and `/kyc/status` returned 304. The actual KYC status and personal data were not recorded, and no document was selected or submitted. This does not prove KYC workflow submission, review, or persistence.
+- Public was restored to `/dashboard/wallet`; Admin remains on `/binary`. No signature, financial write, file upload, or account mutation occurred.

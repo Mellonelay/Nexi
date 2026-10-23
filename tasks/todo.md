@@ -873,3 +873,8 @@ Receipt: `tasks/evidence/market-provider-runtime-20261017.md`.
 
 - [x] P2.4 partial: Wallet showed five accounts and Activity History at 440×956 without a locked/unavailable/no-auth fallback. Five-item mobile dock links measured 81×44px with no horizontal overflow. Lighthouse accessibility snapshot scored 100; no wallet values/actions were inspected. Receipt: [browser progress](evidence/nexi-browser-acceptance-progress-20261023.md).
 - [ ] P2.4 remains open for fresh wallet API/body proof, all five account read states, and read-only deposit/withdrawal/transfer/convert/Activity flows; no financial writes without explicit authorization.
+
+## 2026-10-23 12:16 UTC — KYC profile structure
+
+- [x] P2.5 rendered structure: Identity verification/status field and document controls present at 440×956; no document submitted. Receipt: [browser progress](evidence/nexi-browser-acceptance-progress-20261023.md).
+- [ ] P2.5 status value, submission, review, and persisted readback remain unverified; use only an authorized controlled identity and document set.
