@@ -863,3 +863,8 @@ Receipt: `tasks/evidence/market-provider-runtime-20261017.md`.
 - [ ] Public auth/cache browser closure: retrieve a fresh authenticated API request after an authorized coordinated release; current existing page DOM and older 304/cache entries do not prove fresh account data or authentication.
 - [ ] Refresh Worker-0 release/service identities before any release action. `ssh nexi-vps` did not resolve from the current host; this documentation commit does not authorize a production operation.
 - [ ] Remaining acceptance: approved Admin Cloud Browser visual/functional pass, TEST_ONLY Learn category status path, controlled Messages thread, eligible Binary position, permitted lower-role identity, broader Public authenticated flows, and owner acceptance.
+
+## 2026-10-23 12:12 UTC — Public Settings verification
+
+- [x] P2.5/P2.7 partial: Profile rendered Identity verification/VIP/Referral; Security rendered Sessions/password/MFA controls; Notifications rendered four controls with 50px rows and no horizontal overflow at 440×956. Keyboard ArrowRight moved Notifications selection to About. No account or security mutation. Receipt: [browser progress](evidence/nexi-browser-acceptance-progress-20261023.md).
+- [ ] Continue P2.5/P2.7 with KYC status semantics and remaining service/settings states; do not use wallet or security write controls without explicit authorization.
