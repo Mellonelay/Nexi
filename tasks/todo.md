@@ -888,3 +888,17 @@ Receipt: `tasks/evidence/market-provider-runtime-20261017.md`.
 
 - [x] P2.1/P2.4 request path: existing app Refresh control triggered `/auth/refresh` 201 and auth/wallet reads 304; no account body values inspected.
 - [ ] Cache cause and fresh wallet data remain open; the 304s may use cached representations. Verify the fixed source only after a separately authorized coordinated release.
+
+## 2026-10-23 15:10 UTC — Next frontier after release checkpoint
+
+- [x] Commit and preserve the reviewed application/evidence batch through `3bb57e02ea921531975124ce2c827382a9f1ec6b` on local `main` (nine commits, 21 tracked files); do not push unless separately requested.
+- [x] Run the focused Backend 1/1, Public 8/8, and Admin 10/10 checks and one canonical release build per changed surface.
+- [x] Deploy Backend → Public → Admin; verify source/build markers, active services, rollback artifacts, readiness/HTTPS routes, and exact-release Sentry search. Browser receipts verify the existing Public session's auth/wallet reads and Admin's authenticated eight-workspace shell.
+- [ ] Resume P1 Admin acceptance with the approved mobile visual comparison after the Admin repair, route persistence/loading/error states, permitted lower-role denial, and eligible selected-position fixture if available.
+- [ ] Resume P2 Public acceptance across remaining authenticated routes, wallet/provider matrix, safe read-only flows, KYC/status, market freshness and realtime reconnect. Current-session `/auth/me` 200 is a bounded existing-session result, not complete multi-wallet acceptance.
+- [ ] Resolve P2.6 Learn-category lifecycle through a reviewed status endpoint and Admin control, or document the separately authorized data-operation dependency; do not write SQLite directly.
+- [ ] Resume P3.2 only with an authorized controlled Messages conversation; verify Public/Admin same-thread send/reply/history/reconnect. Do not create or message a customer conversation.
+- [ ] Investigate the Backend systemd 30-second stop timeout and prove graceful shutdown during an authorized controlled maintenance window.
+- [ ] Obtain final owner acceptance. Keep all four economic gates `OWNER_ACCEPTED_UNTESTED`; no signatures, transfers, orders, settlement overrides, migrations, or financial operations were part of this release.
+
+Detailed exact artifact/build/browser/Sentry/rollback evidence: [2026-10-23 coordinated release checkpoint](evidence/nexi-coordinated-release-checkpoint-20261023.md).
