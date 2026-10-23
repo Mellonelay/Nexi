@@ -650,3 +650,12 @@ Changed-boundary evidence: `backend/test/gate2/binary.service.spec.ts`, `backend
 - [x] Canonical Admin client/SSR/Nitro build passed using pnpm 12.14.0 and `/srv/nexi/admin/shared/node_modules`; exact release marker and Sentry client/SSR uploads verified.
 - [x] Admin service active with zero restarts; HTTPS Overview 200, Messages bundle served, unauthenticated API boundary 401; no release-matched Sentry issues found. Rollback archive retained and verified.
 - [ ] Authenticated browser and owner acceptance remain open. Backend/Public and SQLite were not changed.
+
+
+### Cross-surface source integration follow-up — 2026-10-23
+
+- [x] Reused the live Worker-0 `@nexi-graphify` MCP session; graph stats and bounded Communications/Binary/Public Settings searches are recorded in [the evidence receipt](evidence/admin-public-cross-surface-integration-20261023.md).
+- [x] Direct source inspection confirmed the Admin and Public Messages HTTP paths, NestJS Communications controller/service boundary, separate Public Support surface, Binary Admin/provider/backend ownership, and supported Public Settings read consumers.
+- [x] Focused Backend Messages/guard tests passed 11/11; Admin direct TypeScript and changed-file ESLint passed; Public Communications contract passed 1/1. Prior provider/Public/UI checks and unchanged Binary/settings proofs were reused. Fallow and Graphify limits are recorded in the evidence receipt.
+- [x] Admin build instructions now document the verified pnpm shared-symlink invocation, without permitting source-tree installs or dependency changes.
+- [ ] Commit and deploy the verified Backend/Admin correction; then browser thread/reply acceptance remains for the later browser phase. Generic Public feature flags remain excluded pending an approved consumer contract.

@@ -12,9 +12,13 @@ import {
 import { ApiTags } from "@nestjs/swagger";
 import { Role } from "../prisma/d1-client";
 import type { AuthenticatedRequest } from "../auth/auth.types";
+import { AuthSurfaceGuard } from "../auth/auth-surface.guard";
+import { RequireAuthSurface } from "../auth/auth-surface.decorator";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { Roles } from "../auth/roles.decorator";
 import { RolesGuard } from "../auth/roles.guard";
+import { AdminPermissionGuard } from "../admin/admin-permission.guard";
+import { RequireAdminPermission } from "../admin/admin-permission.decorator";
 import { CommunicationsService } from "./communications.service";
 import {
   AdminMutationDto,
@@ -163,17 +167,27 @@ export class CommunicationsController {
   publishAnnouncement(@Param("id") id: string, @Body() dto: AdminMutationDto) {
     return this.service.publishAnnouncement(id, dto.idempotencyKey);
   }
-  @Get("admin/messages") @UseGuards(JwtAuthGuard, RolesGuard) @Roles(Role.ADMIN)
-  adminMessages(@Query() q: PageQueryDto) { return this.service.adminMessages(q.page, q.limit); }
-  @Get("admin/messages/moderation")
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Get("admin/messages")
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
+  @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
+  @RequireAdminPermission("messages.view")
+  adminMessages(@Query() q: PageQueryDto) {
+    return this.service.adminMessages(q.page, q.limit);
+  }
+  @Get("admin/messages/moderation")
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
+  @RequireAuthSurface("ADMIN")
+  @Roles(Role.ADMIN)
+  @RequireAdminPermission("messages.view")
   adminMessageModeration(@Query() q: PageQueryDto) {
     return this.service.adminMessageModeration(q.page, q.limit);
   }
   @Patch("admin/messages/moderation/:id")
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
+  @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
+  @RequireAdminPermission("messages.send")
   resolveMessageModeration(
     @Req() req: AuthenticatedRequest,
     @Param("id") id: string,

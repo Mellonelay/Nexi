@@ -51,7 +51,7 @@ describe('recipient-owned message read', () => {
     expect(await gateway.markMessageRead('stranger', 'message')).toBe(false);
     bridge.batch.mockRejectedValueOnce(new Error('batch failed'));
     await expect(gateway.markMessageRead('recipient', 'message')).rejects.toThrow('batch failed');
-    process.env.D1_RUNTIME_ENABLED = 'false';
+    bridge.isEnabled = () => false;
     await expect(gateway.markMessageRead('recipient', 'message')).rejects.toThrow('disabled');
     expect(bridge.batch).toHaveBeenCalledTimes(2);
   });

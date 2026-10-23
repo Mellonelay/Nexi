@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 const page = readFileSync(new URL('../app/dashboard/messages/page.tsx', import.meta.url), 'utf8');
-const openapi = JSON.parse(readFileSync(new URL('../../../docs/contracts/openapi.json', import.meta.url), 'utf8'));
+const openapi = JSON.parse(readFileSync(new URL('../../docs/contracts/openapi.json', import.meta.url), 'utf8'));
 assert.match(page, /const messageEndpoint = .*'\/communications\/messages'/);
 assert.match(page, /const conversationEndpoint = .*'\/communications\/conversations'/);
 assert.match(page, /api\.post\('\/communications\/messages'/);

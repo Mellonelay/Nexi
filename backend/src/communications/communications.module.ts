@@ -7,11 +7,17 @@ import { RedisModule } from "../redis/redis.module";
 import { CommunicationsController } from "./communications.controller";
 import { CommunicationsService } from "./communications.service";
 import { CommunicationsGateway } from "./communications.gateway";
+import { AdminPermissionGuard } from "../admin/admin-permission.guard";
 
 @Module({
   imports: [AuthModule, D1PrismaModule, RedisModule, EventsModule],
   controllers: [CommunicationsController],
-  providers: [CommunicationsService, CommunicationsGateway, D1CommunicationsCommandGateway],
+  providers: [
+    CommunicationsService,
+    CommunicationsGateway,
+    D1CommunicationsCommandGateway,
+    AdminPermissionGuard,
+  ],
   exports: [CommunicationsService],
 })
 export class CommunicationsModule {}

@@ -449,14 +449,14 @@ function Page() {
                   <Button
                     size="sm"
                     variant="outline"
-                    disabled={busy}
+                    disabled={busy || !session.can("messages.send")}
                     onClick={() => void decide(item, "OPEN", "RESTRICTED")}
                   >
                     Restrict
                   </Button>
                   <Button
                     size="sm"
-                    disabled={busy}
+                    disabled={busy || !session.can("messages.send")}
                     onClick={() => void decide(item, "RESOLVED", "ACTIVE")}
                   >
                     Resolve + restore

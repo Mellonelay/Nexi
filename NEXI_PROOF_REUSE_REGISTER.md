@@ -481,3 +481,11 @@ Sentry artifact uploads completed for both frontend builds under release `6507cf
 - **SENTRY LIMIT:** One client script and one SSR script lacked an auto-detected source-map reference; complete source-map association is not proven. Sentry environment falls back to Vite mode (`production`) when `VITE_SENTRY_ENVIRONMENT` is unset.
 - **ROLLBACK:** `/srv/nexi/admin/shared/rollback-admin-d163bfa-20261022.tar.gz`, SHA-256 `9a3390d37751853e3942dc8699dab6e1f5278b06143c3f5115ea034f8c2c6df6`; tar integrity and privileged disposable extraction/rsync dry-run equivalence passed. Retain until owner acceptance.
 - **NOT VERIFIED:** No authenticated desktop/mobile browser acceptance or owner acceptance. No Backend/Public deployment or promoted SQLite migration.
+
+
+## 2026-10-23 — Cross-surface Admin/Public integration evidence
+
+- **SOURCE / GRAPH:** At `main@146a40b4a9e74cae8a0d71b8ab9cf07b4e25e997` (same as `origin/main`), Worker-0 `mcpc @nexi-graphify` v0.9.92 returned 6,429 nodes / 17,747 edges / 35 communities. Direct source checks corroborated the Communications controller-to-service path, Admin and Public endpoint strings, Binary control ownership, and five Public Settings consumers. The inferred Admin-provider/controller graph path is explicitly not treated as behavioral proof.
+- **REUSED TEST PROOF:** Prior same-session results were backend Communications 17/17, Admin provider 9/9, Public Communications/UI contracts 5/5, and backend build-scope/Admin/Public TypeScript checks passed. Not rerun in the graph/documentation continuation because the test inputs were unchanged. Details and limitations: `tasks/evidence/admin-public-cross-surface-integration-20261023.md`.
+- **FALLOW:** Changed-scope result: 21 findings; zero unresolved imports, cycles, re-export cycles, or boundary violations. One directly invoked Public Node test was classified as unreachable from application-entry reachability; 20 unused dependencies were in unchanged manifests; no rule packs were configured.
+- **SOURCE FRONTIER:** Messages permission/test correction remains dirty and uncommitted over the recorded HEAD. No production change, deployment, browser acceptance, or owner acceptance occurred. Public feature flags remain excluded pending an approved named consumer contract.

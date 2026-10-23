@@ -811,3 +811,10 @@ Receipt: `tasks/evidence/market-provider-runtime-20261017.md`.
 - [x] Admin deployed: `/srv/nexi/admin/current/NEXI_RELEASE_SHA` matches `8977545dfca13f83d6bd63b4bcd4fe069d3ce2c9`; `nexi-admin.service` active, zero restarts; HTTPS `/overview` 200; built Messages asset served; unauthenticated `/admin/me` 401. Release-matched Sentry issue search returned none.
 - [x] Retained and verified rollback artifact `/srv/nexi/admin/shared/rollback-admin-d163bfa-20261022.tar.gz` (SHA-256 `9a3390d37751853e3942dc8699dab6e1f5278b06143c3f5115ea034f8c2c6df6`).
 - [ ] Authenticated rendered browser acceptance and owner acceptance remain open. No Backend/Public deployment or production SQLite migration was performed.
+
+
+### Cross-surface source integration follow-up — 2026-10-23
+
+- [x] Worker-0 `@nexi-graphify` MCP reused successfully (6,429 nodes / 17,747 edges); Communications, Binary, and Public Settings source connections were checked against direct provider/controller/consumer paths. Receipt: [admin-public-cross-surface-integration-20261023.md](evidence/admin-public-cross-surface-integration-20261023.md).
+- [x] Focused Backend Messages/guard tests passed 11/11; Admin direct TypeScript and changed-file ESLint passed; Public Communications contract passed 1/1. Prior provider/Public/UI checks and unchanged Binary/settings proofs were reused.
+- [ ] Commit and deploy Backend/Admin Messages correction. Browser thread/reply acceptance remains the later browser phase; feature flags remain excluded without a named Public contract.
