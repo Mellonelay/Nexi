@@ -547,3 +547,7 @@ The existing Public Settings Profile at 440×956 rendered the Identity verificat
 ## Public Spot browser slice — 2026-10-23 12:20 UTC
 
 At 440×956, Spot had no horizontal overflow. `/spot/orderbook` and `/spot/market-trades` returned 304 twice; `/auth/refresh` returned 201 and `/auth/me` 304. Order book displayed Live with one bid row/zero ask rows; selecting Trades showed an explicit no-recent-trades state and no request error. Socket.IO polling requests returned 200 and no WebSocket resource was listed. No order was placed; order entry showed balance unavailable. Since responses were 304, data freshness is unverified; no pushed event or reconnect was tested. Public restored to Wallet. Detailed receipt: [browser acceptance progress](tasks/evidence/nexi-browser-acceptance-progress-20261023.md).
+
+## Existing Wallet Refresh request evidence — 2026-10-23 12:22 UTC
+
+On the existing Public Wallet page, the visible/enabled Refresh control was invoked through DevTools DOM interaction after an earlier MCP click timeout. `/auth/refresh` returned 201; `/auth/me`, `/wallet/overview`, and `/wallet/activity` returned 304, followed by another 304 overview/activity pair. No body or account value was read. The session refresh path works, while cache-body/freshness causality remains unresolved. No financial action or signature occurred. Receipt: [browser acceptance progress](tasks/evidence/nexi-browser-acceptance-progress-20261023.md).

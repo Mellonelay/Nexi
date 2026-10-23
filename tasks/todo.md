@@ -883,3 +883,8 @@ Receipt: `tasks/evidence/market-provider-runtime-20261017.md`.
 
 - [x] P2.3 partial: live order-book status and empty Recent trades state observed at 440×956; orderbook/trades endpoints returned 304 and Socket.IO polling returned 200. No order submitted.
 - [ ] P2.3 remains open for fresh trade/order-book payload proof and reconnect/event behavior; 304s and polling handshake alone do not prove freshness or realtime updates.
+
+## 2026-10-23 12:22 UTC — Wallet refresh request
+
+- [x] P2.1/P2.4 request path: existing app Refresh control triggered `/auth/refresh` 201 and auth/wallet reads 304; no account body values inspected.
+- [ ] Cache cause and fresh wallet data remain open; the 304s may use cached representations. Verify the fixed source only after a separately authorized coordinated release.

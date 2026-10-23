@@ -587,3 +587,7 @@ Sentry artifact uploads completed for both frontend builds under release `6507cf
 
 - **BROWSER_VERIFIED, partial:** Existing Spot page at 440×956 had no overflow. Order-book API and market-trade API returned 304 twice; app refresh 201 and `/auth/me` 304. Order-book UI showed Live, one bid and zero asks; selected mobile Trades panel showed `No recent trades yet` without an error. No order or financial action occurred; account balance was unavailable to the order form.
 - **Realtime:** Socket.IO polling requests returned 200; no WebSocket resource was observed. This does not prove a pushed market update or reconnect. Because API responses were 304, freshness and whether the empty trades state came from cached data remain open.
+
+## 2026-10-23 12:22 UTC — P2.1/P2.4 Wallet Refresh control
+
+- **BROWSER_VERIFIED, request path only:** Enabled visible Refresh control (49×44px) was invoked on the existing Wallet tab. `/auth/refresh` returned 201; `/auth/me`, `/wallet/overview`, `/wallet/activity` returned 304; a second overview/activity read also returned 304. Bodies and balances were not inspected. This verifies app-session refresh and request issuance, not cached-body semantics, authoritative balances, or cause of the earlier unavailable state. No write or signature occurred.
