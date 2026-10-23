@@ -56,6 +56,14 @@ The preserved rollback artifact is `/srv/nexi/admin/shared/rollback-admin-a6b5c8
 
 Sentry source maps were not uploaded and the build did not create a Sentry release: `SENTRY_AUTH_TOKEN` is absent from the existing Admin build environment, and the build reported both omissions. The final public output contains no `.map` files. Sentry release/issue lookups returned HTTP 502, so no release-matched issue result is established. The three Admin Fallow complexity/coverage findings introduced with the prior UI source remain `BLOCKED_WITH_EVIDENCE` pending behavior coverage and owner UI inspection: `exposure.Inner` (CC22/cognitive 37/CRAP 506), `NexiAdminApiProvider.request` (CC13/cognitive 16/CRAP 182), and `AdminShell.SessionControls` (CC6/cognitive 10/CRAP 42). They are static risk findings, not verified functional defects. Focused ESLint remains at its parent-source baseline of 26 findings in the API provider; no Admin logic was changed by this release repair. The backend Mining Sentry issue `NEXI-17` remains a separate, unauthorized backend release dependency.
 
+## 2026-10-23 — Backend/Admin Messages release
+
+Application source commit `c74b3c02c948ceac2df92a76acc4f3c5c19c540d` is pushed to GitHub `main` and deployed to canonical Backend and Admin runtimes. Backend `RELEASE_SHA`/`SENTRY_RELEASE` and Admin `NEXI_RELEASE_SHA`/`VITE_SENTRY_RELEASE` match that commit. Nest build and Admin Vite client/SSR/Nitro build passed using the backend and Admin's separate shared dependency stores; Admin used pinned pnpm 12.14.0. Public production source did not change; its deployed Next build ID remains `6507cf16a8cd863048b12aa56b23fd43435695ec` and was reused.
+
+Backend and Admin services are active. API `/readyz` returns 200 with SQLite and Redis ready; Public navigation/routes/banners/quotes/localization endpoints return 200. Admin Overview/Messages and its built bundle return 200. Unauthenticated Admin message history, moderation history, and reply POST return 401. No message or financial data was written. Migration 0017 was already applied with matching schema; this release did not mutate promoted SQLite.
+
+Verified rollback artifacts are retained at `/srv/nexi/backend/rollback/rollback-backend-9473e13-to-c74b3c0-20261023.tar.gz` and `/srv/nexi/admin/shared/rollback-admin-8977545-to-c74b3c0-20261023.tar.gz`; both restoration rehearsals passed. Sentry accepted the Admin client, SSR, and Nitro artifact bundles for the release and exact-release issue search found no events. Some generated scripts lack auto-detected source-map references, so complete map coverage is not claimed; Sentry has no deployment record. Authenticated browser acceptance and owner acceptance remain open.
+
 ---
 
 ## Latest Public release state — 2026-10-20

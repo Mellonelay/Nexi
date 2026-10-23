@@ -1,4 +1,11 @@
-## Latest release checkpoint — 2026-10-20 (supersedes pending build/deploy rows below)
+## Latest integrated release checkpoint — 2026-10-23 (supersedes older build/deploy rows below)
+
+- [x] Source `c74b3c02c948ceac2df92a76acc4f3c5c19c540d` pushed; Backend and Admin canonical production builds passed and are deployed at that source SHA.
+- [x] Backend/Admin services active; API readiness, all five Public Settings API reads, Admin Messages route/bundle, and protected Messages endpoints verified. Public production artifact was reused because Public production source was unchanged.
+- [x] Backend/Admin rollback artifacts retained and restoration rehearsals passed. Migration 0017 was already applied with matching schema; no production data mutation occurred.
+- [ ] Remaining acceptance: authenticated Admin/Public browser flows and visual/responsive checks. Sentry artifact bundles processed; some generated chunks have no auto-detected source-map reference. Public feature flags remain excluded without an approved named consumer contract.
+
+## Prior release checkpoint — 2026-10-20 (historical; superseded above)
 
 - [x] Production build completed in `/srv/nexi/public/current` with `/srv/nexi/public/shared/node_modules`; Next.js 16.4.1 optimized production build and standalone asset preparation exited successfully.
 - [x] Public service restarted and active; `MainPID=2187369`, `NRestarts=0`, process cwd `/srv/nexi/public/current`, dependency symlink resolves to `/srv/nexi/public/shared/node_modules`.
@@ -41,7 +48,7 @@ Current run also changes `frontend/app/lib/wallet-connector-options.ts` and its 
 - [x] Phase 4: focused static/typechecks and affected builds only if source changed; record no unnecessary financial test reruns
 - [x] Phase 4: Sentry release/environment mapping in all three projects confirmed or blockers documented before any deployment
 - [x] Phase 4: source-only proof/state/docs and Git fan-in in 3e3a06f; Source CI 7/7 and React Doctor passed; deployed artifact proof is a separate future gate
-- [ ] LATER AUTHORIZATION ONLY: sequential backend → Public → Admin release, with rollback and release-matched Sentry; avoid concurrent CPU/RAM-intensive builds
+- [x] Historical deployment authorization gate superseded by the 2026-10-23 owner authorization and completed Backend/Admin release recorded above.
 
 DO NOT reopen owner-closed financial testing, touch promoted SQLite, restart services, deploy, or claim runtime verification from source analysis.
 
@@ -817,4 +824,6 @@ Receipt: `tasks/evidence/market-provider-runtime-20261017.md`.
 
 - [x] Worker-0 `@nexi-graphify` MCP reused successfully (6,429 nodes / 17,747 edges); Communications, Binary, and Public Settings source connections were checked against direct provider/controller/consumer paths. Receipt: [admin-public-cross-surface-integration-20261023.md](evidence/admin-public-cross-surface-integration-20261023.md).
 - [x] Focused Backend Messages/guard tests passed 11/11; Admin direct TypeScript and changed-file ESLint passed; Public Communications contract passed 1/1. Prior provider/Public/UI checks and unchanged Binary/settings proofs were reused.
-- [ ] Commit and deploy Backend/Admin Messages correction. Browser thread/reply acceptance remains the later browser phase; feature flags remain excluded without a named Public contract.
+- [x] Source commit `c74b3c02c948ceac2df92a76acc4f3c5c19c540d` pushed. Canonical Backend build and Admin Vite client/SSR/Nitro build passed; unchanged Public artifact reused.
+- [x] Backend/Admin deployed at `c74b3c02c948ceac2df92a76acc4f3c5c19c540d`; health, Public Settings, Admin Messages page/bundle, and unauthenticated Messages permission boundaries verified. Rollback rehearsals passed; migration 0017 already applied and no DB mutation performed.
+- [ ] Later browser phase: authenticated Messages thread/reply plus full Admin/Public acceptance. Sentry source-map association remains partial for generated chunks. Public feature flags remain excluded without an approved named consumer contract.
