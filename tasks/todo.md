@@ -3,8 +3,15 @@
 - [x] Source `c74b3c02c948ceac2df92a76acc4f3c5c19c540d` pushed; Backend and Admin canonical production builds passed and are deployed at that source SHA.
 - [x] Backend/Admin services active; API readiness, all five Public Settings API reads, Admin Messages route/bundle, and protected Messages endpoints verified. Public production artifact was reused because Public production source was unchanged.
 - [x] Backend/Admin rollback artifacts retained and restoration rehearsals passed. Migration 0017 was already applied with matching schema; no production data mutation occurred.
-- [x] Durable history consolidated in [Admin/Public integrated release history](evidence/admin-integrated-release-history-20261023.md); existing integration and release receipts remain the detailed proof sources. No builds or tests were repeated because application source was unchanged.
 - [ ] Remaining acceptance: authenticated Admin/Public browser flows and visual/responsive checks. Sentry artifact bundles processed; some generated chunks have no auto-detected source-map reference. Public feature flags remain excluded without an approved named consumer contract.
+- [x] Durable history consolidated in [Admin/Public integrated release history](evidence/admin-integrated-release-history-20261023.md); existing integration and release receipts remain the detailed proof sources. At that release checkpoint, no builds or tests were repeated because application source was unchanged.
+- [x] Storage maintenance: removed the 1,043,682,946-byte Public Webpack cache, npm download cache (~177 MB), and APT package archives. All three application services remained active; Public `/dashboard` returned 200; final root free space was 1,942,331,392 bytes. Shared dependency stores, native-ABI-specific backend source dependencies, live data, browser state, and rollback archives were retained. See [storage receipt](evidence/storage-maintenance-20261023.md).
+- [x] Communications acceptance repair: unpublished the explicitly `TEST_ONLY` Public announcement and moved two explicitly `TEST_ONLY` Learn articles to Draft through the authenticated Admin API with audit reasons; Admin/API/Public readbacks confirmed removal from public feeds.
+- [ ] Public Learn still exposes the active `TEST_ONLY PRELIVE` category; no supported Admin category update endpoint exists. Resolve with a reviewed source/API change or an authorized category-data operation.
+- [x] Admin announcement status and mobile Binary layout repairs are committed locally in `a1746f94ab41d4dbc864677603701b0f8dc3d45d`; focused provider tests passed 10/10 and Admin TypeScript check passed. They remain undeployed; do not claim live Admin behavior is fixed until an authorized release.
+- [x] Diagnose the Public `/auth/me` 401 without restarting wallet authentication: the existing app session restored through `/auth/refresh` (201), and normal `/auth/me` calls returned 200. The earlier raw fetch bypassed the app Bearer interceptor and was expected to receive 401. No new signature was needed. See the 10:55 UTC browser proof update in `NEXI_PROOF_REUSE_REGISTER.md`.
+- [ ] Continue remaining P1/P2/P3 browser checks: eligible Binary research inspector/default, Client Detail details, Admin mobile visual/interaction and role-denial behavior, Public stock profile and authenticated Spot/Binary/Wallet journeys, and cross-surface configuration beyond existing Communications readback. Reuse prior Dashboard checks at 320×700, 360×956, 390×956, 430×956, and 440×956.
+- [ ] P3.2 Messages remains open: both Public and Admin inboxes had no conversation, so controlled two-way message/reconnect proof was not possible. Use only a controlled test identity/thread.
 
 ## Prior release checkpoint — 2026-10-20 (historical; superseded above)
 
@@ -828,3 +835,31 @@ Receipt: `tasks/evidence/market-provider-runtime-20261017.md`.
 - [x] Source commit `c74b3c02c948ceac2df92a76acc4f3c5c19c540d` pushed. Canonical Backend build and Admin Vite client/SSR/Nitro build passed; unchanged Public artifact reused.
 - [x] Backend/Admin deployed at `c74b3c02c948ceac2df92a76acc4f3c5c19c540d`; health, Public Settings, Admin Messages page/bundle, and unauthenticated Messages permission boundaries verified. Rollback rehearsals passed; migration 0017 already applied and no DB mutation performed.
 - [ ] Later browser phase: authenticated Messages thread/reply plus full Admin/Public acceptance. Sentry source-map association remains partial for generated chunks. Public feature flags remain excluded without an approved named consumer contract.
+
+
+## 2026-10-23 11:48 UTC — Authenticated Public cache follow-up
+
+- [x] P2.1 `SOURCE_IMPLEMENTED` / `TESTED`: fix authenticated ETag revalidation across Public Axios and the shared NestJS JWT guard. Focused Backend test 1/1, Public auth-session test 8/8, Backend/Public production-config type checks exit 0. Graphify refreshed.
+- [ ] P2.1 `DEPLOYED` / post-release `BROWSER_VERIFIED`: existing 5858 Network evidence shows `/auth/me`, `/wallet/overview`, `/wallet/activity` 304 responses and a cached representation on deployed old code; current page reload produced no new auth/wallet API request. The local fix is committed in `88ede5f`; await a separately authorized coordinated release and capture a fresh app request before claiming browser acceptance.
+- [ ] Continue only open Admin/Public/communications scenarios; retain existing authenticated tabs and do not request wallet signatures unless a real signature prompt is reached.
+
+
+- [x] P2.1 reviewed authentication/cache repair committed to local `main` as `88ede5f`; no push or deployment. `origin/main` is unchanged at `8084d860d9672c4de5c3bdbee2b96513db4b2b14`.
+
+
+## 2026-10-23 11:56 UTC — Browser fan-in correction
+
+- [x] P2.2 browser evidence: AAPL stock profile, truthful About NEXI, and five Binary durations inspected on the existing 440×956 Public tab; no financial/wallet action. Admin `/binary` and eight-workspace nav read on the existing 1500×816 tab.
+- [ ] P2.1 causal closure: 304s were observed on authenticated requests, but a cached JSON representation was present and the live wallet rendered normally. Do not assert 304 alone caused the earlier unavailable state. After a separately authorized release, verify the new no-cache/private-no-store behavior and real wallet state.
+- [ ] P1.1 Admin mobile visual comparison and restricted-role denial remain open; no lower-role identity. P1.2 remains fixture-limited (no eligible position). P3.2 remains fixture/authority-limited (no controlled message thread).
+- [ ] P2.6 Learn category remains active because the existing API/Admin UI supports list/create only. The next source slice, if selected, is a category status-update endpoint plus Admin control; no direct SQLite write.
+
+
+- [x] P1.1 Admin mobile slice: 390×844 comparison against approved Trading reference; hamburger navigation exposes all eight workspaces, with Super Admin/API state confirmed. Live deployed `Binary Trading` heading truncates; current local `a1746f9` fix is tested but awaits release/post-release verification.
+
+## 2026-10-23 12:06 UTC — Continuation boundary
+
+- [x] Existing Admin mapping/mobile repair commit `a1746f94ab41d4dbc864677603701b0f8dc3d45d` and Public auth/cache commit `88ede5ff18e61e270c659a43b2dbbb21bee0a323` are local on `main`; neither was pushed or deployed in this continuation.
+- [ ] Public auth/cache browser closure: retrieve a fresh authenticated API request after an authorized coordinated release; current existing page DOM and older 304/cache entries do not prove fresh account data or authentication.
+- [ ] Refresh Worker-0 release/service identities before any release action. `ssh nexi-vps` did not resolve from the current host; this documentation commit does not authorize a production operation.
+- [ ] Remaining acceptance: approved Admin Cloud Browser visual/functional pass, TEST_ONLY Learn category status path, controlled Messages thread, eligible Binary position, permitted lower-role identity, broader Public authenticated flows, and owner acceptance.

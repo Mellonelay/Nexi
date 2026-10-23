@@ -660,10 +660,16 @@ Changed-boundary evidence: `backend/test/gate2/binary.service.spec.ts`, `backend
 - [x] Admin build instructions now document the verified pnpm shared-symlink invocation, without permitting source-tree installs or dependency changes.
 - [x] Source commit `c74b3c02c948ceac2df92a76acc4f3c5c19c540d` was pushed to `main`. Canonical Backend build and Admin client/SSR/Nitro build passed; the existing Public artifact was reused because no Public production source changed.
 - [x] Backend and Admin deployed at source SHA `c74b3c02c948ceac2df92a76acc4f3c5c19c540d`. Both services are active with zero recorded restarts; API readiness, five Public Settings endpoints, Admin Overview/Messages and its built bundle returned expected responses. Protected Messages reads/reply reject unauthenticated requests with 401.
+- [x] Current Backend/Admin rollback artifacts passed privileged restoration rehearsals. Migration 0017 was already applied with matching schema; no production database mutation was made.
+- [ ] Authenticated browser thread/reply and full Admin/Public acceptance remain for the later browser phase. Sentry accepted three Admin bundles and exact-release issue search found no events; some generated chunks lacked discoverable source-map references, so complete source-map coverage is not claimed. Generic Public feature flags remain excluded pending an approved consumer contract.
 
 ### Integrated release history — 2026-10-23
 
 - [x] Reused the current source/build/runtime receipts; no Admin/Public/backend build or test was repeated because application source was unchanged during this documentation update.
 - [x] Created the consolidated [Admin/Public integrated release history](evidence/admin-integrated-release-history-20261023.md), preserving source SHA, deployed identities, verification scope, Sentry limitation, rollback hashes, and the remaining authenticated browser/owner-acceptance gate.
-- [x] Current Backend/Admin rollback artifacts passed privileged restoration rehearsals. Migration 0017 was already applied with matching schema; no production database mutation was made.
-- [ ] Authenticated browser thread/reply and full Admin/Public acceptance remain for the later browser phase. Sentry accepted three Admin bundles and exact-release issue search found no events; some generated chunks lacked discoverable source-map references, so complete source-map coverage is not claimed. Generic Public feature flags remain excluded pending an approved consumer contract.
+
+### Storage maintenance — 2026-10-23
+
+- [x] Removed only Public `.next/cache/webpack` (1,043,682,946 bytes), npm `_cacache` (~177 MB), and APT package downloads. Root free space measured 1,942,331,392 bytes at final closeout; services stayed active and Public `/dashboard` returned 200.
+- [x] Confirmed and retained the three independent shared dependency stores. Kept checkout `backend/node_modules` because native `better-sqlite3` cannot cross the source Node 22 ABI and runtime Node 24 ABI. Kept rollback and financial archives, active browser/tool state, and an unrelated fresh `/tmp` project checkout.
+- [x] Full path-by-path actions and retained-data decisions are in [storage maintenance receipt](evidence/storage-maintenance-20261023.md). No production DB mutation, build, restart, source change, or browser test occurred.
