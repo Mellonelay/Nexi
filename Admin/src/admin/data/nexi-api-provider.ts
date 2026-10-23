@@ -56,6 +56,7 @@ import type {
 } from "../types";
 import { reorderByIds } from "./banner-order";
 import { mapBinaryPositionStatus } from "../types";
+import { isPublishedAnnouncement } from "./announcement-status";
 
 type ApiConfig = { baseUrl: string; getToken: () => Promise<string> };
 type JsonRecord = Record<string, unknown>;
@@ -1973,7 +1974,8 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     return this.request<unknown[]>("/admin/announcements").then((rows) =>
       rows.map((value) => {
         const row = record(value);
-        const status = row.published === true ? "published" : row.startsAt ? "scheduled" : "draft";
+        const published = isPublishedAnnouncement(row.published);
+        const status = published ? "published" : row.startsAt ? "scheduled" : "draft";
         return {
           id: stringValue(row.id),
           title: stringValue(row.title),
@@ -1984,7 +1986,7 @@ export class NexiAdminApiProvider implements AdminDataProvider {
           scheduledAt: typeof row.startsAt === "string" ? row.startsAt : undefined,
           endsAt: typeof row.endsAt === "string" ? row.endsAt : undefined,
           publishedAt:
-            typeof row.updatedAt === "string" && row.published === true ? row.updatedAt : undefined,
+            typeof row.updatedAt === "string" && published ? row.updatedAt : undefined,
           pinned: row.pinned === true,
           pinOrder: Number(row.pinOrder ?? 0),
         } as Announcement;

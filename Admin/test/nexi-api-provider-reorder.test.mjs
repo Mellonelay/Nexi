@@ -4,6 +4,7 @@ import test from "node:test";
 import { reorderByIds } from "../src/admin/data/banner-order.ts";
 import { ALL_ROUTES, findRoute, NAV_GROUPS } from "../src/admin/config/navigation.ts";
 import { mapBinaryPositionStatus } from "../src/admin/types/index.ts";
+import { isPublishedAnnouncement } from "../src/admin/data/announcement-status.ts";
 import { isOngoingBinaryPositionStatus } from "../src/admin/data/binary-position-view.ts";
 import { groupAdminMessageConversations } from "../src/admin/data/message-conversations.ts";
 import { buildOverviewWorkItems } from "../src/admin/data/overview-work-items.ts";
@@ -58,6 +59,14 @@ test("settling Binary positions are not exposed as open research-control targets
   assert.equal(mapBinaryPositionStatus("win"), "won");
   assert.equal(mapBinaryPositionStatus("loss"), "lost");
   assert.equal(mapBinaryPositionStatus("unknown"), "error");
+});
+
+test("announcement publication mapping accepts SQLite integer booleans", () => {
+  assert.equal(isPublishedAnnouncement(true), true);
+  assert.equal(isPublishedAnnouncement(1), true);
+  assert.equal(isPublishedAnnouncement(false), false);
+  assert.equal(isPublishedAnnouncement(0), false);
+  assert.equal(isPublishedAnnouncement("true"), false);
 });
 
 test("the Binary ongoing view includes open and settling positions, but not completed positions", () => {

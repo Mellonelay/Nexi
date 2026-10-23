@@ -558,7 +558,7 @@ function PositionsPanel({
 
   return (
     <>
-      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <DataTable
           data={positions}
           columns={columns}
@@ -722,7 +722,7 @@ function PositionInspector({
     return (
       <aside
         aria-label="Selected position details"
-        className="surface-1 rounded-lg border border-border/60 p-4"
+        className="surface-1 min-w-0 rounded-lg border border-border/60 p-4"
       >
         <div className="py-8 text-sm text-muted-foreground">
           Select a position to inspect its details and available controls.
