@@ -902,3 +902,12 @@ Receipt: `tasks/evidence/market-provider-runtime-20261017.md`.
 - [ ] Obtain final owner acceptance. Keep all four economic gates `OWNER_ACCEPTED_UNTESTED`; no signatures, transfers, orders, settlement overrides, migrations, or financial operations were part of this release.
 
 Detailed exact artifact/build/browser/Sentry/rollback evidence: [2026-10-23 coordinated release checkpoint](evidence/nexi-coordinated-release-checkpoint-20261023.md).
+
+## 2026-10-23 15:28 UTC — Release closeout follow-through
+
+- [x] Remove only this release's regenerable build caches: Public Webpack/type-build cache and Admin temporary SSR build workspace. Keep canonical outputs, older cache entries, dependencies, rollback archives, and unrelated temporary session evidence. Free space after cleanup: 4,676,288,512 bytes.
+- [x] Recheck all three deployed markers, active services, API readiness, Public dashboard/wallet, and Admin Overview/Messages after cleanup; all returned expected identities/statuses.
+- [x] Fetch `origin/main` before publication; no divergence, local `main` was ten commits ahead. Push was explicitly authorized by the owner for this closeout.
+- [ ] Finish remaining authenticated Admin/Public owner acceptance, controlled Messages, Learn-category status path, and Backend graceful-shutdown investigation as listed above; this release closeout does not mark those items complete.
+
+Evidence: [coordinated release checkpoint](evidence/nexi-coordinated-release-checkpoint-20261023.md).

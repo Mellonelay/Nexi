@@ -599,3 +599,9 @@ Sentry artifact uploads completed for both frontend builds under release `6507cf
 - **P1.1 and announcement mapping:** the Admin layout and SQLite numeric/boolean publication mapping fixes are deployed; focused provider tests were 10/10. The authenticated Announcements page rendered the TEST_ONLY announcement as Draft without a mutation. Full post-release mobile reference comparison and restricted-role/eligible-position checks remain open.
 - **P2.6/P3.2:** the Learn category remains active because no supported category status-update API/control was found; Messages lacks an authorized controlled conversation. These remain `OPEN` / fixture-or-contract limited, not repaired by this release.
 - **Release verification:** all three services active; HTTPS API readiness and the exercised Public/Admin routes returned expected success statuses. Exact-release Sentry error search over 24h returned no events; Admin bundle upload completed with partial generated-chunk source-map association. No economic acceptance gate was rerun or promoted; owner acceptance remains open.
+
+## 2026-10-23 15:28 UTC — P5 release closeout cleanup
+
+- `DEPLOYED` identities remain `3bb57e02ea921531975124ce2c827382a9f1ec6b` on Backend/Public/Admin after cleanup; all services active and the final readiness/HTTPS smoke checks passed. No rebuild or restart occurred.
+- Removed only the release-generated Public Webpack/type-build caches and Admin temporary Vite/Nitro SSR output. Preserved live outputs, older caches, dependency stores, rollback archives, and unrelated task/browser temp files. Free space is 4,676,288,512 bytes. Exact paths/results: [release checkpoint](tasks/evidence/nexi-coordinated-release-checkpoint-20261023.md).
+- Full owner acceptance and the open P1/P2/P3/P5 items remain unchanged.

@@ -56,3 +56,10 @@ Builds used only the canonical outputs and their dedicated dependency stores. Ba
 - `P3.2` — End-to-end Public/Admin Messages remains fixture/authority-limited: no controlled test conversation existed, so no customer conversation was created or messaged.
 - `P5.*` — Preserve rollback archives and investigate the Backend graceful-stop timeout. Four owner-accepted economic gates remain `OWNER_ACCEPTED_UNTESTED`; no test or result status was promoted.
 - Overall Public/Admin owner acceptance remains open. This checkpoint is a precise restart point, not completion of the full acceptance campaign.
+
+## Post-release cache cleanup and final route check — 2026-10-23 15:28 UTC
+
+- Removed only cache/output created by the release build: Public `/srv/nexi/public/current/.next/cache/webpack` (8 files, about 1,011 MiB) and `.next/cache/.tsbuildinfo` (803,938 bytes); Admin `/srv/nexi/admin/shared/node_modules/.nitro/vite/services/ssr` (117 generated files, about 2.9 MiB) and its `last-build.json`.
+- Kept the deployed Backend `dist`, Public `.next` artifact, Admin `current` runtime and `.nitro/nitro.json`, all dependency packages/stores, Admin's older `.nitro` cache content, Public's older SWC cache, rollback archives, and unrelated `/tmp` session/evidence files. Public `.next/cache` remains about 24 KiB.
+- After cleanup, all three services were active; release markers and Public build ID still matched `3bb57e02ea921531975124ce2c827382a9f1ec6b`; API readiness, Public dashboard/wallet, and Admin Overview/Messages returned HTTP 200. Free space measured 4,676,288,512 bytes.
+- Before publishing this follow-up, `git fetch origin main` found no divergence: `origin/main` was `8084d860d9672c4de5c3bdbee2b96513db4b2b14`, with ten local commits ahead. The user authorized pushing this reviewed checkpoint.
