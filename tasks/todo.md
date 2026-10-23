@@ -878,3 +878,8 @@ Receipt: `tasks/evidence/market-provider-runtime-20261017.md`.
 
 - [x] P2.5 rendered structure: Identity verification/status field and document controls present at 440×956; no document submitted. Receipt: [browser progress](evidence/nexi-browser-acceptance-progress-20261023.md).
 - [ ] P2.5 status value, submission, review, and persisted readback remain unverified; use only an authorized controlled identity and document set.
+
+## 2026-10-23 12:20 UTC — Spot book/trades evidence
+
+- [x] P2.3 partial: live order-book status and empty Recent trades state observed at 440×956; orderbook/trades endpoints returned 304 and Socket.IO polling returned 200. No order submitted.
+- [ ] P2.3 remains open for fresh trade/order-book payload proof and reconnect/event behavior; 304s and polling handshake alone do not prove freshness or realtime updates.

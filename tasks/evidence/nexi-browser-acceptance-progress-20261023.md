@@ -124,3 +124,9 @@
 
 - **P2.5 — `BROWSER_VERIFIED` rendered structure only:** On the existing Public Settings Profile route at 440×956, the Identity verification section and status field rendered with two document file inputs and one action control; the document width fit the viewport. `/auth/refresh` returned 201; `/auth/me` and `/kyc/status` returned 304. The actual KYC status and personal data were not recorded, and no document was selected or submitted. This does not prove KYC workflow submission, review, or persistence.
 - Public was restored to `/dashboard/wallet`; Admin remains on `/binary`. No signature, financial write, file upload, or account mutation occurred.
+
+## Public Spot book/trades and transport check — 2026-10-23 12:20 UTC
+
+- **P2.3 — `BROWSER_VERIFIED` partial:** Existing Public `/dashboard/spot` at 440×956 had no horizontal overflow. `/spot/orderbook` and `/spot/market-trades` returned 304 twice; `/auth/refresh` returned 201 and `/auth/me` returned 304. No request body or market values were recorded. The Order book panel showed its `Live` status with one bid row and zero ask rows. Selecting the mobile Trades tab displayed the explicit `No recent trades yet` empty state, without a request-error state. No order was placed; order entry showed balance unavailable.
+- **Realtime boundary:** Socket.IO polling requests/handshake returned HTTP 200. No WebSocket resource was listed, so this session used or remained on polling transport. A connected/live order-book state was observed, but no pushed market event or reconnect cycle was tested. The empty trades view is not enough to establish provider failure because the API responses were 304 and may have used cached content.
+- Restored the mobile market panel to Order book, then restored Public to `/dashboard/wallet`; Admin remained on `/binary`. No interception, network disablement, order, signature, or account mutation occurred.

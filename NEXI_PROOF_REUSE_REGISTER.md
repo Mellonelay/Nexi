@@ -582,3 +582,8 @@ Sentry artifact uploads completed for both frontend builds under release `6507cf
 
 - **BROWSER_VERIFIED, rendered structure only:** Existing Public Profile showed the Identity verification section/status field, two document inputs and one action control at 440×956, with no horizontal overflow. Refresh returned 201; `/auth/me` and `/kyc/status` returned 304. The KYC status and personal data were intentionally not recorded; no upload or submit occurred.
 - KYC workflow acceptance remains open for an owner-authorized controlled submission/review path and persisted readback.
+
+## 2026-10-23 12:20 UTC — P2.3 Spot book/trades slice
+
+- **BROWSER_VERIFIED, partial:** Existing Spot page at 440×956 had no overflow. Order-book API and market-trade API returned 304 twice; app refresh 201 and `/auth/me` 304. Order-book UI showed Live, one bid and zero asks; selected mobile Trades panel showed `No recent trades yet` without an error. No order or financial action occurred; account balance was unavailable to the order form.
+- **Realtime:** Socket.IO polling requests returned 200; no WebSocket resource was observed. This does not prove a pushed market update or reconnect. Because API responses were 304, freshness and whether the empty trades state came from cached data remain open.

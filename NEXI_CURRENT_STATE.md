@@ -543,3 +543,7 @@ At 440×956, the existing Wallet page showed all five account tabs and Activity 
 ## KYC profile browser slice — 2026-10-23 12:16 UTC
 
 The existing Public Settings Profile at 440×956 rendered the Identity verification section/status field, two file inputs and one action control without horizontal overflow. `/auth/refresh` returned 201; `/auth/me` and `/kyc/status` returned 304. Actual KYC status and personal data were not recorded; no file was selected or submitted. KYC review/submission/persistence remain unverified. Public restored to Wallet. See [browser acceptance receipt](tasks/evidence/nexi-browser-acceptance-progress-20261023.md).
+
+## Public Spot browser slice — 2026-10-23 12:20 UTC
+
+At 440×956, Spot had no horizontal overflow. `/spot/orderbook` and `/spot/market-trades` returned 304 twice; `/auth/refresh` returned 201 and `/auth/me` 304. Order book displayed Live with one bid row/zero ask rows; selecting Trades showed an explicit no-recent-trades state and no request error. Socket.IO polling requests returned 200 and no WebSocket resource was listed. No order was placed; order entry showed balance unavailable. Since responses were 304, data freshness is unverified; no pushed event or reconnect was tested. Public restored to Wallet. Detailed receipt: [browser acceptance progress](tasks/evidence/nexi-browser-acceptance-progress-20261023.md).
