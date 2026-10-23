@@ -47,6 +47,7 @@ test('API authorization uses credentials and recovers through the HttpOnly cooki
 
   assert.match(api, /getAccessToken/);
   assert.match(api, /Authorization\s*=\s*`Bearer \$\{token\}`/);
+  assert.match(api, /config\.headers\[['"]Cache-Control['"]\]\s*=\s*['"]no-cache['"]/);
   assert.match(api, /['"]\/auth\/refresh['"]/);
   assert.match(api, /withCredentials:\s*true/);
   assert.doesNotMatch(api, /getRefreshToken|refreshToken\s*\}/);

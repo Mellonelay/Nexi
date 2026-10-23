@@ -60,6 +60,7 @@ api.interceptors.request.use((config) => {
     const token = getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      config.headers['Cache-Control'] = 'no-cache';
     }
   }
   return config;
