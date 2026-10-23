@@ -3,6 +3,7 @@
 - [x] Source `c74b3c02c948ceac2df92a76acc4f3c5c19c540d` pushed; Backend and Admin canonical production builds passed and are deployed at that source SHA.
 - [x] Backend/Admin services active; API readiness, all five Public Settings API reads, Admin Messages route/bundle, and protected Messages endpoints verified. Public production artifact was reused because Public production source was unchanged.
 - [x] Backend/Admin rollback artifacts retained and restoration rehearsals passed. Migration 0017 was already applied with matching schema; no production data mutation occurred.
+- [x] Durable history consolidated in [Admin/Public integrated release history](evidence/admin-integrated-release-history-20261023.md); existing integration and release receipts remain the detailed proof sources. No builds or tests were repeated because application source was unchanged.
 - [ ] Remaining acceptance: authenticated Admin/Public browser flows and visual/responsive checks. Sentry artifact bundles processed; some generated chunks have no auto-detected source-map reference. Public feature flags remain excluded without an approved named consumer contract.
 
 ## Prior release checkpoint — 2026-10-20 (historical; superseded above)

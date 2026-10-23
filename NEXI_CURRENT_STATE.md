@@ -1,3 +1,9 @@
+## Current Admin/Public release checkpoint — 2026-10-23
+
+Backend and Admin source/release markers are `c74b3c02c948ceac2df92a76acc4f3c5c19c540d`; the unchanged Public build ID is `6507cf16a8cd863048b12aa56b23fd43435695ec`. At the last recorded release check, all three services were active and Public `/dashboard` returned HTTP 200. Migration 0017 was already applied with matching schema; no promoted SQLite write was made during the release. Authenticated browser acceptance and owner acceptance remain open.
+
+---
+
 ## Current integrated release state — 2026-10-22
 
 Public source `6507cf16a8cd863048b12aa56b23fd43435695ec` remains deployed at `/srv/nexi/public/current`. Admin source `d163bfa85479fb7efb465a8a675141cdc4e50f17` is deployed at canonical `/srv/nexi/admin/current`; its release marker matches the pushed source. Admin Vite client, SSR and Nitro builds passed using the pinned Admin pnpm/shared dependency store. Backend remains at marker `9473e1393ada0c7398ad1aca27e822b2d6d00975`; API readiness returns 200. Admin HTTPS root redirects to `/overview`, overview returns 200, and unauthenticated `api.nexitrading.app/admin/me` returns 401.
