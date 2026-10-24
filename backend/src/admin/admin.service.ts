@@ -27,7 +27,7 @@ import { D1FinancialCommandGateway } from "../d1/d1-financial-command.gateway";
 import { D1PrismaService } from "../d1/d1-prisma.service";
 import { randomUUID } from "node:crypto";
 import { CommunicationsService } from "../communications/communications.service";
-import { assertPublicBannerSettings, assertPublicRouteSettings } from "./public-ui-config";
+import { assertPublicBannerSettings, assertPublicRouteSettings, assertSupportEntryPoints } from "./public-ui-config";
 import { assertBinaryDurationUnchanged, latestBinaryConfigurationRows, resolveBinaryEnabled } from "./binary-configuration.utils";
 import {
   AdminPlanMutationContext,
@@ -912,6 +912,7 @@ export class AdminService {
       assertVisiblePublicQuotesCategory(value);
     if (key === "admin.frontend.routes") assertPublicRouteSettings(value);
     if (key === "admin.frontend.banners") assertPublicBannerSettings(value);
+    if (key === "admin.frontend.supportEntryPoints") assertSupportEntryPoints(value);
     if (this.d1?.isEnabled())
       return this.d1.updateSystemConfig({
         key,

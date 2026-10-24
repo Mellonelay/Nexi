@@ -943,3 +943,9 @@ Evidence: [coordinated release checkpoint](evidence/nexi-coordinated-release-che
 - [x] Skill paths and backend lockfile versions checked. Standalone BullMQ skill absent; Vibe Workflow/Redis and current official package documentation are the routed fallback. No direct Capability Orchestrator/Coordinator MCP or Promptfoo tool is exposed; the Coordinator claim board list CLI worked.
 - [x] Read-only scenario results and evidence limits recorded in [the routing receipt](evidence/backend-specialist-first-routing-20261024.md).
 - [ ] No code tests/build/deploy were run because this is an instruction-only change. Whether instructions are obeyed in future tasks is not runtime-enforced or proven here.
+
+## 2026-10-24 — P3.2 Support/chat source checkpoint (latest)
+
+- [x] SOURCE_IMPLEMENTED / TESTED: Public Support contacts and help UI, recipient-free Public NEXI support chat, canonical Admin/Public conversation identity, explicit read receipts, Admin support contact settings, and private attachment upload/read source paths are integrated in the shared working tree.
+- [x] Focused Backend communications/config/attachment tests, Admin support-contact source tests and typecheck, Public communications/UI contracts, Next route type generation + TypeScript, targeted ESLint, Graphify topology paths, Fallow scoped analysis, and `git diff --check` are recorded in [the source receipt](evidence/nexi-support-chat-source-implementation-20261024.md).
+- [ ] Not committed, built, deployed, or browser-verified. P3.2 remains OPEN for an authorized controlled Public send → Admin reply → same Public thread history/read-state/reconnect acceptance. No real customer messages, production message writes, or financial operations were performed.

@@ -542,20 +542,6 @@ export interface ReconciliationItem {
   notes: ReconciliationNote[];
 }
 
-export type TicketStatus = "open" | "pending_user" | "resolved" | "escalated";
-export type TicketPriority = "low" | "normal" | "high" | "urgent";
-export interface SupportTicket {
-  id: string;
-  userId: string;
-  subject: string;
-  priority: TicketPriority;
-  status: TicketStatus;
-  assignee?: string;
-  createdAt: string;
-  updatedAt: string;
-  messages: { id: string; author: string; internal: boolean; body: string; ts: string }[];
-}
-
 export interface AuditEvent {
   id: string;
   ts: string;
@@ -641,7 +627,7 @@ export interface SupportEntryPoint {
   id: string;
   label: string;
   target: string;
-  channel: "chat" | "ticket" | "email" | "faq";
+  channel: "chat" | "ticket" | "email" | "telegram" | "faq";
   visible: boolean;
   order: number;
 }
@@ -720,6 +706,8 @@ export interface AdminMessage {
   recipientId: string;
   body: string;
   conversationId?: string;
+  supportCustomerId?: string;
+  attachments?: Array<{ id: string; name: string; mimeType: string; size: number }>;
   deliveryState: string;
   readAt?: string | null;
   createdAt: string;

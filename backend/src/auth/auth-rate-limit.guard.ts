@@ -14,6 +14,7 @@ import { RedisRateLimitService } from './redis-rate-limit.service';
 interface AuthRateLimitRequest {
   readonly ip?: string;
   readonly body?: Record<string, unknown>;
+  readonly user?: { readonly userId?: string };
 }
 
 interface AuthRateLimitPolicy {
@@ -28,6 +29,7 @@ const AUTH_RATE_LIMIT_POLICIES: Record<AuthRateLimitOperation, AuthRateLimitPoli
   'admin-login': { ipLimit: 10, accountLimit: 3, windowSeconds: 60 },
   refresh: { ipLimit: 20, accountLimit: 5, windowSeconds: 60 },
   'admin-refresh': { ipLimit: 10, accountLimit: 3, windowSeconds: 60 },
+  'message-attachment': { ipLimit: 12, accountLimit: 8, windowSeconds: 60 },
 };
 
 export class AuthRateLimitExceededException extends HttpException {
@@ -60,6 +62,12 @@ export class AuthRateLimitGuard implements CanActivate {
     if (typeof email === 'string' && email.trim().length > 0) {
       keys.push({
         key: `auth:${operation}:account:${this.digest(email.trim().toLowerCase())}`,
+        limit: policy.accountLimit,
+      });
+    }
+    if (typeof request.user?.userId === 'string' && request.user.userId) {
+      keys.push({
+        key: `auth:${operation}:actor:${this.digest(request.user.userId)}`,
         limit: policy.accountLimit,
       });
     }

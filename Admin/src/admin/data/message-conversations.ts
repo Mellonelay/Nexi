@@ -1,9 +1,21 @@
 import type { AdminMessage } from "@/admin/types";
 
 export interface AdminMessageConversation {
+  conversationId: string;
   clientId: string;
+  support: boolean;
   latestMessage: AdminMessage;
   unreadCount: number;
+}
+
+function clientIdForMessage(message: AdminMessage, actorId: string): string | null {
+  if (message.supportCustomerId) return message.supportCustomerId;
+  if (message.senderId === actorId) return message.recipientId;
+  return message.recipientId === actorId ? message.senderId : null;
+}
+
+function isUnreadIncoming(message: AdminMessage, actorId: string, support: boolean): boolean {
+  return !message.readAt && message.recipientId === (support ? "support:nexi" : actorId);
 }
 
 export function groupAdminMessageConversations(
@@ -14,26 +26,25 @@ export function groupAdminMessageConversations(
 
   const conversations = new Map<string, AdminMessageConversation>();
   for (const message of messages) {
-    const clientId =
-      message.senderId === actorId
-        ? message.recipientId
-        : message.recipientId === actorId
-          ? message.senderId
-          : null;
+    const support = !!message.supportCustomerId;
+    const clientId = clientIdForMessage(message, actorId);
     if (!clientId || clientId === actorId) continue;
 
-    const existing = conversations.get(clientId);
-    if (!existing) {
-      conversations.set(clientId, {
-        clientId,
-        latestMessage: message,
-        unreadCount: message.recipientId === actorId && !message.readAt ? 1 : 0,
-      });
+    const conversationId = message.conversationId ?? `legacy:${clientId}`;
+    const key = support ? conversationId : `direct:${clientId}`;
+    const existing = conversations.get(key);
+    if (existing) {
+      if (message.createdAt > existing.latestMessage.createdAt) existing.latestMessage = message;
+      if (isUnreadIncoming(message, actorId, support)) existing.unreadCount += 1;
       continue;
     }
-
-    if (message.createdAt > existing.latestMessage.createdAt) existing.latestMessage = message;
-    if (message.recipientId === actorId && !message.readAt) existing.unreadCount += 1;
+    conversations.set(key, {
+      conversationId,
+      clientId,
+      support,
+      latestMessage: message,
+      unreadCount: isUnreadIncoming(message, actorId, support) ? 1 : 0,
+    });
   }
 
   return [...conversations.values()].sort((a, b) =>

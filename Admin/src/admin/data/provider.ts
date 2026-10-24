@@ -16,7 +16,6 @@ import type {
   LedgerEntry,
   Deposit,
   Withdrawal,
-  SupportTicket,
   AuditEvent,
   FeatureFlag,
   Announcement,
@@ -285,6 +284,10 @@ export interface AdminDataProvider {
   ): Promise<MutationResult>;
 
   listSupportEntryPoints(): Promise<SupportEntryPoint[]>;
+  updatePublicSupportContacts(
+    contacts: { telegramUrl: string; email: string },
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult>;
   updateSupportEntryPoint(
     id: string,
     patch: Partial<Pick<SupportEntryPoint, "label" | "target" | "channel" | "visible" | "order">>,
@@ -370,20 +373,6 @@ export interface AdminDataProvider {
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
 
-  /** Support */
-  listTickets(): Promise<SupportTicket[]>;
-  replyTicket(
-    id: string,
-    body: string,
-    internal: boolean,
-    ctx: ConsequentialContext,
-  ): Promise<MutationResult>;
-  setTicketStatus(
-    id: string,
-    status: SupportTicket["status"],
-    ctx: ConsequentialContext,
-  ): Promise<MutationResult>;
-
   /** Governance */
   listAdmins(): Promise<AdminUser[]>;
   /** Optional read-only detail projection for live Admin providers. */
@@ -433,8 +422,10 @@ export interface AdminDataProvider {
   ): Promise<MutationResult>;
   publishAnnouncement(id: string, ctx: ConsequentialContext): Promise<MutationResult>;
   listMessages(): Promise<AdminMessage[]>;
+  uploadAdminMessageAttachment(recipientId: string, file: File): Promise<{ id: string; name: string; mimeType: string; size: number }>;
+  getAdminMessageAttachment(recipientId: string, id: string): Promise<Blob>;
   sendAdminMessage(
-    payload: { recipientId: string; body: string },
+    payload: { recipientId: string; conversationId?: string; body: string; attachmentIds?: string[]; idempotencyKey: string },
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
   markAdminMessageRead(id: string): Promise<void>;
@@ -562,6 +553,8 @@ export interface AdminDataProvider {
 
   /** Subscription to audit stream (for UI refresh) */
   subscribe(fn: () => void): () => void;
+  /** Optional authenticated Socket.IO invalidation stream; HTTP remains the data authority. */
+  subscribeToCommunications?(fn: () => void): () => void;
 }
 
 export class NotConnectedError extends Error {

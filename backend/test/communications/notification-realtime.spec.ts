@@ -51,7 +51,7 @@ describe('A19 notification durable realtime closure', () => {
 
   it('targets communications events to the authenticated user room', () => {
     const emit = jest.fn();
-    const gateway = new CommunicationsGateway({} as any, {} as any, {} as any);
+    const gateway = new CommunicationsGateway({} as any, {} as any, { hasPermission: jest.fn() } as any, {} as any, {} as any);
     (gateway as any).server = { to: jest.fn(() => ({ emit })) };
     (gateway as any).broadcast(JSON.stringify({ type: 'NOTIFICATION_SENT', referenceId: 'notification-1', payload: { userId: 'user-1' } }));
     expect((gateway as any).server.to).toHaveBeenCalledWith('user:user-1');

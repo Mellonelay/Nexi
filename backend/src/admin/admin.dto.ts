@@ -1,5 +1,7 @@
 import { Type } from "class-transformer";
 import {
+  ArrayMaxSize,
+  IsArray,
   IsBoolean,
   IsDateString,
   IsInt,
@@ -16,6 +18,7 @@ import {
   IsIn,
 } from "class-validator";
 import { PartialType } from "@nestjs/mapped-types";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
 export class UpdateSystemConfigDto {
   @IsString()
@@ -328,11 +331,20 @@ export class AdminSupportStatusDto {
 }
 
 export class AdminSendMessageDto {
+  @ApiProperty({ format: "uuid", description: "Customer account that owns the support thread." })
   @IsUUID() recipientId!: string;
-  @IsString() @Length(1, 10000) body!: string;
+  @ApiPropertyOptional({ description: "Canonical conversation ID from the customer support thread." })
+  @IsOptional() @IsString() @Length(1, 256) conversationId?: string;
+  @ApiPropertyOptional({ maxLength: 10000 })
+  @IsOptional() @IsString() @Length(0, 10000) body?: string;
+  @ApiPropertyOptional({ type: [String], format: "uuid", maxItems: 4 })
+  @IsOptional() @IsArray() @ArrayMaxSize(4) @IsUUID('4', { each: true }) attachmentIds?: string[];
+  @ApiProperty({ minLength: 3, maxLength: 500 })
   @IsString() @Length(3, 500) reason!: string;
+  @ApiProperty({ minLength: 8, maxLength: 128 })
   @IsString() @Length(8, 128) idempotencyKey!: string;
 }
+
 
 export class AdminPairMaintenanceDto {
   @IsString() @Length(3, 64) symbol!: string;

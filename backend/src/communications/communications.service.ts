@@ -12,6 +12,9 @@ import { RedisService } from "../redis/redis.service";
 import { EventOutboxService } from "../events/event-outbox.service";
 import { D1CommunicationsCommandGateway } from "../d1/d1-communications-command.gateway";
 import type { D1BridgeBatchStatement } from "../d1/d1-worker-bridge.service";
+import { SUPPORT_ATTACHMENT_MAX_COUNT, SupportAttachmentStorageService, type SupportAttachment, type SupportUpload } from "./support-attachment-storage.service";
+
+export const NEXI_SUPPORT_CHANNEL_ID = "support:nexi";
 
 type ResolveMessageModerationInput = {
   status: "OPEN" | "RESOLVED";
@@ -50,6 +53,18 @@ type LearnArticleUpdateContext = {
   now: string;
 };
 
+function parseSupportAttachments(value: unknown): SupportAttachment[] {
+  if (typeof value === "string") {
+    try { value = JSON.parse(value); } catch { return []; }
+  }
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is SupportAttachment =>
+    !!item && typeof item === "object" &&
+    typeof item.id === "string" && typeof item.name === "string" &&
+    typeof item.mimeType === "string" && Number.isSafeInteger(item.size) && item.size >= 0,
+  );
+}
+
 @Injectable()
 export class CommunicationsService {
   constructor(
@@ -57,6 +72,7 @@ export class CommunicationsService {
     private readonly outbox: EventOutboxService,
     private readonly d1Communications: D1CommunicationsCommandGateway,
     private readonly redis: RedisService,
+    private readonly supportAttachments: SupportAttachmentStorageService = new SupportAttachmentStorageService(),
   ) {}
 
   private get database(): any {
@@ -146,7 +162,7 @@ export class CommunicationsService {
       where: { userId },
       skip,
       take: limit,
-      orderBy: { updatedAt: "desc" },
+      orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
       include: {
         replies: {
           where: { internal: false },
@@ -237,6 +253,132 @@ export class CommunicationsService {
     };
   }
 
+  private supportConversationIdentity(userId: string) {
+    return this.conversationIdentity(userId, NEXI_SUPPORT_CHANNEL_ID);
+  }
+
+  private async supportConversation(userId: string, create: boolean) {
+    const identity = this.supportConversationIdentity(userId);
+    if (create) {
+      if (this.d1Communications.isEnabled()) await this.d1Communications.ensureConversation({
+        id: identity.conversationId,
+        participantAId: identity.participantAId,
+        participantBId: identity.participantBId,
+      });
+      else await this.database.messageConversation.upsert({
+        where: { participantAId_participantBId: {
+          participantAId: identity.participantAId,
+          participantBId: identity.participantBId,
+        } },
+        update: {},
+        create: identity,
+      });
+    }
+    const conversation = await this.database.messageConversation.findUnique({ where: { id: identity.conversationId } });
+    if (!conversation || conversation.id !== identity.conversationId ||
+      conversation.participantAId !== identity.participantAId ||
+      conversation.participantBId !== identity.participantBId || conversation.state !== "ACTIVE") {
+      throw new ForbiddenException("Support conversation is restricted");
+    }
+    return identity;
+  }
+
+  private async supportAttachmentReferences(conversationId: string): Promise<Set<string>> {
+    const rows = await this.database.persistentMessage.findMany({
+      where: { conversationId }, select: { attachments: true },
+    });
+    return new Set(rows.flatMap((row: { attachments?: unknown }) => parseSupportAttachments(row.attachments).map((item) => item.id)));
+  }
+
+  private async assertSupportAttachmentLinked(conversationId: string, id: string): Promise<void> {
+    const rows = await this.database.persistentMessage.findMany({
+      where: { conversationId, attachments: { contains: id } }, select: { attachments: true },
+    });
+    if (!rows.some((row: { attachments?: unknown }) => parseSupportAttachments(row.attachments).some((item) => item.id === id))) {
+      throw new NotFoundException("Attachment not found");
+    }
+  }
+
+  async supportThread(userId: string, page = 1, limit = 100) {
+    const identity = this.supportConversationIdentity(userId);
+    const conversation = await this.database.messageConversation.findUnique({
+      where: { id: identity.conversationId },
+    });
+    if (!conversation) return { conversationId: identity.conversationId, page, limit, messages: [] };
+    if (
+      conversation.participantAId !== identity.participantAId ||
+      conversation.participantBId !== identity.participantBId ||
+      conversation.state !== "ACTIVE"
+    ) throw new ForbiddenException("Support conversation is restricted");
+    const messages = await this.database.persistentMessage.findMany({
+      where: { conversationId: identity.conversationId },
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: [{ sequence: "asc" }, { createdAt: "asc" }, { id: "asc" }],
+    });
+    return { conversationId: identity.conversationId, page, limit, messages: messages.map((message) => this.supportMessageResponse(message)) };
+  }
+
+  private supportMessageResponse<T extends { attachments?: unknown }>(message: T) {
+    return { ...message, attachments: parseSupportAttachments(message.attachments) };
+  }
+
+  async uploadSupportAttachment(userId: string, file?: SupportUpload): Promise<SupportAttachment> {
+    const identity = await this.supportConversation(userId, true);
+    const referenced = await this.supportAttachmentReferences(identity.conversationId);
+    await this.supportAttachments.cleanupExpired(userId, referenced);
+    return this.supportAttachments.upload(userId, file, referenced);
+  }
+
+  async getSupportAttachment(userId: string, id: string) {
+    const identity = await this.supportConversation(userId, false);
+    await this.assertSupportAttachmentLinked(identity.conversationId, id);
+    return this.supportAttachments.read(userId, id);
+  }
+
+  async uploadAdminSupportAttachment(userId: string, file?: SupportUpload): Promise<SupportAttachment> {
+    const recipient = await this.database.user.findFirst({ where: { id: userId, role: Role.USER }, select: { id: true } });
+    if (!recipient) throw new NotFoundException("Client not found");
+    const identity = await this.supportConversation(userId, false);
+    const referenced = await this.supportAttachmentReferences(identity.conversationId);
+    await this.supportAttachments.cleanupExpired(userId, referenced);
+    return this.supportAttachments.upload(userId, file, referenced);
+  }
+
+  async getAdminSupportAttachment(userId: string, id: string) {
+    const recipient = await this.database.user.findFirst({ where: { id: userId, role: Role.USER }, select: { id: true } });
+    if (!recipient) throw new NotFoundException("Client not found");
+    const identity = await this.supportConversation(userId, false);
+    await this.assertSupportAttachmentLinked(identity.conversationId, id);
+    return this.supportAttachments.read(userId, id);
+  }
+
+  async sendSupportMessage(userId: string, body: string, idempotencyKey: string, attachmentIds: string[] = []) {
+    const messageBody = body.trim();
+    if (!messageBody && !attachmentIds.length) throw new BadRequestException("Message body or attachment is required");
+    if (attachmentIds.length > SUPPORT_ATTACHMENT_MAX_COUNT || new Set(attachmentIds).size !== attachmentIds.length) {
+      throw new BadRequestException(`A message may include up to ${SUPPORT_ATTACHMENT_MAX_COUNT} unique attachments`);
+    }
+    const messageId = this.id(`message:${userId}:${NEXI_SUPPORT_CHANNEL_ID}`, idempotencyKey);
+    const existing = await this.database.persistentMessage.findUnique({ where: { id: messageId } });
+    if (existing) {
+      const activeIdentity = await this.supportConversation(userId, false);
+      const attachments = parseSupportAttachments(existing.attachments);
+      const attachmentIdsMatch = attachments.length === attachmentIds.length &&
+        attachments.every((attachment, index) => attachment.id === attachmentIds[index]) &&
+        (existing.attachments == null || attachments.length > 0 || attachmentIds.length === 0);
+      if (existing.conversationId !== activeIdentity.conversationId || existing.senderId !== userId ||
+        existing.recipientId !== NEXI_SUPPORT_CHANNEL_ID || existing.body !== messageBody || !attachmentIdsMatch) {
+        throw new ConflictException("Message idempotency key was already used with a different payload");
+      }
+      return this.supportMessageResponse(existing);
+    }
+    const attachments = await this.supportAttachments.resolve(userId, attachmentIds);
+    await this.supportConversation(userId, true);
+    const message = await this.sendMessage(userId, NEXI_SUPPORT_CHANNEL_ID, messageBody, idempotencyKey, attachments.length ? attachments : undefined);
+    return this.supportMessageResponse(message);
+  }
+
   async sendMessage(
     senderId: string,
     recipientId: string,
@@ -246,6 +388,8 @@ export class CommunicationsService {
   ) {
     const messageId = this.id(`message:${senderId}:${recipientId}`, key);
     const identity = this.conversationIdentity(senderId, recipientId);
+    const serializedAttachments = attachments === undefined ? null : JSON.stringify(attachments);
+    const expected = { conversationId: identity.conversationId, senderId, recipientId, body, attachments: serializedAttachments };
     if (this.d1Communications.isEnabled()) {
       await this.d1Communications.sendMessage({
         id: messageId,
@@ -256,55 +400,12 @@ export class CommunicationsService {
         attachments,
         idempotencyKey: `message:${messageId}`,
       });
-    } else {
-      await this.database.$transaction(async (tx) => {
-        const conversation = await tx.messageConversation.upsert({
-          where: {
-            participantAId_participantBId: {
-              participantAId: identity.participantAId,
-              participantBId: identity.participantBId,
-            },
-          },
-          update: {},
-          create: {
-            id: identity.conversationId,
-            participantAId: identity.participantAId,
-            participantBId: identity.participantBId,
-          },
-        });
-        if (conversation.state !== "ACTIVE")
-          throw new ForbiddenException("Conversation is restricted");
-        const last = await tx.persistentMessage.findFirst({
-          where: { conversationId: identity.conversationId },
-          orderBy: { sequence: "desc" },
-          select: { sequence: true },
-        });
-        await tx.persistentMessage.upsert({
-          where: { id: messageId },
-          update: {},
-          create: {
-            id: messageId,
-            conversationId: identity.conversationId,
-            senderId,
-            recipientId,
-            body,
-            sequence: (last?.sequence ?? 0) + 1,
-            attachments: attachments as Prisma.InputJsonValue | undefined,
-          },
-        });
-      });
-      await this.durableEvent(
-        "message:" + messageId,
-        "PERSISTENT_MESSAGE",
-        messageId,
-        "MESSAGE_SENT",
-        { conversationId: identity.conversationId, senderId, recipientId },
-      );
-    }
+    } else await this.persistPrismaMessage(messageId, expected, identity);
     const message = await this.database.persistentMessage.findUnique({
       where: { id: messageId },
     });
     if (!message) throw new ForbiddenException("Conversation is restricted");
+    this.assertMessageMatches(message, expected);
     await this.publishRealtimeEvent("MESSAGE_SENT", message.id, {
       conversationId: identity.conversationId,
       senderId,
@@ -312,6 +413,48 @@ export class CommunicationsService {
       sequence: message.sequence,
     });
     return message;
+  }
+
+  private async persistPrismaMessage(
+    messageId: string,
+    expected: { conversationId: string; senderId: string; recipientId: string; body: string; attachments: string | null },
+    identity: { conversationId: string; participantAId: string; participantBId: string },
+  ) {
+    await this.database.$transaction(async (tx: any) => {
+      const conversation = await tx.messageConversation.upsert({
+        where: { participantAId_participantBId: { participantAId: identity.participantAId, participantBId: identity.participantBId } },
+        update: { updatedAt: new Date() },
+        create: { id: identity.conversationId, participantAId: identity.participantAId, participantBId: identity.participantBId },
+      });
+      if (conversation.state !== "ACTIVE") throw new ForbiddenException("Conversation is restricted");
+      const last = await tx.persistentMessage.findFirst({
+        where: { conversationId: identity.conversationId }, orderBy: { sequence: "desc" }, select: { sequence: true },
+      });
+      const message = await tx.persistentMessage.upsert({
+        where: { id: messageId }, update: {},
+        create: { id: messageId, ...expected, sequence: (last?.sequence ?? 0) + 1 },
+      });
+      this.assertMessageMatches(message, expected);
+      await tx.eventOutbox.upsert({
+        where: { idempotencyKey: `message:${messageId}` }, update: {},
+        create: {
+          id: this.id("event-outbox", `message:${messageId}`), idempotencyKey: `message:${messageId}`,
+          aggregateType: "PERSISTENT_MESSAGE", aggregateId: messageId, eventType: "MESSAGE_SENT", eventVersion: 1,
+          correlationId: `message:${messageId}`,
+          payload: JSON.stringify({ conversationId: identity.conversationId, senderId: expected.senderId, recipientId: expected.recipientId }),
+        },
+      });
+    });
+  }
+
+  private assertMessageMatches(
+    message: { conversationId?: string | null; senderId: string; recipientId: string; body: string; attachments?: unknown },
+    expected: { conversationId: string; senderId: string; recipientId: string; body: string; attachments: string | null },
+  ) {
+    if (message.conversationId !== expected.conversationId || message.senderId !== expected.senderId ||
+      message.recipientId !== expected.recipientId || message.body !== expected.body || message.attachments !== expected.attachments) {
+      throw new ConflictException("Message idempotency key was already used with a different payload");
+    }
   }
 
   async markMessageRead(userId: string, messageId: string) {
@@ -507,41 +650,51 @@ export class CommunicationsService {
   }
 
   async adminMessages(page = 1, limit = 100) {
-    return this.database.persistentMessage.findMany({
+    const rows = await this.database.persistentMessage.findMany({
       skip: (page - 1) * limit,
       take: limit,
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      include: { conversation: { select: { participantAId: true, participantBId: true } } },
+    });
+    return rows.map((message: any) => {
+      const conversation = message.conversation;
+      const supportCustomerId = conversation?.participantAId === NEXI_SUPPORT_CHANNEL_ID
+        ? conversation.participantBId
+        : conversation?.participantBId === NEXI_SUPPORT_CHANNEL_ID
+          ? conversation.participantAId
+          : undefined;
+      return { ...message, supportCustomerId };
     });
   }
 
   async sendAdminMessage(
     adminId: string,
-    input: { recipientId: string; body: string; reason: string; idempotencyKey: string },
+    input: { recipientId: string; body?: string; reason: string; idempotencyKey: string; conversationId?: string; attachmentIds?: string[] },
   ) {
     const reason = input.reason.trim();
-    const body = input.body.trim();
+    const body = input.body?.trim() ?? "";
     if (!reason) throw new BadRequestException("An audit reason is required");
-    if (!body) throw new BadRequestException("Message body is required");
     if (input.recipientId === adminId) throw new BadRequestException("An admin cannot message their own account");
     const recipient = await this.database.user.findFirst({
       where: { id: input.recipientId, role: Role.USER },
       select: { id: true },
     });
     if (!recipient) throw new NotFoundException("Client not found");
+    const { senderId, attachments } = await this.resolveAdminMessageRoute(adminId, input);
+    if (!body && !attachments?.length) throw new BadRequestException("Message body or attachment is required");
     const message = await this.sendMessage(
-      adminId,
+      senderId,
       input.recipientId,
       body,
       input.idempotencyKey,
+      attachments,
     );
     if (
-      message.senderId !== adminId ||
-      message.recipientId !== input.recipientId ||
-      message.body !== body
+      message.senderId !== senderId || message.recipientId !== input.recipientId || message.body !== body
     ) {
       throw new BadRequestException("Message idempotency key was already used");
     }
-    const messageId = this.id(`message:${adminId}:${input.recipientId}`, input.idempotencyKey);
+    const messageId = this.id(`message:${senderId}:${input.recipientId}`, input.idempotencyKey);
     const details = JSON.stringify({ messageId, reason, idempotencyKey: input.idempotencyKey });
     const audit = await this.database.adminAuditLog.upsert({
       where: { id: this.id(`admin-message-audit:${adminId}:${input.recipientId}`, input.idempotencyKey) },
@@ -558,6 +711,31 @@ export class CommunicationsService {
       throw new BadRequestException("Message idempotency key was already used");
     }
     return { ...message, auditId: audit.id };
+  }
+
+  private async resolveAdminMessageRoute(adminId: string, input: { recipientId: string; conversationId?: string; attachmentIds?: string[] }) {
+    if (!input.conversationId) {
+      if (input.attachmentIds?.length) throw new BadRequestException("Attachments are available only in support conversations");
+      return { senderId: adminId, attachments: undefined };
+    }
+    const identity = this.supportConversationIdentity(input.recipientId);
+    if (input.conversationId !== identity.conversationId) throw new ForbiddenException("Admin reply does not match the customer's support conversation");
+    const conversation = await this.database.messageConversation.findUnique({ where: { id: identity.conversationId } });
+    if (!conversation || conversation.state !== "ACTIVE") throw new NotFoundException("Support conversation not found");
+    const attachments = await this.supportAttachments.resolve(input.recipientId, input.attachmentIds ?? []);
+    return { senderId: NEXI_SUPPORT_CHANNEL_ID, attachments: attachments.length ? attachments : undefined };
+  }
+
+  async markAdminMessageRead(adminId: string, messageId: string) {
+    const message = await this.database.persistentMessage.findUnique({ where: { id: messageId } });
+    if (!message) throw new NotFoundException("Message not found");
+    if (message.recipientId === NEXI_SUPPORT_CHANNEL_ID && message.conversationId) {
+      const conversation = await this.database.messageConversation.findUnique({ where: { id: message.conversationId } });
+      const isSupport = conversation?.participantAId === NEXI_SUPPORT_CHANNEL_ID || conversation?.participantBId === NEXI_SUPPORT_CHANNEL_ID;
+      if (isSupport) return this.markMessageRead(NEXI_SUPPORT_CHANNEL_ID, messageId);
+    }
+    if (message.recipientId === adminId) return this.markMessageRead(adminId, messageId);
+    throw new NotFoundException("Message not found");
   }
 
   async adminNotifications(page = 1, limit = 100) {
@@ -586,13 +764,11 @@ export class CommunicationsService {
   }
 
   async snapshot(userId: string) {
-    const [tickets, messages, notifications] = await Promise.all([
-      this.listTickets(userId, 1, 25),
+    const [messages, notifications] = await Promise.all([
       this.listMessages(userId, 1, 25),
       this.listNotifications(userId, 1, 25),
     ]);
     return {
-      tickets,
       messages,
       notifications,
       capturedAt: new Date().toISOString(),

@@ -118,7 +118,7 @@ function Inner() {
           <BannersPanel banners={banners} incidents={incidents} />
         </TabsContent>
         <TabsContent value="support">
-          <SupportEntryPanel supports={supports} />
+          <SupportEntryPanel supports={supports} error={supportQ.error} onSaved={() => supportQ.refresh()} />
         </TabsContent>
         <TabsContent value="audit">
           <AuditTimeline actionPrefix="frontend." limit={40} />
@@ -752,11 +752,20 @@ function BannersPanel({
 }
 
 /* --------------- Support entry --------------- */
-function SupportEntryPanel({ supports }: { supports: SupportEntryPoint[] }) {
+function SupportEntryPanel({ supports, error, onSaved }: { supports: SupportEntryPoint[]; error?: Error; onSaved: () => void }) {
   const provider = useAdminData();
   const session = useAdminSession();
   const canEdit = session.can("frontend.edit");
   const [editing, setEditing] = useState<SupportEntryPoint | null>(null);
+  const [telegramUrl, setTelegramUrl] = useState("");
+  const [email, setEmail] = useState("");
+  const [contactReason, setContactReason] = useState("");
+  const [savingContacts, setSavingContacts] = useState(false);
+
+  useEffect(() => {
+    setTelegramUrl(supports.find((entry) => entry.channel === "telegram")?.target ?? "");
+    setEmail(supports.find((entry) => entry.channel === "email")?.target ?? "");
+  }, [supports]);
 
   const columns: DataTableColumn<SupportEntryPoint>[] = [
     {
@@ -788,8 +797,61 @@ function SupportEntryPanel({ supports }: { supports: SupportEntryPoint[] }) {
     },
   ];
 
+  if (error) {
+    return <ErrorState title="Could not load support settings" description={error.message} onRetry={onSaved} />;
+  }
+
   return (
     <>
+      <section className="mb-5 rounded-lg border border-border p-4" aria-labelledby="public-support-contacts-title">
+        <h2 id="public-support-contacts-title" className="text-sm font-semibold">Public contact actions</h2>
+        <p className="mt-1 text-xs text-muted-foreground">These values appear on the Public Support page. Leave a field blank to hide that contact action.</p>
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          <FormField label="Telegram URL">
+            <Input aria-label="Telegram support URL" type="url" value={telegramUrl} onChange={(event) => setTelegramUrl(event.target.value)} placeholder="https://t.me/…" />
+          </FormField>
+          <FormField label="Support email">
+            <Input aria-label="Support email address" type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+          </FormField>
+        </div>
+        <div className="mt-3 flex flex-col gap-3 md:flex-row md:items-end">
+          <FormField label="Reason (auditable, at least 6 characters)">
+            <Input aria-label="Support contact update reason" value={contactReason} onChange={(event) => setContactReason(event.target.value)} />
+          </FormField>
+          <Button
+            type="button"
+            disabled={!canEdit || savingContacts || contactReason.trim().length < 6}
+            onClick={async () => {
+              setSavingContacts(true);
+              try {
+                await provider.updatePublicSupportContacts({ telegramUrl, email }, {
+                  actor: session.actorName,
+                  role: session.roleId,
+                  environment: session.environment,
+                  reason: contactReason.trim(),
+                });
+                const persisted = await provider.listSupportEntryPoints();
+                const persistedTelegram = persisted.find((entry) => entry.channel === "telegram")?.target.trim() ?? "";
+                const persistedEmail = persisted.find((entry) => entry.channel === "email")?.target.trim() ?? "";
+                if (persistedTelegram !== telegramUrl.trim() || persistedEmail !== email.trim()) {
+                  throw new Error("Public support contacts did not match the saved configuration");
+                }
+                setTelegramUrl(persistedTelegram);
+                setEmail(persistedEmail);
+                setContactReason("");
+                onSaved();
+                toast.success("Public support contacts saved");
+              } catch (error) {
+                toast.error(error instanceof Error ? error.message : "Support contacts could not be saved");
+              } finally {
+                setSavingContacts(false);
+              }
+            }}
+          >
+            {savingContacts ? "Saving…" : "Save contacts"}
+          </Button>
+        </div>
+      </section>
       <DataTable
         data={supports}
         columns={columns}

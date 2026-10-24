@@ -21,7 +21,6 @@ import {
   ArrowUpToLine,
   Pickaxe,
   Landmark,
-  LifeBuoy,
   MessageSquare,
   Megaphone,
   GraduationCap,
@@ -177,7 +176,6 @@ export const NAV_GROUPS: NavGroup[] = [
     primary: "/messages",
     items: [
       { to: "/messages", label: "Messages", icon: MessageSquare, permission: "messages.view" },
-      { to: "/support", label: "Support", icon: LifeBuoy, permission: "support.view" },
       {
         to: "/notifications",
         label: "Notifications",

@@ -4,6 +4,10 @@ For NEXI work from the paired Worker-0 Codex CLI, this Codex session is the sing
 
 For tool execution, preserve the native handle type (`functions.exec` cell ID, shell session ID, MCP task ID, or Codex task/thread ID) and inspect the original result before retrying. Await independent reads; serialize dependent and shared mutations. Discover the live tool schema/version before calls that depend on it. Hook registration is not proof of execution or interception; claim enforcement only after observing the effective hook run and its result. Apply owner, platform, tool, and domain authorization separately.
 
+## CodeScene MCP quality checks
+
+When CodeScene MCP is enabled and authenticated, run `pre_commit_code_health_safeguard` on the changed or staged files before creating or recommending a commit. Before opening or updating a pull request, run `analyze_change_set` against the exact base ref. If either reports regression, inspect affected files with `code_health_review`; fix in-scope issues or report the unresolved findings. For an explicitly requested maintainability refactor, use `code_health_review` before and after significant steps. Keep checks scoped to relevant changes, do not impose a fixed 10.0 target or other arbitrary score gate, and treat Code Health as maintainability evidence rather than proof of correctness, security, tests, or runtime behavior. If MCP authentication or connectivity prevents a check, report it as not run.
+
 Older dated Work/RDC/Polypane routing clauses below are historical and superseded where they conflict with this override.
 
 

@@ -92,7 +92,7 @@ export const ROLES: Record<RoleId, RoleDef> = {
   support_agent: {
     id: "support_agent",
     label: "Support Agent",
-    description: "Handle tickets and inspect user context.",
+    description: "Handle customer messages and inspect user context.",
     permissions: pick(
       "overview.view",
       "users.view",

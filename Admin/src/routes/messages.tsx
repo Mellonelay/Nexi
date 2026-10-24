@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { PageHeader } from "@/admin/components/PageHeader";
 import { RouteGuard } from "@/admin/components/RouteGuard";
 import { StatusBadge } from "@/admin/components/StatusBadge";
@@ -23,12 +23,21 @@ function Page() {
   const users = useAdminQuery((p) => p.listUsers());
   const refreshMessages = messages.refresh;
   const refreshModeration = moderation.refresh;
+  useEffect(() => provider.subscribeToCommunications?.(() => {
+    refreshMessages();
+    refreshModeration();
+  }), [provider, refreshMessages, refreshModeration]);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [recipientId, setRecipientId] = useState("");
+  const [selectedConversationId, setSelectedConversationId] = useState("");
   const [conversationSearch, setConversationSearch] = useState("");
   const [conversationStatus, setConversationStatus] = useState<"all" | "unread">("all");
   const [draft, setDraft] = useState("");
+  const [attachments, setAttachments] = useState<Array<{ id: string; name: string; mimeType: string; size: number }>>([]);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [pendingMessageKey, setPendingMessageKey] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   useEffect(() => {
@@ -87,11 +96,22 @@ function Page() {
 
   const threadMessages = (messages.data ?? [])
     .filter(
-      (message) =>
-        session.actorId &&
-        recipientId &&
-        ((message.senderId === session.actorId && message.recipientId === recipientId) ||
-          (message.recipientId === session.actorId && message.senderId === recipientId)),
+      (message) => {
+        if (!recipientId || !session.actorId) return false;
+        if (selectedConversationId.startsWith("legacy:")) {
+          return (
+            !message.supportCustomerId &&
+            (message.conversationId === null || message.conversationId === undefined) &&
+            ((message.senderId === session.actorId && message.recipientId === recipientId) ||
+              (message.recipientId === session.actorId && message.senderId === recipientId))
+          );
+        }
+        if (selectedConversationId) return message.conversationId === selectedConversationId;
+        return (
+          (message.senderId === session.actorId && message.recipientId === recipientId) ||
+          (message.recipientId === session.actorId && message.senderId === recipientId)
+        );
+      },
     )
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 
@@ -99,6 +119,7 @@ function Page() {
     () => groupAdminMessageConversations(messages.data ?? [], session.actorId ?? ""),
     [messages.data, session.actorId],
   );
+  const selectedConversation = conversations.find((item) => item.conversationId === selectedConversationId);
   const visibleConversations = conversations.filter((conversation) => {
     if (conversationStatus === "unread" && conversation.unreadCount === 0) return false;
     const client = (users.data ?? []).find((user) => user.id === conversation.clientId);
@@ -113,16 +134,16 @@ function Page() {
   const selectedClient = (users.data ?? []).find((user) => user.id === recipientId);
   const selectedClientLabel = selectedClient?.displayName || selectedClient?.email || recipientId;
 
-  useEffect(() => {
-    if (!recipientId && conversations.length) setRecipientId(conversations[0].clientId);
-  }, [conversations, recipientId]);
-
-  const openThread = async (id: string) => {
+  const openThread = useCallback(async (id: string, conversationId?: string) => {
     setRecipientId(id);
+    setSelectedConversationId(conversationId ?? "");
     if (!session.actorId || !id) return;
+    const conversation = conversations.find((item) => item.conversationId === conversationId);
     const unread = (messages.data ?? []).filter(
       (message) =>
-        message.recipientId === session.actorId && message.senderId === id && !message.readAt,
+        !message.readAt && (conversation?.support
+          ? message.conversationId === conversation.conversationId && message.recipientId === "support:nexi"
+          : message.recipientId === session.actorId && message.senderId === id),
     );
     if (!unread.length) return;
     try {
@@ -131,24 +152,83 @@ function Page() {
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Could not mark messages as read.");
     }
-  };
+  }, [conversations, messages.data, messages.refresh, provider, session.actorId]);
+
+  useEffect(() => {
+    if (!recipientId && conversations.length) {
+      void openThread(conversations[0].clientId, conversations[0].conversationId);
+    }
+  }, [conversations, openThread, recipientId]);
 
   const sendMessage = async () => {
-    if (!session.can("messages.send") || !recipientId || !draft.trim() || !reason.trim()) {
+    if (!session.can("messages.send") || !recipientId || (!draft.trim() && !attachments.length) || !reason.trim()) {
       setFeedback("Choose a client, enter a message, and provide an audit reason.");
       return;
     }
     setSending(true);
     setFeedback(null);
+    const body = draft.trim();
+    const idempotencyKey = pendingMessageKey ?? globalThis.crypto?.randomUUID?.() ?? `admin-message-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    setPendingMessageKey(idempotencyKey);
     try {
-      await provider.sendAdminMessage({ recipientId, body: draft.trim() }, ctx());
+      await provider.sendAdminMessage({
+        recipientId,
+        ...(selectedConversation?.support ? { conversationId: selectedConversation.conversationId } : {}),
+        body,
+        ...(attachments.length ? { attachmentIds: attachments.map((item) => item.id) } : {}),
+        idempotencyKey,
+      }, ctx());
       setDraft("");
+      setAttachments([]);
+      setPendingMessageKey(null);
       messages.refresh();
       setFeedback("Message sent.");
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Message could not be sent.");
     } finally {
       setSending(false);
+    }
+  };
+
+  const uploadAttachments = async (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = "";
+    if (!files.length) return;
+    if (!selectedConversation?.support || !recipientId) {
+      setFeedback("Attachments are available in NEXI support conversations.");
+      return;
+    }
+    if (files.length + attachments.length > 4) {
+      setFeedback("A message can include up to four attachments.");
+      return;
+    }
+    setUploading(true);
+    setFeedback(null);
+    try {
+      for (const file of files) {
+        const uploaded = await provider.uploadAdminMessageAttachment(recipientId, file);
+        setAttachments((current) => [...current, uploaded]);
+        setPendingMessageKey(null);
+      }
+    } catch (error) {
+      setFeedback(error instanceof Error ? error.message : "Attachment upload failed.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const downloadAttachment = async (attachment: NonNullable<AdminMessage["attachments"]>[number]) => {
+    if (!recipientId) return;
+    try {
+      const blob = await provider.getAdminMessageAttachment(recipientId, attachment.id);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = attachment.name;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      setFeedback(error instanceof Error ? error.message : "Attachment could not be downloaded.");
     }
   };
 
@@ -253,7 +333,10 @@ function Page() {
             id="messages-audit-reason"
             name="messages-audit-reason"
             value={reason}
-            onChange={(event) => setReason(event.target.value)}
+            onChange={(event) => {
+              setReason(event.target.value);
+              setPendingMessageKey(null);
+            }}
             placeholder="Enter the reason for this action"
             disabled={busy || sending}
           />
@@ -299,18 +382,22 @@ function Page() {
               {visibleConversations.map((conversation) => {
                 const client = (users.data ?? []).find((user) => user.id === conversation.clientId);
                 const name = client?.displayName || client?.email || conversation.clientId;
-                const selected = recipientId === conversation.clientId;
+                const selected = selectedConversationId === conversation.conversationId;
                 return (
-                  <div key={conversation.clientId} role="listitem">
+                  <div key={conversation.conversationId} role="listitem">
                     <button
                       type="button"
                       aria-current={selected ? "true" : undefined}
-                      onClick={() => void openThread(conversation.clientId)}
+                      onClick={() => {
+                        setPendingMessageKey(null);
+                        void openThread(conversation.clientId, conversation.conversationId);
+                      }}
+                      disabled={sending}
                       className={`flex w-full items-start justify-between gap-3 rounded-md border-b border-border/50 p-3 text-left hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${selected ? "bg-primary/10" : ""}`}
                     >
                       <span className="min-w-0">
                         <span className="block truncate text-sm font-medium text-foreground">
-                          {name}
+                          {conversation.support ? `NEXI Support · ${name}` : name}
                         </span>
                         <span className="mt-1 block truncate text-xs text-muted-foreground">
                           {conversation.latestMessage.body}
@@ -347,8 +434,12 @@ function Page() {
                 name="message-client"
                 aria-label="Message client"
                 value={recipientId}
-                onChange={(event) => void openThread(event.target.value)}
-                disabled={!session.can("messages.send") || users.error !== undefined}
+                onChange={(event) => {
+                  setPendingMessageKey(null);
+                  setSelectedConversationId("");
+                  void openThread(event.target.value);
+                }}
+                disabled={sending || !session.can("messages.send") || users.error !== undefined}
                 className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
               >
                 <option value="">Choose a client</option>
@@ -392,12 +483,17 @@ function Page() {
                   className={`max-w-[92%] rounded-md border border-border/50 p-3 text-sm ${message.senderId === session.actorId ? "ml-auto bg-primary/10" : "bg-muted/30"}`}
                 >
                   <p className="mb-1 text-[11px] text-muted-foreground">
-                    {message.senderId === session.actorId ? "You" : "Client"} ·{" "}
+                    {message.senderId === session.actorId ? "You" : message.senderId === "support:nexi" ? "NEXI Support" : "Client"} ·{" "}
                     {new Date(message.createdAt).toLocaleString()}
                     {` · ${message.deliveryState}`}
-                    {message.recipientId === session.actorId && !message.readAt ? " · Unread" : ""}
+                    {(message.recipientId === session.actorId || (message.supportCustomerId && message.recipientId === "support:nexi")) && !message.readAt ? " · Unread" : ""}
                   </p>
                   <p className="whitespace-pre-wrap">{message.body}</p>
+                  {message.attachments?.map((attachment) => (
+                    <Button key={attachment.id} type="button" variant="outline" size="sm" className="mt-2 mr-2" onClick={() => void downloadAttachment(attachment)}>
+                      Download {attachment.name}
+                    </Button>
+                  ))}
                 </article>
               ))}
             </div>
@@ -405,24 +501,42 @@ function Page() {
               <label htmlFor="message-to-client" className="text-xs text-muted-foreground">
                 Reply to client
               </label>
+              {attachments.length > 0 ? (
+                <ul className="flex flex-wrap gap-2" aria-label="Attachments ready to send">
+                  {attachments.map((item) => (
+                    <li key={item.id} className="flex max-w-full items-center gap-2 rounded-md border border-border px-2 py-1 text-xs">
+                      <span className="max-w-48 truncate">{item.name}</span>
+                      <Button type="button" variant="ghost" size="sm" aria-label={`Remove ${item.name}`} onClick={() => { setAttachments((current) => current.filter((attachment) => attachment.id !== item.id)); setPendingMessageKey(null); }}>Remove</Button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
               <textarea
                 id="message-to-client"
                 name="message-to-client"
                 aria-label="Message to client"
                 value={draft}
-                onChange={(event) => setDraft(event.target.value)}
+                onChange={(event) => {
+                  setDraft(event.target.value);
+                  setPendingMessageKey(null);
+                }}
                 rows={3}
                 maxLength={10000}
                 className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
                 placeholder="Write a message"
                 disabled={!session.can("messages.send") || sending}
               />
+              <input ref={fileInputRef} type="file" multiple accept="image/png,image/jpeg,image/webp,application/pdf" onChange={(event) => void uploadAttachments(event)} className="sr-only" aria-label="Choose message attachments" />
+              <Button type="button" variant="outline" className="self-start" disabled={!session.can("messages.send") || !selectedConversation?.support || uploading || sending} onClick={() => fileInputRef.current?.click()}>
+                {uploading ? "Uploading…" : "Attach files"}
+              </Button>
               <Button
                 className="self-start"
                 disabled={
                   !session.can("messages.send") ||
                   !recipientId ||
-                  !draft.trim() ||
+                  (!draft.trim() && !attachments.length) ||
+                  uploading ||
                   !reason.trim() ||
                   sending
                 }

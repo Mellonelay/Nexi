@@ -108,6 +108,27 @@
         ]
       }
     },
+    "/public/config/support": {
+      "get": {
+        "operationId": "AppController_getPublicSupportContacts",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicSupportContactsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Application"
+        ]
+      }
+    },
     "/public/config/quotes-categories": {
       "get": {
         "operationId": "AppController_getPublicQuotesCategories",
@@ -188,45 +209,160 @@
         ]
       }
     },
-    "/communications/tickets": {
-      "post": {
-        "operationId": "CommunicationsController_createTicket",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateTicketDto"
-              }
+    "/communications/support/thread": {
+      "get": {
+        "operationId": "CommunicationsController_supportThread",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "type": "number"
             }
           }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Communications"
-        ]
-      },
-      "get": {
-        "operationId": "CommunicationsController_tickets",
-        "parameters": [],
+        ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "The customer's canonical NEXI support thread; messages is empty when none exist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportThreadResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "A valid Public user session is required."
+          },
+          "403": {
+            "description": "The support conversation is restricted."
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Communications"
         ]
       }
     },
-    "/communications/tickets/{id}/replies": {
+    "/communications/support/messages": {
       "post": {
-        "operationId": "CommunicationsController_reply",
+        "operationId": "CommunicationsController_supportMessage",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendSupportMessageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The persisted message in the canonical support conversation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportMessageResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Message text or at least one valid attachment is required."
+          },
+          "401": {
+            "description": "A valid Public user session is required."
+          },
+          "403": {
+            "description": "The support conversation is restricted."
+          },
+          "409": {
+            "description": "The idempotency key was already used with a different message payload."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
+    "/communications/support/attachments": {
+      "post": {
+        "operationId": "CommunicationsController_uploadSupportAttachment",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Private staged attachment reference for a later support message.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportAttachmentResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "File is missing, oversized, or not an allowed content type."
+          },
+          "401": {
+            "description": "A valid Public user session is required."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
+    "/communications/support/attachments/{id}": {
+      "get": {
+        "operationId": "CommunicationsController_getSupportAttachment",
         "parameters": [
           {
             "name": "id",
@@ -237,54 +373,51 @@
             }
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ReplyTicketDto"
+        "responses": {
+          "200": {
+            "description": "Private attachment; access is restricted to its conversation participant.",
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
               }
             }
+          },
+          "401": {
+            "description": "A valid Public user session is required."
+          },
+          "403": {
+            "description": "The attachment is not linked to this user's support conversation."
+          },
+          "404": {
+            "description": "The attachment does not exist or is unavailable to this user."
           }
         },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Communications"
-        ]
-      }
-    },
-    "/communications/tickets/{id}/assign": {
-      "post": {
-        "operationId": "CommunicationsController_assign",
-        "parameters": [
+        "security": [
           {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
+            "bearer": []
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AssignTicketDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
         "tags": [
           "Communications"
         ]
@@ -292,30 +425,48 @@
     },
     "/communications/messages": {
       "post": {
+        "deprecated": true,
+        "description": "Recipient-selected Public messaging is retired. Use the NEXI support conversation.",
         "operationId": "CommunicationsController_message",
         "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SendMessageDto"
-              }
-            }
-          }
-        },
         "responses": {
-          "201": {
-            "description": ""
+          "410": {
+            "description": "Recipient-selected messaging has been retired."
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "",
         "tags": [
           "Communications"
         ]
       },
       "get": {
         "operationId": "CommunicationsController_messages",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -352,7 +503,27 @@
     "/communications/conversations": {
       "get": {
         "operationId": "CommunicationsController_conversations",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -399,7 +570,27 @@
     "/communications/notifications": {
       "get": {
         "operationId": "CommunicationsController_notifications",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -591,9 +782,67 @@
     "/communications/admin/messages": {
       "get": {
         "operationId": "CommunicationsController_adminMessages",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
+            "description": "Operator message records with canonical support-customer linkage.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AdminMessageResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
+    "/communications/admin/messages/{id}/read": {
+      "post": {
+        "operationId": "CommunicationsController_markAdminMessageRead",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
             "description": ""
           }
         },
@@ -605,7 +854,27 @@
     "/communications/admin/messages/moderation": {
       "get": {
         "operationId": "CommunicationsController_adminMessageModeration",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -652,7 +921,27 @@
     "/communications/admin/notifications": {
       "get": {
         "operationId": "CommunicationsController_adminNotifications",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -700,6 +989,18 @@
       }
     },
     "/communications/admin/learn/categories": {
+      "get": {
+        "operationId": "CommunicationsController_adminLearnCategories",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      },
       "post": {
         "operationId": "CommunicationsController_createLearnCategory",
         "parameters": [],
@@ -715,6 +1016,39 @@
         },
         "responses": {
           "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
+    "/communications/admin/learn/categories/{id}": {
+      "patch": {
+        "operationId": "CommunicationsController_updateLearnCategoryStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLearnCategoryStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
             "description": ""
           }
         },
@@ -2748,6 +3082,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -2769,9 +3108,137 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "The persisted operator message and its audit reference.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminMessageResponseDto"
+                }
+              }
+            }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/messages/{recipientId}/attachments": {
+      "post": {
+        "operationId": "AdminController_uploadAdminSupportAttachment",
+        "parameters": [
+          {
+            "name": "recipientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportAttachmentResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/messages/{recipientId}/attachments/{id}": {
+      "get": {
+        "operationId": "AdminController_getAdminSupportAttachment",
+        "parameters": [
+          {
+            "name": "recipientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Private attachment for the specified customer's support conversation.",
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -2786,6 +3253,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -2800,6 +3272,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -2823,6 +3300,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -2837,6 +3319,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -2851,6 +3338,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -2898,139 +3390,12 @@
             "description": "Incident not found"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "Acknowledge an operational incident",
-        "tags": [
-          "Admin Control Plane"
-        ]
-      }
-    },
-    "/admin/tickets/{id}/reply": {
-      "post": {
-        "operationId": "AdminController_replyAdminTicket",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AdminSupportReplyDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Support reply result",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "ok",
-                    "auditId",
-                    "replayed"
-                  ],
-                  "properties": {
-                    "ok": {
-                      "type": "boolean"
-                    },
-                    "auditId": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "replayed": {
-                      "type": "boolean"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid support reply request"
-          },
-          "404": {
-            "description": "Support ticket not found"
-          }
-        },
-        "summary": "Reply to a support ticket",
-        "tags": [
-          "Admin Control Plane"
-        ]
-      }
-    },
-    "/admin/tickets/{id}/status": {
-      "post": {
-        "operationId": "AdminController_setAdminTicketStatus",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AdminSupportStatusDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Support status result",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "ok",
-                    "auditId",
-                    "replayed",
-                    "status"
-                  ],
-                  "properties": {
-                    "ok": {
-                      "type": "boolean"
-                    },
-                    "auditId": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "replayed": {
-                      "type": "boolean"
-                    },
-                    "status": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid support status request"
-          },
-          "404": {
-            "description": "Support ticket not found"
-          }
-        },
-        "summary": "Change support ticket status",
         "tags": [
           "Admin Control Plane"
         ]
@@ -3045,6 +3410,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3078,6 +3448,11 @@
             "description": "Invalid maintenance window request"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "Schedule a maintenance window",
         "tags": [
           "Admin Control Plane"
@@ -3126,6 +3501,11 @@
             "description": "Maintenance window not found"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "Cancel a maintenance window",
         "tags": [
           "Admin Control Plane"
@@ -3141,6 +3521,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3155,6 +3540,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3177,6 +3567,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3191,6 +3586,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3213,6 +3613,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3246,6 +3651,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3279,6 +3689,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3293,6 +3708,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3315,6 +3735,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3339,6 +3764,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3363,6 +3793,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3386,6 +3821,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3400,6 +3840,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3433,6 +3878,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3466,6 +3916,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3480,6 +3935,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3511,6 +3971,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3535,6 +4000,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3549,6 +4019,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3582,6 +4057,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3615,6 +4095,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3629,6 +4114,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3651,6 +4141,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3665,6 +4160,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3689,6 +4189,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3703,6 +4208,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3727,6 +4237,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3741,6 +4256,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3755,6 +4275,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3779,6 +4304,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3793,6 +4323,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3807,6 +4342,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3821,6 +4361,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3843,6 +4388,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3876,6 +4426,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3900,6 +4455,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3914,6 +4474,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3928,6 +4493,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3961,6 +4531,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3985,6 +4560,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -3999,6 +4579,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4013,6 +4598,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4027,6 +4617,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4041,6 +4636,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4074,6 +4674,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4107,6 +4712,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4140,6 +4750,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4173,6 +4788,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4206,6 +4826,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4239,6 +4864,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4253,6 +4883,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4286,6 +4921,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4319,6 +4959,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4352,6 +4997,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4385,6 +5035,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4418,20 +5073,11 @@
             "description": ""
           }
         },
-        "tags": [
-          "Admin Control Plane"
-        ]
-      }
-    },
-    "/admin/tickets": {
-      "get": {
-        "operationId": "AdminController_getAdminTickets",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
+        "security": [
+          {
+            "bearer": []
           }
-        },
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4446,6 +5092,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4479,6 +5130,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4512,6 +5168,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4545,6 +5206,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4559,6 +5225,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4581,6 +5252,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4614,6 +5290,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4647,6 +5328,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4661,6 +5347,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4683,6 +5374,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4716,6 +5412,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4730,6 +5431,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4752,6 +5458,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4785,6 +5496,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4799,6 +5515,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4813,6 +5534,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4846,6 +5572,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4879,6 +5610,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4893,6 +5629,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4916,6 +5657,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -4938,6 +5684,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Admin Control Plane"
         ]
@@ -5731,25 +6482,170 @@
       }
     },
     "schemas": {
+      "PublicSupportContactsResponseDto": {
+        "type": "object",
+        "properties": {
+          "telegramUrl": {
+            "type": "string",
+            "nullable": true,
+            "format": "uri",
+            "description": "Configured trusted Telegram support URL, or null when disabled."
+          },
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "format": "email",
+            "description": "Configured support email address, or null when disabled."
+          }
+        },
+        "required": [
+          "telegramUrl",
+          "email"
+        ]
+      },
       "UploadFeedbackDto": {
         "type": "object",
         "properties": {}
       },
-      "CreateTicketDto": {
+      "SupportAttachmentResponseDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string",
+            "enum": [
+              "image/png",
+              "image/jpeg",
+              "image/webp",
+              "application/pdf"
+            ]
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5242880
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "mimeType",
+          "size"
+        ]
       },
-      "ReplyTicketDto": {
+      "SupportMessageResponseDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "conversationId": {
+            "type": "string"
+          },
+          "senderId": {
+            "type": "string"
+          },
+          "recipientId": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "deliveryState": {
+            "type": "string"
+          },
+          "sequence": {
+            "type": "integer"
+          },
+          "readAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupportAttachmentResponseDto"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "conversationId",
+          "senderId",
+          "recipientId",
+          "body",
+          "deliveryState",
+          "sequence",
+          "readAt",
+          "attachments",
+          "createdAt"
+        ]
       },
-      "AssignTicketDto": {
+      "SupportThreadResponseDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "conversationId": {
+            "type": "string"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupportMessageResponseDto"
+            }
+          }
+        },
+        "required": [
+          "conversationId",
+          "page",
+          "limit",
+          "messages"
+        ]
       },
-      "SendMessageDto": {
+      "SendSupportMessageDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "body": {
+            "type": "string",
+            "description": "Message text. May be empty when attachmentIds is non-empty.",
+            "maxLength": 10000
+          },
+          "attachmentIds": {
+            "maxItems": 4,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "idempotencyKey"
+        ]
       },
       "ReportConversationDto": {
         "type": "object",
@@ -5767,6 +6663,89 @@
         "type": "object",
         "properties": {}
       },
+      "AdminMessageConversationResponseDto": {
+        "type": "object",
+        "properties": {
+          "participantAId": {
+            "type": "string"
+          },
+          "participantBId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "participantAId",
+          "participantBId"
+        ]
+      },
+      "AdminMessageResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "conversationId": {
+            "type": "string",
+            "nullable": true
+          },
+          "senderId": {
+            "type": "string"
+          },
+          "recipientId": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "deliveryState": {
+            "type": "string"
+          },
+          "sequence": {
+            "type": "integer"
+          },
+          "readAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "attachments": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "supportCustomerId": {
+            "type": "string",
+            "nullable": true
+          },
+          "conversation": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdminMessageConversationResponseDto"
+              }
+            ]
+          },
+          "auditId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "conversationId",
+          "senderId",
+          "recipientId",
+          "body",
+          "deliveryState",
+          "sequence",
+          "readAt",
+          "attachments",
+          "createdAt"
+        ]
+      },
       "ResolveMessageModerationDto": {
         "type": "object",
         "properties": {}
@@ -5776,6 +6755,10 @@
         "properties": {}
       },
       "CreateLearnCategoryDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateLearnCategoryStatusDto": {
         "type": "object",
         "properties": {}
       },
@@ -6085,17 +7068,46 @@
       },
       "AdminSendMessageDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "recipientId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Customer account that owns the support thread."
+          },
+          "conversationId": {
+            "type": "string",
+            "description": "Canonical conversation ID from the customer support thread."
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 10000
+          },
+          "attachmentIds": {
+            "maxItems": 4,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 500
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "recipientId",
+          "reason",
+          "idempotencyKey"
+        ]
       },
       "AdminIncidentAcknowledgeDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "AdminSupportReplyDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "AdminSupportStatusDto": {
         "type": "object",
         "properties": {}
       },

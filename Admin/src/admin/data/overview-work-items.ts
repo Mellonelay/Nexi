@@ -1,6 +1,6 @@
-import type { HealthCheck, KycReview, SupportTicket, Withdrawal } from "../types";
+import type { HealthCheck, KycReview, Withdrawal } from "../types";
 
-export type OverviewWorkRoute = "/kyc" | "/withdrawals" | "/support" | "/health";
+export type OverviewWorkRoute = "/kyc" | "/withdrawals" | "/health";
 
 export interface OverviewWorkItem {
   id: string;
@@ -13,9 +13,8 @@ export interface OverviewWorkItem {
 export function buildOverviewWorkItems(input: {
   kyc: KycReview[];
   withdrawals: Withdrawal[];
-  tickets: SupportTicket[];
   health: HealthCheck[];
-  access: { kyc: boolean; withdrawals: boolean; support: boolean; health: boolean };
+  access: { kyc: boolean; withdrawals: boolean; health: boolean };
 }): OverviewWorkItem[] {
   return [
     ...(input.access.kyc
@@ -38,17 +37,6 @@ export function buildOverviewWorkItems(input: {
             label: `${withdrawal.amount} ${withdrawal.asset}`,
             status: withdrawal.status,
             to: "/withdrawals" as const,
-          }))
-      : []),
-    ...(input.access.support
-      ? input.tickets
-          .filter((ticket) => ticket.status === "open" || ticket.status === "escalated")
-          .map((ticket) => ({
-            id: `ticket:${ticket.id}`,
-            category: "Support",
-            label: ticket.subject,
-            status: ticket.status,
-            to: "/support" as const,
           }))
       : []),
     ...(input.access.health

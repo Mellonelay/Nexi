@@ -30,7 +30,6 @@ import type {
   WalletRow,
   Withdrawal,
   User,
-  SupportTicket,
   SettlementRecord,
   Announcement,
   AssetCategory,
@@ -54,6 +53,7 @@ import type {
   SupportEntryPoint,
   TranslationKey,
 } from "../types";
+import { io } from "socket.io-client";
 import { reorderByIds } from "./banner-order";
 import { mapBinaryPositionStatus } from "../types";
 import { isPublishedAnnouncement } from "./announcement-status";
@@ -241,6 +241,17 @@ function record(value: unknown): JsonRecord {
 function stringValue(value: unknown, fallback = ""): string {
   return typeof value === "string" ? value : fallback;
 }
+function parseMessageAttachments(value: unknown): AdminMessage["attachments"] {
+  if (typeof value === "string") {
+    try { value = JSON.parse(value); } catch { return []; }
+  }
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is NonNullable<AdminMessage["attachments"]>[number] => {
+    const row = record(item);
+    return typeof row.id === "string" && typeof row.name === "string" &&
+      typeof row.mimeType === "string" && Number.isSafeInteger(row.size) && Number(row.size) >= 0;
+  });
+}
 function jsonRecordValue(value: unknown): Record<string, any> | undefined {
   if (value && typeof value === "object") return value as Record<string, any>;
   if (typeof value !== "string" || !value.trim()) return undefined;
@@ -291,6 +302,20 @@ function scope(commandType: string): ApprovalRequest["scope"] {
 export class NexiAdminApiProvider implements AdminDataProvider {
   constructor(private readonly config: ApiConfig) {}
 
+  subscribeToCommunications(onChange: () => void): () => void {
+    const socket = io(`${this.config.baseUrl.replace(/\/$/, "")}/communications`, {
+      auth: (callback) => {
+        void this.config.getToken().then((token) => callback({ token })).catch(() => callback({}));
+      },
+      reconnection: true,
+      transports: ["polling", "websocket"],
+      tryAllTransports: true,
+    });
+    socket.on("communications.changed", onChange);
+    socket.on("connect", onChange);
+    return () => socket.disconnect();
+  }
+
   supports(operation: keyof AdminDataProvider): boolean {
     return !UNSUPPORTED_OPERATIONS.has(operation);
   }
@@ -302,12 +327,13 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     const startedAt = Date.now();
     let status: number | null = null;
     let outcome: "success" | "http-error" | "network-error" | "response-error" = "success";
+    const multipart = typeof FormData !== "undefined" && init.body instanceof FormData;
     try {
       const response = await fetch(`${this.config.baseUrl.replace(/\/$/, "")}${path}`, {
         ...init,
         headers: {
           Accept: "application/json",
-          ...(init.body ? { "Content-Type": "application/json" } : {}),
+          ...(init.body && !multipart ? { "Content-Type": "application/json" } : {}),
           ...(init.headers ?? {}),
           Authorization: `Bearer ${token}`,
         },
@@ -354,13 +380,19 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     payload: JsonRecord = {},
     keyValues: string[] = [],
     method: "POST" | "PATCH" = "POST",
+    idempotencyKey?: string,
   ): Promise<MutationResult> {
     const result = await this.request<JsonRecord>(path, {
       method,
       body: JSON.stringify({
         ...payload,
         reason: ctx.reason,
-        idempotencyKey: boundedIdempotencyKey("admin", [path, ctx.actor, ctx.reason, ...keyValues]),
+        idempotencyKey: idempotencyKey ?? boundedIdempotencyKey("admin", [
+          path,
+          ctx.actor,
+          ctx.reason,
+          ...keyValues,
+        ]),
       }),
     });
     return { ok: result.ok !== false, auditId: stringValue(result.auditId ?? result.id) };
@@ -1161,61 +1193,6 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       [id, decision],
     );
   }
-  listTickets(): Promise<SupportTicket[]> {
-    return this.request<unknown[]>("/admin/tickets").then((rows) =>
-      rows.map((value) => {
-        const row = record(value);
-        const status = stringValue(row.status).toLowerCase();
-        const priority = stringValue(row.priority).toLowerCase();
-        const replies = Array.isArray(row.replies) ? row.replies : [];
-        return {
-          id: stringValue(row.id),
-          userId: stringValue(row.userId),
-          subject: stringValue(row.subject),
-          priority: ["low", "normal", "high", "urgent"].includes(priority)
-            ? (priority as SupportTicket["priority"])
-            : "normal",
-          status:
-            status === "resolved"
-              ? "resolved"
-              : status === "escalated"
-                ? "escalated"
-                : status === "pending_user"
-                  ? "pending_user"
-                  : "open",
-          assignee: typeof row.assignedToId === "string" ? row.assignedToId : undefined,
-          createdAt: stringValue(row.createdAt, new Date(0).toISOString()),
-          updatedAt: stringValue(row.updatedAt, new Date(0).toISOString()),
-          messages: replies.map((reply) => {
-            const r = record(reply);
-            return {
-              id: stringValue(r.id),
-              author: stringValue(r.authorId),
-              internal: r.internal === true,
-              body: stringValue(r.body),
-              ts: stringValue(r.createdAt, new Date(0).toISOString()),
-            };
-          }),
-        };
-      }),
-    );
-  }
-  replyTicket(id: string, body: string, internal: boolean, ctx: ConsequentialContext) {
-    return this.requestMutation(
-      `/admin/tickets/${encodeURIComponent(id)}/reply`,
-      ctx,
-      { body, internal },
-      [id, body, String(internal)],
-    );
-  }
-  setTicketStatus(id: string, status: SupportTicket["status"], ctx: ConsequentialContext) {
-    return this.requestMutation(
-      `/admin/tickets/${encodeURIComponent(id)}/status`,
-      ctx,
-      { status },
-      [id, status],
-    );
-  }
   listAdmins() {
     return this.request<unknown[]>("/admin/admins").then((rows) =>
       rows.map((value) => this.mapAdminAccount(value)),
@@ -1851,6 +1828,34 @@ export class NexiAdminApiProvider implements AdminDataProvider {
   listSupportEntryPoints(): Promise<SupportEntryPoint[]> {
     return this.readJsonConfig<SupportEntryPoint[]>("admin.frontend.supportEntryPoints", []);
   }
+  async updatePublicSupportContacts(
+    contacts: { telegramUrl: string; email: string },
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult> {
+    const items = await this.listSupportEntryPoints();
+    const contactEntries = [
+      ["telegram", contacts.telegramUrl, "Telegram support"],
+      ["email", contacts.email, "Email support"],
+    ] as const;
+    const savedContacts = contactEntries.map(([channel, target, label], index) => {
+      const existing = items.find((item) => item.channel === channel);
+      return {
+        id: existing?.id ?? `public-support-${channel}`,
+        label,
+        target: target.trim(),
+        channel,
+        visible: !!target.trim(),
+        order: existing?.order ?? items.length + index + 1,
+      } satisfies SupportEntryPoint;
+    });
+    const nextItems = [...items.filter((item) => item.channel !== "telegram" && item.channel !== "email"), ...savedContacts];
+    return this.writeJsonConfig(
+      "admin.frontend.supportEntryPoints",
+      nextItems,
+      "Public support contact settings",
+      ctx,
+    );
+  }
   async updateSupportEntryPoint(
     id: string,
     patch: Partial<Pick<SupportEntryPoint, "label" | "target" | "channel" | "visible" | "order">>,
@@ -2040,31 +2045,68 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       [id],
     );
   }
-  listMessages(): Promise<AdminMessage[]> {
-    return this.request<unknown[]>("/communications/admin/messages").then((rows) =>
-      rows.map((v) => {
-        const r = record(v);
-        return {
+  async listMessages(): Promise<AdminMessage[]> {
+    const messages: AdminMessage[] = [];
+    const seenIds = new Set<string>();
+    for (let page = 1; ; page += 1) {
+      const rows = await this.request<unknown[]>(`/communications/admin/messages?page=${page}&limit=100`);
+      const unseenRows = rows.filter((value) => !seenIds.has(stringValue(record(value).id)));
+      for (const value of unseenRows) {
+        const r = record(value);
+        const mapped = {
           id: stringValue(r.id),
           senderId: stringValue(r.senderId),
           recipientId: stringValue(r.recipientId),
           body: stringValue(r.body),
           conversationId: typeof r.conversationId === "string" ? r.conversationId : undefined,
+          supportCustomerId: typeof r.supportCustomerId === "string" ? r.supportCustomerId : undefined,
+          attachments: parseMessageAttachments(r.attachments),
           deliveryState: stringValue(r.deliveryState),
           readAt: typeof r.readAt === "string" ? r.readAt : null,
           createdAt: stringValue(r.createdAt),
         };
-      }),
+        if (mapped.id) seenIds.add(mapped.id);
+        messages.push(mapped);
+      }
+      if (rows.length < 100) return messages;
+    }
+  }
+  async uploadAdminMessageAttachment(recipientId: string, file: File) {
+    const data = new FormData();
+    data.append("file", file);
+    return this.request<{ id: string; name: string; mimeType: string; size: number }>(
+      `/admin/messages/${encodeURIComponent(recipientId)}/attachments`,
+      { method: "POST", body: data },
     );
   }
-  sendAdminMessage(payload: { recipientId: string; body: string }, ctx: ConsequentialContext) {
+  async getAdminMessageAttachment(recipientId: string, id: string): Promise<Blob> {
+    const token = await this.config.getToken();
+    if (!token.trim()) throw new NexiAdminApiError(401, "Admin session token is unavailable");
+    const response = await fetch(
+      `${this.config.baseUrl.replace(/\/$/, "")}/admin/messages/${encodeURIComponent(recipientId)}/attachments/${encodeURIComponent(id)}`,
+      { headers: { Accept: "application/octet-stream", Authorization: `Bearer ${token}` } },
+    );
+    if (!response.ok) {
+      let message = `Admin API request failed (${response.status})`;
+      try {
+        const payload = record(await response.json());
+        if (typeof payload.message === "string") message = payload.message;
+      } catch { /* The response can be an empty error body. */ }
+      throw new NexiAdminApiError(response.status, message);
+    }
+    return response.blob();
+  }
+  sendAdminMessage(
+    payload: { recipientId: string; conversationId?: string; body: string; attachmentIds?: string[]; idempotencyKey: string },
+    ctx: ConsequentialContext,
+  ) {
     return this.requestMutation("/admin/messages", ctx, payload, [
       payload.recipientId,
       payload.body,
-    ]);
+    ], "POST", payload.idempotencyKey);
   }
   async markAdminMessageRead(id: string): Promise<void> {
-    await this.request(`/communications/messages/${encodeURIComponent(id)}/read`, {
+    await this.request(`/communications/admin/messages/${encodeURIComponent(id)}/read`, {
       method: "POST",
     });
   }

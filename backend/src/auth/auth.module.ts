@@ -36,6 +36,6 @@ import { ReferralVipModule } from '../referral-vip/referral-vip.module';
   ],
   providers: [AuthService, WalletAuthService, JwtStrategy, RolesGuard, JwtAuthGuard, OwnershipGuard, DevelopmentOnlyGuard, RefreshTokenCryptoService, AuthSecurityEventsService, AuthSessionService, RedisRateLimitService, AuthRateLimitGuard, AuthSurfaceGuard],
   controllers: [AuthController],
-  exports: [AuthService, WalletAuthService, RolesGuard, JwtAuthGuard, OwnershipGuard, DevelopmentOnlyGuard, RefreshTokenCryptoService, AuthSecurityEventsService, AuthSessionService, RedisRateLimitService, AuthRateLimitGuard, AuthSurfaceGuard, JwtModule],
+  exports: [AuthService, WalletAuthService, JwtStrategy, RolesGuard, JwtAuthGuard, OwnershipGuard, DevelopmentOnlyGuard, RefreshTokenCryptoService, AuthSecurityEventsService, AuthSessionService, RedisRateLimitService, AuthRateLimitGuard, AuthSurfaceGuard, JwtModule],
 })
 export class AuthModule {}

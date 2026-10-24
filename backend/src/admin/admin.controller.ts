@@ -13,12 +13,21 @@ import {
   Query,
   Req,
   StreamableFile,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from "@nestjs/common";
+import { FileInterceptor } from "@nestjs/platform-express";
 import {
   ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiCreatedResponse,
   ApiNotFoundResponse,
+  ApiOkResponse,
   ApiOperation,
+  ApiProduces,
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
@@ -54,8 +63,6 @@ import {
   AdminAuditQueryDto,
   AdminIncidentQueryDto,
   AdminIncidentAcknowledgeDto,
-  AdminSupportReplyDto,
-  AdminSupportStatusDto,
   AdminSendMessageDto,
   AdminPairMaintenanceDto,
   AdminKycDecisionDto,
@@ -75,8 +82,13 @@ import { LoanAdminDecisionDto } from "../loans/loans.dto";
 import { MarketProviderRouterService } from "../market/market-provider-router.service";
 import { KycService } from "../kyc/kyc.service";
 import { CommunicationsService } from "../communications/communications.service";
+import { SUPPORT_ATTACHMENT_MAX_BYTES, type SupportUpload } from "../communications/support-attachment-storage.service";
+import { AdminMessageResponseDto, SupportAttachmentResponseDto } from "../communications/communications.dto";
+import { AuthRateLimit } from "../auth/auth-rate-limit.decorator";
+import { AuthRateLimitGuard } from "../auth/auth-rate-limit.guard";
 
 @ApiTags("Admin Control Plane")
+@ApiBearerAuth()
 @Controller("admin")
 @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
 @RequireAuthSurface("ADMIN")
@@ -98,12 +110,46 @@ export class AdminController {
   }
 
   @Post("messages")
+  @ApiCreatedResponse({ type: AdminMessageResponseDto, description: "The persisted operator message and its audit reference." })
   @RequireAdminPermission("messages.send")
   sendAdminMessage(
     @Body() body: AdminSendMessageDto,
     @Req() request: AuthenticatedRequest,
   ) {
     return this.communications.sendAdminMessage(request.user.userId, body);
+  }
+
+  @Post("messages/:recipientId/attachments")
+  @ApiConsumes("multipart/form-data")
+  @ApiBody({ schema: { type: "object", required: ["file"], properties: { file: { type: "string", format: "binary" } } } })
+  @ApiCreatedResponse({ type: SupportAttachmentResponseDto })
+  @RequireAdminPermission("messages.send")
+  @UseGuards(AuthRateLimitGuard)
+  @AuthRateLimit("message-attachment")
+  @UseInterceptors(FileInterceptor("file", { limits: { fileSize: SUPPORT_ATTACHMENT_MAX_BYTES, files: 1 } }))
+  uploadAdminSupportAttachment(
+    @Param("recipientId", ParseUUIDPipe) recipientId: string,
+    @UploadedFile() file?: SupportUpload,
+  ) {
+    return this.communications.uploadAdminSupportAttachment(recipientId, file);
+  }
+
+  @Get("messages/:recipientId/attachments/:id")
+  @ApiProduces("image/png", "image/jpeg", "image/webp", "application/pdf")
+  @ApiOkResponse({ schema: { type: "string", format: "binary" }, description: "Private attachment for the specified customer's support conversation." })
+  @RequireAdminPermission("messages.view")
+  @Header("X-Content-Type-Options", "nosniff")
+  @Header("Cache-Control", "private, no-store")
+  async getAdminSupportAttachment(
+    @Param("recipientId", ParseUUIDPipe) recipientId: string,
+    @Param("id", ParseUUIDPipe) id: string,
+  ) {
+    const { attachment, body } = await this.communications.getAdminSupportAttachment(recipientId, id);
+    return new StreamableFile(body, {
+      type: attachment.mimeType,
+      disposition: `attachment; filename*=UTF-8''${encodeURIComponent(attachment.name)}`,
+      length: attachment.size,
+    });
   }
 
   @Get("roles")
@@ -152,63 +198,6 @@ export class AdminController {
     @Req() request: AuthenticatedRequest,
   ) {
     return this.adminService.acknowledgeIncident(id, request.user.userId, body);
-  }
-
-  @Post("tickets/:id/reply")
-  @ApiOperation({ summary: "Reply to a support ticket" })
-  @ApiResponse({
-    status: 200,
-    description: "Support reply result",
-    schema: {
-      type: "object",
-      required: ["ok", "auditId", "replayed"],
-      properties: {
-        ok: { type: "boolean" },
-        auditId: { type: "string", format: "uuid" },
-        replayed: { type: "boolean" },
-      },
-    },
-  })
-  @ApiBadRequestResponse({ description: "Invalid support reply request" })
-  @ApiNotFoundResponse({ description: "Support ticket not found" })
-  @RequireAdminPermission("support.reply")
-  replyAdminTicket(
-    @Param("id", ParseUUIDPipe) id: string,
-    @Body() body: AdminSupportReplyDto,
-    @Req() request: AuthenticatedRequest,
-  ) {
-    return this.adminService.replyAdminTicket(id, request.user.userId, body);
-  }
-
-  @Post("tickets/:id/status")
-  @ApiOperation({ summary: "Change support ticket status" })
-  @ApiResponse({
-    status: 200,
-    description: "Support status result",
-    schema: {
-      type: "object",
-      required: ["ok", "auditId", "replayed", "status"],
-      properties: {
-        ok: { type: "boolean" },
-        auditId: { type: "string", format: "uuid" },
-        replayed: { type: "boolean" },
-        status: { type: "string" },
-      },
-    },
-  })
-  @ApiBadRequestResponse({ description: "Invalid support status request" })
-  @ApiNotFoundResponse({ description: "Support ticket not found" })
-  @RequireAdminPermission("support.reply")
-  setAdminTicketStatus(
-    @Param("id", ParseUUIDPipe) id: string,
-    @Body() body: AdminSupportStatusDto,
-    @Req() request: AuthenticatedRequest,
-  ) {
-    return this.adminService.setAdminTicketStatus(
-      id,
-      request.user.userId,
-      body,
-    );
   }
 
   @Get("maintenance-windows")
@@ -860,12 +849,6 @@ export class AdminController {
       body.reason,
       body.idempotencyKey,
     );
-  }
-
-  @Get("tickets")
-  @RequireAdminPermission("support.view")
-  getAdminTickets() {
-    return this.adminService.getAdminTickets();
   }
 
   @Get("announcements")

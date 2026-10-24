@@ -11,7 +11,7 @@ import { DataTable, type DataTableColumn } from "@/admin/components/DataTable";
 import { useAdminSession } from "@/admin/session/session";
 import { buildOverviewWorkItems, type OverviewWorkItem } from "@/admin/data/overview-work-items";
 import { ErrorState, LoadingSkeleton } from "@/admin/components/states";
-import { Users, Activity, Wallet, LifeBuoy, Radio, Timer } from "lucide-react";
+import { Users, Activity, Wallet, Radio, Timer } from "lucide-react";
 
 export const Route = createFileRoute("/overview")({ component: OverviewPage });
 
@@ -29,7 +29,6 @@ function Inner() {
   const canUsers = session.can("users.view");
   const canSessions = session.can("sessions.view");
   const canWithdrawals = session.can("withdrawals.view");
-  const canSupport = session.can("support.view");
   const canFeeds = session.can("feeds.view");
   const canBinary = session.can("binary.view");
   const canKyc = session.can("kyc.view");
@@ -43,10 +42,6 @@ function Inner() {
   const withdrawals = useAdminQuery(
     (p) => (canWithdrawals ? p.listWithdrawals() : Promise.resolve([])),
     [canWithdrawals],
-  );
-  const tickets = useAdminQuery(
-    (p) => (canSupport ? p.listTickets() : Promise.resolve([])),
-    [canSupport],
   );
   const feeds = useAdminQuery((p) => (canFeeds ? p.listFeeds() : Promise.resolve([])), [canFeeds]);
   const binary = useAdminQuery(
@@ -64,7 +59,6 @@ function Inner() {
     canUsers && users.loading,
     canSessions && sessions.loading,
     canWithdrawals && withdrawals.loading,
-    canSupport && tickets.loading,
     canFeeds && feeds.loading,
     canBinary && binary.loading,
     canKyc && kyc.loading,
@@ -74,15 +68,13 @@ function Inner() {
   const queueErrors = [
     canKyc && kyc.error && "KYC reviews",
     canWithdrawals && withdrawals.error && "withdrawals",
-    canSupport && tickets.error && "support tickets",
     canHealth && health.error && "system health",
   ].filter(Boolean);
   const workItems = buildOverviewWorkItems({
     kyc: kyc.data ?? [],
     withdrawals: withdrawals.data ?? [],
-    tickets: tickets.data ?? [],
     health: health.data ?? [],
-    access: { kyc: canKyc, withdrawals: canWithdrawals, support: canSupport, health: canHealth },
+    access: { kyc: canKyc, withdrawals: canWithdrawals, health: canHealth },
   });
   const selected = workItems.find((item) => item.id === selectedId) ?? workItems[0] ?? null;
   const workColumns: DataTableColumn<OverviewWorkItem>[] = [
@@ -153,19 +145,6 @@ function Inner() {
               }
               icon={<Wallet className="h-4 w-4" />}
               tone="warning"
-            />
-          )}
-          {canSupport && (
-            <MetricCard
-              label="Open tickets"
-              value={
-                tickets.error
-                  ? "Unavailable"
-                  : (tickets.data?.filter((t) => t.status === "open" || t.status === "escalated")
-                      .length ?? 0)
-              }
-              icon={<LifeBuoy className="h-4 w-4" />}
-              tone="destructive"
             />
           )}
           {canFeeds && (

@@ -716,3 +716,10 @@ The previously reviewed nine-commit source/evidence batch at `3bb57e02ea92153197
 - [x] Confirmed lockfile versions and local specialist-file discovery. BullMQ has no standalone skill at the searched roots; Vibe Workflow/Redis and installed package/vendor contracts are the fallback. Coordinator board listing worked, but no parallel writer was appropriate; no task or board mutation was created.
 - [x] Evidence: [backend specialist-first routing receipt](evidence/backend-specialist-first-routing-20261024.md).
 - [ ] Runtime enforcement is not established by documentation or these simulations. Each future backend task must record actual skill reads and task-local evidence; no hook interception claim is made.
+
+## 2026-10-24 — P3.2 Support and Messages source implementation
+
+- [x] Reworked Public Support around retained help content and configured Chat/Telegram/email contacts; removed active Public ticket interactions without deleting historical ticket data.
+- [x] Wired recipient-free Public support bootstrap/send, canonical support conversation identity shared with Admin, explicit Public/Admin read receipts, server-side authorization, Admin audit attribution, private bounded attachment routes, and durable SQLite/Outbox message writes with Socket.IO/Valkey notifications.
+- [x] Focused source tests, changed-surface typechecks, targeted lint, Graphify path review, Fallow changed-code analysis, and `git diff --check` passed at the recorded scopes. Framework CLI use was limited to route type generation and no-write Nest scaffold inspection; no generator was allowed to overwrite existing implementation.
+- [ ] Source remains uncommitted and undeployed. Do not infer production correctness from source tests. The separate authenticated browser phase still needs a controlled test conversation for Public send → Admin thread/reply → same-thread Public readback, refresh/reconnect, role denial, and attachment round trip. Receipt: [P3.2 Support/chat source implementation](evidence/nexi-support-chat-source-implementation-20261024.md).

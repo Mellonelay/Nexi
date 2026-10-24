@@ -23,6 +23,18 @@ export class D1CommunicationsCommandGateway {
     return this.bridge.isEnabled();
   }
 
+  async ensureConversation(input: {
+    id: string;
+    participantAId: string;
+    participantBId: string;
+  }): Promise<void> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    await this.bridge.batch([{
+      sql: `INSERT OR IGNORE INTO "MessageConversation" ("id","participantAId","participantBId","state","createdAt","updatedAt") VALUES (?,?,?,'ACTIVE',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`,
+      params: [input.id, input.participantAId, input.participantBId],
+    }]);
+  }
+
   async markMessageRead(userId: string, messageId: string): Promise<boolean> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const result = await this.bridge.batch([

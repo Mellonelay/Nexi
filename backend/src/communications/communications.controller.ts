@@ -1,15 +1,36 @@
 import {
   Body,
   Controller,
+  GoneException,
   Get,
+  Header,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   Query,
   Req,
+  StreamableFile,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
 } from "@nestjs/common";
-import { ApiTags } from "@nestjs/swagger";
+import { FileInterceptor } from "@nestjs/platform-express";
+import {
+  ApiBody,
+  ApiBearerAuth,
+  ApiBadRequestResponse,
+  ApiConsumes,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiProduces,
+  ApiQuery,
+  ApiResponse,
+  ApiUnauthorizedResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import { Role } from "../prisma/d1-client";
 import type { AuthenticatedRequest } from "../auth/auth.types";
 import { AuthSurfaceGuard } from "../auth/auth-surface.guard";
@@ -17,22 +38,26 @@ import { RequireAuthSurface } from "../auth/auth-surface.decorator";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { Roles } from "../auth/roles.decorator";
 import { RolesGuard } from "../auth/roles.guard";
+import { AuthRateLimit } from "../auth/auth-rate-limit.decorator";
+import { AuthRateLimitGuard } from "../auth/auth-rate-limit.guard";
 import { AdminPermissionGuard } from "../admin/admin-permission.guard";
 import { RequireAdminPermission } from "../admin/admin-permission.decorator";
 import { CommunicationsService } from "./communications.service";
+import { SUPPORT_ATTACHMENT_MAX_BYTES, type SupportUpload } from "./support-attachment-storage.service";
 import {
   AdminMutationDto,
-  AssignTicketDto,
   CreateAnnouncementDto,
   CreateLearnCategoryDto,
   CreateLearnContentDto,
-  CreateTicketDto,
   ContentLocaleQueryDto,
   PageQueryDto,
   ReportConversationDto,
   ResolveMessageModerationDto,
-  ReplyTicketDto,
-  SendMessageDto,
+  SendSupportMessageDto,
+  AdminMessageResponseDto,
+  SupportAttachmentResponseDto,
+  SupportMessageResponseDto,
+  SupportThreadResponseDto,
   UpdateAnnouncementDto,
   UpdateLearnCategoryStatusDto,
   UpdateLearnContentDto,
@@ -43,55 +68,76 @@ import {
 @Controller("communications")
 export class CommunicationsController {
   constructor(private readonly service: CommunicationsService) {}
-  @Post("tickets") @UseGuards(JwtAuthGuard) createTicket(
-    @Req() req: AuthenticatedRequest,
-    @Body() dto: CreateTicketDto,
-  ) {
-    return this.service.createTicket(
-      req.user.userId,
-      dto.subject,
-      dto.body,
-      dto.idempotencyKey,
-    );
+  @Get("support/thread")
+  @ApiBearerAuth()
+  @ApiUnauthorizedResponse({ description: "A valid Public user session is required." })
+  @ApiForbiddenResponse({ description: "The support conversation is restricted." })
+  @ApiQuery({ name: "page", required: false, type: Number, minimum: 1 })
+  @ApiQuery({ name: "limit", required: false, type: Number, minimum: 1, maximum: 100 })
+  @ApiOkResponse({ type: SupportThreadResponseDto, description: "The customer's canonical NEXI support thread; messages is empty when none exist." })
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard)
+  @RequireAuthSurface("PUBLIC")
+  @Roles(Role.USER)
+  supportThread(@Req() req: AuthenticatedRequest, @Query() q: PageQueryDto) {
+    return this.service.supportThread(req.user.userId, q.page, q.limit);
   }
-  @Get("tickets") @UseGuards(JwtAuthGuard) tickets(
-    @Req() req: AuthenticatedRequest,
-    @Query() q: PageQueryDto,
-  ) {
-    return this.service.listTickets(req.user.userId, q.page, q.limit);
+  @Post("support/messages")
+  @ApiBearerAuth()
+  @ApiBadRequestResponse({ description: "Message text or at least one valid attachment is required." })
+  @ApiUnauthorizedResponse({ description: "A valid Public user session is required." })
+  @ApiForbiddenResponse({ description: "The support conversation is restricted." })
+  @ApiResponse({ status: 409, description: "The idempotency key was already used with a different message payload." })
+  @ApiCreatedResponse({ type: SupportMessageResponseDto, description: "The persisted message in the canonical support conversation." })
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard)
+  @RequireAuthSurface("PUBLIC")
+  @Roles(Role.USER)
+  supportMessage(@Req() req: AuthenticatedRequest, @Body() dto: SendSupportMessageDto) {
+    return this.service.sendSupportMessage(req.user.userId, dto.body ?? "", dto.idempotencyKey, dto.attachmentIds);
   }
-  @Post("tickets/:id/replies") @UseGuards(JwtAuthGuard) reply(
-    @Req() req: AuthenticatedRequest,
-    @Param("id") id: string,
-    @Body() dto: ReplyTicketDto,
-  ) {
-    return this.service.reply(
-      req.user.userId,
-      id,
-      dto.body,
-      dto.idempotencyKey,
-      dto.internal,
-      dto.attachments,
-      req.user.role,
-    );
+  @Post("support/attachments")
+  @ApiBearerAuth()
+  @ApiBadRequestResponse({ description: "File is missing, oversized, or not an allowed content type." })
+  @ApiUnauthorizedResponse({ description: "A valid Public user session is required." })
+  @ApiConsumes("multipart/form-data")
+  @ApiBody({ schema: { type: "object", required: ["file"], properties: { file: { type: "string", format: "binary" } } } })
+  @ApiCreatedResponse({ type: SupportAttachmentResponseDto, description: "Private staged attachment reference for a later support message." })
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AuthRateLimitGuard)
+  @RequireAuthSurface("PUBLIC")
+  @AuthRateLimit("message-attachment")
+  @Roles(Role.USER)
+  @UseInterceptors(FileInterceptor("file", { limits: { fileSize: SUPPORT_ATTACHMENT_MAX_BYTES, files: 1 } }))
+  uploadSupportAttachment(@Req() req: AuthenticatedRequest, @UploadedFile() file?: SupportUpload) {
+    return this.service.uploadSupportAttachment(req.user.userId, file);
   }
-  @Post("tickets/:id/assign")
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
-  assign(@Param("id") id: string, @Body() dto: AssignTicketDto) {
-    return this.service.assign(id, dto.assignedToId);
+  @Get("support/attachments/:id")
+  @ApiBearerAuth()
+  @ApiUnauthorizedResponse({ description: "A valid Public user session is required." })
+  @ApiForbiddenResponse({ description: "The attachment is not linked to this user's support conversation." })
+  @ApiResponse({ status: 404, description: "The attachment does not exist or is unavailable to this user." })
+  @ApiProduces("image/png", "image/jpeg", "image/webp", "application/pdf")
+  @ApiOkResponse({ schema: { type: "string", format: "binary" }, description: "Private attachment; access is restricted to its conversation participant." })
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard)
+  @RequireAuthSurface("PUBLIC")
+  @Roles(Role.USER)
+  @Header("X-Content-Type-Options", "nosniff")
+  @Header("Cache-Control", "private, no-store")
+  async getSupportAttachment(@Req() req: AuthenticatedRequest, @Param("id", ParseUUIDPipe) id: string) {
+    const { attachment, body } = await this.service.getSupportAttachment(req.user.userId, id);
+    return new StreamableFile(body, {
+      type: attachment.mimeType,
+      disposition: `attachment; filename*=UTF-8''${encodeURIComponent(attachment.name)}`,
+      length: attachment.size,
+    });
   }
-  @Post("messages") @UseGuards(JwtAuthGuard) message(
-    @Req() req: AuthenticatedRequest,
-    @Body() dto: SendMessageDto,
-  ) {
-    return this.service.sendMessage(
-      req.user.userId,
-      dto.recipientId,
-      dto.body,
-      dto.idempotencyKey,
-      dto.attachments,
-    );
+  @Post("messages")
+  @ApiBearerAuth()
+  @ApiOperation({ deprecated: true, description: "Recipient-selected Public messaging is retired. Use the NEXI support conversation." })
+  @ApiResponse({ status: 410, description: "Recipient-selected messaging has been retired." })
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard)
+  @RequireAuthSurface("PUBLIC")
+  @Roles(Role.USER)
+  message() {
+    throw new GoneException("Recipient-selected messaging is retired. Use the NEXI support conversation.");
   }
   @Post("messages/:id/read") @UseGuards(JwtAuthGuard) readMessage(
     @Req() req: AuthenticatedRequest,
@@ -169,12 +215,24 @@ export class CommunicationsController {
     return this.service.publishAnnouncement(id, dto.idempotencyKey);
   }
   @Get("admin/messages")
+  @ApiBearerAuth()
+  @ApiQuery({ name: "page", required: false, type: 'integer', minimum: 1 })
+  @ApiQuery({ name: "limit", required: false, type: 'integer', minimum: 1, maximum: 100 })
+  @ApiOkResponse({ type: AdminMessageResponseDto, isArray: true, description: "Operator message records with canonical support-customer linkage." })
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
   @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
   @RequireAdminPermission("messages.view")
   adminMessages(@Query() q: PageQueryDto) {
     return this.service.adminMessages(q.page, q.limit);
+  }
+  @Post("admin/messages/:id/read")
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
+  @RequireAuthSurface("ADMIN")
+  @Roles(Role.ADMIN)
+  @RequireAdminPermission("messages.view")
+  markAdminMessageRead(@Req() req: AuthenticatedRequest, @Param("id") id: string) {
+    return this.service.markAdminMessageRead(req.user.userId, id);
   }
   @Get("admin/messages/moderation")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)

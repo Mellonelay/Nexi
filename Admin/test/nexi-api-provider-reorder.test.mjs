@@ -131,6 +131,47 @@ test("Admin messages are grouped into recent conversations with unread counts", 
   );
 });
 
+test("Admin message provider fetches bounded API pages through the final partial page", async () => {
+  const source = await readFile(new URL("../src/admin/data/nexi-api-provider.ts", import.meta.url), "utf8");
+  assert.match(source, /async listMessages\(\): Promise<AdminMessage\[\]>[\s\S]*?for \(let page = 1; ; page \+= 1\)/);
+  assert.match(source, /\/communications\/admin\/messages\?page=\$\{page\}&limit=100/);
+  assert.match(source, /if \(rows\.length < 100\) return messages/);
+  assert.match(source, /const seenIds = new Set<string>\(\)/);
+});
+
+test("Admin groups routed customer messages under their canonical support conversation", async () => {
+  const conversations = groupAdminMessageConversations([
+    {
+      id: "public-1",
+      conversationId: "conversation:customer:support:nexi",
+      supportCustomerId: "customer",
+      senderId: "customer",
+      recipientId: "support:nexi",
+      body: "Question",
+      deliveryState: "SENT",
+      createdAt: "2026-10-24T10:00:00.000Z",
+      readAt: null,
+    },
+    {
+      id: "admin-1",
+      conversationId: "conversation:customer:support:nexi",
+      supportCustomerId: "customer",
+      senderId: "support:nexi",
+      recipientId: "customer",
+      body: "Reply",
+      deliveryState: "SENT",
+      createdAt: "2026-10-24T10:01:00.000Z",
+      readAt: null,
+    },
+  ], "admin");
+
+  assert.equal(conversations.length, 1);
+  assert.equal(conversations[0].conversationId, "conversation:customer:support:nexi");
+  assert.equal(conversations[0].clientId, "customer");
+  assert.equal(conversations[0].latestMessage.id, "admin-1");
+  assert.equal(conversations[0].unreadCount, 1);
+});
+
 test("Learn category status actions compare against current status and send the opposite target", () => {
   assert.deepEqual(learnCategoryStatusUpdate("ACTIVE"), {
     expectedStatus: "ACTIVE",
@@ -163,7 +204,21 @@ test("Messages renders a conversation inbox and selected thread from live messag
   assert.match(source, /groupAdminMessageConversations/);
   assert.match(source, /aria-label="Message conversations"/);
   assert.match(source, /aria-label="Selected client conversation"/);
-  assert.match(source, /onChange=\{\(event\) => void openThread\(event\.target\.value\)\}/);
+  assert.match(source, /if \(!recipientId && conversations\.length\) \{\s*void openThread\(conversations\[0\]\.clientId, conversations\[0\]\.conversationId\);/);
+  assert.match(source, /const unread = \(messages\.data \?\? \[\]\)\.filter\([\s\S]*?!message\.readAt[\s\S]*?\);\s*if \(!unread\.length\) return;\s*try \{\s*await Promise\.all\(unread\.map\(\(message\) => provider\.markAdminMessageRead\(message\.id\)\)\)/);
+  assert.match(source, /onChange=\{\(event\) => \{\s*setPendingMessageKey\(null\);\s*setSelectedConversationId\(""\);\s*void openThread\(event\.target\.value\);/);
+});
+
+test("Admin Messages uses one idempotency key per compose intent and retains it on failure", async () => {
+  const route = await readFile(new URL("../src/routes/messages.tsx", import.meta.url), "utf8");
+  const provider = await readFile(new URL("../src/admin/data/nexi-api-provider.ts", import.meta.url), "utf8");
+
+  assert.match(route, /const \[pendingMessageKey, setPendingMessageKey\] = useState<string \| null>\(null\)/);
+  assert.match(route, /pendingMessageKey \?\? globalThis\.crypto\?\.randomUUID/);
+  assert.match(route, /sendAdminMessage\(\{[\s\S]*?recipientId,[\s\S]*?selectedConversation\?\.support \? \{ conversationId: selectedConversation\.conversationId \}/);
+  assert.match(route, /setPendingMessageKey\(null\);\s+messages\.refresh\(\)/);
+  assert.match(provider, /idempotencyKey: idempotencyKey \?\? boundedIdempotencyKey/);
+  assert.match(provider, /payload: \{ recipientId: string; conversationId\?: string; body: string; attachmentIds\?: string\[\]; idempotencyKey: string \}/);
 });
 
 test("Overview queues only actionable live records visible to the operator", () => {
@@ -204,19 +259,26 @@ test("Overview queues only actionable live records visible to the operator", () 
         status: "confirmed",
       },
     ],
-    tickets: [
-      { id: "ticket", userId: "client", subject: "Needs help", status: "escalated" },
-      { id: "resolved", userId: "client", subject: "Done", status: "resolved" },
-    ],
     health: [
       { id: "api", name: "API", status: "down", latencyMs: 100, updatedAt: "2026-10-22T00:00:00Z" },
       { id: "db", name: "SQLite", status: "ok", latencyMs: 1, updatedAt: "2026-10-22T00:00:00Z" },
     ],
-    access: { kyc: true, withdrawals: false, support: true, health: true },
+    access: { kyc: true, withdrawals: false, health: true },
   });
 
   assert.deepEqual(
     items.map(({ id }) => id),
-    ["kyc:kyc", "ticket:ticket", "health:api"],
+    ["kyc:kyc", "health:api"],
   );
+});
+
+test("Admin Messages invalidates protected HTTP data on authenticated Socket.IO changes and reconnect", async () => {
+  const provider = await readFile(new URL("../src/admin/data/nexi-api-provider.ts", import.meta.url), "utf8");
+  const route = await readFile(new URL("../src/routes/messages.tsx", import.meta.url), "utf8");
+  assert.match(provider, /subscribeToCommunications\(onChange: \(\) => void\)/);
+  assert.match(provider, /auth: \(callback\).*getToken/s);
+  assert.match(provider, /socket\.on\("communications\.changed", onChange\)/);
+  assert.match(provider, /socket\.on\("connect", onChange\)/);
+  assert.match(provider, /return \(\) => socket\.disconnect\(\)/);
+  assert.match(route, /subscribeToCommunications\?\.\(\(\) => \{[\s\S]*refreshMessages\(\);[\s\S]*refreshModeration\(\);/);
 });

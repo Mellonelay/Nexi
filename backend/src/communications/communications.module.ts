@@ -8,6 +8,7 @@ import { CommunicationsController } from "./communications.controller";
 import { CommunicationsService } from "./communications.service";
 import { CommunicationsGateway } from "./communications.gateway";
 import { AdminPermissionGuard } from "../admin/admin-permission.guard";
+import { SupportAttachmentStorageService } from "./support-attachment-storage.service";
 
 @Module({
   imports: [AuthModule, D1PrismaModule, RedisModule, EventsModule],
@@ -17,6 +18,7 @@ import { AdminPermissionGuard } from "../admin/admin-permission.guard";
     CommunicationsGateway,
     D1CommunicationsCommandGateway,
     AdminPermissionGuard,
+    SupportAttachmentStorageService,
   ],
   exports: [CommunicationsService],
 })

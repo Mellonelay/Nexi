@@ -1,10 +1,18 @@
 import { Controller, Get, Query } from "@nestjs/common";
-import { ApiTags } from "@nestjs/swagger";
+import { ApiOkResponse, ApiProperty, ApiTags } from "@nestjs/swagger";
 import { AppService } from "./app.service";
 import { MarketAuthorityService } from "./market/market-authority.service";
 import { ReadinessService } from "./observability/readiness.service";
 import { D1PrismaService } from "./d1/d1-prisma.service";
-import { normalizePublicBanners, normalizePublicRouteSettings } from "./admin/public-ui-config";
+import { normalizePublicBanners, normalizePublicRouteSettings, normalizePublicSupportContacts } from "./admin/public-ui-config";
+
+class PublicSupportContactsResponseDto {
+  @ApiProperty({ type: String, nullable: true, format: "uri", description: "Configured trusted Telegram support URL, or null when disabled." })
+  telegramUrl!: string | null;
+
+  @ApiProperty({ type: String, nullable: true, format: "email", description: "Configured support email address, or null when disabled." })
+  email!: string | null;
+}
 
 const PUBLIC_NAVIGATION_TARGETS = new Set([
   "/dashboard",
@@ -149,6 +157,22 @@ export class AppController {
       value = null;
     }
     return normalizePublicBanners(value);
+  }
+
+  @Get("public/config/support")
+  @ApiOkResponse({ type: PublicSupportContactsResponseDto })
+  async getPublicSupportContacts() {
+    const row = await this.prisma?.systemConfig.findUnique({
+      where: { key: "admin.frontend.supportEntryPoints" },
+      select: { value: true },
+    });
+    let value: unknown;
+    try {
+      value = row ? JSON.parse(row.value) : null;
+    } catch {
+      value = null;
+    }
+    return normalizePublicSupportContacts(value);
   }
 
   @Get("public/config/quotes-categories")

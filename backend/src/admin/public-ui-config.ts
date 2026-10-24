@@ -18,6 +18,69 @@ const routeStates = new Set(["public", "authenticated", "hidden", "maintenance"]
 const bannerSeverities = new Set(["info", "warning", "critical"]);
 const bannerScopes = new Set(["global", "spot", "binary", "wallets"]);
 
+export type PublicSupportContacts = { telegramUrl: string | null; email: string | null };
+
+function validTelegramTarget(value: unknown): value is string {
+  if (typeof value !== "string" || value.length > 256) return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && url.hostname === "t.me" && !!url.pathname.slice(1) &&
+      !url.username && !url.password && !url.search && !url.hash;
+  } catch {
+    return false;
+  }
+}
+
+function validSupportEmail(value: unknown): value is string {
+  return typeof value === "string" && value.length <= 254 &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+export function normalizePublicSupportContacts(value: unknown): PublicSupportContacts {
+  const contacts: PublicSupportContacts = { telegramUrl: null, email: null };
+  if (!Array.isArray(value)) return contacts;
+  for (const entry of value) {
+    if (typeof entry !== "object" || entry === null) continue;
+    const item = entry as Record<string, unknown>;
+    if (item.visible !== true || typeof item.target !== "string") continue;
+    if (!contacts.telegramUrl && item.channel === "telegram" && validTelegramTarget(item.target)) {
+      contacts.telegramUrl = item.target;
+    }
+    if (!contacts.email && item.channel === "email" && validSupportEmail(item.target)) {
+      contacts.email = item.target;
+    }
+  }
+  return contacts;
+}
+
+export function assertSupportEntryPoints(value: string): void {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(value);
+  } catch {
+    throw new BadRequestException("Invalid Public support entry configuration");
+  }
+  if (!Array.isArray(parsed)) throw new BadRequestException("Public support entries must be an array");
+  const contactChannels = new Set<string>();
+  for (const entry of parsed) {
+    if (typeof entry !== "object" || entry === null) continue;
+    const item = entry as Record<string, unknown>;
+    if (item.channel !== "telegram" && item.channel !== "email") continue;
+    if (contactChannels.has(item.channel)) throw new BadRequestException("Public support contacts must be unique by channel");
+    contactChannels.add(item.channel);
+    if (typeof item.visible !== "boolean" || typeof item.target !== "string") {
+      throw new BadRequestException("Public support contact is invalid");
+    }
+    if (!item.visible && !item.target.trim()) continue;
+    if (item.channel === "telegram" && !validTelegramTarget(item.target)) {
+      throw new BadRequestException("Telegram support must use a valid https://t.me/ URL");
+    }
+    if (item.channel === "email" && !validSupportEmail(item.target)) {
+      throw new BadRequestException("Support email must be a valid email address");
+    }
+  }
+}
+
 type PublicRouteState = "public" | "authenticated" | "hidden" | "maintenance";
 type PublicRouteSetting = {
   id: string;
