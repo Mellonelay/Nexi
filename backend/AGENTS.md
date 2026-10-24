@@ -41,6 +41,21 @@ Current source/runtime and the root `AGENTS.md` control the execution model.
 Preserve NestJS module ownership, authorization, ownership checks, DTO validation, exact monetary precision, idempotency, ledger invariants, audit/activity linkage, EventOutbox semantics, public/Admin separation, and safe retry/recovery.
 Do not mutate scalar wallet balances as financial authority when canonical ledger/reservation/posting methods exist.
 Do not invent economic behavior, lifecycle states, settlement rules, or acceptance data.
+
+## Backend specialist-first change gate
+Before proposing or changing backend behavior, identify the symptom, causal owner, affected technology boundaries, and existing proof that remains valid. Read the applicable specialist instructions and inspect the installed package versions/contracts before selecting a repair. For a NestJS change, NestJS specialist guidance is mandatory; add SQL/Prisma, Valkey/Redis, BullMQ, Socket.IO, or security/API-contract specialists only for boundaries the change actually touches. Discover the current canonical skill paths through the NEXI Capability Router rather than assuming every named skill is installed.
+
+Keep a compact pre-change receipt in the task evidence: symptom and reproduction; causal module; affected technologies; exact skill files read and versioned contract checked; proof reused; candidate files; and focused regression checks. For changed behavior, reproduce the failure with a focused test or controlled read-only observation when practical, then verify the repair and adjacent contract. Do not substitute typechecking for behavior proof or repeat unchanged acceptance suites.
+
+- **NestJS:** verify module/provider ownership, guards and permissions, DTO validation, exception mapping, lifecycle ordering, dependency injection, and the existing test boundary.
+- **SQLite/Prisma:** verify the installed Prisma and adapter versions; preserve transaction atomicity, WAL/SHM, foreign keys, busy timeout, idempotency, Ledger, audit, EventOutbox/EventInbox, and durable journals as applicable.
+- **Valkey/Redis:** verify client ownership, Aiven configuration, reconnect/timeout behavior, stream acknowledgement/recovery, and cache invalidation; Valkey remains transport/cache, never financial truth.
+- **BullMQ:** inspect the installed API/version, job identity, retries, idempotency, worker drain, QueueEvents connections, and Outbox/journal boundary when queues are involved. Consult current official docs when package behavior is version-sensitive; do not infer exactly-once business execution.
+- **Socket.IO/realtime:** verify installed NestJS, Socket.IO, and adapter contracts, especially `close(server)`, disposal order, authentication, reconnect/replay, and Redis client cleanup.
+- **Authentication/API:** verify the actual client-to-controller contract, auth surface, role/permission guards, ownership checks, validation, and error mapping.
+
+For Admin/Public consumers of a changed endpoint, check both sides' request and response contract before release. Batch compatible, confirmed repairs; run focused causal and adjacent tests before any production build. Build/deploy only affected surfaces, once the batch is ready and separately authorized. These instructions guide each task; they do not prove a skill or hook ran, enforce runtime behavior, or reopen the completed Learn-category and graceful-shutdown fixes.
+
 ## SQLite and Prisma handling
 The VPS target uses the existing Prisma better-sqlite3 adapter and local financial command gateway. Preserve per-connection WAL/FULL durability, foreign keys, busy timeout, atomic transaction and exact decimal/idempotency behavior. Keep Ledger, EventOutbox, EventInbox and durable workflow/job rows in the same SQLite authority where required.
 

@@ -936,3 +936,10 @@ Evidence: [coordinated release checkpoint](evidence/nexi-coordinated-release-che
 - [x] Backend shutdown runtime check: controlled restart completed without the prior systemd timeout; shutdown hooks logged Socket.IO adapter closure, and `/ops/ready` returned 200 with database and Redis ready. Startup briefly returned 502 before binding; it recovered without another restart.
 - [x] Source commit `b3103ad7b07937616815b487efa212b324bdbce2` is pushed and deployed to Admin. Backend remains at `20d10c4d85bb733ae4bba680ad919fc35b98e344`; Public remains on build `3bb57e02ea921531975124ce2c827382a9f1ec6b`. Exact service IDs, checks, Sentry and rollback details are in the 2026-10-24 receipt.
 - [ ] Keep P1/P2/P3 owner acceptance open for controlled Messages, lower-role Admin permissions, eligible open Binary position, broader Public wallet/KYC/realtime cases, responsive reference comparisons, and final owner acceptance. Do not perform wallet signatures or economic actions. Preserve four `OWNER_ACCEPTED_UNTESTED` gates.
+
+## 2026-10-24 — Backend workflow hardening
+
+- [x] Specialist-first routing instructions added to `backend/AGENTS.md` and checked against the Learn-status and graceful-shutdown historical scenarios without reopening either repair.
+- [x] Skill paths and backend lockfile versions checked. Standalone BullMQ skill absent; Vibe Workflow/Redis and current official package documentation are the routed fallback. No direct Capability Orchestrator/Coordinator MCP or Promptfoo tool is exposed; the Coordinator claim board list CLI worked.
+- [x] Read-only scenario results and evidence limits recorded in [the routing receipt](evidence/backend-specialist-first-routing-20261024.md).
+- [ ] No code tests/build/deploy were run because this is an instruction-only change. Whether instructions are obeyed in future tasks is not runtime-enforced or proven here.
