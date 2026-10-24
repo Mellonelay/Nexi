@@ -686,3 +686,25 @@ Changed-boundary evidence: `backend/test/gate2/binary.service.spec.ts`, `backend
 ## 2026-10-23 — Checkpoint after coordinated application release
 
 The previously reviewed nine-commit source/evidence batch at `3bb57e02ea921531975124ce2c827382a9f1ec6b` is now built and running across the changed Backend, Public, and Admin surfaces. The release is recorded in [the coordinated release checkpoint](evidence/nexi-coordinated-release-checkpoint-20261023.md). The next phase resumes at authenticated acceptance and recovery evidence; do not repeat unchanged builds or focused test receipts. The source release is committed locally but not pushed. Full owner acceptance, controlled Messages, Learn-category status administration, remaining Public journeys, and Backend graceful shutdown evidence remain open.
+
+### 2026-10-23 — Learn category authorization and transactional Outbox
+
+- [x] Scoped NestJS review found category creation lacked the Admin auth-surface and `learn.publish` permission used by the Admin contract. Category status previously committed category/audit rows before a separate Outbox write.
+- [x] Source repair applies the full Admin guard/permission metadata and writes category status, audit, and idempotent Outbox event in one Prisma transaction. No schema change or live database operation.
+- [x] Focused Learn lifecycle suite 8/8, Backend source-only `tsconfig.build.json` typecheck, Fallow changed-file analysis (0 findings), and `git diff --check` passed. Receipt: [Learn authorization and Outbox evidence](evidence/nexi-backend-learn-authorization-outbox-20261023.md).
+- [ ] Backend ESLint is unavailable because no Backend ESLint configuration is present. The audit collector's whole-backend TypeScript run reports unrelated existing test/config errors. Source is not committed, deployed, or runtime/browser-verified.
+
+### 2026-10-23 — Backend graceful-shutdown adapter correction
+
+- [x] NestJS 12 shutdown trace identified the custom RedisIoAdapter `close()` override swallowing Nest's `close(server)` call. It closed Redis without closing Socket.IO namespaces/transports before HTTP server disposal.
+- [x] Corrected the adapter close/dispose contract and bounded Redis quit timer. Regression test failed before the change and passed after; both Nest's server-close and the existing no-argument lifecycle cleanup are covered. Backend source-only typecheck and `git diff --check` passed.
+- [ ] Live graceful shutdown remains unverified; no service stop/restart or deployment was performed. Recheck only in an authorized maintenance window. Fallow's findings are degraded by skipped generated Prisma WASM JS; framework overrides are flagged as unused, and no dependency/method removal is justified. Receipt: [Backend shutdown fix](evidence/nexi-backend-shutdown-fix-20261023.md).
+
+## 2026-10-24 — Integrated Learn/Admin release and runtime follow-through
+
+- [x] Admin Learn status-toggle defect fixed in source commit `b3103ad7b07937616815b487efa212b324bdbce2`, pushed to `origin/main`, and built into canonical `/srv/nexi/admin/current`. The old live browser tab retained its old JavaScript and initially sent the inverse compare-and-set values; after a cache-bypassing reload, the new bundle sent the correct transition and the authenticated Admin PATCH returned 200.
+- [x] Through the Admin UI, hid the approved `TEST_ONLY PRELIVE` category with the required audit reason. Admin readback showed INACTIVE; Public `/communications/learn/categories` returned 200 with `[]`. No direct database access or article publication was used.
+- [x] Controlled restart verified the deployed NestJS adapter fix: systemd stopped the old API process cleanly, shutdown logs recorded Socket.IO Redis adapter closure and final lifecycle handles, the replacement process became ready, and `/ops/ready` returned 200 with database and Redis true. Startup caused brief HTTPS 502s until the API bound port 3002; it recovered without a second restart.
+- [x] Canonical Admin build passed client, SSR, and Nitro stages; Admin TypeScript passed; focused Admin test passed 11/11; `git diff --check` passed. Changed-file ESLint reported 46 inherited Prettier errors in `learn.tsx`; the new helper had no lint findings. Graphify, Fallow, authenticated CodeScene pre-commit, and exact-release Sentry checks are recorded in [the 2026-10-24 release receipt](evidence/nexi-integrated-release-followthrough-20261024.md).
+- [x] Runtime identities are separate: Backend `20d10c4d85bb733ae4bba680ad919fc35b98e344`, Admin `b3103ad7b07937616815b487efa212b324bdbce2`, and unchanged Public build `3bb57e02ea921531975124ce2c827382a9f1ec6b`. All services are active with zero systemd restarts; rollback archive is retained. Admin Sentry error search for `b3103ad` returned no events in 24h; source-map association remains partial.
+- [ ] Remaining acceptance is limited to the separate owner browser phase: controlled Messages send/reply/reconnect fixture, lower-role permissions, eligible OPEN Binary position, broad Public wallet/KYC/realtime paths, responsive screenshot comparisons, and final owner acceptance. The four economic gates remain `OWNER_ACCEPTED_UNTESTED`.

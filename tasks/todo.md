@@ -910,7 +910,7 @@ Receipt: `tasks/evidence/market-provider-runtime-20261017.md`.
 - [ ] Resume P2 Public acceptance across remaining authenticated routes, wallet/provider matrix, safe read-only flows, KYC/status, market freshness and realtime reconnect. Current-session `/auth/me` 200 is a bounded existing-session result, not complete multi-wallet acceptance.
 - [ ] Resolve P2.6 Learn-category lifecycle through a reviewed status endpoint and Admin control, or document the separately authorized data-operation dependency; do not write SQLite directly.
 - [ ] Resume P3.2 only with an authorized controlled Messages conversation; verify Public/Admin same-thread send/reply/history/reconnect. Do not create or message a customer conversation.
-- [ ] Investigate the Backend systemd 30-second stop timeout and prove graceful shutdown during an authorized controlled maintenance window.
+- [x] Diagnose and repair the source-level NestJS Socket.IO adapter close mismatch causing shutdown disposal to skip gateway closure; regression test and typecheck pass. Live graceful shutdown still requires an authorized controlled maintenance window. Receipt: [Backend shutdown fix](evidence/nexi-backend-shutdown-fix-20261023.md).
 - [ ] Obtain final owner acceptance. Keep all four economic gates `OWNER_ACCEPTED_UNTESTED`; no signatures, transfers, orders, settlement overrides, migrations, or financial operations were part of this release.
 
 Detailed exact artifact/build/browser/Sentry/rollback evidence: [2026-10-23 coordinated release checkpoint](evidence/nexi-coordinated-release-checkpoint-20261023.md).
@@ -923,3 +923,16 @@ Detailed exact artifact/build/browser/Sentry/rollback evidence: [2026-10-23 coor
 - [ ] Finish remaining authenticated Admin/Public owner acceptance, controlled Messages, Learn-category status path, and Backend graceful-shutdown investigation as listed above; this release closeout does not mark those items complete.
 
 Evidence: [coordinated release checkpoint](evidence/nexi-coordinated-release-checkpoint-20261023.md).
+
+### Backend Learn authorization / Outbox follow-through — 2026-10-23
+
+- [x] Category creation now enforces Admin auth surface and `learn.publish`; category status, audit, and idempotent Outbox event now commit atomically.
+- [x] Focused Learn tests 8/8; source-only TypeScript check passed; Fallow found 0 issues; `git diff --check` passed. Full proof: [backend Learn correction](evidence/nexi-backend-learn-authorization-outbox-20261023.md).
+- [ ] Backend ESLint could not run because no Backend ESLint config is present. No build, deployment, runtime/browser check, or production DB mutation occurred.
+
+## 2026-10-24 — Current integrated release status
+
+- [x] P2.6 Learn-category lifecycle: fixed the Admin expected/current status inversion, deployed the Admin source repair, and used the authenticated Admin UI to set the approved test-only category to INACTIVE. Admin readback showed INACTIVE and the Public category endpoint returned an empty list. See [integrated release follow-through](evidence/nexi-integrated-release-followthrough-20261024.md).
+- [x] Backend shutdown runtime check: controlled restart completed without the prior systemd timeout; shutdown hooks logged Socket.IO adapter closure, and `/ops/ready` returned 200 with database and Redis ready. Startup briefly returned 502 before binding; it recovered without another restart.
+- [x] Source commit `b3103ad7b07937616815b487efa212b324bdbce2` is pushed and deployed to Admin. Backend remains at `20d10c4d85bb733ae4bba680ad919fc35b98e344`; Public remains on build `3bb57e02ea921531975124ce2c827382a9f1ec6b`. Exact service IDs, checks, Sentry and rollback details are in the 2026-10-24 receipt.
+- [ ] Keep P1/P2/P3 owner acceptance open for controlled Messages, lower-role Admin permissions, eligible open Binary position, broader Public wallet/KYC/realtime cases, responsive reference comparisons, and final owner acceptance. Do not perform wallet signatures or economic actions. Preserve four `OWNER_ACCEPTED_UNTESTED` gates.
