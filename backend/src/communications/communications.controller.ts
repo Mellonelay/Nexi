@@ -201,8 +201,10 @@ export class CommunicationsController {
   @Post("admin/notifications") @UseGuards(JwtAuthGuard, RolesGuard) @Roles(Role.ADMIN)
   sendAdminNotification(@Body() dto: SendNotificationDto) { return this.service.sendAdminNotification(dto); }
   @Get("admin/learn/articles")
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
+  @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
+  @RequireAdminPermission("learn.view")
   adminLearnArticles() {
     return this.service.adminLearnArticles();
   }
@@ -215,8 +217,10 @@ export class CommunicationsController {
     return this.service.adminLearnCategories();
   }
   @Post("admin/learn/categories")
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
+  @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
+  @RequireAdminPermission("learn.publish")
   createLearnCategory(@Body() dto: CreateLearnCategoryDto) {
     return this.service.createLearnCategory(dto);
   }
@@ -233,20 +237,26 @@ export class CommunicationsController {
     return this.service.updateLearnCategoryStatus(id, req.user.userId, dto);
   }
   @Post("admin/learn")
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
+  @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
+  @RequireAdminPermission("learn.publish")
   createLearn(@Body() dto: CreateLearnContentDto) {
     return this.service.createLearn(dto);
   }
   @Patch("admin/learn/:id")
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
+  @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
+  @RequireAdminPermission("learn.publish")
   updateLearn(@Param("id") id: string, @Body() dto: UpdateLearnContentDto) {
     return this.service.updateLearn(id, dto);
   }
   @Post("admin/learn/:id/publish")
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
+  @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
+  @RequireAdminPermission("learn.publish")
   publishLearn(@Param("id") id: string, @Body() dto: AdminMutationDto) {
     return this.service.publishLearn(id, dto.idempotencyKey);
   }

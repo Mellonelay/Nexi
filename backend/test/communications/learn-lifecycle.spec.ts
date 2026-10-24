@@ -60,25 +60,44 @@ describe('A18 Learn lifecycle closure', () => {
     }));
   });
 
-  it('preserves ADMIN-guarded update and publish HTTP contracts', async () => {
+  it('restricts Learn article operations to the Admin surface and matching permissions', async () => {
     const service: any = {
+      adminLearnArticles: jest.fn(async () => []),
+      createLearn: jest.fn(async () => ({ id: 'learn-1' })),
       updateLearn: jest.fn(async () => ({ id: 'learn-1' })),
       publishLearn: jest.fn(async () => ({ id: 'learn-1', status: 'PUBLISHED' })),
     };
     const controller = new CommunicationsController(service);
+    await controller.adminLearnArticles();
+    await controller.createLearn({ slug: 'risk-basics', title: 'Risk', body: 'Draft' } as any);
     await controller.updateLearn('learn-1', { title: 'Updated' } as any);
     await controller.publishLearn('learn-1', { idempotencyKey: 'learn-publish-1' } as any);
+    expect(service.adminLearnArticles).toHaveBeenCalled();
+    expect(service.createLearn).toHaveBeenCalled();
     expect(service.updateLearn).toHaveBeenCalledWith('learn-1', expect.objectContaining({ title: 'Updated' }));
     expect(service.publishLearn).toHaveBeenCalledWith('learn-1', 'learn-publish-1');
+    expect(Reflect.getMetadata(PATH_METADATA, controller.adminLearnArticles)).toBe('admin/learn/articles');
+    expect(Reflect.getMetadata(PATH_METADATA, controller.createLearn)).toBe('admin/learn');
     expect(Reflect.getMetadata(PATH_METADATA, controller.updateLearn)).toBe('admin/learn/:id');
     expect(Reflect.getMetadata(PATH_METADATA, controller.publishLearn)).toBe('admin/learn/:id/publish');
-    expect(Reflect.getMetadata(GUARDS_METADATA, controller.updateLearn)).toEqual(expect.arrayContaining([JwtAuthGuard, RolesGuard]));
-    expect(Reflect.getMetadata(GUARDS_METADATA, controller.publishLearn)).toEqual(expect.arrayContaining([JwtAuthGuard, RolesGuard]));
+    for (const handler of [controller.adminLearnArticles, controller.createLearn, controller.updateLearn, controller.publishLearn]) {
+      expect(Reflect.getMetadata(GUARDS_METADATA, handler)).toEqual(
+        expect.arrayContaining([JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard]),
+      );
+      expect(Reflect.getMetadata(AUTH_SURFACE_METADATA, handler)).toBe('ADMIN');
+    }
+    expect(Reflect.getMetadata(ADMIN_PERMISSION_KEY, controller.adminLearnArticles)).toBe('learn.view');
+    for (const handler of [controller.createLearn, controller.updateLearn, controller.publishLearn]) {
+      expect(Reflect.getMetadata(ADMIN_PERMISSION_KEY, handler)).toBe('learn.publish');
+    }
   });
 
   it('changes category visibility with Admin audit, optimistic status check, and durable event', async () => {
     let category: any = { id: 'category-1', slug: 'test-only-prelive', status: 'ACTIVE' };
     const tx: any = {
+      eventOutbox: {
+        upsert: jest.fn(async ({ create }: any) => create),
+      },
       adminAuditLog: {
         findUnique: jest.fn(async () => null),
         upsert: jest.fn(async ({ create }: any) => create),
@@ -105,9 +124,35 @@ describe('A18 Learn lifecycle closure', () => {
     expect(tx.adminAuditLog.upsert).toHaveBeenCalledWith(expect.objectContaining({
       create: expect.objectContaining({ adminId: 'admin-1', action: 'LEARN_CATEGORY_STATUS_UPDATED', target: 'category-1' }),
     }));
-    expect(outbox.recordEvent).toHaveBeenCalledWith(expect.objectContaining({
-      eventType: 'LEARN_CATEGORY_STATUS_UPDATED', aggregateId: 'category-1',
+    expect(tx.eventOutbox.upsert).toHaveBeenCalledWith(expect.objectContaining({
+      where: { idempotencyKey: 'learn-category-status:category-1:category-hide-1' },
+      create: expect.objectContaining({
+        aggregateType: 'LEARN_CATEGORY', aggregateId: 'category-1',
+        eventType: 'LEARN_CATEGORY_STATUS_UPDATED',
+      }),
     }));
+    expect(outbox.recordEvent).not.toHaveBeenCalled();
+  });
+
+  it('fails the category status operation when its transactional outbox write fails', async () => {
+    const tx: any = {
+      eventOutbox: { upsert: jest.fn(async () => { throw new Error('outbox unavailable'); }) },
+      adminAuditLog: {
+        findUnique: jest.fn(async () => null),
+        upsert: jest.fn(async ({ create }: any) => create),
+      },
+      learnCategory: {
+        findUnique: jest.fn(async () => ({ id: 'category-1', status: 'ACTIVE' })),
+        updateMany: jest.fn(async () => ({ count: 1 })),
+      },
+    };
+    const prisma: any = { $transaction: jest.fn((work: any) => work(tx)) };
+    const service = new CommunicationsService(prisma, { recordEvent: jest.fn() } as any, {} as any, {} as any);
+
+    await expect(service.updateLearnCategoryStatus('category-1', 'admin-1', {
+      expectedStatus: 'ACTIVE', status: 'INACTIVE', reason: 'Hide test content', idempotencyKey: 'category-hide-fail',
+    })).rejects.toThrow('outbox unavailable');
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
   });
 
   it('rejects a reused category idempotency key with a different request', async () => {
@@ -153,5 +198,14 @@ describe('A18 Learn lifecycle closure', () => {
     );
     expect(Reflect.getMetadata(AUTH_SURFACE_METADATA, controller.updateLearnCategoryStatus)).toBe('ADMIN');
     expect(Reflect.getMetadata(ADMIN_PERMISSION_KEY, controller.updateLearnCategoryStatus)).toBe('learn.publish');
+  });
+
+  it('restricts category creation to Admin surface permission', () => {
+    const controller = new CommunicationsController({} as any);
+    expect(Reflect.getMetadata(GUARDS_METADATA, controller.createLearnCategory)).toEqual(
+      expect.arrayContaining([JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard]),
+    );
+    expect(Reflect.getMetadata(AUTH_SURFACE_METADATA, controller.createLearnCategory)).toBe('ADMIN');
+    expect(Reflect.getMetadata(ADMIN_PERMISSION_KEY, controller.createLearnCategory)).toBe('learn.publish');
   });
 });

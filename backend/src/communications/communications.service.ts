@@ -873,17 +873,29 @@ export class CommunicationsService {
       throw new BadRequestException("Learn category status is invalid");
     const auditId = this.id(`learn-category-status:${id}:${adminId}`, input.idempotencyKey);
     const details = JSON.stringify({ reason, idempotencyKey: input.idempotencyKey, expectedStatus: input.expectedStatus, status: input.status });
-    const updated = await this.database.$transaction((tx: any) =>
-      this.updateLearnCategoryStatusTransaction(tx, { id, adminId, auditId, details, expectedStatus: input.expectedStatus, status: input.status }),
-    );
+    const updated = await this.database.$transaction(async (tx: any) => {
+      const category = await this.updateLearnCategoryStatusTransaction(tx, {
+        id, adminId, auditId, details,
+        expectedStatus: input.expectedStatus,
+        status: input.status,
+      });
+      if (category) {
+        await tx.eventOutbox.upsert({
+          where: { idempotencyKey: `learn-category-status:${id}:${input.idempotencyKey}` },
+          update: {},
+          create: {
+            idempotencyKey: `learn-category-status:${id}:${input.idempotencyKey}`,
+            aggregateType: "LEARN_CATEGORY",
+            aggregateId: id,
+            eventType: "LEARN_CATEGORY_STATUS_UPDATED",
+            correlationId: `learn-category-status:${id}:${input.idempotencyKey}`,
+            payload: JSON.stringify({ status: category.status, adminId, auditId }),
+          },
+        });
+      }
+      return category;
+    });
     if (!updated) throw new NotFoundException("Learn category not found");
-    await this.durableEvent(
-      `learn-category-status:${id}:${input.idempotencyKey}`,
-      "LEARN_CATEGORY",
-      id,
-      "LEARN_CATEGORY_STATUS_UPDATED",
-      { status: updated.status, adminId, auditId },
-    );
     return { ...updated, auditId };
   }
 

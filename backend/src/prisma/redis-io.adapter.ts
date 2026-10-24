@@ -1,5 +1,5 @@
 import { IoAdapter } from '@nestjs/platform-socket.io';
-import { ServerOptions } from 'socket.io';
+import { Server, ServerOptions } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-streams-adapter';
 import { Redis } from 'ioredis';
 import { resolveRuntimeConfig } from '../runtime/runtime.config';
@@ -46,7 +46,14 @@ export class RedisIoAdapter extends IoAdapter {
     return server;
   }
 
-  async close(): Promise<void> {
+  async close(server?: Server): Promise<void> {
+    if (server) {
+      return super.close(server);
+    }
+    return this.dispose();
+  }
+
+  async dispose(): Promise<void> {
     await this.closeClient(this.redisClient);
     this.redisClient = undefined;
   }
@@ -55,13 +62,19 @@ export class RedisIoAdapter extends IoAdapter {
     if (!client || client.status === 'end') {
       return;
     }
+    let timeout: NodeJS.Timeout | undefined;
     try {
       await Promise.race([
         client.quit(),
-        new Promise<void>((resolve) => setTimeout(resolve, 2_000)),
+        new Promise<void>((resolve) => {
+          timeout = setTimeout(resolve, 2_000);
+          timeout.unref?.();
+        }),
       ]);
     } catch {
       // Force-disconnect below handles incomplete TLS shutdowns.
+    } finally {
+      if (timeout) clearTimeout(timeout);
     }
     client.disconnect();
   }
