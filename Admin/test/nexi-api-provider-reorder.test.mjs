@@ -8,6 +8,7 @@ import { isPublishedAnnouncement } from "../src/admin/data/announcement-status.t
 import { isOngoingBinaryPositionStatus } from "../src/admin/data/binary-position-view.ts";
 import { groupAdminMessageConversations } from "../src/admin/data/message-conversations.ts";
 import { buildOverviewWorkItems } from "../src/admin/data/overview-work-items.ts";
+import { learnCategoryStatusUpdate } from "../src/admin/data/learn-category-status.ts";
 
 test("reorders banners by a complete ID permutation and preserves each record", () => {
   const banners = [
@@ -128,6 +129,17 @@ test("Admin messages are grouped into recent conversations with unread counts", 
       { clientId: "client-b", latestMessageId: "three", unreadCount: 0 },
     ],
   );
+});
+
+test("Learn category status actions compare against current status and send the opposite target", () => {
+  assert.deepEqual(learnCategoryStatusUpdate("ACTIVE"), {
+    expectedStatus: "ACTIVE",
+    status: "INACTIVE",
+  });
+  assert.deepEqual(learnCategoryStatusUpdate("INACTIVE"), {
+    expectedStatus: "INACTIVE",
+    status: "ACTIVE",
+  });
 });
 
 test("Trading Binary opens on positions and separates the two control contexts", async () => {

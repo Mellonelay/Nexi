@@ -7,6 +7,7 @@ import { ProviderBadge } from "@/admin/components/ProviderBadge";
 import { LoadingSkeleton, ErrorState } from "@/admin/components/states";
 import { DataTable, type DataTableColumn } from "@/admin/components/DataTable";
 import { useAdminData, useAdminQuery } from "@/admin/data/context";
+import { learnCategoryStatusUpdate } from "@/admin/data/learn-category-status";
 import { useAdminSession } from "@/admin/session/session";
 import type { AdminLearnArticle } from "@/admin/types";
 import { Button } from "@/components/ui/button";
@@ -131,7 +132,7 @@ function Page() {
     }
   };
 
-  const updateCategoryStatus = async (categoryId: string, expectedStatus: "ACTIVE" | "INACTIVE") => {
+  const updateCategoryStatus = async (categoryId: string, currentStatus: "ACTIVE" | "INACTIVE") => {
     if (!canPublish || !categoryReason.trim()) {
       setFeedback("Learn publish permission and a category audit reason are required.");
       return;
@@ -139,8 +140,13 @@ function Page() {
     setBusy(true);
     setFeedback(null);
     try {
-      const status = expectedStatus === "ACTIVE" ? "INACTIVE" : "ACTIVE";
-      await provider.updateLearnCategoryStatus(categoryId, expectedStatus, status, ctx(categoryReason));
+      const { expectedStatus, status } = learnCategoryStatusUpdate(currentStatus);
+      await provider.updateLearnCategoryStatus(
+        categoryId,
+        expectedStatus,
+        status,
+        ctx(categoryReason),
+      );
       categoriesQ.refresh();
       setFeedback(status === "INACTIVE" ? "Category hidden from Public Learn." : "Category visible on Public Learn.");
     } catch (error) {
@@ -249,7 +255,17 @@ function Page() {
             {(categoriesQ.data ?? []).map((category) => (
               <div key={category.id} className="flex flex-wrap items-center justify-between gap-3 py-2">
                 <div><span>{category.name}</span> <span className="mono text-xs text-muted-foreground">{category.slug}</span> <StatusBadge tone={category.status === "ACTIVE" ? "success" : "warning"}>{category.status}</StatusBadge></div>
-                <Button variant="outline" size="sm" disabled={!canPublish || busy || !categoryReason.trim()} onClick={() => void updateCategoryStatus(category.id, category.status === "ACTIVE" ? "INACTIVE" : "ACTIVE")}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!canPublish || busy || !categoryReason.trim()}
+                  onClick={() =>
+                    void updateCategoryStatus(
+                      category.id,
+                      category.status as "ACTIVE" | "INACTIVE",
+                    )
+                  }
+                >
                   {category.status === "ACTIVE" ? "Hide from Public" : "Show on Public"}
                 </Button>
               </div>
