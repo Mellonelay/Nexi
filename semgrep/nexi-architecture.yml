@@ -1,0 +1,24 @@
+rules:
+  - id: nexi.browser-surfaces-no-database-client
+    message: Public and Admin must use the NestJS API; they must not import direct Prisma or SQLite database clients.
+    severity: ERROR
+    languages:
+      - javascript
+      - typescript
+    paths:
+      include:
+        - '**/frontend/app/**'
+        - '**/Admin/src/**'
+    pattern-either:
+      - pattern: import $DB from 'better-sqlite3'
+      - pattern: import $DB from "better-sqlite3"
+      - pattern: import $DB from 'sqlite3'
+      - pattern: import $DB from "sqlite3"
+      - pattern: import { PrismaClient } from '@prisma/client'
+      - pattern: import { PrismaClient } from "@prisma/client"
+      - pattern: const $DB = require('better-sqlite3')
+      - pattern: const $DB = require("better-sqlite3")
+      - pattern: const $DB = require('sqlite3')
+      - pattern: const $DB = require("sqlite3")
+      - pattern: const { PrismaClient } = require('@prisma/client')
+      - pattern: const { PrismaClient } = require("@prisma/client")
