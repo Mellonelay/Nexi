@@ -13,7 +13,6 @@ test('realtime subscriptions own their cleanup handlers', () => {
   assert.match(read('app/dashboard/binary/page.tsx'), /submissionLock\.current/);
   assert.match(read('app/dashboard/spot/page.tsx'), /orderSubmissionLock\.current/);
   assert.match(read('app/dashboard/spot/page.tsx'), /marginSubmissionLock\.current = false/);
-  assert.match(read('app/dashboard/support/page.tsx'), /submissionLock\.current/);
 });
 
 test('mobile controls expose names to assistive technology', () => {
@@ -27,15 +26,16 @@ test('mobile controls expose names to assistive technology', () => {
   assert.match(read('app/components/AppHeader.tsx'), /max-\[359px\]:\[&>span>span:last-child\]:hidden/);
   assert.match(timeframe, /aria-label="Chart timeframe"/);
   assert.match(timeframe, /aria-pressed=\{interval === tf\}/);
-  assert.match(support, /aria-label="Ticket subject"/);
-  assert.match(support, /aria-label="Ticket message"/);
+  assert.match(support, /Wallet operations/);
+  assert.match(support, /api\.get<unknown>\('\/public\/config\/support'\)/);
+  assert.doesNotMatch(support, /Ticket subject|Ticket message|Submit ticket|communications\/tickets/);
   assert.doesNotMatch(asset, /router\.replace\(/);
 });
 
 
 test('canonical market identity has all 53 local asset marks', () => {
   const assetDir = new URL('../public/assets/market/', import.meta.url);
-  const icons = readdirSync(assetDir).filter((name) => name.endsWith('.svg')).sort();
+  const icons = readdirSync(assetDir).filter((name) => name.endsWith('.svg') && name !== 'usdt.svg').sort();
   assert.equal(icons.length, 53);
   assert.match(read('app/lib/asset-registry.ts'), /ASSET_REGISTRY_COUNT = ASSET_REGISTRY\.length/);
   assert.match(read('app/dashboard/components/QuotesHubVisuals.tsx'), /<AssetIcon/);

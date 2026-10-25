@@ -354,6 +354,57 @@ describe('CommunicationsService', () => {
     expect(markMessageRead).not.toHaveBeenCalled();
   });
 
+  it('denies attachment reads unless the file is linked to the requesting customer thread', async () => {
+    const customerId = 'user-2';
+    const [participantAId, participantBId] = [customerId, NEXI_SUPPORT_CHANNEL_ID].sort();
+    const conversationId = `conversation:${participantAId}:${participantBId}`;
+    const findMany = jest.fn().mockResolvedValue([]);
+    const read = jest.fn();
+    const service = new CommunicationsService({
+      messageConversation: { findUnique: jest.fn().mockResolvedValue({
+        id: conversationId, participantAId, participantBId, state: 'ACTIVE',
+      }) },
+      persistentMessage: { findMany },
+    } as any, outbox as any, d1Communications as any, redis as any, { read } as any);
+
+    await expect(service.getSupportAttachment(customerId, 'private-file'))
+      .rejects.toMatchObject({ status: 404 });
+    expect(findMany).toHaveBeenCalledWith({
+      where: { conversationId, attachments: { contains: 'private-file' } },
+      select: { attachments: true },
+    });
+    expect(read).not.toHaveBeenCalled();
+  });
+
+  it('returns an idempotent support message after its staged attachment expires', async () => {
+    const customerId = 'user-3';
+    const attachment = {
+      id: '11111111-1111-4111-8111-111111111111',
+      name: 'proof.pdf',
+      mimeType: 'application/pdf',
+      size: 12,
+    };
+    const [participantAId, participantBId] = [customerId, NEXI_SUPPORT_CHANNEL_ID].sort();
+    const conversationId = `conversation:${participantAId}:${participantBId}`;
+    const saved = {
+      id: 'message-1', conversationId, senderId: customerId,
+      recipientId: NEXI_SUPPORT_CHANNEL_ID, body: 'See attached',
+      attachments: JSON.stringify([attachment]), sequence: 1, readAt: null,
+      deliveryState: 'SENT', createdAt: new Date('2026-10-24T12:00:00Z'),
+    };
+    const resolve = jest.fn().mockRejectedValue(new Error('Attachment upload expired'));
+    const service = new CommunicationsService({
+      messageConversation: { findUnique: jest.fn().mockResolvedValue({
+        id: conversationId, participantAId, participantBId, state: 'ACTIVE',
+      }) },
+      persistentMessage: { findUnique: jest.fn().mockResolvedValue(saved) },
+    } as any, outbox as any, d1Communications as any, redis as any, { resolve } as any);
+
+    await expect(service.sendSupportMessage(customerId, saved.body, 'retry-key', [attachment.id]))
+      .resolves.toEqual({ ...saved, attachments: [attachment] });
+    expect(resolve).not.toHaveBeenCalled();
+  });
+
   it('rejects sends into a restricted conversation before message creation', async () => {
     const tx: any = {
       messageConversation: {
@@ -438,6 +489,37 @@ describe('CommunicationsService', () => {
     }));
     expect(findMany).toHaveBeenNthCalledWith(2, expect.objectContaining({ skip: 10, take: 5 }));
   });
+
+  it('restores canonical support identity for legacy messages without a conversation relation', async () => {
+    const customerId = 'user-1';
+    const [participantAId, participantBId] = [customerId, NEXI_SUPPORT_CHANNEL_ID].sort();
+    const findMany = jest.fn().mockResolvedValue([
+      { id: 'legacy-public', conversationId: null, senderId: customerId, recipientId: NEXI_SUPPORT_CHANNEL_ID, conversation: null },
+      { id: 'legacy-reply', conversationId: null, senderId: NEXI_SUPPORT_CHANNEL_ID, recipientId: customerId, conversation: null },
+      { id: 'direct', conversationId: null, senderId: customerId, recipientId: 'user-2', conversation: null },
+    ]);
+    const service = new CommunicationsService(
+      { persistentMessage: { findMany } } as any,
+      outbox as any,
+      d1Communications as any,
+      redis as any,
+    );
+
+    await expect(service.adminMessages()).resolves.toEqual([
+      expect.objectContaining({
+        id: 'legacy-public',
+        conversationId: `conversation:${participantAId}:${participantBId}`,
+        supportCustomerId: customerId,
+      }),
+      expect.objectContaining({
+        id: 'legacy-reply',
+        conversationId: `conversation:${participantAId}:${participantBId}`,
+        supportCustomerId: customerId,
+      }),
+      expect.objectContaining({ id: 'direct', conversationId: null, supportCustomerId: undefined }),
+    ]);
+  });
+
   it('sends Admin messages through the conversation store with an idempotent audit record', async () => {
     const message = { id: 'message-1', senderId: 'admin-1', recipientId: 'user-1', body: 'Hello' };
     const auditUpsert = jest.fn(async ({ create }: any) => create);

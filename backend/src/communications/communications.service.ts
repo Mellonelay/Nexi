@@ -662,8 +662,18 @@ export class CommunicationsService {
         ? conversation.participantBId
         : conversation?.participantBId === NEXI_SUPPORT_CHANNEL_ID
           ? conversation.participantAId
-          : undefined;
-      return { ...message, supportCustomerId };
+          : message.recipientId === NEXI_SUPPORT_CHANNEL_ID
+            ? message.senderId
+            : message.senderId === NEXI_SUPPORT_CHANNEL_ID
+              ? message.recipientId
+              : undefined;
+      return {
+        ...message,
+        conversationId: message.conversationId ?? (supportCustomerId
+          ? this.supportConversationIdentity(supportCustomerId).conversationId
+          : message.conversationId),
+        supportCustomerId,
+      };
     });
   }
 
