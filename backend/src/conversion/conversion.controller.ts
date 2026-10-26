@@ -10,6 +10,8 @@ import {
 import { ApiTags } from "@nestjs/swagger";
 import { Role } from "../prisma/d1-client";
 import type { AuthenticatedRequest } from "../auth/auth.types";
+import { AuthSurfaceGuard } from "../auth/auth-surface.guard";
+import { RequireAuthSurface } from "../auth/auth-surface.decorator";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { Roles } from "../auth/roles.decorator";
 import { RolesGuard } from "../auth/roles.guard";
@@ -32,7 +34,8 @@ export class ConversionController {
   }
 
   @Post("convert")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
   async convert(
     @Body() body: ConvertDto,
     @Req() request: AuthenticatedRequest,
@@ -47,7 +50,8 @@ export class ConversionController {
 
   // Admin: Set Rate
   @Post("admin/rate")
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard)
+  @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
   async setRate(@Body() body: SetConversionRateDto) {
     return this.conversionService.updateRate(body.pair, body.rate);
