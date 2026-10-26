@@ -5,6 +5,8 @@
 
 Use the established Worker-0 `mcpc @nexi-sentry` OAuth session and new `sentry` CLI for live inspection; classic `sentry-cli` only for suitable CI/build/release operations. Inspect live schemas/CLI help. Organization `mellonelay`, project `nexi`.
 
+For classic `sentry-cli` release operations, obtain `SENTRY_AUTH_TOKEN` through the authenticated 1Password CLI, not the 1Password MCP: `op run --environment <SENTRY_ENVIRONMENT_ID> -- sentry-cli ...`. The Environment ID must be supplied from the authorized NEXI Sentry environment. Never print, copy into shell history, or report the token. Before release mutations, verify CLI authentication and the required Sentry release/source-map permissions; if `op whoami` has no configured account or `op run` cannot resolve the environment, stop that Sentry operation and report the exact CLI setup requirement rather than falling back to the 1Password MCP.
+
 
 ## Source owners and privacy
 
