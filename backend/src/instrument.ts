@@ -1,5 +1,7 @@
 import * as Sentry from "@sentry/nestjs";
 
+process.setSourceMapsEnabled(true);
+
 const dsn = process.env.SENTRY_DSN;
 
 if (dsn) {
