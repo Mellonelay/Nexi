@@ -13,7 +13,9 @@ The owner authorized clearing cache and other clearly unnecessary files while de
 | `/home/mellonelay1999/.npm/_npx/5834814a68760709` | 935,847 |
 | `/home/mellonelay1999/.npm/_npx/32026684e21afda6` | 0 |
 | `/home/mellonelay1999/.npm/_npx/02566d9bbd85b975` | 0 |
-| **Total reclaimed file bytes** | **127,632,108 (about 121.7 MiB)** |
+| **Total logical file bytes removed** | **127,632,108 (about 121.7 MiB)** |
+
+Before deletion, `du -sh` reported about 158 MiB for the 8575099 cache, 1.2 MiB for the 5834814 cache, and 4 KiB for each of three empty entries. The allocated-space estimate is therefore about 159.2 MiB; `df -h` is rounded to tenths of a GB and showed free space rise from 3.3 GB to 3.5 GB.
 
 Each directory resolved directly under the `_npx` cache root, and a bounded `/proc/*/cmdline` check found no process using its `node_modules` tree. The directories are regenerable `npm exec` caches. The remaining `_npx/eea2bd7412d4593b` cache was retained because the active Context7 MCP process uses it.
 
