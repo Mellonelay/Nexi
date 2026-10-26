@@ -1,5 +1,7 @@
 ## CURRENT 2026-10-26 — Final closure continuation
 
+**Frontier rule:** The dated entries below preserve execution chronology. Use the latest current-state and todo frontier for present authority; an older unchecked item is not current work unless explicitly re-promoted there.
+
 ### 2026-10-26 16:20 UTC — source versus runtime checkpoint
 
 - Fresh Git read: canonical checkout is clean, and `main` / `origin/main` / `HEAD` are `e90565de2bc47e151a8a8ea69b0efd1542c522c2`. The six Playwright MCP page snapshots and eleven prior console logs are committed in `b4e72df` and `e90565d`; no dirty or untracked work remains.
