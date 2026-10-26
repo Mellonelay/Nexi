@@ -18,6 +18,11 @@ const nextConfig = {
     }];
   },
   transpilePackages: ['geist'],
+  webpack(config) {
+    // Base Account is not a configured connector; omit its optional SDK path from the client bundle.
+    config.resolve.alias = { ...config.resolve.alias, '@base-org/account': false };
+    return config;
+  },
   images: {
     remotePatterns: [{ protocol: 'https', hostname: 'cdn.simpleicons.org', pathname: '/**' }],
   },
