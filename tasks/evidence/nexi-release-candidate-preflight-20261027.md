@@ -62,3 +62,10 @@ These are release-preflight actions; this receipt does not make them blockers to
 - CodeScene `pre_commit_code_health_safeguard` passed, checking five modified files including one code-health-eligible file. Staged and complete diffs passed `git diff --check`; no token-like value was staged.
 - Read-only Sentry `find_releases` for the exact pushed SHA returned no release. Current Sentry tool discovery includes `find_releases` and `get_release_details` as read-only release operations and did not expose release creation, source-map upload, finalization, or deployment. `sentry-cli 3.7.0 info` continues to report only `org:ci`.
 - These Git/Sentry checks do not make the commit a built artifact or release. No application build, Sentry lifecycle mutation, deployment, restart, or browser test occurred.
+
+## 2026-10-26 22:47 UTC live runtime and artifact identity
+
+- Source `main`/`origin/main` was `1bc3a63941615fa1f3b8a593980dc3e192f7af9a`; working tree was clean at the check. All three systemd services were active/running with zero restarts. Each application Node process resolved to `/opt/nexi/runtime/node-v24.21.0/bin/node`; Public runs Next.js 16.4.1 under pinned Node 24.
+- Local Backend `/readyz` returned `READY`, SQLite and Redis true, HTTP 200 in 0.082 seconds.
+- Current deployed artifact/runtime release identities remain mismatched: Backend marker `e356a00885da9517fe8c32df12dde3e6a3e49688`, process `SENTRY_RELEASE=ace72accfe815abf5ba20df26ee57c76898d0cab`; Public marker `3bb57e02ea921531975124ce2c827382a9f1ec6b`, `.next/BUILD_ID` and server/client Sentry release `ace72accfe815abf5ba20df26ee57c76898d0cab`; Admin marker `ace72accfe815abf5ba20df26ee57c76898d0cab`, process `VITE_SENTRY_RELEASE=3bb57e02ea921531975124ce2c827382a9f1ec6b`.
+- Capacity at this sample: 2.9 GiB free disk, 3.9 GiB available RAM, 3.1 GiB free swap; I/O PSI `some avg10=22.65%`, `full avg10=6.42%`. Canonical artifact sizes were not measured, so build headroom is still unestablished. No build, restart, deployment, or browser check was performed.
