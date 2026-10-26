@@ -1,0 +1,9 @@
+[  -35452ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ https://api.nexitrading.app/auth/refresh:0
+[  -32819ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ https://api.nexitrading.app/auth/preferences:0
+[  -31802ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ https://api.nexitrading.app/auth/refresh:0
+[  -40146ms] [WARNING] MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 close listeners added. Use emitter.setMaxListeners() to increase limit @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/scripts/contentscript.js:16196
+[  -40094ms] [WARNING] MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 end listeners added. Use emitter.setMaxListeners() to increase limit @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/scripts/contentscript.js:16196
+[  -39793ms] [WARNING] ObjectMultiplex - orphaned data for stream "app-init-liveness" @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/scripts/contentscript.js:16554
+[  -39790ms] [WARNING] ObjectMultiplex - orphaned data for stream "app-init-liveness" @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/scripts/contentscript.js:16554
+[  -39774ms] [WARNING] ObjectMultiplex - orphaned data for stream "background-liveness" @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/scripts/contentscript.js:16554
+[  -39772ms] [WARNING] ObjectMultiplex - orphaned data for stream "background-liveness" @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/scripts/contentscript.js:16554

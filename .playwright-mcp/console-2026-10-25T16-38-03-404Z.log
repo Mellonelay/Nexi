@@ -1,0 +1,491 @@
+[-203118213ms] [INFO] Autofocus processing was blocked because a document already has a focused element. @ devtools://devtools/bundled/devtools_app.html?remoteBase=https://chrome-devtools-frontend.appspot.com/serve_file/@5869fe313571d75152b77813cf0a4ee26a4e6df0/&targetType=tab&can_dock=true&panel=elements&hasOtherClients=true:0
+[-203115531ms] [WARNING] Unrecognized feature: 'proofreader'. @ devtools://devtools/bundled/third_party/lit/lit.js:2
+[-203118331ms] [TIMEEND] Main._createAppUI: 51.474853515625 ms @ devtools://devtools/bundled/entrypoints/main/main.js:10
+[-203117666ms] [TIMEEND] Main._showAppUI: 661.838134765625 ms @ devtools://devtools/bundled/entrypoints/main/main.js:10
+[-203117536ms] [TIMEEND] Main._initializeTarget: 127.5419921875 ms @ devtools://devtools/bundled/entrypoints/main/main.js:10
+[-203117400ms] [TIMEEND] Main._lateInitialization: 37.623046875 ms @ devtools://devtools/bundled/entrypoints/main/main.js:10
+[-203116115ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-203116108ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-203116107ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201854788ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201854184ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201854162ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201847094ms] [ERROR] Request Emulation.setEmitTouchEventsForMouse failed. {"code":-32601,"message":"'Emulation.setEmitTouchEventsForMouse' wasn't found"} @ devtools://devtools/bundled/core/protocol_client/protocol_client.js:0
+[-201790613ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201790063ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201790036ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201785125ms] [ERROR] Request Emulation.setEmitTouchEventsForMouse failed. {"code":-32601,"message":"'Emulation.setEmitTouchEventsForMouse' wasn't found"} @ devtools://devtools/bundled/core/protocol_client/protocol_client.js:0
+[-201769283ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201768737ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201768700ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201563981ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201562895ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201562876ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201538445ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201537539ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201537517ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201529944ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201529105ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201529063ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201521766ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201521190ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201521162ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201514517ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201513955ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201513932ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201506581ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201505412ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201505304ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201494954ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201494324ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-201494300ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-199734395ms] [ERROR] Request Emulation.setEmitTouchEventsForMouse failed. {"code":-32601,"message":"'Emulation.setEmitTouchEventsForMouse' wasn't found"} @ devtools://devtools/bundled/core/protocol_client/protocol_client.js:0
+[-199443960ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-199443258ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-199443232ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-199391997ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-199391996ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-199391995ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-199371789ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-199371264ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-199371241ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-199318299ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-199309474ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-199309228ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-198976933ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-198975754ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-198975730ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-198763812ms] [ERROR] Request Emulation.setEmitTouchEventsForMouse failed. {"code":-32601,"message":"'Emulation.setEmitTouchEventsForMouse' wasn't found"} @ devtools://devtools/bundled/core/protocol_client/protocol_client.js:0
+[-198726034ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-198725528ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-198725478ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-198719106ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-198718509ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-198718484ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-198712070ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-198711445ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-198711423ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-198587378ms] [ERROR] Request Emulation.setEmitTouchEventsForMouse failed. {"code":-32601,"message":"'Emulation.setEmitTouchEventsForMouse' wasn't found"} @ devtools://devtools/bundled/core/protocol_client/protocol_client.js:0
+[-198582778ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-198582166ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-198582138ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-198575750ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-198575227ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-198575205ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-198549394ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-198548826ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-198548803ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-198545503ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-198544836ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-198544808ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-198543536ms] [ERROR] Extension server error: Operation failed: https://www.nexitrading.app/dashboard has no execution context @ devtools://devtools/bundled/panels/common/common.js:178
+[-198542437ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-198541017ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-198540984ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-194160250ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-194159459ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-194159426ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-194107779ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-194106815ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-194106762ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-194078724ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-194077307ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-194077266ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-193130767ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-193129723ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-193129533ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-193118409ms] [ERROR] Request Emulation.setEmitTouchEventsForMouse failed. {"code":-32601,"message":"'Emulation.setEmitTouchEventsForMouse' wasn't found"} @ devtools://devtools/bundled/core/protocol_client/protocol_client.js:0
+[-191732253ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-191731489ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-191731416ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-191519641ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-191518420ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-191518375ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-191511633ms] [ERROR] Request Emulation.setEmitTouchEventsForMouse failed. {"code":-32601,"message":"'Emulation.setEmitTouchEventsForMouse' wasn't found"} @ devtools://devtools/bundled/core/protocol_client/protocol_client.js:0
+[-191424459ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-191423598ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-191423564ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-191413732ms] [ERROR] Request Emulation.setEmitTouchEventsForMouse failed. {"code":-32601,"message":"'Emulation.setEmitTouchEventsForMouse' wasn't found"} @ devtools://devtools/bundled/core/protocol_client/protocol_client.js:0
+[-191177193ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-191175883ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-191175854ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-191167432ms] [ERROR] Request Emulation.setEmitTouchEventsForMouse failed. {"code":-32601,"message":"'Emulation.setEmitTouchEventsForMouse' wasn't found"} @ devtools://devtools/bundled/core/protocol_client/protocol_client.js:0
+[-191101928ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-191100744ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-191100678ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-190001551ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-190000072ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-190000072ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-189988884ms] [ERROR] Request Emulation.setEmitTouchEventsForMouse failed. {"code":-32601,"message":"'Emulation.setEmitTouchEventsForMouse' wasn't found"} @ devtools://devtools/bundled/core/protocol_client/protocol_client.js:0
+[-189911971ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-189911134ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-189911107ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-189884746ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-189881873ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-189881763ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-189873003ms] [ERROR] Request Emulation.setEmitTouchEventsForMouse failed. {"code":-32601,"message":"'Emulation.setEmitTouchEventsForMouse' wasn't found"} @ devtools://devtools/bundled/core/protocol_client/protocol_client.js:0
+[-189850406ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-189849574ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-189849538ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-189843322ms] [ERROR] Request Emulation.setEmitTouchEventsForMouse failed. {"code":-32601,"message":"'Emulation.setEmitTouchEventsForMouse' wasn't found"} @ devtools://devtools/bundled/core/protocol_client/protocol_client.js:0
+[-189806112ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-189805107ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-189805099ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-189271324ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-189268952ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-189268755ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-188876440ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-188875635ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-188875600ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-188819668ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-188817925ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-188817866ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-188780673ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-188779368ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-188779328ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-188714129ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-188712598ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-188712558ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-188562053ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-188559155ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-188559092ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-188524571ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-188520385ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-188520348ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-188407595ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-188406682ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-188406658ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-188396151ms] [ERROR] Request Emulation.setEmitTouchEventsForMouse failed. {"code":-32601,"message":"'Emulation.setEmitTouchEventsForMouse' wasn't found"} @ devtools://devtools/bundled/core/protocol_client/protocol_client.js:0
+[-188270054ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-188268284ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-188268253ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-178312813ms] [ERROR] Extension server error: Operation failed: https://www.nexitrading.app/dashboard/wallet has no execution context @ devtools://devtools/bundled/panels/common/common.js:178
+[-178306029ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-178304514ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-178304514ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-159018437ms] [ERROR] Extension server error: Operation failed: https://www.nexitrading.app/dashboard/wallet has no execution context @ devtools://devtools/bundled/panels/common/common.js:178
+[-159011048ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-159010040ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-159010018ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[-1006503ms] [ERROR] Extension server error: Operation failed: https://www.nexitrading.app/dashboard/wallet has no execution context @ devtools://devtools/bundled/panels/common/common.js:178
+[-1002300ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[ -997257ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[ -997137ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[ -957154ms] [ERROR] Request Emulation.setEmitTouchEventsForMouse failed. {"code":-32601,"message":"'Emulation.setEmitTouchEventsForMouse' wasn't found"} @ devtools://devtools/bundled/core/protocol_client/protocol_client.js:0
+[  -41236ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[  -40083ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[  -40034ms] [WARNING] No handler registered for issue code PerformanceIssue @ devtools://devtools/bundled/models/issues_manager/issues_manager.js:4
+[  -37454ms] [ERROR] Request Emulation.setEmitTouchEventsForMouse failed. {"code":-32601,"message":"'Emulation.setEmitTouchEventsForMouse' wasn't found"} @ devtools://devtools/bundled/core/protocol_client/protocol_client.js:0
+[-201531975ms] [ERROR] Error in event handler: Error: Cannot reorder children for suspense node "1" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543015
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-201531957ms] [ERROR] Error in event handler: Error: Cannot remove node "299" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:538069
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-201531721ms] [ERROR] Error in event handler: Error: Cannot remove node "307" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:538069
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-201511085ms] [ERROR] Error in event handler: Error: Cannot reorder children for suspense node "1" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543015
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-201509464ms] [ERROR] Error in event handler: Error: Cannot reorder children for suspense node "1" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543015
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-201509420ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "212" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198763267ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "889" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198762713ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "889" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198762702ms] [ERROR] Error in event handler: Error: Cannot reorder children for node "947" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:539273
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198757658ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "889" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198757056ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "889" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198756051ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "889" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198755890ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "889" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198755230ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "889" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198754804ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "889" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198749445ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "889" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198748633ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "889" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198745302ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "889" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198745153ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "889" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198739461ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "889" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198737923ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "889" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198737062ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "889" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198736535ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "889" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198736236ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "889" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198735767ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "889" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198733267ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "889" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198733109ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "889" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198730336ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "889" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198730223ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "889" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198729509ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "889" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198728406ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "889" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198728208ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "889" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198727506ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "889" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198727140ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "889" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198707794ms] [ERROR] Error in event handler: Error: Cannot add child "275" to parent "245" because parent node was not found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:537038
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198707084ms] [ERROR] Error in event handler: Error: Cannot reorder children for suspense node "1" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543015
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198706231ms] [ERROR] Error in event handler: Error: Cannot reorder children for suspense node "1" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543015
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198679106ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "212" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198677618ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "212" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198602233ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "212" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198602096ms] [ERROR] Error in event handler: Error: Cannot remove node "264" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:538069
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198599494ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "212" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198595480ms] [ERROR] Error in event handler: Error: Cannot remove node "254" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:538069
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198579141ms] [ERROR] Error in event handler: Error: Cannot update suspenders of suspense node "274" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:544539
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198578760ms] [ERROR] Error in event handler: Error: Cannot add child "275" to parent "245" because parent node was not found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:537038
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198570439ms] [ERROR] Error in event handler: Error: Cannot add child "275" to parent "245" because parent node was not found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:537038
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-198569479ms] [ERROR] Error in event handler: Error: Cannot reorder children for suspense node "1" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543015
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-189611583ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "212" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[-189611574ms] [ERROR] Error in event handler: Error: Cannot set rects for suspense node "212" because no matching node was found in the Store.
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:543751
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:490467)
+    at _.emit (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493013)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:492093
+    at nextBridgePortListener (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:907981) @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/main.html:0
+[    1166ms] Error: Cannot send a message through a Bridge that has been shut down.
+    at _._assertNotShutdown (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493702)
+    at _.send (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493044)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:909092
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:901828
+    at m (<anonymous>:1:12115)
+    at le._onCallback (<anonymous>:1:15085)
+    at le._onMessage (<anonymous>:1:15168)
+[    1167ms] Error: Cannot send a message through a Bridge that has been shut down.
+    at _._assertNotShutdown (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493702)
+    at _.send (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:493044)
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:909092
+    at chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:1:901828
+    at m (<anonymous>:1:12115)
+    at le._onCallback (<anonymous>:1:15085)
+    at le._onMessage (<anonymous>:1:15168)
+[-178299343ms] [ERROR] Received error with code window.__REACT_DEVTOOLS_GLOBAL_HOOK__ &&window.__REACT_DEVTOOLS_GLOBAL_HOOK__.renderers.size > 0 while checking if react has loaded: "Timed out while waiting for eval response from the inspected window." @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:0
+[-159007218ms] [ERROR] Received error with code window.__REACT_DEVTOOLS_GLOBAL_HOOK__ &&window.__REACT_DEVTOOLS_GLOBAL_HOOK__.renderers.size > 0 while checking if react has loaded: "Timed out while waiting for eval response from the inspected window." @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:0
+[-1005120ms] [ERROR] Received error while checking if react has loaded: Could not establish connection. Receiving end does not exist. @ chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/main.js:0

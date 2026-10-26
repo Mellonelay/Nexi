@@ -1,0 +1,62 @@
+[-2258107ms] [LOG] Snow detected a new realm creation attempt in MetaMask. Performing scuttling on new realm. Window @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[-2258085ms] [LOG] Snow detected a new realm creation attempt in MetaMask. Performing scuttling on new realm. Window @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[-2256359ms] [WARNING] ObjectMultiplex - malformed chunk without name "[object Object]" @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[-2254286ms] [TIMEEND] [ExtensionStore]: Reading from local store: 1656.7109375 ms @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/js-2c7117ce.83598986fabdf2de6466.js:110
+[-2235798ms] [LOG] Snow detected a new realm creation attempt in MetaMask. Performing scuttling on new realm. Window @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[-2234945ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[-2234941ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[-2233179ms] [LOG] No WebGL support. Image mesh will not be drawn. @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[-2232983ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[-2232519ms] [WARNING] Phishing warning page timeout; page not guaranteed to work offline. @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[-1934397ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[-1910313ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[-1910304ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[-1909983ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[-1609982ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[-1609974ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[-1609968ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[-1609655ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[-1309652ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[-1309644ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[-1309637ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[-1309337ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[-1009333ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[-1009320ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[-1009300ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[-1009022ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[ -709018ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[ -709008ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[ -709005ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[ -708720ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[ -408721ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[ -408709ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[ -408704ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[ -408432ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[ -108428ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[ -108420ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[ -108415ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[ -108125ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[  191878ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[  191885ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[  320319ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[  320324ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[  320340ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[  320343ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[  320636ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[  320641ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[  620638ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[  620647ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[  620665ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[  620677ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[  620682ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[  620685ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[  620993ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[  620996ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[  920997ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[  921001ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[  921027ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[  921034ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[  921038ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[  921043ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[  921303ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
+[  921308ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'mutations') @ chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/bootstrap.7338f323f11147f798dd.js:501
