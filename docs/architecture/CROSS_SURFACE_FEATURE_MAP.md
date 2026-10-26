@@ -43,7 +43,7 @@ flowchart LR
 
 ## Acceptance/evidence separation
 
-Feature map presence proves navigation only. For every feature, record separately when asked: `SOURCE_IMPLEMENTED`, `TESTED`, `DEPLOYED`, `RUNTIME_VERIFIED`, `BROWSER_VERIFIED`, `OWNER_ACCEPTED`. Use actual source SHA and deployed artifact IDs. For the current paired-Codex workflow, browser ownership is Chrome DevTools/CDP at `127.0.0.1:5858`; Polypane/5859 is retired. Authenticated Coinbase/other EIP-1193 owner signatures remain separately authorized. Do not infer browser verification from a source map.
+Feature map presence proves navigation only. For every feature, record separately when asked: `SOURCE_IMPLEMENTED`, `TESTED`, `DEPLOYED`, `RUNTIME_VERIFIED`, `BROWSER_VERIFIED`, `OWNER_ACCEPTED`. Use actual source SHA and deployed artifact IDs. For the current paired-Codex workflow, Chrome DevTools MCP attaches to the owner's profile with `--autoConnect --userDataDir /home/mellonelay1999/.local/share/nexi-admin-browser-acceptance`; the previous MCP target 5858 and Polypane/5859 are retired. Authenticated Coinbase/other EIP-1193 owner signatures remain separately authorized. Do not infer browser verification from a source map.
 
 The 92-table/11,802,372-row export and the 2026-10-17 empty-SQLite/D1 sample are HISTORICAL migration-phase evidence, not current runtime state. Promoted VPS SQLite is the active canonical application/financial database under the October 25 owner and source authority. Four later financial gates were closed by owner acceptance with untested outcomes; do not reopen them from the old snapshot. Independent off-site backup/restore and present runtime claims still require distinct proof. No historical D1 equality assumption applies to the current production source.
 

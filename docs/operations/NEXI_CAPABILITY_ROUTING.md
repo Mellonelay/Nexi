@@ -12,7 +12,7 @@ These are conditional specialists **beneath** the paired Codex parent, local NEX
 
 **Routing matrix:** framework semantics = installed version + official docs + Knowledge Index; intended business/API contract = NEXI financial requirements/OpenAPI; ownership/topology = direct source + Graphify (Vibe map only when missing); implementation method = Addy + task-fit Ponytail/framework specialist (Vibe recipe only if distinct); quality candidates = Fallow/NestJS Doctor/React Doctor/Semgrep and optionally VibeDoctor; proof = only changed/unsupported focused evidence. Record each actually invoked tool, exact result and limit; never claim that hook selection automatically applied these specialists.
 
-CURRENT 2026-10-25 OVERRIDE: The paired Codex CLI session is the sole Worker-0 lifecycle/execution parent. The local NEXI Work Kernel owns task method and continuity; the local Capability Router discovers specialists; Agent Skills provide phase methods. ChatGPT Work Control Plane governs separate ChatGPT Work sessions and is not this VM session's controller or transport. Exactly one canonical checkout, canonical build directories and three separate shared dependency stores. Browser ownership is Chrome DevTools/CDP `127.0.0.1:5858`; former Polypane 5859/Cloud Browser split is historical. NestJS/Prisma/SQLite/Ledger/Outbox remain application authority; Cloudflare app runtime is retired. Current owner decisions and verified Worker-0 runtime supersede old task/ledger checkboxes. Do not create parallel writers or reinstall frameworks for routine work.
+CURRENT 2026-10-26 OVERRIDE: The paired Codex CLI session is the sole Worker-0 lifecycle/execution parent. The local NEXI Work Kernel owns task method and continuity; the local Capability Router discovers specialists; Agent Skills provide phase methods. ChatGPT Work Control Plane governs separate ChatGPT Work sessions and is not this VM session's controller or transport. Exactly one canonical checkout, canonical build directories and three separate shared dependency stores. Chrome DevTools MCP attaches to the owner's existing profile using `--autoConnect --userDataDir /home/mellonelay1999/.local/share/nexi-admin-browser-acceptance`; it reads that profile's active `DevToolsActivePort` endpoint. Port 5858 was a stale MCP target, and Polypane 5859/Cloud Browser split is historical. NestJS/Prisma/SQLite/Ledger/Outbox remain application authority; Cloudflare app runtime is retired. Current owner decisions and verified Worker-0 runtime supersede old task/ledger checkboxes. Do not create parallel writers or reinstall frameworks for routine work.
 
 # NEXI Capability and Execution Routing
 
@@ -38,7 +38,7 @@ Third-party skills specialize work; they do not override NEXI architecture, secu
 - Static/change risk: Fallow + CodeScene; add specialist static tools only for distinct risk.
 - External docs: Context7 + current official vendor docs; current web research only when repo/runtime is not authority.
 - Git/PR/CI: Git + GitHub.
-- Browser: CURRENT paired Codex uses Chrome DevTools/CDP `127.0.0.1:5858` for applicable authenticated Public/Admin acceptance under owner control. Polypane/5859, Cloud Browser split and BrowserStack route descriptions below are historical, not parallel acceptance owners.
+- Browser: CURRENT paired Codex connects Chrome DevTools MCP to the existing Chrome profile with `--autoConnect --userDataDir /home/mellonelay1999/.local/share/nexi-admin-browser-acceptance --categoryExtensions` for applicable authenticated Public/Admin acceptance under owner control. The MCP reads the dynamic CDP port/path from `DevToolsActivePort`; the Chrome `chrome://inspect/#devices` discovery list is not MCP client configuration. Use `docs/quality/NEXI_CHROME_DEVTOOLS_MCP_GUIDE.md` for active actions and DevTools/extension-panel workflows. Port 5858 was a stale MCP target; Polypane/5859, Cloud Browser split and BrowserStack route descriptions below are historical, not parallel acceptance owners.
 - Direct bounded editing: parent/RDC when owner and proof are deterministic.
 - Heavy workers: Codex/Kilo only for substantial bounded work or independent review where separate reasoning context adds value.
 
@@ -73,7 +73,7 @@ Never create Remote-Desktop-Commander-via-Remote-Desktop-Commander recursion.
 
 ## Browser responsibility split
 
-- HISTORICAL ONLY: Polypane + Chrome DevTools port 5859 was a prior responsive environment; current paired Codex must use the existing authorized CDP 5858 target.
+- HISTORICAL ONLY: Polypane + Chrome DevTools port 5859 was a prior responsive environment; the former MCP target 5858 is also retired. Current paired Codex uses profile-aware Chrome autoConnect, not a hardcoded port.
 - Recover the existing Coinbase Wallet authenticated profile through the current browser-fabric contract. Older MetaMask profiles and stale ports are historical, not current acceptance owners.
 - Verify actual page, profile, wallet identity and SIWE authentication before browser claims; do not fabricate sessions or create redundant browser harnesses.
 - Playwright, DevTools and device tools provide scoped interaction/diagnostic evidence only, not independent financial authority.

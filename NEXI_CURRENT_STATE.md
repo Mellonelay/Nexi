@@ -1,4 +1,20 @@
-## CURRENT OWNER MAINTENANCE / COMPLETION FRONTIER — 2026-10-26
+## CURRENT OWNER FRONTIER — 2026-10-27 COORDINATED RELEASE PREPARATION
+
+This summary reflects parent-provided Oct 27 direction and Oct 26 observations; the runtime and artifact facts were not independently rechecked in this documentation pass. Parent-verified source checkpoint: `HEAD = origin/main = 01e81159787bdf48f3d5108b96ecf7a178915573`. Preserve the eight already-dirty tracked docs and new Chrome guide; no unrelated dirty work is included in this update.
+
+The owner directed one coordinated release after corrections are ready; that release is not ready to execute while its technical preflight remains open. `ROLLBACK_PREPARATION = OWNER_DEFERRED` is an explicit recovery limitation, not a passed check; the owner will handle backup capacity and rollback preparation after engineering. Do not reopen the backup-location question or treat the deferral itself as proof of a rollback. Owner decisions remain open for off-site backup/key custody, Sentry write scope, and retention/disposition of synthetic Support conversation `3ecc85a9-c243-4da3-bde0-a24bdf532e8f` and `nexi-support-acceptance-ace72ac.png`.
+
+Parent-reported Oct 26 sample: all three systemd services active with zero restarts on Node 24.21.0; API readiness and Public/Admin HTTPS routes returned 200; canonical artifacts exist. Reported root capacity was 2.9 GiB free of 51 GiB (95% used), with I/O PSI `full avg10` about 21%; no builds now. Backend artifact marker `e356a00885da9517fe8c32df12dde3e6a3e49688` differs from runtime `SENTRY_RELEASE=ace72accfe815abf5ba20df26ee57c76898d0cab`. Public `RELEASE_SHA=3bb57e02ea921531975124ce2c827382a9f1ec6b`, while `.next/BUILD_ID` and runtime release are `ace72accfe815abf5ba20df26ee57c76898d0cab`. Admin marker `ace72accfe815abf5ba20df26ee57c76898d0cab` differs from runtime `VITE_SENTRY_RELEASE=3bb57e02ea921531975124ce2c827382a9f1ec6b`. These identities are not reconciled.
+
+Fresh parent check at 2026-10-26 22:14 UTC: root still had 2.9 GiB free of 51 GiB; I/O PSI `full avg10` was 21.67%. At 22:16 UTC, `/readyz` returned `READY` with `database=true`, `redis=true`, and `authority=SQLite`. This bounded API result does not prove sustained health or readiness of Public/Admin routes at that time.
+
+Detailed release/Sentry preflight and evidence limits: [tasks/evidence/nexi-release-candidate-preflight-20261027.md](tasks/evidence/nexi-release-candidate-preflight-20261027.md).
+
+Public manifest/lock has `@sentry/nextjs@10.75.2`; the Public shared store has 10.73.0. This is a confirmed store-alignment release preflight, and no Public build should precede its resolution. Admin Sentry 10.73.0 and Vite plugin 5.4.0 align. Public/Admin plugins hide sourcemaps, delete maps after upload, and disable automatic release creation/finalization; upload is unverified. `sentry-cli` authentication is present, but mutation scopes are not established. No Sentry lifecycle or map-upload proof exists. Browser DevTools timed out; no browser proof. VibeDoctor data dated Oct 25 is stale. Prior bounded source reviews found no confirmed causal code defect in their reviewed scope; Backend/Public dependency corrections are source-only per prior receipts.
+
+No app build, install, test, restart, browser test, deployment, migration, financial operation, or storage action occurred in this continuation. Reuse unchanged accepted evidence. Financial receipt remains 20 PASS / 0 FAIL / 4 BLOCKED, with four `OWNER_ACCEPTED_UNTESTED` gates. Preserve the original six-stage roadmap and all dated Oct 26 and earlier chronology below.
+
+## HISTORICAL — CURRENT OWNER MAINTENANCE / COMPLETION FRONTIER — 2026-10-26
 
 ### Source/API documentation preflight — 2026-10-26 16:29 UTC
 

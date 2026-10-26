@@ -1,4 +1,25 @@
-## CURRENT 2026-10-26 — NEXI FINAL CLOSURE FRONTIER
+## CURRENT 2026-10-27 — COORDINATED RELEASE PREPARATION FRONTIER
+
+**Frontier rule:** This owner-directed summary controls current tracking. The Oct 26 checklist and all older rows below remain historical records; unchecked historical items are not reactivated unless explicitly promoted here.
+
+- [x] Reconcile the owner-provided Oct 27 frontier into the current summary while preserving the original six-stage roadmap, dated chronology, and unrelated dirty files.
+- [x] Record parent-verified source identity `HEAD = origin/main = 01e81159787bdf48f3d5108b96ecf7a178915573` and Oct 26 runtime/artifact observations with their scope; these were not independently rechecked in this documentation continuation.
+- [x] Keep `ROLLBACK_PREPARATION = OWNER_DEFERRED` as an open recovery limitation, not a passed check. The owner directed one coordinated release after corrections are ready; current technical preflight still prevents execution. Backup capacity and rollback preparation remain owner-managed after engineering. Do not reopen the backup-location question.
+- [ ] Resolve release preflight: Public manifest/lock Sentry 10.75.2 versus shared store 10.73.0; reconcile per-surface artifact/runtime Sentry release marker mismatches. No builds now; reported root capacity is 2.9 GiB free / 51 GiB and I/O PSI full avg10 about 21%.
+- [ ] Verify Sentry upload/write capability and source-map lifecycle. Existing Public/Admin plugins hide source maps, delete maps after upload, and disable automatic release create/finalize; map upload and mutation scopes are not proven. `sentry-cli` authentication alone is insufficient.
+- [ ] Use `tasks/evidence/nexi-release-candidate-preflight-20261027.md` as the current release/Sentry evidence receipt; do not repeat the bounded preflight unless a relevant fact changes.
+- [ ] Reacquire browser evidence when DevTools is available; the prior call timed out and no browser proof is claimed.
+- [ ] Preserve separate owner decisions for off-site backup destination/key custody, Sentry write scope, and synthetic Support conversation/attachment retention.
+- [ ] Preserve financial evidence as 20 PASS / 0 FAIL / 4 BLOCKED; four gates remain `OWNER_ACCEPTED_UNTESTED`. Do not reopen unchanged accepted proofs.
+- [ ] Complete the directed coordinated release after technical preflight: resolve Public canonical-store mismatch, reconcile per-surface artifact and Sentry identities, establish release/source-map write capability, and confirm safe canonical build capacity. Preserve the deferred rollback-preparation limitation in release reporting; do not describe it as passed or ask the owner to repeat its decision. Verify exact deployed/runtime identities after release.
+
+**Parent-reported Oct 26 observations:** three services active, zero restarts on Node 24.21.0; API readiness and Public/Admin HTTPS routes returned 200; canonical artifacts exist. Backend artifact marker `e356a00885da9517fe8c32df12dde3e6a3e49688` versus runtime `ace72accfe815abf5ba20df26ee57c76898d0cab`; Public `RELEASE_SHA=3bb57e02ea921531975124ce2c827382a9f1ec6b` versus `BUILD_ID` and runtime `ace72accfe815abf5ba20df26ee57c76898d0cab`; Admin artifact marker `ace72accfe815abf5ba20df26ee57c76898d0cab` versus runtime `VITE_SENTRY_RELEASE=3bb57e02ea921531975124ce2c827382a9f1ec6b`. Admin Sentry 10.73.0 and Vite plugin 5.4.0 align. Backend/Public dependency corrections are source-only per prior receipts; Public shared-store mismatch must be resolved before build. Prior source reviews found no confirmed causal defect in their bounded scope. Oct 25 VibeDoctor data is stale, not current defect evidence.
+
+**Fresh checks:** At 22:14 UTC root capacity was 2.9 GiB free / 51 GiB and I/O PSI `full avg10` was 21.67%. At 22:16 UTC `/readyz` returned `READY` with SQLite and Redis true. This is one bounded API check; Public/Admin routes were not rechecked in that probe.
+
+**This continuation:** no application build, install, test, restart, browser test, deployment, migration, financial operation, or storage action. Only the three assigned frontier documents are edited; parent owns integration and Git.
+
+## HISTORICAL — CURRENT 2026-10-26 — NEXI FINAL CLOSURE FRONTIER
 
 **Frontier rule:** This top section controls current execution. Older unchecked boxes and next-step notes below are preserved as historical task records; they are not reopened unless this frontier or a newer owner directive explicitly promotes them.
 

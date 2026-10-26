@@ -1,6 +1,8 @@
 # NEXI three-surface Sentry and release preparation
 
-**Status: source-config reviewed, NO rollout authorized or performed.** Source SHA and running artifact identity must never be treated as equal without a deployment receipt.
+**Current status (2026-10-27): coordinated release directed by owner; not yet executed.** The owner has directed one coordinated release after source corrections and technical preflight. Do not ask for duplicate authorization for this same release campaign. Source SHA and running artifact identity must never be treated as equal without a deployment receipt.
+
+The release preflight remains open: Public's canonical Sentry dependency store does not match its manifest/lock; deployed artifact and runtime Sentry release identifiers disagree; Sentry write scopes and source-map upload are unverified; and current disk/I/O conditions do not support a safe build. `ROLLBACK_PREPARATION = OWNER_DEFERRED`: the owner will handle backup capacity and rollback preparation after engineering. This is a disclosed recovery limitation, not passed rollback evidence. Do not create rollback archives or perform storage cleanup under this campaign.
 
 ## Release contracts
 
@@ -13,12 +15,12 @@
 
 At campaign inspection on 2026-10-20: backend environment carried `bae05aad3dcbae762427199f08a3ab7c9e01d9f5`; Admin environment carried `7fbde5ca82287902cb351546ccae1b632f1aae44`; Public environment file access was restricted. These belong to earlier deployed artifacts. **Do not overwrite running release variables now.**
 
-## Later, only after explicit owner deployment authorization
+## Coordinated release workflow under the current owner directive
 
-1. Commit and freeze coherent Git source identity, resolve source contract blockers, and prepare rollback artifacts. Never run three large builds simultaneously on the 8 GiB VPS.
+1. Commit and freeze the coherent Git source identity; resolve source and dependency blockers. Record the owner-deferred rollback limitation; do not create archives under this campaign. Never run three large builds simultaneously on the 8 GiB VPS.
 2. Backend: build once, inject backend release identity, deploy serialized, confirm service/readiness, release SHA and fresh release-scoped Sentry events. Confirm old Public/Admin remain API-compatible while backend updates.
 3. Public: inject matching server/client Sentry release and build identity; build/deploy once, confirm public route/API, Sentry release and no current-release regression.
 4. Admin: inject Vite build-time Sentry release; build/deploy once, confirm Admin login/API, Sentry release and no current-release regression.
 5. Preserve old deployed releases and rollback. Report strongest proven state separately: SOURCE_VALIDATED / BUILT / DEPLOYED / RUNTIME_VERIFIED / OWNER_ACCEPTED.
 
-No SQLite migration, financial tests, queue execution or deployment is part of this document.
+No SQLite migration, financial tests, or queue execution is part of this release procedure. Deployment is in scope under the current owner directive after the technical preflight is satisfied.

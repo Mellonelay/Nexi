@@ -20,7 +20,7 @@ For each changed Wallet, Trading, Messages, Admin, or other product slice: (1) i
 | GitHub CodeQL | security and selected static correctness | `Mellonelay/Nexi` is private and user-owned; GitHub documents hosted private code scanning for eligible Team/Enterprise organizations with Code Security enabled. This repo is not organization-owned, and no CodeQL CLI/workflow is configured here. |
 | dependency-cruiser | dependency boundaries and cyclic modules | screenshot candidate; not configured |
 | Knip | unused files/exports/dependencies | screenshot candidate; not configured |
-| Browser verification | actual browser exchange/reconnect after source correctness | Use the existing Chrome DevTools MCP session on CDP `127.0.0.1:5858`; do not run Playwright MCP/browser campaigns for this workflow. Public declares `@playwright/test`, but that package declaration does not make Playwright MCP the browser route. |
+| Browser verification | actual browser exchange/reconnect after source correctness | Use Chrome DevTools MCP with `--autoConnect --userDataDir /home/mellonelay1999/.local/share/nexi-admin-browser-acceptance` to attach to the owner's existing Chrome profile; it reads the dynamic CDP endpoint from that profile's `DevToolsActivePort`. Do not run Playwright MCP/browser campaigns for this workflow. Chrome's `chrome://inspect/#devices` discovery targets do not configure the MCP client. Public declares `@playwright/test`, but that package declaration does not make Playwright MCP the browser route. |
 
 ## Historical defect → required detection, no false claims
 

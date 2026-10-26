@@ -1,4 +1,22 @@
-## CURRENT 2026-10-26 — Final closure continuation
+## CURRENT 2026-10-27 — Coordinated release preparation frontier
+
+**Authority and scope:** This Oct 27 summary supersedes the Oct 26 current frontier below; dated entries remain intact as history. Source and runtime facts below were supplied by the parent as Oct 26 observations and were not independently rechecked in this documentation pass. Canonical source `HEAD = origin/main = 01e81159787bdf48f3d5108b96ecf7a178915573` at the parent-verified checkpoint. Preserve the eight already-dirty tracked documentation files and new Chrome guide; this task owns only the three current-frontier documents.
+
+- The owner directed one coordinated release after corrections are ready. It is not ready to execute while its technical preflight remains open. `ROLLBACK_PREPARATION = OWNER_DEFERRED` is an explicit recovery limitation, not a passed check; backup capacity and rollback preparation are owner-managed after engineering. Do not reopen the backup-location question or treat the deferral itself as proof of a rollback.
+- No archive comparison, archive creation, or storage cleanup is requested here. Root storage was reported at 2.9 GiB free of 51 GiB (95% used) with I/O PSI `full avg10` about 21%; no builds now.
+- Parent-verified Oct 26 runtime sample: three systemd services active with zero restarts on Node 24.21.0; API readiness and Public/Admin HTTPS routes returned 200. Canonical build artifacts exist. These observations do not establish deployed identity for current source or release readiness.
+- Fresh parent check: at 22:14 UTC root capacity remained 2.9 GiB free / 51 GiB and I/O PSI `full avg10` was 21.67%; at 22:16 UTC `/readyz` returned `READY` (`database=true`, `redis=true`, `authority=SQLite`). This bounded API result is not sustained health or Public/Admin route proof.
+- Parent-verified artifact/Sentry reconciliation: Backend artifact marker `e356a00885da9517fe8c32df12dde3e6a3e49688` differs from runtime `SENTRY_RELEASE=ace72accfe815abf5ba20df26ee57c76898d0cab`; Public `RELEASE_SHA=3bb57e02ea921531975124ce2c827382a9f1ec6b` while `BUILD_ID` and runtime release are `ace72accfe815abf5ba20df26ee57c76898d0cab`; Admin artifact marker `ace72accfe815abf5ba20df26ee57c76898d0cab` differs from runtime `VITE_SENTRY_RELEASE=3bb57e02ea921531975124ce2c827382a9f1ec6b`. Public manifest/lock resolves `@sentry/nextjs@10.75.2` while its shared store has 10.73.0, a confirmed dependency-store alignment preflight before any Public build. Admin Sentry 10.73.0 and Vite plugin 5.4.0 align. Public/Admin hide sourcemaps and delete maps after upload; automatic release create/finalize is disabled. Upload itself is unverified. `sentry-cli` auth exists, but write scopes are not established; no Sentry lifecycle or source-map upload proof exists.
+- Full release/Sentry evidence and limits: `tasks/evidence/nexi-release-candidate-preflight-20261027.md`.
+- Browser DevTools timed out; no browser proof. VibeDoctor data dated Oct 25 is stale and is not current defect evidence. Prior bounded source reviews found no confirmed causal code defect in their reviewed scopes. Backend/Public dependency corrections are confirmed in prior receipts and remain source-only; the Public store mismatch must be resolved before a build.
+- No application build, install, test, restart, browser test, deployment, migration, financial operation, or storage action was performed in this continuation. Reuse unchanged accepted proofs. Financial receipt remains 20 PASS / 0 FAIL / 4 BLOCKED; four gates remain `OWNER_ACCEPTED_UNTESTED`.
+- Keep the distinct owner decisions open: off-site backup destination/key custody; Sentry write scope; disposition/retention of synthetic Support conversation `3ecc85a9-c243-4da3-bde0-a24bdf532e8f` and `nexi-support-acceptance-ace72ac.png`. Do not ask again for the rollback location.
+
+### Six-stage roadmap status
+
+The original six-stage roadmap in `tasks/NEXI_FINAL_CLOSURE_ROADMAP_20261026.md` remains intact. Oct 27 is a frontier reconciliation, not a replacement roadmap: S1 current-frontier documentation has been reconciled here; S2 skill/harness evidence remains bounded to its receipts; S3–S5 corrections, proof, and release gates remain scoped to verified findings; S6 still requires exact source/artifact/runtime reconciliation and explicit owner acceptance. Do not promote any stage to deployed or accepted based on this summary.
+
+## HISTORICAL — CURRENT 2026-10-26 — Final closure continuation
 
 **Frontier rule:** The dated entries below preserve execution chronology. Use the latest current-state and todo frontier for present authority; an older unchecked item is not current work unless explicitly re-promoted there.
 

@@ -2,10 +2,12 @@
 
 **Status:** Current production browser-acceptance contract
 **Authority reconciliation date:** 2026-10-25 (UTC); requirements lineage began 2026-09-25.
-**Browser workflow owner:** paired Codex session using Chrome DevTools MCP at `127.0.0.1:5858`.
+**Browser workflow owner:** paired Codex session using Chrome DevTools MCP with `--autoConnect --userDataDir /home/mellonelay1999/.local/share/nexi-admin-browser-acceptance`.
 **Completion decision:** current owner directive and directly verified source, deployed runtime and browser evidence; the old ledger is historical.
 
 This document defines what browser evidence must prove. It does not own runtime architecture, completion status, or deployment authority.
+
+For MCP setup, the session-observed tool catalog, Chrome DevTools workbench panels, and extension workflows, follow the [NEXI Chrome DevTools MCP guide](NEXI_CHROME_DEVTOOLS_MCP_GUIDE.md). The Chrome DevTools MCP registration enables extension tools with `--categoryExtensions`; restart Codex after changing that flag and verify actual tool exposure before use.
 
 ## Production target
 
@@ -16,10 +18,10 @@ Browser acceptance for NEXI completion must exercise:
 A local standalone frontend, mock backend, disconnected fixture, or VM-local NestJS process cannot prove end-to-end production behavior.
 ## Acceptance owners
 
-- Chrome DevTools MCP on CDP port 5858 is the current live-browser route. Polypane/5859 is retired for this workflow.
+- Chrome DevTools MCP reads the active CDP port and WebSocket path from the existing profile's `DevToolsActivePort` file. Configure Codex with `--autoConnect --userDataDir /home/mellonelay1999/.local/share/nexi-admin-browser-acceptance`; do not hardcode its current port. This follows the [official Chrome DevTools MCP project](https://github.com/ChromeDevTools/chrome-devtools-mcp) connection modes. Port 5858 was a stale MCP target. Polypane/5859 is retired for this workflow.
 - Reuse the owner's existing Chrome profile and whichever wallet the owner specifies. The current owner-reported Public wallet is already unlocked in MetaMask. If Public auth is needed, use NEXI's wallet chooser and complete only the expected SIWE sign-in message after checking its origin, account, domain/URI, chain, nonce and statement.
 - Chrome DevTools MCP supports DOM, network, console, response-header and viewport diagnostics in the actual session.
-- Use the existing Chrome DevTools MCP session at CDP `127.0.0.1:5858` for both the site and any MetaMask page already exposed in that browser. Use `list_pages`, `select_page`, and a fresh `take_snapshot` when MetaMask is listed. Do not switch to Playwright MCP or another browser-control tool, and do not navigate directly to a `chrome-extension://` URL. If the MetaMask approval is not exposed to the current DevTools session, stop at that prompt and record the browser-control boundary; never claim authentication completed.
+- Use the existing Chrome profile through Chrome DevTools MCP for both the site and any MetaMask page already exposed in that browser. Use `list_pages`, `select_page`, and a fresh `take_snapshot` when MetaMask is listed. Do not switch to Playwright MCP or another browser-control tool, and do not navigate directly to a `chrome-extension://` URL. If the MetaMask approval is not exposed to the current DevTools session, stop at that prompt and record the browser-control boundary; never claim authentication completed.
 - D1/Ledger correctness requires separate backend evidence; a browser screenshot does not prove accounting.
 
 ## Public coverage
@@ -89,7 +91,7 @@ Before approving the wallet message, check that the request came from `https://w
 
 ### Chrome DevTools and installed extensions
 
-1. Verify the live Chrome DevTools MCP route is `127.0.0.1:5858`; call `list_pages`, then `select_page` for the exact Public or Admin origin. Preserve the existing profile and unrelated tabs.
+1. Verify `codex mcp get chrome-devtools` shows `--autoConnect --userDataDir /home/mellonelay1999/.local/share/nexi-admin-browser-acceptance`; the explicit profile path makes autoConnect read that profile's active `DevToolsActivePort` endpoint instead of Chrome's default profile. Chrome's `chrome://inspect/#devices` target-discovery entries (including `localhost:9222` and `localhost:9229`) do not configure the MCP client and should not be changed to 5858. If the registration changes, restart Codex to reload its MCP subprocess. Then call `list_pages`, confirm the existing signed-in page titles/origins, and `select_page` for the exact Public or Admin origin. Preserve the existing profile and unrelated tabs.
 2. Use `take_snapshot` and `take_screenshot` before the action. For session recovery, inspect the visible gate/form and accessible button names; do not use page scripts to bypass the UI.
 3. In **Network**, enable **Preserve log**, filter Fetch/XHR, perform only the requested sign-in, and record the relevant endpoint, method, status and timing. `list_network_requests` is enough for routine sequence/status proof; use `get_network_request` only for a specific failure after confirming sensitive request/response fields will not be copied. For Public, inspect challenge → verify → `/auth/me` order. For Admin, inspect `/admin/auth/login` then `/admin/me`. Redact credentials and sensitive payloads; status/route evidence is sufficient.
 4. Use `list_console_messages`/`get_console_message` for relevant errors, `get_css_styles` for a specific visual issue, `lighthouse_audit` for scoped accessibility/performance checks, and `performance_start_trace`/`performance_stop_trace` only when timing/rendering is in scope. Use already-installed React Developer Tools **Components/Profiler** or Accessibility Toolkit panels when they answer the specific UI question. Open the MetaMask extension panel only to handle/inspect the owner-approved NEXI prompt; do not inspect account secrets or change accounts/network without authorization.

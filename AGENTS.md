@@ -4,7 +4,7 @@ One canonical Git checkout only: `/home/mellonelay1999/workspaces/Nexi`. Exactly
 
 # CURRENT PAIRED CODEX CLI OWNER ROUTE — 2026-10-23
 
-For NEXI work from the paired Worker-0 Codex CLI, this Codex session is the single lifecycle parent and operates in the verified local shell. Do not route through ChatGPT Work, RDC, or SSH-to-self. Use NEXI Work Kernel for lifecycle, Agent Skills for phase methods, and Capability Router for discovery. Codex Tasks/Coordinator may provide separate task windows only when a same-checkout Worker-0 environment and exact task identity are verified; no subagents by default, no overlapping writers, and one owner for Git, production, services, financial/database state, and shared generated outputs. Browser acceptance uses the existing Chrome session through Chrome DevTools MCP at 127.0.0.1:5858 only; Polypane/5859 is retired for this workflow. The promoted VPS SQLite/NestJS/Ledger/Outbox architecture remains current; Cloudflare app runtime and historical ledgers are retired.
+For NEXI work from the paired Worker-0 Codex CLI, this Codex session is the single lifecycle parent and operates in the verified local shell. Do not route through ChatGPT Work, RDC, or SSH-to-self. Use NEXI Work Kernel for lifecycle, Agent Skills for phase methods, and Capability Router for discovery. Codex Tasks/Coordinator may provide separate task windows only when a same-checkout Worker-0 environment and exact task identity are verified; no subagents by default, no overlapping writers, and one owner for Git, production, services, financial/database state, and shared generated outputs. Browser acceptance uses the owner's existing Chrome profile through Chrome DevTools MCP configured with `--autoConnect --userDataDir /home/mellonelay1999/.local/share/nexi-admin-browser-acceptance`; 5858 was a stale MCP target and Polypane/5859 is retired for this workflow. The MCP reads the profile's `DevToolsActivePort` file; Chrome's `chrome://inspect/#devices` target-discovery entries are not MCP configuration. The promoted VPS SQLite/NestJS/Ledger/Outbox architecture remains current; Cloudflare app runtime and historical ledgers are retired.
 
 For tool execution, preserve the native handle type (`functions.exec` cell ID, shell session ID, MCP task ID, or Codex task/thread ID) and inspect the original result before retrying. Await independent reads; serialize dependent and shared mutations. Discover the live tool schema/version before calls that depend on it. Hook registration is not proof of execution or interception; claim enforcement only after observing the effective hook run and its result. Apply owner, platform, tool, and domain authorization separately.
 
@@ -58,7 +58,7 @@ These are the rules for EVERY agent operating in the NEXI repository. They are s
 
 **Skills and hooks:** use installed protected 25-workflow Agent Skills vendor source via using-agent-skills, phase-fit methods, Ponytail/Karpathy minimal code discipline; Graphify Agent Workflows only for topology/impact, Fallow for TS/JS risk. The actual hook config lives in user ~/.codex/hooks.json (Addy SessionStart) and repository .codex/hooks.json (Graphify PreToolUse/Bash; Worker-0 harness UserPromptSubmit). Desktop UI shows plugin-managed Ponytail and Capability Orchestrator hooks; inspect current enablement/effects, never duplicate/reset them. Hook enabled != skill invoked/test passed.
 
-**Historical browser routing (retired 2026-10-25):** Public was routed through Polypane/CDP 5859 and Admin through ChatGPT Work Cloud Browser. This is archival context only. The active paired Worker-0 Codex route is the existing Chrome DevTools MCP/CDP at 127.0.0.1:5858; follow `.codex/AGENTS.md` for current session recovery and authentication steps.
+**Historical browser routing (retired 2026-10-25):** Public was routed through Polypane/CDP 5859 and Admin through ChatGPT Work Cloud Browser. This is archival context only. The active paired Worker-0 Codex route is Chrome DevTools MCP with `--autoConnect --userDataDir /home/mellonelay1999/.local/share/nexi-admin-browser-acceptance`; follow `.codex/AGENTS.md` for current session recovery and authentication steps.
 
 **Global documentation:** for approved protected edits run worker0-protect unlock, verify diff and status, then worker0-protect refresh-lock and recheck locks. Do NOT run Agent Kernel proposal/compile/sync/publish to maintain these rules; retired generated instructions must not overwrite this owner decision.
 
@@ -208,15 +208,15 @@ NEXI tasks in ChatGPT Work follow NEXI Work Control Plane -> NEXI Work Kernel ->
 
 ## HISTORICAL BROWSER ROUTING — superseded for paired Codex CLI 2026-10-23
 
-The former Public Polypane/CDP 5859 route is retired. Current paired Codex browser verification uses the existing Chrome DevTools MCP at 127.0.0.1:5858 for both Public and Admin, preserving the existing Chrome profile and recording each surface's own origin, authentication state, and evidence. Follow `.codex/AGENTS.md`.
+The former Public Polypane/CDP 5859 route and stale MCP target 5858 are retired. Current paired Codex browser verification uses Chrome DevTools MCP with `--autoConnect --userDataDir /home/mellonelay1999/.local/share/nexi-admin-browser-acceptance` for both Public and Admin, preserving the existing Chrome profile and recording each surface's own origin, authentication state, and evidence. Follow `.codex/AGENTS.md`.
 
-The former ChatGPT Work Cloud Browser-only Admin rule is retired. The current paired Codex session may use the owner's existing authenticated Chrome profile at 127.0.0.1:5858 under the bounded sign-in procedure in `.codex/AGENTS.md`; never read or report credentials, cookies, tokens, or wallet internals.
+The former ChatGPT Work Cloud Browser-only Admin rule is retired. The current paired Codex session may use the owner's existing authenticated Chrome profile through the Chrome DevTools MCP profile-aware connection under the bounded sign-in procedure in `.codex/AGENTS.md`; never read or report credentials, cookies, tokens, or wallet internals.
 
 Keep release, browser/session, URL, authenticated state and observed rendered/network result separately for each surface. Wallet signatures and financial operations need task-specific owner authorization. Supersedes incompatible historical browser notes below; see ~/.agents/BROWSER_FABRIC.md and ~/RDC_ONBOARDING.md.
 
 ## Historical browser execution — superseded for paired Codex CLI 2026-10-23
 
-This browser-routing note is historical. Use the current Chrome DevTools MCP/CDP route at 127.0.0.1:5858 and the current owner-approved wallet procedure in `.codex/AGENTS.md`; do not assume a particular wallet is already connected.
+This browser-routing note is historical. Use the current Chrome DevTools MCP route `--autoConnect --userDataDir /home/mellonelay1999/.local/share/nexi-admin-browser-acceptance` and the current owner-approved wallet procedure in `.codex/AGENTS.md`; do not assume a particular wallet is already connected.
 
 ## Production closure controller — hard rule
 
