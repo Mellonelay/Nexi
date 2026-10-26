@@ -1,3 +1,11 @@
+# CURRENT OWNER BUILD/TOOLCHAIN OVERRIDE — 2026-10-25
+
+The single Admin output is `/srv/nexi/admin/current`; the only Admin dependencies live at `/srv/nexi/admin/shared/node_modules`, linked from the canonical `Admin/` source. No worktrees, duplicate installs, isolated build roots or second generated `.output`. Build only with the existing pinned `corepack pnpm@12.14.0` and `NEXI_ADMIN_OUTPUT_DIR=/srv/nexi/admin/current` command below. Pin the Admin runtime service to `/opt/nexi/runtime/node-v24.21.0/bin/node` when authorized and check effective ExecStart before claiming alignment. First derive design from installed TanStack Start/Router/Query, Vite/Nitro, current NexiAdminApiProvider and NestJS contracts; only then edit and run focused checks. Reuse unchanged evidence. All three services were intentionally stopped by the owner for maintenance on 2026-10-25.
+
+## External engineering references
+
+For Admin work, choose the exact domain bundle in `/home/mellonelay1999/.codex/reference-libraries/NEXI_Engineering_Reference_Library_v3.1/NEXI_Engineering_Reference_Library_v3.1/`, using its `graphify-out/wiki/index.md` and `graphify-out/GRAPH_REPORT.md` for navigation. Check installed versions, official framework contracts, and current source before applying a reference; CONTRACT/ADAPT/STUDY are dispositions, not approval. Graphify is navigation/reference evidence, not semantic or runtime proof.
+
 # CURRENT OWNER BROWSER OVERRIDE — 2026-10-21
 
 For NEXI Work Local, Admin rendered acceptance uses the existing owner-authorized ChatGPT in-app browser Admin tab, independently of Public. Work Cloud Browser is not required. Use authorized direct SSH alias nexi-vps for Worker-0 source/CLI work, with RDC as fallback. Do not transfer credentials or session material between surfaces.

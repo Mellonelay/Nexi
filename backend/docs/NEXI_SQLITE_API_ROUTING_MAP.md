@@ -1,6 +1,6 @@
 # NEXI SQLite backend routing map
 
-The full source-derived 223-path API and controller mapping is [here](../../docs/architecture/NEXI_BACKEND_API_SQLITE_SOURCE_MAP.md).
+The linked 223-path API inventory is a HISTORICAL 2026-10-20 snapshot, superseded by later Support/Messages route changes. It is not an active generated endpoint contract. For current API consumers inspect the installed NestJS controller/DTO/guards and regenerate `docs/contracts/openapi.json` only for a scoped source revision; do not infer ticket routes remain active from old tables. Historical source mapping: [archive-era map](../../docs/architecture/NEXI_BACKEND_API_SQLITE_SOURCE_MAP.md).
 
 ## Architecture diagram
 

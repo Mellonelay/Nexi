@@ -1,3 +1,11 @@
+# CURRENT OWNER BUILD/TOOLCHAIN OVERRIDE — 2026-10-25
+
+The only Public build is `/srv/nexi/public/current/.next`, built from `/srv/nexi/public/current` using its symlink to `/srv/nexi/public/shared/node_modules`. No worktrees, isolated copies, dev/preview builds, `npm install` or `npm ci` in the source checkout. Use pinned `/opt/nexi/runtime/node-v24.21.0/bin/node` and its npm path for next authorized build and runtime service; verify systemd ExecStart before claiming alignment. First map design and contracts across NestJS/Admin consumers; use framework-local Next CLI (`next typegen`, diagnostics) where relevant; tests verify implementation, not determine architecture by trial and error. Reuse unchanged proof. All three services were intentionally stopped by the owner for maintenance on 2026-10-25; do not infer active status from historical receipts.
+
+## External engineering references
+
+For Public work, choose the exact domain bundle in `/home/mellonelay1999/.codex/reference-libraries/NEXI_Engineering_Reference_Library_v3.1/NEXI_Engineering_Reference_Library_v3.1/`, using its `graphify-out/wiki/index.md` and `graphify-out/GRAPH_REPORT.md` for navigation. Check installed versions, official framework contracts, and current source before applying a reference; CONTRACT/ADAPT/STUDY are dispositions, not approval. Graphify is navigation/reference evidence, not semantic or runtime proof.
+
 # CURRENT OWNER BROWSER OVERRIDE — 2026-10-21
 
 For NEXI Work Local, Public rendered acceptance uses the existing ChatGPT in-app browser session. Polypane/CDP 5859 is optional historical tooling, not a gate. Use task-fit frontend/browser skills and evidence; do not require routine subagents. Wallet signing and financial actions remain separately authorized.

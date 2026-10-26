@@ -354,11 +354,21 @@ describe('CommunicationsService', () => {
     expect(markMessageRead).not.toHaveBeenCalled();
   });
 
-  it('denies attachment reads unless the file is linked to the requesting customer thread', async () => {
+  it('denies a valid attachment linked only to another customer support thread', async () => {
     const customerId = 'user-2';
     const [participantAId, participantBId] = [customerId, NEXI_SUPPORT_CHANNEL_ID].sort();
     const conversationId = `conversation:${participantAId}:${participantBId}`;
-    const findMany = jest.fn().mockResolvedValue([]);
+    const foreignCustomerId = 'user-foreign';
+    const [foreignParticipantAId, foreignParticipantBId] = [foreignCustomerId, NEXI_SUPPORT_CHANNEL_ID].sort();
+    const foreignConversationId = `conversation:${foreignParticipantAId}:${foreignParticipantBId}`;
+    const foreignAttachmentId = '11111111-1111-4111-8111-111111111111';
+    const foreignMessage = {
+      conversationId: foreignConversationId,
+      attachments: JSON.stringify([{ id: foreignAttachmentId }]),
+    };
+    const findMany = jest.fn(({ where }: any) => Promise.resolve(
+      where.conversationId === foreignConversationId ? [foreignMessage] : [],
+    ));
     const read = jest.fn();
     const service = new CommunicationsService({
       messageConversation: { findUnique: jest.fn().mockResolvedValue({
@@ -367,10 +377,10 @@ describe('CommunicationsService', () => {
       persistentMessage: { findMany },
     } as any, outbox as any, d1Communications as any, redis as any, { read } as any);
 
-    await expect(service.getSupportAttachment(customerId, 'private-file'))
+    await expect(service.getSupportAttachment(customerId, foreignAttachmentId))
       .rejects.toMatchObject({ status: 404 });
     expect(findMany).toHaveBeenCalledWith({
-      where: { conversationId, attachments: { contains: 'private-file' } },
+      where: { conversationId, attachments: { contains: foreignAttachmentId } },
       select: { attachments: true },
     });
     expect(read).not.toHaveBeenCalled();

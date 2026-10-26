@@ -43,9 +43,9 @@ flowchart LR
 
 ## Acceptance/evidence separation
 
-Feature map presence proves navigation only. For every feature, record separately when asked: `SOURCE_IMPLEMENTED`, `TESTED`, `DEPLOYED`, `RUNTIME_VERIFIED`, `BROWSER_VERIFIED`, `OWNER_ACCEPTED`. Use actual source SHA and deployed artifact IDs. The final authenticated browser campaign uses Polypane + Chrome DevTools and authorized Coinbase Wallet with real SIWE, after the relevant deployments; it is not a prerequisite to static source closure.
+Feature map presence proves navigation only. For every feature, record separately when asked: `SOURCE_IMPLEMENTED`, `TESTED`, `DEPLOYED`, `RUNTIME_VERIFIED`, `BROWSER_VERIFIED`, `OWNER_ACCEPTED`. Use actual source SHA and deployed artifact IDs. For the current paired-Codex workflow, browser ownership is Chrome DevTools/CDP at `127.0.0.1:5858`; Polypane/5859 is retired. Authenticated Coinbase/other EIP-1193 owner signatures remain separately authorized. Do not infer browser verification from a source map.
 
-The historical 92-table/11,802,372-row export reconciliation is complete but does not prove current D1/SQLite equality. The live 2026-10-17 sample confirms D1 core financial rows and zero sampled rows in active VPS SQLite; current delta, authorized authenticated financial acceptance, independent encrypted backup/restore and owner-controlled cutover remain open. Trusted VPS TLS and basic Socket.IO transport are verified in prior direct checks; full provider/Socket.IO recovery remains separate.
+The 92-table/11,802,372-row export and the 2026-10-17 empty-SQLite/D1 sample are HISTORICAL migration-phase evidence, not current runtime state. Promoted VPS SQLite is the active canonical application/financial database under the October 25 owner and source authority. Four later financial gates were closed by owner acceptance with untested outcomes; do not reopen them from the old snapshot. Independent off-site backup/restore and present runtime claims still require distinct proof. No historical D1 equality assumption applies to the current production source.
 
 ## Ownership routing
 

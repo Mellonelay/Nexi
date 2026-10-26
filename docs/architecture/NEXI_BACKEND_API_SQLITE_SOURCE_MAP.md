@@ -1,6 +1,6 @@
 # NEXI backend API / routing / DTO / SQLite source map
 
-> Generated from the source checkout and `docs/contracts/openapi.json`; this is source inventory, not runtime acceptance proof.
+> HISTORICAL SOURCE SNAPSHOT (2026-10-20): Generated from the then-current checkout and `docs/contracts/openapi.json`; this is not an up-to-date route contract. The listed legacy `communications/tickets`, recipient-selected messaging, and 223-path/245-operation snapshot predate the accepted Support/Messages ticket-retirement release. Do not use these rows as active API endpoints or generate clients from this snapshot. For current operations, inspect live controllers and regenerate the canonical OpenAPI with the installed NestJS generator only when required. Retain this file for historical evidence until a source-current replacement is accepted.
 
 ## Endpoint contract inventory
 

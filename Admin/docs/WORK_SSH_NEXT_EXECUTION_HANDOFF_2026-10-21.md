@@ -1,6 +1,8 @@
 # NEXI ADMIN — REMOTE CODEX SSH EXECUTION CONTRACT (2026-10-22)
-Status: OWNER-REQUESTED SOURCE IMPLEMENTATION PHASE; **NO BROWSER TESTING IN THIS PHASE**.
+Status: HISTORICAL DRAFT ONLY (2026-10-22); superseded by later owner paired-Codex/CDP 5858 instructions, subsequent Support/Messages release and current acceptance. No execution authority.
 Source starting point: GitHub `Mellonelay/Nexi` main commit `0e2023b0c93c359ba1f458cd694dee97900aae19` (verified pushed 2026-10-21). Before mutation confirm actual HEAD/origin and dirty tree; this SHA is a checkpoint, not permission to reset new work.
+HISTORICAL DRAFT — NOT ACTIVE EXECUTION AUTHORITY (2026-10-21). Later paired-Codex and CDP 5858 instructions supersede the executor/browser language below. Retained solely to preserve the history of proposed Admin/Binary requirements.
+
 Target: **Codex Desktop Remote SSH on authorized Worker-0**. Canonical checkout `/home/mellonelay1999/workspaces/Nexi`; use direct native shell via existing authorized `nexi-vps` connection where callable. **Do not substitute this with ChatGPT Cloud Work/RDC** or create a second writer. Browser acceptance is reserved for the owner's separate **local ChatGPT Work session with in-app browser** after code and non-browser proof.
 
 ## 0. PRIMARY MANDATE — ACT, TRACK, TEST, COMPLETE

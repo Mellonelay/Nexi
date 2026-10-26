@@ -65,7 +65,7 @@ The test visual projection and simulated result must be causally consistent with
 
 ## Communication and product parity
 
-Messages should evolve into a real selectable conversation list + thread/reply composer, unread states, pagination and readback, matching Axue's useful two-column usability without copying defects. First verify existing `/messages` provider methods, NestJS controllers and realtime events; do not claim attachments, sending, subscriptions or new endpoints before contract proof. Keep support tickets separate.
+HISTORICAL DESIGN NOTE (2026-10-21): Messages was proposed to evolve into a selectable conversation list and thread/reply composer. Later October 24/25 Support/Messages release and browser receipts establish the implemented two-way flow within their scope; inspect current source before treating any proposed element as missing. First verify existing `/messages` provider methods, NestJS controllers and realtime events; do not claim attachments, sending, subscriptions or new endpoints before contract proof. Keep support tickets separate.
 
 Product configuration remains Admin-controlled **where existing backend authority supports it**: Binary five duration boxes/payout/min/max and pair eligibility, Mining plans/payout parameters, Loans settings, Markets 53 assets and feeds, Wallet deposit networks/addresses, Public navigation and supported content. Exact current persisted values and whether the five Binary duration seconds are freely editable require readback, not historical defaults. Never equate a visible form with a durable mutation.
 

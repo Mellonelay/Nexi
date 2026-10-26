@@ -139,25 +139,37 @@ export class CommunicationsController {
   message() {
     throw new GoneException("Recipient-selected messaging is retired. Use the NEXI support conversation.");
   }
-  @Post("messages/:id/read") @UseGuards(JwtAuthGuard) readMessage(
+  @Post("messages/:id/read")
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
+  readMessage(
     @Req() req: AuthenticatedRequest,
     @Param("id") id: string,
   ) {
     return this.service.markMessageRead(req.user.userId, id);
   }
-  @Get("messages") @UseGuards(JwtAuthGuard) messages(
+  @Get("messages")
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
+  messages(
     @Req() req: AuthenticatedRequest,
     @Query() q: PageQueryDto,
   ) {
     return this.service.listMessages(req.user.userId, q.page, q.limit);
   }
-  @Get("conversations") @UseGuards(JwtAuthGuard) conversations(
+  @Get("conversations")
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
+  conversations(
     @Req() req: AuthenticatedRequest,
     @Query() q: PageQueryDto,
   ) {
     return this.service.listConversations(req.user.userId, q.page, q.limit);
   }
-  @Post("conversations/:id/report") @UseGuards(JwtAuthGuard) reportConversation(
+  @Post("conversations/:id/report")
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
+  reportConversation(
     @Req() req: AuthenticatedRequest,
     @Param("id") id: string,
     @Body() dto: ReportConversationDto,
@@ -169,13 +181,19 @@ export class CommunicationsController {
       dto.messageId,
     );
   }
-  @Get("notifications") @UseGuards(JwtAuthGuard) notifications(
+  @Get("notifications")
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
+  notifications(
     @Req() req: AuthenticatedRequest,
     @Query() q: PageQueryDto,
   ) {
     return this.service.listNotifications(req.user.userId, q.page, q.limit);
   }
-  @Post("notifications/:id/read") @UseGuards(JwtAuthGuard) read(
+  @Post("notifications/:id/read")
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
+  read(
     @Req() req: AuthenticatedRequest,
     @Param("id") id: string,
   ) {
@@ -197,19 +215,22 @@ export class CommunicationsController {
     return this.service.learnDetail(slug, q.locale);
   }
   @Post("admin/announcements")
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard)
+  @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
   createAnnouncement(@Body() dto: CreateAnnouncementDto) {
     return this.service.createAnnouncement(dto);
   }
   @Patch("admin/announcements/:id")
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard)
+  @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
   updateAnnouncement(@Param("id") id: string, @Body() dto: UpdateAnnouncementDto) {
     return this.service.updateAnnouncement(id, dto);
   }
   @Post("admin/announcements/:id/publish")
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard)
+  @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
   publishAnnouncement(@Param("id") id: string, @Body() dto: AdminMutationDto) {
     return this.service.publishAnnouncement(id, dto.idempotencyKey);
@@ -254,9 +275,15 @@ export class CommunicationsController {
   ) {
     return this.service.resolveMessageModeration(id, req.user.userId, dto);
   }
-  @Get("admin/notifications") @UseGuards(JwtAuthGuard, RolesGuard) @Roles(Role.ADMIN)
+  @Get("admin/notifications")
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard)
+  @RequireAuthSurface("ADMIN")
+  @Roles(Role.ADMIN)
   adminNotifications(@Query() q: PageQueryDto) { return this.service.adminNotifications(q.page, q.limit); }
-  @Post("admin/notifications") @UseGuards(JwtAuthGuard, RolesGuard) @Roles(Role.ADMIN)
+  @Post("admin/notifications")
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard)
+  @RequireAuthSurface("ADMIN")
+  @Roles(Role.ADMIN)
   sendAdminNotification(@Body() dto: SendNotificationDto) { return this.service.sendAdminNotification(dto); }
   @Get("admin/learn/articles")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
