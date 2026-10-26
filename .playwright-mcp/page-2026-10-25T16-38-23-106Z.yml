@@ -1,0 +1,59 @@
+- generic [ref=e76]:
+  - generic [ref=e77]:
+    - generic [ref=e78]:
+      - img "maskicon" [ref=e81]
+      - paragraph [ref=e83]: Account 1
+    - button "Account details" [ref=e88] [cursor=pointer]
+  - generic [ref=e91]:
+    - heading "Sign-in request" [level=2] [ref=e92]
+    - paragraph [ref=e93]: A site wants you to sign in to prove you own this account.
+    - generic [ref=e96]:
+      - paragraph [ref=e98]: Estimated changes
+      - paragraph [ref=e102]: No changes
+    - generic [ref=e103]:
+      - generic [ref=e104]:
+        - paragraph [ref=e107]: Network
+        - generic [ref=e108]:
+          - img "Ethereum logo" [ref=e110]
+          - paragraph [ref=e111]: Ethereum
+      - generic [ref=e112]:
+        - paragraph [ref=e115]: Request from
+        - paragraph [ref=e117]: www.nexitrading.app
+      - generic [ref=e118]:
+        - paragraph [ref=e121]: Signing in with
+        - generic [ref=e124]:
+          - img "maskicon" [ref=e126]
+          - paragraph [ref=e127]: Account 1
+    - generic [ref=e129]:
+      - button "copy-button" [ref=e130] [cursor=pointer]
+      - button "collapse-button" [ref=e132] [cursor=pointer]
+      - paragraph [ref=e136]: Message
+      - generic [ref=e137]:
+        - paragraph [ref=e138]: Sign in to NEXI.
+        - generic [ref=e139]:
+          - paragraph [ref=e142]: URL
+          - paragraph [ref=e144]: https://www.nexitrading.app
+        - generic [ref=e145]:
+          - paragraph [ref=e148]: Network
+          - paragraph [ref=e150]: Ethereum
+        - generic [ref=e151]:
+          - paragraph [ref=e154]: Account
+          - generic [ref=e157]:
+            - img "maskicon" [ref=e159]
+            - paragraph [ref=e160]: Account 1
+        - generic [ref=e161]:
+          - paragraph [ref=e164]: Version
+          - paragraph [ref=e166]: "1"
+        - generic [ref=e167]:
+          - paragraph [ref=e170]: Chain ID
+          - paragraph [ref=e172]: "1"
+        - generic [ref=e173]:
+          - paragraph [ref=e176]: Nonce
+          - paragraph [ref=e178]: b934b5ad6bba81f4231c9fa29e9f33e6
+        - generic [ref=e179]:
+          - paragraph [ref=e182]: Issued
+          - paragraph [ref=e184]: 25 October 2026, 16:38
+    - button "Scroll down" [ref=e185] [cursor=pointer]
+  - generic [ref=e188]:
+    - button "Cancel" [ref=e189] [cursor=pointer]
+    - button "Confirm" [active] [ref=e190] [cursor=pointer]
