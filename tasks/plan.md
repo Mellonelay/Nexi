@@ -1,5 +1,11 @@
 ## CURRENT 2026-10-26 — Final closure continuation
 
+### 2026-10-26 16:20 UTC — source versus runtime checkpoint
+
+- Fresh Git read: canonical checkout is clean, and `main` / `origin/main` / `HEAD` are `e90565de2bc47e151a8a8ea69b0efd1542c522c2`. The six Playwright MCP page snapshots and eleven prior console logs are committed in `b4e72df` and `e90565d`; no dirty or untracked work remains.
+- Fresh HTTP/systemd read: all three production units are active with zero restarts; API `/readyz` returned HTTP 200 with SQLite and Redis ready, Public `/dashboard` returned 200, and Admin `/overview` returned 200. This is live route and service evidence only; it does not prove that current source commits are deployed.
+- Application changes in the pushed dependency and auth-surface commits remain **not built and not deployed** in this campaign. Do not infer deployment from GitHub push or healthy routes. `ROLLBACK_PREPARATION = OWNER_DEFERRED`; production release remains unauthorized until owner preparation and explicit per-app authorization. No build, deployment, service control, data mutation, cleanup, or rollback operation was performed for this checkpoint.
+
 ### 2026-10-26 16:02 UTC — isolated source commit
 
 - Reviewed and committed only `backend/src/conversion/conversion.controller.ts`, `backend/src/kyc/kyc.controller.ts`, `backend/test/auth/cross-domain-auth-surface.spec.ts`, and its evidence receipt as `646f907` (`fix: enforce auth surfaces on conversion and KYC routes`). `main` is one commit ahead of the last observed `origin/main=1e2d28d`; no push was made because release/deployment remains separately gated.
