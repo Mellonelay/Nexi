@@ -1,6 +1,7 @@
 ## CURRENT 2026-10-26 — NEXI FINAL CLOSURE FRONTIER
 
-- [x] Local source checkpoint `646f907` isolates the Conversion/KYC surface guards, regression test, and source receipt in 4 paths. `main` is ahead of last observed `origin/main=1e2d28d` by one; no push/deploy. Focused proof 2 suites / 19 tests passed; unrelated dirty paths remain untouched.
+- [x] Git integration: `646f907` (Conversion/KYC auth-surface guards) and `482ebb5` (Communications auth-surface guards plus closure documentation/evidence) are pushed; last verified local `main` and `origin/main` both resolve to `482ebb5b6e05a8ab435c772869ccdd5fe2b3ea08`. Focused proofs are 2 suites / 19 tests for Conversion/KYC and 2 suites / 45 tests for Communications/identity. No application build, deployment, service restart, migration, or financial operation followed these source commits. Six generated `.playwright-mcp` page snapshots remain untracked and preserved.
+- [x] Owner-authorized cache-only cleanup: removed five inactive, regenerable exact directories under `/home/mellonelay1999/.npm/_npx` (127,632,108 bytes total); exact paths and limits are recorded in [the cache cleanup receipt](evidence/nexi-cache-prune-20261026.md). The active Context7 cache, RDC npm cache, pnpm/Corepack stores, application dependencies, and rollback artifacts were preserved. Root free space moved from 3.3 GB to 3.5 GB. This did not change `ROLLBACK_PREPARATION = OWNER_DEFERRED` or authorize deployment.
 
 - [x] Source-level guard DI review for Conversion/KYC: both active modules import AuthModule, which provides/exports AuthSurfaceGuard; AppModule registers both. No runtime application-context proof was run for this unshipped patch.
 
