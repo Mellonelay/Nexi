@@ -2,6 +2,13 @@
 
 **Frontier rule:** The dated entries below preserve execution chronology. Use the latest current-state and todo frontier for present authority; an older unchecked item is not current work unless explicitly re-promoted there.
 
+### 2026-10-26 16:29 UTC — source/API contract and documentation preflight
+
+- The existing NestJS 12.0.3 preview OpenAPI generator ran against the current source with pinned Node 24.21.0/npm 11.19.0. `docs/contracts/openapi.json` was byte-identical before and after (SHA-256 `1a0b38d88f283a9ae00c0ce597a953d5eb729c7036fba27947045bcd5571d6b3`); no preview SQLite file was created. This is generator reproducibility evidence only, not full route, consumer, authorization, or runtime proof.
+- Graphify and direct source checks found the reviewed `ContractController` is not registered through an active module and no current Public/Admin consumer was found; no speculative auth patch was justified. Other bounded route observations and the source-review limits are recorded in `tasks/evidence/nexi-source-contract-reconciliation-20261026.md`.
+- Updated OpenAPI assurance wording, exact v3.1 Reference Library corpus/Graphify paths, and browser guidance in the matrix, `frontend/AGENTS.md`, `docs/frontend/README.md`, and financial verification guidance to use the existing Chrome DevTools MCP session only. If MetaMask is not exposed via DevTools `list_pages`, stop and report that boundary; do not switch to Playwright MCP or claim sign-in success. The Public instruction's active realtime statement now names promoted SQLite rather than D1-backed reads.
+- The bounded Backend and Public/Admin source-gap lanes completed and found no confirmed source defect in their assigned current-frontier scope; remaining issues are browser/runtime proof or controlled-identity/fixture gates. No app source change was justified in these lanes, and no app build, deployment, restart, migration, production data change, or browser test was run. Source/documentation pre-release work is complete for this bounded frontier. Owner rollback preparation remains deferred and does not authorize release; stop here for the requested full pre-release report.
+
 ### 2026-10-26 16:20 UTC — source versus runtime checkpoint
 
 - Fresh Git read: canonical checkout is clean, and `main` / `origin/main` / `HEAD` are `e90565de2bc47e151a8a8ea69b0efd1542c522c2`. The six Playwright MCP page snapshots and eleven prior console logs are committed in `b4e72df` and `e90565d`; no dirty or untracked work remains.

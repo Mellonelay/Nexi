@@ -6,9 +6,9 @@ The only Public build is `/srv/nexi/public/current/.next`, built from `/srv/nexi
 
 For Public work, choose the exact domain bundle in `/home/mellonelay1999/.codex/reference-libraries/NEXI_Engineering_Reference_Library_v3.1/NEXI_Engineering_Reference_Library_v3.1/`, using its `graphify-out/wiki/index.md` and `graphify-out/GRAPH_REPORT.md` for navigation. Check installed versions, official framework contracts, and current source before applying a reference; CONTRACT/ADAPT/STUDY are dispositions, not approval. Graphify is navigation/reference evidence, not semantic or runtime proof.
 
-# CURRENT OWNER BROWSER OVERRIDE — 2026-10-21
+# CURRENT OWNER BROWSER OVERRIDE — 2026-10-26
 
-For NEXI Work Local, Public rendered acceptance uses the existing ChatGPT in-app browser session. Polypane/CDP 5859 is optional historical tooling, not a gate. Use task-fit frontend/browser skills and evidence; do not require routine subagents. Wallet signing and financial actions remain separately authorized.
+For the paired NEXI Codex CLI, use the existing Worker-0 Chrome DevTools MCP session on CDP `127.0.0.1:5858` for site rendering, interaction, network, console and viewport evidence. Do not route this VM task through ChatGPT Work's browser, Polypane/CDP 5859, Playwright MCP, or a duplicate browser session. For a MetaMask approval, inspect `list_pages`; use `select_page` and a fresh `take_snapshot` only if the extension page is exposed in that same DevTools session. Never navigate directly to a `chrome-extension://` URL. If the extension prompt is not exposed, stop at that boundary and report it; do not claim authentication completed. Wallet signing and financial actions remain separately authorized.
 
 ## CANONICAL PUBLIC BUILD — 2026-10-23
 
@@ -165,7 +165,7 @@ Frontend must render backend truth. Never fabricate:
 - authorization
 - provider health
 
-Realtime transport is not durable truth. After reconnect, recover authoritative state from backend/D1-backed reads.
+Realtime transport is not durable truth. After reconnect, recover authoritative state from Backend reads backed by promoted VPS SQLite.
 Reject duplicate/out-of-order market events where the current contract already does so.
 
 Wallet/SIWE and protected financial actions remain identity-gated.
@@ -184,18 +184,13 @@ For UI behavior changes, validate the rendered deployed app, not just compilatio
 
 PUBLIC BUILD AUTHORITY: Do not build this app during iterative repair. Finish all source changes and focused source checks first. The only generated Public build/runtime directory is `/srv/nexi/public/current`; do not create `build-*`, `releases/*`, candidate, temporary, rollback, worktree, or copied build-output directories under `/srv/nexi/public`. When the owner-selected source frontier is ready for the final integration pass, stop `nexi-public.service`, synchronize this canonical source into `/srv/nexi/public/current`, run the single production build there, restart the service, and verify deployed behavior.
 
-Before deployment, run only the focused deterministic source/build gates invalidated by the change. Final browser acceptance follows the current global Browser Fabric and owner-selected browser responsibility model:
-- Polypane on DevTools `127.0.0.1:5859` is the PRIMARY visual/responsive discovery and rendered-layout acceptance surface; verify the actual Polypane page/pane identity on attach;
-- the preserved headed Worker-0 Chrome + MetaMask profile on `127.0.0.1:5858` is the PRIMARY wallet-authenticated/session acceptance surface;
-- Playwright / Chrome DevTools / React DevTools / passive Requestly support only the browser/profile and claim they are attached to; they are not independent acceptance owners;
-- BrowserStack is targeted real-device/cross-browser confirmation only when the claim specifically requires it;
-- do not infer authenticated state across Polypane, Chrome, or BrowserStack surfaces.
+Before deployment, run only the focused deterministic source/build gates invalidated by the change. Final browser acceptance uses the existing Worker-0 Chrome session through Chrome DevTools MCP at `127.0.0.1:5858`, as specified by the current global owner route and `docs/quality/NEXI_BROWSER_ACCEPTANCE_MATRIX.md`. Do not use Polypane, Playwright MCP, or a separate browser session for this workflow. Do not infer authenticated state unless it is observed in the same Chrome profile and confirmed by the relevant application/API response.
 
 Minimum affected-flow proof:
 - typecheck / affected unit-contract tests / production build as required by the change;
-- Polypane rendered/interaction evidence for affected visual/responsive claims;
-- preserved Chrome rendered/session evidence when the affected claim requires wallet/application authentication;
-- responsive evidence at the required CSS viewport probes in Polypane, with BrowserStack only when the claim specifically requires targeted real-device/cross-browser confirmation;
+- Chrome DevTools rendered/interaction evidence for affected visual/responsive claims;
+- same-profile Chrome session evidence when the affected claim requires wallet/application authentication;
+- responsive evidence at the required CSS viewport probes in Chrome DevTools;
 - no horizontal overflow;
 - keyboard/focus/accessibility behavior where affected;
 - current locale behavior where affected;

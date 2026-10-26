@@ -11,7 +11,7 @@ For each changed Wallet, Trading, Messages, Admin, or other product slice: (1) i
 | Mechanism | NEXI role | Status at latest inspection |
 | --- | --- | --- |
 | Existing Graphify map | source call graph / cross-surface impact, not semantics | previously executed in NEXI; verify current index freshness |
-| NestJS OpenAPI + consumer typed APIs | compare real controllers, guards and DTOs to Public/Admin API calls | `docs/contracts/openapi.json` and `backend/scripts/generate-openapi.js` exist; generation freshness unverified |
+| NestJS OpenAPI + consumer typed APIs | compare real controllers, guards and DTOs to Public/Admin API calls | On 2026-10-26, the installed NestJS 12.0.3 preview generator ran from the current source; `docs/contracts/openapi.json` remained byte-identical at SHA-256 `1a0b38d88f283a9ae00c0ce597a953d5eb729c7036fba27947045bcd5571d6b3`. No preview SQLite database was created. This establishes generator reproducibility for the artifact, not complete consumer compatibility or runtime route behavior. |
 | tieline | detect Axios/fetch to missing server route or HTTP method | suggested by old screenshot; not established installed |
 | OpenAPI TypeScript / Orval | generated typed client/interface drift | screenshot candidate; not found as configured package |
 | Pact | cross-surface consumer/provider executable contract | screenshot candidate; not configured |
@@ -20,7 +20,7 @@ For each changed Wallet, Trading, Messages, Admin, or other product slice: (1) i
 | GitHub CodeQL | security and selected static correctness | `Mellonelay/Nexi` is private and user-owned; GitHub documents hosted private code scanning for eligible Team/Enterprise organizations with Code Security enabled. This repo is not organization-owned, and no CodeQL CLI/workflow is configured here. |
 | dependency-cruiser | dependency boundaries and cyclic modules | screenshot candidate; not configured |
 | Knip | unused files/exports/dependencies | screenshot candidate; not configured |
-| Playwright | browser exchange/reconnect after source correctness | `@playwright/test` declared in Public; existing accepted browser receipts reused |
+| Browser verification | actual browser exchange/reconnect after source correctness | Use the existing Chrome DevTools MCP session on CDP `127.0.0.1:5858`; do not run Playwright MCP/browser campaigns for this workflow. Public declares `@playwright/test`, but that package declaration does not make Playwright MCP the browser route. |
 
 ## Historical defect → required detection, no false claims
 
