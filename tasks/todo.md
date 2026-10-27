@@ -3,7 +3,8 @@
 - [x] Backend, Public, and Admin were built and deployed to their canonical outputs; all three services are active with zero restarts. Focused local readiness/routes passed.
 - [x] Public dependency-resolution build failure fixed with the bounded `@base-org/account` Webpack alias; final Public build carries full SHA `943ebda18d9060fd817074a1bbb2ce4fe7d26a59`. Admin and Backend identities and build outcomes are in the release evidence receipt.
 - [x] Sentry releases finalized and deployed to production for Backend `20ba4da6cc34fd8f355324bbf2ab401db2665ef0` and Public/Admin `943ebda18d9060fd817074a1bbb2ce4fe7d26a59`. Admin source-map bundle upload was confirmed. Public remote bundle presence and Backend event-level symbolication remain unverified.
-- [ ] Push final documentation integration, then re-associate the full Public/Admin SHA with GitHub commits and verify `HEAD = origin/main`.
+- [x] Committed and pushed the Public source correction and release documentation. At the verified push, `HEAD = origin/main = d0d5678ecee3250bd2fd67f8e4f9d9a9df4481e4`.
+- [ ] Sentry commit association for Public/Admin release `943ebda18d9060fd817074a1bbb2ce4fe7d26a59` remains unresolved: after push, `set-commits --auto` selected docs HEAD `d0d5678`; Sentry release details still show no commits after an explicit source range attempt. This is release metadata, not artifact/runtime identity.
 - [ ] Next session: run the owner-requested browser acceptance on the deployed artifacts. Preserve the accepted scope of existing proofs; financial gates remain `OWNER_ACCEPTED_UNTESTED`.
 - `ROLLBACK_PREPARATION = OWNER_DEFERRED`; no rollback archive validation or storage cleanup was performed.
 - Detailed handoff: `tasks/evidence/nexi-release-candidate-preflight-20261027.md`.

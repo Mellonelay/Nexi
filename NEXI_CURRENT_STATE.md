@@ -14,6 +14,8 @@ Sentry releases `20ba4da6cc34fd8f355324bbf2ab401db2665ef0` (Backend) and `943ebd
 
 Detailed command/results and remaining limits: [coordinated release evidence](tasks/evidence/nexi-release-candidate-preflight-20261027.md#2026-10-27-coordinated-build-deploy-and-reconciliation).
 
+Git source commit `943ebda18d9060fd817074a1bbb2ce4fe7d26a59` and release-documentation commit `d0d5678ecee3250bd2fd67f8e4f9d9a9df4481e4` were pushed to `main`. The latest verified push had `HEAD = origin/main` and no dirty files. Sentry release commit association is still absent for the Public/Admin SHA; details and the bounded attempts are in the evidence receipt. The VM's external hostname lookup failed, but all local route probes passed. The next session can begin with post-deploy browser acceptance; do not rebuild or repeat unchanged financial/SIWE/Binary/Support acceptance.
+
 ---
 
 ## HISTORICAL RELEASE-PREPARATION FRONTIER — superseded by the release execution above
