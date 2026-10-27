@@ -12,6 +12,13 @@ const response = (body: unknown, status = 200) => ({
 describe('MarketAssetMetadataService', () => {
   afterEach(() => jest.restoreAllMocks());
 
+  it('decodes metadata HTML entities only once, including ampersand-prefixed entities', () => {
+    const { normalizeMetadataText } = require('../../src/market/market-asset-metadata.mapper');
+    expect(normalizeMetadataText('AT&amp;T')).toBe('AT&T');
+    expect(normalizeMetadataText('&amp;lt;script&amp;gt;')).toBe('&lt;script&gt;');
+    expect(normalizeMetadataText('&amp;quot;')).toBe('&quot;');
+  });
+
   it('routes metadata by canonical category to the approved provider adapters', async () => {
     const requested: string[] = [];
     jest.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
