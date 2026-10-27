@@ -41,3 +41,12 @@ jobs:
         uses: github/codeql-action/analyze@v4
         with:
           category: nexi/${{ matrix.language }}
+          output: codeql-results
+      - name: Save CodeQL SARIF evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nexi-codeql-sarif-${{ matrix.language }}
+          path: codeql-results/
+          retention-days: 7
+          if-no-files-found: warn
