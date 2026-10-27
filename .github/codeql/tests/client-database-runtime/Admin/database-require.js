@@ -1,1 +1,1 @@
-const database = require("@prisma/client");
+void require("@prisma/client");

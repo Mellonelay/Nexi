@@ -1,1 +1,1 @@
-const workers = require("cloudflare:workers");
+void require("cloudflare:workers");

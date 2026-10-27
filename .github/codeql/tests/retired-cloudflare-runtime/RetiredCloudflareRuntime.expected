@@ -1,4 +1,4 @@
 | Admin/cloudflare-reexport.js:1:24:1:50 | "@cloud ... -types" | Active NEXI source references a retired Cloudflare Worker runtime module. Use the current VPS/NestJS ownership contract. |
 | backend/cloudflare-bulk-reexport.js:1:15:1:34 | "cloudflare:workers" | Active NEXI source references a retired Cloudflare Worker runtime module. Use the current VPS/NestJS ownership contract. |
 | backend/retired-worker-import.js:1:8:1:27 | "cloudflare:workers" | Active NEXI source references a retired Cloudflare Worker runtime module. Use the current VPS/NestJS ownership contract. |
-| frontend/cloudflare-require.js:1:25:1:44 | "cloudflare:workers" | Active NEXI source references a retired Cloudflare Worker runtime module. Use the current VPS/NestJS ownership contract. |
+| frontend/cloudflare-require.js:1:14:1:33 | "cloudflare:workers" | Active NEXI source references a retired Cloudflare Worker runtime module. Use the current VPS/NestJS ownership contract. |
