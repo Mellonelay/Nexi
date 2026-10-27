@@ -97,7 +97,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: NestJS Doctor — backend source, advisory
-        uses: RoloBits/nestjs-doctor@v1
+        uses: RoloBits/nestjs-doctor@bfc83dafb95b59d45d879d8756f01c1cf89054ab # v1
         with:
           directory: backend
           scope: changed
@@ -116,7 +116,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Fallow — monorepo source analysis
-        uses: fallow-rs/fallow@v3
+        uses: fallow-rs/fallow@3c6e45b55ae60a52caa2b586ea3fae44f3e5a44e # v3
         with:
           root: .
           config: .fallowrc.jsonc
@@ -177,7 +177,7 @@ jobs:
         working-directory: Admin
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with:
           version: '12.14.0'
           run_install: false
