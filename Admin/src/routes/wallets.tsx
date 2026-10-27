@@ -19,7 +19,7 @@ import { Wallet } from "lucide-react";
 
 export const Route = createFileRoute("/wallets")({ component: Page });
 
-const DOMAINS: WalletDomain[] = ["overview", "spot", "option", "funding", "financial"];
+const DOMAINS: WalletDomain[] = ["overview", "spot", "margin", "option", "funding", "financial"];
 
 function Page() {
   return (
@@ -75,10 +75,6 @@ function Inner() {
       </Shell>
     );
 
-  const totalValue = wallets
-    .filter((w) => w.domain === "overview")
-    .reduce((n, w) => n + Number(w.estimatedValue ?? 0), 0);
-
   const columns: DataTableColumn<WalletRow>[] = [
     {
       key: "user",
@@ -121,7 +117,7 @@ function Inner() {
       header: "Est. value (USDT)",
       align: "right",
       sortValue: (w) => Number(w.estimatedValue ?? 0),
-      cell: (w) => <span className="mono text-xs">{fmt(w.estimatedValue ?? "0")}</span>,
+      cell: (w) => <span className="mono text-xs">{w.estimatedValue === undefined ? "—" : fmt(w.estimatedValue)}</span>,
     },
     {
       key: "updated",
@@ -164,7 +160,7 @@ function Inner() {
   ];
 
   return (
-    <Shell total={wallets.length} totalValue={totalValue}>
+    <Shell total={wallets.length}>
       <p className="text-xs text-muted-foreground">
         Wallets are read-only in the admin plane. Balance edits happen through governed workflows
         (deposits, withdrawals, reconciliation) — not through direct writes here.
@@ -233,7 +229,7 @@ function Inner() {
                     { label: "Locked", value: selected.locked, mono: true },
                     {
                       label: "Estimated value (USDT)",
-                      value: fmt(selected.estimatedValue ?? "0"),
+                      value: selected.estimatedValue === undefined ? "—" : fmt(selected.estimatedValue),
                       mono: true,
                     },
                     {
@@ -298,28 +294,21 @@ function Inner() {
 function Shell({
   children,
   total,
-  totalValue,
 }: {
   children: React.ReactNode;
   total?: number;
-  totalValue?: number;
 }) {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Wallets"
-        description="Domains: Overview · Spot · Option · Funding · Financial. Inspect balances and linked activity. No direct balance-edit UI."
+        description="Domains: Funding · Spot · Margin · Option · Financial. Inspect balances and linked activity. No direct balance-edit UI."
         badges={
           <>
             <ProviderBadge />
             {total !== undefined ? (
               <StatusBadge tone="info" dot={false}>
                 {total} rows
-              </StatusBadge>
-            ) : null}
-            {totalValue !== undefined ? (
-              <StatusBadge tone="primary" dot={false}>
-                Overview aggregate ≈ {fmt(String(totalValue))} USDT
               </StatusBadge>
             ) : null}
           </>
@@ -425,6 +414,8 @@ function domainTone(d: WalletDomain) {
       return "primary" as const;
     case "spot":
       return "info" as const;
+    case "margin":
+      return "warning" as const;
     case "option":
       return "warning" as const;
     case "funding":
@@ -461,6 +452,8 @@ function typeTone(t: import("@/admin/types").LedgerOperationType) {
       return "warning" as const;
     case "adjustment":
       return "warning" as const;
+    case "posting":
+      return "neutral" as const;
   }
 }
 function amountClass(amount: string) {

@@ -276,14 +276,16 @@ export class CommunicationsController {
     return this.service.resolveMessageModeration(id, req.user.userId, dto);
   }
   @Get("admin/notifications")
-  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
   @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
+  @RequireAdminPermission("notifications.view")
   adminNotifications(@Query() q: PageQueryDto) { return this.service.adminNotifications(q.page, q.limit); }
   @Post("admin/notifications")
-  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
   @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
+  @RequireAdminPermission("notifications.send")
   sendAdminNotification(@Body() dto: SendNotificationDto) { return this.service.sendAdminNotification(dto); }
   @Get("admin/learn/articles")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)

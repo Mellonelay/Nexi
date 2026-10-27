@@ -3,12 +3,30 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { reorderByIds } from "../src/admin/data/banner-order.ts";
 import { ALL_ROUTES, findRoute, NAV_GROUPS } from "../src/admin/config/navigation.ts";
-import { mapBinaryPositionStatus } from "../src/admin/types/index.ts";
+import { mapBinaryPositionStatus, mapLedgerScope, mapWalletAccount, mapLedgerPosting } from "../src/admin/types/index.ts";
 import { isPublishedAnnouncement } from "../src/admin/data/announcement-status.ts";
 import { isOngoingBinaryPositionStatus } from "../src/admin/data/binary-position-view.ts";
 import { groupAdminMessageConversations } from "../src/admin/data/message-conversations.ts";
 import { buildOverviewWorkItems } from "../src/admin/data/overview-work-items.ts";
 import { learnCategoryStatusUpdate } from "../src/admin/data/learn-category-status.ts";
+
+test("ledger scope mapping preserves all canonical wallet accounts", () => {
+  assert.deepEqual(["MAIN", "SPOT", "MARGIN", "BINARY", "FINANCE"].map(mapLedgerScope),
+    ["funding", "spot", "margin", "option", "financial"]);
+  assert.equal(mapLedgerScope("UNKNOWN"), undefined);
+});
+
+test("Admin wallet and ledger rows preserve canonical balances, scope and owner", () => {
+  const account = { id: "account-1", userId: "user-1", asset: "USDT", scope: "MARGIN", status: "ACTIVE", available: "12.50", locked: "2.00" };
+  assert.deepEqual(mapWalletAccount(account), { id: "account-1", userId: "user-1", asset: "USDT", domain: "margin", status: "active", available: "12.50", locked: "2.00", updatedAt: undefined });
+  const posting = { id: "posting-1", userId: "user-1", scope: "MARGIN", asset: "USDT", amount: "2.00", kind: "DEBIT", createdAt: "2026-10-27T00:00:00Z", referenceId: "ref-1", referenceType: "MARGIN_INTEREST" };
+  assert.deepEqual(mapLedgerPosting(posting), { id: "posting-1", userId: "user-1", domain: "margin", asset: "USDT", amount: "2.00", type: "posting", ts: posting.createdAt, refId: "ref-1", note: "DEBIT · MARGIN_INTEREST", debit: "2.00", credit: undefined, status: "posted" });
+  const { userId, scope, ...nestedPosting } = posting;
+  assert.equal(mapLedgerPosting({ ...nestedPosting, account: { userId, scope } })?.userId, "user-1");
+  assert.equal(mapWalletAccount({ ...account, scope: "UNKNOWN" }), undefined);
+  assert.equal(mapWalletAccount({ ...account, status: "__proto__" }), undefined);
+  assert.equal(mapLedgerPosting({ ...posting, scope: "UNKNOWN" }), undefined);
+});
 
 test("reorders banners by a complete ID permutation and preserves each record", () => {
   const banners = [

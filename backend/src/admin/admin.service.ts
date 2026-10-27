@@ -1806,9 +1806,10 @@ export class AdminService {
 
   async getAdminWallets() {
     if (this.d1?.isEnabled()) return this.d1.listAdminWallets();
-    return this.prisma.wallet.findMany({
-      include: { user: true },
-      orderBy: { updatedAt: "desc" },
+    return this.prisma.ledgerAccount.findMany({
+      select: { id: true, userId: true, asset: true, scope: true, status: true, available: true, locked: true, updatedAt: true },
+      orderBy: [{ updatedAt: "desc" }, { id: "asc" }],
+      take: 500,
     });
   }
 

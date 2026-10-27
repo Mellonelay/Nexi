@@ -3,6 +3,7 @@ A live source comparison is not a consistent point-in-time cutover snapshot.
 """
 from pathlib import Path
 import sqlite3, subprocess, json, hashlib, decimal, datetime, sys
+from reconcile_sql import quote_existing_table
 ROOT=Path(__file__).resolve().parent
 DB=Path('/home/mellonelay1999/nexi-migration-snapshots/nexi-core-restored-20261016.sqlite')
 SOURCE='522177fa-ac42-4d8f-a6a8-b34eed262f15'
@@ -29,7 +30,13 @@ report={'startedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'sc
 out=ROOT/'evidence/small-table-content-reconciliation.json'
 for start in range(0,len(inventory),10):
     group=inventory[start:start+10]
-    batch=[{'sql':'SELECT * FROM "'+x['table']+'" LIMIT 1001','params':[]} for x in group]
+    quoted_tables={x['table']:quote_existing_table(d,x['table']) for x in group}
+    for entry in group:
+        columns=[column['name'] for column in entry['columns']]
+        available={row['name'] for row in d.execute(f"PRAGMA table_info({quoted_tables[entry['table']]})")}
+        if len(columns)!=len(set(columns)) or any(not isinstance(column,str) or column not in available for column in columns):
+            raise RuntimeError('Unexpected reconciliation columns for '+entry['table'])
+    batch=[{'sql':f'SELECT * FROM {quoted_tables[x["table"]]} LIMIT 1001','params':[]} for x in group]
     p=subprocess.run(['cf','-q','d1','query',SOURCE,'--batch',json.dumps(batch)],capture_output=True,text=True,timeout=120)
     if p.returncode:raise RuntimeError('CF query failed for batch '+str(start//10)+': '+p.stderr[:180])
     remote=json.loads(p.stdout)
@@ -37,7 +44,7 @@ for start in range(0,len(inventory),10):
     for entry,result in zip(group,remote):
         if result.get('success') is False:raise RuntimeError('D1 query failed')
         rows=result['results'];cols=[c['name'] for c in entry['columns']]
-        left=digest([dict(x) for x in d.execute('SELECT * FROM "'+entry['table']+'"')],cols)
+        left=digest([dict(x) for x in d.execute(f'SELECT * FROM {quoted_tables[entry["table"]]}')],cols)
         right=digest(rows,cols)
         report['tables'].append({'table':entry['table'],'local':left,'source':right,'equal':left==right,'truncated':len(rows)>=1001})
     out.write_text(json.dumps(report,indent=2)+'\n')

@@ -1,4 +1,13 @@
 import { AuthController } from '../../src/auth/auth.controller';
+import { GUARDS_METADATA } from '@nestjs/common/constants';
+import { AUTH_RATE_LIMIT_OPERATION } from '../../src/auth/auth-rate-limit.decorator';
+import { AuthRateLimitGuard } from '../../src/auth/auth-rate-limit.guard';
+import { AuthService } from '../../src/auth/auth.service';
+import { WalletAuthService } from '../../src/auth/wallet-auth.service';
+import { RedisRateLimitService } from '../../src/auth/redis-rate-limit.service';
+import { Test } from '@nestjs/testing';
+import type { NestExpressApplication } from '@nestjs/platform-express';
+import request from 'supertest';
 
 function responseDouble() {
   return {
@@ -8,6 +17,47 @@ function responseDouble() {
 }
 
 describe('Public authentication controller contract', () => {
+  it.each([
+    ['walletChallenge', 'wallet-challenge'],
+    ['walletVerify', 'wallet-verify'],
+  ] as const)('protects %s with its own rate limit', (method, operation) => {
+    const handler = AuthController.prototype[method];
+    expect(Reflect.getMetadata(GUARDS_METADATA, handler)).toContain(AuthRateLimitGuard);
+    expect(Reflect.getMetadata(AUTH_RATE_LIMIT_OPERATION, handler)).toBe(operation);
+  });
+
+  it('limits wallet requests per forwarded client and fails closed when the limiter fails', async () => {
+    const counts = new Map<string, number>();
+    const consume = jest.fn().mockImplementation(async (key: string, limit: number) => {
+      const count = (counts.get(key) ?? 0) + 1;
+      counts.set(key, count);
+      return { allowed: count <= limit };
+    });
+    const module = await Test.createTestingModule({
+      controllers: [AuthController],
+      providers: [AuthRateLimitGuard, { provide: RedisRateLimitService, useValue: { consume } },
+        { provide: AuthService, useValue: {} },
+        { provide: WalletAuthService, useValue: {
+          createChallenge: jest.fn().mockResolvedValue({}),
+          verifyChallenge: jest.fn().mockResolvedValue({ access_token: 'access', refresh_token: 'refresh' }),
+        } }],
+    }).compile();
+    const app = module.createNestApplication<NestExpressApplication>();
+    app.set('trust proxy', 'loopback');
+    await app.init();
+    try {
+      for (let i = 0; i < 20; i += 1) {
+        await request(app.getHttpServer()).post('/auth/wallet/challenge').set('X-Forwarded-For', '198.51.100.2, 203.0.113.10').send({}).expect(201);
+      }
+      await request(app.getHttpServer()).post('/auth/wallet/challenge').set('X-Forwarded-For', '198.51.100.3, 203.0.113.10').send({}).expect(429);
+      await request(app.getHttpServer()).post('/auth/wallet/verify').set('X-Forwarded-For', '203.0.113.10').send({}).expect(201);
+      await request(app.getHttpServer()).post('/auth/wallet/challenge').set('X-Forwarded-For', '203.0.113.11').send({}).expect(201);
+      consume.mockRejectedValueOnce(new Error('unavailable'));
+      await request(app.getHttpServer()).post('/auth/wallet/challenge').set('X-Forwarded-For', '203.0.113.12').send({}).expect(503);
+    } finally {
+      await app.close();
+    }
+  });
   it('does not expose public email/password login or signup routes', () => {
     const controller = new AuthController({} as never);
 

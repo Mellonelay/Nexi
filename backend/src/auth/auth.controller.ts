@@ -85,6 +85,8 @@ export class AuthController {
   ) {}
 
   @Post("wallet/challenge")
+  @AuthRateLimit("wallet-challenge")
+  @UseGuards(AuthRateLimitGuard)
   async walletChallenge(@Body() body: WalletChallengeDto) {
     if (!this.walletAuthService)
       throw new ServiceUnavailableException(
@@ -94,6 +96,8 @@ export class AuthController {
   }
 
   @Post("wallet/verify")
+  @AuthRateLimit("wallet-verify")
+  @UseGuards(AuthRateLimitGuard)
   async walletVerify(
     @Body() body: WalletVerifyDto,
     @Request()

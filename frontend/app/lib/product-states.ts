@@ -26,7 +26,7 @@ export function productStateLabel(state: string): string {
   return normalized ? normalized[0].toUpperCase() + normalized.slice(1) : 'Not available';
 }
 
-export const WALLET_DOMAINS = ['OVERVIEW', 'FUNDING', 'SPOT', 'BINARY', 'FINANCE'] as const;
+export const WALLET_DOMAINS = ['OVERVIEW', 'FUNDING', 'SPOT', 'MARGIN', 'BINARY', 'FINANCE'] as const;
 export type WalletDomain = (typeof WALLET_DOMAINS)[number];
 
 export const EXTERNAL_WALLET_STATES = [

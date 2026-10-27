@@ -420,7 +420,18 @@ export function mapBinaryInternal(dir: "long" | "short"): "UP" | "DOWN" {
   return dir === "long" ? "UP" : "DOWN";
 }
 
-export type WalletDomain = "overview" | "spot" | "option" | "funding" | "financial";
+export type WalletDomain = "overview" | "spot" | "margin" | "option" | "funding" | "financial";
+
+export function mapLedgerScope(scope: unknown): WalletDomain | undefined {
+  switch (scope) {
+    case "MAIN": return "funding";
+    case "SPOT": return "spot";
+    case "MARGIN": return "margin";
+    case "BINARY": return "option";
+    case "FINANCE": return "financial";
+    default: return undefined;
+  }
+}
 
 export type WalletStatus = "active" | "frozen" | "closed" | "maintenance";
 
@@ -438,7 +449,7 @@ export interface WalletRow {
 }
 
 export type LedgerOperationType =
-  "deposit" | "withdrawal" | "trade" | "settlement" | "adjustment" | "fee" | "reward";
+  "deposit" | "withdrawal" | "trade" | "settlement" | "adjustment" | "fee" | "reward" | "posting";
 
 export type LedgerStatus = "posted" | "reversed" | "pending";
 
@@ -459,6 +470,33 @@ export interface LedgerEntry {
   balance?: string;
   status?: LedgerStatus;
   reason?: string;
+}
+
+export function mapWalletAccount(value: unknown): WalletRow | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const row = value as Record<string, unknown>;
+  const domain = mapLedgerScope(row.scope);
+  const status = row.status === "ACTIVE" ? "active" : row.status === "SUSPENDED" ? "frozen" : row.status === "CLOSED" ? "closed" : undefined;
+  if (!domain || !status || typeof row.id !== "string" || !row.id || typeof row.userId !== "string" || !row.userId ||
+      typeof row.asset !== "string" || !row.asset || typeof row.available !== "string" || typeof row.locked !== "string") return undefined;
+  return { id: row.id, userId: row.userId, domain, asset: row.asset, available: row.available, locked: row.locked,
+    updatedAt: typeof row.updatedAt === "string" ? row.updatedAt : undefined, status };
+}
+
+export function mapLedgerPosting(value: unknown): LedgerEntry | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const row = value as Record<string, unknown>;
+  const account = row.account && typeof row.account === "object" ? row.account as Record<string, unknown> : {};
+  const domain = mapLedgerScope(row.scope ?? account.scope);
+  const userId = row.userId ?? account.userId;
+  if (!domain || typeof userId !== "string" || !userId || typeof row.id !== "string" || !row.id ||
+      typeof row.asset !== "string" || !row.asset || typeof row.amount !== "string" ||
+      typeof row.createdAt !== "string" || typeof row.referenceId !== "string" || typeof row.kind !== "string") return undefined;
+  return { id: row.id, ts: row.createdAt, userId, domain, asset: row.asset, amount: row.amount,
+    type: row.kind === "SETTLEMENT" ? "settlement" : "posting", refId: row.referenceId,
+    note: typeof row.referenceType === "string" ? `${row.kind} · ${row.referenceType}` : row.kind,
+    debit: row.kind === "DEBIT" ? row.amount : undefined, credit: row.kind === "CREDIT" ? row.amount : undefined,
+    status: "posted" };
 }
 
 export type DepositStatus =

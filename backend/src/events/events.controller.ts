@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
   BadRequestException,
 } from "@nestjs/common";
-import { ApiTags } from "@nestjs/swagger";
+import { ApiHeader, ApiTags } from "@nestjs/swagger";
 import { ConfigService } from "@nestjs/config";
 import { createHmac, timingSafeEqual } from "crypto";
 import { EventOutboxService } from "./event-outbox.service";
@@ -22,6 +22,16 @@ export class EventsController {
     private readonly config: ConfigService,
   ) {}
 
+  @ApiHeader({
+    name: "x-nexi-event-signature",
+    description:
+      "Lowercase hex HMAC-SHA256 using JWT_SECRET over UTF-8 `${timestampHeader}:${JSON.stringify(parsedJsonBody)}`.",
+  })
+  @ApiHeader({
+    name: "x-nexi-event-timestamp",
+    description:
+      "Unix epoch timestamp in milliseconds as a decimal string; accepted within five minutes of server time.",
+  })
   @Post("queue")
   async ingestQueue(
     @Body() body: unknown,
@@ -50,9 +60,7 @@ export class EventsController {
       throw new BadRequestException("Invalid queue envelope");
     }
     this.assertWorkerSignature(
-      queue,
-      messageId,
-      event,
+      input,
       signature,
       timestampHeader,
     );
@@ -65,9 +73,7 @@ export class EventsController {
   }
 
   private assertWorkerSignature(
-    queue: string,
-    messageId: string,
-    event: NexiEventEnvelope,
+    body: Record<string, unknown>,
     signature: string | undefined,
     timestampHeader: string | undefined,
   ): void {
@@ -82,7 +88,7 @@ export class EventsController {
       throw new UnauthorizedException("Queue ingress authentication failed");
     }
     const expected = createHmac("sha256", secret)
-      .update(`${timestamp}:${queue}:${messageId}:${event.idempotencyKey}`)
+      .update(`${timestampHeader}:${JSON.stringify(body)}`)
       .digest("hex");
     const actual = Buffer.from(signature, "hex");
     const expectedBuffer = Buffer.from(expected, "hex");

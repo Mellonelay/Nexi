@@ -27,8 +27,9 @@ const OP_TYPES: LedgerOperationType[] = [
   "adjustment",
   "fee",
   "reward",
+  "posting",
 ];
-const DOMAINS: WalletDomain[] = ["overview", "spot", "option", "funding", "financial"];
+const DOMAINS: WalletDomain[] = ["overview", "spot", "margin", "option", "funding", "financial"];
 
 function Page() {
   return (
@@ -388,6 +389,8 @@ function typeTone(t: LedgerOperationType) {
       return "warning" as const;
     case "adjustment":
       return "warning" as const;
+    case "posting":
+      return "neutral" as const;
   }
 }
 function statusTone(s: LedgerStatus | undefined) {

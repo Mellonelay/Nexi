@@ -30,6 +30,8 @@ const AUTH_RATE_LIMIT_POLICIES: Record<AuthRateLimitOperation, AuthRateLimitPoli
   refresh: { ipLimit: 20, accountLimit: 5, windowSeconds: 60 },
   'admin-refresh': { ipLimit: 10, accountLimit: 3, windowSeconds: 60 },
   'message-attachment': { ipLimit: 12, accountLimit: 8, windowSeconds: 60 },
+  'wallet-challenge': { ipLimit: 20, accountLimit: 5, windowSeconds: 60 },
+  'wallet-verify': { ipLimit: 20, accountLimit: 5, windowSeconds: 60 },
 };
 
 export class AuthRateLimitExceededException extends HttpException {

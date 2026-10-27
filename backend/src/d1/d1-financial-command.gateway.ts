@@ -3298,7 +3298,7 @@ export class D1FinancialCommandGateway {
   async listAdminWallets(): Promise<Record<string, unknown>[]> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const result = await this.bridge.select<Record<string, unknown>>(
-      `SELECT w.*,u."email" FROM "Wallet" w LEFT JOIN "User" u ON u."id"=w."userId" ORDER BY w."updatedAt" DESC LIMIT 500`,
+      `SELECT "id","userId","asset","scope","status","available","locked","updatedAt" FROM "LedgerAccount" ORDER BY "updatedAt" DESC, "id" ASC LIMIT 500`,
       [],
     );
     return result.results;

@@ -4,6 +4,8 @@ import { AuthSurfaceGuard } from '../../src/auth/auth-surface.guard';
 import { AUTH_SURFACE_METADATA } from '../../src/auth/auth-surface.decorator';
 import { AuthSurface } from '../../src/auth/auth.types';
 import { JwtAuthGuard } from '../../src/auth/jwt-auth.guard';
+import { AdminPermissionGuard } from '../../src/admin/admin-permission.guard';
+import { ADMIN_PERMISSION_KEY } from '../../src/admin/admin-permission.decorator';
 
 const expectedSurface: Record<string, AuthSurface> = {
   supportThread: 'PUBLIC',
@@ -55,5 +57,16 @@ describe('CommunicationsController authentication surfaces', () => {
     expect(guards).toContain(JwtAuthGuard);
     expect(guards).toContain(AuthSurfaceGuard);
     expect(Reflect.getMetadata(AUTH_SURFACE_METADATA, handler)).toBe(surface);
+  });
+
+  it.each([
+    ['adminNotifications', 'notifications.view'],
+    ['sendAdminNotification', 'notifications.send'],
+  ])('%s requires the %s permission', (name, permission) => {
+    const handler = controller[name as keyof typeof controller];
+    const guards = Reflect.getMetadata(GUARDS_METADATA, handler) as unknown[] | undefined;
+
+    expect(guards).toContain(AdminPermissionGuard);
+    expect(Reflect.getMetadata(ADMIN_PERMISSION_KEY, handler)).toBe(permission);
   });
 });

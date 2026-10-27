@@ -81,6 +81,31 @@ describe("D1FinancialCommandGateway", () => {
     }
   });
 
+  it("returns canonical ledger accounts rather than legacy wallet balances for Admin", async () => {
+    const db = new Database(":memory:");
+    db.exec(`
+      CREATE TABLE "Wallet" ("id" TEXT, "userId" TEXT, "balance" TEXT, "updatedAt" TEXT);
+      CREATE TABLE "LedgerAccount" ("id" TEXT, "userId" TEXT, "asset" TEXT, "scope" TEXT, "status" TEXT, "available" TEXT, "locked" TEXT, "updatedAt" TEXT);
+      CREATE TABLE "LedgerPosting" ("id" TEXT, "accountId" TEXT, "asset" TEXT, "kind" TEXT, "amount" TEXT, "referenceId" TEXT, "createdAt" TEXT);
+      CREATE TABLE "User" ("id" TEXT, "email" TEXT);
+      INSERT INTO "User" VALUES ('user-1', 'u@example.test');
+      INSERT INTO "Wallet" VALUES ('legacy', 'user-1', '999', '2026-01-01');
+      INSERT INTO "LedgerAccount" VALUES ('account-1', 'user-1', 'USDT', 'MARGIN', 'ACTIVE', '12.50', '2.00', '2026-01-02');
+      INSERT INTO "LedgerPosting" VALUES ('posting-1', 'account-1', 'USDT', 'DEBIT', '2.00', 'ref-1', '2026-01-02');
+    `);
+    const bridge = createBridge({ select: jest.fn(async (sql: string) => ({ results: db.prepare(sql).all() })) });
+    try {
+      await expect(new D1FinancialCommandGateway(bridge).listAdminWallets()).resolves.toEqual([
+        expect.objectContaining({ id: 'account-1', userId: 'user-1', asset: 'USDT', scope: 'MARGIN', available: '12.50', locked: '2.00' }),
+      ]);
+      await expect(new D1FinancialCommandGateway(bridge).listAdminLedger()).resolves.toEqual([
+        expect.objectContaining({ id: 'posting-1', userId: 'user-1', asset: 'USDT', scope: 'MARGIN', amount: '2.00' }),
+      ]);
+    } finally {
+      db.close();
+    }
+  });
+
   describe("financial quote freshness", () => {
     const now = Date.parse("2026-10-08T01:00:00Z");
     let clock: jest.SpyInstance;

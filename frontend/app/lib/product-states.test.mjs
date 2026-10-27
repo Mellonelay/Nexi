@@ -64,7 +64,7 @@ test('external wallet state accepts only governed connection states', () => {
 });
 
 test('wallet domains stay locked to the active product-owned sections', () => {
-  assert.deepEqual(WALLET_DOMAINS, ['OVERVIEW', 'FUNDING', 'SPOT', 'BINARY', 'FINANCE']);
+  assert.deepEqual(WALLET_DOMAINS, ['OVERVIEW', 'FUNDING', 'SPOT', 'MARGIN', 'BINARY', 'FINANCE']);
 });
 
 test('configured endpoint templates never invent missing routes', () => {

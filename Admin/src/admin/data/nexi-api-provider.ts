@@ -55,7 +55,7 @@ import type {
 } from "../types";
 import { io } from "socket.io-client";
 import { reorderByIds } from "./banner-order";
-import { mapBinaryPositionStatus } from "../types";
+import { mapBinaryPositionStatus, mapWalletAccount, mapLedgerPosting } from "../types";
 import { isPublishedAnnouncement } from "./announcement-status";
 
 type ApiConfig = { baseUrl: string; getToken: () => Promise<string> };
@@ -1077,46 +1077,18 @@ export class NexiAdminApiProvider implements AdminDataProvider {
   listWallets(): Promise<WalletRow[]> {
     return this.request<unknown[]>("/admin/wallets").then((rows) =>
       rows.map((value) => {
-        const row = record(value);
-        return {
-          id: stringValue(row.id),
-          userId: stringValue(row.userId),
-          domain: "overview",
-          asset: "MULTI",
-          available: stringValue(row.balance),
-          locked: stringValue(row.frozenBalance),
-          updatedAt: stringValue(row.updatedAt, new Date(0).toISOString()),
-          status: "active",
-        } as WalletRow;
+        const account = mapWalletAccount(value);
+        if (!account) throw new NexiAdminApiError(502, "Admin API returned an invalid ledger account");
+        return account;
       }),
     );
   }
   listLedger(): Promise<LedgerEntry[]> {
     return this.request<unknown[]>("/admin/ledger").then((rows) =>
       rows.map((value) => {
-        const row = record(value);
-        const account = record(row.account);
-        const kind = stringValue(row.kind).toLowerCase();
-        return {
-          id: stringValue(row.id),
-          ts: stringValue(row.createdAt, new Date(0).toISOString()),
-          userId: typeof account.userId === "string" ? account.userId : undefined,
-          domain: "financial",
-          asset: stringValue(row.asset),
-          amount: stringValue(row.amount),
-          type: kind.includes("deposit")
-            ? "deposit"
-            : kind.includes("withdraw")
-              ? "withdrawal"
-              : kind.includes("trade")
-                ? "trade"
-                : kind.includes("fee")
-                  ? "fee"
-                  : "adjustment",
-          refId: stringValue(row.referenceId),
-          note: undefined,
-          status: "posted",
-        } as LedgerEntry;
+        const posting = mapLedgerPosting(value);
+        if (!posting) throw new NexiAdminApiError(502, "Admin API returned an invalid ledger posting");
+        return posting;
       }),
     );
   }

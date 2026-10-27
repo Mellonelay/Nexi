@@ -2,6 +2,7 @@
 import "./instrument";
 
 import { NestFactory } from "@nestjs/core";
+import type { NestExpressApplication } from "@nestjs/platform-express";
 import { AppModule } from "./app.module";
 import { ConsoleLogger, ValidationPipe } from "@nestjs/common";
 import { RedisIoAdapter } from "./prisma/redis-io.adapter";
@@ -10,9 +11,10 @@ import { resolveRuntimeConfig } from "./runtime/runtime.config";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 
 export async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: new ConsoleLogger({ forceConsole: true }),
   });
+  app.set("trust proxy", "loopback");
   const runtimeConfig = resolveRuntimeConfig();
   const openApiConfig = new DocumentBuilder()
     .setTitle("NEXI API")
