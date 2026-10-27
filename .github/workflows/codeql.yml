@@ -36,7 +36,7 @@ jobs:
         uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
-          queries: ${{ matrix.language == 'javascript-typescript' && 'security-and-quality,./.github/codeql/queries/RetiredCloudflareRuntime.ql' || 'security-and-quality' }}
+          queries: ${{ matrix.language == 'javascript-typescript' && 'security-and-quality,./.github/codeql/queries/RetiredCloudflareRuntime.ql,./.github/codeql/queries/ClientDatabaseRuntime.ql' || 'security-and-quality' }}
       - name: Analyze and upload SARIF
         uses: github/codeql-action/analyze@v4
         with:
