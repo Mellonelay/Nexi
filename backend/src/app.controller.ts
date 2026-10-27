@@ -76,7 +76,7 @@ export class AppController {
   // Bulk prices endpoint for frontend hook
   @Get("market/prices")
   async getAllPrices() {
-    return this.marketAuthority?.getPrices() ?? [];
+    return this.marketAuthority ? await this.marketAuthority.getPrices() : [];
   }
 
   @Get("health")
