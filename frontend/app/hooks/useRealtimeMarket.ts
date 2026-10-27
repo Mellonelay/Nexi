@@ -82,12 +82,9 @@ export function useRealtimeMarket(symbol: string, interval = "1m") {
     setSnapshot({ ...EMPTY_STREAM_SNAPSHOT, status: "CONNECTING" });
 
     const initialize = async () => {
-      let initial = EMPTY_STREAM_SNAPSHOT;
-      try {
-        initial = await loadBaseline(symbol, interval);
-      } catch {
-        initial = EMPTY_STREAM_SNAPSHOT;
-      }
+      const initial = await loadBaseline(symbol, interval).catch(
+        () => EMPTY_STREAM_SNAPSHOT,
+      );
       if (disposed) return;
       setSnapshot(initial);
       const apiUrl = apiBaseUrl;
