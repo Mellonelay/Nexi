@@ -14,7 +14,6 @@
     "test:standalone-assets": "node --test scripts/prepare-standalone-assets.test.mjs"
   },
   "dependencies": {
-    "@coinbase/wallet-sdk": "^4.3.7",
     "@radix-ui/react-dialog": "^1.1.23",
     "@radix-ui/react-dropdown-menu": "^2.1.24",
     "@radix-ui/react-tooltip": "^1.2.16",
@@ -24,13 +23,11 @@
     "axios": "^1.20.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "ethers": "^6.16.0",
     "framer-motion": "^11.18.2",
     "geist": "^1.7.2",
     "lightweight-charts": "^4.1.0",
     "lucide-react": "^1.47.0",
     "next": "16.4.1",
-    "pino-pretty": "^13.2.0",
     "qrcode.react": "4.2.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",

@@ -15,7 +15,6 @@ async function publicApplicationSources() {
     'app/signup/page.tsx',
     'app/components/AccountIdentityHeader.tsx',
     'app/components/NotificationsPanel.tsx',
-    'app/components/WalletAccessGate.tsx',
     'app/components/WalletConnectControl.tsx',
     'app/dashboard/binary/page.tsx',
     'app/dashboard/loans/page.tsx',
@@ -121,12 +120,4 @@ test('public refresh uses the HttpOnly cookie contract and never accepts a brows
 test('public dashboard shell is not globally blocked on wallet-environment detection', async () => {
   const layout = await source('app/dashboard/layout.tsx');
   assert.doesNotMatch(layout, /WalletAccessGate/);
-});
-
-test('wallet environment QA bypass is explicit and impossible in production builds', async () => {
-  const gate = await source('app/components/WalletAccessGate.tsx');
-  assert.match(gate, /NODE_ENV\s*!==\s*['"]production['"]/);
-  assert.match(gate, /NEXT_PUBLIC_NEXI_UI_QA_BYPASS_WALLET_ENVIRONMENT/);
-  assert.match(gate, /===\s*['"]1['"]/);
-  assert.match(gate, /uiQaBypassWalletEnvironment[\s\S]*return <>{children}<\/>/);
 });
