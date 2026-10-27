@@ -1056,3 +1056,11 @@ Evidence: [coordinated release checkpoint](evidence/nexi-coordinated-release-che
 - [x] Focused Backend communications/config/attachment tests, Admin support-contact source tests and typecheck, Public communications/UI contracts, Next route type generation + TypeScript, targeted ESLint, Graphify topology paths, Fallow scoped analysis, and `git diff --check` are recorded in [the source receipt](evidence/nexi-support-chat-source-implementation-20261024.md).
 - [ ] Not committed, built, deployed, or browser-verified. P3.2 remains OPEN for an authorized controlled Public send → Admin reply → same Public thread history/read-state/reconnect acceptance. No real customer messages, production message writes, or financial operations were performed.
 - [x] Targeted `viem` dependency resolver follow-up: pinned Node 24.21.0 resolved `ws@8.18.3` from canonical `viem`, `ws@8.21.0` from `engine.io`, and nested `ws@8.18.3` from `socket.io-adapter`. No source-reachable viem receiver was demonstrated; resolver output does not prove loaded runtime behavior. No package change; see `tasks/evidence/nexi-ws-viem-reachability-20261026.md`.
+
+
+## 2026-10-27 — VPS tool and historical export hygiene
+
+- [x] Remove stale BrowserStack, filesystem and Polypane shared-MCP registrations and retired owner-scoped binaries after checking active processes and current Chrome DevTools route.
+- [x] Remove only two historical pre-cutover D1 exports (1,638,806,801 bytes), retaining import manifest and live SQLite/Valkey; record irrecoverable loss of these historical copies in `NEXI_CURRENT_STATE.md`.
+- [x] Preserve active dependency stores, Codex session state and current browser-testing route; root free capacity increased to 5.5G (89% used). All three services remained active.
+- [ ] Browser acceptance and remaining release verification remain separate; tool cleanup is not acceptance proof.
