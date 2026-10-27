@@ -22,6 +22,12 @@ Follow the root `AGENTS.md` **Canonical Worker-0 Build and Release Contract** fo
 
 This explicit command is the canonical Worker-0 build: it uses the required Webpack mode and runs the package's standalone-assets step. Restart only Public after a successful build. Verify the release marker, actual HTTPS pages and API consumers, process stability, and Sentry release/source-map association before moving to another surface. Keep the verified rollback until acceptance; restore it if defined health checks fail.
 
+## DEPENDENCY FAILURE TRIAGE — POST-RELEASE 2026-10-27
+
+The three canonical physical dependency stores are independent; do not infer a dependency-install failure solely from a Webpack optional-import warning. Before installing or changing lockfiles, classify the exact importing package, configured/reachable connector path, manifest/lock resolution, installed package, and whether the import is required for an enabled runtime path. Base Account is not configured: `next.config.js` intentionally aliases only `@base-org/account` to `false` to exclude its optional x402 tree, while preserving Coinbase Wallet and injected EIP-1193 connectors. Do not delete this alias or install speculative x402 packages without a reproduced enabled-connector failure. The MetaMask `@react-native-async-storage/async-storage` peer warning is optional in the web bundle; it is not by itself a runtime defect. The 27 `outputFileTracingRoot` warnings concern tracing paths outside the project root and are a separate packaging/proof question, not a request to duplicate dependencies or build roots.
+
+`frontend/node_modules` and `/srv/nexi/public/current/node_modules` must point to `/srv/nexi/public/shared/node_modules`; Backend and Admin retain their own stores. Check symlink identity, installed versions, runtime trace, and the current release evidence before proposing any `npm ci` or code changes. If a real locked-package mismatch is proven, follow this file's canonical Public recovery procedure under service coordination. Public's production build succeeded at source `943ebda18d9060fd817074a1bbb2ce4fe7d26a59`; do not rebuild solely for historical warnings. On 2026-10-27 generated Webpack cache was 1.6 GiB and root filesystem reached 98% usage; only that exact regenerated cache was removed, recovering about 1.6 GiB. Do not delete `.next/standalone`, `.next/server`, dependency stores, logs, or rollback artifacts as cache cleanup.
+
 # NEXI Public Frontend — Agent Contract
 
 ## Scope and authority

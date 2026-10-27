@@ -1,3 +1,7 @@
+## CURRENT 2026-10-27 ADDENDUM — DEPENDENCY / CAPACITY
+
+Coordinated release remains complete. Independent SentinelX verification found intact separate application dependency stores, the committed optional Base Account/x402 exclusion, and no new confirmed dependency-store defect. Disk inventory (details in `NEXI_CURRENT_STATE.md`) identifies a ~15 GiB live SQLite file, ~14.6 GiB `/home`, 6 GiB OS `/usr`, 4 GiB swap and ~3.6 GiB `/srv/nexi`; only about 1.8 GiB of explicitly identified regenerable Webpack/RDC/Playwright caches was removed. Do not launch a duplicate install/build or delete SQLite, retained migration snapshots, active Codex history, dependency stores or rollback assets. The next product stage is deployed-release browser acceptance and bounded Sentry evidence, with disk growth/retention treated separately. Current docs correction is local until the authenticated Worker-0 Git push succeeds.
+
 ## LATEST CHECKPOINT — 2026-10-27 coordinated release complete
 
 - The coordinated Backend/Public/Admin builds and deployments completed. Backend source/artifact is `20ba4da6cc34fd8f355324bbf2ab401db2665ef0`; Public and Admin source/artifacts are `943ebda18d9060fd817074a1bbb2ce4fe7d26a59`. All three services are active with zero restarts; Backend `/readyz`, local Public `/dashboard`, and local Admin `/overview` returned 200.

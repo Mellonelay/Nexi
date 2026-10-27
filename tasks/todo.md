@@ -1,3 +1,10 @@
+## CURRENT CONTROLLER CORRECTION — 2026-10-27 STORAGE / DEPENDENCY
+
+- [x] Directly verify the three independent shared dependency stores and source links; the Base Account/x402 optional connector failure was fixed in committed Public Webpack configuration, not by reinstalling application dependencies. Preserve the deployed source and accepted release proof. See root/Public `AGENTS.md` and current state.
+- [x] Measure actual disk owners with gdu, not estimates. The live SQLite database is about 15 GiB; other major consumers are developer tooling/session/migration artifacts, OS files, and the 4 GiB swapfile. Remove only verified regenerable inactive Webpack/RDC/Playwright caches (approximately 1.8 GiB reclaimed); three services remain active, root still ~95% used.
+- [ ] Do not open a new build/dependency campaign from optional MetaMask/tracing warnings. Proceed with the previously agreed post-deployment browser acceptance and bounded Sentry proof; separately address continuing disk growth or retention with an exact owner-approved target, never financial DB/history destruction by size alone.
+- [ ] Synchronize the controller's local documentation correction commit to GitHub from the existing authenticated Worker-0 Git environment. SentinelX service's HTTPS `git push` lacked credentials; do not claim remote sync until independently verified.
+
 ## CURRENT 2026-10-27 — COORDINATED RELEASE COMPLETE
 
 - [x] Backend, Public, and Admin were built and deployed to their canonical outputs; all three services are active with zero restarts. Focused local readiness/routes passed.
