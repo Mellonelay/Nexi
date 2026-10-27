@@ -446,7 +446,6 @@ function PositionsPanel({
   positions: BinaryPosition[];
   onRefresh: () => void;
 }) {
-  const provider = useAdminData();
   const session = useAdminSession();
   const canSettle = session.can("binary.settle");
   const canEdit = session.can("binary.edit");

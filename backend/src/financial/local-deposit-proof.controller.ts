@@ -23,6 +23,7 @@ export class LocalDepositProofController {
     @Headers('content-type') type?:string,
   ){
     if(this.config.get<string>('NEXI_LOCAL_OBJECTS_ENABLED')!=='true')throw new BadRequestException('Local proof upload is disabled');
+    if (typeof key !== 'string') throw new BadRequestException('Deposit proof key must be a string');
     if(!type)throw new BadRequestException('Content type required');
     this.financial.authorizeDepositProofUpload(request.user.userId,key);
     const declared=Number((request as unknown as {headers?:Record<string,string>}).headers?.['content-length']);

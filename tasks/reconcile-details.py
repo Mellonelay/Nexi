@@ -1,6 +1,6 @@
 """Read-only detailed differences and exact Decimal financial totals. No raw identities persisted."""
 from pathlib import Path
-import sqlite3,subprocess,json,hashlib,datetime,decimal,collections
+import sqlite3,subprocess,json,datetime,decimal,collections
 from reconcile_sql import quote_existing_table
 ROOT=Path(__file__).resolve().parent
 DB='/home/mellonelay1999/nexi-migration-snapshots/nexi-core-restored-20261016.sqlite'

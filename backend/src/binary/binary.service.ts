@@ -1,9 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException, Optional, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { BinarySide, Gate2BinaryState, Prisma } from '../prisma/d1-client';
-import { randomUUID } from 'crypto';
 import { D1PrismaService } from '../d1/d1-prisma.service';
-import { assertPositiveDecimal, binaryTransitionAllowed, decimalProduct } from '../gate2/gate2-rules';
+import { assertPositiveDecimal, decimalProduct } from '../gate2/gate2-rules';
 import { BinaryGateway } from './binary.gateway';
 import { SandboxScenarioService } from '../sandbox/sandbox-scenario.service';
 import { getMarketSourcePolicy, getProviderMapping, isDeterministicTestProvider, isSettlementApproved } from '../market/market-source-registry';

@@ -6,7 +6,6 @@ import {
   Param,
   UseGuards,
   Req,
-  Headers,
 } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { Role } from "../prisma/d1-client";

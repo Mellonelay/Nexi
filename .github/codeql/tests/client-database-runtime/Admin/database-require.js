@@ -1,0 +1,1 @@
+void require("@prisma/client");

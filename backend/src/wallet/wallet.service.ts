@@ -273,9 +273,9 @@ export class WalletService {
     };
   }
 
-  private decodeActivityCursor(value: string): { createdAt: string; id: string } {
+  private decodeActivityCursor(value: unknown): { createdAt: string; id: string } {
     try {
-      if (value.length > 512) throw new Error("cursor too long");
+      if (typeof value !== "string" || value.length > 512) throw new Error("cursor is not a bounded string");
       const parsed = JSON.parse(Buffer.from(value, "base64url").toString("utf8"));
       if (!this.isActivityCursor(parsed)) throw new Error("cursor shape invalid");
       return { createdAt: parsed.createdAt, id: parsed.id };

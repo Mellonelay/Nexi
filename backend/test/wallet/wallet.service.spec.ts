@@ -183,6 +183,11 @@ describe("WalletService D1 read authority", () => {
     } as any;
     const service = new WalletService(prisma, ledger, d1);
     await expect(service.getActivity("user-1", { cursor: "invalid" })).rejects.toBeInstanceOf(BadRequestException);
+    const decodeCursor = jest.spyOn(Buffer, "from");
+    await expect(service.getActivity("user-1", { cursor: ["invalid"] as unknown as string })).rejects.toBeInstanceOf(BadRequestException);
+    expect(decodeCursor).not.toHaveBeenCalled();
+    decodeCursor.mockRestore();
+    expect(d1.listUserActivityPage).not.toHaveBeenCalled();
     await service.getActivity("user-1", { limit: 20, type: "transfer", asset: "usdt", status: "completed" });
     expect(d1.listUserActivityPage).toHaveBeenCalledWith("user-1", {
       limit: 20,

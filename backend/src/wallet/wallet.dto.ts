@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsNumber, IsOptional, IsPositive, IsString, Length } from 'class-validator';
+import { IsNumber, IsPositive, IsString, Length } from 'class-validator';
 
 export class WalletAmountDto {
   @IsString()

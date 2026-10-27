@@ -832,7 +832,7 @@ describe("D1FinancialCommandGateway", () => {
     const statements = (bridge.batch as jest.Mock).mock
       .calls[0][0] as D1BridgeBatchStatement[];
     expect(statements).toHaveLength(14);
-    for (const [index, statement] of statements.entries()) {
+    for (const [, statement] of statements.entries()) {
       expect(statement.params ?? []).toHaveLength(statement.sql.match(/\?/g)?.length ?? 0);
     }
     expect(statements[12].sql).toContain("Gate2SpotOrder");

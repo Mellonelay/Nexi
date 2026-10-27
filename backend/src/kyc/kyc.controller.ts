@@ -1,11 +1,9 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
   Headers,
   Param,
-  PayloadTooLargeException,
   Post,
   Req,
   UseGuards,
@@ -19,7 +17,6 @@ import { OwnershipGuard } from '../auth/ownership.guard';
 import { KycSubmissionDto } from '../auth/auth.dto';
 import { KycService } from './kyc.service';
 
-const KYC_EVIDENCE_MAX_BYTES = 5 * 1024 * 1024;
 
 @ApiTags('KYC')
 @Controller('kyc')

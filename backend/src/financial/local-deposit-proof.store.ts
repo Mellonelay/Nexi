@@ -12,7 +12,7 @@ export class LocalDepositProofStore {
   constructor(@Optional() private readonly config: ConfigService = new ConfigService()) {}
   private async file(key:string):Promise<string> {
     const root=this.config.get<string>('NEXI_LOCAL_OBJECTS_ROOT');
-    if(this.config.get<string>('NEXI_LOCAL_OBJECTS_ENABLED')!=='true'||!root||!isAbsolute(root)||
+    if(typeof key !== 'string'||this.config.get<string>('NEXI_LOCAL_OBJECTS_ENABLED')!=='true'||!root||!isAbsolute(root)||
       key.includes('..')||!objectKey.test(key)){
       throw new ServiceUnavailableException('Private local deposit proof storage is unavailable');
     }

@@ -8,7 +8,6 @@ import {
   BiquoteProfile,
   CoinGeckoAssetDetails,
   GateStockSymbol,
-  MetadataStatus,
   mapCoinGeckoProfile,
   mapFallbackProfile,
   mapForexProfile,

@@ -1,0 +1,4 @@
+| Admin/database-bulk-reexport.js:1:15:1:30 | "better-sqlite3" | NEXI Admin/Public code directly references a database runtime. Durable application and financial data belong behind the NestJS API. |
+| Admin/database-require.js:1:14:1:29 | "@prisma/client" | NEXI Admin/Public code directly references a database runtime. Durable application and financial data belong behind the NestJS API. |
+| frontend/database-reexport.js:1:30:1:45 | "@libsql/client" | NEXI Admin/Public code directly references a database runtime. Durable application and financial data belong behind the NestJS API. |
+| frontend/direct-database-import.js:1:8:1:23 | "better-sqlite3" | NEXI Admin/Public code directly references a database runtime. Durable application and financial data belong behind the NestJS API. |

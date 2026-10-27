@@ -1,5 +1,4 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
-import { Observable } from 'rxjs';
 import { verify } from 'crypto';
 import { D1PrismaService } from '../d1/d1-prisma.service';
 

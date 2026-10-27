@@ -3,8 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import { Prisma } from '../prisma/d1-client';
 import { createHash, randomUUID } from 'crypto';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { LedgerAuthorityService } from '../ledger/ledger-authority.service';
-import { D1PrismaService } from '../d1/d1-prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { D1FinancialCommandGateway } from '../d1/d1-financial-command.gateway';
 import { SentryCron } from '@sentry/nestjs';

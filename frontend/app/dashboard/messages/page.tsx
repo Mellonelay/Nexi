@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEv
 import { Check, CheckCheck, FileText, Image as ImageIcon, LoaderCircle, Paperclip, Send, Smile, X } from 'lucide-react';
 import { io } from 'socket.io-client';
 import Image from 'next/image';
-import Link from 'next/link';
 import api, { apiBaseUrl } from '../../lib/api';
 import { getAccessToken } from '../../lib/auth-session';
 import { sessionPrincipalId } from '../../lib/wallet-auth';

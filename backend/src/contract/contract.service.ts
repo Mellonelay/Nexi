@@ -1,5 +1,4 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
-import { D1PrismaService } from '../d1/d1-prisma.service';
 import { WalletService } from '../wallet/wallet.service';
 import { LedgerType } from '../prisma/d1-client';
 
