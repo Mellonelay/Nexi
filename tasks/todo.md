@@ -1,9 +1,9 @@
 ## CURRENT CONTROLLER CORRECTION — 2026-10-27 STORAGE / DEPENDENCY
 
 - [x] Directly verify the three independent shared dependency stores and source links; the Base Account/x402 optional connector failure was fixed in committed Public Webpack configuration, not by reinstalling application dependencies. Preserve the deployed source and accepted release proof. See root/Public `AGENTS.md` and current state.
-- [x] Measure actual disk owners with gdu, not estimates. The live SQLite database is about 15 GiB; other major consumers are developer tooling/session/migration artifacts, OS files, and the 4 GiB swapfile. Remove only verified regenerable inactive Webpack/RDC/Playwright caches (approximately 1.8 GiB reclaimed); three services remain active, root still ~95% used.
+- [x] Measure actual disk owners with gdu, not estimates. The live SQLite database is about 15 GiB; other major consumers are developer tooling/session/migration artifacts, OS files, and the 4 GiB swapfile. Remove only verified regenerable inactive Webpack/RDC/Playwright caches, the old unused Codex daemon binary, and npm download cache (approximately 2.9 GiB reclaimed overall); three services remain active, root now ~93% used with 3.9 GiB available.
 - [ ] Do not open a new build/dependency campaign from optional MetaMask/tracing warnings. Proceed with the previously agreed post-deployment browser acceptance and bounded Sentry proof; separately address continuing disk growth or retention with an exact owner-approved target, never financial DB/history destruction by size alone.
-- [ ] Synchronize the controller's local documentation correction commit to GitHub from the existing authenticated Worker-0 Git environment. SentinelX service's HTTPS `git push` lacked credentials; do not claim remote sync until independently verified.
+- [x] Synchronize the controller's documentation correction using the already-authenticated VM owner GitHub CLI credential route, then confirm checkout `main` tracks `origin/main` clean after the final addendum.
 
 ## CURRENT 2026-10-27 — COORDINATED RELEASE COMPLETE
 
