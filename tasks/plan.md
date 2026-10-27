@@ -3,7 +3,7 @@
 - The coordinated Backend/Public/Admin builds and deployments completed. Backend source/artifact is `20ba4da6cc34fd8f355324bbf2ab401db2665ef0`; Public and Admin source/artifacts are `943ebda18d9060fd817074a1bbb2ce4fe7d26a59`. All three services are active with zero restarts; Backend `/readyz`, local Public `/dashboard`, and local Admin `/overview` returned 200.
 - Sentry production releases were finalized/deployed for both source identities. No errors or warning/error logs were returned for either in the queried 24-hour window. Admin upload was confirmed (124 source files). Public upload and Backend event symbolication remain not independently read-verified.
 - No rollback archive validation, storage cleanup, migrations, financial mutations, or browser acceptance ran. `ROLLBACK_PREPARATION = OWNER_DEFERRED`; the four financial gates remain `OWNER_ACCEPTED_UNTESTED`.
-- [x] Source and release documentation commits were pushed; at the verified push `HEAD = origin/main = d0d5678ecee3250bd2fd67f8e4f9d9a9df4481e4`.
+- [x] Source and release documentation commits, including evidence follow-up `90b8d9abe4e8388e33ba166d732e4a5e9dce1356`, were pushed; `HEAD = origin/main = 90b8d9abe4e8388e33ba166d732e4a5e9dce1356` at the last verification before this current-state amendment.
 - [ ] Sentry commit association remains unresolved for Public/Admin release `943ebda18d9060fd817074a1bbb2ce4fe7d26a59`: post-push `set-commits --auto` selected docs HEAD `d0d5678`; release details still have no commit list after an explicit source-range attempt.
 - Full evidence and warnings: `tasks/evidence/nexi-release-candidate-preflight-20261027.md`. The 23:29 stop checkpoint below is historical and superseded by the owner's instruction to proceed.
 
