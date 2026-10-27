@@ -344,8 +344,9 @@ export function normalizeProviderTimestamp(value: unknown): string | undefined {
 
 function plainText(value: unknown, maxLength: number): string | undefined {
   if (typeof value !== 'string') return undefined;
-  const text = value.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&')
+  const text = value.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/gi, ' ')
     .replace(/&quot;/gi, '"').replace(/&#39;|&apos;/gi, "'").replace(/&lt;/gi, '<').replace(/&gt;/gi, '>')
+    .replace(/&amp;/gi, '&')
     .replace(/\s+/g, ' ').trim();
   return text ? text.slice(0, maxLength) : undefined;
 }

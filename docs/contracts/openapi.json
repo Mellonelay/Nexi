@@ -1629,19 +1629,19 @@
             "name": "x-nexi-event-signature",
             "required": true,
             "in": "header",
+            "description": "Lowercase hex HMAC-SHA256 using JWT_SECRET over UTF-8 `${timestampHeader}:${JSON.stringify(parsedJsonBody)}`.",
             "schema": {
               "type": "string"
-            },
-            "description": "Lowercase hex HMAC-SHA256 using JWT_SECRET over UTF-8 `${timestampHeader}:${JSON.stringify(parsedJsonBody)}`."
+            }
           },
           {
             "name": "x-nexi-event-timestamp",
             "required": true,
             "in": "header",
+            "description": "Unix epoch timestamp in milliseconds as a decimal string; accepted within five minutes of server time.",
             "schema": {
               "type": "string"
-            },
-            "description": "Unix epoch timestamp in milliseconds as a decimal string; accepted within five minutes of server time."
+            }
           }
         ],
         "responses": {
