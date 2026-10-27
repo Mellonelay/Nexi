@@ -1,0 +1,46 @@
+# NEXI source-only CodeQL baseline.
+# Manual invocation only: no push, pull_request, or schedule triggers.
+# CodeQL security-and-quality is static analysis, not a replacement for
+# cross-layer Ledger/API/UI contracts, integration tests, or runtime acceptance.
+# Before dispatching, verify the CodeQL Terms and NEXI repository licensing.
+name: NEXI CodeQL manual baseline
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+concurrency:
+  group: nexi-codeql-manual-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  analyze:
+    name: CodeQL (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        language:
+          - actions
+          - javascript-typescript
+          - python
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL with security and quality queries
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-and-quality
+
+      # JavaScript/TypeScript, Python and GitHub Actions are extracted
+      # without an application build. No dependency install or autobuild.
+      - name: Analyze and upload CodeQL SARIF
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: nexi/${{ matrix.language }}
