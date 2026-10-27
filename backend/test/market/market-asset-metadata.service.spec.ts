@@ -1,5 +1,6 @@
 import { jest } from '@jest/globals';
 import { MarketAssetMetadataService } from '../../src/market/market-asset-metadata.service';
+import { normalizeMetadataText } from '../../src/market/market-asset-metadata.mapper';
 import { CANONICAL_MARKET_CATALOG } from '../../src/market/market-catalog';
 import { STOCK_ISSUER_PROFILES } from '../../src/market/market-asset-profile-catalog';
 
@@ -13,7 +14,6 @@ describe('MarketAssetMetadataService', () => {
   afterEach(() => jest.restoreAllMocks());
 
   it('decodes metadata HTML entities only once, including ampersand-prefixed entities', () => {
-    const { normalizeMetadataText } = require('../../src/market/market-asset-metadata.mapper');
     expect(normalizeMetadataText('AT&amp;T')).toBe('AT&T');
     expect(normalizeMetadataText('&amp;lt;script&amp;gt;')).toBe('&lt;script&gt;');
     expect(normalizeMetadataText('&amp;quot;')).toBe('&quot;');
