@@ -9,8 +9,8 @@
  */
 import javascript
 
-predicate isDatabaseRuntimePath(string path) {
-  path.regexpMatch("(^|/)(@prisma/client|@prisma/adapter-better-sqlite3|better-sqlite3|node:sqlite|sqlite3|@libsql/client)(/|$)")
+predicate isDatabaseRuntimePath(Expr modulePath) {
+  modulePath.getStringValue().regexpMatch("(^|/)(@prisma/client|@prisma/adapter-better-sqlite3|better-sqlite3|node:sqlite|sqlite3|@libsql/client)(/|$)")
 }
 
 predicate isClientFile(File file) {
@@ -35,6 +35,6 @@ where
       exportPath = reExport.getImportedPath()
     )
   ) and
-  isDatabaseRuntimePath(modulePath.getStringValue()) and
+  isDatabaseRuntimePath(modulePath) and
   isClientFile(modulePath.getFile())
 select modulePath, "NEXI Admin/Public code directly references a database runtime. Durable application and financial data belong behind the NestJS API."

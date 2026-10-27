@@ -9,8 +9,8 @@
  */
 import javascript
 
-predicate isRetiredCloudflareRuntimePath(string path) {
-  path.regexpMatch("(^|/)(@cloudflare/workers-types|cloudflare:workers)(/|$)")
+predicate isRetiredCloudflareRuntimePath(Expr modulePath) {
+  modulePath.getStringValue().regexpMatch("(^|/)(@cloudflare/workers-types|cloudflare:workers)(/|$)")
 }
 
 predicate isActiveNexiFile(File file) {
@@ -35,6 +35,6 @@ where
       exportPath = reExport.getImportedPath()
     )
   ) and
-  isRetiredCloudflareRuntimePath(modulePath.getStringValue()) and
+  isRetiredCloudflareRuntimePath(modulePath) and
   isActiveNexiFile(modulePath.getFile())
 select modulePath, "Active NEXI source references a retired Cloudflare Worker runtime module. Use the current VPS/NestJS ownership contract."
