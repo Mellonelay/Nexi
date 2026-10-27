@@ -1,3 +1,13 @@
+## 2026-10-27 — independent post-release dependency and Sentry proof reuse
+
+- **RELEASE_LIFECYCLE_VERIFIED:** both deployed Backend/Public-Admin Sentry release objects have exact SHA commits and production deployments; previously missing Public/Admin association is resolved. No new release was created.
+- **PACKAGING_CHECKED (VPS only):** 45 Public trace manifests, 1,131 file refs, none missing; 29 unique external targets exist under the physical Public shared store linked into standalone. The 27 out-of-root warnings are not a reproduced missing-file defect. Do not claim a self-contained relocation proof.
+- **BACKEND_NATIVE_CHECKED:** bcrypt hash/compare and better-sqlite3 in-memory query pass with canonical Node/store; Prisma schema engine exists. Eight install-script-capable packages remain to be classified only if a path fails. No reinstallation.
+- **SENTRY_PARTIAL:** 67/70 Public and 62/62 Admin JS assets have debug-ID markers; backend Node source-map mapping works locally and deployment NODE_OPTIONS has source-map flag. Remote artifact matching and actual event symbolication still unverified. 195/14 Sentry drop/accept aggregates do not identify a specific SDK/surface.
+- **NO_APP_DEFECT:** three 01:46 UTC POST-root 404 logs match an external scanner in Nginx with environment-file probing; do not change routes. Fresh Public/API public HTTPS 200.
+- **UNCHANGED:** accepted financial gates, previous product proofs, current deployed SHAs, and owner-deferred rollback decision. Next proof belongs to the browser phase. Detailed evidence: [post-release receipt](tasks/evidence/nexi-post-release-reconciliation-20261027.md).
+
+
 ## 2026-10-26 — Current closure continuation evidence
 
 - **Runtime identity reused after a fresh check:** all three services active, zero restarts, process executables pinned to Node 24.21.0; API `/readyz`, `www.nexitrading.app/dashboard`, and `admin.nexitrading.app/overview` returned 200. Current markers are Backend `e356a00885da9517fe8c32df12dde3e6a3e49688`, Public `3bb57e02ea921531975124ce2c827382a9f1ec6b` with build ID `ace72accfe815abf5ba20df26ee57c76898d0cab`, and Admin `ace72accfe815abf5ba20df26ee57c76898d0cab`. Root free space: 3.7 GiB. Direct apex DNS lookup failed.

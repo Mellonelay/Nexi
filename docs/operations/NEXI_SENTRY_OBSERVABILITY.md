@@ -1,3 +1,8 @@
+## 2026-10-27 — current deployed release evidence correction
+
+Sentry `get_release_details` directly confirms the exact Backend `20ba4da6cc34fd8f355324bbf2ab401db2665ef0` and Public/Admin `943ebda18d9060fd817074a1bbb2ce4fe7d26a59` commits attached to their finalized production deployments. Previous documentation claiming Public/Admin commit association unresolved is superseded. Deployed JS contains Sentry debug IDs (Public 67/70 static JS, Admin 62/62 asset JS); Admin build recorded 124 uploaded sources. Backend env has production/full SHA, Sentry DSN and `NODE_OPTIONS=--enable-source-maps`; generated map parses with Node SourceMap. This is partial map configuration proof, not evidence that a captured event was symbolicated. The 24-hour NEXI project outcome buckets show 195 `client_discard/network_error` and 14 accepted errors, but do not identify the SDK/surface/release responsible. No arbitrary DSN or sample-rate changes are authorized from this aggregate. Three `Cannot POST /` backend logs belong to external Nginx 404 probe activity, not an internal API contract failure. Detailed receipt: `tasks/evidence/nexi-post-release-reconciliation-20261027.md`. Next actual browser event may close the event-level source-map proof; do not manufacture an error endpoint.
+
+
 # NEXI Production Observability: Sentry
 
 

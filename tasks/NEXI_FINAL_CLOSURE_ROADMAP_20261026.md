@@ -1,3 +1,8 @@
+## 2026-10-27 — reconciled release-to-browser transition (addendum; v1.0 remains IN REVIEW)
+
+The six-stage roadmap did not regress to preflight. Stages 1 and 5's source/release integration are complete to the stated evidence scope; a separate bounded post-release audit found no source-backed dependency or tracing defect requiring new application builds. Sentry commit association is now verified for both current release SHAs, resolving a dated contradiction in older tasks. Remaining release observability limitations are remote artifact bundle/event-level source-map proof and unattributed `network_error` discards, not demonstrated misconfiguration. Current task is Stage 6's *deployed-source browser acceptance* and then final owner decision, with preserved accepted proofs and exceptions. Details: [post-release receipt](../tasks/evidence/nexi-post-release-reconciliation-20261027.md). Do not reopen historical Cloudflare migration, pre-release dependency installs, accepted financial operations, or browser testing in a second build root.
+
+
 # NEXI Final Closure Roadmap — Paired Codex First-Read
 Artifact ID: NEXI-FINAL-CLOSURE-20261026 | v1.0 | Status: IN REVIEW | Usage: task routing only | Owner: Mellonelay | Created: 2026-10-26 Asia/Yangon.
 Extends current NEXI AGENTS hierarchy, state/proof/acceptance documents; replaces generic closure handoff prompts, not financial/API/product contracts. Owner authorized this roadmap creation, not automatic financial operations or destructive cleanup. Codex integration owner must reconcile it against live working-tree files before promoting to FINAL.
