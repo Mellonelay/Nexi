@@ -21,7 +21,7 @@ export class LocalWorkflowCoordinator {
  }
  private async command(row:WorkflowRow,name:string,action:string,suffix:string,payload:Record<string,unknown>={}):Promise<{result:Record<string,unknown>;receipt:{name:string;commandKey:string;result:unknown}}>{
   const commandKey=row.id+suffix;
-  const result=await this.store.step(row.id,name)??await this.invoke({workflow:row.workflow,instanceId:row.id,action,entityId:row.entityId,idempotencyKey:commandKey,payload});
+  const result = (await this.store.step(row.id, name)) ?? (await this.invoke({ workflow: row.workflow, instanceId: row.id, action, entityId: row.entityId, idempotencyKey: commandKey, payload }));
   return {result,receipt:{name,commandKey,result}};
  }
  async tick(id:string):Promise<boolean>{
