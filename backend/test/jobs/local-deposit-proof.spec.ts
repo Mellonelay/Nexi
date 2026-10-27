@@ -45,8 +45,21 @@ describe('VPS local deposit proof and claims',()=>{
       proofObjectKey:key,idempotencyKey:'deposit-proof-test-2',
     })).rejects.toThrow('object is not available');
     await expect(store.put('deposit-proofs/../escape',image,'image/png')).rejects.toThrow();
+    await expect(store.put([key] as unknown as string,image,'image/png')).rejects.toThrow('unavailable');
     await expect(store.put(key,Buffer.from('invalid'),'image/png')).rejects.toThrow('Unsupported');
     expect(existsSync(join(root,'escape'))).toBe(false);
+  });
+  it('rejects an array-valued upload key before authorization or storage',async()=>{
+    const financial=new FinancialOperationsService({} as any);
+    const authorize=jest.spyOn(financial,'authorizeDepositProofUpload');
+    const objects={uploadStream:jest.fn()} as any;
+    const controller=new LocalDepositProofController(financial,objects);
+    async function* body(){ yield image; }
+    await expect(controller.upload([key] as unknown as string,{user:{userId:'user-1'},[Symbol.asyncIterator]:body} as any,'image/png'))
+      .rejects.toThrow('key must be a string');
+    expect(authorize).not.toHaveBeenCalled();
+    expect(objects.uploadStream).not.toHaveBeenCalled();
+    expect(()=>financial.authorizeDepositProofUpload('user-1',[key] as unknown as string)).toThrow('key is invalid');
   });
   it('refuses operation outside explicitly enabled local mode',async()=>{
     delete process.env.NEXI_LOCAL_OBJECTS_ENABLED;

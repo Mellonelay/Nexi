@@ -4,7 +4,7 @@ the exported table affinities in RAM; batches are hashed then discarded.
 Only counts/schema/key/content fingerprints are persisted, never raw records.
 """
 from pathlib import Path
-import sqlite3,gzip,io,re,json,hashlib,decimal,datetime,struct,sys,time
+import sqlite3,gzip,io,re,json,hashlib,datetime,struct,sys,time
 ROOT=Path(__file__).resolve().parent
 BASE=Path('/home/mellonelay1999/nexi-migration-snapshots')
 MOD=2**256

@@ -264,7 +264,7 @@ export class FinancialOperationsService {
 
   authorizeDepositProofUpload(userId: string, key: string) {
     const prefix = `deposit-proofs/${userId}/`;
-    if (!/^[0-9a-f-]{36}$/.test(key.startsWith(prefix) ? key.slice(prefix.length) : '')) throw new BadRequestException('Deposit proof key is invalid');
+    if (typeof key !== 'string' || !/^[0-9a-f-]{36}$/.test(key.startsWith(prefix) ? key.slice(prefix.length) : '')) throw new BadRequestException('Deposit proof key is invalid');
     return { authorized: true, key };
   }
 

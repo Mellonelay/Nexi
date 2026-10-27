@@ -163,14 +163,3 @@ export class GateMarketAdapter extends PublicExchangeMarketAdapter {
   protected params(instrument: string) { return { contract: instrument }; }
   protected extract(response: any) { const x = Array.isArray(response) ? response[0] : null; return x && { price: x.last, indexPrice: x.index_price, markPrice: x.mark_price, change: x.change_percentage, volume: x.volume_24h_quote, high: x.high_24h, low: x.low_24h, time: Number(x.funding_next_apply) * 1000 }; }
 }
-
-const GATE_INTERVALS = new Set<MarketKlineInterval>(['5m', '15m', '30m', '1h', '2h', '4h', '6h', '12h', '1d', '3d', '1w', '1M']);
-
-function gateIntervalMs(interval: MarketKlineInterval): number {
-  const values: Partial<Record<MarketKlineInterval, number>> = {
-    '5m': 300_000, '15m': 900_000, '30m': 1_800_000, '1h': 3_600_000,
-    '2h': 7_200_000, '4h': 14_400_000, '6h': 21_600_000, '12h': 43_200_000,
-    '1d': 86_400_000, '3d': 259_200_000, '1w': 604_800_000, '1M': 2_592_000_000,
-  };
-  return values[interval] ?? 60_000;
-}

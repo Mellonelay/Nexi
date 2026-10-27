@@ -1263,7 +1263,7 @@ export class D1FinancialCommandGateway {
       assertSameOpen(replay);
       return replay;
     }
-    const result = await this.bridge.batch([
+    await this.bridge.batch([
       {
         sql: `INSERT OR IGNORE INTO "SpotMarginPosition" ("id","accountId","direction","leverage","collateral","quantity","entryPrice","markPrice","debtAsset","debtPrincipal","interestAccrued","realizedPnl","unrealizedPnl","status","openIdempotencyKey","entryOrderId","openedAt","updatedAt") SELECT ?,?,?,?,?,?,?,?,?,?, '0','0','0',?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP
           WHERE EXISTS (SELECT 1 FROM "Gate2SpotOrder" o WHERE o."id"=? AND o."userId"=? AND o."idempotencyKey"=? AND o."status" IN ('OPEN','PARTIALLY_FILLED','FILLED'))

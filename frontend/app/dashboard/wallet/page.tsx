@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowDownToLine, ArrowLeftRight, ArrowUpFromLine, Clock3, History, RefreshCw, WalletCards } from 'lucide-react';
-import { toast } from 'sonner';
 import api from '../../lib/api';
 import { sessionPrincipalId } from '../../lib/wallet-auth';
 import { useMarketData } from '../../hooks/useMarketData';
@@ -25,7 +24,6 @@ type WalletAsset = { name: string; available: unknown; locked: unknown; total: u
 type Activity = { id: string; type: unknown; source: unknown; destination: unknown; asset: unknown; amount: unknown; status: unknown; createdAt: unknown; ledgerId: unknown; referenceType: unknown; referenceId: unknown; correlationId: unknown; details: Record<string, unknown>; postings: Array<Record<string, unknown>> };
 
 const tabs: Tab[] = ['Overview', 'Funding', 'Spot', 'Margin', 'Binary', 'Finance'];
-const categories: Category[] = ['All', 'Crypto', 'Stocks', 'Metals', 'Forex'];
 const actionIcons: Record<Action, typeof ArrowDownToLine> = { Deposit: ArrowDownToLine, Withdraw: ArrowUpFromLine, Transfer: ArrowLeftRight, Convert: RefreshCw };
 
 function record(value: unknown): Record<string, unknown> { return value && typeof value === 'object' ? value as Record<string, unknown> : {}; }
@@ -208,10 +206,6 @@ function useWalletAuthority() {
   useEffect(() => { void loadWallet(); }, [loadWallet]);
 
   return { userId, sessionChecked, state, payload, activities, activityState, error, loadWallet };
-}
-
-function walletMetricValue(state: ReadState, value: unknown) {
-  return state === 'LIVE' ? text(value) : 'UNAVAILABLE';
 }
 
 function performanceValue(state: ReadState, value: unknown, percent: unknown) {

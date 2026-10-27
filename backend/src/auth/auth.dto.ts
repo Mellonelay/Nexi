@@ -1,4 +1,4 @@
-import { Transform, Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import { IsEmail, IsISO8601, IsInt, IsObject, IsOptional, IsString, IsUUID, Length, Matches, MaxLength, Min, MinLength } from 'class-validator';
 
 const normalizeEmail = ({ value }: { value: unknown }): unknown =>

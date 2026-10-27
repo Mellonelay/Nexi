@@ -19,7 +19,6 @@ import {
   Wallet,
   X,
   Zap,
-  Bell,
   Megaphone,
 } from "lucide-react";
 import { localeLabel } from "../state/locale";

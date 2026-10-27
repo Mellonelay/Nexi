@@ -7,14 +7,13 @@ import requests
 # --- CONFIGURATION ---
 BASE_URL = "https://www.coindefgie15eg.qpon/api"
 
-# UPDATED: Your specific live credentials from the chat logs
-AUTH_TOKEN = "c8d37fa8ec36eedbb903eefe9b9359e0"
-PHP_SESSION = "php_exchange_session=ne4goyzD9bGM0KV3RYe4HsxdGwIUgb0hmZIPr2JA"
 
 # --- SETUP SESSION ---
 def make_session():
     """Creates a browser-like session with your credentials."""
     s = requests.Session()
+    auth_token = os.environ.get("DEXIXZ_AUTH_TOKEN")
+    php_session = os.environ.get("DEXIXZ_PHP_SESSION")
     
     headers = {
         "Accept": "*/*",
@@ -29,16 +28,15 @@ def make_session():
         "Content-Type": "application/json"
     }
     
-    # Inject your credentials
-    if AUTH_TOKEN:
-        headers["authorization"] = AUTH_TOKEN
+    # Credentials are supplied through the environment.
+    if auth_token:
+        headers["authorization"] = auth_token
     
     s.headers.update(headers)
     
     # Inject the session cookie specifically
-    if PHP_SESSION:
-        # Parse "key=value" string if needed, or set directly header
-        s.headers["Cookie"] = PHP_SESSION
+    if php_session:
+        s.headers["Cookie"] = php_session
 
     return s
 
@@ -111,6 +109,8 @@ def get_microtrade_list(session):
 # --- MAIN EXECUTION ---
 
 def main():
+    if not os.environ.get("DEXIXZ_AUTH_TOKEN") or not os.environ.get("DEXIXZ_PHP_SESSION"):
+        raise SystemExit("Set DEXIXZ_AUTH_TOKEN and DEXIXZ_PHP_SESSION before running this utility")
     print("--- STARTING DEXIXZ DATA DUMP ---")
     session = make_session()
 

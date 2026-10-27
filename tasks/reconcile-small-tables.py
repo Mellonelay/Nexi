@@ -2,7 +2,7 @@
 A live source comparison is not a consistent point-in-time cutover snapshot.
 """
 from pathlib import Path
-import sqlite3, subprocess, json, hashlib, decimal, datetime, sys
+import sqlite3, subprocess, json, hashlib, decimal, datetime
 from reconcile_sql import quote_existing_table
 ROOT=Path(__file__).resolve().parent
 DB=Path('/home/mellonelay1999/nexi-migration-snapshots/nexi-core-restored-20261016.sqlite')

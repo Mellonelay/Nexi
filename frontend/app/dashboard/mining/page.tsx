@@ -1,7 +1,7 @@
 'use client';
 
 import { FormEvent, useCallback, useEffect, useState } from 'react';
-import { Clock3, Coins, History, RefreshCw, ShieldCheck, Sparkles } from 'lucide-react';
+import { History, RefreshCw, Sparkles } from 'lucide-react';
 import api from '../../lib/api';
 import { actionCanSubmit, authoritativeValue, EARN_STATES, normalizeProductState, resolveEndpointTemplate } from '../../lib/product-states';
 import { sessionPrincipalId } from '../../lib/wallet-auth';

@@ -69,13 +69,6 @@ describe('B1 durable AuthSession persistence', () => {
     const crypto = new RefreshTokenCryptoService();
     const first = crypto.generate();
     const current = activeRecord({ refreshTokenHash: first.hash });
-    const tx = {
-      authSession: {
-        findUnique: jest.fn().mockResolvedValue(current),
-        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
-        create: jest.fn().mockImplementation(async ({ data }) => ({ ...data })),
-      },
-    };
     const d1 = {
       getAuthSessionByHash: jest.fn().mockResolvedValue(current),
       rotateAuthSession: jest.fn().mockImplementation(async (_id, data) => ({ id: data.id, ...data })),
@@ -104,7 +97,6 @@ describe('B1 durable AuthSession persistence', () => {
   });
 
   it('enforces user and surface ownership for idempotent logout', async () => {
-    const updateMany = jest.fn().mockResolvedValue({ count: 1 });
     const service = serviceWith({ revokeAuthSession: jest.fn().mockResolvedValue(true) });
 
     await expect(service.revokeSession('user-1', 'ADMIN', 'session-1')).resolves.toEqual({ revoked: true });

@@ -1,5 +1,5 @@
 import requests
-import json
+import os
 
 class DexixzClient:
     BASE = "https://www.coindefgie15eg.qpon/api"
@@ -84,14 +84,14 @@ class DexixzClient:
         return self._post_json("/microtrade/micro_deal", payload)
 
 
-# --- Usage Example (Run this file directly to test) ---
-if __name__ == "__main__":
-    # Your LIVE credentials
-    MY_TOKEN = "c8d37fa8ec36eedbb903eefe9b9359e0"
-    MY_SESSION = "php_exchange_session=ne4goyzD9bGM0KV3RYe4HsxdGwIUgb0hmZIPr2JA"
+def main():
+    auth_token = os.environ.get("DEXIXZ_AUTH_TOKEN")
+    php_session = os.environ.get("DEXIXZ_PHP_SESSION")
+    if not auth_token or not php_session:
+        raise SystemExit("Set DEXIXZ_AUTH_TOKEN and DEXIXZ_PHP_SESSION before running this utility")
 
     print("--- Initializing Client ---")
-    client = DexixzClient(auth_token=MY_TOKEN, php_session=MY_SESSION)
+    client = DexixzClient(auth_token=auth_token, php_session=php_session)
 
     print("\n[*] Testing Market Data (HB List)...")
     hb = client.get_hb_list()
@@ -102,15 +102,12 @@ if __name__ == "__main__":
 
     print("\n[*] Testing Spot Wallet...")
     spot = client.get_spot_wallet()
-    if spot:
-        print("    Success! Wallet data retrieved.")
-        # print(json.dumps(spot, indent=2)) # Uncomment to see full wallet JSON
-    else:
-        print("    Failed.")
+    print("    Success! Wallet data retrieved." if spot else "    Failed.")
 
     print("\n[*] Testing Microtrade Configs (Binary Options)...")
     micro = client.get_microtrade_list()
-    if micro:
-        print("    Success! Configuration retrieved.")
-    else:
-        print("    Failed.")
+    print("    Success! Configuration retrieved." if micro else "    Failed.")
+
+
+if __name__ == "__main__":
+    main()

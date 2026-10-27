@@ -1,4 +1,3 @@
-import { BadRequestException } from "@nestjs/common";
 import { D1FinancialCommandGateway } from "../../src/d1/d1-financial-command.gateway";
 import { D1BridgeBatchStatement, D1WorkerBridgeService } from "../../src/d1/d1-worker-bridge.service";
 

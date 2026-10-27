@@ -7,7 +7,7 @@ import {
   OnGatewayDisconnect,
 } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
-import { Injectable, Logger, OnModuleDestroy, Optional } from "@nestjs/common";
+import { Injectable, Logger, OnModuleDestroy } from "@nestjs/common";
 import { RedisService } from "../redis/redis.service";
 import { isCorsOriginAllowed } from "../runtime/runtime.config";
 import { JwtService } from "@nestjs/jwt";

@@ -40,7 +40,6 @@ function Inner() {
   const session = useAdminSession();
   const receipt = useReceipt();
   const approvalsQuery = useAdminQuery((p) => p.listApprovals());
-  const allowed = session.environment === "SANDBOX" && session.can("sandbox.force");
   const [history, setHistory] = useState<Scenario[]>([]);
   const [pending, setPending] = useState<Scenario | null>(null);
   const [executing, setExecuting] = useState<Record<string, boolean>>({});

@@ -1,7 +1,6 @@
-import { BadRequestException, Injectable, NotFoundException, Optional } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '../prisma/d1-client';
 import { createHash } from 'crypto';
-import { LedgerAuthorityService } from '../ledger/ledger-authority.service';
 import { RedisService } from '../redis/redis.service';
 import { D1FinancialCommandGateway } from '../d1/d1-financial-command.gateway';
 

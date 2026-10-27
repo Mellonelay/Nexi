@@ -1,0 +1,6 @@
+name: nexi/codeql-custom-query-tests
+version: 0.0.0
+dependencies:
+  nexi/codeql-custom-queries: "*"
+extractor: javascript-typescript
+tests: .

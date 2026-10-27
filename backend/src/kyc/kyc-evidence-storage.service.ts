@@ -1,7 +1,6 @@
 import { constants } from 'node:fs';
 import { lstat, mkdir, open, readFile, realpath } from 'node:fs/promises';
 import { isAbsolute, join, sep, dirname } from 'node:path';
-import { randomUUID } from 'node:crypto';
 import { ConfigService } from '@nestjs/config';
 import {
   BadRequestException,

@@ -1648,7 +1648,7 @@ export class AdminService {
         return { ok: true, auditId: existing.id, replayed: true };
       }
 
-      const command = await tx.adminGovernanceCommand.create({
+      await tx.adminGovernanceCommand.create({
         data: {
           commandType: "BINARY_RESEARCH_CONTROL",
           target,

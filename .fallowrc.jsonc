@@ -6,6 +6,8 @@
   "ignorePatterns": [
     "backend/src/prisma/d1-client/**",
     "Admin/src/routeTree.gen.ts",
+    // CodeQL's .qlref harness executes these fixture files outside JS entrypoint discovery.
+    ".github/codeql/tests/**",
     "**/*.gen.ts"
   ],
 

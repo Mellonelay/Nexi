@@ -18,6 +18,29 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  query-tests:
+    name: NEXI custom CodeQL query tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Initialize CodeQL query test environment
+        id: init
+        uses: github/codeql-action/init@v4
+        with:
+          languages: javascript-typescript
+      - name: Install custom query test dependencies
+        run: >-
+          "${{ steps.init.outputs.codeql-path }}" pack install
+          --search-path=.github/codeql .github/codeql/tests
+      - name: Run custom query regression tests
+        run: >-
+          "${{ steps.init.outputs.codeql-path }}" test run
+          --search-path=.github/codeql .github/codeql/tests
+
   analyze:
     name: CodeQL (${{ matrix.language }})
     runs-on: ubuntu-latest

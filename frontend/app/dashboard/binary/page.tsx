@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowDown, ArrowLeft, ArrowUp, Clock3, Wallet } from 'lucide-react';
+import { ArrowDown, ArrowUp, Clock3, Wallet } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ModalSurface from '../../components/ModalSurface';
@@ -26,7 +26,6 @@ import {
 
 type Direction = 'LONG' | 'SHORT';
 type BinaryTab = 'TRADE' | 'ACTIVE' | 'HISTORY';
-type ConfirmationMode = 'AUTHORITATIVE';
 
 type BinaryConfiguration = {
   pair: string;
@@ -155,7 +154,6 @@ export default function BinaryPage() {
   const [tab, setTab] = useState<BinaryTab>('TRADE');
   const [state, setState] = useState<BinaryPositionState>('DRAFT');
   const [confirmationOpen, setConfirmationOpen] = useState(false);
-  const [confirmationMode, setConfirmationMode] = useState<ConfirmationMode>('AUTHORITATIVE');
   const [activePositions, setActivePositions] = useState<BinaryPosition[]>([]);
   const [history, setHistory] = useState<BinaryPosition[]>([]);
   const [selectedResult, setSelectedResult] = useState<BinaryPosition | null>(null);
@@ -188,7 +186,6 @@ export default function BinaryPage() {
     setTab('TRADE');
     setState('DRAFT');
     setConfirmationOpen(false);
-    setConfirmationMode('AUTHORITATIVE');
     setActivePositions([]);
     setHistory([]);
     setSelectedResult(null);
@@ -411,7 +408,6 @@ export default function BinaryPage() {
     setDirection(nextDirection);
     setFeedback(null);
     if (ready) {
-      setConfirmationMode('AUTHORITATIVE');
       setState('CONFIRMATION');
       setConfirmationOpen(true);
       return;
@@ -523,7 +519,7 @@ export default function BinaryPage() {
           <dl className="mt-4 space-y-2 text-sm">
             <Row label="Pair" value={displayPair} /><Row label="Stake" value={`${amount} USDT`} /><Row label="Duration" value={`${duration}s`} />{currentPrice !== null && <Row label="Reference price" value={String(currentPrice)} />}<Row label="Potential return" value={potentialReturn === null ? '—' : `${potentialReturn.toFixed(2)} USDT`} />
           </dl>
-          <div className="mt-5 grid grid-cols-2 gap-3"><button type="button" onClick={() => { setConfirmationOpen(false); setConfirmationMode('AUTHORITATIVE'); setState('DRAFT'); }} className="min-h-12 rounded-xl border border-violet-300/15">Back</button><button type="button" onClick={submitPosition} disabled={state === 'SUBMITTING'} className="min-h-12 rounded-xl bg-[#7C3AED] font-semibold disabled:opacity-50">{state === 'SUBMITTING' ? 'Submitting…' : 'Confirm'}</button></div>
+          <div className="mt-5 grid grid-cols-2 gap-3"><button type="button" onClick={() => { setConfirmationOpen(false); setState('DRAFT'); }} className="min-h-12 rounded-xl border border-violet-300/15">Back</button><button type="button" onClick={submitPosition} disabled={state === 'SUBMITTING'} className="min-h-12 rounded-xl bg-[#7C3AED] font-semibold disabled:opacity-50">{state === 'SUBMITTING' ? 'Submitting…' : 'Confirm'}</button></div>
         </div>
       </ModalSurface>}
 

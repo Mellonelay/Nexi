@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, Wallet } from 'lucide-react';
+import { Wallet } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ModalSurface from '../../components/ModalSurface';

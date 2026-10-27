@@ -1,5 +1,5 @@
 import { constants } from 'node:fs';
-import { lstat, mkdir, open, readdir, realpath, rm, stat, writeFile } from 'node:fs/promises';
+import { lstat, mkdir, open, readdir, realpath, rm, writeFile } from 'node:fs/promises';
 import { createHash, randomUUID } from 'node:crypto';
 import { basename, isAbsolute, join, sep } from 'node:path';
 import { BadRequestException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';

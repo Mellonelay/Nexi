@@ -10,7 +10,7 @@ import { useAdminQuery } from "@/admin/data/context";
 import { DataTable, type DataTableColumn } from "@/admin/components/DataTable";
 import { useAdminSession } from "@/admin/session/session";
 import { buildOverviewWorkItems, type OverviewWorkItem } from "@/admin/data/overview-work-items";
-import { ErrorState, LoadingSkeleton } from "@/admin/components/states";
+import { LoadingSkeleton } from "@/admin/components/states";
 import { Users, Activity, Wallet, Radio, Timer } from "lucide-react";
 
 export const Route = createFileRoute("/overview")({ component: OverviewPage });
