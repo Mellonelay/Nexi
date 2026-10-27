@@ -21,14 +21,15 @@ export class LocalWorkflowCoordinator {
  }
  private async command(row:WorkflowRow,name:string,action:string,suffix:string,payload:Record<string,unknown>={}):Promise<{result:Record<string,unknown>;receipt:{name:string;commandKey:string;result:unknown}}>{
   const commandKey=row.id+suffix;
-  const result=await this.store.step(row.id,name)??await this.invoke({workflow:row.workflow,instanceId:row.id,action,entityId:row.entityId,idempotencyKey:commandKey,payload});
+  const result = (await this.store.step(row.id, name)) ?? (await this.invoke({ workflow: row.workflow, instanceId: row.id, action, entityId: row.entityId, idempotencyKey: commandKey, payload }));
   return {result,receipt:{name,commandKey,result}};
  }
  async tick(id:string):Promise<boolean>{
   const row=await this.store.claim(id,randomUUID(),this.clock());if(!row)return false;
   try{if(row.workflow==='loan')await this.loan(row);else if(row.workflow==='withdrawal')await this.withdrawal(row);else await this.mining(row);return true;}
   catch(error){
-   const retries=Number(row.context.retryCount??0)+1;const terminal=error instanceof LocalWorkflowFatalError||retries>5;
+   const retries = Number(row.context.retryCount ?? 0) + 1;
+   const terminal = error instanceof LocalWorkflowFatalError || retries > 5;
    await this.save(row,{status:terminal?'FAILED':'SLEEPING',nextAt:this.clock()+5000*2**Math.min(retries-1,5),context:{retryCount:retries,lastErrorCode:terminal?'WORKFLOW_FAILED':'WORKFLOW_STEP_RETRY'}});return true;
   }
  }
