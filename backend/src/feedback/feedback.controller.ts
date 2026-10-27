@@ -8,6 +8,7 @@ import {
 } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { mkdir, writeFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import * as path from "path";
 import { DevelopmentOnlyGuard } from "../auth/development-only.guard";
 import {
@@ -38,10 +39,10 @@ export class FeedbackController {
     const extension =
       mimeType === "image/jpeg" ? "jpg" : mimeType.slice("image/".length);
     const base64Data = data.image.slice(data.image.indexOf(",") + 1);
-    const fileName = `feedback-${Date.now()}.${extension}`;
+    const fileName = `feedback-${randomUUID()}.${extension}`;
     const filePath = path.join(feedbackDir, fileName);
 
-    await writeFile(filePath, Buffer.from(base64Data, "base64"));
+    await writeFile(filePath, Buffer.from(base64Data, "base64"), { flag: "wx", mode: 0o600 });
 
     // Save metadata
     const metaPath = filePath.replace(path.extname(filePath), ".json");
@@ -56,6 +57,7 @@ export class FeedbackController {
         null,
         2,
       ),
+      { flag: "wx", mode: 0o600 },
     );
 
     this.logger.log(`Feedback saved to ${filePath}`);
