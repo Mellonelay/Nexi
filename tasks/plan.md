@@ -1,4 +1,11 @@
-## CURRENT 2026-10-27 — Coordinated release preparation frontier
+## LATEST CHECKPOINT — 2026-10-27 coordinated release complete
+
+- The coordinated Backend/Public/Admin builds and deployments completed. Backend source/artifact is `20ba4da6cc34fd8f355324bbf2ab401db2665ef0`; Public and Admin source/artifacts are `943ebda18d9060fd817074a1bbb2ce4fe7d26a59`. All three services are active with zero restarts; Backend `/readyz`, local Public `/dashboard`, and local Admin `/overview` returned 200.
+- Sentry production releases were finalized/deployed for both source identities. No errors or warning/error logs were returned for either in the queried 24-hour window. Admin upload was confirmed (124 source files). Public upload and Backend event symbolication remain not independently read-verified.
+- No rollback archive validation, storage cleanup, migrations, financial mutations, or browser acceptance ran. `ROLLBACK_PREPARATION = OWNER_DEFERRED`; the four financial gates remain `OWNER_ACCEPTED_UNTESTED`.
+- Full evidence and warnings: `tasks/evidence/nexi-release-candidate-preflight-20261027.md`. The 23:29 stop checkpoint below is historical and superseded by the owner's instruction to proceed.
+
+## HISTORICAL 2026-10-27 — Coordinated release preparation frontier (superseded)
 
 **Authority and scope:** This Oct 27 summary supersedes the Oct 26 current frontier below; dated entries remain intact as history. The listed source and runtime facts were supplied by the parent at the Oct 27 documentation intake and were not rechecked in that pass. The parent-verified intake checkpoint was `01e81159787bdf48f3d5108b96ecf7a178915573`; the later docs commit is `5f84560`. Preserve the eight already-dirty tracked documentation files and new Chrome guide; the original documentation lane owned the three current-frontier documents, with later parent integration recorded below.
 

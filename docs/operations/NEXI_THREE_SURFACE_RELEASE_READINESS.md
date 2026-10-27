@@ -1,8 +1,16 @@
-# NEXI three-surface Sentry and release preparation
+# NEXI three-surface Sentry and release execution
 
-**Current status (2026-10-27): coordinated release directed by owner; not yet executed.** The owner has directed one coordinated release after source corrections and technical preflight. Do not ask for duplicate authorization for this same release campaign. Source SHA and running artifact identity must never be treated as equal without a deployment receipt.
+**Current status (2026-10-27): coordinated release built, deployed, and locally health-checked.** The previous 2026-10-26 23:29 pause was superseded by the owner's instruction to proceed; no rollback archives were inspected, compared, created, or deleted. `ROLLBACK_PREPARATION = OWNER_DEFERRED` remains a recovery limitation, not a passed check.
 
-The release preflight remains open: Public's canonical Sentry dependency store does not match its manifest/lock; deployed artifact and runtime Sentry release identifiers disagree; Sentry write scopes and source-map upload are unverified; and current disk/I/O conditions do not support a safe build. `ROLLBACK_PREPARATION = OWNER_DEFERRED`: the owner will handle backup capacity and rollback preparation after engineering. This is a disclosed recovery limitation, not passed rollback evidence. Do not create rollback archives or perform storage cleanup under this campaign.
+| Surface | Source / Sentry release | Artifact identity | Runtime result |
+|---|---|---|---|
+| Backend | `20ba4da6cc34fd8f355324bbf2ab401db2665ef0` | `/srv/nexi/backend/RELEASE_SHA` | `/ops/live` and `/readyz` HTTP 200; SQLite and Redis ready; service active, 0 restarts |
+| Public | `943ebda18d9060fd817074a1bbb2ce4fe7d26a59` | `.next/BUILD_ID` + `RELEASE_SHA` | local `/dashboard` HTTP 200; active, 0 restarts |
+| Admin | `943ebda18d9060fd817074a1bbb2ce4fe7d26a59` | `RELEASE_SHA`; SHA embedded in built assets | local `/overview` HTTP 200; active, 0 restarts |
+
+Both Sentry releases were finalized and deployed to `production`. Admin's build log confirms 124 source files uploaded in artifact bundle `0cc61521-aa24-5edc-a835-81471125ec31`. Public's Next integration ran with the full build-time release/environment values and its configured hide/delete-after-upload settings; the remote artifact bundle was not independently enumerable, so upload remains not independently read-verified. Backend has 193 generated maps and Node `--enable-source-maps`; symbolication has not been verified with an event. Sentry returned no matching production errors or warning/error logs in the last 24 hours.
+
+Public emitted two warnings: optional MetaMask async-storage peer resolution and 27 standalone trace paths outside its configured tracing root. The external `nexitrading.app` hostname did not resolve from the VM during verification; direct local service routes passed. Browser acceptance was not run. Full receipt: [release evidence](../../tasks/evidence/nexi-release-candidate-preflight-20261027.md#2026-10-27-coordinated-build-deploy-and-reconciliation).
 
 ## Release contracts
 
@@ -13,7 +21,7 @@ The release preflight remains open: Public's canonical Sentry dependency store d
 
 ## Last observed deployed config (historical, not target)
 
-At campaign inspection on 2026-10-20: backend environment carried `bae05aad3dcbae762427199f08a3ab7c9e01d9f5`; Admin environment carried `7fbde5ca82287902cb351546ccae1b632f1aae44`; Public environment file access was restricted. These belong to earlier deployed artifacts. **Do not overwrite running release variables now.**
+At campaign inspection on 2026-10-20: backend environment carried `bae05aad3dcbae762427199f08a3ab7c9e01d9f5`; Admin environment carried `7fbde5ca82287902cb351546ccae1b632f1aae44`; Public environment file access was restricted. These identities are historical and superseded by the current release table above.
 
 ## Coordinated release workflow under the current owner directive
 

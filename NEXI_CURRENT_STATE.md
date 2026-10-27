@@ -1,4 +1,22 @@
-## CURRENT OWNER FRONTIER — 2026-10-27 COORDINATED RELEASE PREPARATION
+## CURRENT RELEASE EXECUTION — 2026-10-27
+
+The earlier 2026-10-26 23:29 UTC pause was superseded by the owner's explicit instruction to proceed without rollback-archive validation. The coordinated release was built and deployed without inspecting, creating, deleting, or validating rollback artifacts. `ROLLBACK_PREPARATION = OWNER_DEFERRED` remains an open recovery limitation, not a passed check.
+
+| Application | Built source | Deployed marker | Runtime proof |
+|---|---|---|---|
+| Backend | `20ba4da6cc34fd8f355324bbf2ab401db2665ef0` | `/srv/nexi/backend/RELEASE_SHA` matches | `nexi-api.service` active, 0 restarts; `/ops/live` and `/readyz` returned 200 with SQLite/Redis ready; Node 24.21.0 |
+| Public | `943ebda18d9060fd817074a1bbb2ce4fe7d26a59` | `.next/BUILD_ID` and `RELEASE_SHA` match | `nexi-public.service` active, 0 restarts; local `/dashboard` returned 200; client/server Sentry release values match; Node 24.21.0 |
+| Admin | `943ebda18d9060fd817074a1bbb2ce4fe7d26a59` | `RELEASE_SHA` matches; SHA present in 62 built JS files | `nexi-admin.service` active, 0 restarts; local `/overview` returned 200; Node 24.21.0 |
+
+Canonical builds succeeded. Public's first build exposed unresolved optional x402 imports through the unconfigured Base Account connector; `frontend/next.config.js` now aliases only `@base-org/account` to `false`, leaving configured Coinbase and injected connectors intact. Public's final build completed with the full release SHA explicitly injected. Remaining build warnings: optional MetaMask `@react-native-async-storage/async-storage` and 27 Next standalone-tracing paths outside `outputFileTracingRoot`. Admin built with pinned pnpm; Sentry uploaded 124 source files as artifact bundle `0cc61521-aa24-5edc-a835-81471125ec31`. Public ran the configured Next Sentry map upload/delete integration; no static `.map` files remain, but a remote artifact-bundle listing was unavailable, so that upload is not independently read-verified. Backend generated 193 maps and runs with Node `--enable-source-maps`; no natural event was available to verify symbolication.
+
+Sentry releases `20ba4da6cc34fd8f355324bbf2ab401db2665ef0` (Backend) and `943ebda18d9060fd817074a1bbb2ce4fe7d26a59` (Public/Admin) were finalized and deployed to `production`. Sentry returned no production errors or warning/error logs for either release in the last 24 hours. This is not proof of event ingestion or symbolication. The VM could not resolve `nexitrading.app`; direct local application routes passed. No browser acceptance, migration, financial mutation, or rollback operation was run. The four financial gates remain `OWNER_ACCEPTED_UNTESTED`.
+
+Detailed command/results and remaining limits: [coordinated release evidence](tasks/evidence/nexi-release-candidate-preflight-20261027.md#2026-10-27-coordinated-build-deploy-and-reconciliation).
+
+---
+
+## HISTORICAL RELEASE-PREPARATION FRONTIER — superseded by the release execution above
 
 This summary reflects parent-provided Oct 27 direction and Oct 26 observations; the runtime and artifact facts were not independently rechecked in this documentation pass. Parent-verified source checkpoint: `HEAD = origin/main = 01e81159787bdf48f3d5108b96ecf7a178915573`. Preserve the eight already-dirty tracked docs and new Chrome guide; no unrelated dirty work is included in this update.
 
@@ -10,7 +28,7 @@ Fresh parent check at 2026-10-26 22:14 UTC: root still had 2.9 GiB free of 51 Gi
 
 Detailed release/Sentry preflight and evidence limits: [tasks/evidence/nexi-release-candidate-preflight-20261027.md](tasks/evidence/nexi-release-candidate-preflight-20261027.md).
 
-Public manifest/lock has `@sentry/nextjs@10.75.2`; the Public shared store has 10.73.0. This is a confirmed store-alignment release preflight, and no Public build should precede its resolution. Admin Sentry 10.73.0 and Vite plugin 5.4.0 align. Public/Admin plugins hide sourcemaps, delete maps after upload, and disable automatic release creation/finalization; upload is unverified. `sentry-cli` authentication is present, but mutation scopes are not established. No Sentry lifecycle or map-upload proof exists. Browser DevTools timed out; no browser proof. VibeDoctor data dated Oct 25 is stale. Prior bounded source reviews found no confirmed causal code defect in their reviewed scope; Backend/Public dependency corrections are source-only per prior receipts.
+Public manifest/lock and shared store now resolve `@sentry/nextjs@10.75.2` (installed correction recorded below). Admin Sentry 10.73.0 and Vite plugin 5.4.0 align. Public/Admin plugins hide sourcemaps, delete maps after upload, and disable automatic release creation/finalization; upload is unverified. `sentry-cli` authentication is present, but mutation scopes are not established. No Sentry lifecycle or map-upload proof exists. Browser DevTools timed out; no browser proof. VibeDoctor data dated Oct 25 is stale. Prior bounded source reviews found no confirmed causal code defect in their reviewed scope; Backend/Public dependency corrections are source-only per prior receipts.
 
 **Source-map follow-up:** `backend/src/instrument.ts` now calls `process.setSourceMapsEnabled(true)` before Nest application modules load. Node 24.21.0 marks this API experimental and limits it to modules loaded after activation; the installed `@types/node@20.19.30` does not declare the replacement `node:module.setSourceMapsSupport()` API. The startup flag `--enable-source-maps` remains preferred for modules loaded before instrumentation and must be reconciled in the coordinated runtime release. The source edit is unbuilt, undeployed, and not symbolication-verified. NestJS Doctor 0.9.10 reported 85/100 with no changed-scope issues; the read-only NestJS audit found no review candidates, but Backend ESLint configuration is absent and whole-project TypeScript reports existing test-file/configuration errors. React Doctor 0.9.18 found no issue in four Sentry integration config files only. Graphify refreshed after commit to 6,978 nodes / 18,452 edges / 287 communities; 19 SQL files lacked graph symbols because the optional parser is unavailable. The source-map correction and its evidence were committed and pushed as `5fa0784a95800e918f0fbfab20d373947d325e52`. No app build, test, service restart, or deployment occurred.
 

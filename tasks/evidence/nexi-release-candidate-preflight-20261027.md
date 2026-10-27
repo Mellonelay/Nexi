@@ -85,3 +85,41 @@ These are release-preflight actions; this receipt does not make them blockers to
 - **Runtime recovery:** stopped only `nexi-public.service` for the shared-store replacement, then started it. The immediate route probe returned a transient 502 before the Next server child appeared; after the process was running, `/dashboard` returned HTTP 200 in 0.148 seconds. Service was active with `NRestarts=0`; no other service was stopped.
 - **Result:** `npm ls @sentry/nextjs` shows only 10.75.2 in the installed Public dependency tree; the previously installed 10.73.0 is absent from that tree. No npm cache cleanup was performed, so cached tarballs were not targeted. This corrects the Public store mismatch only; it does not build or deploy the Public artifact or verify Sentry source-map upload.
 - **Capacity observation during install:** after npm removed the old tree, root free space was 4.6 GiB; I/O PSI `full avg10` peaked at 71.51% in that sample. No build was started.
+
+## 2026-10-26 23:29 UTC — Owner-authorized release attempt stopped before build
+
+- **Git:** `main`, `origin/main`, and `HEAD` are `20ba4da6cc34fd8f355324bbf2ab401db2665ef0`; working tree was clean before this handoff update.
+- **Resource/process sample:** RAM 7.8 GiB total / 3.6 GiB available; swap 4 GiB / 2.9 GiB free; root disk 51 GiB / 2.7 GiB free; CPU PSI `some avg10=4.01%`; I/O PSI `some avg10=28.80%`, `full avg10=21.93%`. No prior build process was present (the matching process was the sampling shell). Backend, Public, and Admin were active on pinned Node 24.21.0 with zero restarts. Worker-0 protection was 70 locked, 0 unlocked, 0 missing.
+- **Concrete stop condition:** the canonical build/release contract requires a tested surface-specific rollback before replacing a live output. No Backend rollback artifact exists in `/srv/nexi/backend/shared`. The prior bounded inventory/content comparison found none of four Backend or three Public archives exactly matched current live outputs; see `tasks/evidence/nexi-final-closure-continuation-20261026.md` lines 79–80. Current owner direction forbids creating/deleting rollback archives and retains `ROLLBACK_PREPARATION = OWNER_DEFERRED`. Therefore the first in-place build/replacement was not started. Existing outputs and all services were preserved.
+- **Not performed:** no build, deploy, restart, Sentry mutation/source-map upload, migration, financial mutation, cleanup, archive operation, or browser test. The Public shared Sentry dependency is already corrected to 10.75.2 as recorded above. Resume only with an existing tested recovery path or a changed owner constraint; do not repeat the prior archive comparison or completed source reviews.
+
+## 2026-10-27 coordinated build, deploy, and reconciliation
+
+Owner authorization superseded the prior 2026-10-26 23:29 pause. The release proceeded without inspecting, comparing, creating, or deleting rollback artifacts. `ROLLBACK_PREPARATION = OWNER_DEFERRED` remains an open recovery limitation.
+
+### Builds and deployment
+
+| Surface | Source SHA | Canonical build/deploy identity | Runtime verification |
+|---|---|---|---|
+| Backend | `20ba4da6cc34fd8f355324bbf2ab401db2665ef0` | `/srv/nexi/backend/RELEASE_SHA` matches; canonical `npm run build` succeeded with Node 24.21.0/npm 11.19.0 | `nexi-api.service` active, 0 restarts; `/ops/live` and `/readyz` returned 200 with SQLite and Redis ready. Node runs with `--enable-source-maps`. |
+| Public | `943ebda18d9060fd817074a1bbb2ce4fe7d26a59` | `.next/BUILD_ID` and `/srv/nexi/public/current/RELEASE_SHA` match; canonical Next 16.4.1 Webpack build and standalone asset preparation succeeded | `nexi-public.service` active, 0 restarts; local `/dashboard` returned 200; process environment has matching `SENTRY_RELEASE` and `NEXT_PUBLIC_SENTRY_RELEASE`. |
+| Admin | `943ebda18d9060fd817074a1bbb2ce4fe7d26a59` | `/srv/nexi/admin/current/RELEASE_SHA` matches; canonical Admin pnpm 12.14.0/Vite 8.3.4 build succeeded | `nexi-admin.service` active, 0 restarts; local `/overview` returned 200; release SHA appears in 62 built JS assets. |
+
+Backend used the pinned Node 24.21.0 build and existing shared dependency store. Public's initial build failed because the unconfigured Base Account connector imported optional x402 modules absent from the accepted dependency graph. The bounded source correction in `frontend/next.config.js` aliases `@base-org/account` to `false`; Coinbase and injected wallet connectors remain configured. The corrected build succeeded. Public warnings: unresolved optional `@react-native-async-storage/async-storage` imported by MetaMask SDK; 27 standalone trace paths outside `outputFileTracingRoot`. Admin's first build command was run from the repository root and failed to resolve Vite; rerunning from `Admin/` with the pinned package manager succeeded. No migrations, financial mutations, or browser tests ran.
+
+### Sentry
+
+- Backend release `20ba4da6cc34fd8f355324bbf2ab401db2665ef0` was finalized and deployed to `production` as `NEXI Backend production`.
+- Public/Admin release `943ebda18d9060fd817074a1bbb2ce4fe7d26a59` was finalized and deployed to `production` as `NEXI Public and Admin production`.
+- A provisional short release `943ebda` was accidentally created during identity correction and then deleted; it was never finalized or deployed. The full 40-character SHA is the only deployed Public/Admin release.
+- `set-commits --auto` was invoked for both releases. Sentry's release details show Backend commits; the Public/Admin release had no commit list at the time queried (its commit was local and had not yet been pushed). Re-associate after push and verify.
+- Admin's Vite Sentry integration confirmed upload: 124 source files, bundle ID `0cc61521-aa24-5edc-a835-81471125ec31`, release SHA above. Processing was pending when the build ended.
+- Public build-time release/environment values were explicitly set to the full SHA and `production`; the SHA is present in 11 `.next` files. The configured Next Sentry integration uses hidden maps and delete-after-upload; no maps remain under `.next/static`. Its successful upload is not independently confirmed through a Sentry artifact-bundle inventory. The classic release-files API returned 0 files for both deployed releases and does not provide artifact-bundle listing.
+- Backend generated 193 `.map` files; Node native `--enable-source-maps` is active. Separate Backend Sentry map upload and event-level symbolication were not verified.
+- Sentry returned no production errors and no error/warning logs for either full release in the queried 24-hour window. No matching event was available to verify ingestion or symbolication.
+
+### Route and runtime limitations
+
+The VM could not resolve `nexitrading.app` during the HTTPS probe. The owner directive named `/health/live`, which is not the Backend route; the registered `HealthController` path is `/ops/live`, and that liveness route returned HTTP 200. Direct local checks passed: Backend `/readyz` HTTP 200; Public `/dashboard` HTTP 200 on port 3000; Admin `/overview` HTTP 200 on port 3001. A first Admin probe used Backend port 3002 and returned 404; the correct Admin port was then verified. All three systemd services were active with `NRestarts=0` on Node 24.21.0.
+
+The new source commit is `943ebda18d9060fd817074a1bbb2ce4fe7d26a59`; documentation reconciliation and final Git integration follow this receipt update. Worker-0 protection and final `HEAD`/`origin/main` are recorded in the final handoff. No rollback archive validation or storage cleanup was performed. The four financial gates remain `OWNER_ACCEPTED_UNTESTED`; browser acceptance remains for the next session.

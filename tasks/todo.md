@@ -1,4 +1,12 @@
-## CURRENT 2026-10-27 — COORDINATED RELEASE PREPARATION FRONTIER
+## CURRENT 2026-10-27 — COORDINATED RELEASE COMPLETE
+
+- [x] Backend, Public, and Admin were built and deployed to their canonical outputs; all three services are active with zero restarts. Focused local readiness/routes passed.
+- [x] Public dependency-resolution build failure fixed with the bounded `@base-org/account` Webpack alias; final Public build carries full SHA `943ebda18d9060fd817074a1bbb2ce4fe7d26a59`. Admin and Backend identities and build outcomes are in the release evidence receipt.
+- [x] Sentry releases finalized and deployed to production for Backend `20ba4da6cc34fd8f355324bbf2ab401db2665ef0` and Public/Admin `943ebda18d9060fd817074a1bbb2ce4fe7d26a59`. Admin source-map bundle upload was confirmed. Public remote bundle presence and Backend event-level symbolication remain unverified.
+- [ ] Push final documentation integration, then re-associate the full Public/Admin SHA with GitHub commits and verify `HEAD = origin/main`.
+- [ ] Next session: run the owner-requested browser acceptance on the deployed artifacts. Preserve the accepted scope of existing proofs; financial gates remain `OWNER_ACCEPTED_UNTESTED`.
+- `ROLLBACK_PREPARATION = OWNER_DEFERRED`; no rollback archive validation or storage cleanup was performed.
+- Detailed handoff: `tasks/evidence/nexi-release-candidate-preflight-20261027.md`.
 
 **Frontier rule:** This owner-directed summary controls current tracking. The Oct 26 checklist and all older rows below remain historical records; unchecked historical items are not reactivated unless explicitly promoted here.
 
