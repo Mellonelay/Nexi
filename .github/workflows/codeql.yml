@@ -35,11 +35,13 @@ jobs:
       - name: Install custom query test dependencies
         run: >-
           "${{ steps.init.outputs.codeql-path }}" pack install
-          --search-path=.github/codeql .github/codeql/tests
+          --additional-packs=.github/codeql --search-path=.github/codeql
+          -- .github/codeql/tests
       - name: Run custom query regression tests
         run: >-
           "${{ steps.init.outputs.codeql-path }}" test run
-          --search-path=.github/codeql .github/codeql/tests
+          --additional-packs=.github/codeql --search-path=.github/codeql
+          .github/codeql/tests
 
   analyze:
     name: CodeQL (${{ matrix.language }})
