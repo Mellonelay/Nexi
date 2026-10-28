@@ -90,8 +90,3 @@ export function findAsset(value: string | undefined | null): AssetDefinition | u
 export function assetIconPath(asset: Pick<AssetDefinition, 'iconKey' | 'iconSlug' | 'iconColor'>): string | undefined {
   return asset.iconKey ? `/assets/market/${asset.iconKey}.svg` : undefined;
 }
-
-export const cryptoAssets = cryptoDefinitions;
-export const stockAssets = stockDefinitions;
-export const metalAssets = metalDefinitions;
-export const forexAssets = forexDefinitions;

@@ -225,7 +225,6 @@ export function hasPermission(role: RoleId, perm: Permission): boolean {
   return ROLES[role].permissions.has(perm);
 }
 
-export const ALL_PERMISSIONS: Permission[] = ALL;
 
 export const PERMISSION_GROUPS: { label: string; perms: Permission[] }[] = [
   { label: "Overview", perms: ["overview.view"] },
