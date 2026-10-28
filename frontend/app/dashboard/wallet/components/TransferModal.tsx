@@ -5,6 +5,7 @@ import ModalSurface from '../../../components/ModalSurface';
 import { X } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../../lib/api';
+import { getIntentKey, type PendingIntentKey } from '../../../lib/intent-key';
 
 interface TransferModalProps {
   isOpen: boolean;
@@ -34,6 +35,8 @@ export default function TransferModal({ isOpen, onClose, currencies, selectedCur
   const [amount, setAmount] = useState('');
   const [busy, setBusy] = useState(false);
   const submissionLock = useRef(false);
+  const pendingIntent = useRef<PendingIntentKey | null>(null);
+  const close = () => { pendingIntent.current = null; onClose(); };
 
   useEffect(() => {
     if (!internalAsset && currencies[0]) setInternalAsset(currencies[0].symbol);
@@ -58,6 +61,8 @@ export default function TransferModal({ isOpen, onClose, currencies, selectedCur
       if (!Number.isInteger(toUserCode) || toUserCode < 100000 || toUserCode > 999999) return;
     }
 
+    const intent = getIntentKey(pendingIntent.current, JSON.stringify([mode, sourceScope, destinationScope, asset, mode === 'USER' ? Number(recipientCode) : null, amount]), mode === 'WALLETS' ? 'wallet-account-transfer' : 'transfer');
+    pendingIntent.current = intent;
     submissionLock.current = true;
     setBusy(true);
     try {
@@ -67,7 +72,7 @@ export default function TransferModal({ isOpen, onClose, currencies, selectedCur
           destinationScope,
           asset,
           amount,
-          idempotencyKey: `wallet-account-transfer:${crypto.randomUUID()}`,
+          idempotencyKey: intent.key,
         });
         toast.success('Wallet transfer completed.');
       } else {
@@ -76,14 +81,14 @@ export default function TransferModal({ isOpen, onClose, currencies, selectedCur
           toUserCode,
           asset,
           amount,
-          idempotencyKey: `transfer:${crypto.randomUUID()}`,
+          idempotencyKey: intent.key,
         });
         toast.success('Transfer to NEXI user completed.');
       }
       await onCompleted?.();
       setAmount('');
       setRecipientCode('');
-      onClose();
+      close();
     } catch (error) {
       const response = error && typeof error === 'object' && 'response' in error
         ? (error as { response?: { data?: { message?: unknown } } }).response?.data?.message
@@ -102,7 +107,7 @@ export default function TransferModal({ isOpen, onClose, currencies, selectedCur
     if ((value === 'MARGIN' || value === 'BINARY') && internalAsset.toUpperCase() !== 'USDT' && currencies.some((currency) => currency.symbol.toUpperCase() === 'USDT')) setInternalAsset('USDT');
   };
 
-  return <ModalSurface open={isOpen} onClose={onClose} title="Transfer"><section className="relative w-full max-w-md overflow-hidden rounded-2xl border border-violet-300/20 bg-[#121022] shadow-2xl"><div className="flex items-center justify-between border-b border-violet-300/10 p-5"><div><h2 id="transfer-title" className="text-xl font-bold text-white">Transfer</h2><p className="mt-1 text-xs text-[#8C8299]">Choose where the funds should go.</p></div><button type="button" onClick={onClose} aria-label="Close transfer dialog" className="inline-flex h-11 w-11 items-center justify-center text-[#C3BBD0]"><X size={22}/></button></div><div className="grid grid-cols-2 gap-2 p-4 pb-0" role="tablist" aria-label="Transfer type"><button type="button" role="tab" aria-selected={mode === 'WALLETS'} onClick={() => { setMode('WALLETS'); setAmount(''); }} className={`min-h-11 rounded-lg border px-2 text-xs font-semibold ${mode === 'WALLETS' ? 'border-[#A995FF] bg-[#2A1742] text-white' : 'border-violet-300/15 bg-[#171022] text-[#C3BBD0]'}`}>Between My Wallets</button><button type="button" role="tab" aria-selected={mode === 'USER'} onClick={() => { setMode('USER'); setAmount(''); }} className={`min-h-11 rounded-lg border px-2 text-xs font-semibold ${mode === 'USER' ? 'border-[#A995FF] bg-[#2A1742] text-white' : 'border-violet-300/15 bg-[#171022] text-[#C3BBD0]'}`}>To Another NEXI User</button></div><form onSubmit={submit} className="space-y-4 p-5">
+  return <ModalSurface open={isOpen} onClose={close} title="Transfer"><section className="relative w-full max-w-md overflow-hidden rounded-2xl border border-violet-300/20 bg-[#121022] shadow-2xl"><div className="flex items-center justify-between border-b border-violet-300/10 p-5"><div><h2 id="transfer-title" className="text-xl font-bold text-white">Transfer</h2><p className="mt-1 text-xs text-[#8C8299]">Choose where the funds should go.</p></div><button type="button" onClick={close} aria-label="Close transfer dialog" className="inline-flex h-11 w-11 items-center justify-center text-[#C3BBD0]"><X size={22}/></button></div><div className="grid grid-cols-2 gap-2 p-4 pb-0" role="tablist" aria-label="Transfer type"><button type="button" role="tab" aria-selected={mode === 'WALLETS'} onClick={() => { setMode('WALLETS'); setAmount(''); }} className={`min-h-11 rounded-lg border px-2 text-xs font-semibold ${mode === 'WALLETS' ? 'border-[#A995FF] bg-[#2A1742] text-white' : 'border-violet-300/15 bg-[#171022] text-[#C3BBD0]'}`}>Between My Wallets</button><button type="button" role="tab" aria-selected={mode === 'USER'} onClick={() => { setMode('USER'); setAmount(''); }} className={`min-h-11 rounded-lg border px-2 text-xs font-semibold ${mode === 'USER' ? 'border-[#A995FF] bg-[#2A1742] text-white' : 'border-violet-300/15 bg-[#171022] text-[#C3BBD0]'}`}>To Another NEXI User</button></div><form onSubmit={submit} className="space-y-4 p-5">
     {mode === 'WALLETS' ? <>
       <label className="block text-xs text-[#C3BBD0]">Source account<select className="nexi-input mt-1 w-full" value={sourceScope} onChange={(event) => setSourceScope(event.target.value as WalletScope)}>{walletScopes.map((scope) => <option key={scope.value} value={scope.value}>{scope.label}</option>)}</select></label>
       <label className="block text-xs text-[#C3BBD0]">Destination account<select className="nexi-input mt-1 w-full" value={destinationScope} onChange={(event) => chooseDestination(event.target.value as WalletScope)}>{walletScopes.map((scope) => <option key={scope.value} value={scope.value} disabled={scope.value === sourceScope}>{scope.label}</option>)}</select></label>
