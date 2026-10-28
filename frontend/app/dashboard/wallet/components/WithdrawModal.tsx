@@ -5,6 +5,7 @@ import ModalSurface from '../../../components/ModalSurface';
 import { X } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../../lib/api';
+import { getIntentKey, type PendingIntentKey } from '../../../lib/intent-key';
 
 interface WithdrawModalProps {
   isOpen: boolean;
@@ -26,6 +27,7 @@ export default function WithdrawModal({ isOpen, onClose, currencies, selectedCur
   const [security, setSecurity] = useState<SecurityState | null>(null);
   const [busy, setBusy] = useState(false);
   const submissionLock = useRef(false);
+  const pendingIntent = useRef<PendingIntentKey | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -38,6 +40,7 @@ export default function WithdrawModal({ isOpen, onClose, currencies, selectedCur
   }, [isOpen]);
 
   const close = () => {
+    pendingIntent.current = null;
     setSecurityPassword('');
     setMfaToken('');
     onClose();
@@ -48,6 +51,8 @@ export default function WithdrawModal({ isOpen, onClose, currencies, selectedCur
     if (submissionLock.current) return;
     if (!network.trim() || !address.trim() || !amount || !Number.isFinite(Number(amount)) || Number(amount) <= 0 || !securityPassword || !security) return;
     if (security.mfa.enabled && !mfaToken) return;
+    const intent = getIntentKey(pendingIntent.current, JSON.stringify([selectedCurrency, network.trim(), address.trim(), amount]), 'withdrawal');
+    pendingIntent.current = intent;
     submissionLock.current = true;
     setBusy(true);
     try {
@@ -56,7 +61,7 @@ export default function WithdrawModal({ isOpen, onClose, currencies, selectedCur
         network: network.trim(),
         address: address.trim(),
         amount,
-        idempotencyKey: `withdrawal:${crypto.randomUUID()}`,
+        idempotencyKey: intent.key,
         securityPassword,
         ...(security.mfa.enabled ? { mfaToken } : {}),
       });
