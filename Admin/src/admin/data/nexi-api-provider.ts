@@ -57,6 +57,7 @@ import { io } from "socket.io-client";
 import { reorderByIds } from "./banner-order";
 import { mapBinaryPositionStatus, mapWalletAccount, mapLedgerPosting } from "../types";
 import { isPublishedAnnouncement } from "./announcement-status";
+import { buildFeatureFlagUpdate } from "./feature-flag-update";
 
 type ApiConfig = { baseUrl: string; getToken: () => Promise<string> };
 type JsonRecord = Record<string, unknown>;
@@ -1364,14 +1365,12 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     patch: Parameters<AdminDataProvider["updateFlag"]>[1],
     ctx: ConsequentialContext,
   ): Promise<MutationResult> {
+    const current = (await this.listFlags()).find((flag) => flag.key === key);
+    if (!current) return { ok: false, auditId: "" };
+    const payload = buildFeatureFlagUpdate(current, patch, ctx.reason);
     await this.request("/admin/feature-flags", {
       method: "POST",
-      body: JSON.stringify({
-        key,
-        enabled: patch.enabled ?? false,
-        environment: patch.env,
-        reason: ctx.reason,
-      }),
+      body: JSON.stringify(payload),
     });
     return { ok: true, auditId: "" };
   }

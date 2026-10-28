@@ -273,10 +273,10 @@ function Inner() {
                 variant="outline"
                 size="sm"
                 data-testid="flag-detail-edit"
-                disabled={!canEdit}
-                onClick={() => setEditing(selected)}
+                disabled
+                title="Rollout targeting is not supported by the current NestJS API contract"
               >
-                Edit targeting
+                Targeting unavailable
               </Button>
               <Button
                 variant={selected.enabled ? "destructive" : "default"}
