@@ -215,23 +215,26 @@ export class CommunicationsController {
     return this.service.learnDetail(slug, q.locale);
   }
   @Post("admin/announcements")
-  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
   @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
+  @RequireAdminPermission("announcements.publish")
   createAnnouncement(@Body() dto: CreateAnnouncementDto) {
     return this.service.createAnnouncement(dto);
   }
   @Patch("admin/announcements/:id")
-  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
   @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
+  @RequireAdminPermission("announcements.publish")
   updateAnnouncement(@Param("id") id: string, @Body() dto: UpdateAnnouncementDto) {
     return this.service.updateAnnouncement(id, dto);
   }
   @Post("admin/announcements/:id/publish")
-  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
   @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
+  @RequireAdminPermission("announcements.publish")
   publishAnnouncement(@Param("id") id: string, @Body() dto: AdminMutationDto) {
     return this.service.publishAnnouncement(id, dto.idempotencyKey);
   }
