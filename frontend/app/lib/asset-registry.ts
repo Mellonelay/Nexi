@@ -75,7 +75,6 @@ const metalDefinitions: AssetDefinition[] = metals.map(([symbol, name, providerS
 }));
 
 export const ASSET_REGISTRY = [...cryptoDefinitions, ...stockDefinitions, ...forexDefinitions, ...metalDefinitions] as const;
-export const ASSET_REGISTRY_COUNT = ASSET_REGISTRY.length;
 
 const aliases = new Map<string, AssetDefinition>();
 for (const asset of ASSET_REGISTRY) {
@@ -90,8 +89,3 @@ export function findAsset(value: string | undefined | null): AssetDefinition | u
 export function assetIconPath(asset: Pick<AssetDefinition, 'iconKey' | 'iconSlug' | 'iconColor'>): string | undefined {
   return asset.iconKey ? `/assets/market/${asset.iconKey}.svg` : undefined;
 }
-
-export const cryptoAssets = cryptoDefinitions;
-export const stockAssets = stockDefinitions;
-export const metalAssets = metalDefinitions;
-export const forexAssets = forexDefinitions;
