@@ -85,3 +85,15 @@ describe('A17 announcement lifecycle closure', () => {
     expect(Reflect.getMetadata(GUARDS_METADATA, controller.publishAnnouncement)).toEqual(expect.arrayContaining([JwtAuthGuard, RolesGuard]));
   });
 });
+
+
+describe('Admin announcement RBAC boundary', () => {
+  it('requires the publish permission on every announcement mutation', () => {
+    const permissionKey = 'nexi:admin-permission';
+    const handlers = [CommunicationsController.prototype.createAnnouncement, CommunicationsController.prototype.updateAnnouncement, CommunicationsController.prototype.publishAnnouncement];
+    for (const handler of handlers) {
+      expect(Reflect.getMetadata(permissionKey, handler)).toBe('announcements.publish');
+      expect(Reflect.getMetadata(GUARDS_METADATA, handler).some((guard: { name: string }) => guard.name === 'AdminPermissionGuard')).toBe(true);
+    }
+  });
+});
