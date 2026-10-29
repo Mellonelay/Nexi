@@ -734,6 +734,7 @@ function useMarginTradingState({
   const [marginFeedback, setMarginFeedback] = useState<string | null>(null);
   const [marginSubmitting, setMarginSubmitting] = useState(false);
   const marginSubmissionLock = useRef(false);
+  const pendingMarginIntent = useRef<PendingIntentKey | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -784,13 +785,16 @@ function useMarginTradingState({
     setMarginSubmitting(true);
     setMarginFeedback(null);
     try {
+      const intent = { userId, pair: displayPair, direction: marginDirection, leverage: effectiveMarginLeverage, collateral: marginCollateral.trim() };
+      pendingMarginIntent.current = getIntentKey(pendingMarginIntent.current, JSON.stringify(intent), 'margin');
       await openMarginPosition({
         pair: displayPair,
         direction: marginDirection,
         leverage: effectiveMarginLeverage,
-        collateral: marginCollateral,
-        idempotencyKey: `margin:open:${normalizedSymbol}:${Date.now()}`,
+        collateral: marginCollateral.trim(),
+        idempotencyKey: pendingMarginIntent.current.key,
       });
+      pendingMarginIntent.current = null;
       setMarginCollateral('');
       setMarginFeedback(`${marginDirection} ${effectiveMarginLeverage}x position submitted.`);
       await refreshMarginPositions();
