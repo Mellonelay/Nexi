@@ -14,6 +14,7 @@ import { useActivePair } from '../../state/ActivePairProvider';
 import { normalizePair } from '../../state/active-instrument';
 import { findAsset } from '../../lib/asset-registry';
 import { type MarketDataStatus } from '../../lib/market-data';
+import { getIntentKey, type PendingIntentKey } from '../../lib/intent-key';
 import { hasAuthSession } from '../../lib/auth-session';
 import { productStateLabel } from '../../lib/product-states';
 import { sessionPrincipalId } from '../../lib/wallet-auth';
@@ -628,6 +629,7 @@ function useSpotOrderState({
   const [confirmationOpen, setConfirmationOpen] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const orderSubmissionLock = useRef(false);
+  const pendingSpotIntent = useRef<PendingIntentKey | null>(null);
 
   useEffect(() => {
     if (currentPrice !== null) setPrice((current) => current || String(currentPrice));
@@ -674,6 +676,8 @@ function useSpotOrderState({
     setOrderState('SUBMITTING');
     setFeedback(null);
     try {
+      const intent = { pair: displayPair, side, type: orderType, amount: amount.trim(), price: price.trim(), ...(orderType === 'STOP' ? { stopPrice: stopPrice.trim() } : {}) };
+      pendingSpotIntent.current = getIntentKey(pendingSpotIntent.current, JSON.stringify(intent), 'spot');
       const response = await api.post('/spot/order', {
         pair: displayPair,
         side,
@@ -681,8 +685,9 @@ function useSpotOrderState({
         amount: amount.trim(),
         price: price.trim(),
         ...(orderType === 'STOP' ? { stopPrice: stopPrice.trim() } : {}),
-        idempotencyKey: `spot:${normalizedSymbol}:${side}:${Date.now()}`,
+        idempotencyKey: pendingSpotIntent.current.key,
       });
+      pendingSpotIntent.current = null;
       setOrderState(normalizeSpotOrderState((response.data as { status?: unknown })?.status));
       setConfirmationOpen(false);
       setAmount('');
