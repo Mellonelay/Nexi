@@ -41,3 +41,8 @@ The owner explicitly authorized the coordinated Backend → Public → Admin pro
 5. Preserve old deployed releases and rollback. Report strongest proven state separately: SOURCE_VALIDATED / BUILT / DEPLOYED / RUNTIME_VERIFIED / OWNER_ACCEPTED.
 
 No SQLite migration, financial tests, or queue execution is part of this release procedure. Deployment is in scope under the current owner directive after the technical preflight is satisfied.
+## CURRENT 2026-10-29 — post-release documentation/storage follow-up
+
+This note supersedes the older “browser acceptance next” stage for the current documentation/storage follow-up. The earlier release-time `2.1 GiB` measurement below is historical; the latest recorded measurement is `2,409,308 KiB` (`2.30 GiB`).
+
+The coordinated release remains the exact SHA recorded below. This follow-up does not repeat or alter release verification. Its authorized scope is documentation reconciliation and safe disk cleanup only; no browser acceptance, build, deployment, restart, migration, test campaign, or financial operation was performed. Root free space is currently 2.30 GiB after removal of stale temporary caches, below the separately requested 5 GiB target. The owner-deferred rollback status remains open. Cleanup paths and preserved data are recorded in `../../tasks/evidence/nexi-doc-reconciliation-storage-cleanup-20261029.md`.

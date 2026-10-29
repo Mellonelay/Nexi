@@ -5,6 +5,10 @@ The six-stage roadmap did not regress to preflight. Stages 1 and 5's source/rele
 
 # NEXI Final Closure Roadmap — Paired Codex First-Read
 Artifact ID: NEXI-FINAL-CLOSURE-20261026 | v1.0 | Status: IN REVIEW | Usage: task routing only | Owner: Mellonelay | Created: 2026-10-26 Asia/Yangon.
+## Current owner correction — 2026-10-29
+
+The October 29 release is already deployed and its recorded runtime proof is in `tasks/evidence/nexi-three-surface-release-20261029.md`. The current follow-up is documentation reconciliation plus safe disk cleanup only. Do not start or resume browser acceptance, build/deploy, service, test, migration, or financial work from the roadmap's older stage list in this follow-up. Browser acceptance and Sentry issue/event verification remain unresolved future acceptance work, not completed work. The latest root filesystem reading is 2,409,308 KiB (2.30 GiB; 2.3G rounded), so the owner's 5 GiB target is unmet. Larger retained candidates include canonical/active tools and dependencies, financial/runtime data, logs, Codex session history, and release/rollback evidence. Cleanup details: `tasks/evidence/nexi-doc-reconciliation-storage-cleanup-20261029.md`.
+
 Extends current NEXI AGENTS hierarchy, state/proof/acceptance documents; replaces generic closure handoff prompts, not financial/API/product contracts. Owner authorized this roadmap creation, not automatic financial operations or destructive cleanup. Codex integration owner must reconcile it against live working-tree files before promoting to FINAL.
 
 ## 0. Mission and authority

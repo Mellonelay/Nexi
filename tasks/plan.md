@@ -1,4 +1,13 @@
-## CURRENT 2026-10-29 — release complete; browser acceptance remains
+## CURRENT 2026-10-29 — documentation/storage follow-up; release complete
+
+- [x] Reconcile the current task scope after the owner's correction: documentation and safe disk cleanup only. No additional browser acceptance, builds, deployments, service restarts, tests, migrations, or financial operations in this follow-up.
+- [x] Remove individually verified stale temporary/Fallow/Node/Python/marketplace caches; preserve canonical app/tool stores, active browser/session state, release/rollback evidence, logs, and financial data. Latest `df -Pk /`: 2,409,308 KiB available (2.30 GiB); the 5 GiB target remains unmet. Removed paths and recorded size evidence are in `tasks/evidence/nexi-doc-reconciliation-storage-cleanup-20261029.md`.
+- [ ] The owner has not requested or authorized additional browser acceptance in this follow-up. Existing partial acceptance and its remaining issues stay recorded as unresolved historical proof; do not treat this cleanup task as browser acceptance.
+- [ ] Reach at least 5 GiB only after identifying additional safely disposable data or receiving a specific retention decision for large retained paths. Do not delete SQLite/financial data, rollback/release evidence, active Codex history, or canonical tool/dependency stores by size alone.
+
+All later dated frontiers in this file are historical snapshots unless explicitly carried into this leading 2026-10-29 scope. Their unchecked items do not authorize work or reopen accepted proof.
+
+## HISTORICAL CURRENT FRONTIER — 2026-10-29 release complete; browser acceptance remains
 
 - [x] Release the reviewed source `7e434daab146fe9c297c04e46ba9d4a0ee81401d` to Backend, Public, and Admin using the canonical build paths. Record artifact/source identities and unchanged GitHub proof.
 - [x] Verify service state, runtime Node identity, Nginx HTTPS routes, Backend SQLite/Redis readiness, and matching production Sentry release/deploy identity.
@@ -6,12 +15,12 @@
 - [ ] Continue scoped browser acceptance against these artifacts. Public Dashboard/Margin read-only rendering is partially verified; investigate the displayed market-data/chart pause. Admin requires owner sign-in after `/admin/me` returned 401. No financial mutation was performed.
 - [ ] Reconcile browser results and owner acceptance; retain `OWNER_ACCEPTED_UNTESTED` for the four closed financial gates. Sentry issue/event status remains `ACCESS_BLOCKED` until read access is available.
 
-## CURRENT 2026-10-27 — independent post-release closure reconciliation
+## HISTORICAL 2026-10-27 — independent post-release closure reconciliation
 
 Release and deployed source IDs are unchanged (Backend `20ba4da6cc34fd8f355324bbf2ab401db2665ef0`; Public/Admin `943ebda18d9060fd817074a1bbb2ce4fe7d26a59`). Sentry directly returns their exact commits **and** production deploys; prior unchecked 'Public/Admin commit association unresolved' rows below are **SUPERSEDED**, not current tasks. Independent trace audit resolved all 1,131 references in 45 deployed Public NFT manifests, including 29 unique external shared-store targets (no missing traced file on this VPS). Backend native bcrypt/SQLite smoke passed; eight install-script-capable lockfile entries alone do not prove missing native builds. Optional MetaMask peer remains a warning, not a demonstrated error. Three `Cannot POST /` logs were external probing (same origin, neighboring `/.env.qa` attempt), not an application endpoint defect. Public and API public HTTPS both now return 200. Sentry debug IDs appear in deployed Public/Admin bundles; remote artifact-bundle verification and event-level symbolication remain unverified. Error `client_discard/network_error` aggregates (195 dropped, 14 accepted over 24h) have unknown sender/surface attribution; do not mutate Sentry config without that causal evidence. No app-source change, reinstall, build or redeploy was necessary or performed. Full evidence: `tasks/evidence/nexi-post-release-reconciliation-20261027.md`. Next stage: **existing Chrome DevTools deployed-release browser acceptance only**, reuse prior accepted proofs and four `OWNER_ACCEPTED_UNTESTED` gates; rollback remains owner-deferred.
 
 
-## CURRENT 2026-10-27 ADDENDUM — DEPENDENCY / CAPACITY
+## HISTORICAL 2026-10-27 ADDENDUM — DEPENDENCY / CAPACITY
 
 Coordinated release remains complete. Independent SentinelX verification found intact separate application dependency stores, the committed optional Base Account/x402 exclusion, and no new confirmed dependency-store defect. Disk inventory (details in `NEXI_CURRENT_STATE.md`) identifies a ~15 GiB live SQLite file, ~14.6 GiB `/home`, 6 GiB OS `/usr`, 4 GiB swap and ~3.6 GiB `/srv/nexi`; about 2.9 GiB in regenerable Webpack/RDC/Playwright/npm caches and one inactive Codex daemon release was removed; 3.9 GiB root space is now available (93% used). Do not launch a duplicate install/build or delete SQLite, retained migration snapshots, active Codex history, dependency stores or rollback assets. The next product stage is deployed-release browser acceptance and bounded Sentry evidence, with disk growth/retention treated separately. The controller documentation correction is pushed through the authenticated VM owner GitHub route; verify the final addendum commit also matches `origin/main`.
 

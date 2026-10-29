@@ -77,7 +77,9 @@ Never create Remote-Desktop-Commander-via-Remote-Desktop-Commander recursion.
 - Recover the existing Coinbase Wallet authenticated profile through the current browser-fabric contract. Older MetaMask profiles and stale ports are historical, not current acceptance owners.
 - Verify actual page, profile, wallet identity and SIWE authentication before browser claims; do not fabricate sessions or create redundant browser harnesses.
 - Playwright, DevTools and device tools provide scoped interaction/diagnostic evidence only, not independent financial authority.
-- VPS API is currently reached by public DNS. Prior public TLS/API/WebSocket transport checks passed, but these do not establish financial safety: the active SQLite core tables are empty while D1 remains populated. Do not issue financial acceptance requests until the public write-safety decision and controlled data synchronization are resolved. API readiness does not establish cutover, D1 equality, backup/restore or owner acceptance.
+- HISTORICAL ONLY: VPS API was reached by public DNS in the prior campaign. Its same-time statement that SQLite was empty while D1 remained populated, and its resulting synchronization gate, were superseded by the later promoted SQLite/Prisma authority decision. Do not use that observation as a current storage claim.
+
+**CURRENT AUTHORITY — 2026-10-29:** Current NEXI architecture and financial-integrity requirements establish promoted VPS SQLite/Prisma as durable application and financial authority; `D1*` class names may implement that SQLite gateway. This authority does not assert current row counts or prove runtime storage state. For the current task scope and release evidence, follow the leading sections of `NEXI_CURRENT_STATE.md` and `docs/operations/NEXI_THREE_SURFACE_RELEASE_READINESS.md`.
 
 ## Astra lineage
 `NEXI_ASTRA_FRONTEND_BINDING_MANIFEST.md` and the `nexi-frontend-astra-controller` skill are retained as historical frontend-binding/execution lineage. They are not the active project routing controller. Current owner decisions and this routing model control new work.

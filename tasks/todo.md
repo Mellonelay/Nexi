@@ -1,4 +1,13 @@
-## CURRENT 2026-10-29 — post-release product acceptance
+## CURRENT 2026-10-29 — documentation/storage follow-up
+
+- [x] Reconcile the owner-corrected scope to documentation alignment and safe disk cleanup only. No additional browser acceptance, build, deployment, restart, tests, migrations, or financial operations were run.
+- [x] Remove only stale generated temporary caches and plugin-source staging copies after checking their installed counterparts; the latest `df -Pk /` reading is 2,409,308 KiB (2.30 GiB), following earlier rounded readings of 2.1 and 2.4G. The requested 5 GiB threshold is **not met**. Details: `tasks/evidence/nexi-doc-reconciliation-storage-cleanup-20261029.md`.
+- [ ] Further cleanup must identify an additional safely disposable target; runtime/financial data, canonical dependencies/tools, session history, logs, release/rollback evidence, and the active Chrome profile remain preserved.
+- [ ] Browser acceptance remains open, but is outside this follow-up's authorized scope. Existing Public partial proof and the Admin sign-in requirement are retained without further browser interaction.
+
+All later dated frontiers in this file are historical snapshots unless explicitly carried into this leading 2026-10-29 scope. Their unchecked items do not authorize work or reopen accepted proof.
+
+## HISTORICAL CURRENT FRONTIER — 2026-10-29 post-release product acceptance
 
 - [x] Deploy Backend, Public, and Admin release `7e434daab146fe9c297c04e46ba9d4a0ee81401d`; all services active, zero restarts, Node 24.21.0, HTTPS routes 200, Backend SQLite/Redis ready.
 - [x] Confirm Sentry release commit association, finalization, production deploy, Admin artifact uploads, and Public/Admin debug-ID presence. Sentry issue query is blocked by HTTP 403; no claim of zero current errors.
@@ -6,19 +15,19 @@
 - [ ] Continue scoped browser acceptance for changed/unproven journeys on release `7e434daab146fe9c297c04e46ba9d4a0ee81401d`. Public Dashboard/Margin UI is partially verified; market-data status remains inconsistent with HTTP 200 responses. Admin `/admin/me` returned 401 after reload; owner sign-in is required. Keep financial actions read-only.
 - [ ] Obtain owner acceptance only from the owner; retain four financial gates as `OWNER_ACCEPTED_UNTESTED` and rollback preparation as `OWNER_DEFERRED`.
 
-## CURRENT 2026-10-27 — independent post-release closure reconciliation
+## HISTORICAL 2026-10-27 — independent post-release closure reconciliation
 
 Release and deployed source IDs are unchanged (Backend `20ba4da6cc34fd8f355324bbf2ab401db2665ef0`; Public/Admin `943ebda18d9060fd817074a1bbb2ce4fe7d26a59`). Sentry directly returns their exact commits **and** production deploys; prior unchecked 'Public/Admin commit association unresolved' rows below are **SUPERSEDED**, not current tasks. Independent trace audit resolved all 1,131 references in 45 deployed Public NFT manifests, including 29 unique external shared-store targets (no missing traced file on this VPS). Backend native bcrypt/SQLite smoke passed; eight install-script-capable lockfile entries alone do not prove missing native builds. Optional MetaMask peer remains a warning, not a demonstrated error. Three `Cannot POST /` logs were external probing (same origin, neighboring `/.env.qa` attempt), not an application endpoint defect. Public and API public HTTPS both now return 200. Sentry debug IDs appear in deployed Public/Admin bundles; remote artifact-bundle verification and event-level symbolication remain unverified. Error `client_discard/network_error` aggregates (195 dropped, 14 accepted over 24h) have unknown sender/surface attribution; do not mutate Sentry config without that causal evidence. No app-source change, reinstall, build or redeploy was necessary or performed. Full evidence: `tasks/evidence/nexi-post-release-reconciliation-20261027.md`. Next stage: **existing Chrome DevTools deployed-release browser acceptance only**, reuse prior accepted proofs and four `OWNER_ACCEPTED_UNTESTED` gates; rollback remains owner-deferred.
 
 
-## CURRENT CONTROLLER CORRECTION — 2026-10-27 STORAGE / DEPENDENCY
+## HISTORICAL CONTROLLER CORRECTION — 2026-10-27 STORAGE / DEPENDENCY
 
 - [x] Directly verify the three independent shared dependency stores and source links; the Base Account/x402 optional connector failure was fixed in committed Public Webpack configuration, not by reinstalling application dependencies. Preserve the deployed source and accepted release proof. See root/Public `AGENTS.md` and current state.
 - [x] Measure actual disk owners with gdu, not estimates. The live SQLite database is about 15 GiB; other major consumers are developer tooling/session/migration artifacts, OS files, and the 4 GiB swapfile. Remove only verified regenerable inactive Webpack/RDC/Playwright caches, the old unused Codex daemon binary, and npm download cache (approximately 2.9 GiB reclaimed overall); three services remain active, root now ~93% used with 3.9 GiB available.
 - [ ] Do not open a new build/dependency campaign from optional MetaMask/tracing warnings. Proceed with the previously agreed post-deployment browser acceptance and bounded Sentry proof; separately address continuing disk growth or retention with an exact owner-approved target, never financial DB/history destruction by size alone.
 - [x] Synchronize the controller's documentation correction using the already-authenticated VM owner GitHub CLI credential route, then confirm checkout `main` tracks `origin/main` clean after the final addendum.
 
-## CURRENT 2026-10-27 — COORDINATED RELEASE COMPLETE
+## HISTORICAL 2026-10-27 — COORDINATED RELEASE COMPLETE
 
 - [x] Backend, Public, and Admin were built and deployed to their canonical outputs; all three services are active with zero restarts. Focused local readiness/routes passed.
 - [x] Public dependency-resolution build failure fixed with the bounded `@base-org/account` Webpack alias; final Public build carries full SHA `943ebda18d9060fd817074a1bbb2ce4fe7d26a59`. Admin and Backend identities and build outcomes are in the release evidence receipt.
