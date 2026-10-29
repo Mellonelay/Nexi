@@ -34,6 +34,7 @@ No Prisma schema or migration changed. No live financial data, ledger, queue, or
 
 - `TESTED`: Backend build and disposable native SQLite smoke. Reused exact source CI at `975a3fc`; no full regression or historical financial campaign was repeated.
 - `DEPLOYED` and `RUNTIME_VERIFIED`: all three services and endpoint checks above.
-- `BROWSER_VERIFIED`: not yet established. Run the scoped browser matrix against this release after the owner's requested bounded temporary/cache cleanup.
+- Before browser verification, removed regenerated `/srv/nexi/public/current/.next/cache/webpack` (about 1.3 GiB) and this session's `/tmp/nexi-api-readyz.json`; preserved historical `/tmp/nexi-ready-body`. Free space rose from 103 MiB to 1.4 GiB. All three services remained active with zero restarts and the four HTTPS endpoints still returned 200.
+- **`BROWSER_VERIFIED`: not established.** Chrome DevTools MCP `list_pages` timed out twice after 60 seconds. Existing Chrome/profile was running and port 9222 was listening, but `/json/version` and `/json/list` returned 404. No browser page was inspected or changed; no alternate controller was used. Resume after repairing the existing MCP/CDP connection.
 - `OWNER_ACCEPTED`: not established. Four previously closed financial requirements remain `OWNER_ACCEPTED_UNTESTED`.
 - Disk reached 100% reported use during builds. The owner directed that engineering-tool/recovery cleanup be deferred; this receipt does not claim storage recovery or rollback readiness.

@@ -5,7 +5,7 @@
 **Browser workflow owner:** paired Codex session using Chrome DevTools MCP with `--autoConnect --userDataDir /home/mellonelay1999/.local/share/nexi-admin-browser-acceptance`.
 **Completion decision:** current owner directive and directly verified source, deployed runtime and browser evidence; the old ledger is historical.
 
-**Current deployed target (2026-10-29):** Backend/Public/Admin release `7e434daab146fe9c297c04e46ba9d4a0ee81401d`; Public Next build ID `UuQn8Dl0W2IZdV4BFjvSA`. HTTPS readiness/page checks passed, but these are runtime smoke evidence only. Authenticated browser acceptance for this release has not yet been performed; complete it after the owner's requested bounded temp/cache cleanup. Do not reuse old browser observations as proof for this release.
+**Current deployed target (2026-10-29):** Backend/Public/Admin release `7e434daab146fe9c297c04e46ba9d4a0ee81401d`; Public Next build ID `UuQn8Dl0W2IZdV4BFjvSA`. HTTPS readiness/page checks passed, but these are runtime smoke evidence only. Before browser verification, the requested bounded cleanup removed the Public Webpack cache and this session's readiness-response temp file; free space rose to 1.4 GiB and services stayed healthy. Browser verification then stopped at the tool boundary: Chrome DevTools MCP `list_pages` timed out twice, while the existing Chrome profile's local port 9222 returned 404 for `/json/version` and `/json/list`. No browser session or UI state was verified. Resume this matrix only after the existing MCP/CDP connection works; do not reuse old browser observations as proof for this release.
 
 This document defines what browser evidence must prove. It does not own runtime architecture, completion status, or deployment authority.
 
