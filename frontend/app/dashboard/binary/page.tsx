@@ -17,6 +17,7 @@ import { sessionPrincipalId } from '../../lib/wallet-auth';
 import { normalizePair } from '../../state/active-instrument';
 import { findAsset } from '../../lib/asset-registry';
 import { finiteMarketNumber } from '../../lib/market-data';
+import { getIntentKey, type PendingIntentKey } from '../../lib/intent-key';
 import { binarySandboxChartFeed, selectBinarySandboxPosition } from '../../lib/binary-sandbox-chart';
 import {
   binaryOrderReady,
@@ -171,6 +172,7 @@ export default function BinaryPage() {
   const [binaryConfigurations, setBinaryConfigurations] = useState<BinaryConfiguration[]>([]);
   const [binaryDurations, setBinaryDurations] = useState<number[]>([]);
   const submissionLock = useRef(false);
+  const pendingBinaryIntent = useRef<PendingIntentKey | null>(null);
   const chartPairRef = useRef(normalizedPair);
   const { marketPairs, metal, shares, forex } = useMarketData();
 
@@ -427,15 +429,18 @@ export default function BinaryPage() {
     submissionLock.current = true;
     setState('SUBMITTING');
     try {
+      const intent = { pair: normalizedPair, stake: String(amount), side: direction === 'LONG' ? 'CALL' : 'PUT', durationSeconds: duration };
+      pendingBinaryIntent.current = getIntentKey(pendingBinaryIntent.current, JSON.stringify(intent), 'binary');
       const response = await api.post('/binary/position', {
         pair: normalizedPair,
         stake: String(amount),
         side: direction === 'LONG' ? 'CALL' : 'PUT',
         durationSeconds: duration,
-        idempotencyKey: `binary:${normalizedPair}:${duration}:${Date.now()}`,
+        idempotencyKey: pendingBinaryIntent.current.key,
       });
       const position = normalizePosition(response.data);
       if (!position) throw new Error('Invalid position response');
+      pendingBinaryIntent.current = null;
       setActivePositions((current) => [position, ...current.filter((item) => item.id !== position.id)]);
       setState('OPEN');
       setConfirmationOpen(false);
