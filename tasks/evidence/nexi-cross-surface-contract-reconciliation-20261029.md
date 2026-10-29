@@ -6,6 +6,49 @@ Does the current Public frontend, Admin client, Backend controller layer, and ch
 
 This is read-only source and contract analysis at `main` / `c14b71d7504469ecadda8c34744752a7b0517c83` (`origin/main` matched at intake). It is not API execution, browser acceptance, authorization penetration testing, or runtime proof. No source route, OpenAPI contract, service, or financial state was changed.
 
+## Follow-up: DTO shape and full cross-surface inventory (2026-10-29)
+
+This follow-up extends the earlier method/path-only comparison. Current source at the start of this pass was `0743e34a4cf5e0a3f125d29b05026208a3ec5845`; the Public, Admin, Backend, and OpenAPI source being compared was unchanged from the original analysis. The follow-up used the local Graphify MCP and CLI, direct TypeScript compiler-AST route/DTO inventory, and the checked-in OpenAPI JSON. It did not invoke a runtime or browser.
+
+### Graphify Multi-View evidence
+
+- The installed Graphify CLI is `0.9.92`. Tree-sitter SQL grammar `tree-sitter-sql==0.3.11` was installed only into Graphify's isolated `uv` tool environment; no application lockfile or runtime dependency changed. Its `tree_sitter_sql` module imports in the same interpreter as Graphify.
+- A forced, local code-only graph refresh re-extracted 781 supported code files without semantic/model extraction. The graph now contains 7,268 nodes and 19,254 links as reported by local Graphify MCP; 311 nodes cover 19 `.sql` files. Deterministic clustering rebuilt 348 stored communities. A separate bounded focus corpus (all 25 Backend controller files and 18 DTO source files, 16 Public API-caller files, the Admin API provider, and OpenAPI) produced 1,425 nodes and 3,646 edges. Semantic extraction was not invoked; the focus view is AST-only and does not add inferred HTTP contract edges.
+- The deterministic NetworkX pass used `worker0-graph-analyze` against the refreshed graph. It found no duplicate node IDs or dangling endpoints; it reports 16 self-loops. Its simplified undirected projection has 19,120 edges, 87 weakly connected components, a largest component of 6,338 nodes, and 120 recomputed Louvain communities. These are not the 348 stored Graphify communities: the latter are Graphify's separate clustering, and neither count is an API completeness measure.
+- Local Graphify query/god-node/path and the bounded focus query were used. The extracted graph connects the Admin provider to its own request/context helpers and Backend controller symbols to their own methods, but does not encode HTTP method/path or JSON body/response boundaries as source-call edges. The Admin provider-to-controller path in the focus graph is absent; the prior base graph's path ran through an inferred evidence document. These are graph-model limitations, not evidence of a broken route.
+- The installed CLI's `graphify diagnose multigraph --graph graphify-out/graph.json --json` reports 7,268 nodes, 19,254 raw links, no dangling endpoints, no duplicate node IDs, no exact duplicate edges, and 16 self-loops. It identifies 120 directed endpoint-pairs and 134 undirected endpoint-pairs with multiple relation variants; the normal post-build graph is a simple undirected `Graph` with 19,119 edges. This is relation collapse in the graph representation, not a deduplication verdict about application behavior. The result limits using the graph alone to prove typed HTTP or persistence paths.
+- The advanced queries included local MCP `graph_stats`, `god_nodes`, `query_graph`, `shortest_path`, `get_neighbors`, and `get_node`, plus CLI `query --dfs --context call`, `path`, and `explain`. The Admin provider explanation has degree 155 and shows its implementation methods and context factory; it does not show outgoing edges for all provider HTTP requests. Path-qualified lookup was necessary because `D1FinancialCommandGateway` also matches a retired CodeQL fixture. The current gateway-to-SQL `LedgerAccount` path was absent even though the gateway source contains SQL statements against that table: the TypeScript SQL string is not linked to the separate SQL AST node. This is another graph coverage limit confirmed by source, not proof that the query or table is unused.
+- The refreshed SQL view establishes schema/migration AST extraction (tables and related SQL structures) for those 19 files. It does not prove the running Prisma client uses every extracted declaration, the live SQLite database has those objects, or that a query reaches an API operation.
+
+### Complete route, DTO-name, and client-caller counts
+
+- A TypeScript compiler-API inventory found 260 live Backend controller routes. Every one of the 256 OpenAPI method/path operations matches a Backend method/path after normalizing Nest `:param` and OpenAPI `{param}` syntax. The four extra Backend routes remain `POST /lever/deal`, `POST /lever/setstop`, `POST /lever/close`, and `GET /lever/my_trade`; no Public/Admin source caller or OpenAPI operation was found. Whether they are intentionally private, externally consumed, or legacy remains `UNKNOWN`.
+- The Public source inventory found 80 direct API calls in `frontend/**/*.ts(x)`. All method/path entries match Backend routes. Thirty-six calls specify a TypeScript response generic; nine of those use `unknown`; 44 calls specify no response generic. A generic assertion is compile-time trust, not runtime response validation.
+- The Admin provider inventory found 52 identifiable API paths and 52 `this.request<T>` call sites; all path/method entries match Backend routes. Their response assertions comprise 30 `unknown[]`, 12 `JsonRecord`, 2 `JsonRecord[]`, and 8 narrower shapes. `NexiAdminApiProvider.request<T>` returns a payload cast as `T`, so these annotations do not validate server response fields at runtime.
+- Of 113 OpenAPI operations with request bodies, 111 reference DTO component schemas and two describe inline multipart uploads. Every one of the 111 `$ref` DTO names matches the Backend handler's `@Body()` TypeScript DTO name. The multipart routes are `POST /communications/support/attachments` and `POST /admin/messages/{recipientId}/attachments`.
+
+### Field-level contract gaps
+
+- Eighty of 86 distinct request DTO schemas have empty `properties`, affecting 103 of 111 `$ref` body operations. Across all components, 81 of 95 schemas have empty or absent properties. Six request DTO schemas expose properties. For example, `CreateCurrencyDto` has fields in `backend/src/admin/admin.dto.ts:52-68`, `WalletChallengeDto` in `backend/src/auth/auth.dto.ts:62-69`, and `OpenBinaryPositionDto` in `backend/src/binary/binary.dto.ts:6-24`; their OpenAPI schemas at `docs/contracts/openapi.json:7180-7183`, `6775-6778`, and `6843-6846` respectively have empty `properties`.
+- The 15 GET operations whose handlers bind typed query DTOs include eight with matching OpenAPI query parameter names. Seven document none of the DTO fields:
+
+  | Operation | Backend query DTO fields | OpenAPI query params |
+  |---|---|---|
+  | `GET /admin/audit` | `actor`, `action`, `target`, `environment`, `correlationId`, `result`, `limit` | none |
+  | `GET /admin/incidents` | `active`, `environment`, `limit` | none |
+  | `GET /admin/maintenance-windows` | `status`, `environment`, `limit` | none |
+  | `GET /communications/announcements` | `locale` | none |
+  | `GET /communications/learn` | `locale` | none |
+  | `GET /communications/learn/{slug}` | `locale` | none |
+  | `GET /conversion/rate` | `from`, `to` | none |
+
+- Of 256 operations, 13 have a schema on at least one 2xx response, 242 have a 2xx response but no schema on any 2xx response, and one has no 2xx response. This substantially limits generated/consumer response-shape certainty.
+- The OpenAPI document also lacks a global bearer-security declaration. Protected routes with Backend guards but missing operation security metadata were already enumerated above; this remains a contract-description gap, not evidence of bypassed guards.
+
+### Reconciled conclusion
+
+**Route correspondence is statically validated; request DTO identity is statically validated; field-level API documentation and response typing are incomplete.** All checked Public and Admin caller paths map to Backend routes, and all 111 referenced request DTO names map to Backend `@Body()` types. However, OpenAPI omits most body properties and seven query DTOs. Of 256 operations, 242 have no schema on any success response, and one has no 2xx response at all. Many Public callers omit response generics and Admin generics are mostly broad casts. These are concrete contract/documentation/type-safety gaps to prioritize for a separate contract-generation or schema-reconciliation task. They do not establish that a live request is malformed or that a response is incompatible. Runtime and browser behavior remain unverified by this static audit.
+
 ## Graphify views and findings
 
 - Local Graphify CLI: `0.9.92`. The checked graph was built at `c14b71d7504469ecadda8c34744752a7b0517c83` before the current documentation edits. It contained 6,930 nodes and 18,513 links. `graphify check-update .` reported no stale inputs at intake; current documentation changes have not been re-extracted.
