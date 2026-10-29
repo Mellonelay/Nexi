@@ -28,6 +28,10 @@ Public emitted two warnings: optional MetaMask async-storage peer resolution and
 
 At campaign inspection on 2026-10-20: backend environment carried `bae05aad3dcbae762427199f08a3ab7c9e01d9f5`; Admin environment carried `7fbde5ca82287902cb351546ccae1b632f1aae44`; Public environment file access was restricted. These identities are historical and superseded by the current release table above.
 
+## 2026-10-29 — executed owner-authorized release
+
+The owner explicitly authorized the coordinated Backend → Public → Admin production release and overrode the normal capacity/rollback-readiness gates for this release. Candidate and deployed source/artifact identity: `7e434daab146fe9c297c04e46ba9d4a0ee81401d`. The applications built once at their canonical outputs; Backend's shared store was synchronized to Prisma 7.10.1 and Admin's to Zod 4.6.7. Services are active with zero restarts, Backend SQLite/Redis readiness is true, and `/ops/live`, `/readyz`, Public `/dashboard`, and Admin `/overview` return HTTPS 200. Root storage reached 100% reported use during the build. `ROLLBACK_PREPARATION` remains `OWNER_DEFERRED`; no rollback artifact was changed. See `tasks/evidence/nexi-three-surface-release-20261029.md` for exact proof and limits. Future releases continue to use the normal capacity and rollback checks unless the owner explicitly overrides them again.
+
 ## Coordinated release workflow under the current owner directive
 
 1. Commit and freeze the coherent Git source identity; resolve source and dependency blockers. Record the owner-deferred rollback limitation; do not create archives under this campaign. Never run three large builds simultaneously on the 8 GiB VPS.

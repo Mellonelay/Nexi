@@ -1,3 +1,10 @@
+## 2026-10-29 — coordinated release proof and reuse boundary
+
+- **`DEPLOYED` / `RUNTIME_VERIFIED`:** Backend, Public, and Admin source/artifact release `7e434daab146fe9c297c04e46ba9d4a0ee81401d`. Public Next build ID `UuQn8Dl0W2IZdV4BFjvSA`. Three services active, zero restarts, Node 24.21.0; Backend `/readyz` confirms SQLite and Redis; four HTTPS endpoints return 200. Details: `tasks/evidence/nexi-three-surface-release-20261029.md`.
+- **`STATICALLY_VALIDATED` / `TESTED`:** Backend canonical Nest build passed after its shared store was reconciled to Prisma 7.10.1; disposable in-memory SQLite native-load smoke passed. Public canonical Next Webpack production build and standalone-assets step passed. Admin canonical Vite/Nitro build passed using Zod 4.6.7 and Sentry CLI 2.58.6. Reuse exact unchanged source CI at `975a3fc89172d13758957ef5910166042ae890bc`; no full test suite or historical financial campaign was repeated.
+- **Sentry:** Full-SHA release created, commits associated, finalized, and production deploy recorded. Admin client/server source-map uploads succeeded; at least one Admin asset had no discovered source-map reference. Public/Admin generated JS contains debug IDs (67/62 files). Fresh issue-list query is `ACCESS_BLOCKED` (403); absence of Sentry events is not established.
+- **Not established:** Authenticated browser acceptance, end-user journeys, Sentry event ingestion/symbolication, or owner acceptance. The four financial gates remain `OWNER_ACCEPTED_UNTESTED`; rollback preparation remains `OWNER_DEFERRED`.
+
 ## 2026-10-27 — independent post-release dependency and Sentry proof reuse
 
 - **RELEASE_LIFECYCLE_VERIFIED:** both deployed Backend/Public-Admin Sentry release objects have exact SHA commits and production deployments; previously missing Public/Admin association is resolved. No new release was created.

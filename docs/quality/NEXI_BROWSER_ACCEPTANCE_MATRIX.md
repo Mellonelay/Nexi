@@ -5,6 +5,8 @@
 **Browser workflow owner:** paired Codex session using Chrome DevTools MCP with `--autoConnect --userDataDir /home/mellonelay1999/.local/share/nexi-admin-browser-acceptance`.
 **Completion decision:** current owner directive and directly verified source, deployed runtime and browser evidence; the old ledger is historical.
 
+**Current deployed target (2026-10-29):** Backend/Public/Admin release `7e434daab146fe9c297c04e46ba9d4a0ee81401d`; Public Next build ID `UuQn8Dl0W2IZdV4BFjvSA`. HTTPS readiness/page checks passed, but these are runtime smoke evidence only. Authenticated browser acceptance for this release has not yet been performed; complete it after the owner's requested bounded temp/cache cleanup. Do not reuse old browser observations as proof for this release.
+
 This document defines what browser evidence must prove. It does not own runtime architecture, completion status, or deployment authority.
 
 For MCP setup, the session-observed tool catalog, Chrome DevTools workbench panels, and extension workflows, follow the [NEXI Chrome DevTools MCP guide](NEXI_CHROME_DEVTOOLS_MCP_GUIDE.md). The Chrome DevTools MCP registration enables extension tools with `--categoryExtensions`; restart Codex after changing that flag and verify actual tool exposure before use.
