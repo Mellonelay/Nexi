@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import { FormEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import LocalDateTime, { useLocalDateTime } from '../../components/LocalDateTime';
 import {
   AlertTriangle,
@@ -13,6 +13,7 @@ import {
   WalletCards,
 } from 'lucide-react';
 import api from '../../lib/api';
+import { getIntentKey, type PendingIntentKey } from '../../lib/intent-key';
 import { finiteMarketNumber } from '../../lib/market-data';
 import {
   authoritativeValue,
@@ -102,6 +103,8 @@ export default function LoansPage() {
   const [repaymentLoanId, setRepaymentLoanId] = useState<string | null>(null);
   const [repaymentAmount, setRepaymentAmount] = useState('');
   const [message, setMessage] = useState<string | null>(null);
+  const pendingApplication = useRef<PendingIntentKey | null>(null);
+  const pendingRepayment = useRef<PendingIntentKey | null>(null);
   const backendConfigured = true;
   useEffect(() => {
     const sync = () => { setUserId(sessionPrincipalId()); setSessionChecked(true); };
@@ -185,9 +188,8 @@ export default function LoansPage() {
     setSubmitting(true);
     setMessage(null);
     try {
-      const idempotencyKey = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-        ? crypto.randomUUID()
-        : `loan-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      pendingApplication.current = getIntentKey(pendingApplication.current, JSON.stringify([selectedPlanId, amount.trim(), durationDays, collateral.trim(), collateralImg.trim()]), 'loan:apply');
+      const idempotencyKey = pendingApplication.current.key;
       await api.post('/loans/apply', {
         planId: selectedPlanId,
         amount: amount.trim(),
@@ -196,6 +198,7 @@ export default function LoansPage() {
         collateralImg: collateralImg.trim(),
         idempotencyKey,
       });
+      pendingApplication.current = null;
       setAmount('');
       setDuration('');
       setCollateral('');
@@ -214,11 +217,13 @@ export default function LoansPage() {
     setRepaying(true);
     setMessage(null);
     try {
+      pendingRepayment.current = getIntentKey(pendingRepayment.current, JSON.stringify([repaymentLoanId, repaymentAmount.trim()]), 'loan:repay');
       await api.post('/loans/repay', {
         loanId: repaymentLoanId,
         amount: repaymentAmount.trim(),
-        idempotencyKey: globalThis.crypto?.randomUUID?.() ?? `repayment-${Date.now()}`,
+        idempotencyKey: pendingRepayment.current.key,
       });
+      pendingRepayment.current = null;
       setRepaymentAmount('');
       setRepaymentLoanId(null);
       setMessage('Repayment submitted.');

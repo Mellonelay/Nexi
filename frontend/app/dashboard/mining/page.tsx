@@ -1,8 +1,9 @@
 'use client';
 
-import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { History, RefreshCw, Sparkles } from 'lucide-react';
 import api from '../../lib/api';
+import { getIntentKey, type PendingIntentKey } from '../../lib/intent-key';
 import { actionCanSubmit, authoritativeValue, EARN_STATES, normalizeProductState, resolveEndpointTemplate } from '../../lib/product-states';
 import { sessionPrincipalId } from '../../lib/wallet-auth';
 import { DataStatePanel, Field, inputClass, Metric, PageHeader, PageShell, Panel, PanelHeading, PrimaryButton, SecondaryButton, StatusBadge } from '../../components/PagePrimitives';
@@ -32,6 +33,7 @@ export default function MiningPage() {
   const [message, setMessage] = useState('');
   const [userId, setUserId] = useState<string | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
+  const pendingSubscription = useRef<PendingIntentKey | null>(null);
   const plansEndpoint = process.env.NEXT_PUBLIC_MINING_PLANS_ENDPOINT || '/mining/plans';
   const positionsEndpoint = userId
     ? resolveEndpointTemplate(process.env.NEXT_PUBLIC_MINING_POSITIONS_ENDPOINT || '/mining/my/{userId}', { userId })
@@ -109,11 +111,13 @@ export default function MiningPage() {
     setStage('SUBMITTING');
     setMessage('');
     try {
+      pendingSubscription.current = getIntentKey(pendingSubscription.current, JSON.stringify([selectedPlan.id, amount.trim()]), 'mining:subscribe');
       await api.post(subscribeEndpoint, {
         planId: selectedPlan.id,
         amount: amount.trim(),
-        idempotencyKey: globalThis.crypto?.randomUUID?.() ?? `mining-${Date.now()}`,
+        idempotencyKey: pendingSubscription.current.key,
       });
+      pendingSubscription.current = null;
       setStage('PENDING_CONFIRMATION');
       setMessage('Request sent. Activation and reward values will appear after confirmation.');
       await load({ preserveFlow: true });
@@ -132,11 +136,14 @@ function MiningPosition({ position, onChanged }: { position: RecordValue; onChan
   const active = position.status === 'ACTIVE';
   const [busyAction, setBusyAction] = useState<string | null>(null);
   const [actionError, setActionError] = useState('');
+  const pendingAction = useRef<PendingIntentKey | null>(null);
   const action = async (path: string) => {
     setBusyAction(path);
     setActionError('');
     try {
-      await api.post(path, { subscriptionId: position.id, idempotencyKey: globalThis.crypto?.randomUUID?.() ?? `mining-${Date.now()}` });
+      pendingAction.current = getIntentKey(pendingAction.current, JSON.stringify([path, position.id]), 'mining:action');
+      await api.post(path, { subscriptionId: position.id, idempotencyKey: pendingAction.current.key });
+      pendingAction.current = null;
       onChanged();
     } catch (error) {
       setActionError(error instanceof Error ? error.message : 'The mining action could not be completed.');
