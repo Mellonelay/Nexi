@@ -6,6 +6,26 @@ import { Gate2SpotOrderType, OrderSide } from '../prisma/d1-client';
 import { MarginPositionDirection, MarginTransferDirection, MarginTransferDto, OpenMarginPositionDto } from './margin.dto';
 import { isLiquidatable, marginPnl, simpleInterest } from './margin.calculations';
 
+type MarginOpenContext = {
+  userId: string;
+  input: OpenMarginPositionDto;
+  pair: { id: string; symbol: string; baseAsset: string; quoteAsset: string };
+  collateral: Prisma.Decimal;
+  leverage: number;
+  debtAsset: string;
+};
+
+function parseMarginBorrowMetadata(value: unknown): Record<string, unknown> | null {
+  try {
+    const parsed: unknown = JSON.parse(String(value ?? 'null'));
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? parsed as Record<string, unknown>
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 @Injectable()
 export class MarginService {
   constructor(private readonly d1: D1FinancialCommandGateway) {}
@@ -47,24 +67,121 @@ export class MarginService {
 
   async openPosition(userId: string, input: OpenMarginPositionDto) {
     const pair = await this.requirePair(input.pair);
-    const quote = await this.requireQuote(pair.id, pair.symbol);
     const collateral = this.decimal(input.collateral);
     const leverage = Number(input.leverage);
-    await this.assertConfiguredLeverage(leverage);
-    const notional = collateral.mul(leverage);
-    const quantity = notional.div(new Prisma.Decimal(quote.price)).toDecimalPlaces(18, Prisma.Decimal.ROUND_DOWN);
     const debtAsset = input.direction === MarginPositionDirection.LONG ? pair.quoteAsset : pair.baseAsset;
+    const context: MarginOpenContext = { userId, input, pair, collateral, leverage, debtAsset };
+    const prior = await this.d1.getMarginOpeningIntent(userId, input.idempotencyKey);
+    if (prior.position) {
+      this.assertSameMarginOpening(prior.position, context);
+      return prior.position;
+    }
+
+    const account = await this.d1.ensureMarginAccount({
+      userId, pair: pair.symbol, baseAsset: pair.baseAsset, quoteAsset: pair.quoteAsset,
+    });
+    const reservation = prior.order
+      ? await this.recoverMarginOpening(context, prior.order, prior.borrow)
+      : await this.reserveNewMarginOpening(context, account.id);
+    for (let attempt = 0; attempt < 128; attempt += 1) {
+      if (!await this.d1.matchSpotOrder({ pair: pair.symbol })) break;
+    }
+    const filled: any = await this.d1.getSpotOrder(userId, String(reservation.order.id));
+    const entryPrice = String(filled?.price ?? reservation.order.price);
+    return this.d1.createMarginPosition({
+      positionId: crypto.randomUUID(), accountId: account.id, userId,
+      direction: input.direction, leverage, collateral: collateral.toString(),
+      quantity: String(filled?.filled ?? '0'), entryPrice, markPrice: entryPrice,
+      status: filled?.status === 'FILLED' ? SpotMarginPositionStatus.OPEN : SpotMarginPositionStatus.PENDING,
+      debtAsset, debtPrincipal: reservation.debtPrincipal.toString(),
+      openIdempotencyKey: input.idempotencyKey, entryOrderId: String(reservation.order.id),
+      pair: pair.symbol, positionAsset: pair.baseAsset,
+      activityId: crypto.randomUUID(), positionEventId: crypto.randomUUID(),
+    });
+  }
+
+  private assertSameMarginOpening(position: Record<string, unknown>, context: MarginOpenContext) {
+    const { pair, input, leverage, collateral } = context;
+    const direction = input.direction;
+    const same = String(position.accountPair).toUpperCase() === pair.symbol.toUpperCase()
+      && String(position.direction) === direction
+      && Number(position.leverage) === leverage
+      && new Prisma.Decimal(String(position.collateral)).eq(collateral);
+    if (!same) throw new BadRequestException('Margin position idempotency key was reused with different parameters');
+  }
+
+  private async recoverMarginOpening(
+    context: MarginOpenContext, order: Record<string, unknown>, borrow: Record<string, unknown> | null,
+  ) {
+    const { userId, input, leverage, collateral, debtAsset } = context;
+    const pair = context.pair.symbol;
+    // An entry reservation and its borrow are one SQLite transaction. Recover its
+    // recorded identity instead of recalculating quote-dependent parameters.
+    const metadata = parseMarginBorrowMetadata(borrow?.metadata);
+    if (!borrow || !metadata) {
+      throw new BadRequestException('Margin opening intent cannot be safely replayed with these parameters');
+    }
+    const account = await this.d1.getAccountForUser(userId, debtAsset, 'MARGIN');
+    let recordedCollateral = '';
+    try { recordedCollateral = this.decimal(String(metadata.collateral)).toString(); } catch { /* Reject invalid stored collateral. */ }
+    const actual = {
+      pair: String(metadata.pair).toUpperCase(),
+      direction: String(metadata.direction),
+      leverage: String(metadata.leverage),
+      collateral: recordedCollateral,
+      orderPair: String(order.pair).toUpperCase(),
+      side: String(order.side),
+      type: String(order.type),
+      scope: String(order.reserveScope),
+      borrowAsset: String(borrow.asset).toUpperCase(),
+      borrowAccount: String(borrow.accountId),
+    };
+    const expected = {
+      pair: pair.toUpperCase(),
+      direction: String(input.direction),
+      leverage: String(leverage),
+      collateral: collateral.toString(),
+      orderPair: pair.toUpperCase(),
+      side: input.direction === MarginPositionDirection.LONG ? OrderSide.BUY : OrderSide.SELL,
+      type: Gate2SpotOrderType.LIMIT,
+      scope: LedgerAccountScope.MARGIN,
+      borrowAsset: debtAsset.toUpperCase(),
+      borrowAccount: String(account.id),
+    };
+    const matching = Object.keys(expected).every((key) => actual[key as keyof typeof actual] === expected[key as keyof typeof expected]);
+    if (!matching) throw new BadRequestException('Margin opening intent cannot be safely replayed with these parameters');
+    return { order, debtPrincipal: new Prisma.Decimal(String(borrow.amount)) };
+  }
+
+  private async reserveNewMarginOpening(context: MarginOpenContext, accountId: string) {
+    const { userId, input, pair, leverage, collateral, debtAsset } = context;
+    await this.assertConfiguredLeverage(leverage);
+    const quote = await this.requireQuote(pair.id, pair.symbol);
+    const quantity = collateral.mul(leverage).div(new Prisma.Decimal(quote.price))
+      .toDecimalPlaces(18, Prisma.Decimal.ROUND_DOWN);
     const debtPrincipal = input.direction === MarginPositionDirection.LONG ? collateral.mul(leverage - 1) : quantity;
-    const account = await this.d1.ensureMarginAccount({ userId, pair: pair.symbol, baseAsset: pair.baseAsset, quoteAsset: pair.quoteAsset });
     const borrowed = await this.d1.getAccountForUser(userId, debtAsset, 'MARGIN');
     const feeValue = await this.d1.getSystemConfigValue('gate2.spot.feeRate');
     const feeRate = feeValue === null ? new Prisma.Decimal('0.001') : assertNonNegativeDecimal(feeValue);
-    const reserveAsset = input.direction === MarginPositionDirection.LONG ? pair.quoteAsset : pair.baseAsset;
-    const reserveAmount = input.direction === MarginPositionDirection.LONG ? quantity.mul(new Prisma.Decimal(quote.price)).mul(new Prisma.Decimal(1).add(feeRate)) : quantity;
-    const order = await this.d1.reserveSpotOrder({ userId, pair: pair.symbol, baseAsset: pair.baseAsset, quoteAsset: pair.quoteAsset, side: input.direction === MarginPositionDirection.LONG ? OrderSide.BUY : OrderSide.SELL, type: Gate2SpotOrderType.LIMIT, amount: quantity.toString(), price: quote.price, stopPrice: null, reserveAsset, reserveScope: LedgerAccountScope.MARGIN, reservedAmount: reserveAmount.toString(), feeRate: feeRate.toString(), idempotencyKey: `margin:entry:${input.idempotencyKey}`, correlationId: input.idempotencyKey, borrow: { accountId: borrowed.id, asset: debtAsset, amount: debtPrincipal.toString(), referenceType: 'SPOT_MARGIN_BORROW', referenceId: input.idempotencyKey, idempotencyKey: `margin:borrow:${input.idempotencyKey}`, correlationId: input.idempotencyKey, economicGroup: account.id, metadata: { pair: pair.symbol, direction: input.direction, leverage } } });
-    for (let attempt = 0; attempt < 128; attempt += 1) if (!await this.d1.matchSpotOrder({ pair: pair.symbol })) break;
-    const filled: any = await this.d1.getSpotOrder(userId, String(order.id));
-    return this.d1.createMarginPosition({ positionId: crypto.randomUUID(), accountId: account.id, userId, direction: input.direction, leverage, collateral: collateral.toString(), quantity: String(filled?.filled ?? '0'), entryPrice: String(filled?.price ?? quote.price), markPrice: String(filled?.price ?? quote.price), status: filled?.status === 'FILLED' ? SpotMarginPositionStatus.OPEN : SpotMarginPositionStatus.PENDING, debtAsset, debtPrincipal: debtPrincipal.toString(), openIdempotencyKey: input.idempotencyKey, entryOrderId: String(order.id), pair: pair.symbol, positionAsset: pair.baseAsset, activityId: crypto.randomUUID(), positionEventId: crypto.randomUUID() });
+    const reservedAmount = input.direction === MarginPositionDirection.LONG
+      ? quantity.mul(new Prisma.Decimal(quote.price)).mul(new Prisma.Decimal(1).add(feeRate))
+      : quantity;
+    const order = await this.d1.reserveSpotOrder({
+      userId, pair: pair.symbol, baseAsset: pair.baseAsset, quoteAsset: pair.quoteAsset,
+      side: input.direction === MarginPositionDirection.LONG ? OrderSide.BUY : OrderSide.SELL,
+      type: Gate2SpotOrderType.LIMIT, amount: quantity.toString(), price: quote.price,
+      stopPrice: null, reserveAsset: debtAsset, reserveScope: LedgerAccountScope.MARGIN,
+      reservedAmount: reservedAmount.toString(), feeRate: feeRate.toString(),
+      idempotencyKey: `margin:entry:${input.idempotencyKey}`, correlationId: input.idempotencyKey,
+      borrow: {
+        accountId: borrowed.id, asset: debtAsset, amount: debtPrincipal.toString(),
+        referenceType: 'SPOT_MARGIN_BORROW', referenceId: input.idempotencyKey,
+        idempotencyKey: `margin:borrow:${input.idempotencyKey}`,
+        correlationId: input.idempotencyKey, economicGroup: accountId,
+        metadata: { pair: pair.symbol, direction: input.direction, leverage, collateral: collateral.toString() },
+      },
+    });
+    return { order: order as Record<string, unknown>, debtPrincipal };
   }
 
   repayUnmatchedBorrow(userId: string, openIdempotencyKey: string) {

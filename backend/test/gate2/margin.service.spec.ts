@@ -55,6 +55,7 @@ describe('Spot isolated margin authority', () => {
   it('creates a pending position after borrowing, reserving, and matching through D1', async () => {
     const d1: any = {
       getActiveMarketPair: jest.fn().mockResolvedValue(pair),
+      getMarginOpeningIntent: jest.fn().mockResolvedValue({ position: null, order: null, borrow: null }),
       getLiveMarketQuote: jest.fn().mockResolvedValue({ id: 'quote-1', price: '100', state: 'LIVE', provider: 'deterministic-test', source: 'fixture', observedAt: new Date().toISOString(), receivedAt: new Date().toISOString() }),
       getSystemConfigValue: jest.fn().mockResolvedValue(null),
       ensureMarginAccount: jest.fn().mockResolvedValue({ id: 'margin-account-1' }),
@@ -77,6 +78,7 @@ describe('Spot isolated margin authority', () => {
   it('does not commit a borrow before the atomic entry reservation', async () => {
     const d1: any = {
       getActiveMarketPair: jest.fn().mockResolvedValue(pair),
+      getMarginOpeningIntent: jest.fn().mockResolvedValue({ position: null, order: null, borrow: null }),
       getLiveMarketQuote: jest.fn().mockResolvedValue({ price: '100' }),
       getSystemConfigValue: jest.fn().mockResolvedValue(null),
       ensureMarginAccount: jest.fn().mockResolvedValue({ id: 'margin-account-1' }),
@@ -92,6 +94,52 @@ describe('Spot isolated margin authority', () => {
     expect(d1.reserveSpotOrder).toHaveBeenCalledWith(expect.objectContaining({
       borrow: expect.objectContaining({ referenceType: 'SPOT_MARGIN_BORROW' }),
     }));
+  });
+
+  it('returns the accepted position before obtaining a changed market quote', async () => {
+    const d1: any = {
+      getActiveMarketPair: jest.fn().mockResolvedValue(pair),
+      getMarginOpeningIntent: jest.fn().mockResolvedValue({
+        position: { id: 'position-original', accountPair: 'BTCUSDT', direction: 'LONG', leverage: 3, collateral: '25' },
+        order: null, borrow: null,
+      }),
+      getLiveMarketQuote: jest.fn(),
+      reserveSpotOrder: jest.fn(),
+    };
+    const input = { pair: 'BTC/USDT', direction: MarginPositionDirection.LONG, leverage: 3, collateral: '25.00', idempotencyKey: 'stable-key-1' };
+    await expect(new MarginService(d1).openPosition('user-1', input)).resolves.toMatchObject({ id: 'position-original' });
+    expect(d1.getLiveMarketQuote).not.toHaveBeenCalled();
+    expect(d1.reserveSpotOrder).not.toHaveBeenCalled();
+    await expect(new MarginService(d1).openPosition('user-1', { ...input, collateral: '26' }))
+      .rejects.toThrow('different parameters');
+  });
+
+  it('materializes an accepted orphan order from its durable quote and borrow snapshot', async () => {
+    const d1: any = {
+      getActiveMarketPair: jest.fn().mockResolvedValue(pair),
+      getMarginOpeningIntent: jest.fn().mockResolvedValue({
+        position: null,
+        order: { id: 'original-order', userId: 'user-1', pair: 'BTCUSDT', side: 'SELL', type: 'LIMIT', reserveScope: 'MARGIN', price: '100', amount: '1.25' },
+        borrow: { accountId: 'margin-btc', asset: 'BTC', amount: '1.25', metadata: JSON.stringify({ pair: 'BTCUSDT', direction: 'SHORT', leverage: 5, collateral: '25' }) },
+      }),
+      ensureMarginAccount: jest.fn().mockResolvedValue({ id: 'margin-account-1' }),
+      getAccountForUser: jest.fn().mockResolvedValue({ id: 'margin-btc' }),
+      matchSpotOrder: jest.fn().mockResolvedValue(false),
+      getSpotOrder: jest.fn().mockResolvedValue({ id: 'original-order', price: '100', status: 'OPEN', filled: '0' }),
+      createMarginPosition: jest.fn().mockResolvedValue({ id: 'recovered-position' }),
+      getLiveMarketQuote: jest.fn().mockResolvedValue({ price: '200' }),
+      reserveSpotOrder: jest.fn(),
+    };
+    const input = { pair: 'BTC/USDT', direction: MarginPositionDirection.SHORT, leverage: 5, collateral: '25', idempotencyKey: 'stable-key-2' };
+    await expect(new MarginService(d1).openPosition('user-1', input)).resolves.toMatchObject({ id: 'recovered-position' });
+    expect(d1.reserveSpotOrder).not.toHaveBeenCalled();
+    expect(d1.getLiveMarketQuote).not.toHaveBeenCalled();
+    expect(d1.createMarginPosition).toHaveBeenCalledWith(expect.objectContaining({
+      entryOrderId: 'original-order', entryPrice: '100', debtPrincipal: '1.25',
+    }));
+    await expect(new MarginService(d1).openPosition('user-1', { ...input, leverage: 4 }))
+      .rejects.toThrow('cannot be safely replayed');
+    expect(d1.createMarginPosition).toHaveBeenCalledTimes(1);
   });
 
   it('routes pending entry cancellation through the owned D1 gateway without a duplicate balance writer', async () => {
