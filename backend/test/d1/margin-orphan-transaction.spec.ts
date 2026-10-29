@@ -56,6 +56,19 @@ describe("D1 orphan Margin borrow repayment — real SQLite transaction", () => 
     else process.env.D1_RUNTIME_ENABLED = previous;
   });
 
+  it("looks up the original order and borrow using the authenticated user, without a write", async () => {
+    const { db, bridge, gateway } = fixture();
+    try {
+      const owned = await gateway.getMarginOpeningIntent("user-1", openingKey);
+      expect(owned.position).toBeNull();
+      expect(owned.order).toMatchObject({ id: "entry-old", reserveScope: "MARGIN" });
+      expect(owned.borrow).toMatchObject({ id: "borrow-1", amount: "10" });
+      const foreign = await gateway.getMarginOpeningIntent("user-2", openingKey);
+      expect(foreign).toEqual({ position: null, order: null, borrow: null });
+      expect(bridge.batch).not.toHaveBeenCalled();
+    } finally { db.close(); }
+  });
+
   it("debits exactly once, audits, publishes via Outbox and safely replays", async () => {
     const { db, bridge, gateway } = fixture();
     try {

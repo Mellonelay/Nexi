@@ -1186,6 +1186,39 @@ export class D1FinancialCommandGateway {
     return result.results[0] ?? null;
   }
 
+  async getMarginOpeningIntent(userId: string, openIdempotencyKey: string): Promise<{
+    position: Record<string, unknown> | null;
+    order: Record<string, unknown> | null;
+    borrow: Record<string, unknown> | null;
+  }> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const [positions, orders, borrows] = await Promise.all([
+      this.bridge.select<Record<string, unknown>>(
+        `SELECT p.*,a."pair" AS "accountPair" FROM "SpotMarginPosition" p
+         JOIN "SpotMarginAccount" a ON a."id"=p."accountId"
+         WHERE p."openIdempotencyKey"=? AND a."userId"=? LIMIT 1`,
+        [openIdempotencyKey, userId],
+      ),
+      this.bridge.select<Record<string, unknown>>(
+        `SELECT * FROM "Gate2SpotOrder" WHERE "userId"=? AND "idempotencyKey"=?
+         AND "reserveScope"='MARGIN' LIMIT 1`,
+        [userId, `margin:entry:${openIdempotencyKey}`],
+      ),
+      this.bridge.select<Record<string, unknown>>(
+        `SELECT p."id",p."accountId",p."asset",p."amount",p."metadata" FROM "LedgerPosting" p
+         JOIN "LedgerAccount" a ON a."id"=p."accountId"
+         WHERE p."idempotencyKey"=? AND p."referenceType"='SPOT_MARGIN_BORROW'
+           AND p."kind"='CREDIT' AND a."userId"=? AND a."scope"='MARGIN' LIMIT 1`,
+        [`margin:borrow:${openIdempotencyKey}`, userId],
+      ),
+    ]);
+    return {
+      position: positions.results[0] ?? null,
+      order: orders.results[0] ?? null,
+      borrow: borrows.results[0] ?? null,
+    };
+  }
+
   async listMarginPositions(
     userId: string,
     status?: string,
