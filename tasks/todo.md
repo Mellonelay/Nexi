@@ -2,8 +2,8 @@
 
 - [x] Deploy Backend, Public, and Admin release `7e434daab146fe9c297c04e46ba9d4a0ee81401d`; all services active, zero restarts, Node 24.21.0, HTTPS routes 200, Backend SQLite/Redis ready.
 - [x] Confirm Sentry release commit association, finalization, production deploy, Admin artifact uploads, and Public/Admin debug-ID presence. Sentry issue query is blocked by HTTP 403; no claim of zero current errors.
-- [ ] Remove only the owner-approved safe task temp files and regenerated Public Webpack cache before using the existing authenticated Chrome profile.
-- [ ] Run scoped browser acceptance for changed/unproven journeys; record exact account/session and deployed SHA. Keep financial actions read-only unless separately authorized.
+- [x] Complete bounded cache/temp cleanup before browser work; free space is 2.1 GiB. Preserve active signed-in browser profile, canonical dependencies, release/rollback data and distinct CodeQL evidence.
+- [ ] Continue scoped browser acceptance for changed/unproven journeys on release `7e434daab146fe9c297c04e46ba9d4a0ee81401d`. Public Dashboard/Margin UI is partially verified; market-data status remains inconsistent with HTTP 200 responses. Admin `/admin/me` returned 401 after reload; owner sign-in is required. Keep financial actions read-only.
 - [ ] Obtain owner acceptance only from the owner; retain four financial gates as `OWNER_ACCEPTED_UNTESTED` and rollback preparation as `OWNER_DEFERRED`.
 
 ## CURRENT 2026-10-27 — independent post-release closure reconciliation

@@ -2,7 +2,8 @@
 
 - [x] Release the reviewed source `7e434daab146fe9c297c04e46ba9d4a0ee81401d` to Backend, Public, and Admin using the canonical build paths. Record artifact/source identities and unchanged GitHub proof.
 - [x] Verify service state, runtime Node identity, Nginx HTTPS routes, Backend SQLite/Redis readiness, and matching production Sentry release/deploy identity.
-- [ ] Complete only the bounded generated-cache/temp cleanup requested by the owner, then perform authenticated browser acceptance against these deployed artifacts.
+- [x] Complete bounded cache/temp cleanup before browser work; free space is 2.1 GiB. Active browser profile, canonical dependency stores, release/rollback data and distinct CodeQL evidence were preserved.
+- [ ] Continue scoped browser acceptance against these artifacts. Public Dashboard/Margin read-only rendering is partially verified; investigate the displayed market-data/chart pause. Admin requires owner sign-in after `/admin/me` returned 401. No financial mutation was performed.
 - [ ] Reconcile browser results and owner acceptance; retain `OWNER_ACCEPTED_UNTESTED` for the four closed financial gates. Sentry issue/event status remains `ACCESS_BLOCKED` until read access is available.
 
 ## CURRENT 2026-10-27 — independent post-release closure reconciliation
