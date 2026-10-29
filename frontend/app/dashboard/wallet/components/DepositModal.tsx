@@ -6,7 +6,8 @@ import { ArrowLeft, Check, Copy, Image as ImageIcon, X } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
 import api from '../../../lib/api';
-import { getAccessToken } from '../../../lib/auth-session';
+import { sameDepositClaim, uploadDepositProofObject, type PendingDepositClaim } from './deposit-proof-intent';
+import { getIntentKey } from '../../../lib/intent-key';
 import { findAsset } from '../../../lib/asset-registry';
 import AssetIcon from '../../../components/AssetIcon';
 
@@ -32,8 +33,6 @@ type Destination = {
 };
 
 type Step = 'asset' | 'details';
-
-function idempotency(prefix: string) { return `${prefix}:${crypto.randomUUID()}`; }
 function normalized(value: string) { return value.trim().toUpperCase(); }
 
 export default function DepositModal({ isOpen, onClose, selectedCurrency, onSelectCurrency, onCompleted }: DepositModalProps) {
@@ -45,6 +44,7 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
   const [proof, setProof] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const submissionLock = useRef(false);
+  const pendingClaim = useRef<PendingDepositClaim | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -53,6 +53,7 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
   useEffect(() => {
     if (!isOpen) return;
     let cancelled = false;
+    pendingClaim.current = null;
     setStep('asset');
     setAmount('');
     setTxHash('');
@@ -126,27 +127,23 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
     submissionLock.current = true;
     setBusy(true);
     try {
-      const intent = await api.post<{ key: string }>('/financial/deposit-proof-intents', {
-        contentType: proof.type,
-        byteSize: String(proof.size),
-      });
-      const token = getAccessToken();
-      const platformOrigin = (process.env.NEXT_PUBLIC_PLATFORM_URL || window.location.origin).replace(/\/$/, '');
-      const upload = await fetch(`${platformOrigin}/storage/deposit-proof?key=${encodeURIComponent(intent.data.key)}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': proof.type, ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: proof,
-      });
-      if (!upload.ok) throw new Error(`Proof upload failed (${upload.status})`);
+      const fingerprint = JSON.stringify([destination.asset, destination.network, destination.depositAddressId, amount.trim(), txHash.trim(), proof.name, proof.size, proof.type, proof.lastModified]);
+      let claim = pendingClaim.current;
+      if (!sameDepositClaim(claim, proof, fingerprint)) {
+        const objectKey = await uploadDepositProofObject(proof);
+        claim = { proof, fingerprint, objectKey, intent: getIntentKey(null, fingerprint, 'deposit-claim') };
+        pendingClaim.current = claim;
+      }
       await api.post('/financial/deposit-claims', {
         asset: destination.asset,
         network: destination.network,
         depositAddressId: destination.depositAddressId,
         claimedAmount: amount,
-        proofObjectKey: intent.data.key,
+        proofObjectKey: claim.objectKey,
         ...(txHash.trim() ? { txHash: txHash.trim() } : {}),
-        idempotencyKey: idempotency('deposit-claim'),
+        idempotencyKey: claim.intent.key,
       });
+      pendingClaim.current = null;
       toast.success('Deposit claim submitted for review.');
       await onCompleted?.();
       onClose();
