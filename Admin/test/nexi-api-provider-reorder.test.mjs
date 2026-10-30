@@ -100,6 +100,66 @@ test("live provider invalidates subscribed reads after successful or uncertain w
   assert.equal(changes, 4);
 });
 
+test("live provider rotates Admin tokens and retries writes and binary downloads once", async (t) => {
+  const { NexiAdminApiProvider } = await loadLiveProvider();
+  let accessToken = "expired-access";
+  let refreshToken = "refresh-token-1";
+  let acceptedAccessToken = "access-token-1";
+  const writes = [];
+  let refreshes = 0;
+  t.mock.method(globalThis, "fetch", async (url, init) => {
+    const path = String(url);
+    if (path.endsWith("/admin/auth/refresh")) {
+      refreshes += 1;
+      assert.deepEqual(JSON.parse(init.body), { refreshToken });
+      accessToken = `access-token-${refreshes + 1}`;
+      refreshToken = `refresh-token-${refreshes + 1}`;
+      acceptedAccessToken = accessToken;
+      return Response.json({ access_token: accessToken, refresh_token: refreshToken, user: {} });
+    }
+    if (path.endsWith("/admin/sessions/session-1/revoke")) {
+      writes.push({ authorization: init.headers.Authorization, body: init.body });
+    }
+    if (init.headers.Authorization !== `Bearer ${acceptedAccessToken}`) {
+      return Response.json({ message: "Expired access token" }, { status: 401 });
+    }
+    if (path.endsWith("/admin/sessions/session-1/revoke")) {
+      return Response.json({ ok: true, auditId: "audit-1" });
+    }
+    if (path.endsWith("/admin/messages/client-1/attachments/file-1")) {
+      return new Response("attachment-bytes", { headers: { "Content-Type": "application/pdf" } });
+    }
+    assert.fail(`Unexpected Admin request: ${path}`);
+  });
+
+  const provider = new NexiAdminApiProvider({
+    baseUrl: "https://admin-api.test",
+    getToken: async () => accessToken,
+    getRefreshToken: async () => refreshToken,
+    setTokens: (access, refresh) => {
+      accessToken = access;
+      refreshToken = refresh;
+    },
+  });
+  const ctx = {
+    actor: "operator",
+    role: "super_admin",
+    environment: "SANDBOX",
+    reason: "Revoke expired session",
+  };
+
+  assert.equal((await provider.revokeSession("session-1", ctx)).ok, true);
+  assert.equal(writes.length, 2);
+  assert.equal(writes[0].authorization, "Bearer expired-access");
+  assert.equal(writes[1].authorization, "Bearer access-token-2");
+  assert.equal(writes[0].body, writes[1].body);
+
+  accessToken = "expired-access-2";
+  const attachment = await provider.getAdminMessageAttachment("client-1", "file-1");
+  assert.equal(await attachment.text(), "attachment-bytes");
+  assert.equal(refreshes, 2);
+});
+
 test("live exposure stays unavailable without a backend risk cap", async (t) => {
   const { NexiAdminApiProvider } = await loadLiveProvider();
   const provider = new NexiAdminApiProvider({

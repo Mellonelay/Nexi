@@ -1,3 +1,18 @@
+## CURRENT 2026-10-30 — principal-scoped session and realtime continuation
+
+Starting source SHA: `222498a22c711c24ec7ca0145b828309ec6d0e5e`. The existing source batch is being completed by the same parent; no parallel writer is active. Owner authorized the reread-and-update of shared task/proof records. Preserve prior evidence and do not repeat these already-passing focused checks.
+
+| Phase | Owner | Source SHA | Dependency | Status | Confirmed defect / action | Changed paths | Verification | Blocker |
+|---|---|---|---|---|---|---|---|---|
+| 0 Intake/proof recovery | Parent | `222498a` | None | VERIFIED | Recovered current dirty batch and claims; kept one canonical checkout | Existing dirty work | Git state and Coordinator active-claim list | None |
+| 1 Public/Admin auth and identity isolation | Parent | `222498a` | Phase 0 | SOURCE_FIXED | Expired Admin session did not recover; delayed Public auth/data results could cross an identity switch | Admin provider/context; Public API/session/profile/settings/dashboard consumers | Focused Admin 20/20 and Public 20/20 previously passed | Runtime/browser behavior unknown |
+| 2 Communications realtime recovery | Parent | `222498a` | Phase 0 | VERIFIED | Redis subscription failure at gateway startup did not retry | Backend Communications gateway/spec | Focused Backend suite 5/5 previously passed | Production delivery/reconnect not runtime-verified |
+| 3 Consolidated review | Parent | `222498a` | Phases 1–2 | VERIFIED | Reviewed exact 23-path staged diff; reconciled task/proof/current-state receipts. CodeScene found change-related complexity increases in auth/session guards and Communications retry handling; retained the bounded security/recovery logic and recorded the maintainability risk rather than broadening the patch | 18 source/test paths plus five bounded task/evidence records | `git diff --cached --check`; CodeScene pre-commit run (quality gate failed on complexity findings; no correctness finding) | Maintainability follow-up can be a separate scoped refactor |
+| 4 Git integration | Parent | Final SHA | Phase 3 | TODO | Commit/push exact reviewed paths, avoiding build workflows | Reviewed source, tests, records | Final HEAD/origin/status readback | CI/build workflows intentionally not run |
+| 5 Owner checkpoint | Parent | Final SHA | Phase 4 | TODO | Report exact candidate and remaining runtime/integration limits | Current state/proof/handoff | Final receipt | Owner build/deploy approval required |
+
+This does not close the broader three-surface integration goal. Do not build, deploy, restart, migrate, mutate production financial/queue state, run CI build workflows, or start browser acceptance.
+
 ## CURRENT 2026-10-30 — source integration continuation checkpoint
 
 Starting frontier: `3b5e2c2b88984c3010e60305af9acd157a5c345c`, matching `origin/main` at intake. Parent is the sole source/Git integrator. User authorized narrow updates to shared task/evidence records after reread. Keep the existing source edits and separate prior ownership; no tests until source work is complete, then one bounded final check. No build, deploy, restart, migration, production write, queue operation, or browser acceptance.

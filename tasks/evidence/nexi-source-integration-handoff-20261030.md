@@ -1,5 +1,26 @@
 # NEXI Source Integration Handoff — 2026-10-30
 
+## Later continuation — principal-scoped session and realtime recovery
+
+This addendum records the local source batch continued from `222498a22c711c24ec7ca0145b828309ec6d0e5e` (`main` matched `origin/main` at intake). It preserves the prior committed OpenAPI/Admin/Communications source closure below; it does not replace that evidence or claim overall integration completion.
+
+### Confirmed source corrections
+
+- Admin API provider now shares a single refresh request across concurrent 401s and retries the original JSON, multipart, or binary request once using the rotated access token. The same mutation intent/body is reused.
+- Public API now correlates private requests/results with the current token principal: a delayed 401 cannot refresh/replay under another identity, and a late success from the prior principal is cancelled. Profile query identity is keyed by principal; Settings, Notifications, Spot, Binary, Mining, and Loans clear or ignore private state/results when identity changes. Realtime auth reads the current token.
+- Communications gateway retries its Redis subscription after initial outage/failure using bounded backoff and clears the retry timer during shutdown.
+
+### Focused evidence already executed
+
+- Admin: `cd Admin && node --test test/nexi-api-provider-reorder.test.mjs` — 20/20 passed.
+- Backend: `cd backend && NODE_OPTIONS=--experimental-vm-modules ./node_modules/.bin/jest --runInBand test/communications/communications.gateway.spec.ts` — 1 suite / 5 tests passed.
+- Public: `cd frontend && node --test tests/public-session-refresh.test.mjs tests/principal-response-race.test.mjs tests/realtime-auth-contract.test.mjs` — 20/20 passed.
+- Fallow MCP changed-code analysis was invoked after source edits; it was degraded because node_modules/policy packs were missing. It reported no unresolved imports, circular dependencies, or boundary violations in its analyzed scope; dynamic/interface methods and the direct `.mjs` tests were reported unused. No removals were based on those results.
+- CodeScene staged pre-commit safeguard analyzed 18 eligible source/test files in the 23-path staged change and returned `quality_gates=failed`, citing increased method/module complexity in the new Admin refresh path, Public Spot/Loans/Mining/Notifications identity handling, and Communications retry path. Those branches protect identity isolation and retry recovery; no unrelated decomposition was introduced. This remains an explicit maintainability risk, not behavioral proof.
+- Graphify index was reused from the earlier source analysis; its snapshot predates this batch and does not encode the HTTP/realtime behavior fully. Current source tracing supplied that evidence. No Graphify rebuild was run.
+
+The focused tests were run once before this documentation addendum. No full suite/typecheck/lint/build/CI/runtime/browser pass is claimed. The source diff requires authorized Git integration. The wider three-surface source goal, CodeScene maintainability risk, and runtime-only auth/realtime behavior remain open. No production build, deployment, restart, migration, financial write, queue mutation, or browser acceptance occurred.
+
 ## Current continuation state — 2026-10-30
 
 The handoff below records the earlier source batch and its commit; this addendum records the later continuation from `3b5e2c2b88984c3010e60305af9acd157a5c345c` (`HEAD=origin/main` at intake). The continuation includes the OpenAPI response closure plus bounded follow-on corrections recorded in `nexi-openapi-response-closure-20261030.md`; it was committed and pushed as `f2207b63e741f2c7a4af718af7ef88aa81b101a2`, separate from prior commit `213ea47`.

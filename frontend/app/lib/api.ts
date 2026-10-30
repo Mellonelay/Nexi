@@ -2,6 +2,7 @@ import axios, { type InternalAxiosRequestConfig } from 'axios';
 import {
   clearAuthSession,
   getAccessToken,
+  getAccessTokenPrincipalId,
   setAuthSession,
   type AuthSessionPayload,
 } from './auth-session';
@@ -31,7 +32,10 @@ const refreshClient = axios.create({
   timeout: 15_000,
 });
 
-type RetriableRequestConfig = InternalAxiosRequestConfig & { _nexiAuthRetry?: boolean };
+type RetriableRequestConfig = InternalAxiosRequestConfig & {
+  _nexiAuthRetry?: boolean;
+  _nexiPrincipalId?: string | null;
+};
 
 let refreshPromise: Promise<boolean> | null = null;
 
@@ -60,6 +64,7 @@ export { recoverPublicSession };
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
     const token = getAccessToken();
+    (config as RetriableRequestConfig)._nexiPrincipalId = getAccessTokenPrincipalId();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
       config.headers['Cache-Control'] = 'no-cache';
@@ -68,7 +73,13 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-api.interceptors.response.use(undefined, async (error: unknown) => {
+api.interceptors.response.use((response) => {
+  const config = response.config as RetriableRequestConfig;
+  if (config._nexiPrincipalId && config._nexiPrincipalId !== getAccessTokenPrincipalId()) {
+    return Promise.reject(new axios.CanceledError('The session principal changed before the response arrived.'));
+  }
+  return response;
+}, async (error: unknown) => {
   if (!axios.isAxiosError(error)) return Promise.reject(error);
   const config = error.config as RetriableRequestConfig | undefined;
   const requestPath = config?.url ?? '';
@@ -78,6 +89,7 @@ api.interceptors.response.use(undefined, async (error: unknown) => {
     || !config
     || config._nexiAuthRetry
     || isPublicAuthEndpoint
+    || (config._nexiPrincipalId && config._nexiPrincipalId !== getAccessTokenPrincipalId())
   ) {
     return Promise.reject(error);
   }

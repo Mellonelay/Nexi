@@ -9,6 +9,7 @@ function client(adapter) {
   const context = vm.createContext({
     window: { location: { hostname: 'www.nexitrading.app' }, dispatchEvent() {} },
     CustomEvent,
+    atob,
     process: { env: { NODE_ENV: 'production' } },
   });
   function load(path, require) {
@@ -99,6 +100,48 @@ test('concurrent and late rejected responses share the renewed session', async (
   rejectLate();
   assert.equal((await late).data, 'ok');
   assert.equal(refreshes, 1);
+});
+
+test('a delayed 401 from another principal is not replayed under the current wallet', async () => {
+  let protectedAttempts = 0;
+  let refreshes = 0;
+  let rejectRequest;
+  const started = Promise.withResolvers();
+  const { api, session } = client(async (config) => {
+    if (config.url === '/auth/refresh') {
+      refreshes++;
+      return response(config, { access_token: 'refreshed-user-b' });
+    }
+    protectedAttempts++;
+    started.resolve();
+    await new Promise((resolve) => { rejectRequest = resolve; });
+    throw unauthorized(config);
+  });
+  const token = (sub) => `header.${Buffer.from(JSON.stringify({ sub })).toString('base64url')}.signature`;
+  session.setAuthSession({ access_token: token('user-a'), user: { id: 'user-a' } });
+  const request = api.post('/mining/subscribe', { idempotencyKey: 'intent-a' });
+  await started.promise;
+  session.setAuthSession({ access_token: token('user-b'), user: { id: 'user-b' } });
+  rejectRequest();
+  await assert.rejects(request, { status: 401 });
+  assert.equal(protectedAttempts, 1);
+  assert.equal(refreshes, 0);
+});
+
+test('a successful response from a previous principal is cancelled before it reaches callers', async () => {
+  let complete;
+  const started = Promise.withResolvers();
+  const { api, session } = client((config) => new Promise((resolve) => {
+    started.resolve();
+    complete = () => resolve(response(config, { privateData: 'user-a' }));
+  }));
+  const token = (sub) => `header.${Buffer.from(JSON.stringify({ sub })).toString('base64url')}.signature`;
+  session.setAuthSession({ access_token: token('user-a'), user: { id: 'user-a' } });
+  const request = api.get('/wallet/overview');
+  await started.promise;
+  session.setAuthSession({ access_token: token('user-b'), user: { id: 'user-b' } });
+  complete();
+  await assert.rejects(request, { code: 'ERR_CANCELED' });
 });
 
 test('failed refresh clears the rejected session and does not replay the protected request', async () => {

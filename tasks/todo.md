@@ -1,3 +1,15 @@
+## CURRENT 2026-10-30 — principal-scoped session and realtime continuation
+
+- [x] INTAKE — Continued the existing goal from clean `main`/`origin/main` at `222498a22c711c24ec7ca0145b828309ec6d0e5e`; preserved the already-dirty source batch (16 tracked paths, two new focused test files). Existing Coordinator claims were checked; the owner authorized these task-record updates after reread.
+- [x] SOURCE_FIXED — Admin API requests refresh an expired session once and retry the same request; concurrent 401s share one refresh. Public private-data responses, delayed 401 retries, identity-keyed profile cache and settings/dashboard state are bound to the current principal. Communications gateway retries Redis subscription after initial outage with bounded backoff.
+- [x] VERIFIED — Previously executed focused regression checks passed: Admin `node --test test/nexi-api-provider-reorder.test.mjs` (20/20); Backend `NODE_OPTIONS=--experimental-vm-modules ./node_modules/.bin/jest --runInBand test/communications/communications.gateway.spec.ts` (5/5); Public `node --test tests/public-session-refresh.test.mjs tests/principal-response-race.test.mjs tests/realtime-auth-contract.test.mjs` (20/20). These results are reused; no rerun is planned absent an invalidating change.
+- [x] STATICALLY_VALIDATED — Fallow MCP changed-code check was invoked once after the source edits; degraded due to unavailable node_modules/policy packs. It reported no unresolved imports, cycles, or boundary violations; dynamic/interface methods and three direct `.mjs` tests were flagged as unused. No code was removed from these findings. Graphify evidence is reused from the prior indexed snapshot; changed runtime edges are checked directly in source.
+- [x] REVIEWED — Exact 23-path staged diff and whitespace check are clean. CodeScene staged safeguard ran; it reported increased method/module complexity in the changed Admin auth provider, Public Spot/Loans/Mining/Notifications paths, and Communications gateway. The added guards/retry preserve principal isolation and recovery; no unrelated refactor was added. Keep this maintainability risk visible for a later bounded cleanup.
+- [ ] TODO — Commit/push the reviewed paths without triggering builds. Broader consumer paths and runtime delivery remain outside this bounded source slice.
+- [ ] TODO — Owner pre-build checkpoint remains open. No build, deployment, restart, migration, live financial/queue operation, CI, or browser acceptance.
+
+Receipt: [source integration handoff](evidence/nexi-source-integration-handoff-20261030.md). Candidate starts at `222498a22c711c24ec7ca0145b828309ec6d0e5e`; current changes are local and not deployed.
+
 ## CURRENT 2026-10-30 — three-surface source integration continuation
 
 - [x] INTAKE — Recovered `main`/`origin/main` at `3b5e2c2b88984c3010e60305af9acd157a5c345c`, current dirty paths and bounded active claims. The owner authorized this session's narrow task-record updates after reread.

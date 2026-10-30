@@ -33,6 +33,7 @@ export default function MiningPage() {
   const [message, setMessage] = useState('');
   const [userId, setUserId] = useState<string | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
+  const previousUserId = useRef<string | null | undefined>(undefined);
   const pendingSubscription = useRef<PendingIntentKey | null>(null);
   const plansEndpoint = process.env.NEXT_PUBLIC_MINING_PLANS_ENDPOINT || '/mining/plans';
   const positionsEndpoint = userId
@@ -41,14 +42,29 @@ export default function MiningPage() {
   const subscribeEndpoint = process.env.NEXT_PUBLIC_MINING_SUBSCRIBE_ENDPOINT || '/mining/subscribe';
 
   useEffect(() => {
-    const sync = () => { setUserId(sessionPrincipalId()); setSessionChecked(true); };
+    const sync = () => {
+      const next = sessionPrincipalId();
+      if (previousUserId.current !== next) {
+        setPositions([]);
+        setSummary(null);
+        setRewards([]);
+        setSelectedPlan(null);
+        setAmount('');
+        setMessage('');
+        setStage('IDLE');
+        setPositionState(next ? 'LOADING' : 'UNAVAILABLE');
+        previousUserId.current = next;
+      }
+      setUserId(next);
+      setSessionChecked(true);
+    };
     sync();
     window.addEventListener('nexi:wallet-session', sync);
     return () => window.removeEventListener('nexi:wallet-session', sync);
   }, []);
 
   const load = useCallback(async (options: { preserveFlow?: boolean } = {}) => {
-    if (!sessionChecked) return;
+    if (!sessionChecked || sessionPrincipalId() !== userId) return;
     if (!options.preserveFlow) {
       setSelectedPlan(null);
       setStage('IDLE');
@@ -70,6 +86,7 @@ export default function MiningPage() {
       }
     }
 
+    if (sessionPrincipalId() !== userId) return;
     if (!userId || !positionsEndpoint) {
       setPositions([]);
       setSummary(null);
@@ -84,11 +101,13 @@ export default function MiningPage() {
         api.get('/mining/summary'),
         api.get(`/mining/rewards/${userId}`),
       ]);
+      if (sessionPrincipalId() !== userId) return;
       setPositions(Array.isArray(result.data) ? result.data : []);
       setSummary(summaryResult.data && typeof summaryResult.data === 'object' ? summaryResult.data : null);
       setRewards(Array.isArray(rewardsResult.data) ? rewardsResult.data : []);
       setPositionState('LIVE');
     } catch {
+      if (sessionPrincipalId() !== userId) return;
       setPositions([]);
       setSummary(null);
       setRewards([]);
@@ -99,7 +118,7 @@ export default function MiningPage() {
   useEffect(() => { void load(); }, [load]);
 
   const submit = async () => {
-    if (!userId || !selectedPlan || selectedPlan.isActive !== true || !subscribeEndpoint || !actionCanSubmit({ authenticated: true, valid: Number(amount) > 0, backendAvailable: catalogState === 'LIVE' })) return;
+    if (!userId || sessionPrincipalId() !== userId || !selectedPlan || selectedPlan.isActive !== true || !subscribeEndpoint || !actionCanSubmit({ authenticated: true, valid: Number(amount) > 0, backendAvailable: catalogState === 'LIVE' })) return;
     const requestedAmount = Number(amount);
     const minDeposit = Number(selectedPlan.minDeposit);
     const maxDeposit = Number(selectedPlan.maxDeposit);
@@ -117,11 +136,13 @@ export default function MiningPage() {
         amount: amount.trim(),
         idempotencyKey: pendingSubscription.current.key,
       });
+      if (sessionPrincipalId() !== userId) return;
       pendingSubscription.current = null;
       setStage('PENDING_CONFIRMATION');
       setMessage('Request sent. Activation and reward values will appear after confirmation.');
       await load({ preserveFlow: true });
     } catch (error) {
+      if (sessionPrincipalId() !== userId) return;
       setStage('ERROR');
       setMessage(error instanceof Error ? error.message : 'This subscription could not be accepted.');
     }

@@ -152,6 +152,7 @@ export default function BinaryPage() {
   const [amount, setAmount] = useState('');
   const [direction, setDirection] = useState<Direction>('LONG');
   const [userId, setUserId] = useState<string | null>(null);
+  const previousUserId = useRef<string | null | undefined>(undefined);
   const [tab, setTab] = useState<BinaryTab>('TRADE');
   const [state, setState] = useState<BinaryPositionState>('DRAFT');
   const [confirmationOpen, setConfirmationOpen] = useState(false);
@@ -196,7 +197,20 @@ export default function BinaryPage() {
   }, [normalizedPair]);
 
   useEffect(() => {
-    const sync = () => setUserId(sessionPrincipalId());
+    const sync = () => {
+      const next = sessionPrincipalId();
+      if (previousUserId.current !== next) {
+        setActivePositions([]);
+        setHistory([]);
+        setSelectedResult(null);
+        setSelectedChartTradeId(null);
+        setOptionWalletBalanceResult(null);
+        setConfirmationOpen(false);
+        setState('DRAFT');
+        previousUserId.current = next;
+      }
+      setUserId(next);
+    };
     sync();
     window.addEventListener('nexi:wallet-session', sync);
     return () => window.removeEventListener('nexi:wallet-session', sync);
@@ -227,7 +241,7 @@ export default function BinaryPage() {
     if (!token) return;
     let disposed = false;
     const socket = io(apiBaseUrl, {
-      auth: { token },
+      auth: (callback) => callback({ token: getAccessToken() }),
       transports: ['websocket'],
       reconnection: true,
       reconnectionAttempts: 8,
@@ -243,7 +257,7 @@ export default function BinaryPage() {
         api.get('/binary/positions/current'),
         api.get('/binary/positions/history'),
       ]).then(([currentResult, historyResult]) => {
-        if (disposed) return;
+        if (disposed || sessionPrincipalId() !== userId) return;
         if (currentResult.status === 'fulfilled' && Array.isArray(currentResult.value.data)) {
           setActivePositions(currentResult.value.data.map(normalizePosition).filter((item): item is BinaryPosition => Boolean(item)));
         }
@@ -253,6 +267,7 @@ export default function BinaryPage() {
       });
     };
     const handlePositionUpdate = (raw: unknown) => {
+      if (disposed || sessionPrincipalId() !== userId) return;
       const payload = raw as { event: string; position: unknown };
       const position = normalizePosition(payload.position);
       if (!position) return;
@@ -267,6 +282,7 @@ export default function BinaryPage() {
       setState(position.status);
     };
     const handleConnectionLoss = () => {
+      if (disposed || sessionPrincipalId() !== userId) return;
       setState((current) => INTERRUPTIBLE_BINARY_STATES.has(current) ? 'CONNECTION_LOST' : current);
     };
     socket.on('connect', handleReconnect);
@@ -315,7 +331,7 @@ export default function BinaryPage() {
       api.get('/binary/positions/current'),
       api.get('/binary/positions/history'),
     ]).then(([currentResult, historyResult]) => {
-      if (cancelled) return;
+      if (cancelled || sessionPrincipalId() !== userId) return;
       if (currentResult.status === 'fulfilled' && Array.isArray(currentResult.value.data)) {
         setActivePositions(currentResult.value.data.map(normalizePosition).filter((item): item is BinaryPosition => Boolean(item)));
       }
@@ -440,6 +456,7 @@ export default function BinaryPage() {
       });
       const position = normalizePosition(response.data);
       if (!position) throw new Error('Invalid position response');
+      if (sessionPrincipalId() !== userId) return;
       pendingBinaryIntent.current = null;
       setActivePositions((current) => [position, ...current.filter((item) => item.id !== position.id)]);
       setState('OPEN');
@@ -448,6 +465,7 @@ export default function BinaryPage() {
       setTab('ACTIVE');
       setFeedback('Position request accepted.');
     } catch {
+      if (sessionPrincipalId() !== userId) return;
       setState('ERROR');
       setConfirmationOpen(false);
       setFeedback('The position request could not be accepted.');

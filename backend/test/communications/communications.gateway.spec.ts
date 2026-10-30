@@ -28,6 +28,30 @@ function makeGateway() {
 }
 
 describe('CommunicationsGateway authenticated rooms', () => {
+  it('retries the communications subscription after a startup Redis outage', async () => {
+    jest.useFakeTimers();
+    try {
+      const subscriber = { subscribe: jest.fn().mockResolvedValue(1), on: jest.fn() };
+      const redis = {
+        isAvailable: jest.fn().mockReturnValueOnce(false).mockReturnValue(true),
+        createSubscriber: jest.fn().mockResolvedValue(subscriber),
+        releaseSubscriber: jest.fn().mockResolvedValue(undefined),
+      };
+      const gateway = new CommunicationsGateway({} as never, {} as never, {} as never, redis as never, {} as never);
+
+      await gateway.onModuleInit();
+      expect(redis.createSubscriber).not.toHaveBeenCalled();
+      await jest.advanceTimersByTimeAsync(1_000);
+
+      expect(redis.createSubscriber).toHaveBeenCalledTimes(1);
+      expect(subscriber.subscribe).toHaveBeenCalledWith('nexi:b8:communications');
+      await gateway.onModuleDestroy();
+      expect(redis.releaseSubscriber).toHaveBeenCalledWith(subscriber);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('accepts a validated Public user and joins only that user room', async () => {
     const ctx = makeGateway();
     ctx.jwt.verifyAsync.mockResolvedValue({ sub: 'customer-1', role: Role.USER, surface: 'PUBLIC' });

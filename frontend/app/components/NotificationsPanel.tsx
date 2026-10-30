@@ -15,7 +15,7 @@ import { cn } from "../lib/cn";
 import { io } from "socket.io-client";
 import axios from "axios";
 import api, { apiBaseUrl } from "../lib/api";
-import { getAccessToken } from "../lib/auth-session";
+import { getAccessToken, getAccessTokenPrincipalId } from "../lib/auth-session";
 
 type NotificationCategory = "All" | "Trading" | "Wallet" | "Account" | "System";
 
@@ -90,7 +90,9 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
   const [readErrors, setReadErrors] = useState<Record<string, boolean>>({});
   const [retryNonce, setRetryNonce] = useState(0);
   const [category, setCategory] = useState<NotificationCategory>("All");
+  const [principalId, setPrincipalId] = useState<string | null>(getAccessTokenPrincipalId());
   const loadRequestRef = useRef(0);
+  const previousPrincipalId = useRef<string | null | undefined>(principalId);
   const readRequestIds = useRef(new Set<string>());
   const unreadCount = notifications.filter((n) => !n.read).length;
   const visibleNotifications =
@@ -102,13 +104,14 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
 
   const loadNotifications = useCallback(async () => {
     const requestId = ++loadRequestRef.current;
+    const requestPrincipalId = getAccessTokenPrincipalId();
     setLoading(true);
     setFailed(false);
     try {
       const { data } = await api.get("/communications/notifications", {
         params: { page: 1, limit: 25 },
       });
-      if (requestId !== loadRequestRef.current) return;
+      if (requestId !== loadRequestRef.current || requestPrincipalId !== getAccessTokenPrincipalId()) return;
       const rows = Array.isArray(data)
         ? data
         : Array.isArray(data?.notifications)
@@ -138,7 +141,7 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
         }),
       );
     } catch (error) {
-      if (requestId !== loadRequestRef.current) return;
+      if (requestId !== loadRequestRef.current || requestPrincipalId !== getAccessTokenPrincipalId()) return;
       setNotifications([]);
       setFailed(true);
       setFailureMessage(axiosErrorMessage(error));
@@ -146,6 +149,24 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
       if (requestId === loadRequestRef.current) setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    const syncPrincipal = () => {
+      const next = getAccessTokenPrincipalId();
+      if (previousPrincipalId.current === next) return;
+      previousPrincipalId.current = next;
+      setPrincipalId(next);
+      loadRequestRef.current += 1;
+      readRequestIds.current.clear();
+      setNotifications([]);
+      setReadErrors({});
+      setFailed(false);
+      if (open && next) void loadNotifications();
+    };
+    window.addEventListener("nexi:wallet-session", syncPrincipal);
+    syncPrincipal();
+    return () => window.removeEventListener("nexi:wallet-session", syncPrincipal);
+  }, [loadNotifications, open]);
 
   useEffect(() => {
     if (!open) {
@@ -156,11 +177,11 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
   }, [loadNotifications, open, retryNonce]);
 
   useEffect(() => {
-    if (!open || typeof window === "undefined") return;
+    if (!open || !principalId || typeof window === "undefined") return;
     const token = getAccessToken();
     if (!token) return;
     const socket = io(`${apiBaseUrl}/communications`, {
-      auth: { token },
+      auth: (callback) => callback({ token: getAccessToken() }),
       transports: ["polling", "websocket"],
       tryAllTransports: true,
       reconnection: true,
@@ -170,11 +191,13 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
     });
     let connectedOnce = false;
     const handleConnect = () => {
+      if (getAccessTokenPrincipalId() !== principalId) return;
       const recovered = connectedOnce;
       connectedOnce = true;
       if (recovered) void loadNotifications();
     };
     const handleEvent = (message: unknown) => {
+      if (getAccessTokenPrincipalId() !== principalId) return;
       if (!message || typeof message !== "object") return;
       const event = (message as { event?: unknown }).event;
       if (!event || typeof event !== "object") return;
@@ -189,17 +212,20 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
       socket.off("communications.event", handleEvent);
       socket.disconnect();
     };
-  }, [loadNotifications, open]);
+  }, [loadNotifications, open, principalId]);
 
   const markRead = async (id: string) => {
     if (readRequestIds.current.has(id)) return;
+    const requestPrincipalId = getAccessTokenPrincipalId();
     readRequestIds.current.add(id);
     try {
       await api.post(`/communications/notifications/${id}/read`);
+      if (requestPrincipalId !== getAccessTokenPrincipalId()) return;
       setNotifications((items) =>
         items.map((item) => (item.id === id ? { ...item, read: true } : item)),
       );
     } catch {
+      if (requestPrincipalId !== getAccessTokenPrincipalId()) return;
       setReadErrors((errors) => ({ ...errors, [id]: true }));
     } finally {
       readRequestIds.current.delete(id);

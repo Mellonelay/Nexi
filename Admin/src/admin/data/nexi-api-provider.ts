@@ -59,7 +59,12 @@ import { mapBinaryPositionStatus, mapWalletAccount, mapLedgerPosting } from "../
 import { isPublishedAnnouncement } from "./announcement-status";
 import { buildFeatureFlagUpdate } from "./feature-flag-update";
 
-type ApiConfig = { baseUrl: string; getToken: () => Promise<string> };
+type ApiConfig = {
+  baseUrl: string;
+  getToken: () => Promise<string>;
+  getRefreshToken?: () => Promise<string>;
+  setTokens?: (accessToken: string, refreshToken: string) => void;
+};
 type JsonRecord = Record<string, unknown>;
 
 const DEFAULT_NAV_ITEMS: NavItem[] = [
@@ -302,6 +307,7 @@ function scope(commandType: string): ApprovalRequest["scope"] {
  */
 export class NexiAdminApiProvider implements AdminDataProvider {
   private readonly listeners = new Set<() => void>();
+  private refreshPromise: Promise<string> | null = null;
 
   constructor(private readonly config: ApiConfig) {}
 
@@ -338,25 +344,74 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     return all;
   }
 
-  private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  private async refreshAccessToken(): Promise<string> {
+    if (!this.config.getRefreshToken || !this.config.setTokens) {
+      throw new NexiAdminApiError(401, "Admin session refresh is unavailable");
+    }
+    if (!this.refreshPromise) {
+      this.refreshPromise = (async () => {
+        const refreshToken = await this.config.getRefreshToken!();
+        if (!refreshToken.trim()) throw new NexiAdminApiError(401, "Admin session has expired");
+        const response = await fetch(`${this.config.baseUrl.replace(/\/$/, "")}/admin/auth/refresh`, {
+          method: "POST",
+          headers: { Accept: "application/json", "Content-Type": "application/json" },
+          body: JSON.stringify({ refreshToken }),
+        });
+        const body = await response.text();
+        let payload: unknown;
+        try {
+          payload = body ? JSON.parse(body) : undefined;
+        } catch {
+          payload = undefined;
+        }
+        const result = record(payload);
+        if (!response.ok) {
+          throw new NexiAdminApiError(
+            response.status,
+            typeof result.message === "string" ? result.message : `Admin session refresh failed (${response.status})`,
+          );
+        }
+        if (typeof result.access_token !== "string" || typeof result.refresh_token !== "string") {
+          throw new NexiAdminApiError(502, "Admin session refresh returned invalid tokens");
+        }
+        this.config.setTokens!(result.access_token, result.refresh_token);
+        return result.access_token;
+      })().finally(() => {
+        this.refreshPromise = null;
+      });
+    }
+    return this.refreshPromise;
+  }
+
+  private async fetchWithAuth(path: string, init: RequestInit = {}): Promise<Response> {
+    const url = `${this.config.baseUrl.replace(/\/$/, "")}${path}`;
+    const multipart = typeof FormData !== "undefined" && init.body instanceof FormData;
+    const fetchWithToken = (token: string) => fetch(url, {
+      ...init,
+      headers: {
+        Accept: "application/json",
+        ...(init.body && !multipart ? { "Content-Type": "application/json" } : {}),
+        ...(init.headers ?? {}),
+        Authorization: `Bearer ${token}`,
+      },
+    });
     const token = await this.config.getToken();
     if (!token.trim()) throw new NexiAdminApiError(401, "Admin session token is unavailable");
+    const response = await fetchWithToken(token);
+    if (response.status !== 401 || !this.config.getRefreshToken || !this.config.setTokens) return response;
+    const refreshToken = await this.config.getRefreshToken();
+    if (!refreshToken.trim()) return response;
+    return fetchWithToken(await this.refreshAccessToken());
+  }
+
+  private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const method = (init.method ?? "GET").toUpperCase();
     const startedAt = Date.now();
     let status: number | null = null;
     let outcome: "success" | "http-error" | "network-error" | "response-error" = "success";
-    const multipart = typeof FormData !== "undefined" && init.body instanceof FormData;
     let invalidate = method !== "GET" && method !== "HEAD";
     try {
-      const response = await fetch(`${this.config.baseUrl.replace(/\/$/, "")}${path}`, {
-        ...init,
-        headers: {
-          Accept: "application/json",
-          ...(init.body && !multipart ? { "Content-Type": "application/json" } : {}),
-          ...(init.headers ?? {}),
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await this.fetchWithAuth(path, init);
       status = response.status;
       if (!response.ok && response.status < 500) invalidate = false;
       const body = await response.text();
@@ -657,11 +712,9 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     });
   }
   async getKycEvidence(userId: string, side: "front" | "back"): Promise<Blob> {
-    const token = await this.config.getToken();
-    if (!token.trim()) throw new NexiAdminApiError(401, "Admin session token is unavailable");
-    const response = await fetch(
-      `${this.config.baseUrl.endsWith("/") ? this.config.baseUrl.slice(0, -1) : this.config.baseUrl}/admin/kyc/${encodeURIComponent(userId)}/evidence/${side}`,
-      { headers: { Accept: "application/octet-stream", Authorization: `Bearer ${token}` } },
+    const response = await this.fetchWithAuth(
+      `/admin/kyc/${encodeURIComponent(userId)}/evidence/${side}`,
+      { headers: { Accept: "application/octet-stream" } },
     );
     if (!response.ok) {
       let message = `Admin API request failed (${response.status})`;
@@ -2067,11 +2120,9 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     );
   }
   async getAdminMessageAttachment(recipientId: string, id: string): Promise<Blob> {
-    const token = await this.config.getToken();
-    if (!token.trim()) throw new NexiAdminApiError(401, "Admin session token is unavailable");
-    const response = await fetch(
-      `${this.config.baseUrl.replace(/\/$/, "")}/admin/messages/${encodeURIComponent(recipientId)}/attachments/${encodeURIComponent(id)}`,
-      { headers: { Accept: "application/octet-stream", Authorization: `Bearer ${token}` } },
+    const response = await this.fetchWithAuth(
+      `/admin/messages/${encodeURIComponent(recipientId)}/attachments/${encodeURIComponent(id)}`,
+      { headers: { Accept: "application/octet-stream" } },
     );
     if (!response.ok) {
       let message = `Admin API request failed (${response.status})`;

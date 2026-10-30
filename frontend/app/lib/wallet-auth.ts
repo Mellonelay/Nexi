@@ -2,23 +2,14 @@ import api from './api';
 import {
   clearAuthSession,
   getAccessToken,
+  getAccessTokenPrincipalId,
   setAuthSession,
   setSessionUser,
   type AuthSessionPayload,
 } from './auth-session';
 
 export function sessionPrincipalId(): string | null {
-  const token = getAccessToken();
-  if (!token) return null;
-  try {
-    const encodedPayload = token.split('.')[1];
-    if (!encodedPayload) return null;
-    const json = atob(encodedPayload.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - encodedPayload.length % 4) % 4));
-    const payload = JSON.parse(json) as { sub?: unknown };
-    return typeof payload.sub === 'string' && payload.sub.length > 0 ? payload.sub : null;
-  } catch {
-    return null;
-  }
+  return getAccessTokenPrincipalId();
 }
 
 export interface ReferralProfile {

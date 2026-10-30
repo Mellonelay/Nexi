@@ -1,12 +1,12 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useLocale } from "../state/LocaleProvider";
 import { authoritativeValue, productStateLabel } from "../lib/product-states";
-import { loadCurrentUser, type WalletProfile } from "../lib/wallet-auth";
+import { loadCurrentUser, sessionPrincipalId, type WalletProfile } from "../lib/wallet-auth";
 import { hasAuthSession } from "../lib/auth-session";
 import { NexiWordmark } from "../dashboard/components/QuotesHubVisuals";
 
@@ -127,12 +127,12 @@ export default function AccountIdentityHeader({
   compact = false,
 }: AccountIdentityHeaderProps) {
   const { t } = useLocale();
-  const queryClient = useQueryClient();
   const [sessionPresent, setSessionPresent] = useState(false);
+  const [principalId, setPrincipalId] = useState<string | null>(sessionPrincipalId());
   const sessionQuery = useQuery<WalletProfile>({
-    queryKey: ["user", "me"],
+    queryKey: ["user", "me", principalId],
     queryFn: loadCurrentUser,
-    enabled: sessionPresent,
+    enabled: sessionPresent && Boolean(principalId),
     retry: false,
     staleTime: 30_000,
   });
@@ -141,13 +141,12 @@ export default function AccountIdentityHeader({
     const syncSession = () => {
       const hasSession = hasAuthSession();
       setSessionPresent(hasSession);
-      if (hasSession)
-        void queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+      setPrincipalId(sessionPrincipalId());
     };
     syncSession();
     window.addEventListener("nexi:wallet-session", syncSession);
     return () => window.removeEventListener("nexi:wallet-session", syncSession);
-  }, [queryClient]);
+  }, []);
 
   const state = accountState(sessionPresent, sessionQuery);
   const profileId =

@@ -630,6 +630,21 @@ function useSpotOrderState({
   const [feedback, setFeedback] = useState<string | null>(null);
   const orderSubmissionLock = useRef(false);
   const pendingSpotIntent = useRef<PendingIntentKey | null>(null);
+  const previousUserId = useRef(userId);
+
+  useEffect(() => {
+    if (previousUserId.current === userId) return;
+    previousUserId.current = userId;
+    setPrice('');
+    setStopPrice('');
+    setAmount('');
+    setTp('');
+    setSl('');
+    setTpSlState('NOT_CONFIGURED');
+    setOrderState('DRAFT');
+    setConfirmationOpen(false);
+    setFeedback(null);
+  }, [userId]);
 
   useEffect(() => {
     if (currentPrice !== null) setPrice((current) => current || String(currentPrice));
@@ -671,7 +686,7 @@ function useSpotOrderState({
   };
 
   const submitOrder = async () => {
-    if (orderSubmissionLock.current || !ready || !userId) return;
+    if (orderSubmissionLock.current || !ready || !userId || sessionPrincipalId() !== userId) return;
     orderSubmissionLock.current = true;
     setOrderState('SUBMITTING');
     setFeedback(null);
@@ -687,12 +702,14 @@ function useSpotOrderState({
         ...(orderType === 'STOP' ? { stopPrice: stopPrice.trim() } : {}),
         idempotencyKey: pendingSpotIntent.current.key,
       });
+      if (sessionPrincipalId() !== userId) return;
       pendingSpotIntent.current = null;
       setOrderState(normalizeSpotOrderState((response.data as { status?: unknown })?.status));
       setConfirmationOpen(false);
       setAmount('');
       setFeedback('Order accepted.');
     } catch {
+      if (sessionPrincipalId() !== userId) return;
       setOrderState('FAILED');
       setConfirmationOpen(false);
       setFeedback('The order could not be accepted.');
@@ -739,15 +756,15 @@ function useMarginTradingState({
   useEffect(() => {
     let cancelled = false;
     const hasToken = hasAuthSession();
+    setMarginQuote(null);
+    setMarginPositions([]);
     if (!userId || !hasToken) {
-      setMarginQuote(null);
-      setMarginPositions([]);
       return () => { cancelled = true; };
     }
 
     setMarginFeedback(null);
     Promise.allSettled([getMarginQuote(displayPair), listMarginPositions()]).then(([quoteResult, positionsResult]) => {
-      if (cancelled) return;
+      if (cancelled || sessionPrincipalId() !== userId) return;
       setMarginQuote(quoteResult.status === 'fulfilled' ? quoteResult.value : null);
       setMarginPositions(positionsResult.status === 'fulfilled' ? positionsResult.value : []);
     });
@@ -767,17 +784,18 @@ function useMarginTradingState({
     && effectiveMarginLeverage !== 0 && marginCollateralValue !== null && !marginSubmitting,
   );
 
-  const refreshMarginPositions = async () => {
+  const refreshMarginPositions = async (requestUserId: string) => {
     try {
-      setMarginPositions(await listMarginPositions());
+      const positions = await listMarginPositions();
+      if (sessionPrincipalId() === requestUserId) setMarginPositions(positions);
     } catch {
-      setMarginFeedback('Margin positions could not be refreshed.');
+      if (sessionPrincipalId() === requestUserId) setMarginFeedback('Margin positions could not be refreshed.');
     }
   };
 
   const handleOpenMargin = async () => {
     if (marginSubmissionLock.current) return;
-    if (!marginReady || marginCollateralValue === null) {
+    if (!marginReady || marginCollateralValue === null || !userId || sessionPrincipalId() !== userId) {
       setMarginFeedback(!userId ? 'Verify the wallet before opening an isolated-margin position.' : 'Enter positive collateral and wait for the latest margin quote.');
       return;
     }
@@ -794,11 +812,13 @@ function useMarginTradingState({
         collateral: marginCollateral.trim(),
         idempotencyKey: pendingMarginIntent.current.key,
       });
+      if (sessionPrincipalId() !== userId) return;
       pendingMarginIntent.current = null;
       setMarginCollateral('');
       setMarginFeedback(`${marginDirection} ${effectiveMarginLeverage}x position submitted.`);
-      await refreshMarginPositions();
+      await refreshMarginPositions(userId);
     } catch {
+      if (sessionPrincipalId() !== userId) return;
       setMarginFeedback('This margin position could not be opened.');
     } finally {
       marginSubmissionLock.current = false;
@@ -807,15 +827,17 @@ function useMarginTradingState({
   };
 
   const handleCloseMargin = async (positionId: string) => {
-    if (marginSubmissionLock.current) return;
+    if (marginSubmissionLock.current || !userId || sessionPrincipalId() !== userId) return;
     marginSubmissionLock.current = true;
     setMarginSubmitting(true);
     setMarginFeedback(null);
     try {
       await closeMarginPosition(positionId, `margin:close:${positionId}:${Date.now()}`);
+      if (sessionPrincipalId() !== userId) return;
       setMarginFeedback('Margin close request accepted.');
-      await refreshMarginPositions();
+      await refreshMarginPositions(userId);
     } catch {
+      if (sessionPrincipalId() !== userId) return;
       setMarginFeedback('The margin close request failed.');
     } finally {
       marginSubmissionLock.current = false;
@@ -824,15 +846,17 @@ function useMarginTradingState({
   };
 
   const handleMarkMargin = async (positionId: string) => {
-    if (marginSubmissionLock.current) return;
+    if (marginSubmissionLock.current || !userId || sessionPrincipalId() !== userId) return;
     marginSubmissionLock.current = true;
     setMarginSubmitting(true);
     setMarginFeedback(null);
     try {
       await markMarginPosition(positionId);
+      if (sessionPrincipalId() !== userId) return;
       setMarginFeedback('Margin position refreshed with the latest quote.');
-      await refreshMarginPositions();
+      await refreshMarginPositions(userId);
     } catch {
+      if (sessionPrincipalId() !== userId) return;
       setMarginFeedback('The margin quote refresh failed.');
     } finally {
       marginSubmissionLock.current = false;

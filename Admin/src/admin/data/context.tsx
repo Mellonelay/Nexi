@@ -8,6 +8,11 @@ export function createConfiguredAdminProvider(): AdminDataProvider {
       import.meta.env.VITE_ADMIN_API_BASE_URL ??
       (import.meta.env.DEV ? "http://127.0.0.1:3200" : "https://api.nexitrading.app"),
     getToken: async () => sessionStorage.getItem("nexi.admin.access_token") ?? "",
+    getRefreshToken: async () => sessionStorage.getItem("nexi.admin.refresh_token") ?? "",
+    setTokens: (accessToken, refreshToken) => {
+      sessionStorage.setItem("nexi.admin.access_token", accessToken);
+      sessionStorage.setItem("nexi.admin.refresh_token", refreshToken);
+    },
   });
 }
 

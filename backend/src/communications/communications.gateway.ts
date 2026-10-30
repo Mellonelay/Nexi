@@ -1,4 +1,4 @@
-import { Injectable, OnModuleDestroy, OnModuleInit, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { MessageBody, SubscribeMessage, WebSocketGateway, WebSocketServer, ConnectedSocket, OnGatewayInit } from '@nestjs/websockets';
 import { Namespace, Socket } from 'socket.io';
@@ -19,6 +19,10 @@ export class CommunicationsGateway implements OnGatewayInit, OnModuleInit, OnMod
   @WebSocketServer() server!: Namespace;
   private subscriber?: Redis;
   private sequence = 0;
+  private readonly logger = new Logger(CommunicationsGateway.name);
+  private subscriberRetryTimer?: NodeJS.Timeout;
+  private subscriberRetryAttempt = 0;
+  private destroyed = false;
 
   constructor(
     private readonly jwt: JwtService,
@@ -35,17 +39,53 @@ export class CommunicationsGateway implements OnGatewayInit, OnModuleInit, OnMod
   }
 
   async onModuleInit() {
-    if (!this.redis.isAvailable()) return;
+    this.destroyed = false;
+    await this.connectSubscriber();
+  }
+
+  async onModuleDestroy() {
+    this.destroyed = true;
+    if (this.subscriberRetryTimer) clearTimeout(this.subscriberRetryTimer);
+    this.subscriberRetryTimer = undefined;
+    if (this.subscriber) await this.redis.releaseSubscriber(this.subscriber);
+    this.subscriber = undefined;
+  }
+
+  private async connectSubscriber() {
+    if (this.destroyed || this.subscriber) return;
+    if (!this.redis.isAvailable()) {
+      this.scheduleSubscriberRetry();
+      return;
+    }
+    let subscriber: Redis | undefined;
     try {
-      this.subscriber = await this.redis.createSubscriber();
-      await this.subscriber.subscribe('nexi:b8:communications');
-      this.subscriber.on('message', (_channel, message) => this.broadcast(message));
+      subscriber = await this.redis.createSubscriber();
+      await subscriber.subscribe('nexi:b8:communications');
+      if (this.destroyed) {
+        await this.redis.releaseSubscriber(subscriber).catch(() => undefined);
+        return;
+      }
+      this.subscriber = subscriber;
+      this.subscriberRetryAttempt = 0;
+      subscriber.on('message', (_channel, message) => this.broadcast(message));
     } catch {
+      if (subscriber) await this.redis.releaseSubscriber(subscriber).catch(() => undefined);
       this.subscriber = undefined;
+      this.logger.warn('Communications Redis subscription unavailable; retry scheduled.');
+      this.scheduleSubscriberRetry();
     }
   }
 
-  async onModuleDestroy() { if (this.subscriber) await this.redis.releaseSubscriber(this.subscriber); }
+  private scheduleSubscriberRetry() {
+    if (this.destroyed || this.subscriberRetryTimer) return;
+    const delay = Math.min(1_000 * (2 ** this.subscriberRetryAttempt), 30_000);
+    this.subscriberRetryAttempt += 1;
+    this.subscriberRetryTimer = setTimeout(() => {
+      this.subscriberRetryTimer = undefined;
+      void this.connectSubscriber();
+    }, delay);
+    this.subscriberRetryTimer.unref?.();
+  }
 
   async handleConnection(client: Socket) {
     const user = client.data.authenticatedUser as AuthenticatedUser;

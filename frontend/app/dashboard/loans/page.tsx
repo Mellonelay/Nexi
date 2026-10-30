@@ -94,6 +94,7 @@ export default function LoansPage() {
   const [state, setState] = useState<LoadState>('LOADING');
   const [userId, setUserId] = useState<string | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
+  const previousUserId = useRef<string | null | undefined>(undefined);
   const [amount, setAmount] = useState('');
   const [duration, setDuration] = useState('');
   const [collateral, setCollateral] = useState('');
@@ -107,14 +108,31 @@ export default function LoansPage() {
   const pendingRepayment = useRef<PendingIntentKey | null>(null);
   const backendConfigured = true;
   useEffect(() => {
-    const sync = () => { setUserId(sessionPrincipalId()); setSessionChecked(true); };
+    const sync = () => {
+      const next = sessionPrincipalId();
+      if (previousUserId.current !== next) {
+        setLoans([]);
+        setSelectedPlanId('');
+        setAmount('');
+        setDuration('');
+        setCollateral('');
+        setCollateralImg('');
+        setRepaymentLoanId(null);
+        setRepaymentAmount('');
+        setMessage(null);
+        setState(next ? 'LOADING' : 'UNAVAILABLE');
+        previousUserId.current = next;
+      }
+      setUserId(next);
+      setSessionChecked(true);
+    };
     sync();
     window.addEventListener('nexi:wallet-session', sync);
     return () => window.removeEventListener('nexi:wallet-session', sync);
   }, []);
 
   const load = useCallback(async () => {
-    if (!sessionChecked) return;
+    if (!sessionChecked || sessionPrincipalId() !== userId) return;
     setPlansState('LOADING');
     try {
       const planResult = await api.get('/loans/plans');
@@ -124,6 +142,7 @@ export default function LoansPage() {
       setPlans([]);
       setPlansState('ERROR');
     }
+    if (sessionPrincipalId() !== userId) return;
     if (!userId || !backendConfigured) {
       setLoans([]);
       setState('UNAVAILABLE');
@@ -132,9 +151,11 @@ export default function LoansPage() {
     setState('LOADING');
     try {
       const result = await api.get(`/loans/my/${userId}`);
+      if (sessionPrincipalId() !== userId) return;
       setLoans(Array.isArray(result.data) ? result.data : []);
       setState('LIVE');
     } catch {
+      if (sessionPrincipalId() !== userId) return;
       setLoans([]);
       setState('ERROR');
     }
@@ -164,7 +185,7 @@ export default function LoansPage() {
   const totalPreview = principal !== null && interestPreview !== null ? principal + interestPreview : null;
   const reviewApplication = async (event: FormEvent) => {
     event.preventDefault();
-    if (!userId) {
+    if (!userId || sessionPrincipalId() !== userId) {
       setMessage('Verify your wallet before submitting a loan application.');
       return;
     }
@@ -198,6 +219,7 @@ export default function LoansPage() {
         collateralImg: collateralImg.trim(),
         idempotencyKey,
       });
+      if (sessionPrincipalId() !== userId) return;
       pendingApplication.current = null;
       setAmount('');
       setDuration('');
@@ -206,6 +228,7 @@ export default function LoansPage() {
       setMessage('Application submitted for review.');
       await load();
     } catch (error) {
+      if (sessionPrincipalId() !== userId) return;
       const responseMessage = (error as { response?: { data?: { message?: unknown } } })?.response?.data?.message;
       setMessage(typeof responseMessage === 'string' ? responseMessage : 'Loan application could not be submitted.');
     } finally {
@@ -213,7 +236,7 @@ export default function LoansPage() {
     }
   };
   const repayLoan = async () => {
-    if (!userId || !repaymentLoanId || positiveNumber(repaymentAmount) === null) return;
+    if (!userId || sessionPrincipalId() !== userId || !repaymentLoanId || positiveNumber(repaymentAmount) === null) return;
     setRepaying(true);
     setMessage(null);
     try {
@@ -223,12 +246,14 @@ export default function LoansPage() {
         amount: repaymentAmount.trim(),
         idempotencyKey: pendingRepayment.current.key,
       });
+      if (sessionPrincipalId() !== userId) return;
       pendingRepayment.current = null;
       setRepaymentAmount('');
       setRepaymentLoanId(null);
       setMessage('Repayment submitted.');
       await load();
     } catch (error) {
+      if (sessionPrincipalId() !== userId) return;
       const responseMessage = (error as { response?: { data?: { message?: unknown } } })?.response?.data?.message;
       setMessage(typeof responseMessage === 'string' ? responseMessage : 'Repayment could not be submitted.');
     } finally {

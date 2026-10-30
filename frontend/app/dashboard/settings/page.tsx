@@ -342,6 +342,8 @@ export default function SettingsPage() {
   const [busy, setBusy] = useState(false);
   const [state, setState] = useState<'LOADING'|'LIVE'|'ERROR'|'UNAVAILABLE'>('LOADING');
   const { locale, setLocale } = useLocale();
+  const previousPrincipalId = useRef<string | null>(sessionPrincipalId());
+  const loadRequestId = useRef(0);
 
   useEffect(() => {
     const requestedTab = searchParams.get('tab');
@@ -349,7 +351,9 @@ export default function SettingsPage() {
   }, [searchParams]);
 
   const load = async () => {
-    if (!sessionPrincipalId()) { setState('UNAVAILABLE'); return; }
+    const requestId = ++loadRequestId.current;
+    const requestPrincipalId = sessionPrincipalId();
+    if (!requestPrincipalId) { setState('UNAVAILABLE'); return; }
     setState('LOADING');
     try {
       const [me, pref, kycStatus, sessionList, securityStatus] = await Promise.all([
@@ -359,15 +363,31 @@ export default function SettingsPage() {
         api.get<Session[]>('/auth/sessions').then((r)=>r.data),
         api.get<SecurityState>('/auth/security/status').then((r)=>r.data),
       ]);
+      if (requestId !== loadRequestId.current || sessionPrincipalId() !== requestPrincipalId) return;
       setProfile(me); setDisplayName(me.displayName ?? ''); setEmail(me.email ?? '');
       setPreferences(pref); setKyc(kycStatus); setSessions(Array.isArray(sessionList) ? sessionList : []); setSecurity(securityStatus); setState('LIVE');
-    } catch { setState('ERROR'); }
+    } catch { if (requestId === loadRequestId.current && sessionPrincipalId() === requestPrincipalId) setState('ERROR'); }
   };
   useEffect(() => {
-    const initialize = async () => { await recoverPublicSession(); await load(); };
-    void initialize();
-    const onSession = () => void load();
+    const onSession = () => {
+      const next = sessionPrincipalId();
+      if (previousPrincipalId.current !== next) {
+        previousPrincipalId.current = next;
+        loadRequestId.current += 1;
+        setProfile(null); setDisplayName(''); setEmail(''); setPreferences(null); setSessions([]); setSecurity(null);
+        setCurrentPassword(''); setNewPassword(''); setMfaToken(''); setMfaPassword(''); setMfaSetup(null); setBackupCodes([]);
+        setKyc(null); setFirstName(''); setLastName(''); setDob(''); setCountry(''); setDocumentType('PASSPORT');
+        setFrontDocument(null); setBackDocument(null); setBusy(false); setState(next ? 'LOADING' : 'UNAVAILABLE');
+      }
+      void load();
+    };
     window.addEventListener('nexi:wallet-session', onSession);
+    const initialize = async () => {
+      const priorRequestId = loadRequestId.current;
+      await recoverPublicSession();
+      if (loadRequestId.current === priorRequestId) void load();
+    };
+    void initialize();
     return () => window.removeEventListener('nexi:wallet-session', onSession);
   }, []);
 
