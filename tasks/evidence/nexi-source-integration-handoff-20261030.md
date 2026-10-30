@@ -48,4 +48,4 @@ Executed in the canonical checkout, without a production build:
 
 ## Handoff state
 
-At receipt creation, intended source changes are still uncommitted. Preserve the existing `main` checkout and reconcile the exact final commit SHA and push result after Git integration. The source work is not equivalent to three-surface runtime integration closure or approval to build/deploy.
+Source changes were committed on `main` as `213ea472c0733fbb912b5f58bef389fcc5f62045` and pushed to `origin/main`. `gh run list` showed no Actions run for that SHA; the commit used `[skip ci]` because the repository push workflows include application builds. The canonical worktree was clean immediately after push. The source work is not equivalent to three-surface runtime integration closure or approval to build/deploy.
