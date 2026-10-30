@@ -1,5 +1,5 @@
 import { Controller, Get } from "@nestjs/common";
-import { ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import { ApiOkResponse, ApiServiceUnavailableResponse, ApiTags } from "@nestjs/swagger";
 import { ReadinessService } from './readiness.service';
 
 @ApiTags("Operations")
@@ -14,6 +14,8 @@ export class HealthController {
   }
 
   @Get("ready")
+  @ApiOkResponse({ description: "Operational readiness; returned when SQLite and Redis are ready.", schema: { type: "object", required: ["status", "dependencies"], properties: { status: { type: "string", enum: ["ready"] }, dependencies: { type: "object", required: ["database", "redis"], properties: { database: { type: "boolean", enum: [true] }, redis: { type: "boolean", enum: [true] } } } } } })
+  @ApiServiceUnavailableResponse({ description: "SQLite or Redis is not ready; includes the current dependency flags." })
   async ready() {
     return this.readinessService.getOperationalReadiness();
   }

@@ -1,5 +1,15 @@
 # NEXI Source Integration Handoff — 2026-10-30
 
+## Current continuation state — 2026-10-30
+
+The handoff below records the earlier source batch and its commit; this addendum records the later working-tree continuation from `3b5e2c2b88984c3010e60305af9acd157a5c345c` (`HEAD=origin/main` at intake). The current continuation is uncommitted and includes the OpenAPI response closure plus the bounded follow-on corrections recorded in `nexi-openapi-response-closure-20261030.md`; it must not be described as part of commit `213ea47` or the prior pushed handoff.
+
+Source review corrected Admin login/refresh token schema optionality, four query integer schemas, Admin unavailable-exposure rendering, and stable ordering for Communications Admin offset pagination. The offset loader still has a concurrent-insert shifting limitation; it is documented, with no pagination redesign. Public refresh/retry and idempotency-key source paths, Admin mutation invalidation/consumer handling, moderation relation consumer, and Communications persistence→Outbox→Redis/Socket.IO→read-back/reconnect relationships were traced within the bounded reviewed paths. Graphify did not model the realtime chain as a path; direct source inspection supplied the structural evidence. Runtime event delivery and broader browser behavior remain unverified.
+
+Final static check of the generated OpenAPI found 0 schema-less 2xx responses, 0 operation parameters referencing the generic `Object` schema, optional `refresh_token` on Admin login and required on refresh, and integer `limit` types on `/admin/audit`, `/admin/incidents`, `/admin/maintenance-windows`, and `/market/klines`. The affected existing suites then passed once: `cd backend && NODE_OPTIONS=--experimental-vm-modules ./node_modules/.bin/jest --runInBand test/communications/communications.service.spec.ts` (22/22) and `cd Admin && node --test test/nexi-api-provider-reorder.test.mjs` (19/19). CodeScene's pre-commit safeguard flagged the Exposure component's complexity increase from the display condition; extracting `formatUtilisation()` resolved the regression, and the repeat safeguard passed with the file stable and aggregate complexity lower. No typecheck, lint, broad suite, CI, build, deployment, service restart, migration, production data/queue operation, or browser acceptance was run in this continuation. Existing 38 focused Backend tests and source-only typecheck are reused only for unchanged implementation.
+
+Current tree at final documentation update: 31 tracked modified paths and two untracked evidence receipts; still uncommitted and undeployed. GitHub integration remains open because the push workflows include application builds and have not been triggered. The source-integration goal is not complete: broader consumer coverage, CI/Git integration, and runtime-only acceptance remain open. Stop before build/deploy/browser acceptance.
+
 ## Scope and boundary
 
 This receipt records the source integration changes from baseline `41529d3976e08f0ec5442856503940f544982ebc` on `main`. It does not establish build, deployment, service, browser, or production-data proof. No production build, deployment, service restart, migration, financial operation, queue mutation, or browser acceptance was performed.
@@ -29,7 +39,7 @@ Executed in the canonical checkout, without a production build:
 
 - Graphify CLI refreshed incrementally with `graphify update . --no-cluster`; graph reported 7,321 nodes / 19,577 edges. Its extraction warnings and missing HTTP-contract edges limit it to navigation evidence.
 - Fallow changed-file MCP analysis reported 7 findings (unused test files and interface-invoked Admin methods); analysis was degraded because root `node_modules` and policy packs were absent. No source was deleted based on those findings.
-- VibeDoctor examined the relevant controller and tests. Its public deposit-destination route flag was reviewed against unauthenticated Public use and the service's public-only projection; the `Body`/`Req` import flags were false positives. Findings were annotated in VibeDoctor, not dismissed.
+- third-party scanner examined the relevant controller and tests. Its public deposit-destination route flag was reviewed against unauthenticated Public use and the service's public-only projection; the `Body`/`Req` import flags were false positives. Findings were annotated in third-party scanner, not dismissed.
 - Vibe Coding API contract workflow and Ponytail implementation guidance were invoked and used to keep the changes contract-focused and minimal.
 
 ## Review limits and remaining work
@@ -43,7 +53,7 @@ Executed in the canonical checkout, without a production build:
 ## Tool and workflow receipt
 
 - **Selected/read:** NEXI Work Kernel and Capability Router routing; Agent Skills task-fit workflow; Ponytail coding discipline; Vibe Coding API workflow; Context Handoff assessment; Codex Coordinator instructions. Context Handoff assessment reported authorized checkpoint/handoff readiness after five compactions and one observed degradation signal; no new thread was created.
-- **Invoked/results used:** Ponytail instructions MCP (minimal complete change rules); Vibe Coding catalog/topic/workflow and API contract compatibility workflow; VibeDoctor status/check/annotation; Graphify CLI incremental update and bounded MCP queries; Fallow MCP changed-file analysis; NestJS/Jest/TypeScript/OpenAPI CLIs listed above; Coordinator board list; native Git status/diff checks.
+- **Invoked/results used:** Ponytail instructions MCP (minimal complete change rules); Vibe Coding catalog/topic/workflow and API contract compatibility workflow; third-party scanner status/check/annotation; Graphify CLI incremental update and bounded MCP queries; Fallow MCP changed-file analysis; NestJS/Jest/TypeScript/OpenAPI CLIs listed above; Coordinator board list; native Git status/diff checks.
 - **Not run:** CodeScene safeguard, React Doctor, production builds, deployment, browser acceptance, runtime service checks, full test suites, and CI. A direct push will use `[skip ci]` to avoid the repository's push workflows, which include production builds. GitHub skip-workflow semantics were checked against the official documentation: <https://docs.github.com/en/actions/how-tos/manage-workflow-runs/skip-workflow-runs>.
 
 ## Handoff state

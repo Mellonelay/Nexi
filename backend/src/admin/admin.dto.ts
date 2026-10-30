@@ -300,12 +300,14 @@ export class AdminAuditQueryDto {
   @IsString()
   @IsIn(["ok", "error", "denied", "unknown"])
   result?: string;
+  @ApiPropertyOptional({ type: "integer", minimum: 1, maximum: 100, default: 50 })
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(100) limit = 50;
 }
 
 export class AdminIncidentQueryDto {
   @IsOptional() @IsBoolean() active?: boolean;
   @IsOptional() @IsString() @Length(1, 32) environment?: string;
+  @ApiPropertyOptional({ type: "integer", minimum: 1, maximum: 100, default: 50 })
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(100) limit = 50;
 }
 
@@ -377,6 +379,7 @@ export class MaintenanceWindowQueryDto {
   @IsString()
   @IsIn(["DEVELOPMENT", "SANDBOX", "PRODUCTION"])
   environment?: string;
+  @ApiPropertyOptional({ type: "integer", minimum: 1, maximum: 100, default: 100 })
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(100) limit = 100;
 }
 

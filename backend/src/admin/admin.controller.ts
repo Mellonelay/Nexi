@@ -543,6 +543,8 @@ export class AdminController {
   @RequireAdminPermission("kyc.view")
   @Header("Cache-Control", "private, no-store")
   @Header("X-Content-Type-Options", "nosniff")
+  @ApiProduces("image/png", "image/jpeg", "image/webp", "application/pdf")
+  @ApiOkResponse({ description: "Private KYC evidence returned as a non-JSON attachment.", schema: { type: "string", format: "binary" } })
   async getKycEvidence(
     @Param("userId", ParseUUIDPipe) userId: string,
     @Param("side") side: string,
@@ -620,6 +622,7 @@ export class AdminController {
 
   @Post("market/assets/visibility")
   @RequireAdminPermission("assets.edit")
+  @ApiCreatedResponse({ schema: { type: "object", required: ["ok", "auditId", "status"], properties: { ok: { type: "boolean", enum: [true] }, auditId: { type: "string", format: "uuid" }, status: { type: "string", enum: ["ACTIVE", "MAINTENANCE"] } } } })
   setMarketAssetVisibility(
     @Body() body: AdminAssetVisibilityDto,
     @Req() request: AuthenticatedRequest,
@@ -638,6 +641,7 @@ export class AdminController {
 
   @Post("market/networks/visibility")
   @RequireAdminPermission("networks.edit")
+  @ApiCreatedResponse({ schema: { type: "object", required: ["ok", "auditId", "status"], properties: { ok: { type: "boolean", enum: [true] }, auditId: { type: "string", format: "uuid" }, status: { type: "string" } } } })
   setMarketNetworkVisibility(
     @Body() body: AdminNetworkVisibilityDto,
     @Req() request: AuthenticatedRequest,
@@ -819,6 +823,7 @@ export class AdminController {
 
   @Post("deposit-claims/:id/confirm")
   @RequireAdminPermission("deposits.confirm")
+  @ApiCreatedResponse({ description: "Approved deposit claim and replay indicator.", schema: { type: "object", required: ["claim", "replayed"], properties: { claim: { type: "object", additionalProperties: true }, replayed: { type: "boolean" } } } })
   confirmDepositClaim(
     @Param("id", ParseUUIDPipe) id: string,
     @Body() body: AdminIncidentAcknowledgeDto,
@@ -834,6 +839,7 @@ export class AdminController {
 
   @Post("deposit-claims/:id/credit")
   @RequireAdminPermission("deposits.confirm")
+  @ApiCreatedResponse({ description: "Credited deposit claim and replay indicator.", schema: { type: "object", required: ["claim", "replayed"], properties: { claim: { type: "object", additionalProperties: true }, replayed: { type: "boolean" } } } })
   creditDepositClaim(
     @Param("id", ParseUUIDPipe) id: string,
     @Body() body: AdminIncidentAcknowledgeDto,
@@ -849,6 +855,7 @@ export class AdminController {
 
   @Post("deposit-claims/:id/reject")
   @RequireAdminPermission("deposits.confirm")
+  @ApiCreatedResponse({ description: "Rejected deposit claim and replay indicator.", schema: { type: "object", required: ["claim", "replayed"], properties: { claim: { type: "object", additionalProperties: true }, replayed: { type: "boolean" } } } })
   rejectDepositClaim(
     @Param("id", ParseUUIDPipe) id: string,
     @Body() body: AdminIncidentAcknowledgeDto,

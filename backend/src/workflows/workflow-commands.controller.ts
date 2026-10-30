@@ -33,7 +33,7 @@ export class WorkflowCommandsController {
     required: true,
     description: "Unix timestamp in milliseconds; maximum age five minutes",
   })
-  @ApiResponse({ status: 200, description: "D1-authoritative command result" })
+  @ApiResponse({ status: 200, description: "Durable workflow command result. The fields depend on the workflow and action.", schema: { type: "object", properties: { done: { type: "boolean" }, state: { type: "string" }, nextRunAt: { type: "string", nullable: true }, dueAt: { type: "string", nullable: true }, result: { type: "object", additionalProperties: true }, withdrawal: { type: "object", additionalProperties: true }, loan: { type: "object", nullable: true, additionalProperties: true }, replayed: { type: "boolean" }, providerLive: { type: "boolean" } }, additionalProperties: true } })
   @ApiBadRequestResponse({
     description: "Invalid workflow, action, entity, or idempotency input",
   })

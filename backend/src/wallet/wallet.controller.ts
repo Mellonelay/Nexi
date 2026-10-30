@@ -122,6 +122,7 @@ export class WalletController {
   @Get("me/ledger")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
+  @ApiOkResponse({ description: "Ledger posting history scoped to the authenticated user.", schema: { type: "array", items: { type: "object", required: ["id", "walletId", "currency", "amount", "availableDelta", "lockedDelta", "type", "createdAt"], properties: { id: { type: "string" }, walletId: { type: "string" }, currency: { type: "string" }, amount: { type: "string" }, availableDelta: { type: "string" }, lockedDelta: { type: "string" }, type: { type: "string" }, referenceId: { type: "string", nullable: true }, idempotencyKey: { type: "string", nullable: true }, correlationId: { type: "string", nullable: true }, createdAt: { type: "string" } }, additionalProperties: true } } })
   async getMyLedger(@Req() request: AuthenticatedRequest) {
     return this.walletService.getLedger(request.user.userId);
   }
@@ -141,6 +142,7 @@ export class WalletController {
   @Get(":userId/ledger")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, OwnershipGuard)
   @RequireAuthSurface("PUBLIC")
+  @ApiOkResponse({ description: "Ledger posting history scoped to the authenticated user; the path user must match the session owner.", schema: { type: "array", items: { type: "object", required: ["id", "walletId", "currency", "amount", "availableDelta", "lockedDelta", "type", "createdAt"], properties: { id: { type: "string" }, walletId: { type: "string" }, currency: { type: "string" }, amount: { type: "string" }, availableDelta: { type: "string" }, lockedDelta: { type: "string" }, type: { type: "string" }, referenceId: { type: "string", nullable: true }, idempotencyKey: { type: "string", nullable: true }, correlationId: { type: "string", nullable: true }, createdAt: { type: "string" } }, additionalProperties: true } } })
   async getLedger(
     @Param("userId") _userId: string,
     @Req() request: AuthenticatedRequest,

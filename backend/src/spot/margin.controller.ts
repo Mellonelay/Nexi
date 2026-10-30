@@ -8,7 +8,7 @@ import {
   Req,
   UseGuards,
 } from "@nestjs/common";
-import { ApiBearerAuth, ApiOkResponse, ApiQuery, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { AuthSurfaceGuard } from "../auth/auth-surface.guard";
 import { RequireAuthSurface } from "../auth/auth-surface.decorator";
@@ -133,6 +133,7 @@ export class MarginController {
   @Post("transfer")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
+  @ApiCreatedResponse({ description: "Same-user transfer between MAIN and MARGIN ledger accounts; replayed requests retain the original posting identifiers.", schema: { type: "object", required: ["accountId", "debitPostingId", "creditPostingId", "replayed"], properties: { accountId: { type: "string" }, debitPostingId: { type: "string" }, creditPostingId: { type: "string" }, replayed: { type: "boolean" } } } })
   transfer(
     @Body() body: MarginTransferDto,
     @Req() request: AuthenticatedRequest,

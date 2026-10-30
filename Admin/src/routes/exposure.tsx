@@ -25,6 +25,12 @@ function Page() {
   );
 }
 
+function formatUtilisation(row: ExposureRow): string {
+  return row.status === "unavailable"
+    ? "Unavailable"
+    : `${Math.round(row.utilisation * 100)}%`;
+}
+
 function Inner() {
   const q = useAdminQuery((p) => p.listExposure());
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -221,7 +227,7 @@ function Inner() {
                     { label: "Cap", value: fmt(selected.cap), mono: true },
                     {
                       label: "Utilisation",
-                      value: `${Math.round(selected.utilisation * 100)}%`,
+                      value: formatUtilisation(selected),
                       mono: true,
                     },
                     { label: "Status", value: label(selected.status), mono: true },

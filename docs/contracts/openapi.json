@@ -75,7 +75,37 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "status",
+                    "timestamp",
+                    "service"
+                  ],
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ok"
+                      ]
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "service": {
+                      "type": "string",
+                      "enum": [
+                        "Dexi Trading Platform"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -392,7 +422,49 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Application readiness with database and Redis dependency state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "status",
+                    "dependencies"
+                  ],
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "READY"
+                      ]
+                    },
+                    "dependencies": {
+                      "type": "object",
+                      "required": [
+                        "database",
+                        "redis",
+                        "authority"
+                      ],
+                      "properties": {
+                        "database": {
+                          "type": "boolean"
+                        },
+                        "redis": {
+                          "type": "boolean"
+                        },
+                        "authority": {
+                          "type": "string",
+                          "enum": [
+                            "SQLite",
+                            "D1"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -416,7 +488,29 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Feedback image and metadata were saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok",
+                    "path"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "path": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -2866,7 +2960,36 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "referralCode",
+                    "referralCount",
+                    "totalEarnings",
+                    "referredByUserCode"
+                  ],
+                  "properties": {
+                    "referralCode": {
+                      "type": "string"
+                    },
+                    "referralCount": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "totalEarnings": {
+                      "type": "string"
+                    },
+                    "referredByUserCode": {
+                      "type": "integer",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2903,7 +3026,117 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "referrals",
+                    "rewards"
+                  ],
+                  "properties": {
+                    "referrals": {
+                      "type": "object",
+                      "required": [
+                        "items",
+                        "limit",
+                        "offset",
+                        "hasMore"
+                      ],
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "required": [
+                              "referredUserCode",
+                              "status",
+                              "attributedAt"
+                            ],
+                            "properties": {
+                              "referredUserCode": {
+                                "type": "integer"
+                              },
+                              "status": {
+                                "type": "string"
+                              },
+                              "attributedAt": {
+                                "type": "string",
+                                "nullable": true
+                              }
+                            }
+                          }
+                        },
+                        "limit": {
+                          "type": "integer"
+                        },
+                        "offset": {
+                          "type": "integer"
+                        },
+                        "hasMore": {
+                          "type": "boolean"
+                        }
+                      }
+                    },
+                    "rewards": {
+                      "type": "object",
+                      "required": [
+                        "items",
+                        "limit",
+                        "offset",
+                        "hasMore"
+                      ],
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "required": [
+                              "id",
+                              "referredUserCode",
+                              "amount",
+                              "asset",
+                              "status",
+                              "rewardedAt"
+                            ],
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "referredUserCode": {
+                                "type": "integer"
+                              },
+                              "amount": {
+                                "type": "string"
+                              },
+                              "asset": {
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "string"
+                              },
+                              "rewardedAt": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "limit": {
+                          "type": "integer"
+                        },
+                        "offset": {
+                          "type": "integer"
+                        },
+                        "hasMore": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2933,7 +3166,36 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Referral claim result; returns the current referral identity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "referralCode",
+                    "referralCount",
+                    "totalEarnings",
+                    "referredByUserCode"
+                  ],
+                  "properties": {
+                    "referralCode": {
+                      "type": "string"
+                    },
+                    "referralCount": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "totalEarnings": {
+                      "type": "string"
+                    },
+                    "referredByUserCode": {
+                      "type": "integer",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2953,7 +3215,50 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "level",
+                    "name",
+                    "progress",
+                    "threshold",
+                    "benefits",
+                    "evaluatedAt",
+                    "qualifiedAt"
+                  ],
+                  "properties": {
+                    "level": {
+                      "type": "integer"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "progress": {
+                      "type": "string"
+                    },
+                    "threshold": {
+                      "type": "string"
+                    },
+                    "benefits": {
+                      "type": "object",
+                      "nullable": true,
+                      "additionalProperties": true
+                    },
+                    "evaluatedAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "qualifiedAt": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2973,7 +3278,44 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "level",
+                      "name",
+                      "threshold",
+                      "benefits",
+                      "enabled"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "level": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "threshold": {
+                        "type": "string"
+                      },
+                      "benefits": {},
+                      "enabled": {
+                        "type": "boolean"
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3250,7 +3592,66 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Ledger posting history scoped to the authenticated user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "walletId",
+                      "currency",
+                      "amount",
+                      "availableDelta",
+                      "lockedDelta",
+                      "type",
+                      "createdAt"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "walletId": {
+                        "type": "string"
+                      },
+                      "currency": {
+                        "type": "string"
+                      },
+                      "amount": {
+                        "type": "string"
+                      },
+                      "availableDelta": {
+                        "type": "string"
+                      },
+                      "lockedDelta": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "referenceId": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "idempotencyKey": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "correlationId": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3313,7 +3714,66 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Ledger posting history scoped to the authenticated user; the path user must match the session owner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "walletId",
+                      "currency",
+                      "amount",
+                      "availableDelta",
+                      "lockedDelta",
+                      "type",
+                      "createdAt"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "walletId": {
+                        "type": "string"
+                      },
+                      "currency": {
+                        "type": "string"
+                      },
+                      "amount": {
+                        "type": "string"
+                      },
+                      "availableDelta": {
+                        "type": "string"
+                      },
+                      "lockedDelta": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "referenceId": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "idempotencyKey": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "correlationId": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4270,7 +4730,34 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Same-user transfer between MAIN and MARGIN ledger accounts; replayed requests retain the original posting identifiers.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "accountId",
+                    "debitPostingId",
+                    "creditPostingId",
+                    "replayed"
+                  ],
+                  "properties": {
+                    "accountId": {
+                      "type": "string"
+                    },
+                    "debitPostingId": {
+                      "type": "string"
+                    },
+                    "creditPostingId": {
+                      "type": "string"
+                    },
+                    "replayed": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4406,11 +4893,7 @@
               "minimum": 40,
               "maximum": 500,
               "default": 240,
-              "allOf": [
-                {
-                  "$ref": "#/components/schemas/Object"
-                }
-              ]
+              "type": "integer"
             }
           },
           {
@@ -6060,6 +6543,17 @@
         "operationId": "AdminController_listAdminAudit",
         "parameters": [
           {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50,
+              "type": "integer"
+            }
+          },
+          {
             "name": "actor",
             "required": false,
             "in": "query",
@@ -6116,21 +6610,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "name": "limit",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "minimum": 1,
-              "maximum": 100,
-              "default": 50,
-              "allOf": [
-                {
-                  "$ref": "#/components/schemas/Object"
-                }
-              ]
-            }
           }
         ],
         "responses": {
@@ -6160,6 +6639,17 @@
         "operationId": "AdminController_listIncidents",
         "parameters": [
           {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50,
+              "type": "integer"
+            }
+          },
+          {
             "name": "active",
             "required": false,
             "in": "query",
@@ -6175,21 +6665,6 @@
               "minLength": 1,
               "maxLength": 32,
               "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "minimum": 1,
-              "maximum": 100,
-              "default": 50,
-              "allOf": [
-                {
-                  "$ref": "#/components/schemas/Object"
-                }
-              ]
             }
           }
         ],
@@ -6273,6 +6748,17 @@
         "operationId": "AdminController_listMaintenanceWindows",
         "parameters": [
           {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 100,
+              "type": "integer"
+            }
+          },
+          {
             "name": "status",
             "required": false,
             "in": "query",
@@ -6286,21 +6772,6 @@
             "in": "query",
             "schema": {
               "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "minimum": 1,
-              "maximum": 100,
-              "default": 100,
-              "allOf": [
-                {
-                  "$ref": "#/components/schemas/Object"
-                }
-              ]
             }
           }
         ],
@@ -7073,7 +7544,33 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Private KYC evidence returned as a non-JSON attachment.",
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -7340,7 +7837,38 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok",
+                    "auditId",
+                    "status"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "auditId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ACTIVE",
+                        "MAINTENANCE"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -7395,7 +7923,34 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok",
+                    "auditId",
+                    "status"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "auditId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "status": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -8059,7 +8614,27 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Approved deposit claim and replay indicator.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "claim",
+                    "replayed"
+                  ],
+                  "properties": {
+                    "claim": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "replayed": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -8097,7 +8672,27 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Credited deposit claim and replay indicator.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "claim",
+                    "replayed"
+                  ],
+                  "properties": {
+                    "claim": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "replayed": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -8135,7 +8730,27 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Rejected deposit claim and replay indicator.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "claim",
+                    "replayed"
+                  ],
+                  "properties": {
+                    "claim": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "replayed": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -9314,7 +9929,54 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Admin access token, authenticated identity, and optional refresh token in the JSON response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "access_token",
+                    "user"
+                  ],
+                  "properties": {
+                    "access_token": {
+                      "type": "string"
+                    },
+                    "refresh_token": {
+                      "type": "string"
+                    },
+                    "user": {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "email",
+                        "role",
+                        "kycStatus"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "ADMIN"
+                          ]
+                        },
+                        "kycStatus": {
+                          "type": "string"
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -9338,7 +10000,55 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Rotated Admin access token, refresh token, and authenticated identity in the JSON response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "access_token",
+                    "refresh_token",
+                    "user"
+                  ],
+                  "properties": {
+                    "access_token": {
+                      "type": "string"
+                    },
+                    "refresh_token": {
+                      "type": "string"
+                    },
+                    "user": {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "email",
+                        "role",
+                        "kycStatus"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "ADMIN"
+                          ]
+                        },
+                        "kycStatus": {
+                          "type": "string"
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -9352,7 +10062,22 @@
         "parameters": [],
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "revoked"
+                  ],
+                  "properties": {
+                    "revoked": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -9371,7 +10096,23 @@
         "parameters": [],
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "revokedCount"
+                  ],
+                  "properties": {
+                    "revokedCount": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -9468,7 +10209,56 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "level",
+                      "name",
+                      "threshold",
+                      "benefits",
+                      "enabled",
+                      "createdAt",
+                      "updatedAt"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "level": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "threshold": {
+                        "type": "string"
+                      },
+                      "benefits": {
+                        "type": "object",
+                        "nullable": true,
+                        "additionalProperties": true
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -9496,7 +10286,69 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "auditId",
+                    "levels"
+                  ],
+                  "properties": {
+                    "auditId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "levels": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "level",
+                          "name",
+                          "threshold",
+                          "benefits",
+                          "enabled",
+                          "createdAt",
+                          "updatedAt"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "level": {
+                            "type": "integer"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "threshold": {
+                            "type": "string"
+                          },
+                          "benefits": {
+                            "type": "object",
+                            "nullable": true,
+                            "additionalProperties": true
+                          },
+                          "enabled": {
+                            "type": "boolean"
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          },
+                          "updatedAt": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -9526,7 +10378,67 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "auditId",
+                    "userCode",
+                    "vip"
+                  ],
+                  "properties": {
+                    "auditId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "userCode": {
+                      "type": "integer"
+                    },
+                    "vip": {
+                      "type": "object",
+                      "required": [
+                        "level",
+                        "name",
+                        "progress",
+                        "threshold",
+                        "benefits",
+                        "evaluatedAt",
+                        "qualifiedAt"
+                      ],
+                      "properties": {
+                        "level": {
+                          "type": "integer"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "progress": {
+                          "type": "string"
+                        },
+                        "threshold": {
+                          "type": "string"
+                        },
+                        "benefits": {
+                          "type": "object",
+                          "nullable": true,
+                          "additionalProperties": true
+                        },
+                        "evaluatedAt": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "qualifiedAt": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -10268,7 +11180,35 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Deposit claim created or replayed for the authenticated user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "depositRequestId",
+                    "status",
+                    "claim",
+                    "replayed"
+                  ],
+                  "properties": {
+                    "depositRequestId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "claim": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "replayed": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -10439,7 +11379,29 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Private deposit proof stored; the object key and upload state are returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "key",
+                    "status"
+                  ],
+                  "properties": {
+                    "key": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "UPLOADED"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -10497,7 +11459,50 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Operational readiness; returned when SQLite and Redis are ready.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "status",
+                    "dependencies"
+                  ],
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ready"
+                      ]
+                    },
+                    "dependencies": {
+                      "type": "object",
+                      "required": [
+                        "database",
+                        "redis"
+                      ],
+                      "properties": {
+                        "database": {
+                          "type": "boolean",
+                          "enum": [
+                            true
+                          ]
+                        },
+                        "redis": {
+                          "type": "boolean",
+                          "enum": [
+                            true
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "SQLite or Redis is not ready; includes the current dependency flags."
           }
         },
         "tags": [
@@ -10562,7 +11567,50 @@
         },
         "responses": {
           "200": {
-            "description": "D1-authoritative command result"
+            "description": "Durable workflow command result. The fields depend on the workflow and action.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "done": {
+                      "type": "boolean"
+                    },
+                    "state": {
+                      "type": "string"
+                    },
+                    "nextRunAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "dueAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "result": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "withdrawal": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "loan": {
+                      "type": "object",
+                      "nullable": true,
+                      "additionalProperties": true
+                    },
+                    "replayed": {
+                      "type": "boolean"
+                    },
+                    "providerLive": {
+                      "type": "boolean"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
           },
           "400": {
             "description": "Invalid workflow, action, entity, or idempotency input"
@@ -10586,7 +11634,161 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Complete wallet-native profile with preferences, referral and VIP state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "email",
+                    "displayName",
+                    "walletAddress",
+                    "chainId",
+                    "kycStatus",
+                    "country",
+                    "role",
+                    "createdAt",
+                    "lastActive",
+                    "preferences",
+                    "referral",
+                    "vip"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "displayName": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "walletAddress": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "chainId": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "kycStatus": {
+                      "type": "string"
+                    },
+                    "country": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "role": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "lastActive": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "preferences": {
+                      "type": "object",
+                      "required": [
+                        "locale",
+                        "timezone",
+                        "theme",
+                        "notificationSettings",
+                        "tradingSettings"
+                      ],
+                      "properties": {
+                        "locale": {
+                          "type": "string"
+                        },
+                        "timezone": {
+                          "type": "string"
+                        },
+                        "theme": {
+                          "type": "string"
+                        },
+                        "notificationSettings": {
+                          "type": "object",
+                          "nullable": true,
+                          "additionalProperties": true
+                        },
+                        "tradingSettings": {
+                          "type": "object",
+                          "nullable": true,
+                          "additionalProperties": true
+                        }
+                      }
+                    },
+                    "referral": {
+                      "type": "object",
+                      "required": [
+                        "referralCode",
+                        "referralCount",
+                        "totalEarnings",
+                        "referredByUserCode"
+                      ],
+                      "properties": {
+                        "referralCode": {
+                          "type": "string"
+                        },
+                        "referralCount": {
+                          "type": "integer"
+                        },
+                        "totalEarnings": {
+                          "type": "string"
+                        },
+                        "referredByUserCode": {
+                          "type": "integer",
+                          "nullable": true
+                        }
+                      }
+                    },
+                    "vip": {
+                      "type": "object",
+                      "required": [
+                        "level",
+                        "name",
+                        "progress",
+                        "threshold",
+                        "benefits",
+                        "evaluatedAt",
+                        "qualifiedAt"
+                      ],
+                      "properties": {
+                        "level": {
+                          "type": "integer"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "progress": {
+                          "type": "string"
+                        },
+                        "threshold": {
+                          "type": "string"
+                        },
+                        "benefits": {
+                          "type": "object",
+                          "nullable": true,
+                          "additionalProperties": true
+                        },
+                        "evaluatedAt": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "qualifiedAt": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -10614,7 +11816,161 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "Updated profile returned with canonical preferences, referral and VIP state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "email",
+                    "displayName",
+                    "walletAddress",
+                    "chainId",
+                    "kycStatus",
+                    "country",
+                    "role",
+                    "createdAt",
+                    "lastActive",
+                    "preferences",
+                    "referral",
+                    "vip"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "displayName": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "walletAddress": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "chainId": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "kycStatus": {
+                      "type": "string"
+                    },
+                    "country": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "role": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "lastActive": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "preferences": {
+                      "type": "object",
+                      "required": [
+                        "locale",
+                        "timezone",
+                        "theme",
+                        "notificationSettings",
+                        "tradingSettings"
+                      ],
+                      "properties": {
+                        "locale": {
+                          "type": "string"
+                        },
+                        "timezone": {
+                          "type": "string"
+                        },
+                        "theme": {
+                          "type": "string"
+                        },
+                        "notificationSettings": {
+                          "type": "object",
+                          "nullable": true,
+                          "additionalProperties": true
+                        },
+                        "tradingSettings": {
+                          "type": "object",
+                          "nullable": true,
+                          "additionalProperties": true
+                        }
+                      }
+                    },
+                    "referral": {
+                      "type": "object",
+                      "required": [
+                        "referralCode",
+                        "referralCount",
+                        "totalEarnings",
+                        "referredByUserCode"
+                      ],
+                      "properties": {
+                        "referralCode": {
+                          "type": "string"
+                        },
+                        "referralCount": {
+                          "type": "integer"
+                        },
+                        "totalEarnings": {
+                          "type": "string"
+                        },
+                        "referredByUserCode": {
+                          "type": "integer",
+                          "nullable": true
+                        }
+                      }
+                    },
+                    "vip": {
+                      "type": "object",
+                      "required": [
+                        "level",
+                        "name",
+                        "progress",
+                        "threshold",
+                        "benefits",
+                        "evaluatedAt",
+                        "qualifiedAt"
+                      ],
+                      "properties": {
+                        "level": {
+                          "type": "integer"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "progress": {
+                          "type": "string"
+                        },
+                        "threshold": {
+                          "type": "string"
+                        },
+                        "benefits": {
+                          "type": "object",
+                          "nullable": true,
+                          "additionalProperties": true
+                        },
+                        "evaluatedAt": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "qualifiedAt": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -10634,7 +11990,42 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "locale",
+                    "timezone",
+                    "theme",
+                    "notificationSettings",
+                    "tradingSettings"
+                  ],
+                  "properties": {
+                    "locale": {
+                      "type": "string"
+                    },
+                    "timezone": {
+                      "type": "string"
+                    },
+                    "theme": {
+                      "type": "string"
+                    },
+                    "notificationSettings": {
+                      "type": "object",
+                      "nullable": true,
+                      "additionalProperties": true
+                    },
+                    "tradingSettings": {
+                      "type": "object",
+                      "nullable": true,
+                      "additionalProperties": true
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -10662,7 +12053,42 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "Persisted Public account preferences.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "locale",
+                    "timezone",
+                    "theme",
+                    "notificationSettings",
+                    "tradingSettings"
+                  ],
+                  "properties": {
+                    "locale": {
+                      "type": "string"
+                    },
+                    "timezone": {
+                      "type": "string"
+                    },
+                    "theme": {
+                      "type": "string"
+                    },
+                    "notificationSettings": {
+                      "type": "object",
+                      "nullable": true,
+                      "additionalProperties": true
+                    },
+                    "tradingSettings": {
+                      "type": "object",
+                      "nullable": true,
+                      "additionalProperties": true
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -12107,10 +13533,6 @@
         "required": [
           "openIdempotencyKey"
         ]
-      },
-      "Object": {
-        "type": "object",
-        "properties": {}
       },
       "MarketKlineCandleDto": {
         "type": "object",

@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
   UseGuards,
 } from "@nestjs/common";
-import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiCreatedResponse, ApiTags } from "@nestjs/swagger";
 import { Role } from "../prisma/d1-client";
 import { AuthService } from "../auth/auth.service";
 import { AuthRateLimit } from "../auth/auth-rate-limit.decorator";
@@ -25,6 +25,7 @@ export class AdminAuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post("login")
+  @ApiCreatedResponse({ description: "Admin access token, authenticated identity, and optional refresh token in the JSON response.", schema: { type: "object", required: ["access_token", "user"], properties: { access_token: { type: "string" }, refresh_token: { type: "string" }, user: { type: "object", required: ["id", "email", "role", "kycStatus"], properties: { id: { type: "string" }, email: { type: "string", nullable: true }, role: { type: "string", enum: ["ADMIN"] }, kycStatus: { type: "string" } }, additionalProperties: true } } } })
   @AuthRateLimit("admin-login")
   @UseGuards(AuthRateLimitGuard)
   async login(@Body() credentials: LoginDto) {
@@ -36,6 +37,7 @@ export class AdminAuthController {
   }
 
   @Post("refresh")
+  @ApiCreatedResponse({ description: "Rotated Admin access token, refresh token, and authenticated identity in the JSON response.", schema: { type: "object", required: ["access_token", "refresh_token", "user"], properties: { access_token: { type: "string" }, refresh_token: { type: "string" }, user: { type: "object", required: ["id", "email", "role", "kycStatus"], properties: { id: { type: "string" }, email: { type: "string", nullable: true }, role: { type: "string", enum: ["ADMIN"] }, kycStatus: { type: "string" } }, additionalProperties: true } } } })
   @AuthRateLimit("admin-refresh")
   @UseGuards(AuthRateLimitGuard)
   async refresh(@Body() body: RefreshTokenDto) {
@@ -44,6 +46,7 @@ export class AdminAuthController {
 
   @ApiBearerAuth()
   @Post("logout")
+  @ApiCreatedResponse({ schema: { type: "object", required: ["revoked"], properties: { revoked: { type: "boolean" } } } })
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard)
   @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
@@ -53,6 +56,7 @@ export class AdminAuthController {
 
   @ApiBearerAuth()
   @Post("logout-all")
+  @ApiCreatedResponse({ schema: { type: "object", required: ["revokedCount"], properties: { revokedCount: { type: "integer", minimum: 0 } } } })
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard)
   @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)

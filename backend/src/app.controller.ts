@@ -81,6 +81,7 @@ export class AppController {
   }
 
   @Get("health")
+  @ApiOkResponse({ schema: { type: "object", required: ["status", "timestamp", "service"], properties: { status: { type: "string", enum: ["ok"] }, timestamp: { type: "string", format: "date-time" }, service: { type: "string", enum: ["Dexi Trading Platform"] } } } })
   getHealth() {
     return {
       status: "ok",
@@ -333,6 +334,7 @@ export class AppController {
   }
 
   @Get("readyz")
+  @ApiOkResponse({ description: "Application readiness with database and Redis dependency state.", schema: { type: "object", required: ["status", "dependencies"], properties: { status: { type: "string", enum: ["READY"] }, dependencies: { type: "object", required: ["database", "redis", "authority"], properties: { database: { type: "boolean" }, redis: { type: "boolean" }, authority: { type: "string", enum: ["SQLite", "D1"] } } } } } })
   async getReadiness() {
     return this.readinessService.getApplicationReadiness();
   }

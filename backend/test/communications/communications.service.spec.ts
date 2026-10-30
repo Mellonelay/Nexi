@@ -18,6 +18,7 @@ describe('CommunicationsService', () => {
     await expect(service.adminMessageModeration(1, 20)).resolves.toBe(rows);
     expect(findMany).toHaveBeenCalledWith(expect.objectContaining({
       include: { conversation: { select: { state: true } } },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     }));
   });
 
@@ -513,7 +514,11 @@ describe('CommunicationsService', () => {
       take: 10,
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     }));
-    expect(findMany).toHaveBeenNthCalledWith(2, expect.objectContaining({ skip: 10, take: 5 }));
+    expect(findMany).toHaveBeenNthCalledWith(2, expect.objectContaining({
+      skip: 10,
+      take: 5,
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    }));
   });
 
   it('restores canonical support identity for legacy messages without a conversation relation', async () => {

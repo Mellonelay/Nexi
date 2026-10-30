@@ -15,7 +15,7 @@ export class MarketKlineQueryDto {
   @IsIn(MARKET_KLINE_INTERVALS)
   interval: MarketKlineInterval = '1m';
 
-  @ApiPropertyOptional({ minimum: 40, maximum: 500, default: 240 })
+  @ApiPropertyOptional({ type: 'integer', minimum: 40, maximum: 500, default: 240 })
   @IsOptional()
   @Type(() => Number)
   @IsInt()

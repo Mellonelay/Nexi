@@ -1,4 +1,4 @@
-import { ApiBearerAuth } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiOkResponse } from "@nestjs/swagger";
 import { BadRequestException, Controller, Headers, Optional, PayloadTooLargeException, Put, Query, Req, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { AuthenticatedRequest } from '../auth/auth.types';
@@ -19,6 +19,7 @@ export class LocalDepositProofController {
   @Put('deposit-proof')
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
+  @ApiOkResponse({ description: "Private deposit proof stored; the object key and upload state are returned.", schema: { type: "object", required: ["key", "status"], properties: { key: { type: "string" }, status: { type: "string", enum: ["UPLOADED"] } } } })
   async upload(
     @Query('key') key:string,
     @Req() request:AuthenticatedRequest & AsyncIterable<Uint8Array>,

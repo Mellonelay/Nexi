@@ -214,6 +214,7 @@ export class FinancialOperationsController {
   @Post("deposit-claims")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
+  @ApiCreatedResponse({ description: "Deposit claim created or replayed for the authenticated user.", schema: { type: "object", required: ["depositRequestId", "status", "claim", "replayed"], properties: { depositRequestId: { type: "string" }, status: { type: "string" }, claim: { type: "object", additionalProperties: true }, replayed: { type: "boolean" } } } })
   submitDepositClaim(
     @Body() body: DepositClaimDto,
     @Req() request: AuthenticatedRequest,

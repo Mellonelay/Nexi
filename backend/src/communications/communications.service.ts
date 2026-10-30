@@ -564,7 +564,7 @@ export class CommunicationsService {
     return this.database.messageModerationCase.findMany({
       skip: (page - 1) * limit,
       take: limit,
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       include: { conversation: { select: { state: true } } },
     });
   }
@@ -750,7 +750,7 @@ export class CommunicationsService {
   async adminNotifications(page = 1, limit = 100) {
     return this.database.notification.findMany({
       skip: (page - 1) * limit, take: limit,
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     });
   }
 

@@ -6,7 +6,7 @@ import {
   Post,
   UseGuards,
 } from "@nestjs/common";
-import { ApiTags } from "@nestjs/swagger";
+import { ApiCreatedResponse, ApiTags } from "@nestjs/swagger";
 import { mkdir, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import * as path from "path";
@@ -22,6 +22,7 @@ export class FeedbackController {
   private readonly logger = new Logger(FeedbackController.name);
 
   @Post("upload")
+  @ApiCreatedResponse({ description: "Feedback image and metadata were saved.", schema: { type: "object", required: ["ok", "path"], properties: { ok: { type: "boolean", enum: [true] }, path: { type: "string" } } } })
   @UseGuards(DevelopmentOnlyGuard)
   async uploadFeedback(@Body() data: UploadFeedbackDto) {
     this.logger.log("Receiving visual feedback...");

@@ -326,6 +326,7 @@ export class NexiAdminApiProvider implements AdminDataProvider {
   private async requestAllPages(path: string): Promise<unknown[]> {
     const all: unknown[] = [];
     const seen = new Set<string>();
+    // Offset pages can miss rows inserted ahead of the current page during this read.
     for (let page = 1; ; page += 1) {
       const rows = await this.request<unknown[]>(`${path}?page=${page}&limit=100`);
       const unseen = rows.filter((value) => !seen.has(stringValue(record(value).id)));
