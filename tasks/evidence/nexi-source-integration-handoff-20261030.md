@@ -2,6 +2,8 @@
 
 ## Later continuation — principal-scoped session and realtime recovery
 
+Final source integration for this bounded batch: commit `d1bf7aba0b7939ad48a52b7685b091a4210f62a4` is on `main` and `origin/main`; the worktree was clean at readback. Push used `[skip ci]` because configured push workflows invoke production builds. A repository commit hook automatically refreshed Graphify (7,427 nodes / 19,564 edges / 388 communities); no separate full graph rebuild was requested. The source-integration goal remains active and broader consumer/runtime evidence remains open.
+
 This addendum records the local source batch continued from `222498a22c711c24ec7ca0145b828309ec6d0e5e` (`main` matched `origin/main` at intake). It preserves the prior committed OpenAPI/Admin/Communications source closure below; it does not replace that evidence or claim overall integration completion.
 
 ### Confirmed source corrections

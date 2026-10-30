@@ -1,3 +1,7 @@
+## CURRENT 2026-10-30 — pushed source candidate
+
+The continuation described below is committed and pushed: `d1bf7aba0b7939ad48a52b7685b091a4210f62a4` (`main`/`origin/main` at final readback). The 23-path change includes 18 source/test paths and five state/proof/task records. GitHub CI was intentionally skipped because the repository push workflows invoke production builds. The commit hook refreshed Graphify automatically: 7,427 nodes, 19,564 edges, 388 communities; this is structural index evidence only. The goal remains active; this source SHA is not build, deployment, browser, or runtime proof.
+
 ## CURRENT 2026-10-30 — principal-scoped session and realtime continuation
 
 - Starting source: `222498a22c711c24ec7ca0145b828309ec6d0e5e` (`main` = `origin/main` at intake); current edits remain local until the reviewed Git integration is complete.

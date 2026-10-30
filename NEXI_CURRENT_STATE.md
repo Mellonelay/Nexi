@@ -1,3 +1,7 @@
+## CURRENT 2026-10-30 — source continuation pushed
+
+The principal-scoped Admin/Public session and Communications Redis recovery batch plus its task/proof updates are committed and pushed to `main` at `d1bf7aba0b7939ad48a52b7685b091a4210f62a4`. Focused tests are recorded in the proof register; CodeScene reported maintainability complexity increases in several changed paths and that risk is retained. The commit used `[skip ci]`; no CI run was started because repository push workflows invoke production builds. This source SHA is not a deployed identity. No build, deploy, restart, migration, production write, live queue operation, or browser acceptance occurred. The wider source-integration goal and owner pre-build checkpoint remain open.
+
 ## CURRENT 2026-10-30 — principal-scoped session and realtime source continuation
 
 Source candidate: the local continuation began from `main`/`origin/main` at `222498a22c711c24ec7ca0145b828309ec6d0e5e`; the current principal-scoped Public/Admin and Communications reconnect changes are still uncommitted and undeployed. Production identity is not rechecked here and must not be inferred from source HEAD. The earlier October 29 deployed-release receipt remains a dated runtime snapshot only.
