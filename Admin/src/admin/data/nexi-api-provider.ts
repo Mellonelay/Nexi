@@ -323,6 +323,20 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     return !UNSUPPORTED_OPERATIONS.has(operation);
   }
 
+  private async requestAllPages(path: string): Promise<unknown[]> {
+    const all: unknown[] = [];
+    const seen = new Set<string>();
+    for (let page = 1; ; page += 1) {
+      const rows = await this.request<unknown[]>(`${path}?page=${page}&limit=100`);
+      const unseen = rows.filter((value) => !seen.has(stringValue(record(value).id)));
+      if (!unseen.length) break;
+      for (const value of unseen) seen.add(stringValue(record(value).id));
+      all.push(...unseen);
+      if (rows.length < 100) break;
+    }
+    return all;
+  }
+
   private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const token = await this.config.getToken();
     if (!token.trim()) throw new NexiAdminApiError(401, "Admin session token is unavailable");
@@ -2082,9 +2096,9 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       method: "POST",
     });
   }
-  listMessageModeration(): Promise<MessageModerationCase[]> {
-    return this.request<unknown[]>("/communications/admin/messages/moderation").then((rows) =>
-      rows.map((value) => {
+  async listMessageModeration(): Promise<MessageModerationCase[]> {
+    const cases = await this.requestAllPages("/communications/admin/messages/moderation");
+    return cases.map((value) => {
         const row = record(value);
         const conversation = record(row.conversation);
         return {
@@ -2103,8 +2117,7 @@ export class NexiAdminApiProvider implements AdminDataProvider {
           createdAt: stringValue(row.createdAt),
           updatedAt: stringValue(row.updatedAt),
         };
-      }),
-    );
+      });
   }
   resolveMessageModeration(
     id: string,
@@ -2123,9 +2136,9 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       "PATCH",
     );
   }
-  listNotifications(): Promise<AdminNotification[]> {
-    return this.request<unknown[]>("/communications/admin/notifications").then((rows) =>
-      rows.map((v) => {
+  async listNotifications(): Promise<AdminNotification[]> {
+    const notifications = await this.requestAllPages("/communications/admin/notifications");
+    return notifications.map((v) => {
         const r = record(v);
         return {
           id: stringValue(r.id),
@@ -2136,8 +2149,7 @@ export class NexiAdminApiProvider implements AdminDataProvider {
           readAt: typeof r.readAt === "string" ? r.readAt : undefined,
           createdAt: stringValue(r.createdAt),
         };
-      }),
-    );
+      });
   }
   sendNotification(
     payload: { userId: string; type: string; title: string; body: string },
