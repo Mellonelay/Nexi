@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
   UseGuards,
 } from "@nestjs/common";
-import { ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { Role } from "../prisma/d1-client";
 import { AuthService } from "../auth/auth.service";
 import { AuthRateLimit } from "../auth/auth-rate-limit.decorator";
@@ -42,6 +42,7 @@ export class AdminAuthController {
     return this.authService.refresh(body.refreshToken, "ADMIN");
   }
 
+  @ApiBearerAuth()
   @Post("logout")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard)
   @RequireAuthSurface("ADMIN")
@@ -50,6 +51,7 @@ export class AdminAuthController {
     return this.authService.logout(request.user);
   }
 
+  @ApiBearerAuth()
   @Post("logout-all")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard)
   @RequireAuthSurface("ADMIN")

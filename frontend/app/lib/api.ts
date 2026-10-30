@@ -35,8 +35,10 @@ type RetriableRequestConfig = InternalAxiosRequestConfig & { _nexiAuthRetry?: bo
 
 let refreshPromise: Promise<boolean> | null = null;
 
-async function recoverPublicSession() {
-  if (getAccessToken()) return true;
+async function recoverPublicSession(rejectedAuthorization?: string) {
+  const token = getAccessToken();
+  // A late 401 may belong to the token another request already renewed.
+  if (token && `Bearer ${token}` !== rejectedAuthorization) return true;
   if (!refreshPromise) {
     refreshPromise = refreshClient.post<AuthSessionPayload>('/auth/refresh')
       .then((response) => {
@@ -80,7 +82,7 @@ api.interceptors.response.use(undefined, async (error: unknown) => {
     return Promise.reject(error);
   }
 
-  const recovered = await recoverPublicSession();
+  const recovered = await recoverPublicSession(config.headers.get('Authorization')?.toString());
   const token = getAccessToken();
   if (!recovered || !token) return Promise.reject(error);
   config._nexiAuthRetry = true;

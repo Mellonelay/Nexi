@@ -1,3 +1,4 @@
+import { ApiBearerAuth } from "@nestjs/swagger";
 import { BadRequestException, Controller, Headers, Optional, PayloadTooLargeException, Put, Query, Req, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { AuthenticatedRequest } from '../auth/auth.types';
@@ -14,6 +15,7 @@ const MAX_BYTES=10*1024*1024;
 export class LocalDepositProofController {
   constructor(private readonly financial:FinancialOperationsService,private readonly objects:LocalDepositProofStore, @Optional() private readonly config: ConfigService = new ConfigService()){}
 
+  @ApiBearerAuth()
   @Put('deposit-proof')
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")

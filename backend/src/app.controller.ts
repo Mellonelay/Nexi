@@ -1,5 +1,5 @@
 import { Controller, Get, Query } from "@nestjs/common";
-import { ApiOkResponse, ApiProperty, ApiTags } from "@nestjs/swagger";
+import { ApiOkResponse, ApiProperty, ApiServiceUnavailableResponse, ApiTags } from "@nestjs/swagger";
 import { AppService } from "./app.service";
 import { MarketAuthorityService } from "./market/market-authority.service";
 import { ReadinessService } from "./observability/readiness.service";
@@ -69,6 +69,7 @@ export class AppController {
   // Proxy for external market data (e.g. Yahoo Finance)
   // Usage: /market/proxy?symbol=AAPL
   @Get("market/proxy")
+  @ApiServiceUnavailableResponse({ description: "Market data provider is unavailable; this legacy proxy currently has no configured provider." })
   async getMarketData(@Query("symbol") symbol: string) {
     return this.appService.fetchMarketData(symbol);
   }
@@ -89,6 +90,40 @@ export class AppController {
   }
 
   @Get("public/config/navigation")
+  @ApiOkResponse({
+    description: "Configured Public navigation items, or null when no configuration is available.",
+    schema: {
+      type: "array",
+      nullable: true,
+      items: {
+        type: "object",
+        required: ["id", "surface", "target", "audience", "visible", "order"],
+        properties: {
+          id: { type: "string" },
+          surface: { type: "string", enum: ["bottom", "drawer"] },
+          target: {
+            type: "string",
+            enum: [
+              "/dashboard",
+              "/dashboard/spot",
+              "/dashboard/binary",
+              "/dashboard/wallet",
+              "/dashboard/mining",
+              "/dashboard/loans",
+              "/dashboard/messages",
+              "/dashboard/announcement",
+              "/dashboard/learn",
+              "/dashboard/support",
+              "/dashboard/settings",
+            ],
+          },
+          audience: { type: "string", enum: ["public", "authenticated"] },
+          visible: { type: "boolean" },
+          order: { type: "integer" },
+        },
+      },
+    },
+  })
   async getPublicNavigation() {
     const row = await this.prisma?.systemConfig.findUnique({
       where: { key: "admin.navigation.items" },
@@ -145,6 +180,23 @@ export class AppController {
   }
 
   @Get("public/config/banners")
+  @ApiOkResponse({
+    description: "Active Public banners; an empty array is returned when none are available.",
+    schema: {
+      type: "array",
+      items: {
+        type: "object",
+        required: ["id", "message", "severity", "scope", "active"],
+        properties: {
+          id: { type: "string" },
+          message: { type: "string" },
+          severity: { type: "string", enum: ["info", "warning", "critical"] },
+          scope: { type: "string", enum: ["global", "spot", "binary", "wallets"] },
+          active: { type: "boolean", enum: [true] },
+        },
+      },
+    },
+  })
   async getPublicBanners() {
     const row = await this.prisma?.systemConfig.findUnique({
       where: { key: "admin.frontend.banners" },
@@ -176,6 +228,21 @@ export class AppController {
   }
 
   @Get("public/config/quotes-categories")
+  @ApiOkResponse({
+    description: "Visible, allowlisted quote categories in display order.",
+    schema: {
+      type: "array",
+      items: {
+        type: "object",
+        required: ["id", "visible", "order"],
+        properties: {
+          id: { type: "string", enum: ["Crypto", "Metals", "Forex", "Stocks"] },
+          visible: { type: "boolean", enum: [true] },
+          order: { type: "integer", minimum: 0, maximum: 1000 },
+        },
+      },
+    },
+  })
   async getPublicQuotesCategories() {
     const row = await this.prisma?.systemConfig.findUnique({
       where: { key: "admin.frontend.quoteCategories" },
@@ -212,6 +279,20 @@ export class AppController {
   }
 
   @Get("public/config/localization")
+  @ApiOkResponse({
+    description: "Public UI message overrides; an empty array is returned when none are configured.",
+    schema: {
+      type: "array",
+      items: {
+        type: "object",
+        required: ["key", "values"],
+        properties: {
+          key: { type: "string" },
+          values: { type: "object", additionalProperties: { type: "string" } },
+        },
+      },
+    },
+  })
   async getPublicLocalization() {
     const row = await this.prisma?.systemConfig.findUnique({
       where: { key: "admin.localization.translations" },
@@ -246,6 +327,7 @@ export class AppController {
   }
 
   @Get("healthz")
+  @ApiOkResponse({ schema: { type: "object", required: ["status"], properties: { status: { type: "string", enum: ["UP"] } } } })
   getLiveness() {
     return { status: "UP" };
   }

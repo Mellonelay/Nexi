@@ -5,6 +5,22 @@ describe('CommunicationsService', () => {
   const redis = { isAvailable: jest.fn().mockReturnValue(false), publish: jest.fn() };
   const d1Communications = { isEnabled: jest.fn(() => false) };
 
+  it('returns only the conversation state required by the Admin moderation contract', async () => {
+    const rows = [{ id: 'case-1', conversation: { state: 'ACTIVE' } }];
+    const findMany = jest.fn().mockResolvedValue(rows);
+    const service = new CommunicationsService(
+      { messageModerationCase: { findMany } } as any,
+      outbox as any,
+      d1Communications as any,
+      redis as any,
+    );
+
+    await expect(service.adminMessageModeration(1, 20)).resolves.toBe(rows);
+    expect(findMany).toHaveBeenCalledWith(expect.objectContaining({
+      include: { conversation: { select: { state: true } } },
+    }));
+  });
+
   it('routes Admin moderation through the canonical D1 command and reads back the result', async () => {
     const current = { id: 'case-1', conversationId: 'conversation:user-1:user-2' };
     const updated = { ...current, status: 'RESOLVED', resolution: 'reviewed', reviewedById: 'admin-1' };

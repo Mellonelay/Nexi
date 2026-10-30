@@ -8,7 +8,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
 import type { AuthenticatedRequest } from '../auth/auth.types';
 import { AuthSurfaceGuard } from '../auth/auth-surface.guard';
 import { RequireAuthSurface } from '../auth/auth-surface.decorator';
@@ -23,7 +23,9 @@ import { KycService } from './kyc.service';
 export class KycController {
   constructor(private readonly kycService: KycService) {}
 
+  @ApiBearerAuth()
   @Post('evidence')
+  @ApiCreatedResponse({ description: 'Private KYC evidence stored for the authenticated user.', schema: { type: 'object', required: ['evidenceId', 'status'], properties: { evidenceId: { type: 'string', format: 'uuid' }, status: { type: 'string', enum: ['UPLOADED'] } } } })
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface('PUBLIC')
   async uploadEvidence(
@@ -38,6 +40,7 @@ export class KycController {
     );
   }
 
+  @ApiBearerAuth()
   @Post('submit')
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface('PUBLIC')
@@ -48,6 +51,7 @@ export class KycController {
     return this.kycService.submitKyc(request.user.userId, body);
   }
 
+  @ApiBearerAuth()
   @Get('status')
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface('PUBLIC')
@@ -55,6 +59,7 @@ export class KycController {
     return this.kycService.getKycStatus(request.user.userId);
   }
 
+  @ApiBearerAuth()
   @Get('status/:userId')
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, OwnershipGuard)
   @RequireAuthSurface('PUBLIC')

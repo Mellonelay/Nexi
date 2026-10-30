@@ -36,6 +36,13 @@ describe('recipient-owned message read', () => {
     expect(findUnique).not.toHaveBeenCalled();
   });
 
+  it('does not return a successful null receipt if the message disappears before read-back', async () => {
+    const gateway: any = { markMessageRead: jest.fn(async () => true) };
+    const findUnique = jest.fn(async () => null);
+    const service = new CommunicationsService({ persistentMessage: { findUnique } } as any, {} as any, gateway, { isAvailable: () => false } as any);
+    await expect(service.markMessageRead('recipient', 'message')).rejects.toMatchObject({ status: 404 });
+  });
+
   it('uses authenticated identity and preserves the guarded HTTP route contract', async () => {
     const service: any = { markMessageRead: jest.fn(async () => ({ id: 'message' })) };
     const controller = new CommunicationsController(service);

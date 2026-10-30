@@ -146,7 +146,7 @@ function boundedIdempotencyKey(prefix: string, values: string[]): string {
   return `${prefix}:${Math.abs(hash >>> 0).toString(36)}`.slice(0, 128);
 }
 
-export class NexiAdminApiError extends Error {
+class NexiAdminApiError extends Error {
   constructor(
     public readonly status: number,
     message: string,
@@ -301,6 +301,8 @@ function scope(commandType: string): ApprovalRequest["scope"] {
  * success-shaped placeholders.
  */
 export class NexiAdminApiProvider implements AdminDataProvider {
+  private readonly listeners = new Set<() => void>();
+
   constructor(private readonly config: ApiConfig) {}
 
   subscribeToCommunications(onChange: () => void): () => void {
@@ -329,6 +331,7 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     let status: number | null = null;
     let outcome: "success" | "http-error" | "network-error" | "response-error" = "success";
     const multipart = typeof FormData !== "undefined" && init.body instanceof FormData;
+    let invalidate = method !== "GET" && method !== "HEAD";
     try {
       const response = await fetch(`${this.config.baseUrl.replace(/\/$/, "")}${path}`, {
         ...init,
@@ -340,6 +343,7 @@ export class NexiAdminApiProvider implements AdminDataProvider {
         },
       });
       status = response.status;
+      if (!response.ok && response.status < 500) invalidate = false;
       const body = await response.text();
       let payload: unknown = undefined;
       try {
@@ -355,11 +359,22 @@ export class NexiAdminApiProvider implements AdminDataProvider {
           typeof detail === "string" ? detail : `Admin API request failed (${response.status})`,
         );
       }
+      if (record(payload).ok === false) invalidate = false;
       return payload as T;
     } catch (error) {
       if (outcome === "success") outcome = status === null ? "network-error" : "response-error";
       throw error;
     } finally {
+      // A lost write response also needs read-back; it does not prove the command failed.
+      if (invalidate) {
+        for (const listener of this.listeners) {
+          try {
+            listener();
+          } catch {
+            // An observer failure must not turn a committed command into a retryable error.
+          }
+        }
+      }
       if (import.meta.env.DEV) {
         void import("@/admin/devtools/events")
           .then(({ adminDevtoolsEvents }) => {
@@ -1571,33 +1586,19 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     );
   }
   async listExposure(): Promise<ExposureRow[]> {
-    const [spotPairs, spotOrders, binaryPairs] = await Promise.all([
+    const [spotPairs, binaryPairs] = await Promise.all([
       this.listSpotPairs(),
-      this.listSpotOrders(),
       this.listBinaryPairs(),
     ]);
     const spot = spotPairs.map((pair) => {
-      const used = spotOrders
-        .filter((order) => order.pair === pair.symbol && order.status === "open")
-        .reduce((sum, order) => {
-          const remaining = Math.max(Number(order.size) - Number(order.filled), 0);
-          return sum + remaining * Number(order.price ?? 0);
-        }, 0);
-      const cap = Number(pair.maxNotional || 0);
-      const utilisation = cap > 0 ? used / cap : 0;
       return {
         id: `spot:${pair.id}`,
         pair: pair.symbol,
         product: "spot" as const,
-        used: String(used),
-        cap: pair.maxNotional,
-        utilisation,
-        status:
-          utilisation >= 1
-            ? ("over_limit" as const)
-            : utilisation >= 0.8
-              ? ("warning" as const)
-              : ("ok" as const),
+        used: "UNAVAILABLE",
+        cap: "UNAVAILABLE",
+        utilisation: 0,
+        status: "unavailable" as const,
       };
     });
     const binary = binaryPairs.map((pair) => {
@@ -2443,7 +2444,10 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     );
     return { ok: true, auditId: audit?.id ?? stringValue(result.auditId) };
   }
-  subscribe() {
-    return () => {};
+  subscribe(fn: () => void) {
+    this.listeners.add(fn);
+    return () => {
+      this.listeners.delete(fn);
+    };
   }
 }

@@ -8,7 +8,7 @@ import {
   Req,
   UseGuards,
 } from "@nestjs/common";
-import { ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiOkResponse, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { AuthSurfaceGuard } from "../auth/auth-surface.guard";
 import { RequireAuthSurface } from "../auth/auth-surface.decorator";
@@ -29,10 +29,31 @@ export class MarginController {
   constructor(private readonly marginService: MarginService) {}
 
   @Get("quote")
+  @ApiQuery({ name: "pair", required: true, type: String })
+  @ApiOkResponse({
+    description: "The current approved market quote and enabled leverage options for the pair.",
+    schema: {
+      type: "object",
+      required: ["pair", "state", "price", "quoteId", "provider", "source", "observedAt", "receivedAt", "maintenanceRatio", "leverageOptions"],
+      properties: {
+        pair: { type: "string" },
+        state: { type: "string", enum: ["LIVE"] },
+        price: { type: "string" },
+        quoteId: { type: "string" },
+        provider: { type: "string" },
+        source: { type: "string" },
+        observedAt: { type: "string", format: "date-time", nullable: true },
+        receivedAt: { type: "string", format: "date-time" },
+        maintenanceRatio: { type: "string" },
+        leverageOptions: { type: "array", items: { type: "number" } },
+      },
+    },
+  })
   getQuote(@Query("pair") pair: string) {
     return this.marginService.getQuote(pair);
   }
 
+  @ApiBearerAuth()
   @Get("positions")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
@@ -40,6 +61,7 @@ export class MarginController {
     return this.marginService.listPositions(request.user.userId);
   }
 
+  @ApiBearerAuth()
   @Post("positions")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
@@ -50,6 +72,7 @@ export class MarginController {
     return this.marginService.openPosition(request.user.userId, body);
   }
 
+  @ApiBearerAuth()
   @Post("positions/:positionId/cancel-pending")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
@@ -63,6 +86,7 @@ export class MarginController {
     );
   }
 
+  @ApiBearerAuth()
   @Post("positions/:positionId/close")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
@@ -78,6 +102,7 @@ export class MarginController {
     );
   }
 
+  @ApiBearerAuth()
   @Post("positions/mark")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
@@ -88,6 +113,7 @@ export class MarginController {
     return this.marginService.markPosition(request.user.userId, positionId);
   }
 
+  @ApiBearerAuth()
   @Post("positions/:positionId/liquidate")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
@@ -103,6 +129,7 @@ export class MarginController {
     );
   }
 
+  @ApiBearerAuth()
   @Post("transfer")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
@@ -113,6 +140,7 @@ export class MarginController {
     return this.marginService.transfer(request.user.userId, body);
   }
 
+  @ApiBearerAuth()
   @Post("borrows/orphan/repay")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
@@ -126,6 +154,7 @@ export class MarginController {
     );
   }
 
+  @ApiBearerAuth()
   @Get("activity")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")

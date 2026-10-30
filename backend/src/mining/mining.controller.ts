@@ -7,7 +7,7 @@ import {
   UseGuards,
   Req,
 } from "@nestjs/common";
-import { ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import { Role } from "../prisma/d1-client";
 import type { AuthenticatedRequest } from "../auth/auth.types";
 import { DevelopmentOnlyGuard } from "../auth/development-only.guard";
@@ -34,13 +34,29 @@ export class MiningController {
     return this.miningService.getPlans();
   }
 
+  @ApiBearerAuth()
   @Get("summary")
+  @ApiOkResponse({
+    description: "The authenticated user's mining subscription and reward totals.",
+    schema: {
+      type: "object",
+      required: ["activeSubscriptions", "totalSubscriptions", "lockedPrincipal", "accruedRewards", "postedRewards"],
+      properties: {
+        activeSubscriptions: { type: "integer" },
+        totalSubscriptions: { type: "integer" },
+        lockedPrincipal: { type: "string" },
+        accruedRewards: { type: "string" },
+        postedRewards: { type: "string" },
+      },
+    },
+  })
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
   async getSummary(@Req() request: AuthenticatedRequest) {
     return this.miningService.getSummary(request.user.userId);
   }
 
+  @ApiBearerAuth()
   @Get("rewards/:userId")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, OwnershipGuard)
   @RequireAuthSurface("PUBLIC")
@@ -51,6 +67,7 @@ export class MiningController {
     return this.miningService.getRewardHistory(request.user.userId);
   }
 
+  @ApiBearerAuth()
   @Post("subscribe")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
@@ -66,6 +83,7 @@ export class MiningController {
     );
   }
 
+  @ApiBearerAuth()
   @Get("my/:userId")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, OwnershipGuard)
   @RequireAuthSurface("PUBLIC")
@@ -76,6 +94,7 @@ export class MiningController {
     return this.miningService.getUserSubscriptions(request.user.userId);
   }
 
+  @ApiBearerAuth()
   @Post("redeem")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
@@ -90,6 +109,7 @@ export class MiningController {
     );
   }
 
+  @ApiBearerAuth()
   @Post("cancel")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
@@ -105,6 +125,7 @@ export class MiningController {
   }
 
   // Admin: Create Plan
+  @ApiBearerAuth()
   @Post("admin/plan")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard)
   @RequireAuthSurface("ADMIN")
@@ -129,6 +150,7 @@ export class MiningController {
   }
 
   // Dev: Force Yield Distribution
+  @ApiBearerAuth()
   @Post("admin/distribute")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, DevelopmentOnlyGuard)
   @RequireAuthSurface("ADMIN")

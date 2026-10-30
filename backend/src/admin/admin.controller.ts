@@ -33,6 +33,7 @@ import {
 import { Role } from "../prisma/d1-client";
 import { AdminService } from "./admin.service";
 import { AdminWalletConfigurationService } from "./admin-wallet-configuration.service";
+import { ADMIN_PERMISSION_KEYS, ADMIN_ROLE_DEFINITIONS } from "./admin-rbac";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { Roles } from "../auth/roles.decorator";
 import { RolesGuard } from "../auth/roles.guard";
@@ -74,6 +75,25 @@ import {
 } from "./admin.dto";
 import type { AuthenticatedRequest } from "../auth/auth.types";
 import { AdminPermissionGuard } from "./admin-permission.guard";
+
+const marginConfigurationResponseSchema = {
+  type: "object",
+  required: ["maintenanceRatio", "leverages"],
+  properties: {
+    maintenanceRatio: { type: "number" },
+    leverages: { type: "array", items: { type: "number" } },
+  },
+};
+
+const pairMaintenanceResponseSchema = {
+  type: "object",
+  required: ["ok", "auditId", "status"],
+  properties: {
+    ok: { type: "boolean" },
+    auditId: { type: "string" },
+    status: { type: "string" },
+  },
+};
 import { RequireAdminPermission } from "./admin-permission.decorator";
 import { MiningService } from "../mining/mining.service";
 import { LoanService } from "../loans/loans.service";
@@ -104,6 +124,42 @@ export class AdminController {
   ) {}
 
   @Get("me")
+  @ApiOkResponse({
+    description: "The authenticated Admin identity and effective role permissions.",
+    schema: {
+      type: "object",
+      required: [
+        "id",
+        "email",
+        "backendRole",
+        "authSurface",
+        "environment",
+        "permissionModel",
+        "roleId",
+        "roleLabel",
+        "effectivePermissions",
+        "roleMappingStatus",
+      ],
+      properties: {
+        id: { type: "string" },
+        email: { type: "string" },
+        backendRole: { type: "string" },
+        authSurface: { type: "string" },
+        environment: { type: "string", enum: ["DEVELOPMENT", "SANDBOX", "PRODUCTION"] },
+        permissionModel: { type: "string", enum: ["ADMIN_ROLE_ASSIGNMENT"] },
+        roleId: { type: "string", enum: Object.keys(ADMIN_ROLE_DEFINITIONS), nullable: true },
+        roleLabel: { type: "string", nullable: true },
+        effectivePermissions: {
+          type: "array",
+          items: { type: "string", enum: [...ADMIN_PERMISSION_KEYS] },
+        },
+        roleMappingStatus: {
+          type: "string",
+          enum: ["ASSIGNED", "UNASSIGNED_ADMIN_REQUIRES_ROLE_ASSIGNMENT"],
+        },
+      },
+    },
+  })
   getAdminIdentity(@Req() request: AuthenticatedRequest) {
     return this.adminService.getAdminIdentity(request.user);
   }
@@ -152,6 +208,25 @@ export class AdminController {
   }
 
   @Get("roles")
+  @ApiOkResponse({
+    description: "Canonical Admin role definitions and their effective permissions.",
+    schema: {
+      type: "array",
+      items: {
+        type: "object",
+        required: ["id", "label", "description", "permissions"],
+        properties: {
+          id: { type: "string", enum: Object.keys(ADMIN_ROLE_DEFINITIONS) },
+          label: { type: "string" },
+          description: { type: "string" },
+          permissions: {
+            type: "array",
+            items: { type: "string", enum: [...ADMIN_PERMISSION_KEYS] },
+          },
+        },
+      },
+    },
+  })
   @RequireAdminPermission("roles.view")
   listAdminRoleDefinitions() {
     return this.adminService.listAdminRoleDefinitions();
@@ -256,6 +331,49 @@ export class AdminController {
   }
 
   @Get("system-config")
+  @ApiOkResponse({
+    description: "Admin configuration with binary timeframe and market summary data.",
+    schema: {
+      type: "object",
+      required: ["status", "timeframes", "marketStats", "config"],
+      properties: {
+        status: { type: "string", enum: ["ok"] },
+        timeframes: {
+          type: "array",
+          items: {
+            type: "object",
+            required: ["id", "name", "seconds", "payoutRate", "profitRatio", "lossRatio", "isActive"],
+            properties: {
+              id: { type: "integer" },
+              name: { type: "string" },
+              seconds: { type: "integer" },
+              payoutRate: { type: "string" },
+              profitRatio: { type: "integer" },
+              lossRatio: { type: "integer" },
+              isActive: { type: "boolean" },
+            },
+          },
+        },
+        marketStats: {
+          type: "array",
+          items: {
+            type: "object",
+            required: ["category", "_count"],
+            properties: {
+              category: { type: "string" },
+              _count: {
+                type: "object",
+                required: ["_all"],
+                properties: { _all: { type: "integer" } },
+                additionalProperties: { type: "integer" },
+              },
+            },
+          },
+        },
+        config: { type: "object", additionalProperties: { type: "string" } },
+      },
+    },
+  })
   @RequireAdminPermission("flags.view")
   getSystemConfig() {
     return this.adminService.getSystemConfig();
@@ -567,12 +685,15 @@ export class AdminController {
   }
 
   @Get("spot/margin/config")
+  @ApiOkResponse({ schema: marginConfigurationResponseSchema })
   @RequireAdminPermission("spot.view")
   getMarginConfiguration() {
     return this.adminService.getMarginConfiguration();
   }
 
   @Post("spot/margin/config")
+  @ApiCreatedResponse({ schema: marginConfigurationResponseSchema })
+  @ApiBadRequestResponse({ description: "Invalid isolated margin configuration." })
   @RequireAdminPermission("spot.edit")
   updateMarginConfiguration(
     @Body() body: UpdateMarginConfigurationDto,
@@ -582,6 +703,19 @@ export class AdminController {
   }
 
   @Post("spot/orders/:id/cancel")
+  @ApiCreatedResponse({
+    schema: {
+      type: "object",
+      required: ["ok", "auditId", "state"],
+      properties: {
+        ok: { type: "boolean" },
+        auditId: { type: "string" },
+        state: { type: "string" },
+      },
+    },
+  })
+  @ApiBadRequestResponse({ description: "A cancellation reason is required." })
+  @ApiNotFoundResponse({ description: "Spot order not found." })
   @RequireAdminPermission("spot.cancel_order")
   cancelAdminSpotOrder(
     @Param("id", ParseUUIDPipe) id: string,
@@ -597,6 +731,9 @@ export class AdminController {
   }
 
   @Post("spot/pairs/maintenance")
+  @ApiCreatedResponse({ schema: pairMaintenanceResponseSchema })
+  @ApiBadRequestResponse({ description: "A maintenance reason is required." })
+  @ApiNotFoundResponse({ description: "Spot pair not found." })
   @RequireAdminPermission("spot.pause")
   setSpotPairMaintenance(
     @Body() body: AdminPairMaintenanceDto,
@@ -639,6 +776,9 @@ export class AdminController {
   }
 
   @Post("binary/pairs/maintenance")
+  @ApiCreatedResponse({ schema: pairMaintenanceResponseSchema })
+  @ApiBadRequestResponse({ description: "A maintenance reason is required." })
+  @ApiNotFoundResponse({ description: "Binary market pair not found." })
   @RequireAdminPermission("binary.edit")
   setBinaryPairMaintenance(
     @Body() body: AdminPairMaintenanceDto,

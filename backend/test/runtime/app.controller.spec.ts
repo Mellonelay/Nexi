@@ -28,6 +28,61 @@ describe("AppController runtime probes", () => {
     process.env.D1_RUNTIME_ENABLED = originalD1RuntimeEnabled;
   });
 
+  it("documents response shapes for consumed Public UI configuration", () => {
+    const responseSchema = (method: keyof AppController) => {
+      const responses = Reflect.getMetadata(
+        "swagger/apiResponse",
+        AppController.prototype[method],
+      );
+      return responses?.[200]?.schema;
+    };
+
+    expect(responseSchema("getPublicBanners")).toMatchObject({
+      type: "array",
+      items: {
+        type: "object",
+        required: ["id", "message", "severity", "scope", "active"],
+        properties: {
+          id: { type: "string" },
+          message: { type: "string" },
+          severity: { type: "string", enum: ["info", "warning", "critical"] },
+          scope: { type: "string", enum: ["global", "spot", "binary", "wallets"] },
+          active: { type: "boolean", enum: [true] },
+        },
+      },
+    });
+    expect(responseSchema("getPublicLocalization")).toMatchObject({
+      type: "array",
+      items: {
+        type: "object",
+        required: ["key", "values"],
+        properties: {
+          key: { type: "string" },
+          values: { type: "object", additionalProperties: { type: "string" } },
+        },
+      },
+    });
+    expect(responseSchema("getPublicNavigation")).toMatchObject({
+      type: "array",
+      nullable: true,
+      items: {
+        type: "object",
+        required: ["id", "surface", "target", "audience", "visible", "order"],
+      },
+    });
+    expect(responseSchema("getPublicQuotesCategories")).toMatchObject({
+      type: "array",
+      items: {
+        required: ["id", "visible", "order"],
+        properties: {
+          id: { enum: ["Crypto", "Metals", "Forex", "Stocks"] },
+          visible: { enum: [true] },
+          order: { minimum: 0, maximum: 1000 },
+        },
+      },
+    });
+  });
+
   it("reports process liveness without requiring dependencies", () => {
     expect(createController(false, false, false).getLiveness()).toEqual({
       status: "UP",

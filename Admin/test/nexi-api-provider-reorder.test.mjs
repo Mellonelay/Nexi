@@ -9,6 +9,131 @@ import { isOngoingBinaryPositionStatus } from "../src/admin/data/binary-position
 import { groupAdminMessageConversations } from "../src/admin/data/message-conversations.ts";
 import { buildOverviewWorkItems } from "../src/admin/data/overview-work-items.ts";
 import { learnCategoryStatusUpdate } from "../src/admin/data/learn-category-status.ts";
+import ts from "typescript";
+
+async function loadLiveProvider() {
+  const url = new URL("../src/admin/data/nexi-api-provider.ts", import.meta.url);
+  const source = await readFile(url, "utf8");
+  const { outputText } = ts.transpileModule(source, {
+    compilerOptions: {
+      target: ts.ScriptTarget.ES2022,
+      module: ts.ModuleKind.ESNext,
+    },
+  });
+  const executable = outputText
+    .replaceAll("import.meta.env.DEV", "false")
+    .replace(/from "([^"]+)"/g, (_, specifier) => {
+      const resolved = specifier.startsWith(".")
+        ? new URL(`${specifier}${specifier === "../types" ? "/index.ts" : ".ts"}`, url).href
+        : import.meta.resolve(specifier);
+      return `from ${JSON.stringify(resolved)}`;
+    });
+  return import(`data:text/javascript;base64,${Buffer.from(executable).toString("base64")}`);
+}
+
+test("live provider invalidates subscribed reads after successful or uncertain writes", async (t) => {
+  const { NexiAdminApiProvider } = await loadLiveProvider();
+  const provider = new NexiAdminApiProvider({
+    baseUrl: "https://admin-api.test",
+    getToken: async () => "test-token",
+  });
+  let revokedAt = null;
+  let writeOutcome = "success";
+  t.mock.method(globalThis, "fetch", async (_url, init) => {
+    if (init.method === "POST" || init.method === "PATCH") {
+      if (writeOutcome === "forbidden")
+        return Response.json({ message: "Forbidden" }, { status: 403 });
+      if (writeOutcome === "server-error") {
+        revokedAt = "2026-10-29T00:00:00Z";
+        return Response.json({ message: "Response failed after commit" }, { status: 500 });
+      }
+      if (writeOutcome === "rejected") return Response.json({ ok: false });
+      revokedAt = "2026-10-29T00:00:00Z";
+      if (writeOutcome === "network-error") throw new TypeError("Response lost after commit");
+      return Response.json({ ok: true, auditId: "audit-1" });
+    }
+    return Response.json([{ id: "session-1", userId: "user-1", revokedAt }]);
+  });
+  let changes = 0;
+  let readback;
+  const unsubscribe = provider.subscribe(() => {
+    changes += 1;
+    readback = provider.listSessions();
+  });
+  assert.equal((await provider.listSessions())[0].active, true);
+  assert.equal(changes, 0);
+  const ctx = {
+    actor: "operator",
+    role: "super_admin",
+    environment: "SANDBOX",
+    reason: "Revoke compromised device",
+  };
+  assert.equal((await provider.revokeSession("session-1", ctx)).ok, true);
+  assert.equal(changes, 1);
+  assert.equal((await readback)[0].active, false);
+  writeOutcome = "forbidden";
+  await assert.rejects(provider.revokeSession("session-1", ctx), {
+    status: 403,
+  });
+  assert.equal(changes, 1);
+  writeOutcome = "server-error";
+  await assert.rejects(provider.revokeSession("session-1", ctx), { status: 500 });
+  assert.equal(changes, 2);
+  assert.equal((await readback)[0].active, false);
+  writeOutcome = "rejected";
+  assert.equal((await provider.revokeSession("session-1", ctx)).ok, false);
+  assert.equal(changes, 2);
+  revokedAt = null;
+  writeOutcome = "network-error";
+  await assert.rejects(provider.revokeSession("session-1", ctx), /Response lost after commit/);
+  assert.equal(changes, 3);
+  assert.equal((await readback)[0].active, false);
+  writeOutcome = "success";
+  const unsubscribeBrokenObserver = provider.subscribe(() => {
+    throw new Error("Observer failed");
+  });
+  await provider.setBinaryResearchDefault("user-1", "NORMAL", ctx);
+  assert.equal(changes, 4);
+  unsubscribeBrokenObserver();
+  unsubscribe();
+  await provider.revokeSession("session-1", ctx);
+  assert.equal(changes, 4);
+});
+
+test("live exposure stays unavailable without a backend risk cap", async (t) => {
+  const { NexiAdminApiProvider } = await loadLiveProvider();
+  const provider = new NexiAdminApiProvider({
+    baseUrl: "https://admin-api.test",
+    getToken: async () => "test-token",
+  });
+  t.mock.method(globalThis, "fetch", async (url) => {
+    if (String(url).endsWith("/admin/spot/pairs"))
+      return Response.json([
+        {
+          id: "btc-usd",
+          symbol: "BTC/USD",
+          status: "ACTIVE",
+          baseAsset: { symbol: "BTC" },
+          quoteAsset: { symbol: "USD" },
+          providerSymbols: [],
+        },
+      ]);
+    if (String(url).endsWith("/admin/binary/config")) return Response.json([]);
+    assert.fail(`Unexpected exposure request: ${String(url)}`);
+  });
+
+  assert.deepEqual(await provider.listExposure(), [
+    {
+      id: "spot:btc-usd",
+      pair: "BTC/USD",
+      product: "spot",
+      used: "UNAVAILABLE",
+      cap: "UNAVAILABLE",
+      utilisation: 0,
+      status: "unavailable",
+    },
+  ]);
+});
 
 test("ledger scope mapping preserves all canonical wallet accounts", () => {
   assert.deepEqual(["MAIN", "SPOT", "MARGIN", "BINARY", "FINANCE"].map(mapLedgerScope),

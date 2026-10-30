@@ -24,6 +24,7 @@ import {
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiOkResponse,
+  ApiNotFoundResponse,
   ApiOperation,
   ApiProduces,
   ApiQuery,
@@ -55,6 +56,9 @@ import {
   ResolveMessageModerationDto,
   SendSupportMessageDto,
   AdminMessageResponseDto,
+  AdminMessageModerationCaseResponseDto,
+  MessageModerationCaseResponseDto,
+  MessageReadResponseDto,
   SupportAttachmentResponseDto,
   SupportMessageResponseDto,
   SupportThreadResponseDto,
@@ -139,7 +143,10 @@ export class CommunicationsController {
   message() {
     throw new GoneException("Recipient-selected messaging is retired. Use the NEXI support conversation.");
   }
+  @ApiBearerAuth()
   @Post("messages/:id/read")
+  @ApiCreatedResponse({ type: MessageReadResponseDto, description: "The persisted message with its canonical read timestamp." })
+  @ApiNotFoundResponse({ description: "Message not found or unavailable to this recipient." })
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
   readMessage(
@@ -148,6 +155,7 @@ export class CommunicationsController {
   ) {
     return this.service.markMessageRead(req.user.userId, id);
   }
+  @ApiBearerAuth()
   @Get("messages")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
@@ -157,6 +165,7 @@ export class CommunicationsController {
   ) {
     return this.service.listMessages(req.user.userId, q.page, q.limit);
   }
+  @ApiBearerAuth()
   @Get("conversations")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
@@ -166,6 +175,7 @@ export class CommunicationsController {
   ) {
     return this.service.listConversations(req.user.userId, q.page, q.limit);
   }
+  @ApiBearerAuth()
   @Post("conversations/:id/report")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
@@ -181,6 +191,7 @@ export class CommunicationsController {
       dto.messageId,
     );
   }
+  @ApiBearerAuth()
   @Get("notifications")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
@@ -190,6 +201,7 @@ export class CommunicationsController {
   ) {
     return this.service.listNotifications(req.user.userId, q.page, q.limit);
   }
+  @ApiBearerAuth()
   @Post("notifications/:id/read")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
@@ -214,6 +226,7 @@ export class CommunicationsController {
   ) {
     return this.service.learnDetail(slug, q.locale);
   }
+  @ApiBearerAuth()
   @Post("admin/announcements")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
   @RequireAuthSurface("ADMIN")
@@ -222,6 +235,7 @@ export class CommunicationsController {
   createAnnouncement(@Body() dto: CreateAnnouncementDto) {
     return this.service.createAnnouncement(dto);
   }
+  @ApiBearerAuth()
   @Patch("admin/announcements/:id")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
   @RequireAuthSurface("ADMIN")
@@ -230,6 +244,7 @@ export class CommunicationsController {
   updateAnnouncement(@Param("id") id: string, @Body() dto: UpdateAnnouncementDto) {
     return this.service.updateAnnouncement(id, dto);
   }
+  @ApiBearerAuth()
   @Post("admin/announcements/:id/publish")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
   @RequireAuthSurface("ADMIN")
@@ -250,7 +265,10 @@ export class CommunicationsController {
   adminMessages(@Query() q: PageQueryDto) {
     return this.service.adminMessages(q.page, q.limit);
   }
+  @ApiBearerAuth()
   @Post("admin/messages/:id/read")
+  @ApiCreatedResponse({ type: MessageReadResponseDto, description: "The persisted message with its canonical read timestamp." })
+  @ApiNotFoundResponse({ description: "Message not found or unavailable to this administrator." })
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
   @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
@@ -263,6 +281,10 @@ export class CommunicationsController {
   @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
   @RequireAdminPermission("messages.view")
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: [AdminMessageModerationCaseResponseDto] })
+  @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse()
   adminMessageModeration(@Query() q: PageQueryDto) {
     return this.service.adminMessageModeration(q.page, q.limit);
   }
@@ -271,6 +293,11 @@ export class CommunicationsController {
   @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
   @RequireAdminPermission("messages.send")
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: MessageModerationCaseResponseDto })
+  @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse()
+  @ApiNotFoundResponse({ description: "Moderation case not found" })
   resolveMessageModeration(
     @Req() req: AuthenticatedRequest,
     @Param("id") id: string,
@@ -278,18 +305,21 @@ export class CommunicationsController {
   ) {
     return this.service.resolveMessageModeration(id, req.user.userId, dto);
   }
+  @ApiBearerAuth()
   @Get("admin/notifications")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
   @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
   @RequireAdminPermission("notifications.view")
   adminNotifications(@Query() q: PageQueryDto) { return this.service.adminNotifications(q.page, q.limit); }
+  @ApiBearerAuth()
   @Post("admin/notifications")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
   @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
   @RequireAdminPermission("notifications.send")
   sendAdminNotification(@Body() dto: SendNotificationDto) { return this.service.sendAdminNotification(dto); }
+  @ApiBearerAuth()
   @Get("admin/learn/articles")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
   @RequireAuthSurface("ADMIN")
@@ -298,6 +328,7 @@ export class CommunicationsController {
   adminLearnArticles() {
     return this.service.adminLearnArticles();
   }
+  @ApiBearerAuth()
   @Get("admin/learn/categories")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
   @RequireAuthSurface("ADMIN")
@@ -306,6 +337,7 @@ export class CommunicationsController {
   adminLearnCategories() {
     return this.service.adminLearnCategories();
   }
+  @ApiBearerAuth()
   @Post("admin/learn/categories")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
   @RequireAuthSurface("ADMIN")
@@ -314,6 +346,7 @@ export class CommunicationsController {
   createLearnCategory(@Body() dto: CreateLearnCategoryDto) {
     return this.service.createLearnCategory(dto);
   }
+  @ApiBearerAuth()
   @Patch("admin/learn/categories/:id")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
   @RequireAuthSurface("ADMIN")
@@ -326,6 +359,7 @@ export class CommunicationsController {
   ) {
     return this.service.updateLearnCategoryStatus(id, req.user.userId, dto);
   }
+  @ApiBearerAuth()
   @Post("admin/learn")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
   @RequireAuthSurface("ADMIN")
@@ -334,6 +368,7 @@ export class CommunicationsController {
   createLearn(@Body() dto: CreateLearnContentDto) {
     return this.service.createLearn(dto);
   }
+  @ApiBearerAuth()
   @Patch("admin/learn/:id")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
   @RequireAuthSurface("ADMIN")
@@ -342,6 +377,7 @@ export class CommunicationsController {
   updateLearn(@Param("id") id: string, @Body() dto: UpdateLearnContentDto) {
     return this.service.updateLearn(id, dto);
   }
+  @ApiBearerAuth()
   @Post("admin/learn/:id/publish")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
   @RequireAuthSurface("ADMIN")

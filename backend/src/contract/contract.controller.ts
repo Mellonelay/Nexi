@@ -7,7 +7,7 @@ import {
   UseGuards,
   Req,
 } from "@nestjs/common";
-import { ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import type { AuthenticatedRequest } from "../auth/auth.types";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { ContractService } from "./contract.service";
@@ -23,6 +23,7 @@ import {
 export class ContractController {
   constructor(private readonly contractService: ContractService) {}
 
+  @ApiBearerAuth()
   @Post("deal")
   @UseGuards(JwtAuthGuard)
   async deal(
@@ -50,6 +51,7 @@ export class ContractController {
     );
   }
 
+  @ApiBearerAuth()
   @Post("setstop")
   @UseGuards(JwtAuthGuard)
   async setStop(
@@ -64,6 +66,7 @@ export class ContractController {
     );
   }
 
+  @ApiBearerAuth()
   @Post("close")
   @UseGuards(JwtAuthGuard)
   async close(
@@ -76,6 +79,7 @@ export class ContractController {
     );
   }
 
+  @ApiBearerAuth()
   @Get("my_trade")
   @UseGuards(JwtAuthGuard)
   async myTrade(

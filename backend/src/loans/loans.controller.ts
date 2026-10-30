@@ -7,7 +7,7 @@ import {
   UseGuards,
   Req,
 } from "@nestjs/common";
-import { ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { Role } from "../prisma/d1-client";
 import type { AuthenticatedRequest } from "../auth/auth.types";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
@@ -33,6 +33,7 @@ export class LoansController {
     return this.loanService.getActiveLoanPlans();
   }
 
+  @ApiBearerAuth()
   @Post("apply")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
@@ -51,6 +52,7 @@ export class LoansController {
     );
   }
 
+  @ApiBearerAuth()
   @Get("my/:userId")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, OwnershipGuard)
   @RequireAuthSurface("PUBLIC")
@@ -62,6 +64,7 @@ export class LoansController {
   }
 
   // Admin Endpoints
+  @ApiBearerAuth()
   @Get("admin/all")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard)
   @RequireAuthSurface("ADMIN")
@@ -70,6 +73,7 @@ export class LoansController {
     return this.loanService.getAllLoans();
   }
 
+  @ApiBearerAuth()
   @Post("admin/approve")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard)
   @RequireAuthSurface("ADMIN")
@@ -84,6 +88,7 @@ export class LoansController {
     });
   }
 
+  @ApiBearerAuth()
   @Post("admin/reject")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard)
   @RequireAuthSurface("ADMIN")
@@ -98,6 +103,7 @@ export class LoansController {
     });
   }
 
+  @ApiBearerAuth()
   @Post("repay")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")

@@ -45,6 +45,19 @@ export class SupportThreadResponseDto {
   @ApiProperty({ type: [SupportMessageResponseDto] }) messages!: SupportMessageResponseDto[];
 }
 
+export class MessageReadResponseDto {
+  @ApiProperty() id!: string;
+  @ApiProperty({ type: String, nullable: true }) conversationId!: string | null;
+  @ApiProperty() senderId!: string;
+  @ApiProperty() recipientId!: string;
+  @ApiProperty() body!: string;
+  @ApiProperty() deliveryState!: string;
+  @ApiProperty({ type: 'integer' }) sequence!: number;
+  @ApiProperty({ type: String, format: 'date-time', nullable: true }) readAt!: Date | null;
+  @ApiProperty({ type: String, nullable: true }) attachments!: string | null;
+  @ApiProperty({ type: String, format: 'date-time' }) createdAt!: Date;
+}
+
 export class AdminMessageConversationResponseDto {
   @ApiProperty() participantAId!: string;
   @ApiProperty() participantBId!: string;
@@ -64,6 +77,29 @@ export class AdminMessageResponseDto {
   @ApiPropertyOptional({ type: String, nullable: true }) supportCustomerId?: string | null;
   @ApiPropertyOptional({ type: AdminMessageConversationResponseDto, nullable: true }) conversation?: AdminMessageConversationResponseDto | null;
   @ApiPropertyOptional() auditId?: string;
+}
+
+export class MessageModerationConversationResponseDto {
+  @ApiProperty() state!: string;
+}
+
+export class MessageModerationCaseResponseDto {
+  @ApiProperty() id!: string;
+  @ApiProperty() conversationId!: string;
+  @ApiProperty({ type: String, nullable: true }) messageId!: string | null;
+  @ApiProperty() reporterId!: string;
+  @ApiProperty({ type: String, nullable: true }) reportedUserId!: string | null;
+  @ApiProperty() reason!: string;
+  @ApiProperty() status!: string;
+  @ApiProperty({ type: String, nullable: true }) resolution!: string | null;
+  @ApiProperty({ type: String, nullable: true }) reviewedById!: string | null;
+  @ApiProperty({ type: String, format: 'date-time' }) createdAt!: Date;
+  @ApiProperty({ type: String, format: 'date-time' }) updatedAt!: Date;
+}
+
+export class AdminMessageModerationCaseResponseDto extends MessageModerationCaseResponseDto {
+  @ApiProperty({ type: MessageModerationConversationResponseDto })
+  conversation!: MessageModerationConversationResponseDto;
 }
 
 export class PageQueryDto {

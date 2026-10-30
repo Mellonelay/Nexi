@@ -463,13 +463,12 @@ export class CommunicationsService {
     const message = await this.d1.persistentMessage.findUnique({
       where: { id: messageId },
     });
-    if (message) {
-      await this.publishRealtimeEvent("MESSAGE_READ", messageId, {
-        userId,
-        senderId: message.senderId,
-        recipientId: message.recipientId,
-      });
-    }
+    if (!message) throw new NotFoundException("Message not found");
+    await this.publishRealtimeEvent("MESSAGE_READ", messageId, {
+      userId,
+      senderId: message.senderId,
+      recipientId: message.recipientId,
+    });
     return message;
   }
 
@@ -566,7 +565,7 @@ export class CommunicationsService {
       skip: (page - 1) * limit,
       take: limit,
       orderBy: { createdAt: "desc" },
-      include: { conversation: true },
+      include: { conversation: { select: { state: true } } },
     });
   }
 

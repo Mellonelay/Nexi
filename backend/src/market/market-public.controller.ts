@@ -1,5 +1,5 @@
 import { BadRequestException, Controller, Get, NotFoundException, Query, Param, ServiceUnavailableException } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiNotFoundResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { MarketAuthorityService } from './market-authority.service';
 import { MarketProviderRouterService } from './market-provider-router.service';
 import { MarketAssetMetadataService } from './market-asset-metadata.service';
@@ -17,6 +17,52 @@ export class MarketPublicController {
   listAssets() { return this.authority.getAssets(); }
 
   @Get('assets/:symbol')
+  @ApiOkResponse({
+    description: 'Canonical market asset with current provider-derived metadata.',
+    schema: {
+      type: 'object',
+      required: ['id', 'symbol', 'displaySymbol', 'displayName', 'category', 'status', 'baseAsset', 'quoteAsset', 'canonicalAssetId', 'assetClass', 'details'],
+      properties: {
+        id: { type: 'string' },
+        symbol: { type: 'string' },
+        displaySymbol: { type: 'string' },
+        displayName: { type: 'string' },
+        category: { type: 'string', enum: ['crypto', 'stock', 'forex', 'metal'] },
+        status: { type: 'string', enum: ['ACTIVE'] },
+        baseAsset: { type: 'string' },
+        quoteAsset: { type: 'string' },
+        canonicalAssetId: { type: 'string', nullable: true },
+        assetClass: { type: 'string' },
+        details: {
+          type: 'object',
+          required: ['symbol', 'category', 'status', 'refreshedAt', 'expiresAt', 'provenance'],
+          properties: {
+            symbol: { type: 'string' },
+            category: { type: 'string', enum: ['crypto', 'stock', 'forex', 'metal'] },
+            status: { type: 'string', enum: ['FRESH', 'PARTIAL', 'STALE'] },
+            refreshedAt: { type: 'string', format: 'date-time' },
+            expiresAt: { type: 'string', format: 'date-time' },
+            provenance: {
+              type: 'array',
+              items: {
+                type: 'object',
+                required: ['provider', 'url'],
+                properties: {
+                  provider: { type: 'string' },
+                  url: { type: 'string', format: 'uri' },
+                  checkedAt: { type: 'string', format: 'date-time' },
+                  verifiedAt: { type: 'string', format: 'date-time' },
+                },
+              },
+            },
+          },
+          additionalProperties: true,
+        },
+      },
+    },
+  })
+  @ApiBadRequestResponse({ description: 'The requested market symbol is invalid.' })
+  @ApiNotFoundResponse({ description: 'The canonical market asset is unavailable.' })
   async getAsset(@Param('symbol') symbol: string) {
     const normalized = symbol.trim().toUpperCase().replace(/\.US\/USDT$/, 'USDT').replaceAll('/', '').replaceAll('.', '');
     if (!/^[A-Z0-9]{2,24}$/.test(normalized)) throw new BadRequestException('Market symbol is invalid');

@@ -17,8 +17,7 @@ import {
   IsPositive,
   IsIn,
 } from "class-validator";
-import { PartialType } from "@nestjs/mapped-types";
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
 
 export class UpdateSystemConfigDto {
   @IsString()
