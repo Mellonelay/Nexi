@@ -1,6 +1,11 @@
 export type MarketDataStatus = 'LIVE' | 'STALE' | 'UNAVAILABLE' | 'DISABLED' | 'LOADING' | 'ERROR' | 'CONNECTION_LOST' | 'CLOSED';
 export type MarketDisplayStatus = 'Live' | 'Error' | 'Closed';
 
+export function marketChartDisplayStatus(status: MarketDataStatus): 'LIVE' | 'LOADING' | 'ERROR' | 'CLOSED' {
+  if (status === 'LIVE' || status === 'LOADING' || status === 'CLOSED') return status;
+  return 'ERROR';
+}
+
 export function marketDisplayStatus(dataState: string | undefined, sessionState?: string): MarketDisplayStatus {
   if (sessionState?.toUpperCase() === 'CLOSED') return 'Closed';
   return dataState === 'LIVE' ? 'Live' : 'Error';

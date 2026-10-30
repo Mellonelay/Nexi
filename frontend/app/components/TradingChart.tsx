@@ -19,7 +19,7 @@ import {
   latestChartMetrics,
   simpleMovingAverage,
 } from "../lib/market-indicators";
-import { type Candle, type MarketDataStatus } from "../lib/market-data";
+import { marketChartDisplayStatus, type Candle, type MarketDataStatus } from "../lib/market-data";
 
 interface TradingChartProps {
   symbol: string;
@@ -50,31 +50,15 @@ const formatMetric = (value: number | null | undefined) =>
       });
 
 const marketStateCopy: Record<
-  Exclude<MarketDataStatus, "LIVE">,
+  Exclude<ReturnType<typeof marketChartDisplayStatus>, "LIVE">,
   [string, string]
 > = {
   LOADING: [
     "Loading market data",
     "The chart will appear shortly.",
   ],
-  STALE: ["Chart updates paused", "Please wait while updates resume."],
   CLOSED: ["Closed", "Showing the last available market history."],
-  CONNECTION_LOST: [
-    "Market connection interrupted",
-    "Reconnecting. The chart shows the last received data.",
-  ],
-  UNAVAILABLE: [
-    "Market data unavailable",
-    "Please try again shortly.",
-  ],
-  DISABLED: [
-    "Chart unavailable",
-    "Chart data is not available for this market.",
-  ],
-  ERROR: [
-    "Market data unavailable",
-    "The chart could not be loaded. Please try again shortly.",
-  ],
+  ERROR: ["Market error", "The chart could not be loaded. Please try again shortly."],
 };
 
 function ChartMetricsRail({
@@ -325,7 +309,8 @@ export default function TradingChart({
 
   const latest = metrics.latest;
   const macdHistogram = metrics.macd?.histogram ?? null;
-  const stateCopy = status === "LIVE" ? null : marketStateCopy[status];
+  const displayStatus = marketChartDisplayStatus(status);
+  const stateCopy = displayStatus === "LIVE" ? null : marketStateCopy[displayStatus];
   const blocksChart = candles.length === 0 && stateCopy;
   return (
     <div

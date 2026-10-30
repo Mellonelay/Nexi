@@ -459,6 +459,17 @@ function PairsPanel({ pairs }: { pairs: SpotPair[] }) {
   );
 }
 
+async function marginConfigurationSaveMessage(update: () => Promise<unknown>): Promise<string> {
+  try {
+    await update();
+    return "Margin configuration updated.";
+  } catch (error) {
+    return error instanceof Error
+      ? `Margin configuration update failed: ${error.message}`
+      : "Margin configuration update failed.";
+  }
+}
+
 function MarginConfigurationPanel() {
   const provider = useAdminData();
   const session = useAdminSession();
@@ -548,19 +559,20 @@ function MarginConfigurationPanel() {
         disabled={!valid || !session.can("spot.edit")}
         onClick={async () => {
           setMessage(null);
-          await provider.updateMarginConfiguration(
-            {
-              maintenanceRatio: parsedRatio,
-              leverages: [...new Set(parsedLeverages)].sort((a, b) => a - b),
-            },
-            {
-              actor: session.actorName,
-              role: session.roleId,
-              environment: session.environment,
-              reason: reason.trim(),
-            },
-          );
-          setMessage("Margin configuration updated.");
+          setMessage(await marginConfigurationSaveMessage(() =>
+            provider.updateMarginConfiguration(
+              {
+                maintenanceRatio: parsedRatio,
+                leverages: [...new Set(parsedLeverages)].sort((a, b) => a - b),
+              },
+              {
+                actor: session.actorName,
+                role: session.roleId,
+                environment: session.environment,
+                reason: reason.trim(),
+              },
+            ),
+          ));
         }}
       >
         Save margin configuration
