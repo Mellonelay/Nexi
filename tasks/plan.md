@@ -1,3 +1,10 @@
+## CURRENT 2026-10-30 — SentinelX source-integration takeover checkpoint
+
+- Confirmed VM/GitHub `main` source SHA `87fba4cf0d2bf9dbcbb56811223a4a90ae58ee03`, clean after reviewed four-file source commit; no build/deploy/restart/migration/financial or queue action.
+- Preserved and integrated prior dirty Public `TradingChart.tsx`, `market-data.ts`, `market-data.test.mjs` Live/Error/Closed presentation mapping and Admin `spot.tsx` Margin error feedback. Extracted `marginConfigurationSaveMessage` to preserve failed-request feedback without new component complexity.
+- Focused checks: Public `node --test frontend/app/lib/market-data.test.mjs` 4/4 PASS; Admin `node --test Admin/test/nexi-api-provider-reorder.test.mjs` 20/20 PASS; `git diff --check` PASS; CodeScene pre-commit safeguard `quality_gates=passed` (Admin stable). Prior 20 Public, 5 Backend gateway, 38 Backend contract tests reused only at their recorded revisions. No typecheck, broad suite, CI or production build run; `[skip ci]` on source commit means no CI pass claim.
+- Historical four financial `OWNER_ACCEPTED_UNTESTED` gates unchanged. Public/Admin source-path corrections are integrated; broader cross-surface/source integration remains `NOT PROVEN`, realtime delivery and browser/deployed acceptance remain runtime-only unknowns. No source blocker in this bounded four-file batch; pre-build decision for the wider source campaign remains open. Source is NOT a new deployed artifact.
+
 ## CURRENT 2026-10-30 — principal-scoped session and realtime continuation
 
 Starting source SHA: `222498a22c711c24ec7ca0145b828309ec6d0e5e`. The existing source batch is being completed by the same parent; no parallel writer is active. Owner authorized the reread-and-update of shared task/proof records. Preserve prior evidence and do not repeat these already-passing focused checks.
