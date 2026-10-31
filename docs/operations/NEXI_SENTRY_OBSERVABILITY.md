@@ -11,6 +11,20 @@ Sentry `get_release_details` directly confirms the exact Backend `20ba4da6cc34fd
 
 # NEXI Production Observability: Sentry
 
+## 2026-10-31 — current rapid-detection verification
+
+Production source release `a72c3127ffc448215cc7a724c4f5f6ca6e593b1b` is present in Sentry with its source commit and production deployment association. The three live artifact markers match this release; this does not imply the artifacts are byte-identical. A 24-hour production search found no error events tagged with this release, while real production traces/spans with this release and environment were ingested. This proves trace ingestion, not complete error-delivery reliability.
+
+The existing enabled issue workflow `6146426` was retained and updated to trigger on new issues, regressions, and archived issue reappearances. It is scoped to project `nexi`, environment `production`, and retains the active email action to issue owners with active-member fallthrough. Its five-minute frequency is a notification frequency setting, not measured alert evaluation or end-to-end delivery latency.
+
+An enabled static error monitor `10813107` now counts production `level:error` events over 300 seconds and triggers above five, resolving at five or fewer. It is connected to workflow `6146426`; no destination or integration was added. This gives a five-minute observation window, but delivery speed has not been measured because no natural qualifying burst was observed. Do not present this as guaranteed five-minute delivery.
+
+The owner screenshots show the Oct 2–Nov 1 usage period: 403/50,000 errors, 4.5M/50M spans, 13.75 MB/5 TB logs, 99.45 MB/5 TB application metrics, 5/500 replays, Cron 1/1 and Uptime 1/1 at capacity, and one active Seer contributor. These are screenshot values, not a live billing API read. No sampling increase was made. Preserve the existing daily rewards Cron monitor and single active uptime monitor; do not add monitors while their capacities are exhausted.
+
+The authenticated Sentry catalog and CLI do not expose deletion of stored issue events. Sentry's permission reference says events are immutable and deletion removes the whole issue group, requiring `event:admin`; this can also remove newer-release events grouped with older ones. Historical events were not deleted, issues were not resolved to hide them, and releases were not deleted. A 90-day production issue search returned 34 grouped issues, but that result does not establish that each event belongs to an older release. See `tasks/evidence/nexi-sentry-detection-20261031.md` for current classifications and proof limits.
+
+Current-release event-level symbolication remains `NOT_YET_OBSERVED`: the current release has no captured error event to inspect, and no new build or source-map upload was performed. Previous Admin upload evidence remains 124 reported files; Public remote upload and all-surface event symbolication are not proven. Sampling remains at the existing 5% trace rate and privacy-masked, low-volume replay configuration.
+
 
 ## Telemetry authority
 

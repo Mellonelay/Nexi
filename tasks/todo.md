@@ -1144,3 +1144,9 @@ Decision: `SOURCE_INTEGRATION_READY_FOR_BUILD = YES` for the defined reviewed so
 ## 2026-10-30 — deployed coordinated three-surface source candidate
 
 Owner-authorized Backend → Public → Admin build and deployment of `a72c3127ffc448215cc7a724c4f5f6ca6e593b1b` completed. All three RELEASE_SHA markers match; Public BUILD_ID `uljjzCtkvCSVGUPLSIB3x`. Services active, NRestarts=0; /ops/live, /readyz, /dashboard and /overview HTTP 200; /readyz SQLite and Redis ready. Unauthenticated /auth/me, /admin/me, /wallet/activity each 401; Socket.IO polling 200. Admin Sentry upload 124 files; Sentry release-filtered error search returned no stored events at inspection. Current release was not browser/authenticated-functionally accepted. Public remote Sentry upload and event symbolication unknown. Regenerated Public webpack cache (~1.3GiB) and one task temporary readiness file removed; disk free ~2.7GiB. No migration, financial action, queue mutation, rollback archive, or GitHub CI run. Four owner-accepted financial gates stay OWNER_ACCEPTED_UNTESTED. Receipt: [three-surface release 2026-10-30](tasks/evidence/nexi-three-surface-release-20261030.md).
+## CURRENT 2026-10-31 — Sentry follow-up boundary
+
+- [x] Verify current production alert workflow and connected five-minute error monitor; retain configured email route to issue owners/active-member fallback.
+- [ ] Obtain a real notification receipt to verify recipient delivery and measure ingestion-to-notification latency; do not synthesize a production failure.
+- [ ] Verify readable current-release frames per surface when a suitable natural event exists. Current exact-release production error search is bounded to 24h and returned none; it does not exhaustively classify historical grouped issues.
+- [ ] Shared-state integration is performed by the active Git owner; Sentry alert delivery and three-surface symbolication remain unverified.
