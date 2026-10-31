@@ -2,9 +2,9 @@
 
 ## Scope and identity
 
-This is a bounded authenticated production browser checkpoint for Public and Admin, not a full product acceptance or owner sign-off. No application source changed. No test suite, build, deployment, service restart, database write, financial action, message send, attachment upload/download, or Sentry mutation occurred.
+This is a bounded authenticated production browser checkpoint for Public and Admin, not a full product acceptance or owner sign-off. No application source changed. No test suite, build, deployment, NEXI application-service restart, database write, financial action, message send, attachment upload/download, or Sentry mutation occurred in the recorded acceptance passes.
 
-- GitHub `main`, local `HEAD`, and `origin/main`: `0f81273e23f5d104fcd987b6ac5e015d82f8290b` (clean before documentation changes).
+- Documentation `main`, local `HEAD`, and `origin/main` at the start of the pause-checkpoint update: `311fa1c76c30df902d38ccfadcbe2cd1dd00a242`. Underlying application-source baseline before the documentation-only commits: `0f81273e23f5d104fcd987b6ac5e015d82f8290b`.
 - Deployed Backend, Public, and Admin release markers: `a72c3127ffc448215cc7a724c4f5f6ca6e593b1b`.
 - Public Next build ID: `uljjzCtkvCSVGUPLSIB3x`.
 - `nexi-api.service`, `nexi-public.service`, `nexi-admin.service`: active, zero restarts at inspection. API `/readyz`: HTTP 200.
@@ -29,7 +29,33 @@ The read-only Public route pass reached Dashboard, BTC/USDT Asset Detail, Spot/M
 
 Source contract review confirms Public “Open chat” enters the canonical support conversation. Backend Public support-thread and send endpoints are explicitly scoped to the authenticated Public user; recipient-selected Public messaging is retired. Admin `/support` retains old ticket records but retires ticket creation/replies/lifecycle controls and links to Messages. This clarifies the implemented Communications relationship; it does not prove end-to-end message send, cross-surface readback, attachment isolation, pushed delivery, or reconnect in the current release.
 
-The approved Admin visual ZIP was recovered at `~/.codex/attachments/0639675e-6697-4080-bbef-ca00c879f5ec/NEXI_Admin_Approved_Visual_Handoff_20261022.zip` (19-file package). It is a design reference, not current rendered proof or owner acceptance. The observed eight-workspace shell and Binary tabs align with those reference elements. Full desktop/mobile comparison across all eight workspaces remains incomplete.
+The approved Admin visual ZIP was recovered at `~/.codex/attachments/0639675e-6697-4080-bbef-ca00c879f5ec/NEXI_Admin_Approved_Visual_Handoff_20261022.zip` (19-file package). Its README and visual acceptance contract were read; the all-workspaces sheet and Overview, Administration, Messages, Markets, and Binary reference images were compared with live desktop views. The observed eight-workspace shell, operations queue/detail layout, and Binary tab group align with the reference direction. Full desktop/mobile comparison across all eight workspaces remains incomplete.
+
+## 2026-10-31 browser continuation
+
+Admin `/support` was opened by direct URL and reloaded in the existing authenticated Chrome tab. The document returned HTTP 200 on both navigations, `/admin/me` returned 200, and the rendered page states that ticket creation, replies, and lifecycle controls are retired while existing records are retained and Messages is the current route. This establishes direct-link/reload compatibility for `/support` only.
+
+The current Admin `/messages` page rendered one existing historical synthetic acceptance conversation with three sent records including an attachment. It was not altered, and no new message was sent; the existing synthetic acceptance data remains pending owner disposition. No message content or customer field values are reproduced here. The approved desktop Overview reference and current 1365×723 page share the eight-workspace shell, KPI region, operations queue and contextual detail pattern; exact pixel parity is not claimed.
+
+The Public API-origin `/auth/me` check returned 200. One console 404 came from an acceptance probe sent to the wrong relative `/api/auth/me` path on the Public origin; it is classified as probe error, not product failure. The user's screenshot shows the DevTools panel chooser with Accessibility Toolkit, Requestly, React Components/Profiler and Suspense. The MCP `list_extensions` response “No extensions installed” covers unpacked extensions only; it does not establish that store-installed extensions or those panels are absent. No Requestly rule or DevTools extension panel was operated in this checkpoint. The current MCP tool list exposes page DOM, screenshots, network/console inspection and Lighthouse, but no DevTools panel-selection or viewport-emulation action.
+
+## Requested pause and browser recovery checkpoint — 2026-10-31
+
+No app code or production data changed in this continuation. The user authorized restarting the existing Chrome profile and asked for a written continuation checklist. At the last successful MCP observation, Admin page 2 was `/support` at 1365×723; Public page 3 had been navigated from `/dashboard/binary` to `/overview` at 392×701 and showed `Checking Admin session…`, with no page heading. Subsequent MCP waits, screenshot/network reads, and a request to restore the Public URL did not return within their tool waits. A direct local request to the profile's reported debugging port returned HTTP 404 at `/json/list`; no direct CDP navigation was confirmed. Treat the page 3 route as unknown until a fresh `list_pages` after browser recovery. The last observed MetaMask side panel was on Home, with no pending approval. Public API-origin `/auth/me` had returned 200 before page 3 was navigated away.
+
+The browser profile process is older than four days. A shell process listing showed the profile's Chrome root (PID 3607775) and two Chrome DevTools MCP server processes (PIDs 265939 and 306427). This is a contention lead, not a proven cause of the slow calls. Do not kill MCP processes or use stale PIDs; recheck process identity and remote-debugging attachment before restarting Chrome. The profile had only the Admin, Public, and MetaMask targets in the last successful page listing, so no clearly unnecessary app tab was identified. Keep those targets/profile data; do not clear cookies, site storage, wallet state, or saved credentials.
+
+### Resume checklist
+
+- [ ] Confirm the staged/dirty set is exactly the nine documentation paths recorded by `git status`; `git diff --check` passed at this checkpoint. Run the docs-only CodeScene safeguard, review the final diff, commit and push through the existing owner workflow. Do not run app CI/builds for this docs-only batch.
+- [ ] Gracefully restart only Chrome using `/home/mellonelay1999/.local/share/nexi-admin-browser-acceptance`, after verifying the current main Chrome process and that no unsaved user form or MetaMask approval is present. Preserve the profile and its cookies/extensions; reopen the existing Admin and Public pages and confirm MetaMask state. Do not restart any NEXI application service or kill the MCP bridge by guesswork.
+- [ ] Reconnect the existing Chrome DevTools MCP and use browser calls sequentially on the shared session. Confirm `list_pages`, restore Public `/dashboard/binary`, and check API-origin `/auth/me` without reading tokens, cookies, wallet values, or private messages.
+- [ ] Use the visible DevTools workbench panels only if the current browser UI/connection permits actual selection. The user specifically pointed to Accessibility Toolkit and React Components/Profiler. Requestly is for a specific authorized request override; do not add a persistent rule just to inspect traffic. If those panels are not controllable through this session, state that limitation accurately rather than equating MCP DOM/network tools with panel execution.
+- [ ] Reattempt the Admin 392×701 rendered check only after Admin identity is confirmed in that tab; if its session is unavailable, record the precise blocker and restore Public. Keep the existing 1365×723 Admin evidence and `/support` reload proof.
+- [ ] Continue the finite acceptance matrix: safe rendered/read workflows; no economic action, synthetic message send, fake fixture, or destructive cleanup. Preserve the current synthetic acceptance thread pending owner disposition and four `OWNER_ACCEPTED_UNTESTED` financial gates.
+- [ ] Reconcile the resulting proof in the existing receipt/current records. Final owner UI acceptance remains the owner's decision; keep the goal active until the remaining gates are resolved.
+
+No application tests, build, deployment, NEXI application-service restart, financial operation, message send, attachment operation, or Sentry mutation was performed during this pause checkpoint. The user separately authorized a graceful restart of the existing Chrome profile; that browser action is not yet performed at this checkpoint.
 
 ## Acceptance decision matrix
 

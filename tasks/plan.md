@@ -1,14 +1,14 @@
 ## CURRENT 2026-10-31 — deployed product acceptance
 
-Source and deployed identities were freshly reconciled: GitHub/local `main` `0f81273e23f5d104fcd987b6ac5e015d82f8290b`; Backend/Public/Admin deployed artifacts `a72c3127ffc448215cc7a724c4f5f6ca6e593b1b`; Public build ID `uljjzCtkvCSVGUPLSIB3x`. Existing Chrome DevTools evidence now proves Public SIWE and read-only route entry/settled states across the listed Public product paths, selected data reads, Admin Super Admin shell/market-feed/Binary states, and current backend readiness. It does not prove full Public action workflows. See [product acceptance receipt](evidence/nexi-final-product-acceptance-20261031.md).
+This continuation began from documentation commit `311fa1c76c30df902d38ccfadcbe2cd1dd00a242`; application-source baseline remains `0f81273e23f5d104fcd987b6ac5e015d82f8290b`, deployed Backend/Public/Admin artifacts remain `a72c3127ffc448215cc7a724c4f5f6ca6e593b1b`, and Public build ID remains `uljjzCtkvCSVGUPLSIB3x`. Existing Chrome DevTools evidence proves Public SIWE and read-only route entry/settled states across the listed Public paths, selected data reads, and Admin workspace states. The follow-up verified Admin `/support` direct navigation and reload (document and `/admin/me` 200), with ticket mutations explicitly retired. An existing synthetic acceptance thread remains visible in Admin Messages and untouched pending owner disposition. See [product acceptance receipt](evidence/nexi-final-product-acceptance-20261031.md).
 
 | Acceptance area | Current result | Remaining proof |
 | --- | --- | --- |
-| Admin design/function | PARTIAL | Eight workspace landing routes were reached; compare the rendered pages with the approved reference at desktop/mobile, verify direct-link refresh and selected actions, and test restricted-role denial using an existing authorized identity. |
+| Admin design/function | PARTIAL | Eight workspace landing routes were reached and `/support` survived a direct reload; full approved-reference comparison, mobile rendering, selected actions, and restricted-role denial using an existing authorized identity remain. |
 | Public design/function | PARTIAL | Public route entry/read states are now covered; verify material per-page actions and desktop/tablet/mobile states with the existing profile. Do not perform economic actions. |
 | Three-surface integration | PARTIAL | Prove a bounded current-release durable readback across Public/Admin/Backend where a safe non-economic change already exists; current health/API 200s alone are insufficient. |
 | Authentication/RBAC | PARTIAL | Public SIWE and Super Admin are verified; restricted-role negative behavior needs an existing authorized restricted identity. |
-| Messages/realtime | PARTIAL | Current support-thread GET and Socket.IO polling are verified; current-release send/readback/push/reconnect remain open. |
+| Messages/realtime | PARTIAL | Current support-thread GET and Socket.IO polling are verified. Admin `/messages` currently shows an existing synthetic acceptance thread; it remains untouched. Current-release send/readback/push/reconnect remain open. |
 | Financial acceptance | PARTIAL | Preserve all four `OWNER_ACCEPTED_UNTESTED` gates; no new transaction or financial tests. |
 | Operations | PARTIAL | Services are healthy; low disk headroom (1.9 GiB), owner-deferred rollback preparation, and off-VPS restore evidence remain. |
 | Final owner decision | OWNER_DECISION_REQUIRED | Owner reviews evidence; Codex must not set final owner acceptance. |

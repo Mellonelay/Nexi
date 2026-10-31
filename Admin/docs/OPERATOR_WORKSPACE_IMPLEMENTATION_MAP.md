@@ -1,6 +1,6 @@
 # NEXI Admin — compact workspaces and implementation map
 
-Status: OWNER-APPROVED DESIGN REFERENCE; partial deployed shell/tab proof recorded 2026-10-31. The approved reference remains intent authority; it does not establish that every route, action or viewport matches. Current GitHub source is `0f81273e23f5d104fcd987b6ac5e015d82f8290b`; deployed Admin release is `a72c3127ffc448215cc7a724c4f5f6ca6e593b1b`. See [the bounded product acceptance receipt](../../tasks/evidence/nexi-final-product-acceptance-20261031.md). Read with `TANSTACK_ARCHITECTURE_AND_ROUTE_MAP.md`, `Admin/AGENTS.md`, root `AGENTS.md`, and current proof register.
+Status: OWNER-APPROVED DESIGN REFERENCE; partial deployed shell/tab proof recorded 2026-10-31. The approved reference remains intent authority; it does not establish that every route, action or viewport matches. This continuation began from documentation commit `311fa1c76c30df902d38ccfadcbe2cd1dd00a242`; app-source baseline is `0f81273e23f5d104fcd987b6ac5e015d82f8290b`, and deployed Admin release is `a72c3127ffc448215cc7a724c4f5f6ca6e593b1b`. Admin `/support` direct reload and retired-ticket rendering were verified; current Admin Messages still displays a synthetic acceptance thread that remains untouched pending owner disposition. See [the bounded product acceptance receipt](../../tasks/evidence/nexi-final-product-acceptance-20261031.md). Read with `TANSTACK_ARCHITECTURE_AND_ROUTE_MAP.md`, `Admin/AGENTS.md`, root `AGENTS.md`, and current proof register.
 
 ## Decision and route disposition
 
