@@ -227,6 +227,20 @@ export const NAV_GROUPS: NavGroup[] = [
 
 export const ALL_ROUTES: NavItem[] = NAV_GROUPS.flatMap((g) => g.items);
 
+export function getVisibleNavGroups(can: (permission: Permission) => boolean): NavGroup[] {
+  return NAV_GROUPS.flatMap((group) => {
+    const items = group.items.filter((item) => can(item.permission));
+    if (items.length === 0) return [];
+    return [
+      {
+        ...group,
+        primary: items.some((item) => item.to === group.primary) ? group.primary : items[0].to,
+        items,
+      },
+    ];
+  });
+}
+
 export function findRoute(path: string): NavItem | undefined {
   return ALL_ROUTES.find((r) => r.to === path);
 }

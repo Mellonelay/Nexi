@@ -1,13 +1,13 @@
-import { Link, useRouterState } from "@tanstack/react-router";
-import { NAV_GROUPS } from "@/admin/config/navigation";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { getVisibleNavGroups, NAV_GROUPS } from "@/admin/config/navigation";
 import { useAdminSession } from "@/admin/session/session";
 import { cn } from "@/lib/utils";
 import { ROLE_LIST } from "@/admin/config/roles";
 import { EnvironmentBadge } from "@/admin/components/EnvironmentBadge";
 import { ProviderBadge } from "@/admin/components/ProviderBadge";
 import { useAdminData } from "@/admin/data/context";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, ShieldAlert } from "lucide-react";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { ShieldAlert } from "lucide-react";
 import type { ReactNode } from "react";
 import { Fragment } from "react";
 import { useState } from "react";
@@ -17,25 +17,20 @@ function routeMatches(pathname: string, route: string) {
   return pathname === route || pathname.startsWith(`${route}/`);
 }
 
-function NavList({ onNavigate }: { onNavigate?: () => void }) {
+function NavList() {
   const { can } = useAdminSession();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const groups = getVisibleNavGroups(can);
 
   return (
     <nav className="flex flex-col gap-4 p-3">
-      {NAV_GROUPS.map((g) => {
-        const items = g.items.filter((i) => {
-          if (!can(i.permission)) return false;
-          return true;
-        });
-        if (items.length === 0) return null;
-        const primary = items.find((item) => item.to === g.primary) ?? items[0];
-        const active = items.some((item) => routeMatches(pathname, item.to));
+      {groups.map((g) => {
+        const primary = g.items.find((item) => item.to === g.primary) ?? g.items[0];
+        const active = g.items.some((item) => routeMatches(pathname, item.to));
         return (
           <Link
             key={g.id}
-            to={primary.to}
-            onClick={onNavigate}
+            to={g.primary}
             className={cn(
               "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
               active
@@ -51,6 +46,37 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
         );
       })}
     </nav>
+  );
+}
+
+function MobileWorkspaceSelector() {
+  const { can } = useAdminSession();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+  const groups = getVisibleNavGroups(can);
+  const activeGroup = groups.find((group) =>
+    group.items.some((item) => routeMatches(pathname, item.to)),
+  );
+
+  return (
+    <select
+      aria-label="Choose workspace"
+      value={activeGroup?.id ?? ""}
+      onChange={(event) => {
+        const group = groups.find((item) => item.id === event.currentTarget.value);
+        if (group) void navigate({ to: group.primary });
+      }}
+      className="h-9 w-36 max-w-[40vw] min-w-0 rounded-md border border-border/60 bg-background px-2 text-xs text-foreground"
+    >
+      <option value="" disabled>
+        Choose workspace
+      </option>
+      {groups.map((group) => (
+        <option key={group.id} value={group.id}>
+          {group.label}
+        </option>
+      ))}
+    </select>
   );
 }
 
@@ -220,14 +246,36 @@ function DesktopSidebar() {
   );
 }
 
+function MobileSessionControls() {
+  const [open, setOpen] = useState(false);
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <button
+          aria-label="Open session controls"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-border/60"
+        >
+          <ShieldAlert className="h-4 w-4" />
+        </button>
+      </SheetTrigger>
+      <SheetContent side="right" className="w-72 bg-sidebar p-0">
+        <SheetTitle className="sr-only">Session controls</SheetTitle>
+        <div className="flex h-full flex-col justify-end">
+          <SessionControls />
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
 function TopBar({ mobileNav }: { mobileNav: ReactNode }) {
   const s = useAdminSession();
   const pathname = useRouterState({ select: (st) => st.location.pathname });
   const crumbs = pathname.split("/").filter(Boolean);
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border/60 bg-background/95 px-3 backdrop-blur">
-      <div className="lg:hidden">{mobileNav}</div>
-      <div className="flex min-w-0 flex-1 items-center gap-2 text-sm text-muted-foreground">
+      <div className="flex shrink-0 items-center gap-1 lg:hidden">{mobileNav}</div>
+      <div className="hidden min-w-0 flex-1 items-center gap-2 text-sm text-muted-foreground sm:flex">
         <span className="text-foreground/80">Admin</span>
         {crumbs.map((c, i) => (
           <span key={i} className="flex items-center gap-2">
@@ -240,11 +288,6 @@ function TopBar({ mobileNav }: { mobileNav: ReactNode }) {
           </span>
         ))}
       </div>
-      <input
-        placeholder="Search users, tickets, orders…"
-        aria-label="Search admin records"
-        className="hidden h-8 w-72 rounded-md border border-input bg-background px-3 text-sm text-foreground md:block"
-      />
       <EnvironmentBadge env={s.environment} />
       <div className="hidden items-center gap-2 md:flex">
         <div className="text-right">
@@ -268,31 +311,16 @@ function TopBar({ mobileNav }: { mobileNav: ReactNode }) {
 }
 
 export function AdminShell({ children }: { children: ReactNode }) {
-  const [open, setOpen] = useState(false);
   return (
     <div className="dark flex min-h-screen w-full bg-background text-foreground">
       <DesktopSidebar />
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar
           mobileNav={
-            <Sheet open={open} onOpenChange={setOpen}>
-              <SheetTrigger asChild>
-                <button
-                  aria-label="Open admin navigation"
-                  className="grid h-8 w-8 place-items-center rounded-md border border-border/60"
-                >
-                  <Menu className="h-4 w-4" />
-                </button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-72 bg-sidebar p-0">
-                <div className="flex h-full flex-col">
-                  <div className="flex-1 overflow-y-auto">
-                    <NavList onNavigate={() => setOpen(false)} />
-                  </div>
-                  <SessionControls />
-                </div>
-              </SheetContent>
-            </Sheet>
+            <>
+              <MobileWorkspaceSelector />
+              <MobileSessionControls />
+            </>
           }
         />
         <ContextualNavigation />
