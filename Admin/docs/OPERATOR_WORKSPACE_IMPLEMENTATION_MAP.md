@@ -1,6 +1,6 @@
 # NEXI Admin — compact workspaces and implementation map
 
-Status: DESIGN / DOCS ONLY. Owner instruction 2026-10-21. Source inspected at `main@6da08471ef200b6cadf96ef3d49ed85fc0f12fc4`. Runtime/deployed parity not asserted. Read with `TANSTACK_ARCHITECTURE_AND_ROUTE_MAP.md`, `Admin/AGENTS.md`, root `AGENTS.md`, and current proof register.
+Status: OWNER-APPROVED DESIGN REFERENCE; partial deployed shell/tab proof recorded 2026-10-31. The approved reference remains intent authority; it does not establish that every route, action or viewport matches. Current GitHub source is `0f81273e23f5d104fcd987b6ac5e015d82f8290b`; deployed Admin release is `a72c3127ffc448215cc7a724c4f5f6ca6e593b1b`. See [the bounded product acceptance receipt](../../tasks/evidence/nexi-final-product-acceptance-20261031.md). Read with `TANSTACK_ARCHITECTURE_AND_ROUTE_MAP.md`, `Admin/AGENTS.md`, root `AGENTS.md`, and current proof register.
 
 ## Decision and route disposition
 
@@ -14,10 +14,10 @@ Eight primary operator workspaces replace the flat navigation presentation; they
 | Wallet & Finance | `/wallets` | `/networks`, `/deposits`, `/withdrawals`, `/ledger`; hidden `/reconciliation` | Deposit destinations vs client balances remain distinct canonical domains; review queues and Ledger readable |
 | Markets | `/assets` | `/market-feeds` | Preserve all 53 assets, source mapping, provenance and feed truth |
 | Products | `/mining` | `/loans` | Configurable plans and product lifecycle; no invented referrals route |
-| Communications | `/messages` | `/support`, `/notifications`, `/announcements`, `/learn` | Two-way inbox separate from tickets, outbound notifications and publishing |
+| Communications | `/messages` | `/support`, `/notifications`, `/announcements`, `/learn` | Messages is the operator conversation workspace; Public chat uses the canonical user-scoped support conversation. Support retains help/contact information, while legacy ticket create/reply/lifecycle actions are retired. Notifications and publishing remain distinct. |
 | Administration & Settings | `/frontend-control` | `/navigation`, `/localization`, `/feature-flags`, `/admins`, `/roles`, `/approvals`, `/audit`, `/health`, `/maintenance` | Public settings + staff governance + system; permission-sensitive secondary tabs |
 
-All 33 NAV_GROUPS destinations remain represented in the local navigation data, subject to permission; contextual tabs and merged screens are NOT yet built. The additional named `/reconciliation` route stays hidden and unavailable. Review any future route removals with import/deep-link/consumer evidence before changing the generated route tree.
+All 33 NAV_GROUPS destinations remain represented in local navigation data, subject to permission. The deployed Admin shell showed eight primary workspaces; the Binary route showed five Trading tabs, and selected Communications tabs were visible. This is not proof that contextual tabs or merged screens are complete across all routes. The additional named `/reconciliation` route stays hidden and unavailable. Review any future route removals with import/deep-link/consumer evidence before changing the generated route tree.
 
 ## Actual ownership and diagram interpretation
 

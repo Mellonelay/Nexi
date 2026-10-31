@@ -1,3 +1,11 @@
+## CURRENT 2026-10-31 — deployed product acceptance checkpoint
+
+- [x] VERIFY — Local `main`, `origin/main`, and GitHub `main` matched at `0f81273e23f5d104fcd987b6ac5e015d82f8290b`; deployed Backend/Public/Admin markers matched `a72c3127ffc448215cc7a724c4f5f6ca6e593b1b`; Public build ID `uljjzCtkvCSVGUPLSIB3x`.
+- [x] BROWSER_VERIFIED — Existing Chrome DevTools profile: Public SIWE `/auth/me` 200, read-only route pass across all listed Public product paths and selected API reads; Admin `/admin/me` and market feeds 200; selected Public mobile and Admin workspace/market/Binary UI slices. Evidence and exact limits: [product acceptance receipt](evidence/nexi-final-product-acceptance-20261031.md).
+- [x] RECONCILED — Public Messages is the canonical scoped support conversation. Admin Support retires ticket mutations, retains existing records, and links to Messages; no product defect inferred from the earlier design wording.
+- [ ] OPEN — Finish only remaining material Public/Admin actions and viewport comparison, restricted-role denial if an existing authorized identity is available, and current-release cross-surface Messages/realtime proof. Do not create identities, send economic operations, or fabricate fixtures.
+- [ ] OWNER DECISION — Review consolidated evidence before final UI/product acceptance. Keep four financial gates `OWNER_ACCEPTED_UNTESTED`; alert delivery and event-level symbolication retain their Sentry statuses.
+
 ## CURRENT 2026-10-30 — SentinelX source-integration takeover checkpoint
 
 - Confirmed VM/GitHub `main` source SHA `87fba4cf0d2bf9dbcbb56811223a4a90ae58ee03`, clean after reviewed four-file source commit; no build/deploy/restart/migration/financial or queue action.

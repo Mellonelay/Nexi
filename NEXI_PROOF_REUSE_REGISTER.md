@@ -1,3 +1,11 @@
+## CURRENT 2026-10-31 — authenticated product acceptance evidence
+
+- **REUSED:** GitHub/local `main` identity `0f81273e23f5d104fcd987b6ac5e015d82f8290b`, deployed release markers `a72c3127ffc448215cc7a724c4f5f6ca6e593b1b`, Public build ID `uljjzCtkvCSVGUPLSIB3x`, and the October 30 release receipt remain unchanged. The live check confirmed all three services active, zero restarts, `/readyz` HTTP 200, and 1.9 GiB free on `/` (97% used).
+- **NEW BROWSER PROOF:** Existing Chrome DevTools MCP/profile; Public SIWE authenticated session with `/auth/me` 200; read-only Public route pass across all listed product paths with selected 200/304 data reads and legitimate empty/unavailable states; Admin `/admin/me` and selected reads 200/304 across all eight workspace landing routes; eight-workspace shell, Binary tabs/empty-state and Market feed page rendered. Spot order acceptance remains incomplete because the observed account balance was unavailable. No message send, wallet transaction, economic mutation, or production data change.
+- **SOURCE CONTRACT APPLIED:** Public chat uses `GET /communications/support/thread` and scoped send contract; recipient-selected Public messaging is retired. Admin `/support` retains legacy tickets but retires ticket create/reply/lifecycle operations and links to Messages. The support-thread read and Socket.IO polling do not establish message delivery, pushed realtime, or reconnect.
+- **NOT CLOSED:** Whole-product browser acceptance, full Admin visual comparison, lower-role RBAC denial, all Public journeys, cross-surface current-release message readback/push/reconnect, and final owner acceptance. Four accepted-untested financial gates remain unchanged.
+- **RECEIPT:** [2026-10-31 product acceptance](tasks/evidence/nexi-final-product-acceptance-20261031.md). Sentry delivery, minutes-scale measurement and symbolication use [the separate Sentry receipt](tasks/evidence/nexi-sentry-detection-20261031.md).
+
 ## CURRENT 2026-10-30 — SentinelX source-integration takeover checkpoint
 
 - Confirmed VM/GitHub `main` source SHA `87fba4cf0d2bf9dbcbb56811223a4a90ae58ee03`, clean after reviewed four-file source commit; no build/deploy/restart/migration/financial or queue action.

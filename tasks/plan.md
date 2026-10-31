@@ -1,3 +1,20 @@
+## CURRENT 2026-10-31 — deployed product acceptance
+
+Source and deployed identities were freshly reconciled: GitHub/local `main` `0f81273e23f5d104fcd987b6ac5e015d82f8290b`; Backend/Public/Admin deployed artifacts `a72c3127ffc448215cc7a724c4f5f6ca6e593b1b`; Public build ID `uljjzCtkvCSVGUPLSIB3x`. Existing Chrome DevTools evidence now proves Public SIWE and read-only route entry/settled states across the listed Public product paths, selected data reads, Admin Super Admin shell/market-feed/Binary states, and current backend readiness. It does not prove full Public action workflows. See [product acceptance receipt](evidence/nexi-final-product-acceptance-20261031.md).
+
+| Acceptance area | Current result | Remaining proof |
+| --- | --- | --- |
+| Admin design/function | PARTIAL | Eight workspace landing routes were reached; compare the rendered pages with the approved reference at desktop/mobile, verify direct-link refresh and selected actions, and test restricted-role denial using an existing authorized identity. |
+| Public design/function | PARTIAL | Public route entry/read states are now covered; verify material per-page actions and desktop/tablet/mobile states with the existing profile. Do not perform economic actions. |
+| Three-surface integration | PARTIAL | Prove a bounded current-release durable readback across Public/Admin/Backend where a safe non-economic change already exists; current health/API 200s alone are insufficient. |
+| Authentication/RBAC | PARTIAL | Public SIWE and Super Admin are verified; restricted-role negative behavior needs an existing authorized restricted identity. |
+| Messages/realtime | PARTIAL | Current support-thread GET and Socket.IO polling are verified; current-release send/readback/push/reconnect remain open. |
+| Financial acceptance | PARTIAL | Preserve all four `OWNER_ACCEPTED_UNTESTED` gates; no new transaction or financial tests. |
+| Operations | PARTIAL | Services are healthy; low disk headroom (1.9 GiB), owner-deferred rollback preparation, and off-VPS restore evidence remain. |
+| Final owner decision | OWNER_DECISION_REQUIRED | Owner reviews evidence; Codex must not set final owner acceptance. |
+
+No confirmed application defect emerged from this bounded inspection, so no source patch, test suite, build, deployment, or restart was justified. Sentry delivery latency and three-surface event symbolication remain separately unknown; see `evidence/nexi-sentry-detection-20261031.md`.
+
 ## CURRENT 2026-10-30 — SentinelX source-integration takeover checkpoint
 
 - Confirmed VM/GitHub `main` source SHA `87fba4cf0d2bf9dbcbb56811223a4a90ae58ee03`, clean after reviewed four-file source commit; no build/deploy/restart/migration/financial or queue action.
