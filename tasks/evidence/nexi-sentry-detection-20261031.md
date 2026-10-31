@@ -1,5 +1,11 @@
 # NEXI Sentry detection and history review — 2026-10-31
 
+## Stage B release follow-up — 2026-10-31
+
+The Admin-only production release is `737355124993705935f9aa56f743a9f1f61a2bf4`. Sentry release detail confirms its Git commit and production deploy `175244175`. The exact-release production error search over 30 minutes returned 0 events; the exact-release production span search over 30 minutes also returned 0 spans. These are bounded query results, not proof of complete ingestion or delivery. No artificial event was sent and no alert configuration was changed. The build uploaded client/SSR/Nitro artifact bundles; one SSR source-map entry had no auto-detected map reference. Event-level symbolication remains NOT_YET_OBSERVED. `SENTRY_ALERT_DELIVERY_VERIFIED=UNKNOWN`; `MINUTES_SCALE_DETECTION_MEASURED=NO`.
+
+The Stage B receipt records Admin browser evidence and acceptance boundaries. The original detection audit below reflects the pre-release `a72c3127ffc448215cc7a724c4f5f6ca6e593b1b` three-surface baseline and remains historical for that query window.
+
 ## Scope and identity
 
 This is a bounded Sentry configuration and production evidence receipt. No source code changed; no application build, service restart, deployment, financial operation, artificial production error, or Sentry history deletion was performed.

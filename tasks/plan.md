@@ -1,4 +1,12 @@
-## CURRENT 2026-10-31 — deployed product acceptance
+## CURRENT 2026-10-31 — Stage B Admin shell release and finite acceptance frontier
+
+Admin shell repairs are committed/pushed as `737355124993705935f9aa56f743a9f1f61a2bf4` and deployed to `/srv/nexi/admin/current`. Admin CI, Fallow, Graphify, CodeQL, focused navigation tests (2/2), typecheck, targeted ESLint, and CodeScene changed-file safeguard passed. Admin release markers and release environment values match; Sentry associates the exact commit with production deploy `175244175`. Admin service is active with zero restarts; local and HTTPS `/overview` are 200. Backend/Public remain at `a72c3127ffc448215cc7a724c4f5f6ca6e593b1b`.
+
+Authenticated Chrome at 979×715 verified all eight workspace-selector routes, correct active selection after reload, contextual tabs and page-specific search, removal of the inert global search/hamburger, and no horizontal overflow. The 440×956 Admin tab showed Sign in, so authenticated mobile shell proof remains open. Public Binary still requires an authorized BINARY account; restricted-role denial requires an existing restricted identity; production Messages send/push/reconnect requires a specifically authorized controlled conversation. No financial or Messages write was performed. Overall acceptance remains partial; see [the current receipt](evidence/nexi-final-product-acceptance-20261031.md).
+
+Sentry exact-release production searches for the Admin release over 30 minutes returned 0 errors and 0 spans. This does not prove ingestion completeness. Alert delivery remains UNKNOWN, minutes-scale measurement NO, event-level symbolication UNKNOWN. Owner explicitly waived release capacity and rollback prerequisites for this Stage B release; no rollback archive was created. Final owner UI/product decision remains required.
+
+## PRE-STAGE-B 2026-10-31 — deployed product acceptance (superseded below)
 
 This continuation began from documentation commit `311fa1c76c30df902d38ccfadcbe2cd1dd00a242`; application-source baseline remains `0f81273e23f5d104fcd987b6ac5e015d82f8290b`, deployed Backend/Public/Admin artifacts remain `a72c3127ffc448215cc7a724c4f5f6ca6e593b1b`, and Public build ID remains `uljjzCtkvCSVGUPLSIB3x`. Existing Chrome DevTools evidence proves Public SIWE and read-only route entry/settled states across the listed Public paths, selected data reads, and Admin workspace states. The follow-up verified Admin `/support` direct navigation and reload (document and `/admin/me` 200), with ticket mutations explicitly retired. An existing synthetic acceptance thread remains visible in Admin Messages and untouched pending owner disposition. See [product acceptance receipt](evidence/nexi-final-product-acceptance-20261031.md).
 
@@ -14,6 +22,10 @@ This continuation began from documentation commit `311fa1c76c30df902d38ccfadcbe2
 | Final owner decision | OWNER_DECISION_REQUIRED | Owner reviews evidence; Codex must not set final owner acceptance. |
 
 No confirmed application defect emerged from this bounded inspection, so no source patch, test suite, build, deployment, or restart was justified. Sentry delivery latency and three-surface event symbolication remain separately unknown; see `evidence/nexi-sentry-detection-20261031.md`.
+
+### Resumed acceptance — Options wallet eligibility
+
+The owner resumed the goal and confirmed sign-in. The existing Chrome session now verifies Public SIWE and Admin `/admin/me` authentication. On Public `/dashboard/binary`, wallet overview and Binary reads return 200, but sanitized USDT scope data contains only unopened MAIN and no BINARY account; the UI says “Unavailable for this account.” The source maps that state intentionally to an unavailable Options balance, and current product contracts define Options as a separate USDT account with an existing wallet-transfer path. This is a material account-provisioning/funding acceptance dependency, not a confirmed code defect. No transfer, trade, message, test, build, deployment, or service restart was performed. See `evidence/nexi-final-product-acceptance-20261031.md`. Acceptance remains PARTIAL; an owner-authorized provisioned/funded Options account is required to continue this financial journey.
 
 ## CURRENT 2026-10-30 — SentinelX source-integration takeover checkpoint
 

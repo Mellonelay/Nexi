@@ -55,3 +55,12 @@ The coordinated release remains the exact SHA recorded below. This follow-up doe
 # 2026-10-31 Sentry readiness addendum
 
 The deployed release `a72c3127ffc448215cc7a724c4f5f6ca6e593b1b` and production deployment `175136980` are associated in Sentry. Production spans were observed. The exact-release production error search covered 24 hours and returned none. Alert workflow `6146426` and monitor `10813107` are enabled and linked. Notification delivery and three-surface source-map symbolication remain unverified; this addendum does not change browser, owner, or application release acceptance. Details: `tasks/evidence/nexi-sentry-detection-20261031.md`.
+## CURRENT 2026-10-31 — Admin-only product shell release
+
+| Surface | Source / deployed release | Artifact evidence | Runtime result |
+| --- | --- | --- | --- |
+| Backend | `a72c3127ffc448215cc7a724c4f5f6ca6e593b1b` | `/srv/nexi/backend/RELEASE_SHA` | Unchanged by Stage B; final HTTPS `/readyz` returned 200; service active, 0 restarts. |
+| Public | `a72c3127ffc448215cc7a724c4f5f6ca6e593b1b` | `/srv/nexi/public/current/RELEASE_SHA`; build ID `uljjzCtkvCSVGUPLSIB3x` | Unchanged by Stage B; final HTTPS `/dashboard` returned 200; service active, 0 restarts; no rebuild or restart. |
+| Admin | `737355124993705935f9aa56f743a9f1f61a2bf4` | `/srv/nexi/admin/current/RELEASE_SHA` and `NEXI_RELEASE_SHA`; 62 public JS assets contain the exact release SHA | `nexi-admin.service` active, `NRestarts=0`; local and HTTPS `/overview` returned 200. |
+
+Sentry confirms Admin release commit `737355124993705935f9aa56f743a9f1f61a2bf4` and production deployment `175244175`. GitHub Admin, Fallow, Graphify and CodeQL checks passed; focused tests/typecheck/lint passed. This was an Admin-only build and promotion. User explicitly waived capacity and rollback prerequisites for this release; no rollback archive was created. Off-VPS restore and full cross-surface product acceptance remain separate open proof. See [the Stage B product acceptance receipt](../../tasks/evidence/nexi-final-product-acceptance-20261031.md).

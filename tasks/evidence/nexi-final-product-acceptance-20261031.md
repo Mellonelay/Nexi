@@ -47,29 +47,93 @@ The browser profile process is older than four days. A shell process listing sho
 
 ### Resume checklist
 
-- [ ] Confirm the staged/dirty set is exactly the nine documentation paths recorded by `git status`; `git diff --check` passed at this checkpoint. Run the docs-only CodeScene safeguard, review the final diff, commit and push through the existing owner workflow. Do not run app CI/builds for this docs-only batch.
-- [ ] Gracefully restart only Chrome using `/home/mellonelay1999/.local/share/nexi-admin-browser-acceptance`, after verifying the current main Chrome process and that no unsaved user form or MetaMask approval is present. Preserve the profile and its cookies/extensions; reopen the existing Admin and Public pages and confirm MetaMask state. Do not restart any NEXI application service or kill the MCP bridge by guesswork.
-- [ ] Reconnect the existing Chrome DevTools MCP and use browser calls sequentially on the shared session. Confirm `list_pages`, restore Public `/dashboard/binary`, and check API-origin `/auth/me` without reading tokens, cookies, wallet values, or private messages.
+- [x] Reconciled the original documentation-only checkpoint in the existing receipt/current task records. The earlier nine-path documentation batch was committed and pushed as `09cb1543e810c1c4ed993cc58e16b008344b2474`; the follow-up browser restart outcome is recorded below.
+- [x] Restarted only the Chrome root process for `/home/mellonelay1999/.local/share/nexi-admin-browser-acceptance`. Before restart, the existing Public tab had only two differing form values, both language selectors; no edited form or visible dialog was present, and MetaMask showed no pending signature request. The first relaunch lacked the VNC `DISPLAY` and exited; the corrected relaunch used the existing `DISPLAY=:98` and a remote-debugging port, after which the existing Chrome DevTools MCP reconnected. No Chrome child process was force-killed, and no MCP process or NEXI application service was restarted.
+- [x] Restored only the needed Public `/dashboard/binary` and Admin `/support` app tabs in that same profile and closed the unneeded New Tab. Post-restart DevTools listed those two tabs and MetaMask's extension background page/worker. Both documents reached `readyState=complete`; Public showed BTC/USDT. Admin `/support` currently shows the Sign in heading, so the prior authenticated Admin session did not survive as an active page session. No post-restart `/auth/me` check or wallet action was performed.
+- [x] RESUMED — Public wallet challenge/verify and `/auth/me` returned 201/200; Admin `/admin/me` returned 200 and `/messages` survived a browser reload with protected message/moderation reads at 200. No credentials or private message bodies were read. No new identity or wallet transaction was used.
 - [ ] Use the visible DevTools workbench panels only if the current browser UI/connection permits actual selection. The user specifically pointed to Accessibility Toolkit and React Components/Profiler. Requestly is for a specific authorized request override; do not add a persistent rule just to inspect traffic. If those panels are not controllable through this session, state that limitation accurately rather than equating MCP DOM/network tools with panel execution.
-- [ ] Reattempt the Admin 392×701 rendered check only after Admin identity is confirmed in that tab; if its session is unavailable, record the precise blocker and restore Public. Keep the existing 1365×723 Admin evidence and `/support` reload proof.
+- [ ] Reattempt the Admin 392×701 rendered check only after Admin identity is confirmed in that tab. Keep the existing 1365×723 Admin evidence and `/support` reload proof.
 - [ ] Continue the finite acceptance matrix: safe rendered/read workflows; no economic action, synthetic message send, fake fixture, or destructive cleanup. Preserve the current synthetic acceptance thread pending owner disposition and four `OWNER_ACCEPTED_UNTESTED` financial gates.
-- [ ] Reconcile the resulting proof in the existing receipt/current records. Final owner UI acceptance remains the owner's decision; keep the goal active until the remaining gates are resolved.
+- [x] Reconcile new proof in the existing acceptance receipt, current state, proof register, active plan/todo, and browser acceptance matrix. Final owner UI acceptance remains the owner's decision.
 
-No application tests, build, deployment, NEXI application-service restart, financial operation, message send, attachment operation, or Sentry mutation was performed during this pause checkpoint. The user separately authorized a graceful restart of the existing Chrome profile; that browser action is not yet performed at this checkpoint.
+At that checkpoint, no application tests, build, deployment, NEXI application-service restart, financial operation, message send, attachment operation, or Sentry mutation had been performed. The Chrome profile restart was complete. The later resume below supersedes the pause status.
 
-## Acceptance decision matrix
+## Resumed authenticated acceptance — 2026-10-31 05:54 UTC
+
+The user reported signing back in and asked to continue. The same Chrome DevTools MCP/profile was reused; no second browser/profile was started.
+
+The resumed slice began with local `HEAD=origin/main=09cb1543e810c1c4ed993cc58e16b008344b2474`. Four documentation files from the prior pause checkpoint were already dirty; no application source was dirty or changed in this slice. The deployed artifact and application-source identities remain the earlier recorded values above.
+
+- Public page 7 was `/dashboard/binary` at a 440×956 viewport. The rendered Options Wallet field still said **“Unavailable for this account.”** Network records show wallet challenge and verify returned 201, the latest `/auth/me` returned 200, `/wallet/overview` returned 200, and Binary config/current/history reads returned 200. A sanitized inspection of the overview response found USDT present but only the `MAIN` scope, where `accountExists=false` and state is `NOT_OPENED`; there is no `BINARY` scope. No amount, account identifier, wallet address, token, cookie, or authenticated header is included here.
+- The exact Options message was **not** previously recorded. The older note “account had no eligible position” refers to a different observed empty state and is not equivalent to an unavailable Options account.
+- Source correlation: `frontend/app/dashboard/binary/page.tsx` maps a missing, unopened, or inactive BINARY scope to `UNSUPPORTED`, rendered as “Unavailable for this account.” `docs/security/NEXI_FINANCIAL_INTEGRITY_REQUIREMENTS.md` and `docs/architecture/CROSS_SURFACE_FEATURE_MAP.md` define Options as a separate USDT BINARY account. `frontend/app/dashboard/wallet/components/TransferModal.tsx` exposes an existing Funding (MAIN) to Options (BINARY) transfer path; Backend transfer code creates/opens an account as part of a supported transfer. These contracts show that wallet sign-in establishes identity but does not itself provision or fund the separate Options scope.
+- Public Wallet was opened read-only; the page exposed a Transfer entry point and an Options account tab. The DevTools click action timed out before activating the Transfer control. No transfer request or Binary order was submitted. Do not create a production account, move funds, or place a trade as an acceptance probe.
+- Admin was also authenticated in the same profile: `/messages` reached `readyState=complete`, then a reload preserved the route; `/admin/me` returned 200, and current Binary config/positions, audit, and users reads returned 200. Messages/moderation reads and Socket.IO polling returned 200; message content was not inspected. The existing synthetic acceptance thread remains untouched. Admin viewport was 979×715.
+- Classification: `MATERIAL_ACCEPTANCE_GAP` — the Binary trading journey cannot be accepted for this identity until a separately authorized Options account is provisioned and funded through the approved flow. This observation does not establish a source defect; login alone is not evidence of a funded BINARY account. No financial or communications mutation occurred.
+
+The existing Public `/dashboard/binary` and Admin `/messages` pages were left open after the read-only inspection. All earlier release/source identity and bounded acceptance limitations remain unchanged. Product and owner acceptance remain PARTIAL; the four `OWNER_ACCEPTED_UNTESTED` financial gates remain unchanged.
+
+## Stage B — Admin shell repair, production release, and current acceptance — 2026-10-31
+
+### Implemented and source verification
+
+The confirmed shell defects were the mobile hamburger in place of the approved labeled workspace selector and the inert global search placeholder. One coherent Admin change added permission-filtered workspace groups/landing routes in `Admin/src/admin/config/navigation.ts`, replaced shell navigation in `Admin/src/admin/components/shell/AdminShell.tsx` with the labeled selector using existing TanStack navigation, retained a separate session-controls drawer, and removed only the inert global field. Existing contextual tabs, direct routes, permissions, and page-level search were preserved. `Admin/test/admin-navigation.test.mjs` covers all eight groups and the role-filtered fallback. `Admin/package.json` exposes this focused test without a dependency change.
+
+Executed checks: focused navigation tests 2/2 PASS; Admin typecheck PASS; targeted ESLint PASS; `git diff --check` PASS; CodeScene changed-file safeguard PASS; GitHub Admin CI, Fallow, Graphify, and all CodeQL checks for commit `737355124993705935f9aa56f743a9f1f61a2bf4` PASS. Backend/Public build jobs were skipped because they were not changed. The automatically invoked Graphify refresh was ignored as proof beyond its successful workflow check. No broad test campaign or dependency change was run.
+
+### Deployment and runtime proof
+
+Owner authorization for this Stage B campaign explicitly waived capacity and rollback prerequisites. The existing canonical Admin build method was used after verifying the prior 8.3 MB artifact, active service, shared dependency symlink, and absence of concurrent builds. A first stop/build attempt from repository root correctly produced no artifact because the Admin package has no root `build` script; Admin was immediately started and recovered. The one actual Vite client/SSR/Nitro build then ran from `Admin/` into `/srv/nexi/admin/current` and completed successfully. No rollback archive was created. The build uploaded Sentry artifact bundles for release `737355124993705935f9aa56f743a9f1f61a2bf4`. One Sentry upload report warned that an SSR asset had no auto-detected source-map reference; event-level symbolication remains unverified.
+
+The Admin service was restarted after build and release metadata alignment. Immediately during startup, HTTPS `/overview` briefly returned 502; subsequent local `http://127.0.0.1:3001/overview` and HTTPS `https://admin.nexitrading.app/overview` returned 200. `nexi-admin.service` is active with `NRestarts=0`. `/srv/nexi/admin/current/RELEASE_SHA`, `NEXI_RELEASE_SHA`, and `/etc/nexi/admin.env` values match `737355124993705935f9aa56f743a9f1f61a2bf4`. Final HTTPS checks returned 200 for API `/readyz`, Public `/dashboard`, and Admin `/overview`; all three services were active with zero restarts. Backend/Public remain at `a72c3127ffc448215cc7a724c4f5f6ca6e593b1b`; Public build ID remains `uljjzCtkvCSVGUPLSIB3x`. No Backend/Public build or restart, migration, data cleanup, financial operation, or queue mutation occurred. Root had 1.5 GiB free after release; the owner-waived capacity condition was not used to authorize cleanup.
+
+Sentry `get_release_details` verified commit `737355124993705935f9aa56f743a9f1f61a2bf4` and production deployment `175244175` in project `nexi`. The exact-release production searches over 30 minutes returned 0 error events and 0 spans. These bounded results do not prove telemetry ingestion completeness, recipient delivery, or minutes-scale detection. The existing alerts were not changed. `SENTRY_ALERT_DELIVERY_VERIFIED=UNKNOWN`, `MINUTES_SCALE_DETECTION_MEASURED=NO`, and event-level symbolication remains `UNKNOWN`.
+
+### Post-release Chrome DevTools evidence
+
+The existing Chrome DevTools MCP and profile were reused. Authenticated Admin at 979×715 displayed the workspace selector with all eight role-visible entries. The selector navigated to `/overview`, `/users`, `/binary`, `/wallets`, `/assets`, `/mining`, `/messages`, and `/frontend-control`; the active selection matched the route and remained correct after reloading `/frontend-control`. Five contextual tabs remained on Frontend Control, its page-specific “Search path or label…” field remained, the inert global search and hamburger were absent, and no horizontal document overflow was observed. A selector screenshot is retained temporarily at `/tmp/nexi-admin-workspace-selector-979.png` (not committed).
+
+The separate 440×956 Admin target showed the Sign in form, not an authenticated shell. No credentials were read or entered and no new identity was created; authenticated mobile acceptance is therefore NOT VERIFIED. Lower-role workspace filtering is supported by the focused source test, but no restricted identity was available to verify real Backend denial. The existing Super Admin view is not RBAC-negative proof. Public Wallet’s read-only 440×956 page exposed its Transfer entry point and Options account route; neither was opened or submitted. The Options account remains unavailable for the existing identity, and no transfer or order occurred.
+
+During earlier Admin Messages inspection in this campaign, an accessibility snapshot returned text from the existing historical synthetic acceptance thread. No message or attachment was created, changed, or deleted; that content is not reproduced or retained in this receipt. The synthetic thread remains pending owner disposition. No production Messages send, cross-surface readback after send, pushed event, or reconnect was tested.
+
+### Consolidated acceptance decisions
 
 | Required decision | Result | Exact boundary |
 | --- | --- | --- |
-| `ADMIN_VISUAL_DESIGN_ACCEPTED` | PARTIAL | Reference recovered; eight workspace links and selected rendered Market/Trading layouts observed at desktop. Complete page-by-page/viewport comparison and owner acceptance remain. |
-| `ADMIN_FUNCTIONAL_ACCEPTED` | PARTIAL | All eight workspace landing routes were reached and selected reads succeeded. Mutating actions, direct-link refresh proof, and restricted-role denial are not verified. |
+| `ADMIN_VISUAL_DESIGN_ACCEPTED` | PARTIAL | Authenticated shell/selector rendered at 979×715 and matched the approved interaction. The 440×956 target had no Admin session; complete page-by-page and mobile visual comparison and owner acceptance remain. |
+| `ADMIN_FUNCTIONAL_ACCEPTED` | PARTIAL | All eight selector routes, deep-link reload selection, contextual tabs, page-specific search, and no-overflow check passed at 979×715. Workspace mutations and real restricted-role denial remain unverified. |
+| `PUBLIC_VISUAL_DESIGN_ACCEPTED` | PARTIAL | Existing Public visual evidence is reused within its recorded routes/viewports; full product-route comparison remains. |
+| `PUBLIC_FUNCTIONAL_ACCEPTED` | PARTIAL | Existing SIWE and selected read proof is reused. Options is unavailable because this identity has no BINARY account; no code defect is confirmed and no financial write is authorized by this evidence. |
+| `THREE_SURFACE_RUNTIME_INTEGRATION_VERIFIED` | PARTIAL | Admin release `7373551…` is API-compatible for the tested read-only shell routes; Backend/Public remain at `a72c3127…`. Full current-release cross-surface workflows are not established. |
+| `AUTHENTICATION_AND_RBAC_ACCEPTED` | PARTIAL | Existing Public SIWE and Admin Super Admin session were verified. Restricted-role direct-route and Backend-denial proof is missing. |
+| `MESSAGES_REALTIME_ACCEPTED` | PARTIAL | Existing read/polling proof is reused. No controlled production send, post-send readback, push delivery, attachment-isolation, or reconnect proof. |
+| `BINARY_OPTIONS_ELIGIBILITY` | BLOCKED | Requires an owner-authorized eligible BINARY account. Existing UI accurately reports unavailable and leaves order controls disabled; no transfer or trade was submitted. |
+| `FINANCIAL_ACCEPTED_WITH_RECORDED_EXCEPTIONS` | ACCEPTED_WITH_EXCEPTIONS | The four financial gates remain `OWNER_ACCEPTED_UNTESTED`; this release performed no financial operation. |
+| `OPERATIONAL_RELEASE_READY` | PARTIAL | Admin release is active, markers match, local/HTTPS route checks return 200, and Admin has zero systemd restarts. The owner waived capacity/rollback prerequisites for this release; full off-VPS restore and remaining product acceptance are still unproven. |
+| `FINAL_OWNER_ACCEPTANCE` | OWNER_DECISION_REQUIRED | The owner must review the consolidated evidence and decide acceptance; Codex does not set this value. |
+
+### Remaining exact owner-dependent steps
+
+- Provide an already-authorized restricted Admin test identity (or keep backend RBAC negative acceptance open).
+- Approve a controlled eligible Options account/funding path if Binary acceptance is required; no automated funding or transfer will be initiated.
+- Authorize a specific controlled Messages conversation and non-sensitive test message if production send/push/reconnect acceptance is required; no real customer conversation is a test fixture.
+- Review the complete Admin/Public result and make the final UI/product acceptance decision.
+- Alert email delivery, measured detection latency, and event-level symbolication remain separate telemetry proof gaps; they do not invalidate this Admin shell release.
+
+## Acceptance decision matrix (pre-Stage-B checkpoint)
+
+| Required decision | Result | Exact boundary |
+| --- | --- | --- |
+| `ADMIN_VISUAL_DESIGN_ACCEPTED` | PARTIAL | Reference recovered; authenticated shell/selector rendered at 979×715. Complete page-by-page/viewport comparison and owner acceptance remain; authenticated 440×956 rendering is unverified. |
+| `ADMIN_FUNCTIONAL_ACCEPTED` | PARTIAL | All eight selector routes and active selection after `/frontend-control` reload passed at 979×715; contextual tabs/page search remained and inert global search was removed. Mutating actions and restricted-role denial are not verified. |
 | `PUBLIC_VISUAL_DESIGN_ACCEPTED` | PARTIAL | Mobile Quotes Hub, Settings structure, Spot and Messages slices observed. Full product-route and viewport comparison remains. |
 | `PUBLIC_FUNCTIONAL_ACCEPTED` | PARTIAL | SIWE, market read, Settings reads, and support-thread read verified. Complete product journeys and writes remain unverified. |
 | `THREE_SURFACE_RUNTIME_INTEGRATION_VERIFIED` | PARTIAL | Current Backend readiness plus current Public/Admin API responses observed. Complete action-to-persistence-to-cross-surface readback is not established by these checks. |
 | `AUTHENTICATION_AND_RBAC_ACCEPTED` | PARTIAL | Public SIWE and Super Admin session verified. Negative/lower-role RBAC behavior remains unverified. |
 | `MESSAGES_REALTIME_ACCEPTED` | PARTIAL | Current support-thread GET and Socket.IO polling verified; no current-release send/readback, push delivery, or reconnect was exercised. |
 | `FINANCIAL_ACCEPTED_WITH_RECORDED_EXCEPTIONS` | PARTIAL | Four financial gates remain `OWNER_ACCEPTED_UNTESTED`; this browser pass performed no economic operation. |
-| `OPERATIONAL_RELEASE_READY` | PARTIAL | Deployed services and readiness passed; root disk is 97% used with 1.9 GiB free, rollback preparation remains owner-deferred, and off-VPS full restore remains unproven. |
+| `OPERATIONAL_RELEASE_READY` | PARTIAL | Admin release `737355124993705935f9aa56f743a9f1f61a2bf4` is active; local and HTTPS `/overview` returned 200 and Admin has zero systemd restarts. Backend/Public remain at `a72c3127ffc448215cc7a724c4f5f6ca6e593b1b`. The owner waived capacity and rollback prerequisites for this release; off-VPS full restore and complete product readiness remain unproven. |
 | `FINAL_OWNER_ACCEPTANCE` | OWNER_DECISION_REQUIRED | Codex does not set this field on the owner's behalf. |
 
 ## Preserved limitations and next decision
