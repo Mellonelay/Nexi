@@ -165,3 +165,16 @@ test('public financial and market copy does not expose implementation-authority 
   assert.doesNotMatch(publicSources, /approved market asset/i);
   assert.doesNotMatch(publicSources, /market asset is not approved/i);
 });
+
+test('Options funding journey preserves intent and preselects the safe wallet transfer', () => {
+  const binary = read('dashboard/binary/page.tsx');
+  const wallet = read('dashboard/wallet/page.tsx');
+  const transfer = read('dashboard/wallet/components/TransferModal.tsx');
+  assert.match(binary, /from: 'options', symbol: normalizedPair, stake: amount, duration: String\(duration\), side: direction/);
+  assert.match(binary, /searchParams\.get\('stake'\)/);
+  assert.match(wallet, /back\.set\('stake', stake\)/);
+  assert.match(wallet, /Return to Options/);
+  assert.match(wallet, /initialDestinationScope=\{optionsReturn \? 'BINARY' : undefined\}/);
+  assert.match(transfer, /setSourceScope\('MAIN'\)/);
+  assert.match(transfer, /setDestinationScope\(initialDestinationScope\)/);
+});

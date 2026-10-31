@@ -148,7 +148,10 @@ export default function BinaryPage() {
   const submissionConfigured = Boolean(apiBaseUrl);
 
   const [interval, setInterval] = useState('1m');
-  const [duration, setDuration] = useState(60);
+  const [duration, setDuration] = useState(() => {
+    const requested = Number(searchParams.get('duration'));
+    return Number.isInteger(requested) && requested > 0 && requested <= 3600 ? requested : 60;
+  });
   const [amount, setAmount] = useState('');
   const [direction, setDirection] = useState<Direction>('LONG');
   const [userId, setUserId] = useState<string | null>(null);
@@ -156,6 +159,7 @@ export default function BinaryPage() {
   const [tab, setTab] = useState<BinaryTab>('TRADE');
   const [state, setState] = useState<BinaryPositionState>('DRAFT');
   const [confirmationOpen, setConfirmationOpen] = useState(false);
+  const [fundingOpen, setFundingOpen] = useState(false);
   const [activePositions, setActivePositions] = useState<BinaryPosition[]>([]);
   const [history, setHistory] = useState<BinaryPosition[]>([]);
   const [selectedResult, setSelectedResult] = useState<BinaryPosition | null>(null);
@@ -184,11 +188,13 @@ export default function BinaryPage() {
 
   useEffect(() => {
     chartPairRef.current = normalizedPair;
-    setAmount('');
-    setDirection('LONG');
+    const requestedStake = searchParams.get('stake');
+    setAmount(searchParams.get('symbol') && normalizePair(searchParams.get('symbol')!) === normalizedPair && requestedStake && /^(?:0|[1-9]\d*)(?:\.\d+)?$/.test(requestedStake) && Number(requestedStake) > 0 ? requestedStake : '');
+    setDirection(searchParams.get('side') === 'SHORT' ? 'SHORT' : 'LONG');
     setTab('TRADE');
     setState('DRAFT');
     setConfirmationOpen(false);
+    setFundingOpen(false);
     setActivePositions([]);
     setHistory([]);
     setSelectedResult(null);
@@ -206,6 +212,7 @@ export default function BinaryPage() {
         setSelectedChartTradeId(null);
         setOptionWalletBalanceResult(null);
         setConfirmationOpen(false);
+        setFundingOpen(false);
         setState('DRAFT');
         previousUserId.current = next;
       }
@@ -219,20 +226,32 @@ export default function BinaryPage() {
   useEffect(() => {
     if (!userId || !apiBaseUrl) return;
     let cancelled = false;
-    api.get('/wallet/overview').then((response) => {
-      if (cancelled || sessionPrincipalId() !== userId) return;
-      setOptionWalletBalanceResult({ userId, balance: readOptionWalletBalance(response.data) });
-    }).catch((error: unknown) => {
-      if (cancelled || sessionPrincipalId() !== userId) return;
-      const status = error && typeof error === 'object' && 'response' in error
-        ? (error as { response?: { status?: number } }).response?.status
-        : undefined;
-      setOptionWalletBalanceResult({
-        userId,
-        balance: { state: status === 401 ? 'UNAUTHENTICATED' : 'ERROR' },
+    let requestId = 0;
+    const refresh = () => {
+      const currentRequest = ++requestId;
+      api.get('/wallet/overview').then((response) => {
+        if (cancelled || currentRequest !== requestId || sessionPrincipalId() !== userId) return;
+        setOptionWalletBalanceResult({ userId, balance: readOptionWalletBalance(response.data) });
+      }).catch((error: unknown) => {
+        if (cancelled || currentRequest !== requestId || sessionPrincipalId() !== userId) return;
+        const status = error && typeof error === 'object' && 'response' in error
+          ? (error as { response?: { status?: number } }).response?.status
+          : undefined;
+        setOptionWalletBalanceResult({
+          userId,
+          balance: { state: status === 401 ? 'UNAUTHENTICATED' : 'ERROR' },
+        });
       });
-    });
-    return () => { cancelled = true; };
+    };
+    const onVisible = () => { if (document.visibilityState === 'visible') refresh(); };
+    refresh();
+    window.addEventListener('focus', onVisible);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('focus', onVisible);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, [userId]);
 
   useEffect(() => {
@@ -406,7 +425,15 @@ export default function BinaryPage() {
     minimumAmount: minimumStake,
     maximumAmount: maximumStake,
   });
-  const reviewReady = ready;
+  const fundingRequired = Boolean(userId) && submissionConfigured
+    && currentPrice !== null && Boolean(selectedDuration?.enabled)
+    && stake !== null && payoutRate !== null
+    && minimumStake !== null && maximumStake !== null
+    && stake >= minimumStake && stake <= maximumStake
+    && (optionWalletBalance.state === 'ZERO'
+      || (optionWalletBalance.state === 'POSITIVE' && stake > Number(optionWalletBalance.available)));
+  // Permit an underfunded customer to request help, never an unfunded order.
+  const reviewReady = ready || fundingRequired;
   const stateTone = ['WIN', 'OPEN'].includes(state)
     ? 'border-emerald-300/25 bg-emerald-400/5 text-[#98FCE4]'
     : ['LOSS', 'ERROR', 'CONNECTION_LOST'].includes(state)
@@ -437,6 +464,10 @@ export default function BinaryPage() {
   const openReview = (nextDirection: Direction) => {
     setDirection(nextDirection);
     setFeedback(null);
+    if (fundingRequired) {
+      setFundingOpen(true);
+      return;
+    }
     if (ready) {
       setState('CONFIRMATION');
       setConfirmationOpen(true);
@@ -546,6 +577,22 @@ export default function BinaryPage() {
           {tab === 'HISTORY' && <PositionList positions={history} now={now} empty="Position history is unavailable." onSelect={(position) => { setSelectedChartTradeId(position.id); setSelectedResult(position); }} />}
         </section>
       </div>
+
+      {fundingOpen && <ModalSurface open onClose={() => setFundingOpen(false)} title="Insufficient Options funds">
+        <div className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-violet-300/15 bg-[#100A18] p-5">
+          <h2 className="text-xl font-semibold">Insufficient Options funds</h2>
+          <p className="mt-2 text-sm text-[#C3BBD0]">Your stake is {amount} USDT, but only {optionWalletBalance.state === 'ZERO' || optionWalletBalance.state === 'POSITIVE' ? optionWalletBalance.available : '0'} USDT is available in Options.</p>
+          <p className="mt-2 text-sm text-[#8C8299]">Transfer funds from Funding or deposit into your NEXI Wallet. No trade has been submitted.</p>
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <button type="button" onClick={() => setFundingOpen(false)} className="min-h-12 rounded-xl border border-violet-300/15">Not now</button>
+            <button type="button" onClick={() => {
+              setFundingOpen(false);
+              const params = new URLSearchParams({ from: 'options', symbol: normalizedPair, stake: amount, duration: String(duration), side: direction });
+              router.push(`/dashboard/wallet?${params.toString()}`);
+            }} className="min-h-12 rounded-xl bg-[#7C3AED] font-semibold">Open Wallet</button>
+          </div>
+        </div>
+      </ModalSurface>}
 
       {confirmationOpen && <ModalSurface open onClose={() => setConfirmationOpen(false)} title="Review Options position">
         <div className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-violet-300/15 bg-[#100A18] p-5">

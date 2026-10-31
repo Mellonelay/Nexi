@@ -54,7 +54,7 @@ function categoryForType(type: string): Exclude<NotificationCategory, "All"> {
   const value = type.toUpperCase();
   if (/(SPOT|ORDER|TRADE|MARGIN|BINARY|OPTION|POSITION|SETTLEMENT)/.test(value))
     return "Trading";
-  if (/(DEPOSIT|WITHDRAW|TRANSFER|CONVERT|WALLET|BALANCE|LEDGER)/.test(value))
+  if (/(DEPOSIT|WITHDRAW|TRANSFER|CONVERT|CONVERSION|WALLET|BALANCE|LEDGER|MINING|LOAN)/.test(value))
     return "Wallet";
   if (
     /(KYC|SESSION|PROFILE|AUTH|LOGIN|SECURITY|VERIF|REFERRAL|VIP)/.test(value)
@@ -94,7 +94,8 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
   const loadRequestRef = useRef(0);
   const previousPrincipalId = useRef<string | null | undefined>(principalId);
   const readRequestIds = useRef(new Set<string>());
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  // The list is paginated; only the Backend can count all unread notifications.
+  const [unreadCount, setUnreadCount] = useState<number | null>(null);
   const visibleNotifications =
     category === "All"
       ? notifications
@@ -108,10 +109,15 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
     setLoading(true);
     setFailed(false);
     try {
-      const { data } = await api.get("/communications/notifications", {
-        params: { page: 1, limit: 25 },
-      });
+      const [listResult, countResult] = await Promise.allSettled([
+        api.get("/communications/notifications", { params: { page: 1, limit: 25 } }),
+        api.get("/communications/notifications/unread-count"),
+      ]);
       if (requestId !== loadRequestRef.current || requestPrincipalId !== getAccessTokenPrincipalId()) return;
+      if (listResult.status !== 'fulfilled') throw listResult.reason;
+      const data = listResult.value.data;
+      const count = countResult.status === 'fulfilled' ? countResult.value.data?.count : null;
+      setUnreadCount(Number.isSafeInteger(count) && count >= 0 ? count : null);
       const rows = Array.isArray(data)
         ? data
         : Array.isArray(data?.notifications)
@@ -143,6 +149,7 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
     } catch (error) {
       if (requestId !== loadRequestRef.current || requestPrincipalId !== getAccessTokenPrincipalId()) return;
       setNotifications([]);
+      setUnreadCount(null);
       setFailed(true);
       setFailureMessage(axiosErrorMessage(error));
     } finally {
@@ -159,6 +166,7 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
       loadRequestRef.current += 1;
       readRequestIds.current.clear();
       setNotifications([]);
+      setUnreadCount(null);
       setReadErrors({});
       setFailed(false);
       if (open && next) void loadNotifications();
@@ -224,6 +232,8 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
       setNotifications((items) =>
         items.map((item) => (item.id === id ? { ...item, read: true } : item)),
       );
+      // The Backend remains authoritative; reconcile races and unseen pages.
+      void loadNotifications();
     } catch {
       if (requestPrincipalId !== getAccessTokenPrincipalId()) return;
       setReadErrors((errors) => ({ ...errors, [id]: true }));
@@ -257,7 +267,7 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
                 <span className="font-semibold text-[#F8F6FF]">
                   Notifications
                 </span>
-                {unreadCount > 0 && (
+                {unreadCount !== null && unreadCount > 0 && (
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#6d41ff] text-white">
                     {unreadCount}
                   </span>

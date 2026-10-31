@@ -262,6 +262,18 @@ export class D1FinancialCommandGateway {
     return this.findAccountForUser(userId, asset, scope);
   }
 
+  // Internal Ledger scopes are provisioned transparently at wallet sign-in.
+  // An atomic INSERT OR IGNORE batch preserves existing balances and statuses.
+  async ensureDefaultUserAccounts(userId: string): Promise<void> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const scopes = ["MAIN", "SPOT", "MARGIN", "BINARY", "FINANCE"] as const;
+    await this.bridge.batch(scopes.map((scope) => ({
+      sql: `INSERT OR IGNORE INTO "LedgerAccount" ("id", "userId", "asset", "scope", "status", "available", "locked", "createdAt", "updatedAt")
+        VALUES (?, ?, 'USDT', ?, 'ACTIVE', '0', '0', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+      params: [randomUUID(), userId, scope],
+    })));
+  }
+
   async getAccountForUser(
     userId: string,
     assetValue: string,
@@ -2770,6 +2782,7 @@ export class D1FinancialCommandGateway {
         correlationId: command.idempotencyKey,
         payload: {
           loanId: loan.id,
+          userId: String(loan.userId),
           adminId: command.adminId ?? null,
           reason: command.reason ?? null,
         },
@@ -2794,6 +2807,8 @@ export class D1FinancialCommandGateway {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     if (!idempotencyKey?.trim())
       throw new BadRequestException("Idempotency key is required");
+    const loan = await this.getLoanApplication(loanId);
+    if (!loan) throw new NotFoundException("Loan application not found");
     const statements: D1BridgeBatchStatement[] = [
       {
         sql: `UPDATE "LoanApplication" SET "status"='REJECTED',"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "status"='PENDING'`,
@@ -2802,7 +2817,7 @@ export class D1FinancialCommandGateway {
     ];
     if (adminId)
       statements.push({
-        sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`,
+        sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") SELECT ?,?,?,?,?,CURRENT_TIMESTAMP WHERE changes()=1`,
         params: [
           randomUUID(),
           adminId,
@@ -2817,7 +2832,8 @@ export class D1FinancialCommandGateway {
         aggregateType: "LOAN_APPLICATION",
         aggregateId: loanId,
         eventType: "LOAN_REJECTED",
-        payload: { adminId: adminId ?? null, reason: reason ?? null },
+        payload: { userId: String(loan.userId), loanId, adminId: adminId ?? null, reason: reason ?? null },
+        guard: { sql: "changes()=1", params: [] },
       }),
     );
     const result = await this.bridge.batch(statements);
@@ -3002,9 +3018,10 @@ export class D1FinancialCommandGateway {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const dueLoans = await this.bridge.select<{
       id: string;
+      userId: string;
       dueDate: string | null;
     }>(
-      `SELECT "id","dueDate" FROM "LoanApplication" WHERE "status"='ACTIVE' AND "dueDate" IS NOT NULL AND "dueDate" < ? ORDER BY "dueDate" ASC`,
+      `SELECT "id","userId","dueDate" FROM "LoanApplication" WHERE "status"='ACTIVE' AND "dueDate" IS NOT NULL AND "dueDate" < ? ORDER BY "dueDate" ASC`,
       [now],
     );
     let count = 0;
@@ -3028,7 +3045,7 @@ export class D1FinancialCommandGateway {
             aggregateId: loan.id,
             eventType: "LOAN_OVERDUE",
             correlationId: loan.id,
-            payload: { loanId: loan.id, dueDate: loan.dueDate },
+            payload: { loanId: loan.id, userId: loan.userId, dueDate: loan.dueDate },
             guard: {
               sql: `EXISTS (SELECT 1 FROM "LoanApplication" WHERE "id"=? AND "status"='OVERDUE')`,
               params: [loan.id],
@@ -8480,6 +8497,10 @@ export class D1FinancialCommandGateway {
             userId: command.sameUserTransfer.userId,
             sourceScope: command.sameUserTransfer.fromScope,
             destinationScope: command.sameUserTransfer.toScope,
+          } : {}),
+          ...(command.internalTransfer ? {
+            fromUserId: command.internalTransfer.fromUserId,
+            toUserId: command.internalTransfer.toUserId,
           } : {}),
         },
       }),

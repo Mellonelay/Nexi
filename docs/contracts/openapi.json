@@ -973,6 +973,41 @@
         ]
       }
     },
+    "/communications/notifications/unread-count": {
+      "get": {
+        "operationId": "CommunicationsController_unreadNotificationCount",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "count"
+                  ],
+                  "properties": {
+                    "count": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
     "/communications/notifications/{id}/read": {
       "post": {
         "operationId": "CommunicationsController_read",

@@ -30,7 +30,7 @@ describe('A19 notification durable realtime closure', () => {
 
   it('publishes durable notification mutations onto the existing communications Redis channel', async () => {
     const notification = { id: 'notification-1', userId: '11111111-1111-4111-8111-111111111111', type: 'info', title: 'Alert', body: 'Body', readAt: null };
-    const d1: any = { notification: { findUnique: jest.fn(async () => notification) } };
+    const d1: any = { notification: { findUnique: jest.fn(async () => notification) }, userPreference: { findUnique: jest.fn(async () => null) } };
     const d1Gateway: any = {
       createNotification: jest.fn(async () => undefined),
       markNotificationRead: jest.fn(async () => true),
@@ -44,6 +44,15 @@ describe('A19 notification durable realtime closure', () => {
     })).toEqual(notification);
     expect(d1Gateway.createNotification).toHaveBeenCalledWith(expect.objectContaining({ eventType: 'NOTIFICATION_SENT', idempotencyKey: 'notification-send-1' }));
     expect(redis.publish).toHaveBeenCalledWith('nexi:b8:communications', expect.stringContaining('NOTIFICATION_SENT'));
+
+    // Simulate the separately materialized system notification returned by the DB.
+    Object.assign(notification, { type: 'TRANSFER_COMPLETED', title: 'Wallet transfer completed', body: '10 USDT transferred from Funding to Options.' });
+    expect(await service.sendSystemNotification({
+      userId: notification.userId, type: 'TRANSFER_COMPLETED',
+      title: 'Wallet transfer completed', body: '10 USDT transferred from Funding to Options.',
+      idempotencyKey: 'event:transfer:123',
+    })).toEqual(notification);
+    expect(d1Gateway.createNotification).toHaveBeenCalledWith(expect.objectContaining({ type: 'TRANSFER_COMPLETED', eventType: 'NOTIFICATION_SENT', idempotencyKey: expect.stringMatching(/^notification:system:[a-f0-9-]{36}$/) }));
 
     await service.markNotificationRead(notification.userId, notification.id);
     expect(redis.publish).toHaveBeenCalledWith('nexi:b8:communications', expect.stringContaining('NOTIFICATION_READ'));

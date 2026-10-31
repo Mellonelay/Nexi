@@ -101,7 +101,7 @@ export function positiveNumber(value: unknown): number | null {
 
 function optionsStakeWithinBalance(amount: number | null, accountActive: boolean, available: unknown): amount is number {
   const optionsAvailableBalance = positiveNumber(available);
-  return accountActive
+  return accountActive === true
     && amount !== null
     && optionsAvailableBalance !== null
     && amount <= optionsAvailableBalance;

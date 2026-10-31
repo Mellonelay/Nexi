@@ -202,6 +202,14 @@ export class CommunicationsController {
     return this.service.listNotifications(req.user.userId, q.page, q.limit);
   }
   @ApiBearerAuth()
+  @Get("notifications/unread-count")
+  @ApiOkResponse({ schema: { type: "object", required: ["count"], properties: { count: { type: "integer", minimum: 0 } } } })
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
+  unreadNotificationCount(@Req() req: AuthenticatedRequest) {
+    return this.service.unreadNotificationCount(req.user.userId);
+  }
+  @ApiBearerAuth()
   @Post("notifications/:id/read")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")

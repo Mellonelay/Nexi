@@ -754,8 +754,9 @@ export class CommunicationsService {
     });
   }
 
-  async sendAdminNotification(data: { userId: string; type: string; title: string; body: string; idempotencyKey: string; reason?: string }) {
-    const id = this.id("admin-notification", data.idempotencyKey);
+  private async createAndPublishNotification(data: { userId: string; type: string; title: string; body: string; idempotencyKey: string; reason?: string }, source: "admin" | "system") {
+    const notificationKey = source === "system" ? `notification:system:${this.id("source-event", data.idempotencyKey)}` : data.idempotencyKey;
+    const id = this.id(`${source}-notification`, notificationKey);
     let notification: any;
     await this.d1Communications.createNotification({
         id,
@@ -763,13 +764,46 @@ export class CommunicationsService {
         type: data.type,
         title: data.title,
         body: data.body,
-        idempotencyKey: data.idempotencyKey,
+        idempotencyKey: notificationKey,
         eventType: "NOTIFICATION_SENT",
     });
     notification = await this.database.notification.findUnique({ where: { id } });
     if (!notification) throw new BadRequestException("Notification was not materialized");
+    // INSERT OR IGNORE is safe for identical retries, but must never turn a
+    // reused idempotency key into a successful notification for another user.
+    if (notification.userId !== data.userId || notification.type !== data.type ||
+        notification.title !== data.title || notification.body !== data.body) {
+      throw new BadRequestException("Notification idempotency key was already used");
+    }
     await this.publishRealtimeEvent("NOTIFICATION_SENT", id, { userId: data.userId, type: data.type });
     return notification;
+  }
+
+  async sendAdminNotification(data: { userId: string; type: string; title: string; body: string; idempotencyKey: string; reason?: string }) {
+    return this.createAndPublishNotification(data, "admin");
+  }
+
+  async sendSystemNotification(data: { userId: string; type: string; title: string; body: string; idempotencyKey: string }) {
+    // The persisted Public settings apply only to optional event categories.
+    // Security and account-critical notices remain visible regardless of opt-outs.
+    const type = data.type.toUpperCase();
+    const preferenceKey = type === "MARGIN_LIQUIDATED" ? null
+      : /^(SPOT|BINARY|MARGIN)/.test(type) ? "tradeEvents"
+      : /^(TRANSFER|DEPOSIT|WITHDRAWAL|CONVERSION|MINING)/.test(type) ? "walletEvents"
+      : null;
+    if (preferenceKey) {
+      const row = await this.database.userPreference.findUnique({
+        where: { userId: data.userId },
+        select: { notificationSettings: true },
+      });
+      if (row?.notificationSettings) {
+        let settings: Record<string, unknown> | null = null;
+        try { settings = JSON.parse(row.notificationSettings) as Record<string, unknown>; }
+        catch { /* Malformed optional preferences cannot poison durable financial event delivery. */ }
+        if (settings?.[preferenceKey] === false) return null;
+      }
+    }
+    return this.createAndPublishNotification(data, "system");
   }
 
   async snapshot(userId: string) {
@@ -784,12 +818,16 @@ export class CommunicationsService {
     };
   }
 
+  async unreadNotificationCount(userId: string): Promise<{ count: number }> {
+    return { count: await this.database.notification.count({ where: { userId, readAt: null } }) };
+  }
+
   async listNotifications(userId: string, page = 1, limit = 25) {
     return this.database.notification.findMany({
       where: { userId },
       skip: (page - 1) * limit,
       take: limit,
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     });
   }
   async markNotificationRead(userId: string, id: string) {

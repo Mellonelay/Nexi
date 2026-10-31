@@ -37,7 +37,9 @@ test('spot orders follow supported backend order-type inputs', () => {
 });
 
 test('binary orders require authoritative price, payout, duration and configured stake range', () => {
-  assert.equal(binaryOrderReady({ authenticated: true, backendConfigured: true, amount: 10, currentPrice: 20, durationEnabled: true, payoutRate: 0.8, minimumAmount: 5, maximumAmount: 20 }), true);
+  const funded = { authenticated: true, backendConfigured: true, optionsAccountActive: true, optionsAvailableBalance: '10', amount: 10, currentPrice: 20, durationEnabled: true, payoutRate: 0.8, minimumAmount: 5, maximumAmount: 20 };
+  assert.equal(binaryOrderReady(funded), true);
+  assert.equal(binaryOrderReady({ ...funded, optionsAvailableBalance: '9.99' }), false);
   assert.equal(binaryOrderReady({ authenticated: true, backendConfigured: true, amount: 10, currentPrice: null, durationEnabled: true, payoutRate: 0.8 }), false);
   assert.equal(binaryOrderReady({ authenticated: false, backendConfigured: true, amount: 10, currentPrice: 20, durationEnabled: true, payoutRate: 0.8 }), false);
   assert.equal(binaryOrderReady({ authenticated: true, backendConfigured: true, amount: 4, currentPrice: 20, durationEnabled: true, payoutRate: 0.8, minimumAmount: 5 }), false);

@@ -98,6 +98,7 @@ export class WalletAuthService {
     const user = await this.getOrCreateUserOnD1(address, message.chainId);
 
     const account = await this.referralVip.ensureAccountState(user.id, Number(user.userCode), input.referralCode);
+    await this.d1.ensureDefaultUserAccounts(user.id);
     const session = await this.auth.login({ id: user.id, publicId: user.userCode.toString(), email: user.email, role: user.role, kycStatus: user.kyc?.status ?? 'NOT_SUBMITTED' }, 'PUBLIC', metadata);
     return {
       ...session,
@@ -119,6 +120,7 @@ export class WalletAuthService {
     const user = await this.d1.getUserById(userId);
     if (!user) throw new UnauthorizedException('Authenticated user is unavailable');
     const account = await this.referralVip.ensureAccountState(userId, Number(user.userCode));
+    await this.d1.ensureDefaultUserAccounts(userId);
     return { id: String(user.userCode), email: user.email ?? null, displayName: user.displayName ?? null, walletAddress: user.walletAddress ?? null, chainId: user.walletChainId ?? null, kycStatus: user.kycStatus ?? 'NOT_SUBMITTED', referral: account.referral, vip: account.vip };
   }
 

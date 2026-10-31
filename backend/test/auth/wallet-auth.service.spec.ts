@@ -59,10 +59,12 @@ function makeService() {
   const referralVip = { ensureAccountState: jest.fn().mockResolvedValue({ referral: null, vip: null }) };
   const d1 = {
     getUserByWallet: jest.fn().mockResolvedValue(user),
+    getUserById: jest.fn().mockResolvedValue({ id: 'user-1', userCode: 100001, walletAddress: '0xabc', walletChainId: 1 }),
     createWalletUser: jest.fn().mockResolvedValue(user),
+    ensureDefaultUserAccounts: jest.fn().mockResolvedValue(undefined),
   };
   const config = { get: (key: string) => ({ WALLET_AUTH_SUPPORTED_CHAIN_IDS: '1', WALLET_AUTH_DOMAIN: 'nexi.local', WALLET_AUTH_URI: 'http://nexi.local' } as Record<string, string>)[key] };
-  return { service: new WalletAuthService(config as any, redis as any, auth as any, referralVip as any, d1 as any), redis, prisma, auth };
+  return { service: new WalletAuthService(config as any, redis as any, auth as any, referralVip as any, d1 as any), redis, prisma, auth, d1 };
 }
 
 describe('WalletAuthService', () => {
@@ -82,11 +84,26 @@ describe('WalletAuthService', () => {
   });
 
   it('consumes a challenge and rejects replay', async () => {
-    const { service, auth } = makeService();
+    const { service, auth, d1 } = makeService();
     const challenge = await service.createChallenge({ address: '0xabc', chainId: 1 });
     await service.verifyChallenge({ message: challenge.message, signature: '0xsigned' }, {});
+    expect(d1.ensureDefaultUserAccounts).toHaveBeenCalledWith('user-1');
     expect(auth.login).toHaveBeenCalledTimes(1);
     await expect(service.verifyChallenge({ message: challenge.message, signature: '0xsigned' }, {})).rejects.toBeInstanceOf(UnauthorizedException);
+  });
+
+  it('reconciles account readiness for an existing authenticated session', async () => {
+    const { service, d1 } = makeService();
+    await service.getCurrentUser('user-1');
+    expect(d1.ensureDefaultUserAccounts).toHaveBeenCalledWith('user-1');
+  });
+
+  it('does not issue a session if account provisioning fails', async () => {
+    const { service, auth, d1 } = makeService();
+    d1.ensureDefaultUserAccounts.mockRejectedValueOnce(new Error('Ledger initialization failed'));
+    const challenge = await service.createChallenge({ address: '0xabc', chainId: 1 });
+    await expect(service.verifyChallenge({ message: challenge.message, signature: '0xsigned' }, {})).rejects.toThrow('Ledger initialization failed');
+    expect(auth.login).not.toHaveBeenCalled();
   });
 
   it('retries D1 user allocation after a six-digit userCode collision', async () => {

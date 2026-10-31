@@ -14,6 +14,7 @@ interface TransferModalProps {
   selectedCurrency: string;
   onSelectCurrency: (symbol: string) => void;
   onCompleted?: () => void | Promise<void>;
+  initialDestinationScope?: 'BINARY';
 }
 
 type WalletScope = 'MAIN' | 'SPOT' | 'MARGIN' | 'BINARY' | 'FINANCE';
@@ -26,7 +27,7 @@ const walletScopes: Array<{ value: WalletScope; label: string }> = [
 ];
 const validAmount = (value: string) => /^(?:0|[1-9]\d*)(?:\.\d+)?$/.test(value) && Number.isFinite(Number(value)) && Number(value) > 0;
 
-export default function TransferModal({ isOpen, onClose, currencies, selectedCurrency, onSelectCurrency, onCompleted }: TransferModalProps) {
+export default function TransferModal({ isOpen, onClose, currencies, selectedCurrency, onSelectCurrency, onCompleted, initialDestinationScope }: TransferModalProps) {
   const [mode, setMode] = useState<'WALLETS' | 'USER'>('WALLETS');
   const [sourceScope, setSourceScope] = useState<WalletScope>('MAIN');
   const [destinationScope, setDestinationScope] = useState<WalletScope>('SPOT');
@@ -41,6 +42,14 @@ export default function TransferModal({ isOpen, onClose, currencies, selectedCur
   useEffect(() => {
     if (!internalAsset && currencies[0]) setInternalAsset(currencies[0].symbol);
   }, [currencies, internalAsset]);
+
+  useEffect(() => {
+    if (!isOpen || !initialDestinationScope) return;
+    setMode('WALLETS');
+    setSourceScope('MAIN');
+    setDestinationScope(initialDestinationScope);
+    setInternalAsset('USDT');
+  }, [isOpen, initialDestinationScope]);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -66,6 +75,7 @@ export default function TransferModal({ isOpen, onClose, currencies, selectedCur
     submissionLock.current = true;
     setBusy(true);
     try {
+      let confirmation: string;
       if (mode === 'WALLETS') {
         await api.post('/financial/account-transfers', {
           sourceScope,
@@ -74,7 +84,7 @@ export default function TransferModal({ isOpen, onClose, currencies, selectedCur
           amount,
           idempotencyKey: intent.key,
         });
-        toast.success('Wallet transfer completed.');
+        confirmation = `${amount} ${asset} transferred from ${accountName(sourceScope)} to ${accountName(destinationScope)}.`;
       } else {
         const toUserCode = Number(recipientCode);
         await api.post('/financial/transfers', {
@@ -83,9 +93,12 @@ export default function TransferModal({ isOpen, onClose, currencies, selectedCur
           amount,
           idempotencyKey: intent.key,
         });
-        toast.success('Transfer to NEXI user completed.');
+        confirmation = `${amount} ${asset} transferred to NEXI user ${recipientCode}.`;
       }
-      await onCompleted?.();
+      // A readback failure must not misreport an already committed transfer.
+      try { await onCompleted?.(); }
+      catch { toast.warning('Transfer completed, but balances could not be refreshed.'); }
+      toast.success(confirmation);
       setAmount('');
       setRecipientCode('');
       close();

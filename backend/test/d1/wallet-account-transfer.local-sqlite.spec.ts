@@ -56,6 +56,27 @@ describe('financial operations on local SQLite', () => {
     else process.env.D1_RUNTIME_ENABLED = previousRuntimeFlag;
   });
 
+  it('initializes five USDT scopes idempotently while preserving existing balances and statuses', async () => {
+    const before = await bridge.select<{ id: string; available: string; locked: string }>(
+      `SELECT "id","available","locked" FROM "LedgerAccount" WHERE "userId"='user-1' AND "scope"='BINARY'`,
+    );
+    await gateway.ensureDefaultUserAccounts('user-1');
+    await gateway.ensureDefaultUserAccounts('user-1');
+    await gateway.ensureDefaultUserAccounts('user-2');
+    const rows = await bridge.select<{ userId: string; scope: string; available: string; locked: string }>(
+      `SELECT "userId","scope","available","locked" FROM "LedgerAccount" WHERE "asset"='USDT' AND "userId" IN ('user-1','user-2') ORDER BY "userId","scope"`,
+    );
+    expect(rows.results.filter(row => row.userId === 'user-1')).toHaveLength(5);
+    expect(rows.results.filter(row => row.userId === 'user-2')).toHaveLength(5);
+    expect(rows.results.find(row => row.userId === 'user-1' && row.scope === 'BINARY')).toMatchObject({ available: '2', locked: '0' });
+    expect(rows.results.find(row => row.userId === 'user-1' && row.scope === 'FINANCE')).toMatchObject({ available: '0', locked: '5' });
+    const after = await bridge.select<{ id: string; available: string; locked: string }>(
+      `SELECT "id","available","locked" FROM "LedgerAccount" WHERE "userId"='user-1' AND "scope"='BINARY'`,
+    );
+    expect(after.results).toEqual(before.results);
+    expect(rows.results.find(row => row.userId === 'user-2' && row.scope === 'MAIN')).toMatchObject({ available: '0', locked: '0' });
+  });
+
   it('posts exact-decimal same-user scope transfers once with Activity and EventOutbox, then replays safely', async () => {
     const input = {
       sourceScope: 'MAIN', destinationScope: 'BINARY', asset: 'USDT', amount: '1.25',

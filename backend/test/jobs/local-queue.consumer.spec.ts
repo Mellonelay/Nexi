@@ -28,6 +28,19 @@ describe('Existing Inbox and durable workflow queue consumption',()=>{
   expect(await store.get('loan-synthetic-loan')).toMatchObject({status:'COMPLETED',context:{restartCount:1}});
  });
  it('does not invent downstream handlers for notifications or integration jobs',async()=>{
-  await consumer.execute({...event,type:'SYNTHETIC_NOTICE'},{...context,queue:'notifications'});expect(ingress).toHaveLength(1);expect(await store.get('loan-synthetic-loan')).toBeNull();
+  await consumer.execute({...event,type:'SYNTHETIC_NOTICE'},{...context,queue:'notifications'});
+  await consumer.execute(event,{...context,queue:'notifications'});
+  expect(ingress).toHaveLength(2);
+  expect(await store.get('loan-synthetic-loan')).toBeNull();
+ });
+ it('delivers committed transfer events after Inbox ingress and retries notification failures',async()=>{
+  const notify=jest.fn(async()=>undefined);
+  notify.mockRejectedValueOnce(new Error('notification delivery failed'));
+  const transfer={...event,type:'TRANSFER_COMPLETED',idempotencyKey:'transfer-event-1',payload:{userId:'user-1',asset:'USDT',amount:'10',sourceScope:'MAIN',destinationScope:'BINARY'}};
+  consumer=new LocalQueueConsumer({recordQueueIngress:async(...args:any[])=>{ingress.push(args);return {replayed:false};}} as any,store,engine,()=>now,notify);
+  await expect(consumer.execute(transfer,context)).rejects.toThrow('notification delivery failed');
+  await expect(consumer.execute(transfer,context)).resolves.toBeUndefined();
+  expect(ingress).toHaveLength(2);
+  expect(notify).toHaveBeenCalledTimes(2);
  });
 });

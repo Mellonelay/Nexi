@@ -49,7 +49,9 @@ function readAssets(payload: unknown, selectedTab: Tab): WalletAsset[] {
   return source.flatMap((value) => {
     const asset = record(value);
     const scopes = record(asset.scopes);
-    const balances = (targetScope ? [scopes[targetScope]] : Object.values(scopes)).filter(Boolean).map(record);
+    // An unprovisioned account is not a zero-balance account.
+    const balances = (targetScope ? [scopes[targetScope]] : Object.values(scopes))
+      .filter(Boolean).map(record).filter((balance) => balance.accountExists !== false);
     if (!balances.length) return [];
     const available = sumDecimalStrings(balances.map((balance) => balance.available));
     const locked = sumDecimalStrings(balances.map((balance) => balance.locked));
@@ -181,29 +183,42 @@ function useWalletAuthority() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [activityState, setActivityState] = useState<ReadState>('LOADING');
   const [error, setError] = useState('');
-
+  const loadSequence = useRef(0);
 
   const reset = useCallback((next: string | null) => {
-        setPayload(null);
-        setActivities([]);
-        setState(next ? 'LOADING' : 'UNAVAILABLE');
-        setActivityState(next ? 'LOADING' : 'UNAVAILABLE');
-        setError(next ? '' : 'Connect and verify a wallet to load private wallet data.');
+    ++loadSequence.current; // Invalidate in-flight reads when the wallet principal changes.
+    setPayload(null);
+    setActivities([]);
+    setState(next ? 'LOADING' : 'UNAVAILABLE');
+    setActivityState(next ? 'LOADING' : 'UNAVAILABLE');
+    setError(next ? '' : 'Connect and verify a wallet to load private wallet data.');
   }, []);
   const { userId, sessionChecked } = useWalletSession(reset);
 
   const loadWallet = useCallback(async () => {
     if (!sessionChecked || !userId) return;
+    const currentLoad = ++loadSequence.current;
     setState('LOADING'); setActivityState('LOADING');
     const [walletResult, activityResult] = await loadWalletData('/wallet/overview', '/wallet/activity');
-    if (sessionPrincipalId() !== userId) return;
+    if (currentLoad !== loadSequence.current || sessionPrincipalId() !== userId) return;
     setPayload(walletResult.data);
     setState(walletResult.state);
     setError(walletResult.state === 'ERROR' ? 'Wallet data could not be loaded. Refresh to try again.' : '');
     setActivities(activityResult.data ?? []);
     setActivityState(activityResult.state);
   }, [sessionChecked, userId]);
-  useEffect(() => { void loadWallet(); }, [loadWallet]);
+  useEffect(() => {
+    void loadWallet();
+    const onFocus = () => { if (document.visibilityState === 'visible') void loadWallet(); };
+    const onVisible = () => { if (document.visibilityState === 'visible') void loadWallet(); };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisible);
+      ++loadSequence.current;
+    };
+  }, [loadWallet]);
 
   return { userId, sessionChecked, state, payload, activities, activityState, error, loadWallet };
 }
@@ -279,6 +294,30 @@ export default function WalletPage() {
   const { marketPairs, metal, shares, forex } = useMarketData();
   const [action, setAction] = useState<Action | null>(null);
   const [currency, setCurrency] = useState('');
+  const [optionsReturn, setOptionsReturn] = useState<string | null>(null);
+  const fundingActionOpened = useRef(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('from') !== 'options') return;
+    const symbol = params.get('symbol');
+    if (!symbol || !/^[A-Za-z0-9./_-]{1,30}$/.test(symbol)) return;
+    const back = new URLSearchParams({ symbol });
+    const stake = params.get('stake');
+    const duration = Number(params.get('duration'));
+    if (stake && /^(?:0|[1-9]\d*)(?:\.\d+)?$/.test(stake) && Number(stake) > 0) back.set('stake', stake);
+    if (Number.isInteger(duration) && duration > 0 && duration <= 3600) back.set('duration', String(duration));
+    back.set('side', params.get('side') === 'SHORT' ? 'SHORT' : 'LONG');
+    setOptionsReturn(`/dashboard/binary?${back.toString()}`);
+    setTab('Binary');
+  }, []);
+
+  useEffect(() => {
+    if (!optionsReturn || !userId || state !== 'LIVE' || fundingActionOpened.current) return;
+    fundingActionOpened.current = true;
+    setCurrency('USDT');
+    setAction('Transfer');
+  }, [optionsReturn, userId, state]);
 
   const root = record(payload);
   const assets = useMemo(() => readAssets(payload, tab), [payload, tab]);
@@ -302,7 +341,7 @@ export default function WalletPage() {
   return <PageShell>
     <header className="mx-auto mb-4 flex max-w-7xl items-center justify-between gap-3 pl-14 sm:pl-0">
       <div className="min-w-0"><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#48C0CC]">Financial control center</p><h1 className="mt-1 truncate text-xl font-semibold tracking-tight gradient-text sm:text-2xl">Wallet</h1><p className="mt-1 truncate text-xs text-[#8C8299]">Wallet accounts, assets and activity.</p></div>
-      <div className="flex shrink-0 items-center gap-2"><SecondaryButton onClick={() => void loadWallet()}><RefreshCw size={15} className="sm:mr-2" /><span className="sr-only sm:not-sr-only">Refresh</span></SecondaryButton></div>
+      <div className="flex shrink-0 items-center gap-2">{optionsReturn && <Link href={optionsReturn} className="inline-flex min-h-11 items-center rounded-lg border border-violet-300/20 px-3 text-xs font-semibold text-[#CFC4FF]">Return to Options</Link>}<SecondaryButton onClick={() => void loadWallet()}><RefreshCw size={15} className="sm:mr-2" /><span className="sr-only sm:not-sr-only">Refresh</span></SecondaryButton></div>
     </header>
     <WalletDashboardLayout>
       <WalletSummary root={root} state={state} valuation={valuation} />
@@ -315,7 +354,7 @@ export default function WalletPage() {
       </div></section>
       <DepositModal isOpen={action === 'Deposit'} onClose={() => setAction(null)} currencies={currencies} selectedCurrency={currency} onSelectCurrency={setCurrency} onCompleted={loadWallet} />
       <WithdrawModal isOpen={action === 'Withdraw'} onClose={() => setAction(null)} currencies={currencies} selectedCurrency={currency} onSelectCurrency={setCurrency} onCompleted={loadWallet} />
-      <TransferModal isOpen={action === 'Transfer'} onClose={() => setAction(null)} currencies={transferCurrencies} selectedCurrency={currency} onSelectCurrency={setCurrency} onCompleted={loadWallet} />
+      <TransferModal isOpen={action === 'Transfer'} onClose={() => setAction(null)} currencies={transferCurrencies} selectedCurrency={currency} onSelectCurrency={setCurrency} initialDestinationScope={optionsReturn ? 'BINARY' : undefined} onCompleted={loadWallet} />
       <ConvertModal isOpen={action === 'Convert'} onClose={() => setAction(null)} currencies={currencies} selectedCurrency={currency} onCompleted={loadWallet} />
     </WalletDashboardLayout>
   </PageShell>;
