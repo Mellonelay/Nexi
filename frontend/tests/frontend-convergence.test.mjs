@@ -62,10 +62,13 @@ test('MA EMA BOLL RSI MACD calculations preserve flat and rising-series semantic
 });
 
 test('Options fail closed without both configured stake limits', () => {
-  const input = { authenticated: true, backendConfigured: true, amount: 10, currentPrice: 20, durationEnabled: true, payoutRate: 2 };
+  const input = { authenticated: true, backendConfigured: true, optionsAccountActive: true, optionsAvailableBalance: 10, amount: 10, currentPrice: 20, durationEnabled: true, payoutRate: 2 };
   assert.equal(binaryOrderReady(input), false);
   assert.equal(binaryOrderReady({ ...input, minimumAmount: 5, maximumAmount: 20 }), true);
   assert.equal(binaryOrderReady({ ...input, minimumAmount: 20, maximumAmount: 5 }), false);
+  assert.equal(binaryOrderReady({ ...input, optionsAccountActive: false, minimumAmount: 5, maximumAmount: 20 }), false);
+  assert.equal(binaryOrderReady({ ...input, optionsAvailableBalance: 0, minimumAmount: 5, maximumAmount: 20 }), false);
+  assert.equal(binaryOrderReady({ ...input, optionsAvailableBalance: 9.99, minimumAmount: 5, maximumAmount: 20 }), false);
   assert.doesNotMatch(read('dashboard/binary/page.tsx'), /raw > 1 \? raw \/ 100/);
 });
 

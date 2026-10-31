@@ -231,6 +231,7 @@ function PublicRoutesPanel({ routes }: { routes: PublicRoute[] }) {
               variant="ghost"
               size="icon"
               data-testid={`route-up-${r.id}`}
+              aria-label={`Move ${r.label} up`}
               disabled={!canEdit || sorted[0]?.id === r.id}
               onClick={() => move(r.id, -1)}
             >
@@ -240,6 +241,7 @@ function PublicRoutesPanel({ routes }: { routes: PublicRoute[] }) {
               variant="ghost"
               size="icon"
               data-testid={`route-down-${r.id}`}
+              aria-label={`Move ${r.label} down`}
               disabled={!canEdit || sorted[sorted.length - 1]?.id === r.id}
               onClick={() => move(r.id, 1)}
             >

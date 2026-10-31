@@ -397,6 +397,8 @@ export default function BinaryPage() {
   const ready = binaryOrderReady({
     authenticated: Boolean(userId),
     backendConfigured: submissionConfigured,
+    optionsAccountActive: optionWalletBalance.state === 'ZERO' || optionWalletBalance.state === 'POSITIVE',
+    optionsAvailableBalance: optionWalletBalance.state === 'POSITIVE' ? optionWalletBalance.available : null,
     amount,
     currentPrice,
     durationEnabled: Boolean(selectedDuration?.enabled),
@@ -416,6 +418,16 @@ export default function BinaryPage() {
     ? 'Options are unavailable right now.'
     : !userId
       ? 'Verify your wallet to review and submit an options position.'
+      : optionWalletBalance.state === 'UNSUPPORTED'
+        ? 'Options account is unavailable. Use Wallet → Transfer to open or fund Options before trading.'
+        : optionWalletBalance.state === 'ERROR'
+          ? 'Options wallet availability could not be checked. Try again before trading.'
+          : optionWalletBalance.state === 'LOADING' || optionWalletBalance.state === 'UNAUTHENTICATED'
+            ? 'Checking Options wallet availability…'
+          : optionWalletBalance.state === 'ZERO'
+            ? 'Options wallet has no available USDT. Use Wallet → Transfer to add funds before trading.'
+          : optionWalletBalance.state === 'POSITIVE' && stake !== null && stake > Number(optionWalletBalance.available)
+            ? 'Stake exceeds the available Options balance.'
       : currentPrice === null
         ? 'A fresh market price is required before submission.'
         : !selectedDuration?.enabled

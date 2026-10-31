@@ -99,6 +99,14 @@ export function positiveNumber(value: unknown): number | null {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }
 
+function optionsStakeWithinBalance(amount: number | null, accountActive: boolean, available: unknown): amount is number {
+  const optionsAvailableBalance = positiveNumber(available);
+  return accountActive
+    && amount !== null
+    && optionsAvailableBalance !== null
+    && amount <= optionsAvailableBalance;
+}
+
 export function spotOrderReady(input: {
   authenticated: boolean;
   backendConfigured: boolean;
@@ -119,6 +127,8 @@ export function spotOrderReady(input: {
 export function binaryOrderReady(input: {
   authenticated: boolean;
   backendConfigured: boolean;
+  optionsAccountActive: boolean;
+  optionsAvailableBalance: unknown;
   amount: unknown;
   currentPrice: unknown;
   durationEnabled: boolean;
@@ -131,7 +141,7 @@ export function binaryOrderReady(input: {
   const maximumAmount = positiveNumber(input.maximumAmount);
   return input.authenticated
     && input.backendConfigured
-    && amount !== null
+    && optionsStakeWithinBalance(amount, input.optionsAccountActive, input.optionsAvailableBalance)
     && positiveNumber(input.currentPrice) !== null
     && input.durationEnabled
     && positiveNumber(input.payoutRate) !== null
