@@ -20,7 +20,7 @@ Admin source is `Admin/`; Public source `frontend/`; backend `backend/`. This is
 
 TanStack Start is a full-stack React framework, not merely a SPA router. Its loaders may execute in server and client contexts; keep credentials/secrets in deliberate server-only primitives and retain NestJS as NEXI's business/API authority. Do not create parallel Start database/financial endpoints simply because server functions are available.
 
-## 3. Source route inventory: 33 sidebar destinations + 1 non-sidebar named route
+## 3. Historical source route inventory and current functional acceptance
 
 This inventory comes from `RoutePath` in `src/admin/config/navigation.ts`, reconciled to `src/routes/*.tsx`. There are **33** registered sidebar operator destinations and **34** named route files besides `index.tsx` and `__root.tsx`. The earlier browser-visible **33** excluded `/reconciliation`, which has a route file but is currently absent from NAV_GROUPS/RoutePath. `src/routes/index.tsx` is the index path and `__root.tsx` is the root, not additional sidebar destinations.
 
@@ -35,7 +35,7 @@ This inventory comes from `RoutePath` in `src/admin/config/navigation.ts`, recon
 | Communications | `/support`, `/messages`, `/announcements`, `/learn`, `/notifications` | Distinguish two-way private conversations, tickets, outbound notifications and content publication |
 | Administration & Settings | `/admins`, `/roles`, `/approvals`, `/audit`, `/frontend-control`, `/navigation`, `/localization`, `/feature-flags`, `/health`, `/maintenance` | Public configuration, governance, system operations |
 
-Total mapped sidebar destinations: 1 + 3 + 5 + 5 + 2 + 2 + 5 + 10 = **33**. `/reconciliation` is the **34th named filesystem route**, not a sidebar entry. The intended navigation is eight primary workspaces with tabs and contextual cross-links, not loss of any existing function. Keep all current URLs stable until an approved migration maps redirects/deep links.
+Historical NAV_GROUPS paths: 1 + 3 + 5 + 5 + 2 + 2 + 5 + 10 = **33**. Current acceptance: 31 active sidebar destinations + contextual `/sandbox` = **32 functional destinations**. Retired `/support` is compatibility-only. `/reconciliation` is the **34th named filesystem route**, not a sidebar entry. The intended navigation is eight primary workspaces with tabs and contextual cross-links, not loss of any existing function. Keep all current URLs stable until an approved migration maps redirects/deep links.
 
 ## 4. Future TanStack routing contract (requirements, not existing implementation)
 
@@ -61,13 +61,15 @@ Total mapped sidebar destinations: 1 + 3 + 5 + 5 + 2 + 2 + 5 + 10 = **33**. `/re
 
 ## 6. Existing-vs-proposed and acceptance
 
-**Source-observed**: 33 sidebar destination paths plus one hidden /reconciliation named route; `/reconciliation` route outside menu; TanStack Start/Router stack, generated tree, root providers; `/binary` pair/position tabs; existing provider boundary.
+**Historical source-observed**: 33 NAV_GROUPS paths plus one hidden /reconciliation named route; `/reconciliation` route outside menu; TanStack Start/Router stack, generated tree, root providers; `/binary` pair/position tabs; existing provider boundary.
 
 **Proposed, requiring owner approval and backend contract proof**: eight-workspace regrouping, new client Binary defaults, per-open-position overrides, simulated market projection/chart replay, additional messaging UX, possible route-level loader/cache refactoring and referral/VIP navigation.
 
 **Unknown**: exact deployed source identity, current persisted Binary settings, complete simulation API/schema, realtime event contracts, 34-route operator visibility by role, page-level browser acceptance. Historical DEXI/Axue behavior is a reference, not present-NEXI runtime proof.
 
-Completion for future implementation: preserve all 33 existing sidebar destinations and the additional /reconciliation deep link; type-safe file routing, generated tree, URL navigation and refresh; provider-backed data and permission enforcement; source tests/build, scoped API readback and separate browser proof. SOURCE_IMPLEMENTED, TESTED, INTEGRATED, DEPLOYED, BROWSER_VERIFIED, OWNER_ACCEPTED are different statuses.
+Current acceptance: no ticket create/reply/lifecycle; verify `/support` compatibility, Support help/contact and Admin Telegram/email settings, and Messages separately. `/sandbox` contextual; `/reconciliation` hidden without durable authority.
+
+Completion for future implementation: preserve 32 functional destinations plus retired `/support` compatibility and the additional /reconciliation deep link; type-safe file routing, generated tree, URL navigation and refresh; provider-backed data and permission enforcement; source tests/build, scoped API readback and separate browser proof. SOURCE_IMPLEMENTED, TESTED, INTEGRATED, DEPLOYED, BROWSER_VERIFIED, OWNER_ACCEPTED are different statuses.
 
 ## 7. Documentation references
 
