@@ -2,20 +2,20 @@
 
 - [x] Reuse prior established financial, notification/queue, Backend/Public TypeScript, NestJS and source proof from `NEXI_PROOF_REUSE_REGISTER.md`; do not rerun unchanged tests.
 - [x] Correct stale Communications admin-notification persisted-record fixture; focused Jest 22/22 PASS; production idempotency guard unchanged.
-- [ ] Final source acceptance remains bounded: earlier isolated wallet SQLite integration timeout has no pass; production Valkey, funded Binary, authorized Admin/Messages and mobile remain independent acceptance evidence gaps. Do not call this 113/113 runtime accepted.
+- [x] Previously stalled wallet SQLite integration suite: **20/20 PASS** at source `8cfcf594` using isolated Jest config with `--forceExit` (clean handle teardown not independently established). Production Valkey, funded Binary, authorized Admin/Messages and mobile remain external acceptance evidence gaps; not 113/113 runtime accepted.
 - [ ] Build/deploy withheld under owner source-first direction. No production migration or economic operations authorized.
 
 ## 2026-11-01 source-batch handoff — owner source-before-tests rule
 
 - [x] SOURCE_IMPLEMENTED CANDIDATE: Preserved established Batch 1 identity/account provisioning and Batch 3 trading engines. Integrated remaining Batch 2/4 withdrawal event causality, replay-intent and customer notification producer/consumer corrections; addressed three AppController business-logic findings and Communications provider DI without new schema/modules. See `tasks/evidence/nexi-five-batch-source-reconciliation-20261101.md`.
-- [ ] FINAL SOURCE VERIFICATION FAN-IN: **Do not run per-edit tests/typechecks/doctor scans.** After the source-only commit, run one targeted invalidated test/typecheck/static suite group, repair actual failures, then reconcile results in the proof register. This check has NOT run on the current complete patch.
+- [x] FINAL SOURCE VERIFICATION FAN-IN (scoped): Source committed; reused 32/32 notification/queue and 53/53 gateway; fixed the stale Communications fixture (22/22 PASS); final isolated SQLite suite 20/20 PASS; Backend TS PASS, post-correction NestJS Doctor zero errors. No additional broad re-test of unchanged code. See the proof reuse register; product-wide runtime acceptance remains open.
 - [ ] RELEASE SEPARATELY AUTHORIZED: Do not build/deploy until final source verification and explicit release authority. Funded Binary, restricted Admin role, controlled Messages write and authenticated mobile are acceptance prerequisites, not automatic source defects.
 
 ## CURRENT 2026-11-01 — source-first workflow recovery; release held
 
 - [x] AUDIT — Reconstructed the raw 5,363-operation SentinelX audit and complete 314-turn owner OPML; classified failed/repeated commands, skill-read evidence, and genuinely overlapping Graphify/Fallow jobs. See [workflow recovery receipt](evidence/nexi-sentinelx-workflow-recovery-20261101.md).
 - [x] CONTROL — Applied owner correction: knowledge/framework and causal source inspection precede edits; complete coherent cross-surface source batches before one invalidated focused verification fan-in. Preserve accepted evidence. No build/deploy until source integration closure and a separate release decision.
-- [x] SOURCE IN PROGRESS — Identified and locally corrected withdrawal Admin audit/outbox events emitted despite no state transition, plus approval replay-intent validation; prepared focused test assertions. Changes remain uncommitted and untested pending source-campaign fan-in; see receipt for exact files and rationale.
+- [x] SOURCE COMMITTED — Withdrawal approval/review event causality, immutable replay-intent validation, notification coverage, and relevant source tests committed by `fd26369`; subsequent fixture correction committed by `8cfcf594`. Exact focused results in the proof reuse register. No latest source build/deploy performed.
 - [ ] OPEN — Finish remaining demonstrable source-contract gaps, then one focused change-invalidated verification pass. Do not convert 113 v4.0 requirements into fabricated defects or acceptance claims. Leave runtime/owner authorization dependencies below unchanged.
 - [ ] EVOLVER — Live `@nexi-evolver` MCPC calls timed out twice; procedural continuity saved through SentinelX context `sxc_JM4DMNEB` rev10, no trusted learning promotion established.
 
