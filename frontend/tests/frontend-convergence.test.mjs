@@ -202,3 +202,14 @@ test('Settings uses client navigation for internal support links and determinist
   assert.doesNotMatch(settings, /<a[^>]*href="\/dashboard\/support"/);
   assert.match(settings, /timeZone: [\'"]UTC[\'"], timeZoneName: [\'"]short[\'"]/);
 });
+
+
+test('Options navigation never clears principal-scoped positions without reloading them', () => {
+  const source = read('dashboard/binary/page.tsx');
+  const routeEffect = source.split('chartPairRef.current = normalizedPair;', 2)[1].split('}, [normalizedPair, searchParams]);', 1)[0];
+  assert.doesNotMatch(routeEffect, /setActivePositions\(\[\]\)/);
+  assert.doesNotMatch(routeEffect, /setHistory\(\[\]\)/);
+  assert.match(source, /if \(previousUserId\.current !== next\)/);
+  assert.match(source, /setActivePositions\(\[\]\)/);
+  assert.match(source, /setHistory\(\[\]\)/);
+});

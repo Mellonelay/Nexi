@@ -200,8 +200,8 @@ export default function BinaryPage() {
     setState('DRAFT');
     setConfirmationOpen(false);
     setFundingOpen(false);
-    setActivePositions([]);
-    setHistory([]);
+    // Position collections are principal-scoped, not route-scoped. Keep the loaded
+    // history when pair or funding-return query parameters change.
     setSelectedResult(null);
     setSelectedChartTradeId(null);
     setFeedback(null);
