@@ -43,4 +43,12 @@ describe('Existing Inbox and durable workflow queue consumption',()=>{
   expect(ingress).toHaveLength(2);
   expect(notify).toHaveBeenCalledTimes(2);
  });
+ it.each(['DEPOSIT_REJECTED','WITHDRAWAL_APPROVED'])('routes committed %s to the customer event handler', async type => {
+  const notify = jest.fn(async () => undefined);
+  consumer = new LocalQueueConsumer({recordQueueIngress:async(...args:any[])=>{ingress.push(args);return {replayed:false};}} as any,store,engine,()=>now,notify);
+  const outboxEvent={...event,type,idempotencyKey:`event:${type}`,payload:{userId:'user-1',asset:'USDT'}};
+  await consumer.execute(outboxEvent,context);
+  expect(notify).toHaveBeenCalledWith(outboxEvent);
+  expect(ingress).toHaveLength(1);
+ });
 });

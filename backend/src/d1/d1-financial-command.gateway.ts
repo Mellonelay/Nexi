@@ -6286,19 +6286,34 @@ export class D1FinancialCommandGateway {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     if (!idempotencyKey?.trim())
       throw new BadRequestException("Idempotency key is required");
+    const prior = await this.bridge.select<{ adminId: string; details: string }>(
+      `SELECT "adminId","details" FROM "AdminAuditLog" WHERE "action"='WITHDRAWAL_APPROVED' AND "target"=? AND json_extract("details",'$.idempotencyKey')=? LIMIT 1`,
+      [requestId, idempotencyKey],
+    );
+    if (prior.results[0]) {
+      let details: Record<string, unknown>;
+      try { details = JSON.parse(String(prior.results[0].details ?? "{}")) as Record<string, unknown>; }
+      catch { throw new BadRequestException("Withdrawal approval idempotency record is invalid"); }
+      if (prior.results[0].adminId !== adminId || details.reason !== reason)
+        throw new BadRequestException("Withdrawal approval idempotency key was already used");
+      const withdrawal = await this.getWithdrawalById(requestId);
+      if (!withdrawal) throw new NotFoundException("Withdrawal not found");
+      return withdrawal;
+    }
+    const withdrawal = await this.getWithdrawalById(requestId);
+    if (!withdrawal) throw new NotFoundException("Withdrawal not found");
     const result = await this.bridge.batch([
       {
         sql: `UPDATE "Gate2Withdrawal" SET "state"='APPROVED',"reviewReason"=?,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "state"='PENDING_REVIEW'`,
         params: [reason, requestId],
       },
       {
-        sql: `INSERT OR IGNORE INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") SELECT ?,?, 'WITHDRAWAL_APPROVED',?,?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "Gate2Withdrawal" WHERE "id"=? AND "state"='APPROVED')`,
+        sql: `INSERT OR IGNORE INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") SELECT ?,?, 'WITHDRAWAL_APPROVED',?,?,CURRENT_TIMESTAMP WHERE changes()=1`,
         params: [
           randomUUID(),
           adminId,
           requestId,
           JSON.stringify({ reason, idempotencyKey }),
-          requestId,
         ],
       },
       this.eventOutboxStatement({
@@ -6307,7 +6322,8 @@ export class D1FinancialCommandGateway {
         aggregateId: requestId,
         eventType: "WITHDRAWAL_APPROVED",
         correlationId: idempotencyKey,
-        payload: { adminId, reason },
+        payload: { userId: String(withdrawal.userId), asset: String(withdrawal.asset), adminId, reason },
+        guard: { sql: "changes()=1", params: [] },
       }),
     ]);
     this.requireChanges(result, 0, "D1 withdrawal approval");
@@ -6345,8 +6361,8 @@ export class D1FinancialCommandGateway {
         params: [reason, requestId],
       },
       {
-        sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") SELECT ?,?,'WITHDRAWAL_REVIEW_REQUESTED',?,?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "Gate2Withdrawal" WHERE "id"=? AND "state"='ADDITIONAL_REVIEW')`,
-        params: [randomUUID(), adminId, requestId, JSON.stringify({ reason, idempotencyKey }), requestId],
+        sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") SELECT ?,?,'WITHDRAWAL_REVIEW_REQUESTED',?,?,CURRENT_TIMESTAMP WHERE changes()=1`,
+        params: [randomUUID(), adminId, requestId, JSON.stringify({ reason, idempotencyKey })],
       },
       this.eventOutboxStatement({
         idempotencyKey: `event:withdrawal:review:${requestId}:${idempotencyKey}`,
@@ -6355,7 +6371,7 @@ export class D1FinancialCommandGateway {
         eventType: "WITHDRAWAL_REVIEW_REQUESTED",
         correlationId: idempotencyKey,
         payload: { adminId, reason },
-        guard: { sql: `EXISTS (SELECT 1 FROM "Gate2Withdrawal" WHERE "id"=? AND "state"='ADDITIONAL_REVIEW')`, params: [requestId] },
+        guard: { sql: "changes()=1", params: [] },
       }),
     ]);
     this.requireChanges(result, 0, "D1 withdrawal review request");
@@ -6395,8 +6411,8 @@ export class D1FinancialCommandGateway {
         params: [reason, requestId],
       },
       {
-        sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") SELECT ?,?,'WITHDRAWAL_REVIEW_RETURNED',?,?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "Gate2Withdrawal" WHERE "id"=? AND "state"='PENDING_REVIEW')`,
-        params: [randomUUID(), adminId, requestId, JSON.stringify({ reason, idempotencyKey }), requestId],
+        sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") SELECT ?,?,'WITHDRAWAL_REVIEW_RETURNED',?,?,CURRENT_TIMESTAMP WHERE changes()=1`,
+        params: [randomUUID(), adminId, requestId, JSON.stringify({ reason, idempotencyKey })],
       },
       this.eventOutboxStatement({
         idempotencyKey: `event:withdrawal:review-return:${requestId}:${idempotencyKey}`,
@@ -6405,7 +6421,7 @@ export class D1FinancialCommandGateway {
         eventType: "WITHDRAWAL_REVIEW_RETURNED",
         correlationId: idempotencyKey,
         payload: { adminId, reason },
-        guard: { sql: `EXISTS (SELECT 1 FROM "Gate2Withdrawal" WHERE "id"=? AND "state"='PENDING_REVIEW')`, params: [requestId] },
+        guard: { sql: "changes()=1", params: [] },
       }),
     ]);
     this.requireChanges(result, 0, "D1 withdrawal review return");

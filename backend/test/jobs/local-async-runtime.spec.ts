@@ -159,6 +159,8 @@ describe('Committed customer financial event notifications', () => {
   beforeEach(() => sendSystemNotification.mockClear());
   it.each([
     ['DEPOSIT_CREDITED', {userId:'user-1',amount:'5',asset:'USDT'}, 'Deposit confirmed'],
+    ['DEPOSIT_REJECTED', {userId:'user-1'}, 'Deposit rejected'],
+    ['WITHDRAWAL_APPROVED', {userId:'user-1',asset:'USDT'}, 'Withdrawal approved'],
     ['WITHDRAWAL_RESERVED', {userId:'user-1',amount:'5',asset:'USDT',network:'Ethereum'}, 'Withdrawal requested'],
     ['WITHDRAWAL_SETTLED', {userId:'user-1',amount:'5',asset:'USDT'}, 'Withdrawal completed'],
     ['BINARY_POSITION_OPENED', {userId:'user-1',side:'LONG',pair:'BTCUSDT',stake:'5'}, 'Options position opened'],

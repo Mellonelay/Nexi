@@ -162,6 +162,10 @@ export class LocalAsyncRuntimeService implements OnModuleInit, OnModuleDestroy {
     switch (event.type) {
       case 'DEPOSIT_CREDITED':
         title = 'Deposit confirmed'; body = `${field('amount')} ${field('asset')} credited to Funding.`; break;
+      case 'DEPOSIT_REJECTED':
+        title = 'Deposit rejected'; body = 'Your deposit was rejected. Review your deposit activity for details.'; break;
+      case 'WITHDRAWAL_APPROVED':
+        title = 'Withdrawal approved'; body = `Your ${field('asset')} withdrawal was approved for processing.`; break;
       case 'WITHDRAWAL_RESERVED':
         title = 'Withdrawal requested'; body = `${field('amount')} ${field('asset')} withdrawal requested on ${field('network')}.`; break;
       case 'WITHDRAWAL_SETTLED':

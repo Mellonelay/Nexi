@@ -265,9 +265,9 @@ describe("D1FinancialCommandGateway", () => {
           { meta: { changes: 1 } },
         ],
       }),
-      select: jest.fn().mockResolvedValue({
-        results: [{ id: "withdrawal-1", state: "APPROVED" }],
-      }),
+      select: jest.fn(async (sql: string) => ({
+        results: sql.includes('FROM "AdminAuditLog"') ? [] : [{ id: "withdrawal-1", state: "APPROVED" }],
+      })),
     });
     const gateway = new D1FinancialCommandGateway(bridge);
     await expect(
@@ -282,7 +282,9 @@ describe("D1FinancialCommandGateway", () => {
       .calls[0][0] as D1BridgeBatchStatement[];
     expect(statements[0].sql).toContain(`AND "state"='PENDING_REVIEW'`);
     expect(statements[1].sql).toContain("AdminAuditLog");
+    expect(statements[1].sql).toContain("WHERE changes()=1");
     expect(statements[2].sql).toContain("EventOutbox");
+    expect(statements[2].sql).toContain("WHERE changes()=1");
   });
 
   it("marks overdue loans and emits one idempotent outbox event per transition", async () => {
@@ -1359,7 +1361,7 @@ describe("D1FinancialCommandGateway", () => {
     const approvalEvent = statements.at(-1)!;
     expect(approvalEvent.sql).toContain('INSERT OR IGNORE INTO "EventOutbox"');
     expect(approvalEvent.params).toContain(
-      JSON.stringify({ loanId: loan.id, adminId: "admin-1", reason: "Approved after review" }),
+      JSON.stringify({ loanId: loan.id, userId: loan.userId, adminId: "admin-1", reason: "Approved after review" }),
     );
   });
 

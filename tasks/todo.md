@@ -1,3 +1,17 @@
+## 2026-11-01 source-batch handoff — owner source-before-tests rule
+
+- [x] SOURCE_IMPLEMENTED CANDIDATE: Preserved established Batch 1 identity/account provisioning and Batch 3 trading engines. Integrated remaining Batch 2/4 withdrawal event causality, replay-intent and customer notification producer/consumer corrections; addressed three AppController business-logic findings and Communications provider DI without new schema/modules. See `tasks/evidence/nexi-five-batch-source-reconciliation-20261101.md`.
+- [ ] FINAL SOURCE VERIFICATION FAN-IN: **Do not run per-edit tests/typechecks/doctor scans.** After the source-only commit, run one targeted invalidated test/typecheck/static suite group, repair actual failures, then reconcile results in the proof register. This check has NOT run on the current complete patch.
+- [ ] RELEASE SEPARATELY AUTHORIZED: Do not build/deploy until final source verification and explicit release authority. Funded Binary, restricted Admin role, controlled Messages write and authenticated mobile are acceptance prerequisites, not automatic source defects.
+
+## CURRENT 2026-11-01 — source-first workflow recovery; release held
+
+- [x] AUDIT — Reconstructed the raw 5,363-operation SentinelX audit and complete 314-turn owner OPML; classified failed/repeated commands, skill-read evidence, and genuinely overlapping Graphify/Fallow jobs. See [workflow recovery receipt](evidence/nexi-sentinelx-workflow-recovery-20261101.md).
+- [x] CONTROL — Applied owner correction: knowledge/framework and causal source inspection precede edits; complete coherent cross-surface source batches before one invalidated focused verification fan-in. Preserve accepted evidence. No build/deploy until source integration closure and a separate release decision.
+- [x] SOURCE IN PROGRESS — Identified and locally corrected withdrawal Admin audit/outbox events emitted despite no state transition, plus approval replay-intent validation; prepared focused test assertions. Changes remain uncommitted and untested pending source-campaign fan-in; see receipt for exact files and rationale.
+- [ ] OPEN — Finish remaining demonstrable source-contract gaps, then one focused change-invalidated verification pass. Do not convert 113 v4.0 requirements into fabricated defects or acceptance claims. Leave runtime/owner authorization dependencies below unchanged.
+- [ ] EVOLVER — Live `@nexi-evolver` MCPC calls timed out twice; procedural continuity saved through SentinelX context `sxc_JM4DMNEB` rev10, no trusted learning promotion established.
+
 ## CURRENT 2026-10-31 — Stage B implementation and release checkpoint
 
 - [x] SOURCE_FIXED — Replaced the mobile hamburger with the permission-filtered eight-workspace selector, preserved contextual navigation/session controls, and removed the inert global search. Added focused navigation tests and the package script; no dependency/lockfile change.

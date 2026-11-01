@@ -74,7 +74,9 @@ export class FinancialOperationsService {
     if (!reason?.trim()) throw new BadRequestException('Review reason is required');
     const withdrawal: any = await this.d1.getWithdrawalById(id);
     if (!withdrawal) throw new NotFoundException('Withdrawal not found');
-    if (withdrawal.state === Gate2WithdrawalState.APPROVED) return { withdrawal, replayed: true, providerLive: false };
+    if (withdrawal.state === Gate2WithdrawalState.APPROVED) {
+      return { withdrawal: await this.d1.approveWithdrawal(id, reason, adminId, idempotencyKey), replayed: true, providerLive: false };
+    }
     if (withdrawal.state !== Gate2WithdrawalState.PENDING_REVIEW) throw new BadRequestException('Withdrawal is not pending review');
     return { withdrawal: await this.d1.approveWithdrawal(id, reason, adminId, idempotencyKey), replayed: false, providerLive: false };
   }

@@ -4,6 +4,8 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  Optional,
+  ServiceUnavailableException,
 } from "@nestjs/common";
 import { Role, Prisma } from "../prisma/d1-client";
 import { createHash } from "crypto";
@@ -72,8 +74,13 @@ export class CommunicationsService {
     private readonly outbox: EventOutboxService,
     private readonly d1Communications: D1CommunicationsCommandGateway,
     private readonly redis: RedisService,
-    private readonly supportAttachments: SupportAttachmentStorageService = new SupportAttachmentStorageService(),
+    @Optional() private readonly supportAttachments?: SupportAttachmentStorageService,
   ) {}
+
+  private get attachmentStorage(): SupportAttachmentStorageService {
+    if (!this.supportAttachments) throw new ServiceUnavailableException("Support attachment storage provider is unavailable");
+    return this.supportAttachments;
+  }
 
   private get database(): any {
     return this.d1;
@@ -326,14 +333,14 @@ export class CommunicationsService {
   async uploadSupportAttachment(userId: string, file?: SupportUpload): Promise<SupportAttachment> {
     const identity = await this.supportConversation(userId, true);
     const referenced = await this.supportAttachmentReferences(identity.conversationId);
-    await this.supportAttachments.cleanupExpired(userId, referenced);
-    return this.supportAttachments.upload(userId, file, referenced);
+    await this.attachmentStorage.cleanupExpired(userId, referenced);
+    return this.attachmentStorage.upload(userId, file, referenced);
   }
 
   async getSupportAttachment(userId: string, id: string) {
     const identity = await this.supportConversation(userId, false);
     await this.assertSupportAttachmentLinked(identity.conversationId, id);
-    return this.supportAttachments.read(userId, id);
+    return this.attachmentStorage.read(userId, id);
   }
 
   async uploadAdminSupportAttachment(userId: string, file?: SupportUpload): Promise<SupportAttachment> {
@@ -341,8 +348,8 @@ export class CommunicationsService {
     if (!recipient) throw new NotFoundException("Client not found");
     const identity = await this.supportConversation(userId, false);
     const referenced = await this.supportAttachmentReferences(identity.conversationId);
-    await this.supportAttachments.cleanupExpired(userId, referenced);
-    return this.supportAttachments.upload(userId, file, referenced);
+    await this.attachmentStorage.cleanupExpired(userId, referenced);
+    return this.attachmentStorage.upload(userId, file, referenced);
   }
 
   async getAdminSupportAttachment(userId: string, id: string) {
@@ -350,7 +357,7 @@ export class CommunicationsService {
     if (!recipient) throw new NotFoundException("Client not found");
     const identity = await this.supportConversation(userId, false);
     await this.assertSupportAttachmentLinked(identity.conversationId, id);
-    return this.supportAttachments.read(userId, id);
+    return this.attachmentStorage.read(userId, id);
   }
 
   async sendSupportMessage(userId: string, body: string, idempotencyKey: string, attachmentIds: string[] = []) {
@@ -373,7 +380,9 @@ export class CommunicationsService {
       }
       return this.supportMessageResponse(existing);
     }
-    const attachments = await this.supportAttachments.resolve(userId, attachmentIds);
+    const attachments = attachmentIds.length
+      ? await this.attachmentStorage.resolve(userId, attachmentIds)
+      : [];
     await this.supportConversation(userId, true);
     const message = await this.sendMessage(userId, NEXI_SUPPORT_CHANNEL_ID, messageBody, idempotencyKey, attachments.length ? attachments : undefined);
     return this.supportMessageResponse(message);
@@ -731,7 +740,9 @@ export class CommunicationsService {
     if (input.conversationId !== identity.conversationId) throw new ForbiddenException("Admin reply does not match the customer's support conversation");
     const conversation = await this.database.messageConversation.findUnique({ where: { id: identity.conversationId } });
     if (!conversation || conversation.state !== "ACTIVE") throw new NotFoundException("Support conversation not found");
-    const attachments = await this.supportAttachments.resolve(input.recipientId, input.attachmentIds ?? []);
+    const attachments = input.attachmentIds?.length
+      ? await this.attachmentStorage.resolve(input.recipientId, input.attachmentIds)
+      : [];
     return { senderId: NEXI_SUPPORT_CHANNEL_ID, attachments: attachments.length ? attachments : undefined };
   }
 

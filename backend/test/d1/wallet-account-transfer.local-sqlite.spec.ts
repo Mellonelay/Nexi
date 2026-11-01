@@ -498,6 +498,14 @@ describe('financial operations on local SQLite', () => {
     expect(returned.withdrawal.state).toBe('PENDING_REVIEW');
     expect((await operations.returnWithdrawalFromReview(withdrawalId, 'compliance review complete', 'admin-1', 'withdrawal-review-return-001')).replayed).toBe(true);
     expect((await operations.approveWithdrawal(withdrawalId, 'identity and destination reviewed', 'admin-1', 'withdrawal-approve-001')).withdrawal.state).toBe('APPROVED');
+    expect((await operations.approveWithdrawal(withdrawalId, 'identity and destination reviewed', 'admin-1', 'withdrawal-approve-001')).replayed).toBe(true);
+    await expect(operations.approveWithdrawal(withdrawalId, 'changed reason', 'admin-1', 'withdrawal-approve-001')).rejects.toThrow('idempotency key was already used');
+    await expect(operations.approveWithdrawal(withdrawalId, 'identity and destination reviewed', 'admin-1', 'withdrawal-approve-different-key')).rejects.toThrow();
+    const approvalAudits = await bridge.select<{ count: number }>(
+      'SELECT count(*) AS count FROM "AdminAuditLog" WHERE "action"=? AND "target"=?',
+      ['WITHDRAWAL_APPROVED', withdrawalId],
+    );
+    expect(approvalAudits.results[0].count).toBe(1);
     expect((await operations.settleWithdrawal(withdrawalId, 'deterministic:receipt-001', 'admin-1', 'controlled non-live settlement')).withdrawal.state).toBe('SETTLED');
     expect((await operations.settleWithdrawal(withdrawalId, 'deterministic:receipt-001', 'admin-1', 'controlled non-live settlement')).replayed).toBe(true);
     await expect(bridge.select<{ available: string; locked: string }>(

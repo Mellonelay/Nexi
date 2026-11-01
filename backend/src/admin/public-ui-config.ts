@@ -231,3 +231,137 @@ export function assertPublicBannerSettings(value: string): void {
   if (new Set(ids).size !== ids.length)
     throw new BadRequestException("Public banner IDs must be unique");
 }
+
+const PUBLIC_NAVIGATION_TARGETS = new Set([
+  "/dashboard",
+  "/dashboard/spot",
+  "/dashboard/binary",
+  "/dashboard/wallet",
+  "/dashboard/mining",
+  "/dashboard/loans",
+  "/dashboard/messages",
+  "/dashboard/announcement",
+  "/dashboard/learn",
+  "/dashboard/support",
+  "/dashboard/settings",
+]);
+
+const PUBLIC_QUOTES_CATEGORY_DEFAULTS = [
+  { id: "Crypto", visible: true, order: 1 },
+  { id: "Metals", visible: true, order: 2 },
+  { id: "Forex", visible: true, order: 3 },
+  { id: "Stocks", visible: true, order: 4 },
+];
+const PUBLIC_QUOTES_CATEGORIES = new Set(
+  PUBLIC_QUOTES_CATEGORY_DEFAULTS.map((category) => category.id),
+);
+const PUBLIC_LOCALES = new Set(["en", "zh-CN", "ko", "ru", "es", "ms"]);
+const PUBLIC_UI_MESSAGE_KEYS = new Set([
+  "dashboard", "spot", "options", "wallet", "earn", "quotesHub", "marketDiscovery",
+  "discoveryDescription", "activePair", "marketDataUnavailable", "filter", "openQuotesHub",
+  "signIn", "createAccount", "exploreOpportunities", "loadingMarketCatalog",
+  "noInstrumentsAvailable", "asset", "lastPrice", "change24h", "volume24h", "primary",
+  "communicationContent", "accountSystem", "spotTrading", "optionsBinary", "earnMining", "loan",
+  "messages", "announcements", "learn", "support", "settings", "language", "logout",
+  "guestAccount", "connectUnlock", "tradingWorkspace", "openApplicationMenu",
+  "closeApplicationMenu", "backToApplicationMenu", "languageSelection", "notifications",
+  "searchMarkets", "profile", "score", "vipLevel", "userStatus", "loadingAccount",
+  "accountUnavailable",
+]);
+
+
+export function normalizePublicNavigation(row: { value: string } | null) {
+    if (!row) return null;
+    try {
+      const value: unknown = JSON.parse(row.value);
+      if (!Array.isArray(value)) return [];
+      return value.flatMap((entry: unknown) => {
+        if (typeof entry !== "object" || entry === null) return [];
+        const item = entry as Record<string, unknown>;
+        if (
+          typeof item.id !== "string" ||
+          !PUBLIC_NAVIGATION_TARGETS.has(String(item.target)) ||
+          (item.surface !== "bottom" && item.surface !== "drawer") ||
+          !["public", "authenticated"].includes(
+            String(item.audience),
+          ) ||
+          typeof item.visible !== "boolean" ||
+          typeof item.order !== "number" ||
+          !Number.isInteger(item.order)
+        )
+          return [];
+        return [
+          {
+            id: item.id,
+            surface: item.surface,
+            target: item.target,
+            audience: item.audience,
+            visible: item.visible,
+            order: item.order,
+          },
+        ];
+      });
+    } catch {
+      return null;
+    }
+}
+
+export function normalizePublicQuotesCategories(row: { value: string } | null) {
+    let value: unknown;
+    try {
+      value = row ? JSON.parse(row.value) : null;
+    } catch {
+      value = null;
+    }
+    if (!Array.isArray(value)) return PUBLIC_QUOTES_CATEGORY_DEFAULTS;
+
+    const categories = new Map<string, { id: string; visible: boolean; order: number }>();
+    for (const entry of value) {
+      if (typeof entry !== "object" || entry === null) continue;
+      const item = entry as Record<string, unknown>;
+      if (
+        typeof item.id === "string" &&
+        PUBLIC_QUOTES_CATEGORIES.has(item.id) &&
+        typeof item.visible === "boolean" &&
+        typeof item.order === "number" &&
+        Number.isSafeInteger(item.order) &&
+        item.order >= 0 &&
+        item.order <= 1000
+      ) {
+        categories.set(item.id, { id: item.id, visible: item.visible, order: item.order });
+      }
+    }
+    const visible = [...categories.values()]
+      .filter((item) => item.visible)
+      .sort((left, right) => left.order - right.order || left.id.localeCompare(right.id));
+    return visible.length > 0 ? visible : PUBLIC_QUOTES_CATEGORY_DEFAULTS;
+}
+
+export function normalizePublicLocalization(row: { value: string } | null) {
+    if (!row) return [];
+    try {
+      const value: unknown = JSON.parse(row.value);
+      if (!Array.isArray(value)) return [];
+      const translations = new Map<
+        string,
+        { key: string; values: Record<string, string> }
+      >();
+      for (const entry of value) {
+        if (typeof entry !== "object" || entry === null) continue;
+        const item = entry as Record<string, unknown>;
+        if (typeof item.key !== "string" || !PUBLIC_UI_MESSAGE_KEYS.has(item.key)) continue;
+        if (typeof item.values !== "object" || item.values === null || Array.isArray(item.values))
+          continue;
+        const values = Object.fromEntries(
+          Object.entries(item.values as Record<string, unknown>).filter(
+            ([locale, text]) =>
+              PUBLIC_LOCALES.has(locale) && typeof text === "string" && text.trim().length > 0,
+          ),
+        ) as Record<string, string>;
+        if (Object.keys(values).length > 0) translations.set(item.key, { key: item.key, values });
+      }
+      return [...translations.values()];
+    } catch {
+      return [];
+    }
+}
