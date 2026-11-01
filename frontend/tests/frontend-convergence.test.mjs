@@ -193,3 +193,12 @@ test('Options restores an existing cookie session before showing a sign-in promp
   assert.doesNotMatch(binary, /Verify (your )?wallet/i);
   assert.match(binary, /Sign in to trade/);
 });
+
+
+test('Settings uses client navigation for internal support links and deterministic session timestamps', () => {
+  const settings = read('dashboard/settings/page.tsx');
+  assert.match(settings, /import Link from [\'"]next\/link[\'"]/);
+  assert.equal((settings.match(/<Link[^>]*href="\/dashboard\/support"/g) ?? []).length, 2);
+  assert.doesNotMatch(settings, /<a[^>]*href="\/dashboard\/support"/);
+  assert.match(settings, /timeZone: [\'"]UTC[\'"], timeZoneName: [\'"]short[\'"]/);
+});
