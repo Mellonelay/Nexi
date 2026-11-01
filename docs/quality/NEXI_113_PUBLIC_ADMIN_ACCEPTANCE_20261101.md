@@ -6,7 +6,7 @@
 
 The 113 original owner requirements are reproduced verbatim from Engineering Reference v4.0 `01_CHECKLIST_TRACEABILITY.md`: **15 domains; 72 P0 + 41 P1**. The original `Check-list.txt` is its normative upstream. No item may be declared passed solely because source exists, a static check ran, or an old version passed.
 
-**Public** testing is mobile-first: widths 320, 360, ~390, 412–430, short-height, bottom dock, safe areas, trading chart and touch interactions, plus tablet/desktop coverage. **Admin** testing is desktop-first: eight operator workspaces, contextual tabs, 33 sidebar destinations, direct URLs, refresh/back/forward, role-aware actions, data states and persisted readback; narrow Admin accessibility is secondary. The Admin route overlay below is supplemental, **not additional items in the canonical 113 count**.
+**Public** testing is mobile-first: widths 320, 360, ~390, 412–430, short-height, bottom dock, safe areas, trading chart and touch interactions, plus tablet/desktop coverage. **Admin** testing is desktop-first: eight operator workspaces, contextual tabs, 31 active sidebar destinations plus contextual `/sandbox` (32 functional destinations), direct URLs, refresh/back/forward, role-aware actions, data states and persisted readback; narrow Admin accessibility is secondary. The Admin route overlay below is supplemental, **not additional items in the canonical 113 count**.
 
 All rows start unchecked for the **new source release**. Existing accepted but untested financial exceptions remain `OWNER_ACCEPTED_UNTESTED` with their prior scope. No production financial, authentication, message-send or browser actions were performed here.
 
@@ -200,7 +200,9 @@ All rows start unchecked for the **new source release**. Existing accepted but u
 
 ## Admin desktop acceptance overlay (supplementary, not counted among 113)
 
-The source-authored operator workspace inventory is drawn from `Admin/docs/OPERATOR_WORKSPACE_IMPLEMENTATION_MAP.md` and `Admin/docs/TANSTACK_ARCHITECTURE_AND_ROUTE_MAP.md`. The October 31 receipt confirms only eight-workspace navigation at 979×715, not 33 route action/readback passes.
+**Owner supersession (October 24):** Ticket create/reply/lifecycle is retired. Support retains help/contact and Admin-controlled Telegram/email settings; Messages owns authenticated customer–Admin conversations, attachments and history. `/support` compatibility and hidden `/reconciliation` are separate checks, not active workflows. The 113 canonical requirements are unchanged.
+
+The source-authored operator workspace inventory is drawn from `Admin/docs/OPERATOR_WORKSPACE_IMPLEMENTATION_MAP.md` and `Admin/docs/TANSTACK_ARCHITECTURE_AND_ROUTE_MAP.md`. The October 31 receipt confirms only eight-workspace navigation at 979×715, not 32 functional destination action/readback passes.
 
 | Operator workspace | Required destination URLs | Current-release browser status |
 | --- | --- | --- |
@@ -210,14 +212,14 @@ The source-authored operator workspace inventory is drawn from `Admin/docs/OPERA
 | Wallet & Finance | `/wallets`, `/networks`, `/ledger`, `/deposits`, `/withdrawals` | PENDING |
 | Markets | `/assets`, `/market-feeds` | PENDING |
 | Products | `/mining`, `/loans` | PENDING |
-| Communications | `/support`, `/messages`, `/announcements`, `/learn`, `/notifications` | PENDING |
+| Communications | `/messages`, `/announcements`, `/learn`, `/notifications`; `/support` compatibility only | PENDING |
 | Administration & Settings | `/admins`, `/roles`, `/approvals`, `/audit`, `/frontend-control`, `/navigation`, `/localization`, `/feature-flags`, `/health`, `/maintenance` | PENDING |
 
-`/reconciliation` is a 34th named route file, **not** a sidebar destination. Preserve its hidden/unavailable contract absent canonical backend authority.
+Historical inventory: 34 named routes = 33 historical NAV_GROUPS paths plus hidden `/reconciliation`. Current acceptance: 31 active sidebar destinations + contextual `/sandbox` = **32 functional Admin destinations**; `/support` is retired-ticket compatibility only. Preserve its hidden/unavailable contract absent canonical backend authority.
 
 ### Common Admin desktop proof
 
-- [ ] Verify eight workspace entrypoints plus 33 existing routes, permitted-role direct URL, refresh, back/forward and active contextual tab.
+- [ ] Verify eight workspace entrypoints plus 32 functional destinations, permitted-role direct URL, refresh, back/forward and active contextual tab.
 - [ ] At ~979×715 and 1365×723 inspect density, tables, filters, selected-client detail, modal controls, desktop overflow and keyboard focus; a narrow viewport requires accessible fallback rather than Public-style mobile-first parity.
 - [ ] Verify authenticated role-sensitive actions against NestJS RBAC including a denied restricted-role request only with an existing authorized restricted identity.
 - [ ] Trace Admin provider → NestJS DTO/endpoint → durable readback → Public presentation for asset/network, Binary, Mining, Loan and notification/content configuration.
