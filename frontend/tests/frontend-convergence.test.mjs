@@ -172,6 +172,8 @@ test('Options funding journey preserves intent and preselects the safe wallet tr
   const transfer = read('dashboard/wallet/components/TransferModal.tsx');
   assert.match(binary, /from: 'options', symbol: normalizedPair, stake: amount, duration: String\(duration\), side: direction/);
   assert.match(binary, /searchParams\.get\('stake'\)/);
+  assert.match(binary, /\}, \[normalizedPair, searchParams\]\);/, 'Funding return updates the Options ticket when the query changes but the pair stays the same');
+  assert.match(binary, /setDuration\(requestedDuration\)/, 'Funding return restores the requested duration before configuration validation');
   assert.match(binary, /optionWalletBalance\.state === 'MISSING_ACCOUNT'\s*\|\| optionWalletBalance\.state === 'ZERO'/);
   assert.match(binary, /if \(account\.accountExists !== true\) return \{ state: 'MISSING_ACCOUNT' \}/);
   assert.match(binary, /Your Options account is not open yet/);

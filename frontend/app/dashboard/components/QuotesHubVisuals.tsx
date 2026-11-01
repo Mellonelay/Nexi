@@ -45,49 +45,6 @@ export function MarketSparkline({ item, compact = false }: { item: MarketPair; c
     </svg>
   );
 }
-export function OpportunityArtwork() {
-  const artId = useId().replace(/:/g, '');
-  const sphereId = `${artId}-sphere`;
-  const chartId = `${artId}-chart`;
-
-  return (
-    <div aria-hidden="true" className="nexi-opportunity-art pointer-events-none absolute inset-0 overflow-hidden">
-      <svg viewBox="0 0 960 240" preserveAspectRatio="none" className="absolute inset-0 h-full w-full">
-        <defs>
-          <radialGradient id={sphereId} cx="38%" cy="34%" r="70%">
-            <stop offset="0" stopColor="#a78bfa" stopOpacity="0.42" />
-            <stop offset="0.5" stopColor="#7353dd" stopOpacity="0.2" />
-            <stop offset="1" stopColor="#180848" stopOpacity="0.03" />
-          </radialGradient>
-          <linearGradient id={chartId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#7c3aed" stopOpacity="0.72" />
-            <stop offset="1" stopColor="#2c146c" stopOpacity="0.08" />
-          </linearGradient>
-        </defs>
-
-        <g transform="translate(36 22)">
-          <circle cx="104" cy="98" r="70" fill={`url(#${sphereId})`} stroke="#a78bfa" strokeOpacity="0.42" strokeWidth="1.4" />
-          <ellipse cx="104" cy="98" rx="70" ry="24" fill="none" stroke="#7c3aed" strokeOpacity="0.62" strokeWidth="1.4" />
-          <ellipse cx="104" cy="98" rx="70" ry="24" transform="rotate(58 104 98)" fill="none" stroke="#7353dd" strokeOpacity="0.5" strokeWidth="1.2" />
-          <ellipse cx="104" cy="98" rx="70" ry="24" transform="rotate(-58 104 98)" fill="none" stroke="#48c0cc" strokeOpacity="0.28" strokeWidth="1.1" />
-          <ellipse cx="104" cy="98" rx="42" ry="70" fill="none" stroke="#a78bfa" strokeOpacity="0.24" strokeWidth="1" />
-          <path d="M20 122C54 48 152 29 208 84" fill="none" stroke="#7c3aed" strokeOpacity="0.62" strokeWidth="2" strokeLinecap="round" />
-          <circle cx="199" cy="78" r="4" fill="#48c0cc" opacity="0.82" />
-        </g>
-
-        <g transform="translate(610 48)">
-          {[72, 104, 58, 128, 94, 146, 118, 160].map((bar, index) => (
-            <rect key={index} x={index * 38} y={170 - bar} width="18" height={bar} rx="4" fill={`url(#${chartId})`} opacity={0.52 + index * 0.04} />
-          ))}
-          <path d="M0 138C40 122 58 146 94 110C132 72 170 126 210 88C248 52 280 70 316 34" fill="none" stroke="#a78bfa" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" opacity="0.86" />
-          <path d="M0 138C40 122 58 146 94 110C132 72 170 126 210 88C248 52 280 70 316 34L316 180H0Z" fill="#7353dd" opacity="0.08" />
-        </g>
-      </svg>
-      <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-violet-950/55 to-transparent md:h-20" />
-    </div>
-  );
-}
-
 export function NexiLogoMark({ compact = false, className = '' }: { compact?: boolean; className?: string }) {
   const gradientId = useId().replace(/:/g, '');
   const highlightId = `${gradientId}-highlight`;

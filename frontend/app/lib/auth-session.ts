@@ -50,10 +50,6 @@ export function hasAuthSession() {
   return Boolean(accessToken);
 }
 
-export function getSessionUser<T = unknown>() {
-  return sessionUser as T | null;
-}
-
 export function getSessionUserId() {
   if (!sessionUser || typeof sessionUser !== 'object') return null;
   const id = (sessionUser as { id?: unknown }).id;

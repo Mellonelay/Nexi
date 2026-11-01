@@ -90,7 +90,7 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
   const [readErrors, setReadErrors] = useState<Record<string, boolean>>({});
   const [retryNonce, setRetryNonce] = useState(0);
   const [category, setCategory] = useState<NotificationCategory>("All");
-  const [principalId, setPrincipalId] = useState<string | null>(getAccessTokenPrincipalId());
+  const [principalId, setPrincipalId] = useState<string | null>(() => getAccessTokenPrincipalId());
   const loadRequestRef = useRef(0);
   const previousPrincipalId = useRef<string | null | undefined>(principalId);
   const readRequestIds = useRef(new Set<string>());

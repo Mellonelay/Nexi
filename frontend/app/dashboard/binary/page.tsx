@@ -193,6 +193,8 @@ export default function BinaryPage() {
     chartPairRef.current = normalizedPair;
     const requestedStake = searchParams.get('stake');
     setAmount(searchParams.get('symbol') && normalizePair(searchParams.get('symbol')!) === normalizedPair && requestedStake && /^(?:0|[1-9]\d*)(?:\.\d+)?$/.test(requestedStake) && Number(requestedStake) > 0 ? requestedStake : '');
+    const requestedDuration = Number(searchParams.get('duration'));
+    if (Number.isInteger(requestedDuration) && requestedDuration > 0 && requestedDuration <= 3600) setDuration(requestedDuration);
     setDirection(searchParams.get('side') === 'SHORT' ? 'SHORT' : 'LONG');
     setTab('TRADE');
     setState('DRAFT');
@@ -203,7 +205,7 @@ export default function BinaryPage() {
     setSelectedResult(null);
     setSelectedChartTradeId(null);
     setFeedback(null);
-  }, [normalizedPair]);
+  }, [normalizedPair, searchParams]);
 
   useEffect(() => {
     const sync = () => {
