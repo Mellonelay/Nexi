@@ -6,7 +6,7 @@ import { io } from 'socket.io-client';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ModalSurface from '../../components/ModalSurface';
 import SafeBackButton from '../../components/SafeBackButton';
-import api, { apiBaseUrl } from '../../lib/api';
+import api, { apiBaseUrl, recoverPublicSession } from '../../lib/api';
 import RealtimeTradingChart from '../../components/RealtimeTradingChart';
 import SymbolSelector from '../../components/SymbolSelector';
 import TimeframeSelector from '../../components/TimeframeSelector';
@@ -92,13 +92,14 @@ const normalizePosition = (value: unknown): BinaryPosition | null => {
 };
 
 type OptionWalletBalance =
-  | { state: 'UNAUTHENTICATED' | 'LOADING' | 'UNSUPPORTED' | 'ERROR' }
+  | { state: 'UNAUTHENTICATED' | 'LOADING' | 'UNSUPPORTED' | 'MISSING_ACCOUNT' | 'ERROR' }
   | { state: 'ZERO' | 'POSITIVE'; available: string };
 
 function optionWalletBalanceLabel(balance: OptionWalletBalance): string {
-  if (balance.state === 'UNAUTHENTICATED') return 'Verify wallet';
+  if (balance.state === 'UNAUTHENTICATED') return 'Sign in to trade';
   if (balance.state === 'LOADING') return 'Loading…';
   if (balance.state === 'UNSUPPORTED') return 'Unavailable for this account';
+  if (balance.state === 'MISSING_ACCOUNT') return 'Options account not opened';
   if (balance.state === 'ERROR') return 'Balance request failed';
   if (balance.state === 'ZERO' || balance.state === 'POSITIVE') {
     return balance.state === 'ZERO'
@@ -115,11 +116,12 @@ function readOptionWalletBalance(payload: unknown): OptionWalletBalance {
   if (!currencies.some((currency) => String(currency).trim().toUpperCase() === 'USDT')) return { state: 'UNSUPPORTED' };
   const assets = Array.isArray(overview.assets) ? overview.assets : [];
   const usdt = assets.find((asset) => asset && typeof asset === 'object' && String((asset as { asset?: unknown }).asset).trim().toUpperCase() === 'USDT') as { scopes?: unknown } | undefined;
-  if (!usdt?.scopes || typeof usdt.scopes !== 'object') return { state: 'UNSUPPORTED' };
+  if (!usdt?.scopes || typeof usdt.scopes !== 'object') return { state: 'MISSING_ACCOUNT' };
   const options = (usdt.scopes as Record<string, unknown>).BINARY;
-  if (!options || typeof options !== 'object') return { state: 'UNSUPPORTED' };
+  if (!options || typeof options !== 'object') return { state: 'MISSING_ACCOUNT' };
   const account = options as { accountExists?: unknown; state?: unknown; available?: unknown };
-  if (account.accountExists !== true || String(account.state).toUpperCase() !== 'ACTIVE') return { state: 'UNSUPPORTED' };
+  if (account.accountExists !== true) return { state: 'MISSING_ACCOUNT' };
+  if (String(account.state).toUpperCase() !== 'ACTIVE') return { state: 'UNSUPPORTED' };
   if (typeof account.available !== 'string' || !/^[0-9]+([.][0-9]+)?$/.test(account.available)) return { state: 'ERROR' };
   return /^0+([.]0+)?$/.test(account.available) ? { state: 'ZERO', available: account.available } : { state: 'POSITIVE', available: account.available };
 }
@@ -155,6 +157,7 @@ export default function BinaryPage() {
   const [amount, setAmount] = useState('');
   const [direction, setDirection] = useState<Direction>('LONG');
   const [userId, setUserId] = useState<string | null>(null);
+  const [sessionChecked, setSessionChecked] = useState(false);
   const previousUserId = useRef<string | null | undefined>(undefined);
   const [tab, setTab] = useState<BinaryTab>('TRADE');
   const [state, setState] = useState<BinaryPositionState>('DRAFT');
@@ -167,7 +170,7 @@ export default function BinaryPage() {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [optionWalletBalanceResult, setOptionWalletBalanceResult] = useState<{ userId: string; balance: OptionWalletBalance } | null>(null);
   const optionWalletBalance: OptionWalletBalance = !userId
-    ? { state: 'UNAUTHENTICATED' }
+    ? { state: sessionChecked ? 'UNAUTHENTICATED' : 'LOADING' }
     : !apiBaseUrl
       ? { state: 'UNSUPPORTED' }
       : optionWalletBalanceResult?.userId === userId
@@ -218,9 +221,18 @@ export default function BinaryPage() {
       }
       setUserId(next);
     };
+    let disposed = false;
     sync();
+    void recoverPublicSession().finally(() => {
+      if (disposed) return;
+      sync();
+      setSessionChecked(true);
+    });
     window.addEventListener('nexi:wallet-session', sync);
-    return () => window.removeEventListener('nexi:wallet-session', sync);
+    return () => {
+      disposed = true;
+      window.removeEventListener('nexi:wallet-session', sync);
+    };
   }, []);
 
   useEffect(() => {
@@ -430,7 +442,8 @@ export default function BinaryPage() {
     && stake !== null && payoutRate !== null
     && minimumStake !== null && maximumStake !== null
     && stake >= minimumStake && stake <= maximumStake
-    && (optionWalletBalance.state === 'ZERO'
+    && (optionWalletBalance.state === 'MISSING_ACCOUNT'
+      || optionWalletBalance.state === 'ZERO'
       || (optionWalletBalance.state === 'POSITIVE' && stake > Number(optionWalletBalance.available)));
   // Permit an underfunded customer to request help, never an unfunded order.
   const reviewReady = ready || fundingRequired;
@@ -443,10 +456,14 @@ export default function BinaryPage() {
         : 'border-violet-300/20 bg-violet-400/5 text-[#CFC4FF]';
   const availabilityCopy = !submissionConfigured
     ? 'Options are unavailable right now.'
-    : !userId
-      ? 'Verify your wallet to review and submit an options position.'
-      : optionWalletBalance.state === 'UNSUPPORTED'
-        ? 'Options account is unavailable. Use Wallet → Transfer to open or fund Options before trading.'
+    : !sessionChecked
+      ? 'Checking trading session…'
+      : !userId
+        ? 'Sign in to trade using the wallet control above.'
+      : optionWalletBalance.state === 'MISSING_ACCOUNT'
+        ? 'Options account is not open yet. Use Wallet → Transfer to open or fund Options before trading.'
+        : optionWalletBalance.state === 'UNSUPPORTED'
+          ? 'Options is not available for this currency or account.'
         : optionWalletBalance.state === 'ERROR'
           ? 'Options wallet availability could not be checked. Try again before trading.'
           : optionWalletBalance.state === 'LOADING' || optionWalletBalance.state === 'UNAUTHENTICATED'
@@ -477,7 +494,7 @@ export default function BinaryPage() {
     setFeedback(!submissionConfigured
       ? 'Options are unavailable right now.'
       : !userId
-        ? 'Verify your wallet to submit a position.'
+        ? 'Sign in to trade using the wallet control above.'
         : currentPrice === null
           ? 'A fresh market price is required before submission.'
           : 'Select an enabled duration and enter a valid stake.');
@@ -578,10 +595,10 @@ export default function BinaryPage() {
         </section>
       </div>
 
-      {fundingOpen && <ModalSurface open onClose={() => setFundingOpen(false)} title="Insufficient Options funds">
+      {fundingOpen && <ModalSurface open onClose={() => setFundingOpen(false)} title="Open or fund Options">
         <div className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-violet-300/15 bg-[#100A18] p-5">
-          <h2 className="text-xl font-semibold">Insufficient Options funds</h2>
-          <p className="mt-2 text-sm text-[#C3BBD0]">Your stake is {amount} USDT, but only {optionWalletBalance.state === 'ZERO' || optionWalletBalance.state === 'POSITIVE' ? optionWalletBalance.available : '0'} USDT is available in Options.</p>
+          <h2 className="text-xl font-semibold">Open or fund Options</h2>
+          <p className="mt-2 text-sm text-[#C3BBD0]">{optionWalletBalance.state === 'MISSING_ACCOUNT' ? 'Your Options account is not open yet.' : `Your stake is ${amount} USDT, but only ${optionWalletBalance.state === 'ZERO' || optionWalletBalance.state === 'POSITIVE' ? optionWalletBalance.available : '0'} USDT is available in Options.`}</p>
           <p className="mt-2 text-sm text-[#8C8299]">Transfer funds from Funding or deposit into your NEXI Wallet. No trade has been submitted.</p>
           <div className="mt-5 grid grid-cols-2 gap-3">
             <button type="button" onClick={() => setFundingOpen(false)} className="min-h-12 rounded-xl border border-violet-300/15">Not now</button>

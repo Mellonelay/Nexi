@@ -172,9 +172,22 @@ test('Options funding journey preserves intent and preselects the safe wallet tr
   const transfer = read('dashboard/wallet/components/TransferModal.tsx');
   assert.match(binary, /from: 'options', symbol: normalizedPair, stake: amount, duration: String\(duration\), side: direction/);
   assert.match(binary, /searchParams\.get\('stake'\)/);
+  assert.match(binary, /optionWalletBalance\.state === 'MISSING_ACCOUNT'\s*\|\| optionWalletBalance\.state === 'ZERO'/);
+  assert.match(binary, /if \(account\.accountExists !== true\) return \{ state: 'MISSING_ACCOUNT' \}/);
+  assert.match(binary, /Your Options account is not open yet/);
   assert.match(wallet, /back\.set\('stake', stake\)/);
   assert.match(wallet, /Return to Options/);
   assert.match(wallet, /initialDestinationScope=\{optionsReturn \? 'BINARY' : undefined\}/);
   assert.match(transfer, /setSourceScope\('MAIN'\)/);
   assert.match(transfer, /setDestinationScope\(initialDestinationScope\)/);
+});
+
+
+test('Options restores an existing cookie session before showing a sign-in prompt', () => {
+  const binary = read('dashboard/binary/page.tsx');
+  assert.match(binary, /recoverPublicSession\(\)/);
+  assert.match(binary, /sessionChecked/);
+  assert.match(binary, /Checking trading session/);
+  assert.doesNotMatch(binary, /Verify (your )?wallet/i);
+  assert.match(binary, /Sign in to trade/);
 });

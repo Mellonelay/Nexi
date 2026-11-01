@@ -94,7 +94,7 @@ test('binary clears private snapshots when the wallet principal changes', () => 
     previousUserId: { current: 'user-a' },
     sessionPrincipalId: () => principal,
   };
-  for (const name of ['setActivePositions', 'setHistory', 'setSelectedResult', 'setSelectedChartTradeId', 'setOptionWalletBalanceResult', 'setConfirmationOpen', 'setState', 'setUserId']) {
+  for (const name of ['setActivePositions', 'setHistory', 'setSelectedResult', 'setSelectedChartTradeId', 'setOptionWalletBalanceResult', 'setConfirmationOpen', 'setFundingOpen', 'setState', 'setUserId']) {
     context[name] = (value) => writes.push({ name, value });
   }
   vm.runInNewContext(ts.transpileModule(`exports.sync = ${sync};`, {
@@ -102,10 +102,10 @@ test('binary clears private snapshots when the wallet principal changes', () => 
   }).outputText, context);
 
   context.exports.sync();
-  assert.deepEqual(writes.slice(0, 7).map(({ name, value }) => [name, Array.isArray(value) ? Array.from(value) : value]), [
+  assert.deepEqual(writes.slice(0, 8).map(({ name, value }) => [name, Array.isArray(value) ? Array.from(value) : value]), [
     ['setActivePositions', []], ['setHistory', []], ['setSelectedResult', null],
     ['setSelectedChartTradeId', null], ['setOptionWalletBalanceResult', null],
-    ['setConfirmationOpen', false], ['setState', 'DRAFT'],
+    ['setConfirmationOpen', false], ['setFundingOpen', false], ['setState', 'DRAFT'],
   ]);
   assert.deepEqual(writes.at(-1), { name: 'setUserId', value: 'user-b' });
 });

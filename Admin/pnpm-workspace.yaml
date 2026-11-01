@@ -5,3 +5,7 @@ patchedDependencies:
 publicHoistPattern:
   - '@tanstack/router-core'
   - '@tanstack/history'
+
+# Keep TanStack serialization on a version addressing GHSA-f86p-h4j2-7qgj and GHSA-9wx9-5pv9-3349.
+overrides:
+  seroval: 1.6.11
