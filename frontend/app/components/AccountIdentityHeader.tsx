@@ -128,7 +128,7 @@ export default function AccountIdentityHeader({
 }: AccountIdentityHeaderProps) {
   const { t } = useLocale();
   const [sessionPresent, setSessionPresent] = useState(false);
-  const [principalId, setPrincipalId] = useState<string | null>(sessionPrincipalId());
+  const [principalId, setPrincipalId] = useState<string | null>(sessionPrincipalId);
   const sessionQuery = useQuery<WalletProfile>({
     queryKey: ["user", "me", principalId],
     queryFn: loadCurrentUser,
