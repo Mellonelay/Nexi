@@ -2,6 +2,8 @@
 
 **Current merged acceptance inventory (2026-11-01):** [113 canonical Public + Admin criteria and desktop route overlay](NEXI_113_PUBLIC_ADMIN_ACCEPTANCE_20261101.md); [113-row CSV proof tracker](NEXI_113_ACCEPTANCE_TRACKER_20261101.csv). Public is mobile-first; Admin is desktop-first. This link does not change the historical source/deployed acceptance status documented below.
 
+**2026-11-01 corrected scope:** Public mobile-first; Admin desktop-first. Current Admin source: **31 sidebar destinations + contextual `/sandbox` = 32 functional destinations**. Retired `/support` and hidden `/reconciliation` are separate compatibility/unsupported checks, not active ticket journeys. The 113 owner criteria are unchanged; current-release browser proof remains pending. [Checklist](NEXI_113_PUBLIC_ADMIN_ACCEPTANCE_20261101.md) / [roadmap](../../tasks/NEXI_FINAL_CLOSURE_ROADMAP_20261026.md).
+
 **Status:** Current production browser-acceptance contract
 **Authority reconciliation date:** 2026-10-31 (UTC); requirements lineage began 2026-09-25.
 **Browser workflow owner:** paired Codex session using Chrome DevTools MCP with `--autoConnect --userDataDir /home/mellonelay1999/.local/share/nexi-admin-browser-acceptance`.

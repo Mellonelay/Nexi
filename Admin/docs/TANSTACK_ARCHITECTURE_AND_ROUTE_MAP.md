@@ -1,5 +1,8 @@
 # NEXI Admin — TanStack Architecture and Operator Route Map
 
+**2026-11-01 current-source supersession:** NAV_GROUPS contains **31 active sidebar destinations** in eight workspaces. `/sandbox` is contextual (32nd functional route), not a sidebar item. `/support` is a retired-ticket compatibility route linking to Messages; `/reconciliation` is hidden/unsupported. In total, 34 named file routes exist excluding index/root, but they are not 34 active operator destinations. The October 21 33-sidebar inventory below is preserved solely as a dated historical source snapshot. Current acceptance: [113 requirements + 32-functional Admin overlay](../../docs/quality/NEXI_113_PUBLIC_ADMIN_ACCEPTANCE_20261101.md). Public mobile-first; Admin desktop-first.
+
+
 Status: source-grounded documentation, 2026-10-21. Source baseline: `6da08471ef200b6cadf96ef3d49ed85fc0f12fc4`. Proposed eight-workspace IA is **not implemented by this document**. Runtime/browser parity and new Binary simulation contracts are **not verified**.
 
 ## 1. Authority and architecture
@@ -20,7 +23,7 @@ Admin source is `Admin/`; Public source `frontend/`; backend `backend/`. This is
 
 TanStack Start is a full-stack React framework, not merely a SPA router. Its loaders may execute in server and client contexts; keep credentials/secrets in deliberate server-only primitives and retain NestJS as NEXI's business/API authority. Do not create parallel Start database/financial endpoints simply because server functions are available.
 
-## 3. Source route inventory: 33 sidebar destinations + 1 non-sidebar named route
+## 3. HISTORICAL October 21 route inventory: 33 sidebar + hidden reconciliation (superseded)
 
 This inventory comes from `RoutePath` in `src/admin/config/navigation.ts`, reconciled to `src/routes/*.tsx`. There are **33** registered sidebar operator destinations and **34** named route files besides `index.tsx` and `__root.tsx`. The earlier browser-visible **33** excluded `/reconciliation`, which has a route file but is currently absent from NAV_GROUPS/RoutePath. `src/routes/index.tsx` is the index path and `__root.tsx` is the root, not additional sidebar destinations.
 
@@ -67,7 +70,7 @@ Total mapped sidebar destinations: 1 + 3 + 5 + 5 + 2 + 2 + 5 + 10 = **33**. `/re
 
 **Unknown**: exact deployed source identity, current persisted Binary settings, complete simulation API/schema, realtime event contracts, 34-route operator visibility by role, page-level browser acceptance. Historical DEXI/Axue behavior is a reference, not present-NEXI runtime proof.
 
-Completion for future implementation: preserve all 33 existing sidebar destinations and the additional /reconciliation deep link; type-safe file routing, generated tree, URL navigation and refresh; provider-backed data and permission enforcement; source tests/build, scoped API readback and separate browser proof. SOURCE_IMPLEMENTED, TESTED, INTEGRATED, DEPLOYED, BROWSER_VERIFIED, OWNER_ACCEPTED are different statuses.
+Historical October 21 completion target (superseded for current counting): preserve all 33 then-visible sidebar destinations and the additional /reconciliation deep link; type-safe file routing, generated tree, URL navigation and refresh; provider-backed data and permission enforcement; source tests/build, scoped API readback and separate browser proof. SOURCE_IMPLEMENTED, TESTED, INTEGRATED, DEPLOYED, BROWSER_VERIFIED, OWNER_ACCEPTED are different statuses.
 
 ## 7. Documentation references
 

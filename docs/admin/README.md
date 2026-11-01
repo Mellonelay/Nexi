@@ -1,6 +1,6 @@
 # NEXI Admin: Current Control Plane and Feature Map
 
-**Current source-derived TanStack architecture and complete route inventory:** [Admin TanStack Architecture and Route Map](../../Admin/docs/TANSTACK_ARCHITECTURE_AND_ROUTE_MAP.md). That document identifies 33 sidebar destinations plus the non-sidebar `/reconciliation` route, the proposed eight-workspace navigation, actual Router/Start/provider ownership, and the distinction between observed source and future design. Consult it before changing Admin UI structure. This README describes existing administrative domain responsibility, not a completed eight-workspace rollout.
+**Current source-derived TanStack architecture and complete route inventory:** [Admin TanStack Architecture and Route Map](../../Admin/docs/TANSTACK_ARCHITECTURE_AND_ROUTE_MAP.md). That document now separates its historical October 21 **33-sidebar** snapshot from the verified 2026-11-01 current-source count: **31 role-scoped sidebar destinations + contextual `/sandbox` = 32 functional operator destinations**. Retired `/support` compatibility and hidden `/reconciliation` are separate, and eight-workspace navigation is implemented but full desktop action/browser acceptance remains open. Consult it before changing Admin UI structure. This README describes existing administrative domain responsibility, not a completed eight-workspace rollout.
 
 **Canonical source:** `Admin/` (React/TanStack/Vite deployment path). Admin is a **governed consumer** of the NestJS backend, never an alternate financial owner.
 
@@ -16,7 +16,7 @@
 | `spot`, `binary` | Trade configuration; Binary fixed supported durations and editable enablement/payout/stake bounds where implemented |
 | `mining`, `loans` | Plan governance, accrual/repayment lifecycle and backend-confirmed positions |
 | `frontend-control`, `feature-flags`, `maintenance`, `navigation`, `localization` | Public-facing controls with explicit propagation rules and audit |
-| `support`, `messages`, `notifications`, `announcements`, `learn` | Support/communications queues, moderation, publication and notification management |
+| `support` (retired-ticket compatibility only), `messages`, `notifications`, `announcements`, `learn` | Messages is active two-way support; legacy tickets are not created/replied to; notification/content operations remain separately governed |
 | `sandbox` | Authorized isolated test scenarios; never counterfeit financial state or pollute live market data |
 
 All rows map to source route files, **not** automatic claims of complete runtime acceptance. Inspect each route/component and backend DTO before asserting a specific control exists or works.

@@ -1,4 +1,7 @@
 # NEXI Admin — Verified Diagrams and Execution Boundary
+
+**2026-11-01 supersession:** This is an October 21 diagram/source snapshot, not current route authority. Today `NAV_GROUPS` has **31 sidebar entries**; contextual `/sandbox` is the 32nd functional destination. `/support` is retired-ticket compatibility and `/reconciliation` remains hidden/unsupported. Preserve historical diagrams below as originally observed. Current acceptance: [113 owner requirements + corrected 32-functional Admin overlay](../../docs/quality/NEXI_113_PUBLIC_ADMIN_ACCEPTANCE_20261101.md).
+
 Status: DESIGN / DOCS ONLY — 2026-10-21. Source checkpoint: `Mellonelay/Nexi@6da08471ef200b6cadf96ef3d49ed85fc0f12fc4`, corroborated by current Worker-0 HEAD/origin and Graphify indexed commit. Not implementation, deployment or browser verification.
 
 Read with `TANSTACK_ARCHITECTURE_AND_ROUTE_MAP.md`, `OPERATOR_WORKSPACE_IMPLEMENTATION_MAP.md`, `Admin/AGENTS.md` and current owner decisions. The three owner-provided PNG diagrams express intent; their linear boxes should **not** be interpreted as literal runtime call order, nor as proof of an existing API.

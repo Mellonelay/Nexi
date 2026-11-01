@@ -6,7 +6,7 @@
 
 The 113 original owner requirements are reproduced verbatim from Engineering Reference v4.0 `01_CHECKLIST_TRACEABILITY.md`: **15 domains; 72 P0 + 41 P1**. The original `Check-list.txt` is its normative upstream. No item may be declared passed solely because source exists, a static check ran, or an old version passed.
 
-**Public** testing is mobile-first: widths 320, 360, ~390, 412–430, short-height, bottom dock, safe areas, trading chart and touch interactions, plus tablet/desktop coverage. **Admin** testing is desktop-first: eight operator workspaces, contextual tabs, 33 sidebar destinations, direct URLs, refresh/back/forward, role-aware actions, data states and persisted readback; narrow Admin accessibility is secondary. The Admin route overlay below is supplemental, **not additional items in the canonical 113 count**.
+**Public** testing is mobile-first: widths 320, 360, ~390, 412–430, short-height, bottom dock, safe areas, trading chart and touch interactions, plus tablet/desktop coverage. **Admin** testing is desktop-first: eight operator workspaces, contextual tabs, 31 current sidebar destinations plus contextual /sandbox (32 functional), direct URLs, refresh/back/forward, role-aware actions, data states and persisted readback; narrow Admin accessibility is secondary. The Admin route overlay below is supplemental, **not additional items in the canonical 113 count**.
 
 All rows start unchecked for the **new source release**. Existing accepted but untested financial exceptions remain `OWNER_ACCEPTED_UNTESTED` with their prior scope. No production financial, authentication, message-send or browser actions were performed here.
 
@@ -19,6 +19,8 @@ All rows start unchecked for the **new source release**. Existing accepted but u
 | Admin | `285738c9a0b9f423377067d2d1b2200c43c06473` | No |
 
 **Release conflict:** The dated October 31 Admin Stage B browser receipt says Admin deployed release `737355124993705935f9aa56f743a9f1f61a2bf4`, whereas the current VM Admin marker reads `285738c9a0b9f423377067d2d1b2200c43c06473`. Verify actual running process/artifact identity before attributing the old Admin browser pass to today's deployment. Preserve the historical receipt unchanged.
+
+**Provenance:** October 21 Admin TanStack route map; October 24 ticket retirement/Messages decision in the 377-message MindMap AI chronology; October 31 Codex support compatibility browser receipt; Library/Nexi 314-message successor chronology; 2026-11-01 navigation/route source. Historical conversations are decision evidence, not current runtime proof.
 
 **Proof fields:** `SOURCE_OWNER_LOCATED` is a navigation hint only; `SOURCE_IMPLEMENTED`, `STATIC_TESTED`, `DEPLOYED`, `BROWSER_VERIFIED`, `ECONOMIC_VERIFIED` and `OWNER_ACCEPTED` require their own receipts. Current-release status defaults to `PENDING`.
 
@@ -200,7 +202,9 @@ All rows start unchecked for the **new source release**. Existing accepted but u
 
 ## Admin desktop acceptance overlay (supplementary, not counted among 113)
 
-The source-authored operator workspace inventory is drawn from `Admin/docs/OPERATOR_WORKSPACE_IMPLEMENTATION_MAP.md` and `Admin/docs/TANSTACK_ARCHITECTURE_AND_ROUTE_MAP.md`. The October 31 receipt confirms only eight-workspace navigation at 979×715, not 33 route action/readback passes.
+**2026-11-01 current-source correction:** `Admin/src/admin/config/navigation.ts` defines 31 role-filtered sidebar destinations. The contextual `/sandbox` is a 32nd functional operator destination. Retired `/support` and hidden `/reconciliation` are separate compatibility/unavailable checks. The October 21 33-sidebar snapshot was superseded by the October 24 owner decision to retire tickets and use Messages for customer–Admin chat; historical route files remain. Neither historical maps nor a named route file count proves current navigation or browser acceptance. The 113 criteria are preserved verbatim.
+
+The source-authored operator workspace inventory is drawn from `Admin/docs/OPERATOR_WORKSPACE_IMPLEMENTATION_MAP.md` and `Admin/docs/TANSTACK_ARCHITECTURE_AND_ROUTE_MAP.md`. The October 31 receipt confirms only eight-workspace navigation at 979×715, not 32 functional-route action/readback passes.
 
 | Operator workspace | Required destination URLs | Current-release browser status |
 | --- | --- | --- |
@@ -210,14 +214,14 @@ The source-authored operator workspace inventory is drawn from `Admin/docs/OPERA
 | Wallet & Finance | `/wallets`, `/networks`, `/ledger`, `/deposits`, `/withdrawals` | PENDING |
 | Markets | `/assets`, `/market-feeds` | PENDING |
 | Products | `/mining`, `/loans` | PENDING |
-| Communications | `/support`, `/messages`, `/announcements`, `/learn`, `/notifications` | PENDING |
+| Communications | `/messages`, `/announcements`, `/learn`, `/notifications` | PENDING |
 | Administration & Settings | `/admins`, `/roles`, `/approvals`, `/audit`, `/frontend-control`, `/navigation`, `/localization`, `/feature-flags`, `/health`, `/maintenance` | PENDING |
 
-`/reconciliation` is a 34th named route file, **not** a sidebar destination. Preserve its hidden/unavailable contract absent canonical backend authority.
+**Compatibility-only:** `/support` remains a retired-ticket page linking to `/messages`, not a functional ticket workflow. **Hidden:** `/reconciliation` has no verified durable backend authority. Both are excluded from the **32 functional destinations**; 34 named route files exist excluding index/root.
 
 ### Common Admin desktop proof
 
-- [ ] Verify eight workspace entrypoints plus 33 existing routes, permitted-role direct URL, refresh, back/forward and active contextual tab.
+- [ ] Verify eight workspace entrypoints plus 31 sidebar destinations and contextual `/sandbox` (32 functional), permitted-role direct URL, refresh, back/forward and active contextual tab.
 - [ ] At ~979×715 and 1365×723 inspect density, tables, filters, selected-client detail, modal controls, desktop overflow and keyboard focus; a narrow viewport requires accessible fallback rather than Public-style mobile-first parity.
 - [ ] Verify authenticated role-sensitive actions against NestJS RBAC including a denied restricted-role request only with an existing authorized restricted identity.
 - [ ] Trace Admin provider → NestJS DTO/endpoint → durable readback → Public presentation for asset/network, Binary, Mining, Loan and notification/content configuration.
@@ -232,7 +236,7 @@ The source-authored operator workspace inventory is drawn from `Admin/docs/OPERA
 | `tasks/evidence/nexi-final-product-acceptance-20261031.md` | Scoped current contract/receipt; preserve date, SHA and proof class |
 | `tasks/evidence/nexi-five-batch-source-reconciliation-20261101.md` | Scoped current contract/receipt; preserve date, SHA and proof class |
 | `Admin/docs/OPERATOR_WORKSPACE_IMPLEMENTATION_MAP.md` | Scoped current contract/receipt; preserve date, SHA and proof class |
-| `Admin/docs/TANSTACK_ARCHITECTURE_AND_ROUTE_MAP.md` | Scoped current contract/receipt; preserve date, SHA and proof class |
+| `Admin/docs/TANSTACK_ARCHITECTURE_AND_ROUTE_MAP.md` | October 21 historical route snapshot; November 1 source correction at top governs current count |
 | `Admin/docs/ADMIN_IMPLEMENTATION_CONTRACT_MAP_A_F_2026-10-21.md` | Historical design/hand-off snapshot; verify against current source |
 | `Admin/docs/ADMIN_VERIFIED_DIAGRAMS_AND_HANDOFF.md` | Scoped current contract/receipt; preserve date, SHA and proof class |
 | `Admin/docs/CURRENT_STATUS.md` | Historical design/hand-off snapshot; verify against current source |
