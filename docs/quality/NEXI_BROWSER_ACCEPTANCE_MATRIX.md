@@ -1,5 +1,7 @@
 # NEXI Completion and Browser Acceptance Matrix
 
+**Current merged acceptance inventory (2026-11-01):** [113 canonical Public + Admin criteria and desktop route overlay](NEXI_113_PUBLIC_ADMIN_ACCEPTANCE_20261101.md); [113-row CSV proof tracker](NEXI_113_ACCEPTANCE_TRACKER_20261101.csv). Public is mobile-first; Admin is desktop-first. This link does not change the historical source/deployed acceptance status documented below.
+
 **Status:** Current production browser-acceptance contract
 **Authority reconciliation date:** 2026-10-31 (UTC); requirements lineage began 2026-09-25.
 **Browser workflow owner:** paired Codex session using Chrome DevTools MCP with `--autoConnect --userDataDir /home/mellonelay1999/.local/share/nexi-admin-browser-acceptance`.

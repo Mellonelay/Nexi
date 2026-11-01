@@ -1,5 +1,7 @@
 # NEXI Admin — compact workspaces and implementation map
 
+**Combined acceptance handoff (2026-11-01):** [NEXI 113 canonical requirements + 33-route Admin desktop overlay](../../docs/quality/NEXI_113_PUBLIC_ADMIN_ACCEPTANCE_20261101.md). Admin is desktop-first; the eight workspaces and role-aware existing routes remain the operator source contract. Historical acceptance statements below retain their dated proof scope.
+
 Status: OWNER-APPROVED DESIGN REFERENCE; Stage B shell repair deployed as Admin release `737355124993705935f9aa56f743a9f1f61a2bf4` on 2026-10-31. At 979×715, authenticated browser evidence confirms the role-visible eight-workspace selector, route-based active selection, contextual Frontend Control tabs, page-specific search, and removal of the inert global search/hamburger. The 440×956 target was unauthenticated, so authenticated mobile parity and complete workspace/page visual acceptance remain open. The approved reference remains intent authority; it does not establish that every route, action or viewport matches. Backend/Public remain on release `a72c3127ffc448215cc7a724c4f5f6ca6e593b1b`. Admin `/support` direct reload and retired-ticket rendering were verified; the existing synthetic Messages thread remains untouched pending owner disposition. See [the Stage B acceptance receipt](../../tasks/evidence/nexi-final-product-acceptance-20261031.md). Read with `TANSTACK_ARCHITECTURE_AND_ROUTE_MAP.md`, `Admin/AGENTS.md`, root `AGENTS.md`, and current proof register.
 
 ## Decision and route disposition
