@@ -1,3 +1,10 @@
+## 2026-11-01 — final source-only notification regression reconciliation
+
+- [x] Reuse prior established financial, notification/queue, Backend/Public TypeScript, NestJS and source proof from `NEXI_PROOF_REUSE_REGISTER.md`; do not rerun unchanged tests.
+- [x] Correct stale Communications admin-notification persisted-record fixture; focused Jest 22/22 PASS; production idempotency guard unchanged.
+- [ ] Final source acceptance remains bounded: earlier isolated wallet SQLite integration timeout has no pass; production Valkey, funded Binary, authorized Admin/Messages and mobile remain independent acceptance evidence gaps. Do not call this 113/113 runtime accepted.
+- [ ] Build/deploy withheld under owner source-first direction. No production migration or economic operations authorized.
+
 ## 2026-11-01 source-batch handoff — owner source-before-tests rule
 
 - [x] SOURCE_IMPLEMENTED CANDIDATE: Preserved established Batch 1 identity/account provisioning and Batch 3 trading engines. Integrated remaining Batch 2/4 withdrawal event causality, replay-intent and customer notification producer/consumer corrections; addressed three AppController business-logic findings and Communications provider DI without new schema/modules. See `tasks/evidence/nexi-five-batch-source-reconciliation-20261101.md`.

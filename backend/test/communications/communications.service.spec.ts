@@ -485,7 +485,7 @@ describe('CommunicationsService', () => {
   });
 
   it('sends an idempotent admin notification through the canonical notification store', async () => {
-    const notification = { id: 'notification-1', userId: 'user-1' };
+    const notification = { id: 'notification-1', userId: 'user-1', type: 'info', title: 'Hello', body: 'Body' };
     const d1: any = {
       notification: {
         findUnique: jest.fn(async () => notification),
