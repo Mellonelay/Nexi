@@ -72,6 +72,8 @@ Total mapped sidebar destinations: 1 + 3 + 5 + 5 + 2 + 2 + 5 + 10 = **33**. `/re
 
 Historical October 21 completion target (superseded for current counting): preserve all 33 then-visible sidebar destinations and the additional /reconciliation deep link; type-safe file routing, generated tree, URL navigation and refresh; provider-backed data and permission enforcement; source tests/build, scoped API readback and separate browser proof. SOURCE_IMPLEMENTED, TESTED, INTEGRATED, DEPLOYED, BROWSER_VERIFIED, OWNER_ACCEPTED are different statuses.
 
+**Current functional acceptance (2026-11-01):** No ticket create/reply/lifecycle controls; verify `/support` compatibility and Public Support help/contact with Admin-configurable Telegram/email settings separately from Messages conversation/attachments. `/sandbox` remains contextual and `/reconciliation` hidden without durable authority. Preserve all 32 functional destinations and compatibility URLs without treating this as proof of browser operation.
+
 ## 7. Documentation references
 
 - TanStack Start overview: https://tanstack.com/start/latest/docs/framework/react/overview

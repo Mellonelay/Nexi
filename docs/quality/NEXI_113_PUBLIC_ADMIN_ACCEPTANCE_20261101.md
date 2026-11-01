@@ -204,6 +204,8 @@ All rows start unchecked for the **new source release**. Existing accepted but u
 
 **2026-11-01 current-source correction:** `Admin/src/admin/config/navigation.ts` defines 31 role-filtered sidebar destinations. The contextual `/sandbox` is a 32nd functional operator destination. Retired `/support` and hidden `/reconciliation` are separate compatibility/unavailable checks. The October 21 33-sidebar snapshot was superseded by the October 24 owner decision to retire tickets and use Messages for customer–Admin chat; historical route files remain. Neither historical maps nor a named route file count proves current navigation or browser acceptance. The 113 criteria are preserved verbatim.
 
+**Owner supersession details (October 24):** Ticket create/reply/lifecycle is retired. Public Support retains help topics and Admin-controlled Telegram/email contact settings; Messages owns authenticated customer–Admin conversations, history and authorized attachments. The `/support` compatibility URL and hidden `/reconciliation` are separate checks, not active ticket/reconciliation business workflows.
+
 The source-authored operator workspace inventory is drawn from `Admin/docs/OPERATOR_WORKSPACE_IMPLEMENTATION_MAP.md` and `Admin/docs/TANSTACK_ARCHITECTURE_AND_ROUTE_MAP.md`. The October 31 receipt confirms only eight-workspace navigation at 979×715, not 32 functional-route action/readback passes.
 
 | Operator workspace | Required destination URLs | Current-release browser status |
