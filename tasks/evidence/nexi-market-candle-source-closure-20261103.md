@@ -7,7 +7,7 @@ Source closure batch completed and pushed; no deployment, service restart, brows
 ## Source and Git
 
 - Source batch commits: `0640cd253e04a71df3a9578884d5b919bd9f16d2` and `d2db8ec8e017745ce1c1f3c001cff517bbbf583e`.
-- Final source paths: backend market ingest/DTO/Kline service/types and focused Jest tests; frontend chart components, realtime hook, stream module/tests and browser worker; `frontend/tests/frontend-convergence.test.mjs`.
+- Final source paths: backend market ingest/DTO/Kline service/types and focused Jest tests; `docs/contracts/openapi.json` generated from the updated Kline DTO; frontend chart components, realtime hook, stream module/tests and browser worker; `frontend/tests/frontend-convergence.test.mjs`.
 - Reconnect buffering and replay are bounded, generation/symbol/interval scoped, deterministic, and stale/final/provider revision aware. Candle freshness is distinct from quote freshness; ticker ticks do not mutate provider OHLC. Aggregated bars retain explicit lineage/finality. Ticker-only non-Binance quote aggregation publishes through the existing Kline Valkey/Gateway route with source-labelled provenance.
 - Push used owner-account normal `git push origin main`; exit 0. Fetch confirmed local `HEAD` = `origin/main` = `d2db8ec8e017745ce1c1f3c001cff517bbbf583e`. `git diff --check origin/main...HEAD` exited 0. Tracked working tree clean. Existing untracked historical backups/generated artifacts were preserved and not staged.
 
@@ -25,10 +25,14 @@ Source closure batch completed and pushed; no deployment, service restart, brows
 | Fallow MCP `trace_file` | reachable | `useRealtimeMarket` is imported by `RealtimeTradingChart`; hook imports API, market data and stream modules |
 | Local Fallow targeted hook report | error-severity gate pass; 0 findings | Boundary warnings and policy rule packs not configured; no whole-repository cleanup attempted |
 | Graphify local statistics | 7,590 nodes / 19,859 edges / 431 communities; built SHA matches `d2db8ec` | Static topology only |
-| GitHub Actions for `d2db8ec` | React Doctor success; VPS Source CI and CodeQL were in progress at checkpoint | Exact run IDs: `41705222822`, `41705222827`, `41705222837`; final status must be read from GitHub |
+| GitHub Actions for `d2db8ec` | React Doctor success; VPS Source CI failed only at OpenAPI snapshot check because `isFinal` was absent; CodeQL was still in progress at last check | Exact run IDs: `41705222822`, `41705222827`, `41705222837`; see follow-up below |
 | VM Kernel / Evolver | status healthy; scoped preflight `abstain` with null lesson/procedure | No signed verifier or evidence-backed lesson promotion |
 
 The earlier frontend typecheck job `job_c9462e3243e4` predates reconnect buffering and is not used as final proof. Backend ESLint is not configured in this checkout; the prior attempt exited 2 with “no configuration file found”. Fallow audit could not create its base worktree (permission denied), so no audit result is claimed.
+
+## CI repair follow-up
+
+GitHub run `41705222822` failed because generation added the new `isFinal` field to `MarketKlineDto` while the committed OpenAPI snapshot did not contain it. Re-ran the same generator used by CI as `mellonelay1999` with `NEXI_LOCAL_SQLITE_PATH=/tmp/nexi-openapi-ci-preview.sqlite`; job `job_1b7a235c9805` exited 0 and updated only `docs/contracts/openapi.json` with the `isFinal` schema/property requirement. The final artifact follow-up commit and exact-SHA CI result are recorded by GitHub after push.
 
 ## Public/mobile acceptance boundary
 

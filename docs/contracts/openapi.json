@@ -13684,6 +13684,10 @@
             "nullable": true,
             "format": "date-time"
           },
+          "isFinal": {
+            "type": "boolean",
+            "description": "True only when the persisted close boundary completes the requested interval."
+          },
           "provider": {
             "type": "string",
             "example": "binance-spot"
@@ -13709,6 +13713,7 @@
           "close",
           "symbol",
           "interval",
+          "isFinal",
           "provider",
           "source",
           "observedAt",
