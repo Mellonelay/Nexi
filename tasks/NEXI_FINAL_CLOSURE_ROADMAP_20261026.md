@@ -1,3 +1,11 @@
+## CURRENT OWNER UPDATE — 2026-11-04 — source phase closed
+
+The market candle/Public source batch is complete and pushed in commit 188fdba1b9e703f04f1c3fbe32186f7daa6dce22. At documentation-task intake, live checkout and origin/main matched that source SHA with a clean tracked tree; this documentation-only reconciliation is separate. Exact-SHA Source CI run 41706263277 and CodeQL run 41706263177 completed successfully. See the current-state and proof-reuse entries plus tasks/evidence/nexi-market-candle-source-closure-20261103.md for bounded tests, Graphify/Fallow caveats and the initial OpenAPI snapshot failure/fix.
+
+This supersedes older roadmap statements that market source repairs, final source verification, or exact-SHA CI are still pending. Earlier receipts remain historical evidence and are not rewritten. The release is not deployed or runtime/browser verified at SHA 188fdba. The 113-point matrix remains a requirement inventory; Nov 1 screenshots are not proof for this source SHA. No deploy, restart, database or financial mutation, migration, or authenticated financial test occurred.
+
+Next action is dependency-gated: separate owner authorization for release/deployment, followed by exact deployed-SHA confirmation and focused current-source browser/mobile acceptance. Preserve all other recorded owner-only financial exceptions, identity/role dependencies, observability gaps, backup/restore limits, and owner-acceptance state. Do not resume broad source scanning without a newly demonstrated defect.
+
 ## CURRENT 2026-11-01 — corrected acceptance authority and six-stage alignment (documentation-only)
 
 **Owner decision:** Prioritize NEXI functional completeness. Nonblocking Dependabot alerts, dead-code scores and cosmetic React/Fallow warnings are deferred unless a reachable issue demonstrably prevents operation or poses immediate material risk. Public acceptance is **mobile-first** and Admin is **desktop-first**. The 113 Engineering References v4.0 owner requirements remain 72 P0/41 P1, as **requirements** with current-release acceptance status pending.

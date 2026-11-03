@@ -1,3 +1,9 @@
+## Current-source evidence addendum — 2026-11-04
+
+The candle-integrity source batch is implemented and final-SHA CI-verified at 188fdba1b9e703f04f1c3fbe32186f7daa6dce22. Focused tests cover reconnect/replay ordering, independent quote and candle freshness, provider precedence/provenance, and the source-labelled non-Binance publication path. Final GitHub Source CI run 41706263277 and CodeQL run 41706263177 succeeded. Details and limitations are in tasks/evidence/nexi-market-candle-source-closure-20261103.md.
+
+This does not change the 113 requirements into runtime passes. In particular, NEXI-11-03's PASS in the dated tracker refers to its cited 2026-11-01 release evidence; it is not proof for un-deployed source SHA 188fdba. NEXI-11-04 and NEXI-11-07 remain without current-release browser proof. Binance orderbook/trades, wallet/Convert, CoinGecko detail, account identity, Options, dock/safe-area and responsive acceptance remain tied to their existing dated receipts; current-source screenshots and interactions have not been captured. Keep Public mobile-first and Admin desktop-first. The four financial OWNER_ACCEPTED_UNTESTED decisions are unchanged.
+
 # NEXI Public + Admin combined acceptance — 113 canonical requirements
 
 **Prepared:** 2026-11-01. **Source revision:** `8ec200b1914d585d6189cf6ea37b5eac2f8158a9` at intake. **Status:** requirement/source-map checklist; **not** 113/113 browser verified.

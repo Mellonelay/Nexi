@@ -1,3 +1,12 @@
+## CURRENT 2026-11-04 — source closure complete; deployed/browser proof gated
+
+- [x] Source batch integrated and pushed in commit 188fdba1b9e703f04f1c3fbe32186f7daa6dce22. At documentation-task intake, local main and origin/main matched that source SHA with a clean tracked tree; this documentation-only update is separate.
+- [x] Final-SHA GitHub Source CI 41706263277 and CodeQL 41706263177 completed successfully. Focused receipts and their caveats are recorded in NEXI_PROOF_REUSE_REGISTER.md and tasks/evidence/nexi-market-candle-source-closure-20261103.md.
+- [x] Current state, proof reuse, roadmap, acceptance notes and task frontier reconciled in the 2026-11-04 documentation receipt.
+- [ ] NEXT, DEPENDENCY-GATED: obtain separate owner authorization for deployment/release; then confirm deployed SHA and complete current-source browser/mobile acceptance using the existing authorized profile and required Public viewport/safe-area/chart/wallet checks.
+- [ ] Keep all other 113-point browser, Admin-role, authenticated financial, realtime and observability gaps at their recorded status. No deployment, browser acceptance, production data mutation, migration or financial operation is authorized by this documentation update.
+- No further source investigation is queued unless new runtime/browser evidence demonstrates a specific defect. Do not reopen proven source work or treat 188fdba as deployed.
+
 ## CURRENT 2026-11-01 — acceptance docs corrected (no implementation/release)
 
 - [x] SOURCE-COUNT VERIFIED: current Admin `NAV_GROUPS` = 31 sidebar destinations; contextual `/sandbox` = 32nd functional destination. Retired `/support` and hidden `/reconciliation` are separate legacy/unavailable checks, not ticket operations or active menu items.

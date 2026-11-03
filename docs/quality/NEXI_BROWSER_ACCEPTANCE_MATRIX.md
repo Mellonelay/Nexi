@@ -1,3 +1,5 @@
+**CURRENT SOURCE UPDATE — 2026-11-04:** Public/Backend candle source closure is implemented and CI-verified at Git main SHA 188fdba1b9e703f04f1c3fbe32186f7daa6dce22; see the dated market-candle source receipt. This source SHA has not been deployed or browser-accepted. The older Nov 1 screenshots under the browser-acceptance evidence directory cover 320x480, 320x568, 360x640, 390x844 and 430x932 on their recorded release only. No current-SHA screenshots exist. Keep the 113-row acceptance tracker release statuses tied to their cited evidence; do not infer current-source browser acceptance or mark all requirements passed. Next browser work is gated on separate deployment authorization and exact deployed-SHA confirmation.
+
 # NEXI Completion and Browser Acceptance Matrix
 
 **Current merged acceptance inventory (2026-11-01):** [113 canonical Public + Admin criteria and desktop route overlay](NEXI_113_PUBLIC_ADMIN_ACCEPTANCE_20261101.md); [113-row CSV proof tracker](NEXI_113_ACCEPTANCE_TRACKER_20261101.csv). Public is mobile-first; Admin is desktop-first. This link does not change the historical source/deployed acceptance status documented below.

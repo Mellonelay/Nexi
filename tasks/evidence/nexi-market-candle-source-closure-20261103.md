@@ -41,3 +41,13 @@ Existing Public mobile source fixes were retained. Bounded source review found n
 ## Continuity
 
 All existing untracked backup/generated files remain untouched and unstaged. No Evolver lesson was promoted. Source implementation is complete; the remaining source-level external gate is exact-SHA GitHub Actions completion, followed only by separately authorized browser/runtime acceptance.
+
+## Final-source and CI reconciliation — 2026-11-04
+
+This addendum supersedes the earlier provisional final-SHA statements in this receipt. The final source is 188fdba1b9e703f04f1c3fbe32186f7daa6dce22, and live local main equals origin/main at that SHA. The tracked tree is clean; pre-existing untracked backups/generated files remain preserved and unstaged.
+
+GitHub Source CI run 41706263277 completed successfully on this exact SHA. Its Graphify, detect, NestJS Doctor, Admin, Fallow, frontend and backend jobs all completed successfully. CodeQL run 41706263177 completed successfully for custom query tests and JavaScript/TypeScript, Python and Actions. The exact-SHA final CI result closes the prior OpenAPI snapshot gap: the snapshot now contains MarketKlineDto.isFinal. The initial Source CI failure at 41705222822 remains historical and was fixed; the old frontend job job_c9462e3243e4 predates reconnect buffering and is not proof.
+
+The earlier focused test results in this receipt remain reused at their documented SHAs/scopes. This reconciliation did not rerun application tests. Fallow is not globally clean: final CI passed its gate while reporting repository findings and degraded/missing node_modules input. Prior d2db8ec Graphify/React Doctor results remain limited to that SHA; final-SHA Graphify CI passed.
+
+No deployment, service restart, current-SHA browser acceptance, database/financial mutation or migration occurred. The November 1 screenshots are prior-source artifacts and are not screenshots of 188fdba. Source closure is complete; browser/runtime acceptance remains dependency-gated on separate deployment authority and exact deployed-SHA confirmation.
