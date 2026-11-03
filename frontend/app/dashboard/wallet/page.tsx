@@ -20,7 +20,7 @@ import WalletDashboardLayout from './components/WalletDashboardLayout';
 type Tab = 'Overview' | 'Funding' | 'Spot' | 'Margin' | 'Binary' | 'Finance';
 type Action = 'Deposit' | 'Withdraw' | 'Transfer' | 'Convert';
 type Category = 'All' | AssetCategory;
-type WalletAsset = { name: string; available: unknown; locked: unknown; total: unknown };
+type WalletAsset = { name: string; displayName: string; iconUrl: string | null; available: unknown; locked: unknown; total: unknown; accountExists: boolean };
 type Activity = { id: string; type: unknown; source: unknown; destination: unknown; asset: unknown; amount: unknown; status: unknown; createdAt: unknown; ledgerId: unknown; referenceType: unknown; referenceId: unknown; correlationId: unknown; details: Record<string, unknown>; postings: Array<Record<string, unknown>> };
 
 const tabs: Tab[] = ['Overview', 'Funding', 'Spot', 'Margin', 'Binary', 'Finance'];
@@ -45,19 +45,26 @@ function sumDecimalStrings(values: unknown[]): string {
 function readAssets(payload: unknown, selectedTab: Tab): WalletAsset[] {
   const root = record(payload);
   const source = Array.isArray(root.assets) ? root.assets : [];
+  const supported = new Set((Array.isArray(root.currencies) ? root.currencies : []).map((value) => String(value).trim().toUpperCase()).filter(Boolean));
   const targetScope = selectedTab === 'Overview' ? null : selectedTab === 'Funding' ? 'MAIN' : selectedTab === 'Binary' ? 'BINARY' : selectedTab.toUpperCase();
   return source.flatMap((value) => {
     const asset = record(value);
+    const symbol = String(asset.asset ?? '').trim().toUpperCase();
+    if (!symbol) return [];
     const scopes = record(asset.scopes);
-    // An unprovisioned account is not a zero-balance account.
     const balances = (targetScope ? [scopes[targetScope]] : Object.values(scopes))
-      .filter(Boolean).map(record).filter((balance) => balance.accountExists !== false);
-    if (!balances.length) return [];
-    const available = sumDecimalStrings(balances.map((balance) => balance.available));
-    const locked = sumDecimalStrings(balances.map((balance) => balance.locked));
-    const total = sumDecimalStrings(balances.map((balance) => balance.total));
-    const name = String(asset.asset ?? '');
-    return name ? [{ name, available, locked, total }] : [];
+      .filter(Boolean).map(record).filter((balance) => balance.accountExists === true);
+    const currencyCatalogEntry = supported.has(symbol);
+    if (!balances.length && !(selectedTab === 'Overview' && currencyCatalogEntry)) return [];
+    const available = balances.length ? sumDecimalStrings(balances.map((balance) => balance.available)) : null;
+    const locked = balances.length ? sumDecimalStrings(balances.map((balance) => balance.locked)) : null;
+    const total = balances.length ? sumDecimalStrings(balances.map((balance) => balance.total)) : null;
+    return [{
+      name: symbol,
+      displayName: String(asset.name ?? symbol),
+      iconUrl: typeof asset.logo === 'string' ? asset.logo : null,
+      available, locked, total, accountExists: balances.length > 0,
+    }];
   });
 }
 
@@ -261,7 +268,7 @@ function assetLabel(asset: ReturnType<typeof assetMeta>, key: 'id' | 'symbol' | 
 }
 
 function WalletAssetRow({ item }: { item: WalletAsset }) {
-  const asset = assetMeta(item.name); const iconItem = { assetId: assetLabel(asset, 'id', item.name), symbol: assetLabel(asset, 'symbol', item.name), displaySymbol: assetLabel(asset, 'displaySymbol', item.name), name: assetLabel(asset, 'name', item.name) }; return <div key={item.name} className="grid min-w-0 grid-cols-[minmax(3rem,1fr)_repeat(3,minmax(3rem,auto))] items-center gap-1.5 bg-[#171022] px-2 py-2 sm:grid-cols-[minmax(0,1fr)_repeat(3,minmax(5rem,auto))] sm:gap-3 sm:px-4"><div className="flex min-w-0 items-center gap-2"><AssetIcon item={iconItem} /><span className="min-w-0"><span className="block truncate text-xs font-semibold sm:text-sm">{assetLabel(asset, 'name', item.name)}</span><span className="block truncate text-[10px] text-[#8C8299] sm:text-xs">{assetLabel(asset, 'displaySymbol', item.name)}</span></span></div><span className="truncate text-right font-mono text-xs tabular-nums">{text(item.available)}</span><span className="truncate text-right font-mono text-[10px] tabular-nums sm:text-xs">{text(item.locked)}</span><span className="truncate text-right font-mono text-xs font-semibold tabular-nums">{text(item.total)}</span></div>;
+  const asset = assetMeta(item.name); const iconItem = { assetId: assetLabel(asset, 'id', item.name), symbol: assetLabel(asset, 'symbol', item.name), displaySymbol: assetLabel(asset, 'displaySymbol', item.name), name: asset?.name ?? item.displayName, iconUrl: item.iconUrl }; return <div key={item.name} className="grid min-w-0 grid-cols-[minmax(3rem,1fr)_repeat(3,minmax(3rem,auto))] items-center gap-1.5 bg-[#171022] px-2 py-2 sm:grid-cols-[minmax(0,1fr)_repeat(3,minmax(5rem,auto))] sm:gap-3 sm:px-4"><div className="flex min-w-0 items-center gap-2"><AssetIcon item={iconItem} /><span className="min-w-0"><span className="block truncate text-xs font-semibold sm:text-sm">{item.displayName}</span><span className="block truncate text-[10px] text-[#8C8299] sm:text-xs">{assetLabel(asset, 'displaySymbol', item.name)}{!item.accountExists && <span className="ml-1 text-amber-200">· Account not opened</span>}</span></span></div><span className="truncate text-right font-mono text-xs tabular-nums">{item.accountExists ? text(item.available) : '—'}</span><span className="truncate text-right font-mono text-[10px] tabular-nums sm:text-xs">{item.accountExists ? text(item.locked) : '—'}</span><span className="truncate text-right font-mono text-xs font-semibold tabular-nums">{item.accountExists ? text(item.total) : '—'}</span></div>;
 }
 
 function WalletActionButton({ item, action, enabled, onSelect }: { item: Action; action: Action | null; enabled: boolean; onSelect: (action: Action) => void }) {
@@ -327,6 +334,18 @@ export default function WalletPage() {
   const authenticated = Boolean(userId);
   const currencies = useMemo(() => assets.map((asset) => ({ symbol: asset.name })), [assets]);
   const transferCurrencies = useMemo(() => Array.isArray(root.currencies) ? root.currencies.map((symbol) => ({ symbol: String(symbol).toUpperCase() })) : currencies, [root.currencies, currencies]);
+  const conversionPairs = useMemo(() => {
+    const symbols = new Set(transferCurrencies.map((item) => item.symbol));
+    const result: Array<{ from: string; to: string }> = [];
+    for (const quote of marketPairs) {
+      if (quote.dataState !== 'LIVE' || quote.price === null || !Number.isFinite(quote.price) || quote.price <= 0) continue;
+      const pair = String(quote.pair || quote.symbol).replace(/[\/_-]/g, '').toUpperCase();
+      for (const from of symbols) for (const to of symbols) {
+        if (from !== to && (pair === from + to || pair === to + from)) result.push({ from, to });
+      }
+    }
+    return result;
+  }, [transferCurrencies, marketPairs]);
 
   const selectAction = (next: Action) => {
     setAction(next);
@@ -355,7 +374,7 @@ export default function WalletPage() {
       <DepositModal isOpen={action === 'Deposit'} onClose={() => setAction(null)} currencies={currencies} selectedCurrency={currency} onSelectCurrency={setCurrency} onCompleted={loadWallet} />
       <WithdrawModal isOpen={action === 'Withdraw'} onClose={() => setAction(null)} currencies={currencies} selectedCurrency={currency} onSelectCurrency={setCurrency} onCompleted={loadWallet} />
       <TransferModal isOpen={action === 'Transfer'} onClose={() => setAction(null)} currencies={transferCurrencies} selectedCurrency={currency} onSelectCurrency={setCurrency} initialDestinationScope={optionsReturn ? 'BINARY' : undefined} onCompleted={loadWallet} />
-      <ConvertModal isOpen={action === 'Convert'} onClose={() => setAction(null)} currencies={currencies} selectedCurrency={currency} onCompleted={loadWallet} />
+      <ConvertModal isOpen={action === 'Convert'} onClose={() => setAction(null)} currencies={transferCurrencies} eligiblePairs={conversionPairs} selectedCurrency={currency} onCompleted={loadWallet} />
     </WalletDashboardLayout>
   </PageShell>;
 }

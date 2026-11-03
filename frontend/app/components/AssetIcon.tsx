@@ -6,18 +6,30 @@ import { assetIconPath, findAsset } from '../lib/asset-registry';
 import type { MarketPair } from '../hooks/useMarketData';
 
 type AssetIconProps = {
-  readonly item: Pick<MarketPair, 'assetId' | 'symbol' | 'displaySymbol' | 'name'>;
+  readonly item: Pick<MarketPair, 'assetId' | 'symbol' | 'displaySymbol' | 'name'> & { iconUrl?: string | null };
   readonly size?: 'sm' | 'md';
 };
+
+function safeAssetIconUrl(value?: string | null): string | undefined {
+  if (!value) return undefined;
+  const candidate = value.trim();
+  if (candidate.startsWith('/') && !candidate.startsWith('//')) return candidate;
+  try {
+    const url = new URL(candidate);
+    return url.protocol === 'https:' && !url.username && !url.password ? url.toString() : undefined;
+  } catch { return undefined; }
+}
 
 export default function AssetIcon({ item, size = 'sm' }: AssetIconProps) {
   const asset = findAsset(item.assetId) ?? findAsset(item.symbol) ?? findAsset(item.displaySymbol);
   const iconPath = item.symbol.trim().toUpperCase() === 'USDT'
     ? '/assets/market/usdt.svg'
     : assetIconPath(asset ?? { iconKey: undefined });
+  const externalIcon = safeAssetIconUrl(item.iconUrl);
+  const resolvedIconPath = iconPath ?? externalIcon;
   const dimensions = size === 'md' ? 36 : 28;
   const fallback = (asset?.displaySymbol ?? item.displaySymbol).slice(0, 3).toUpperCase();
-  return <AssetIconImage key={iconPath ?? 'fallback'} item={item} asset={asset} iconPath={iconPath} size={size} dimensions={dimensions} fallback={fallback} />;
+  return <AssetIconImage key={resolvedIconPath ?? 'fallback'} item={item} asset={asset} iconPath={resolvedIconPath} size={size} dimensions={dimensions} fallback={fallback} />;
 }
 
 function AssetIconImage({ item, asset, iconPath, size, dimensions, fallback }: AssetIconProps & { asset: ReturnType<typeof findAsset>; iconPath?: string; dimensions: number; fallback: string }) {

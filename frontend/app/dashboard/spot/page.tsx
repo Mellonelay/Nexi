@@ -43,8 +43,8 @@ const RealtimeTradingChart = dynamic(() => import('../../components/RealtimeTrad
   loading: () => <div className="min-h-[180px] animate-pulse rounded-2xl bg-[#0B0711] md:min-h-[300px]" />,
 });
 
-type OrderBookRow = { id?: string; price: number; amount: number; remaining?: number };
-type MarketTradeRow = { id: string; price: number; amount: number; executedAt: string; side: 'MATCHED' };
+type OrderBookRow = { id?: string; price: string; amount: string };
+type MarketTradeRow = { id: string; price: number; amount: number; executedAt: string; side: 'BUY' | 'SELL' };
 type OrderType = 'MARKET' | 'LIMIT' | 'STOP';
 type HistoryTab = 'OPEN' | 'ORDERS' | 'TRADES';
 type SpotHistoryRow = Record<string, unknown>;
@@ -92,20 +92,25 @@ function walletAmountLabel(state: WalletReadState, balance: ScopedBalance | unde
 
 
 const CHART_INTERVALS: ChartInterval[] = ['1m', '5m', '15m', '30m', '1h', '4h', '1d'];
-const numberFormatter = new Intl.NumberFormat('en-US');
+const numberFormatter = new Intl.NumberFormat('en-US', { maximumSignificantDigits: 10 });
 const orderBookRowKey = (row: OrderBookRow) => `${row.id ?? ''}:${row.price}:${row.amount}`;
 
 const finiteRows = (value: unknown): OrderBookRow[] => {
   if (!Array.isArray(value)) return [];
-  return value.flatMap((row) => {
+  const rows = value.flatMap((row) => {
     if (!row || typeof row !== 'object') return [];
-    const item = row as Record<string, unknown>;
-    const price = Number(item.price);
-    const amount = Number(item.remaining ?? item.amount);
-    return Number.isFinite(price) && price > 0 && Number.isFinite(amount) && amount > 0
-      ? [{ id: typeof item.id === 'string' ? item.id : typeof item.orderId === 'string' ? item.orderId : undefined, price, amount }]
-      : [];
+    const item = Array.isArray(row) ? null : row as Record<string, unknown>;
+    const rawPrice = Array.isArray(row) ? row[0] : item?.price;
+    const rawAmount = Array.isArray(row) ? row[1] : item?.remaining ?? item?.amount;
+    const price = Number(rawPrice);
+    const amount = Number(rawAmount);
+    if (!Number.isFinite(price) || price <= 0 || !Number.isFinite(amount) || amount <= 0) return [];
+    return [{
+      id: typeof item?.id === 'string' ? item.id : item?.orderId !== undefined ? String(item.orderId) : undefined,
+      price: String(rawPrice), amount: String(rawAmount),
+    }];
   });
+  return rows.filter((row, index, all) => all.findIndex((candidate) => Number(candidate.price) === Number(row.price)) === index);
 };
 
 const finiteTrades = (value: unknown): MarketTradeRow[] => {
@@ -114,11 +119,13 @@ const finiteTrades = (value: unknown): MarketTradeRow[] => {
     if (!row || typeof row !== 'object') return [];
     const item = row as Record<string, unknown>;
     const price = Number(item.price);
-    const amount = Number(item.amount);
-    const id = typeof item.id === 'string' ? item.id : null;
-    const executedAt = typeof item.executedAt === 'string' ? item.executedAt : null;
-    return id && executedAt && Number.isFinite(price) && price > 0 && Number.isFinite(amount) && amount > 0
-      ? [{ id, price, amount, executedAt, side: 'MATCHED' as const }]
+    const amount = Number(item.amount ?? item.quantity ?? item.qty);
+    const id = item.id !== undefined && item.id !== null ? String(item.id) : item.tradeId !== undefined && item.tradeId !== null ? String(item.tradeId) : null;
+    const timestamp = typeof item.executedAt === 'string' ? item.executedAt : Number(item.eventTime);
+    const executedAt = typeof timestamp === 'string' ? timestamp : Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : null;
+    const side = item.side === 'BUY' || item.maker === false ? 'BUY' : item.side === 'SELL' || item.maker === true ? 'SELL' : null;
+    return id && executedAt && side && Number.isFinite(Date.parse(executedAt)) && Number.isFinite(price) && price > 0 && Number.isFinite(amount) && amount > 0
+      ? [{ id, price, amount, executedAt, side }]
       : [];
   });
 };
@@ -171,96 +178,118 @@ function useSpotMarketFeed({
 
   useEffect(() => {
     let cancelled = false;
-    setBids([]);
-    setAsks([]);
-    setTrades([]);
-    if (!backendConfigured) return;
-    setBookStatus('LOADING');
-    setTradeStatus('LOADING');
+    let lastBookAt = 0;
+    let lastTradeAt = 0;
+    let depthRevision = 0;
+    let tradeRevision = 0;
+    let depthRequestSequence = 0;
+    let tradeRequestSequence = 0;
+    let lastUpdateId = BigInt(0);
+    const seenTrades = new Set<string>();
+    setBids([]); setAsks([]); setTrades([]);
+    if (!backendConfigured) return () => { cancelled = true; };
+    setBookStatus('LOADING'); setTradeStatus('LOADING');
 
-    const socket = io(`${apiBaseUrl}/spot`, {
-      transports: ['polling', 'websocket'],
-      tryAllTransports: true,
-      reconnection: true,
-      reconnectionAttempts: 8,
-      reconnectionDelay: 500,
-      reconnectionDelayMax: 8_000,
+    const socket = io(`${apiBaseUrl}/market`, {
+      transports: ['polling', 'websocket'], tryAllTransports: true, reconnection: true,
+      reconnectionAttempts: 8, reconnectionDelay: 500, reconnectionDelayMax: 8_000,
     });
-
+    const validEvent = (event: Record<string, unknown>, kind: 'depth' | 'trade') => {
+      const eventTime = Number(event.eventTime);
+      return normalizePair(String(event.symbol ?? '')) === normalizedSymbol
+        && event.event === `market.reference.${kind}`
+        && event.version === 'v1' && event.kind === kind && event.provider === 'binance-spot' && event.source === 'websocket'
+        && Number.isFinite(eventTime) && eventTime <= Date.now() + 5_000 && Date.now() - eventTime < 30_000;
+    };
     const refreshTrades = () => {
-      void api.get('/spot/market-trades', { params: { pair: displayPair }, timeout: 15_000 })
+      const revision = tradeRevision;
+      const request = ++tradeRequestSequence;
+      void api.get('/market/trades', { params: { symbol: normalizedSymbol, limit: 50 }, timeout: 15_000 })
         .then((response) => {
-          if (cancelled) return;
-          const nextTrades = finiteTrades(response.data);
-          setTrades(nextTrades);
-          setTradeStatus(socket.connected ? (nextTrades.length > 0 ? 'LIVE' : 'UNAVAILABLE') : 'CONNECTION_LOST');
+          if (cancelled || revision !== tradeRevision || request !== tradeRequestSequence) return;
+          const payload = response.data as unknown;
+          if (!Array.isArray(payload)) { setTradeStatus('UNAVAILABLE'); return; }
+          const rows = finiteTrades(payload.filter((row) => row && typeof row === 'object' && (row as Record<string, unknown>).provider === 'binance-spot' && (row as Record<string, unknown>).source === 'rest'));
+          const latestTradeAt = rows.reduce((latest, row) => Math.max(latest, Date.parse(row.executedAt)), 0);
+          if (!rows.length || latestTradeAt > Date.now() + 5_000 || Date.now() - latestTradeAt > 300_000) { setTrades([]); setTradeStatus('UNAVAILABLE'); return; }
+          const ordered = rows.sort((a, b) => Date.parse(b.executedAt) - Date.parse(a.executedAt));
+          for (const row of ordered) seenTrades.add(row.id);
+          setTrades((current) => [...current, ...ordered].filter((item, index, all) => all.findIndex((other) => other.id === item.id) === index)
+            .sort((a, b) => Date.parse(b.executedAt) - Date.parse(a.executedAt)).slice(0, 50));
+          lastTradeAt = Date.now();
+          setTradeStatus(socket.connected ? 'LIVE' : 'CONNECTION_LOST');
         })
-        .catch(() => { if (!cancelled) setTradeStatus('ERROR'); });
+        .catch(() => { if (!cancelled && revision === tradeRevision && request === tradeRequestSequence) setTradeStatus('ERROR'); });
     };
-
     const refreshBook = () => {
-      void api.get('/spot/orderbook', { params: { pair: displayPair }, timeout: 15_000 })
+      const revision = depthRevision;
+      const request = ++depthRequestSequence;
+      void api.get('/market/depth', { params: { symbol: normalizedSymbol, limit: 20 }, timeout: 15_000 })
         .then((response) => {
-          if (cancelled) return;
+          if (cancelled || revision !== depthRevision || request !== depthRequestSequence) return;
           const payload = response.data as Record<string, unknown>;
-          const nextBids = finiteRows(payload.bids);
-          const nextAsks = finiteRows(payload.asks);
-          setBids(nextBids);
-          setAsks(nextAsks);
-          setBookStatus(socket.connected ? (nextBids.length > 0 || nextAsks.length > 0 ? 'LIVE' : 'UNAVAILABLE') : 'CONNECTION_LOST');
+          const observedAt = Date.parse(String(payload.observedAt ?? ''));
+          if (payload.provider !== 'binance-spot' || payload.source !== 'rest' || payload.state !== 'LIVE' || !Number.isFinite(observedAt)
+            || Date.now() - observedAt > 30_000 || observedAt > Date.now() + 5_000) {
+            setBookStatus('UNAVAILABLE'); return;
+          }
+          const nextBids = finiteRows(payload.bids).sort((a, b) => Number(b.price) - Number(a.price));
+          const nextAsks = finiteRows(payload.asks).sort((a, b) => Number(a.price) - Number(b.price));
+          if (!nextBids.length || !nextAsks.length) { setBookStatus('UNAVAILABLE'); return; }
+          setBids(nextBids); setAsks(nextAsks);
+          lastBookAt = Date.now();
+          setBookStatus(socket.connected ? 'LIVE' : 'CONNECTION_LOST');
         })
-        .catch(() => { if (!cancelled) setBookStatus('ERROR'); });
+        .catch(() => { if (!cancelled && revision === depthRevision && request === depthRequestSequence) setBookStatus('ERROR'); });
     };
-
-    const handleOrderBook = (raw: unknown) => {
+    const handleDepth = (raw: unknown) => {
       if (!raw || typeof raw !== 'object') return;
       const event = raw as Record<string, unknown>;
-      if (normalizePair(String(event.pair ?? '')) !== normalizedSymbol) return;
-      const payload = event.payload && typeof event.payload === 'object' ? event.payload as Record<string, unknown> : null;
-      const orderBook = payload?.orderBook && typeof payload.orderBook === 'object' ? payload.orderBook as Record<string, unknown> : null;
-      if (!orderBook) return;
-      const nextBids = finiteRows(orderBook.bids);
-      const nextAsks = finiteRows(orderBook.asks);
-      setBids(nextBids);
-      setAsks(nextAsks);
-      setBookStatus(nextBids.length > 0 || nextAsks.length > 0 ? 'LIVE' : 'UNAVAILABLE');
-      refreshTrades();
+      const updateIdText = String(event.updateId ?? '');
+      if (!validEvent(event, 'depth') || !/^\d+$/.test(updateIdText)) return;
+      const updateId = BigInt(updateIdText);
+      if (updateId <= lastUpdateId) return;
+      const nextBids = finiteRows(event.bids).sort((a, b) => Number(b.price) - Number(a.price));
+      const nextAsks = finiteRows(event.asks).sort((a, b) => Number(a.price) - Number(b.price));
+      if (!nextBids.length || !nextAsks.length) return;
+      lastUpdateId = updateId; depthRevision++; lastBookAt = Date.now();
+      setBids(nextBids); setAsks(nextAsks); setBookStatus('LIVE');
     };
-
-    const handleConnect = () => {
-      socket.emit('spot.subscribe', { pair: normalizedSymbol });
-      refreshBook();
-      refreshTrades();
+    const handleTrade = (raw: unknown) => {
+      if (!raw || typeof raw !== 'object') return;
+      const event = raw as Record<string, unknown>;
+      if (!validEvent(event, 'trade')) return;
+      const [trade] = finiteTrades([event]);
+      if (!trade || seenTrades.has(trade.id)) return;
+      seenTrades.add(trade.id);
+      if (seenTrades.size > 2_000) seenTrades.delete(seenTrades.values().next().value as string);
+      tradeRevision++; lastTradeAt = Date.now();
+      setTrades((current) => [trade, ...current.filter((item) => item.id !== trade.id)]
+        .sort((a, b) => Date.parse(b.executedAt) - Date.parse(a.executedAt)).slice(0, 50));
+      setTradeStatus('LIVE');
     };
-    const handleConnectionLoss = () => {
-      setBookStatus('CONNECTION_LOST');
-      setTradeStatus('CONNECTION_LOST');
-    };
+    const handleConnect = () => { setBookStatus('LOADING'); setTradeStatus('LOADING'); refreshBook(); refreshTrades(); };
+    const handleConnectionLoss = () => { setBookStatus('CONNECTION_LOST'); setTradeStatus('CONNECTION_LOST'); };
+    const freshnessTimer = window.setInterval(() => {
+      const now = Date.now();
+      if (lastBookAt && now - lastBookAt > 30_000) setBookStatus('CONNECTION_LOST');
+      if (lastTradeAt && now - lastTradeAt > 30_000) setTradeStatus('CONNECTION_LOST');
+    }, 5_000);
 
-    refreshBook();
-    refreshTrades();
-    socket.on('disconnect', handleConnectionLoss);
-    socket.on('connect_error', handleConnectionLoss);
-    socket.on('connect', handleConnect);
-    socket.on('spot.orderbook', handleOrderBook);
-
+    refreshBook(); refreshTrades();
+    socket.on('disconnect', handleConnectionLoss); socket.on('connect_error', handleConnectionLoss);
+    socket.on('connect', handleConnect); socket.on('market.reference.depth', handleDepth);
+    socket.on('market.reference.trade', handleTrade);
     return () => {
-      cancelled = true;
-      socket.off('disconnect', handleConnectionLoss);
-      socket.off('connect_error', handleConnectionLoss);
-      socket.off('connect', handleConnect);
-      socket.off('spot.orderbook', handleOrderBook);
-      socket.disconnect();
+      cancelled = true; window.clearInterval(freshnessTimer);
+      socket.off('disconnect', handleConnectionLoss); socket.off('connect_error', handleConnectionLoss);
+      socket.off('connect', handleConnect); socket.off('market.reference.depth', handleDepth);
+      socket.off('market.reference.trade', handleTrade); socket.disconnect();
     };
   }, [backendConfigured, displayPair, normalizedSymbol]);
 
-  return {
-    bids: backendConfigured ? bids : [],
-    asks: backendConfigured ? asks : [],
-    trades: backendConfigured ? trades : [],
-    tradeStatus: backendConfigured ? tradeStatus : 'UNAVAILABLE',
-    bookStatus: backendConfigured ? bookStatus : 'UNAVAILABLE',
-  };
+  return { bids: backendConfigured ? bids : [], asks: backendConfigured ? asks : [], trades: backendConfigured ? trades : [],
+    tradeStatus: backendConfigured ? tradeStatus : 'UNAVAILABLE', bookStatus: backendConfigured ? bookStatus : 'UNAVAILABLE' };
 }
 
 
@@ -396,17 +425,17 @@ function SpotOrderBook({mobileMarketPanel, bids, asks, bookStatus, setPrice}: Sp
   return (
             <section className={`nexi-station-card min-w-0 overflow-hidden rounded-2xl xl:block ${mobileMarketPanel === 'BOOK' ? 'block' : 'hidden'}`} aria-labelledby="order-book-heading">
               <div className="flex items-center justify-between border-b border-white/5 px-4 py-3">
-                <h2 id="order-book-heading" className="font-semibold">Order book</h2>
-                {bookStatus === 'LIVE' ? <span className="text-xs text-[#8C8299]">Live</span> : bookStatus === 'CONNECTION_LOST' ? <span className="text-xs text-amber-200">Updates paused · last received depth</span> : bookStatus === 'LOADING' ? <span className="text-xs text-[#8C8299]">Loading</span> : bookStatus === 'ERROR' ? <span className="text-xs text-[#8C8299]">Request error</span> : null}
+                <div><h2 id="order-book-heading" className="font-semibold">Market depth</h2><p className="text-[10px] text-[#8C8299]">Binance Spot reference data · not executable NEXI liquidity</p></div>
+                {bookStatus === 'LIVE' ? <span className="text-xs text-[#8C8299]">Live</span> : bookStatus === 'CONNECTION_LOST' ? <span className="text-xs text-amber-200">Updates paused · last received depth</span> : bookStatus === 'LOADING' ? <span className="text-xs text-[#8C8299]">Loading</span> : bookStatus === 'ERROR' ? <span className="text-xs text-[#8C8299]">Request error</span> : bookStatus === 'UNAVAILABLE' ? <span className="text-xs text-amber-200">Unavailable</span> : null}
               </div>
               <div className="grid min-w-0 grid-cols-2 text-xs">
                 <div className="min-w-0 border-r border-white/5 p-3">
-                  <div className="mb-2 flex min-w-0 justify-between gap-2 text-[#8C8299]"><span>Amount</span><span>Bid</span></div>
-                  {bids.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(String(row.price))} className="nexi-interactive flex min-h-8 min-w-0 w-full justify-between gap-2 rounded px-1 font-mono hover:bg-emerald-400/5"><span className="truncate">{row.amount}</span><span className="truncate text-[#22D3A6]">{row.price}</span></button>)}
+                  <div className="mb-2 flex justify-between text-[10px] text-[#8C8299]"><span>Bid · USDT</span><span>Quantity BTC</span></div>
+                  {bids.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(row.price)} className="nexi-interactive flex min-h-9 min-w-0 w-full flex-col justify-center rounded px-1 text-left font-mono tabular-nums hover:bg-emerald-400/5"><span className="text-xs text-[#22D3A6]">{row.price}</span><span className="break-all text-[10px] text-[#C3BBD0]">{row.amount} BTC</span></button>)}
                 </div>
                 <div className="min-w-0 p-3">
-                  <div className="mb-2 flex min-w-0 justify-between gap-2 text-[#8C8299]"><span>Ask</span><span>Amount</span></div>
-                  {asks.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(String(row.price))} className="nexi-interactive flex min-h-8 min-w-0 w-full justify-between gap-2 rounded px-1 font-mono hover:bg-rose-400/5"><span className="truncate text-[#FF5C7C]">{row.price}</span><span className="truncate">{row.amount}</span></button>)}
+                  <div className="mb-2 flex justify-between text-[10px] text-[#8C8299]"><span>Ask · USDT</span><span>Quantity BTC</span></div>
+                  {asks.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(row.price)} className="nexi-interactive flex min-h-9 min-w-0 w-full flex-col items-end justify-center rounded px-1 text-right font-mono tabular-nums hover:bg-rose-400/5"><span className="text-xs text-[#FF5C7C]">{row.price}</span><span className="break-all text-[10px] text-[#C3BBD0]">{row.amount} BTC</span></button>)}
                 </div>
               </div>
               {bids.length === 0 && asks.length === 0 && (
@@ -415,7 +444,7 @@ function SpotOrderBook({mobileMarketPanel, bids, asks, bookStatus, setPrice}: Sp
                     ? 'Loading the order book…'
                     : bookStatus === 'ERROR'
                       ? 'The order book could not be loaded.'
-                      : 'No order-book data yet.'}
+                      : 'Reference depth is unavailable or unsupported for this symbol.'}
                 </p>
               )}
             </section>
@@ -433,20 +462,21 @@ function streamStatusText(status: MarketConnectionStatus, liveLabel: string, los
 function recentTradesEmptyText(status: MarketConnectionStatus) {
   if (status === 'LOADING') return 'Loading recent trades…';
   if (status === 'ERROR') return 'Recent trades could not be loaded.';
+  if (status === 'UNAVAILABLE') return 'Reference trades are unavailable or unsupported for this symbol.';
   return 'No recent trades yet.';
 }
 
 function SpotRecentTrades({mobileMarketPanel, marketTrades, tradeStatus}: SpotWorkspaceProps) {
-  const statusText = streamStatusText(tradeStatus, 'Live market records', 'Updates paused · last received records');
+  const statusText = streamStatusText(tradeStatus, 'Live reference trades', 'Reference updates paused · last received trades');
   const statusClass = tradeStatus === 'CONNECTION_LOST' ? 'text-xs text-amber-200' : 'text-xs text-[#8C8299]';
   return (
             <section className={`nexi-station-card min-w-0 rounded-2xl xl:block ${mobileMarketPanel === 'TRADES' ? 'block' : 'hidden'}`} aria-labelledby="recent-trades-heading">
               <div className="flex items-center justify-between gap-2 border-b border-white/5 px-4 py-3">
-                <h2 id="recent-trades-heading" className="font-semibold">Recent trades</h2>
+                <div><h2 id="recent-trades-heading" className="font-semibold">Recent trades</h2><p className="text-[10px] text-[#8C8299]">Binance Spot reference trades</p></div>
                 {statusText && <span className={statusClass}>{statusText}</span>}
               </div>
               {marketTrades.length > 0
-                ? <div className="divide-y divide-white/5 text-xs">{marketTrades.slice(0, 12).map((trade) => <div key={trade.id} className="grid grid-cols-3 gap-2 px-4 py-2 font-mono"><span>{numberFormatter.format(trade.price)}</span><span>{trade.amount}</span><span className="text-right text-[#8C8299]"><LocalDateTime value={trade.executedAt} timeStyle="short" /></span></div>)}</div>
+                ? <div className="divide-y divide-white/5 text-xs">{marketTrades.slice(0, 12).map((trade) => <div key={trade.id} className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-2 px-4 py-2 font-mono"><span>{numberFormatter.format(trade.price)}</span><span className={trade.side === 'BUY' ? 'text-[#22D3A6]' : 'text-[#FF5C7C]'}>{trade.side}</span><span className="text-right text-[#8C8299]"><LocalDateTime value={trade.executedAt} timeStyle="short" /></span></div>)}</div>
                 : <div className="flex min-h-52 items-center justify-center p-6 text-center text-sm text-[#8C8299]">{recentTradesEmptyText(tradeStatus)}</div>}
             </section>
   );

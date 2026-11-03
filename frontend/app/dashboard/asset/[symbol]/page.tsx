@@ -63,12 +63,13 @@ function assetDetailModel(item: MarketItem, details: AssetDetails | null, detail
     : {};
   const metadataSource = detailText(details?.sourceProvider)
     ?? (details?.provenance?.map((entry) => entry.provider).filter(Boolean).join(', ') || placeholder);
-  const aboutFacts: Array<[string, string]> = [
+  const technicalFacts: Array<[string, string]> = [
     ['Metadata status', details?.status ?? (detailState === 'UNAVAILABLE' ? 'UNAVAILABLE' : placeholder)],
     ['Metadata source', metadataSource],
     ['Last refreshed', detailText(details?.refreshedAt) ?? placeholder],
     ['Metadata expires', detailText(details?.expiresAt) ?? placeholder],
   ];
+  const aboutFacts: Array<[string, string]> = [];
   if (instrument.category === 'Crypto') {
     aboutFacts.push(
       ['Project', detailText(details?.projectName) ?? instrument.name],
@@ -128,7 +129,7 @@ function assetDetailModel(item: MarketItem, details: AssetDetails | null, detail
     : displayStatus === 'Live'
       ? 'border-emerald-300/20 text-emerald-200'
       : 'border-rose-300/20 text-rose-200';
-  return { instrument, definition, aboutCopy, aboutFacts, aboutLinks, provenance, displayStatus, statusClass };
+  return { instrument, definition, aboutCopy, aboutFacts, aboutLinks, technicalFacts, provenance, displayStatus, statusClass };
 }
 
 export default function AssetDetailPage() {
@@ -189,7 +190,7 @@ function AssetDetailView({
     return () => { cancelled = true; };
   }, [item.symbol]);
 
-  const { instrument, definition, aboutCopy, aboutFacts, aboutLinks, provenance, displayStatus, statusClass } = assetDetailModel(item, details, detailState);
+  const { instrument, definition, aboutCopy, aboutFacts, aboutLinks, technicalFacts, provenance, displayStatus, statusClass } = assetDetailModel(item, details, detailState);
 
   return (
     <div className="nexi-page-shell relative min-h-full w-full min-w-0 overflow-x-clip px-4 pb-6 pt-4 text-[#F8F6FF] md:px-8 md:pb-8 md:pt-8">
@@ -235,7 +236,7 @@ function AssetDetailView({
             <div className="flex items-center gap-2"><BarChart3 className="h-4 w-4 text-[#A995FF]" aria-hidden="true" /><h2 className="font-semibold">Market chart</h2></div>
             <span className="text-xs text-[#8C8299]">{timeframe === '1d' ? '1D' : timeframe}</span>
           </div>
-          <div className="min-w-0 min-h-[260px]">
+          <div className="min-w-0 h-[clamp(280px,52svh,620px)] md:h-[min(62vh,720px)]">
             <RealtimeTradingChart
               symbol={normalizePair(instrument.pair)}
               type="spot"
@@ -272,9 +273,10 @@ function AssetDetailView({
                 {aboutLinks.map(([label, href]) => <a key={label} href={href} target="_blank" rel="noreferrer" className="text-xs font-semibold text-violet-200 underline decoration-violet-300/40 underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)]">{label}</a>)}
               </div>
             )}
-            {provenance.length > 0 && (
-              <div className="mt-4 border-t border-violet-300/10 pt-4">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-[#8C8299]">Metadata provenance</h3>
+            {(provenance.length > 0 || technicalFacts.length > 0) && (
+              <details className="mt-4 border-t border-violet-300/10 pt-3">
+                <summary className="cursor-pointer text-xs font-semibold text-[#8C8299]">Data sources and verification</summary>
+                <dl className="mt-2 grid gap-2 text-xs sm:grid-cols-2">{technicalFacts.map(([label, value]) => <div key={label}><dt className="text-[#8C8299]">{label}</dt><dd className="break-words text-[#C3BBD0]">{value}</dd></div>)}</dl>
                 <ul className="mt-2 grid gap-2 text-xs sm:grid-cols-2">
                   {provenance.map((entry) => {
                     const href = safeExternalUrl(entry.url);
@@ -283,7 +285,7 @@ function AssetDetailView({
                     return <li key={href} className="min-w-0"><a href={href} target="_blank" rel="noreferrer" className="break-all text-violet-200 underline decoration-violet-300/40 underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)]">{entry.provider}</a>{checkedAt && <span className="ml-2 break-words text-[#8C8299]">{entry.checkedAt ? 'Checked' : 'Verified'} {checkedAt}</span>}</li>;
                   })}
                 </ul>
-              </div>
+              </details>
             )}
 
           </div>
