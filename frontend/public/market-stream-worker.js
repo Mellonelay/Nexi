@@ -1,80 +1,143 @@
-let intervalSeconds = 60;
+let generation = 0;
 const emptySnapshot = () => ({
-  status: 'UNAVAILABLE',
+  status: "UNAVAILABLE",
   lastSequence: null,
   lastTimestamp: null,
+  lastQuoteTimestamp: null,
+  lastKlineTimestamp: null,
+  lastKlineProvider: null,
+  lastKlineSource: null,
+  lastKlineFinal: null,
+  candleRevisions: {},
   price: null,
   candles: [],
 });
 let snapshot = emptySnapshot();
+const rank = (revision) =>
+  revision?.source?.endsWith(":quote-aggregation")
+    ? 0
+    : revision?.source?.startsWith("derived:")
+      ? 1
+      : 2;
+const publish = () => self.postMessage({ generation, snapshot });
 
 self.onmessage = (event) => {
-  if (event.data?.type === 'INIT') {
-    intervalSeconds = Math.max(1, Number(event.data.intervalSeconds) || 60);
-    const initial = event.data.snapshot;
-    snapshot = initial && Array.isArray(initial.candles)
-      ? {
-          status: initial.status || 'UNAVAILABLE',
-          lastSequence: initial.lastSequence ?? null,
-          lastTimestamp: initial.lastTimestamp ?? null,
-          price: Number.isFinite(initial.price) ? initial.price : null,
-          candles: initial.candles.slice(-500),
-        }
-      : emptySnapshot();
+  const message = event.data || {};
+  if (message.type === "INIT") {
+    generation = Number(message.generation) || 0;
+    const initial = message.snapshot;
+    snapshot =
+      initial && Array.isArray(initial.candles)
+        ? {
+            ...emptySnapshot(),
+            ...initial,
+            candles: initial.candles.slice(-500),
+            candleRevisions: initial.candleRevisions || {},
+          }
+        : emptySnapshot();
+    publish();
     return;
   }
+  if (Number(message.generation) !== generation) return;
 
-  if (event.data?.type === 'KLINE') {
-    const kline = event.data.kline;
+  if (message.type === "KLINE") {
+    const kline = message.kline;
     if (!kline?.candle || !Number.isFinite(kline.observedAt)) return;
+    const key = String(kline.candle.time);
+    const prior = snapshot.candleRevisions[key];
+    const revision = {
+      observedAt: kline.observedAt,
+      sequence: kline.sequence ?? null,
+      provider: kline.provider ?? null,
+      source: kline.source ?? null,
+      isFinal: kline.isFinal === true,
+    };
+    if (
+      prior &&
+      (rank(revision) < rank(prior) ||
+        (prior.isFinal && !revision.isFinal) ||
+        (rank(revision) === rank(prior) &&
+          (revision.observedAt < prior.observedAt ||
+            (revision.observedAt === prior.observedAt &&
+              ((revision.sequence !== null &&
+                prior.sequence !== null &&
+                revision.sequence <= prior.sequence) ||
+                (revision.sequence === null && prior.sequence === null))))))
+    )
+      return;
+    const latestCandleTime =
+      snapshot.candles.at(-1)?.time ?? Number.NEGATIVE_INFINITY;
+    const isNewestCandle = kline.candle.time >= latestCandleTime;
     const candles = [...snapshot.candles];
-    const index = candles.findIndex((candle) => candle.time === kline.candle.time);
+    const index = candles.findIndex(
+      (candle) => candle.time === kline.candle.time,
+    );
     if (index >= 0) candles[index] = kline.candle;
     else candles.push(kline.candle);
     candles.sort((left, right) => left.time - right.time);
+    const boundedCandles = candles.slice(-500);
+    const retainedTimes = new Set(
+      boundedCandles.map((candle) => String(candle.time)),
+    );
+    const candleRevisions = Object.fromEntries(
+      Object.entries({ ...snapshot.candleRevisions, [key]: revision }).filter(
+        ([time]) => retainedTimes.has(time),
+      ),
+    );
     snapshot = {
-      status: 'LIVE',
-      lastSequence: snapshot.lastSequence,
-      lastTimestamp: Math.max(snapshot.lastTimestamp || 0, kline.observedAt),
-      price: kline.candle.close,
-      candles: candles.slice(-500),
+      ...snapshot,
+      status:
+        kline.observedAt >= (snapshot.lastKlineTimestamp || 0)
+          ? "LIVE"
+          : snapshot.status,
+      lastTimestamp: Math.max(
+        snapshot.lastKlineTimestamp || 0,
+        kline.observedAt,
+      ),
+      lastKlineTimestamp: Math.max(
+        snapshot.lastKlineTimestamp || 0,
+        kline.observedAt,
+      ),
+      lastKlineProvider: isNewestCandle
+        ? revision.provider
+        : snapshot.lastKlineProvider,
+      lastKlineSource: isNewestCandle
+        ? revision.source
+        : snapshot.lastKlineSource,
+      lastKlineFinal: isNewestCandle
+        ? revision.isFinal
+        : snapshot.lastKlineFinal,
+      candleRevisions,
+      price:
+        isNewestCandle && kline.observedAt >= (snapshot.lastQuoteTimestamp || 0)
+          ? kline.candle.close
+          : snapshot.price,
+      candles: boundedCandles,
     };
-    self.postMessage(snapshot);
+    publish();
     return;
   }
 
-  if (event.data?.type !== 'TICK') return;
-  const tick = event.data.tick;
-  if (tick.sequence !== undefined && snapshot.lastSequence !== null && tick.sequence <= snapshot.lastSequence) return;
-  if (snapshot.lastTimestamp !== null && tick.timestamp < snapshot.lastTimestamp - intervalSeconds * 1000) return;
-  const bucket = Math.floor(tick.timestamp / (intervalSeconds * 1000)) * intervalSeconds;
-  const candles = [...snapshot.candles];
-  const last = candles.at(-1);
-  if (last?.time === bucket) {
-    candles[candles.length - 1] = {
-      ...last,
-      high: Math.max(last.high, tick.price),
-      low: Math.min(last.low, tick.price),
-      close: tick.price,
-      volume: (last.volume || 0) + (tick.volume || 0),
-    };
-  } else if (!last || bucket > last.time) {
-    candles.push({
-      time: bucket,
-      open: tick.price,
-      high: tick.price,
-      low: tick.price,
-      close: tick.price,
-      volume: tick.volume || 0,
-    });
-  }
-
+  if (message.type !== "TICK") return;
+  const tick = message.tick;
+  if (!tick || !Number.isFinite(tick.timestamp) || !Number.isFinite(tick.price))
+    return;
+  if (
+    tick.sequence !== undefined &&
+    snapshot.lastSequence !== null &&
+    tick.sequence <= snapshot.lastSequence
+  )
+    return;
+  if (
+    snapshot.lastQuoteTimestamp !== null &&
+    tick.timestamp < snapshot.lastQuoteTimestamp
+  )
+    return;
   snapshot = {
-    status: 'LIVE',
+    ...snapshot,
     lastSequence: tick.sequence ?? snapshot.lastSequence,
-    lastTimestamp: tick.timestamp,
+    lastQuoteTimestamp: tick.timestamp,
     price: tick.price,
-    candles: candles.slice(-500),
   };
-  self.postMessage(snapshot);
+  publish();
 };

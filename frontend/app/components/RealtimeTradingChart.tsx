@@ -2,6 +2,7 @@
 
 import TradingChart from "./TradingChart";
 import { useRealtimeMarket } from "../hooks/useRealtimeMarket";
+import { marketCandleLineageLabel } from "../lib/market-stream";
 import type { MarketDataStatus } from "../lib/market-data";
 import type { BinarySandboxChartFeed } from "../lib/binary-sandbox-chart";
 
@@ -35,6 +36,10 @@ export default function RealtimeTradingChart({
     ? sandboxFeed?.valid && candles.length > 0 ? "LIVE" : "ERROR"
     : marketStatus === "CLOSED" ? "CLOSED" : rawStatus;
 
+  const candleLineageLabel = !hasSandbox
+    ? marketCandleLineageLabel(stream.lastKlineSource, stream.lastKlineFinal)
+    : null;
+
   return (
     <TradingChart
       symbol={symbol}
@@ -42,6 +47,7 @@ export default function RealtimeTradingChart({
       interval={interval}
       candles={candles}
       status={status}
+      candleLineageLabel={candleLineageLabel}
       sandboxed={hasSandbox}
       showIndicatorControls={showIndicatorControls}
     />

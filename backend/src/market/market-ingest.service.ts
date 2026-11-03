@@ -147,11 +147,12 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
           sessionState: event.sessionState,
         });
         if (quote.accepted && event.price && event.provider !== 'binance-spot') {
-          await this.marketKlines.accumulateQuote({
+          const candle = await this.marketKlines.accumulateQuote({
             symbol: event.symbol, price: event.price, provider: event.provider,
             source: event.source,
             observedAt: new Date(event.eventTime),
           });
+          await this.publishMarketKlineEvent(candle);
         }
       } else if (event.kind === 'kline') {
         const persisted = await this.marketKlines.persist({
@@ -186,7 +187,7 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
   private async publishMarketKlineEvent(candle: {
     symbol: string; interval: string; time: number; closeTime: string | null;
     open: string; high: string; low: string; close: string; volume: string | null;
-    provider: string; source: string; observedAt: string; receivedAt: string;
+    provider: string; source: string; observedAt: string; receivedAt: string; isFinal: boolean;
   }): Promise<void> {
     if (!this.redis.isAvailable()) return;
     const payload: MarketKlineRealtimeEvent = {
@@ -194,7 +195,7 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
       openTime: candle.time * 1000, closeTime: candle.closeTime ? Date.parse(candle.closeTime) : null,
       open: candle.open, high: candle.high, low: candle.low, close: candle.close, volume: candle.volume,
       provider: candle.provider, source: candle.source, observedAt: candle.observedAt,
-      receivedAt: candle.receivedAt, sequence: Date.parse(candle.observedAt),
+      receivedAt: candle.receivedAt, sequence: Date.parse(candle.observedAt), isFinal: candle.isFinal,
     };
     await this.redis.publish(MARKET_KLINES_CHANNEL, JSON.stringify(payload));
   }

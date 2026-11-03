@@ -44,6 +44,7 @@ export class MarketKlineCandleDto {
   @ApiProperty({ example: 'BTCUSDT' }) symbol!: string;
   @ApiProperty({ enum: MARKET_KLINE_INTERVALS, example: '1m' }) interval!: MarketKlineInterval;
   @ApiPropertyOptional({ nullable: true, format: 'date-time' }) closeTime!: string | null;
+  @ApiProperty({ description: 'True only when the persisted close boundary completes the requested interval.' }) isFinal!: boolean;
   @ApiProperty({ example: 'binance-spot' }) provider!: string;
   @ApiProperty({ example: 'rest:klines' }) source!: string;
   @ApiProperty({ format: 'date-time' }) observedAt!: string;

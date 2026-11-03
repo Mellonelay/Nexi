@@ -28,6 +28,7 @@ export type MarketKlineRealtimeEvent = {
   observedAt: string;
   receivedAt: string;
   sequence: number;
+  isFinal: boolean;
 };
 
 export type MarketReferenceDepthEvent = {

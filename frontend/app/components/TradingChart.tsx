@@ -27,6 +27,7 @@ interface TradingChartProps {
   interval?: string;
   candles?: Candle[];
   status?: MarketDataStatus;
+  candleLineageLabel?: string | null;
   sandboxed?: boolean;
   showIndicatorControls?: boolean;
 }
@@ -114,6 +115,7 @@ export default function TradingChart({
   interval = "1m",
   candles = EMPTY_CANDLES,
   status = "UNAVAILABLE",
+  candleLineageLabel = null,
   sandboxed = false,
   showIndicatorControls = type === "spot",
 }: TradingChartProps) {
@@ -376,6 +378,7 @@ export default function TradingChart({
       className={`nexi-trading-chart relative flex h-full w-full flex-col overflow-hidden rounded-lg ${responsiveHeight}`}
     >
       {sandboxed && <div role="status" className="border-b border-amber-300/20 bg-amber-300/5 px-3 py-1 text-center font-mono text-[10px] font-semibold uppercase tracking-wider text-amber-100">Sandbox simulation · test data</div>}
+      {!sandboxed && candleLineageLabel && <div className="border-b border-sky-300/15 bg-sky-300/5 px-3 py-1 text-center text-[10px] font-medium text-sky-100" aria-label={candleLineageLabel}>{candleLineageLabel}</div>}
       <ChartMetricsRail latest={latest} rsi={metrics.rsi} macdHistogram={macdHistogram} activeIndicators={activeIndicators} overlays={overlays} />
       <div
         ref={chartContainerRef}

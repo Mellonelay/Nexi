@@ -63,7 +63,7 @@ describe('MarketGateway ordering and deduplication', () => {
     const event = (sequence: number) => ({
       version: 'v1', event: 'market_kline', symbol: 'BTCUSDT', interval: '1m', sequence,
       openTime: 1_000, closeTime: 60_999, open: '10', high: '12', low: '9', close: '11', volume: null,
-      provider: 'fixture', source: 'websocket:kline', observedAt: new Date(sequence * 1_000).toISOString(), receivedAt: new Date(sequence * 1_000).toISOString(),
+      provider: 'fixture', source: 'websocket:kline', observedAt: new Date(sequence * 1_000).toISOString(), receivedAt: new Date(sequence * 1_000).toISOString(), isFinal: true,
     });
 
     (gateway as any).broadcastMarketKline(event(2));

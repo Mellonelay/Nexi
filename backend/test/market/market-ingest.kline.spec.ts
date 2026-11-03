@@ -23,13 +23,19 @@ describe('MarketIngestService Kline publication', () => {
 
   it('keeps quote-derived 1m candles for providers without the Binance native kline stream', async () => {
     const marketAuthority = { ingestQuote: jest.fn().mockResolvedValue({ accepted: true }) };
-    const marketKlines = { persist: jest.fn(), accumulateQuote: jest.fn().mockResolvedValue(undefined), aggregateFromOneMinute: jest.fn() };
+    const quoteCandle = {
+      symbol: 'AAPLUSDT', interval: '1m', time: 0, closeTime: '1970-01-01T00:00:01.000Z',
+      open: '10', high: '10', low: '10', close: '10', volume: null, provider: 'gate',
+      source: 'rest:ticker:quote-aggregation', observedAt: '1970-01-01T00:00:01.000Z',
+      receivedAt: '1970-01-01T00:00:01.001Z', isFinal: false,
+    };
+    const marketKlines = { persist: jest.fn(), accumulateQuote: jest.fn().mockResolvedValue(quoteCandle), aggregateFromOneMinute: jest.fn() };
     const service = new MarketIngestService(
       marketAuthority as never,
       marketKlines as never,
       { ensureReconciled: jest.fn().mockResolvedValue(undefined) } as never,
       { start: jest.fn(), stop: jest.fn() } as never,
-      { isAvailable: jest.fn().mockReturnValue(false), publish: jest.fn() } as never,
+      { isAvailable: jest.fn().mockReturnValue(true), publish: jest.fn().mockResolvedValue(undefined) } as never,
     );
 
     await (service as any).handleProviderEvent({
@@ -38,13 +44,14 @@ describe('MarketIngestService Kline publication', () => {
     });
 
     expect(marketKlines.accumulateQuote).toHaveBeenCalledTimes(1);
+    expect((service as any).redis.publish).toHaveBeenCalledWith('market:klines:v1', expect.stringContaining('"source":"rest:ticker:quote-aggregation"'));
   });
 
   it('persists provider Kline updates before publishing the normalized realtime event', async () => {
     const candle = {
       symbol: 'BTCUSDT', interval: '1m', time: 1_000, closeTime: '1970-01-01T00:01:00.999Z',
       open: '10', high: '12', low: '9', close: '11', volume: '3', provider: 'fixture',
-      source: 'websocket:kline', observedAt: '1970-01-01T00:01:01.000Z', receivedAt: '1970-01-01T00:01:01.001Z',
+      source: 'websocket:kline', observedAt: '1970-01-01T00:01:01.000Z', receivedAt: '1970-01-01T00:01:01.001Z', isFinal: true,
     };
     const redis = { isAvailable: jest.fn().mockReturnValue(true), publish: jest.fn().mockResolvedValue(undefined) };
     const marketKlines = { persist: jest.fn().mockResolvedValue(candle), accumulateQuote: jest.fn(), aggregateFromOneMinute: jest.fn().mockResolvedValue([]) };
@@ -63,7 +70,7 @@ describe('MarketIngestService Kline publication', () => {
     });
 
     expect(marketKlines.persist).toHaveBeenCalledTimes(1);
-    expect(redis.publish).toHaveBeenCalledWith('market:klines:v1', expect.stringContaining('"event":"market_kline"'));
+    expect(redis.publish).toHaveBeenCalledWith('market:klines:v1', expect.stringContaining('"isFinal":true'));
     expect(redis.publish.mock.invocationCallOrder[0]).toBeGreaterThan(marketKlines.persist.mock.invocationCallOrder[0]);
   });
 

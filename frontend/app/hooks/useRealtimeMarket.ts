@@ -7,6 +7,9 @@ import { apiBaseUrl } from "../lib/api";
 import {
   applyMarketTick,
   applyMarketKline,
+  appendRecoveryEvent,
+  sortRecoveryEvents,
+  type MarketRecoveryEvent,
   EMPTY_STREAM_SNAPSHOT,
   marketSnapshotForSymbol,
   type MarketStreamSnapshot,
@@ -43,21 +46,41 @@ async function loadBaseline(
   if (!response.ok)
     throw new Error(`Market baseline returned ${response.status}.`);
   const payload = (await response.json()) as KlinePayload;
-  const candles = Array.isArray(payload.candles)
-    ? payload.candles.flatMap((row) => {
-        const candle =
-          row && typeof row === "object"
-            ? normalizeCandle(row as Record<string, unknown>)
-            : null;
-        return candle ? [candle] : [];
-      })
-    : [];
+  const revisions: MarketStreamSnapshot["candleRevisions"] = {};
+  const rows = Array.isArray(payload.candles) ? payload.candles : [];
+  const candles = rows
+    .flatMap((row) => {
+      if (!row || typeof row !== "object") return [];
+      const record = row as Record<string, unknown>;
+      const candle = normalizeCandle(record);
+      if (!candle) return [];
+      const observedAt =
+        typeof record.observedAt === "string"
+          ? Date.parse(record.observedAt)
+          : Number(record.observedAt);
+      revisions[String(candle.time)] = {
+        observedAt: Number.isFinite(observedAt) ? observedAt : 0,
+        sequence: null,
+        provider: typeof record.provider === "string" ? record.provider : null,
+        source: typeof record.source === "string" ? record.source : null,
+        isFinal: record.isFinal === true,
+      };
+      return [candle];
+    })
+    .sort((left, right) => left.time - right.time);
   const latest = candles.at(-1);
   if (!latest) throw new Error("Market baseline contained no valid candles.");
+  const lastKlineTimestamp = revisions[String(latest.time)]?.observedAt || null;
   return {
     status: normalizedState(payload.dataState),
     lastSequence: null,
-    lastTimestamp: null,
+    lastTimestamp: lastKlineTimestamp,
+    lastQuoteTimestamp: null,
+    lastKlineTimestamp,
+    lastKlineProvider: revisions[String(latest.time)]?.provider ?? null,
+    lastKlineSource: revisions[String(latest.time)]?.source ?? null,
+    lastKlineFinal: revisions[String(latest.time)]?.isFinal ?? null,
+    candleRevisions: revisions,
     price: latest.close,
     candles,
   };
@@ -76,9 +99,36 @@ export function useRealtimeMarket(symbol: string, interval = "1m") {
     let staleTimer: ReturnType<typeof setInterval> | null = null;
     let worker: Worker | null = null;
     let socket: ReturnType<typeof io> | null = null;
-    let acceptedRealtime = false;
     let connectedOnce = false;
     let recoveryGeneration = 0;
+    let recovering = false;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    let workerGeneration = 0;
+    let recoverFromOverflow: (() => void) | null = null;
+    let recoveryEvents: MarketRecoveryEvent[] = [];
+    const bufferRecoveryEvent = (event: MarketRecoveryEvent): boolean => {
+      if (!recovering) return true;
+      const buffered = appendRecoveryEvent(recoveryEvents, event);
+      if (!buffered) {
+        // An incomplete replay cannot be represented as live chart data.
+        recoveryGeneration++;
+        recovering = false;
+        recoveryEvents = [];
+        if (retryTimer) {
+          clearTimeout(retryTimer);
+          retryTimer = null;
+        }
+        workerGeneration++;
+        setSnapshot((current) => ({
+          ...current,
+          status: reconnectRecoveryStatus(current),
+        }));
+        recoverFromOverflow?.();
+        return false;
+      }
+      recoveryEvents = buffered;
+      return true;
+    };
     let cleanupStream: (() => void) | null = null;
 
     setSnapshot({ ...EMPTY_STREAM_SNAPSHOT, status: "CONNECTING" });
@@ -99,9 +149,16 @@ export function useRealtimeMarket(symbol: string, interval = "1m") {
           type: "INIT",
           intervalSeconds,
           snapshot: initial,
+          generation: ++workerGeneration,
         });
-        worker.onmessage = (event: MessageEvent<MarketStreamSnapshot>) => {
-          if (!disposed) setSnapshot(event.data);
+        worker.onmessage = (
+          event: MessageEvent<{
+            generation: number;
+            snapshot: MarketStreamSnapshot;
+          }>,
+        ) => {
+          if (!disposed && event.data?.generation === workerGeneration)
+            setSnapshot(event.data.snapshot);
         };
       }
 
@@ -121,8 +178,13 @@ export function useRealtimeMarket(symbol: string, interval = "1m") {
         if (disposed || document.visibilityState === "hidden") return;
         const tick = normalizeMarketTick(raw, symbol);
         if (!tick) return;
-        acceptedRealtime = true;
-        if (worker) worker.postMessage({ type: "TICK", tick });
+        if (!bufferRecoveryEvent({ type: "TICK", tick })) return;
+        if (worker)
+          worker.postMessage({
+            type: "TICK",
+            tick,
+            generation: workerGeneration,
+          });
         else
           setSnapshot((current) =>
             applyMarketTick(current, tick, intervalSeconds),
@@ -135,7 +197,10 @@ export function useRealtimeMarket(symbol: string, interval = "1m") {
         if (!selected) return;
         setSnapshot((previous) => ({
           ...previous,
-          ...selected,
+          price: selected.price ?? previous.price,
+          lastQuoteTimestamp:
+            selected.lastTimestamp ?? previous.lastQuoteTimestamp,
+          lastSequence: selected.lastSequence ?? previous.lastSequence,
         }));
       };
 
@@ -143,53 +208,101 @@ export function useRealtimeMarket(symbol: string, interval = "1m") {
         if (disposed) return;
         const kline = normalizeMarketKline(raw, symbol, interval);
         if (!kline) return;
-        if (worker) worker.postMessage({ type: "KLINE", kline });
+        if (!bufferRecoveryEvent({ type: "KLINE", kline })) return;
+        if (worker)
+          worker.postMessage({
+            type: "KLINE",
+            kline,
+            generation: workerGeneration,
+          });
         else setSnapshot((current) => applyMarketKline(current, kline));
       };
+
+      const scheduleRecovery = () => {
+        if (disposed || retryTimer) return;
+        recovering = true;
+        recoveryEvents = [];
+        retryTimer = setTimeout(() => {
+          retryTimer = null;
+          const generation = ++recoveryGeneration;
+          void loadBaseline(symbol, interval)
+            .then((baseline) => {
+              if (
+                !shouldApplyRecovery(generation, recoveryGeneration, disposed)
+              )
+                return;
+              recovering = false;
+              const events = sortRecoveryEvents(recoveryEvents);
+              recoveryEvents = [];
+              if (worker) {
+                const token = ++workerGeneration;
+                worker.postMessage({
+                  type: "INIT",
+                  intervalSeconds,
+                  snapshot: baseline,
+                  generation: token,
+                });
+                for (const event of events)
+                  worker.postMessage({ ...event, generation: token });
+              } else {
+                setSnapshot(
+                  events.reduce(
+                    (current, event) =>
+                      event.type === "TICK"
+                        ? applyMarketTick(current, event.tick, intervalSeconds)
+                        : applyMarketKline(current, event.kline),
+                    baseline,
+                  ),
+                );
+              }
+            })
+            .catch(() => {
+              if (
+                !shouldApplyRecovery(generation, recoveryGeneration, disposed)
+              )
+                return;
+              recovering = false;
+              recoveryEvents = [];
+              setSnapshot((current) => ({
+                ...current,
+                status: reconnectRecoveryStatus(current),
+              }));
+            });
+        }, 1_000);
+      };
+      recoverFromOverflow = scheduleRecovery;
 
       const handleConnect = () => {
         const isReconnect = connectedOnce;
         connectedOnce = true;
-        setSnapshot((current) => ({
-          ...current,
-          status: acceptedRealtime ? "LIVE" : current.status,
-        }));
         if (!isReconnect) return;
 
         // Socket.IO does not guarantee missed-event replay unless connection-state
         // recovery or an application cursor is enabled. Re-anchor every recovered
         // transport to the authoritative REST Kline history instead of inventing
         // events that may have been missed while disconnected.
-        const generation = ++recoveryGeneration;
-        void loadBaseline(symbol, interval)
-          .then((baseline) => {
-            if (!shouldApplyRecovery(generation, recoveryGeneration, disposed)) return;
-            acceptedRealtime = false;
-            if (worker) {
-              worker.postMessage({
-                type: "INIT",
-                intervalSeconds,
-                snapshot: baseline,
-              });
-            } else {
-              setSnapshot(baseline);
-            }
-          })
-          .catch(() => {
-            if (!shouldApplyRecovery(generation, recoveryGeneration, disposed)) return;
-            setSnapshot((current) => ({
-              ...current,
-              status: reconnectRecoveryStatus(current),
-            }));
-          });
-      };
-      const handleReconnectAttempt = () =>
-        setSnapshot((current) => ({ ...current, status: "RECONNECTING" }));
-      const handleDisconnect = () =>
         setSnapshot((current) => ({
           ...current,
           status: reconnectRecoveryStatus(current),
         }));
+        scheduleRecovery();
+      };
+      const handleReconnectAttempt = () =>
+        setSnapshot((current) => ({ ...current, status: "RECONNECTING" }));
+      const handleDisconnect = () => {
+        recoveryGeneration++;
+        recovering = false;
+        recoveryEvents = [];
+        if (retryTimer) {
+          clearTimeout(retryTimer);
+          retryTimer = null;
+        }
+        workerGeneration++;
+        setSnapshot((current) => ({
+          ...current,
+          status: reconnectRecoveryStatus(current),
+        }));
+      };
       const handleConnectError = () =>
         setSnapshot((current) => ({
           ...current,
@@ -218,7 +331,11 @@ export function useRealtimeMarket(symbol: string, interval = "1m") {
       staleTimer = setInterval(() => {
         setSnapshot((current) => ({
           ...current,
-          status: streamStatusAt(current, Date.now()),
+          status: streamStatusAt(
+            current,
+            Date.now(),
+            Math.max(15_000, intervalSeconds * 2_000),
+          ),
         }));
       }, 5_000);
     };
@@ -227,7 +344,9 @@ export function useRealtimeMarket(symbol: string, interval = "1m") {
 
     return () => {
       disposed = true;
+      recoverFromOverflow = null;
       if (staleTimer) clearInterval(staleTimer);
+      if (retryTimer) clearTimeout(retryTimer);
       cleanupStream?.();
       socket?.disconnect();
       worker?.terminate();
