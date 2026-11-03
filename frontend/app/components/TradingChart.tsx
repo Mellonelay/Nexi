@@ -256,6 +256,9 @@ export default function TradingChart({
     return () => {
       resizeObserver.disconnect();
       chart.remove();
+      fittedKeyRef.current = "";
+      renderedKeyRef.current = "";
+      renderedCandlesRef.current = [];
       chartRef.current = null;
       candleSeriesRef.current = null;
       volumeSeriesRef.current = null;

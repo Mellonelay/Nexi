@@ -67,6 +67,8 @@ export function useRealtimeMarket(symbol: string, interval = "1m") {
   const [snapshot, setSnapshot] = useState<MarketStreamSnapshot>(
     EMPTY_STREAM_SNAPSHOT,
   );
+  const streamKey = JSON.stringify([symbol, interval]);
+  const [snapshotKey, setSnapshotKey] = useState(streamKey);
   const intervalSeconds = timeframeToSeconds(interval);
 
   useEffect(() => {
@@ -80,6 +82,7 @@ export function useRealtimeMarket(symbol: string, interval = "1m") {
     let cleanupStream: (() => void) | null = null;
 
     setSnapshot({ ...EMPTY_STREAM_SNAPSHOT, status: "CONNECTING" });
+    setSnapshotKey(JSON.stringify([symbol, interval]));
 
     const initialize = async () => {
       const initial = await loadBaseline(symbol, interval).catch(
@@ -231,5 +234,7 @@ export function useRealtimeMarket(symbol: string, interval = "1m") {
     };
   }, [interval, intervalSeconds, symbol]);
 
-  return snapshot;
+  return snapshotKey === streamKey
+    ? snapshot
+    : { ...EMPTY_STREAM_SNAPSHOT, status: "CONNECTING" as const };
 }

@@ -72,6 +72,17 @@ test('Options fail closed without both configured stake limits', () => {
   assert.doesNotMatch(read('dashboard/binary/page.tsx'), /raw > 1 \? raw \/ 100/);
 });
 
+test('chart recreation and pair changes discard rendered history from the prior chart', () => {
+  const chart = read('components/TradingChart.tsx');
+  const stream = read('hooks/useRealtimeMarket.ts');
+  const cleanup = chart.split('resizeObserver.disconnect();', 2)[1].split('}, [interval]);', 1)[0];
+  assert.match(cleanup, /fittedKeyRef\.current = ""/);
+  assert.match(cleanup, /renderedKeyRef\.current = ""/);
+  assert.match(cleanup, /renderedCandlesRef\.current = \[\]/);
+  assert.match(stream, /return snapshotKey === streamKey/);
+  assert.match(stream, /setSnapshotKey\(JSON\.stringify\(\[symbol, interval\]\)\)/);
+});
+
 test('chart controls follow the plot and Options keeps five config-driven duration boxes', () => {
   const chart = read('components/TradingChart.tsx');
   const binary = read('dashboard/binary/page.tsx');
