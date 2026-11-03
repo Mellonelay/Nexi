@@ -10760,6 +10760,63 @@
         ]
       }
     },
+    "/financial/conversion/pairs": {
+      "get": {
+        "operationId": "FinancialOperationsController_conversionPairs",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Authenticated, read-only conversion pairs eligible under current backend configuration and fresh market quotes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "pairs"
+                  ],
+                  "properties": {
+                    "pairs": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "from",
+                          "to",
+                          "source"
+                        ],
+                        "properties": {
+                          "from": {
+                            "type": "string"
+                          },
+                          "to": {
+                            "type": "string"
+                          },
+                          "source": {
+                            "type": "string",
+                            "enum": [
+                              "CONFIGURED",
+                              "MARKET"
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Financial Operations"
+        ]
+      }
+    },
     "/financial/conversion/quote": {
       "post": {
         "operationId": "FinancialOperationsController_quote",
