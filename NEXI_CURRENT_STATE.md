@@ -1,3 +1,11 @@
+## CURRENT 2026-11-03 — Graphify / NetworkX / Valkey audit
+
+Current docs-only checkout at audit time: `171ccddb3ceabcfaf5eb72e310015ade7838c35b`; application source: `188fdba1b9e703f04f1c3fbe32186f7daa6dce22`. Local Graphify was built at the exact checkout SHA. CLI 0.9.101 and local `nexi-mcpc` 0.7.0 responded. Graph: 7,917 nodes / 20,340 edges / 411 communities, 94% extracted / 6% inferred. NetworkX 3.6.1 and exact-symbol DFS/call queries were used; dynamic NestJS registration and event strings were checked manually. Details are in `tasks/evidence/nexi-graphify-valkey-doctor-audit-20261103.md`.
+
+React Doctor analyzed 135/135 frontend source files: 1 error, 50 warnings. The sole error at wallet/page.tsx:203 was traced to a ref increment in an effect callback, not a functional state updater; assessed as a static false positive. NestJS Doctor analyzed 190 backend files: 0 errors, 229 warnings, 116 informational findings (86/100). No additional application defect was established, so no speculative source patch was made.
+
+Read-only TLS Valkey check from the owner-managed backend environment succeeded (Valkey 9.1.2, DB 1); BullMQ `domain-events` had 49 completed and no pending/failed jobs, while `notifications` and `integration-jobs` were empty. SQLite journals and Ledger/Outbox remain durable authority; Valkey/BullMQ is transport. Aiven control plane showed open IPv4/IPv6 allowlists and unrestricted default ACL; the credential pasted in chat is treated as exposed and omitted. No Aiven config, queue, or economic state changed. Rotate and restrict after approved client CIDRs and required BullMQ/Socket.IO ACL commands are confirmed.
+
 ## CURRENT 2026-11-04 — final market source closure and acceptance frontier
 
 The application-source closure commit is 188fdba1b9e703f04f1c3fbe32186f7daa6dce22. At documentation-task intake, live SentinelX confirmed local main and origin/main both equaled that SHA, with no tracked modifications; this documentation-only reconciliation is a separate change. Existing untracked backups/generated artifacts remain preserved and unstaged. The source closure and final CI correction are documented in tasks/evidence/nexi-market-candle-source-closure-20261103.md and the documentation reconciliation receipt dated 2026-11-04.

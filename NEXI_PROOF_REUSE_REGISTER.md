@@ -1,3 +1,13 @@
+## 2026-11-03 Graphify / NetworkX / Doctor / Valkey audit
+
+- Local Graphify graph at `171ccddb3ceabcfaf5eb72e310015ade7838c35b`: 7,917 nodes, 20,340 edges, 411 communities, extraction 94%, inference 6%. CLI 0.9.101 and local MCP 0.7.0 responded. NetworkX 3.6.1 analyzed the same local graph; hosted index was not mixed with local results. No refresh/upgrade required.
+- React Doctor 0.9.14: exit 1, complete 135/135 files, 1 error / 50 warnings. The lone wallet finding was reviewed against its effect callback and is a static false positive; other warnings were not individually certified clean.
+- NestJS Doctor 0.9.10: exit 0, 190 files, 0 errors / 229 warnings / 116 info, score 86/100. Findings remain heuristic absent source confirmation.
+- Read-only staging Valkey/BullMQ: TLS PING succeeded, DB 1, 20 clients; `domain-events` 49 completed, all other states zero; notification/integration queues empty. No jobs consumed or mutated. No market BullMQ processor: market Kline publication uses the existing Valkey/Socket.IO route.
+- Aiven configuration showed open IPv4/IPv6 allowlists and default ACL `+@all`; pasted credential treated as exposed. No config changed; rotate and restrict after confirming approved CIDRs and BullMQ/Socket.IO command requirements.
+- No new source defect confirmed. Existing application source tests/CI at 188fdba remain the applicable proof. Browser, deployed-release and authenticated mobile acceptance remain open.
+- Full bounded queries, paths, diagnostic details, security finding and proof boundaries: `tasks/evidence/nexi-graphify-valkey-doctor-audit-20261103.md`.
+
 ## CURRENT 2026-11-04 — exact-SHA market candle source proof
 
 - APPLICATION SOURCE: closure commit 188fdba1b9e703f04f1c3fbe32186f7daa6dce22. At documentation-task intake, local main and origin/main both equaled this SHA and the tracked worktree was clean; this documentation-only reconciliation is separate. Historical untracked backups and generated artifacts were preserved, not staged.
