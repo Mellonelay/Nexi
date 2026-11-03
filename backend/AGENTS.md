@@ -8,7 +8,7 @@ Use the service runtime Node `/opt/nexi/runtime/node-v24.21.0/bin/node` and its 
 PATH=/opt/nexi/runtime/node-v24.21.0/bin:$PATH npm ci --legacy-peer-deps --include=dev --no-audit --no-fund
 ```
 
-Never run `npm ci` in the canonical source checkout or runtime root because that can replace the runtime dependency symlink. For release, verify committed source SHA, active artifact and rollback; stop only `nexi-api.service`; sync committed Backend source into `/srv/nexi/backend` while preserving `shared/`, `node_modules`, durable SQLite files and rollback data; then build once from `/srv/nexi/backend`:
+Never run `npm ci` in the canonical source checkout or runtime root because that can replace the runtime dependency symlink. For release, verify committed source SHA and active artifact; no rollback archive is required or retained under the current owner policy. Stop only `nexi-api.service`; sync committed Backend source into `/srv/nexi/backend` while preserving `shared/`, `node_modules` and durable SQLite files; then build once from `/srv/nexi/backend`:
 
 ```bash
 PATH=/opt/nexi/runtime/node-v24.21.0/bin:$PATH NODE_OPTIONS=--max-old-space-size=4096 npm run build

@@ -1,3 +1,7 @@
+# CURRENT 2026-11-04 — owner release archive policy
+
+The owner has directed that release rollback/archive copies are not required or retained. Do not create rollback bundles or dedicated rollback archive directories. Keep historical release receipts as records. This policy does not authorize deleting active build/runtime output, dependency stores, logs, financial backups, or live data.
+
 ## CURRENT 2026-10-27 — independent post-release closure reconciliation
 
 Release and deployed source IDs are unchanged (Backend `20ba4da6cc34fd8f355324bbf2ab401db2665ef0`; Public/Admin `943ebda18d9060fd817074a1bbb2ce4fe7d26a59`). Sentry directly returns their exact commits **and** production deploys; prior unchecked 'Public/Admin commit association unresolved' rows below are **SUPERSEDED**, not current tasks. Independent trace audit resolved all 1,131 references in 45 deployed Public NFT manifests, including 29 unique external shared-store targets (no missing traced file on this VPS). Backend native bcrypt/SQLite smoke passed; eight install-script-capable lockfile entries alone do not prove missing native builds. Optional MetaMask peer remains a warning, not a demonstrated error. Three `Cannot POST /` logs were external probing (same origin, neighboring `/.env.qa` attempt), not an application endpoint defect. Public and API public HTTPS both now return 200. Sentry debug IDs appear in deployed Public/Admin bundles; remote artifact-bundle verification and event-level symbolication remain unverified. Error `client_discard/network_error` aggregates (195 dropped, 14 accepted over 24h) have unknown sender/surface attribution; do not mutate Sentry config without that causal evidence. No app-source change, reinstall, build or redeploy was necessary or performed. Full evidence: `tasks/evidence/nexi-post-release-reconciliation-20261027.md`. Next stage: **existing Chrome DevTools deployed-release browser acceptance only**, reuse prior accepted proofs and four `OWNER_ACCEPTED_UNTESTED` gates; rollback remains owner-deferred.
@@ -40,11 +44,11 @@ The owner explicitly authorized the coordinated Backend → Public → Admin pro
 
 ## Coordinated release workflow under the current owner directive
 
-1. Commit and freeze the coherent Git source identity; resolve source and dependency blockers. Record the owner-deferred rollback limitation; do not create archives under this campaign. Never run three large builds simultaneously on the 8 GiB VPS.
+1. Commit and freeze the coherent Git source identity; resolve source and dependency blockers. Do not create or require rollback archives under current owner policy. Never run three large builds simultaneously on the 8 GiB VPS.
 2. Backend: build once, inject backend release identity, deploy serialized, confirm service/readiness, release SHA and fresh release-scoped Sentry events. Confirm old Public/Admin remain API-compatible while backend updates.
 3. Public: inject matching server/client Sentry release and build identity; build/deploy once, confirm public route/API, Sentry release and no current-release regression.
 4. Admin: inject Vite build-time Sentry release; build/deploy once, confirm Admin login/API, Sentry release and no current-release regression.
-5. Preserve old deployed releases and rollback. Report strongest proven state separately: SOURCE_VALIDATED / BUILT / DEPLOYED / RUNTIME_VERIFIED / OWNER_ACCEPTED.
+5. Preserve historical release receipts as records; rollback archives are neither required nor retained under current owner policy. Report strongest proven state separately: SOURCE_VALIDATED / BUILT / DEPLOYED / RUNTIME_VERIFIED / OWNER_ACCEPTED.
 
 No SQLite migration, financial tests, or queue execution is part of this release procedure. Deployment is in scope under the current owner directive after the technical preflight is satisfied.
 ## CURRENT 2026-10-29 — post-release documentation/storage follow-up
