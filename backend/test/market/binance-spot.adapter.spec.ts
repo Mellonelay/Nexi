@@ -41,7 +41,7 @@ describe('BinanceSpotAdapter', () => {
         : [{ id: 9, price: '10', qty: '1', time: 1000, isBuyerMaker: false }];
       return { ok: true, json: async () => body } as Response;
     });
-    await expect(adapter.fetchDepth('BTCUSDT')).resolves.toMatchObject({ state: 'LIVE', provider: 'binance-spot' });
+    await expect(adapter.fetchDepth('BTCUSDT')).resolves.toMatchObject({ state: 'LIVE', provider: 'binance-spot', lastUpdateId: 8 });
     await expect(adapter.fetchTrades('BTCUSDT')).resolves.toMatchObject([{ id: 'binance:BTCUSDT:9', side: 'BUY' }]);
   });
 

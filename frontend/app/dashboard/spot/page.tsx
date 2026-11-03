@@ -120,7 +120,8 @@ const finiteTrades = (value: unknown): MarketTradeRow[] => {
     const item = row as Record<string, unknown>;
     const price = Number(item.price);
     const amount = Number(item.amount ?? item.quantity ?? item.qty);
-    const id = item.id !== undefined && item.id !== null ? String(item.id) : item.tradeId !== undefined && item.tradeId !== null ? String(item.tradeId) : null;
+    const id = item.id !== undefined && item.id !== null ? String(item.id) : item.tradeId !== undefined && item.tradeId !== null
+      ? `binance:${normalizePair(String(item.symbol ?? ''))}:${String(item.tradeId)}` : null;
     const timestamp = typeof item.executedAt === 'string' ? item.executedAt : Number(item.eventTime);
     const executedAt = typeof timestamp === 'string' ? timestamp : Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : null;
     const side = item.side === 'BUY' || item.maker === false ? 'BUY' : item.side === 'SELL' || item.maker === true ? 'SELL' : null;
@@ -206,12 +207,18 @@ function useSpotMarketFeed({
       const request = ++tradeRequestSequence;
       void api.get('/market/trades', { params: { symbol: normalizedSymbol, limit: 50 }, timeout: 15_000 })
         .then((response) => {
-          if (cancelled || revision !== tradeRevision || request !== tradeRequestSequence) return;
+          if (cancelled || request !== tradeRequestSequence) return;
           const payload = response.data as unknown;
-          if (!Array.isArray(payload)) { setTradeStatus('UNAVAILABLE'); return; }
+          if (!Array.isArray(payload)) {
+            if (revision === tradeRevision) setTradeStatus('UNAVAILABLE');
+            return;
+          }
           const rows = finiteTrades(payload.filter((row) => row && typeof row === 'object' && (row as Record<string, unknown>).provider === 'binance-spot' && (row as Record<string, unknown>).source === 'rest'));
           const latestTradeAt = rows.reduce((latest, row) => Math.max(latest, Date.parse(row.executedAt)), 0);
-          if (!rows.length || latestTradeAt > Date.now() + 5_000 || Date.now() - latestTradeAt > 300_000) { setTrades([]); setTradeStatus('UNAVAILABLE'); return; }
+          if (!rows.length || latestTradeAt > Date.now() + 5_000 || Date.now() - latestTradeAt > 300_000) {
+            if (revision === tradeRevision) { setTrades([]); setTradeStatus('UNAVAILABLE'); }
+            return;
+          }
           const ordered = rows.sort((a, b) => Date.parse(b.executedAt) - Date.parse(a.executedAt));
           for (const row of ordered) seenTrades.add(row.id);
           setTrades((current) => [...current, ...ordered].filter((item, index, all) => all.findIndex((other) => other.id === item.id) === index)
@@ -229,13 +236,15 @@ function useSpotMarketFeed({
           if (cancelled || revision !== depthRevision || request !== depthRequestSequence) return;
           const payload = response.data as Record<string, unknown>;
           const observedAt = Date.parse(String(payload.observedAt ?? ''));
+          const snapshotUpdateId = String(payload.lastUpdateId ?? '');
           if (payload.provider !== 'binance-spot' || payload.source !== 'rest' || payload.state !== 'LIVE' || !Number.isFinite(observedAt)
-            || Date.now() - observedAt > 30_000 || observedAt > Date.now() + 5_000) {
+            || !/^[0-9]+$/.test(snapshotUpdateId) || Date.now() - observedAt > 30_000 || observedAt > Date.now() + 5_000) {
             setBookStatus('UNAVAILABLE'); return;
           }
           const nextBids = finiteRows(payload.bids).sort((a, b) => Number(b.price) - Number(a.price));
           const nextAsks = finiteRows(payload.asks).sort((a, b) => Number(a.price) - Number(b.price));
           if (!nextBids.length || !nextAsks.length) { setBookStatus('UNAVAILABLE'); return; }
+          lastUpdateId = BigInt(snapshotUpdateId);
           setBids(nextBids); setAsks(nextAsks);
           lastBookAt = Date.now();
           setBookStatus(socket.connected ? 'LIVE' : 'CONNECTION_LOST');

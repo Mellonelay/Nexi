@@ -12,6 +12,7 @@ export type BinanceSpotMarketEvent =
 
 export interface BinanceOrderBook {
   pair: string;
+  lastUpdateId: number;
   bids: Array<{ orderId: string; price: string; amount: string }>;
   asks: Array<{ orderId: string; price: string; amount: string }>;
   state: 'LIVE' | 'UNAVAILABLE';
@@ -281,6 +282,7 @@ export class BinanceSpotAdapter implements OnModuleDestroy, MarketProviderAdapte
     const observedAt = new Date().toISOString();
     return {
       pair: symbol,
+      lastUpdateId: data.lastUpdateId,
       bids: data.bids.map(([price, amount], index) => ({ orderId: `binance:${data.lastUpdateId}:bid:${index}`, price, amount })),
       asks: data.asks.map(([price, amount], index) => ({ orderId: `binance:${data.lastUpdateId}:ask:${index}`, price, amount })),
       state: 'LIVE', provider: 'binance-spot', source: 'rest', observedAt,

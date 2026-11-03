@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit --incremental false",
     "test:ui": "playwright test",
+    "test:spot-contract": "node --test tests/spot-contract.test.mjs",
     "typegen": "next typegen",
     "doctor": "react-doctor",
     "test:standalone-assets": "node --test scripts/prepare-standalone-assets.test.mjs"
