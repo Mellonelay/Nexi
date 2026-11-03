@@ -75,11 +75,6 @@ function assetDetailModel(item: MarketItem, details: AssetDetails | null, detail
       ['Project', detailText(details?.projectName) ?? instrument.name],
       ['Asset symbol', detailText(details?.assetSymbol) ?? instrument.symbol],
       ['Categories', detailList(details?.categories) ?? placeholder],
-      ['Launch date', detailText(details?.launchDate) ?? placeholder],
-      ['Market cap (USD)', detailValue(marketStats.marketCapUsd) ?? placeholder],
-      ['Market cap rank', detailValue(marketStats.marketCapRank) ?? placeholder],
-      ['Circulating supply', detailValue(marketStats.circulatingSupply) ?? placeholder],
-      ['Max supply', detailValue(marketStats.maxSupply) ?? placeholder],
     );
   } else if (instrument.category === 'Shares') {
     aboutFacts.push(
@@ -123,13 +118,24 @@ function assetDetailModel(item: MarketItem, details: AssetDetails | null, detail
     ['Block explorer', safeExternalUrl(details?.explorer)],
   ] as Array<[string, string | null]>).filter((entry): entry is [string, string] => entry[1] !== null);
   const provenance = (details?.provenance ?? []).filter((entry) => safeExternalUrl(entry.url) !== null);
+  const cryptoMarketFacts = instrument.category === 'Crypto' ? [
+    ['Market cap (USD, CoinGecko)', detailValue(marketStats.marketCapUsd)],
+    ['Fully diluted value (USD, CoinGecko)', detailValue(marketStats.fullyDilutedValuationUsd)],
+    ['Market cap rank (CoinGecko)', detailValue(marketStats.marketCapRank)],
+    ['24h volume (USD, CoinGecko)', detailValue(marketStats.volume24hUsd)],
+    ['Circulating supply (CoinGecko)', detailValue(marketStats.circulatingSupply)],
+    ['Total supply (CoinGecko)', detailValue(marketStats.totalSupply)],
+    ['Maximum supply (CoinGecko)', detailValue(marketStats.maxSupply)],
+    ['Launch date', detailText(details?.launchDate)],
+  ] as Array<[string, string | null]> : [];
+  const availableCryptoMarketFacts = cryptoMarketFacts.filter((entry): entry is [string, string] => entry[1] !== null);
   const displayStatus = marketDisplayStatus(item.dataState, item.sessionState);
   const statusClass = displayStatus === 'Closed'
     ? 'border-white/15 text-[#8C8299]'
     : displayStatus === 'Live'
       ? 'border-emerald-300/20 text-emerald-200'
       : 'border-rose-300/20 text-rose-200';
-  return { instrument, definition, aboutCopy, aboutFacts, aboutLinks, technicalFacts, provenance, displayStatus, statusClass };
+  return { instrument, definition, aboutCopy, aboutFacts, aboutLinks, technicalFacts, provenance, displayStatus, statusClass, availableCryptoMarketFacts };
 }
 
 export default function AssetDetailPage() {
@@ -190,7 +196,7 @@ function AssetDetailView({
     return () => { cancelled = true; };
   }, [item.symbol]);
 
-  const { instrument, definition, aboutCopy, aboutFacts, aboutLinks, technicalFacts, provenance, displayStatus, statusClass } = assetDetailModel(item, details, detailState);
+  const { instrument, definition, aboutCopy, aboutFacts, aboutLinks, technicalFacts, provenance, displayStatus, statusClass, availableCryptoMarketFacts } = assetDetailModel(item, details, detailState);
 
   return (
     <div className="nexi-page-shell relative min-h-full w-full min-w-0 overflow-x-clip px-4 pb-6 pt-4 text-[#F8F6FF] md:px-8 md:pb-8 md:pt-8">
@@ -236,7 +242,7 @@ function AssetDetailView({
             <div className="flex items-center gap-2"><BarChart3 className="h-4 w-4 text-[#A995FF]" aria-hidden="true" /><h2 className="font-semibold">Market chart</h2></div>
             <span className="text-xs text-[#8C8299]">{timeframe === '1d' ? '1D' : timeframe}</span>
           </div>
-          <div className="min-w-0 h-[clamp(280px,52svh,620px)] md:h-[min(62vh,720px)]">
+          <div className="min-w-0 h-[clamp(320px,52svh,620px)] md:h-[min(62vh,720px)]">
             <RealtimeTradingChart
               symbol={normalizePair(instrument.pair)}
               type="spot"
@@ -252,7 +258,7 @@ function AssetDetailView({
 
         <section className="mb-5 grid gap-4 md:grid-cols-2">
           <div className="min-w-0 rounded-xl border border-violet-300/15 bg-[#100A18] p-4">
-            <h2 className="mb-4 font-semibold">Market data</h2>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2"><h2 className="font-semibold">Market data</h2>{instrument.category === 'Crypto' && <span className={`text-[10px] ${details?.status === 'STALE' ? 'text-amber-200' : 'text-[#8C8299]'}`}>{details?.status === 'STALE' ? 'CoinGecko metrics may be stale' : details?.status === 'FRESH' ? 'CoinGecko profile metrics · USD' : 'CoinGecko profile metrics partial or unavailable'}</span>}</div>
             <dl className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,7rem),1fr))] gap-x-4 gap-y-4 text-sm">
               <div><dt className="text-[#8C8299]">Last price</dt><dd className="mt-1 font-mono">{formatNumber(instrument.price, instrument.precision ?? 8)}</dd></div>
               <div><dt className="text-[#8C8299]">24h change</dt><dd className="mt-1 font-mono">{formatChange(instrument.change24h)}</dd></div>
@@ -260,6 +266,7 @@ function AssetDetailView({
               <div><dt className="text-[#8C8299]">Precision</dt><dd className="mt-1 font-mono">{instrument.precision ?? placeholder}</dd></div>
               <div><dt className="text-[#8C8299]">Source</dt><dd className="mt-1 font-mono">{provider ?? placeholder}</dd></div>
               <div><dt className="text-[#8C8299]">Updated</dt><dd className="mt-1 font-mono"><LocalDateTime value={item.observedAt} timeStyle="short" /></dd></div>
+              {availableCryptoMarketFacts.map(([label, value]) => <div key={label}><dt className="text-[#8C8299]">{label}</dt><dd className="mt-1 break-words font-mono">{value}</dd></div>)}
             </dl>
           </div>
           <div className="min-w-0 rounded-xl border border-violet-300/15 bg-[#100A18] p-4">

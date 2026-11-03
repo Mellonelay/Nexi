@@ -110,12 +110,13 @@ describe('MarketIngestService Kline publication', () => {
 
     await (service as any).handleProviderEvent({
       kind: 'trade', symbol: 'BTCUSDT', provider: 'binance-spot', source: 'websocket:trade',
-      providerInstrument: 'BTCUSDT', eventTime: 120_000, tradeId: 'trade-1',
+      providerInstrument: 'BTCUSDT', eventTime: 120_000, tradeTime: 119_999, tradeId: 'trade-1',
       price: '10', quantity: '0.1', maker: false,
     });
 
     expect(redis.publish).toHaveBeenCalledTimes(1);
     expect(redis.publish).toHaveBeenCalledWith('market:reference:v1', expect.stringContaining('"event":"market.reference.trade"'));
+    expect(JSON.parse(redis.publish.mock.calls[0][1])).toMatchObject({ eventTime: 120_000, tradeTime: 119_999 });
   });
 
   it('dequeues durable quote events ahead of bursty reference traffic', () => {

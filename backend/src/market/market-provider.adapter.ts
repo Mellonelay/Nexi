@@ -56,6 +56,7 @@ export type ProviderTradeEvent = {
   source: string;
   providerInstrument: string;
   eventTime: number;
+  tradeTime: number;
   tradeId: number;
   price: string;
   quantity: string;

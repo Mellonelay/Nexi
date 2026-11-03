@@ -44,7 +44,7 @@ const RealtimeTradingChart = dynamic(() => import('../../components/RealtimeTrad
 });
 
 type OrderBookRow = { id?: string; price: string; amount: string };
-type MarketTradeRow = { id: string; price: number; amount: number; executedAt: string; side: 'BUY' | 'SELL' };
+type MarketTradeRow = { id: string; price: string; amount: string; executedAt: string; side: 'BUY' | 'SELL' };
 type OrderType = 'MARKET' | 'LIMIT' | 'STOP';
 type HistoryTab = 'OPEN' | 'ORDERS' | 'TRADES';
 type SpotHistoryRow = Record<string, unknown>;
@@ -118,17 +118,43 @@ const finiteTrades = (value: unknown): MarketTradeRow[] => {
   return value.flatMap((row) => {
     if (!row || typeof row !== 'object') return [];
     const item = row as Record<string, unknown>;
-    const price = Number(item.price);
-    const amount = Number(item.amount ?? item.quantity ?? item.qty);
+    const rawPrice = item.price;
+    const rawAmount = item.amount ?? item.quantity ?? item.qty;
+    const price = Number(rawPrice);
+    const amount = Number(rawAmount);
     const id = item.id !== undefined && item.id !== null ? String(item.id) : item.tradeId !== undefined && item.tradeId !== null
       ? `binance:${normalizePair(String(item.symbol ?? ''))}:${String(item.tradeId)}` : null;
-    const timestamp = typeof item.executedAt === 'string' ? item.executedAt : Number(item.eventTime);
-    const executedAt = typeof timestamp === 'string' ? timestamp : Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : null;
+    const timestamp = typeof item.executedAt === 'string' ? item.executedAt : Number(item.tradeTime);
+    const executedAt = typeof timestamp === 'string' ? timestamp : Number.isFinite(timestamp) && timestamp > 0 && Number.isFinite(new Date(timestamp).getTime()) ? new Date(timestamp).toISOString() : null;
     const side = item.side === 'BUY' || item.maker === false ? 'BUY' : item.side === 'SELL' || item.maker === true ? 'SELL' : null;
     return id && executedAt && side && Number.isFinite(Date.parse(executedAt)) && Number.isFinite(price) && price > 0 && Number.isFinite(amount) && amount > 0
-      ? [{ id, price, amount, executedAt, side }]
+      ? [{ id, price: String(rawPrice), amount: String(rawAmount), executedAt, side }]
       : [];
   });
+};
+
+const formatMarketDecimal = (value: string) => {
+  const parts = /^(\d+)(?:\.(\d+))?(?:e([+-]?\d+))?$/i.exec(value);
+  if (!parts) return '—';
+  const digits = parts[1] + (parts[2] ?? '');
+  const point = parts[1].length + Number(parts[3] ?? 0);
+  if (!Number.isSafeInteger(point) || Math.abs(point) > 100) return '—';
+  const wholeValue = point <= 0 ? '0' : digits.slice(0, point).padEnd(point, '0');
+  const fractionValue = point < 0 ? '0'.repeat(-point) + digits : digits.slice(point);
+  const whole = (wholeValue.replace(/^0+(?=\d)/, '') || '0').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  const fraction = fractionValue.replace(/0+$/, '');
+  return fraction ? whole + '.' + fraction : whole;
+};
+
+const compareTradesNewestFirst = (left: MarketTradeRow, right: MarketTradeRow) => {
+  const byTime = Date.parse(right.executedAt) - Date.parse(left.executedAt);
+  if (byTime) return byTime;
+  const leftId = /(?:^|:)(\d+)$/.exec(left.id)?.[1];
+  const rightId = /(?:^|:)(\d+)$/.exec(right.id)?.[1];
+  if (!leftId || !rightId) return right.id.localeCompare(left.id);
+  const leftSequence = BigInt(leftId);
+  const rightSequence = BigInt(rightId);
+  return leftSequence === rightSequence ? 0 : leftSequence > rightSequence ? -1 : 1;
 };
 
 function useSpotHistory(userId: string | null, historyTab: HistoryTab) {
@@ -174,7 +200,7 @@ function useSpotMarketFeed({
   const [bids, setBids] = useState<OrderBookRow[]>([]);
   const [asks, setAsks] = useState<OrderBookRow[]>([]);
   const [trades, setTrades] = useState<MarketTradeRow[]>([]);
-  const [tradeStatus, setTradeStatus] = useState<'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR' | 'CONNECTION_LOST'>('UNAVAILABLE');
+  const [tradeStatus, setTradeStatus] = useState<'LOADING' | 'LIVE' | 'STALE' | 'EMPTY' | 'UNAVAILABLE' | 'ERROR' | 'CONNECTION_LOST'>('UNAVAILABLE');
   const [bookStatus, setBookStatus] = useState<'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR' | 'CONNECTION_LOST'>('UNAVAILABLE');
 
   useEffect(() => {
@@ -199,6 +225,7 @@ function useSpotMarketFeed({
       const eventTime = Number(event.eventTime);
       return normalizePair(String(event.symbol ?? '')) === normalizedSymbol
         && event.event === `market.reference.${kind}`
+        && normalizePair(String(event.providerInstrument ?? '')) === normalizedSymbol
         && event.version === 'v1' && event.kind === kind && event.provider === 'binance-spot' && event.source === 'websocket'
         && Number.isFinite(eventTime) && eventTime <= Date.now() + 5_000 && Date.now() - eventTime < 30_000;
     };
@@ -213,21 +240,30 @@ function useSpotMarketFeed({
             if (revision === tradeRevision) setTradeStatus('UNAVAILABLE');
             return;
           }
-          const rows = finiteTrades(payload.filter((row) => row && typeof row === 'object' && (row as Record<string, unknown>).provider === 'binance-spot' && (row as Record<string, unknown>).source === 'rest'));
-          const latestTradeAt = rows.reduce((latest, row) => Math.max(latest, Date.parse(row.executedAt)), 0);
-          if (!rows.length || latestTradeAt > Date.now() + 5_000 || Date.now() - latestTradeAt > 300_000) {
-            if (revision === tradeRevision) { setTrades([]); setTradeStatus('UNAVAILABLE'); }
+          const rows = finiteTrades(payload.filter((row) => row && typeof row === 'object' && (row as Record<string, unknown>).provider === 'binance-spot' && (row as Record<string, unknown>).source === 'rest' && normalizePair(String((row as Record<string, unknown>).pair ?? (row as Record<string, unknown>).symbol ?? '')) === normalizedSymbol));
+          if (!rows.length) {
+            if (revision === tradeRevision) setTradeStatus(lastTradeAt ? socket.connected ? 'STALE' : 'CONNECTION_LOST' : 'EMPTY');
             return;
           }
-          const ordered = rows.sort((a, b) => Date.parse(b.executedAt) - Date.parse(a.executedAt));
+          const latestTradeAt = rows.reduce((latest, row) => Math.max(latest, Date.parse(row.executedAt)), 0);
+          if (latestTradeAt > Date.now() + 5_000 || Date.now() - latestTradeAt > 300_000) {
+            if (revision === tradeRevision) setTradeStatus('STALE');
+            return;
+          }
+          const ordered = rows.sort(compareTradesNewestFirst);
           for (const row of ordered) seenTrades.add(row.id);
-          setTrades((current) => [...current, ...ordered].filter((item, index, all) => all.findIndex((other) => other.id === item.id) === index)
-            .sort((a, b) => Date.parse(b.executedAt) - Date.parse(a.executedAt)).slice(0, 50));
-          lastTradeAt = Date.now();
-          setTradeStatus(socket.connected ? 'LIVE' : 'CONNECTION_LOST');
+          setTrades((current) => [...current, ...ordered]
+            .filter((item, index, all) => all.findIndex((other) => other.id === item.id) === index)
+            .sort(compareTradesNewestFirst).slice(0, 50));
+          if (revision === tradeRevision) {
+            lastTradeAt = latestTradeAt;
+            const fresh = Date.now() - latestTradeAt <= 30_000;
+            setTradeStatus(socket.connected ? fresh ? 'LIVE' : 'STALE' : 'CONNECTION_LOST');
+          }
         })
         .catch(() => { if (!cancelled && revision === tradeRevision && request === tradeRequestSequence) setTradeStatus('ERROR'); });
     };
+
     const refreshBook = () => {
       const revision = depthRevision;
       const request = ++depthRequestSequence;
@@ -237,10 +273,11 @@ function useSpotMarketFeed({
           const payload = response.data as Record<string, unknown>;
           const observedAt = Date.parse(String(payload.observedAt ?? ''));
           const snapshotUpdateId = String(payload.lastUpdateId ?? '');
-          if (payload.provider !== 'binance-spot' || payload.source !== 'rest' || payload.state !== 'LIVE' || !Number.isFinite(observedAt)
+          if (normalizePair(String(payload.pair ?? payload.symbol ?? '')) !== normalizedSymbol || payload.provider !== 'binance-spot' || payload.source !== 'rest' || payload.state !== 'LIVE' || !Number.isFinite(observedAt)
             || !/^[0-9]+$/.test(snapshotUpdateId) || Date.now() - observedAt > 30_000 || observedAt > Date.now() + 5_000) {
             setBookStatus('UNAVAILABLE'); return;
           }
+          if (BigInt(snapshotUpdateId) < lastUpdateId) { setBookStatus('CONNECTION_LOST'); return; }
           const nextBids = finiteRows(payload.bids).sort((a, b) => Number(b.price) - Number(a.price));
           const nextAsks = finiteRows(payload.asks).sort((a, b) => Number(a.price) - Number(b.price));
           if (!nextBids.length || !nextAsks.length) { setBookStatus('UNAVAILABLE'); return; }
@@ -272,17 +309,19 @@ function useSpotMarketFeed({
       if (!trade || seenTrades.has(trade.id)) return;
       seenTrades.add(trade.id);
       if (seenTrades.size > 2_000) seenTrades.delete(seenTrades.values().next().value as string);
-      tradeRevision++; lastTradeAt = Date.now();
+      tradeRevision++;
+      const tradeTime = Date.parse(trade.executedAt);
+      lastTradeAt = Math.max(lastTradeAt, tradeTime);
       setTrades((current) => [trade, ...current.filter((item) => item.id !== trade.id)]
-        .sort((a, b) => Date.parse(b.executedAt) - Date.parse(a.executedAt)).slice(0, 50));
-      setTradeStatus('LIVE');
+        .sort(compareTradesNewestFirst).slice(0, 50));
+      setTradeStatus(socket.connected ? Date.now() - lastTradeAt <= 30_000 ? 'LIVE' : 'STALE' : 'CONNECTION_LOST');
     };
     const handleConnect = () => { setBookStatus('LOADING'); setTradeStatus('LOADING'); refreshBook(); refreshTrades(); };
     const handleConnectionLoss = () => { setBookStatus('CONNECTION_LOST'); setTradeStatus('CONNECTION_LOST'); };
     const freshnessTimer = window.setInterval(() => {
       const now = Date.now();
       if (lastBookAt && now - lastBookAt > 30_000) setBookStatus('CONNECTION_LOST');
-      if (lastTradeAt && now - lastTradeAt > 30_000) setTradeStatus('CONNECTION_LOST');
+      if (lastTradeAt && now - lastTradeAt > 30_000) setTradeStatus(socket.connected ? 'STALE' : 'CONNECTION_LOST');
     }, 5_000);
 
     refreshBook(); refreshTrades();
@@ -302,7 +341,7 @@ function useSpotMarketFeed({
 }
 
 
-type MarketConnectionStatus = 'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR' | 'CONNECTION_LOST';
+type MarketConnectionStatus = 'LOADING' | 'LIVE' | 'STALE' | 'EMPTY' | 'UNAVAILABLE' | 'ERROR' | 'CONNECTION_LOST';
 
 function MarginWorkspace({
   displayPair, normalizedSymbol, chartInterval, setChartInterval, sessionClosed,
@@ -385,7 +424,7 @@ type SpotWorkspaceProps = {
   side: 'BUY' | 'SELL'; setSide: React.Dispatch<React.SetStateAction<'BUY' | 'SELL'>>;
   orderType: OrderType; setOrderType: React.Dispatch<React.SetStateAction<OrderType>>;
   price: string; stopPrice: string; setStopPrice: React.Dispatch<React.SetStateAction<string>>;
-  amount: string; setAmount: React.Dispatch<React.SetStateAction<string>>; baseSymbol: string;
+  amount: string; setAmount: React.Dispatch<React.SetStateAction<string>>; baseSymbol: string; quoteSymbol: string;
   tpSlState: TpSlState; configureTpSl: (enabled: boolean) => void; tp: string;
   setTp: React.Dispatch<React.SetStateAction<string>>; sl: string; setSl: React.Dispatch<React.SetStateAction<string>>;
   total: number | null; orderState: SpotOrderState; feedback: string | null; reviewReady: boolean; ready: boolean;
@@ -430,7 +469,7 @@ function SpotChartArea({displayPair, normalizedSymbol, chartInterval, setChartIn
   );
 }
 
-function SpotOrderBook({mobileMarketPanel, bids, asks, bookStatus, setPrice}: SpotWorkspaceProps) {
+function SpotOrderBook({mobileMarketPanel, bids, asks, bookStatus, setPrice, baseSymbol, quoteSymbol}: SpotWorkspaceProps) {
   return (
             <section className={`nexi-station-card min-w-0 overflow-hidden rounded-2xl xl:block ${mobileMarketPanel === 'BOOK' ? 'block' : 'hidden'}`} aria-labelledby="order-book-heading">
               <div className="flex items-center justify-between border-b border-white/5 px-4 py-3">
@@ -439,12 +478,12 @@ function SpotOrderBook({mobileMarketPanel, bids, asks, bookStatus, setPrice}: Sp
               </div>
               <div className="grid min-w-0 grid-cols-2 text-xs">
                 <div className="min-w-0 border-r border-white/5 p-3">
-                  <div className="mb-2 flex justify-between text-[10px] text-[#8C8299]"><span>Bid · USDT</span><span>Quantity BTC</span></div>
-                  {bids.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(row.price)} className="nexi-interactive flex min-h-9 min-w-0 w-full flex-col justify-center rounded px-1 text-left font-mono tabular-nums hover:bg-emerald-400/5"><span className="text-xs text-[#22D3A6]">{row.price}</span><span className="break-all text-[10px] text-[#C3BBD0]">{row.amount} BTC</span></button>)}
+                  <div className="mb-2 flex justify-between text-[10px] text-[#8C8299]"><span>Bid · {quoteSymbol}</span><span>Quantity {baseSymbol}</span></div>
+                  {bids.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(row.price)} className="nexi-interactive flex min-h-9 min-w-0 w-full flex-col justify-center rounded px-1 text-left font-mono tabular-nums hover:bg-emerald-400/5"><span className="text-xs text-[#22D3A6]">{row.price}</span><span className="break-all text-[10px] text-[#C3BBD0]">{row.amount} {baseSymbol}</span></button>)}
                 </div>
                 <div className="min-w-0 p-3">
-                  <div className="mb-2 flex justify-between text-[10px] text-[#8C8299]"><span>Ask · USDT</span><span>Quantity BTC</span></div>
-                  {asks.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(row.price)} className="nexi-interactive flex min-h-9 min-w-0 w-full flex-col items-end justify-center rounded px-1 text-right font-mono tabular-nums hover:bg-rose-400/5"><span className="text-xs text-[#FF5C7C]">{row.price}</span><span className="break-all text-[10px] text-[#C3BBD0]">{row.amount} BTC</span></button>)}
+                  <div className="mb-2 flex justify-between text-[10px] text-[#8C8299]"><span>Ask · {quoteSymbol}</span><span>Quantity {baseSymbol}</span></div>
+                  {asks.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(row.price)} className="nexi-interactive flex min-h-9 min-w-0 w-full flex-col items-end justify-center rounded px-1 text-right font-mono tabular-nums hover:bg-rose-400/5"><span className="text-xs text-[#FF5C7C]">{row.price}</span><span className="break-all text-[10px] text-[#C3BBD0]">{row.amount} {baseSymbol}</span></button>)}
                 </div>
               </div>
               {bids.length === 0 && asks.length === 0 && (
@@ -462,6 +501,7 @@ function SpotOrderBook({mobileMarketPanel, bids, asks, bookStatus, setPrice}: Sp
 
 function streamStatusText(status: MarketConnectionStatus, liveLabel: string, lostLabel: string) {
   if (status === 'LIVE') return liveLabel;
+  if (status === 'STALE') return 'Stale reference data · waiting for a fresh trade';
   if (status === 'CONNECTION_LOST') return lostLabel;
   if (status === 'LOADING') return 'Loading';
   if (status === 'ERROR') return 'Request error';
@@ -470,23 +510,29 @@ function streamStatusText(status: MarketConnectionStatus, liveLabel: string, los
 
 function recentTradesEmptyText(status: MarketConnectionStatus) {
   if (status === 'LOADING') return 'Loading recent trades…';
-  if (status === 'ERROR') return 'Recent trades could not be loaded.';
+  if (status === 'ERROR') return 'Recent trades could not be loaded. Retry when connected.';
+  if (status === 'STALE') return 'Recent reference trades are stale. Waiting for fresh data.';
+  if (status === 'EMPTY') return 'No recent reference trades yet.';
+  if (status === 'CONNECTION_LOST') return 'Market connection lost. Recent trades will resume after reconnecting.';
   if (status === 'UNAVAILABLE') return 'Reference trades are unavailable or unsupported for this symbol.';
   return 'No recent trades yet.';
 }
 
-function SpotRecentTrades({mobileMarketPanel, marketTrades, tradeStatus}: SpotWorkspaceProps) {
-  const statusText = streamStatusText(tradeStatus, 'Live reference trades', 'Reference updates paused · last received trades');
-  const statusClass = tradeStatus === 'CONNECTION_LOST' ? 'text-xs text-amber-200' : 'text-xs text-[#8C8299]';
+function SpotRecentTrades({mobileMarketPanel, marketTrades, tradeStatus, baseSymbol, quoteSymbol}: SpotWorkspaceProps) {
+  const statusText = streamStatusText(tradeStatus, 'Live reference trades', 'Connection lost · showing last received trades');
+  const statusClass = tradeStatus === 'CONNECTION_LOST' || tradeStatus === 'STALE' ? 'text-[10px] text-amber-200' : 'text-[10px] text-[#8C8299]';
   return (
-            <section className={`nexi-station-card min-w-0 rounded-2xl xl:block ${mobileMarketPanel === 'TRADES' ? 'block' : 'hidden'}`} aria-labelledby="recent-trades-heading">
-              <div className="flex items-center justify-between gap-2 border-b border-white/5 px-4 py-3">
-                <div><h2 id="recent-trades-heading" className="font-semibold">Recent trades</h2><p className="text-[10px] text-[#8C8299]">Binance Spot reference trades</p></div>
-                {statusText && <span className={statusClass}>{statusText}</span>}
+            <section className={`nexi-station-card min-w-0 overflow-hidden rounded-2xl xl:block ${mobileMarketPanel === 'TRADES' ? 'block' : 'hidden'}`} aria-labelledby="recent-trades-heading">
+              <div className="flex items-center justify-between gap-2 border-b border-white/5 px-3 py-3 sm:px-4">
+                <div className="min-w-0"><h2 id="recent-trades-heading" className="font-semibold">Recent trades</h2><p className="text-[10px] text-[#8C8299]">Binance Spot reference trades</p></div>
+                {statusText && <span className={`${statusClass} shrink-0 text-right`}>{statusText}</span>}
               </div>
               {marketTrades.length > 0
-                ? <div className="divide-y divide-white/5 text-xs">{marketTrades.slice(0, 12).map((trade) => <div key={trade.id} className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-2 px-4 py-2 font-mono"><span>{numberFormatter.format(trade.price)}</span><span className={trade.side === 'BUY' ? 'text-[#22D3A6]' : 'text-[#FF5C7C]'}>{trade.side}</span><span className="text-right text-[#8C8299]"><LocalDateTime value={trade.executedAt} timeStyle="short" /></span></div>)}</div>
-                : <div className="flex min-h-52 items-center justify-center p-6 text-center text-sm text-[#8C8299]">{recentTradesEmptyText(tradeStatus)}</div>}
+                ? <>
+                    <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-1 border-b border-white/5 px-3 py-2 text-[9px] text-[#8C8299] sm:px-4 sm:text-[10px]"><span>Price ({quoteSymbol})</span><span>Amount ({baseSymbol})</span><span className="text-right">Time</span></div>
+                    <div className="max-h-[min(55vh,520px)] divide-y divide-white/5 overflow-y-auto text-[10px] sm:text-xs">{marketTrades.slice(0, 50).map((trade) => <div key={trade.id} aria-label={`${trade.side} Binance reference trade at ${trade.price} ${quoteSymbol}, amount ${trade.amount} ${baseSymbol}`} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-1 px-3 py-2 font-mono tabular-nums sm:px-4"><span className={`min-w-0 break-all ${trade.side === 'BUY' ? 'text-[#22D3A6]' : 'text-[#FF5C7C]'}`}>{formatMarketDecimal(trade.price)}</span><span className="min-w-0 break-all text-[#C3BBD0]">{formatMarketDecimal(trade.amount)}</span><span className="min-w-[54px] whitespace-nowrap text-right text-[#8C8299]"><LocalDateTime value={trade.executedAt} timeStyle="medium" /></span></div>)}</div>
+                  </>
+                : <div className="flex min-h-52 items-center justify-center p-6 text-center text-sm text-[#8C8299]" role="status">{recentTradesEmptyText(tradeStatus)}</div>}
             </section>
   );
 }
@@ -984,6 +1030,8 @@ function SpotPageBody({
   const { marketPairs, metal, shares, forex, loading: marketLoading } = useMarketData();
   const market = [...marketPairs, metal, shares, forex].flat().find((row) => normalizePair(row.symbol) === normalizedSymbol);
   const currentPrice = market?.dataState === 'LIVE' ? market.price : null;
+  const pairParts = displayPair.split('/');
+  const quoteSymbol = (pairParts.length > 1 ? pairParts.at(-1) : normalizedSymbol.slice(baseSymbol.length))?.trim().toUpperCase() || '—';
   const marketChange = market?.dataState === 'LIVE' ? market.change : null;
 
   const [userId, setUserId] = useState<string | null>(null);
@@ -1066,7 +1114,7 @@ function SpotPageBody({
         bids={bids} asks={asks} bookStatus={bookStatus} setPrice={setPrice} marketTrades={marketTrades} tradeStatus={tradeStatus}
         historyTab={historyTab} setHistoryTab={setHistoryTab} historyRows={historyRows} historyStatus={historyStatus}
         side={side} setSide={setSide} orderType={orderType} setOrderType={setOrderType} price={price} stopPrice={stopPrice}
-        setStopPrice={setStopPrice} amount={amount} setAmount={setAmount} baseSymbol={baseSymbol} tpSlState={tpSlState}
+        setStopPrice={setStopPrice} amount={amount} setAmount={setAmount} baseSymbol={baseSymbol} quoteSymbol={quoteSymbol} tpSlState={tpSlState}
         configureTpSl={configureTpSl} tp={tp} setTp={setTp} sl={sl} setSl={setSl} total={total} orderState={orderState}
         feedback={feedback} reviewReady={reviewReady} ready={ready} openReview={openReview}
       />}
@@ -1088,8 +1136,10 @@ export default function SpotPage() {
   const querySymbol = searchParams.get('symbol');
   const symbol = querySymbol || activePair;
   const normalizedSymbol = normalizePair(symbol);
-  const baseSymbol = normalizedSymbol.endsWith('USDT') ? normalizedSymbol.slice(0, -4) : normalizedSymbol;
-  const displayPair = findAsset(symbol)?.pair ?? (normalizedSymbol.endsWith('USDT') ? `${baseSymbol}/USDT` : symbol);
+  const selectedAsset = findAsset(symbol);
+  const displayPair = selectedAsset?.pair ?? (normalizedSymbol.endsWith('USDT') ? `${normalizedSymbol.slice(0, -4)}/USDT` : symbol);
+  const pairParts = displayPair.split('/');
+  const baseSymbol = (pairParts.length > 1 ? pairParts[0] : selectedAsset?.baseAsset ?? (normalizedSymbol.endsWith('USDT') ? normalizedSymbol.slice(0, -4) : normalizedSymbol)).trim().toUpperCase();
   const backendConfigured = Boolean(apiBaseUrl);
 
   useEffect(() => {

@@ -8,7 +8,7 @@ export type BinanceSpotMarketEvent =
   | { kind: 'ticker'; symbol: string; provider: 'binance-spot'; source: 'websocket' | 'rest:watchdog'; providerInstrument: string; priceType: 'LAST'; eventTime: number; price: string; change24h: string; volume24h: string; high24h: string; low24h: string }
   | { kind: 'kline'; symbol: string; provider: 'binance-spot'; source: 'websocket:kline'; providerInstrument: string; eventTime: number; openTime: number; closeTime: number; interval: '1m'; open: string; high: string; low: string; close: string; volume: string; closed: boolean }
   | { kind: 'depth'; symbol: string; provider: 'binance-spot'; source: 'websocket'; providerInstrument: string; eventTime: number; updateId: number; bids: Array<[string, string]>; asks: Array<[string, string]> }
-  | { kind: 'trade'; symbol: string; provider: 'binance-spot'; source: 'websocket'; providerInstrument: string; eventTime: number; tradeId: number; price: string; quantity: string; maker: boolean };
+  | { kind: 'trade'; symbol: string; provider: 'binance-spot'; source: 'websocket'; providerInstrument: string; eventTime: number; tradeTime: number; tradeId: number; price: string; quantity: string; maker: boolean };
 
 export interface BinanceOrderBook {
   pair: string;
@@ -340,7 +340,11 @@ export class BinanceSpotAdapter implements OnModuleDestroy, MarketProviderAdapte
           asks: (data.a ?? data.asks as Array<[string, string]>) as Array<[string, string]> ?? [],
         };
       }
-      if (event === 'trade') return { kind: 'trade', symbol, provider: 'binance-spot', source: 'websocket', providerInstrument: symbol, eventTime, tradeId: Number(data.t), price: String(data.p), quantity: String(data.q), maker: data.m === true };
+      if (event === 'trade') {
+        const tradeTime = Number(data.T);
+        if (!Number.isSafeInteger(tradeTime) || tradeTime <= 0) return null;
+        return { kind: 'trade', symbol, provider: 'binance-spot', source: 'websocket', providerInstrument: symbol, eventTime, tradeTime, tradeId: Number(data.t), price: String(data.p), quantity: String(data.q), maker: data.m === true };
+      }
       return null;
     } catch { return null; }
   }

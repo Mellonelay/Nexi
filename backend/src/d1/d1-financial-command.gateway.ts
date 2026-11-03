@@ -1020,6 +1020,21 @@ export class D1FinancialCommandGateway {
     return result.results[0] ?? null;
   }
 
+  async listActiveConversionMarketPairs(): Promise<D1MarketPairRow[]> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const result = await this.bridge.select<D1MarketPairRow>(
+      `SELECT p."id",p."symbol",base."symbol" AS "baseAsset",quote."symbol" AS "quoteAsset"
+       FROM "MarketPair" p
+       JOIN "MarketAsset" base ON base."id"=p."baseAssetId"
+       JOIN "MarketAsset" quote ON quote."id"=p."quoteAssetId"
+       WHERE p."status"='ACTIVE' AND base."status"='ACTIVE' AND quote."status"='ACTIVE'
+         AND (SELECT COUNT(*) FROM "MarketAssetCapability" c WHERE c."assetId" IN (p."baseAssetId",p."quoteAssetId") AND c."status"='ACTIVE' AND c."tradingEnabled"=1)=2
+       ORDER BY p."symbol" ASC`,
+      [],
+    );
+    return result.results;
+  }
+
   /** Resolve a historical trade's pair without reapplying new-order enablement gates. */
   async getMarketPairForSettlement(symbolValue: string): Promise<D1MarketPairRow | null> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
@@ -1107,6 +1122,15 @@ export class D1FinancialCommandGateway {
       [key],
     );
     return result.results[0]?.value ?? null;
+  }
+
+  async listConversionRateConfig(): Promise<Array<{ key: string; value: string }>> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const result = await this.bridge.select<{ key: string; value: string }>(
+      `SELECT "key","value" FROM "SystemConfig" WHERE "key" LIKE 'gate2.conversion.rate.%' ORDER BY "key" ASC`,
+      [],
+    );
+    return result.results;
   }
 
   async hasAssetCapability(

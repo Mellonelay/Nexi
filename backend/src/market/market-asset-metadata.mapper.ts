@@ -24,8 +24,11 @@ export type CoinGeckoAssetDetails = {
   genesis_date?: string | null;
   market_data?: {
     market_cap?: Record<string, unknown>;
+    fully_diluted_valuation?: Record<string, unknown>;
+    total_volume?: Record<string, unknown>;
     market_cap_rank?: number | null;
     circulating_supply?: number | null;
+    total_supply?: number | null;
     max_supply?: number | null;
   };
 };
@@ -101,8 +104,11 @@ export function mapCoinGeckoProfile(
 function coinMarketStats(data: CoinGeckoAssetDetails['market_data']): Record<string, number> | undefined {
   const candidates: Array<[string, unknown]> = [
     ['marketCapUsd', data?.market_cap?.usd],
+    ['fullyDilutedValuationUsd', data?.fully_diluted_valuation?.usd],
+    ['volume24hUsd', data?.total_volume?.usd],
     ['marketCapRank', data?.market_cap_rank],
     ['circulatingSupply', data?.circulating_supply],
+    ['totalSupply', data?.total_supply],
     ['maxSupply', data?.max_supply],
   ];
   const result: Record<string, number> = {};

@@ -105,8 +105,11 @@ describe('MarketAssetMetadataService', () => {
       market_data: {
         current_price: { usd: 12345 },
         market_cap: { usd: 2000000000 },
+        fully_diluted_valuation: { usd: 2500000000 },
+        total_volume: { usd: 125000000 },
         market_cap_rank: 1,
         circulating_supply: 19000000,
+        total_supply: 20000000,
         max_supply: 21000000,
       },
     }));
@@ -120,8 +123,11 @@ describe('MarketAssetMetadataService', () => {
     expect(profile.launchDate).toBe('2009-01-03');
     expect(profile.marketStats).toEqual({
       marketCapUsd: 2000000000,
+      fullyDilutedValuationUsd: 2500000000,
+      volume24hUsd: 125000000,
       marketCapRank: 1,
       circulatingSupply: 19000000,
+      totalSupply: 20000000,
       maxSupply: 21000000,
     });
     expect(JSON.stringify(profile)).not.toContain('12345');

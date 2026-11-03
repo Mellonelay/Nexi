@@ -127,16 +127,27 @@ export default function TradingChart({
   const bollUpperSeriesRef = useRef<ISeriesApi<"Line"> | null>(null);
   const bollLowerSeriesRef = useRef<ISeriesApi<"Line"> | null>(null);
   const fittedKeyRef = useRef("");
-  const responsiveHeight =
-    type === "spot"
-      ? "min-h-[220px] md:min-h-[360px] xl:min-h-[430px]"
-      : "min-h-0";
-  const metrics = useMemo(() => latestChartMetrics(candles), [candles]);
+  const renderedKeyRef = useRef("");
+  const renderedCandlesRef = useRef<Candle[]>([]);
+  const responsiveHeight = "min-h-0";
+  const chartCandles = useMemo(() => {
+    const unique = new Map<number, Candle>();
+    for (const candle of candles) {
+      const { time, open, high, low, close, volume } = candle;
+      if (!Number.isSafeInteger(time) || time <= 0 || time >= 1_000_000_000_000
+        || ![open, high, low, close].every(Number.isFinite)
+        || high < Math.max(open, close) || low > Math.min(open, close) || high < low
+        || (volume !== undefined && (!Number.isFinite(volume) || volume < 0))) continue;
+      unique.set(time, candle);
+    }
+    return [...unique.values()].sort((left, right) => left.time - right.time).slice(-500);
+  }, [candles]);
+  const metrics = useMemo(() => latestChartMetrics(chartCandles), [chartCandles]);
   const overlays = useMemo(() => ({
-    ma20: simpleMovingAverage(candles, 20).at(-1)?.value,
-    ema20: exponentialMovingAverage(candles, 20).at(-1)?.value,
-    ema50: exponentialMovingAverage(candles, 50).at(-1)?.value,
-  }), [candles]);
+    ma20: simpleMovingAverage(chartCandles, 20).at(-1)?.value,
+    ema20: exponentialMovingAverage(chartCandles, 20).at(-1)?.value,
+    ema50: exponentialMovingAverage(chartCandles, 50).at(-1)?.value,
+  }), [chartCandles]);
   const [activeIndicators, setActiveIndicators] = useState<Set<IndicatorKey>>(() => new Set(INDICATORS));
   const toggleIndicator = (indicator: IndicatorKey) => {
     setActiveIndicators((current) => {
@@ -270,42 +281,87 @@ export default function TradingChart({
     const volumeSeries = volumeSeriesRef.current;
     if (!candleSeries || !volumeSeries) return;
 
-    const candleData: CandlestickData<Time>[] = candles.map((candle) => ({
+    const candleData: CandlestickData<Time>[] = chartCandles.map((candle) => ({
       time: candle.time as UTCTimestamp,
       open: candle.open,
       high: candle.high,
       low: candle.low,
       close: candle.close,
     }));
-    const volumeData: HistogramData<Time>[] = candles
+    const volumeData: HistogramData<Time>[] = chartCandles
       .filter((candle) => candle.volume !== undefined)
       .map((candle) => ({
         time: candle.time as UTCTimestamp,
         value: candle.volume ?? 0,
-        color:
-          candle.close >= candle.open
-            ? "rgba(34,211,166,0.38)"
-            : "rgba(255,92,124,0.38)",
+        color: candle.close >= candle.open ? "rgba(34,211,166,0.38)" : "rgba(255,92,124,0.38)",
       }));
-    candleSeries.setData(candleData);
-    volumeSeries.setData(volumeData);
-    ma20SeriesRef.current?.setData(lineData(simpleMovingAverage(candles, 20)));
-    ema20SeriesRef.current?.setData(
-      lineData(exponentialMovingAverage(candles, 20)),
-    );
-    ema50SeriesRef.current?.setData(
-      lineData(exponentialMovingAverage(candles, 50)),
-    );
-    const bands = bollingerBands(candles);
-    bollUpperSeriesRef.current?.setData(lineData(bands.upper));
-    bollLowerSeriesRef.current?.setData(lineData(bands.lower));
-
+    const maData = lineData(simpleMovingAverage(chartCandles, 20));
+    const ema20Data = lineData(exponentialMovingAverage(chartCandles, 20));
+    const ema50Data = lineData(exponentialMovingAverage(chartCandles, 50));
+    const bands = bollingerBands(chartCandles);
+    const bollUpperData = lineData(bands.upper);
+    const bollLowerData = lineData(bands.lower);
     const key = `${symbol}:${interval}`;
-    if (candles.length > 0 && fittedKeyRef.current !== key) {
+    const previous = renderedCandlesRef.current;
+    const sameBar = (left: Candle, right: Candle) => left.time === right.time
+      && left.open === right.open && left.high === right.high && left.low === right.low
+      && left.close === right.close && left.volume === right.volume;
+    const samePrefix = (left: Candle[], right: Candle[]) => left.length === right.length
+      && left.every((candle, index) => sameBar(candle, right[index]));
+    const sameKey = renderedKeyRef.current === key;
+    const previousLatest = previous.at(-1);
+    const nextLatest = chartCandles.at(-1);
+    const replacingLatest = sameKey && previous.length === chartCandles.length && previous.length > 0
+      && samePrefix(previous.slice(0, -1), chartCandles.slice(0, -1))
+      && previousLatest?.time === nextLatest?.time;
+    const appendingLatest = sameKey && previous.length > 0 && chartCandles.length === previous.length + 1
+      && samePrefix(previous.slice(0, -1), chartCandles.slice(0, -2));
+    const slidingWindow = sameKey && previous.length === chartCandles.length && previous.length >= 3
+      && samePrefix(previous.slice(1, -1), chartCandles.slice(0, -2));
+    const incremental = Boolean((replacingLatest || appendingLatest || slidingWindow) && nextLatest?.volume !== undefined);
+    const indicatorSeries = [
+      [ma20SeriesRef.current, maData],
+      [ema20SeriesRef.current, ema20Data],
+      [ema50SeriesRef.current, ema50Data],
+      [bollUpperSeriesRef.current, bollUpperData],
+      [bollLowerSeriesRef.current, bollLowerData],
+    ] as const;
+
+    if (incremental && nextLatest) {
+      if ((appendingLatest || slidingWindow) && previousLatest) {
+        const previousCandle = candleData.find((candle) => Number(candle.time) === previousLatest.time);
+        const previousVolume = volumeData.find((volume) => Number(volume.time) === previousLatest.time);
+        if (previousCandle) candleSeries.update(previousCandle);
+        if (previousVolume) volumeSeries.update(previousVolume);
+        for (const [series, points] of indicatorSeries) {
+          const priorPoint = points.find((point) => Number(point.time) === previousLatest.time);
+          if (series && priorPoint) series.update(priorPoint);
+        }
+      }
+      candleSeries.update(candleData[candleData.length - 1]);
+      const latestVolume = volumeData.find((volume) => Number(volume.time) === nextLatest.time);
+      if (latestVolume) volumeSeries.update(latestVolume);
+      for (const [series, points] of indicatorSeries) {
+        const latestPoint = points.at(-1);
+        if (series && latestPoint) series.update(latestPoint);
+      }
+    } else {
+      candleSeries.setData(candleData);
+      volumeSeries.setData(volumeData);
+      ma20SeriesRef.current?.setData(maData);
+      ema20SeriesRef.current?.setData(ema20Data);
+      ema50SeriesRef.current?.setData(ema50Data);
+      bollUpperSeriesRef.current?.setData(bollUpperData);
+      bollLowerSeriesRef.current?.setData(bollLowerData);
+    }
+
+    if (chartCandles.length > 0 && fittedKeyRef.current !== key) {
       chartRef.current?.timeScale().fitContent();
       fittedKeyRef.current = key;
     }
-  }, [candles, interval, symbol]);
+    renderedKeyRef.current = key;
+    renderedCandlesRef.current = chartCandles;
+  }, [chartCandles, interval, symbol]);
 
   const latest = metrics.latest;
   const macdHistogram = metrics.macd?.histogram ?? null;

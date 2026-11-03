@@ -334,18 +334,38 @@ export default function WalletPage() {
   const authenticated = Boolean(userId);
   const currencies = useMemo(() => assets.map((asset) => ({ symbol: asset.name })), [assets]);
   const transferCurrencies = useMemo(() => Array.isArray(root.currencies) ? root.currencies.map((symbol) => ({ symbol: String(symbol).toUpperCase() })) : currencies, [root.currencies, currencies]);
-  const conversionPairs = useMemo(() => {
-    const symbols = new Set(transferCurrencies.map((item) => item.symbol));
-    const result: Array<{ from: string; to: string }> = [];
-    for (const quote of marketPairs) {
-      if (quote.dataState !== 'LIVE' || quote.price === null || !Number.isFinite(quote.price) || quote.price <= 0) continue;
-      const pair = String(quote.pair || quote.symbol).replace(/[\/_-]/g, '').toUpperCase();
-      for (const from of symbols) for (const to of symbols) {
-        if (from !== to && (pair === from + to || pair === to + from)) result.push({ from, to });
-      }
+  const [conversionPairs, setConversionPairs] = useState<Array<{ from: string; to: string }>>([]);
+  const [conversionPairState, setConversionPairState] = useState<'IDLE' | 'LOADING' | 'READY' | 'ERROR'>('IDLE');
+  const [conversionRefreshKey, setConversionRefreshKey] = useState(0);
+
+  useEffect(() => {
+    if (action !== 'Convert' || !authenticated || !userId) {
+      setConversionPairs([]);
+      setConversionPairState('IDLE');
+      return;
     }
-    return result;
-  }, [transferCurrencies, marketPairs]);
+    let cancelled = false;
+    setConversionPairs([]);
+    setConversionPairState('LOADING');
+    api.get('/financial/conversion/pairs', { timeout: 15_000 }).then((response) => {
+      if (cancelled || sessionPrincipalId() !== userId) return;
+      const payload = response.data as { pairs?: unknown } | null;
+      const pairs = Array.isArray(payload?.pairs) ? payload.pairs.flatMap((value) => {
+        if (!value || typeof value !== 'object') return [];
+        const row = value as { from?: unknown; to?: unknown };
+        const from = typeof row.from === 'string' ? row.from.trim().toUpperCase() : '';
+        const to = typeof row.to === 'string' ? row.to.trim().toUpperCase() : '';
+        return from && to && from !== to ? [{ from, to }] : [];
+      }) : [];
+      setConversionPairs(pairs);
+      setConversionPairState('READY');
+    }).catch(() => {
+      if (cancelled || sessionPrincipalId() !== userId) return;
+      setConversionPairs([]);
+      setConversionPairState('ERROR');
+    });
+    return () => { cancelled = true; };
+  }, [action, authenticated, userId, conversionRefreshKey]);
 
   const selectAction = (next: Action) => {
     setAction(next);
@@ -374,7 +394,7 @@ export default function WalletPage() {
       <DepositModal isOpen={action === 'Deposit'} onClose={() => setAction(null)} currencies={currencies} selectedCurrency={currency} onSelectCurrency={setCurrency} onCompleted={loadWallet} />
       <WithdrawModal isOpen={action === 'Withdraw'} onClose={() => setAction(null)} currencies={currencies} selectedCurrency={currency} onSelectCurrency={setCurrency} onCompleted={loadWallet} />
       <TransferModal isOpen={action === 'Transfer'} onClose={() => setAction(null)} currencies={transferCurrencies} selectedCurrency={currency} onSelectCurrency={setCurrency} initialDestinationScope={optionsReturn ? 'BINARY' : undefined} onCompleted={loadWallet} />
-      <ConvertModal isOpen={action === 'Convert'} onClose={() => setAction(null)} currencies={transferCurrencies} eligiblePairs={conversionPairs} selectedCurrency={currency} onCompleted={loadWallet} />
+      <ConvertModal isOpen={action === 'Convert'} onClose={() => setAction(null)} eligiblePairs={conversionPairs} eligibilityStatus={conversionPairState} onRetryEligibility={() => setConversionRefreshKey((current) => current + 1)} selectedCurrency={currency} onCompleted={loadWallet} />
     </WalletDashboardLayout>
   </PageShell>;
 }

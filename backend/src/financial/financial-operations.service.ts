@@ -257,6 +257,61 @@ export class FinancialOperationsService {
 
   getDepositDestinations() { return this.d1.listDepositDestinations(); }
 
+  async getConversionPairs(): Promise<{ pairs: Array<{ from: string; to: string; source: 'CONFIGURED' | 'MARKET' }> }> {
+    const [currencies, configuredRates, marketPairs] = await Promise.all([
+      this.d1.listCurrencies(),
+      this.d1.listConversionRateConfig(),
+      this.d1.listActiveConversionMarketPairs(),
+    ]);
+    const assets = [...new Set(currencies.map((currency) => String(currency.symbol ?? '').trim().toUpperCase()).filter((symbol) => /^[A-Z0-9]{2,24}$/.test(symbol)))].sort();
+    const supported = new Set(assets);
+    const configured = new Map<string, string>();
+    for (const row of configuredRates) {
+      const match = /^gate2\.conversion\.rate\.([A-Z0-9]{2,24})\.([A-Z0-9]{2,24})$/.exec(row.key);
+      if (!match || !supported.has(match[1]) || !supported.has(match[2]) || match[1] === match[2]) continue;
+      configured.set(`${match[1]}:${match[2]}`, row.value);
+    }
+    const uniquePairs = new Map<string, D1MarketPairRow>();
+    for (const pair of marketPairs) {
+      const symbol = String(pair.symbol ?? '').trim().toUpperCase();
+      if (symbol) uniquePairs.set(symbol, pair);
+    }
+    const quotes = new Map<string, Awaited<ReturnType<D1FinancialCommandGateway['getLiveMarketQuote']>>>();
+    await Promise.all([...new Set([...uniquePairs.values()].map((pair) => pair.id))].map(async (id) => {
+      quotes.set(id, await this.d1.getLiveMarketQuote(id));
+    }));
+    const eligible: Array<{ from: string; to: string; source: 'CONFIGURED' | 'MARKET' }> = [];
+    for (const from of assets) for (const to of assets) {
+      if (from === to) continue;
+      const configuredKey = `${from}:${to}`;
+      if (configured.has(configuredKey)) {
+        try {
+          assertPositiveDecimal(configured.get(configuredKey)!);
+          eligible.push({ from, to, source: 'CONFIGURED' });
+        } catch {
+          // A present but invalid configured rate blocks the market fallback exactly as quote creation does.
+        }
+        continue;
+      }
+      const direct = uniquePairs.get(`${from}${to}`);
+      const inverse = direct ? null : uniquePairs.get(`${to}${from}`);
+      const pair = direct ?? inverse;
+      if (!pair) continue;
+      const quote = quotes.get(pair.id);
+      if (!quote) continue;
+      const expectedBase = direct ? from : to;
+      const expectedQuote = direct ? to : from;
+      if (pair.baseAsset !== expectedBase || pair.quoteAsset !== expectedQuote) continue;
+      try {
+        this.normalizeConversionMarketRate({ price: quote.price, inverted: !direct });
+        eligible.push({ from, to, source: 'MARKET' });
+      } catch {
+        // Invalid or unrepresentable market rates cannot produce a quote.
+      }
+    }
+    return { pairs: eligible };
+  }
+
   createDepositProofIntent(userId: string, contentType: string, byteSize: string) {
     const size = Number(byteSize);
     if (!/^image\/(png|jpeg|webp|gif)$/.test(contentType) || !Number.isSafeInteger(size) || size <= 0 || size > 10 * 1024 * 1024) throw new BadRequestException('Deposit proof must be an image no larger than 10MB');

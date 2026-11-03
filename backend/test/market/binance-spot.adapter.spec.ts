@@ -29,7 +29,8 @@ describe('BinanceSpotAdapter', () => {
     expect(adapter.normalize(JSON.stringify({ data: { e: 'kline', E: 1000, s: 'BTCUSDT', k: { t: 0, T: 59999, i: '1m', o: '9', h: '11', l: '8', c: '10', v: '3', x: true } } }))).toMatchObject({ kind: 'kline', closed: true, interval: '1m' });
     expect(adapter.normalize(JSON.stringify({ data: { e: 'depthUpdate', E: 1000, s: 'BTCUSDT', u: 4, b: [['10', '2']], a: [['11', '1']] } }))).toMatchObject({ kind: 'depth', updateId: 4 });
     expect(adapter.normalize(JSON.stringify({ stream: 'btcusdt@depth20@1000ms', data: { lastUpdateId: 5, bids: [['10', '2']], asks: [['11', '1']] } }))).toMatchObject({ kind: 'depth', symbol: 'BTCUSDT', updateId: 5, bids: [['10', '2']] });
-    expect(adapter.normalize(JSON.stringify({ data: { e: 'trade', E: 1000, s: 'BTCUSDT', t: 7, p: '10', q: '1', m: true } }))).toMatchObject({ kind: 'trade', tradeId: 7, maker: true });
+    expect(adapter.normalize(JSON.stringify({ data: { e: 'trade', E: 1000, T: 900, s: 'BTCUSDT', t: 7, p: '10', q: '1', m: true } }))).toMatchObject({ kind: 'trade', eventTime: 1000, tradeTime: 900, tradeId: 7, maker: true });
+    expect(adapter.normalize(JSON.stringify({ data: { e: 'trade', E: 1000, s: 'BTCUSDT', t: 7, p: '10', q: '1', m: true } }))).toBeNull();
   });
 
   it('maps public REST depth and trades without credentials', async () => {

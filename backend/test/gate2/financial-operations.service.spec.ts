@@ -5,6 +5,9 @@ describe('Gate 2 financial operations', () => {
     const withdrawal = { id: 'withdrawal-1', userId: 'user-1', asset: 'USDT', amount: '10', fee: '0.2', reservedAmount: '10.2', state: 'PENDING_REVIEW' };
     const transfer = { id: 'transfer-1', fromUserId: 'user-1', toUserId: 'user-2', asset: 'USDT', amount: '5', debitPostingId: 'debit-1', creditPostingId: 'credit-1' };
     const d1: any = {
+      listCurrencies: jest.fn().mockResolvedValue([{ symbol: 'BTC' }, { symbol: 'USDT' }]),
+      listConversionRateConfig: jest.fn().mockResolvedValue([{ key: 'gate2.conversion.rate.USDT.BTC', value: '0.000025' }]),
+      listActiveConversionMarketPairs: jest.fn().mockResolvedValue([]),
       hasAssetCapability: jest.fn().mockResolvedValue(true),
       getWalletAssetNetworkConfig: jest.fn().mockResolvedValue({ assetActive: 1, withdrawEnabled: 1, networkActive: 1, networkWithdrawEnabled: 1, minWithdrawal: '1', maxWithdrawal: '1000', withdrawalFee: '0.2' }),
       getSystemConfigValue: jest.fn().mockImplementation(async (key: string) => key.includes('conversion.rate') ? '0.000025' : null),
@@ -43,6 +46,45 @@ describe('Gate 2 financial operations', () => {
     const result = await new FinancialOperationsService(d1).createConversionQuote('user-1', { fromAsset: 'USDT', toAsset: 'BTC', amount: '10', quoteKey: 'quote-key-1' });
     expect(result.replayed).toBe(false);
     expect(d1.createConversionQuote).toHaveBeenCalledWith(expect.objectContaining({ inputAmount: '10', rate: '0.000025', outputAmount: '0.00025', source: 'gate2.conversion.rate.USDT.BTC', quoteKey: 'quote-key-1' }));
+  });
+
+  it('lists configured conversion routes without requiring a live frontend market ticker or writing quotes', async () => {
+    const { d1 } = createD1();
+    const result = await new FinancialOperationsService(d1).getConversionPairs();
+    expect(result).toEqual({ pairs: [{ from: 'USDT', to: 'BTC', source: 'CONFIGURED' }] });
+    expect(d1.getLiveMarketQuote).not.toHaveBeenCalled();
+    expect(d1.createConversionQuote).not.toHaveBeenCalled();
+  });
+
+  it('lists only fresh active market routes and lets configured rates override them', async () => {
+    const { d1 } = createD1();
+    d1.listConversionRateConfig.mockResolvedValue([]);
+    d1.listActiveConversionMarketPairs.mockResolvedValue([{ id: 'pair-btc-usdt', symbol: 'BTCUSDT', baseAsset: 'BTC', quoteAsset: 'USDT' }]);
+    const result = await new FinancialOperationsService(d1).getConversionPairs();
+    expect(result.pairs).toEqual([
+      { from: 'BTC', to: 'USDT', source: 'MARKET' },
+      { from: 'USDT', to: 'BTC', source: 'MARKET' },
+    ]);
+    expect(d1.createConversionQuote).not.toHaveBeenCalled();
+  });
+
+  it('does not fall back to a market route when its configured conversion rate is invalid', async () => {
+    const { d1 } = createD1();
+    d1.listConversionRateConfig.mockResolvedValue([{ key: 'gate2.conversion.rate.USDT.BTC', value: '0' }]);
+    d1.listActiveConversionMarketPairs.mockResolvedValue([{ id: 'pair-btc-usdt', symbol: 'BTCUSDT', baseAsset: 'BTC', quoteAsset: 'USDT' }]);
+    const result = await new FinancialOperationsService(d1).getConversionPairs();
+    expect(result.pairs).not.toContainEqual({ from: 'USDT', to: 'BTC', source: 'MARKET' });
+  });
+
+  it('does not advertise market rates that quote creation cannot use', async () => {
+    const { d1 } = createD1();
+    d1.listConversionRateConfig.mockResolvedValue([]);
+    d1.listActiveConversionMarketPairs.mockResolvedValue([{ id: 'pair-btc-usdt', symbol: 'BTCUSDT', baseAsset: 'BTC', quoteAsset: 'USDT' }]);
+    const service = new FinancialOperationsService(d1);
+    d1.getLiveMarketQuote.mockResolvedValue({ price: '0' });
+    expect((await service.getConversionPairs()).pairs).toEqual([]);
+    d1.getLiveMarketQuote.mockResolvedValue({ price: '100000000000000000000' });
+    expect((await service.getConversionPairs()).pairs).toEqual([{ from: 'BTC', to: 'USDT', source: 'MARKET' }]);
   });
 
   it('rejects changed conversion parameters under an existing quote key', async () => {

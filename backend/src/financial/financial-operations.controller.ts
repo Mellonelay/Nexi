@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Post, Req, UseGuards } from "@nestjs/common";
-import { ApiBadRequestResponse, ApiBearerAuth, ApiCreatedResponse, ApiNotFoundResponse, ApiTags } from "@nestjs/swagger";
+import { ApiBadRequestResponse, ApiBearerAuth, ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import { Role } from "../prisma/d1-client";
 import type { AuthenticatedRequest } from "../auth/auth.types";
 import { AuthService } from "../auth/auth.service";
@@ -119,6 +119,35 @@ export class FinancialOperationsController {
     @Req() request: AuthenticatedRequest,
   ) {
     return this.financial.transfer(request.user.userId, body);
+  }
+
+  @ApiBearerAuth()
+  @Get("conversion/pairs")
+  @ApiOkResponse({
+    description: "Authenticated, read-only conversion pairs eligible under current backend configuration and fresh market quotes.",
+    schema: {
+      type: "object",
+      required: ["pairs"],
+      properties: {
+        pairs: {
+          type: "array",
+          items: {
+            type: "object",
+            required: ["from", "to", "source"],
+            properties: {
+              from: { type: "string" },
+              to: { type: "string" },
+              source: { type: "string", enum: ["CONFIGURED", "MARKET"] },
+            },
+          },
+        },
+      },
+    },
+  })
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
+  conversionPairs() {
+    return this.financial.getConversionPairs();
   }
 
   @ApiBearerAuth()
