@@ -59,6 +59,8 @@ const marketStateCopy: Record<
     "The chart will appear shortly.",
   ],
   CLOSED: ["Closed", "Showing the last available market history."],
+  STALE: ["Stale market data", "Showing the last available candles; updates may be delayed."],
+  CONNECTION_LOST: ["Reconnecting", "Showing the last available candles while the connection recovers."],
   ERROR: ["Market error", "The chart could not be loaded. Please try again shortly."],
 };
 

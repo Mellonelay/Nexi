@@ -25,11 +25,13 @@ test('exposes only Live, Error, or Closed as market display status', () => {
   assert.equal(marketDisplayStatus('STALE', 'OPEN'), 'Error');
 });
 
-test('normalizes internal chart transport states to the three product statuses', () => {
+test('preserves stale and reconnecting chart states while mapping unavailable data to error', () => {
   assert.equal(marketChartDisplayStatus('LIVE'), 'LIVE');
   assert.equal(marketChartDisplayStatus('LOADING'), 'LOADING');
   assert.equal(marketChartDisplayStatus('CLOSED'), 'CLOSED');
-  for (const status of ['STALE', 'UNAVAILABLE', 'DISABLED', 'ERROR', 'CONNECTION_LOST']) {
+  assert.equal(marketChartDisplayStatus('STALE'), 'STALE');
+  assert.equal(marketChartDisplayStatus('CONNECTION_LOST'), 'CONNECTION_LOST');
+  for (const status of ['UNAVAILABLE', 'DISABLED', 'ERROR']) {
     assert.equal(marketChartDisplayStatus(status), 'ERROR');
   }
 });

@@ -1,8 +1,8 @@
 export type MarketDataStatus = 'LIVE' | 'STALE' | 'UNAVAILABLE' | 'DISABLED' | 'LOADING' | 'ERROR' | 'CONNECTION_LOST' | 'CLOSED';
 export type MarketDisplayStatus = 'Live' | 'Error' | 'Closed';
 
-export function marketChartDisplayStatus(status: MarketDataStatus): 'LIVE' | 'LOADING' | 'ERROR' | 'CLOSED' {
-  if (status === 'LIVE' || status === 'LOADING' || status === 'CLOSED') return status;
+export function marketChartDisplayStatus(status: MarketDataStatus): 'LIVE' | 'STALE' | 'CONNECTION_LOST' | 'LOADING' | 'ERROR' | 'CLOSED' {
+  if (status === 'LIVE' || status === 'STALE' || status === 'CONNECTION_LOST' || status === 'LOADING' || status === 'CLOSED') return status;
   return 'ERROR';
 }
 

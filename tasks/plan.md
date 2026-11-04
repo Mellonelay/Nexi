@@ -1,3 +1,19 @@
+# CURRENT PLAN — NEXI end-to-end browser acceptance v2 (2026-11-04)
+
+Task ID: NEXI_BROWSER_ACCEPTANCE_V2_20261104
+Execution mode: test/observe/record first; repair only after the feasible Phase A sweep; no deployment authorization.
+
+1. **Recover authority and exact runtime.** Recheck canonical repo/source SHA and dirty/untracked state; current Public, Backend and Admin release markers; Sentry release/environment; API readiness and canonical domains; active writer/jobs; existing signed-in Chrome DevTools MCP session and authorized profile. Never treat a previous source SHA as deployed proof.
+2. **Load the current contracts once.** Read root, Backend, Frontend and Admin `AGENTS.md`; applicable current architecture/source maps, Public design, Admin operator/route maps, Sentry and security contracts, browser guide/matrices/receipts, release receipt, task records and financial-integrity rules. Record which unchanged proof is reused and its source SHA/date.
+3. **Build the operator-use map before judging UI.** Ground every expected result in current route/menu, RBAC, API/DTO/provider, durable SQLite/Ledger/Outbox or Valkey/realtime ownership. Inventory all 32 active Admin destinations, map Public counterparts and normal/empty/error/denial states, reconcile the existing usage guide, and fill expected-outcome/evidence fields in the master register before any browser action.
+4. **Phase A browser sweep — read/observe only by default.** Use the existing authenticated Chrome DevTools connection/profile. Preserve sessions; verify Admin and customer identities/scopes. Execute all independent feasible Admin and Public journeys, including route/access states, market depth/trades/Klines/reconnect, Wallet/Convert states, Asset Detail and responsive geometry. Capture current deployed SHA, identity (redacted), viewport, actions, network/console, UI states, screenshots/traces, and backend durable readback where appropriate.
+5. **Gate each consequential action separately.** Funding, transfers, Spot/Options/Margin/Convert operations and Admin Binary/config changes require an existing authorized TEST identity plus specific approved operation bounds. If absent, record BLOCKED with the exact missing fixture/permission/amount/config approval and continue all independent read-only cases. Never synthesize account funding or mutate production state directly.
+6. **Finish the sweep before changing source.** Append results for every attempted journey; classify PASS/FAIL/BLOCKED/NOT_TESTED/OWNER_ACCEPTED_UNTESTED accurately. Deduplicate only after preserving scenario evidence. Do not fix during Phase A.
+7. **Phase B grouped repair.** After coverage reconciliation, trace confirmed defects to causal owners, group a coherent source repair batch, add regression coverage, review the diff, and run one consolidated targeted verification set. Commit/push only as authorized. Do not deploy or restart.
+8. **Release boundary and closure.** Request separate deployment approval only if a verified source fix needs release. After an authorized new deployment, perform one grouped regression sweep on its exact release SHA. Report status counts, all Admin-route dispositions, source/runtime identity, proof links, defects, blockers and next dependency-ready action.
+
+Stop conditions: stop only a dependent mutation for missing authorization or safety boundary; continue unrelated tests. End the task after the feasible sweep and any authorized source closure are accurately recorded, without converting static/source evidence into runtime acceptance.
+
 ## CURRENT 2026-11-04 — source closure complete; deployed/browser proof gated
 
 - [x] Source batch integrated and pushed in commit 188fdba1b9e703f04f1c3fbe32186f7daa6dce22. At documentation-task intake, local main and origin/main matched that source SHA with a clean tracked tree; this documentation-only update is separate.
@@ -1025,3 +1041,25 @@ Owner-authorized Backend → Public → Admin build and deployment of `a72c3127f
 ## 2026-10-31 — Sentry documentation reconciliation
 
 Sentry alert configuration is current and verified for production release `a72c3127ffc448215cc7a724c4f5f6ca6e593b1b`: workflow `6146426` handles new/regressed/reappeared issues; monitor `10813107` checks `>5` errors in 300 seconds and feeds the existing email workflow. Owner-target routing configuration is verified without exposing member identities; delivery itself is not. Exact-release error search covered 24 hours and returned no results; classify this as bounded coverage, not exhaustive issue-feed classification. Keep delivery `UNKNOWN`, measured minutes-scale detection `NO`, and symbolication `UNKNOWN`. No app build/deploy/restart or broad tests are in scope. Evidence: `tasks/evidence/nexi-sentry-detection-20261031.md`.
+
+
+## Execution checkpoint — 2026-11-04
+
+Live authority confirmed at source HEAD 2a74ce1b60940221ddb53f95baf4ec04a1f6eac4 / origin/main same; deployed Backend and Public markers 188fdba1b9e703f04f1c3fbe32186f7daa6dce22; Admin marker 111a5010f04a6592c290b0b0bc93240ab0cec69b. Correct active API unit is nexi-api.service (nexi-backend.service is not a configured service name); nexi-api, Public, Admin and Valkey are active, API /readyz HTTP 200 READY. Reused the 2026-11-01 Admin route-load receipt only for matching Admin release SHA.
+
+Read-only browser run covered Admin identity/Overview; Public dashboard, Asset Detail, Spot, Wallet, Options, Mining, Loans, Announcements, Learn, Support, Settings and Messages metadata. Exact UI/API findings, failure classifications, privacy boundary and open screenshot/viewport gaps are in the dated evidence register. Sentry production error search for the current Backend/Public release over 24h returned no results. No production financial or Admin write, app repair, build, restart or deployment occurred.
+
+Phase A is still OPEN. Read-only evidence is partial; current Chrome MCP lacks viewport emulation and denied screenshot persistence outside configured roots. Wallet balance/activity state is unavailable/pending in browser; dedicated TEST identity, eligible deposit, approved amount/stake and isolated Binary configuration scope were not established. Continue independent non-mutating checks if available; keep economic and privileged writes blocked until those exact authorization prerequisites exist. Do not treat an empty Sentry query, API 200, or route-load receipt as functional/economic acceptance.
+
+
+## Phase A closure / Phase B entry — 2026-11-04
+
+Phase A feasible read-only browser coverage is reconciled in `tasks/evidence/nexi-browser-acceptance-v2-20261104.md`. No financial/Admin write occurred. Two confirmed P2 source defects enter one repair batch: Spot chart indicator controls disabled against the design contract; stale 1d candles are surfaced as generic chart ERROR despite HTTP 200 and valid historical candles. Leave the P3 autofill issue as a candidate pending scope review. After the full intended diff, commit the coherent documentation/source batch as authorized, run the consolidated targeted frontend verification, repair only demonstrated failures, and do not deploy/restart. Browser, economic, lower-role, viewport and live-frame gaps remain release acceptance dependencies.
+
+
+## Phase B source repair checkpoint — 2026-11-04
+
+- The feasible Phase A read-only coverage was complete before source changes. Financial/admin mutations, mobile viewport matrix and physical-device/WebSocket proof remain explicitly gated.
+- One frontend batch repaired Spot indicator controls and stale/reconnecting candle presentation. Focused receipts and the typegen permission gap are recorded in `tasks/evidence/nexi-browser-acceptance-v2-source-repair-20261104.md` (canonical evidence filename below is 20261104; no application build/deploy/restart).
+- 23/23 focused tests PASS; direct TypeScript PASS; changed-file ESLint PASS with five existing warnings; scoped React Doctor PASS on changed lines; `git diff --check` PASS. `next typegen` is blocked by root-owned canonical-checkout `.next/types/routes.d.ts` (EACCES); no artifact ownership or permissions were altered.
+- Source commit/push remains authorized. Do not deploy/restart. Refresh Graphify against the exact committed source SHA; browser retest requires separate release authorization and a new deployed SHA.

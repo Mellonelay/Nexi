@@ -85,8 +85,14 @@ test('chart recreation and pair changes discard rendered history from the prior 
 
 test('chart controls follow the plot and Options keeps five config-driven duration boxes', () => {
   const chart = read('components/TradingChart.tsx');
+  const spot = read('dashboard/spot/page.tsx');
   const binary = read('dashboard/binary/page.tsx');
   assert.ok(chart.indexOf('ref={chartContainerRef}') < chart.indexOf('<ChartIndicatorRail activeIndicators={activeIndicators}'));
+  assert.doesNotMatch(spot, /showIndicatorControls={false}/);
+  assert.ok(chart.includes('showIndicatorControls = type === "spot"'));
+  assert.ok(chart.includes('STALE: ["Stale market data", "Showing the last available candles; updates may be delayed."]'));
+  assert.ok(chart.includes('CONNECTION_LOST: ["Reconnecting", "Showing the last available candles while the connection recovers."]'));
+  assert.ok(chart.includes('const blocksChart = candles.length === 0 && stateCopy'));
   assert.doesNotMatch(chart, /<summary[^>]*>\s*Indicators/);
   assert.match(binary, /grid-cols-5/);
   assert.match(binary, /durationOptions\.map/);

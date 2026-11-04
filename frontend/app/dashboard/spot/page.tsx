@@ -51,7 +51,7 @@ type SpotHistoryRow = Record<string, unknown>;
 type ChartInterval = '1m' | '5m' | '15m' | '30m' | '1h' | '4h' | '1d';
 
 function SpotRealtimeTradingChart({ symbol, interval, marketStatus }: { symbol: string; interval: ChartInterval; marketStatus?: MarketDataStatus }) {
-  return <RealtimeTradingChart symbol={symbol} type="spot" interval={interval} marketStatus={marketStatus} showIndicatorControls={false} />;
+  return <RealtimeTradingChart symbol={symbol} type="spot" interval={interval} marketStatus={marketStatus} />;
 }
 
 type MobileMarketPanel = 'CHART' | 'BOOK' | 'TRADES';

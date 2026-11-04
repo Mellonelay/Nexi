@@ -1,3 +1,24 @@
+# CURRENT TASK — NEXI end-to-end browser acceptance v2 (2026-11-04)
+
+Task ID: NEXI_BROWSER_ACCEPTANCE_V2_20261104
+Authority: owner directive v2 and current repository/live source. This registers the work; it does not claim browser acceptance has started or passed.
+
+- [x] Phase 0 — Reconfirmed current source/deployment authority before browser use: Git SHA, Public/Backend/Admin release markers, Sentry release, API `/readyz`, domains, active writer/session state, and existing authorized Chrome DevTools connection/profile. Prior SHAs and runtime reports are historical checkpoints only.
+- [x] Read the current four `AGENTS.md` files and applicable architecture, frontend/backend/Admin, operations/Sentry, security, Chrome DevTools guide, browser matrices/113-row tracker, release receipt, and financial-acceptance records. Reused same-release Admin route evidence where exact marker matched. Reuse unchanged session-verified instructions; resolve moved documents from current repo.
+- [x] Established source-backed expected behavior/evidence criteria before browser actions; created the current operator guide and dated task acceptance register. Reconcile the existing guide first; complete a 32-destination Admin inventory (31 role-filtered sidebar destinations + contextual `/sandbox`, eight workspaces; exclude retired `/support` workflow and hidden `/reconciliation`) and Public customer journeys. Update/reconcile the existing operator guide and master acceptance register; do not duplicate authoritative documents.
+- [x] Phase A — Completed the feasible read-only browser sweep on 2026-11-04 across Admin identity/finance/markets, Public identity, dashboard, Asset Detail, Spot/Order Book/Trades, Margin, Options, Wallet/Convert, products, communications and Settings. Exact-sha Admin route-load evidence reused for all 32 destinations; today's direct reads, request statuses, current screenshot observations and limits are in the dated evidence register. All financial/privileged mutations remain BLOCKED by missing authorized TEST identity/fixture/bounds. Each row records deployed SHA, redacted identity, viewport, prerequisites, action, expected/actual, request/economic references, UI and durable readback, screenshot/trace, defect/severity, status, and dependency. Statuses: PASS, FAIL, BLOCKED (reason), NOT_TESTED (reason), OWNER_ACCEPTED_UNTESTED.
+- [x] Continue independent scenarios after blockers — all feasible non-mutating browser journeys were completed and recorded before repairs. Funding, transfer, trade, settlement, and Admin configuration mutations remain BLOCKED without a confirmed designated TEST identity and explicit operation bounds. No SQLite edits, fabricated deposits, UI/RBAC bypass, or synthetic success.
+- [ ] Public viewport coverage: 320×480, 320×568, 360×640, 390×844, 412–430×932, 440×956 plus relevant tablet/desktop. Admin desktop coverage: 1365×723 and 979×715 where applicable. Record actual viewport, overflow/clipping/focus/safe-area states and current-release screenshots. Preserve existing authenticated sessions; do not create a replacement browser/profile.
+- [x] Phase A gate — Feasible read-only sweep reconciled before repairs. Two confirmed P2 Public chart defects are registered with reproduction and causal source owners; P3 form-autofill issue remains a candidate. Distinguish blocked financial/role/viewport/WebSocket proof from source defects.
+- [x] Phase B source repair and consolidated focused verification — after feasible Phase A coverage, fixed the two confirmed chart defects in one frontend batch. 23/23 focused tests, direct TypeScript, changed-file ESLint, scoped React Doctor and diff check passed; Next typegen alone is blocked by root-owned `.next/types/routes.d.ts` (EACCES). Detailed receipts: `tasks/evidence/nexi-browser-acceptance-v2-source-repair-20261104.md`.
+- [ ] Close with per-feature PASS/FAIL/BLOCKED/NOT_TESTED/OWNER_ACCEPTED_UNTESTED counts; all 32 Admin destination statuses; Public journey results; exact deployed identities; evidence links; authorized mutations and restoration/readback; Sentry/runtime correlation; defect backlog; and precise remaining approval/proof gaps.
+
+Safety and scope: Browser acceptance is not authorized by source CI, route HTTP 200, graph paths, or prior screenshots. No production deployment, service restart, database/financial mutation, or unauthorized Admin write. Keep production verifier fail-closed.
+
+Registration state (historical): task was registered before browser interaction; no financial operation, Admin mutation, application repair, build, deployment, or restart occurred in that registration step.
+
+Historical execution checkpoint (superseded by the later read-only continuation and Phase A closure in the evidence register): the initial sweep was considered open at that point. Current browser proof gaps, source repair and validation results are in `tasks/evidence/nexi-browser-acceptance-v2-source-repair-20261104.md`.
+
 ## CURRENT 2026-11-04 — source closure complete; deployed/browser proof gated
 
 - [x] Source batch integrated and pushed in commit 188fdba1b9e703f04f1c3fbe32186f7daa6dce22. At documentation-task intake, local main and origin/main matched that source SHA with a clean tracked tree; this documentation-only update is separate.
@@ -1207,3 +1228,6 @@ Owner-authorized Backend → Public → Admin build and deployment of `a72c3127f
 - [ ] Obtain a real notification receipt to verify recipient delivery and measure ingestion-to-notification latency; do not synthesize a production failure.
 - [ ] Verify readable current-release frames per surface when a suitable natural event exists. Current exact-release production error search is bounded to 24h and returned none; it does not exhaustively classify historical grouped issues.
 - [ ] Shared-state integration is performed by the active Git owner; Sentry alert delivery and three-surface symbolication remain unverified.
+
+
+Phase B evidence update — 2026-11-04: the two confirmed P2 chart source fixes and final focused receipts are in `tasks/evidence/nexi-browser-acceptance-v2-source-repair-20261104.md`. The primary browser evidence register remains preserved unchanged due its existing root ownership. Commit/push is pending; deployment/browser re-test and economic/role/viewport acceptance remain gated.
