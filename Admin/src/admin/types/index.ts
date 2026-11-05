@@ -48,6 +48,8 @@ export type Permission =
   | "exposure.view"
   | "wallets.view"
   | "ledger.view"
+  | "ledger.adjust"
+  | "ledger.freeze"
   | "deposits.view"
   | "deposits.confirm"
   | "withdrawals.view"
@@ -68,6 +70,7 @@ export type Permission =
   | "learn.publish"
   | "notifications.view"
   | "notifications.send"
+  | "operator_alerts.view"
   | "admins.view"
   | "admins.edit"
   | "roles.view"
@@ -110,7 +113,7 @@ export interface AdminUser {
   }>;
 }
 
-export type ApprovalDecision = "pending" | "approved" | "rejected" | "expired";
+export type ApprovalDecision = "pending" | "approved" | "rejected" | "expired" | "executed";
 
 export interface ApprovalRequest {
   id: string;
@@ -157,6 +160,7 @@ export type KycStatus = "unverified" | "pending" | "approved" | "rejected" | "mo
 
 export interface User {
   id: string;
+  userCode?: string;
   email: string;
   displayName: string;
   country: string;
@@ -232,6 +236,7 @@ export interface MiningPlan {
 export interface LoanPlan {
   id: string;
   name: string;
+  currency: string;
   durationDays: number;
   interestRate: number;
   minAmount: number;
@@ -261,6 +266,7 @@ export interface LoanApplicationAdmin {
   status: string;
   durationDays: number;
   totalRepayment: string;
+  totalRepaid: string;
   createdAt: string;
   dueDate?: string | null;
   collateral?: string | null;
@@ -356,6 +362,20 @@ export interface SpotOrder {
   createdAt: string;
 }
 
+/** Shared policy applied to every eligible Binary pair. */
+export interface BinaryGlobalDurationSetting {
+  durationSeconds: number;
+  payoutRate: number;
+  enabled: boolean;
+}
+
+export interface BinaryGlobalConfiguration {
+  version: number;
+  minStake: string;
+  maxStake: string;
+  durations: BinaryGlobalDurationSetting[];
+}
+
 /** Binary durations are backend-configured positive seconds. */
 export type BinaryDuration = number;
 
@@ -424,12 +444,18 @@ export type WalletDomain = "overview" | "spot" | "margin" | "option" | "funding"
 
 export function mapLedgerScope(scope: unknown): WalletDomain | undefined {
   switch (scope) {
-    case "MAIN": return "funding";
-    case "SPOT": return "spot";
-    case "MARGIN": return "margin";
-    case "BINARY": return "option";
-    case "FINANCE": return "financial";
-    default: return undefined;
+    case "MAIN":
+      return "funding";
+    case "SPOT":
+      return "spot";
+    case "MARGIN":
+      return "margin";
+    case "BINARY":
+      return "option";
+    case "FINANCE":
+      return "financial";
+    default:
+      return undefined;
   }
 }
 
@@ -476,27 +502,74 @@ export function mapWalletAccount(value: unknown): WalletRow | undefined {
   if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
   const row = value as Record<string, unknown>;
   const domain = mapLedgerScope(row.scope);
-  const status = row.status === "ACTIVE" ? "active" : row.status === "SUSPENDED" ? "frozen" : row.status === "CLOSED" ? "closed" : undefined;
-  if (!domain || !status || typeof row.id !== "string" || !row.id || typeof row.userId !== "string" || !row.userId ||
-      typeof row.asset !== "string" || !row.asset || typeof row.available !== "string" || typeof row.locked !== "string") return undefined;
-  return { id: row.id, userId: row.userId, domain, asset: row.asset, available: row.available, locked: row.locked,
-    updatedAt: typeof row.updatedAt === "string" ? row.updatedAt : undefined, status };
+  const status =
+    row.status === "ACTIVE"
+      ? "active"
+      : row.status === "SUSPENDED" || row.status === "ADMIN_FROZEN"
+        ? "frozen"
+        : row.status === "CLOSED"
+          ? "closed"
+          : undefined;
+  if (
+    !domain ||
+    !status ||
+    typeof row.id !== "string" ||
+    !row.id ||
+    typeof row.userId !== "string" ||
+    !row.userId ||
+    typeof row.asset !== "string" ||
+    !row.asset ||
+    typeof row.available !== "string" ||
+    typeof row.locked !== "string"
+  )
+    return undefined;
+  return {
+    id: row.id,
+    userId: row.userId,
+    domain,
+    asset: row.asset,
+    available: row.available,
+    locked: row.locked,
+    updatedAt: typeof row.updatedAt === "string" ? row.updatedAt : undefined,
+    status,
+  };
 }
 
 export function mapLedgerPosting(value: unknown): LedgerEntry | undefined {
   if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
   const row = value as Record<string, unknown>;
-  const account = row.account && typeof row.account === "object" ? row.account as Record<string, unknown> : {};
+  const account =
+    row.account && typeof row.account === "object" ? (row.account as Record<string, unknown>) : {};
   const domain = mapLedgerScope(row.scope ?? account.scope);
   const userId = row.userId ?? account.userId;
-  if (!domain || typeof userId !== "string" || !userId || typeof row.id !== "string" || !row.id ||
-      typeof row.asset !== "string" || !row.asset || typeof row.amount !== "string" ||
-      typeof row.createdAt !== "string" || typeof row.referenceId !== "string" || typeof row.kind !== "string") return undefined;
-  return { id: row.id, ts: row.createdAt, userId, domain, asset: row.asset, amount: row.amount,
-    type: row.kind === "SETTLEMENT" ? "settlement" : "posting", refId: row.referenceId,
+  if (
+    !domain ||
+    typeof userId !== "string" ||
+    !userId ||
+    typeof row.id !== "string" ||
+    !row.id ||
+    typeof row.asset !== "string" ||
+    !row.asset ||
+    typeof row.amount !== "string" ||
+    typeof row.createdAt !== "string" ||
+    typeof row.referenceId !== "string" ||
+    typeof row.kind !== "string"
+  )
+    return undefined;
+  return {
+    id: row.id,
+    ts: row.createdAt,
+    userId,
+    domain,
+    asset: row.asset,
+    amount: row.amount,
+    type: row.kind === "SETTLEMENT" ? "settlement" : "posting",
+    refId: row.referenceId,
     note: typeof row.referenceType === "string" ? `${row.kind} · ${row.referenceType}` : row.kind,
-    debit: row.kind === "DEBIT" ? row.amount : undefined, credit: row.kind === "CREDIT" ? row.amount : undefined,
-    status: "posted" };
+    debit: row.kind === "DEBIT" ? row.amount : undefined,
+    credit: row.kind === "CREDIT" ? row.amount : undefined,
+    status: "posted",
+  };
 }
 
 export type DepositStatus =
@@ -774,6 +847,15 @@ export interface AdminNotification {
   body: string;
   readAt?: string;
   createdAt: string;
+}
+
+export type AdminOperatorAlertCategory = "ACCOUNT" | "IDENTITY" | "WALLET" | "TRADING" | "PRODUCT" | "SYSTEM";
+export interface AdminOperatorAlert {
+  id: string; category: AdminOperatorAlertCategory; severity: string; title: string; summary: string;
+  referenceType: string; referenceId: string; createdAt: string; readAt: string | null; href: string;
+}
+export interface AdminOperatorAlertsResponse {
+  items: AdminOperatorAlert[]; unreadCount: number; categories: AdminOperatorAlertCategory[]; disabledCategories: AdminOperatorAlertCategory[];
 }
 
 export interface AdminLearnArticle {

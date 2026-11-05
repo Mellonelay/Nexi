@@ -101,7 +101,7 @@ function Inner() {
           </TabsTrigger>
           <TabsTrigger value="support" data-testid="tab-support">
             <LifeBuoy className="mr-1 h-3.5 w-3.5" />
-            Support entry
+            Contact Us
           </TabsTrigger>
           <TabsTrigger value="audit" data-testid="tab-audit">
             Audit
@@ -139,7 +139,7 @@ function Shell({
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Frontend Control"
-        description="Public route visibility, Quotes Hub, banners, incidents, and support entry points."
+        description="Public routes, Quotes Hub, banners, incidents, and Contact Us links."
         badges={
           <>
             <ProviderBadge />
@@ -753,51 +753,26 @@ function BannersPanel({
   );
 }
 
-/* --------------- Support entry --------------- */
+/* --------------- Contact Us --------------- */
 function SupportEntryPanel({ supports, error, onSaved }: { supports: SupportEntryPoint[]; error?: Error; onSaved: () => void }) {
   const provider = useAdminData();
   const session = useAdminSession();
   const canEdit = session.can("frontend.edit");
-  const [editing, setEditing] = useState<SupportEntryPoint | null>(null);
   const [telegramUrl, setTelegramUrl] = useState("");
   const [email, setEmail] = useState("");
   const [contactReason, setContactReason] = useState("");
   const [savingContacts, setSavingContacts] = useState(false);
 
+  const normalizedTelegramUrl = (value: string) => {
+    const target = value.trim();
+    const username = target.replace(/^@/, "");
+    return /^[A-Za-z0-9_]{5,32}$/.test(username) ? `https://t.me/${username}` : target;
+  };
+
   useEffect(() => {
     setTelegramUrl(supports.find((entry) => entry.channel === "telegram")?.target ?? "");
     setEmail(supports.find((entry) => entry.channel === "email")?.target ?? "");
   }, [supports]);
-
-  const columns: DataTableColumn<SupportEntryPoint>[] = [
-    {
-      key: "order",
-      header: "#",
-      align: "right",
-      sortValue: (s) => s.order,
-      cell: (s) => <span className="mono text-xs">{s.order}</span>,
-    },
-    { key: "label", header: "Label", cell: (s) => <span className="text-sm">{s.label}</span> },
-    {
-      key: "channel",
-      header: "Channel",
-      cell: (s) => <span className="mono text-xs">{s.channel}</span>,
-    },
-    {
-      key: "target",
-      header: "Target",
-      cell: (s) => <span className="mono text-xs text-muted-foreground">{s.target}</span>,
-    },
-    {
-      key: "visible",
-      header: "Visibility",
-      cell: (s) => (
-        <StatusBadge tone={s.visible ? "success" : "neutral"}>
-          {s.visible ? "visible" : "hidden"}
-        </StatusBadge>
-      ),
-    },
-  ];
 
   if (error) {
     return <ErrorState title="Could not load support settings" description={error.message} onRetry={onSaved} />;
@@ -806,13 +781,13 @@ function SupportEntryPanel({ supports, error, onSaved }: { supports: SupportEntr
   return (
     <>
       <section className="mb-5 rounded-lg border border-border p-4" aria-labelledby="public-support-contacts-title">
-        <h2 id="public-support-contacts-title" className="text-sm font-semibold">Public contact actions</h2>
-        <p className="mt-1 text-xs text-muted-foreground">These values appear on the Public Support page. Leave a field blank to hide that contact action.</p>
+        <h2 id="public-support-contacts-title" className="text-sm font-semibold">Contact Us</h2>
+        <p className="mt-1 text-xs text-muted-foreground">These contacts appear on the Public Help page. Leave a field blank to hide that contact method.</p>
         <div className="mt-4 grid gap-3 md:grid-cols-2">
-          <FormField label="Telegram URL">
-            <Input aria-label="Telegram support URL" type="url" value={telegramUrl} onChange={(event) => setTelegramUrl(event.target.value)} placeholder="https://t.me/…" />
+          <FormField label="Telegram URL or username">
+            <Input aria-label="Telegram support URL or username" type="text" value={telegramUrl} onChange={(event) => setTelegramUrl(event.target.value)} placeholder="@username or https://t.me/username" />
           </FormField>
-          <FormField label="Support email">
+          <FormField label="Support Gmail or email">
             <Input aria-label="Support email address" type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
           </FormField>
         </div>
@@ -826,7 +801,8 @@ function SupportEntryPanel({ supports, error, onSaved }: { supports: SupportEntr
             onClick={async () => {
               setSavingContacts(true);
               try {
-                await provider.updatePublicSupportContacts({ telegramUrl, email }, {
+                const savedTelegramUrl = normalizedTelegramUrl(telegramUrl);
+                await provider.updatePublicSupportContacts({ telegramUrl: savedTelegramUrl, email }, {
                   actor: session.actorName,
                   role: session.roleId,
                   environment: session.environment,
@@ -835,7 +811,7 @@ function SupportEntryPanel({ supports, error, onSaved }: { supports: SupportEntr
                 const persisted = await provider.listSupportEntryPoints();
                 const persistedTelegram = persisted.find((entry) => entry.channel === "telegram")?.target.trim() ?? "";
                 const persistedEmail = persisted.find((entry) => entry.channel === "email")?.target.trim() ?? "";
-                if (persistedTelegram !== telegramUrl.trim() || persistedEmail !== email.trim()) {
+                if (persistedTelegram !== savedTelegramUrl || persistedEmail !== email.trim()) {
                   throw new Error("Public support contacts did not match the saved configuration");
                 }
                 setTelegramUrl(persistedTelegram);
@@ -854,118 +830,7 @@ function SupportEntryPanel({ supports, error, onSaved }: { supports: SupportEntr
           </Button>
         </div>
       </section>
-      <DataTable
-        data={supports}
-        columns={columns}
-        rowKey={(s) => s.id}
-        rowActions={(s) => (
-          <Button
-            variant="outline"
-            size="sm"
-            data-testid={`support-edit-${s.id}`}
-            disabled={!canEdit}
-            onClick={() => setEditing(s)}
-          >
-            Edit
-          </Button>
-        )}
-      />
-      <SupportEntryForm
-        entry={editing}
-        onClose={() => setEditing(null)}
-        onSubmit={async (patch, reason) => {
-          if (!editing) return;
-          await provider.updateSupportEntryPoint(editing.id, patch, {
-            actor: session.actorName,
-            role: session.roleId,
-            environment: session.environment,
-            reason,
-          });
-        }}
-      />
     </>
-  );
-}
-
-function SupportEntryForm({
-  entry,
-  onClose,
-  onSubmit,
-}: {
-  entry: SupportEntryPoint | null;
-  onClose: () => void;
-  onSubmit: (patch: Partial<SupportEntryPoint>, reason: string) => Promise<void>;
-}) {
-  const [label, setLabel] = useState("");
-  const [target, setTarget] = useState("");
-  const [order, setOrder] = useState(1);
-  const [visible, setVisible] = useState(true);
-  const [reason, setReason] = useState("");
-
-  useEffect(() => {
-    if (entry) {
-      setLabel(entry.label);
-      setTarget(entry.target);
-      setOrder(entry.order);
-      setVisible(entry.visible);
-      setReason("");
-    }
-  }, [entry?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const reasonOk = reason.trim().length >= 6;
-
-  return (
-    <FormDrawer
-      open={!!entry}
-      onOpenChange={(o) => {
-        if (!o) onClose();
-      }}
-      title={entry ? `Support entry — ${entry.label}` : ""}
-      description="Public label, target, and visibility for the support entry point."
-      submitLabel="Save"
-      submitDisabled={!reasonOk}
-      onSubmit={async () => {
-        await onSubmit({ label, target, order, visible }, reason.trim());
-        onClose();
-      }}
-      testId="support-entry-drawer"
-    >
-      <FormField label="Label">
-        <Input data-testid="se-label" value={label} onChange={(e) => setLabel(e.target.value)} />
-      </FormField>
-      <FormField label="Target">
-        <Input data-testid="se-target" value={target} onChange={(e) => setTarget(e.target.value)} />
-      </FormField>
-      <FormField label="Order">
-        <Input
-          data-testid="se-order"
-          type="number"
-          value={order}
-          onChange={(e) => setOrder(Number(e.target.value))}
-        />
-      </FormField>
-      <div className="flex items-center gap-2">
-        <input
-          id="se-visible"
-          data-testid="se-visible"
-          type="checkbox"
-          checked={visible}
-          onChange={(e) => setVisible(e.target.checked)}
-        />
-        <Label htmlFor="se-visible" className="text-xs">
-          Visible on public surface
-        </Label>
-      </div>
-      <FormField label="Reason (auditable, ≥ 6 chars)">
-        <textarea
-          data-testid="se-reason"
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-          rows={3}
-          className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
-        />
-      </FormField>
-    </FormDrawer>
   );
 }
 

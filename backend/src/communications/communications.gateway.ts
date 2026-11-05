@@ -12,6 +12,7 @@ import { AdminPermissionGuard } from '../admin/admin-permission.guard';
 import { isCorsOriginAllowed } from '../runtime/runtime.config';
 
 export const ADMIN_COMMUNICATIONS_MESSAGES_ROOM = 'admin:communications:messages';
+export const ADMIN_OPERATOR_ALERTS_ROOM = 'admin:operator-alerts';
 
 @Injectable()
 @WebSocketGateway({ namespace: '/communications', cors: { origin: (origin, callback) => callback(null, isCorsOriginAllowed(origin)) } })
@@ -89,7 +90,16 @@ export class CommunicationsGateway implements OnGatewayInit, OnModuleInit, OnMod
 
   async handleConnection(client: Socket) {
     const user = client.data.authenticatedUser as AuthenticatedUser;
-    await client.join(user.surface === 'ADMIN' ? ADMIN_COMMUNICATIONS_MESSAGES_ROOM : `user:${user.userId}`);
+    if (user.surface === 'PUBLIC') {
+      await client.join(`user:${user.userId}`);
+      return;
+    }
+    if (await this.adminPermissions.hasPermission(user.userId, 'messages.view')) {
+      await client.join(ADMIN_COMMUNICATIONS_MESSAGES_ROOM);
+    }
+    if (await this.adminPermissions.hasPermission(user.userId, 'operator_alerts.view')) {
+      await client.join(ADMIN_OPERATOR_ALERTS_ROOM);
+    }
   }
 
   private async authenticate(client: Socket) {
@@ -104,9 +114,11 @@ export class CommunicationsGateway implements OnGatewayInit, OnModuleInit, OnMod
 
   private async authorizeCommunicationsUser(user: AuthenticatedUser) {
     if (user.surface === 'ADMIN' && user.role === Role.ADMIN) {
-      if (!await this.adminPermissions.hasPermission(user.userId, 'messages.view')) {
-        throw new UnauthorizedException('Messages permission is required');
-      }
+      const [canViewMessages, canViewAlerts] = await Promise.all([
+        this.adminPermissions.hasPermission(user.userId, 'messages.view'),
+        this.adminPermissions.hasPermission(user.userId, 'operator_alerts.view'),
+      ]);
+      if (!canViewMessages && !canViewAlerts) throw new UnauthorizedException('Communications access is not allowed');
     } else if (user.surface !== 'PUBLIC' || user.role !== Role.USER) {
       throw new UnauthorizedException('Communications access is not allowed');
     }
@@ -116,6 +128,10 @@ export class CommunicationsGateway implements OnGatewayInit, OnModuleInit, OnMod
   async snapshot(@ConnectedSocket() client: Socket, @MessageBody() _body: { sinceSequence?: number }) {
     if (!client.data.userId) throw new UnauthorizedException('WebSocket authentication required');
     return { type: 'communications.snapshot', sequence: this.sequence, data: await this.service.snapshot(client.data.userId) };
+  }
+
+  notifyOperatorAlertsChanged() {
+    this.server?.to(ADMIN_OPERATOR_ALERTS_ROOM).emit('operator-alerts.changed', { updatedAt: new Date().toISOString() });
   }
 
   private broadcast(raw: string) {

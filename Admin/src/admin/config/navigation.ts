@@ -3,10 +3,8 @@ import {
   LayoutDashboard,
   Users,
   ShieldCheck,
-  MonitorSmartphone,
   LayoutTemplate,
   Menu as MenuIcon,
-  Languages,
   Flag,
   Coins,
   Network,
@@ -14,8 +12,6 @@ import {
   CandlestickChart,
   Timer,
   Scale,
-  TrendingUp,
-  Wallet,
   BookOpen,
   ArrowDownToLine,
   ArrowUpToLine,
@@ -26,10 +22,6 @@ import {
   GraduationCap,
   Bell,
   UserCog,
-  KeyRound,
-  CheckCheck,
-  ScrollText,
-  Activity,
   Wrench,
 } from "lucide-react";
 import type { Permission } from "../types";
@@ -75,6 +67,7 @@ export interface NavItem {
   label: string;
   icon: LucideIcon;
   permission: Permission;
+  anyPermissions?: Permission[];
   sandboxOnly?: boolean;
 }
 
@@ -106,7 +99,6 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { to: "/users", label: "Clients", icon: Users, permission: "users.view" },
       { to: "/kyc", label: "KYC Reviews", icon: ShieldCheck, permission: "kyc.view" },
-      { to: "/sessions", label: "Sessions", icon: MonitorSmartphone, permission: "sessions.view" },
     ],
   },
   {
@@ -127,15 +119,13 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: CandlestickChart,
         permission: "spot.view",
       },
-      { to: "/exposure", label: "Trading Risk", icon: TrendingUp, permission: "exposure.view" },
     ],
   },
   {
     id: "wallet-finance",
     label: "Wallet & Finance",
-    primary: "/wallets",
+    primary: "/networks",
     items: [
-      { to: "/wallets", label: "Wallets", icon: Wallet, permission: "wallets.view" },
       {
         to: "/networks",
         label: "Deposit Wallet Settings",
@@ -181,6 +171,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Notifications",
         icon: Bell,
         permission: "notifications.view",
+        anyPermissions: ["operator_alerts.view"],
       },
       {
         to: "/announcements",
@@ -208,18 +199,8 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: MenuIcon,
         permission: "navigation.view",
       },
-      {
-        to: "/localization",
-        label: "Localization",
-        icon: Languages,
-        permission: "localization.view",
-      },
       { to: "/feature-flags", label: "Feature Controls", icon: Flag, permission: "flags.view" },
       { to: "/admins", label: "Admin Accounts", icon: UserCog, permission: "admins.view" },
-      { to: "/roles", label: "Roles & Permissions", icon: KeyRound, permission: "roles.view" },
-      { to: "/approvals", label: "Approvals", icon: CheckCheck, permission: "approvals.view" },
-      { to: "/audit", label: "Audit Logs", icon: ScrollText, permission: "audit.view" },
-      { to: "/health", label: "System Health", icon: Activity, permission: "health.view" },
       { to: "/maintenance", label: "Maintenance", icon: Wrench, permission: "maintenance.view" },
     ],
   },
@@ -229,7 +210,7 @@ export const ALL_ROUTES: NavItem[] = NAV_GROUPS.flatMap((g) => g.items);
 
 export function getVisibleNavGroups(can: (permission: Permission) => boolean): NavGroup[] {
   return NAV_GROUPS.flatMap((group) => {
-    const items = group.items.filter((item) => can(item.permission));
+    const items = group.items.filter((item) => can(item.permission) || item.anyPermissions?.some(can));
     if (items.length === 0) return [];
     return [
       {

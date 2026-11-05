@@ -27,8 +27,16 @@ import { D1FinancialCommandGateway } from "../d1/d1-financial-command.gateway";
 import { D1PrismaService } from "../d1/d1-prisma.service";
 import { randomUUID } from "node:crypto";
 import { CommunicationsService } from "../communications/communications.service";
-import { assertPublicBannerSettings, assertPublicRouteSettings, assertSupportEntryPoints } from "./public-ui-config";
-import { assertBinaryDurationUnchanged, latestBinaryConfigurationRows, resolveBinaryEnabled } from "./binary-configuration.utils";
+import {
+  assertPublicBannerSettings,
+  assertPublicRouteSettings,
+  assertSupportEntryPoints,
+} from "./public-ui-config";
+import {
+  assertBinaryDurationUnchanged,
+  latestBinaryConfigurationRows,
+  resolveBinaryEnabled,
+} from "./binary-configuration.utils";
 import {
   AdminPlanMutationContext,
   assertValidMiningPlanValues,
@@ -70,20 +78,27 @@ const ADMIN_ACCOUNT_SELECT = {
   },
 } satisfies Prisma.UserSelect;
 
-const PUBLIC_QUOTES_CATEGORY_IDS = new Set(["Crypto", "Metals", "Forex", "Stocks"]);
+const PUBLIC_QUOTES_CATEGORY_IDS = new Set([
+  "Crypto",
+  "Metals",
+  "Forex",
+  "Stocks",
+]);
 
 function isPublicQuotesCategory(
   value: unknown,
 ): value is { id: string; visible: boolean; order: number } {
   if (!value || typeof value !== "object") return false;
   const item = value as Record<string, unknown>;
-  return typeof item.id === "string" &&
+  return (
+    typeof item.id === "string" &&
     PUBLIC_QUOTES_CATEGORY_IDS.has(item.id) &&
     typeof item.visible === "boolean" &&
     typeof item.order === "number" &&
     Number.isSafeInteger(item.order) &&
     item.order >= 0 &&
-    item.order <= 1000;
+    item.order <= 1000
+  );
 }
 
 function hasVisiblePublicQuotesCategory(value: unknown): boolean {
@@ -207,7 +222,8 @@ export class AdminService {
     if (this.d1?.isEnabled()) {
       const row: any = await this.d1.getAdminIdentity(request.userId);
       const role = row?.roleId as
-        keyof typeof ADMIN_ROLE_DEFINITIONS | undefined;
+        | keyof typeof ADMIN_ROLE_DEFINITIONS
+        | undefined;
       return {
         id: row?.id ?? request.userId,
         email: row?.email ?? request.email,
@@ -467,17 +483,25 @@ export class AdminService {
     if (!input.body?.trim() || !input.reason?.trim())
       throw new BadRequestException("A reply body and reason are required");
     if (this.d1?.isEnabled()) {
-      const result = await this.d1.replyAdminTicket({ ticketId: id, adminId, ...input });
+      const result = await this.d1.replyAdminTicket({
+        ticketId: id,
+        adminId,
+        ...input,
+      });
       const ticket = await this.prisma.supportTicket.findUnique({
         where: { id },
         select: { userId: true },
       });
       if (ticket?.userId && this.communications) {
-        await this.communications.publishRealtimeEvent("SUPPORT_TICKET_REPLIED", id, {
-          userId: ticket.userId,
-          adminId,
-          internal: input.internal,
-        });
+        await this.communications.publishRealtimeEvent(
+          "SUPPORT_TICKET_REPLIED",
+          id,
+          {
+            userId: ticket.userId,
+            adminId,
+            internal: input.internal,
+          },
+        );
       }
       return result;
     }
@@ -531,17 +555,25 @@ export class AdminService {
         "A reason is required to change ticket status",
       );
     if (this.d1?.isEnabled()) {
-      const result = await this.d1.setAdminTicketStatus({ ticketId: id, adminId, ...input });
+      const result = await this.d1.setAdminTicketStatus({
+        ticketId: id,
+        adminId,
+        ...input,
+      });
       const ticket = await this.prisma.supportTicket.findUnique({
         where: { id },
         select: { userId: true },
       });
       if (ticket?.userId && this.communications) {
-        await this.communications.publishRealtimeEvent("SUPPORT_TICKET_STATUS_CHANGED", id, {
-          userId: ticket.userId,
-          adminId,
-          status: String(result.status ?? input.status).toUpperCase(),
-        });
+        await this.communications.publishRealtimeEvent(
+          "SUPPORT_TICKET_STATUS_CHANGED",
+          id,
+          {
+            userId: ticket.userId,
+            adminId,
+            status: String(result.status ?? input.status).toUpperCase(),
+          },
+        );
       }
       return result;
     }
@@ -847,16 +879,20 @@ export class AdminService {
       _sum: { amount: true },
     });
     const activeUsers = await this.prisma.user.count();
-    const binaryConfigurations = await this.prisma.gate2BinaryConfiguration.findMany({
-      where: { enabled: true },
-      select: { payoutRate: true },
-    });
+    const binaryConfigurations =
+      await this.prisma.gate2BinaryConfiguration.findMany({
+        where: { enabled: true },
+        select: { payoutRate: true },
+      });
 
     return {
       totalVolume: totalVolume._sum.amount || 0,
       activeUsers,
       globalPayoutRate: binaryConfigurations.length
-        ? binaryConfigurations.reduce((sum, config) => sum + Number(config.payoutRate), 0) / binaryConfigurations.length
+        ? binaryConfigurations.reduce(
+            (sum, config) => sum + Number(config.payoutRate),
+            0,
+          ) / binaryConfigurations.length
         : 0,
     };
   }
@@ -912,7 +948,8 @@ export class AdminService {
       assertVisiblePublicQuotesCategory(value);
     if (key === "admin.frontend.routes") assertPublicRouteSettings(value);
     if (key === "admin.frontend.banners") assertPublicBannerSettings(value);
-    if (key === "admin.frontend.supportEntryPoints") assertSupportEntryPoints(value);
+    if (key === "admin.frontend.supportEntryPoints")
+      assertSupportEntryPoints(value);
     if (this.d1?.isEnabled())
       return this.d1.updateSystemConfig({
         key,
@@ -1042,7 +1079,8 @@ export class AdminService {
         const current = await tx.adminGovernanceCommand.findUnique({
           where: { id: commandId },
         });
-        if (!current) throw new NotFoundException("Governance command not found");
+        if (!current)
+          throw new NotFoundException("Governance command not found");
         if (current.status !== decision)
           throw new BadRequestException(
             `Governance command is already ${String(current.status).toLowerCase()}`,
@@ -1128,13 +1166,30 @@ export class AdminService {
       : this.prisma.adminFeatureFlag.findMany({ orderBy: { key: "asc" } });
   }
 
+  async setUserLedgerFreeze(input: {
+    userId: string;
+    frozen: boolean;
+    reason: string;
+    idempotencyKey: string;
+    adminId: string;
+  }) {
+    if (!input.reason?.trim())
+      throw new BadRequestException(
+        "A reason is required to freeze or unfreeze ledger accounts",
+      );
+    if (this.d1?.isEnabled()) return this.d1.setUserLedgerFreeze(input);
+    throw new ServiceUnavailableException(
+      "Canonical ledger account authority is unavailable",
+    );
+  }
+
   async applyFinancialCorrection(input: {
     userId: string;
     asset: string;
     amount: string;
     direction: "CREDIT" | "DEBIT";
+    scope?: "MAIN" | "SPOT" | "MARGIN" | "BINARY" | "FINANCE";
     idempotencyKey: string;
-    governanceCommandId: string;
     reason: string;
     adminId: string;
   }) {
@@ -1143,9 +1198,14 @@ export class AdminService {
         "A reason is required for financial corrections",
       );
     if (this.d1?.isEnabled()) {
-      return this.d1.applyAdminFinancialCorrection(input);
+      return this.d1.applyAdminFinancialCorrection({
+        ...input,
+        scope: input.scope ?? "MAIN",
+      });
     }
-    throw new ServiceUnavailableException("Canonical financial correction authority is unavailable");
+    throw new ServiceUnavailableException(
+      "Canonical financial correction authority is unavailable",
+    );
   }
 
   async requestSandboxControl(input: {
@@ -1168,9 +1228,13 @@ export class AdminService {
         "A reason is required for sandbox controls",
       );
     if (!["normal", "forced_win", "forced_loss"].includes(input.mode))
-      throw new BadRequestException("Sandbox mode must be normal, forced_win, or forced_loss");
+      throw new BadRequestException(
+        "Sandbox mode must be normal, forced_win, or forced_loss",
+      );
     if (input.scope !== "binary")
-      throw new BadRequestException(`Unsupported sandbox scope: ${input.scope}. Only 'binary' scope is enforced`);
+      throw new BadRequestException(
+        `Unsupported sandbox scope: ${input.scope}. Only 'binary' scope is enforced`,
+      );
     if (!input.expiresAt) {
       throw new BadRequestException("Sandbox scenarios require an expiry");
     }
@@ -1596,9 +1660,9 @@ export class AdminService {
     const rows = this.d1?.isEnabled()
       ? await this.d1.listBinaryPositions()
       : await this.prisma.gate2BinaryPosition.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 500,
-    });
+          orderBy: { createdAt: "desc" },
+          take: 500,
+        });
     return rows.map((position) => ({
       ...position,
       researchEligible: this.isBinaryResearchAccount(String(position.userId)),
@@ -1621,9 +1685,15 @@ export class AdminService {
     idempotencyKey: string;
     expectedVersion?: number;
   }) {
-    if (!input.reason.trim()) throw new BadRequestException("A reason is required");
-    if (input.scope === "account" && !this.isBinaryResearchAccount(input.target)) {
-      throw new ForbiddenException("Binary control is limited to approved research accounts");
+    if (!input.reason.trim())
+      throw new BadRequestException("A reason is required");
+    if (
+      input.scope === "account" &&
+      !this.isBinaryResearchAccount(input.target)
+    ) {
+      throw new ForbiddenException(
+        "Binary control is limited to approved research accounts",
+      );
     }
     const payload = JSON.stringify({
       scope: input.scope,
@@ -1643,7 +1713,9 @@ export class AdminService {
           existing.reason !== input.reason.trim() ||
           existing.payload !== payload
         ) {
-          throw new BadRequestException("Binary control idempotency key was already used");
+          throw new BadRequestException(
+            "Binary control idempotency key was already used",
+          );
         }
         return { ok: true, auditId: existing.id, replayed: true };
       }
@@ -1665,7 +1737,8 @@ export class AdminService {
           where: { id: input.target },
           data: { binaryResearchDefault: input.mode },
         });
-        if (changed.count !== 1) throw new NotFoundException("Research account not found");
+        if (changed.count !== 1)
+          throw new NotFoundException("Research account not found");
       } else {
         const position = await tx.gate2BinaryPosition.findUnique({
           where: { id: input.target },
@@ -1673,7 +1746,9 @@ export class AdminService {
         });
         if (!position) throw new NotFoundException("Binary position not found");
         if (!this.isBinaryResearchAccount(position.userId)) {
-          throw new ForbiddenException("Binary control is limited to approved research accounts");
+          throw new ForbiddenException(
+            "Binary control is limited to approved research accounts",
+          );
         }
         const changed = await tx.gate2BinaryPosition.updateMany({
           where: {
@@ -1689,15 +1764,26 @@ export class AdminService {
           },
         });
         if (changed.count !== 1) {
-          throw new ConflictException("Position changed, expired, or is no longer open; refresh and retry");
+          throw new ConflictException(
+            "Position changed, expired, or is no longer open; refresh and retry",
+          );
         }
       }
       const audit = await tx.adminAuditLog.create({
         data: {
           adminId: input.adminId,
-          action: input.scope === "account" ? "BINARY_RESEARCH_DEFAULT_UPDATED" : "BINARY_RESEARCH_POSITION_UPDATED",
+          action:
+            input.scope === "account"
+              ? "BINARY_RESEARCH_DEFAULT_UPDATED"
+              : "BINARY_RESEARCH_POSITION_UPDATED",
           target: input.target,
-          details: JSON.stringify({ scope: input.scope, mode: input.mode, reason: input.reason.trim(), idempotencyKey: input.idempotencyKey, expectedVersion: input.expectedVersion }),
+          details: JSON.stringify({
+            scope: input.scope,
+            mode: input.mode,
+            reason: input.reason.trim(),
+            idempotencyKey: input.idempotencyKey,
+            expectedVersion: input.expectedVersion,
+          }),
         },
       });
       return { ok: true, auditId: audit.id, replayed: false };
@@ -1705,15 +1791,32 @@ export class AdminService {
   }
 
   setBinaryResearchDefault(input: {
-    userId: string; mode: "NORMAL" | "WIN" | "LOSS"; adminId: string; reason: string; idempotencyKey: string;
+    userId: string;
+    mode: "NORMAL" | "WIN" | "LOSS";
+    adminId: string;
+    reason: string;
+    idempotencyKey: string;
   }) {
-    return this.persistBinaryResearchControl({ ...input, target: input.userId, scope: "account" });
+    return this.persistBinaryResearchControl({
+      ...input,
+      target: input.userId,
+      scope: "account",
+    });
   }
 
   setBinaryResearchPositionOverride(input: {
-    positionId: string; mode: "DEFAULT" | "NORMAL" | "WIN" | "LOSS"; expectedVersion: number; adminId: string; reason: string; idempotencyKey: string;
+    positionId: string;
+    mode: "DEFAULT" | "NORMAL" | "WIN" | "LOSS";
+    expectedVersion: number;
+    adminId: string;
+    reason: string;
+    idempotencyKey: string;
   }) {
-    return this.persistBinaryResearchControl({ ...input, target: input.positionId, scope: "position" });
+    return this.persistBinaryResearchControl({
+      ...input,
+      target: input.positionId,
+      scope: "position",
+    });
   }
 
   async getAdminSettlements() {
@@ -1807,7 +1910,16 @@ export class AdminService {
   async getAdminWallets() {
     if (this.d1?.isEnabled()) return this.d1.listAdminWallets();
     return this.prisma.ledgerAccount.findMany({
-      select: { id: true, userId: true, asset: true, scope: true, status: true, available: true, locked: true, updatedAt: true },
+      select: {
+        id: true,
+        userId: true,
+        asset: true,
+        scope: true,
+        status: true,
+        available: true,
+        locked: true,
+        updatedAt: true,
+      },
       orderBy: [{ updatedAt: "desc" }, { id: "asc" }],
       take: 500,
     });
@@ -1823,15 +1935,19 @@ export class AdminService {
   }
 
   async getAdminDeposits() {
-    if (this.d1?.isEnabled()) return this.d1.listAdminDeposits();
-    const observed = await this.prisma.gate2Deposit.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 500,
-    });
+    const observed = this.d1?.isEnabled()
+      ? await this.d1.listAdminDeposits()
+      : await this.prisma.gate2Deposit.findMany({
+          orderBy: { createdAt: "desc" },
+          take: 500,
+        });
     const claims = await this.financialOperations.getAdminDepositClaims();
-    return [
-      ...observed,
-      ...claims.map((claim) => ({
+    const rows = [
+      ...observed.map((deposit: any) => ({
+        ...deposit,
+        observedAt: deposit.observedAt ?? deposit.createdAt,
+      })),
+      ...claims.map((claim: any) => ({
         id: claim.id,
         userId: claim.userId,
         asset: claim.asset,
@@ -1847,8 +1963,12 @@ export class AdminService {
         proofObjectKey: claim.proofObjectKey,
         manualClaim: true,
       })),
-    ]
-      .sort((a, b) => b.observedAt.getTime() - a.observedAt.getTime())
+    ];
+    return rows
+      .sort(
+        (a: any, b: any) =>
+          new Date(b.observedAt).getTime() - new Date(a.observedAt).getTime(),
+      )
       .slice(0, 500);
   }
 
@@ -2105,37 +2225,132 @@ export class AdminService {
   }
 
   async getMarginConfiguration() {
-    const read = async (key: string) => this.d1?.isEnabled()
-      ? this.d1.getSystemConfigValue(key)
-      : (await this.prisma.systemConfig.findUnique({ where: { key } }))?.value ?? null;
-    const [ratioRaw, leveragesRaw] = await Promise.all([read("gate2.margin.maintenanceRatio"), read("gate2.margin.leverages")]);
-    const leverages = String(leveragesRaw ?? "2,3,5").split(",").map((value) => Number(value.trim())).filter((value) => Number.isInteger(value) && value >= 2 && value <= 20);
-    return { maintenanceRatio: Number(ratioRaw ?? "0.5"), leverages: [...new Set(leverages)].sort((a, b) => a - b) };
+    const read = async (key: string) =>
+      this.d1?.isEnabled()
+        ? this.d1.getSystemConfigValue(key)
+        : ((await this.prisma.systemConfig.findUnique({ where: { key } }))
+            ?.value ?? null);
+    const [ratioRaw, leveragesRaw] = await Promise.all([
+      read("gate2.margin.maintenanceRatio"),
+      read("gate2.margin.leverages"),
+    ]);
+    const leverages = String(leveragesRaw ?? "2,3,5")
+      .split(",")
+      .map((value) => Number(value.trim()))
+      .filter((value) => Number.isInteger(value) && value >= 2 && value <= 20);
+    return {
+      maintenanceRatio: Number(ratioRaw ?? "0.5"),
+      leverages: [...new Set(leverages)].sort((a, b) => a - b),
+    };
   }
 
-  async updateMarginConfiguration(input: { maintenanceRatio: number; leverages?: string; reason: string; idempotencyKey: string }, adminId: string) {
-    const leverageValues = String(input.leverages ?? "2,3,5").split(",").map((value) => Number(value.trim())).filter((value) => Number.isInteger(value) && value >= 2 && value <= 20);
+  async updateMarginConfiguration(
+    input: {
+      maintenanceRatio: number;
+      leverages?: string;
+      reason: string;
+      idempotencyKey: string;
+    },
+    adminId: string,
+  ) {
+    const leverageValues = String(input.leverages ?? "2,3,5")
+      .split(",")
+      .map((value) => Number(value.trim()))
+      .filter((value) => Number.isInteger(value) && value >= 2 && value <= 20);
     const leverages = [...new Set(leverageValues)].sort((a, b) => a - b);
-    if (!leverages.length) throw new BadRequestException("At least one leverage between 2x and 20x is required");
-    if (input.maintenanceRatio <= 0 || input.maintenanceRatio >= 1) throw new BadRequestException("Maintenance ratio must be between 0 and 1");
+    if (!leverages.length)
+      throw new BadRequestException(
+        "At least one leverage between 2x and 20x is required",
+      );
+    if (input.maintenanceRatio <= 0 || input.maintenanceRatio >= 1)
+      throw new BadRequestException(
+        "Maintenance ratio must be between 0 and 1",
+      );
     if (this.d1?.isEnabled()) {
-      await this.d1.updateSystemConfig({ key: "gate2.margin.maintenanceRatio", value: String(input.maintenanceRatio), description: "Isolated margin maintenance ratio", adminId, reason: input.reason });
-      await this.d1.updateSystemConfig({ key: "gate2.margin.leverages", value: leverages.join(","), description: "Allowed isolated margin leverage multipliers", adminId, reason: input.reason });
+      await this.d1.updateSystemConfig({
+        key: "gate2.margin.maintenanceRatio",
+        value: String(input.maintenanceRatio),
+        description: "Isolated margin maintenance ratio",
+        adminId,
+        reason: input.reason,
+      });
+      await this.d1.updateSystemConfig({
+        key: "gate2.margin.leverages",
+        value: leverages.join(","),
+        description: "Allowed isolated margin leverage multipliers",
+        adminId,
+        reason: input.reason,
+      });
     } else {
       await this.prisma.$transaction([
-        this.prisma.systemConfig.upsert({ where: { key: "gate2.margin.maintenanceRatio" }, update: { value: String(input.maintenanceRatio), description: "Isolated margin maintenance ratio" }, create: { key: "gate2.margin.maintenanceRatio", value: String(input.maintenanceRatio), description: "Isolated margin maintenance ratio" } }),
-        this.prisma.systemConfig.upsert({ where: { key: "gate2.margin.leverages" }, update: { value: leverages.join(","), description: "Allowed isolated margin leverage multipliers" }, create: { key: "gate2.margin.leverages", value: leverages.join(","), description: "Allowed isolated margin leverage multipliers" } }),
-        this.prisma.adminAuditLog.create({ data: { adminId, action: "MARGIN_CONFIGURATION_UPDATED", target: "isolated-margin", details: { reason: input.reason, idempotencyKey: input.idempotencyKey, maintenanceRatio: input.maintenanceRatio, leverages } } }),
+        this.prisma.systemConfig.upsert({
+          where: { key: "gate2.margin.maintenanceRatio" },
+          update: {
+            value: String(input.maintenanceRatio),
+            description: "Isolated margin maintenance ratio",
+          },
+          create: {
+            key: "gate2.margin.maintenanceRatio",
+            value: String(input.maintenanceRatio),
+            description: "Isolated margin maintenance ratio",
+          },
+        }),
+        this.prisma.systemConfig.upsert({
+          where: { key: "gate2.margin.leverages" },
+          update: {
+            value: leverages.join(","),
+            description: "Allowed isolated margin leverage multipliers",
+          },
+          create: {
+            key: "gate2.margin.leverages",
+            value: leverages.join(","),
+            description: "Allowed isolated margin leverage multipliers",
+          },
+        }),
+        this.prisma.adminAuditLog.create({
+          data: {
+            adminId,
+            action: "MARGIN_CONFIGURATION_UPDATED",
+            target: "isolated-margin",
+            details: {
+              reason: input.reason,
+              idempotencyKey: input.idempotencyKey,
+              maintenanceRatio: input.maintenanceRatio,
+              leverages,
+            },
+          },
+        }),
       ]);
     }
     return { maintenanceRatio: input.maintenanceRatio, leverages };
   }
 
   async updateCurrency(id: number, data: any, adminId: string) {
-    const { reason = "Admin currency configuration update", idempotencyKey = `currency:${id}:${Date.now()}`, ...patch } = data;
-    if (this.d1?.isEnabled()) return this.d1.updateAdminCurrency({ id, patch: patch as Record<string, unknown>, adminId, reason, idempotencyKey });
-    const updated = await this.prisma.currency.update({ where: { id }, data: patch });
-    await this.prisma.adminAuditLog.create({ data: { adminId, action: "CURRENCY_CONFIGURATION_UPDATED", target: String(id), details: { reason, idempotencyKey, fields: Object.keys(patch) } } });
+    const {
+      reason = "Admin currency configuration update",
+      idempotencyKey = `currency:${id}:${Date.now()}`,
+      ...patch
+    } = data;
+    if (this.d1?.isEnabled())
+      return this.d1.updateAdminCurrency({
+        id,
+        patch: patch as Record<string, unknown>,
+        adminId,
+        reason,
+        idempotencyKey,
+      });
+    const updated = await this.prisma.currency.update({
+      where: { id },
+      data: patch,
+    });
+    await this.prisma.adminAuditLog.create({
+      data: {
+        adminId,
+        action: "CURRENCY_CONFIGURATION_UPDATED",
+        target: String(id),
+        details: { reason, idempotencyKey, fields: Object.keys(patch) },
+      },
+    });
     return updated;
   }
 
@@ -2148,16 +2363,55 @@ export class AdminService {
     reason: string,
     idempotencyKey: string,
   ) {
-    if (this.d1?.isEnabled()) return this.d1.createAdminDepositAddress({ currencyId, network, address, label, adminId, reason, idempotencyKey });
-    const created = await this.prisma.depositAddress.create({ data: { currencyId, network, address, label } });
-    await this.prisma.adminAuditLog.create({ data: { adminId, action: "DEPOSIT_ADDRESS_CREATED", target: created.id, details: { currencyId, network, reason, idempotencyKey } } });
+    if (this.d1?.isEnabled())
+      return this.d1.createAdminDepositAddress({
+        currencyId,
+        network,
+        address,
+        label,
+        adminId,
+        reason,
+        idempotencyKey,
+      });
+    const created = await this.prisma.depositAddress.create({
+      data: { currencyId, network, address, label },
+    });
+    await this.prisma.adminAuditLog.create({
+      data: {
+        adminId,
+        action: "DEPOSIT_ADDRESS_CREATED",
+        target: created.id,
+        details: { currencyId, network, reason, idempotencyKey },
+      },
+    });
     return created;
   }
 
-  async deleteDepositAddress(id: string, adminId: string, reason: string, idempotencyKey: string) {
-    if (this.d1?.isEnabled()) return this.d1.deactivateAdminDepositAddress({ id, adminId, reason, idempotencyKey });
-    const updated = await this.prisma.depositAddress.update({ where: { id }, data: { isActive: false } });
-    await this.prisma.adminAuditLog.create({ data: { adminId, action: "DEPOSIT_ADDRESS_DISABLED", target: id, details: { reason, idempotencyKey } } });
+  async deleteDepositAddress(
+    id: string,
+    adminId: string,
+    reason: string,
+    idempotencyKey: string,
+  ) {
+    if (this.d1?.isEnabled())
+      return this.d1.deactivateAdminDepositAddress({
+        id,
+        adminId,
+        reason,
+        idempotencyKey,
+      });
+    const updated = await this.prisma.depositAddress.update({
+      where: { id },
+      data: { isActive: false },
+    });
+    await this.prisma.adminAuditLog.create({
+      data: {
+        adminId,
+        action: "DEPOSIT_ADDRESS_DISABLED",
+        target: id,
+        details: { reason, idempotencyKey },
+      },
+    });
     return updated;
   }
 
@@ -2170,10 +2424,7 @@ export class AdminService {
     });
   }
 
-  async createMiningPlan(
-    data: any,
-    context?: AdminPlanMutationContext,
-  ) {
+  async createMiningPlan(data: any, context?: AdminPlanMutationContext) {
     const dailyYield = new Prisma.Decimal(String(data.dailyYield));
     const minDeposit = new Prisma.Decimal(String(data.minDeposit));
     const maxDeposit = new Prisma.Decimal(String(data.maxDeposit));
@@ -2183,7 +2434,9 @@ export class AdminService {
       return this.d1.createMiningPlan({
         id: randomUUID(),
         name: String(data.name).trim(),
-        currency: String(data.currency ?? "USDT").trim().toUpperCase(),
+        currency: String(data.currency ?? "USDT")
+          .trim()
+          .toUpperCase(),
         lockupPeriod: Number(data.lockupPeriod),
         dailyYield: dailyYield.toString(),
         minDeposit: minDeposit.toString(),
@@ -2266,19 +2519,57 @@ export class AdminService {
     return this.prisma.loanPlan.findMany({ orderBy: { durationDays: "asc" } });
   }
 
-  async createLoanPlan(
-    data: any,
-    context?: AdminPlanMutationContext,
-  ) {
-    const planData = { ...data, interestRate: String(data.interestRate), minAmount: String(data.minAmount), maxAmount: String(data.maxAmount) };
+  async getLoanAssets() {
+    return this.marketDatabase().marketAsset.findMany({
+      where: {
+        status: "ACTIVE",
+        capabilities: {
+          some: { capabilityKey: { endsWith: ":loans" }, status: "ACTIVE" },
+        },
+      },
+      select: { symbol: true, displayName: true },
+      orderBy: { symbol: "asc" },
+    });
+  }
+
+  async createLoanPlan(data: any, context?: AdminPlanMutationContext) {
+    const currency = String(data.currency ?? "")
+      .trim()
+      .toUpperCase();
+    await this.assertLoanCurrency(currency);
+    const planData = {
+      ...data,
+      currency,
+      interestRate: String(data.interestRate),
+      minAmount: String(data.minAmount),
+      maxAmount: String(data.maxAmount),
+    };
     return this.prisma.$transaction(async (tx) => {
       if (context) {
-        const prior = await tx.adminAuditLog.findFirst({ where: { adminId: context.adminId, action: "LOAN_PLAN_CREATED", details: { contains: `"idempotencyKey":"${context.idempotencyKey}"` } } });
+        const prior = await tx.adminAuditLog.findFirst({
+          where: {
+            adminId: context.adminId,
+            action: "LOAN_PLAN_CREATED",
+            details: {
+              contains: `"idempotencyKey":"${context.idempotencyKey}"`,
+            },
+          },
+        });
         if (prior) {
-          const expected = JSON.stringify({ reason: context.reason, idempotencyKey: context.idempotencyKey, payload: planData });
-          if (prior.details !== expected) throw new BadRequestException("Loan plan idempotency key was reused with different parameters");
-          const existing = await tx.loanPlan.findUnique({ where: { id: prior.target! } });
-          if (!existing) throw new NotFoundException("Loan plan replay no longer resolves");
+          const expected = JSON.stringify({
+            reason: context.reason,
+            idempotencyKey: context.idempotencyKey,
+            payload: planData,
+          });
+          if (prior.details !== expected)
+            throw new BadRequestException(
+              "Loan plan idempotency key was reused with different parameters",
+            );
+          const existing = await tx.loanPlan.findUnique({
+            where: { id: prior.target! },
+          });
+          if (!existing)
+            throw new NotFoundException("Loan plan replay no longer resolves");
           return existing;
         }
       }
@@ -2306,15 +2597,44 @@ export class AdminService {
     context?: AdminPlanMutationContext,
   ) {
     const planData = { ...data };
-    for (const field of ["interestRate", "minAmount", "maxAmount"] as const) if (planData[field] !== undefined) planData[field] = String(planData[field]);
+    if (planData.currency !== undefined) {
+      planData.currency = String(planData.currency).trim().toUpperCase();
+      const current = await this.prisma.loanPlan.findUnique({
+        where: { id },
+        select: { currency: true },
+      });
+      if (!current) throw new NotFoundException("Loan plan not found");
+      if (planData.currency !== current.currency)
+        await this.assertLoanCurrency(planData.currency);
+    }
+    for (const field of ["interestRate", "minAmount", "maxAmount"] as const)
+      if (planData[field] !== undefined)
+        planData[field] = String(planData[field]);
     return this.prisma.$transaction(async (tx) => {
       if (context) {
-        const prior = await tx.adminAuditLog.findFirst({ where: { adminId: context.adminId, action: "LOAN_PLAN_UPDATED", target: id, details: { contains: `"idempotencyKey":"${context.idempotencyKey}"` } } });
+        const prior = await tx.adminAuditLog.findFirst({
+          where: {
+            adminId: context.adminId,
+            action: "LOAN_PLAN_UPDATED",
+            target: id,
+            details: {
+              contains: `"idempotencyKey":"${context.idempotencyKey}"`,
+            },
+          },
+        });
         if (prior) {
-          const expected = JSON.stringify({ reason: context.reason, idempotencyKey: context.idempotencyKey, payload: planData });
-          if (prior.details !== expected) throw new BadRequestException("Loan plan idempotency key was reused with different parameters");
+          const expected = JSON.stringify({
+            reason: context.reason,
+            idempotencyKey: context.idempotencyKey,
+            payload: planData,
+          });
+          if (prior.details !== expected)
+            throw new BadRequestException(
+              "Loan plan idempotency key was reused with different parameters",
+            );
           const existing = await tx.loanPlan.findUnique({ where: { id } });
-          if (!existing) throw new NotFoundException("Loan plan replay no longer resolves");
+          if (!existing)
+            throw new NotFoundException("Loan plan replay no longer resolves");
           return existing;
         }
       }
@@ -2334,6 +2654,25 @@ export class AdminService {
       });
       return { ...plan, ok: true, auditId: audit.id };
     });
+  }
+
+  private async assertLoanCurrency(currency: string): Promise<void> {
+    if (!/^[A-Z0-9._-]{2,20}$/.test(currency))
+      throw new BadRequestException("Select a valid loan asset");
+    const asset = await this.marketDatabase().marketAsset.findFirst({
+      where: {
+        symbol: currency,
+        status: "ACTIVE",
+        capabilities: {
+          some: { capabilityKey: { endsWith: ":loans" }, status: "ACTIVE" },
+        },
+      },
+      select: { symbol: true },
+    });
+    if (!asset)
+      throw new BadRequestException(
+        "Loan asset must have an active Loans capability",
+      );
   }
 
   // --- Risk Management ---
@@ -2428,6 +2767,44 @@ export class AdminService {
     };
   }
 
+  async getBinaryGlobalConfiguration() {
+    if (!this.d1?.isEnabled())
+      throw new ServiceUnavailableException("Binary global configuration requires the canonical SQLite gateway");
+    return this.d1.getBinaryGlobalConfiguration();
+  }
+
+  async updateBinaryGlobalConfiguration(
+    input: {
+      minStake: string;
+      maxStake: string;
+      durations: Array<{ durationSeconds: number; payoutRate: number; enabled: boolean }>;
+      reason: string;
+      idempotencyKey: string;
+    },
+    adminId: string,
+  ) {
+    if (!this.d1?.isEnabled())
+      throw new ServiceUnavailableException("Binary global configuration requires the canonical SQLite gateway");
+    if (!input.reason?.trim())
+      throw new BadRequestException("A reason is required for Binary configuration changes");
+    let minStake: Prisma.Decimal;
+    let maxStake: Prisma.Decimal;
+    try {
+      minStake = new Prisma.Decimal(input.minStake);
+      maxStake = new Prisma.Decimal(input.maxStake);
+    } catch {
+      throw new BadRequestException("Binary stake limits are invalid");
+    }
+    if (!minStake.isFinite() || !maxStake.isFinite() || minStake.lte(0) || maxStake.lt(minStake))
+      throw new BadRequestException("Binary stake limits are invalid");
+    return this.d1.updateBinaryGlobalConfiguration({
+      ...input,
+      minStake: minStake.toString(),
+      maxStake: maxStake.toString(),
+      adminId,
+    });
+  }
+
   async getBinaryConfigurations(pair?: string) {
     if (this.d1?.isEnabled()) {
       const rows = await this.d1.listBinaryConfigurations();
@@ -2468,18 +2845,69 @@ export class AdminService {
         "A reason is required for Binary configuration changes",
       );
     const pair = input.pair.trim().toUpperCase();
-    const sourceDurationSeconds = input.sourceDurationSeconds ?? input.durationSeconds;
+    const sourceDurationSeconds =
+      input.sourceDurationSeconds ?? input.durationSeconds;
     assertBinaryDurationUnchanged(input.durationSeconds, sourceDurationSeconds);
     const target = `${pair}:${input.durationSeconds}`;
     if (this.d1?.isEnabled()) {
-      const current = await this.d1.getBinaryConfiguration(pair, sourceDurationSeconds, undefined, true);
-      if (!current) throw new NotFoundException("Binary configuration not found");
-      const payoutRate = input.payoutRate ?? Number(current.payoutRate);
-      const minStake = input.minStake ?? Number(current.minStake);
-      const maxStake = input.maxStake ?? Number(current.maxStake);
-      if (!Number.isFinite(payoutRate) || payoutRate <= 0 || !Number.isFinite(minStake) || minStake <= 0 || !Number.isFinite(maxStake) || maxStake < minStake) throw new BadRequestException("Binary payout and stake limits are invalid");
-      return this.d1.updateBinaryConfiguration({ pair, sourceDurationSeconds, durationSeconds: input.durationSeconds, payoutRate, minStake, maxStake, enabled: resolveBinaryEnabled(input.enabled, current.enabled), adminId, reason: input.reason, idempotencyKey: input.idempotencyKey });
+      const current = await this.d1.getBinaryConfiguration(
+        pair,
+        sourceDurationSeconds,
+        undefined,
+        true,
+      );
+      if (!current)
+        throw new NotFoundException("Binary configuration not found");
+      const storedGlobal = await this.d1.getSystemConfigValue("gate2.binary.globalPolicy");
+      const globalPolicy = storedGlobal ? JSON.parse(storedGlobal) as {
+        minStake: string;
+        maxStake: string;
+        durations: Array<{ durationSeconds: number; payoutRate: number; enabled: boolean }>;
+      } : null;
+      const globalDuration = globalPolicy?.durations.find((item) => item.durationSeconds === input.durationSeconds);
+      if (globalPolicy && !globalDuration)
+        throw new BadRequestException("Binary duration is not present in the global policy");
+      const payoutRate = globalDuration?.payoutRate ?? input.payoutRate ?? Number(current.payoutRate);
+      const minStake = globalPolicy ? globalPolicy.minStake : input.minStake ?? String(current.minStake);
+      const maxStake = globalPolicy ? globalPolicy.maxStake : input.maxStake ?? String(current.maxStake);
+      let minStakeDecimal: Prisma.Decimal;
+      let maxStakeDecimal: Prisma.Decimal;
+      try {
+        minStakeDecimal = new Prisma.Decimal(minStake);
+        maxStakeDecimal = new Prisma.Decimal(maxStake);
+      } catch {
+        throw new BadRequestException("Binary payout and stake limits are invalid");
+      }
+      if (
+        !Number.isFinite(payoutRate) ||
+        payoutRate <= 0 ||
+        !minStakeDecimal.isFinite() ||
+        minStakeDecimal.lte(0) ||
+        !maxStakeDecimal.isFinite() ||
+        maxStakeDecimal.lt(minStakeDecimal)
+      )
+        throw new BadRequestException("Binary payout and stake limits are invalid");
+      return this.d1.updateBinaryConfiguration({
+        pair,
+        sourceDurationSeconds,
+        durationSeconds: input.durationSeconds,
+        payoutRate,
+        minStake,
+        maxStake,
+        enabled: resolveBinaryEnabled(input.enabled, current.pairEnabled ?? current.enabled),
+        adminId,
+        reason: input.reason,
+        idempotencyKey: input.idempotencyKey,
+      });
     }
+    const globalPolicy = await this.prisma.systemConfig.findUnique({
+      where: { key: "gate2.binary.globalPolicy" },
+      select: { id: true },
+    });
+    if (globalPolicy)
+      throw new ServiceUnavailableException(
+        "Binary pair availability changes require the canonical SQLite gateway",
+      );
     return this.prisma.$transaction(
       async (tx) => {
         const replay = await tx.adminAuditLog.findFirst({

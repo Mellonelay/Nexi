@@ -10,7 +10,6 @@ import {
   type DataTableFilter,
 } from "@/admin/components/DataTable";
 import { DetailDrawer } from "@/admin/components/DetailDrawer";
-import { FormDrawer } from "@/admin/components/FormDrawer";
 import { ConsequentialActionDialog } from "@/admin/components/ConsequentialActionDialog";
 import { AuditTimeline } from "@/admin/components/AuditTimeline";
 import { LoadingSkeleton, ErrorState } from "@/admin/components/states";
@@ -20,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import type { BinaryPair, BinaryPosition, BinaryDuration } from "@/admin/types";
+import type { BinaryPair, BinaryPosition, BinaryGlobalConfiguration } from "@/admin/types";
 import { mapBinaryInternal } from "@/admin/types";
 import { isOngoingBinaryPositionStatus } from "@/admin/data/binary-position-view";
 import { Pause, Play, RefreshCw } from "lucide-react";
@@ -77,7 +76,7 @@ function Inner() {
         <span className="text-foreground">Short</span>; internally mapped to
         <span className="mono text-warning"> UP</span> and{" "}
         <span className="mono text-warning">DOWN</span>. Duration, payout and stake limits are
-        backend-configured per pair.
+        configured globally across eligible pairs.
       </div>
 
       {view === "pairs" ? (
@@ -145,16 +144,12 @@ function PairsPanel({ pairs }: { pairs: BinaryPair[] }) {
   const provider = useAdminData();
   const session = useAdminSession();
   const canEdit = session.can("binary.edit");
-
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [editing, setEditing] = useState<BinaryPair | null>(null);
   const [pausing, setPausing] = useState<BinaryPair | null>(null);
-
   const selected = useMemo(
     () => (selectedId ? (pairs.find((p) => p.id === selectedId) ?? null) : null),
     [pairs, selectedId],
   );
-
   const columns: DataTableColumn<BinaryPair>[] = [
     {
       key: "symbol",
@@ -164,107 +159,43 @@ function PairsPanel({ pairs }: { pairs: BinaryPair[] }) {
     },
     {
       key: "state",
-      header: "State",
+      header: "Availability",
       cell: (p) => (
         <StatusBadge tone={p.maintenance ? "warning" : p.enabled ? "success" : "neutral"}>
-          {p.maintenance ? "maintenance" : p.enabled ? "enabled" : "disabled"}
+          {p.maintenance ? "maintenance" : p.enabled ? "available" : "unavailable"}
         </StatusBadge>
       ),
     },
-    {
-      key: "durations",
-      header: "Durations",
-      cell: (p) => (
-        <div className="flex flex-wrap gap-1">
-          {binaryConfigs(p).map((config) => (
-            <StatusBadge key={config.durationSeconds} tone="info" dot={false}>
-              {config.durationSeconds}s · {(config.payoutBps / 100).toFixed(2)}%
-            </StatusBadge>
-          ))}
-        </div>
-      ),
-    },
-    {
-      key: "stakes",
-      header: "Stakes",
-      align: "right",
-      cell: (p) => (
-        <span className="mono text-xs">
-          {p.minStake} – {p.maxStake}
-        </span>
-      ),
-    },
-    {
-      key: "exposure",
-      header: "Exposure",
-      align: "right",
-      cell: (p) => {
-        const used = p.exposureUsed.trim() === "" ? Number.NaN : Number(p.exposureUsed);
-        const cap = p.exposureCap.trim() === "" ? Number.NaN : Number(p.exposureCap);
-        const exposureAvailable = Number.isFinite(used) && Number.isFinite(cap) && cap > 0;
-
-        return (
-          <div className="flex flex-col text-right leading-tight">
-            <span className="mono text-xs">
-              {exposureAvailable ? `${p.exposureUsed} / ${p.exposureCap}` : "Unavailable"}
-            </span>
-            {exposureAvailable && (
-              <span className="mono text-[10px] text-muted-foreground">
-                {Math.round((used / cap) * 100)}%
-              </span>
-            )}
-          </div>
-        );
-      },
-    },
   ];
-
   const filters: DataTableFilter<BinaryPair>[] = [
     {
       key: "state",
-      label: "state",
+      label: "availability",
       options: [
-        { value: "enabled", label: "Enabled" },
-        { value: "disabled", label: "Disabled" },
+        { value: "enabled", label: "Available" },
+        { value: "disabled", label: "Unavailable" },
         { value: "maintenance", label: "Maintenance" },
       ],
-      match: (p, v) => {
-        if (v === "enabled") return p.enabled && !p.maintenance;
-        if (v === "disabled") return !p.enabled;
-        return p.maintenance;
-      },
+      match: (p, v) => v === "enabled" ? p.enabled && !p.maintenance : v === "disabled" ? !p.enabled : p.maintenance,
     },
   ];
-
   return (
     <>
+      <BinaryGlobalSettings />
+      <div className="rounded-md border border-border/60 p-3 text-xs text-muted-foreground">
+        Pair controls below only manage availability. Payout rates and stake limits are shared across all eligible pairs.
+      </div>
       <DataTable
         data={pairs}
         columns={columns}
         filters={filters}
-        searchable={(p) => `${p.symbol}`}
+        searchable={(p) => p.symbol}
         searchPlaceholder="Search pair…"
         rowKey={(p) => p.id}
         onRowClick={(p) => setSelectedId(p.id)}
         rowActions={(p) => (
           <div className="flex justify-end gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              data-testid={`bin-inspect-${p.id}`}
-              onClick={() => setSelectedId(p.id)}
-            >
-              Inspect
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              data-testid={`bin-edit-${p.id}`}
-              disabled={!canEdit}
-              onClick={() => setEditing(p)}
-            >
-              Edit
-            </Button>
+            <Button variant="outline" size="sm" data-testid={`bin-inspect-${p.id}`} onClick={() => setSelectedId(p.id)}>Inspect</Button>
             <Button
               variant={p.maintenance ? "default" : "destructive"}
               size="sm"
@@ -272,170 +203,142 @@ function PairsPanel({ pairs }: { pairs: BinaryPair[] }) {
               data-testid={`bin-pause-${p.id}`}
               onClick={() => setPausing(p)}
             >
-              {p.maintenance ? (
-                <>
-                  <Play className="mr-1 h-3.5 w-3.5" /> Resume
-                </>
-              ) : (
-                <>
-                  <Pause className="mr-1 h-3.5 w-3.5" /> Pause
-                </>
-              )}
+              {p.maintenance ? <><Play className="mr-1 h-3.5 w-3.5" /> Resume</> : <><Pause className="mr-1 h-3.5 w-3.5" /> Pause</>}
             </Button>
           </div>
         )}
       />
-
       <DetailDrawer
         open={!!selected}
-        onOpenChange={(o) => {
-          if (!o) setSelectedId(null);
-        }}
+        onOpenChange={(open) => { if (!open) setSelectedId(null); }}
         title={selected ? <span className="mono text-primary">{selected.symbol}</span> : ""}
         subtitle={selected ? selected.id : undefined}
-        badges={
-          selected ? (
-            <>
-              <StatusBadge tone={selected.enabled ? "success" : "neutral"}>
-                {selected.enabled ? "enabled" : "disabled"}
-              </StatusBadge>
-              {selected.maintenance ? <StatusBadge tone="warning">maintenance</StatusBadge> : null}
-            </>
-          ) : null
-        }
-        sections={
-          selected
-            ? [
-                {
-                  id: "pair",
-                  title: "Pair",
-                  fields: [
-                    { label: "Symbol", value: selected.symbol, mono: true },
-                    { label: "Min stake", value: selected.minStake, mono: true },
-                    { label: "Max stake", value: selected.maxStake, mono: true },
-                    { label: "Exposure used", value: selected.exposureUsed, mono: true },
-                    { label: "Exposure cap", value: selected.exposureCap, mono: true },
-                    {
-                      label: "Settlement delay",
-                      value: `${selected.settlementDelayMs} ms`,
-                      mono: true,
-                    },
-                    {
-                      label: "Price source rule",
-                      value:
-                        "Median of primary + fallback feeds; last-quote fallback if stale > 3s.",
-                    },
-                  ],
-                },
-                {
-                  id: "payout",
-                  title: "Payout matrix",
-                  content: (
-                    <div className="grid grid-cols-5 gap-2">
-                      {binaryConfigs(selected).map((config) => (
-                        <div
-                          key={config.durationSeconds}
-                          className="rounded-md border border-border/60 bg-background/40 p-2 text-center"
-                        >
-                          <div className="mono text-[10px] uppercase text-muted-foreground">
-                            {config.durationSeconds}s
-                          </div>
-                          <div className="mono text-sm text-foreground">
-                            {(config.payoutBps / 100).toFixed(2)}%
-                          </div>
-                          <div className="mono text-[10px] text-muted-foreground">
-                            {config.minStake}–{config.maxStake}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ),
-                },
-                {
-                  id: "audit",
-                  title: "Audit timeline",
-                  content: <AuditTimeline targetId={selected.id} heading="" limit={15} />,
-                },
-              ]
-            : []
-        }
-        actions={
-          selected ? (
-            <>
-              <Button
-                variant="outline"
-                size="sm"
-                data-testid="bin-detail-edit"
-                disabled={!canEdit}
-                onClick={() => setEditing(selected)}
-              >
-                Edit
-              </Button>
-              <Button
-                variant={selected.maintenance ? "default" : "destructive"}
-                size="sm"
-                disabled={!canEdit}
-                data-testid="bin-detail-pause"
-                onClick={() => setPausing(selected)}
-              >
-                {selected.maintenance ? "Resume" : "Pause"}
-              </Button>
-            </>
-          ) : null
-        }
+        badges={selected ? <StatusBadge tone={selected.maintenance ? "warning" : selected.enabled ? "success" : "neutral"}>{selected.maintenance ? "maintenance" : selected.enabled ? "available" : "unavailable"}</StatusBadge> : null}
+        sections={selected ? [{
+          id: "pair",
+          title: "Pair availability",
+          fields: [
+            { label: "Symbol", value: selected.symbol, mono: true },
+            { label: "Availability", value: selected.maintenance ? "Maintenance" : selected.enabled ? "Available" : "Unavailable" },
+            { label: "Shared policy", value: "Global Binary Settings controls duration, payout and stake limits." },
+          ],
+        }, { id: "audit", title: "Audit timeline", content: <AuditTimeline targetId={selected.id} heading="" limit={15} /> }] : []}
+        actions={selected ? <Button variant={selected.maintenance ? "default" : "destructive"} size="sm" disabled={!canEdit} onClick={() => setPausing(selected)}>{selected.maintenance ? "Resume" : "Pause"}</Button> : null}
       />
-
-      <BinaryPairEditForm
-        pair={editing}
-        onClose={() => setEditing(null)}
-        onSubmit={async (patch, reason) => {
-          if (!editing) return;
-          await provider.updateBinaryPair(editing.id, patch, {
-            actor: session.actorName,
-            role: session.roleId,
-            environment: session.environment,
-            reason,
-          });
-        }}
-      />
-
       {pausing ? (
         <ConsequentialActionDialog
           open
-          onOpenChange={(o) => {
-            if (!o) setPausing(null);
-          }}
+          onOpenChange={(open) => { if (!open) setPausing(null); }}
           title={pausing.maintenance ? "Resume pair" : "Pause pair (maintenance)"}
           description="Paused pairs reject new positions. Existing positions continue toward strike."
           target={<span className="mono">{pausing.symbol}</span>}
           targetId={pausing.id}
           action={pausing.maintenance ? "binary.resume_pair" : "binary.pause_pair"}
           permission="binary.edit"
-          currentState={
-            <StatusBadge tone={pausing.maintenance ? "warning" : "success"}>
-              {pausing.maintenance ? "maintenance" : "enabled"}
-            </StatusBadge>
-          }
-          proposedState={
-            <StatusBadge tone={pausing.maintenance ? "success" : "warning"}>
-              {pausing.maintenance ? "enabled" : "maintenance"}
-            </StatusBadge>
-          }
+          currentState={<StatusBadge tone={pausing.maintenance ? "warning" : "success"}>{pausing.maintenance ? "maintenance" : "available"}</StatusBadge>}
+          proposedState={<StatusBadge tone={pausing.maintenance ? "success" : "warning"}>{pausing.maintenance ? "available" : "maintenance"}</StatusBadge>}
           destructive={!pausing.maintenance}
           submitLabel={pausing.maintenance ? "Resume" : "Pause"}
-          successMessage="Pair state updated"
-          onConfirm={(reason) =>
-            provider.pauseBinaryPair(pausing.id, !pausing.maintenance, {
-              actor: session.actorName,
-              role: session.roleId,
-              environment: session.environment,
-              reason,
-            })
-          }
+          successMessage="Pair availability updated"
+          onConfirm={(reason) => provider.pauseBinaryPair(pausing.id, !pausing.maintenance, {
+            actor: session.actorName, role: session.roleId, environment: session.environment, reason,
+          })}
           onSuccess={() => setPausing(null)}
         />
       ) : null}
     </>
+  );
+}
+
+const BINARY_DURATIONS = [30, 60, 180, 280, 420] as const;
+
+function BinaryGlobalSettings() {
+  const provider = useAdminData();
+  const session = useAdminSession();
+  const canEdit = session.can("binary.edit");
+  const query = useAdminQuery((p) => p.getBinaryGlobalConfiguration());
+  const [draft, setDraft] = useState<BinaryGlobalConfiguration | null>(null);
+  const [reason, setReason] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  useEffect(() => {
+    if (query.data) setDraft(query.data);
+  }, [query.data]);
+
+  const durations = draft?.durations ?? [];
+  const valid = Boolean(
+    draft &&
+    BINARY_DURATIONS.every((duration) => durations.some((item) => item.durationSeconds === duration)) &&
+    durations.length === BINARY_DURATIONS.length &&
+    Number(draft.minStake) > 0 &&
+    Number(draft.maxStake) >= Number(draft.minStake) &&
+    durations.every((item) => Number.isFinite(item.payoutRate) && item.payoutRate > 0),
+  );
+  const updateDuration = (durationSeconds: number, patch: Partial<BinaryGlobalConfiguration["durations"][number]>) => {
+    setDraft((current) => current ? ({
+      ...current,
+      durations: current.durations.map((item) => item.durationSeconds === durationSeconds ? { ...item, ...patch } : item),
+    }) : current);
+  };
+  const save = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!draft || !valid || reason.trim().length < 6 || !canEdit || saving) return;
+    setSaving(true);
+    setMessage(null);
+    try {
+      const result = await provider.updateBinaryGlobalConfiguration({
+        minStake: draft.minStake,
+        maxStake: draft.maxStake,
+        durations: draft.durations,
+      }, {
+        actor: session.actorName,
+        role: session.roleId,
+        environment: session.environment,
+        reason: reason.trim(),
+      });
+      setMessage(result.ok ? "Global settings saved." : "Settings were not accepted.");
+      setReason("");
+      await query.refresh();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not save global settings.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <form onSubmit={save} className="space-y-4 rounded-lg border border-border/60 bg-background/40 p-4">
+      <div>
+        <h2 className="font-semibold">Global Binary Settings</h2>
+        <p className="text-xs text-muted-foreground">One shared payout and stake policy for every eligible pair. New settings do not change open-position snapshots.</p>
+      </div>
+      {query.loading && !draft ? <LoadingSkeleton rows={2} /> : query.error ? <ErrorState title="Could not load global Binary settings" description={query.error.message} /> : !draft ? <p className="text-sm text-muted-foreground">Global settings are not configured.</p> : (
+        <>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Minimum stake"><Input inputMode="decimal" value={draft.minStake} disabled={!canEdit || saving} onChange={(e) => setDraft((current) => current ? { ...current, minStake: e.target.value } : current)} /></Field>
+            <Field label="Maximum stake"><Input inputMode="decimal" value={draft.maxStake} disabled={!canEdit || saving} onChange={(e) => setDraft((current) => current ? { ...current, maxStake: e.target.value } : current)} /></Field>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            {BINARY_DURATIONS.map((duration) => {
+              const setting = durations.find((item) => item.durationSeconds === duration);
+              return <div key={duration} className="space-y-3 rounded-md border border-border/60 p-3">
+                <h3 className="text-sm font-medium">{duration} seconds</h3>
+                {setting ? <>
+                  <Field label="Payout (%)"><Input type="number" min="0.01" step="0.01" value={(setting.payoutRate * 100).toFixed(2)} disabled={!canEdit || saving} onChange={(e) => updateDuration(duration, { payoutRate: Number(e.target.value) / 100 })} /></Field>
+                  <label className="flex items-center justify-between gap-3 text-xs"><span>Duration available</span><Switch checked={setting.enabled} disabled={!canEdit || saving} onCheckedChange={(enabled) => updateDuration(duration, { enabled })} /></label>
+                </> : <p className="text-xs text-destructive">Missing from backend configuration.</p>}
+              </div>;
+            })}
+          </div>
+          <Field label="Reason (auditable, at least 6 characters)"><textarea value={reason} disabled={!canEdit || saving} onChange={(event) => setReason(event.target.value)} rows={2} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground" /></Field>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button type="submit" disabled={!canEdit || !valid || reason.trim().length < 6 || saving}>{saving ? "Saving…" : "Save global settings"}</Button>
+            {draft.version > 0 ? <span className="text-xs text-muted-foreground">Configuration version {draft.version}</span> : null}
+            {message ? <span role="status" className="text-xs text-muted-foreground">{message}</span> : null}
+          </div>
+        </>
+      )}
+    </form>
   );
 }
 
@@ -942,206 +845,6 @@ function PositionSettleAction({
       {label}
     </Button>
   );
-}
-
-function BinaryPairEditForm({
-  pair,
-  onClose,
-  onSubmit,
-}: {
-  pair: BinaryPair | null;
-  onClose: () => void;
-  onSubmit: (
-    patch: Partial<Pick<BinaryPair, "enabled" | "exposureCap" | "settlementDelayMs">> & {
-      durationConfigs?: Array<{
-        sourceDurationSeconds: number;
-        durationSeconds: number;
-        payoutBps: number;
-        minStake: string;
-        maxStake: string;
-        enabled: boolean;
-      }>;
-    },
-    reason: string,
-  ) => Promise<void>;
-}) {
-  const [state, setState] = useState({
-    enabled: true,
-    exposureCap: "50000",
-    settlementDelayMs: 500,
-    durationConfigs: [] as Array<{
-      sourceDurationSeconds: number;
-      durationSeconds: number;
-      payoutBps: number;
-      minStake: string;
-      maxStake: string;
-      enabled: boolean;
-    }>,
-  });
-  const [reason, setReason] = useState("");
-
-  useEffect(() => {
-    if (pair) {
-      setState({
-        enabled: pair.enabled,
-        exposureCap: pair.exposureCap,
-        settlementDelayMs: pair.settlementDelayMs,
-        durationConfigs: binaryConfigs(pair).map((config) => ({ ...config })),
-      });
-      setReason("");
-    }
-  }, [pair?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const reasonOk = reason.trim().length >= 6;
-  const configsValid =
-    state.durationConfigs.length === 5 &&
-    new Set(state.durationConfigs.map((config) => config.durationSeconds)).size === 5 &&
-    state.durationConfigs.every(
-      (config) =>
-        Number.isInteger(config.durationSeconds) &&
-        config.durationSeconds > 0 &&
-        config.durationSeconds <= 86400 &&
-        config.payoutBps > 0 &&
-        Number(config.minStake) > 0 &&
-        Number(config.maxStake) >= Number(config.minStake),
-    );
-
-  return (
-    <FormDrawer
-      open={!!pair}
-      onOpenChange={(o) => {
-        if (!o) onClose();
-      }}
-      title={pair ? `Edit — ${pair.symbol}` : ""}
-      description="Edit payout, stake limits, and availability for each of the five fixed Option durations."
-      submitLabel="Save pair"
-      submitDisabled={!reasonOk || !configsValid}
-      onSubmit={async () => {
-        await onSubmit(
-          {
-            enabled: state.enabled,
-            exposureCap: state.exposureCap,
-            settlementDelayMs: state.settlementDelayMs,
-            durationConfigs: state.durationConfigs,
-          },
-          reason.trim(),
-        );
-        onClose();
-      }}
-      testId="bin-edit-drawer"
-    >
-      <label
-        htmlFor="bin-enabled"
-        className="flex items-center justify-between rounded-md border border-border/60 bg-background/40 px-3 py-2"
-      >
-        <span className="text-sm">Enabled</span>
-        <Switch
-          id="bin-enabled"
-          data-testid="bin-enabled"
-          checked={state.enabled}
-          onCheckedChange={(v) => setState((s) => ({ ...s, enabled: !!v }))}
-        />
-      </label>
-      <div className="grid gap-3 md:grid-cols-5">
-        {state.durationConfigs.map((config, index) => (
-          <div
-            key={`${config.sourceDurationSeconds}-${index}`}
-            className="space-y-2 rounded-md border border-border/60 bg-background/40 p-3"
-          >
-            <div className="text-xs font-medium">Box {index + 1}</div>
-            <Field label="Duration (seconds)">
-              <Input value={config.durationSeconds} readOnly />
-            </Field>
-            <Field label="Payout (bps)">
-              <Input
-                type="number"
-                min={1}
-                value={config.payoutBps}
-                onChange={(e) =>
-                  setState((s) => ({
-                    ...s,
-                    durationConfigs: s.durationConfigs.map((item, i) =>
-                      i === index ? { ...item, payoutBps: Number(e.target.value) } : item,
-                    ),
-                  }))
-                }
-              />
-            </Field>
-            <Field label="Min stake">
-              <Input
-                value={config.minStake}
-                onChange={(e) =>
-                  setState((s) => ({
-                    ...s,
-                    durationConfigs: s.durationConfigs.map((item, i) =>
-                      i === index ? { ...item, minStake: e.target.value } : item,
-                    ),
-                  }))
-                }
-              />
-            </Field>
-            <Field label="Max stake">
-              <Input
-                value={config.maxStake}
-                onChange={(e) =>
-                  setState((s) => ({
-                    ...s,
-                    durationConfigs: s.durationConfigs.map((item, i) =>
-                      i === index ? { ...item, maxStake: e.target.value } : item,
-                    ),
-                  }))
-                }
-              />
-            </Field>
-            <label className="flex items-center justify-between rounded-md border border-border/60 px-2 py-1.5">
-              <span className="text-xs">Enabled</span>
-              <Switch
-                data-testid={`bin-duration-enabled-${config.sourceDurationSeconds}`}
-                checked={config.enabled}
-                onCheckedChange={(enabled) =>
-                  setState((s) => ({
-                    ...s,
-                    durationConfigs: s.durationConfigs.map((item, i) =>
-                      i === index ? { ...item, enabled } : item,
-                    ),
-                  }))
-                }
-              />
-            </label>
-          </div>
-        ))}
-      </div>
-      {!configsValid ? (
-        <p className="text-xs text-destructive">
-          Exactly five unique positive duration boxes are required; payout and stake limits must be
-          valid.
-        </p>
-      ) : null}
-      <Field label="Reason (auditable, ≥ 6 chars)">
-        <textarea
-          data-testid="bin-reason"
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-          rows={3}
-          className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
-        />
-      </Field>
-    </FormDrawer>
-  );
-}
-
-function binaryConfigs(pair: BinaryPair) {
-  if (pair.durationConfigs?.length) return pair.durationConfigs;
-  return Object.entries(pair.payoutBps)
-    .map(([duration, payoutBps]) => ({
-      sourceDurationSeconds: Number(duration),
-      durationSeconds: Number(duration),
-      payoutBps,
-      minStake: pair.minStake,
-      maxStake: pair.maxStake,
-      enabled: pair.enabled,
-    }))
-    .sort((a, b) => a.durationSeconds - b.durationSeconds);
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {

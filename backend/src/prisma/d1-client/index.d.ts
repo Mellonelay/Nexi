@@ -36941,6 +36941,7 @@ export namespace Prisma {
   export type LoanPlanMinAggregateOutputType = {
     id: string | null
     name: string | null
+    currency: string | null
     durationDays: number | null
     interestRate: string | null
     minAmount: string | null
@@ -36953,6 +36954,7 @@ export namespace Prisma {
   export type LoanPlanMaxAggregateOutputType = {
     id: string | null
     name: string | null
+    currency: string | null
     durationDays: number | null
     interestRate: string | null
     minAmount: string | null
@@ -36965,6 +36967,7 @@ export namespace Prisma {
   export type LoanPlanCountAggregateOutputType = {
     id: number
     name: number
+    currency: number
     durationDays: number
     interestRate: number
     minAmount: number
@@ -36987,6 +36990,7 @@ export namespace Prisma {
   export type LoanPlanMinAggregateInputType = {
     id?: true
     name?: true
+    currency?: true
     durationDays?: true
     interestRate?: true
     minAmount?: true
@@ -36999,6 +37003,7 @@ export namespace Prisma {
   export type LoanPlanMaxAggregateInputType = {
     id?: true
     name?: true
+    currency?: true
     durationDays?: true
     interestRate?: true
     minAmount?: true
@@ -37011,6 +37016,7 @@ export namespace Prisma {
   export type LoanPlanCountAggregateInputType = {
     id?: true
     name?: true
+    currency?: true
     durationDays?: true
     interestRate?: true
     minAmount?: true
@@ -37110,6 +37116,7 @@ export namespace Prisma {
   export type LoanPlanGroupByOutputType = {
     id: string
     name: string
+    currency: string
     durationDays: number
     interestRate: string
     minAmount: string
@@ -37141,6 +37148,7 @@ export namespace Prisma {
   export type LoanPlanSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     name?: boolean
+    currency?: boolean
     durationDays?: boolean
     interestRate?: boolean
     minAmount?: boolean
@@ -37153,6 +37161,7 @@ export namespace Prisma {
   export type LoanPlanSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     name?: boolean
+    currency?: boolean
     durationDays?: boolean
     interestRate?: boolean
     minAmount?: boolean
@@ -37165,6 +37174,7 @@ export namespace Prisma {
   export type LoanPlanSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     name?: boolean
+    currency?: boolean
     durationDays?: boolean
     interestRate?: boolean
     minAmount?: boolean
@@ -37177,6 +37187,7 @@ export namespace Prisma {
   export type LoanPlanSelectScalar = {
     id?: boolean
     name?: boolean
+    currency?: boolean
     durationDays?: boolean
     interestRate?: boolean
     minAmount?: boolean
@@ -37186,7 +37197,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type LoanPlanOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "durationDays" | "interestRate" | "minAmount" | "maxAmount" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["loanPlan"]>
+  export type LoanPlanOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "currency" | "durationDays" | "interestRate" | "minAmount" | "maxAmount" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["loanPlan"]>
 
   export type $LoanPlanPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "LoanPlan"
@@ -37194,6 +37205,7 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       name: string
+      currency: string
       durationDays: number
       interestRate: string
       minAmount: string
@@ -37626,6 +37638,7 @@ export namespace Prisma {
   interface LoanPlanFieldRefs {
     readonly id: FieldRef<"LoanPlan", 'String'>
     readonly name: FieldRef<"LoanPlan", 'String'>
+    readonly currency: FieldRef<"LoanPlan", 'String'>
     readonly durationDays: FieldRef<"LoanPlan", 'Int'>
     readonly interestRate: FieldRef<"LoanPlan", 'String'>
     readonly minAmount: FieldRef<"LoanPlan", 'String'>
@@ -117553,6 +117566,7 @@ export namespace Prisma {
   export const LoanPlanScalarFieldEnum: {
     id: 'id',
     name: 'name',
+    currency: 'currency',
     durationDays: 'durationDays',
     interestRate: 'interestRate',
     minAmount: 'minAmount',
@@ -121156,6 +121170,7 @@ export namespace Prisma {
     NOT?: LoanPlanWhereInput | LoanPlanWhereInput[]
     id?: StringFilter<"LoanPlan"> | string
     name?: StringFilter<"LoanPlan"> | string
+    currency?: StringFilter<"LoanPlan"> | string
     durationDays?: IntFilter<"LoanPlan"> | number
     interestRate?: StringFilter<"LoanPlan"> | string
     minAmount?: StringFilter<"LoanPlan"> | string
@@ -121168,6 +121183,7 @@ export namespace Prisma {
   export type LoanPlanOrderByWithRelationInput = {
     id?: SortOrder
     name?: SortOrder
+    currency?: SortOrder
     durationDays?: SortOrder
     interestRate?: SortOrder
     minAmount?: SortOrder
@@ -121183,6 +121199,7 @@ export namespace Prisma {
     OR?: LoanPlanWhereInput[]
     NOT?: LoanPlanWhereInput | LoanPlanWhereInput[]
     name?: StringFilter<"LoanPlan"> | string
+    currency?: StringFilter<"LoanPlan"> | string
     durationDays?: IntFilter<"LoanPlan"> | number
     interestRate?: StringFilter<"LoanPlan"> | string
     minAmount?: StringFilter<"LoanPlan"> | string
@@ -121195,6 +121212,7 @@ export namespace Prisma {
   export type LoanPlanOrderByWithAggregationInput = {
     id?: SortOrder
     name?: SortOrder
+    currency?: SortOrder
     durationDays?: SortOrder
     interestRate?: SortOrder
     minAmount?: SortOrder
@@ -121215,6 +121233,7 @@ export namespace Prisma {
     NOT?: LoanPlanScalarWhereWithAggregatesInput | LoanPlanScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"LoanPlan"> | string
     name?: StringWithAggregatesFilter<"LoanPlan"> | string
+    currency?: StringWithAggregatesFilter<"LoanPlan"> | string
     durationDays?: IntWithAggregatesFilter<"LoanPlan"> | number
     interestRate?: StringWithAggregatesFilter<"LoanPlan"> | string
     minAmount?: StringWithAggregatesFilter<"LoanPlan"> | string
@@ -129530,6 +129549,7 @@ export namespace Prisma {
   export type LoanPlanCreateInput = {
     id?: string
     name: string
+    currency?: string
     durationDays: number
     interestRate: string
     minAmount: string
@@ -129542,6 +129562,7 @@ export namespace Prisma {
   export type LoanPlanUncheckedCreateInput = {
     id?: string
     name: string
+    currency?: string
     durationDays: number
     interestRate: string
     minAmount: string
@@ -129554,6 +129575,7 @@ export namespace Prisma {
   export type LoanPlanUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    currency?: StringFieldUpdateOperationsInput | string
     durationDays?: IntFieldUpdateOperationsInput | number
     interestRate?: StringFieldUpdateOperationsInput | string
     minAmount?: StringFieldUpdateOperationsInput | string
@@ -129566,6 +129588,7 @@ export namespace Prisma {
   export type LoanPlanUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    currency?: StringFieldUpdateOperationsInput | string
     durationDays?: IntFieldUpdateOperationsInput | number
     interestRate?: StringFieldUpdateOperationsInput | string
     minAmount?: StringFieldUpdateOperationsInput | string
@@ -129578,6 +129601,7 @@ export namespace Prisma {
   export type LoanPlanCreateManyInput = {
     id?: string
     name: string
+    currency?: string
     durationDays: number
     interestRate: string
     minAmount: string
@@ -129590,6 +129614,7 @@ export namespace Prisma {
   export type LoanPlanUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    currency?: StringFieldUpdateOperationsInput | string
     durationDays?: IntFieldUpdateOperationsInput | number
     interestRate?: StringFieldUpdateOperationsInput | string
     minAmount?: StringFieldUpdateOperationsInput | string
@@ -129602,6 +129627,7 @@ export namespace Prisma {
   export type LoanPlanUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    currency?: StringFieldUpdateOperationsInput | string
     durationDays?: IntFieldUpdateOperationsInput | number
     interestRate?: StringFieldUpdateOperationsInput | string
     minAmount?: StringFieldUpdateOperationsInput | string
@@ -138172,6 +138198,7 @@ export namespace Prisma {
   export type LoanPlanCountOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
+    currency?: SortOrder
     durationDays?: SortOrder
     interestRate?: SortOrder
     minAmount?: SortOrder
@@ -138188,6 +138215,7 @@ export namespace Prisma {
   export type LoanPlanMaxOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
+    currency?: SortOrder
     durationDays?: SortOrder
     interestRate?: SortOrder
     minAmount?: SortOrder
@@ -138200,6 +138228,7 @@ export namespace Prisma {
   export type LoanPlanMinOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
+    currency?: SortOrder
     durationDays?: SortOrder
     interestRate?: SortOrder
     minAmount?: SortOrder

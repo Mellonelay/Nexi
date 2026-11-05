@@ -107,7 +107,10 @@ function Inner() {
     {
       key: "status",
       label: "decision",
-      options: ["pending", "approved", "rejected", "expired"].map((v) => ({ value: v, label: v })),
+      options: ["pending", "approved", "rejected", "expired", "executed"].map((v) => ({
+        value: v,
+        label: v,
+      })),
       match: (a, v) => a.status === v,
     },
   ];
@@ -165,7 +168,9 @@ function Inner() {
                   ? "success"
                   : selected.status === "rejected"
                     ? "destructive"
-                    : "warning"
+                    : selected.status === "executed"
+                      ? "neutral"
+                      : "warning"
               }
             >
               {selected.status}

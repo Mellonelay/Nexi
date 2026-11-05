@@ -1,6 +1,7 @@
 import { Type } from "class-transformer";
 import {
   ArrayMaxSize,
+  ArrayMinSize,
   IsArray,
   IsBoolean,
   IsDateString,
@@ -10,6 +11,7 @@ import {
   IsString,
   IsUUID,
   IsUrl,
+  ValidateNested,
   Length,
   Matches,
   Max,
@@ -132,6 +134,7 @@ export class UpdateMiningPlanDto extends PartialType(CreateMiningPlanDto) {}
 
 export class CreateLoanPlanDto {
   @IsString() @Length(1, 128) name!: string;
+  @IsString() @Length(2, 20) @Matches(/^[A-Z0-9._-]+$/) currency!: string;
   @Type(() => Number) @IsInt() @Min(1) durationDays!: number;
   @Type(() => Number) @IsNumber() @Min(0) interestRate!: number;
   @Type(() => Number) @IsNumber() @Min(0) minAmount!: number;
@@ -150,6 +153,20 @@ export class UpdatePairRiskDto {
 
 export class UpdatePayoutDto {
   @Type(() => Number) @IsNumber() @IsPositive() rate!: number;
+}
+
+export class BinaryGlobalDurationDto {
+  @Type(() => Number) @IsInt() @IsIn([30, 60, 180, 280, 420]) durationSeconds!: number;
+  @Type(() => Number) @IsNumber() @IsPositive() payoutRate!: number;
+  @IsBoolean() enabled!: boolean;
+}
+
+export class UpdateBinaryGlobalConfigurationDto {
+  @IsString() @Matches(/^(?:0|[1-9][0-9]*)(?:[.][0-9]{1,18})?$/) minStake!: string;
+  @IsString() @Matches(/^(?:0|[1-9][0-9]*)(?:[.][0-9]{1,18})?$/) maxStake!: string;
+  @IsArray() @ArrayMinSize(5) @ArrayMaxSize(5) @ValidateNested({ each: true }) @Type(() => BinaryGlobalDurationDto) durations!: BinaryGlobalDurationDto[];
+  @IsString() @Length(3, 500) reason!: string;
+  @IsString() @Length(8, 128) idempotencyKey!: string;
 }
 
 export class UpdateBinaryConfigurationDto {
@@ -223,8 +240,17 @@ export class FinancialCorrectionDto {
   @IsString() @Length(1, 128) amount!: string;
   @IsString() @Matches(/^(CREDIT|DEBIT)$/) direction!: "CREDIT" | "DEBIT";
   @IsString() @Length(8, 128) idempotencyKey!: string;
-  @IsUUID() governanceCommandId!: string;
+  @IsOptional()
+  @IsString()
+  @Matches(/^(MAIN|SPOT|MARGIN|BINARY|FINANCE)$/)
+  scope?: "MAIN" | "SPOT" | "MARGIN" | "BINARY" | "FINANCE";
   @IsString() @Length(3, 500) reason!: string;
+}
+
+export class LedgerFreezeDto {
+  @IsBoolean() frozen!: boolean;
+  @IsString() @Length(3, 500) reason!: string;
+  @IsString() @Length(8, 128) idempotencyKey!: string;
 }
 
 export class SandboxControlDto {
@@ -300,15 +326,35 @@ export class AdminAuditQueryDto {
   @IsString()
   @IsIn(["ok", "error", "denied", "unknown"])
   result?: string;
-  @ApiPropertyOptional({ type: "integer", minimum: 1, maximum: 100, default: 50 })
-  @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(100) limit = 50;
+  @ApiPropertyOptional({
+    type: "integer",
+    minimum: 1,
+    maximum: 100,
+    default: 50,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit = 50;
 }
 
 export class AdminIncidentQueryDto {
   @IsOptional() @IsBoolean() active?: boolean;
   @IsOptional() @IsString() @Length(1, 32) environment?: string;
-  @ApiPropertyOptional({ type: "integer", minimum: 1, maximum: 100, default: 50 })
-  @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(100) limit = 50;
+  @ApiPropertyOptional({
+    type: "integer",
+    minimum: 1,
+    maximum: 100,
+    default: 50,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit = 50;
 }
 
 export class AdminIncidentAcknowledgeDto {
@@ -332,20 +378,39 @@ export class AdminSupportStatusDto {
 }
 
 export class AdminSendMessageDto {
-  @ApiProperty({ format: "uuid", description: "Customer account that owns the support thread." })
-  @IsUUID() recipientId!: string;
-  @ApiPropertyOptional({ description: "Canonical conversation ID from the customer support thread." })
-  @IsOptional() @IsString() @Length(1, 256) conversationId?: string;
+  @ApiProperty({
+    format: "uuid",
+    description: "Customer account that owns the support thread.",
+  })
+  @IsUUID()
+  recipientId!: string;
+  @ApiPropertyOptional({
+    description: "Canonical conversation ID from the customer support thread.",
+  })
+  @IsOptional()
+  @IsString()
+  @Length(1, 256)
+  conversationId?: string;
   @ApiPropertyOptional({ maxLength: 10000 })
-  @IsOptional() @IsString() @Length(0, 10000) body?: string;
+  @IsOptional()
+  @IsString()
+  @Length(0, 10000)
+  body?: string;
   @ApiPropertyOptional({ type: [String], format: "uuid", maxItems: 4 })
-  @IsOptional() @IsArray() @ArrayMaxSize(4) @IsUUID('4', { each: true }) attachmentIds?: string[];
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(4)
+  @IsUUID("4", { each: true })
+  attachmentIds?: string[];
   @ApiProperty({ minLength: 3, maxLength: 500 })
-  @IsString() @Length(3, 500) reason!: string;
+  @IsString()
+  @Length(3, 500)
+  reason!: string;
   @ApiProperty({ minLength: 8, maxLength: 128 })
-  @IsString() @Length(8, 128) idempotencyKey!: string;
+  @IsString()
+  @Length(8, 128)
+  idempotencyKey!: string;
 }
-
 
 export class AdminPairMaintenanceDto {
   @IsString() @Length(3, 64) symbol!: string;
@@ -379,8 +444,18 @@ export class MaintenanceWindowQueryDto {
   @IsString()
   @IsIn(["DEVELOPMENT", "SANDBOX", "PRODUCTION"])
   environment?: string;
-  @ApiPropertyOptional({ type: "integer", minimum: 1, maximum: 100, default: 100 })
-  @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(100) limit = 100;
+  @ApiPropertyOptional({
+    type: "integer",
+    minimum: 1,
+    maximum: 100,
+    default: 100,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit = 100;
 }
 
 export class CancelMaintenanceWindowDto {

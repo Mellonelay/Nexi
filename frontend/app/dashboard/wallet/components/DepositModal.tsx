@@ -23,6 +23,7 @@ interface DepositModalProps {
 type Destination = {
   asset: string;
   assetName?: string;
+  assetLogo?: string;
   network: string;
   depositAddressId: string;
   address: string;
@@ -187,7 +188,7 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
                   const meta = findAsset(asset);
                   const name = rows[0]?.assetName || meta?.name || asset;
                   const networks = Array.from(new Set(rows.map((row: Destination) => row.network)));
-                  const iconItem = { assetId: meta?.id ?? asset, symbol: meta?.symbol ?? asset, displaySymbol: meta?.displaySymbol ?? asset, name };
+                  const iconItem = { assetId: meta?.id ?? asset, symbol: meta?.symbol ?? asset, displaySymbol: meta?.displaySymbol ?? asset, name, iconUrl: rows[0]?.assetLogo };
                   return (
                     <button key={asset} type="button" onClick={() => chooseAsset(asset)} className="flex min-h-20 w-full items-center gap-3 rounded-2xl border border-[#2B2037] bg-[#171022] px-4 py-3 text-left transition hover:border-violet-300/35 hover:bg-[#1B1229] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF]">
                       <AssetIcon item={iconItem} size="md" />
@@ -204,7 +205,7 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
               <form onSubmit={submit} className="space-y-4">
                 <section className="rounded-2xl border border-violet-300/15 bg-[#151020] p-4">
                   <div className="flex items-center gap-3">
-                    <AssetIcon item={{ assetId: selectedMeta?.id ?? destination.asset, symbol: selectedMeta?.symbol ?? destination.asset, displaySymbol: selectedMeta?.displaySymbol ?? destination.asset, name: destination.assetName || selectedMeta?.name || destination.asset }} size="md" />
+                    <AssetIcon item={{ assetId: selectedMeta?.id ?? destination.asset, symbol: selectedMeta?.symbol ?? destination.asset, displaySymbol: selectedMeta?.displaySymbol ?? destination.asset, name: destination.assetName || selectedMeta?.name || destination.asset, iconUrl: destination.assetLogo }} size="md" />
                     <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-white">{destination.assetName || selectedMeta?.name || destination.asset}</p><p className="mt-0.5 text-xs text-[#8C8299]">{destination.asset} deposit</p></div>
                   </div>
                   {assetDestinations.length > 1 ? (

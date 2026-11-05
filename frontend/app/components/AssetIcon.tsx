@@ -26,7 +26,7 @@ export default function AssetIcon({ item, size = 'sm' }: AssetIconProps) {
     ? '/assets/market/usdt.svg'
     : assetIconPath(asset ?? { iconKey: undefined });
   const externalIcon = safeAssetIconUrl(item.iconUrl);
-  const resolvedIconPath = iconPath ?? externalIcon;
+  const resolvedIconPath = externalIcon ?? iconPath;
   const dimensions = size === 'md' ? 36 : 28;
   const fallback = (asset?.displaySymbol ?? item.displaySymbol).slice(0, 3).toUpperCase();
   return <AssetIconImage key={resolvedIconPath ?? 'fallback'} item={item} asset={asset} iconPath={resolvedIconPath} size={size} dimensions={dimensions} fallback={fallback} />;

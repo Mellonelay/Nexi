@@ -5,10 +5,13 @@ import test from 'node:test';
 const root = new URL('../', import.meta.url);
 const read = (relative) => fs.readFileSync(new URL(relative, root), 'utf8');
 
-test('support retains help topics and reads only configured contact entry points', () => {
+test('Help retains topic discovery and renders only configured Contact Us methods', () => {
   const support = read('./app/dashboard/support/page.tsx');
   assert.match(support, /Wallet operations/);
-  assert.match(support, /Chat with NEXI/);
+  assert.match(support, /Contact Us/);
+  assert.match(support, /No support contact methods are configured/);
+  assert.match(support, /Contact options are unavailable right now/);
+  assert.doesNotMatch(support, /Help topic detail|Chat with NEXI|Open chat|dashboard\/messages/);
   assert.match(support, /api\.get<unknown>\('\/public\/config\/support'\)/);
   assert.match(support, /telegramUrl: string \| null; email: string \| null/);
   assert.match(support, /contacts\.telegramUrl &&/);

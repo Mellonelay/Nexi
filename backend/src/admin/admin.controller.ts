@@ -51,12 +51,14 @@ import {
   UpdateLoanPlanDto,
   UpdateMiningPlanDto,
   UpdateBinaryConfigurationDto,
+  UpdateBinaryGlobalConfigurationDto,
   UpdateMarginConfigurationDto,
   UpdateSystemConfigDto,
   CreateGovernanceCommandDto,
   GovernanceDecisionDto,
   UpdateFeatureFlagDto,
   FinancialCorrectionDto,
+  LedgerFreezeDto,
   SandboxControlDto,
   BinaryResearchDefaultDto,
   BinaryResearchPositionDto,
@@ -101,8 +103,14 @@ import { LoanAdminDecisionDto } from "../loans/loans.dto";
 import { MarketProviderRouterService } from "../market/market-provider-router.service";
 import { KycService } from "../kyc/kyc.service";
 import { CommunicationsService } from "../communications/communications.service";
-import { SUPPORT_ATTACHMENT_MAX_BYTES, type SupportUpload } from "../communications/support-attachment-storage.service";
-import { AdminMessageResponseDto, SupportAttachmentResponseDto } from "../communications/communications.dto";
+import {
+  SUPPORT_ATTACHMENT_MAX_BYTES,
+  type SupportUpload,
+} from "../communications/support-attachment-storage.service";
+import {
+  AdminMessageResponseDto,
+  SupportAttachmentResponseDto,
+} from "../communications/communications.dto";
 import { AuthRateLimit } from "../auth/auth-rate-limit.decorator";
 import { AuthRateLimitGuard } from "../auth/auth-rate-limit.guard";
 
@@ -125,7 +133,8 @@ export class AdminController {
 
   @Get("me")
   @ApiOkResponse({
-    description: "The authenticated Admin identity and effective role permissions.",
+    description:
+      "The authenticated Admin identity and effective role permissions.",
     schema: {
       type: "object",
       required: [
@@ -145,9 +154,16 @@ export class AdminController {
         email: { type: "string" },
         backendRole: { type: "string" },
         authSurface: { type: "string" },
-        environment: { type: "string", enum: ["DEVELOPMENT", "SANDBOX", "PRODUCTION"] },
+        environment: {
+          type: "string",
+          enum: ["DEVELOPMENT", "SANDBOX", "PRODUCTION"],
+        },
         permissionModel: { type: "string", enum: ["ADMIN_ROLE_ASSIGNMENT"] },
-        roleId: { type: "string", enum: Object.keys(ADMIN_ROLE_DEFINITIONS), nullable: true },
+        roleId: {
+          type: "string",
+          enum: Object.keys(ADMIN_ROLE_DEFINITIONS),
+          nullable: true,
+        },
         roleLabel: { type: "string", nullable: true },
         effectivePermissions: {
           type: "array",
@@ -165,7 +181,10 @@ export class AdminController {
   }
 
   @Post("messages")
-  @ApiCreatedResponse({ type: AdminMessageResponseDto, description: "The persisted operator message and its audit reference." })
+  @ApiCreatedResponse({
+    type: AdminMessageResponseDto,
+    description: "The persisted operator message and its audit reference.",
+  })
   @RequireAdminPermission("messages.send")
   sendAdminMessage(
     @Body() body: AdminSendMessageDto,
@@ -176,12 +195,22 @@ export class AdminController {
 
   @Post("messages/:recipientId/attachments")
   @ApiConsumes("multipart/form-data")
-  @ApiBody({ schema: { type: "object", required: ["file"], properties: { file: { type: "string", format: "binary" } } } })
+  @ApiBody({
+    schema: {
+      type: "object",
+      required: ["file"],
+      properties: { file: { type: "string", format: "binary" } },
+    },
+  })
   @ApiCreatedResponse({ type: SupportAttachmentResponseDto })
   @RequireAdminPermission("messages.send")
   @UseGuards(AuthRateLimitGuard)
   @AuthRateLimit("message-attachment")
-  @UseInterceptors(FileInterceptor("file", { limits: { fileSize: SUPPORT_ATTACHMENT_MAX_BYTES, files: 1 } }))
+  @UseInterceptors(
+    FileInterceptor("file", {
+      limits: { fileSize: SUPPORT_ATTACHMENT_MAX_BYTES, files: 1 },
+    }),
+  )
   uploadAdminSupportAttachment(
     @Param("recipientId", ParseUUIDPipe) recipientId: string,
     @UploadedFile() file?: SupportUpload,
@@ -191,7 +220,11 @@ export class AdminController {
 
   @Get("messages/:recipientId/attachments/:id")
   @ApiProduces("image/png", "image/jpeg", "image/webp", "application/pdf")
-  @ApiOkResponse({ schema: { type: "string", format: "binary" }, description: "Private attachment for the specified customer's support conversation." })
+  @ApiOkResponse({
+    schema: { type: "string", format: "binary" },
+    description:
+      "Private attachment for the specified customer's support conversation.",
+  })
   @RequireAdminPermission("messages.view")
   @Header("X-Content-Type-Options", "nosniff")
   @Header("Cache-Control", "private, no-store")
@@ -199,7 +232,8 @@ export class AdminController {
     @Param("recipientId", ParseUUIDPipe) recipientId: string,
     @Param("id", ParseUUIDPipe) id: string,
   ) {
-    const { attachment, body } = await this.communications.getAdminSupportAttachment(recipientId, id);
+    const { attachment, body } =
+      await this.communications.getAdminSupportAttachment(recipientId, id);
     return new StreamableFile(body, {
       type: attachment.mimeType,
       disposition: `attachment; filename*=UTF-8''${encodeURIComponent(attachment.name)}`,
@@ -209,7 +243,8 @@ export class AdminController {
 
   @Get("roles")
   @ApiOkResponse({
-    description: "Canonical Admin role definitions and their effective permissions.",
+    description:
+      "Canonical Admin role definitions and their effective permissions.",
     schema: {
       type: "array",
       items: {
@@ -332,7 +367,8 @@ export class AdminController {
 
   @Get("system-config")
   @ApiOkResponse({
-    description: "Admin configuration with binary timeframe and market summary data.",
+    description:
+      "Admin configuration with binary timeframe and market summary data.",
     schema: {
       type: "object",
       required: ["status", "timeframes", "marketStats", "config"],
@@ -342,7 +378,15 @@ export class AdminController {
           type: "array",
           items: {
             type: "object",
-            required: ["id", "name", "seconds", "payoutRate", "profitRatio", "lossRatio", "isActive"],
+            required: [
+              "id",
+              "name",
+              "seconds",
+              "payoutRate",
+              "profitRatio",
+              "lossRatio",
+              "isActive",
+            ],
             properties: {
               id: { type: "integer" },
               name: { type: "string" },
@@ -461,7 +505,7 @@ export class AdminController {
   }
 
   @Post("financial-corrections")
-  @RequireAdminPermission("approvals.decide")
+  @RequireAdminPermission("ledger.adjust")
   applyFinancialCorrection(
     @Body() body: FinancialCorrectionDto,
     @Req() request: AuthenticatedRequest,
@@ -498,6 +542,20 @@ export class AdminController {
   @RequireAdminPermission("users.view")
   getUsers() {
     return this.adminService.getUsers();
+  }
+
+  @Post("users/:id/ledger-freeze")
+  @RequireAdminPermission("ledger.freeze")
+  setUserLedgerFreeze(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() body: LedgerFreezeDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.adminService.setUserLedgerFreeze({
+      ...body,
+      userId: id,
+      adminId: request.user.userId,
+    });
   }
 
   @Patch("users/:id/binary-research-default")
@@ -544,7 +602,10 @@ export class AdminController {
   @Header("Cache-Control", "private, no-store")
   @Header("X-Content-Type-Options", "nosniff")
   @ApiProduces("image/png", "image/jpeg", "image/webp", "application/pdf")
-  @ApiOkResponse({ description: "Private KYC evidence returned as a non-JSON attachment.", schema: { type: "string", format: "binary" } })
+  @ApiOkResponse({
+    description: "Private KYC evidence returned as a non-JSON attachment.",
+    schema: { type: "string", format: "binary" },
+  })
   async getKycEvidence(
     @Param("userId", ParseUUIDPipe) userId: string,
     @Param("side") side: string,
@@ -622,7 +683,17 @@ export class AdminController {
 
   @Post("market/assets/visibility")
   @RequireAdminPermission("assets.edit")
-  @ApiCreatedResponse({ schema: { type: "object", required: ["ok", "auditId", "status"], properties: { ok: { type: "boolean", enum: [true] }, auditId: { type: "string", format: "uuid" }, status: { type: "string", enum: ["ACTIVE", "MAINTENANCE"] } } } })
+  @ApiCreatedResponse({
+    schema: {
+      type: "object",
+      required: ["ok", "auditId", "status"],
+      properties: {
+        ok: { type: "boolean", enum: [true] },
+        auditId: { type: "string", format: "uuid" },
+        status: { type: "string", enum: ["ACTIVE", "MAINTENANCE"] },
+      },
+    },
+  })
   setMarketAssetVisibility(
     @Body() body: AdminAssetVisibilityDto,
     @Req() request: AuthenticatedRequest,
@@ -641,7 +712,17 @@ export class AdminController {
 
   @Post("market/networks/visibility")
   @RequireAdminPermission("networks.edit")
-  @ApiCreatedResponse({ schema: { type: "object", required: ["ok", "auditId", "status"], properties: { ok: { type: "boolean", enum: [true] }, auditId: { type: "string", format: "uuid" }, status: { type: "string" } } } })
+  @ApiCreatedResponse({
+    schema: {
+      type: "object",
+      required: ["ok", "auditId", "status"],
+      properties: {
+        ok: { type: "boolean", enum: [true] },
+        auditId: { type: "string", format: "uuid" },
+        status: { type: "string" },
+      },
+    },
+  })
   setMarketNetworkVisibility(
     @Body() body: AdminNetworkVisibilityDto,
     @Req() request: AuthenticatedRequest,
@@ -697,13 +778,18 @@ export class AdminController {
 
   @Post("spot/margin/config")
   @ApiCreatedResponse({ schema: marginConfigurationResponseSchema })
-  @ApiBadRequestResponse({ description: "Invalid isolated margin configuration." })
+  @ApiBadRequestResponse({
+    description: "Invalid isolated margin configuration.",
+  })
   @RequireAdminPermission("spot.edit")
   updateMarginConfiguration(
     @Body() body: UpdateMarginConfigurationDto,
     @Req() request: AuthenticatedRequest,
   ) {
-    return this.adminService.updateMarginConfiguration(body, request.user.userId);
+    return this.adminService.updateMarginConfiguration(
+      body,
+      request.user.userId,
+    );
   }
 
   @Post("spot/orders/:id/cancel")
@@ -823,7 +909,17 @@ export class AdminController {
 
   @Post("deposit-claims/:id/confirm")
   @RequireAdminPermission("deposits.confirm")
-  @ApiCreatedResponse({ description: "Approved deposit claim and replay indicator.", schema: { type: "object", required: ["claim", "replayed"], properties: { claim: { type: "object", additionalProperties: true }, replayed: { type: "boolean" } } } })
+  @ApiCreatedResponse({
+    description: "Approved deposit claim and replay indicator.",
+    schema: {
+      type: "object",
+      required: ["claim", "replayed"],
+      properties: {
+        claim: { type: "object", additionalProperties: true },
+        replayed: { type: "boolean" },
+      },
+    },
+  })
   confirmDepositClaim(
     @Param("id", ParseUUIDPipe) id: string,
     @Body() body: AdminIncidentAcknowledgeDto,
@@ -839,7 +935,17 @@ export class AdminController {
 
   @Post("deposit-claims/:id/credit")
   @RequireAdminPermission("deposits.confirm")
-  @ApiCreatedResponse({ description: "Credited deposit claim and replay indicator.", schema: { type: "object", required: ["claim", "replayed"], properties: { claim: { type: "object", additionalProperties: true }, replayed: { type: "boolean" } } } })
+  @ApiCreatedResponse({
+    description: "Credited deposit claim and replay indicator.",
+    schema: {
+      type: "object",
+      required: ["claim", "replayed"],
+      properties: {
+        claim: { type: "object", additionalProperties: true },
+        replayed: { type: "boolean" },
+      },
+    },
+  })
   creditDepositClaim(
     @Param("id", ParseUUIDPipe) id: string,
     @Body() body: AdminIncidentAcknowledgeDto,
@@ -855,7 +961,17 @@ export class AdminController {
 
   @Post("deposit-claims/:id/reject")
   @RequireAdminPermission("deposits.confirm")
-  @ApiCreatedResponse({ description: "Rejected deposit claim and replay indicator.", schema: { type: "object", required: ["claim", "replayed"], properties: { claim: { type: "object", additionalProperties: true }, replayed: { type: "boolean" } } } })
+  @ApiCreatedResponse({
+    description: "Rejected deposit claim and replay indicator.",
+    schema: {
+      type: "object",
+      required: ["claim", "replayed"],
+      properties: {
+        claim: { type: "object", additionalProperties: true },
+        replayed: { type: "boolean" },
+      },
+    },
+  })
   rejectDepositClaim(
     @Param("id", ParseUUIDPipe) id: string,
     @Body() body: AdminIncidentAcknowledgeDto,
@@ -1005,7 +1121,10 @@ export class AdminController {
 
   @Post("currencies")
   @RequireAdminPermission("assets.edit")
-  createCurrency(@Body() body: CreateCurrencyDto, @Req() request: AuthenticatedRequest) {
+  createCurrency(
+    @Body() body: CreateCurrencyDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
     return this.walletConfiguration.createCurrency(body, request.user.userId);
   }
 
@@ -1044,29 +1163,58 @@ export class AdminController {
     @Body() body: AdminIncidentAcknowledgeDto,
     @Req() request: AuthenticatedRequest,
   ) {
-    return this.adminService.deleteDepositAddress(id, request.user.userId, body.reason, body.idempotencyKey);
+    return this.adminService.deleteDepositAddress(
+      id,
+      request.user.userId,
+      body.reason,
+      body.idempotencyKey,
+    );
   }
 
   @Get("wallet-networks")
   @RequireAdminPermission("assets.view")
-  getWalletNetworks() { return this.walletConfiguration.getWalletNetworks(); }
+  getWalletNetworks() {
+    return this.walletConfiguration.getWalletNetworks();
+  }
 
   @Post("wallet-networks")
   @RequireAdminPermission("assets.edit")
-  createWalletNetwork(@Body() body: CreateWalletNetworkDto, @Req() request: AuthenticatedRequest) {
-    return this.walletConfiguration.createWalletNetwork(body, request.user.userId);
+  createWalletNetwork(
+    @Body() body: CreateWalletNetworkDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.walletConfiguration.createWalletNetwork(
+      body,
+      request.user.userId,
+    );
   }
 
   @Patch("wallet-networks/:id")
   @RequireAdminPermission("assets.edit")
-  updateWalletNetwork(@Param("id", ParseUUIDPipe) id: string, @Body() body: UpdateWalletNetworkDto, @Req() request: AuthenticatedRequest) {
-    return this.walletConfiguration.updateWalletNetwork(id, body, request.user.userId);
+  updateWalletNetwork(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() body: UpdateWalletNetworkDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.walletConfiguration.updateWalletNetwork(
+      id,
+      body,
+      request.user.userId,
+    );
   }
 
   @Patch("address/:id/state")
   @RequireAdminPermission("assets.edit")
-  updateDepositAddressState(@Param("id", ParseUUIDPipe) id: string, @Body() body: UpdateDepositAddressStateDto, @Req() request: AuthenticatedRequest) {
-    return this.walletConfiguration.setDepositAddressState(id, body, request.user.userId);
+  updateDepositAddressState(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() body: UpdateDepositAddressStateDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.walletConfiguration.setDepositAddressState(
+      id,
+      body,
+      request.user.userId,
+    );
   }
 
   // --- Mining Plans ---
@@ -1110,6 +1258,12 @@ export class AdminController {
   @RequireAdminPermission("loans.view")
   getLoanPlans() {
     return this.adminService.getLoanPlans();
+  }
+
+  @Get("loan-assets")
+  @RequireAdminPermission("loans.view")
+  getLoanAssets() {
+    return this.adminService.getLoanAssets();
   }
 
   @Post("loan-plans")
@@ -1183,6 +1337,24 @@ export class AdminController {
   @RequireAdminPermission("binary.view")
   getBinaryPairs() {
     return this.adminService.getBinaryPairs();
+  }
+
+  @Get("binary/global-config")
+  @RequireAdminPermission("binary.view")
+  getBinaryGlobalConfiguration() {
+    return this.adminService.getBinaryGlobalConfiguration();
+  }
+
+  @Post("binary/global-config")
+  @RequireAdminPermission("binary.edit")
+  updateBinaryGlobalConfiguration(
+    @Body() body: UpdateBinaryGlobalConfigurationDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.adminService.updateBinaryGlobalConfiguration(
+      body,
+      request.user.userId,
+    );
   }
 
   @Get("binary/config")

@@ -455,6 +455,7 @@ model DepositClaim {
 model LoanPlan {
   id           String   @id @default(uuid())
   name         String
+  currency     String   @default("USDT")
   durationDays Int
   interestRate String // e.g., 0.05 for 5%
   minAmount    String
@@ -1994,4 +1995,41 @@ model Gate2OperationAudit {
   @@index([operationType, operationId, createdAt])
   @@index([userId, createdAt])
   @@index([idempotencyKey])
+}
+
+
+model AdminOperatorAlertSource {
+  sourceEventId String   @id
+  createdAt     DateTime @default(now())
+}
+
+model AdminOperatorAlert {
+  id                 String   @id
+  sourceEventId      String   @unique
+  category           String
+  requiredPermission String
+  severity           String   @default("NORMAL")
+  title              String
+  summary            String
+  referenceType      String
+  referenceId        String
+  createdAt          DateTime @default(now())
+
+  @@index([requiredPermission, createdAt])
+  @@index([category, createdAt])
+}
+
+model AdminOperatorAlertRead {
+  adminId  String
+  alertId  String
+  readAt   DateTime @default(now())
+
+  @@id([adminId, alertId])
+  @@index([adminId, readAt])
+}
+
+model AdminOperatorAlertPreference {
+  adminId            String   @id
+  disabledCategories String   @default("[\"TRADING\"]")
+  updatedAt          DateTime @updatedAt
 }

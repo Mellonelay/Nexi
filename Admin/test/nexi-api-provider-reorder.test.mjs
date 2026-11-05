@@ -3,7 +3,12 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { reorderByIds } from "../src/admin/data/banner-order.ts";
 import { ALL_ROUTES, findRoute, NAV_GROUPS } from "../src/admin/config/navigation.ts";
-import { mapBinaryPositionStatus, mapLedgerScope, mapWalletAccount, mapLedgerPosting } from "../src/admin/types/index.ts";
+import {
+  mapBinaryPositionStatus,
+  mapLedgerScope,
+  mapWalletAccount,
+  mapLedgerPosting,
+} from "../src/admin/types/index.ts";
 import { isPublishedAnnouncement } from "../src/admin/data/announcement-status.ts";
 import { isOngoingBinaryPositionStatus } from "../src/admin/data/binary-position-view.ts";
 import { groupAdminMessageConversations } from "../src/admin/data/message-conversations.ts";
@@ -196,18 +201,66 @@ test("live exposure stays unavailable without a backend risk cap", async (t) => 
 });
 
 test("ledger scope mapping preserves all canonical wallet accounts", () => {
-  assert.deepEqual(["MAIN", "SPOT", "MARGIN", "BINARY", "FINANCE"].map(mapLedgerScope),
-    ["funding", "spot", "margin", "option", "financial"]);
+  assert.deepEqual(["MAIN", "SPOT", "MARGIN", "BINARY", "FINANCE"].map(mapLedgerScope), [
+    "funding",
+    "spot",
+    "margin",
+    "option",
+    "financial",
+  ]);
   assert.equal(mapLedgerScope("UNKNOWN"), undefined);
 });
 
 test("Admin wallet and ledger rows preserve canonical balances, scope and owner", () => {
-  const account = { id: "account-1", userId: "user-1", asset: "USDT", scope: "MARGIN", status: "ACTIVE", available: "12.50", locked: "2.00" };
-  assert.deepEqual(mapWalletAccount(account), { id: "account-1", userId: "user-1", asset: "USDT", domain: "margin", status: "active", available: "12.50", locked: "2.00", updatedAt: undefined });
-  const posting = { id: "posting-1", userId: "user-1", scope: "MARGIN", asset: "USDT", amount: "2.00", kind: "DEBIT", createdAt: "2026-10-27T00:00:00Z", referenceId: "ref-1", referenceType: "MARGIN_INTEREST" };
-  assert.deepEqual(mapLedgerPosting(posting), { id: "posting-1", userId: "user-1", domain: "margin", asset: "USDT", amount: "2.00", type: "posting", ts: posting.createdAt, refId: "ref-1", note: "DEBIT · MARGIN_INTEREST", debit: "2.00", credit: undefined, status: "posted" });
+  const account = {
+    id: "account-1",
+    userId: "user-1",
+    asset: "USDT",
+    scope: "MARGIN",
+    status: "ACTIVE",
+    available: "12.50",
+    locked: "2.00",
+  };
+  assert.deepEqual(mapWalletAccount(account), {
+    id: "account-1",
+    userId: "user-1",
+    asset: "USDT",
+    domain: "margin",
+    status: "active",
+    available: "12.50",
+    locked: "2.00",
+    updatedAt: undefined,
+  });
+  const posting = {
+    id: "posting-1",
+    userId: "user-1",
+    scope: "MARGIN",
+    asset: "USDT",
+    amount: "2.00",
+    kind: "DEBIT",
+    createdAt: "2026-10-27T00:00:00Z",
+    referenceId: "ref-1",
+    referenceType: "MARGIN_INTEREST",
+  };
+  assert.deepEqual(mapLedgerPosting(posting), {
+    id: "posting-1",
+    userId: "user-1",
+    domain: "margin",
+    asset: "USDT",
+    amount: "2.00",
+    type: "posting",
+    ts: posting.createdAt,
+    refId: "ref-1",
+    note: "DEBIT · MARGIN_INTEREST",
+    debit: "2.00",
+    credit: undefined,
+    status: "posted",
+  });
   const { userId, scope, ...nestedPosting } = posting;
-  assert.equal(mapLedgerPosting({ ...nestedPosting, account: { userId, scope } })?.userId, "user-1");
+  assert.equal(
+    mapLedgerPosting({ ...nestedPosting, account: { userId, scope } })?.userId,
+    "user-1",
+  );
   assert.equal(mapWalletAccount({ ...account, scope: "UNKNOWN" }), undefined);
   assert.equal(mapWalletAccount({ ...account, status: "__proto__" }), undefined);
   assert.equal(mapLedgerPosting({ ...posting, scope: "UNKNOWN" }), undefined);
@@ -335,38 +388,47 @@ test("Admin messages are grouped into recent conversations with unread counts", 
 });
 
 test("Admin message provider fetches bounded API pages through the final partial page", async () => {
-  const source = await readFile(new URL("../src/admin/data/nexi-api-provider.ts", import.meta.url), "utf8");
-  assert.match(source, /async listMessages\(\): Promise<AdminMessage\[\]>[\s\S]*?for \(let page = 1; ; page \+= 1\)/);
+  const source = await readFile(
+    new URL("../src/admin/data/nexi-api-provider.ts", import.meta.url),
+    "utf8",
+  );
+  assert.match(
+    source,
+    /async listMessages\(\): Promise<AdminMessage\[\]>[\s\S]*?for \(let page = 1; ; page \+= 1\)/,
+  );
   assert.match(source, /\/communications\/admin\/messages\?page=\$\{page\}&limit=100/);
   assert.match(source, /if \(rows\.length < 100\) return messages/);
   assert.match(source, /const seenIds = new Set<string>\(\)/);
 });
 
 test("Admin groups routed customer messages under their canonical support conversation", async () => {
-  const conversations = groupAdminMessageConversations([
-    {
-      id: "public-1",
-      conversationId: "conversation:customer:support:nexi",
-      supportCustomerId: "customer",
-      senderId: "customer",
-      recipientId: "support:nexi",
-      body: "Question",
-      deliveryState: "SENT",
-      createdAt: "2026-10-24T10:00:00.000Z",
-      readAt: null,
-    },
-    {
-      id: "admin-1",
-      conversationId: "conversation:customer:support:nexi",
-      supportCustomerId: "customer",
-      senderId: "support:nexi",
-      recipientId: "customer",
-      body: "Reply",
-      deliveryState: "SENT",
-      createdAt: "2026-10-24T10:01:00.000Z",
-      readAt: null,
-    },
-  ], "admin");
+  const conversations = groupAdminMessageConversations(
+    [
+      {
+        id: "public-1",
+        conversationId: "conversation:customer:support:nexi",
+        supportCustomerId: "customer",
+        senderId: "customer",
+        recipientId: "support:nexi",
+        body: "Question",
+        deliveryState: "SENT",
+        createdAt: "2026-10-24T10:00:00.000Z",
+        readAt: null,
+      },
+      {
+        id: "admin-1",
+        conversationId: "conversation:customer:support:nexi",
+        supportCustomerId: "customer",
+        senderId: "support:nexi",
+        recipientId: "customer",
+        body: "Reply",
+        deliveryState: "SENT",
+        createdAt: "2026-10-24T10:01:00.000Z",
+        readAt: null,
+      },
+    ],
+    "admin",
+  );
 
   assert.equal(conversations.length, 1);
   assert.equal(conversations[0].conversationId, "conversation:customer:support:nexi");
@@ -407,21 +469,42 @@ test("Messages renders a conversation inbox and selected thread from live messag
   assert.match(source, /groupAdminMessageConversations/);
   assert.match(source, /aria-label="Message conversations"/);
   assert.match(source, /aria-label="Selected client conversation"/);
-  assert.match(source, /if \(!recipientId && conversations\.length\) \{\s*void openThread\(conversations\[0\]\.clientId, conversations\[0\]\.conversationId\);/);
-  assert.match(source, /const unread = \(messages\.data \?\? \[\]\)\.filter\([\s\S]*?!message\.readAt[\s\S]*?\);\s*if \(!unread\.length\) return;\s*try \{\s*await Promise\.all\(unread\.map\(\(message\) => provider\.markAdminMessageRead\(message\.id\)\)\)/);
-  assert.match(source, /onChange=\{\(event\) => \{\s*setPendingMessageKey\(null\);\s*setSelectedConversationId\(""\);\s*void openThread\(event\.target\.value\);/);
+  assert.match(
+    source,
+    /if \(!recipientId && conversations\.length\) \{\s*void openThread\(conversations\[0\]\.clientId, conversations\[0\]\.conversationId\);/,
+  );
+  assert.match(
+    source,
+    /const unread = \(messages\.data \?\? \[\]\)\.filter\([\s\S]*?!message\.readAt[\s\S]*?\);\s*if \(!unread\.length\) return;\s*try \{\s*await Promise\.all\(unread\.map\(\(message\) => provider\.markAdminMessageRead\(message\.id\)\)\)/,
+  );
+  assert.match(
+    source,
+    /onChange=\{\(event\) => \{\s*setPendingMessageKey\(null\);\s*setSelectedConversationId\(""\);\s*void openThread\(event\.target\.value\);/,
+  );
 });
 
 test("Admin Messages uses one idempotency key per compose intent and retains it on failure", async () => {
   const route = await readFile(new URL("../src/routes/messages.tsx", import.meta.url), "utf8");
-  const provider = await readFile(new URL("../src/admin/data/nexi-api-provider.ts", import.meta.url), "utf8");
+  const provider = await readFile(
+    new URL("../src/admin/data/nexi-api-provider.ts", import.meta.url),
+    "utf8",
+  );
 
-  assert.match(route, /const \[pendingMessageKey, setPendingMessageKey\] = useState<string \| null>\(null\)/);
+  assert.match(
+    route,
+    /const \[pendingMessageKey, setPendingMessageKey\] = useState<string \| null>\(null\)/,
+  );
   assert.match(route, /pendingMessageKey \?\? globalThis\.crypto\?\.randomUUID/);
-  assert.match(route, /sendAdminMessage\(\{[\s\S]*?recipientId,[\s\S]*?selectedConversation\?\.support \? \{ conversationId: selectedConversation\.conversationId \}/);
+  assert.match(
+    route,
+    /sendAdminMessage\(\{[\s\S]*?recipientId,[\s\S]*?selectedConversation\?\.support \? \{ conversationId: selectedConversation\.conversationId \}/,
+  );
   assert.match(route, /setPendingMessageKey\(null\);\s+messages\.refresh\(\)/);
-  assert.match(provider, /idempotencyKey: idempotencyKey \?\? boundedIdempotencyKey/);
-  assert.match(provider, /payload: \{ recipientId: string; conversationId\?: string; body: string; attachmentIds\?: string\[\]; idempotencyKey: string \}/);
+  assert.match(provider, /idempotencyKey:\s*idempotencyKey\s*\?\?\s*boundedIdempotencyKey/);
+  assert.match(
+    provider,
+    /payload:\s*\{\s*recipientId: string;\s*conversationId\?: string;\s*body: string;\s*attachmentIds\?: string\[\];\s*idempotencyKey: string;/,
+  );
 });
 
 test("Overview queues only actionable live records visible to the operator", () => {
@@ -476,12 +559,123 @@ test("Overview queues only actionable live records visible to the operator", () 
 });
 
 test("Admin Messages invalidates protected HTTP data on authenticated Socket.IO changes and reconnect", async () => {
-  const provider = await readFile(new URL("../src/admin/data/nexi-api-provider.ts", import.meta.url), "utf8");
+  const provider = await readFile(
+    new URL("../src/admin/data/nexi-api-provider.ts", import.meta.url),
+    "utf8",
+  );
   const route = await readFile(new URL("../src/routes/messages.tsx", import.meta.url), "utf8");
   assert.match(provider, /subscribeToCommunications\(onChange: \(\) => void\)/);
   assert.match(provider, /auth: \(callback\).*getToken/s);
   assert.match(provider, /socket\.on\("communications\.changed", onChange\)/);
   assert.match(provider, /socket\.on\("connect", onChange\)/);
   assert.match(provider, /return \(\) => socket\.disconnect\(\)/);
-  assert.match(route, /subscribeToCommunications\?\.\(\(\) => \{[\s\S]*refreshMessages\(\);[\s\S]*refreshModeration\(\);/);
+  assert.match(
+    route,
+    /subscribeToCommunications\?\.\(\(\) => \{[\s\S]*refreshMessages\(\);[\s\S]*refreshModeration\(\);/,
+  );
+});
+
+test("Admin user projection preserves the canonical six-digit public user code", async (t) => {
+  const { NexiAdminApiProvider } = await loadLiveProvider();
+  const provider = new NexiAdminApiProvider({
+    baseUrl: "https://admin-api.test",
+    getToken: async () => "token",
+  });
+  t.mock.method(globalThis, "fetch", async () =>
+    Response.json([{ id: "uuid-1", userCode: 123456, email: "test@example.com" }]),
+  );
+  const users = await provider.listUsers();
+  assert.equal(users[0].userCode, "123456");
+});
+
+test("deposit network settings read wallet-network records, not market networks", async (t) => {
+  const { NexiAdminApiProvider } = await loadLiveProvider();
+  const provider = new NexiAdminApiProvider({
+    baseUrl: "https://admin-api.test",
+    getToken: async () => "token",
+  });
+  const requested = [];
+  t.mock.method(globalThis, "fetch", async (url) => {
+    const path = new URL(url).pathname;
+    requested.push(path);
+    if (path === "/admin/wallet-networks")
+      return Response.json([
+        {
+          id: "net-1",
+          currencyId: 7,
+          asset: "USDT",
+          code: "TRC20",
+          name: "Tron",
+          isActive: 1,
+          depositEnabled: 1,
+          withdrawEnabled: 1,
+        },
+      ]);
+    if (path === "/admin/currencies")
+      return Response.json([
+        {
+          id: 7,
+          symbol: "USDT",
+          decimals: 6,
+          minDeposit: 10,
+          maxDeposit: 1000,
+          confirmationCount: 12,
+          depositAddresses: [
+            { id: "addr-1", network: "TRC20", address: "T123456789", isActive: 1 },
+          ],
+        },
+      ]);
+    throw new Error("Unexpected endpoint: " + path);
+  });
+  const networks = await provider.listNetworks();
+  assert.deepEqual(requested.sort(), ["/admin/currencies", "/admin/wallet-networks"]);
+  assert.equal(networks.length, 1);
+  assert.equal(networks[0].assetSymbol, "USDT");
+  assert.equal(networks[0].chainId, "TRC20");
+  assert.equal(networks[0].enabled, true);
+  assert.equal(networks[0].depositAddresses.length, 1);
+});
+
+test("deposit configuration writes use canonical wallet API and auditable payloads", async (t) => {
+  const { NexiAdminApiProvider } = await loadLiveProvider();
+  const provider = new NexiAdminApiProvider({
+    baseUrl: "https://admin-api.test",
+    getToken: async () => "token",
+  });
+  const writes = [];
+  t.mock.method(globalThis, "fetch", async (url, init = {}) => {
+    const path = new URL(url).pathname;
+    if (init.method === "POST" || init.method === "PATCH") {
+      writes.push({ path, method: init.method, body: JSON.parse(init.body) });
+      return Response.json({ ok: true, id: "audit-1" });
+    }
+    if (path === "/admin/currencies")
+      return Response.json([{ id: 7, symbol: "USDT", name: "Tether" }]);
+    if (path === "/admin/wallet-networks")
+      return Response.json([
+        { id: "net-1", currencyId: 7, asset: "USDT", code: "TRC20", name: "Tron", isActive: 1 },
+      ]);
+    throw new Error("Unexpected endpoint: " + path);
+  });
+  const ctx = {
+    actor: "operator",
+    role: "super_admin",
+    environment: "PRODUCTION",
+    reason: "Operator configuration request",
+  };
+  assert.deepEqual(await provider.listDepositAssets(), [{ id: 7, symbol: "USDT", name: "Tether" }]);
+  await provider.createDepositAsset({ symbol: "ABC", name: "Example" }, ctx);
+  await provider.createDepositNetwork({ currencyId: 7, code: "ERC20", name: "Ethereum" }, ctx);
+  await provider.toggleNetwork("net-1", ctx);
+  assert.equal(writes.length, 3);
+  assert.equal(writes[0].path, "/admin/currencies");
+  assert.equal(writes[0].body.depositEnabled, false);
+  assert.equal(writes[1].path, "/admin/wallet-networks");
+  assert.deepEqual([writes[1].body.currencyId, writes[1].body.code], [7, "ERC20"]);
+  assert.equal(writes[2].path, "/admin/wallet-networks/net-1");
+  assert.equal(writes[2].body.isActive, false);
+  for (const request of writes) {
+    assert.equal(request.body.reason, ctx.reason);
+    assert.ok(request.body.idempotencyKey);
+  }
 });

@@ -9,6 +9,7 @@ import type {
   AdminUser,
   ApprovalRequest,
   BinaryPair,
+  BinaryGlobalConfiguration,
   AuditEvent,
   FeatureFlag,
   HealthCheck,
@@ -40,6 +41,9 @@ import type {
   AdminMessage,
   MessageModerationCase,
   AdminNotification,
+  AdminOperatorAlert,
+  AdminOperatorAlertsResponse,
+  AdminOperatorAlertCategory,
   AdminLearnArticle,
   AdminLearnCategory,
   ExposureRow,
@@ -206,6 +210,8 @@ const PERMISSIONS = new Set<Permission>([
   "exposure.view",
   "wallets.view",
   "ledger.view",
+  "ledger.adjust",
+  "ledger.freeze",
   "deposits.view",
   "deposits.confirm",
   "withdrawals.view",
@@ -226,6 +232,7 @@ const PERMISSIONS = new Set<Permission>([
   "learn.publish",
   "notifications.view",
   "notifications.send",
+  "operator_alerts.view",
   "admins.view",
   "admins.edit",
   "roles.view",
@@ -249,24 +256,53 @@ function stringValue(value: unknown, fallback = ""): string {
 }
 function parseMessageAttachments(value: unknown): AdminMessage["attachments"] {
   if (typeof value === "string") {
-    try { value = JSON.parse(value); } catch { return []; }
+    try {
+      value = JSON.parse(value);
+    } catch {
+      return [];
+    }
   }
   if (!Array.isArray(value)) return [];
   return value.filter((item): item is NonNullable<AdminMessage["attachments"]>[number] => {
     const row = record(item);
-    return typeof row.id === "string" && typeof row.name === "string" &&
-      typeof row.mimeType === "string" && Number.isSafeInteger(row.size) && Number(row.size) >= 0;
+    return (
+      typeof row.id === "string" &&
+      typeof row.name === "string" &&
+      typeof row.mimeType === "string" &&
+      Number.isSafeInteger(row.size) &&
+      Number(row.size) >= 0
+    );
   });
 }
-function jsonRecordValue(value: unknown): Record<string, any> | undefined {
-  if (value && typeof value === "object") return value as Record<string, any>;
-  if (typeof value !== "string" || !value.trim()) return undefined;
-  try {
-    const parsed = JSON.parse(value);
-    return parsed && typeof parsed === "object" ? (parsed as Record<string, any>) : undefined;
-  } catch {
-    return undefined;
+function jsonRecordValue(
+  value: unknown,
+): Record<string, { title?: string; body?: string; summary?: string }> | undefined {
+  let parsed = value;
+  if (typeof parsed === "string") {
+    if (!parsed.trim()) return undefined;
+    try {
+      parsed = JSON.parse(parsed) as unknown;
+    } catch {
+      return undefined;
+    }
   }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return undefined;
+  return Object.fromEntries(
+    Object.entries(parsed).flatMap(([locale, candidate]) => {
+      if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) return [];
+      const fields = record(candidate);
+      return [
+        [
+          locale,
+          {
+            ...(typeof fields.title === "string" ? { title: fields.title } : {}),
+            ...(typeof fields.body === "string" ? { body: fields.body } : {}),
+            ...(typeof fields.summary === "string" ? { summary: fields.summary } : {}),
+          },
+        ],
+      ];
+    }),
+  );
 }
 function role(value: unknown): RoleId | "unassigned" {
   const candidate = stringValue(value);
@@ -314,13 +350,17 @@ export class NexiAdminApiProvider implements AdminDataProvider {
   subscribeToCommunications(onChange: () => void): () => void {
     const socket = io(`${this.config.baseUrl.replace(/\/$/, "")}/communications`, {
       auth: (callback) => {
-        void this.config.getToken().then((token) => callback({ token })).catch(() => callback({}));
+        void this.config
+          .getToken()
+          .then((token) => callback({ token }))
+          .catch(() => callback({}));
       },
       reconnection: true,
       transports: ["polling", "websocket"],
       tryAllTransports: true,
     });
     socket.on("communications.changed", onChange);
+    socket.on("operator-alerts.changed", onChange);
     socket.on("connect", onChange);
     return () => socket.disconnect();
   }
@@ -352,11 +392,30 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       this.refreshPromise = (async () => {
         const refreshToken = await this.config.getRefreshToken!();
         if (!refreshToken.trim()) throw new NexiAdminApiError(401, "Admin session has expired");
-        const response = await fetch(`${this.config.baseUrl.replace(/\/$/, "")}/admin/auth/refresh`, {
-          method: "POST",
-          headers: { Accept: "application/json", "Content-Type": "application/json" },
-          body: JSON.stringify({ refreshToken }),
-        });
+        const response = await fetch(
+          `${this.config.baseUrl.replace(/\/$/, "")}/admin/auth/refresh`,
+          {
+            method: "POST",
+            headers: { Accept: "application/json", "Content-Type": "application/json" },
+            body: JSON.stringify({ refreshToken }),
+          },
+        );
+        if (!response.ok) {
+          const body = await response.text();
+          let payload: unknown;
+          try {
+            payload = body ? JSON.parse(body) : undefined;
+          } catch {
+            payload = undefined;
+          }
+          const result = record(payload);
+          throw new NexiAdminApiError(
+            response.status,
+            typeof result.message === "string"
+              ? result.message
+              : `Admin session refresh failed (${response.status})`,
+          );
+        }
         const body = await response.text();
         let payload: unknown;
         try {
@@ -365,12 +424,6 @@ export class NexiAdminApiProvider implements AdminDataProvider {
           payload = undefined;
         }
         const result = record(payload);
-        if (!response.ok) {
-          throw new NexiAdminApiError(
-            response.status,
-            typeof result.message === "string" ? result.message : `Admin session refresh failed (${response.status})`,
-          );
-        }
         if (typeof result.access_token !== "string" || typeof result.refresh_token !== "string") {
           throw new NexiAdminApiError(502, "Admin session refresh returned invalid tokens");
         }
@@ -386,19 +439,21 @@ export class NexiAdminApiProvider implements AdminDataProvider {
   private async fetchWithAuth(path: string, init: RequestInit = {}): Promise<Response> {
     const url = `${this.config.baseUrl.replace(/\/$/, "")}${path}`;
     const multipart = typeof FormData !== "undefined" && init.body instanceof FormData;
-    const fetchWithToken = (token: string) => fetch(url, {
-      ...init,
-      headers: {
-        Accept: "application/json",
-        ...(init.body && !multipart ? { "Content-Type": "application/json" } : {}),
-        ...(init.headers ?? {}),
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const fetchWithToken = (token: string) =>
+      fetch(url, {
+        ...init,
+        headers: {
+          Accept: "application/json",
+          ...(init.body && !multipart ? { "Content-Type": "application/json" } : {}),
+          ...(init.headers ?? {}),
+          Authorization: `Bearer ${token}`,
+        },
+      });
     const token = await this.config.getToken();
     if (!token.trim()) throw new NexiAdminApiError(401, "Admin session token is unavailable");
     const response = await fetchWithToken(token);
-    if (response.status !== 401 || !this.config.getRefreshToken || !this.config.setTokens) return response;
+    if (response.status !== 401 || !this.config.getRefreshToken || !this.config.setTokens)
+      return response;
     const refreshToken = await this.config.getRefreshToken();
     if (!refreshToken.trim()) return response;
     return fetchWithToken(await this.refreshAccessToken());
@@ -473,12 +528,9 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       body: JSON.stringify({
         ...payload,
         reason: ctx.reason,
-        idempotencyKey: idempotencyKey ?? boundedIdempotencyKey("admin", [
-          path,
-          ctx.actor,
-          ctx.reason,
-          ...keyValues,
-        ]),
+        idempotencyKey:
+          idempotencyKey ??
+          boundedIdempotencyKey("admin", [path, ctx.actor, ctx.reason, ...keyValues]),
       }),
     });
     return { ok: result.ok !== false, auditId: stringValue(result.auditId ?? result.id) };
@@ -607,8 +659,10 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     const status = ["active", "restricted", "frozen", "closed"].includes(stringValue(row.status))
       ? (stringValue(row.status) as User["status"])
       : "active";
+    const code = String(row.userCode ?? "");
     return {
       id: stringValue(row.id),
+      userCode: /^[0-9]{6}$/.test(code) ? code : undefined,
       email: stringValue(row.email),
       displayName: stringValue(
         row.displayName,
@@ -815,25 +869,88 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       visible: !asset.visible,
     });
   }
+  async listDepositAssets(): Promise<
+    Array<{ id: number; symbol: string; name: string; logo?: string }>
+  > {
+    const rows = await this.request<unknown[]>("/admin/currencies");
+    return rows
+      .map((item) => {
+        const row = record(item);
+        return {
+          id: Number(row.id),
+          symbol: stringValue(row.symbol),
+          name: stringValue(row.name),
+          ...(typeof row.logo === "string" ? { logo: row.logo } : {}),
+        };
+      })
+      .filter((item) => Number.isSafeInteger(item.id) && item.id > 0 && item.symbol);
+  }
+  createDepositAsset(
+    payload: { symbol: string; name: string; logo?: string },
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult> {
+    return this.requestMutation(
+      "/admin/currencies",
+      ctx,
+      {
+        symbol: payload.symbol.trim().toUpperCase(),
+        name: payload.name.trim(),
+        ...(payload.logo?.trim() ? { logo: payload.logo.trim() } : {}),
+        isActive: true,
+        depositEnabled: false,
+        withdrawEnabled: false,
+      },
+      [payload.symbol.trim().toUpperCase()],
+    );
+  }
+  updateDepositAsset(
+    id: number,
+    patch: { name?: string; logo?: string | null },
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult> {
+    const payload = {
+      ...(patch.name !== undefined ? { name: patch.name.trim() } : {}),
+      ...(patch.logo !== undefined ? { logo: patch.logo?.trim() || null } : {}),
+    };
+    return this.requestMutation(`/admin/currencies/${id}`, ctx, payload, [String(id)], "PATCH");
+  }
+  createDepositNetwork(
+    payload: { currencyId: number; code: string; name: string },
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult> {
+    return this.requestMutation(
+      "/admin/wallet-networks",
+      ctx,
+      {
+        currencyId: payload.currencyId,
+        code: payload.code.trim().toUpperCase(),
+        name: payload.name.trim(),
+      },
+      [String(payload.currencyId), payload.code.trim().toUpperCase()],
+    );
+  }
   async listNetworks() {
     const [networkRows, currencyRows] = await Promise.all([
-      this.request<unknown[]>("/admin/market/networks"),
+      this.request<unknown[]>("/admin/wallet-networks"),
       this.request<unknown[]>("/admin/currencies"),
     ]);
     const currencies = currencyRows.map(record);
     return networkRows.map((value) => {
       const row = record(value);
-      const asset = record(row.asset);
-      const assetSymbol = stringValue(asset.symbol);
+      const nestedCurrency = record(row.currency);
+      const assetSymbol = stringValue(row.asset, stringValue(nestedCurrency.symbol));
       const currency =
+        currencies.find((item) => Number(item.id) === Number(row.currencyId)) ??
         currencies.find(
           (item) => stringValue(item.symbol).toUpperCase() === assetSymbol.toUpperCase(),
-        ) ?? {};
+        ) ??
+        {};
+      const code = stringValue(row.code);
       return {
         id: stringValue(row.id),
         name: stringValue(row.name),
         assetSymbol,
-        chainId: stringValue(row.code),
+        chainId: code,
         decimals: Number(currency.decimals ?? 0),
         explorer: "",
         minDeposit: stringValue(currency.minDeposit, "0"),
@@ -842,22 +959,28 @@ export class NexiAdminApiProvider implements AdminDataProvider {
         maxWithdrawal: stringValue(currency.maxWithdrawal, "0"),
         withdrawalFee: stringValue(currency.withdrawalFee, "0"),
         confirmations: Number(currency.confirmationCount ?? 0),
-        depositEnabled: currency.depositEnabled === true || currency.depositEnabled === 1,
-        withdrawEnabled: currency.withdrawEnabled === true || currency.withdrawEnabled === 1,
-        currencyId: Number(currency.id),
+        depositEnabled:
+          (row.depositEnabled === true || row.depositEnabled === 1) &&
+          (currency.depositEnabled === true || currency.depositEnabled === 1),
+        withdrawEnabled:
+          (row.withdrawEnabled === true || row.withdrawEnabled === 1) &&
+          (currency.withdrawEnabled === true || currency.withdrawEnabled === 1),
+        currencyId: Number(row.currencyId ?? currency.id),
         depositAddresses: Array.isArray(currency.depositAddresses)
-          ? currency.depositAddresses.map((item) => {
-              const address = record(item);
-              return {
+          ? currency.depositAddresses
+              .map(record)
+              .filter(
+                (address) => stringValue(address.network).toUpperCase() === code.toUpperCase(),
+              )
+              .map((address) => ({
                 id: stringValue(address.id),
                 network: stringValue(address.network),
                 address: stringValue(address.address),
                 label: typeof address.label === "string" ? address.label : undefined,
                 isActive: address.isActive === true || address.isActive === 1,
-              };
-            })
+              }))
           : [],
-        enabled: stringValue(row.status) === "ACTIVE",
+        enabled: row.isActive === true || row.isActive === 1,
       };
     });
   }
@@ -890,11 +1013,14 @@ export class NexiAdminApiProvider implements AdminDataProvider {
   async toggleNetwork(id: string, ctx: ConsequentialContext): Promise<MutationResult> {
     const networks = await this.listNetworks();
     const network = networks.find((item) => item.id === id);
-    if (!network) throw new NexiAdminApiError(404, "Market network not found");
-    return this.requestMutation("/admin/market/networks/visibility", ctx, {
-      id,
-      enabled: !network.enabled,
-    });
+    if (!network) throw new NexiAdminApiError(404, "Deposit network not found");
+    return this.requestMutation(
+      `/admin/wallet-networks/${encodeURIComponent(id)}`,
+      ctx,
+      { isActive: !network.enabled },
+      [id, String(!network.enabled)],
+      "PATCH",
+    );
   }
   private marketFeedFromRow(providerRow: JsonRecord, symbolValue: unknown): MarketFeed {
     const symbol = record(symbolValue);
@@ -1056,6 +1182,29 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       leverages: config.leverages.join(","),
     });
   }
+  getBinaryGlobalConfiguration(): Promise<BinaryGlobalConfiguration> {
+    return this.request<BinaryGlobalConfiguration>("/admin/binary/global-config");
+  }
+  updateBinaryGlobalConfiguration(
+    config: Omit<BinaryGlobalConfiguration, "version">,
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult> {
+    const idempotencyKey = boundedIdempotencyKey("binary-global", [
+      ctx.actor,
+      ctx.reason,
+      config.minStake,
+      config.maxStake,
+      JSON.stringify(config.durations),
+    ]);
+    return this.requestMutation(
+      "/admin/binary/global-config",
+      ctx,
+      config as unknown as JsonRecord,
+      [],
+      "POST",
+      idempotencyKey,
+    );
+  }
   async listBinaryPairs(): Promise<BinaryPair[]> {
     const rows = await this.request<unknown[]>("/admin/binary/config");
     const grouped = new Map<string, JsonRecord[]>();
@@ -1162,7 +1311,8 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     return this.request<unknown[]>("/admin/wallets").then((rows) =>
       rows.map((value) => {
         const account = mapWalletAccount(value);
-        if (!account) throw new NexiAdminApiError(502, "Admin API returned an invalid ledger account");
+        if (!account)
+          throw new NexiAdminApiError(502, "Admin API returned an invalid ledger account");
         return account;
       }),
     );
@@ -1171,7 +1321,8 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     return this.request<unknown[]>("/admin/ledger").then((rows) =>
       rows.map((value) => {
         const posting = mapLedgerPosting(value);
-        if (!posting) throw new NexiAdminApiError(502, "Admin API returned an invalid ledger posting");
+        if (!posting)
+          throw new NexiAdminApiError(502, "Admin API returned an invalid ledger posting");
         return posting;
       }),
     );
@@ -1206,6 +1357,10 @@ export class NexiAdminApiProvider implements AdminDataProvider {
         } as Deposit;
       }),
     );
+  }
+  async acceptDeposit(id: string, ctx: ConsequentialContext): Promise<MutationResult> {
+    await this.confirmDeposit(id, ctx);
+    return this.creditDeposit(id, ctx);
   }
   confirmDeposit(id: string, ctx: ConsequentialContext): Promise<MutationResult> {
     return this.requestMutation(`/admin/deposits/${encodeURIComponent(id)}/confirm`, ctx, {}, [id]);
@@ -1363,6 +1518,15 @@ export class NexiAdminApiProvider implements AdminDataProvider {
   async listLoanPlans(): Promise<LoanPlan[]> {
     return this.request<LoanPlan[]>("/admin/loan-plans");
   }
+  async listLoanAssets(): Promise<Array<{ symbol: string; name: string }>> {
+    const rows = await this.request<unknown[]>("/admin/loan-assets");
+    return rows
+      .map((item) => {
+        const row = record(item);
+        return { symbol: stringValue(row.symbol), name: stringValue(row.displayName) };
+      })
+      .filter((item) => item.symbol.length > 0);
+  }
   async createLoanPlan(
     payload: Omit<LoanPlan, "id">,
     ctx: ConsequentialContext,
@@ -1404,10 +1568,11 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       userId: stringValue(row.userId),
       userEmail: stringValue(record(row.user).email),
       amount: stringValue(row.amountDecimal, stringValue(row.amount)),
-      currency: stringValue(row.currency, "USDT"),
+      currency: stringValue(row.currency),
       status: stringValue(row.status),
       durationDays: Number(row.durationDays ?? row.term),
       totalRepayment: stringValue(row.totalRepaymentDecimal, stringValue(row.totalRepayment)),
+      totalRepaid: stringValue(row.totalRepaidDecimal, "0"),
       createdAt: stringValue(row.createdAt),
       dueDate: typeof row.dueDate === "string" ? row.dueDate : null,
       collateral: typeof row.collateral === "string" ? row.collateral : null,
@@ -1532,83 +1697,16 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     patch: Parameters<AdminDataProvider["updateBinaryPair"]>[1],
     ctx: ConsequentialContext,
   ): Promise<MutationResult> {
-    const pair = (await this.listBinaryPairs()).find(
-      (item) => item.id === id || item.symbol === id,
-    );
-    const symbol = pair?.symbol ?? id;
-    if (patch.enabled !== undefined) {
-      await this.requestMutation(
-        "/admin/binary/pairs/maintenance",
-        ctx,
-        { symbol, enabled: patch.enabled },
-        [symbol],
-      );
+    if (Object.keys(patch).some((key) => key !== "enabled")) {
+      return this.unsupportedAuthority("updateBinaryPair", "Binary pair-level changes are limited to availability.");
     }
-    const configPatch = patch as Record<string, unknown>;
-    const configRows = await this.request<unknown[]>(
-      `/admin/binary/config?pair=${encodeURIComponent(symbol)}`,
+    const pair = (await this.listBinaryPairs()).find((item) => item.id === id || item.symbol === id);
+    return this.requestMutation(
+      "/admin/binary/pairs/maintenance",
+      ctx,
+      { symbol: pair?.symbol ?? id, enabled: patch.enabled },
+      [pair?.symbol ?? id, String(patch.enabled)],
     );
-    const requestedConfigs = Array.isArray(configPatch.durationConfigs)
-      ? (configPatch.durationConfigs as Array<{
-          sourceDurationSeconds: number;
-          durationSeconds: number;
-          payoutBps: number;
-          minStake: string;
-          maxStake: string;
-          enabled: boolean;
-        }>)
-      : configRows.map((row) => {
-          const current = record(row);
-          const duration = Number(current.durationSeconds);
-          const payout =
-            configPatch.payoutBps && typeof configPatch.payoutBps === "object"
-              ? (configPatch.payoutBps as Record<string, unknown>)[String(duration)]
-              : undefined;
-          return {
-            sourceDurationSeconds: duration,
-            durationSeconds: duration,
-            payoutBps:
-              typeof payout === "number"
-                ? payout
-                : Math.round(Number(current.payoutRate ?? 0) * 10000),
-            minStake:
-              typeof configPatch.minStake === "string"
-                ? configPatch.minStake
-                : stringValue(current.minStake),
-            maxStake:
-              typeof configPatch.maxStake === "string"
-                ? configPatch.maxStake
-                : stringValue(current.maxStake),
-            enabled: current.enabled !== false,
-          };
-        });
-    let lastAuditId = "";
-    for (const config of requestedConfigs) {
-      if (!Number.isInteger(config.durationSeconds) || config.durationSeconds < 1) continue;
-      const result = await this.request<JsonRecord>("/admin/binary/config", {
-        method: "POST",
-        body: JSON.stringify({
-          pair: symbol,
-          sourceDurationSeconds: config.sourceDurationSeconds,
-          durationSeconds: config.durationSeconds,
-          payoutRate: config.payoutBps / 10000,
-          minStake: Number(config.minStake),
-          maxStake: Number(config.maxStake),
-          enabled: config.enabled,
-          reason: ctx.reason,
-          idempotencyKey: boundedIdempotencyKey("binary", [
-            symbol,
-            String(config.sourceDurationSeconds),
-            String(config.durationSeconds),
-            ctx.actor,
-            ctx.reason,
-          ]),
-        }),
-      });
-      lastAuditId = stringValue(result.auditId ?? result.id, lastAuditId);
-    }
-    if (Object.keys(configPatch).length === 0) return { ok: true, auditId: lastAuditId };
-    return { ok: true, auditId: lastAuditId };
   }
   listSettlements(): Promise<SettlementRecord[]> {
     return this.request<unknown[]>("/admin/binary/settlements").then((rows) =>
@@ -1888,7 +1986,10 @@ export class NexiAdminApiProvider implements AdminDataProvider {
         order: existing?.order ?? items.length + index + 1,
       } satisfies SupportEntryPoint;
     });
-    const nextItems = [...items.filter((item) => item.channel !== "telegram" && item.channel !== "email"), ...savedContacts];
+    const nextItems = [
+      ...items.filter((item) => item.channel !== "telegram" && item.channel !== "email"),
+      ...savedContacts,
+    ];
     return this.writeJsonConfig(
       "admin.frontend.supportEntryPoints",
       nextItems,
@@ -2030,8 +2131,7 @@ export class NexiAdminApiProvider implements AdminDataProvider {
           localizations: jsonRecordValue(row.localizations),
           scheduledAt: typeof row.startsAt === "string" ? row.startsAt : undefined,
           endsAt: typeof row.endsAt === "string" ? row.endsAt : undefined,
-          publishedAt:
-            typeof row.updatedAt === "string" && published ? row.updatedAt : undefined,
+          publishedAt: typeof row.updatedAt === "string" && published ? row.updatedAt : undefined,
           pinned: row.pinned === true,
           pinOrder: Number(row.pinOrder ?? 0),
         } as Announcement;
@@ -2089,7 +2189,9 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     const messages: AdminMessage[] = [];
     const seenIds = new Set<string>();
     for (let page = 1; ; page += 1) {
-      const rows = await this.request<unknown[]>(`/communications/admin/messages?page=${page}&limit=100`);
+      const rows = await this.request<unknown[]>(
+        `/communications/admin/messages?page=${page}&limit=100`,
+      );
       const unseenRows = rows.filter((value) => !seenIds.has(stringValue(record(value).id)));
       for (const value of unseenRows) {
         const r = record(value);
@@ -2099,7 +2201,8 @@ export class NexiAdminApiProvider implements AdminDataProvider {
           recipientId: stringValue(r.recipientId),
           body: stringValue(r.body),
           conversationId: typeof r.conversationId === "string" ? r.conversationId : undefined,
-          supportCustomerId: typeof r.supportCustomerId === "string" ? r.supportCustomerId : undefined,
+          supportCustomerId:
+            typeof r.supportCustomerId === "string" ? r.supportCustomerId : undefined,
           attachments: parseMessageAttachments(r.attachments),
           deliveryState: stringValue(r.deliveryState),
           readAt: typeof r.readAt === "string" ? r.readAt : null,
@@ -2129,19 +2232,31 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       try {
         const payload = record(await response.json());
         if (typeof payload.message === "string") message = payload.message;
-      } catch { /* The response can be an empty error body. */ }
+      } catch {
+        /* The response can be an empty error body. */
+      }
       throw new NexiAdminApiError(response.status, message);
     }
     return response.blob();
   }
   sendAdminMessage(
-    payload: { recipientId: string; conversationId?: string; body: string; attachmentIds?: string[]; idempotencyKey: string },
+    payload: {
+      recipientId: string;
+      conversationId?: string;
+      body: string;
+      attachmentIds?: string[];
+      idempotencyKey: string;
+    },
     ctx: ConsequentialContext,
   ) {
-    return this.requestMutation("/admin/messages", ctx, payload, [
-      payload.recipientId,
-      payload.body,
-    ], "POST", payload.idempotencyKey);
+    return this.requestMutation(
+      "/admin/messages",
+      ctx,
+      payload,
+      [payload.recipientId, payload.body],
+      "POST",
+      payload.idempotencyKey,
+    );
   }
   async markAdminMessageRead(id: string): Promise<void> {
     await this.request(`/communications/admin/messages/${encodeURIComponent(id)}/read`, {
@@ -2151,25 +2266,25 @@ export class NexiAdminApiProvider implements AdminDataProvider {
   async listMessageModeration(): Promise<MessageModerationCase[]> {
     const cases = await this.requestAllPages("/communications/admin/messages/moderation");
     return cases.map((value) => {
-        const row = record(value);
-        const conversation = record(row.conversation);
-        return {
-          id: stringValue(row.id),
-          conversationId: stringValue(row.conversationId),
-          messageId: typeof row.messageId === "string" ? row.messageId : undefined,
-          reporterId: stringValue(row.reporterId),
-          reportedUserId: typeof row.reportedUserId === "string" ? row.reportedUserId : undefined,
-          reason: stringValue(row.reason),
-          status: stringValue(row.status),
-          resolution: typeof row.resolution === "string" ? row.resolution : undefined,
-          reviewedById: typeof row.reviewedById === "string" ? row.reviewedById : undefined,
-          conversation: Object.keys(conversation).length
-            ? { state: stringValue(conversation.state) }
-            : undefined,
-          createdAt: stringValue(row.createdAt),
-          updatedAt: stringValue(row.updatedAt),
-        };
-      });
+      const row = record(value);
+      const conversation = record(row.conversation);
+      return {
+        id: stringValue(row.id),
+        conversationId: stringValue(row.conversationId),
+        messageId: typeof row.messageId === "string" ? row.messageId : undefined,
+        reporterId: stringValue(row.reporterId),
+        reportedUserId: typeof row.reportedUserId === "string" ? row.reportedUserId : undefined,
+        reason: stringValue(row.reason),
+        status: stringValue(row.status),
+        resolution: typeof row.resolution === "string" ? row.resolution : undefined,
+        reviewedById: typeof row.reviewedById === "string" ? row.reviewedById : undefined,
+        conversation: Object.keys(conversation).length
+          ? { state: stringValue(conversation.state) }
+          : undefined,
+        createdAt: stringValue(row.createdAt),
+        updatedAt: stringValue(row.updatedAt),
+      };
+    });
   }
   resolveMessageModeration(
     id: string,
@@ -2188,20 +2303,44 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       "PATCH",
     );
   }
+  subscribeToOperatorAlerts(onChange: () => void): () => void {
+    return this.subscribeToCommunications(onChange);
+  }
+  async listOperatorAlerts(): Promise<AdminOperatorAlertsResponse> {
+    const value = record(await this.request<unknown>("/communications/admin/operator-alerts"));
+    const categories = Array.isArray(value.categories) ? value.categories as AdminOperatorAlertCategory[] : [];
+    return {
+      items: Array.isArray(value.items) ? value.items.map((item) => {
+        const row = record(item);
+        return { id: stringValue(row.id), category: stringValue(row.category) as AdminOperatorAlertCategory,
+          severity: stringValue(row.severity), title: stringValue(row.title), summary: stringValue(row.summary),
+          referenceType: stringValue(row.referenceType), referenceId: stringValue(row.referenceId),
+          createdAt: stringValue(row.createdAt), readAt: typeof row.readAt === "string" ? row.readAt : null,
+          href: stringValue(row.href, "/overview") } satisfies AdminOperatorAlert;
+      }) : [], unreadCount: Number(value.unreadCount ?? 0), categories,
+      disabledCategories: Array.isArray(value.disabledCategories) ? value.disabledCategories as AdminOperatorAlertCategory[] : [],
+    };
+  }
+  updateOperatorAlertPreferences(disabledCategories: AdminOperatorAlertCategory[]): Promise<AdminOperatorAlertsResponse> {
+    return this.request("/communications/admin/operator-alerts/preferences", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ disabledCategories }) });
+  }
+  async markOperatorAlertRead(id: string): Promise<void> {
+    await this.request(`/communications/admin/operator-alerts/${encodeURIComponent(id)}/read`, { method: "PATCH" });
+  }
   async listNotifications(): Promise<AdminNotification[]> {
     const notifications = await this.requestAllPages("/communications/admin/notifications");
     return notifications.map((v) => {
-        const r = record(v);
-        return {
-          id: stringValue(r.id),
-          userId: stringValue(r.userId),
-          type: stringValue(r.type),
-          title: stringValue(r.title),
-          body: stringValue(r.body),
-          readAt: typeof r.readAt === "string" ? r.readAt : undefined,
-          createdAt: stringValue(r.createdAt),
-        };
-      });
+      const r = record(v);
+      return {
+        id: stringValue(r.id),
+        userId: stringValue(r.userId),
+        type: stringValue(r.type),
+        title: stringValue(r.title),
+        body: stringValue(r.body),
+        readAt: typeof r.readAt === "string" ? r.readAt : undefined,
+        createdAt: stringValue(r.createdAt),
+      };
+    });
   }
   sendNotification(
     payload: { userId: string; type: string; title: string; body: string },
@@ -2415,7 +2554,10 @@ export class NexiAdminApiProvider implements AdminDataProvider {
         targetId: stringValue(row.target, stringValue(row.id)),
         scope: scope(stringValue(row.commandType)),
         status:
-          status === "approved" || status === "rejected" || status === "expired"
+          status === "approved" ||
+          status === "rejected" ||
+          status === "expired" ||
+          status === "executed"
             ? status
             : "pending",
         reason: stringValue(row.reason),
@@ -2429,6 +2571,40 @@ export class NexiAdminApiProvider implements AdminDataProvider {
           : undefined,
       };
     });
+  }
+  async setUserLedgerFreeze(input: {
+    userId: string;
+    frozen: boolean;
+    reason: string;
+    idempotencyKey: string;
+  }): Promise<MutationResult> {
+    const result = await this.request<JsonRecord>(
+      `/admin/users/${encodeURIComponent(input.userId)}/ledger-freeze`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          frozen: input.frozen,
+          reason: input.reason,
+          idempotencyKey: input.idempotencyKey,
+        }),
+      },
+    );
+    return { ok: true, auditId: stringValue(result.auditId) };
+  }
+  async applyFinancialCorrection(input: {
+    userId: string;
+    asset: string;
+    scope: "MAIN" | "SPOT" | "MARGIN" | "BINARY" | "FINANCE";
+    amount: string;
+    direction: "CREDIT" | "DEBIT";
+    reason: string;
+    idempotencyKey: string;
+  }): Promise<MutationResult> {
+    const result = await this.request<JsonRecord>("/admin/financial-corrections", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+    return { ok: true, auditId: stringValue(result.auditId) };
   }
   async decideApproval(
     id: string,

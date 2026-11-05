@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/admin/components/PageHeader";
 import { RouteGuard } from "@/admin/components/RouteGuard";
 import { StatusBadge } from "@/admin/components/StatusBadge";
@@ -50,11 +50,20 @@ function Inner() {
   const provider = useAdminData();
   const session = useAdminSession();
   const usersQ = useAdminQuery((p) => p.listUsers());
-  const sessionsQ = useAdminQuery((p) => p.listSessions());
+  const sessionsQ = useAdminQuery(
+    (p) => (session.can("sessions.view") ? p.listSessions() : Promise.resolve([])),
+    [session.roleId],
+  );
+  const walletsQ = useAdminQuery(
+    (p) => (session.can("wallets.view") ? p.listWallets() : Promise.resolve([])),
+    [session.roleId],
+  );
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [entitlementUser, setEntitlementUser] = useState<User | null>(null);
   const [restrictionUser, setRestrictionUser] = useState<User | null>(null);
+  const [fundingUser, setFundingUser] = useState<User | null>(null);
+  const [freezeAction, setFreezeAction] = useState<{ user: User; frozen: boolean } | null>(null);
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [binaryDefaultDraft, setBinaryDefaultDraft] = useState<"NORMAL" | "WIN" | "LOSS">("NORMAL");
   const [pendingBinaryDefault, setPendingBinaryDefault] = useState<{
@@ -64,6 +73,7 @@ function Inner() {
 
   const users = useMemo(() => usersQ.data ?? [], [usersQ.data]);
   const sessions = useMemo(() => sessionsQ.data ?? [], [sessionsQ.data]);
+  const wallets = useMemo(() => walletsQ.data ?? [], [walletsQ.data]);
 
   const selected = useMemo(
     () => (selectedId ? (users.find((u) => u.id === selectedId) ?? null) : null),
@@ -112,10 +122,10 @@ function Inner() {
       ),
     },
     {
-      key: "id",
-      header: "User ID",
-      sortValue: (u) => u.id,
-      cell: (u) => <span className="mono text-xs text-muted-foreground">{u.id}</span>,
+      key: "userCode",
+      header: "Profile ID",
+      sortValue: (u) => u.userCode ?? "",
+      cell: (u) => <span className="mono text-xs text-primary">{u.userCode ?? "—"}</span>,
     },
     {
       key: "country",
@@ -213,7 +223,7 @@ function Inner() {
         data={users}
         columns={columns}
         filters={filters}
-        searchable={(u) => `${u.displayName} ${u.email} ${u.id} ${u.country}`}
+        searchable={(u) => `${u.displayName} ${u.email} ${u.userCode ?? ""} ${u.id} ${u.country}`}
         searchPlaceholder="Search name, email, ID, country…"
         rowKey={(u) => u.id}
         onRowClick={(u) => setSelectedId(u.id)}
@@ -245,7 +255,11 @@ function Inner() {
             ""
           )
         }
-        subtitle={selected ? `${selected.email} · ${selected.id}` : undefined}
+        subtitle={
+          selected
+            ? `${selected.userCode ? `Profile ${selected.userCode} · ` : ""}${selected.email}`
+            : undefined
+        }
         badges={
           selected ? (
             <>
@@ -264,6 +278,8 @@ function Inner() {
                   id: "profile",
                   title: "Profile",
                   fields: [
+                    { label: "Profile ID", value: selected.userCode ?? "Unavailable", mono: true },
+                    { label: "Internal UUID", value: selected.id, mono: true },
                     { label: "Display name", value: selected.displayName },
                     { label: "Email", value: selected.email },
                     { label: "Country", value: selected.country, mono: true },
@@ -272,6 +288,110 @@ function Inner() {
                     { label: "Last login", value: formatDate(selected.lastLoginAt), mono: true },
                   ],
                 },
+                ...(session.can("wallets.view")
+                  ? [
+                      {
+                        id: "accounts",
+                        title: "NEXI internal accounts",
+                        description:
+                          "Funding, Spot, Margin, Option and Finance balances. Deposit addresses are configured separately.",
+                        content: walletsQ.error ? (
+                          <p className="text-sm text-destructive">
+                            Could not load account balances.
+                          </p>
+                        ) : walletsQ.loading ? (
+                          <p className="text-sm text-muted-foreground">Loading balances…</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {(
+                              [
+                                ["funding", "Funding"],
+                                ["spot", "Spot"],
+                                ["margin", "Margin"],
+                                ["option", "Option"],
+                                ["financial", "Finance"],
+                              ] as const
+                            ).map(([domain, label]) => {
+                              const accounts = wallets.filter(
+                                (wallet) =>
+                                  wallet.userId === selected.id && wallet.domain === domain,
+                              );
+                              return (
+                                <div
+                                  key={domain}
+                                  className="rounded-md border border-border/60 p-3"
+                                >
+                                  <div className="text-xs font-semibold text-foreground">
+                                    {label}
+                                  </div>
+                                  {accounts.length ? (
+                                    accounts.map((account) => (
+                                      <div
+                                        key={account.id}
+                                        className="mt-1 text-xs text-muted-foreground"
+                                      >
+                                        <span className="font-medium text-foreground">
+                                          {account.asset}
+                                        </span>
+                                        : {account.available} available · {account.locked} locked ·{" "}
+                                        {account.status ?? "unknown"}
+                                      </div>
+                                    ))
+                                  ) : (
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                      Account not opened
+                                    </p>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ),
+                      },
+                    ]
+                  : []),
+                ...(session.can("sessions.view")
+                  ? [
+                      {
+                        id: "security-sessions",
+                        title: "Security & Sessions",
+                        description:
+                          "Authentication sessions. A session that is not revoked does not mean the customer is online now.",
+                        content: sessionsQ.error ? (
+                          <p className="text-sm text-destructive">Could not load customer sessions.</p>
+                        ) : sessionsQ.loading ? (
+                          <p className="text-sm text-muted-foreground">Loading customer sessions…</p>
+                        ) : sessions.filter((item) => item.userId === selected.id).length ? (
+                          <div className="space-y-2">
+                            {sessions
+                              .filter((item) => item.userId === selected.id)
+                              .sort((left, right) => {
+                                const lastUsed = Date.parse(right.lastSeenAt) - Date.parse(left.lastSeenAt);
+                                return Number.isFinite(lastUsed) ? lastUsed : 0;
+                              })
+                              .map((item) => (
+                                <div key={item.id} className="rounded-md border border-border/60 p-3">
+                                  <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <span className="text-sm font-medium text-foreground">{item.device}</span>
+                                    <StatusBadge tone={item.active ? "success" : "neutral"}>
+                                      {item.active ? "Not revoked" : "Revoked"}
+                                    </StatusBadge>
+                                  </div>
+                                  <p className="mt-1 text-xs text-muted-foreground">
+                                    Last used {formatDate(item.lastSeenAt)} · Created {formatDate(item.createdAt)}
+                                  </p>
+                                  <p className="mt-1 break-all font-mono text-[11px] text-muted-foreground">
+                                    {item.id}
+                                  </p>
+                                </div>
+                              ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">No customer authentication sessions found.</p>
+                        ),
+                      },
+                    ]
+                  : []),
                 {
                   id: "entitlements",
                   title: "Entitlements & flags",
@@ -283,10 +403,6 @@ function Inner() {
                     {
                       label: "Approved research account",
                       value: <BoolPill on={!!selected.binaryResearchEligible} />,
-                    },
-                    {
-                      label: "Active sessions",
-                      value: <span className="mono">{activeSessionsFor(selected.id)}</span>,
                     },
                   ],
                 },
@@ -361,6 +477,30 @@ function Inner() {
         actions={
           selected ? (
             <>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!session.can("ledger.adjust") || !provider.applyFinancialCorrection}
+                onClick={() => setFundingUser(selected)}
+              >
+                Adjust balance
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!session.can("ledger.freeze") || !provider.setUserLedgerFreeze}
+                onClick={() => setFreezeAction({ user: selected, frozen: true })}
+              >
+                Freeze balances
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!session.can("ledger.freeze") || !provider.setUserLedgerFreeze}
+                onClick={() => setFreezeAction({ user: selected, frozen: false })}
+              >
+                Unfreeze balances
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -474,6 +614,27 @@ function Inner() {
             environment: session.environment,
             reason,
           });
+        }}
+      />
+
+      <FinancialCorrectionForm
+        key={fundingUser?.id ?? "closed"}
+        user={fundingUser}
+        provider={provider}
+        session={session}
+        onClose={() => {
+          setFundingUser(null);
+          walletsQ.refresh();
+        }}
+      />
+      <LedgerFreezeForm
+        key={freezeAction ? `${freezeAction.user.id}:${freezeAction.frozen}` : "closed"}
+        action={freezeAction}
+        provider={provider}
+        session={session}
+        onClose={() => {
+          setFreezeAction(null);
+          walletsQ.refresh();
         }}
       />
 
@@ -809,6 +970,232 @@ function RestrictionsForm({
             />
           </div>
         </>
+      ) : null}
+    </FormDrawer>
+  );
+}
+
+function LedgerFreezeForm({
+  action,
+  provider,
+  session,
+  onClose,
+}: {
+  action: { user: User; frozen: boolean } | null;
+  provider: ReturnType<typeof useAdminData>;
+  session: ReturnType<typeof useAdminSession>;
+  onClose: () => void;
+}) {
+  const [reason, setReason] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const idempotencyKey = useRef<string | null>(null);
+  return (
+    <FormDrawer
+      open={!!action}
+      onOpenChange={(open) => !open && onClose()}
+      onCancel={onClose}
+      title={action?.frozen ? "Freeze user balances" : "Unfreeze user balances"}
+      description="Suspends or reactivates this user’s open ledger accounts. The change is audited and recorded in the event outbox."
+      submitLabel={action?.frozen ? "Freeze balances" : "Unfreeze balances"}
+      submitVariant={action?.frozen ? "destructive" : "default"}
+      submitDisabled={!action || !provider.setUserLedgerFreeze || !session.can("ledger.freeze")}
+      testId="ledger-freeze-form"
+      onSubmit={async () => {
+        if (!action || !provider.setUserLedgerFreeze) return;
+        setError(null);
+        try {
+          if (reason.trim().length < 3) throw new Error("Enter a reason of at least 3 characters.");
+          const requestKey = idempotencyKey.current ?? crypto.randomUUID();
+          idempotencyKey.current = requestKey;
+          await provider.setUserLedgerFreeze({
+            userId: action.user.id,
+            frozen: action.frozen,
+            reason: reason.trim(),
+            idempotencyKey: requestKey,
+          });
+          idempotencyKey.current = null;
+          onClose();
+        } catch (cause) {
+          setError(
+            cause instanceof Error ? cause.message : "Could not change ledger account status.",
+          );
+        }
+      }}
+    >
+      {action ? (
+        <p className="text-xs text-muted-foreground">
+          {action.user.displayName} · Profile {action.user.userCode ?? "—"}
+        </p>
+      ) : null}
+      <label className="flex flex-col gap-1 text-xs">
+        Reason
+        <textarea
+          required
+          minLength={3}
+          maxLength={500}
+          rows={3}
+          value={reason}
+          onChange={(e) => {
+            idempotencyKey.current = null;
+            setReason(e.target.value);
+          }}
+          className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+        />
+      </label>
+      {error ? (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
+    </FormDrawer>
+  );
+}
+
+function FinancialCorrectionForm({
+  user,
+  provider,
+  session,
+  onClose,
+}: {
+  user: User | null;
+  provider: ReturnType<typeof useAdminData>;
+  session: ReturnType<typeof useAdminSession>;
+  onClose: () => void;
+}) {
+  const [asset, setAsset] = useState("");
+  const [amount, setAmount] = useState("");
+  const [direction, setDirection] = useState<"CREDIT" | "DEBIT">("CREDIT");
+  const [scope, setScope] = useState<"MAIN" | "SPOT" | "MARGIN" | "BINARY" | "FINANCE">("MAIN");
+  const [reason, setReason] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const idempotencyKey = useRef<string | null>(null);
+  return (
+    <FormDrawer
+      open={!!user}
+      onOpenChange={(open) => !open && onClose()}
+      onCancel={onClose}
+      title="Adjust user balance"
+      description="Posts a direct balance adjustment to the selected ledger account, with an administrator audit record."
+      submitLabel={direction === "CREDIT" ? "Credit account" : "Debit account"}
+      submitDisabled={!user || !session.can("ledger.adjust") || !provider.applyFinancialCorrection}
+      testId="financial-correction-form"
+      onSubmit={async () => {
+        if (!user || !provider.applyFinancialCorrection) return;
+        setError(null);
+        try {
+          const canonicalAmount = amount.trim();
+          if (
+            !/^(?:0|[1-9][0-9]*)(?:\.[0-9]+)?$/.test(canonicalAmount) ||
+            !/[1-9]/.test(canonicalAmount)
+          ) {
+            throw new Error("Enter a positive decimal amount.");
+          }
+          if (!/^[A-Z0-9._-]{2,20}$/.test(asset.trim()))
+            throw new Error("Enter a valid uppercase asset code.");
+          if (reason.trim().length < 3) throw new Error("Enter a reason of at least 3 characters.");
+          const requestKey = idempotencyKey.current ?? crypto.randomUUID();
+          idempotencyKey.current = requestKey;
+          await provider.applyFinancialCorrection({
+            userId: user.id,
+            asset: asset.trim(),
+            scope,
+            amount: canonicalAmount,
+            direction,
+            reason: reason.trim(),
+            idempotencyKey: requestKey,
+          });
+          idempotencyKey.current = null;
+          onClose();
+        } catch (cause) {
+          setError(
+            cause instanceof Error
+              ? cause.message
+              : "Could not complete the balance adjustment. Retry to safely check the original request.",
+          );
+        }
+      }}
+    >
+      {user ? (
+        <p className="text-xs text-muted-foreground">
+          {user.displayName} · Profile {user.userCode ?? "—"}
+        </p>
+      ) : null}
+      <label className="flex flex-col gap-1 text-xs">
+        Asset
+        <input
+          required
+          value={asset}
+          onChange={(e) => {
+            idempotencyKey.current = null;
+            setAsset(e.target.value.toUpperCase());
+          }}
+          maxLength={20}
+          className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+        />
+      </label>
+      <label className="flex flex-col gap-1 text-xs">
+        Amount
+        <input
+          required
+          inputMode="decimal"
+          value={amount}
+          onChange={(e) => {
+            idempotencyKey.current = null;
+            setAmount(e.target.value);
+          }}
+          className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+        />
+      </label>
+      <label className="flex flex-col gap-1 text-xs">
+        Account
+        <select
+          value={scope}
+          onChange={(e) => {
+            idempotencyKey.current = null;
+            setScope(e.target.value as typeof scope);
+          }}
+          className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+        >
+          <option value="MAIN">Funding</option>
+          <option value="SPOT">Spot</option>
+          <option value="MARGIN">Margin</option>
+          <option value="BINARY">Option / Binary</option>
+          <option value="FINANCE">Finance</option>
+        </select>
+      </label>
+      <label className="flex flex-col gap-1 text-xs">
+        Direction
+        <select
+          value={direction}
+          onChange={(e) => {
+            idempotencyKey.current = null;
+            setDirection(e.target.value as typeof direction);
+          }}
+          className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+        >
+          <option value="CREDIT">Credit</option>
+          <option value="DEBIT">Debit</option>
+        </select>
+      </label>
+      <label className="flex flex-col gap-1 text-xs">
+        Reason
+        <textarea
+          required
+          minLength={3}
+          maxLength={500}
+          rows={3}
+          value={reason}
+          onChange={(e) => {
+            idempotencyKey.current = null;
+            setReason(e.target.value);
+          }}
+          className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+        />
+      </label>
+      {error ? (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
       ) : null}
     </FormDrawer>
   );

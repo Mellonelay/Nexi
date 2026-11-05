@@ -13,7 +13,7 @@ test("visible workspaces keep the configured landing route when permitted", () =
       ["overview", "/overview"],
       ["clients", "/users"],
       ["trading", "/binary"],
-      ["wallet-finance", "/wallets"],
+      ["wallet-finance", "/networks"],
       ["markets", "/assets"],
       ["products", "/mining"],
       ["communications", "/messages"],
@@ -34,6 +34,33 @@ test("visible workspaces hide unauthorized groups and use an allowed landing rou
   assert.equal(trading.primary, "/settlements");
   assert.deepEqual(
     trading.items.map(({ to }) => to),
-    ["/settlements", "/spot", "/exposure"],
+    ["/settlements", "/spot"],
   );
+});
+
+test("normal Admin navigation excludes development-only and redundant destinations", () => {
+  const groups = getVisibleNavGroups(() => true);
+  const visible = new Set(groups.flatMap(({ items }) => items.map(({ to }) => to)));
+  for (const path of [
+    "/exposure",
+    "/localization",
+    "/roles",
+    "/approvals",
+    "/audit",
+    "/health",
+    "/wallets",
+    "/sessions",
+  ]) {
+    assert.equal(visible.has(path), false, `${path} must not appear in normal navigation`);
+  }
+  for (const path of [
+    "/binary",
+    "/users",
+    "/networks",
+    "/feature-flags",
+    "/admins",
+    "/maintenance",
+  ]) {
+    assert.equal(visible.has(path), true, `${path} must remain reachable in normal navigation`);
+  }
 });

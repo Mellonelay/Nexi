@@ -193,7 +193,7 @@ function Inner() {
                 disabled={!canConfirm}
                 onClick={() => setPending({ kind: "confirm", row: d })}
               >
-                <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Confirm
+                <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Accept &amp; credit
               </Button>
             ) : null}
             {d.status === "confirmed" ? (
@@ -291,7 +291,7 @@ function Inner() {
                   disabled={!canConfirm}
                   onClick={() => setPending({ kind: "confirm", row: selected })}
                 >
-                  <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Confirm
+                  <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Accept &amp; credit
                 </Button>
               ) : null}
               {selected.status === "confirmed" ? (
@@ -328,8 +328,8 @@ function Inner() {
           onOpenChange={(o) => {
             if (!o) setPending(null);
           }}
-          title="Confirm deposit"
-          description="Marks the deposit as CONFIRMED. Credit posting is a separate, subsequent step."
+          title="Accept deposit and credit wallet"
+          description="Accepts this deposit and posts its ledger credit in the same action."
           target={
             <span>
               {pending.row.amount} {pending.row.asset} · {pending.row.network}
@@ -343,17 +343,25 @@ function Inner() {
               {pending.row.status.toUpperCase()}
             </StatusBadge>
           }
-          proposedState={<StatusBadge tone="info">CONFIRMED</StatusBadge>}
-          submitLabel="Confirm"
-          successMessage="Deposit confirmed"
-          onConfirm={(reason) =>
-            provider.confirmDeposit(pending.row.id, {
+          proposedState={<StatusBadge tone="success">CREDITED</StatusBadge>}
+          submitLabel="Accept & credit"
+          successMessage="Deposit accepted and credited"
+          onConfirm={async (reason) => {
+            const ctx = {
               actor: session.actorName,
               role: session.roleId,
               environment: session.environment,
               reason,
-            })
-          }
+            };
+            try {
+              if (provider.acceptDeposit) return await provider.acceptDeposit(pending.row.id, ctx);
+              await provider.confirmDeposit(pending.row.id, ctx);
+              return await provider.creditDeposit(pending.row.id, ctx);
+            } catch (error) {
+              q.refresh();
+              throw error;
+            }
+          }}
           onSuccess={() => setPending(null)}
         />
       ) : null}

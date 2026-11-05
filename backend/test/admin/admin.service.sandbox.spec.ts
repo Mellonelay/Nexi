@@ -18,6 +18,7 @@ describe("AdminService sandbox source contract", () => {
       {} as never,
       {} as never,
       {} as never,
+      {} as never,
     );
   }
 
@@ -38,20 +39,89 @@ describe("AdminService sandbox source contract", () => {
   });
 
   it("persists LoanPlan monetary config as strings and replays its audited idempotency key", async () => {
-    const plan = { id: "plan-1", name: "Test", durationDays: 30, interestRate: "0.05", minAmount: "10", maxAmount: "100", isActive: true };
-    const audit = { id: "audit-1", adminId: "admin-1", action: "LOAN_PLAN_CREATED", target: "plan-1", details: JSON.stringify({ reason: "test", idempotencyKey: "loan-plan-key-1", payload: { name: "Test", durationDays: 30, interestRate: "0.05", minAmount: "10", maxAmount: "100", isActive: true } }) };
-    const tx = {
-      loanPlan: { create: jest.fn().mockResolvedValue(plan), findUnique: jest.fn().mockResolvedValue(plan) },
-      adminAuditLog: { findFirst: jest.fn().mockResolvedValueOnce(null).mockResolvedValueOnce(audit), create: jest.fn().mockResolvedValue(audit) },
+    const plan = {
+      id: "plan-1",
+      name: "Test",
+      currency: "USDT",
+      durationDays: 30,
+      interestRate: "0.05",
+      minAmount: "10",
+      maxAmount: "100",
+      isActive: true,
     };
-    const prisma = { $transaction: jest.fn(async (work: any) => work(tx)) };
-    const subject = new AdminService(prisma as never, {} as never, {} as never, {} as never, {} as never, {} as never, {} as never);
-    const input = { name: "Test", durationDays: 30, interestRate: 0.05, minAmount: 10, maxAmount: 100, isActive: true };
-    const context = { adminId: "admin-1", reason: "test", idempotencyKey: "loan-plan-key-1" };
+    const audit = {
+      id: "audit-1",
+      adminId: "admin-1",
+      action: "LOAN_PLAN_CREATED",
+      target: "plan-1",
+      details: JSON.stringify({
+        reason: "test",
+        idempotencyKey: "loan-plan-key-1",
+        payload: {
+          name: "Test",
+          currency: "USDT",
+          durationDays: 30,
+          interestRate: "0.05",
+          minAmount: "10",
+          maxAmount: "100",
+          isActive: true,
+        },
+      }),
+    };
+    const tx = {
+      loanPlan: {
+        create: jest.fn().mockResolvedValue(plan),
+        findUnique: jest.fn().mockResolvedValue(plan),
+      },
+      adminAuditLog: {
+        findFirst: jest
+          .fn()
+          .mockResolvedValueOnce(null)
+          .mockResolvedValueOnce(audit),
+        create: jest.fn().mockResolvedValue(audit),
+      },
+    };
+    const prisma = {
+      marketAsset: {
+        findFirst: jest.fn().mockResolvedValue({ symbol: "USDT" }),
+      },
+      $transaction: jest.fn(async (work: any) => work(tx)),
+    };
+    const subject = new AdminService(
+      prisma as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+    );
+    const input = {
+      name: "Test",
+      currency: "USDT",
+      durationDays: 30,
+      interestRate: 0.05,
+      minAmount: 10,
+      maxAmount: 100,
+      isActive: true,
+    };
+    const context = {
+      adminId: "admin-1",
+      reason: "test",
+      idempotencyKey: "loan-plan-key-1",
+    };
     await subject.createLoanPlan(input, context);
     await subject.createLoanPlan(input, context);
-    expect(tx.loanPlan.create).toHaveBeenCalledWith({ data: expect.objectContaining({ interestRate: "0.05", minAmount: "10", maxAmount: "100" }) });
-    expect(tx.adminAuditLog.create).toHaveBeenCalledWith({ data: expect.objectContaining({ details: expect.any(String) }) });
+    expect(tx.loanPlan.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        interestRate: "0.05",
+        minAmount: "10",
+        maxAmount: "100",
+      }),
+    });
+    expect(tx.adminAuditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ details: expect.any(String) }),
+    });
     expect(tx.loanPlan.create).toHaveBeenCalledTimes(1);
   });
 
@@ -127,28 +197,53 @@ describe("AdminService sandbox source contract", () => {
     };
     const tx = {
       adminGovernanceCommand: {
-        findUnique: jest.fn().mockResolvedValueOnce(null).mockResolvedValueOnce(command),
+        findUnique: jest
+          .fn()
+          .mockResolvedValueOnce(null)
+          .mockResolvedValueOnce(command),
         create: jest.fn().mockResolvedValue(command),
       },
       user: { updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
-      adminAuditLog: { create: jest.fn().mockResolvedValue({ id: "research-audit-1" }) },
+      adminAuditLog: {
+        create: jest.fn().mockResolvedValue({ id: "research-audit-1" }),
+      },
     };
-    const prisma = { $transaction: jest.fn((work: (value: typeof tx) => unknown) => work(tx)) };
-    const subject = new AdminService(prisma as never, {} as never, {} as never, {} as never, {} as never, {} as never, {} as never);
+    const prisma = {
+      $transaction: jest.fn((work: (value: typeof tx) => unknown) => work(tx)),
+    };
+    const subject = new AdminService(
+      prisma as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+    );
     const input = {
-      userId: "research-user", mode: "WIN" as const, adminId: "admin-1",
-      reason: "research account default", idempotencyKey: "research-default-key-1",
+      userId: "research-user",
+      mode: "WIN" as const,
+      adminId: "admin-1",
+      reason: "research account default",
+      idempotencyKey: "research-default-key-1",
     };
 
-    await expect(subject.setBinaryResearchDefault(input)).resolves.toMatchObject({ replayed: false });
-    await expect(subject.setBinaryResearchDefault(input)).resolves.toMatchObject({ replayed: true });
+    await expect(
+      subject.setBinaryResearchDefault(input),
+    ).resolves.toMatchObject({ replayed: false });
+    await expect(
+      subject.setBinaryResearchDefault(input),
+    ).resolves.toMatchObject({ replayed: true });
     expect(tx.user.updateMany).toHaveBeenCalledWith({
       where: { id: "research-user" },
       data: { binaryResearchDefault: "WIN" },
     });
     expect(tx.adminGovernanceCommand.create).toHaveBeenCalledTimes(1);
     expect(tx.adminAuditLog.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ action: "BINARY_RESEARCH_DEFAULT_UPDATED", target: "research-user" }),
+      data: expect.objectContaining({
+        action: "BINARY_RESEARCH_DEFAULT_UPDATED",
+        target: "research-user",
+      }),
     });
   });
 
@@ -156,16 +251,34 @@ describe("AdminService sandbox source contract", () => {
     const previous = process.env.NODE_ENV;
     process.env.NODE_ENV = "production";
     const prisma = {
-      user: { findUnique: jest.fn().mockResolvedValue({ id: "admin-1", email: "admin@example.invalid", role: "ADMIN" }) },
-      adminRoleAssignment: { findUnique: jest.fn().mockResolvedValue({ roleId: "super_admin" }) },
+      user: {
+        findUnique: jest.fn().mockResolvedValue({
+          id: "admin-1",
+          email: "admin@example.invalid",
+          role: "ADMIN",
+        }),
+      },
+      adminRoleAssignment: {
+        findUnique: jest.fn().mockResolvedValue({ roleId: "super_admin" }),
+      },
     };
     const subject = new AdminService(
-      prisma as never, {} as never, {} as never, {} as never, {} as never, {} as never,
+      prisma as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
       { isEnabled: () => false } as never,
     );
     try {
-      await expect(subject.getAdminIdentity({ userId: "admin-1", email: "admin@example.invalid", role: "ADMIN" }))
-        .resolves.toMatchObject({ environment: "PRODUCTION" });
+      await expect(
+        subject.getAdminIdentity({
+          userId: "admin-1",
+          email: "admin@example.invalid",
+          role: "ADMIN",
+        }),
+      ).resolves.toMatchObject({ environment: "PRODUCTION" });
     } finally {
       if (previous === undefined) delete process.env.NODE_ENV;
       else process.env.NODE_ENV = previous;

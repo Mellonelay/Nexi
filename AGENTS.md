@@ -49,7 +49,7 @@ Sharing boundary: These are THREE separate app-specific physical node_modules st
 
 Storage: Root filesystem measured about 6.1 GiB available (88% used) after bounded cache cleanup on 2026-10-20; remeasure before assuming freshness. Preserve all live SQLite database/WAL/SHM files, financial data, backups, evidence, the existing authorized Chrome browser session, and runtime artifacts. Never blanket-clear /tmp or delete running-session files. Existing Public .next/cache was cleared; caches may regenerate. Prior npm cache had already been cleared by another operation. Permission-denied temp entries were not forcibly removed. Build, install, restart, push or deployment remain separately authorized actions.
 
-This current owner-verified map supersedes older conflicting path or sharing claims below. For protected docs use worker0-protect unlock, bounded change, diff verification, refresh-lock, and status.
+This current owner-verified map supersedes older conflicting path or sharing claims below.
 
 ---
 # HISTORICAL WORK/CODEX/HOOKS ROUTE — superseded for paired Codex CLI 2026-10-23
@@ -64,7 +64,7 @@ These are the rules for EVERY agent operating in the NEXI repository. They are s
 
 **Historical browser routing (retired 2026-10-25):** Public was routed through Polypane/CDP 5859 and Admin through ChatGPT Work Cloud Browser. This is archival context only. The active paired Worker-0 Codex route is Chrome DevTools MCP with `--autoConnect --userDataDir /home/mellonelay1999/.local/share/nexi-admin-browser-acceptance`; follow `.codex/AGENTS.md` for current session recovery and authentication steps.
 
-**Global documentation:** for approved protected edits run worker0-protect unlock, verify diff and status, then worker0-protect refresh-lock and recheck locks. Do NOT run Agent Kernel proposal/compile/sync/publish to maintain these rules; retired generated instructions must not overwrite this owner decision.
+**Global documentation:** Do NOT run retired Agent Kernel proposal/compile/sync/publish to maintain these rules; retired generated instructions must not overwrite this owner decision.
 
 ---
 # CURRENT OWNER OVERRIDE — 2026-10-17 (supersedes contradictory older sections)
@@ -208,7 +208,7 @@ Rules:
 
 ## HISTORICAL NEXI WORK CONTROLLER — superseded for paired Codex CLI 2026-10-23
 
-NEXI tasks in ChatGPT Work follow NEXI Work Control Plane -> NEXI Work Kernel -> Capability Router and selected Agent Skills. Maintain Work phase/session capability cache, authority, proof reuse and relevant knowledge contracts. Native shell, Codex SSH, RDC and mcpc are execution capabilities, not lifecycle owners. Chat-side Capability Cache v1.4.0 cannot authorize or execute Work tasks. Agent Kernel and its global generated Codex AGENTS.md are retired as NEXI controllers; never use agent-kernel CLI to publish NEXI rules. Use worker0-protect unlock/refresh-lock for authorized VM documentation edits. Browser-routing references below are archival and non-operative; use the current paired Codex route in `.codex/AGENTS.md`.
+NEXI tasks in ChatGPT Work follow NEXI Work Control Plane -> NEXI Work Kernel -> Capability Router and selected Agent Skills. Maintain Work phase/session capability cache, authority, proof reuse and relevant knowledge contracts. Native shell, Codex SSH, RDC and mcpc are execution capabilities, not lifecycle owners. Chat-side Capability Cache v1.4.0 cannot authorize or execute Work tasks. Agent Kernel and its global generated Codex AGENTS.md are retired as NEXI controllers; never use agent-kernel CLI to publish NEXI rules.  Browser-routing references below are archival and non-operative; use the current paired Codex route in `.codex/AGENTS.md`.
 
 ## HISTORICAL BROWSER ROUTING — superseded for paired Codex CLI 2026-10-23
 

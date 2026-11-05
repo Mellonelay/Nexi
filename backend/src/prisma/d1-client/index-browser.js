@@ -441,6 +441,7 @@ exports.Prisma.DepositClaimScalarFieldEnum = {
 exports.Prisma.LoanPlanScalarFieldEnum = {
   id: 'id',
   name: 'name',
+  currency: 'currency',
   durationDays: 'durationDays',
   interestRate: 'interestRate',
   minAmount: 'minAmount',

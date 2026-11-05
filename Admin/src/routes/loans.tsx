@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/admin/components/PageHeader";
 import { RouteGuard } from "@/admin/components/RouteGuard";
 import { StatusBadge } from "@/admin/components/StatusBadge";
@@ -24,8 +24,10 @@ function Inner() {
   const session = useAdminSession();
   const query = useAdminQuery((p) => p.listLoanPlans());
   const applicationsQuery = useAdminQuery((p) => p.listLoanApplications());
+  const loanAssetsQuery = useAdminQuery((p) => p.listLoanAssets());
   const [editing, setEditing] = useState<LoanPlan | null>(null);
   const [name, setName] = useState("");
+  const [currency, setCurrency] = useState("");
   const [days, setDays] = useState("30");
   const [rate, setRate] = useState("0.1");
   const [min, setMin] = useState("100");
@@ -33,6 +35,10 @@ function Inner() {
   const [message, setMessage] = useState("");
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const canEdit = session.can("loans.edit");
+  const loanAssets = useMemo(() => loanAssetsQuery.data ?? [], [loanAssetsQuery.data]);
+  useEffect(() => {
+    if (!editing && !currency && loanAssets[0]) setCurrency(loanAssets[0].symbol);
+  }, [editing, currency, loanAssets]);
   if (query.loading) return <LoadingSkeleton rows={5} />;
   if (query.error)
     return <ErrorState title="Could not load loan plans" description={query.error.message} />;
@@ -45,6 +51,7 @@ function Inner() {
   const reset = () => {
     setEditing(null);
     setName("");
+    setCurrency("");
     setMessage("");
   };
   const reviewApplication = async (
@@ -80,9 +87,31 @@ function Inner() {
   };
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!canEdit || !name.trim()) return;
+    const durationDays = Number(days);
+    const interestRate = Number(rate);
+    const minAmount = Number(min);
+    const maxAmount = Number(max);
+    if (
+      !canEdit ||
+      !name.trim() ||
+      !currency ||
+      !Number.isInteger(durationDays) ||
+      durationDays < 1 ||
+      !Number.isFinite(interestRate) ||
+      interestRate < 0 ||
+      !Number.isFinite(minAmount) ||
+      minAmount < 0 ||
+      !Number.isFinite(maxAmount) ||
+      maxAmount <= minAmount
+    ) {
+      setMessage(
+        "Choose a supported loan asset and enter valid plan terms with maximum above minimum.",
+      );
+      return;
+    }
     const payload = {
       name: name.trim(),
+      currency,
       durationDays: Number(days),
       interestRate: Number(rate),
       minAmount: Number(min),
@@ -120,7 +149,7 @@ function Inner() {
                 <div>
                   <h2 className="font-semibold">{plan.name}</h2>
                   <p className="text-xs text-muted-foreground">
-                    {plan.durationDays} days · rate {plan.interestRate}
+                    {plan.currency} · {plan.durationDays} days · rate {plan.interestRate}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -134,6 +163,7 @@ function Inner() {
                     onClick={() => {
                       setEditing(plan);
                       setName(plan.name);
+                      setCurrency(plan.currency);
                       setDays(String(plan.durationDays));
                       setRate(String(plan.interestRate));
                       setMin(String(plan.minAmount));
@@ -177,7 +207,13 @@ function Inner() {
                     <p className="font-medium">{application.userEmail ?? application.userId}</p>
                     <p className="text-xs text-muted-foreground">
                       {application.amount} {application.currency} · {application.durationDays} days
-                      · repay {application.totalRepayment}
+                      · total repayment {application.totalRepayment} · repaid{" "}
+                      {application.totalRepaid}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Submitted {application.createdAt || "date unavailable"}
+                      {application.approvedAt ? ` · approved ${application.approvedAt}` : ""}
+                      {application.dueDate ? ` · due ${application.dueDate}` : ""}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
                       Collateral: {application.collateral || "Not provided"}
@@ -221,6 +257,30 @@ function Inner() {
         </section>
         <form onSubmit={submit} className="space-y-3 rounded-xl border border-border bg-card p-4">
           <h2 className="font-semibold">{editing ? "Edit plan" : "Create plan"}</h2>
+          {loanAssetsQuery.error ? (
+            <p role="alert" className="text-sm text-destructive">
+              Could not load supported loan assets: {loanAssetsQuery.error.message}
+            </p>
+          ) : null}
+          <label className="flex flex-col gap-1.5 text-xs">
+            Settlement asset
+            <select
+              value={currency}
+              onChange={(event) => setCurrency(event.target.value)}
+              disabled={!canEdit || loanAssetsQuery.loading}
+              className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="">Select supported asset</option>
+              {editing && !loanAssets.some((asset) => asset.symbol === editing.currency) ? (
+                <option value={editing.currency}>Existing plan asset: {editing.currency}</option>
+              ) : null}
+              {loanAssets.map((asset) => (
+                <option key={asset.symbol} value={asset.symbol}>
+                  {asset.symbol} — {asset.name}
+                </option>
+              ))}
+            </select>
+          </label>
           <Input
             placeholder="Plan name"
             value={name}
@@ -252,7 +312,12 @@ function Inner() {
             disabled={!canEdit}
           />
           <div className="flex gap-2">
-            <Button type="submit" disabled={!canEdit}>
+            <Button
+              type="submit"
+              disabled={
+                !canEdit || loanAssetsQuery.loading || (!editing && loanAssets.length === 0)
+              }
+            >
               {editing ? "Save changes" : "Create plan"}
             </Button>
             {editing && (

@@ -57,6 +57,7 @@ type LoanRecord = {
 type LoanPlan = {
   id?: unknown;
   name?: unknown;
+  currency?: unknown;
   durationDays?: unknown;
   interestRate?: unknown;
   minAmount?: unknown;
@@ -340,6 +341,7 @@ function LoanProductsPanel({ plans, plansState }: { plans: LoanPlan[]; plansStat
             <article key={String(plan.id)} className="rounded-xl border border-[#2B2037] bg-[#171022] p-3 sm:p-4">
               <div className="flex items-center justify-between gap-3"><h3 className="font-semibold">{authoritativeValue(plan.name)}</h3><StatusBadge state="AVAILABLE" /></div>
               <dl className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                <ReviewRow label="Asset" value={authoritativeValue(plan.currency)} stacked />
                 <ReviewRow label="Term" value={`${authoritativeValue(plan.durationDays)} days`} stacked />
                 <ReviewRow label="Rate" value={authoritativeValue(plan.interestRate)} stacked />
                 <ReviewRow label="Limits" value={`${authoritativeValue(plan.minAmount)} – ${authoritativeValue(plan.maxAmount)}`} stacked />
@@ -437,6 +439,7 @@ function LoanApplicationPanel({
   userId: string | null;
   onSubmit: (event: FormEvent) => Promise<void>;
 }) {
+  const selectedPlan = plans.find((item) => String(item.id) === selectedPlanId);
   const selectPlan = (planId: string) => {
     onSelectedPlanIdChange(planId);
     const plan = plans.find((item) => String(item.id) === planId);
@@ -453,13 +456,13 @@ function LoanApplicationPanel({
         <Field label="Loan product" hint="Terms are based on the selected loan product.">
           <select aria-label="Loan product" className={inputClass} value={selectedPlanId} onChange={(event) => selectPlan(event.target.value)}>
             <option value="">Select a product</option>
-            {plans.map((plan) => <option key={String(plan.id)} value={String(plan.id)}>{authoritativeValue(plan.name)} · {authoritativeValue(plan.durationDays)} days</option>)}
+            {plans.map((plan) => <option key={String(plan.id)} value={String(plan.id)}>{authoritativeValue(plan.name)} · {authoritativeValue(plan.currency)} · {authoritativeValue(plan.durationDays)} days</option>)}
           </select>
         </Field>
         <Field label="Requested principal" hint="Limits appear when a product is available.">
           <div className="relative">
             <input aria-label="Requested principal" className={`${inputClass} pr-16 text-right font-mono`} value={amount} onChange={(event) => onAmountChange(event.target.value)} inputMode="decimal" placeholder="0.00" />
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#8C8299]">USDT</span>
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#8C8299]">{authoritativeValue(selectedPlan?.currency)}</span>
           </div>
         </Field>
         <Field label="Duration (days)" hint="Choose a duration when product terms are available.">
@@ -475,10 +478,10 @@ function LoanApplicationPanel({
         <div className="rounded-xl border border-[#49335E] bg-[#0B0711] p-3 text-sm text-[#C3BBD0]">
           <div className="flex items-center gap-2 font-semibold"><WalletCards size={16} className="text-[#48C0CC]" />Repayment preview</div>
           <dl className="mt-3 grid grid-cols-2 gap-3 text-xs">
-            <ProductFact label="Principal" value={principal === null ? '—' : `${principal} USDT`} compact />
+            <ProductFact label="Principal" value={principal === null || !selectedPlan ? '—' : `${principal} ${authoritativeValue(selectedPlan.currency)}`} compact />
             <ProductFact label="Duration" value={durationDays === null ? '—' : `${durationDays} days`} compact />
-            <ProductFact label="Interest" value={interestPreview === null ? '—' : `${interestPreview.toFixed(4)} USDT`} compact />
-            <ProductFact label="Total repayment" value={totalPreview === null ? '—' : `${totalPreview.toFixed(4)} USDT`} compact />
+            <ProductFact label="Interest" value={interestPreview === null || !selectedPlan ? '—' : `${interestPreview.toFixed(4)} ${authoritativeValue(selectedPlan.currency)}`} compact />
+            <ProductFact label="Total repayment" value={totalPreview === null || !selectedPlan ? '—' : `${totalPreview.toFixed(4)} ${authoritativeValue(selectedPlan.currency)}`} compact />
           </dl>
         </div>
         {message && (

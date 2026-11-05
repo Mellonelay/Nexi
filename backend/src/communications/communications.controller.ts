@@ -44,6 +44,7 @@ import { AuthRateLimitGuard } from "../auth/auth-rate-limit.guard";
 import { AdminPermissionGuard } from "../admin/admin-permission.guard";
 import { RequireAdminPermission } from "../admin/admin-permission.decorator";
 import { CommunicationsService } from "./communications.service";
+import { AdminOperatorAlertsService } from "./admin-operator-alerts.service";
 import { SUPPORT_ATTACHMENT_MAX_BYTES, type SupportUpload } from "./support-attachment-storage.service";
 import {
   AdminMutationDto,
@@ -71,7 +72,10 @@ import {
 @ApiTags("Communications")
 @Controller("communications")
 export class CommunicationsController {
-  constructor(private readonly service: CommunicationsService) {}
+  constructor(
+    private readonly service: CommunicationsService,
+    private readonly operatorAlerts: AdminOperatorAlertsService,
+  ) {}
   @Get("support/thread")
   @ApiBearerAuth()
   @ApiUnauthorizedResponse({ description: "A valid Public user session is required." })
@@ -328,6 +332,45 @@ export class CommunicationsController {
   @RequireAdminPermission("notifications.send")
   sendAdminNotification(@Body() dto: SendNotificationDto) { return this.service.sendAdminNotification(dto); }
   @ApiBearerAuth()
+  @Get("admin/operator-alerts")
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
+  @RequireAuthSurface("ADMIN")
+  @Roles(Role.ADMIN)
+  @RequireAdminPermission("operator_alerts.view")
+  operatorAlertsList(@Req() req: AuthenticatedRequest) {
+    return this.operatorAlerts.list(req.user.userId);
+  }
+
+  @Get("admin/operator-alerts/preferences")
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
+  @RequireAuthSurface("ADMIN")
+  @Roles(Role.ADMIN)
+  @RequireAdminPermission("operator_alerts.view")
+  operatorAlertPreferences(@Req() req: AuthenticatedRequest) {
+    return this.operatorAlerts.preferences(req.user.userId);
+  }
+
+  @Patch("admin/operator-alerts/preferences")
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
+  @RequireAuthSurface("ADMIN")
+  @Roles(Role.ADMIN)
+  @RequireAdminPermission("operator_alerts.view")
+  updateOperatorAlertPreferences(@Req() req: AuthenticatedRequest, @Body() body: { disabledCategories: unknown }) {
+    return this.operatorAlerts.updatePreferences(req.user.userId, body.disabledCategories);
+  }
+
+  @Patch("admin/operator-alerts/:id/read")
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
+  @RequireAuthSurface("ADMIN")
+  @Roles(Role.ADMIN)
+  @RequireAdminPermission("operator_alerts.view")
+  markOperatorAlertRead(@Req() req: AuthenticatedRequest, @Param("id") id: string) {
+    return this.operatorAlerts.markRead(req.user.userId, id);
+  }
+
   @Get("admin/learn/articles")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
   @RequireAuthSurface("ADMIN")

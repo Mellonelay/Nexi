@@ -36,11 +36,40 @@ function Inner() {
   const provider = useAdminData();
   const session = useAdminSession();
   const q = useAdminQuery((p) => p.listNetworks());
+  const assetsQ = useAdminQuery(
+    (p) =>
+      session.can("assets.view") && p.listDepositAssets
+        ? p.listDepositAssets()
+        : Promise.resolve([]),
+    [session.roleId],
+  );
+  const [creating, setCreating] = useState<"asset" | "network" | null>(null);
+  const [newCurrencyId, setNewCurrencyId] = useState("");
+  const [newSymbol, setNewSymbol] = useState("");
+  const [newName, setNewName] = useState("");
+  const [newLogo, setNewLogo] = useState("");
+  const [newCode, setNewCode] = useState("");
+  const [editingAsset, setEditingAsset] = useState<{
+    id: number;
+    symbol: string;
+    name: string;
+    logo?: string;
+  } | null>(null);
+  const [editAssetName, setEditAssetName] = useState("");
+  const [editAssetLogo, setEditAssetLogo] = useState("");
+  const [editAssetReason, setEditAssetReason] = useState("");
+  const [editAssetError, setEditAssetError] = useState("");
+  const [createReason, setCreateReason] = useState("");
+  const [createError, setCreateError] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editing, setEditing] = useState<Network | null>(null);
   const [toggling, setToggling] = useState<Network | null>(null);
   const [addingAddress, setAddingAddress] = useState<Network | null>(null);
-  const [disablingAddress, setDisablingAddress] = useState<{ network: Network; addressId: string; address: string } | null>(null);
+  const [disablingAddress, setDisablingAddress] = useState<{
+    network: Network;
+    addressId: string;
+    address: string;
+  } | null>(null);
 
   const nets = useMemo(() => q.data ?? [], [q.data]);
   const selected = useMemo(
@@ -61,7 +90,17 @@ function Inner() {
       </Shell>
     );
 
-  const canEdit = session.can("networks.edit");
+  const canEdit = session.can("networks.edit") && session.can("assets.edit");
+  const canCreate = canEdit && !!provider.createDepositAsset && !!provider.createDepositNetwork;
+  const createValid =
+    createReason.trim().length >= 6 &&
+    newName.trim().length >= 2 &&
+    (creating === "asset"
+      ? /^[A-Z0-9._-]{2,20}$/.test(newSymbol.trim().toUpperCase()) &&
+        (!newLogo.trim() || /^https:\/\//i.test(newLogo.trim()))
+      : creating === "network" &&
+        Number(newCurrencyId) > 0 &&
+        /^[A-Z0-9_-]{2,32}$/.test(newCode.trim().toUpperCase()));
 
   const columns: DataTableColumn<Network>[] = [
     {
@@ -136,6 +175,289 @@ function Inner() {
 
   return (
     <Shell total={nets.length} enabled={nets.filter((n) => n.enabled).length}>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          variant="outline"
+          disabled={!canCreate}
+          onClick={() => {
+            setCreating("asset");
+            setCreateError("");
+            setCreateReason("");
+            setNewName("");
+            setNewSymbol("");
+            setNewLogo("");
+          }}
+        >
+          Add deposit asset
+        </Button>
+        <Button
+          disabled={!canCreate || assetsQ.loading || !assetsQ.data?.length}
+          onClick={() => {
+            setCreating("network");
+            setCreateError("");
+            setCreateReason("");
+            setNewName("");
+            setNewCode("");
+            setNewCurrencyId(String(assetsQ.data?.[0]?.id ?? ""));
+          }}
+        >
+          Add deposit network
+        </Button>
+      </div>
+      <section
+        className="space-y-2 rounded-xl border border-border bg-card p-3"
+        aria-labelledby="configured-assets-heading"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 id="configured-assets-heading" className="text-sm font-semibold">
+              Deposit assets
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Assets and logos shown in the Public deposit flow.
+            </p>
+          </div>
+          <span className="text-xs text-muted-foreground">
+            {assetsQ.data?.length ?? 0} configured
+          </span>
+        </div>
+        {assetsQ.error ? (
+          <p className="text-sm text-destructive">
+            Could not load deposit assets: {assetsQ.error.message}
+          </p>
+        ) : assetsQ.loading ? (
+          <p className="text-xs text-muted-foreground">Loading deposit assets…</p>
+        ) : (assetsQ.data ?? []).length === 0 ? (
+          <p className="text-xs text-muted-foreground">No deposit assets are configured.</p>
+        ) : (
+          <div className="divide-y divide-border">
+            {(assetsQ.data ?? []).map((asset) => (
+              <div
+                key={asset.id}
+                className="flex flex-wrap items-center justify-between gap-3 py-2"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">
+                    {asset.name} <span className="font-mono text-primary">{asset.symbol}</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {asset.logo ? "Logo configured" : "No logo configured"}
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!session.can("assets.edit") || !provider.updateDepositAsset}
+                  onClick={() => {
+                    setEditingAsset(asset);
+                    setEditAssetName(asset.name);
+                    setEditAssetLogo(asset.logo ?? "");
+                    setEditAssetReason("");
+                    setEditAssetError("");
+                  }}
+                >
+                  Edit asset
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+      <FormDrawer
+        open={creating !== null}
+        onOpenChange={(open) => {
+          if (!open) setCreating(null);
+        }}
+        title={creating === "asset" ? "Add deposit asset" : "Add deposit network"}
+        description="Configure a deposit destination from canonical wallet assets. New assets start with deposits and withdrawals disabled."
+        submitLabel="Create"
+        submitDisabled={!createValid || !canCreate}
+        testId="create-deposit-configuration"
+        onSubmit={async () => {
+          if (!creating || !createValid) return;
+          const ctx = {
+            actor: session.actorName,
+            role: session.roleId,
+            environment: session.environment,
+            reason: createReason.trim(),
+          };
+          try {
+            const result =
+              creating === "asset"
+                ? await provider.createDepositAsset?.(
+                    {
+                      symbol: newSymbol.trim().toUpperCase(),
+                      name: newName.trim(),
+                      ...(newLogo.trim() ? { logo: newLogo.trim() } : {}),
+                    },
+                    ctx,
+                  )
+                : await provider.createDepositNetwork?.(
+                    {
+                      currencyId: Number(newCurrencyId),
+                      code: newCode.trim().toUpperCase(),
+                      name: newName.trim(),
+                    },
+                    ctx,
+                  );
+            if (!result?.ok) throw new Error("Configuration was not saved");
+            assetsQ.refresh();
+            q.refresh();
+            setCreating(null);
+          } catch (error) {
+            setCreateError(error instanceof Error ? error.message : "Configuration was not saved");
+          }
+        }}
+      >
+        {creating === "network" ? (
+          <>
+            <label className="text-xs" htmlFor="deposit-currency">
+              Deposit asset
+            </label>
+            <select
+              id="deposit-currency"
+              className="h-10 rounded-md border border-input bg-background px-3"
+              value={newCurrencyId}
+              onChange={(event) => setNewCurrencyId(event.target.value)}
+            >
+              <option value="">Select asset</option>
+              {(assetsQ.data ?? []).map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.symbol} — {item.name}
+                </option>
+              ))}
+            </select>
+            <label className="text-xs" htmlFor="deposit-network-code">
+              Network code
+            </label>
+            <Input
+              id="deposit-network-code"
+              value={newCode}
+              placeholder="ERC20"
+              onChange={(event) => setNewCode(event.target.value)}
+            />
+          </>
+        ) : (
+          <>
+            <label className="text-xs" htmlFor="deposit-asset-symbol">
+              Asset symbol
+            </label>
+            <Input
+              id="deposit-asset-symbol"
+              value={newSymbol}
+              placeholder="USDT"
+              onChange={(event) => setNewSymbol(event.target.value)}
+            />
+          </>
+        )}
+        <label className="text-xs" htmlFor="deposit-config-name">
+          {creating === "network" ? "Network name" : "Asset name"}
+        </label>
+        <Input
+          id="deposit-config-name"
+          value={newName}
+          onChange={(event) => setNewName(event.target.value)}
+        />
+        {creating === "asset" ? (
+          <>
+            <label className="text-xs" htmlFor="deposit-asset-logo">
+              Asset logo URL (HTTPS)
+            </label>
+            <Input
+              id="deposit-asset-logo"
+              type="url"
+              inputMode="url"
+              value={newLogo}
+              placeholder="https://example.com/asset.svg"
+              onChange={(event) => setNewLogo(event.target.value)}
+            />
+          </>
+        ) : null}
+        <label className="text-xs" htmlFor="deposit-config-reason">
+          Reason (audited)
+        </label>
+        <Input
+          id="deposit-config-reason"
+          value={createReason}
+          onChange={(event) => setCreateReason(event.target.value)}
+        />
+        {createError ? (
+          <p role="alert" className="text-sm text-destructive">
+            {createError}
+          </p>
+        ) : null}
+      </FormDrawer>
+      <FormDrawer
+        open={editingAsset !== null}
+        onOpenChange={(open) => {
+          if (!open) setEditingAsset(null);
+        }}
+        title={editingAsset ? `Edit ${editingAsset.symbol} deposit asset` : "Edit deposit asset"}
+        description="Update the asset name or logo used by Public deposit screens. Changes are audited."
+        submitLabel="Save asset"
+        submitDisabled={
+          !editingAsset ||
+          !session.can("assets.edit") ||
+          editAssetName.trim().length < 2 ||
+          editAssetReason.trim().length < 6 ||
+          (!!editAssetLogo.trim() && !/^https:\/\//i.test(editAssetLogo.trim()))
+        }
+        testId="edit-deposit-asset"
+        onSubmit={async () => {
+          if (!editingAsset || !provider.updateDepositAsset) return;
+          try {
+            const result = await provider.updateDepositAsset(
+              editingAsset.id,
+              { name: editAssetName.trim(), logo: editAssetLogo.trim() || null },
+              {
+                actor: session.actorName,
+                role: session.roleId,
+                environment: session.environment,
+                reason: editAssetReason.trim(),
+              },
+            );
+            if (!result.ok) throw new Error("Asset was not saved");
+            assetsQ.refresh();
+            q.refresh();
+            setEditingAsset(null);
+          } catch (error) {
+            setEditAssetError(error instanceof Error ? error.message : "Asset was not saved");
+          }
+        }}
+      >
+        <label className="text-xs" htmlFor="edit-deposit-asset-name">
+          Asset name
+        </label>
+        <Input
+          id="edit-deposit-asset-name"
+          value={editAssetName}
+          onChange={(event) => setEditAssetName(event.target.value)}
+        />
+        <label className="text-xs" htmlFor="edit-deposit-asset-logo">
+          Asset logo URL (HTTPS)
+        </label>
+        <Input
+          id="edit-deposit-asset-logo"
+          type="url"
+          inputMode="url"
+          value={editAssetLogo}
+          placeholder="https://example.com/asset.svg"
+          onChange={(event) => setEditAssetLogo(event.target.value)}
+        />
+        <label className="text-xs" htmlFor="edit-deposit-asset-reason">
+          Reason (audited)
+        </label>
+        <Input
+          id="edit-deposit-asset-reason"
+          value={editAssetReason}
+          onChange={(event) => setEditAssetReason(event.target.value)}
+        />
+        {editAssetError ? (
+          <p role="alert" className="text-sm text-destructive">
+            {editAssetError}
+          </p>
+        ) : null}
+      </FormDrawer>
       <DataTable
         data={nets}
         columns={columns}
@@ -260,18 +582,44 @@ function Inner() {
                   title: "Deposit destinations",
                   content: (
                     <div className="space-y-2">
-                      {(selected.depositAddresses ?? []).filter((item) => item.isActive).length === 0 ? (
-                        <p className="text-xs text-muted-foreground">No active deposit address is configured.</p>
+                      {(selected.depositAddresses ?? []).filter((item) => item.isActive).length ===
+                      0 ? (
+                        <p className="text-xs text-muted-foreground">
+                          No active deposit address is configured.
+                        </p>
                       ) : (
-                        (selected.depositAddresses ?? []).filter((item) => item.isActive).map((item) => (
-                          <div key={item.id} className="flex items-start justify-between gap-3 rounded-md border border-border/60 bg-background/40 p-3">
-                            <div className="min-w-0">
-                              <p className="text-xs font-medium">{item.network}{item.label ? ` · ${item.label}` : ""}</p>
-                              <p className="mt-1 break-all font-mono text-[11px] text-muted-foreground">{item.address}</p>
+                        (selected.depositAddresses ?? [])
+                          .filter((item) => item.isActive)
+                          .map((item) => (
+                            <div
+                              key={item.id}
+                              className="flex items-start justify-between gap-3 rounded-md border border-border/60 bg-background/40 p-3"
+                            >
+                              <div className="min-w-0">
+                                <p className="text-xs font-medium">
+                                  {item.network}
+                                  {item.label ? ` · ${item.label}` : ""}
+                                </p>
+                                <p className="mt-1 break-all font-mono text-[11px] text-muted-foreground">
+                                  {item.address}
+                                </p>
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={!canEdit}
+                                onClick={() =>
+                                  setDisablingAddress({
+                                    network: selected,
+                                    addressId: item.id,
+                                    address: item.address,
+                                  })
+                                }
+                              >
+                                Disable
+                              </Button>
                             </div>
-                            <Button variant="outline" size="sm" disabled={!canEdit} onClick={() => setDisablingAddress({ network: selected, addressId: item.id, address: item.address })}>Disable</Button>
-                          </div>
-                        ))
+                          ))
                       )}
                     </div>
                   ),
@@ -336,7 +684,9 @@ function Inner() {
       {disablingAddress ? (
         <ConsequentialActionDialog
           open
-          onOpenChange={(open) => { if (!open) setDisablingAddress(null); }}
+          onOpenChange={(open) => {
+            if (!open) setDisablingAddress(null);
+          }}
           title="Disable deposit address"
           description="This removes the address from Public deposit destinations without deleting its audit history."
           target={<span className="break-all font-mono text-xs">{disablingAddress.address}</span>}
@@ -348,13 +698,18 @@ function Inner() {
           destructive
           submitLabel="Disable address"
           successMessage="Deposit address disabled"
-          onConfirm={(reason) => provider.disableDepositAddress(disablingAddress.addressId, {
-            actor: session.actorName,
-            role: session.roleId,
-            environment: session.environment,
-            reason,
-          })}
-          onSuccess={() => { setDisablingAddress(null); q.refresh(); }}
+          onConfirm={(reason) =>
+            provider.disableDepositAddress(disablingAddress.addressId, {
+              actor: session.actorName,
+              role: session.roleId,
+              environment: session.environment,
+              reason,
+            })
+          }
+          onSuccess={() => {
+            setDisablingAddress(null);
+            q.refresh();
+          }}
         />
       ) : null}
 
@@ -632,7 +987,10 @@ function DepositAddressForm({
 }: {
   net: Network | null;
   onClose: () => void;
-  onSubmit: (input: { network: string; address: string; label?: string }, reason: string) => Promise<void>;
+  onSubmit: (
+    input: { network: string; address: string; label?: string },
+    reason: string,
+  ) => Promise<void>;
 }) {
   const [network, setNetwork] = useState("");
   const [address, setAddress] = useState("");
@@ -640,29 +998,52 @@ function DepositAddressForm({
   const [reason, setReason] = useState("");
   useEffect(() => {
     if (!net) return;
-    setNetwork(net.name || net.chainId);
+    setNetwork(net.chainId);
     setAddress("");
     setLabel("");
     setReason("");
   }, [net?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-  const valid = network.trim().length >= 2 && address.trim().length >= 8 && reason.trim().length >= 6;
+  const valid =
+    network.trim().length >= 2 && address.trim().length >= 8 && reason.trim().length >= 6;
   return (
     <FormDrawer
       open={!!net}
-      onOpenChange={(open) => { if (!open) onClose(); }}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
       title={net ? `Add deposit address — ${net.assetSymbol}` : ""}
-      description="Creates an audited D1-backed deposit destination exposed to the Public wallet only when the currency and destination are enabled."
+      description="Adds an audited deposit destination to the canonical wallet configuration. Public visibility also requires an enabled currency and network."
       submitLabel="Add deposit address"
       submitDisabled={!valid}
       onSubmit={async () => {
-        await onSubmit({ network: network.trim(), address: address.trim(), ...(label.trim() ? { label: label.trim() } : {}) }, reason.trim());
+        await onSubmit(
+          {
+            network: network.trim(),
+            address: address.trim(),
+            ...(label.trim() ? { label: label.trim() } : {}),
+          },
+          reason.trim(),
+        );
         onClose();
       }}
     >
-      <Field label="Network"><Input value={network} onChange={(e) => setNetwork(e.target.value)} /></Field>
-      <Field label="Deposit address"><Input value={address} onChange={(e) => setAddress(e.target.value)} className="font-mono" /></Field>
-      <Field label="Label (optional)"><Input value={label} onChange={(e) => setLabel(e.target.value)} /></Field>
-      <Field label="Reason (auditable, ≥ 6 chars)"><textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3} className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground" /></Field>
+      <Field label="Network">
+        <Input value={network} onChange={(e) => setNetwork(e.target.value)} />
+      </Field>
+      <Field label="Deposit address">
+        <Input value={address} onChange={(e) => setAddress(e.target.value)} className="font-mono" />
+      </Field>
+      <Field label="Label (optional)">
+        <Input value={label} onChange={(e) => setLabel(e.target.value)} />
+      </Field>
+      <Field label="Reason (auditable, ≥ 6 chars)">
+        <textarea
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          rows={3}
+          className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+        />
+      </Field>
     </FormDrawer>
   );
 }

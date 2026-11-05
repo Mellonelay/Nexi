@@ -11,7 +11,7 @@ import type {
   SpotOrder,
   BinaryPair,
   BinaryPosition,
-  BinaryDuration,
+  BinaryGlobalConfiguration,
   WalletRow,
   LedgerEntry,
   Deposit,
@@ -22,6 +22,8 @@ import type {
   AdminMessage,
   MessageModerationCase,
   AdminNotification,
+  AdminOperatorAlertsResponse,
+  AdminOperatorAlertCategory,
   AdminLearnArticle,
   AdminLearnCategory,
   HealthCheck,
@@ -142,6 +144,21 @@ export interface AdminDataProvider {
   ): Promise<MutationResult>;
 
   listNetworks(): Promise<Network[]>;
+  /** Currency catalog backing deposit destinations, distinct from market assets. */
+  listDepositAssets?(): Promise<Array<{ id: number; symbol: string; name: string; logo?: string }>>;
+  createDepositAsset?(
+    payload: { symbol: string; name: string; logo?: string },
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult>;
+  updateDepositAsset?(
+    id: number,
+    patch: { name?: string; logo?: string | null },
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult>;
+  createDepositNetwork?(
+    payload: { currencyId: number; code: string; name: string },
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult>;
   toggleNetwork(id: string, ctx: ConsequentialContext): Promise<MutationResult>;
   updateNetwork(
     id: string,
@@ -212,6 +229,11 @@ export interface AdminDataProvider {
   ): Promise<MutationResult>;
 
   /** Binary */
+  getBinaryGlobalConfiguration(): Promise<BinaryGlobalConfiguration>;
+  updateBinaryGlobalConfiguration(
+    config: Omit<BinaryGlobalConfiguration, "version">,
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult>;
   listBinaryPairs(): Promise<BinaryPair[]>;
   listBinaryPositions(): Promise<BinaryPosition[]>;
   pauseBinaryPair(id: string, paused: boolean, ctx: ConsequentialContext): Promise<MutationResult>;
@@ -224,19 +246,7 @@ export interface AdminDataProvider {
   ): Promise<MutationResult>;
   updateBinaryPair(
     id: string,
-    patch: Partial<
-      Pick<BinaryPair, "enabled" | "minStake" | "maxStake" | "exposureCap" | "settlementDelayMs">
-    > & {
-      payoutBps?: Partial<Record<BinaryDuration, number>>;
-      durationConfigs?: Array<{
-        sourceDurationSeconds: number;
-        durationSeconds: number;
-        payoutBps: number;
-        minStake: string;
-        maxStake: string;
-        enabled: boolean;
-      }>;
-    },
+    patch: Pick<BinaryPair, "enabled">,
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
 
@@ -327,6 +337,7 @@ export interface AdminDataProvider {
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
   listLoanPlans(): Promise<LoanPlan[]>;
+  listLoanAssets(): Promise<Array<{ symbol: string; name: string }>>;
   createLoanPlan(payload: Omit<LoanPlan, "id">, ctx: ConsequentialContext): Promise<MutationResult>;
   updateLoanPlan(
     id: string,
@@ -339,6 +350,7 @@ export interface AdminDataProvider {
   rejectLoanApplication(id: string, ctx: ConsequentialContext): Promise<MutationResult>;
 
   listDeposits(): Promise<Deposit[]>;
+  acceptDeposit?(id: string, ctx: ConsequentialContext): Promise<MutationResult>;
   confirmDeposit(id: string, ctx: ConsequentialContext): Promise<MutationResult>;
   creditDeposit(id: string, ctx: ConsequentialContext): Promise<MutationResult>;
   failDeposit(id: string, reason: string, ctx: ConsequentialContext): Promise<MutationResult>;
@@ -422,10 +434,19 @@ export interface AdminDataProvider {
   ): Promise<MutationResult>;
   publishAnnouncement(id: string, ctx: ConsequentialContext): Promise<MutationResult>;
   listMessages(): Promise<AdminMessage[]>;
-  uploadAdminMessageAttachment(recipientId: string, file: File): Promise<{ id: string; name: string; mimeType: string; size: number }>;
+  uploadAdminMessageAttachment(
+    recipientId: string,
+    file: File,
+  ): Promise<{ id: string; name: string; mimeType: string; size: number }>;
   getAdminMessageAttachment(recipientId: string, id: string): Promise<Blob>;
   sendAdminMessage(
-    payload: { recipientId: string; conversationId?: string; body: string; attachmentIds?: string[]; idempotencyKey: string },
+    payload: {
+      recipientId: string;
+      conversationId?: string;
+      body: string;
+      attachmentIds?: string[];
+      idempotencyKey: string;
+    },
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
   markAdminMessageRead(id: string): Promise<void>;
@@ -440,6 +461,10 @@ export interface AdminDataProvider {
     ctx: ConsequentialContext,
   ): Promise<MutationResult>;
   listNotifications(): Promise<AdminNotification[]>;
+  listOperatorAlerts?(): Promise<AdminOperatorAlertsResponse>;
+  updateOperatorAlertPreferences?(disabledCategories: AdminOperatorAlertCategory[]): Promise<AdminOperatorAlertsResponse>;
+  markOperatorAlertRead?(id: string): Promise<void>;
+  subscribeToOperatorAlerts?(fn: () => void): () => void;
   sendNotification(
     payload: { userId: string; type: string; title: string; body: string },
     ctx: ConsequentialContext,
@@ -517,6 +542,22 @@ export interface AdminDataProvider {
 
   /** Governance — approval queue */
   listApprovals(): Promise<ApprovalRequest[]>;
+  setUserLedgerFreeze?(input: {
+    userId: string;
+    frozen: boolean;
+    reason: string;
+    idempotencyKey: string;
+  }): Promise<MutationResult>;
+  /** Direct role-gated and audited ledger adjustment; no governance request is created. */
+  applyFinancialCorrection?(input: {
+    userId: string;
+    asset: string;
+    scope: "MAIN" | "SPOT" | "MARGIN" | "BINARY" | "FINANCE";
+    amount: string;
+    direction: "CREDIT" | "DEBIT";
+    reason: string;
+    idempotencyKey: string;
+  }): Promise<MutationResult>;
   decideApproval(
     id: string,
     decision: "approved" | "rejected",
