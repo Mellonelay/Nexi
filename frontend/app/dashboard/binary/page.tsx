@@ -547,12 +547,12 @@ export default function BinaryPage() {
       <div className="grid min-w-0 gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_400px] xl:items-start">
         <section className="min-w-0 space-y-4 xl:col-start-1 xl:row-start-1" aria-labelledby="binary-heading">
           <div className="flex min-w-0 flex-wrap items-end justify-between gap-3">
-            <div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-[.2em] text-[#A78BFA]">Options</p><h1 id="binary-heading" className="mt-1 break-words leading-tight text-2xl font-semibold">{displayPair}</h1></div>
+            <h1 id="binary-heading" className="min-w-0 break-words text-[clamp(1.125rem,4vw,1.5rem)] font-semibold leading-tight">Options</h1>
             {state !== 'DRAFT' && <span className={`shrink-0 rounded-full border px-3 py-1 font-mono text-xs ${stateTone}`}>{binaryStateLabel(state)}</span>}
           </div>
           <div className="nexi-station-card min-w-0 rounded-2xl p-2">
             <div className="border-b border-white/5 px-2 pb-2"><TimeframeSelector interval={interval} onChange={setInterval} /></div>
-            <div className="nexi-options-chart-frame h-[clamp(260px,58vw,420px)] sm:h-[420px] xl:h-[500px]"><RealtimeTradingChart symbol={normalizedPair} type="binary" interval={interval} marketStatus={market?.sessionState === 'CLOSED' ? 'CLOSED' : undefined} sandboxFeed={sandboxChartFeed} showIndicatorControls={false} /></div>
+            <div className="nexi-options-chart-frame h-[clamp(19.5rem,88vw,27rem)] sm:h-[420px] xl:h-[500px]"><RealtimeTradingChart symbol={normalizedPair} type="binary" interval={interval} marketStatus={market?.sessionState === 'CLOSED' ? 'CLOSED' : undefined} sandboxFeed={sandboxChartFeed} showIndicatorControls={false} /></div>
           </div>
 
         </section>

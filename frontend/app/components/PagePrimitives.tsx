@@ -105,8 +105,8 @@ export function Field({ label, children, hint }: { label: string; children: Reac
 
 export const inputClass = 'nexi-input px-3 text-sm placeholder:text-[#8C8299]';
 
-export function PrimaryButton({ children, disabled = false, type = 'button', onClick }: { children: ReactNode; disabled?: boolean; type?: 'button' | 'submit'; onClick?: () => void }) {
-  return <button type={type} disabled={disabled} onClick={onClick} className={controlVariants({ intent: 'primary' })}>{children}</button>;
+export function PrimaryButton({ children, disabled = false, type = 'button', size = 'default', className, onClick }: { children: ReactNode; disabled?: boolean; type?: 'button' | 'submit'; size?: 'default' | 'compact'; className?: string; onClick?: () => void }) {
+  return <button type={type} disabled={disabled} onClick={onClick} className={cn(controlVariants({ intent: 'primary', size }), className)}>{children}</button>;
 }
 
 export function SecondaryButton({ children, disabled = false, onClick }: { children: ReactNode; disabled?: boolean; onClick?: () => void }) {
