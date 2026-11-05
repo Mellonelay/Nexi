@@ -16,6 +16,7 @@ import {
   AdminMaintenanceStatus,
   Prisma,
   AdminRoleId,
+  Gate2BinaryConfiguration,
 } from "../prisma/d1-client";
 import { LedgerAuthorityService } from "../ledger/ledger-authority.service";
 import { SpotService } from "../spot/spot.service";
@@ -1347,11 +1348,19 @@ export class AdminService {
   async getUsers() {
     if (this.d1?.isEnabled()) return this.d1.listUsers();
     const users = await this.prisma.user.findMany({
-      include: { wallet: true },
+      include: {
+        wallet: true,
+        walletIdentity: { select: { address: true } },
+        kyc: { select: { status: true } },
+      },
       orderBy: { createdAt: "desc" },
     });
-    return users.map((user) => ({
+    return users.map(({ walletIdentity, kyc, ...user }) => ({
       ...user,
+      // User has no canonical lifecycle-status field; never infer "active".
+      status: "unknown",
+      walletAddress: walletIdentity?.address ?? null,
+      kycStatus: kyc?.status ?? null,
       binaryResearchEligible: this.isBinaryResearchAccount(user.id),
     }));
   }
@@ -1878,18 +1887,91 @@ export class AdminService {
       select: { id: true, symbol: true },
     });
     if (!pair) throw new NotFoundException("Binary market pair not found");
-    const result = await this.prisma.$transaction(async (tx) => {
-      const updated = await tx.marketPair.update({
-        where: { id: pair.id },
-        data: {
+    const eventKey = `admin:binary-pair:${idempotencyKey}`;
+    return this.prisma.$transaction(async (tx) => {
+      const prior = await tx.eventOutbox.findUnique({
+        where: { idempotencyKey: eventKey },
+      });
+      if (prior) {
+        let payload: {
+          adminId?: string;
+          symbol?: string;
+          enabled?: boolean;
+          reason?: string;
+          auditId?: string;
+        };
+        try {
+          payload = JSON.parse(prior.payload);
+        } catch {
+          throw new ConflictException(
+            "Binary pair idempotency key was already used",
+          );
+        }
+        if (
+          prior.eventType !== "BINARY_PAIR_AVAILABILITY_UPDATED" ||
+          payload.adminId !== adminId ||
+          payload.symbol !== pair.symbol ||
+          payload.enabled !== enabled ||
+          payload.reason !== reason ||
+          !payload.auditId
+        )
+          throw new ConflictException(
+            "Binary pair idempotency key was already used",
+          );
+        return {
+          ok: true,
+          auditId: payload.auditId,
           status: enabled ? "ACTIVE" : "MAINTENANCE",
-          maintenanceNote: enabled ? null : reason,
+          replayed: true,
+        };
+      }
+
+      // Append new versions rather than editing configurations referenced by open positions.
+      // MarketPair status is shared with Spot/Margin and must remain independently controlled.
+      const rows = await tx.gate2BinaryConfiguration.findMany({
+        where: { pair: pair.symbol },
+        orderBy: { version: "desc" },
+        select: {
+          pair: true,
+          durationSeconds: true,
+          payoutRate: true,
+          lossRate: true,
+          minStake: true,
+          maxStake: true,
+          settlementDelaySeconds: true,
+          version: true,
         },
       });
-      await tx.gate2BinaryConfiguration.updateMany({
-        where: { pair: pair.symbol, enabled: true },
-        data: { enabled },
-      });
+      const latest = latestBinaryConfigurationRows(
+        rows as Pick<
+          Gate2BinaryConfiguration,
+          | "pair"
+          | "durationSeconds"
+          | "payoutRate"
+          | "lossRate"
+          | "minStake"
+          | "maxStake"
+          | "settlementDelaySeconds"
+          | "version"
+        >[],
+      );
+      if (!latest.length)
+        throw new NotFoundException("Binary pair configuration not found");
+      for (const row of latest) {
+        await tx.gate2BinaryConfiguration.create({
+          data: {
+            pair: row.pair,
+            durationSeconds: row.durationSeconds,
+            payoutRate: row.payoutRate,
+            lossRate: row.lossRate,
+            minStake: row.minStake,
+            maxStake: row.maxStake,
+            settlementDelaySeconds: row.settlementDelaySeconds,
+            version: row.version + 1,
+            enabled,
+          },
+        });
+      }
       const audit = await tx.adminAuditLog.create({
         data: {
           adminId,
@@ -1898,13 +1980,29 @@ export class AdminService {
           details: { symbol: pair.symbol, enabled, reason, idempotencyKey },
         },
       });
-      return { updated, audit };
+      await tx.eventOutbox.create({
+        data: {
+          idempotencyKey: eventKey,
+          aggregateType: "BinaryPair",
+          aggregateId: pair.id,
+          eventType: "BINARY_PAIR_AVAILABILITY_UPDATED",
+          correlationId: idempotencyKey,
+          payload: JSON.stringify({
+            adminId,
+            symbol: pair.symbol,
+            enabled,
+            reason,
+            auditId: audit.id,
+          }),
+        },
+      });
+      return {
+        ok: true,
+        auditId: audit.id,
+        status: enabled ? "ACTIVE" : "MAINTENANCE",
+        replayed: false,
+      };
     });
-    return {
-      ok: true,
-      auditId: result.audit.id,
-      status: result.updated.status,
-    };
   }
 
   async getAdminWallets() {
@@ -2769,7 +2867,9 @@ export class AdminService {
 
   async getBinaryGlobalConfiguration() {
     if (!this.d1?.isEnabled())
-      throw new ServiceUnavailableException("Binary global configuration requires the canonical SQLite gateway");
+      throw new ServiceUnavailableException(
+        "Binary global configuration requires the canonical SQLite gateway",
+      );
     return this.d1.getBinaryGlobalConfiguration();
   }
 
@@ -2777,16 +2877,24 @@ export class AdminService {
     input: {
       minStake: string;
       maxStake: string;
-      durations: Array<{ durationSeconds: number; payoutRate: number; enabled: boolean }>;
+      durations: Array<{
+        durationSeconds: number;
+        payoutRate: number;
+        enabled: boolean;
+      }>;
       reason: string;
       idempotencyKey: string;
     },
     adminId: string,
   ) {
     if (!this.d1?.isEnabled())
-      throw new ServiceUnavailableException("Binary global configuration requires the canonical SQLite gateway");
+      throw new ServiceUnavailableException(
+        "Binary global configuration requires the canonical SQLite gateway",
+      );
     if (!input.reason?.trim())
-      throw new BadRequestException("A reason is required for Binary configuration changes");
+      throw new BadRequestException(
+        "A reason is required for Binary configuration changes",
+      );
     let minStake: Prisma.Decimal;
     let maxStake: Prisma.Decimal;
     try {
@@ -2795,7 +2903,12 @@ export class AdminService {
     } catch {
       throw new BadRequestException("Binary stake limits are invalid");
     }
-    if (!minStake.isFinite() || !maxStake.isFinite() || minStake.lte(0) || maxStake.lt(minStake))
+    if (
+      !minStake.isFinite() ||
+      !maxStake.isFinite() ||
+      minStake.lte(0) ||
+      maxStake.lt(minStake)
+    )
       throw new BadRequestException("Binary stake limits are invalid");
     return this.d1.updateBinaryGlobalConfiguration({
       ...input,
@@ -2858,25 +2971,46 @@ export class AdminService {
       );
       if (!current)
         throw new NotFoundException("Binary configuration not found");
-      const storedGlobal = await this.d1.getSystemConfigValue("gate2.binary.globalPolicy");
-      const globalPolicy = storedGlobal ? JSON.parse(storedGlobal) as {
-        minStake: string;
-        maxStake: string;
-        durations: Array<{ durationSeconds: number; payoutRate: number; enabled: boolean }>;
-      } : null;
-      const globalDuration = globalPolicy?.durations.find((item) => item.durationSeconds === input.durationSeconds);
+      const storedGlobal = await this.d1.getSystemConfigValue(
+        "gate2.binary.globalPolicy",
+      );
+      const globalPolicy = storedGlobal
+        ? (JSON.parse(storedGlobal) as {
+            minStake: string;
+            maxStake: string;
+            durations: Array<{
+              durationSeconds: number;
+              payoutRate: number;
+              enabled: boolean;
+            }>;
+          })
+        : null;
+      const globalDuration = globalPolicy?.durations.find(
+        (item) => item.durationSeconds === input.durationSeconds,
+      );
       if (globalPolicy && !globalDuration)
-        throw new BadRequestException("Binary duration is not present in the global policy");
-      const payoutRate = globalDuration?.payoutRate ?? input.payoutRate ?? Number(current.payoutRate);
-      const minStake = globalPolicy ? globalPolicy.minStake : input.minStake ?? String(current.minStake);
-      const maxStake = globalPolicy ? globalPolicy.maxStake : input.maxStake ?? String(current.maxStake);
+        throw new BadRequestException(
+          "Binary duration is not present in the global policy",
+        );
+      const payoutRate =
+        globalDuration?.payoutRate ??
+        input.payoutRate ??
+        Number(current.payoutRate);
+      const minStake = globalPolicy
+        ? globalPolicy.minStake
+        : (input.minStake ?? String(current.minStake));
+      const maxStake = globalPolicy
+        ? globalPolicy.maxStake
+        : (input.maxStake ?? String(current.maxStake));
       let minStakeDecimal: Prisma.Decimal;
       let maxStakeDecimal: Prisma.Decimal;
       try {
         minStakeDecimal = new Prisma.Decimal(minStake);
         maxStakeDecimal = new Prisma.Decimal(maxStake);
       } catch {
-        throw new BadRequestException("Binary payout and stake limits are invalid");
+        throw new BadRequestException(
+          "Binary payout and stake limits are invalid",
+        );
       }
       if (
         !Number.isFinite(payoutRate) ||
@@ -2886,7 +3020,9 @@ export class AdminService {
         !maxStakeDecimal.isFinite() ||
         maxStakeDecimal.lt(minStakeDecimal)
       )
-        throw new BadRequestException("Binary payout and stake limits are invalid");
+        throw new BadRequestException(
+          "Binary payout and stake limits are invalid",
+        );
       return this.d1.updateBinaryConfiguration({
         pair,
         sourceDurationSeconds,
@@ -2894,7 +3030,10 @@ export class AdminService {
         payoutRate,
         minStake,
         maxStake,
-        enabled: resolveBinaryEnabled(input.enabled, current.pairEnabled ?? current.enabled),
+        enabled: resolveBinaryEnabled(
+          input.enabled,
+          current.pairEnabled ?? current.enabled,
+        ),
         adminId,
         reason: input.reason,
         idempotencyKey: input.idempotencyKey,

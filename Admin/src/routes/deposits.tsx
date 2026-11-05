@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { createFileRoute, useRouterState } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/admin/components/PageHeader";
 import { RouteGuard } from "@/admin/components/RouteGuard";
 import { StatusBadge } from "@/admin/components/StatusBadge";
@@ -38,7 +38,16 @@ function Inner() {
   const provider = useAdminData();
   const session = useAdminSession();
   const q = useAdminQuery((p) => p.listDeposits());
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const reference = useRouterState({
+    select: (state) => {
+      const value = (state.location.search as { reference?: unknown }).reference;
+      return typeof value === "string" ? value : undefined;
+    },
+  });
+  const [selectedId, setSelectedId] = useState<string | null>(reference ?? null);
+  useEffect(() => {
+    if (reference) setSelectedId(reference);
+  }, [reference]);
   const [pending, setPending] = useState<PendingAction | null>(null);
 
   const rows = useMemo(() => q.data ?? [], [q.data]);
@@ -167,6 +176,11 @@ function Inner() {
 
   return (
     <Shell counts={counts} total={rows.length}>
+      {reference && selectedId === reference && !selected && (
+        <p role="status" className="text-sm text-muted-foreground">
+          The referenced record is not in the loaded results.
+        </p>
+      )}
       <DataTable
         data={rows}
         columns={columns}

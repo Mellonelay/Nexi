@@ -343,26 +343,48 @@ function scope(commandType: string): ApprovalRequest["scope"] {
  */
 export class NexiAdminApiProvider implements AdminDataProvider {
   private readonly listeners = new Set<() => void>();
+  private readonly communicationsListeners = new Set<() => void>();
+  private communicationsSocket: ReturnType<typeof io> | null = null;
   private refreshPromise: Promise<string> | null = null;
 
   constructor(private readonly config: ApiConfig) {}
 
   subscribeToCommunications(onChange: () => void): () => void {
-    const socket = io(`${this.config.baseUrl.replace(/\/$/, "")}/communications`, {
-      auth: (callback) => {
-        void this.config
-          .getToken()
-          .then((token) => callback({ token }))
-          .catch(() => callback({}));
-      },
-      reconnection: true,
-      transports: ["polling", "websocket"],
-      tryAllTransports: true,
-    });
-    socket.on("communications.changed", onChange);
-    socket.on("operator-alerts.changed", onChange);
-    socket.on("connect", onChange);
-    return () => socket.disconnect();
+    const listener = () => onChange();
+    this.communicationsListeners.add(listener);
+    if (!this.communicationsSocket) {
+      const socket = io(`${this.config.baseUrl.replace(/\/$/, "")}/communications`, {
+        auth: (callback) => {
+          void this.config
+            .getToken()
+            .then((token) => callback({ token }))
+            .catch(() => callback({}));
+        },
+        reconnection: true,
+        transports: ["polling", "websocket"],
+        tryAllTransports: true,
+      });
+      const notify = () => {
+        for (const current of this.communicationsListeners) {
+          try {
+            current();
+          } catch {
+            // One subscriber must not prevent the others from refreshing.
+          }
+        }
+      };
+      socket.on("communications.changed", notify);
+      socket.on("operator-alerts.changed", notify);
+      socket.on("connect", notify);
+      this.communicationsSocket = socket;
+    }
+    return () => {
+      this.communicationsListeners.delete(listener);
+      if (!this.communicationsListeners.size) {
+        this.communicationsSocket?.disconnect();
+        this.communicationsSocket = null;
+      }
+    };
   }
 
   supports(operation: keyof AdminDataProvider): boolean {
@@ -656,13 +678,25 @@ export class NexiAdminApiProvider implements AdminDataProvider {
   private mapUser(value: unknown): User {
     const row = record(value);
     const profile = record(row.profile);
-    const status = ["active", "restricted", "frozen", "closed"].includes(stringValue(row.status))
-      ? (stringValue(row.status) as User["status"])
-      : "active";
+    const rawStatus = stringValue(row.status).toLowerCase();
+    const status = ["active", "restricted", "frozen", "closed"].includes(rawStatus)
+      ? (rawStatus as User["status"])
+      : "unknown";
+    const rawKycStatus = stringValue(row.kycStatus ?? record(row.kyc).status).toLowerCase();
+    const hasKycAuthority = Object.hasOwn(row, "kycStatus") || Object.hasOwn(row, "kyc");
+    const kycStatus =
+      rawKycStatus === "more_info" || rawKycStatus === "needs_info"
+        ? "more_info"
+        : ["pending", "approved", "rejected", "unverified"].includes(rawKycStatus)
+          ? rawKycStatus
+          : hasKycAuthority
+            ? "unverified"
+            : "unknown";
     const code = String(row.userCode ?? "");
     return {
       id: stringValue(row.id),
       userCode: /^[0-9]{6}$/.test(code) ? code : undefined,
+      walletAddress: typeof row.walletAddress === "string" ? row.walletAddress : null,
       email: stringValue(row.email),
       displayName: stringValue(
         row.displayName,
@@ -670,11 +704,7 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       ),
       country: stringValue(row.country, stringValue(profile.country, "UNKNOWN")),
       status,
-      kyc: ["unverified", "pending", "approved", "rejected", "more_info"].includes(
-        stringValue(row.kycStatus),
-      )
-        ? (stringValue(row.kycStatus) as User["kyc"])
-        : "unverified",
+      kyc: kycStatus as User["kyc"],
       tier: ["T0", "T1", "T2", "T3"].includes(stringValue(row.tier))
         ? (stringValue(row.tier) as User["tier"])
         : "T0",
@@ -1233,10 +1263,14 @@ export class NexiAdminApiProvider implements AdminDataProvider {
         maxStake: stringValue(config.maxStake, "0"),
         enabled: config.enabled === true || config.enabled === 1,
       }));
+      const pairEnabled = (row: JsonRecord) => {
+        const value = row.pairEnabled === undefined ? row.enabled : row.pairEnabled;
+        return value === true || value === 1;
+      };
       return {
         id: symbol,
         symbol,
-        enabled: configs.some((row) => row.enabled === true || row.enabled === 1),
+        enabled: configs.some(pairEnabled),
         payoutBps,
         durationConfigs,
         minStake: stringValue(current.minStake, "0"),
@@ -1244,7 +1278,7 @@ export class NexiAdminApiProvider implements AdminDataProvider {
         exposureCap: "UNAVAILABLE",
         exposureUsed: "UNAVAILABLE",
         settlementDelayMs: Number(current.settlementDelaySeconds ?? 0) * 1000,
-        maintenance: configs.every((row) => row.enabled === false || row.enabled === 0),
+        maintenance: !configs.some(pairEnabled),
       };
     });
   }
@@ -1698,9 +1732,14 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     ctx: ConsequentialContext,
   ): Promise<MutationResult> {
     if (Object.keys(patch).some((key) => key !== "enabled")) {
-      return this.unsupportedAuthority("updateBinaryPair", "Binary pair-level changes are limited to availability.");
+      return this.unsupportedAuthority(
+        "updateBinaryPair",
+        "Binary pair-level changes are limited to availability.",
+      );
     }
-    const pair = (await this.listBinaryPairs()).find((item) => item.id === id || item.symbol === id);
+    const pair = (await this.listBinaryPairs()).find(
+      (item) => item.id === id || item.symbol === id,
+    );
     return this.requestMutation(
       "/admin/binary/pairs/maintenance",
       ctx,
@@ -2308,24 +2347,47 @@ export class NexiAdminApiProvider implements AdminDataProvider {
   }
   async listOperatorAlerts(): Promise<AdminOperatorAlertsResponse> {
     const value = record(await this.request<unknown>("/communications/admin/operator-alerts"));
-    const categories = Array.isArray(value.categories) ? value.categories as AdminOperatorAlertCategory[] : [];
+    const categories = Array.isArray(value.categories)
+      ? (value.categories as AdminOperatorAlertCategory[])
+      : [];
     return {
-      items: Array.isArray(value.items) ? value.items.map((item) => {
-        const row = record(item);
-        return { id: stringValue(row.id), category: stringValue(row.category) as AdminOperatorAlertCategory,
-          severity: stringValue(row.severity), title: stringValue(row.title), summary: stringValue(row.summary),
-          referenceType: stringValue(row.referenceType), referenceId: stringValue(row.referenceId),
-          createdAt: stringValue(row.createdAt), readAt: typeof row.readAt === "string" ? row.readAt : null,
-          href: stringValue(row.href, "/overview") } satisfies AdminOperatorAlert;
-      }) : [], unreadCount: Number(value.unreadCount ?? 0), categories,
-      disabledCategories: Array.isArray(value.disabledCategories) ? value.disabledCategories as AdminOperatorAlertCategory[] : [],
+      items: Array.isArray(value.items)
+        ? value.items.map((item) => {
+            const row = record(item);
+            return {
+              id: stringValue(row.id),
+              category: stringValue(row.category) as AdminOperatorAlertCategory,
+              severity: stringValue(row.severity),
+              title: stringValue(row.title),
+              summary: stringValue(row.summary),
+              referenceType: stringValue(row.referenceType),
+              referenceId: stringValue(row.referenceId),
+              createdAt: stringValue(row.createdAt),
+              readAt: typeof row.readAt === "string" ? row.readAt : null,
+              href: stringValue(row.href, "/overview"),
+            } satisfies AdminOperatorAlert;
+          })
+        : [],
+      unreadCount: Number(value.unreadCount ?? 0),
+      categories,
+      disabledCategories: Array.isArray(value.disabledCategories)
+        ? (value.disabledCategories as AdminOperatorAlertCategory[])
+        : [],
     };
   }
-  updateOperatorAlertPreferences(disabledCategories: AdminOperatorAlertCategory[]): Promise<AdminOperatorAlertsResponse> {
-    return this.request("/communications/admin/operator-alerts/preferences", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ disabledCategories }) });
+  updateOperatorAlertPreferences(
+    disabledCategories: AdminOperatorAlertCategory[],
+  ): Promise<AdminOperatorAlertsResponse> {
+    return this.request("/communications/admin/operator-alerts/preferences", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ disabledCategories }),
+    });
   }
   async markOperatorAlertRead(id: string): Promise<void> {
-    await this.request(`/communications/admin/operator-alerts/${encodeURIComponent(id)}/read`, { method: "PATCH" });
+    await this.request(`/communications/admin/operator-alerts/${encodeURIComponent(id)}/read`, {
+      method: "PATCH",
+    });
   }
   async listNotifications(): Promise<AdminNotification[]> {
     const notifications = await this.requestAllPages("/communications/admin/notifications");

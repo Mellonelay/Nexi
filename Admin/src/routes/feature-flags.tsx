@@ -29,14 +29,18 @@ export const Route = createFileRoute("/feature-flags")({ component: Page });
 const ENV_OPTIONS: Environment[] = ["DEVELOPMENT", "SANDBOX", "PRODUCTION"];
 
 function Page() {
+  return <FeatureControls />;
+}
+
+export function FeatureControls({ embedded = false }: { embedded?: boolean }) {
   return (
     <RouteGuard permission="flags.view">
-      <Inner />
+      <Inner embedded={embedded} />
     </RouteGuard>
   );
 }
 
-function Inner() {
+function Inner({ embedded }: { embedded: boolean }) {
   const provider = useAdminData();
   const session = useAdminSession();
   const flagsQ = useAdminQuery((p) => p.listFlags());
@@ -53,14 +57,14 @@ function Inner() {
 
   if (flagsQ.loading) {
     return (
-      <Shell>
+      <Shell embedded={embedded}>
         <LoadingSkeleton rows={4} />
       </Shell>
     );
   }
   if (flagsQ.error) {
     return (
-      <Shell>
+      <Shell embedded={embedded}>
         <ErrorState title="Could not load flags" description={flagsQ.error.message} />
       </Shell>
     );
@@ -168,7 +172,7 @@ function Inner() {
   ];
 
   return (
-    <Shell total={flags.length} enabled={enabledCount}>
+    <Shell total={flags.length} enabled={enabledCount} embedded={embedded}>
       <DataTable
         data={flags}
         columns={columns}
@@ -350,11 +354,23 @@ function Shell({
   children,
   total,
   enabled,
+  embedded,
 }: {
   children: React.ReactNode;
   total?: number;
   enabled?: number;
+  embedded: boolean;
 }) {
+  if (embedded)
+    return (
+      <div className="flex flex-col gap-4">
+        <h2 className="text-base font-semibold">Feature controls</h2>
+        <p className="text-sm text-muted-foreground">
+          Manage supported feature flags and inspect their history.
+        </p>
+        {children}
+      </div>
+    );
   return (
     <div className="flex flex-col gap-6">
       <PageHeader

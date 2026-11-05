@@ -1,4 +1,4 @@
-@import './styles/nexi-tokens.generated.css';
+@import "./styles/nexi-tokens.generated.css";
 
 @tailwind base;
 @tailwind components;
@@ -17,13 +17,26 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family:
+    var(--font-geist-sans),
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: #050508;
   background-image:
-    radial-gradient(circle at 78% -8%, rgba(109, 65, 255, 0.2), transparent 30rem),
-    radial-gradient(circle at 10% 18%, rgba(116, 242, 247, 0.06), transparent 26rem),
+    radial-gradient(
+      circle at 78% -8%,
+      rgba(109, 65, 255, 0.2),
+      transparent 30rem
+    ),
+    radial-gradient(
+      circle at 10% 18%,
+      rgba(116, 242, 247, 0.06),
+      transparent 26rem
+    ),
     linear-gradient(180deg, #050508 0%, #0b0a0e 54%, #050508 100%);
   background-attachment: fixed;
   color: var(--nexi-text);
@@ -31,7 +44,11 @@ body {
 }
 
 .gradient-text {
-  background: linear-gradient(90deg, var(--nexi-text) 0%, var(--nexi-focus) 100%);
+  background: linear-gradient(
+    90deg,
+    var(--nexi-text) 0%,
+    var(--nexi-focus) 100%
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -45,8 +62,10 @@ body {
   background: var(--nexi-glass-panel-bg);
   border: 1px solid var(--nexi-border);
   border-radius: var(--nexi-radius-sm);
-  -webkit-backdrop-filter: blur(var(--nexi-glass-blur-panel)) saturate(var(--nexi-glass-saturation-panel));
-  backdrop-filter: blur(var(--nexi-glass-blur-panel)) saturate(var(--nexi-glass-saturation-panel));
+  -webkit-backdrop-filter: blur(var(--nexi-glass-blur-panel))
+    saturate(var(--nexi-glass-saturation-panel));
+  backdrop-filter: blur(var(--nexi-glass-blur-panel))
+    saturate(var(--nexi-glass-saturation-panel));
   box-shadow: var(--nexi-shadow-panel);
 }
 
@@ -56,36 +75,58 @@ body {
   }
 
   .nexi-safe-area-header {
-    padding-inline: max(12px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-right));
+    padding-inline: max(12px, env(safe-area-inset-left))
+      max(12px, env(safe-area-inset-right));
     padding-block: max(4px, env(safe-area-inset-top)) 4px;
   }
 
   @media (min-width: 768px) {
     .nexi-safe-area-header {
-      padding-inline: max(24px, env(safe-area-inset-left)) max(24px, env(safe-area-inset-right));
+      padding-inline: max(24px, env(safe-area-inset-left))
+        max(24px, env(safe-area-inset-right));
       padding-block: max(8px, env(safe-area-inset-top)) 8px;
     }
   }
 
   .nexi-safe-area-page {
-    padding-block: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-bottom));
-    padding-inline: max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right));
+    padding-block: max(16px, env(safe-area-inset-top))
+      max(16px, env(safe-area-inset-bottom));
+    padding-inline: max(16px, env(safe-area-inset-left))
+      max(16px, env(safe-area-inset-right));
   }
 
   .nexi-page-shell {
     background:
-      radial-gradient(circle at 82% -4%, rgba(115, 83, 221, 0.16), transparent 26rem),
-      radial-gradient(circle at 8% 20%, rgba(72, 192, 204, 0.035), transparent 22rem),
-      linear-gradient(180deg, var(--nexi-cal-canvas) 0%, var(--nexi-cal-canvas-deep) 58%, #02020b 100%);
+      radial-gradient(
+        circle at 82% -4%,
+        rgba(115, 83, 221, 0.16),
+        transparent 26rem
+      ),
+      radial-gradient(
+        circle at 8% 20%,
+        rgba(72, 192, 204, 0.035),
+        transparent 22rem
+      ),
+      linear-gradient(
+        180deg,
+        var(--nexi-cal-canvas) 0%,
+        var(--nexi-cal-canvas-deep) 58%,
+        #02020b 100%
+      );
   }
 
   .nexi-topbar,
   .nexi-station-header {
     border-color: var(--nexi-border-subtle);
-    background:
-      linear-gradient(180deg, rgba(12, 10, 38, 0.72), rgba(1, 1, 14, 0.7));
-    -webkit-backdrop-filter: blur(var(--nexi-glass-blur-shell)) saturate(var(--nexi-glass-saturation-shell));
-    backdrop-filter: blur(var(--nexi-glass-blur-shell)) saturate(var(--nexi-glass-saturation-shell));
+    background: linear-gradient(
+      180deg,
+      rgba(12, 10, 38, 0.72),
+      rgba(1, 1, 14, 0.7)
+    );
+    -webkit-backdrop-filter: blur(var(--nexi-glass-blur-shell))
+      saturate(var(--nexi-glass-saturation-shell));
+    backdrop-filter: blur(var(--nexi-glass-blur-shell))
+      saturate(var(--nexi-glass-saturation-shell));
     box-shadow:
       inset 0 1px 0 var(--nexi-specular-edge),
       inset 0 -1px 0 rgba(109, 65, 255, 0.16),
@@ -118,9 +159,15 @@ body {
   @media (min-width: 768px) {
     .nexi-dashboard-topbar {
       border-color: var(--nexi-border-subtle);
-      background: linear-gradient(180deg, rgba(12, 10, 38, 0.66), rgba(4, 3, 21, 0.54));
-      -webkit-backdrop-filter: blur(var(--nexi-glass-blur-shell)) saturate(var(--nexi-glass-saturation-shell));
-      backdrop-filter: blur(var(--nexi-glass-blur-shell)) saturate(var(--nexi-glass-saturation-shell));
+      background: linear-gradient(
+        180deg,
+        rgba(12, 10, 38, 0.66),
+        rgba(4, 3, 21, 0.54)
+      );
+      -webkit-backdrop-filter: blur(var(--nexi-glass-blur-shell))
+        saturate(var(--nexi-glass-saturation-shell));
+      backdrop-filter: blur(var(--nexi-glass-blur-shell))
+        saturate(var(--nexi-glass-saturation-shell));
       box-shadow: inset 0 -1px 0 rgba(115, 83, 221, 0.12);
     }
   }
@@ -129,45 +176,85 @@ body {
   .nexi-station-card {
     border: 1px solid var(--nexi-border-raised);
     background:
-      radial-gradient(circle at 100% 0%, rgba(109, 65, 255, 0.16), transparent 48%),
-      linear-gradient(135deg, var(--nexi-glass-raised-bg), var(--nexi-glass-panel-bg));
-    -webkit-backdrop-filter: blur(var(--nexi-glass-blur-panel)) saturate(var(--nexi-glass-saturation-panel));
-    backdrop-filter: blur(var(--nexi-glass-blur-panel)) saturate(var(--nexi-glass-saturation-panel));
+      radial-gradient(
+        circle at 100% 0%,
+        rgba(109, 65, 255, 0.16),
+        transparent 48%
+      ),
+      linear-gradient(
+        135deg,
+        var(--nexi-glass-raised-bg),
+        var(--nexi-glass-panel-bg)
+      );
+    -webkit-backdrop-filter: blur(var(--nexi-glass-blur-panel))
+      saturate(var(--nexi-glass-saturation-panel));
+    backdrop-filter: blur(var(--nexi-glass-blur-panel))
+      saturate(var(--nexi-glass-saturation-panel));
     box-shadow: var(--nexi-shadow-panel);
   }
 
   .nexi-panel-strong {
     border: 1px solid var(--nexi-border-strong);
     background:
-      radial-gradient(circle at 92% 8%, rgba(109, 65, 255, 0.28), transparent 44%),
-      linear-gradient(120deg, rgba(34, 18, 89, 0.76), rgba(12, 10, 38, 0.64) 58%, rgba(6, 4, 26, 0.72));
-    -webkit-backdrop-filter: blur(var(--nexi-glass-blur-raised)) saturate(var(--nexi-glass-saturation-shell));
-    backdrop-filter: blur(var(--nexi-glass-blur-raised)) saturate(var(--nexi-glass-saturation-shell));
+      radial-gradient(
+        circle at 92% 8%,
+        rgba(109, 65, 255, 0.28),
+        transparent 44%
+      ),
+      linear-gradient(
+        120deg,
+        rgba(34, 18, 89, 0.76),
+        rgba(12, 10, 38, 0.64) 58%,
+        rgba(6, 4, 26, 0.72)
+      );
+    -webkit-backdrop-filter: blur(var(--nexi-glass-blur-raised))
+      saturate(var(--nexi-glass-saturation-shell));
+    backdrop-filter: blur(var(--nexi-glass-blur-raised))
+      saturate(var(--nexi-glass-saturation-shell));
     box-shadow: var(--nexi-shadow-active);
   }
 
   .nexi-tabs-shell {
     border: 1px solid rgba(24, 24, 56, 0.92);
-    background: linear-gradient(180deg, rgba(11, 9, 38, 0.88), rgba(8, 4, 28, 0.9));
-    -webkit-backdrop-filter: blur(var(--nexi-glass-blur-panel)) saturate(var(--nexi-glass-saturation-panel));
-    backdrop-filter: blur(var(--nexi-glass-blur-panel)) saturate(var(--nexi-glass-saturation-panel));
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 10px 28px rgba(0,0,0,.24);
+    background: linear-gradient(
+      180deg,
+      rgba(11, 9, 38, 0.88),
+      rgba(8, 4, 28, 0.9)
+    );
+    -webkit-backdrop-filter: blur(var(--nexi-glass-blur-panel))
+      saturate(var(--nexi-glass-saturation-panel));
+    backdrop-filter: blur(var(--nexi-glass-blur-panel))
+      saturate(var(--nexi-glass-saturation-panel));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.035),
+      0 10px 28px rgba(0, 0, 0, 0.24);
   }
 
   .nexi-symbol-selector-trigger {
     border: 1px solid rgba(139, 92, 246, 0.46);
     border-radius: 14px;
-    background: linear-gradient(145deg, rgba(44, 20, 108, 0.66), rgba(12, 10, 38, 0.82));
-    -webkit-backdrop-filter: blur(18px) saturate(var(--nexi-glass-saturation-shell));
+    background: linear-gradient(
+      145deg,
+      rgba(44, 20, 108, 0.66),
+      rgba(12, 10, 38, 0.82)
+    );
+    -webkit-backdrop-filter: blur(18px)
+      saturate(var(--nexi-glass-saturation-shell));
     backdrop-filter: blur(18px) saturate(var(--nexi-glass-saturation-shell));
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), inset 0 0 0 1px rgba(139, 92, 246, 0.12), 0 8px 22px rgba(1, 1, 14, 0.25);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.14),
+      inset 0 0 0 1px rgba(139, 92, 246, 0.12),
+      0 8px 22px rgba(1, 1, 14, 0.25);
   }
-
 
   .nexi-quote-row {
     border-color: var(--nexi-border-subtle);
     background:
-      radial-gradient(circle at 100% 50%, rgba(109, 65, 255, 0.08), transparent 42%),
+      radial-gradient(
+        circle at 100% 50%,
+        rgba(109, 65, 255, 0.08),
+        transparent 42%
+      ),
       linear-gradient(90deg, var(--nexi-glass-row-bg), rgba(8, 7, 32, 0.76));
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
   }
@@ -175,32 +262,62 @@ body {
   .nexi-quote-row:hover,
   .nexi-quote-row:focus-visible {
     border-color: rgba(74, 31, 111, 0.7);
-    background: linear-gradient(90deg, var(--nexi-glass-row-active), var(--nexi-glass-row-hover));
-    box-shadow: 0 0 24px -8px var(--nexi-violet-glow), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    background: linear-gradient(
+      90deg,
+      var(--nexi-glass-row-active),
+      var(--nexi-glass-row-hover)
+    );
+    box-shadow:
+      0 0 24px -8px var(--nexi-violet-glow),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
   }
 
   .nexi-promo {
     border: 1px solid rgba(115, 83, 221, 0.46);
     background:
-      radial-gradient(circle at 14% 50%, rgba(115, 83, 221, 0.28), transparent 16rem),
-      radial-gradient(circle at 88% 24%, rgba(72, 192, 204, 0.06), transparent 14rem),
-      linear-gradient(115deg, rgba(24, 8, 72, 0.82) 0%, rgba(11, 9, 38, 0.76) 58%, rgba(4, 3, 21, 0.88) 100%);
-    -webkit-backdrop-filter: blur(var(--nexi-glass-blur-raised)) saturate(var(--nexi-glass-saturation-shell));
-    backdrop-filter: blur(var(--nexi-glass-blur-raised)) saturate(var(--nexi-glass-saturation-shell));
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.055), 0 18px 46px rgba(0,0,0,.34), 0 0 24px rgba(115,83,221,.16);
+      radial-gradient(
+        circle at 14% 50%,
+        rgba(115, 83, 221, 0.28),
+        transparent 16rem
+      ),
+      radial-gradient(
+        circle at 88% 24%,
+        rgba(72, 192, 204, 0.06),
+        transparent 14rem
+      ),
+      linear-gradient(
+        115deg,
+        rgba(24, 8, 72, 0.82) 0%,
+        rgba(11, 9, 38, 0.76) 58%,
+        rgba(4, 3, 21, 0.88) 100%
+      );
+    -webkit-backdrop-filter: blur(var(--nexi-glass-blur-raised))
+      saturate(var(--nexi-glass-saturation-shell));
+    backdrop-filter: blur(var(--nexi-glass-blur-raised))
+      saturate(var(--nexi-glass-saturation-shell));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.055),
+      0 18px 46px rgba(0, 0, 0, 0.34),
+      0 0 24px rgba(115, 83, 221, 0.16);
   }
 
   .nexi-bottom-nav,
   .nexi-shell-glass {
-    -webkit-backdrop-filter: blur(var(--nexi-glass-blur-shell)) saturate(var(--nexi-glass-saturation-shell));
-    backdrop-filter: blur(var(--nexi-glass-blur-shell)) saturate(var(--nexi-glass-saturation-shell));
+    -webkit-backdrop-filter: blur(var(--nexi-glass-blur-shell))
+      saturate(var(--nexi-glass-saturation-shell));
+    backdrop-filter: blur(var(--nexi-glass-blur-shell))
+      saturate(var(--nexi-glass-saturation-shell));
   }
 
   .nexi-bottom-nav {
     border-color: rgba(115, 83, 221, 0.34);
-    background: linear-gradient(180deg, rgba(11, 9, 38, 0.82), rgba(4, 4, 24, 0.9));
+    background: linear-gradient(
+      180deg,
+      rgba(11, 9, 38, 0.82),
+      rgba(4, 4, 24, 0.9)
+    );
     box-shadow:
-      inset 0 1px 0 rgba(255,255,255,.055),
+      inset 0 1px 0 rgba(255, 255, 255, 0.055),
       0 -10px 30px rgba(0, 0, 0, 0.38),
       0 0 18px -10px rgba(115, 83, 221, 0.34);
   }
@@ -208,27 +325,53 @@ body {
   .nexi-sidebar,
   .nexi-drawer {
     background:
-      radial-gradient(circle at 100% 0%, rgba(109, 65, 255, 0.18), transparent 18rem),
-      linear-gradient(180deg, rgba(11, 9, 36, 0.92) 0%, rgba(1, 1, 14, 0.98) 100%);
-    -webkit-backdrop-filter: blur(var(--nexi-glass-blur-shell)) saturate(var(--nexi-glass-saturation-panel));
-    backdrop-filter: blur(var(--nexi-glass-blur-shell)) saturate(var(--nexi-glass-saturation-panel));
-    box-shadow: 16px 0 58px rgba(1, 1, 14, 0.48), inset -1px 0 0 rgba(109, 65, 255, 0.12);
+      radial-gradient(
+        circle at 100% 0%,
+        rgba(109, 65, 255, 0.18),
+        transparent 18rem
+      ),
+      linear-gradient(
+        180deg,
+        rgba(11, 9, 36, 0.92) 0%,
+        rgba(1, 1, 14, 0.98) 100%
+      );
+    -webkit-backdrop-filter: blur(var(--nexi-glass-blur-shell))
+      saturate(var(--nexi-glass-saturation-panel));
+    backdrop-filter: blur(var(--nexi-glass-blur-shell))
+      saturate(var(--nexi-glass-saturation-panel));
+    box-shadow:
+      16px 0 58px rgba(1, 1, 14, 0.48),
+      inset -1px 0 0 rgba(109, 65, 255, 0.12);
   }
 
-  .nexi-drawer:not([open]) {
+  dialog.nexi-drawer:not([open]) {
     display: none;
   }
 
   .nexi-data {
     font-variant-numeric: tabular-nums;
-    font-feature-settings: "tnum" 1, "zero" 1;
+    font-feature-settings:
+      "tnum" 1,
+      "zero" 1;
   }
 
   .nexi-atmosphere {
     background:
-      radial-gradient(circle at 78% 0%, rgba(109, 65, 255, 0.2), transparent 24rem),
-      radial-gradient(circle at 8% 26%, rgba(116, 242, 247, 0.055), transparent 22rem),
-      radial-gradient(circle at 50% 58%, rgba(38, 19, 102, 0.14), transparent 34rem);
+      radial-gradient(
+        circle at 78% 0%,
+        rgba(109, 65, 255, 0.2),
+        transparent 24rem
+      ),
+      radial-gradient(
+        circle at 8% 26%,
+        rgba(116, 242, 247, 0.055),
+        transparent 22rem
+      ),
+      radial-gradient(
+        circle at 50% 58%,
+        rgba(38, 19, 102, 0.14),
+        transparent 34rem
+      );
   }
 
   .nexi-icon-button {
@@ -240,8 +383,14 @@ body {
     border: 1px solid rgba(142, 91, 226, 0.28);
     border-radius: 14px;
     color: var(--nexi-text-secondary);
-    background: linear-gradient(180deg, rgba(22, 18, 57, 0.72), rgba(6, 4, 26, 0.78));
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 12px 32px rgba(1, 1, 14, 0.28);
+    background: linear-gradient(
+      180deg,
+      rgba(22, 18, 57, 0.72),
+      rgba(6, 4, 26, 0.78)
+    );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 12px 32px rgba(1, 1, 14, 0.28);
     -webkit-backdrop-filter: blur(18px) saturate(150%);
     backdrop-filter: blur(18px) saturate(150%);
   }
@@ -263,30 +412,55 @@ body {
     color: white;
     font-size: 0.875rem;
     font-weight: 600;
-    background: radial-gradient(circle at 35% 28%, rgba(255,255,255,.28), transparent 22%), linear-gradient(145deg, #6d41ff, #25105f 70%);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 0 24px rgba(109,65,255,.28);
+    background:
+      radial-gradient(
+        circle at 35% 28%,
+        rgba(255, 255, 255, 0.28),
+        transparent 22%
+      ),
+      linear-gradient(145deg, #6d41ff, #25105f 70%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      0 0 24px rgba(109, 65, 255, 0.28);
   }
 
   .nexi-logo-mark {
     border: 1px solid rgba(142, 91, 226, 0.46);
     background: linear-gradient(145deg, #8e5be2 0%, #6d41ff 48%, #24105f 100%);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 0 24px rgba(109,65,255,.28);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.2),
+      0 0 24px rgba(109, 65, 255, 0.28);
   }
 
   .nexi-active-pair {
     border: 1px solid rgba(115, 83, 221, 0.7);
     background:
-      radial-gradient(circle at 88% 118%, rgba(115, 83, 221, 0.3), transparent 40%),
+      radial-gradient(
+        circle at 88% 118%,
+        rgba(115, 83, 221, 0.3),
+        transparent 40%
+      ),
       linear-gradient(135deg, rgba(44, 20, 108, 0.68), rgba(11, 9, 38, 0.82));
     -webkit-backdrop-filter: blur(22px) saturate(158%);
     backdrop-filter: blur(22px) saturate(158%);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.09), 0 0 24px rgba(115,83,221,.2), 0 18px 48px rgba(0,0,0,.4);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.09),
+      0 0 24px rgba(115, 83, 221, 0.2),
+      0 18px 48px rgba(0, 0, 0, 0.4);
   }
 
   .nexi-token-mark {
-    border: 1px solid rgba(255,255,255,.09);
-    background: radial-gradient(circle at 30% 20%, rgba(255,255,255,.12), transparent 32%), rgba(11,9,38,.88);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 0 16px rgba(115,83,221,.12);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background:
+      radial-gradient(
+        circle at 30% 20%,
+        rgba(255, 255, 255, 0.12),
+        transparent 32%
+      ),
+      rgba(11, 9, 38, 0.88);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 0 16px rgba(115, 83, 221, 0.12);
   }
 
   .nexi-search-compact,
@@ -305,24 +479,38 @@ body {
   .nexi-market-row {
     border: 1px solid rgba(24, 24, 56, 0.92);
     background:
-      radial-gradient(circle at 82% 30%, rgba(115, 83, 221, 0.075), transparent 42%),
+      radial-gradient(
+        circle at 82% 30%,
+        rgba(115, 83, 221, 0.075),
+        transparent 42%
+      ),
       linear-gradient(105deg, rgba(12, 8, 36, 0.92), rgba(8, 4, 28, 0.94));
     -webkit-backdrop-filter: blur(16px) saturate(145%);
     backdrop-filter: blur(16px) saturate(145%);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 10px 24px rgba(0,0,0,.2);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      0 10px 24px rgba(0, 0, 0, 0.2);
   }
 
   .nexi-market-row:hover,
   .nexi-market-row:focus-visible {
     border-color: rgba(115, 83, 221, 0.56);
-    background: linear-gradient(105deg, rgba(44,20,108,.74), rgba(11,9,38,.92));
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.065), 0 0 20px rgba(115,83,221,.16);
+    background: linear-gradient(
+      105deg,
+      rgba(44, 20, 108, 0.74),
+      rgba(11, 9, 38, 0.92)
+    );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.065),
+      0 0 20px rgba(115, 83, 221, 0.16);
   }
 
   .nexi-primary-button {
     color: white;
     background: linear-gradient(135deg, #6d41ff, #9b55ff);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 0 26px rgba(109,65,255,.34);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      0 0 26px rgba(109, 65, 255, 0.34);
   }
 
   .nexi-primary-button:hover {
@@ -333,23 +521,29 @@ body {
     color: #b995ff;
     border: 1px solid rgba(142, 91, 226, 0.65);
     background: rgba(6, 4, 26, 0.34);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 0 22px rgba(109,65,255,.12);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 0 22px rgba(109, 65, 255, 0.12);
     -webkit-backdrop-filter: blur(16px) saturate(145%);
     backdrop-filter: blur(16px) saturate(145%);
   }
 
   .nexi-promo-button:hover {
     color: white;
-    border-color: rgba(116,242,247,.48);
-    box-shadow: 0 0 24px rgba(109,65,255,.22);
+    border-color: rgba(116, 242, 247, 0.48);
+    box-shadow: 0 0 24px rgba(109, 65, 255, 0.22);
   }
 }
 
-
 /* Shared selected-tab refraction. State fills and focus rings remain component-owned. */
 :where(button[role="tab"][aria-selected="true"], button[aria-pressed="true"]) {
-  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0) 72%);
-  -webkit-backdrop-filter: blur(14px) saturate(var(--nexi-glass-saturation-panel));
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.09),
+    rgba(255, 255, 255, 0) 72%
+  );
+  -webkit-backdrop-filter: blur(14px)
+    saturate(var(--nexi-glass-saturation-panel));
   backdrop-filter: blur(14px) saturate(var(--nexi-glass-saturation-panel));
   outline: 1px solid rgba(185, 150, 255, 0.22);
   outline-offset: -1px;
@@ -361,7 +555,10 @@ body {
 }
 
 @media (prefers-reduced-transparency: reduce) {
-  :where(button[role="tab"][aria-selected="true"], button[aria-pressed="true"]) {
+  :where(
+    button[role="tab"][aria-selected="true"],
+    button[aria-pressed="true"]
+  ) {
     background-image: none;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
@@ -375,7 +572,10 @@ body {
 }
 
 @media (prefers-contrast: more) {
-  :where(button[role="tab"][aria-selected="true"], button[aria-pressed="true"]) {
+  :where(
+    button[role="tab"][aria-selected="true"],
+    button[aria-pressed="true"]
+  ) {
     outline-color: rgba(185, 150, 255, 0.82);
   }
 
@@ -383,7 +583,6 @@ body {
     border-color: rgba(185, 150, 255, 0.82);
   }
 }
-
 
 ::-webkit-scrollbar {
   width: 8px;
@@ -426,7 +625,8 @@ textarea {
   }
 
   .nexi-ripple::after,
-  .nexi-station-card[aria-labelledby="spot-ticket-heading"] .nexi-interactive::after {
+  .nexi-station-card[aria-labelledby="spot-ticket-heading"]
+    .nexi-interactive::after {
     transform: translate(-50%, -50%) scale(1);
     transition: none;
   }
@@ -435,7 +635,9 @@ textarea {
 html {
   min-height: 100%;
   background: #050508;
-  scroll-padding-bottom: calc(var(--nexi-mobile-dock-height) + var(--nexi-safe-bottom) + 24px);
+  scroll-padding-bottom: calc(
+    var(--nexi-mobile-dock-height) + var(--nexi-safe-bottom) + 24px
+  );
 }
 
 body {
@@ -444,25 +646,48 @@ body {
 
 @layer components {
   .nexi-shell-glass {
-    background: linear-gradient(180deg, rgba(11, 9, 36, 0.78), rgba(4, 4, 24, 0.9));
-    box-shadow: inset 0 1px 0 var(--nexi-specular-edge), 0 18px 48px rgba(1, 1, 14, 0.38);
+    background: linear-gradient(
+      180deg,
+      rgba(11, 9, 36, 0.78),
+      rgba(4, 4, 24, 0.9)
+    );
+    box-shadow:
+      inset 0 1px 0 var(--nexi-specular-edge),
+      0 18px 48px rgba(1, 1, 14, 0.38);
   }
 
   .nexi-raised-panel {
-    background: radial-gradient(circle at 100% 0%, rgba(109, 65, 255, 0.18), transparent 48%), linear-gradient(135deg, rgba(26, 12, 36, 0.90), rgba(12, 10, 38, 0.80));
-    -webkit-backdrop-filter: blur(var(--nexi-glass-blur-raised)) saturate(var(--nexi-glass-saturation-panel));
-    backdrop-filter: blur(var(--nexi-glass-blur-raised)) saturate(var(--nexi-glass-saturation-panel));
-    box-shadow: var(--nexi-shadow-panel), inset 0 0 0 1px rgba(139, 92, 246, 0.08);
+    background:
+      radial-gradient(
+        circle at 100% 0%,
+        rgba(109, 65, 255, 0.18),
+        transparent 48%
+      ),
+      linear-gradient(135deg, rgba(26, 12, 36, 0.9), rgba(12, 10, 38, 0.8));
+    -webkit-backdrop-filter: blur(var(--nexi-glass-blur-raised))
+      saturate(var(--nexi-glass-saturation-panel));
+    backdrop-filter: blur(var(--nexi-glass-blur-raised))
+      saturate(var(--nexi-glass-saturation-panel));
+    box-shadow:
+      var(--nexi-shadow-panel),
+      inset 0 0 0 1px rgba(139, 92, 246, 0.08);
   }
 
   .nexi-execution-surface {
-    background: linear-gradient(180deg, rgba(8, 5, 14, 0.98), rgba(6, 4, 20, 0.97));
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035), 0 14px 36px rgba(0, 0, 0, 0.28);
+    background: linear-gradient(
+      180deg,
+      rgba(8, 5, 14, 0.98),
+      rgba(6, 4, 20, 0.97)
+    );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.035),
+      0 14px 36px rgba(0, 0, 0, 0.28);
   }
 
   .nexi-interactive {
     touch-action: manipulation;
-    transition-property: transform, border-color, background-color, color, box-shadow, opacity;
+    transition-property:
+      transform, border-color, background-color, color, box-shadow, opacity;
     transition-duration: var(--nexi-motion-feedback);
     transition-timing-function: var(--nexi-ease-standard);
   }
@@ -484,35 +709,47 @@ body {
   }
 
   .nexi-ripple::after,
-  .nexi-station-card[aria-labelledby="spot-ticket-heading"] .nexi-interactive::after {
+  .nexi-station-card[aria-labelledby="spot-ticket-heading"]
+    .nexi-interactive::after {
     position: absolute;
     inset: 50% auto auto 50%;
     width: 140%;
     aspect-ratio: 1;
     border-radius: 999px;
-    background: radial-gradient(circle, rgba(248, 246, 255, 0.18) 0%, rgba(248, 246, 255, 0) 66%);
-    content: '';
+    background: radial-gradient(
+      circle,
+      rgba(248, 246, 255, 0.18) 0%,
+      rgba(248, 246, 255, 0) 66%
+    );
+    content: "";
     opacity: 0;
     pointer-events: none;
     transform: translate(-50%, -50%) scale(0.2);
-    transition: opacity 150ms var(--nexi-ease-standard), transform 150ms var(--nexi-ease-standard);
+    transition:
+      opacity 150ms var(--nexi-ease-standard),
+      transform 150ms var(--nexi-ease-standard);
     z-index: 0;
   }
 
   .nexi-ripple > *,
-  .nexi-station-card[aria-labelledby="spot-ticket-heading"] .nexi-interactive > * {
+  .nexi-station-card[aria-labelledby="spot-ticket-heading"]
+    .nexi-interactive
+    > * {
     position: relative;
     z-index: 1;
   }
 
   .nexi-ripple:active::after,
-  .nexi-station-card[aria-labelledby="spot-ticket-heading"] .nexi-interactive:active::after {
+  .nexi-station-card[aria-labelledby="spot-ticket-heading"]
+    .nexi-interactive:active::after {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
   }
 
   .nexi-tab-edge {
-    transition: transform var(--nexi-motion-tab) var(--nexi-ease-standard), opacity var(--nexi-motion-tab) var(--nexi-ease-standard);
+    transition:
+      transform var(--nexi-motion-tab) var(--nexi-ease-standard),
+      opacity var(--nexi-motion-tab) var(--nexi-ease-standard);
     transform-origin: left center;
   }
 
@@ -524,7 +761,9 @@ body {
     background: var(--nexi-surface-execution);
     color: var(--nexi-text);
     outline: none;
-    transition: border-color var(--nexi-motion-feedback) var(--nexi-ease-standard), box-shadow var(--nexi-motion-feedback) var(--nexi-ease-standard);
+    transition:
+      border-color var(--nexi-motion-feedback) var(--nexi-ease-standard),
+      box-shadow var(--nexi-motion-feedback) var(--nexi-ease-standard);
   }
 
   .nexi-input:focus-visible {
@@ -533,15 +772,29 @@ body {
   }
 
   .nexi-safe-page {
-    scroll-padding-bottom: calc(var(--nexi-mobile-dock-height) + var(--nexi-safe-bottom) + 28px);
+    scroll-padding-bottom: calc(
+      var(--nexi-mobile-dock-height) + var(--nexi-safe-bottom) + 28px
+    );
   }
 
   .nexi-scroll-rail {
     scrollbar-width: none;
     scroll-snap-type: x proximity;
     overscroll-behavior-inline: contain;
-    -webkit-mask-image: linear-gradient(90deg, transparent 0, black 18px, black calc(100% - 18px), transparent 100%);
-    mask-image: linear-gradient(90deg, transparent 0, black 18px, black calc(100% - 18px), transparent 100%);
+    -webkit-mask-image: linear-gradient(
+      90deg,
+      transparent 0,
+      black 18px,
+      black calc(100% - 18px),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      90deg,
+      transparent 0,
+      black 18px,
+      black calc(100% - 18px),
+      transparent 100%
+    );
   }
 
   .nexi-scroll-rail::-webkit-scrollbar {
@@ -555,14 +808,18 @@ body {
 
 /* Quotes owns its mobile header and active-pair composition. */
 @media (max-width: 767px) {
-  .nexi-dashboard-toolbar { display: contents; }
+  .nexi-dashboard-toolbar {
+    display: contents;
+  }
   .nexi-dashboard-toolbar button {
     position: absolute;
     top: 6px;
     right: 12px;
     z-index: 1;
   }
-  .nexi-dashboard-search { margin-top: 56px; }
+  .nexi-dashboard-search {
+    margin-top: 56px;
+  }
   .nexi-dashboard-hero {
     grid-template-columns: minmax(0, 1fr);
     margin-top: 8px;
@@ -580,20 +837,36 @@ body {
     width: 100%;
     padding: 6px;
   }
-  .nexi-dashboard-hero .nexi-active-pair button:first-child { min-height: 44px; }
-  .nexi-dashboard-hero .nexi-active-pair-favorite { display: none; }
+  .nexi-dashboard-hero .nexi-active-pair button:first-child {
+    min-height: 44px;
+  }
+  .nexi-dashboard-hero .nexi-active-pair-favorite {
+    display: none;
+  }
 }
 
 @media (min-width: 500px) and (max-width: 767px) {
-  .nexi-dashboard-hero { grid-template-columns: minmax(0, 1fr) 220px; }
-  .nexi-dashboard-toolbar button { right: 240px; }
+  .nexi-dashboard-hero {
+    grid-template-columns: minmax(0, 1fr) 220px;
+  }
+  .nexi-dashboard-toolbar button {
+    right: 240px;
+  }
 }
 
 @media (min-width: 500px) and (max-width: 767px) and (max-height: 400px) {
-  .nexi-dashboard-hero { margin-top: 4px; }
-  .nexi-dashboard-hero .nexi-active-pair { padding: 4px; }
-  .nexi-dashboard-hero ~ .nexi-tabs-shell { margin-top: 2px; }
-  .nexi-dashboard-hero ~ section .nexi-market-row { align-items: start; }
+  .nexi-dashboard-hero {
+    margin-top: 4px;
+  }
+  .nexi-dashboard-hero .nexi-active-pair {
+    padding: 4px;
+  }
+  .nexi-dashboard-hero ~ .nexi-tabs-shell {
+    margin-top: 2px;
+  }
+  .nexi-dashboard-hero ~ section .nexi-market-row {
+    align-items: start;
+  }
 }
 
 @media (max-height: 700px) and (max-width: 767px) {
@@ -608,12 +881,28 @@ body {
 }
 
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
-  :is(.card-dark, .nexi-shell-glass, .nexi-raised-panel, .nexi-panel,
-      .nexi-panel-strong, .nexi-station-card, .nexi-tabs-shell, .nexi-promo,
-      .nexi-topbar, .nexi-station-header, .nexi-bottom-nav, .nexi-sidebar,
-      .nexi-drawer, .nexi-icon-button, .nexi-search-compact,
-      .nexi-secondary-button, .nexi-market-row, .nexi-quote-row,
-      .nexi-active-pair, .nexi-promo-button) {
+  :is(
+    .card-dark,
+    .nexi-shell-glass,
+    .nexi-raised-panel,
+    .nexi-panel,
+    .nexi-panel-strong,
+    .nexi-station-card,
+    .nexi-tabs-shell,
+    .nexi-promo,
+    .nexi-topbar,
+    .nexi-station-header,
+    .nexi-bottom-nav,
+    .nexi-sidebar,
+    .nexi-drawer,
+    .nexi-icon-button,
+    .nexi-search-compact,
+    .nexi-secondary-button,
+    .nexi-market-row,
+    .nexi-quote-row,
+    .nexi-active-pair,
+    .nexi-promo-button
+  ) {
     background: #0b0711;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
@@ -621,38 +910,86 @@ body {
 }
 
 @media (forced-colors: active) {
-  :is(.nexi-panel, .nexi-raised-panel, .nexi-station-card, .nexi-topbar, .nexi-station-header, .nexi-bottom-nav) {
-    color: CanvasText; border: 1px solid CanvasText; background: Canvas; box-shadow: none;
-    -webkit-backdrop-filter: none; backdrop-filter: none;
+  :is(
+    .nexi-panel,
+    .nexi-raised-panel,
+    .nexi-station-card,
+    .nexi-topbar,
+    .nexi-station-header,
+    .nexi-bottom-nav
+  ) {
+    color: CanvasText;
+    border: 1px solid CanvasText;
+    background: Canvas;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
-  :where(button, a, input, select, textarea):focus-visible { outline: 2px solid Highlight; outline-offset: 2px; }
+  :where(button, a, input, select, textarea):focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
 }
 
 @media (prefers-contrast: more) {
-  :is(.card-dark, .nexi-shell-glass, .nexi-raised-panel, .nexi-panel,
-      .nexi-panel-strong, .nexi-station-card, .nexi-tabs-shell, .nexi-promo,
-      .nexi-topbar, .nexi-station-header, .nexi-bottom-nav, .nexi-sidebar,
-      .nexi-drawer, .nexi-icon-button, .nexi-search-compact,
-      .nexi-secondary-button, .nexi-market-row, .nexi-quote-row,
-      .nexi-active-pair, .nexi-promo-button) {
+  :is(
+    .card-dark,
+    .nexi-shell-glass,
+    .nexi-raised-panel,
+    .nexi-panel,
+    .nexi-panel-strong,
+    .nexi-station-card,
+    .nexi-tabs-shell,
+    .nexi-promo,
+    .nexi-topbar,
+    .nexi-station-header,
+    .nexi-bottom-nav,
+    .nexi-sidebar,
+    .nexi-drawer,
+    .nexi-icon-button,
+    .nexi-search-compact,
+    .nexi-secondary-button,
+    .nexi-market-row,
+    .nexi-quote-row,
+    .nexi-active-pair,
+    .nexi-promo-button
+  ) {
     border-color: rgba(185, 150, 255, 0.62);
   }
 }
 
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  :is(.card-dark, .nexi-shell-glass, .nexi-raised-panel, .nexi-panel,
-      .nexi-panel-strong, .nexi-station-card, .nexi-tabs-shell, .nexi-promo,
-      .nexi-topbar, .nexi-station-header, .nexi-bottom-nav, .nexi-sidebar,
-      .nexi-drawer, .nexi-icon-button, .nexi-search-compact,
-      .nexi-secondary-button, .nexi-market-row, .nexi-quote-row,
-      .nexi-active-pair, .nexi-promo-button) {
+@supports not (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  :is(
+    .card-dark,
+    .nexi-shell-glass,
+    .nexi-raised-panel,
+    .nexi-panel,
+    .nexi-panel-strong,
+    .nexi-station-card,
+    .nexi-tabs-shell,
+    .nexi-promo,
+    .nexi-topbar,
+    .nexi-station-header,
+    .nexi-bottom-nav,
+    .nexi-sidebar,
+    .nexi-drawer,
+    .nexi-icon-button,
+    .nexi-search-compact,
+    .nexi-secondary-button,
+    .nexi-market-row,
+    .nexi-quote-row,
+    .nexi-active-pair,
+    .nexi-promo-button
+  ) {
     background: #0b0711;
   }
 }
 
 /* Mobile input sizing prevents focus zoom on iOS while preserving NEXI's responsive layout. */
 @media (max-width: 767px) {
-  input:not([type='checkbox']):not([type='radio']):not([type='range']),
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
   select,
   textarea {
     font-size: 16px;
@@ -661,33 +998,91 @@ body {
 
 /* Short mobile viewports keep the trading task ahead of repeated chrome. */
 @media (max-width: 1023px) and (max-height: 700px) {
-  .nexi-trading-page .nexi-trading-chart .nexi-chart-indicators { order: 2; }
+  .nexi-trading-page .nexi-trading-chart .nexi-chart-indicators {
+    order: 2;
+  }
 }
 @media (max-width: 1023px) and (max-height: 500px) and (orientation: landscape) {
-  .nexi-trading-page { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; }
-  .nexi-trading-page > .nexi-station-header { padding-block: 4px; }
-  .nexi-trading-page > .nexi-station-card { grid-column: 1 / -1; }
-  .nexi-trading-page > .nexi-trading-products { margin: 4px 12px; align-self: center; }
-  .nexi-trading-page .nexi-trading-workspace { grid-column: 1 / -1; padding: 8px 12px; gap: 8px; }
-  .nexi-trading-page .nexi-trading-heading { display: none; }
-  .nexi-trading-page .nexi-trading-chart-card { min-height: 0; }
-  .nexi-trading-page .nexi-margin-workspace { margin-top: 0; padding: 8px 12px; }
-  .nexi-trading-page .nexi-margin-heading { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-  .nexi-trading-page .nexi-margin-chart-frame { margin-top: 0; }
-  .nexi-trading-page .nexi-trading-intervals { padding-block: 4px; }
-  .nexi-trading-page .nexi-trading-intervals button { min-height: 44px; min-width: 44px; }
-  .nexi-trading-page .nexi-options-chart-frame { height: 220px !important; }
+  .nexi-trading-page {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+  }
+  .nexi-trading-page > .nexi-station-header {
+    padding-block: 4px;
+  }
+  .nexi-trading-page > .nexi-station-card {
+    grid-column: 1 / -1;
+  }
+  .nexi-trading-page > .nexi-trading-products {
+    margin: 4px 12px;
+    align-self: center;
+  }
+  .nexi-trading-page .nexi-trading-workspace {
+    grid-column: 1 / -1;
+    padding: 8px 12px;
+    gap: 8px;
+  }
+  .nexi-trading-page .nexi-trading-heading {
+    display: none;
+  }
+  .nexi-trading-page .nexi-trading-chart-card {
+    min-height: 0;
+  }
+  .nexi-trading-page .nexi-margin-workspace {
+    margin-top: 0;
+    padding: 8px 12px;
+  }
+  .nexi-trading-page .nexi-margin-heading {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .nexi-trading-page .nexi-margin-chart-frame {
+    margin-top: 0;
+  }
+  .nexi-trading-page .nexi-trading-intervals {
+    padding-block: 4px;
+  }
+  .nexi-trading-page .nexi-trading-intervals button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .nexi-trading-page .nexi-options-chart-frame {
+    height: 220px !important;
+  }
   .nexi-trading-page .nexi-options-chart-frame .nexi-trading-chart,
-  .nexi-trading-page .nexi-options-chart-frame .nexi-trading-plot-shell { height: 220px; min-height: 220px; }
-  .nexi-trading-page .nexi-chart-rail { padding-block: 4px; }
-  .nexi-trading-page .nexi-trading-chart { height: 220px; min-height: 0; }
-  .nexi-trading-page .nexi-trading-plot-shell { height: 220px; min-height: 220px; }
+  .nexi-trading-page .nexi-options-chart-frame .nexi-trading-plot-shell {
+    height: 220px;
+    min-height: 220px;
+  }
+  .nexi-trading-page .nexi-chart-rail {
+    padding-block: 4px;
+  }
+  .nexi-trading-page .nexi-trading-chart {
+    height: 220px;
+    min-height: 0;
+  }
+  .nexi-trading-page .nexi-trading-plot-shell {
+    height: 220px;
+    min-height: 220px;
+  }
 }
 
 @media (min-width: 460px) and (max-width: 539px) and (max-height: 500px) and (orientation: landscape) {
-  .nexi-trading-page { grid-template-columns: minmax(0, 1fr) 120px; }
+  .nexi-trading-page {
+    grid-template-columns: minmax(0, 1fr) 120px;
+  }
 }
 
 @media (min-width: 540px) and (max-width: 1023px) and (max-height: 500px) and (orientation: landscape) {
-  .nexi-trading-page { grid-template-columns: minmax(0, 1fr) 160px; }
+  .nexi-trading-page {
+    grid-template-columns: minmax(0, 1fr) 160px;
+  }
 }

@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { FormEvent, useState } from "react";
+import { createFileRoute, useRouterState } from "@tanstack/react-router";
+import { FormEvent, useEffect, useState } from "react";
 import { PageHeader } from "@/admin/components/PageHeader";
 import { RouteGuard } from "@/admin/components/RouteGuard";
 import { StatusBadge } from "@/admin/components/StatusBadge";
@@ -24,6 +24,12 @@ function Inner() {
   const session = useAdminSession();
   const query = useAdminQuery((p) => p.listMiningPlans());
   const subscriptionsQuery = useAdminQuery((p) => p.listMiningSubscriptions());
+  const reference = useRouterState({
+    select: (state) => {
+      const value = (state.location.search as { reference?: unknown }).reference;
+      return typeof value === "string" ? value : undefined;
+    },
+  });
   const [editing, setEditing] = useState<MiningPlan | null>(null);
   const [name, setName] = useState("");
   const [dailyYield, setDailyYield] = useState("0.001");
@@ -33,6 +39,10 @@ function Inner() {
   const [isActive, setIsActive] = useState(true);
   const [message, setMessage] = useState("");
   const canEdit = session.can("mining.edit");
+  useEffect(() => {
+    if (!reference) return;
+    document.getElementById("mining-" + reference)?.scrollIntoView({ block: "center" });
+  }, [reference, subscriptionsQuery.data]);
   if (query.loading) return <LoadingSkeleton rows={5} />;
   if (query.error)
     return <ErrorState title="Could not load mining plans" description={query.error.message} />;
@@ -144,8 +154,17 @@ function Inner() {
               subscriptionsQuery.data.map((row) => (
                 <div
                   key={row.id}
-                  className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-sm"
+                  id={"mining-" + row.id}
+                  className={
+                    "mt-3 flex flex-wrap items-center justify-between gap-2 border-t pt-3 text-sm " +
+                    (reference === row.id ? "border-primary bg-primary/5" : "border-border")
+                  }
                 >
+                  {reference === row.id ? (
+                    <p className="w-full text-xs font-medium text-primary">
+                      Opened from operator alert
+                    </p>
+                  ) : null}
                   <span>
                     {row.userEmail ?? row.userId} · {row.planName ?? "plan"}
                   </span>

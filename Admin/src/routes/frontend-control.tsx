@@ -25,103 +25,152 @@ import type {
 } from "@/admin/types";
 import { ArrowUp, ArrowDown, Megaphone, Wrench, ListFilter, LifeBuoy } from "lucide-react";
 import { toast } from "sonner";
+import { PublicNavigationSettings } from "./navigation";
+import { FeatureControls } from "./feature-flags";
 
 export const Route = createFileRoute("/frontend-control")({ component: Page });
 
 function Page() {
+  const session = useAdminSession();
+  if (session.can("frontend.view")) return <Inner />;
+  if (session.can("navigation.view") || session.can("flags.view")) {
+    return (
+      <LimitedSettings
+        canNavigate={session.can("navigation.view")}
+        canFlags={session.can("flags.view")}
+      />
+    );
+  }
   return (
     <RouteGuard permission="frontend.view">
-      <Inner />
+      <div />
     </RouteGuard>
   );
 }
 
+function LimitedSettings({ canNavigate, canFlags }: { canNavigate: boolean; canFlags: boolean }) {
+  return (
+    <Shell>
+      <Tabs defaultValue={canNavigate ? "routes" : "advanced"} className="w-full">
+        <TabsList className="mb-4 flex h-auto w-full flex-wrap justify-start gap-1">
+          {canNavigate && <TabsTrigger value="routes">Routes & Navigation</TabsTrigger>}
+          {canFlags && <TabsTrigger value="advanced">Advanced Settings & Audit</TabsTrigger>}
+        </TabsList>
+        {canNavigate && (
+          <TabsContent value="routes">
+            <PublicNavigationSettings embedded />
+          </TabsContent>
+        )}
+        {canFlags && (
+          <TabsContent value="advanced">
+            <FeatureControls embedded />
+          </TabsContent>
+        )}
+      </Tabs>
+    </Shell>
+  );
+}
+
 function Inner() {
+  const session = useAdminSession();
   const routesQ = useAdminQuery((p) => p.listPublicRoutes());
   const catsQ = useAdminQuery((p) => p.listQuotesCategories());
   const bannersQ = useAdminQuery((p) => p.listBanners());
   const incidentsQ = useAdminQuery((p) => p.listIncidents());
   const supportQ = useAdminQuery((p) => p.listSupportEntryPoints());
-
-  if (
-    routesQ.loading ||
-    catsQ.loading ||
-    bannersQ.loading ||
-    incidentsQ.loading ||
-    supportQ.loading
-  ) {
-    return (
-      <Shell>
-        <LoadingSkeleton rows={5} />
-      </Shell>
-    );
-  }
-  if (routesQ.error)
-    return (
-      <Shell>
-        <ErrorState title="Could not load frontend config" description={routesQ.error.message} />
-      </Shell>
-    );
-
   const routes = routesQ.data ?? [];
   const cats = catsQ.data ?? [];
   const banners = bannersQ.data ?? [];
   const incidents = incidentsQ.data ?? [];
   const supports = supportQ.data ?? [];
-  const activeBanners = banners.filter((b) => b.active).length;
-  const activeIncidents = incidents.filter((i) => i.active).length;
+  const contentError = bannersQ.error ?? incidentsQ.error;
 
   return (
-    <Shell
-      badges={[
-        { tone: "info", label: `${routes.length} routes` },
-        {
-          tone: activeIncidents ? "destructive" : "neutral",
-          label: `${activeIncidents} incident${activeIncidents === 1 ? "" : "s"}`,
-        },
-        {
-          tone: activeBanners ? "warning" : "neutral",
-          label: `${activeBanners} banner${activeBanners === 1 ? "" : "s"}`,
-        },
-      ]}
-    >
+    <Shell>
       <Tabs defaultValue="routes" className="w-full">
-        <TabsList className="mb-4">
+        <TabsList className="mb-4 flex h-auto w-full flex-wrap justify-start gap-1">
           <TabsTrigger value="routes" data-testid="tab-routes">
             <Wrench className="mr-1 h-3.5 w-3.5" />
-            Public routes
+            Routes & Navigation
           </TabsTrigger>
           <TabsTrigger value="quotes" data-testid="tab-quotes">
             <ListFilter className="mr-1 h-3.5 w-3.5" />
-            Quotes Hub
+            Markets & Quotes
           </TabsTrigger>
           <TabsTrigger value="banners" data-testid="tab-banners">
             <Megaphone className="mr-1 h-3.5 w-3.5" />
-            Banners & incidents
+            Content & Notices
           </TabsTrigger>
           <TabsTrigger value="support" data-testid="tab-support">
             <LifeBuoy className="mr-1 h-3.5 w-3.5" />
             Contact Us
           </TabsTrigger>
           <TabsTrigger value="audit" data-testid="tab-audit">
-            Audit
+            Advanced Settings & Audit
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="routes">
-          <PublicRoutesPanel routes={routes} />
+          <div className="flex flex-col gap-6">
+            {routesQ.loading ? (
+              <LoadingSkeleton rows={5} />
+            ) : routesQ.error ? (
+              <ErrorState
+                title="Could not load public routes"
+                description={routesQ.error.message}
+                onRetry={routesQ.refresh}
+              />
+            ) : (
+              <PublicRoutesPanel routes={routes} />
+            )}
+            {session.can("navigation.view") && <PublicNavigationSettings embedded />}
+          </div>
         </TabsContent>
         <TabsContent value="quotes">
-          <QuotesPanel cats={cats} />
+          {catsQ.loading ? (
+            <LoadingSkeleton rows={5} />
+          ) : catsQ.error ? (
+            <ErrorState
+              title="Could not load Quotes Hub settings"
+              description={catsQ.error.message}
+              onRetry={catsQ.refresh}
+            />
+          ) : (
+            <QuotesPanel cats={cats} />
+          )}
         </TabsContent>
         <TabsContent value="banners">
-          <BannersPanel banners={banners} incidents={incidents} />
+          {bannersQ.loading || incidentsQ.loading ? (
+            <LoadingSkeleton rows={5} />
+          ) : contentError ? (
+            <ErrorState
+              title="Could not load notices"
+              description={contentError.message}
+              onRetry={() => {
+                bannersQ.refresh();
+                incidentsQ.refresh();
+              }}
+            />
+          ) : (
+            <BannersPanel banners={banners} incidents={incidents} />
+          )}
         </TabsContent>
         <TabsContent value="support">
-          <SupportEntryPanel supports={supports} error={supportQ.error} onSaved={() => supportQ.refresh()} />
+          {supportQ.loading ? (
+            <LoadingSkeleton rows={3} />
+          ) : (
+            <SupportEntryPanel
+              supports={supports}
+              error={supportQ.error}
+              onSaved={supportQ.refresh}
+            />
+          )}
         </TabsContent>
         <TabsContent value="audit">
-          <AuditTimeline actionPrefix="frontend." limit={40} />
+          <div className="flex flex-col gap-6">
+            {session.can("flags.view") && <FeatureControls embedded />}
+            <AuditTimeline actionPrefix="frontend." limit={40} />
+          </div>
         </TabsContent>
       </Tabs>
     </Shell>
@@ -138,8 +187,8 @@ function Shell({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Frontend Control"
-        description="Public routes, Quotes Hub, banners, incidents, and Contact Us links."
+        title="Public App Settings"
+        description="Manage public routes, navigation, markets, notices, contact options, and supported feature controls."
         badges={
           <>
             <ProviderBadge />
@@ -754,7 +803,15 @@ function BannersPanel({
 }
 
 /* --------------- Contact Us --------------- */
-function SupportEntryPanel({ supports, error, onSaved }: { supports: SupportEntryPoint[]; error?: Error; onSaved: () => void }) {
+function SupportEntryPanel({
+  supports,
+  error,
+  onSaved,
+}: {
+  supports: SupportEntryPoint[];
+  error?: Error;
+  onSaved: () => void;
+}) {
   const provider = useAdminData();
   const session = useAdminSession();
   const canEdit = session.can("frontend.edit");
@@ -775,25 +832,54 @@ function SupportEntryPanel({ supports, error, onSaved }: { supports: SupportEntr
   }, [supports]);
 
   if (error) {
-    return <ErrorState title="Could not load support settings" description={error.message} onRetry={onSaved} />;
+    return (
+      <ErrorState
+        title="Could not load support settings"
+        description={error.message}
+        onRetry={onSaved}
+      />
+    );
   }
 
   return (
     <>
-      <section className="mb-5 rounded-lg border border-border p-4" aria-labelledby="public-support-contacts-title">
-        <h2 id="public-support-contacts-title" className="text-sm font-semibold">Contact Us</h2>
-        <p className="mt-1 text-xs text-muted-foreground">These contacts appear on the Public Help page. Leave a field blank to hide that contact method.</p>
+      <section
+        className="mb-5 rounded-lg border border-border p-4"
+        aria-labelledby="public-support-contacts-title"
+      >
+        <h2 id="public-support-contacts-title" className="text-sm font-semibold">
+          Contact Us
+        </h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          These contacts appear on the Public Help page. Leave a field blank to hide that contact
+          method.
+        </p>
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           <FormField label="Telegram URL or username">
-            <Input aria-label="Telegram support URL or username" type="text" value={telegramUrl} onChange={(event) => setTelegramUrl(event.target.value)} placeholder="@username or https://t.me/username" />
+            <Input
+              aria-label="Telegram support URL or username"
+              type="text"
+              value={telegramUrl}
+              onChange={(event) => setTelegramUrl(event.target.value)}
+              placeholder="@username or https://t.me/username"
+            />
           </FormField>
           <FormField label="Support Gmail or email">
-            <Input aria-label="Support email address" type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+            <Input
+              aria-label="Support email address"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+            />
           </FormField>
         </div>
         <div className="mt-3 flex flex-col gap-3 md:flex-row md:items-end">
           <FormField label="Reason (auditable, at least 6 characters)">
-            <Input aria-label="Support contact update reason" value={contactReason} onChange={(event) => setContactReason(event.target.value)} />
+            <Input
+              aria-label="Support contact update reason"
+              value={contactReason}
+              onChange={(event) => setContactReason(event.target.value)}
+            />
           </FormField>
           <Button
             type="button"
@@ -802,15 +888,20 @@ function SupportEntryPanel({ supports, error, onSaved }: { supports: SupportEntr
               setSavingContacts(true);
               try {
                 const savedTelegramUrl = normalizedTelegramUrl(telegramUrl);
-                await provider.updatePublicSupportContacts({ telegramUrl: savedTelegramUrl, email }, {
-                  actor: session.actorName,
-                  role: session.roleId,
-                  environment: session.environment,
-                  reason: contactReason.trim(),
-                });
+                await provider.updatePublicSupportContacts(
+                  { telegramUrl: savedTelegramUrl, email },
+                  {
+                    actor: session.actorName,
+                    role: session.roleId,
+                    environment: session.environment,
+                    reason: contactReason.trim(),
+                  },
+                );
                 const persisted = await provider.listSupportEntryPoints();
-                const persistedTelegram = persisted.find((entry) => entry.channel === "telegram")?.target.trim() ?? "";
-                const persistedEmail = persisted.find((entry) => entry.channel === "email")?.target.trim() ?? "";
+                const persistedTelegram =
+                  persisted.find((entry) => entry.channel === "telegram")?.target.trim() ?? "";
+                const persistedEmail =
+                  persisted.find((entry) => entry.channel === "email")?.target.trim() ?? "";
                 if (persistedTelegram !== savedTelegramUrl || persistedEmail !== email.trim()) {
                   throw new Error("Public support contacts did not match the saved configuration");
                 }
@@ -820,7 +911,9 @@ function SupportEntryPanel({ supports, error, onSaved }: { supports: SupportEntr
                 onSaved();
                 toast.success("Public support contacts saved");
               } catch (error) {
-                toast.error(error instanceof Error ? error.message : "Support contacts could not be saved");
+                toast.error(
+                  error instanceof Error ? error.message : "Support contacts could not be saved",
+                );
               } finally {
                 setSavingContacts(false);
               }

@@ -19,34 +19,38 @@ export const Route = createFileRoute("/navigation")({ component: Page });
 const AUDIENCES: NavAudience[] = ["public", "authenticated", "vip", "internal"];
 
 function Page() {
+  return <PublicNavigationSettings />;
+}
+
+export function PublicNavigationSettings({ embedded = false }: { embedded?: boolean }) {
   return (
     <RouteGuard permission="navigation.view">
-      <Inner />
+      <Inner embedded={embedded} />
     </RouteGuard>
   );
 }
 
-function Inner() {
+function Inner({ embedded }: { embedded: boolean }) {
   const navQ = useAdminQuery((p) => p.listNavItems());
 
   if (navQ.loading)
     return (
-      <Shell>
+      <Shell embedded={embedded}>
         <LoadingSkeleton rows={5} />
       </Shell>
     );
   if (navQ.error)
     return (
-      <Shell>
+      <Shell embedded={embedded}>
         <ErrorState title="Could not load navigation" description={navQ.error.message} />
       </Shell>
     );
 
   const items = navQ.data ?? [];
   return (
-    <Shell total={items.length}>
+    <Shell total={items.length} embedded={embedded}>
       <Tabs defaultValue="bottom">
-        <TabsList className="mb-4">
+        <TabsList className="mb-4 flex h-auto w-full flex-wrap justify-start gap-1">
           <TabsTrigger value="bottom" data-testid="nav-tab-bottom">
             Bottom navigation
           </TabsTrigger>
@@ -79,7 +83,25 @@ function Inner() {
   );
 }
 
-function Shell({ children, total }: { children: React.ReactNode; total?: number }) {
+function Shell({
+  children,
+  total,
+  embedded,
+}: {
+  children: React.ReactNode;
+  total?: number;
+  embedded: boolean;
+}) {
+  if (embedded)
+    return (
+      <div className="flex flex-col gap-4">
+        <h2 className="text-base font-semibold">Public navigation</h2>
+        <p className="text-sm text-muted-foreground">
+          Control bottom navigation and the left drawer for supported audiences.
+        </p>
+        {children}
+      </div>
+    );
   return (
     <div className="flex flex-col gap-6">
       <PageHeader

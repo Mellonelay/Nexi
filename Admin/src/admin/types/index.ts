@@ -161,11 +161,12 @@ export type KycStatus = "unverified" | "pending" | "approved" | "rejected" | "mo
 export interface User {
   id: string;
   userCode?: string;
+  walletAddress?: string | null;
   email: string;
   displayName: string;
   country: string;
-  status: UserStatus;
-  kyc: KycStatus;
+  status: UserStatus | "unknown";
+  kyc: KycStatus | "unknown";
   tier: "T0" | "T1" | "T2" | "T3";
   createdAt: string;
   lastLoginAt: string;
@@ -849,13 +850,25 @@ export interface AdminNotification {
   createdAt: string;
 }
 
-export type AdminOperatorAlertCategory = "ACCOUNT" | "IDENTITY" | "WALLET" | "TRADING" | "PRODUCT" | "SYSTEM";
+export type AdminOperatorAlertCategory =
+  "ACCOUNT" | "IDENTITY" | "WALLET" | "TRADING" | "PRODUCT" | "SYSTEM";
 export interface AdminOperatorAlert {
-  id: string; category: AdminOperatorAlertCategory; severity: string; title: string; summary: string;
-  referenceType: string; referenceId: string; createdAt: string; readAt: string | null; href: string;
+  id: string;
+  category: AdminOperatorAlertCategory;
+  severity: string;
+  title: string;
+  summary: string;
+  referenceType: string;
+  referenceId: string;
+  createdAt: string;
+  readAt: string | null;
+  href: string;
 }
 export interface AdminOperatorAlertsResponse {
-  items: AdminOperatorAlert[]; unreadCount: number; categories: AdminOperatorAlertCategory[]; disabledCategories: AdminOperatorAlertCategory[];
+  items: AdminOperatorAlert[];
+  unreadCount: number;
+  categories: AdminOperatorAlertCategory[];
+  disabledCategories: AdminOperatorAlertCategory[];
 }
 
 export interface AdminLearnArticle {

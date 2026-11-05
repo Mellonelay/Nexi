@@ -25,7 +25,10 @@ import { isOngoingBinaryPositionStatus } from "@/admin/data/binary-position-view
 import { Pause, Play, RefreshCw } from "lucide-react";
 import { z } from "zod";
 
-const binarySearchSchema = z.object({ view: z.enum(["positions", "pairs", "audit"]).optional() });
+const binarySearchSchema = z.object({
+  view: z.enum(["positions", "pairs", "audit"]).optional(),
+  reference: z.string().optional(),
+});
 
 export const Route = createFileRoute("/binary")({
   validateSearch: binarySearchSchema,
@@ -43,7 +46,8 @@ function Page() {
 }
 
 function Inner() {
-  const { view = "positions" } = Route.useSearch();
+  const search = Route.useSearch();
+  const view = search.reference ? "positions" : (search.view ?? "positions");
   const pairsQ = useAdminQuery((p) => p.listBinaryPairs());
   const posQ = useAdminQuery((p) => p.listBinaryPositions());
 
@@ -84,7 +88,11 @@ function Inner() {
       ) : view === "audit" ? (
         <AuditTimeline actionPrefix="binary." limit={40} />
       ) : (
-        <PositionsPanel positions={positions} onRefresh={posQ.refresh} />
+        <PositionsPanel
+          positions={positions}
+          onRefresh={posQ.refresh}
+          reference={search.reference}
+        />
       )}
       {view !== "audit" ? (
         <details className="border-t border-border/60 pt-3">
@@ -176,14 +184,20 @@ function PairsPanel({ pairs }: { pairs: BinaryPair[] }) {
         { value: "disabled", label: "Unavailable" },
         { value: "maintenance", label: "Maintenance" },
       ],
-      match: (p, v) => v === "enabled" ? p.enabled && !p.maintenance : v === "disabled" ? !p.enabled : p.maintenance,
+      match: (p, v) =>
+        v === "enabled"
+          ? p.enabled && !p.maintenance
+          : v === "disabled"
+            ? !p.enabled
+            : p.maintenance,
     },
   ];
   return (
     <>
       <BinaryGlobalSettings />
       <div className="rounded-md border border-border/60 p-3 text-xs text-muted-foreground">
-        Pair controls below only manage availability. Payout rates and stake limits are shared across all eligible pairs.
+        Pair controls below only manage availability. Payout rates and stake limits are shared
+        across all eligible pairs.
       </div>
       <DataTable
         data={pairs}
@@ -195,7 +209,14 @@ function PairsPanel({ pairs }: { pairs: BinaryPair[] }) {
         onRowClick={(p) => setSelectedId(p.id)}
         rowActions={(p) => (
           <div className="flex justify-end gap-2">
-            <Button variant="outline" size="sm" data-testid={`bin-inspect-${p.id}`} onClick={() => setSelectedId(p.id)}>Inspect</Button>
+            <Button
+              variant="outline"
+              size="sm"
+              data-testid={`bin-inspect-${p.id}`}
+              onClick={() => setSelectedId(p.id)}
+            >
+              Inspect
+            </Button>
             <Button
               variant={p.maintenance ? "default" : "destructive"}
               size="sm"
@@ -203,46 +224,115 @@ function PairsPanel({ pairs }: { pairs: BinaryPair[] }) {
               data-testid={`bin-pause-${p.id}`}
               onClick={() => setPausing(p)}
             >
-              {p.maintenance ? <><Play className="mr-1 h-3.5 w-3.5" /> Resume</> : <><Pause className="mr-1 h-3.5 w-3.5" /> Pause</>}
+              {p.maintenance ? (
+                <>
+                  <Play className="mr-1 h-3.5 w-3.5" /> Resume
+                </>
+              ) : (
+                <>
+                  <Pause className="mr-1 h-3.5 w-3.5" /> Pause
+                </>
+              )}
             </Button>
           </div>
         )}
       />
       <DetailDrawer
         open={!!selected}
-        onOpenChange={(open) => { if (!open) setSelectedId(null); }}
+        onOpenChange={(open) => {
+          if (!open) setSelectedId(null);
+        }}
         title={selected ? <span className="mono text-primary">{selected.symbol}</span> : ""}
         subtitle={selected ? selected.id : undefined}
-        badges={selected ? <StatusBadge tone={selected.maintenance ? "warning" : selected.enabled ? "success" : "neutral"}>{selected.maintenance ? "maintenance" : selected.enabled ? "available" : "unavailable"}</StatusBadge> : null}
-        sections={selected ? [{
-          id: "pair",
-          title: "Pair availability",
-          fields: [
-            { label: "Symbol", value: selected.symbol, mono: true },
-            { label: "Availability", value: selected.maintenance ? "Maintenance" : selected.enabled ? "Available" : "Unavailable" },
-            { label: "Shared policy", value: "Global Binary Settings controls duration, payout and stake limits." },
-          ],
-        }, { id: "audit", title: "Audit timeline", content: <AuditTimeline targetId={selected.id} heading="" limit={15} /> }] : []}
-        actions={selected ? <Button variant={selected.maintenance ? "default" : "destructive"} size="sm" disabled={!canEdit} onClick={() => setPausing(selected)}>{selected.maintenance ? "Resume" : "Pause"}</Button> : null}
+        badges={
+          selected ? (
+            <StatusBadge
+              tone={selected.maintenance ? "warning" : selected.enabled ? "success" : "neutral"}
+            >
+              {selected.maintenance
+                ? "maintenance"
+                : selected.enabled
+                  ? "available"
+                  : "unavailable"}
+            </StatusBadge>
+          ) : null
+        }
+        sections={
+          selected
+            ? [
+                {
+                  id: "pair",
+                  title: "Pair availability",
+                  fields: [
+                    { label: "Symbol", value: selected.symbol, mono: true },
+                    {
+                      label: "Availability",
+                      value: selected.maintenance
+                        ? "Maintenance"
+                        : selected.enabled
+                          ? "Available"
+                          : "Unavailable",
+                    },
+                    {
+                      label: "Shared policy",
+                      value: "Global Binary Settings controls duration, payout and stake limits.",
+                    },
+                  ],
+                },
+                {
+                  id: "audit",
+                  title: "Audit timeline",
+                  content: <AuditTimeline targetId={selected.id} heading="" limit={15} />,
+                },
+              ]
+            : []
+        }
+        actions={
+          selected ? (
+            <Button
+              variant={selected.maintenance ? "default" : "destructive"}
+              size="sm"
+              disabled={!canEdit}
+              onClick={() => setPausing(selected)}
+            >
+              {selected.maintenance ? "Resume" : "Pause"}
+            </Button>
+          ) : null
+        }
       />
       {pausing ? (
         <ConsequentialActionDialog
           open
-          onOpenChange={(open) => { if (!open) setPausing(null); }}
+          onOpenChange={(open) => {
+            if (!open) setPausing(null);
+          }}
           title={pausing.maintenance ? "Resume pair" : "Pause pair (maintenance)"}
           description="Paused pairs reject new positions. Existing positions continue toward strike."
           target={<span className="mono">{pausing.symbol}</span>}
           targetId={pausing.id}
           action={pausing.maintenance ? "binary.resume_pair" : "binary.pause_pair"}
           permission="binary.edit"
-          currentState={<StatusBadge tone={pausing.maintenance ? "warning" : "success"}>{pausing.maintenance ? "maintenance" : "available"}</StatusBadge>}
-          proposedState={<StatusBadge tone={pausing.maintenance ? "success" : "warning"}>{pausing.maintenance ? "available" : "maintenance"}</StatusBadge>}
+          currentState={
+            <StatusBadge tone={pausing.maintenance ? "warning" : "success"}>
+              {pausing.maintenance ? "maintenance" : "available"}
+            </StatusBadge>
+          }
+          proposedState={
+            <StatusBadge tone={pausing.maintenance ? "success" : "warning"}>
+              {pausing.maintenance ? "available" : "maintenance"}
+            </StatusBadge>
+          }
           destructive={!pausing.maintenance}
           submitLabel={pausing.maintenance ? "Resume" : "Pause"}
           successMessage="Pair availability updated"
-          onConfirm={(reason) => provider.pauseBinaryPair(pausing.id, !pausing.maintenance, {
-            actor: session.actorName, role: session.roleId, environment: session.environment, reason,
-          })}
+          onConfirm={(reason) =>
+            provider.pauseBinaryPair(pausing.id, !pausing.maintenance, {
+              actor: session.actorName,
+              role: session.roleId,
+              environment: session.environment,
+              reason,
+            })
+          }
           onSuccess={() => setPausing(null)}
         />
       ) : null}
@@ -258,27 +348,54 @@ function BinaryGlobalSettings() {
   const canEdit = session.can("binary.edit");
   const query = useAdminQuery((p) => p.getBinaryGlobalConfiguration());
   const [draft, setDraft] = useState<BinaryGlobalConfiguration | null>(null);
+  const [payoutInputs, setPayoutInputs] = useState<Record<number, string>>({});
   const [reason, setReason] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   useEffect(() => {
-    if (query.data) setDraft(query.data);
+    if (query.data) {
+      setDraft(query.data);
+      setPayoutInputs(
+        Object.fromEntries(
+          query.data.durations.map((item) => [
+            item.durationSeconds,
+            item.payoutRate > 0 ? String(Number((item.payoutRate * 100).toFixed(8))) : "",
+          ]),
+        ),
+      );
+    }
   }, [query.data]);
 
   const durations = draft?.durations ?? [];
   const valid = Boolean(
     draft &&
-    BINARY_DURATIONS.every((duration) => durations.some((item) => item.durationSeconds === duration)) &&
+    BINARY_DURATIONS.every((duration) =>
+      durations.some((item) => item.durationSeconds === duration),
+    ) &&
     durations.length === BINARY_DURATIONS.length &&
     Number(draft.minStake) > 0 &&
     Number(draft.maxStake) >= Number(draft.minStake) &&
-    durations.every((item) => Number.isFinite(item.payoutRate) && item.payoutRate > 0),
+    durations.every(
+      (item) =>
+        /^(?:\d+)(?:\.\d{1,8})?$/.test(payoutInputs[item.durationSeconds] ?? "") &&
+        Number.isFinite(item.payoutRate) &&
+        item.payoutRate > 0,
+    ),
   );
-  const updateDuration = (durationSeconds: number, patch: Partial<BinaryGlobalConfiguration["durations"][number]>) => {
-    setDraft((current) => current ? ({
-      ...current,
-      durations: current.durations.map((item) => item.durationSeconds === durationSeconds ? { ...item, ...patch } : item),
-    }) : current);
+  const updateDuration = (
+    durationSeconds: number,
+    patch: Partial<BinaryGlobalConfiguration["durations"][number]>,
+  ) => {
+    setDraft((current) =>
+      current
+        ? {
+            ...current,
+            durations: current.durations.map((item) =>
+              item.durationSeconds === durationSeconds ? { ...item, ...patch } : item,
+            ),
+          }
+        : current,
+    );
   };
   const save = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -286,16 +403,19 @@ function BinaryGlobalSettings() {
     setSaving(true);
     setMessage(null);
     try {
-      const result = await provider.updateBinaryGlobalConfiguration({
-        minStake: draft.minStake,
-        maxStake: draft.maxStake,
-        durations: draft.durations,
-      }, {
-        actor: session.actorName,
-        role: session.roleId,
-        environment: session.environment,
-        reason: reason.trim(),
-      });
+      const result = await provider.updateBinaryGlobalConfiguration(
+        {
+          minStake: draft.minStake,
+          maxStake: draft.maxStake,
+          durations: draft.durations,
+        },
+        {
+          actor: session.actorName,
+          role: session.roleId,
+          environment: session.environment,
+          reason: reason.trim(),
+        },
+      );
       setMessage(result.ok ? "Global settings saved." : "Settings were not accepted.");
       setReason("");
       await query.refresh();
@@ -307,34 +427,127 @@ function BinaryGlobalSettings() {
   };
 
   return (
-    <form onSubmit={save} className="space-y-4 rounded-lg border border-border/60 bg-background/40 p-4">
+    <form
+      onSubmit={save}
+      className="space-y-4 rounded-lg border border-border/60 bg-background/40 p-4"
+    >
       <div>
         <h2 className="font-semibold">Global Binary Settings</h2>
-        <p className="text-xs text-muted-foreground">One shared payout and stake policy for every eligible pair. New settings do not change open-position snapshots.</p>
+        <p className="text-xs text-muted-foreground">
+          One shared payout and stake policy for every eligible pair. New settings do not change
+          open-position snapshots.
+        </p>
+        {draft?.version === 0 && (
+          <p role="status" className="mt-2 text-sm text-warning">
+            No global policy is saved. Enter the stake limits and each payout, then choose which
+            durations are available. Existing pair settings remain in effect until you save.
+          </p>
+        )}
       </div>
-      {query.loading && !draft ? <LoadingSkeleton rows={2} /> : query.error ? <ErrorState title="Could not load global Binary settings" description={query.error.message} /> : !draft ? <p className="text-sm text-muted-foreground">Global settings are not configured.</p> : (
+      {query.loading && !draft ? (
+        <LoadingSkeleton rows={2} />
+      ) : query.error ? (
+        <ErrorState
+          title="Could not load global Binary settings"
+          description={query.error.message}
+        />
+      ) : !draft ? (
+        <p className="text-sm text-muted-foreground">Global settings are not configured.</p>
+      ) : (
         <>
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Minimum stake"><Input inputMode="decimal" value={draft.minStake} disabled={!canEdit || saving} onChange={(e) => setDraft((current) => current ? { ...current, minStake: e.target.value } : current)} /></Field>
-            <Field label="Maximum stake"><Input inputMode="decimal" value={draft.maxStake} disabled={!canEdit || saving} onChange={(e) => setDraft((current) => current ? { ...current, maxStake: e.target.value } : current)} /></Field>
+            <Field label="Minimum stake">
+              <Input
+                inputMode="decimal"
+                value={draft.minStake}
+                disabled={!canEdit || saving}
+                onChange={(e) =>
+                  setDraft((current) =>
+                    current ? { ...current, minStake: e.target.value } : current,
+                  )
+                }
+              />
+            </Field>
+            <Field label="Maximum stake">
+              <Input
+                inputMode="decimal"
+                value={draft.maxStake}
+                disabled={!canEdit || saving}
+                onChange={(e) =>
+                  setDraft((current) =>
+                    current ? { ...current, maxStake: e.target.value } : current,
+                  )
+                }
+              />
+            </Field>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
             {BINARY_DURATIONS.map((duration) => {
               const setting = durations.find((item) => item.durationSeconds === duration);
-              return <div key={duration} className="space-y-3 rounded-md border border-border/60 p-3">
-                <h3 className="text-sm font-medium">{duration} seconds</h3>
-                {setting ? <>
-                  <Field label="Payout (%)"><Input type="number" min="0.01" step="0.01" value={(setting.payoutRate * 100).toFixed(2)} disabled={!canEdit || saving} onChange={(e) => updateDuration(duration, { payoutRate: Number(e.target.value) / 100 })} /></Field>
-                  <label className="flex items-center justify-between gap-3 text-xs"><span>Duration available</span><Switch checked={setting.enabled} disabled={!canEdit || saving} onCheckedChange={(enabled) => updateDuration(duration, { enabled })} /></label>
-                </> : <p className="text-xs text-destructive">Missing from backend configuration.</p>}
-              </div>;
+              return (
+                <div key={duration} className="space-y-3 rounded-md border border-border/60 p-3">
+                  <h3 className="text-sm font-medium">{duration} seconds</h3>
+                  {setting ? (
+                    <>
+                      <Field label="Payout (%)">
+                        <Input
+                          type="text"
+                          inputMode="decimal"
+                          value={payoutInputs[duration] ?? ""}
+                          disabled={!canEdit || saving}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setPayoutInputs((current) => ({ ...current, [duration]: value }));
+                            updateDuration(duration, { payoutRate: Number(value) / 100 });
+                          }}
+                        />
+                      </Field>
+                      <label className="flex items-center justify-between gap-3 text-xs">
+                        <span>Duration available</span>
+                        <Switch
+                          checked={setting.enabled}
+                          disabled={!canEdit || saving}
+                          onCheckedChange={(enabled) => updateDuration(duration, { enabled })}
+                        />
+                      </label>
+                    </>
+                  ) : (
+                    <p className="text-xs text-destructive">Missing from backend configuration.</p>
+                  )}
+                </div>
+              );
             })}
           </div>
-          <Field label="Reason (auditable, at least 6 characters)"><textarea value={reason} disabled={!canEdit || saving} onChange={(event) => setReason(event.target.value)} rows={2} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground" /></Field>
+          <Field label="Reason (auditable, at least 6 characters)">
+            <textarea
+              value={reason}
+              disabled={!canEdit || saving}
+              onChange={(event) => setReason(event.target.value)}
+              rows={2}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+            />
+          </Field>
           <div className="flex flex-wrap items-center gap-3">
-            <Button type="submit" disabled={!canEdit || !valid || reason.trim().length < 6 || saving}>{saving ? "Saving…" : "Save global settings"}</Button>
-            {draft.version > 0 ? <span className="text-xs text-muted-foreground">Configuration version {draft.version}</span> : null}
-            {message ? <span role="status" className="text-xs text-muted-foreground">{message}</span> : null}
+            <Button
+              type="submit"
+              disabled={!canEdit || !valid || reason.trim().length < 6 || saving}
+            >
+              {saving
+                ? "Saving…"
+                : draft.version === 0
+                  ? "Initialize global settings"
+                  : "Save global settings"}
+            </Button>
+            {draft.version > 0 ? (
+              <span className="text-xs text-muted-foreground">
+                Configuration version {draft.version}
+              </span>
+            ) : null}
+            {message ? (
+              <span role="status" className="text-xs text-muted-foreground">
+                {message}
+              </span>
+            ) : null}
           </div>
         </>
       )}
@@ -345,15 +558,20 @@ function BinaryGlobalSettings() {
 function PositionsPanel({
   positions,
   onRefresh,
+  reference,
 }: {
   positions: BinaryPosition[];
   onRefresh: () => void;
+  reference?: string;
 }) {
   const session = useAdminSession();
   const canSettle = session.can("binary.settle");
   const canEdit = session.can("binary.edit");
   const [selectedId, setSelectedId] = useState<string | null>(
-    () => positions.find((position) => isOngoingBinaryPositionStatus(position.status))?.id ?? null,
+    () =>
+      reference ??
+      positions.find((position) => isOngoingBinaryPositionStatus(position.status))?.id ??
+      null,
   );
   const [pending, setPending] = useState<PendingSettle | null>(null);
   const [researchDraft, setResearchDraft] = useState<"DEFAULT" | "NORMAL" | "WIN" | "LOSS">(
@@ -363,12 +581,16 @@ function PositionsPanel({
   const selected = positions.find((position) => position.id === selectedId) ?? null;
 
   useEffect(() => {
+    if (reference) {
+      setSelectedId(reference);
+      return;
+    }
     if (!selectedId || !positions.some((position) => position.id === selectedId)) {
       setSelectedId(
         positions.find((position) => isOngoingBinaryPositionStatus(position.status))?.id ?? null,
       );
     }
-  }, [positions, selectedId]);
+  }, [positions, reference, selectedId]);
 
   useEffect(() => {
     setResearchDraft(selected?.researchOverride ?? "DEFAULT");

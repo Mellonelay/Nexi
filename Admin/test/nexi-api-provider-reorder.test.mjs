@@ -16,7 +16,7 @@ import { buildOverviewWorkItems } from "../src/admin/data/overview-work-items.ts
 import { learnCategoryStatusUpdate } from "../src/admin/data/learn-category-status.ts";
 import ts from "typescript";
 
-async function loadLiveProvider() {
+async function loadLiveProvider({ socketModuleUrl } = {}) {
   const url = new URL("../src/admin/data/nexi-api-provider.ts", import.meta.url);
   const source = await readFile(url, "utf8");
   const { outputText } = ts.transpileModule(source, {
@@ -28,13 +28,101 @@ async function loadLiveProvider() {
   const executable = outputText
     .replaceAll("import.meta.env.DEV", "false")
     .replace(/from "([^"]+)"/g, (_, specifier) => {
-      const resolved = specifier.startsWith(".")
-        ? new URL(`${specifier}${specifier === "../types" ? "/index.ts" : ".ts"}`, url).href
-        : import.meta.resolve(specifier);
+      const resolved =
+        specifier === "socket.io-client" && socketModuleUrl
+          ? socketModuleUrl
+          : specifier.startsWith(".")
+            ? new URL(`${specifier}${specifier === "../types" ? "/index.ts" : ".ts"}`, url).href
+            : import.meta.resolve(specifier);
       return `from ${JSON.stringify(resolved)}`;
     });
   return import(`data:text/javascript;base64,${Buffer.from(executable).toString("base64")}`);
 }
+
+test("client mapping preserves authoritative wallet and KYC data without inventing lifecycle or verification state", async (t) => {
+  const { NexiAdminApiProvider } = await loadLiveProvider();
+  t.mock.method(globalThis, "fetch", async () =>
+    Response.json([
+      {
+        id: "user-1",
+        userCode: 123456,
+        email: "a@example.test",
+        walletAddress: "0xabc123",
+        kycStatus: "PENDING",
+      },
+      { id: "user-2", userCode: 123457, kycStatus: null },
+      { id: "user-3", userCode: 123458 },
+    ]),
+  );
+  const provider = new NexiAdminApiProvider({
+    baseUrl: "https://admin-api.test",
+    getToken: async () => "test-token",
+  });
+  const users = await provider.listUsers();
+  assert.equal(users[0].walletAddress, "0xabc123");
+  assert.equal(users[0].kyc, "pending");
+  assert.equal(users[0].status, "unknown");
+  assert.equal(users[1].kyc, "unverified");
+  assert.equal(users[2].kyc, "unknown");
+});
+
+test("Admin communications share one authenticated socket and clean up subscriptions", async (t) => {
+  globalThis.__nexiSocketPool = [];
+  t.after(() => {
+    delete globalThis.__nexiSocketPool;
+  });
+  const stub = [
+    "export function io(url, options) {",
+    "  const handlers = new Map();",
+    "  const socket = { url, options, disconnected: 0,",
+    "    on(event, callback) { handlers.set(event, callback); return this; },",
+    "    fire(event) { handlers.get(event)?.(); },",
+    "    disconnect() { this.disconnected += 1; } };",
+    "  globalThis.__nexiSocketPool.push(socket);",
+    "  return socket;",
+    "}",
+  ].join("\n");
+  const socketModuleUrl = "data:text/javascript;base64," + Buffer.from(stub).toString("base64");
+  const { NexiAdminApiProvider } = await loadLiveProvider({ socketModuleUrl });
+  let token = "first-token";
+  const provider = new NexiAdminApiProvider({
+    baseUrl: "https://admin-api.test",
+    getToken: async () => token,
+  });
+  let alerts = 0;
+  let messages = 0;
+  const unsubscribeAlerts = provider.subscribeToOperatorAlerts(() => {
+    alerts += 1;
+  });
+  const unsubscribeMessages = provider.subscribeToCommunications(() => {
+    messages += 1;
+  });
+  assert.equal(globalThis.__nexiSocketPool.length, 1);
+  const socket = globalThis.__nexiSocketPool[0];
+  assert.equal(socket.url, "https://admin-api.test/communications");
+  assert.deepEqual(await new Promise((resolve) => socket.options.auth(resolve)), {
+    token: "first-token",
+  });
+  token = "refreshed-token";
+  assert.deepEqual(await new Promise((resolve) => socket.options.auth(resolve)), {
+    token: "refreshed-token",
+  });
+  socket.fire("connect");
+  socket.fire("operator-alerts.changed");
+  assert.equal(alerts, 2);
+  assert.equal(messages, 2);
+  unsubscribeAlerts();
+  assert.equal(socket.disconnected, 0);
+  socket.fire("communications.changed");
+  assert.equal(alerts, 2);
+  assert.equal(messages, 3);
+  unsubscribeMessages();
+  assert.equal(socket.disconnected, 1);
+  const unsubscribeAgain = provider.subscribeToOperatorAlerts(() => {});
+  assert.equal(globalThis.__nexiSocketPool.length, 2);
+  unsubscribeAgain();
+  assert.equal(globalThis.__nexiSocketPool[1].disconnected, 1);
+});
 
 test("live provider invalidates subscribed reads after successful or uncertain writes", async (t) => {
   const { NexiAdminApiProvider } = await loadLiveProvider();

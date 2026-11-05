@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouterState } from "@tanstack/react-router";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/admin/components/PageHeader";
 import { RouteGuard } from "@/admin/components/RouteGuard";
@@ -25,6 +25,12 @@ function Inner() {
   const query = useAdminQuery((p) => p.listLoanPlans());
   const applicationsQuery = useAdminQuery((p) => p.listLoanApplications());
   const loanAssetsQuery = useAdminQuery((p) => p.listLoanAssets());
+  const reference = useRouterState({
+    select: (state) => {
+      const value = (state.location.search as { reference?: unknown }).reference;
+      return typeof value === "string" ? value : undefined;
+    },
+  });
   const [editing, setEditing] = useState<LoanPlan | null>(null);
   const [name, setName] = useState("");
   const [currency, setCurrency] = useState("");
@@ -39,6 +45,10 @@ function Inner() {
   useEffect(() => {
     if (!editing && !currency && loanAssets[0]) setCurrency(loanAssets[0].symbol);
   }, [editing, currency, loanAssets]);
+  useEffect(() => {
+    if (!reference) return;
+    document.getElementById("loan-" + reference)?.scrollIntoView({ block: "center" });
+  }, [reference, applicationsQuery.data]);
   if (query.loading) return <LoadingSkeleton rows={5} />;
   if (query.error)
     return <ErrorState title="Could not load loan plans" description={query.error.message} />;
@@ -201,7 +211,19 @@ function Inner() {
                 <p className="mt-3 text-sm text-muted-foreground">No loan applications returned.</p>
               )}
             {(applicationsQuery.data ?? []).map((application) => (
-              <div key={application.id} className="mt-3 border-t border-border pt-3 text-sm">
+              <div
+                key={application.id}
+                id={"loan-" + application.id}
+                className={
+                  "mt-3 border-t pt-3 text-sm " +
+                  (reference === application.id ? "border-primary bg-primary/5" : "border-border")
+                }
+              >
+                {reference === application.id ? (
+                  <p className="mb-2 text-xs font-medium text-primary">
+                    Opened from operator alert
+                  </p>
+                ) : null}
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <p className="font-medium">{application.userEmail ?? application.userId}</p>

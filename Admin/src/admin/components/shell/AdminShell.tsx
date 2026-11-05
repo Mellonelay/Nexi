@@ -88,7 +88,9 @@ function ContextualNavigation() {
     item.items.some((route) => routeMatches(pathname, route.to)),
   );
   if (!group) return null;
-  const items = group.items.filter((item) => can(item.permission));
+  const items = group.items.filter(
+    (item) => can(item.permission) || item.anyPermissions?.some(can),
+  );
   if (items.length < 2) return null;
 
   return (
@@ -172,17 +174,20 @@ function OperatorAlertIndicator() {
       ? p.listOperatorAlerts()
       : Promise.reject(new Error("Operator alerts are unavailable")),
   );
-  const previousUnread = useRef<number | null>(null);
+  const previousAlerts = useRef<{ ids: Set<string>; disabledKey: string } | null>(null);
   const [toast, setToast] = useState<AdminOperatorAlert | null>(null);
 
   useEffect(() => provider.subscribeToOperatorAlerts?.(query.refresh), [provider, query.refresh]);
   useEffect(() => {
-    const unread = query.data?.unreadCount;
-    if (unread === undefined) return;
-    if (previousUnread.current !== null && unread > previousUnread.current) {
-      setToast(query.data?.items.find((item) => !item.readAt) ?? null);
+    const data = query.data;
+    if (!data) return;
+    const disabledKey = [...data.disabledCategories].sort().join(",");
+    const previous = previousAlerts.current;
+    if (previous && previous.disabledKey === disabledKey) {
+      const latest = data.items.find((item) => !item.readAt && !previous.ids.has(item.id));
+      if (latest) setToast(latest);
     }
-    previousUnread.current = unread;
+    previousAlerts.current = { ids: new Set(data.items.map((item) => item.id)), disabledKey };
   }, [query.data]);
   useEffect(() => {
     if (!toast) return;

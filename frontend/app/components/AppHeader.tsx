@@ -12,6 +12,7 @@ import { NotificationsPanel } from "./NotificationsPanel";
 
 export default function AppHeader() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState<number | null>(null);
   const { locale, setLocale, languages, t } = useLocale();
   return (
     <header className="nexi-app-header nexi-safe-area-header nexi-topbar relative z-40 flex h-auto min-h-14 min-w-0 flex-wrap items-center gap-[8px] border-b border-violet-300/15 md:min-h-16">
@@ -62,18 +63,31 @@ export default function AppHeader() {
         </label>
         <button
           type="button"
-          aria-label={t("notifications")}
+          aria-label={
+            unreadCount !== null && unreadCount > 0
+              ? t("notifications") + ", " + unreadCount + " unread"
+              : t("notifications")
+          }
           aria-controls="nexi-notifications-panel"
           aria-expanded={notificationsOpen}
           onClick={() => setNotificationsOpen((open) => !open)}
           className="nexi-header-icon relative h-[44px] w-[44px] shrink-0"
         >
           <Bell className="h-[18px] w-[18px]" aria-hidden="true" />
+          {unreadCount !== null && unreadCount > 0 && (
+            <span
+              aria-hidden="true"
+              className="absolute right-0 top-0 min-w-4 rounded-full bg-[#6d41ff] px-1 text-center text-[10px] font-bold leading-4 text-white"
+            >
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
         </button>
       </div>
       <NotificationsPanel
         open={notificationsOpen}
         onClose={() => setNotificationsOpen(false)}
+        onUnreadCountChange={setUnreadCount}
       />
     </header>
   );

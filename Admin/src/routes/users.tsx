@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouterState } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/admin/components/PageHeader";
 import { RouteGuard } from "@/admin/components/RouteGuard";
@@ -49,6 +49,12 @@ function Page() {
 function Inner() {
   const provider = useAdminData();
   const session = useAdminSession();
+  const reference = useRouterState({
+    select: (state) => {
+      const value = (state.location.search as { reference?: unknown }).reference;
+      return typeof value === "string" ? value : undefined;
+    },
+  });
   const usersQ = useAdminQuery((p) => p.listUsers());
   const sessionsQ = useAdminQuery(
     (p) => (session.can("sessions.view") ? p.listSessions() : Promise.resolve([])),
@@ -59,7 +65,10 @@ function Inner() {
     [session.roleId],
   );
 
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(reference ?? null);
+  useEffect(() => {
+    if (reference) setSelectedId(reference);
+  }, [reference]);
   const [entitlementUser, setEntitlementUser] = useState<User | null>(null);
   const [restrictionUser, setRestrictionUser] = useState<User | null>(null);
   const [fundingUser, setFundingUser] = useState<User | null>(null);
@@ -118,6 +127,14 @@ function Inner() {
         <div className="flex flex-col leading-tight">
           <span className="font-medium text-foreground">{u.displayName}</span>
           <span className="text-xs text-muted-foreground">{u.email}</span>
+          {u.walletAddress ? (
+            <span
+              className="mono max-w-48 truncate text-[10px] text-muted-foreground"
+              title={u.walletAddress}
+            >
+              {u.walletAddress}
+            </span>
+          ) : null}
         </div>
       ),
     },
@@ -162,7 +179,7 @@ function Inner() {
     },
     {
       key: "sessions",
-      header: "Active",
+      header: "Unrevoked sessions",
       align: "right",
       sortValue: (u) => activeSessionsFor(u.id),
       cell: (u) => <span className="mono text-xs">{activeSessionsFor(u.id)}</span>,
@@ -193,6 +210,7 @@ function Inner() {
       key: "kyc",
       label: "KYC",
       options: [
+        { value: "unknown", label: "Unknown" },
         { value: "unverified", label: "Unverified" },
         { value: "pending", label: "Pending" },
         { value: "more_info", label: "More info" },
@@ -214,7 +232,9 @@ function Inner() {
     },
   ];
 
-  const restrictedCount = users.filter((u) => u.status !== "active").length;
+  const restrictedCount = users.filter(
+    (u) => u.status !== "active" && u.status !== "unknown",
+  ).length;
   const researchCount = users.filter((u) => u.binaryResearchEligible).length;
 
   return (
@@ -223,8 +243,10 @@ function Inner() {
         data={users}
         columns={columns}
         filters={filters}
-        searchable={(u) => `${u.displayName} ${u.email} ${u.userCode ?? ""} ${u.id} ${u.country}`}
-        searchPlaceholder="Search name, email, ID, country…"
+        searchable={(u) =>
+          `${u.displayName} ${u.email} ${u.walletAddress ?? ""} ${u.userCode ?? ""} ${u.id} ${u.country}`
+        }
+        searchPlaceholder="Search profile ID, name, email, wallet, UUID…"
         rowKey={(u) => u.id}
         onRowClick={(u) => setSelectedId(u.id)}
         rowActions={(u) => (
@@ -282,6 +304,11 @@ function Inner() {
                     { label: "Internal UUID", value: selected.id, mono: true },
                     { label: "Display name", value: selected.displayName },
                     { label: "Email", value: selected.email },
+                    {
+                      label: "Connected wallet",
+                      value: selected.walletAddress ?? "Not connected",
+                      mono: true,
+                    },
                     { label: "Country", value: selected.country, mono: true },
                     { label: "Tier", value: selected.tier, mono: true },
                     { label: "Created", value: formatDate(selected.createdAt), mono: true },
@@ -358,27 +385,38 @@ function Inner() {
                         description:
                           "Authentication sessions. A session that is not revoked does not mean the customer is online now.",
                         content: sessionsQ.error ? (
-                          <p className="text-sm text-destructive">Could not load customer sessions.</p>
+                          <p className="text-sm text-destructive">
+                            Could not load customer sessions.
+                          </p>
                         ) : sessionsQ.loading ? (
-                          <p className="text-sm text-muted-foreground">Loading customer sessions…</p>
+                          <p className="text-sm text-muted-foreground">
+                            Loading customer sessions…
+                          </p>
                         ) : sessions.filter((item) => item.userId === selected.id).length ? (
                           <div className="space-y-2">
                             {sessions
                               .filter((item) => item.userId === selected.id)
                               .sort((left, right) => {
-                                const lastUsed = Date.parse(right.lastSeenAt) - Date.parse(left.lastSeenAt);
+                                const lastUsed =
+                                  Date.parse(right.lastSeenAt) - Date.parse(left.lastSeenAt);
                                 return Number.isFinite(lastUsed) ? lastUsed : 0;
                               })
                               .map((item) => (
-                                <div key={item.id} className="rounded-md border border-border/60 p-3">
+                                <div
+                                  key={item.id}
+                                  className="rounded-md border border-border/60 p-3"
+                                >
                                   <div className="flex flex-wrap items-center justify-between gap-2">
-                                    <span className="text-sm font-medium text-foreground">{item.device}</span>
+                                    <span className="text-sm font-medium text-foreground">
+                                      {item.device}
+                                    </span>
                                     <StatusBadge tone={item.active ? "success" : "neutral"}>
                                       {item.active ? "Not revoked" : "Revoked"}
                                     </StatusBadge>
                                   </div>
                                   <p className="mt-1 text-xs text-muted-foreground">
-                                    Last used {formatDate(item.lastSeenAt)} · Created {formatDate(item.createdAt)}
+                                    Last used {formatDate(item.lastSeenAt)} · Created{" "}
+                                    {formatDate(item.createdAt)}
                                   </p>
                                   <p className="mt-1 break-all font-mono text-[11px] text-muted-foreground">
                                     {item.id}
@@ -387,7 +425,9 @@ function Inner() {
                               ))}
                           </div>
                         ) : (
-                          <p className="text-sm text-muted-foreground">No customer authentication sessions found.</p>
+                          <p className="text-sm text-muted-foreground">
+                            No customer authentication sessions found.
+                          </p>
                         ),
                       },
                     ]
@@ -1217,8 +1257,10 @@ function BoolPill({ on }: { on: boolean }) {
   );
 }
 
-function statusTone(s: UserStatus) {
+function statusTone(s: UserStatus | "unknown") {
   switch (s) {
+    case "unknown":
+      return "neutral" as const;
     case "active":
       return "success" as const;
     case "restricted":

@@ -125,7 +125,7 @@ function Inner() {
           )}
           {canSessions && (
             <MetricCard
-              label="Active sessions"
+              label="Unrevoked sessions"
               value={
                 sessions.error
                   ? "Unavailable"

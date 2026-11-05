@@ -1144,7 +1144,7 @@ export class D1FinancialCommandGateway {
   ): Promise<Record<string, unknown> | null> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const result = await this.bridge.select<Record<string, unknown>>(
-      `SELECT * FROM "Gate2BinaryConfiguration" WHERE "pair"=? AND "durationSeconds"=? ${version === undefined ? `${includeDisabled ? "" : 'AND "enabled"=1'} ORDER BY "version" DESC` : 'AND "version"=?'} LIMIT 1`,
+      `SELECT * FROM "Gate2BinaryConfiguration" WHERE "pair"=? AND "durationSeconds"=? ${version === undefined ? 'ORDER BY "version" DESC' : 'AND "version"=?'} LIMIT 1`,
       version === undefined
         ? [pair, durationSeconds]
         : [pair, durationSeconds, version],
@@ -1152,14 +1152,25 @@ export class D1FinancialCommandGateway {
     const row = result.results[0];
     if (!row) return null;
     if (version !== undefined) return row;
-    const storedPolicy = await this.getSystemConfigValue("gate2.binary.globalPolicy");
+    // A disabled latest version must not fall back to an older enabled version.
+    if (!includeDisabled && row.enabled !== true && row.enabled !== 1)
+      return null;
+    const storedPolicy = await this.getSystemConfigValue(
+      "gate2.binary.globalPolicy",
+    );
     if (!storedPolicy) return row;
     const policy = JSON.parse(storedPolicy) as {
       minStake: string;
       maxStake: string;
-      durations: Array<{ durationSeconds: number; payoutRate: number; enabled: boolean }>;
+      durations: Array<{
+        durationSeconds: number;
+        payoutRate: number;
+        enabled: boolean;
+      }>;
     };
-    const duration = policy.durations.find((item) => item.durationSeconds === durationSeconds);
+    const duration = policy.durations.find(
+      (item) => item.durationSeconds === durationSeconds,
+    );
     return {
       ...row,
       pairEnabled: Boolean(row.enabled),
@@ -4035,7 +4046,7 @@ export class D1FinancialCommandGateway {
   async listUsers(): Promise<Record<string, unknown>[]> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const result = await this.bridge.select<Record<string, unknown>>(
-      `SELECT u.*,w."id" AS "walletId",w."balance" AS "walletBalance",w."frozenBalance" AS "walletFrozenBalance",w."balances" AS "walletBalances" FROM "User" u LEFT JOIN "Wallet" w ON w."userId"=u."id" ORDER BY u."createdAt" DESC`,
+      `SELECT u.*,w."id" AS "walletId",w."balance" AS "walletBalance",w."frozenBalance" AS "walletFrozenBalance",w."balances" AS "walletBalances",wi."address" AS "walletAddress",k."status" AS "kycStatus" FROM "User" u LEFT JOIN "Wallet" w ON w."userId"=u."id" LEFT JOIN "WalletIdentity" wi ON wi."userId"=u."id" LEFT JOIN "KYC" k ON k."userId"=u."id" ORDER BY u."createdAt" DESC`,
       [],
     );
     const researchAccounts = new Set(
@@ -4132,7 +4143,15 @@ export class D1FinancialCommandGateway {
       },
       {
         sql: `INSERT INTO "EventOutbox" ("id","idempotencyKey","aggregateType","aggregateId","eventType","eventVersion","correlationId","payload","state","availableAt","createdAt","updatedAt") VALUES (?,?,?,?,?,1,?,?,'PENDING',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`,
-        params: [randomUUID(), userRegisteredKey, "USER", command.id, "USER_REGISTERED", userRegisteredKey, JSON.stringify({ userId: command.id })],
+        params: [
+          randomUUID(),
+          userRegisteredKey,
+          "USER",
+          command.id,
+          "USER_REGISTERED",
+          userRegisteredKey,
+          JSON.stringify({ userId: command.id }),
+        ],
       },
     ]);
     this.requireChanges(result, 0, "D1 user creation");
@@ -6245,7 +6264,9 @@ export class D1FinancialCommandGateway {
 
   async getBinaryGlobalConfiguration(): Promise<Record<string, unknown>> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
-    const stored = await this.getSystemConfigValue(this.BINARY_GLOBAL_POLICY_KEY);
+    const stored = await this.getSystemConfigValue(
+      this.BINARY_GLOBAL_POLICY_KEY,
+    );
     if (stored) {
       try {
         const policy = JSON.parse(stored) as Record<string, unknown>;
@@ -6256,27 +6277,28 @@ export class D1FinancialCommandGateway {
       }
       throw new BadRequestException("Stored Binary global policy is invalid");
     }
-    const rows = await this.listBinaryConfigurationRows();
-    if (!rows.length) throw new BadRequestException("Binary configuration is not initialized");
-    const minStake = String(rows[0].minStake);
-    const maxStake = String(rows[0].maxStake);
-    if (rows.some((row) => String(row.minStake) !== minStake || String(row.maxStake) !== maxStake))
-      throw new BadRequestException("Legacy Binary stake limits differ; reconcile before enabling global policy");
-    const durations = [30, 60, 180, 280, 420].map((durationSeconds) => {
-      const candidates = rows.filter((row) => Number(row.durationSeconds) === durationSeconds);
-      if (!candidates.length) throw new BadRequestException(`Legacy Binary duration ${durationSeconds} is not configured`);
-      const payoutRate = String(candidates[0].payoutRate);
-      if (candidates.some((row) => String(row.payoutRate) !== payoutRate))
-        throw new BadRequestException(`Legacy Binary payout differs for ${durationSeconds}s; reconcile before enabling global policy`);
-      return { durationSeconds, payoutRate: Number(payoutRate), enabled: candidates.some((row) => Boolean(row.enabled)) };
-    });
-    return { version: 0, minStake, maxStake, durations };
+    // No legacy value is a global policy until an operator explicitly saves it.
+    // The blank draft is never persisted or used for trade pricing.
+    return {
+      version: 0,
+      minStake: "",
+      maxStake: "",
+      durations: [30, 60, 180, 280, 420].map((durationSeconds) => ({
+        durationSeconds,
+        payoutRate: 0,
+        enabled: false,
+      })),
+    };
   }
 
   async updateBinaryGlobalConfiguration(command: {
     minStake: string;
     maxStake: string;
-    durations: Array<{ durationSeconds: number; payoutRate: number; enabled: boolean }>;
+    durations: Array<{
+      durationSeconds: number;
+      payoutRate: number;
+      enabled: boolean;
+    }>;
     adminId: string;
     reason: string;
     idempotencyKey: string;
@@ -6290,49 +6312,87 @@ export class D1FinancialCommandGateway {
         payoutRate: Number(duration.payoutRate),
         enabled: Boolean(duration.enabled),
       }));
-    if (durations.length !== supported.length || durations.some((d, i) => d.durationSeconds !== supported[i]))
-      throw new BadRequestException("Exactly the five supported Binary durations are required");
+    if (
+      durations.length !== supported.length ||
+      durations.some((d, i) => d.durationSeconds !== supported[i])
+    )
+      throw new BadRequestException(
+        "Exactly the five supported Binary durations are required",
+      );
     const positiveDecimal = /^(?:0|[1-9]\d*)(?:\.\d{1,18})?$/;
-    if (!positiveDecimal.test(command.minStake) || !positiveDecimal.test(command.maxStake))
+    if (
+      !positiveDecimal.test(command.minStake) ||
+      !positiveDecimal.test(command.maxStake)
+    )
       throw new BadRequestException("Binary stake limits are invalid");
     const minimum = new Prisma.Decimal(command.minStake);
     const maximum = new Prisma.Decimal(command.maxStake);
-    if (!minimum.isFinite() || !maximum.isFinite() || minimum.lte(0) || maximum.lt(minimum))
+    if (
+      !minimum.isFinite() ||
+      !maximum.isFinite() ||
+      minimum.lte(0) ||
+      maximum.lt(minimum)
+    )
       throw new BadRequestException("Binary stake limits are invalid");
-    if (durations.some((d) => !Number.isFinite(d.payoutRate) || d.payoutRate <= 0))
+    if (
+      durations.some((d) => !Number.isFinite(d.payoutRate) || d.payoutRate <= 0)
+    )
       throw new BadRequestException("Binary payout rates are invalid");
     const payload = {
       minStake: command.minStake,
       maxStake: command.maxStake,
       durations,
     };
-    const prior = await this.bridge.select<{ adminId: string; details: string }>(
+    const prior = await this.bridge.select<{
+      adminId: string;
+      details: string;
+    }>(
       `SELECT "adminId","details" FROM "AdminAuditLog" WHERE "action"='BINARY_GLOBAL_CONFIGURATION_UPDATED' AND json_extract("details",'$.idempotencyKey')=? ORDER BY "createdAt" DESC LIMIT 1`,
       [command.idempotencyKey],
     );
     if (prior.results[0]) {
       let details: Record<string, any>;
-      try { details = JSON.parse(prior.results[0].details); }
-      catch { throw new BadRequestException("Binary global configuration idempotency key was already used"); }
-      if (prior.results[0].adminId !== command.adminId || details.reason !== command.reason ||
-          JSON.stringify(details.payload) !== JSON.stringify(payload))
-        throw new BadRequestException("Binary global configuration idempotency key was already used");
-      if (!details.policy) throw new BadRequestException("Binary global configuration replay has no saved result");
+      try {
+        details = JSON.parse(prior.results[0].details);
+      } catch {
+        throw new BadRequestException(
+          "Binary global configuration idempotency key was already used",
+        );
+      }
+      if (
+        prior.results[0].adminId !== command.adminId ||
+        details.reason !== command.reason ||
+        JSON.stringify(details.payload) !== JSON.stringify(payload)
+      )
+        throw new BadRequestException(
+          "Binary global configuration idempotency key was already used",
+        );
+      if (!details.policy)
+        throw new BadRequestException(
+          "Binary global configuration replay has no saved result",
+        );
       return { ...details.policy, replayed: true };
     }
 
     const latestRows = await this.listBinaryConfigurationRows();
-    if (!latestRows.length) throw new BadRequestException("Binary configuration is not initialized");
-    const previousStored = await this.getSystemConfigValue(this.BINARY_GLOBAL_POLICY_KEY);
+    if (!latestRows.length)
+      throw new BadRequestException("Binary configuration is not initialized");
+    const previousStored = await this.getSystemConfigValue(
+      this.BINARY_GLOBAL_POLICY_KEY,
+    );
     let previousVersion = 0;
     if (previousStored) {
       try {
-        previousVersion = Number((JSON.parse(previousStored) as { version?: unknown }).version ?? 0);
+        previousVersion = Number(
+          (JSON.parse(previousStored) as { version?: unknown }).version ?? 0,
+        );
       } catch {
         throw new BadRequestException("Stored Binary global policy is invalid");
       }
       if (!Number.isInteger(previousVersion) || previousVersion < 0)
-        throw new BadRequestException("Stored Binary global policy version is invalid");
+        throw new BadRequestException(
+          "Stored Binary global policy version is invalid",
+        );
     }
     const policy = {
       version: previousVersion + 1,
@@ -6342,46 +6402,79 @@ export class D1FinancialCommandGateway {
     };
     const statements: D1BridgeBatchStatement[] = [];
     for (const current of latestRows) {
-      const setting = durations.find((d) => d.durationSeconds === Number(current.durationSeconds));
+      const setting = durations.find(
+        (d) => d.durationSeconds === Number(current.durationSeconds),
+      );
       if (!setting) continue;
       const version = Number(current.version ?? 0) + 1;
       statements.push({
         sql: `INSERT INTO "Gate2BinaryConfiguration" ("id","pair","durationSeconds","payoutRate","lossRate","minStake","maxStake","settlementDelaySeconds","version","enabled","createdAt","updatedAt") VALUES (?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`,
         params: [
-          randomUUID(), String(current.pair), Number(current.durationSeconds),
-          String(setting.payoutRate), String(current.lossRate ?? "0"),
-          command.minStake, command.maxStake, Number(current.settlementDelaySeconds ?? 0),
-          version, current.enabled ? 1 : 0,
+          randomUUID(),
+          String(current.pair),
+          Number(current.durationSeconds),
+          String(setting.payoutRate),
+          String(current.lossRate ?? "0"),
+          command.minStake,
+          command.maxStake,
+          Number(current.settlementDelaySeconds ?? 0),
+          version,
+          current.enabled ? 1 : 0,
         ],
       });
     }
-    if (!statements.length) throw new BadRequestException("No supported Binary configurations can be materialized");
+    if (!statements.length)
+      throw new BadRequestException(
+        "No supported Binary configurations can be materialized",
+      );
     statements.push({
       sql: `INSERT INTO "SystemConfig" ("id","key","value","description","updatedAt") VALUES (?,?,?,?,CURRENT_TIMESTAMP) ON CONFLICT("key") DO UPDATE SET "value"=excluded."value","description"=excluded."description","updatedAt"=CURRENT_TIMESTAMP`,
-      params: [randomUUID(), this.BINARY_GLOBAL_POLICY_KEY, JSON.stringify(policy), "Authoritative global Binary policy"],
+      params: [
+        randomUUID(),
+        this.BINARY_GLOBAL_POLICY_KEY,
+        JSON.stringify(policy),
+        "Authoritative global Binary policy",
+      ],
     });
     statements.push({
       sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`,
-      params: [randomUUID(), command.adminId, "BINARY_GLOBAL_CONFIGURATION_UPDATED", "global", JSON.stringify({
-        reason: command.reason, idempotencyKey: command.idempotencyKey, payload, policy,
-      })],
+      params: [
+        randomUUID(),
+        command.adminId,
+        "BINARY_GLOBAL_CONFIGURATION_UPDATED",
+        "global",
+        JSON.stringify({
+          reason: command.reason,
+          idempotencyKey: command.idempotencyKey,
+          payload,
+          policy,
+        }),
+      ],
     });
-    statements.push(this.eventOutboxStatement({
-      idempotencyKey: `event:${command.idempotencyKey}`,
-      aggregateType: "BinaryGlobalConfiguration",
-      aggregateId: String(policy.version),
-      eventType: "BINARY_GLOBAL_CONFIGURATION_UPDATED",
-      correlationId: command.idempotencyKey,
-      payload: policy,
-      strict: true,
-    }));
+    statements.push(
+      this.eventOutboxStatement({
+        idempotencyKey: `event:${command.idempotencyKey}`,
+        aggregateType: "BinaryGlobalConfiguration",
+        aggregateId: String(policy.version),
+        eventType: "BINARY_GLOBAL_CONFIGURATION_UPDATED",
+        correlationId: command.idempotencyKey,
+        payload: policy,
+        strict: true,
+      }),
+    );
     const result = await this.bridge.batch(statements);
     for (let index = 0; index < statements.length - 3; index++)
-      this.requireChanges(result, index, "D1 Binary global config materialization");
+      this.requireChanges(
+        result,
+        index,
+        "D1 Binary global config materialization",
+      );
     return policy;
   }
 
-  private async listBinaryConfigurationRows(): Promise<Record<string, unknown>[]> {
+  private async listBinaryConfigurationRows(): Promise<
+    Record<string, unknown>[]
+  > {
     const result = await this.bridge.select<Record<string, unknown>>(
       `SELECT "id","pair","durationSeconds","payoutRate","lossRate","minStake","maxStake","settlementDelaySeconds","version","enabled","createdAt","updatedAt" FROM (SELECT *,ROW_NUMBER() OVER (PARTITION BY "pair","durationSeconds" ORDER BY "version" DESC) AS row_num FROM "Gate2BinaryConfiguration") WHERE row_num=1 ORDER BY "pair" ASC,"durationSeconds" ASC`,
       [],
@@ -6392,15 +6485,23 @@ export class D1FinancialCommandGateway {
   async listBinaryConfigurations(): Promise<Record<string, unknown>[]> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const rows = await this.listBinaryConfigurationRows();
-    const stored = await this.getSystemConfigValue(this.BINARY_GLOBAL_POLICY_KEY);
+    const stored = await this.getSystemConfigValue(
+      this.BINARY_GLOBAL_POLICY_KEY,
+    );
     if (!stored) return rows;
     const policy = JSON.parse(stored) as {
       minStake: string;
       maxStake: string;
-      durations: Array<{ durationSeconds: number; payoutRate: number; enabled: boolean }>;
+      durations: Array<{
+        durationSeconds: number;
+        payoutRate: number;
+        enabled: boolean;
+      }>;
     };
     return rows.map((row) => {
-      const duration = policy.durations.find((item) => item.durationSeconds === Number(row.durationSeconds));
+      const duration = policy.durations.find(
+        (item) => item.durationSeconds === Number(row.durationSeconds),
+      );
       return {
         ...row,
         pairEnabled: Boolean(row.enabled),
@@ -9719,9 +9820,7 @@ export class D1FinancialCommandGateway {
     });
   }
 
-  async pairedTransfer(
-    command: PairedTransferCommand,
-  ): Promise<{
+  async pairedTransfer(command: PairedTransferCommand): Promise<{
     debitPostingId: string;
     creditPostingId: string;
     replayed: boolean;

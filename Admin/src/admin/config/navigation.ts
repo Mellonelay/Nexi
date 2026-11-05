@@ -4,8 +4,6 @@ import {
   Users,
   ShieldCheck,
   LayoutTemplate,
-  Menu as MenuIcon,
-  Flag,
   Coins,
   Network,
   Radio,
@@ -192,14 +190,8 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Public App Settings",
         icon: LayoutTemplate,
         permission: "frontend.view",
+        anyPermissions: ["navigation.view", "flags.view"],
       },
-      {
-        to: "/navigation",
-        label: "Public Navigation",
-        icon: MenuIcon,
-        permission: "navigation.view",
-      },
-      { to: "/feature-flags", label: "Feature Controls", icon: Flag, permission: "flags.view" },
       { to: "/admins", label: "Admin Accounts", icon: UserCog, permission: "admins.view" },
       { to: "/maintenance", label: "Maintenance", icon: Wrench, permission: "maintenance.view" },
     ],
@@ -210,7 +202,9 @@ export const ALL_ROUTES: NavItem[] = NAV_GROUPS.flatMap((g) => g.items);
 
 export function getVisibleNavGroups(can: (permission: Permission) => boolean): NavGroup[] {
   return NAV_GROUPS.flatMap((group) => {
-    const items = group.items.filter((item) => can(item.permission) || item.anyPermissions?.some(can));
+    const items = group.items.filter(
+      (item) => can(item.permission) || item.anyPermissions?.some(can),
+    );
     if (items.length === 0) return [];
     return [
       {

@@ -54,7 +54,11 @@ function categoryForType(type: string): Exclude<NotificationCategory, "All"> {
   const value = type.toUpperCase();
   if (/(SPOT|ORDER|TRADE|MARGIN|BINARY|OPTION|POSITION|SETTLEMENT)/.test(value))
     return "Trading";
-  if (/(DEPOSIT|WITHDRAW|TRANSFER|CONVERT|CONVERSION|WALLET|BALANCE|LEDGER|MINING|LOAN)/.test(value))
+  if (
+    /(DEPOSIT|WITHDRAW|TRANSFER|CONVERT|CONVERSION|WALLET|BALANCE|LEDGER|MINING|LOAN)/.test(
+      value,
+    )
+  )
     return "Wallet";
   if (
     /(KYC|SESSION|PROFILE|AUTH|LOGIN|SECURITY|VERIF|REFERRAL|VIP)/.test(value)
@@ -77,9 +81,14 @@ const TYPE_CONFIG = {
 interface NotificationsPanelProps {
   open: boolean;
   onClose: () => void;
+  onUnreadCountChange: (count: number | null) => void;
 }
 
-export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
+export function NotificationsPanel({
+  open,
+  onClose,
+  onUnreadCountChange,
+}: NotificationsPanelProps) {
   const shouldReduceMotion = useReducedMotion();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
@@ -90,8 +99,13 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
   const [readErrors, setReadErrors] = useState<Record<string, boolean>>({});
   const [retryNonce, setRetryNonce] = useState(0);
   const [category, setCategory] = useState<NotificationCategory>("All");
-  const [principalId, setPrincipalId] = useState<string | null>(() => getAccessTokenPrincipalId());
+  const [principalId, setPrincipalId] = useState<string | null>(() =>
+    getAccessTokenPrincipalId(),
+  );
   const loadRequestRef = useRef(0);
+  const countRequestRef = useRef(0);
+  const sessionGenerationRef = useRef(0);
+  const openRef = useRef(open);
   const previousPrincipalId = useRef<string | null | undefined>(principalId);
   const readRequestIds = useRef(new Set<string>());
   // The list is paginated; only the Backend can count all unread notifications.
@@ -103,21 +117,48 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
           (notification) => notification.category === category,
         );
 
+  const loadUnreadCount = useCallback(async () => {
+    const requestId = ++countRequestRef.current;
+    const requestPrincipalId = getAccessTokenPrincipalId();
+    if (!requestPrincipalId) {
+      setUnreadCount(null);
+      return;
+    }
+    try {
+      const response = await api.get(
+        "/communications/notifications/unread-count",
+      );
+      if (
+        requestId !== countRequestRef.current ||
+        requestPrincipalId !== getAccessTokenPrincipalId()
+      )
+        return;
+      const count = response.data?.count;
+      setUnreadCount(Number.isSafeInteger(count) && count >= 0 ? count : null);
+    } catch {
+      if (
+        requestId === countRequestRef.current &&
+        requestPrincipalId === getAccessTokenPrincipalId()
+      ) {
+        setUnreadCount(null);
+      }
+    }
+  }, []);
+
   const loadNotifications = useCallback(async () => {
     const requestId = ++loadRequestRef.current;
     const requestPrincipalId = getAccessTokenPrincipalId();
     setLoading(true);
     setFailed(false);
     try {
-      const [listResult, countResult] = await Promise.allSettled([
-        api.get("/communications/notifications", { params: { page: 1, limit: 25 } }),
-        api.get("/communications/notifications/unread-count"),
-      ]);
-      if (requestId !== loadRequestRef.current || requestPrincipalId !== getAccessTokenPrincipalId()) return;
-      if (listResult.status !== 'fulfilled') throw listResult.reason;
-      const data = listResult.value.data;
-      const count = countResult.status === 'fulfilled' ? countResult.value.data?.count : null;
-      setUnreadCount(Number.isSafeInteger(count) && count >= 0 ? count : null);
+      const { data } = await api.get("/communications/notifications", {
+        params: { page: 1, limit: 25 },
+      });
+      if (
+        requestId !== loadRequestRef.current ||
+        requestPrincipalId !== getAccessTokenPrincipalId()
+      )
+        return;
       const rows = Array.isArray(data)
         ? data
         : Array.isArray(data?.notifications)
@@ -147,9 +188,12 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
         }),
       );
     } catch (error) {
-      if (requestId !== loadRequestRef.current || requestPrincipalId !== getAccessTokenPrincipalId()) return;
+      if (
+        requestId !== loadRequestRef.current ||
+        requestPrincipalId !== getAccessTokenPrincipalId()
+      )
+        return;
       setNotifications([]);
-      setUnreadCount(null);
       setFailed(true);
       setFailureMessage(axiosErrorMessage(error));
     } finally {
@@ -158,23 +202,46 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
   }, []);
 
   useEffect(() => {
+    openRef.current = open;
+  }, [open]);
+
+  useEffect(
+    () => () => {
+      loadRequestRef.current += 1;
+      countRequestRef.current += 1;
+      sessionGenerationRef.current += 1;
+    },
+    [],
+  );
+
+  useEffect(() => {
+    onUnreadCountChange(unreadCount);
+  }, [onUnreadCountChange, unreadCount]);
+
+  useEffect(() => {
     const syncPrincipal = () => {
       const next = getAccessTokenPrincipalId();
       if (previousPrincipalId.current === next) return;
       previousPrincipalId.current = next;
       setPrincipalId(next);
       loadRequestRef.current += 1;
+      countRequestRef.current += 1;
+      sessionGenerationRef.current += 1;
       readRequestIds.current.clear();
       setNotifications([]);
       setUnreadCount(null);
       setReadErrors({});
       setFailed(false);
-      if (open && next) void loadNotifications();
     };
     window.addEventListener("nexi:wallet-session", syncPrincipal);
     syncPrincipal();
-    return () => window.removeEventListener("nexi:wallet-session", syncPrincipal);
-  }, [loadNotifications, open]);
+    return () =>
+      window.removeEventListener("nexi:wallet-session", syncPrincipal);
+  }, []);
+
+  useEffect(() => {
+    if (principalId && !openRef.current) void loadUnreadCount();
+  }, [loadUnreadCount, principalId]);
 
   useEffect(() => {
     if (!open) {
@@ -182,10 +249,11 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
       return;
     }
     void loadNotifications();
-  }, [loadNotifications, open, retryNonce]);
+    if (principalId) void loadUnreadCount();
+  }, [loadNotifications, loadUnreadCount, open, principalId, retryNonce]);
 
   useEffect(() => {
-    if (!open || !principalId || typeof window === "undefined") return;
+    if (!principalId || typeof window === "undefined") return;
     const token = getAccessToken();
     if (!token) return;
     const socket = io(`${apiBaseUrl}/communications`, {
@@ -197,12 +265,11 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
       reconnectionDelay: 500,
       reconnectionDelayMax: 8_000,
     });
-    let connectedOnce = false;
     const handleConnect = () => {
       if (getAccessTokenPrincipalId() !== principalId) return;
-      const recovered = connectedOnce;
-      connectedOnce = true;
-      if (recovered) void loadNotifications();
+      // Close the gap between the first REST read and the socket joining its room.
+      void loadUnreadCount();
+      if (openRef.current) void loadNotifications();
     };
     const handleEvent = (message: unknown) => {
       if (getAccessTokenPrincipalId() !== principalId) return;
@@ -210,8 +277,10 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
       const event = (message as { event?: unknown }).event;
       if (!event || typeof event !== "object") return;
       const type = String((event as { type?: unknown }).type ?? "");
-      if (type === "NOTIFICATION_SENT" || type === "NOTIFICATION_READ")
-        void loadNotifications();
+      if (type === "NOTIFICATION_SENT" || type === "NOTIFICATION_READ") {
+        void loadUnreadCount();
+        if (openRef.current) void loadNotifications();
+      }
     };
     socket.on("connect", handleConnect);
     socket.on("communications.event", handleEvent);
@@ -220,183 +289,200 @@ export function NotificationsPanel({ open, onClose }: NotificationsPanelProps) {
       socket.off("communications.event", handleEvent);
       socket.disconnect();
     };
-  }, [loadNotifications, open, principalId]);
+  }, [loadNotifications, loadUnreadCount, principalId]);
 
   const markRead = async (id: string) => {
     if (readRequestIds.current.has(id)) return;
     const requestPrincipalId = getAccessTokenPrincipalId();
+    const requestSession = sessionGenerationRef.current;
     readRequestIds.current.add(id);
     try {
       await api.post(`/communications/notifications/${id}/read`);
-      if (requestPrincipalId !== getAccessTokenPrincipalId()) return;
+      if (
+        requestSession !== sessionGenerationRef.current ||
+        requestPrincipalId !== getAccessTokenPrincipalId()
+      )
+        return;
+      setReadErrors((errors) => ({ ...errors, [id]: false }));
       setNotifications((items) =>
         items.map((item) => (item.id === id ? { ...item, read: true } : item)),
       );
       // The Backend remains authoritative; reconcile races and unseen pages.
-      void loadNotifications();
+      void loadUnreadCount();
+      if (openRef.current) void loadNotifications();
     } catch {
-      if (requestPrincipalId !== getAccessTokenPrincipalId()) return;
+      if (
+        requestSession !== sessionGenerationRef.current ||
+        requestPrincipalId !== getAccessTokenPrincipalId()
+      )
+        return;
       setReadErrors((errors) => ({ ...errors, [id]: true }));
     } finally {
-      readRequestIds.current.delete(id);
+      if (requestSession === sessionGenerationRef.current)
+        readRequestIds.current.delete(id);
     }
   };
 
   return (
     <LazyMotion features={domAnimation}>
-      <ModalSurface open={open} onClose={onClose} title="Notifications" align="right">
-          <m.aside
-            id="nexi-notifications-panel"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Notifications"
-            className="nexi-drawer flex w-full max-w-[360px] flex-col overflow-hidden rounded-2xl border border-violet-300/20"
-            initial={shouldReduceMotion ? { opacity: 0 } : { x: "100%" }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={shouldReduceMotion ? { opacity: 0 } : { x: "100%" }}
-            transition={
-              shouldReduceMotion
-                ? { duration: 0.1 }
-                : { duration: 0.25, ease: [0.16, 1, 0.3, 1] }
-            }
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--nexi-border-subtle)]">
-              <div className="flex items-center gap-2">
-                <Bell size={16} className="text-[#6d41ff]" />
-                <span className="font-semibold text-[#F8F6FF]">
-                  Notifications
+      <ModalSurface
+        open={open}
+        onClose={onClose}
+        title="Notifications"
+        align="right"
+      >
+        <m.aside
+          id="nexi-notifications-panel"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Notifications"
+          className="nexi-drawer flex w-full max-w-[360px] flex-col overflow-hidden rounded-2xl border border-violet-300/20"
+          initial={shouldReduceMotion ? { opacity: 0 } : { x: "100%" }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={shouldReduceMotion ? { opacity: 0 } : { x: "100%" }}
+          transition={
+            shouldReduceMotion
+              ? { duration: 0.1 }
+              : { duration: 0.25, ease: [0.16, 1, 0.3, 1] }
+          }
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--nexi-border-subtle)]">
+            <div className="flex items-center gap-2">
+              <Bell size={16} className="text-[#6d41ff]" />
+              <span className="font-semibold text-[#F8F6FF]">
+                Notifications
+              </span>
+              {unreadCount !== null && unreadCount > 0 && (
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#6d41ff] text-white">
+                  {unreadCount}
                 </span>
-                {unreadCount !== null && unreadCount > 0 && (
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#6d41ff] text-white">
-                    {unreadCount}
-                  </span>
-                )}
-              </div>
-              <button
-                onClick={onClose}
-                className="w-11 h-11 rounded-lg flex items-center justify-center text-[#8C8299] hover:text-[#F8F6FF] hover:bg-white/10 transition-colors"
-                aria-label="Close notifications"
-              >
-                <X size={16} />
-              </button>
+              )}
             </div>
+            <button
+              onClick={onClose}
+              className="w-11 h-11 rounded-lg flex items-center justify-center text-[#8C8299] hover:text-[#F8F6FF] hover:bg-white/10 transition-colors"
+              aria-label="Close notifications"
+            >
+              <X size={16} />
+            </button>
+          </div>
 
-            <div className="border-b border-[var(--nexi-border-subtle)] px-3 py-2">
-              <div
-                className="flex flex-wrap gap-1.5 pb-1"
-                role="tablist"
-                aria-label="Notification categories"
-              >
-                {CATEGORIES.map((item) => (
+          <div className="border-b border-[var(--nexi-border-subtle)] px-3 py-2">
+            <div
+              className="flex flex-wrap gap-1.5 pb-1"
+              role="tablist"
+              aria-label="Notification categories"
+            >
+              {CATEGORIES.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  role="tab"
+                  aria-selected={category === item}
+                  onClick={() => setCategory(item)}
+                  className={cn(
+                    "min-h-9 shrink-0 rounded-lg border px-3 text-xs font-semibold transition-colors",
+                    category === item
+                      ? "border-[#8B5CF6] bg-[#2A1742] text-white"
+                      : "border-[#2B2037] bg-[#171022] text-[#A99DB8] hover:text-white",
+                  )}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Notification list */}
+          <div className="flex-1 overflow-y-auto py-2">
+            {loading && (
+              <p className="px-4 py-6 text-sm text-[#8C8299]">
+                Loading notifications…
+              </p>
+            )}
+            {!loading && failed && (
+              <div className="px-4 py-6 text-sm text-[#8C8299]">
+                <p>{failureMessage}</p>
+                <button
+                  type="button"
+                  onClick={() => setRetryNonce((value) => value + 1)}
+                  className="mt-3 min-h-11 font-semibold text-[#A995FF] underline-offset-4 hover:underline"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+            {!loading && !failed && visibleNotifications.length === 0 && (
+              <p className="px-4 py-6 text-sm text-[#8C8299]">
+                {notifications.length === 0
+                  ? "No notifications available."
+                  : `No ${category.toLowerCase()} notifications.`}
+              </p>
+            )}
+            {!loading &&
+              !failed &&
+              visibleNotifications.map((notif) => {
+                const cfg = TYPE_CONFIG[notif.type];
+                const Icon = cfg.icon;
+                return (
                   <button
-                    key={item}
+                    key={notif.id}
                     type="button"
-                    role="tab"
-                    aria-selected={category === item}
-                    onClick={() => setCategory(item)}
+                    aria-label={`${notif.title}${notif.read ? " (read)" : " (unread)"}`}
+                    onClick={() => {
+                      if (!notif.read) void markRead(notif.id);
+                    }}
                     className={cn(
-                      "min-h-9 shrink-0 rounded-lg border px-3 text-xs font-semibold transition-colors",
-                      category === item
-                        ? "border-[#8B5CF6] bg-[#2A1742] text-white"
-                        : "border-[#2B2037] bg-[#171022] text-[#A99DB8] hover:text-white",
+                      "flex gap-3 px-4 py-3 border-b border-[#2B2037]/60 text-left last:border-0 transition-colors",
+                      !notif.read && "bg-[#6d41ff]/5",
                     )}
                   >
-                    {item}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Notification list */}
-            <div className="flex-1 overflow-y-auto py-2">
-              {loading && (
-                <p className="px-4 py-6 text-sm text-[#8C8299]">
-                  Loading notifications…
-                </p>
-              )}
-              {!loading && failed && (
-                <div className="px-4 py-6 text-sm text-[#8C8299]">
-                  <p>{failureMessage}</p>
-                  <button
-                    type="button"
-                    onClick={() => setRetryNonce((value) => value + 1)}
-                    className="mt-3 min-h-11 font-semibold text-[#A995FF] underline-offset-4 hover:underline"
-                  >
-                    Retry
-                  </button>
-                </div>
-              )}
-              {!loading && !failed && visibleNotifications.length === 0 && (
-                <p className="px-4 py-6 text-sm text-[#8C8299]">
-                  {notifications.length === 0
-                    ? "No notifications available."
-                    : `No ${category.toLowerCase()} notifications.`}
-                </p>
-              )}
-              {!loading &&
-                !failed &&
-                visibleNotifications.map((notif) => {
-                  const cfg = TYPE_CONFIG[notif.type];
-                  const Icon = cfg.icon;
-                  return (
-                    <button
-                      key={notif.id}
-                      type="button"
-                      aria-label={`${notif.title}${notif.read ? " (read)" : " (unread)"}`}
-                      onClick={() => {
-                        if (!notif.read) void markRead(notif.id);
-                      }}
-                      className={cn(
-                        "flex gap-3 px-4 py-3 border-b border-[#2B2037]/60 text-left last:border-0 transition-colors",
-                        !notif.read && "bg-[#6d41ff]/5",
-                      )}
+                    <div
+                      className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
+                      style={{ background: cfg.bg }}
                     >
-                      <div
-                        className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
-                        style={{ background: cfg.bg }}
-                      >
-                        <Icon size={14} style={{ color: cfg.color }} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <p className="text-sm font-semibold text-[#F8F6FF] leading-snug">
-                            {notif.title}
-                          </p>
-                          {!notif.read && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#6d41ff] flex-shrink-0 mt-1.5" />
-                          )}
-                        </div>
-                        <p className="text-xs text-[#8C8299] leading-5 mt-0.5">
-                          {notif.message}
+                      <Icon size={14} style={{ color: cfg.color }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm font-semibold text-[#F8F6FF] leading-snug">
+                          {notif.title}
                         </p>
-                        <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-[#55546A]">
-                          <span>{notif.time}</span>
-                          <span className="uppercase tracking-[0.08em]">
-                            {notif.sourceType}
-                          </span>
-                        </div>
-                        {readErrors[notif.id] && (
-                          <p className="mt-1 text-[10px] text-[#FFB6C2]">
-                            Could not mark as read.
-                          </p>
+                        {!notif.read && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#6d41ff] flex-shrink-0 mt-1.5" />
                         )}
                       </div>
-                    </button>
-                  );
-                })}
-            </div>
+                      <p className="text-xs text-[#8C8299] leading-5 mt-0.5">
+                        {notif.message}
+                      </p>
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-[#55546A]">
+                        <span>{notif.time}</span>
+                        <span className="uppercase tracking-[0.08em]">
+                          {notif.sourceType}
+                        </span>
+                      </div>
+                      {readErrors[notif.id] && (
+                        <p className="mt-1 text-[10px] text-[#FFB6C2]">
+                          Could not mark as read.
+                        </p>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+          </div>
 
-            {/* Footer */}
-            <div className="px-4 py-3 pb-[calc(12px+env(safe-area-inset-bottom))] border-t border-[var(--nexi-border-subtle)]">
-              <p
-                className="text-center text-[11px] leading-5 text-[#8C8299]"
-                role="status"
-              >
-                Open a notification to mark it as read.
-              </p>
-            </div>
-          </m.aside>
+          {/* Footer */}
+          <div className="px-4 py-3 pb-[calc(12px+env(safe-area-inset-bottom))] border-t border-[var(--nexi-border-subtle)]">
+            <p
+              className="text-center text-[11px] leading-5 text-[#8C8299]"
+              role="status"
+            >
+              Open a notification to mark it as read.
+            </p>
+          </div>
+        </m.aside>
       </ModalSurface>
     </LazyMotion>
   );

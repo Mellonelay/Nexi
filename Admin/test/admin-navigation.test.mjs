@@ -50,6 +50,8 @@ test("normal Admin navigation excludes development-only and redundant destinatio
     "/health",
     "/wallets",
     "/sessions",
+    "/navigation",
+    "/feature-flags",
   ]) {
     assert.equal(visible.has(path), false, `${path} must not appear in normal navigation`);
   }
@@ -57,10 +59,27 @@ test("normal Admin navigation excludes development-only and redundant destinatio
     "/binary",
     "/users",
     "/networks",
-    "/feature-flags",
+    "/frontend-control",
     "/admins",
     "/maintenance",
   ]) {
     assert.equal(visible.has(path), true, `${path} must remain reachable in normal navigation`);
   }
+});
+
+test("public settings remains reachable with navigation-only or flags-only access", () => {
+  for (const permission of ["navigation.view", "flags.view"]) {
+    const groups = getVisibleNavGroups((candidate) => candidate === permission);
+    const settings = groups.find(({ id }) => id === "settings");
+    assert.ok(settings, "settings workspace should be visible");
+    assert.equal(settings.primary, "/frontend-control");
+    assert.deepEqual(
+      settings.items.map(({ to }) => to),
+      ["/frontend-control"],
+    );
+  }
+  assert.equal(
+    getVisibleNavGroups(() => false).some(({ id }) => id === "settings"),
+    false,
+  );
 });
