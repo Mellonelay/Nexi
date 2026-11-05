@@ -205,7 +205,10 @@ function OperatorAlertIndicator() {
         )}
       </Link>
       {toast && (
-        <div role="status" className="absolute right-0 top-11 z-50 w-72 max-w-[calc(100vw-1.5rem)] rounded-lg border border-border bg-card p-3 shadow-lg">
+        <div
+          role="status"
+          className="absolute right-0 top-11 z-50 w-72 max-w-[calc(100vw-1.5rem)] rounded-lg border border-border bg-card p-3 shadow-lg"
+        >
           <Link to="/notifications" className="block text-sm hover:underline">
             <span className="font-medium">{toast.title}</span>
             <span className="mt-1 block text-muted-foreground">{toast.summary}</span>
