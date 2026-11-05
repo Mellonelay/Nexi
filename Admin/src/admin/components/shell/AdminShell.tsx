@@ -5,13 +5,13 @@ import { cn } from "@/lib/utils";
 import { ROLE_LIST } from "@/admin/config/roles";
 import { EnvironmentBadge } from "@/admin/components/EnvironmentBadge";
 import { ProviderBadge } from "@/admin/components/ProviderBadge";
-import { useAdminData } from "@/admin/data/context";
+import { useAdminData, useAdminQuery } from "@/admin/data/context";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { ShieldAlert } from "lucide-react";
+import { Bell, ShieldAlert } from "lucide-react";
 import type { ReactNode } from "react";
 import { Fragment } from "react";
-import { useState } from "react";
-import type { RoleId } from "@/admin/types";
+import { useEffect, useRef, useState } from "react";
+import type { AdminOperatorAlert, RoleId } from "@/admin/types";
 
 function routeMatches(pathname: string, route: string) {
   return pathname === route || pathname.startsWith(`${route}/`);
@@ -165,6 +165,57 @@ function navClass(active: boolean) {
   );
 }
 
+function OperatorAlertIndicator() {
+  const provider = useAdminData();
+  const query = useAdminQuery((p) =>
+    p.listOperatorAlerts
+      ? p.listOperatorAlerts()
+      : Promise.reject(new Error("Operator alerts are unavailable")),
+  );
+  const previousUnread = useRef<number | null>(null);
+  const [toast, setToast] = useState<AdminOperatorAlert | null>(null);
+
+  useEffect(() => provider.subscribeToOperatorAlerts?.(query.refresh), [provider, query.refresh]);
+  useEffect(() => {
+    const unread = query.data?.unreadCount;
+    if (unread === undefined) return;
+    if (previousUnread.current !== null && unread > previousUnread.current) {
+      setToast(query.data?.items.find((item) => !item.readAt) ?? null);
+    }
+    previousUnread.current = unread;
+  }, [query.data]);
+  useEffect(() => {
+    if (!toast) return;
+    const timeout = window.setTimeout(() => setToast(null), 5000);
+    return () => window.clearTimeout(timeout);
+  }, [toast]);
+
+  return (
+    <div className="relative shrink-0">
+      <Link
+        to="/notifications"
+        aria-label={`Operator alerts${query.data?.unreadCount ? `, ${query.data.unreadCount} unread` : ""}`}
+        className="relative grid h-9 w-9 place-items-center rounded-md border border-border/60 hover:bg-accent"
+      >
+        <Bell className="h-4 w-4" aria-hidden="true" />
+        {!!query.data?.unreadCount && (
+          <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-destructive px-1 text-center text-[10px] leading-4 text-destructive-foreground">
+            {query.data.unreadCount > 99 ? "99+" : query.data.unreadCount}
+          </span>
+        )}
+      </Link>
+      {toast && (
+        <div role="status" className="absolute right-0 top-11 z-50 w-72 max-w-[calc(100vw-1.5rem)] rounded-lg border border-border bg-card p-3 shadow-lg">
+          <Link to="/notifications" className="block text-sm hover:underline">
+            <span className="font-medium">{toast.title}</span>
+            <span className="mt-1 block text-muted-foreground">{toast.summary}</span>
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SessionControls() {
   const s = useAdminSession();
   const provider = useAdminData();
@@ -289,6 +340,7 @@ function TopBar({ mobileNav }: { mobileNav: ReactNode }) {
         ))}
       </div>
       <EnvironmentBadge env={s.environment} />
+      {s.can("operator_alerts.view") && <OperatorAlertIndicator />}
       <div className="hidden items-center gap-2 md:flex">
         <div className="text-right">
           <div className="text-xs font-medium text-foreground">{s.actorName}</div>

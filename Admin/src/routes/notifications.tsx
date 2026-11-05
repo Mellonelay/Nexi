@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Bell } from "lucide-react";
 import { PageHeader } from "@/admin/components/PageHeader";
 import { RouteGuard } from "@/admin/components/RouteGuard";
@@ -187,18 +187,9 @@ function CustomerNotifications() {
 function OperatorAlerts() {
   const provider = useAdminData();
   const q = useAdminQuery((p) => p.listOperatorAlerts ? p.listOperatorAlerts() : Promise.reject(new Error("Operator alerts are unavailable")));
-  const previousUnread = useRef<number | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => provider.subscribeToOperatorAlerts?.(() => q.refresh()), [provider, q.refresh]);
-  useEffect(() => {
-    if (q.data && previousUnread.current !== null && q.data.unreadCount > previousUnread.current) {
-      const latest = q.data.items.find((item) => !item.readAt);
-      if (latest) { setToast(`${latest.title}: ${latest.summary}`); window.setTimeout(() => setToast(null), 5000); }
-    }
-    if (q.data) previousUnread.current = q.data.unreadCount;
-  }, [q.data]);
   const categories = q.data?.categories ?? [];
   const disabled = q.data?.disabledCategories ?? [];
   const toggle = async (category: AdminOperatorAlertCategory) => {
@@ -219,7 +210,6 @@ function OperatorAlerts() {
       <div><h2 className="flex items-center gap-2 text-lg font-semibold"><Bell className="h-4 w-4" aria-hidden="true" />Operator alerts <span aria-label={`${q.data?.unreadCount ?? 0} unread alerts`} className="rounded-full bg-muted px-2 py-0.5 text-xs">{q.data?.unreadCount ?? 0}</span></h2><p className="text-sm text-muted-foreground">Durable platform events</p></div>
       <Button variant="outline" onClick={q.refresh}>Refresh</Button>
     </div>
-    {toast && <p role="status" className="mt-3 rounded-md bg-muted p-3 text-sm">{toast}</p>}
     <div className="my-4 flex flex-wrap gap-2" aria-label="Alert category preferences">
       {categories.map((category) => <label key={category} className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm">
         <input type="checkbox" checked={!disabled.includes(category)} disabled={saving} onChange={() => void toggle(category)} />{category.toLowerCase()}
