@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
@@ -24,7 +24,7 @@ import { ReferralVipModule } from '../referral-vip/referral-vip.module';
     PassportModule,
     ConfigModule,
     D1PrismaModule,
-    ReferralVipModule,
+    forwardRef(() => ReferralVipModule),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
