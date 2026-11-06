@@ -25,10 +25,10 @@ def norm(sql):
     sql = re.sub(r'\bIF\s+NOT\s+EXISTS\b', '', sql or '', flags=re.I)
     return " ".join(sql.split()).casefold()
 
-def run_prior(script, db, apply):
+def run_prior(script, db, apply, owner_waiver=False):
     cmd = [sys.executable, str(script), "--db", str(db)]
     if apply:
-        cmd += ["--apply", "--acknowledge-quiesced-and-backed-up"]
+        cmd += ["--apply", "--acknowledge-quiesced-owner-waives-backup" if owner_waiver else "--acknowledge-quiesced-and-backed-up"]
     p = subprocess.run(cmd, capture_output=True, text=True)
     if p.returncode:
         raise RuntimeError(f"{script.name}: {(p.stderr or p.stdout).strip()}")
@@ -82,8 +82,8 @@ def pending_ddl(db, applied):
         raise ValueError("migration journal says applied but required schema objects are absent")
     return pending
 
-def migrate(path, apply=False, acknowledge=False):
-    if apply and not acknowledge: raise ValueError("--apply requires --acknowledge-quiesced-and-backed-up")
+def migrate(path, apply=False, acknowledge=False, owner_waiver=False):
+    if apply and not (acknowledge or owner_waiver): raise ValueError("--apply requires a quiescence/recovery acknowledgement")
     dbpath = pathlib.Path(path).expanduser().resolve(strict=True)
     prior = [run_prior(script, dbpath, False) for _, _, script in EARLY]
     ro = sqlite3.connect(dbpath.as_uri()+"?mode=ro", uri=True, timeout=5); ro.row_factory = sqlite3.Row
@@ -96,7 +96,7 @@ def migrate(path, apply=False, acknowledge=False):
             print(f"DRY_RUN additive_statements={len(pending)} journal_entries=5; no changes made")
             return
     finally: ro.close()
-    for _, _, script in EARLY: print(run_prior(script, dbpath, True))
+    for _, _, script in EARLY: print(run_prior(script, dbpath, True, owner_waiver))
     db = sqlite3.connect(str(dbpath), timeout=5); db.row_factory = sqlite3.Row
     try:
         db.execute("PRAGMA busy_timeout=5000"); db.execute("BEGIN IMMEDIATE")
@@ -117,8 +117,10 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--db", required=True); p.add_argument("--apply", action="store_true")
     p.add_argument("--acknowledge-quiesced-and-backed-up", action="store_true")
+    p.add_argument("--acknowledge-quiesced-owner-waives-backup", action="store_true",
+                   help="confirm the service is quiesced; the owner explicitly waives a recovery backup")
     a = p.parse_args()
-    try: migrate(a.db, a.apply, a.acknowledge_quiesced_and_backed_up)
+    try: migrate(a.db, a.apply, a.acknowledge_quiesced_and_backed_up, a.acknowledge_quiesced_owner_waives_backup)
     except (OSError, sqlite3.Error, ValueError, RuntimeError) as e: p.exit(1, f"migration stopped: {e}\n")
 
 if __name__ == "__main__": main()

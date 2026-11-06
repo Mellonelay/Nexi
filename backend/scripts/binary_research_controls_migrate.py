@@ -81,9 +81,9 @@ def migration_statements(path):
     return statements
 
 
-def migrate(path, apply=False, acknowledge=False):
-    if apply and not acknowledge:
-        raise ValueError("--apply requires --acknowledge-quiesced-and-backed-up")
+def migrate(path, apply=False, acknowledge=False, owner_waiver=False):
+    if apply and not (acknowledge or owner_waiver):
+        raise ValueError("--apply requires a quiescence/recovery acknowledgement")
     database = pathlib.Path(path).expanduser().resolve(strict=True)
     if not database.is_file():
         raise ValueError("SQLite database path is not a file")
@@ -132,9 +132,12 @@ def main(argv=None):
         action="store_true",
         help="confirm the service is quiesced and a protected recovery backup is verified",
     )
+    parser.add_argument("--acknowledge-quiesced-owner-waives-backup", action="store_true",
+                        help="confirm the service is quiesced; the owner explicitly waives a recovery backup")
     args = parser.parse_args(argv)
     try:
-        migrate(args.db, apply=args.apply, acknowledge=args.acknowledge_quiesced_and_backed_up)
+        migrate(args.db, apply=args.apply, acknowledge=args.acknowledge_quiesced_and_backed_up,
+                owner_waiver=args.acknowledge_quiesced_owner_waives_backup)
         return 0
     except (OSError, sqlite3.Error, ValueError) as error:
         print(f"MIGRATION_ERROR: {error}", file=sys.stderr)

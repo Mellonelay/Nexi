@@ -95,7 +95,9 @@ if __name__ == "__main__":
     parser.add_argument("--db", required=True)
     parser.add_argument("--apply", action="store_true")
     parser.add_argument("--acknowledge-quiesced-and-backed-up", action="store_true")
+    parser.add_argument("--acknowledge-quiesced-owner-waives-backup", action="store_true",
+                        help="confirm the service is quiesced; the owner explicitly waives a recovery backup")
     args = parser.parse_args()
-    if args.apply and not args.acknowledge_quiesced_and_backed_up:
-        parser.error("--apply requires --acknowledge-quiesced-and-backed-up")
+    if args.apply and not (args.acknowledge_quiesced_and_backed_up or args.acknowledge_quiesced_owner_waives_backup):
+        parser.error("--apply requires a quiescence/recovery acknowledgement")
     migrate(args.db, args.apply)

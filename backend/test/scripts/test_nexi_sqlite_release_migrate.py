@@ -59,6 +59,11 @@ class NEXISQLiteReleaseMigrationTests(unittest.TestCase):
             self.assertEqual(db.execute("SELECT COUNT(*) FROM d1_migrations").fetchone()[0], 1)
             self.assertNotIn("currency", {r[1] for r in db.execute('PRAGMA table_info("LoanPlan")')})
 
+    def test_owner_can_explicitly_waive_backup_after_quiescence(self):
+        result = self.run_cli("--apply", "--acknowledge-quiesced-owner-waives-backup")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("APPLIED migrations=0016-0020", result.stdout)
+
     def test_apply_records_all_migrations_and_repeated_apply_is_safe(self):
         for _ in range(2):
             result = self.run_cli("--apply", "--acknowledge-quiesced-and-backed-up")
