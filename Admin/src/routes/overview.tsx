@@ -11,7 +11,7 @@ import { DataTable, type DataTableColumn } from "@/admin/components/DataTable";
 import { useAdminSession } from "@/admin/session/session";
 import { buildOverviewWorkItems, type OverviewWorkItem } from "@/admin/data/overview-work-items";
 import { LoadingSkeleton } from "@/admin/components/states";
-import { Users, Activity, Wallet, Radio, Timer } from "lucide-react";
+import { Users, Activity, Wallet, ArrowDownLeft, ArrowUpRight, Timer } from "lucide-react";
 
 export const Route = createFileRoute("/overview")({ component: OverviewPage });
 
@@ -29,10 +29,9 @@ function Inner() {
   const canUsers = session.can("users.view");
   const canSessions = session.can("sessions.view");
   const canWithdrawals = session.can("withdrawals.view");
-  const canFeeds = session.can("feeds.view");
+  const canDeposits = session.can("deposits.view");
   const canBinary = session.can("binary.view");
   const canKyc = session.can("kyc.view");
-  const canHealth = session.can("health.view");
   const canAudit = session.can("audit.view");
   const users = useAdminQuery((p) => (canUsers ? p.listUsers() : Promise.resolve([])), [canUsers]);
   const sessions = useAdminQuery(
@@ -43,38 +42,34 @@ function Inner() {
     (p) => (canWithdrawals ? p.listWithdrawals() : Promise.resolve([])),
     [canWithdrawals],
   );
-  const feeds = useAdminQuery((p) => (canFeeds ? p.listFeeds() : Promise.resolve([])), [canFeeds]);
+  const deposits = useAdminQuery(
+    (p) => (canDeposits ? p.listDeposits() : Promise.resolve([])),
+    [canDeposits],
+  );
   const binary = useAdminQuery(
     (p) => (canBinary ? p.listBinaryPositions() : Promise.resolve([])),
     [canBinary],
   );
   const kyc = useAdminQuery((p) => (canKyc ? p.listKyc() : Promise.resolve([])), [canKyc]);
   const audit = useAdminQuery((p) => (canAudit ? p.listAudit() : Promise.resolve([])), [canAudit]);
-  const health = useAdminQuery(
-    (p) => (canHealth ? p.listHealth() : Promise.resolve([])),
-    [canHealth],
-  );
 
   const loading = [
     canUsers && users.loading,
     canSessions && sessions.loading,
     canWithdrawals && withdrawals.loading,
-    canFeeds && feeds.loading,
+    canDeposits && deposits.loading,
     canBinary && binary.loading,
     canKyc && kyc.loading,
-    canHealth && health.loading,
     canAudit && audit.loading,
   ].some(Boolean);
   const queueErrors = [
     canKyc && kyc.error && "KYC reviews",
     canWithdrawals && withdrawals.error && "withdrawals",
-    canHealth && health.error && "system health",
   ].filter(Boolean);
   const workItems = buildOverviewWorkItems({
     kyc: kyc.data ?? [],
     withdrawals: withdrawals.data ?? [],
-    health: health.data ?? [],
-    access: { kyc: canKyc, withdrawals: canWithdrawals, health: canHealth },
+    access: { kyc: canKyc, withdrawals: canWithdrawals },
   });
   const selected = workItems.find((item) => item.id === selectedId) ?? workItems[0] ?? null;
   const workColumns: DataTableColumn<OverviewWorkItem>[] = [
@@ -108,7 +103,7 @@ function Inner() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Operations Overview"
-        description="Snapshot of platform activity, health, and pending work."
+        description="Platform activity and pending operational work."
         badges={<ProviderBadge />}
       />
 
@@ -147,16 +142,42 @@ function Inner() {
               tone="warning"
             />
           )}
-          {canFeeds && (
+          {canDeposits && (
             <MetricCard
-              label="Live feeds"
+              label="Deposits this month"
               value={
-                feeds.error
-                  ? "Unavailable"
-                  : `${feeds.data?.filter((f) => f.status === "LIVE").length ?? 0}/${feeds.data?.length ?? 0}`
+                deposits.error ? (
+                  "Unavailable"
+                ) : (
+                  <MonthlyAmounts
+                    rows={deposits.data ?? []}
+                    dateOf={(row) => row.creditedAt}
+                    include={(row) => row.status === "credited"}
+                  />
+                )
               }
-              icon={<Radio className="h-4 w-4" />}
+              hint="Per asset · credited this UTC month · latest 500 API records"
+              icon={<ArrowDownLeft className="h-4 w-4" />}
               tone="success"
+            />
+          )}
+          {canWithdrawals && (
+            <MetricCard
+              label="Withdrawals this month"
+              value={
+                withdrawals.error ? (
+                  "Unavailable"
+                ) : (
+                  <MonthlyAmounts
+                    rows={withdrawals.data ?? []}
+                    dateOf={(row) => row.createdAt}
+                    include={(row) => row.status === "confirmed"}
+                  />
+                )
+              }
+              hint="Per asset · settled requests created this UTC month · latest 500 API records"
+              icon={<ArrowUpRight className="h-4 w-4" />}
+              tone="info"
             />
           )}
           {canBinary && (
@@ -240,41 +261,6 @@ function Inner() {
       </section>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {canHealth && (
-          <div className="surface-1 rounded-lg border border-border/60 p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-foreground">System health</h2>
-            </div>
-            {health.error ? (
-              <p className="text-sm text-destructive">
-                System health is unavailable. Retry the Health workspace.
-              </p>
-            ) : (
-              <ul className="divide-y divide-border/50">
-                {(health.data ?? []).map((h) => (
-                  <li key={h.id} className="flex items-center justify-between py-2 text-sm">
-                    <span className="text-foreground">{h.name}</span>
-                    <span className="flex items-center gap-3">
-                      <span className="mono text-xs text-muted-foreground">{h.latencyMs}ms</span>
-                      <StatusBadge
-                        tone={
-                          h.status === "ok"
-                            ? "success"
-                            : h.status === "degraded"
-                              ? "warning"
-                              : "destructive"
-                        }
-                      >
-                        {h.status}
-                      </StatusBadge>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
-
         {canAudit && (
           <div className="surface-1 rounded-lg border border-border/60 p-4">
             <div className="mb-3 flex items-center justify-between">
@@ -306,5 +292,48 @@ function Inner() {
         )}
       </div>
     </div>
+  );
+}
+
+function MonthlyAmounts<T extends { asset: string; amount: string }>({
+  rows,
+  dateOf,
+  include,
+}: {
+  rows: T[];
+  dateOf: (row: T) => string | undefined;
+  include: (row: T) => boolean;
+}) {
+  const now = new Date();
+  const monthStart = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1);
+  const nextMonth = Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1);
+  const totals = new Map<string, bigint>();
+
+  for (const row of rows) {
+    const timestamp = dateOf(row);
+    if (!include(row) || !timestamp) continue;
+    const time = Date.parse(timestamp);
+    const match = /^(\d+)(?:\.(\d{1,18}))?$/.exec(row.amount);
+    if (!Number.isFinite(time) || time < monthStart || time >= nextMonth || !match) continue;
+    const amount = BigInt(match[1]) * 10n ** 18n + BigInt((match[2] ?? "").padEnd(18, "0") || "0");
+    totals.set(row.asset, (totals.get(row.asset) ?? 0n) + amount);
+  }
+
+  const entries = [...totals].sort(([left], [right]) => left.localeCompare(right));
+  if (entries.length === 0) return <span>0</span>;
+
+  return (
+    <span className="flex flex-col gap-1 text-base">
+      {entries.map(([asset, amount]) => {
+        const whole = amount / 10n ** 18n;
+        const fraction = (amount % 10n ** 18n).toString().padStart(18, "0").replace(/0+$/, "");
+        return (
+          <span key={asset}>
+            {asset} {whole}
+            {fraction ? `.${fraction}` : ""}
+          </span>
+        );
+      })}
+    </span>
   );
 }
