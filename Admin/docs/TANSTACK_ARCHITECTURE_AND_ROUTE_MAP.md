@@ -85,3 +85,23 @@ Historical October 21 completion target (superseded for current counting): prese
 - TanStack AI Agent Skills: https://tanstack.com/ai/latest/docs/getting-started/agent-skills — for **TanStack AI library agent skills**, not required for this Admin's Router/Start architecture. Do not install `@tanstack/ai` or Intent merely to use Router/Start.
 
 See `docs/admin/README.md`, root `AGENTS.md`, `Admin/AGENTS.md`, relevant current-state and proof reuse docs. Historical Axue/DEXI comparison and proposed flow diagrams are design evidence, not verified code or deployment evidence.
+
+
+## Current source reconciliation — 2026-11-06
+
+This section supersedes older route counts in this document. The older route map remains as historical provenance. Live checkout at source HEAD `cc378e601638` has eight navigation workspaces and 21 primary visible destinations; guarded Sandbox remains contextual. Compatibility routes may exist without a sidebar entry.
+
+| Workspace | Current primary destinations | Route/provider/backend ownership |
+| --- | --- | --- |
+| Overview | Dashboard | `/overview` → overview queries in `AdminDataProvider` / `NexiAdminApiProvider` → Admin controller/service |
+| Clients | Clients, KYC Reviews | `/users`, `/kyc` → user/session/wallet/KYC methods → Admin and KYC controllers/services; VIP/referral API is in `ReferralVipAdminController` |
+| Trading | Binary · Ongoing, History & Settlements, Spot & Margin | `/binary`, `/settlements`, `/spot` → trading provider methods → Binary/settlement/market services and financial command owner |
+| Wallet & Finance | Deposit Wallet Settings, Deposits, Withdrawals, Ledger | `/networks`, `/deposits`, `/withdrawals`, `/ledger` → wallet/deposit/withdrawal/ledger provider methods → Admin/financial services; SQLite Ledger is accounting authority |
+| Markets | Assets, Price Data Sources | `/assets`, `/market-feeds` → asset/feed provider methods → market configuration/feed services |
+| Products | Mining, Loans | `/mining`, `/loans` → mining/loan provider methods → product services and canonical financial commands |
+| Communications | Messages, Notifications, Announcements, Learn Content | `/messages`, `/notifications`, `/announcements`, `/learn` → communications/content provider methods → communications/content services and durable outbox consumers |
+| Administration & Settings | Public App Settings, Admin Accounts, Maintenance | `/frontend-control`, `/admins`, `/maintenance` → frontend/admin/maintenance provider methods → configuration and Admin authorities |
+
+Public Navigation and Feature Controls are presented in Public App Settings; compatibility route files are retained where routing or existing links require them. Route guards control entry and action permissions; backend authorization remains authoritative. Exact method and HTTP mappings must be read from `src/admin/data/provider.ts`, `src/admin/data/nexi-api-provider.ts`, and current NestJS controller decorators; this table is a workspace map, not a substitute for those contracts.
+
+Current owner-directed VIP progression, effective tier-limit enforcement, first-successful-external-deposit referral rewards, customer VIP/Referral panels, and policy editors are not established by source at this revision. Existing VIP level read/upsert/manual assignment and referral history are not equivalent. See [NEXI Admin Operator Usage Guide](NEXI_ADMIN_OPERATOR_USAGE_GUIDE.md) for source-backed operator instructions and explicit evidence boundaries.

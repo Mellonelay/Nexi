@@ -146,3 +146,8 @@ Use this statement only when the selected provider and remaining unsupported sur
 ```text
 Live Admin API contracts are selected explicitly; unsupported capabilities remain unavailable.
 ```
+
+
+## Operator documentation
+
+See [NEXI Admin Operator Usage Guide](docs/NEXI_ADMIN_OPERATOR_USAGE_GUIDE.md) for the current eight-workspace operator workflow, role cautions, customer/finance distinctions, route-to-provider authority map, status meanings, troubleshooting and evidence boundaries. It describes source behavior as of the documented checkout and does not claim deployment or browser acceptance.

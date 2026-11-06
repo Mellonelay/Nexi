@@ -102,3 +102,10 @@ The account-level proposed mode set is NORMAL / SIMULATED_WIN / SIMULATED_LOSS; 
 - TanStack Start overview: https://tanstack.com/start/latest/docs/framework/react/overview
 - TanStack Router search: https://tanstack.com/router/latest/docs/framework/react/guide/search-params
 - Source: `Admin/src/router.tsx`, `src/routes/__root.tsx`, `src/admin/config/navigation.ts`, `src/admin/data/context.tsx`, `src/admin/data/provider.ts`, `src/admin/data/nexi-api-provider.ts` and route components at source checkpoint above.
+
+
+## Current source handoff — 2026-11-06
+
+The diagrams and handoff statements above reflect their recorded historical revision. Current navigation is eight workspaces and 21 primary destinations, with guarded contextual Sandbox. Public configuration is presented through the consolidated Public App Settings destination; customer sessions are nested in Clients. Existing backend financial architecture remains NestJS command authority → SQLite Ledger and durable Outbox/Inbox; transports do not become financial truth.
+
+No new VIP/referral flow is represented as complete in this handoff. Source review found no deposit reversal/chargeback command owner, so a diagram implying reversal-safe tier recomputation or referral clawback would be speculative. Update those flows only after the canonical reversal contract exists and tests cover its atomic accounting/audit/outbox behavior.

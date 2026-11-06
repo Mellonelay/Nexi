@@ -264,3 +264,14 @@ SANDBOX_MOCK_WORKFLOWS_COMPLETE=NO
 PRODUCTION_INTEGRATION_CONNECTED=NO
 PRODUCTION_READY=NO
 ```
+
+
+## Current checkout reconciliation — 2026-11-06
+
+The preceding document is retained as a historical scaffold snapshot and must not be used for current route counts, provider status or production readiness. Current source checkout is `main` at `cc378e601638`, five local commits ahead of origin, with seven tracked source modifications and five untracked roots at the last verified snapshot. The tracked edits are the latest Public mobile work; the untracked set includes a backup and acceptance evidence, which are preserved and excluded from this source task.
+
+Current Admin navigation: eight workspaces, 21 primary visible destinations, plus guarded contextual Sandbox. The latest committed source includes the Admin workflow/alert changes, Public App Settings consolidation, Contact Us and Help simplification, Public notification drawer source fix, initial shared Binary configuration, and customer/product workflows. These are source claims; do not infer test, deployment or browser proof from the commits alone.
+
+VIP/referral source remains incomplete against the 2026-11-06 owner decision. Existing VIP/referral profile/history, level configuration and manual assignment are present. Deposit-only automatic progress, effective customer deposit/withdrawal limits, first successful external deposit reward orchestration, related Admin/Public panels and a canonical reversal/chargeback contract are not established. Reward policy has no approved monetary values and must not pay until configured. No production schema operation or historical backfill is authorized.
+
+For current route ownership, operational steps and status/proof definitions, see [NEXI Admin Operator Usage Guide](NEXI_ADMIN_OPERATOR_USAGE_GUIDE.md). Post-deployment authenticated browser acceptance remains deferred; it is not part of this source-verification run.

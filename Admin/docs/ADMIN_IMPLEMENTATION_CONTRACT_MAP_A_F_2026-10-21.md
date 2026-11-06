@@ -95,3 +95,10 @@ These are source-confirmed contracts only. No claim is made here about current s
 
 ## Closeout status and next source proofs
 A01-A14 are documented with concrete file ownership and expected proof, but **A01-A14 are not all implemented or runtime verified**. Next targeted proof required: exact Binary account/position policy DTO/storage/version and price chart consumer; per-resource Admin/Public setting parity; Admin two-way message command+permission. After these contracts are settled, full UI integration, focused tests, deployment and browser checks can occur without replaying previously owner-accepted financial campaigns. The separate WORK_SSH handoff file remains a draft; it is not activated.
+
+
+## Current revision note — 2026-11-06
+
+This file is a dated historical design/contract map. Its future-tense recommendations and route counts describe the 2026-10-21 snapshot; they are not current source status. Current checkout `cc378e601638` has eight Admin workspaces with 21 primary navigation destinations plus contextual Sandbox. Current owner decisions consolidate Public Navigation and Feature Controls under Public App Settings and keep customer Sessions under Clients.
+
+Current VIP/referral source is not closed: `ReferralVipService` exposes attribution/history, VIP profile/level reads and audited manual level assignment. The reviewed code does not establish cumulative credited-external-deposit qualification, restrictive effective VIP transaction limits, first-successful-deposit reward payout, or customer-level Admin/Public panels. Do not infer implementation from this historical contract inventory. The newly authored [NEXI Admin Operator Usage Guide](NEXI_ADMIN_OPERATOR_USAGE_GUIDE.md) documents current paths and gaps; source and tests remain the authority.

@@ -82,3 +82,24 @@ Product configuration remains Admin-controlled **where existing backend authorit
 7. Verify Admin -> NestJS -> persisted readback -> Public across configurations, messaging and eligible simulation paths where implemented. Distinguish SOURCE_IMPLEMENTED, TESTED, INTEGRATED, DEPLOYED, BROWSER_VERIFIED, OWNER_ACCEPTED.
 
 **Stop condition for this documentation slice:** source-mapped route disposition and diagrams exist, preserve existing capabilities and identify all unproven contracts. No Admin build, deployment, DB operation, protected data edit, service restart or Git fan-in in this docs-only slice.
+
+
+## Current source reconciliation — 2026-11-06
+
+The historical inventory above must not be read as the current sidebar. At checkout HEAD `cc378e601638`, the operator UI has eight workspaces, 21 primary visible destinations and a contextual guarded Sandbox. Clients contains KYC Reviews and customer Security & Sessions; do not restore standalone Sessions or hidden legacy destinations. Public App Settings consolidates route/navigation, markets/quotes, content/notices, Contact Us and advanced feature controls while preserving provider/backend ownership.
+
+Source status by current owner requirement:
+
+| Area | Current source evidence | Evidence status |
+| --- | --- | --- |
+| Admin workspaces, customer detail, finance actions, deposit review, Binary, Mining, Loans, Messages and global operator alerts | Existing route/provider/controller/service implementations are present in current source; previous commits include `2b5ecab`, `5a88bea`, `9114b63`, `ac052e5` | Implemented source; use revision-matched tests for tested status |
+| Public App Settings and Contact Us | Existing settings sections and backend read/write authority are present | Implemented source; current test proof must be recorded separately |
+| Public F6 notification drawer | Existing panel/header/CSS source is present; mobile/browser rendering still requires post-deployment acceptance | Implemented source; browser pending post-deploy |
+| Global Binary policy | Existing global editor and shared-policy source exist; preserve snapshots and research controls | Implemented source; initial-policy fixture evidence must be revision-matched |
+| Deposit-only VIP qualification and customer effective limits | Not established: current VIP source is profile/history plus level configuration/manual assignment; no demonstrated canonical deposit qualification or deposit/withdrawal guard enforcement | Missing source; no production thresholds/limits may be invented |
+| First credited external deposit referral reward | Not established: attribution/history exists, but no first-deposit reward policy/orchestration was found | Missing source; monetary reward must remain disabled until valid authorized config |
+| Deposit reversal/chargeback owner | No canonical reversal path was found in the inspected source | Contract blocker for claiming reversal-safe VIP/reward qualification |
+
+Use current source and provider contracts before changing an individual control. Local Graphify CLI 0.9.101 is indexed at current HEAD `cc378e601638` (confirmed by `graph_stats`); hosted/promoted snapshots are separate and may be older. Graph topology is structural evidence only. Do not treat the historical 113-scenario tracker as a source-completion gate; browser acceptance is a later post-deployment phase.
+
+For operator steps, role cautions, status meanings, finance distinctions, troubleshooting and source/test/browser proof boundaries, see [NEXI Admin Operator Usage Guide](NEXI_ADMIN_OPERATOR_USAGE_GUIDE.md).
