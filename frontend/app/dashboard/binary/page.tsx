@@ -540,19 +540,19 @@ export default function BinaryPage() {
     <main className="nexi-trading-page nexi-page-shell min-h-full w-full min-w-0 overflow-x-clip pb-8 text-[#F8F6FF]">
       <header className="nexi-station-header sticky top-0 z-20 flex min-w-0 items-center justify-between gap-2 border-b px-3 py-3 sm:gap-3 sm:px-4">
         <SafeBackButton fallback="/dashboard" label="Back to Quotes Hub" />
-        <div className="min-w-0 flex-1"><SymbolSelector currentSymbol={pair} onSelect={(next) => { setPair(next); setActivePair(next); router.push(`/dashboard/binary?symbol=${next}`); }} /></div>
+        <div className="min-w-0 flex-1"><SymbolSelector compact currentSymbol={pair} onSelect={(next) => { setPair(next); setActivePair(next); router.push(`/dashboard/binary?symbol=${next}`); }} /></div>
         {currentPrice !== null && <div className="shrink-0 text-right" aria-label="Current market price"><p className="font-mono text-sm text-[#C3BBD0]">{currentPrice.toLocaleString()}</p>{marketChange !== null && <p className={`mt-0.5 font-mono text-[10px] ${marketChange >= 0 ? 'text-[#22D3A6]' : 'text-[#FF5C7C]'}`}>{marketChange > 0 ? '+' : ''}{marketChange.toFixed(2)}% 24h</p>}</div>}
       </header>
 
       <div className="grid min-w-0 gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_400px] xl:items-start">
         <section className="min-w-0 space-y-4 xl:col-start-1 xl:row-start-1" aria-labelledby="binary-heading">
           <div className="flex min-w-0 flex-wrap items-end justify-between gap-3">
-            <h1 id="binary-heading" className="min-w-0 break-words text-[clamp(1.125rem,4vw,1.5rem)] font-semibold leading-tight">Options</h1>
+            <h1 id="binary-heading" className="min-w-0 break-words text-[clamp(1.25rem,5.6vw,1.5rem)] font-semibold leading-[1.3]">Options</h1>
             {state !== 'DRAFT' && <span className={`shrink-0 rounded-full border px-3 py-1 font-mono text-xs ${stateTone}`}>{binaryStateLabel(state)}</span>}
           </div>
           <div className="nexi-station-card min-w-0 rounded-2xl p-2">
             <div className="border-b border-white/5 px-2 pb-2"><TimeframeSelector interval={interval} onChange={setInterval} /></div>
-            <div className="nexi-options-chart-frame h-[clamp(19.5rem,88vw,27rem)] sm:h-[420px] xl:h-[500px]"><RealtimeTradingChart symbol={normalizedPair} type="binary" interval={interval} marketStatus={market?.sessionState === 'CLOSED' ? 'CLOSED' : undefined} sandboxFeed={sandboxChartFeed} showIndicatorControls={false} /></div>
+            <div className="nexi-options-chart-frame h-[clamp(22rem,110vw,32rem)] sm:h-[420px] xl:h-[500px]"><RealtimeTradingChart symbol={normalizedPair} type="binary" interval={interval} marketStatus={market?.sessionState === 'CLOSED' ? 'CLOSED' : undefined} sandboxFeed={sandboxChartFeed} showIndicatorControls={false} /></div>
           </div>
 
         </section>
@@ -640,23 +640,52 @@ function PositionList({ positions, now, empty, onSelect }: { positions: BinaryPo
     return <li key={position.id}><button type="button" onClick={() => onSelect(position)} className="nexi-interactive block min-h-20 w-full px-4 py-3 text-left hover:bg-white/[.03]">
       <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
         <div className="min-w-0"><p className="truncate font-semibold">{position.symbol} · {position.direction}</p><p className="mt-1 text-xs text-[#8C8299]">{binaryStateLabel(position.status)}</p></div>
-        <div className="text-right font-mono text-xs"><p>{position.amount === null ? '—' : `${position.amount} USDT`}</p><p className="mt-1 flex items-center justify-end gap-1 text-[#8C8299]"><Clock3 size={12} />{remaining === null ? '—' : `${remaining}s`}</p></div>
+        <div className="text-right font-mono text-xs"><p>{position.amount === null ? '—' : `${position.amount} USDT`}</p><p role="timer" aria-live="off" aria-label={remaining === null ? "Position expiry unavailable" : `${remaining} seconds remaining`} className="mt-1 flex items-center justify-end gap-1 text-[#8C8299]"><Clock3 size={12} aria-hidden="true" />{remaining === null ? '—' : `${remaining}s`}</p></div>
       </div>
-      {progress !== null && <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-white/5" aria-label={`Position progress ${progress.toFixed(0)} percent`}><div className="h-full rounded-full bg-[#7C3AED] transition-[width] duration-500" style={{ width: `${progress}%` }} /></div>}
+      {progress !== null && <div role="progressbar" aria-label="Position duration elapsed" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)} className="mt-3 h-2.5 overflow-hidden rounded-full bg-white/5"><div className="h-full rounded-full bg-[#7C3AED] transition-[width] duration-500" style={{ width: `${progress}%` }} /></div>}
     </button></li>;
   })}</ul>;
 }
 
 function ResultDialog({ position, onClose }: { position: BinaryPosition; onClose: () => void }) {
   const publicResult = ['WIN', 'LOSS'].includes(position.status);
+  const resultTone = position.status === 'WIN'
+    ? 'border-emerald-300/25 bg-emerald-300/10 text-emerald-100'
+    : position.status === 'LOSS'
+      ? 'border-rose-300/25 bg-rose-300/10 text-rose-100'
+      : 'border-violet-300/20 bg-violet-300/10 text-violet-100';
   return <ModalSurface open onClose={onClose} title="Options result">
-    <div className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-violet-300/15 bg-[#100A18] p-5">
-      <p className="text-xs font-semibold uppercase tracking-[.2em] text-[#A78BFA]">{publicResult ? `Trade result — ${binaryStateLabel(position.status)}` : binaryStateLabel(position.status)}</p>
-      <h2 id="binary-result-heading" className="mt-1 text-xl font-semibold">{position.symbol} · {position.direction}</h2>
-      <dl className="mt-4 space-y-2 text-sm"><Row label="Stake" value={position.amount === null ? '—' : `${position.amount} USDT`} /><Row label="Entry price" value={position.entryPrice === null ? '—' : String(position.entryPrice)} /><Row label="Result price" value={position.closePrice === null ? '—' : String(position.closePrice)} /><Row label="Duration" value={position.duration === null ? '—' : `${position.duration}s`} /><Row label="Payout" value={position.payout === null ? '—' : `${position.payout} USDT`} /><Row label="Realized P/L" value={position.realizedProfit === null ? '—' : `${position.realizedProfit} USDT`} /><Row label="Open / expiry" value={`${position.openedAt ?? '—'} / ${position.expiresAt ?? '—'}`} /><Row label="Settlement" value={binaryStateLabel(position.status)} /><Row label="Reference ID" value={position.referenceId ?? '—'} /></dl>
-      <button type="button" onClick={onClose} className="mt-5 min-h-12 w-full rounded-xl bg-[#7C3AED] font-semibold">Done</button>
+    <div className="max-h-[min(calc(100dvh-2rem),34rem)] w-[min(100%,22rem)] overflow-y-auto rounded-2xl border border-violet-300/15 bg-[#100A18] p-4 shadow-2xl sm:p-5">
+      <div className={`rounded-xl border p-3 ${resultTone}`}>
+        <p className="text-[11px] font-semibold uppercase tracking-[.16em]">{publicResult ? 'Trade settled' : 'Trade status'}</p>
+        <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <h2 id="binary-result-heading" className="text-lg font-semibold leading-tight">{binaryStateLabel(position.status)}</h2>
+          <p className="font-mono text-sm tabular-nums">{position.symbol} · {position.direction}</p>
+        </div>
+      </div>
+      <dl className="mt-3 grid grid-cols-2 gap-2 rounded-xl border border-violet-300/10 bg-[#0B0711] p-3 text-sm">
+        <SummaryValue label="Stake" value={position.amount === null ? '—' : `${position.amount} USDT`} />
+        <SummaryValue label="Duration" value={position.duration === null ? '—' : `${position.duration}s`} />
+        <SummaryValue label="Realized P/L" value={position.realizedProfit === null ? '—' : `${position.realizedProfit} USDT`} />
+        <SummaryValue label="Payout" value={position.payout === null ? '—' : `${position.payout} USDT`} />
+      </dl>
+      <details className="mt-3 rounded-xl border border-violet-300/10 bg-[#0B0711] px-3 py-2">
+        <summary className="min-h-9 cursor-pointer py-1 text-sm font-medium text-[#C3BBD0]">Trade details</summary>
+        <dl className="space-y-2 pb-2 pt-1 text-xs">
+          <Row label="Entry price" value={position.entryPrice === null ? '—' : String(position.entryPrice)} />
+          <Row label="Result price" value={position.closePrice === null ? '—' : String(position.closePrice)} />
+          <Row label="Opened / expiry" value={`${position.openedAt ?? '—'} / ${position.expiresAt ?? '—'}`} />
+          <Row label="Settlement" value={binaryStateLabel(position.status)} />
+          <Row label="Reference ID" value={position.referenceId ?? '—'} />
+        </dl>
+      </details>
+      <button type="button" onClick={onClose} className="mt-3 min-h-11 w-full rounded-xl bg-[#7C3AED] font-semibold">Done</button>
     </div>
   </ModalSurface>;
+}
+
+function SummaryValue({ label, value }: { label: string; value: string }) {
+  return <div className="min-w-0"><dt className="text-xs text-[#8C8299]">{label}</dt><dd className="mt-1 break-words font-mono text-sm tabular-nums">{value}</dd></div>;
 }
 
 function Row({ label, value }: { label: string; value: string }) {

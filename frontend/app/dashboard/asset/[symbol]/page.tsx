@@ -1,10 +1,19 @@
 'use client';
 
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { ArrowUpRight, BarChart3, ChevronRight, Info, Star } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import RealtimeTradingChart from '../../../components/RealtimeTradingChart';
+const RealtimeTradingChart = dynamic(() => import('../../../components/RealtimeTradingChart'), {
+  ssr: false,
+  loading: () => (
+    <div role="status" aria-live="polite" className="flex h-full w-full items-center justify-center bg-[#0B0711] text-sm text-[#8C8299]">
+      <span className="mr-2 h-4 w-4 rounded-full border-2 border-violet-300/30 border-t-violet-200 motion-safe:animate-spin" aria-hidden="true" />
+      Preparing chart
+    </div>
+  ),
+});
 import api from '../../../lib/api';
 import { useActiveInstrument } from '../../../state/ActivePairProvider';
 import { useMarketData } from '../../../hooks/useMarketData';
@@ -199,13 +208,13 @@ function AssetDetailView({
   const { instrument, definition, aboutCopy, aboutFacts, aboutLinks, technicalFacts, provenance, displayStatus, statusClass, availableCryptoMarketFacts } = assetDetailModel(item, details, detailState);
 
   return (
-    <div className="nexi-page-shell relative min-h-full w-full min-w-0 overflow-x-clip px-4 pb-6 pt-4 text-[#F8F6FF] md:px-8 md:pb-8 md:pt-8">
+    <div className="nexi-page-shell relative min-h-full w-full min-w-0 overflow-x-clip px-3 pb-6 pt-3 text-[#F8F6FF] sm:px-4 md:px-8 md:pb-8 md:pt-8">
       <div className="relative mx-auto max-w-6xl">
-        <header className="nexi-station-header mb-6 grid grid-cols-[44px_minmax(0,1fr)_44px] items-start gap-3 rounded-2xl border p-3 sm:gap-4 sm:p-4">
+        <header className="nexi-station-header mb-4 grid grid-cols-[44px_minmax(0,1fr)_44px] items-center gap-2 rounded-2xl border p-2.5 sm:gap-3 sm:p-3">
           <SafeBackButton fallback="/dashboard" label="Back to Quotes Hub" className="!min-h-[44px] !min-w-[44px] border-violet-300/20 bg-[#100A18] hover:border-violet-300/45" />
           <div className="min-w-0 flex-1">
             <p className="break-words text-xs font-semibold uppercase tracking-[0.16em] text-[#8C8299]">Asset Detail</p>
-            <h1 className="break-words text-2xl font-semibold leading-tight tracking-tight md:text-3xl">{instrument.pair}</h1>
+            <h1 className="break-words text-xl font-semibold leading-[1.25] tracking-tight sm:text-2xl">{instrument.pair}</h1>
           </div>
           <button
             type="button"
@@ -220,19 +229,21 @@ function AssetDetailView({
           </button>
         </header>
 
-        <section className="mb-5 rounded-xl border border-violet-300/15 bg-[#100A18] p-4 md:p-6">
-          <div className="flex flex-wrap items-start justify-between gap-5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border border-violet-300/20 bg-[#21152F]"><AssetIcon item={{ assetId: definition?.id ?? instrument.symbol, symbol: instrument.symbol, displaySymbol: definition?.displaySymbol ?? instrument.symbol, name: instrument.name }} size="md" /></div>
+        <section className="mb-4 rounded-xl border border-violet-300/15 bg-[#100A18] p-3 sm:p-4 md:p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-violet-300/20 bg-[#21152F] sm:h-12 sm:w-12"><AssetIcon item={{ assetId: definition?.id ?? instrument.symbol, symbol: instrument.symbol, displaySymbol: definition?.displaySymbol ?? instrument.symbol, name: instrument.name }} size="sm" /></div>
               <div>
-                <p className="text-lg font-semibold">{instrument.name}</p>
+                <p className="break-words text-base font-semibold leading-snug sm:text-lg">{instrument.name}</p>
                 <p className="text-sm text-[#8C8299]">{instrument.category}</p>
               </div>
             </div>
-            <div className="text-left sm:text-right">
-              <p className="font-mono text-2xl tabular-nums">{formatNumber(instrument.price, instrument.precision ?? 8)}</p>
-              <span className={`inline-flex rounded border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.1em] ${statusClass}`}>{displayStatus}</span>
-              <p className="font-mono text-sm text-[#8C8299]">24h {formatChange(instrument.change24h)}</p>
+            <div className="ml-auto min-w-0 text-right">
+              <p className="break-all font-mono text-xl tabular-nums leading-tight sm:text-2xl">{formatNumber(instrument.price, instrument.precision ?? 8)}</p>
+              <div className="mt-1 flex flex-wrap items-center justify-end gap-2">
+                <span className={`inline-flex rounded border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.1em] ${statusClass}`}>{displayStatus}</span>
+                <p className="font-mono text-xs text-[#8C8299]">24h {formatChange(instrument.change24h)}</p>
+              </div>
             </div>
           </div>
         </section>
@@ -242,7 +253,7 @@ function AssetDetailView({
             <div className="flex items-center gap-2"><BarChart3 className="h-4 w-4 text-[#A995FF]" aria-hidden="true" /><h2 className="font-semibold">Market chart</h2></div>
             <span className="text-xs text-[#8C8299]">{timeframe === '1d' ? '1D' : timeframe}</span>
           </div>
-          <div className="min-w-0 h-[clamp(320px,52svh,620px)] md:h-[min(62vh,720px)]">
+          <div className="min-w-0 h-[clamp(260px,38svh,440px)] sm:h-[clamp(300px,48svh,560px)] lg:h-[min(62vh,640px)]">
             <RealtimeTradingChart
               symbol={normalizePair(instrument.pair)}
               type="spot"

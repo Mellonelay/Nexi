@@ -78,7 +78,7 @@ function ChartMetricsRail({
   overlays: { ma20: number | undefined; ema20: number | undefined; ema50: number | undefined };
 }) {
   return (
-    <div role="region" aria-label="Chart values" tabIndex={0} className="nexi-chart-rail [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex min-w-0 shrink-0 items-center overflow-x-auto whitespace-nowrap gap-x-3 gap-y-1 border-b border-violet-300/10 bg-black/15 px-3 py-2 font-mono text-[9px] sm:text-[10px]">
+    <div role="region" aria-label="Chart values" tabIndex={0} className="nexi-chart-rail [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex min-w-0 shrink-0 items-center overflow-x-auto whitespace-nowrap gap-x-3 gap-y-1 border-b border-violet-300/10 bg-black/15 px-3 py-2 font-mono text-[11px] sm:text-xs">
       <span className="hidden text-[#8C8299] sm:inline">O <b className="font-medium text-[#C3BBD0]">{formatMetric(latest?.open)}</b></span>
       <span className="hidden text-[#8C8299] sm:inline">H <b className="font-medium text-[#98FCE4]">{formatMetric(latest?.high)}</b></span>
       <span className="hidden text-[#8C8299] sm:inline">L <b className="font-medium text-[#FF9CB0]">{formatMetric(latest?.low)}</b></span>
@@ -170,7 +170,7 @@ export default function TradingChart({
         background: { type: ColorType.Solid, color: "transparent" },
         textColor: "#9A8BAA",
         fontFamily: "var(--font-geist-mono), monospace",
-        fontSize: 11,
+        fontSize: 12,
         attributionLogo: false,
       },
       grid: {

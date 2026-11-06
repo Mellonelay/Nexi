@@ -53,8 +53,8 @@ export function PageHeader({ eyebrow, title, description, action }: {
     <header className="nexi-station-header mx-auto mb-6 flex max-w-7xl flex-col gap-4 rounded-2xl border px-4 py-4 sm:flex-row sm:items-end sm:justify-between sm:px-5">
       <div className="min-w-0">
         {eyebrow && <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#48C0CC]">{eyebrow}</p>}
-        <h1 className="text-2xl font-semibold tracking-tight gradient-text sm:text-3xl">{title}</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-[#C3BBD0]">{description}</p>
+        <h1 className="text-[clamp(1.25rem,5.6vw,1.875rem)] leading-[1.3] font-semibold tracking-tight gradient-text">{title}</h1>
+        <p className="mt-2 max-w-2xl text-base leading-6 text-[#C3BBD0]">{description}</p>
       </div>
       {action}
     </header>
@@ -69,8 +69,8 @@ export function PanelHeading({ title, description, action }: { title: string; de
   return (
     <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <h2 className="text-base font-semibold text-[#F2ECFA]">{title}</h2>
-        {description && <p className="mt-1 text-sm leading-5 text-[#8C8299]">{description}</p>}
+        <h2 className="text-xl leading-[1.3] font-semibold text-[#F2ECFA]">{title}</h2>
+        {description && <p className="mt-1 text-base leading-6 text-[#8C8299]">{description}</p>}
       </div>
       {action}
     </div>
@@ -86,7 +86,7 @@ export function DataStatePanel({ state, title = 'Data is not available right now
   return (
     <div className="rounded-xl border border-dashed border-[#49335E] bg-[#0B0711] p-5" role="status" aria-live="polite">
       <div className="flex flex-wrap items-center gap-3"><StatusBadge state={state} /><h3 className="text-sm font-semibold text-[#F2ECFA]">{title}</h3></div>
-      <p className="mt-3 text-sm leading-6 text-[#8C8299]">{message}</p>
+      <p className="mt-3 text-base leading-6 text-[#8C8299]">{message}</p>
     </div>
   );
 }
@@ -103,7 +103,7 @@ export function Field({ label, children, hint }: { label: string; children: Reac
   return <label className="block text-sm text-[#C3BBD0]"><span className="mb-2 block font-semibold text-[#F2ECFA]">{label}</span>{children}{hint && <span className="mt-2 block text-xs leading-5 text-[#8C8299]">{hint}</span>}</label>;
 }
 
-export const inputClass = 'nexi-input px-3 text-sm placeholder:text-[#8C8299]';
+export const inputClass = 'nexi-input px-3 text-base placeholder:text-[#8C8299]';
 
 export function PrimaryButton({ children, disabled = false, type = 'button', size = 'default', className, onClick }: { children: ReactNode; disabled?: boolean; type?: 'button' | 'submit'; size?: 'default' | 'compact'; className?: string; onClick?: () => void }) {
   return <button type={type} disabled={disabled} onClick={onClick} className={cn(controlVariants({ intent: 'primary', size }), className)}>{children}</button>;

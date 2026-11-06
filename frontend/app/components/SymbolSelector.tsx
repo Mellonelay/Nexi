@@ -11,9 +11,10 @@ interface SymbolSelectorProps {
   readonly currentSymbol: string;
   readonly onSelect: (symbol: string) => void;
   readonly cryptoOnly?: boolean;
+  readonly compact?: boolean;
 }
 
-export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = false }: SymbolSelectorProps) {
+export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = false, compact = false }: SymbolSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<AssetCategory>('Crypto');
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -56,15 +57,15 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="nexi-interactive nexi-symbol-selector-trigger flex min-h-[44px] min-w-0 max-w-full items-center gap-2 text-lg font-bold transition-colors hover:text-gray-300"
+        className={`nexi-interactive nexi-symbol-selector-trigger flex min-h-[44px] min-w-0 max-w-full items-center gap-2 ${compact ? "text-base sm:text-lg" : "text-lg"} font-bold transition-colors hover:text-gray-300`}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >
-        {currentAsset && <AssetIcon item={{ assetId: currentAsset.id, symbol: currentAsset.symbol, displaySymbol: currentAsset.displaySymbol, name: currentAsset.name }} size="md" />}
+        {currentAsset && <AssetIcon item={{ assetId: currentAsset.id, symbol: currentAsset.symbol, displaySymbol: currentAsset.displaySymbol, name: currentAsset.name }} size={compact ? "sm" : "md"} />}
         <span className="min-w-0 whitespace-normal break-words text-left leading-tight">
           {currentAsset?.pair ?? currentSymbol}
         </span>
-        <ChevronDown size={20} className={`shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown size={compact ? 18 : 20} className={`shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {/* Dropdown Content */}

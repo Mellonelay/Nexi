@@ -42,6 +42,7 @@ async function loadBaseline(
   const params = new URLSearchParams({ symbol, interval, limit: "240" });
   const response = await fetch(`/api/market/klines?${params}`, {
     cache: "no-store",
+    signal: AbortSignal.timeout(5_000),
   });
   if (!response.ok)
     throw new Error(`Market baseline returned ${response.status}.`);
@@ -133,34 +134,21 @@ export function useRealtimeMarket(symbol: string, interval = "1m") {
     let cleanupStream: (() => void) | null = null;
 
     const initialize = async () => {
-      const initial = await loadBaseline(symbol, interval).catch(
+      const initialPromise = loadBaseline(symbol, interval).catch(
         () => EMPTY_STREAM_SNAPSHOT,
       );
-      if (disposed) return;
-      setSnapshot(initial);
-      setSnapshotKey(JSON.stringify([symbol, interval]));
       const apiUrl = apiBaseUrl;
-      if (!apiUrl) return;
-
-      if (typeof Worker !== "undefined") {
-        worker = new Worker("/market-stream-worker.js");
-        worker.postMessage({
-          type: "INIT",
-          intervalSeconds,
-          snapshot: initial,
-          generation: ++workerGeneration,
-        });
-        worker.onmessage = (
-          event: MessageEvent<{
-            generation: number;
-            snapshot: MarketStreamSnapshot;
-          }>,
-        ) => {
-          if (!disposed && event.data?.generation === workerGeneration)
-            setSnapshot(event.data.snapshot);
-        };
+      if (!apiUrl) {
+        const initial = await initialPromise;
+        if (disposed) return;
+        setSnapshot(initial);
+        setSnapshotKey(JSON.stringify([symbol, interval]));
+        return;
       }
 
+      // Subscribe while the historical candle baseline loads. Events are buffered
+      // and replayed after the baseline so opening the socket never waits on REST.
+      recovering = true;
       socket = io(`${apiUrl}/market`, {
         // The API is reached through the VPS Nginx proxy. Start with the
         // reliable polling handshake, then allow websocket upgrade and retry
@@ -337,6 +325,45 @@ export function useRealtimeMarket(symbol: string, interval = "1m") {
           ),
         }));
       }, 5_000);
+
+      const initial = await initialPromise;
+      if (disposed) return;
+      setSnapshotKey(JSON.stringify([symbol, interval]));
+      const startupEvents = sortRecoveryEvents(recoveryEvents);
+      recoveryEvents = [];
+      recovering = false;
+
+      if (typeof Worker !== "undefined") {
+        worker = new Worker("/market-stream-worker.js");
+        worker.onmessage = (
+          event: MessageEvent<{
+            generation: number;
+            snapshot: MarketStreamSnapshot;
+          }>,
+        ) => {
+          if (!disposed && event.data?.generation === workerGeneration)
+            setSnapshot(event.data.snapshot);
+        };
+        const generation = ++workerGeneration;
+        worker.postMessage({
+          type: "INIT",
+          intervalSeconds,
+          snapshot: initial,
+          generation,
+        });
+        for (const event of startupEvents)
+          worker.postMessage({ ...event, generation });
+      } else {
+        setSnapshot(
+          startupEvents.reduce(
+            (current, event) =>
+              event.type === "TICK"
+                ? applyMarketTick(current, event.tick, intervalSeconds)
+                : applyMarketKline(current, event.kline),
+            initial,
+          ),
+        );
+      }
     };
 
     void initialize();
