@@ -41,7 +41,7 @@ Use the dashboard to review operational summaries and follow links to the owning
 
 **Customer detail:** Review profile identity, KYC, account status, the five internal account scopes, and Security & Sessions when the role permits. Session status means revoked/not revoked and last-used time; it does not prove current online presence.
 
-**Financial actions:** Use only the provider-backed customer credit/debit/freeze/unfreeze controls shown to an authorized operator. Select the exact internal account scope and asset, enter a reason, review the confirmation, then verify the resulting Ledger/activity record. A freeze is an account restriction and is not a balance change. Do not use customer balance summaries as a ledger substitute.
+**Financial actions:** Use only the provider-backed customer credit/debit/freeze/unfreeze controls shown to an authorized operator. The searchable balance dialog loads eligible assets from that customer's active Ledger accounts intersected with active configured assets, and lists only scopes that are valid for the selected asset. If the options cannot load or no eligible account exists, the adjustment remains disabled. Select the exact scope and asset, enter a reason, review the confirmation, then verify the resulting Ledger/activity record. A freeze is an account restriction and is not a balance change. Do not use customer balance summaries as a ledger substitute. This is source behavior; verify deployment and browser acceptance separately.
 
 **KYC:** Open KYC Reviews, inspect the submitted evidence and current status, then approve, reject, or request more information only when permitted. A pending submission is not approval.
 

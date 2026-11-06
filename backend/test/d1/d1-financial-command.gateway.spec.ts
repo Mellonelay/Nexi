@@ -1579,6 +1579,9 @@ describe("D1FinancialCommandGateway", () => {
     });
     expect(result.replayed).toBe(false);
     expect(statements).toHaveLength(9);
+    const activity = statements.find((statement) => statement.sql.includes('"Activity"'));
+    expect(activity).toBeDefined();
+    expect(activity!.params).toHaveLength((activity!.sql.match(/\?/g) ?? []).length);
     const sql = statements.map((statement) => statement.sql).join("\n");
     expect(sql).toContain('"LedgerPosting"');
     expect(sql).toContain('"Activity"');

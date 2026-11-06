@@ -1199,10 +1199,15 @@ export class AdminService {
         "A reason is required for financial corrections",
       );
     if (this.d1?.isEnabled()) {
-      return this.d1.applyAdminFinancialCorrection({
-        ...input,
-        scope: input.scope ?? "MAIN",
-      });
+      const asset = String(input.asset ?? "").trim().toUpperCase();
+      const scope = input.scope ?? "MAIN";
+      const options = await this.getFinancialCorrectionOptions(input.userId);
+      if (!options.some((option) => option.asset === asset && option.scopes.includes(scope))) {
+        throw new BadRequestException(
+          "Financial correction requires an active customer Ledger account and active configured asset for the selected scope",
+        );
+      }
+      return this.d1.applyAdminFinancialCorrection({ ...input, asset, scope });
     }
     throw new ServiceUnavailableException(
       "Canonical financial correction authority is unavailable",
@@ -1344,6 +1349,34 @@ export class AdminService {
   }
 
   // --- User Management ---
+
+  async getFinancialCorrectionOptions(userId: string) {
+    const accounts = this.d1?.isEnabled()
+      ? await this.d1.listLedgerAccounts(userId)
+      : await this.prisma.ledgerAccount.findMany({
+          where: { userId },
+          select: { asset: true, scope: true, status: true },
+          orderBy: [{ asset: "asc" }, { scope: "asc" }],
+        });
+    const currencies = await this.getCurrencies();
+    const configured = new Map(
+      currencies
+        .filter((currency: any) => currency.isActive === true || currency.isActive === 1)
+        .map((currency: any) => [String(currency.symbol).toUpperCase(), String(currency.name ?? currency.symbol)]),
+    );
+    const eligible = new Map<string, { asset: string; name: string; scopes: Set<string> }>();
+    for (const account of accounts as any[]) {
+      const asset = String(account.asset ?? "").toUpperCase();
+      const scope = String(account.scope ?? "");
+      if (account.status !== "ACTIVE" || !configured.has(asset)) continue;
+      const option = eligible.get(asset) ?? { asset, name: configured.get(asset)!, scopes: new Set<string>() };
+      option.scopes.add(scope);
+      eligible.set(asset, option);
+    }
+    return [...eligible.values()]
+      .map(({ asset, name, scopes }) => ({ asset, name, scopes: [...scopes].sort() }))
+      .sort((a, b) => a.asset.localeCompare(b.asset));
+  }
 
   async getUsers() {
     if (this.d1?.isEnabled()) return this.d1.listUsers();

@@ -504,6 +504,14 @@ export class AdminController {
     });
   }
 
+  @Get("financial-corrections/options/:userId")
+  @RequireAdminPermission("ledger.adjust")
+  getFinancialCorrectionOptions(
+    @Param("userId", ParseUUIDPipe) userId: string,
+  ) {
+    return this.adminService.getFinancialCorrectionOptions(userId);
+  }
+
   @Post("financial-corrections")
   @RequireAdminPermission("ledger.adjust")
   applyFinancialCorrection(

@@ -2794,6 +2794,18 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     );
     return { ok: true, auditId: stringValue(result.auditId) };
   }
+  async getFinancialCorrectionOptions(userId: string): Promise<Array<{ asset: string; name: string; scopes: Array<"MAIN" | "SPOT" | "MARGIN" | "BINARY" | "FINANCE"> }>> {
+    const rows = await this.request<unknown[]>(`/admin/financial-corrections/options/${encodeURIComponent(userId)}`);
+    const allowed = new Set(["MAIN", "SPOT", "MARGIN", "BINARY", "FINANCE"]);
+    return rows.flatMap((value) => {
+      const row = record(value);
+      const asset = stringValue(row.asset).toUpperCase();
+      const scopes = Array.isArray(row.scopes)
+        ? row.scopes.filter((scope): scope is "MAIN" | "SPOT" | "MARGIN" | "BINARY" | "FINANCE" => typeof scope === "string" && allowed.has(scope))
+        : [];
+      return asset && scopes.length ? [{ asset, name: stringValue(row.name) || asset, scopes }] : [];
+    });
+  }
   async applyFinancialCorrection(input: {
     userId: string;
     asset: string;

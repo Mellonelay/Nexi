@@ -1324,6 +1324,30 @@ function FinancialCorrectionForm({
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
   const idempotencyKey = useRef<string | null>(null);
+  const optionsQ = useAdminQuery(
+    (p) => user && session.can("ledger.adjust") && p.getFinancialCorrectionOptions
+      ? p.getFinancialCorrectionOptions(user.id)
+      : Promise.resolve([]),
+    [user?.id, session.roleId],
+  );
+  const availableScopes = useMemo(
+    () => [...new Set((optionsQ.data ?? []).flatMap((item) => item.scopes))],
+    [optionsQ.data],
+  );
+  const scopedAssets = useMemo(
+    () => (optionsQ.data ?? []).filter((item) => item.scopes.includes(scope)),
+    [optionsQ.data, scope],
+  );
+  useEffect(() => {
+    if (!availableScopes.includes(scope)) {
+      setScope(availableScopes.includes("MAIN") ? "MAIN" : availableScopes[0] ?? "MAIN");
+    }
+  }, [availableScopes, scope]);
+  useEffect(() => {
+    if (!scopedAssets.some((item) => item.asset === asset)) {
+      setAsset(scopedAssets.find((item) => item.asset === "USDT")?.asset ?? scopedAssets[0]?.asset ?? "");
+    }
+  }, [asset, scopedAssets]);
   return (
     <FormDrawer
       open={!!user}
@@ -1332,7 +1356,7 @@ function FinancialCorrectionForm({
       title="Adjust user balance"
       description="Posts a direct balance adjustment to the selected ledger account, with an administrator audit record."
       submitLabel={direction === "CREDIT" ? "Credit account" : "Debit account"}
-      submitDisabled={!user || !session.can("ledger.adjust") || !provider.applyFinancialCorrection}
+      submitDisabled={!user || !session.can("ledger.adjust") || !provider.applyFinancialCorrection || optionsQ.loading || !!optionsQ.error || !scopedAssets.some((item) => item.asset === asset)}
       testId="financial-correction-form"
       onSubmit={async () => {
         if (!user || !provider.applyFinancialCorrection) return;
@@ -1345,6 +1369,8 @@ function FinancialCorrectionForm({
           ) {
             throw new Error("Enter a positive decimal amount.");
           }
+          if (!scopedAssets.some((item) => item.asset === asset && item.scopes.includes(scope)))
+            throw new Error("Choose an active configured asset and customer account scope.");
           if (!/^[A-Z0-9._-]{2,20}$/.test(asset.trim()))
             throw new Error("Enter a valid uppercase asset code.");
           if (reason.trim().length < 3) throw new Error("Enter a reason of at least 3 characters.");
@@ -1379,14 +1405,16 @@ function FinancialCorrectionForm({
         Asset
         <input
           required
+          list="financial-correction-assets"
           value={asset}
-          onChange={(e) => {
-            idempotencyKey.current = null;
-            setAsset(e.target.value.toUpperCase());
-          }}
-          maxLength={20}
+          disabled={optionsQ.loading || !!optionsQ.error || scopedAssets.length === 0}
+          placeholder={scopedAssets.length ? "Search configured assets" : "No eligible configured asset"}
+          onChange={(e) => { idempotencyKey.current = null; setAsset(e.target.value.trim().toUpperCase()); }}
           className="h-9 rounded-md border border-input bg-background px-3 text-sm"
         />
+        <datalist id="financial-correction-assets">
+          {scopedAssets.map((item) => <option key={item.asset} value={item.asset} label={item.name} />)}
+        </datalist>
       </label>
       <label className="flex flex-col gap-1 text-xs">
         Amount
@@ -1402,22 +1430,19 @@ function FinancialCorrectionForm({
         />
       </label>
       <label className="flex flex-col gap-1 text-xs">
-        Account
+        Account scope
         <select
-          value={scope}
-          onChange={(e) => {
-            idempotencyKey.current = null;
-            setScope(e.target.value as typeof scope);
-          }}
+          value={availableScopes.includes(scope) ? scope : ""}
+          disabled={optionsQ.loading || !!optionsQ.error || availableScopes.length === 0}
+          onChange={(e) => { idempotencyKey.current = null; setScope(e.target.value as typeof scope); }}
           className="h-9 rounded-md border border-input bg-background px-3 text-sm"
         >
-          <option value="MAIN">Funding</option>
-          <option value="SPOT">Spot</option>
-          <option value="MARGIN">Margin</option>
-          <option value="BINARY">Option / Binary</option>
-          <option value="FINANCE">Finance</option>
+          {availableScopes.map((value) => <option key={value} value={value}>{{ MAIN: "MAIN · Funding", SPOT: "SPOT · Spot", MARGIN: "MARGIN · Margin", BINARY: "BINARY · Options", FINANCE: "FINANCE · Finance" }[value]}</option>)}
         </select>
       </label>
+      {optionsQ.loading ? <p className="text-xs text-muted-foreground">Loading eligible customer accounts…</p> : null}
+      {optionsQ.error ? <p role="alert" className="text-xs text-destructive">Could not load eligible account assets. Refresh the customer detail before adjusting a balance.</p> : null}
+      {!optionsQ.loading && !optionsQ.error && scopedAssets.length === 0 ? <p className="text-xs text-muted-foreground">No active customer account is available for this scope and configured asset.</p> : null}
       <label className="flex flex-col gap-1 text-xs">
         Direction
         <select

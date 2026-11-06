@@ -5886,6 +5886,7 @@ export class D1FinancialCommandGateway {
           command.userId,
           referenceId,
           referenceId,
+          referenceId,
           postingId,
           asset,
           amount.toString(),

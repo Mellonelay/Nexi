@@ -35,3 +35,11 @@ Public Next.js and Admin → VPS Nginx → NestJS service `nexi-api.service`. Pr
 ## Source-derived API mapping
 
 For all current OpenAPI routes, method operationIds, source controller decorators, module registrations and DTO import references see [NEXI backend map](../architecture/NEXI_BACKEND_API_SQLITE_SOURCE_MAP.md) and `backend/docs/NEXI_SQLITE_API_ROUTING_MAP.md`. Generated from the checked source; no claim of route-to-service join completeness beyond listed imports.
+
+## NEXI release schema migration sequence (0016–0020)
+
+Use the canonical release migrator from the repository root: `python3 backend/scripts/nexi_sqlite_release_migrate.py --db <absolute-sqlite-path>`. Default mode is read-only and reports the ordered 0016–0020 plan. It checks the existing loan CAS and Binary research migrators first, then preflights 0018 loan currency, 0019 operator-alert tables/indexes, and 0020 VIP/referral tables and UserVipState columns. In apply mode it runs 0016 and 0017 through their guarded transaction scripts, applies 0018–0020 additively under `BEGIN IMMEDIATE`, verifies the resulting schema, and records the exact five migration IDs/names in `d1_migrations`. A partial or conflicting schema/history fails closed; the operation is safe to rerun after an interrupted additive sequence.
+
+Applying requires a quiesced service and independently verified consistent backup: append `--apply --acknowledge-quiesced-and-backed-up` only after that gate is satisfied. Preserve WAL/SHM, use SQLite's supported backup API or a verified offline snapshot, and check free space on the actual destination before beginning. Do not run the apply command during source preparation.
+
+Observed 2026-11-06 on `/var/lib/nexi/sqlite/nexi-staging.sqlite` (read-only): journal ends at 0015; physical 0016 loan CAS and 0017 Binary research schema are present; `LoanPlan.currency` from 0018 and 0019/0020 objects are absent. The new migrator dry-run reported 18 additive statements and made no changes. Reinspect live schema/history immediately before any future apply; this snapshot is not a standing runtime guarantee.

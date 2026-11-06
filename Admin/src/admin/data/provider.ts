@@ -612,6 +612,8 @@ export interface AdminDataProvider {
     reason: string;
     idempotencyKey: string;
   }): Promise<MutationResult>;
+  /** Active configured asset/scope pairs already held by a customer. */
+  getFinancialCorrectionOptions?(userId: string): Promise<Array<{ asset: string; name: string; scopes: Array<"MAIN" | "SPOT" | "MARGIN" | "BINARY" | "FINANCE"> }>>;
   /** Direct role-gated and audited ledger adjustment; no governance request is created. */
   applyFinancialCorrection?(input: {
     userId: string;
