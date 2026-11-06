@@ -1359,10 +1359,13 @@ export class AdminService {
           orderBy: [{ asset: "asc" }, { scope: "asc" }],
         });
     const currencies = await this.getCurrencies();
-    const configured = new Map(
+    const configured = new Map<string, string>(
       currencies
         .filter((currency: any) => currency.isActive === true || currency.isActive === 1)
-        .map((currency: any) => [String(currency.symbol).toUpperCase(), String(currency.name ?? currency.symbol)]),
+        .map((currency: any): [string, string] => [
+          String(currency.symbol).toUpperCase(),
+          String(currency.name ?? currency.symbol),
+        ]),
     );
     const eligible = new Map<string, { asset: string; name: string; scopes: Set<string> }>();
     for (const account of accounts as any[]) {
