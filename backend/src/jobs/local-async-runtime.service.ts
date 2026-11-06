@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleDestroy, OnModuleInit, Optional } from '@ne
 import { ConfigService } from '@nestjs/config';
 import { Queue, Worker } from 'bullmq';
 import { CommunicationsService } from '../communications/communications.service';
+import { ReferralVipService } from '../referral-vip/referral-vip.service';
 import { D1WorkerBridgeService } from '../d1/d1-worker-bridge.service';
 import { LocalSqliteBridgeService } from '../d1/local-sqlite-bridge.service';
 import { EventOutboxService } from '../events/event-outbox.service';
@@ -106,6 +107,7 @@ export class LocalAsyncRuntimeService implements OnModuleInit, OnModuleDestroy {
     private readonly outbox: EventOutboxService,
     private readonly commands: WorkflowCommandsService,
     @Optional() private readonly communications?: CommunicationsService,
+    @Optional() private readonly referralVip?: ReferralVipService,
   ) {}
 
   private async notifyAccountTransfer(event: NexiEventEnvelope): Promise<void> {
@@ -149,6 +151,12 @@ export class LocalAsyncRuntimeService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async notifyCustomerEvent(event: NexiEventEnvelope): Promise<void> {
+    if ((event.type === 'DEPOSIT_CREDITED' || event.type === 'DEPOSIT_CLAIM_CREDITED') && this.referralVip) {
+      await this.referralVip.processCreditedExternalDeposit(
+        event.type === 'DEPOSIT_CREDITED' ? 'DEPOSIT' : 'DEPOSIT_CLAIM',
+        typeof event.payload.depositId === 'string' ? event.payload.depositId : '',
+      );
+    }
     if (event.type === 'TRANSFER_COMPLETED') return this.notifyAccountTransfer(event);
     if (!this.communications) throw new Error('Communications are required for customer notification delivery');
     const payload = event.payload;

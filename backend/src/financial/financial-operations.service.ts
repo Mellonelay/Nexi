@@ -348,6 +348,60 @@ export class FinancialOperationsService {
   getWithdrawals(userId: string) { return this.d1.listWithdrawals(userId); }
   getTransfers(userId: string) { return this.d1.listInternalTransfers(userId); }
 
+  async convertExactAmount(input: { fromAsset: string; toAsset: string; amount: string }) {
+    const fromAsset = input.fromAsset.trim().toUpperCase();
+    const toAsset = input.toAsset.trim().toUpperCase();
+    const amount = assertPositiveDecimal(input.amount);
+    if (!/^[A-Z0-9]{1,20}$/.test(fromAsset) || !/^[A-Z0-9]{1,20}$/.test(toAsset)) {
+      throw new BadRequestException('Conversion asset is invalid');
+    }
+    if (fromAsset === toAsset) return { amount: amount.toString(), rate: '1', source: 'same-asset' };
+    const source = await this.resolveConversionRate({
+      fromAsset,
+      toAsset,
+      rateKey: `conversion:${fromAsset}:${toAsset}`,
+    });
+    return { amount: amount.mul(source.rate).toString(), rate: source.rate.toString(), source: source.source };
+  }
+
+  async applyAdminFinancialCorrection(input: {
+    userId: string;
+    asset: string;
+    amount: string;
+    direction: 'CREDIT' | 'DEBIT';
+    scope: 'MAIN' | 'SPOT' | 'MARGIN' | 'BINARY' | 'FINANCE';
+    idempotencyKey: string;
+    reason: string;
+    adminId: string;
+  }) {
+    if (!input.reason.trim()) throw new BadRequestException('A reason is required for financial corrections');
+    return this.d1.applyAdminFinancialCorrection(input);
+  }
+
+  async postReferralReward(input: {
+    referrerUserId: string;
+    referredUserId: string;
+    depositRef: string;
+    asset: string;
+    amount: string;
+  }) {
+    const asset = input.asset.trim().toUpperCase();
+    const amount = assertPositiveDecimal(input.amount);
+    if (!/^[A-Z0-9]{1,20}$/.test(asset)) throw new BadRequestException('Referral reward asset is invalid');
+    const account = await this.d1.getAccountForUser(input.referrerUserId, asset);
+    return this.d1.credit({
+      accountId: account.id,
+      asset,
+      amount: amount.toString(),
+      referenceType: 'AFFILIATE_REWARD',
+      referenceId: input.referredUserId,
+      idempotencyKey: `referral:first-external-deposit:${input.referredUserId}`,
+      correlationId: input.depositRef,
+      economicGroup: input.depositRef,
+      metadata: { referredUserId: input.referredUserId, depositRef: input.depositRef },
+    });
+  }
+
   private async resolveConversionRate(request: ConversionRateRequest): Promise<ConversionRateSource> {
     const configuredRate = await this.d1.getSystemConfigValue(request.rateKey);
     if (configuredRate !== null) {

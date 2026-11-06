@@ -3,6 +3,9 @@ import type {
   AdminIdentity,
   ConsequentialContext,
   MutationResult,
+  VipAdminLevel,
+  VipReferralAdminSettings,
+  VipReferralCustomer,
 } from "./provider";
 import type {
   Asset,
@@ -733,6 +736,144 @@ export class NexiAdminApiProvider implements AdminDataProvider {
   }
   async getUser(id: string): Promise<User | undefined> {
     return (await this.listUsers()).find((user) => user.id === id);
+  }
+
+  async getVipReferralCustomer(userCode: number): Promise<VipReferralCustomer> {
+    const query = new URLSearchParams({ userCode: String(userCode), limit: "1" });
+    const [vipRows, referralRows] = await Promise.all([
+      this.request<unknown[]>(`/admin/vip/users?${query}`),
+      this.request<unknown[]>(`/admin/referrals?${query}`),
+    ]);
+    const vipRow = vipRows[0] ? record(vipRows[0]) : null;
+    const referralRow = referralRows[0] ? record(referralRows[0]) : null;
+    return {
+      vip: vipRow
+        ? {
+            level: Number(vipRow.level),
+            name: stringValue(vipRow.name),
+            progress: stringValue(vipRow.progress),
+            threshold: stringValue(vipRow.threshold),
+            baseAsset: vipRow.baseAsset == null ? null : stringValue(vipRow.baseAsset),
+            nextTier: vipRow.nextTier && typeof vipRow.nextTier === "object"
+              ? {
+                  level: Number(record(vipRow.nextTier).level),
+                  name: stringValue(record(vipRow.nextTier).name),
+                  threshold: stringValue(record(vipRow.nextTier).threshold),
+                  remaining: stringValue(record(vipRow.nextTier).remaining),
+                }
+              : null,
+            benefits: Object.keys(record(vipRow.benefits)).length ? record(vipRow.benefits) : null,
+            evaluatedAt: vipRow.evaluatedAt == null ? null : stringValue(vipRow.evaluatedAt),
+            qualifiedAt: vipRow.qualifiedAt == null ? null : stringValue(vipRow.qualifiedAt),
+            manualOverride: vipRow.manualOverride === true || Number(vipRow.manualOverride) === 1,
+            overrideAdminId: vipRow.overrideAdminId == null ? null : stringValue(vipRow.overrideAdminId),
+            overrideReason: vipRow.overrideReason == null ? null : stringValue(vipRow.overrideReason),
+            overrideAt: vipRow.overrideAt == null ? null : stringValue(vipRow.overrideAt),
+            firstDepositReferral: vipRow.firstDepositReferral && typeof vipRow.firstDepositReferral === "object"
+              ? {
+                  status: stringValue(record(vipRow.firstDepositReferral).status),
+                  reason: record(vipRow.firstDepositReferral).reason == null ? null : stringValue(record(vipRow.firstDepositReferral).reason),
+                  depositRef: record(vipRow.firstDepositReferral).depositRef == null ? null : stringValue(record(vipRow.firstDepositReferral).depositRef),
+                  rewardAmount: record(vipRow.firstDepositReferral).rewardAmount == null ? null : stringValue(record(vipRow.firstDepositReferral).rewardAmount),
+                  rewardAsset: record(vipRow.firstDepositReferral).rewardAsset == null ? null : stringValue(record(vipRow.firstDepositReferral).rewardAsset),
+                  referrerUserCode: record(vipRow.firstDepositReferral).referrerUserCode == null ? null : Number(record(vipRow.firstDepositReferral).referrerUserCode),
+                }
+              : null,
+          }
+        : null,
+      referral: referralRow
+        ? {
+            referralCode: stringValue(referralRow.referralCode),
+            referredByUserCode:
+              referralRow.referredByUserCode == null
+                ? null
+                : Number(referralRow.referredByUserCode),
+            referralCount: Number(referralRow.referralCount ?? 0),
+          }
+        : null,
+    };
+  }
+
+  async getVipReferralAdminSettings(): Promise<VipReferralAdminSettings> {
+    const [levels, vipPolicy, referralRewardPolicy] = await Promise.all([
+      this.request<unknown[]>("/admin/vip/levels"),
+      this.request<VipReferralAdminSettings["vipPolicy"]>("/admin/vip/policy"),
+      this.request<VipReferralAdminSettings["referralRewardPolicy"]>(
+        "/admin/referrals/reward-policy",
+      ),
+    ]);
+    return {
+      levels: levels.map((value) => {
+        const row = record(value);
+        return {
+          id: stringValue(row.id),
+          level: Number(row.level),
+          name: stringValue(row.name),
+          threshold: stringValue(row.threshold),
+          benefits: Object.keys(record(row.benefits)).length ? record(row.benefits) : null,
+          enabled: row.enabled === true || Number(row.enabled) === 1,
+        };
+      }),
+      vipPolicy,
+      referralRewardPolicy: referralRewardPolicy
+        ? {
+            ...referralRewardPolicy,
+            value: referralRewardPolicy.value ?? null,
+            asset: referralRewardPolicy.asset ?? null,
+            minimumFirstDeposit: referralRewardPolicy.minimumFirstDeposit ?? null,
+            baseAsset: referralRewardPolicy.baseAsset ?? null,
+          }
+        : null,
+    };
+  }
+
+  private async vipPolicyMutation(
+    path: string,
+    body: Record<string, unknown>,
+  ): Promise<MutationResult> {
+    const result = await this.request<JsonRecord>(path, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+    return { ok: result.ok !== false, auditId: stringValue(result.auditId ?? result.id) };
+  }
+
+  saveVipAdminLevel(input: VipAdminLevel & { reason: string }): Promise<MutationResult> {
+    const { level, name, threshold, benefits, enabled, reason } = input;
+    return this.vipPolicyMutation("/admin/vip/levels", {
+      level,
+      name,
+      threshold,
+      benefits: benefits ?? {},
+      enabled,
+      reason,
+    });
+  }
+
+  saveVipQualificationPolicy(baseAsset: string, reason: string): Promise<MutationResult> {
+    return this.vipPolicyMutation("/admin/vip/policy", { baseAsset, reason });
+  }
+
+  saveReferralRewardPolicy(
+    input: NonNullable<VipReferralAdminSettings["referralRewardPolicy"]> & { reason: string },
+  ): Promise<MutationResult> {
+    const { enabled, mode, value, asset, minimumFirstDeposit, reason } = input;
+    return this.vipPolicyMutation("/admin/referrals/reward-policy", {
+      enabled,
+      mode,
+      value: value?.trim() || null,
+      asset: asset?.trim() || null,
+      minimumFirstDeposit: minimumFirstDeposit?.trim() || null,
+      reason,
+    });
+  }
+
+  assignUserVip(userCode: number, level: number, reason: string): Promise<MutationResult> {
+    return this.vipPolicyMutation("/admin/vip/assign", { userCode, level, reason });
+  }
+
+  clearUserVipOverride(userCode: number, reason: string): Promise<MutationResult> {
+    return this.vipPolicyMutation("/admin/vip/override/clear", { userCode, reason });
   }
   setUserStatus() {
     return this.unsupportedAuthority(

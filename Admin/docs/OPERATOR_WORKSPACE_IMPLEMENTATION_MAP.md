@@ -86,7 +86,7 @@ Product configuration remains Admin-controlled **where existing backend authorit
 
 ## Current source reconciliation — 2026-11-06
 
-The historical inventory above must not be read as the current sidebar. At checkout HEAD `cc378e601638`, the operator UI has eight workspaces, 21 primary visible destinations and a contextual guarded Sandbox. Clients contains KYC Reviews and customer Security & Sessions; do not restore standalone Sessions or hidden legacy destinations. Public App Settings consolidates route/navigation, markets/quotes, content/notices, Contact Us and advanced feature controls while preserving provider/backend ownership.
+The historical inventory above must not be read as the current sidebar. The current source working tree based on `main` `e37bc2364b77` (2026-11-06) has eight workspaces, 21 primary visible destinations and a contextual guarded Sandbox. Clients contains KYC Reviews and customer Security & Sessions; the `/users` customer detail also owns VIP/referral profile, referral reward decision, policy editing and audited manual VIP override/clear controls. Do not restore standalone Sessions or hidden legacy destinations. Public App Settings consolidates route/navigation, markets/quotes, content/notices, Contact Us and advanced feature controls while preserving provider/backend ownership.
 
 Source status by current owner requirement:
 
@@ -96,10 +96,10 @@ Source status by current owner requirement:
 | Public App Settings and Contact Us | Existing settings sections and backend read/write authority are present | Implemented source; current test proof must be recorded separately |
 | Public F6 notification drawer | Existing panel/header/CSS source is present; mobile/browser rendering still requires post-deployment acceptance | Implemented source; browser pending post-deploy |
 | Global Binary policy | Existing global editor and shared-policy source exist; preserve snapshots and research controls | Implemented source; initial-policy fixture evidence must be revision-matched |
-| Deposit-only VIP qualification and customer effective limits | Not established: current VIP source is profile/history plus level configuration/manual assignment; no demonstrated canonical deposit qualification or deposit/withdrawal guard enforcement | Missing source; no production thresholds/limits may be invented |
-| First credited external deposit referral reward | Not established: attribution/history exists, but no first-deposit reward policy/orchestration was found | Missing source; monetary reward must remain disabled until valid authorized config |
-| Deposit reversal/chargeback owner | No canonical reversal path was found in the inspected source | Contract blocker for claiming reversal-safe VIP/reward qualification |
+| VIP qualification and customer profile | Implemented in source: cumulative valid credited external-deposit qualification in configured base asset, highest enabled threshold determines tier, automatic promotion without demotion, Clients profile and audited manual override controls | Source implemented; per-tier financial benefit limits remain unenforced and are informational metadata |
+| First valid external-deposit referral reward | Implemented in source: one unique first-deposit decision/reward path; reward values require explicit valid policy configuration and canonical Ledger posting | Source implemented; focused test evidence remains revision-specific; no production migration performed |
+| Invalid credited-deposit recovery | Audited `POST /admin/deposits/invalidate` guarded by `ledger.adjust`, using canonical Ledger corrections and qualification recalculation without demotion; not exposed in this Admin customer panel | Source recovery exists; automated provider chargeback lifecycle is not established |
 
-Use current source and provider contracts before changing an individual control. Local Graphify CLI 0.9.101 is indexed at current HEAD `cc378e601638` (confirmed by `graph_stats`); hosted/promoted snapshots are separate and may be older. Graph topology is structural evidence only. Do not treat the historical 113-scenario tracker as a source-completion gate; browser acceptance is a later post-deployment phase.
+Use current source and provider contracts before changing an individual control. The graph index is topology evidence only and does not establish runtime behavior. Do not treat the historical 113-scenario tracker as a source-completion gate; browser acceptance is a later post-deployment phase.
 
 For operator steps, role cautions, status meanings, finance distinctions, troubleshooting and source/test/browser proof boundaries, see [NEXI Admin Operator Usage Guide](NEXI_ADMIN_OPERATOR_USAGE_GUIDE.md).

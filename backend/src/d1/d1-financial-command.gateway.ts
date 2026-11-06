@@ -6712,6 +6712,7 @@ export class D1FinancialCommandGateway {
         eventType: "DEPOSIT_CREDITED",
         correlationId,
         payload: {
+          depositId,
           userId: String(deposit.userId),
           asset: String(deposit.asset),
           amount: String(deposit.amount),
@@ -6998,6 +6999,7 @@ export class D1FinancialCommandGateway {
             eventType: "DEPOSIT_CLAIM_CREDITED",
             correlationId: idempotencyKey,
             payload: {
+              depositId: id,
               userId: claim.userId,
               asset: claim.asset,
               amount: claim.claimedAmount,
@@ -7054,6 +7056,7 @@ export class D1FinancialCommandGateway {
           eventType: "DEPOSIT_CLAIM_CREDITED",
           correlationId: idempotencyKey,
           payload: {
+            depositId: id,
             userId: claim.userId,
             asset: claim.asset,
             amount: claim.claimedAmount,

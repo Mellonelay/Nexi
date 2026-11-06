@@ -1358,6 +1358,62 @@ model ReferralRewardEvent {
   @@index([referrerUserId, rewardedAt])
 }
 
+model VipDepositQualification {
+  id                 String   @id
+  depositRef         String   @unique
+  sourceType         String
+  sourceId           String
+  userId             String
+  asset              String
+  amount             String
+  baseAsset          String
+  baseAmount         String
+  rate               String
+  rateSource         String
+  status             String
+  creditedAt         String
+  invalidatedAt      String?
+  invalidationReason String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @default(now())
+
+  @@index([userId, status, creditedAt])
+}
+
+model ReferralFirstDepositDecision {
+  id                String   @id
+  referredUserId    String   @unique
+  referrerUserId    String?
+  depositRef        String   @unique
+  depositBaseAsset  String
+  depositBaseAmount String
+  status            String
+  decisionReason    String
+  rewardAsset       String?
+  rewardAmount      String?
+  policySnapshot    String?
+  ledgerPostingId   String?  @unique
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @default(now())
+
+  @@index([referrerUserId, status])
+}
+
+model DepositInvalidationRecovery {
+  id              String   @id
+  depositRef      String   @unique
+  userId          String
+  asset           String
+  amount          String
+  status          String
+  reason          String
+  ledgerPostingId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now())
+
+  @@index([userId, status])
+}
+
 model LegacyBinaryOptionResult {
   id         String               @id
   positionId String               @unique
@@ -1720,6 +1776,10 @@ model UserVipState {
   progress    String    @default("0")
   evaluatedAt DateTime  @default(now())
   qualifiedAt DateTime?
+  manualOverride Boolean @default(false)
+  overrideAdminId String?
+  overrideReason String?
+  overrideAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @default(now())
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)

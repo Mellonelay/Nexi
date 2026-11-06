@@ -1,6 +1,6 @@
 # NEXI Admin Operator Usage Guide
 
-Source reference: checkout `main` at `cc378e601638` (2026-11-05), with local uncommitted Public UI changes present. This guide reflects source inspection only. It does not claim a deployed release, a passing test campaign, or authenticated browser acceptance.
+Source reference: working tree based on `main` `e37bc2364b77` (2026-11-06). This guide reflects source inspection only. It does not claim a deployed release, a passing test campaign, or authenticated browser acceptance.
 
 ## Before acting
 
@@ -45,7 +45,7 @@ Use the dashboard to review operational summaries and follow links to the owning
 
 **KYC:** Open KYC Reviews, inspect the submitted evidence and current status, then approve, reject, or request more information only when permitted. A pending submission is not approval.
 
-**VIP and referrals — source limitation:** Current source has public VIP/referral profile and history reads plus Admin VIP level listing/assignment routes. This checkout does not yet expose the owner-requested deposit-only automatic qualification, effective tier-limit enforcement, first-successful-deposit reward policy, or a complete Clients → Customer Detail VIP/Referral workflow. Do not use manual VIP assignment as proof of deposit qualification or represent referral balances as payable rewards. Referral monetary settings must remain non-paying until an authorized, valid policy is configured through a completed implementation.
+**VIP and referrals (Clients → Customer Detail):** `users.view` permits reading the customer summary (qualified external-deposit progress/base asset, next enabled tier, benefit metadata, override audit details, referral identity/count, and first-deposit reward decision). `users.entitlements` permits opening the VIP/referral policy editor, saving the base asset, enabled tier threshold/name/benefit metadata and first-deposit reward policy, and assigning/clearing a manual VIP override. Each mutation requires an audit reason; customer override changes also use the consequential confirmation dialog. Saves perform a provider readback; the UI reports success only when the returned policy/profile matches. Clearing an override retains the current tier and resumes future promotion without demotion. Tier benefit JSON is descriptive metadata only: no VIP deposit cap or VIP-specific withdrawal limit is enforced by the deposit/withdrawal owners. Withdrawal bounds currently come from configured asset/network settings. Maximum qualification thresholds select the highest enabled tier and never cap deposits. Reward fields must be explicitly configured; valid credited external deposits qualify cumulatively, and the first valid external deposit creates the single referral reward decision. The invalid-deposit recovery endpoint requires `ledger.adjust`, an audit reason and canonical Ledger correction; it is not exposed as a control in this customer panel. Source presence does not establish deployment, migration, or browser acceptance.
 
 ### Trading — Binary · Ongoing, History & Settlements, Spot & Margin (`/binary`, `/settlements`, `/spot`)
 
@@ -95,6 +95,7 @@ Use Assets to inspect supported asset metadata and visibility. Use Price Data So
 | --- | --- | --- | --- |
 | Dashboard | `overview.view` | Overview queries through `AdminDataProvider` / `NexiAdminApiProvider` | `AdminController` / `AdminService` |
 | Clients | `users.view` | `listUsers`, customer detail, sessions/wallets as separately permitted | Admin controller/service; sessions and wallet owners |
+| Clients — VIP & referrals | `users.view`; mutations require `users.entitlements` | `getVipReferralCustomer`, `getVipReferralAdminSettings`, VIP level/base-asset/reward-policy saves, audited assignment/override-clear | `ReferralVipAdminController` / `ReferralVipService`; credited external deposits, SQLite qualification/decision records, Ledger/Outbox reward commands |
 | KYC Reviews | `kyc.view` | `listKyc`, evidence and review methods | KYC controller/service |
 | Binary · Ongoing | `binary.view` | Binary configuration/position methods | Admin controller/service; Binary owner and `D1FinancialCommandGateway` |
 | History & Settlements | `settlements.view` | Settlement queries and actions | Admin controller/service and settlement authority |
@@ -140,6 +141,6 @@ The exact provider methods and `@Controller` routes are maintained in `Admin/src
 
 ## Current source gaps and evidence boundary
 
-As of source `cc378e601638` on 2026-11-05, the user-approved deposit-only VIP progression, effective tier deposit/withdrawal guard enforcement, first-successful-deposit-only referral reward policy, durable reward orchestration, and customer-level Admin VIP/Referral panels are not established by current source. Existing history/assignment contracts do not prove those rules. Existing inspected deposit credit writers publish durable events and post through the canonical Ledger; the searched current source did not reveal a deposit reversal/chargeback owner. That missing reversal contract blocks a safe claim of complete VIP/referral source closure.
+**VIP financial enforcement contract gap:** VIP benefit JSON has no typed financial semantics and neither NestJS deposit-credit nor withdrawal-request/approval validation reads it. The existing withdrawal min/max are asset/network configuration and are not VIP benefits. Therefore configured benefit values remain informational; no per-tier deposit or withdrawal limit is enforced. Adding enforcement requires an explicit owner contract defining benefit keys, units/assets, period, and behavior for pending/credited transactions, then wiring the existing NestJS financial owners without introducing another writer. Do not infer enforcement from the Admin display. Maximum qualification thresholds are tier-selection thresholds only and must never cap deposits. Invalidated credited deposits have an audited recovery route at `POST /admin/deposits/invalidate` guarded by `ledger.adjust`; it uses canonical Ledger corrections and recalculates qualification without demotion. Automated provider chargeback handling is not established by this source.
 
 Source inspection and this guide are not tests, deployed evidence, or browser acceptance. Authenticated browser acceptance is pending a later deployed revision.

@@ -69,6 +69,59 @@ export interface MutationResult {
   auditId: string;
 }
 
+export interface VipAdminLevel {
+  id: string;
+  level: number;
+  name: string;
+  threshold: string;
+  benefits: Record<string, unknown> | null;
+  enabled: boolean;
+}
+
+export interface VipReferralCustomer {
+  vip: {
+    level: number;
+    name: string;
+    progress: string;
+    threshold: string;
+    baseAsset: string | null;
+    nextTier: { level: number; name: string; threshold: string; remaining: string } | null;
+    benefits: Record<string, unknown> | null;
+    evaluatedAt: string | null;
+    qualifiedAt: string | null;
+    manualOverride: boolean;
+    overrideAdminId: string | null;
+    overrideReason: string | null;
+    overrideAt: string | null;
+    firstDepositReferral: {
+      status: string;
+      reason: string | null;
+      depositRef: string | null;
+      rewardAmount: string | null;
+      rewardAsset: string | null;
+      referrerUserCode: number | null;
+    } | null;
+  } | null;
+  referral: {
+    referralCode: string;
+    referredByUserCode: number | null;
+    referralCount: number;
+  } | null;
+}
+
+export interface VipReferralAdminSettings {
+  levels: VipAdminLevel[];
+  vipPolicy: { baseAsset: string } | null;
+  referralRewardPolicy: {
+    enabled: boolean;
+    mode: "FIXED" | "PERCENT";
+    value: string | null;
+    asset: string | null;
+    minimumFirstDeposit: string | null;
+    baseAsset: string | null;
+  } | null;
+}
+
 export interface AdminIdentity {
   id: string;
   email: string;
@@ -92,6 +145,15 @@ export interface AdminDataProvider {
   /** Users */
   listUsers(): Promise<User[]>;
   getUser(id: string): Promise<User | undefined>;
+  getVipReferralCustomer?(userCode: number): Promise<VipReferralCustomer>;
+  getVipReferralAdminSettings?(): Promise<VipReferralAdminSettings>;
+  saveVipAdminLevel?(input: VipAdminLevel & { reason: string }): Promise<MutationResult>;
+  saveVipQualificationPolicy?(baseAsset: string, reason: string): Promise<MutationResult>;
+  saveReferralRewardPolicy?(
+    input: NonNullable<VipReferralAdminSettings["referralRewardPolicy"]> & { reason: string },
+  ): Promise<MutationResult>;
+  assignUserVip?(userCode: number, level: number, reason: string): Promise<MutationResult>;
+  clearUserVipOverride?(userCode: number, reason: string): Promise<MutationResult>;
   setUserStatus(id: string, status: UserStatus, ctx: ConsequentialContext): Promise<MutationResult>;
   updateUserEntitlements(
     id: string,
@@ -462,7 +524,9 @@ export interface AdminDataProvider {
   ): Promise<MutationResult>;
   listNotifications(): Promise<AdminNotification[]>;
   listOperatorAlerts?(): Promise<AdminOperatorAlertsResponse>;
-  updateOperatorAlertPreferences?(disabledCategories: AdminOperatorAlertCategory[]): Promise<AdminOperatorAlertsResponse>;
+  updateOperatorAlertPreferences?(
+    disabledCategories: AdminOperatorAlertCategory[],
+  ): Promise<AdminOperatorAlertsResponse>;
   markOperatorAlertRead?(id: string): Promise<void>;
   subscribeToOperatorAlerts?(fn: () => void): () => void;
   sendNotification(

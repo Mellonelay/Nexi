@@ -9,7 +9,7 @@ import { RolesGuard } from '../auth/roles.guard';
 import type { AuthenticatedRequest } from '../auth/auth.types';
 import { AdminPermissionGuard } from '../admin/admin-permission.guard';
 import { RequireAdminPermission } from '../admin/admin-permission.decorator';
-import { AssignVipDto, UpdateVipLevelDto } from './referral-vip.dto';
+import { AssignVipDto, ClearVipOverrideDto, InvalidateExternalDepositDto, UpdateReferralRewardPolicyDto, UpdateVipLevelDto, UpdateVipPolicyDto } from './referral-vip.dto';
 import { ReferralVipService } from './referral-vip.service';
 
 const vipLevelSchema = { type: 'object', required: ['id', 'level', 'name', 'threshold', 'benefits', 'enabled', 'createdAt', 'updatedAt'], properties: { id: { type: 'string' }, level: { type: 'integer' }, name: { type: 'string' }, threshold: { type: 'string' }, benefits: { type: 'object', nullable: true, additionalProperties: true }, enabled: { type: 'boolean' }, createdAt: { type: 'string' }, updatedAt: { type: 'string' } }, additionalProperties: true };
@@ -27,15 +27,16 @@ export class ReferralVipAdminController {
   @Get('referrals')
   @RequireAdminPermission('users.view')
   @ApiOperation({ summary: 'List referral identities and referral totals.' })
-  referrals(@Query('limit') limit?: string) {
-    return this.service.adminReferralOverview(limit ? Number(limit) : 100);
+  referrals(@Query('limit') limit?: string, @Query('userCode') userCode?: string) {
+    return this.service.adminReferralOverview(limit ? Number(limit) : 100, userCode === undefined ? undefined : Number(userCode));
   }
 
   @Get('vip/users')
+  @ApiOkResponse({ description: 'VIP customer state with qualification progress, next tier, and first-deposit referral decision.' })
   @RequireAdminPermission('users.view')
   @ApiOperation({ summary: 'List user VIP state.' })
-  users(@Query('limit') limit?: string) {
-    return this.service.adminVipOverview(limit ? Number(limit) : 100);
+  users(@Query('limit') limit?: string, @Query('userCode') userCode?: string) {
+    return this.service.adminVipOverview(limit ? Number(limit) : 100, userCode === undefined ? undefined : Number(userCode));
   }
 
   @Get('vip/levels')
@@ -54,6 +55,39 @@ export class ReferralVipAdminController {
     return this.service.adminUpsertVipLevel(request.user.userId, body);
   }
 
+  @Get('vip/policy')
+  @RequireAdminPermission('users.view')
+  vipPolicy() { return this.service.getVipPolicy(); }
+
+  @Post('vip/policy')
+  @RequireAdminPermission('users.entitlements')
+  upsertVipPolicy(@Req() request: AuthenticatedRequest, @Body() body: UpdateVipPolicyDto) {
+    return this.service.adminUpsertVipPolicy(request.user.userId, body);
+  }
+
+  @Get('referrals/reward-policy')
+  @RequireAdminPermission('users.view')
+  referralRewardPolicy() { return this.service.getReferralRewardPolicy(); }
+
+  @Post('referrals/reward-policy')
+  @RequireAdminPermission('users.entitlements')
+  upsertReferralRewardPolicy(@Req() request: AuthenticatedRequest, @Body() body: UpdateReferralRewardPolicyDto) {
+    return this.service.adminUpsertReferralRewardPolicy(request.user.userId, body);
+  }
+
+  @Post('deposits/invalidate')
+  @RequireAdminPermission('ledger.adjust')
+  @ApiOperation({ summary: 'Invalidate an external deposit and recover its credit and any referral reward through audited Ledger corrections.' })
+  invalidateExternalDeposit(@Req() request: AuthenticatedRequest, @Body() body: InvalidateExternalDepositDto) {
+    return this.service.adminInvalidateExternalDeposit(request.user.userId, body.sourceType, body.sourceId, body.reason);
+  }
+
+  @Post('vip/override/clear')
+  @RequireAdminPermission('users.entitlements')
+  clearVipOverride(@Req() request: AuthenticatedRequest, @Body() body: ClearVipOverrideDto) {
+    return this.service.adminClearVipOverride(request.user.userId, body.userCode, body.reason);
+  }
+
   @Post('vip/assign')
   @ApiCreatedResponse({ schema: { type: 'object', required: ['auditId', 'userCode', 'vip'], properties: { auditId: { type: 'string', format: 'uuid' }, userCode: { type: 'integer' }, vip: vipStateSchema } } })
   @RequireAdminPermission('users.entitlements')
@@ -61,4 +95,5 @@ export class ReferralVipAdminController {
   assign(@Req() request: AuthenticatedRequest, @Body() body: AssignVipDto) {
     return this.service.adminAssignVip(request.user.userId, body);
   }
+
 }

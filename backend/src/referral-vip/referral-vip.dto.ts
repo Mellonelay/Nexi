@@ -1,4 +1,4 @@
-import { IsBoolean, IsInt, IsObject, IsOptional, IsString, Length, Max, Min } from 'class-validator';
+import { IsBoolean, IsIn, IsInt, IsObject, IsOptional, IsString, Length, Max, Min } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class ClaimReferralDto {
@@ -51,6 +51,70 @@ export class AssignVipDto {
   @IsString()
   @Length(1, 128)
   progress?: string;
+
+  @IsString()
+  @Length(3, 500)
+  reason!: string;
+}
+
+export class UpdateVipPolicyDto {
+  @IsString()
+  @Length(2, 20)
+  baseAsset!: string;
+
+  @IsString()
+  @Length(3, 500)
+  reason!: string;
+}
+
+export class UpdateReferralRewardPolicyDto {
+  @IsBoolean()
+  enabled!: boolean;
+
+  @IsIn(['FIXED', 'PERCENT'])
+  @IsString()
+  @Length(1, 16)
+  mode!: 'FIXED' | 'PERCENT';
+
+  @IsOptional()
+  @IsString()
+  @Length(1, 64)
+  value?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @Length(2, 20)
+  asset?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @Length(1, 64)
+  minimumFirstDeposit?: string | null;
+
+  @IsString()
+  @Length(3, 500)
+  reason!: string;
+}
+
+export class InvalidateExternalDepositDto {
+  @IsIn(['DEPOSIT', 'DEPOSIT_CLAIM'])
+  sourceType!: 'DEPOSIT' | 'DEPOSIT_CLAIM';
+
+  @IsString()
+  @Length(1, 160)
+  sourceId!: string;
+
+  @IsString()
+  @Length(3, 500)
+  reason!: string;
+}
+
+
+export class ClearVipOverrideDto {
+  @IsInt()
+  @Min(100000)
+  @Max(999999)
+  userCode!: number;
 
   @IsString()
   @Length(3, 500)
