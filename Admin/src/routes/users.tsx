@@ -257,7 +257,7 @@ function Inner() {
   const researchCount = users.filter((u) => u.binaryResearchEligible).length;
 
   return (
-    <PageShell restrictedCount={restrictedCount} researchCount={researchCount} total={users.length}>
+    <PageShell restrictedCount={restrictedCount} researchCount={researchCount}>
       {session.can("users.view") ? (
         <VipReferralPolicyEditor
           settings={vipSettingsQ.data}
@@ -404,6 +404,166 @@ function Inner() {
                       },
                     ]
                   : []),
+                {
+                  id: "vip-referral",
+                  title: "VIP and referrals",
+                  description:
+                    "Qualification and referral rewards are based on credited external deposits. Legacy referral totals are not shown as payable balances.",
+                  content: (
+                    <div className="flex flex-col gap-3">
+                      {vipReferralQ.loading ? (
+                        <p className="text-xs text-muted-foreground">
+                          Loading VIP and referral profile…
+                        </p>
+                      ) : null}
+                      {vipReferralQ.error ? (
+                        <p role="alert" className="text-xs text-destructive">
+                          {vipReferralQ.error.message}
+                        </p>
+                      ) : null}
+                      {vipReferralQ.data?.vip ? (
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          <p className="text-sm">
+                            VIP {vipReferralQ.data.vip.level} · {vipReferralQ.data.vip.name}
+                          </p>
+                          <p className="text-sm">
+                            Qualified deposit progress {vipReferralQ.data.vip.progress} /{" "}
+                            {vipReferralQ.data.vip.threshold}{" "}
+                            {vipReferralQ.data.vip.baseAsset ?? ""}
+                          </p>
+                          {vipReferralQ.data.vip.nextTier ? (
+                            <p className="text-sm">
+                              Next: VIP {vipReferralQ.data.vip.nextTier.level} ·{" "}
+                              {vipReferralQ.data.vip.nextTier.name};{" "}
+                              {vipReferralQ.data.vip.nextTier.remaining}{" "}
+                              {vipReferralQ.data.vip.baseAsset ?? ""} remaining
+                            </p>
+                          ) : null}
+                          <p className="text-xs text-muted-foreground">
+                            {vipReferralQ.data.vip.manualOverride
+                              ? `Manual override: ${vipReferralQ.data.vip.overrideReason ?? "reason not recorded"}`
+                              : "Automatically qualified"}
+                          </p>
+                          <div className="rounded bg-muted p-2 text-xs">
+                            <p className="mb-1 font-medium">Tier benefit metadata</p>
+                            {Object.entries(vipReferralQ.data.vip.benefits ?? {}).length ? (
+                              <dl className="grid gap-1 sm:grid-cols-2">
+                                {Object.entries(vipReferralQ.data.vip.benefits ?? {}).map(
+                                  ([key, value]) => (
+                                    <div key={key} className="flex justify-between gap-3">
+                                      <dt className="text-muted-foreground">{key}</dt>
+                                      <dd className="text-right">
+                                        {typeof value === "string" ? value : JSON.stringify(value)}
+                                      </dd>
+                                    </div>
+                                  ),
+                                )}
+                              </dl>
+                            ) : (
+                              <p className="text-muted-foreground">
+                                No benefit metadata configured.
+                              </p>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground sm:col-span-2">
+                            Benefit metadata is informational; deposit and withdrawal limits are not
+                            enforced by this field.
+                          </p>
+                          {vipReferralQ.data.vip.firstDepositReferral ? (
+                            <div className="text-xs sm:col-span-2">
+                              First deposit referral:{" "}
+                              {vipReferralQ.data.vip.firstDepositReferral.status}
+                              {vipReferralQ.data.vip.firstDepositReferral.reason
+                                ? ` · ${vipReferralQ.data.vip.firstDepositReferral.reason}`
+                                : ""}
+                              {vipReferralQ.data.vip.firstDepositReferral.rewardAmount
+                                ? ` · ${vipReferralQ.data.vip.firstDepositReferral.rewardAmount} ${vipReferralQ.data.vip.firstDepositReferral.rewardAsset ?? ""}`
+                                : ""}
+                            </div>
+                          ) : null}
+                        </div>
+                      ) : !vipReferralQ.loading ? (
+                        <p className="text-xs text-muted-foreground">
+                          No VIP qualification record for this customer.
+                        </p>
+                      ) : null}
+                      {vipReferralQ.data?.referral ? (
+                        <div className="grid gap-1 text-sm sm:grid-cols-3">
+                          <p>
+                            Referral code:{" "}
+                            <span className="font-mono">
+                              {vipReferralQ.data.referral.referralCode}
+                            </span>
+                          </p>
+                          <p>Referred by: {vipReferralQ.data.referral.referredByUserCode ?? "—"}</p>
+                          <p>Customers referred: {vipReferralQ.data.referral.referralCount}</p>
+                        </div>
+                      ) : !vipReferralQ.loading ? (
+                        <p className="text-xs text-muted-foreground">
+                          No referral identity recorded.
+                        </p>
+                      ) : null}
+                      {selected.userCode && session.can("users.entitlements") ? (
+                        <div className="flex flex-wrap items-end gap-2 border-t border-border/60 pt-3">
+                          <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+                            Audited manual VIP override
+                            <select
+                              aria-label="VIP manual override level"
+                              className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
+                              value={vipLevelDraft}
+                              onChange={(event) => setVipLevelDraft(event.target.value)}
+                            >
+                              <option value="">Select level</option>
+                              {(vipSettingsQ.data?.levels ?? [])
+                                .filter((level) => level.enabled)
+                                .map((level) => (
+                                  <option key={level.id} value={level.level}>
+                                    VIP {level.level} · {level.name}
+                                  </option>
+                                ))}
+                            </select>
+                          </label>
+                          <Button
+                            size="sm"
+                            disabled={
+                              !provider.assignUserVip || !vipLevelDraft || vipReferralQ.loading
+                            }
+                            onClick={() =>
+                              setPendingVipAction({
+                                kind: "assign",
+                                user: selected,
+                                level: Number(vipLevelDraft),
+                              })
+                            }
+                          >
+                            Assign override
+                          </Button>
+                          {vipReferralQ.data?.vip?.manualOverride ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={!provider.clearUserVipOverride || vipReferralQ.loading}
+                              onClick={() =>
+                                setPendingVipAction({
+                                  kind: "clear",
+                                  user: selected,
+                                  level: null,
+                                })
+                              }
+                            >
+                              Clear override
+                            </Button>
+                          ) : null}
+                          {vipActionMessage ? (
+                            <p role="status" className="w-full text-xs text-muted-foreground">
+                              {vipActionMessage}
+                            </p>
+                          ) : null}
+                        </div>
+                      ) : null}
+                    </div>
+                  ),
+                },
                 ...(session.can("sessions.view")
                   ? [
                       {
@@ -459,151 +619,6 @@ function Inner() {
                       },
                     ]
                   : []),
-                {
-                  id: "vip-referral",
-                  title: "VIP and referrals",
-                  description:
-                    "Qualification and referral rewards are based on credited external deposits. Legacy referral totals are not shown as payable balances.",
-                  content: (
-                    <div className="flex flex-col gap-3">
-                      {vipReferralQ.loading ? (
-                        <p className="text-xs text-muted-foreground">
-                          Loading VIP and referral profile…
-                        </p>
-                      ) : null}
-                      {vipReferralQ.error ? (
-                        <p role="alert" className="text-xs text-destructive">
-                          {vipReferralQ.error.message}
-                        </p>
-                      ) : null}
-                      {vipReferralQ.data?.vip ? (
-                        <div className="grid gap-2 sm:grid-cols-2">
-                          <p className="text-sm">
-                            VIP {vipReferralQ.data.vip.level} · {vipReferralQ.data.vip.name}
-                          </p>
-                          <p className="text-sm">
-                            Qualified deposit progress {vipReferralQ.data.vip.progress} /{" "}
-                            {vipReferralQ.data.vip.threshold} {vipReferralQ.data.vip.baseAsset ?? ""}
-                          </p>
-                          {vipReferralQ.data.vip.nextTier ? (
-                            <p className="text-sm">
-                              Next: VIP {vipReferralQ.data.vip.nextTier.level} · {vipReferralQ.data.vip.nextTier.name};{" "}
-                              {vipReferralQ.data.vip.nextTier.remaining} {vipReferralQ.data.vip.baseAsset ?? ""} remaining
-                            </p>
-                          ) : null}
-                          <p className="text-xs text-muted-foreground">
-                            {vipReferralQ.data.vip.manualOverride
-                              ? `Manual override: ${vipReferralQ.data.vip.overrideReason ?? "reason not recorded"}`
-                              : "Automatically qualified"}
-                          </p>
-                          <div className="rounded bg-muted p-2 text-xs">
-                            <p className="mb-1 font-medium">Tier benefit metadata</p>
-                            {Object.entries(vipReferralQ.data.vip.benefits ?? {}).length ? (
-                              <dl className="grid gap-1 sm:grid-cols-2">
-                                {Object.entries(vipReferralQ.data.vip.benefits ?? {}).map(([key, value]) => (
-                                  <div key={key} className="flex justify-between gap-3">
-                                    <dt className="text-muted-foreground">{key}</dt>
-                                    <dd className="text-right">{typeof value === "string" ? value : JSON.stringify(value)}</dd>
-                                  </div>
-                                ))}
-                              </dl>
-                            ) : <p className="text-muted-foreground">No benefit metadata configured.</p>}
-                          </div>
-                          <p className="text-xs text-muted-foreground sm:col-span-2">
-                            Benefit metadata is informational; deposit and withdrawal limits are not enforced by this field.
-                          </p>
-                          {vipReferralQ.data.vip.firstDepositReferral ? (
-                            <div className="text-xs sm:col-span-2">
-                              First deposit referral: {vipReferralQ.data.vip.firstDepositReferral.status}
-                              {vipReferralQ.data.vip.firstDepositReferral.reason ? ` · ${vipReferralQ.data.vip.firstDepositReferral.reason}` : ""}
-                              {vipReferralQ.data.vip.firstDepositReferral.rewardAmount
-                                ? ` · ${vipReferralQ.data.vip.firstDepositReferral.rewardAmount} ${vipReferralQ.data.vip.firstDepositReferral.rewardAsset ?? ""}`
-                                : ""}
-                            </div>
-                          ) : null}
-                        </div>
-                      ) : !vipReferralQ.loading ? (
-                        <p className="text-xs text-muted-foreground">
-                          No VIP qualification record for this customer.
-                        </p>
-                      ) : null}
-                      {vipReferralQ.data?.referral ? (
-                        <div className="grid gap-1 text-sm sm:grid-cols-3">
-                          <p>
-                            Referral code:{" "}
-                            <span className="font-mono">
-                              {vipReferralQ.data.referral.referralCode}
-                            </span>
-                          </p>
-                          <p>Referred by: {vipReferralQ.data.referral.referredByUserCode ?? "—"}</p>
-                          <p>Customers referred: {vipReferralQ.data.referral.referralCount}</p>
-                        </div>
-                      ) : !vipReferralQ.loading ? (
-                        <p className="text-xs text-muted-foreground">
-                          No referral identity recorded.
-                        </p>
-                      ) : null}
-                      {selected.userCode && session.can("users.entitlements") ? (
-                        <div className="flex flex-wrap items-end gap-2 border-t border-border/60 pt-3">
-                          <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-                            Audited manual VIP override
-                            <select
-                              aria-label="VIP manual override level"
-                              className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
-                              value={vipLevelDraft}
-                              onChange={(event) => setVipLevelDraft(event.target.value)}
-                            >
-                              <option value="">Select level</option>
-                              {(vipSettingsQ.data?.levels ?? [])
-                                .filter((level) => level.enabled)
-                                .map((level) => (
-                                  <option key={level.id} value={level.level}>
-                                    VIP {level.level} · {level.name}
-                                  </option>
-                                ))}
-                            </select>
-                          </label>
-                          <Button
-                            size="sm"
-                            disabled={
-                              !provider.assignUserVip ||
-                              !vipLevelDraft ||
-                              vipReferralQ.loading
-                            }
-                            onClick={() => setPendingVipAction({
-                              kind: "assign",
-                              user: selected,
-                              level: Number(vipLevelDraft),
-                            })}
-                          >
-                            Assign override
-                          </Button>
-                          {vipReferralQ.data?.vip?.manualOverride ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled={
-                                !provider.clearUserVipOverride || vipReferralQ.loading
-                              }
-                              onClick={() => setPendingVipAction({
-                                kind: "clear",
-                                user: selected,
-                                level: null,
-                              })}
-                            >
-                              Clear override
-                            </Button>
-                          ) : null}
-                          {vipActionMessage ? (
-                            <p role="status" className="w-full text-xs text-muted-foreground">
-                              {vipActionMessage}
-                            </p>
-                          ) : null}
-                        </div>
-                      ) : null}
-                    </div>
-                  ),
-                },
                 {
                   id: "entitlements",
                   title: "Entitlements & flags",
@@ -933,37 +948,58 @@ function Inner() {
       {pendingVipAction ? (
         <ConsequentialActionDialog
           open
-          onOpenChange={(open) => { if (!open) setPendingVipAction(null); }}
+          onOpenChange={(open) => {
+            if (!open) setPendingVipAction(null);
+          }}
           title={pendingVipAction.kind === "assign" ? "Assign VIP override" : "Clear VIP override"}
-          description={pendingVipAction.kind === "clear"
-            ? "Clears the manual override flag. The current tier stays in place; future automatic qualification resumes."
-            : "Sets the customer's current VIP tier through an audited manual override."}
+          description={
+            pendingVipAction.kind === "clear"
+              ? "Clears the manual override flag. The current tier stays in place; future automatic qualification resumes."
+              : "Sets the customer's current VIP tier through an audited manual override."
+          }
           target={<span>{pendingVipAction.user.displayName}</span>}
           targetId={String(pendingVipAction.user.userCode ?? pendingVipAction.user.id)}
           action={pendingVipAction.kind === "assign" ? "vip.override.assign" : "vip.override.clear"}
           permission="users.entitlements"
-          currentState={<StatusBadge tone="info">VIP {vipReferralQ.data?.vip?.level ?? "unassigned"}</StatusBadge>}
-          proposedState={<StatusBadge tone="warning">
-            {pendingVipAction.kind === "assign" ? "VIP " + pendingVipAction.level + " override" : "Override flag cleared"}
-          </StatusBadge>}
+          currentState={
+            <StatusBadge tone="info">
+              VIP {vipReferralQ.data?.vip?.level ?? "unassigned"}
+            </StatusBadge>
+          }
+          proposedState={
+            <StatusBadge tone="warning">
+              {pendingVipAction.kind === "assign"
+                ? "VIP " + pendingVipAction.level + " override"
+                : "Override flag cleared"}
+            </StatusBadge>
+          }
           submitLabel={pendingVipAction.kind === "assign" ? "Assign override" : "Clear override"}
-          successMessage={pendingVipAction.kind === "assign" ? "VIP override saved" : "VIP override cleared"}
+          successMessage={
+            pendingVipAction.kind === "assign" ? "VIP override saved" : "VIP override cleared"
+          }
           onConfirm={async (reason) => {
             const userCode = Number(pendingVipAction.user.userCode);
-            const result = pendingVipAction.kind === "assign"
-              ? await provider.assignUserVip!(userCode, pendingVipAction.level!, reason)
-              : await provider.clearUserVipOverride!(userCode, reason);
+            const result =
+              pendingVipAction.kind === "assign"
+                ? await provider.assignUserVip!(userCode, pendingVipAction.level!, reason)
+                : await provider.clearUserVipOverride!(userCode, reason);
             const readback = await provider.getVipReferralCustomer!(userCode);
-            const verified = pendingVipAction.kind === "assign"
-              ? readback.vip?.manualOverride === true && readback.vip.level === pendingVipAction.level
-              : readback.vip?.manualOverride === false &&
-                readback.vip.level === (vipReferralQ.data?.vip?.level ?? 0);
+            const verified =
+              pendingVipAction.kind === "assign"
+                ? readback.vip?.manualOverride === true &&
+                  readback.vip.level === pendingVipAction.level
+                : readback.vip?.manualOverride === false &&
+                  readback.vip.level === (vipReferralQ.data?.vip?.level ?? 0);
             if (!verified) {
-              throw new Error("Mutation was accepted but profile readback did not confirm it. Refresh before retrying.");
+              throw new Error(
+                "Mutation was accepted but profile readback did not confirm it. Refresh before retrying.",
+              );
             }
-            setVipActionMessage(pendingVipAction.kind === "assign"
-              ? "VIP override saved and confirmed by profile readback."
-              : "Override clear confirmed; current tier retained and automatic qualification resumed.");
+            setVipActionMessage(
+              pendingVipAction.kind === "assign"
+                ? "VIP override saved and confirmed by profile readback."
+                : "Override clear confirmed; current tier retained and automatic qualification resumed.",
+            );
             return result;
           }}
           onSuccess={() => {
@@ -1019,12 +1055,10 @@ function PageShell({
   children,
   restrictedCount,
   researchCount,
-  total,
 }: {
   children: React.ReactNode;
   restrictedCount?: number;
   researchCount?: number;
-  total?: number;
 }) {
   return (
     <div className="flex flex-col gap-6">
@@ -1034,11 +1068,6 @@ function PageShell({
         badges={
           <>
             <ProviderBadge />
-            {total !== undefined ? (
-              <StatusBadge tone="info" dot={false}>
-                {total} total
-              </StatusBadge>
-            ) : null}
             {restrictedCount ? (
               <StatusBadge tone="destructive" dot={false}>
                 {restrictedCount} non-active
@@ -1325,9 +1354,10 @@ function FinancialCorrectionForm({
   const [error, setError] = useState<string | null>(null);
   const idempotencyKey = useRef<string | null>(null);
   const optionsQ = useAdminQuery(
-    (p) => user && session.can("ledger.adjust") && p.getFinancialCorrectionOptions
-      ? p.getFinancialCorrectionOptions(user.id)
-      : Promise.resolve([]),
+    (p) =>
+      user && session.can("ledger.adjust") && p.getFinancialCorrectionOptions
+        ? p.getFinancialCorrectionOptions(user.id)
+        : Promise.resolve([]),
     [user?.id, session.roleId],
   );
   const availableScopes = useMemo(
@@ -1340,12 +1370,14 @@ function FinancialCorrectionForm({
   );
   useEffect(() => {
     if (!availableScopes.includes(scope)) {
-      setScope(availableScopes.includes("MAIN") ? "MAIN" : availableScopes[0] ?? "MAIN");
+      setScope(availableScopes.includes("MAIN") ? "MAIN" : (availableScopes[0] ?? "MAIN"));
     }
   }, [availableScopes, scope]);
   useEffect(() => {
     if (!scopedAssets.some((item) => item.asset === asset)) {
-      setAsset(scopedAssets.find((item) => item.asset === "USDT")?.asset ?? scopedAssets[0]?.asset ?? "");
+      setAsset(
+        scopedAssets.find((item) => item.asset === "USDT")?.asset ?? scopedAssets[0]?.asset ?? "",
+      );
     }
   }, [asset, scopedAssets]);
   return (
@@ -1356,7 +1388,14 @@ function FinancialCorrectionForm({
       title="Adjust user balance"
       description="Posts a direct balance adjustment to the selected ledger account, with an administrator audit record."
       submitLabel={direction === "CREDIT" ? "Credit account" : "Debit account"}
-      submitDisabled={!user || !session.can("ledger.adjust") || !provider.applyFinancialCorrection || optionsQ.loading || !!optionsQ.error || !scopedAssets.some((item) => item.asset === asset)}
+      submitDisabled={
+        !user ||
+        !session.can("ledger.adjust") ||
+        !provider.applyFinancialCorrection ||
+        optionsQ.loading ||
+        !!optionsQ.error ||
+        !scopedAssets.some((item) => item.asset === asset)
+      }
       testId="financial-correction-form"
       onSubmit={async () => {
         if (!user || !provider.applyFinancialCorrection) return;
@@ -1408,12 +1447,19 @@ function FinancialCorrectionForm({
           list="financial-correction-assets"
           value={asset}
           disabled={optionsQ.loading || !!optionsQ.error || scopedAssets.length === 0}
-          placeholder={scopedAssets.length ? "Search configured assets" : "No eligible configured asset"}
-          onChange={(e) => { idempotencyKey.current = null; setAsset(e.target.value.trim().toUpperCase()); }}
+          placeholder={
+            scopedAssets.length ? "Search configured assets" : "No eligible configured asset"
+          }
+          onChange={(e) => {
+            idempotencyKey.current = null;
+            setAsset(e.target.value.trim().toUpperCase());
+          }}
           className="h-9 rounded-md border border-input bg-background px-3 text-sm"
         />
         <datalist id="financial-correction-assets">
-          {scopedAssets.map((item) => <option key={item.asset} value={item.asset} label={item.name} />)}
+          {scopedAssets.map((item) => (
+            <option key={item.asset} value={item.asset} label={item.name} />
+          ))}
         </datalist>
       </label>
       <label className="flex flex-col gap-1 text-xs">
@@ -1434,15 +1480,41 @@ function FinancialCorrectionForm({
         <select
           value={availableScopes.includes(scope) ? scope : ""}
           disabled={optionsQ.loading || !!optionsQ.error || availableScopes.length === 0}
-          onChange={(e) => { idempotencyKey.current = null; setScope(e.target.value as typeof scope); }}
+          onChange={(e) => {
+            idempotencyKey.current = null;
+            setScope(e.target.value as typeof scope);
+          }}
           className="h-9 rounded-md border border-input bg-background px-3 text-sm"
         >
-          {availableScopes.map((value) => <option key={value} value={value}>{{ MAIN: "MAIN · Funding", SPOT: "SPOT · Spot", MARGIN: "MARGIN · Margin", BINARY: "BINARY · Options", FINANCE: "FINANCE · Finance" }[value]}</option>)}
+          {availableScopes.map((value) => (
+            <option key={value} value={value}>
+              {
+                {
+                  MAIN: "MAIN · Funding",
+                  SPOT: "SPOT · Spot",
+                  MARGIN: "MARGIN · Margin",
+                  BINARY: "BINARY · Options",
+                  FINANCE: "FINANCE · Finance",
+                }[value]
+              }
+            </option>
+          ))}
         </select>
       </label>
-      {optionsQ.loading ? <p className="text-xs text-muted-foreground">Loading eligible customer accounts…</p> : null}
-      {optionsQ.error ? <p role="alert" className="text-xs text-destructive">Could not load eligible account assets. Refresh the customer detail before adjusting a balance.</p> : null}
-      {!optionsQ.loading && !optionsQ.error && scopedAssets.length === 0 ? <p className="text-xs text-muted-foreground">No active customer account is available for this scope and configured asset.</p> : null}
+      {optionsQ.loading ? (
+        <p className="text-xs text-muted-foreground">Loading eligible customer accounts…</p>
+      ) : null}
+      {optionsQ.error ? (
+        <p role="alert" className="text-xs text-destructive">
+          Could not load eligible account assets. Refresh the customer detail before adjusting a
+          balance.
+        </p>
+      ) : null}
+      {!optionsQ.loading && !optionsQ.error && scopedAssets.length === 0 ? (
+        <p className="text-xs text-muted-foreground">
+          No active customer account is available for this scope and configured asset.
+        </p>
+      ) : null}
       <label className="flex flex-col gap-1 text-xs">
         Direction
         <select

@@ -73,7 +73,7 @@ function Inner() {
   const maintenance = pairs.filter((p) => p.maintenance).length;
 
   return (
-    <Shell total={pairs.length} maintenance={maintenance} open={open}>
+    <Shell maintenance={maintenance} open={open}>
       <div className="rounded-md border border-border/60 bg-background/40 p-3 text-xs text-muted-foreground">
         <span className="mono text-primary">Public labels</span> are{" "}
         <span className="text-foreground">Long</span> and{" "}
@@ -108,12 +108,10 @@ function Inner() {
 
 function Shell({
   children,
-  total,
   maintenance,
   open,
 }: {
   children: React.ReactNode;
-  total?: number;
   maintenance?: number;
   open?: number;
 }) {
@@ -125,11 +123,6 @@ function Shell({
         badges={
           <>
             <ProviderBadge />
-            {total !== undefined ? (
-              <StatusBadge tone="info" dot={false}>
-                {total} pairs
-              </StatusBadge>
-            ) : null}
             {maintenance ? (
               <StatusBadge tone="warning" dot={false}>
                 {maintenance} maintenance

@@ -174,7 +174,7 @@ function Inner() {
   ];
 
   return (
-    <Shell total={nets.length} enabled={nets.filter((n) => n.enabled).length}>
+    <Shell>
       <div className="flex flex-wrap gap-2">
         <Button
           variant="outline"
@@ -771,15 +771,7 @@ function Inner() {
   );
 }
 
-function Shell({
-  children,
-  total,
-  enabled,
-}: {
-  children: React.ReactNode;
-  total?: number;
-  enabled?: number;
-}) {
+function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -788,16 +780,6 @@ function Shell({
         badges={
           <>
             <ProviderBadge />
-            {total !== undefined ? (
-              <StatusBadge tone="info" dot={false}>
-                {total} networks
-              </StatusBadge>
-            ) : null}
-            {enabled !== undefined ? (
-              <StatusBadge tone="success" dot={false}>
-                {enabled} enabled
-              </StatusBadge>
-            ) : null}
           </>
         }
       />

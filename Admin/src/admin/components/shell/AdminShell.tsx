@@ -6,7 +6,6 @@ import { ROLE_LIST } from "@/admin/config/roles";
 import { EnvironmentBadge } from "@/admin/components/EnvironmentBadge";
 import { ProviderBadge } from "@/admin/components/ProviderBadge";
 import { useAdminData, useAdminQuery } from "@/admin/data/context";
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Bell, ShieldAlert } from "lucide-react";
 import type { ReactNode } from "react";
 import { Fragment } from "react";
@@ -305,28 +304,6 @@ function DesktopSidebar() {
   );
 }
 
-function MobileSessionControls() {
-  const [open, setOpen] = useState(false);
-  return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <button
-          aria-label="Open session controls"
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-border/60"
-        >
-          <ShieldAlert className="h-4 w-4" />
-        </button>
-      </SheetTrigger>
-      <SheetContent side="right" className="w-72 bg-sidebar p-0">
-        <SheetTitle className="sr-only">Session controls</SheetTitle>
-        <div className="flex h-full flex-col justify-end">
-          <SessionControls />
-        </div>
-      </SheetContent>
-    </Sheet>
-  );
-}
-
 function TopBar({ mobileNav }: { mobileNav: ReactNode }) {
   const s = useAdminSession();
   const pathname = useRouterState({ select: (st) => st.location.pathname });
@@ -379,7 +356,6 @@ export function AdminShell({ children }: { children: ReactNode }) {
           mobileNav={
             <>
               <MobileWorkspaceSelector />
-              <MobileSessionControls />
             </>
           }
         />

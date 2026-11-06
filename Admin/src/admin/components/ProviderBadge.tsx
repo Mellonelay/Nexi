@@ -2,21 +2,11 @@ import { useAdminData } from "@/admin/data/context";
 import { StatusBadge } from "@/admin/components/StatusBadge";
 
 /**
- * Provider-state badge.
- *
- * Renders a truthful label for the active AdminDataProvider. The live label
- * describes configured provider mode, not successful connectivity.
- *
- * The identity method is the live-provider boundary. This also keeps injected
- * live providers consistent with the session provider and avoids an
- * instanceof check that would misclassify test or embedded providers.
+ * Provider-state indicator for explicit local/demo mode.
+ * Live API mode is the production default and is intentionally not shown.
  */
 export function ProviderBadge() {
   const provider = useAdminData();
-  const isLive = Boolean(provider.getAdminIdentity);
-  return isLive ? (
-    <StatusBadge tone="info">Configured live Admin API</StatusBadge>
-  ) : (
-    <StatusBadge tone="warning">Local/demo data</StatusBadge>
-  );
+  if (provider.getAdminIdentity) return null;
+  return <StatusBadge tone="warning">Local/demo data</StatusBadge>;
 }
