@@ -30,11 +30,12 @@ const nextConfig = {
 };
 
 module.exports = withSentryConfig(nextConfig, {
-  silent: true,
+  silent: false,
   hideSourceMaps: true,
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN,
+  useRunAfterProductionCompileHook: true,
   release: {
     name: process.env.SENTRY_RELEASE,
     create: false,
