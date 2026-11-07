@@ -84,9 +84,11 @@ Product configuration remains Admin-controlled **where existing backend authorit
 **Stop condition for this documentation slice:** source-mapped route disposition and diagrams exist, preserve existing capabilities and identify all unproven contracts. No Admin build, deployment, DB operation, protected data edit, service restart or Git fan-in in this docs-only slice.
 
 
-## Current source reconciliation — 2026-11-06
+## Current source reconciliation — 2026-11-07
 
-The historical inventory above must not be read as the current sidebar. The current source working tree based on `main` `e37bc2364b77` (2026-11-06) has eight workspaces, 21 primary visible destinations and a contextual guarded Sandbox. Clients contains KYC Reviews and customer Security & Sessions; the `/users` customer detail also owns VIP/referral profile, referral reward decision, policy editing and audited manual VIP override/clear controls. Do not restore standalone Sessions or hidden legacy destinations. Public App Settings consolidates route/navigation, markets/quotes, content/notices, Contact Us and advanced feature controls while preserving provider/backend ownership.
+Canonical three-surface topology: use `@nexi-graphify-live` backed by `/srv/nexi/graphify-live/20261107/merged-graph.json`; exact SHA/counts and coverage are in [the Graphify coverage report](../../docs/architecture/NEXI_GRAPHIFY_COVERAGE_20261107.md). This map is source ownership evidence, not browser/runtime proof.
+
+The historical inventory above must not be read as the current sidebar. Source main `27b78bb6f74a0ddb44e9121b15fdbb7c9f1c3c32` (2026-11-07) has eight workspaces, 21 direct NAV_GROUPS destinations and 34 named page files; Sandbox remains contextual and is not a direct navigation item. Clients contains KYC Reviews and customer Security & Sessions; the `/users` customer detail also owns VIP/referral profile, referral reward decision, policy editing and audited manual VIP override/clear controls. Do not restore standalone Sessions or hidden legacy destinations. Public App Settings consolidates route/navigation, markets/quotes, content/notices, Contact Us and advanced feature controls while preserving provider/backend ownership.
 
 Source status by current owner requirement:
 

@@ -1,3 +1,9 @@
+# Cross-surface Graphify reference
+
+For Public-to-Backend-to-Admin relationships, use the canonical unified graph and local MCP route in the root `AGENTS.md` section **CANONICAL CROSS-SURFACE GRAPH**. Verified 2026-11-07 graph: `/srv/nexi/graphify-live/20261107/merged-graph.json`, 5,953 nodes / 17,481 edges / 208 communities, SHA-256 `0c18266bab126d924e5e77acde7e940e004534a03a0bf033785fdeecf5f8337d`; MCP alias `@nexi-graphify-live`. See `../docs/architecture/NEXI_GRAPHIFY_COVERAGE_20261107.md`.
+
+This frontend's local `graphify-out/` is a checkout-level view only; it is not the unified graph. A local `graphify update .` does not rebuild the multi-root graph. Graphify is topology/reference evidence, not runtime proof.
+
 # CURRENT OWNER BUILD/TOOLCHAIN OVERRIDE — 2026-10-25
 
 The only Public build is `/srv/nexi/public/current/.next`, built from `/srv/nexi/public/current` using its symlink to `/srv/nexi/public/shared/node_modules`. No worktrees, isolated copies, dev/preview builds, `npm install` or `npm ci` in the source checkout. Use pinned `/opt/nexi/runtime/node-v24.21.0/bin/node` and its npm path for next authorized build and runtime service; verify systemd ExecStart before claiming alignment. First map design and contracts across NestJS/Admin consumers; use framework-local Next CLI (`next typegen`, diagnostics) where relevant; tests verify implementation, not determine architecture by trial and error. Reuse unchanged proof. All three services were intentionally stopped by the owner for maintenance on 2026-10-25; do not infer active status from historical receipts.

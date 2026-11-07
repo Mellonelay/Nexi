@@ -1,3 +1,9 @@
+# Cross-surface Graphify reference
+
+For Public-to-Backend-to-Admin relationships, use the canonical unified graph and MCP route in root `AGENTS.md` under **CANONICAL CROSS-SURFACE GRAPH**. Verified 2026-11-07 graph: `/srv/nexi/graphify-live/20261107/merged-graph.json`, 5,953 nodes / 17,481 edges / 208 communities, SHA-256 `0c18266bab126d924e5e77acde7e940e004534a03a0bf033785fdeecf5f8337d`; MCP alias `@nexi-graphify-live`. See `../docs/architecture/NEXI_GRAPHIFY_COVERAGE_20261107.md`.
+
+Backend-local Graphify CLI output is scoped to its current checkout. Do not treat `graphify update .` as a rebuild of the unified graph. Graphify is topology evidence only; inspect source and focused tests/runtime for behavior.
+
 ## CANONICAL BACKEND BUILD — 2026-10-23
 
 Follow the root `AGENTS.md` **Canonical Worker-0 Build and Release Contract** for the shared release sequence. Backend dependency authority is `backend/package.json` plus `backend/package-lock.json`; `/srv/nexi/backend` is its only runtime/build working tree, `/srv/nexi/backend/dist` its build output, and `nexi-api.service` its service. `/srv/nexi/backend/node_modules` must remain a symlink to `/srv/nexi/backend/shared/node_modules`. The canonical checkout's `backend/node_modules` is now a symlink to `/srv/nexi/backend/shared/node_modules` (verified 2026-10-25). Preserve this link; never install into the checkout. Build only in `/srv/nexi/backend` using the one shared Backend store and pinned Node 24.21.0.
@@ -61,12 +67,12 @@ The VPS target uses the existing Prisma better-sqlite3 adapter and local financi
 
 ## High-impact change workflow
 Before changing high-centrality nodes such as `D1FinancialCommandGateway`, `AdminService`, `EventOutboxService`, realtime gateways, or shared financial services:
-1. refresh Graphify first if current source is newer than the graph;
+1. choose the graph whose scope matches the question: use the canonical unified MCP from root `AGENTS.md` for cross-surface impact, or the Backend-local graph for Backend-only impact; verify source snapshot freshness;
 2. run bounded `affected` and/or `path`/`explain` analysis;
 3. inspect exact current source;
 4. make the smallest coherent change;
 5. run focused validation;
-6. refresh graph once after the batch and recheck relevant impact/path only.
+6. refresh only the graph scope that changed, once after the batch, then recheck relevant impact/path.
 
 Graphify is not proof. Direct source and focused tests/runtime decide correctness.
 ## Remaining join requirements

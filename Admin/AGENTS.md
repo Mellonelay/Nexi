@@ -1,3 +1,9 @@
+# Cross-surface Graphify reference
+
+For Public-to-Backend-to-Admin relationships, use the canonical unified graph and MCP route in root `AGENTS.md` under **CANONICAL CROSS-SURFACE GRAPH**. Verified 2026-11-07 graph: `/srv/nexi/graphify-live/20261107/merged-graph.json`, 5,953 nodes / 17,481 edges / 208 communities, SHA-256 `0c18266bab126d924e5e77acde7e940e004534a03a0bf033785fdeecf5f8337d`; MCP alias `@nexi-graphify-live`. See `../docs/architecture/NEXI_GRAPHIFY_COVERAGE_20261107.md`.
+
+Admin-local graph files and CLI outputs are scoped snapshots; do not use the old 1,376-node Admin graph as the current unified graph. A local `graphify update . --no-cluster` updates only its working-tree graph, not the unified multi-root graph. Graphify is topology evidence, not runtime or behavior proof.
+
 # CURRENT OWNER BUILD/TOOLCHAIN OVERRIDE — 2026-10-25
 
 The single Admin output is `/srv/nexi/admin/current`; the only Admin dependencies live at `/srv/nexi/admin/shared/node_modules`, linked from the canonical `Admin/` source. No worktrees, duplicate installs, isolated build roots or second generated `.output`. Build only with the existing pinned `corepack pnpm@12.14.0` and `NEXI_ADMIN_OUTPUT_DIR=/srv/nexi/admin/current` command below. Pin the Admin runtime service to `/opt/nexi/runtime/node-v24.21.0/bin/node` when authorized and check effective ExecStart before claiming alignment. First derive design from installed TanStack Start/Router/Query, Vite/Nitro, current NexiAdminApiProvider and NestJS contracts; only then edit and run focused checks. Reuse unchanged evidence. All three services were intentionally stopped by the owner for maintenance on 2026-10-25.
@@ -58,8 +64,7 @@ Do not invent persistence for public routes, banners, localization, exposure, re
 - Provider mode may remain `mock` or `live`, but production-path work must exercise `live` explicitly.
 
 ## Contract tools
-Use the current Admin Graphify graph for provider/route blast radius. Current graph: 1,376 nodes / 3,842 edges / 105 communities; key hubs include `AdminDataProvider`, `NexiAdminApiProvider`, `LocalMockAdminProvider`, `useAdminQuery`, and `useAdminSession`.
-After coherent edits run `graphify update . --no-cluster`; use `affected`, `path`, and `explain` before broad provider changes.
+Use the canonical unified Graphify MCP from root `AGENTS.md` for cross-surface provider/route impact. Use an Admin-local graph only for an explicitly Admin-scoped question, and verify its source revision before relying on it. After coherent Admin-only edits, `graphify update . --no-cluster` updates the local working-tree graph; it does not refresh the unified multi-root graph. Use bounded `affected`, `path`, and `explain` queries before broad provider changes.
 Use concrete VM controller/DTO/OpenAPI material with API Documentation Checker and API Impact Mapper. Progress summaries are not contract evidence.
 
 ## Validation
