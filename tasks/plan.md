@@ -1,4 +1,28 @@
-# CURRENT PLAN — NEXI end-to-end browser acceptance v2 (2026-11-04)
+# CURRENT PLAN — NEXI task-state and capability continuity (2026-11-08)
+
+1. **Authority:** use root/surface `AGENTS.md`, `NEXI_CURRENT_STATE.md` and current dated evidence; treat old task entries as historical when superseded. Older `CURRENT` headings below are time-scoped snapshots, not current task pointers.
+2. **Repository:** verify local/remote Git before edits. At intake, main refs matched `184b7a5892a85bc8c09cac5ec0ec73c110d54fa3`; zero tracked changes and 54 untracked backups/`.graphifyrc` were present and preserved.
+3. **Context/Evolver:** use the existing owner `@nexi-evolver` session via `/usr/local/bin/nexi-mcpc`; check live status and full five-field preflight, search candidates explicitly after abstention, capture only scoped `verified:false` learning, and read back the returned candidate. Never self-promote or treat candidate memory as permission.
+4. **Task records:** put the latest verified task frontier first in `tasks/todo.md` and `tasks/plan.md`; label older campaign details historical without deleting receipts or changing their outcomes.
+5. **Closeout:** inspect only the intended documentation diff, run `git diff --check`, commit only task documents, push to `origin/main`, then verify remote SHA and tracked state. Do not build, test, deploy, restart services, alter databases/queues/financial state or delete historical backups.
+
+## CURRENT 2026-11-08 — final task-state reconciliation
+
+- [x] Checked local `main`, local `origin/main`, and GitHub main; all matched `184b7a5892a85bc8c09cac5ec0ec73c110d54fa3` at intake.
+- [x] Classified worktree: zero staged/unstaged tracked edits; 54 untracked items (timestamped backups plus `.graphifyrc`); preserved all. SentinelX edit tooling created additional timestamped backups while making this update; those are also preserved.
+- [x] Read ChatGPT-side bootstrap v1.4.1 sources and selected SentinelX Work Controller/Adaptive Work/Capability Evolver/VM Kernel/Work Fast Kernel/Fast Coding instructions; used Vibe documentation-sync and evidence-normalization guidance.
+- [x] Reused existing owner-scoped `@nexi-evolver`; status reported Evolver `0.5.0-candidate`, zero lessons/receipts, no production verifier. Preflight abstained and candidate search was empty.
+- [x] Captured and read back candidate `exp_6f2dbb4a986940c68b6c` as `candidate`, `verified:false`, `deterministic:false`; no promotion/acceptance claim.
+- **Closeout rule:** this task is complete only after the task-document commit is pushed and the resulting remote SHA and tracked state are verified.
+- [ ] Keep product browser/economic/privileged acceptance at the statuses and explicit gates in current acceptance evidence; this documentation task does not change them.
+
+Runtime facts above are scoped to their cited state snapshot; this task did not repeat service or API readiness checks. No code, deployment, database, financial or queue state changed.
+
+---
+
+## HISTORICAL PLAN — NEXI end-to-end browser acceptance v2 (2026-11-04; current frontier above)
+
+### Historical campaign plan — NEXI end-to-end browser acceptance v2 (2026-11-04)
 
 Task ID: NEXI_BROWSER_ACCEPTANCE_V2_20261104
 Execution mode: test/observe/record first; repair only after the feasible Phase A sweep; no deployment authorization.

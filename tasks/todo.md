@@ -1,4 +1,22 @@
-# CURRENT TASK — NEXI end-to-end browser acceptance v2 (2026-11-04)
+# CURRENT TASK FRONTIER — NEXI task-state and capability continuity (2026-11-08)
+
+**Authority:** This block replaces the stale 2026-11-04 campaign title as the current task pointer. Follow repository root/surface `AGENTS.md`, `NEXI_CURRENT_STATE.md`, and the relevant dated evidence; preserve dated receipts as history. Older `CURRENT` headings below are time-scoped snapshots, not current task pointers.
+
+**Git check at intake:** local `main`, local `origin/main`, and GitHub `refs/heads/main` matched `184b7a5892a85bc8c09cac5ec0ec73c110d54fa3`. There were **0 staged/unstaged tracked changes** and **54 untracked items**: timestamped `.bak.*` snapshots plus `.graphifyrc`. They were inspected by name and preserved; no application/source edits were found. Additional SentinelX safe-edit backups created during this update were also preserved.
+
+**Current pointers from the checked-in 2026-11-08 state snapshot:** application-source snapshot `27b78bb6f74a0ddb44e9121b15fdbb7c9f1c3c32`; separately recorded deployed Backend/Admin markers `45a857de6a4d4101fc3f42738eb7d83f52bd62eb` and Public marker `27b78bb6f74a0ddb44e9121b15fdbb7c9f1c3c32`. The state document records services active and API readiness at its check time; that runtime check was not independently repeated in this task. The canonical static merged Graphify snapshot remains `/srv/nexi/graphify-live/20261107/merged-graph.json`, built from separate Frontend, Backend and Admin current-main graphs and then merged; the detailed counts, extraction scope and limitations are in `docs/architecture/NEXI_GRAPHIFY_COVERAGE_20261107.md`. Do not treat graph edges as runtime proof.
+
+**Completed in this task:** Read the current and complete ChatGPT-side bootstrap v1.4.1 sources and routing master template; read SentinelX Work Controller, Adaptive Work, Capability Evolver, VM Kernel, Work Fast Kernel and Fast Coding instructions; checked the repository frontier and existing owner-scoped `@nexi-evolver` session; retrieved the documentation-sync and evidence-normalization workflows. The existing `@nexi-evolver` was run as `mellonelay1999`. Live status: Evolver server `0.5.0-rc.1`, runtime `0.5.0-candidate`, zero lessons/receipts, production verifier not configured. Scoped preflight abstained; candidate search was empty. One **unverified, non-deterministic procedure candidate** was captured and read back: `exp_6f2dbb4a986940c68b6c`. It is advisory only and is not promoted or accepted.
+
+**Documentation frontier:** Nov 7 documentation commits through `184b7a5` align the root and Frontend/Backend/Admin guidance, Admin docs and current operational authority with the unified Graphify pointer. This task corrects the stale task-index heading and records the actual Git/Evolver check. No production/runtime or application behavior was changed.
+
+**Separate product acceptance remains open:** use the current state, acceptance matrix and dated receipts for exact status. Current-source browser/mobile coverage, lower-role Admin denial, authenticated financial/privileged flows, realtime behavior and final owner acceptance must retain their recorded classifications and authorization gates. This documentation/Evolver update is not new product acceptance, deployment, test or release authorization.
+
+**Stop condition:** task-state and Evolver continuity updates are complete after the reviewed docs commit is pushed. Preserve all historical records and untracked backups; do not resume browser or economic operations from this checkpoint alone.
+
+---
+
+## HISTORICAL CAMPAIGN SPECIFICATION — NEXI end-to-end browser acceptance v2 (2026-11-04; current frontier above)
 
 Task ID: NEXI_BROWSER_ACCEPTANCE_V2_20261104
 Authority: owner directive v2 and current repository/live source. This registers the work; it does not claim browser acceptance has started or passed.
