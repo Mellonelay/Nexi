@@ -39,7 +39,7 @@ flowchart LR
 | VIP/referral | Settings/Profile | `referral-vip/` | `users`, `audit` | account attribution and reward history, Ledger rewards |
 | Communications | Messages, Support, Learn, Announcements | `communications/`, `notification/` | `messages`, `support`, `learn`, `announcements`, `notifications` | SQLite persistence, event delivery/read state |
 | Frontend governance | Public routes/components | `admin/`, configuration services | `frontend-control`, `feature-flags`, `maintenance`, `navigation` | explicit audited configuration; Public readback |
-| Monitoring | Browser instrumentation | `instrument.ts`, `observability/` | `src/sentry.ts` | Sentry telemetry only; SQLite/Ledger remain financial truth |
+| Monitoring | Browser instrumentation | `instrument.ts`, `observability/` | `src/sentry.ts` | Sentry telemetry plus local Jaeger trace backend; production app trace emission is not established; SQLite/Ledger remain financial truth |
 
 ## Acceptance/evidence separation
 
@@ -50,3 +50,5 @@ The 92-table/11,802,372-row export and the 2026-10-17 empty-SQLite/D1 sample are
 ## Ownership routing
 
 Backend domain and contracts: [Backend](../backend/README.md). VPS components/data flow: [Runtime map](NEXI_VPS_BACKEND_RUNTIME.md). User behavior/design: [Frontend](../frontend/README.md). Admin permission/control: [Admin](../admin/README.md). Release/telemetry: [Sentry](../operations/NEXI_SENTRY_OBSERVABILITY.md). Older dated phase and production-program records are historical only.
+
+Current static cross-surface request/context coverage and its exact proof boundaries: [Graphify coverage snapshot](NEXI_GRAPHIFY_COVERAGE_20261107.md). It complements this feature map; it is not runtime traffic or browser proof.

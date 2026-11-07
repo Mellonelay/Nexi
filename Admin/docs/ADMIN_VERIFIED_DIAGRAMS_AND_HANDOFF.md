@@ -1,6 +1,6 @@
 # NEXI Admin — Verified Diagrams and Execution Boundary
 
-**2026-11-01 supersession:** This is an October 21 diagram/source snapshot, not current route authority. Today `NAV_GROUPS` has **31 sidebar entries**; contextual `/sandbox` is the 32nd functional destination. `/support` is retired-ticket compatibility and `/reconciliation` remains hidden/unsupported. Preserve historical diagrams below as originally observed. Current acceptance: [113 owner requirements + corrected 32-functional Admin overlay](../../docs/quality/NEXI_113_PUBLIC_ADMIN_ACCEPTANCE_20261101.md).
+**Route-count chronology (verified 2026-11-07):** This October 21 diagram/source snapshot is not current route authority. The 31-sidebar + contextual `/sandbox` count was valid for Nov 1 source `99a460a33d51a05a96ae669aee167fc866723021`; deployed Admin release `45a857de6a4d4101fc3f42738eb7d83f52bd62eb` and current `main` `27b78bb6f74a0ddb44e9121b15fdbb7c9f1c3c32` each have 21 direct `NAV_GROUPS` destinations in eight groups and 34 named page files. `/sandbox` is contextual, not a sidebar destination; `/support` is compatibility-only and `/reconciliation` hidden/unsupported. A 24-route count is not established by `NAV_GROUPS`. Preserve diagrams as historically observed. Current acceptance criteria are dated [here](../../docs/quality/NEXI_113_PUBLIC_ADMIN_ACCEPTANCE_20261101.md).
 
 Status: DESIGN / DOCS ONLY — 2026-10-21. Source checkpoint: `Mellonelay/Nexi@6da08471ef200b6cadf96ef3d49ed85fc0f12fc4`, corroborated by current Worker-0 HEAD/origin and Graphify indexed commit. Not implementation, deployment or browser verification.
 
@@ -46,7 +46,7 @@ flowchart LR
   WW -. "hidden/unavailable; future only" .-> R["/reconciliation"]
 ```
 
-Count: **33 sidebar destinations** in `navigation.ts`, plus one non-sidebar `/reconciliation` named route = **34** named functional file-route destinations, excluding `index.tsx` and `__root.tsx`. “Hide from navigation” does not mean delete or block an existing deep link. All useful backend capabilities and RBAC remain intact.
+**Historical October 21 snapshot only:** this diagram represented 33 sidebar destinations in `navigation.ts`, plus one non-sidebar `/reconciliation` named route (34 named functional file-route destinations, excluding `index.tsx` and `__root.tsx`). It is not the current navigation inventory. As verified on 2026-11-07, deployed Admin release `45a857de6a4d4101fc3f42738eb7d83f52bd62eb` and current `main` each have 21 direct `NAV_GROUPS` destinations across eight groups and 34 named page files. The other 13 named page files remain in source; absence from `NAV_GROUPS` does not delete their route files. “Hide from navigation” does not by itself prove a deep link is blocked.
 
 ## C. Proposed controlled Binary research lifecycle (not yet proven as an API)
 

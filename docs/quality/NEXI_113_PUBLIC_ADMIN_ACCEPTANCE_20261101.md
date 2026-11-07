@@ -12,19 +12,19 @@ This does not change the 113 requirements into runtime passes. In particular, NE
 
 The 113 original owner requirements are reproduced verbatim from Engineering Reference v4.0 `01_CHECKLIST_TRACEABILITY.md`: **15 domains; 72 P0 + 41 P1**. The original `Check-list.txt` is its normative upstream. No item may be declared passed solely because source exists, a static check ran, or an old version passed.
 
-**Public** testing is mobile-first: widths 320, 360, ~390, 412–430, short-height, bottom dock, safe areas, trading chart and touch interactions, plus tablet/desktop coverage. **Admin** testing is desktop-first: eight operator workspaces, contextual tabs, 31 current sidebar destinations plus contextual /sandbox (32 functional), direct URLs, refresh/back/forward, role-aware actions, data states and persisted readback; narrow Admin accessibility is secondary. The Admin route overlay below is supplemental, **not additional items in the canonical 113 count**.
+**Public** testing is mobile-first: widths 320, 360, ~390, 412–430, short-height, bottom dock, safe areas, trading chart and touch interactions, plus tablet/desktop coverage. **Admin** testing is desktop-first. The 2026-11-07 source check found 21 direct `NAV_GROUPS` destinations across eight workspaces and 34 named page route files on both deployed Admin release `45a857de6a4d4101fc3f42738eb7d83f52bd62eb` and `main` `27b78bb6f74a0ddb44e9121b15fdbb7c9f1c3c32`. Disposition all 34 named files; classify compatibility `/support` and hidden `/reconciliation` separately, and treat `/sandbox` as contextual rather than a sidebar item. Preserve the 31 + contextual `/sandbox` count as Nov 1 source history. Test direct URLs, refresh/back/forward, role-aware actions, data states and persisted readback; narrow Admin accessibility is secondary. The Admin route overlay below is supplemental, **not additional items in the canonical 113 count**.
 
 All rows start unchecked for the **new source release**. Existing accepted but untested financial exceptions remain `OWNER_ACCEPTED_UNTESTED` with their prior scope. No production financial, authentication, message-send or browser actions were performed here.
 
 ## Verified source and observed release markers
 
-| Surface | Marker observed from VM | Current source equals marker? |
+| Surface | Marker observed from VM (2026-11-07) | Current source `main` equals marker? |
 | --- | --- | --- |
-| Backend | `a72c3127ffc448215cc7a724c4f5f6ca6e593b1b` | No |
-| Public | `285738c9a0b9f423377067d2d1b2200c43c06473` | No |
-| Admin | `285738c9a0b9f423377067d2d1b2200c43c06473` | No |
+| Backend | `45a857de6a4d4101fc3f42738eb7d83f52bd62eb` | No (`main` is `27b78bb6f74a0ddb44e9121b15fdbb7c9f1c3c32`) |
+| Public | `27b78bb6f74a0ddb44e9121b15fdbb7c9f1c3c32` | Yes |
+| Admin | `45a857de6a4d4101fc3f42738eb7d83f52bd62eb` | No (`main` is `27b78bb6f74a0ddb44e9121b15fdbb7c9f1c3c32`) |
 
-**Release conflict:** The dated October 31 Admin Stage B browser receipt says Admin deployed release `737355124993705935f9aa56f743a9f1f61a2bf4`, whereas the current VM Admin marker reads `285738c9a0b9f423377067d2d1b2200c43c06473`. Verify actual running process/artifact identity before attributing the old Admin browser pass to today's deployment. Preserve the historical receipt unchanged.
+**2026-11-07 source/deployment status:** Graph/source review used Public release `27b78bb6f74a0ddb44e9121b15fdbb7c9f1c3c32` and Backend/Admin release `45a857de6a4d4101fc3f42738eb7d83f52bd62eb`; current GitHub `main` is `27b78bb6f74a0ddb44e9121b15fdbb7c9f1c3c32`. Public matches source; Backend/Admin do not. The Nov 1 32-route Admin browser receipt is for release `111a5010f04a6592c290b0b0bc93240ab0cec69b`; preserve it as dated evidence and do not reuse it as proof for the Nov 7 deployed Admin marker. Running-process, source and browser acceptance remain separate claims.
 
 **Provenance:** October 21 Admin TanStack route map; October 24 ticket retirement/Messages decision in the 377-message MindMap AI chronology; October 31 Codex support compatibility browser receipt; Library/Nexi 314-message successor chronology; 2026-11-01 navigation/route source. Historical conversations are decision evidence, not current runtime proof.
 
@@ -208,28 +208,48 @@ All rows start unchecked for the **new source release**. Existing accepted but u
 
 ## Admin desktop acceptance overlay (supplementary, not counted among 113)
 
-**2026-11-01 current-source correction:** `Admin/src/admin/config/navigation.ts` defines 31 role-filtered sidebar destinations. The contextual `/sandbox` is a 32nd functional operator destination. Retired `/support` and hidden `/reconciliation` are separate compatibility/unavailable checks. The October 21 33-sidebar snapshot was superseded by the October 24 owner decision to retire tickets and use Messages for customer–Admin chat; historical route files remain. Neither historical maps nor a named route file count proves current navigation or browser acceptance. The 113 criteria are preserved verbatim.
+**2026-11-01 source-count record (historical):** At source revision `99a460a33d51a05a96ae669aee167fc866723021`, `Admin/src/admin/config/navigation.ts` defined 31 role-filtered sidebar destinations; `/sandbox` was a contextual functional destination. The October 21 33-sidebar snapshot had already been superseded by the October 24 owner decision to retire tickets and use Messages for customer–Admin chat. **2026-11-07 source supersession:** deployed Admin release `45a857de6a4d4101fc3f42738eb7d83f52bd62eb` and current `main` `27b78bb6f74a0ddb44e9121b15fdbb7c9f1c3c32` each define 21 direct NAV_GROUPS destinations across eight groups and contain 34 named page route files. `/sandbox` is not a sidebar item; `/support` remains compatibility-only and `/reconciliation` hidden/unsupported. The 24-route count is not established by NAV_GROUPS. Named route files, navigation counts and browser acceptance are separate measures. The 113 criteria remain preserved verbatim.
 
 **Owner supersession details (October 24):** Ticket create/reply/lifecycle is retired. Public Support retains help topics and Admin-controlled Telegram/email contact settings; Messages owns authenticated customer–Admin conversations, history and authorized attachments. The `/support` compatibility URL and hidden `/reconciliation` are separate checks, not active ticket/reconciliation business workflows.
 
 The source-authored operator workspace inventory is drawn from `Admin/docs/OPERATOR_WORKSPACE_IMPLEMENTATION_MAP.md` and `Admin/docs/TANSTACK_ARCHITECTURE_AND_ROUTE_MAP.md`. The October 31 receipt confirms only eight-workspace navigation at 979×715, not 32 functional-route action/readback passes.
 
-| Operator workspace | Required destination URLs | Current-release browser status |
+### Current Admin source inventory — 2026-11-07 (not browser proof)
+
+| Operator workspace | Current direct `NAV_GROUPS` destinations | Current-release browser status |
 | --- | --- | --- |
 | Overview | `/overview` | PENDING |
-| Clients | `/users`, `/kyc`, `/sessions` | PENDING |
-| Trading | `/spot`, `/binary`, `/settlements`, `/exposure`, `/sandbox` | PENDING |
-| Wallet & Finance | `/wallets`, `/networks`, `/ledger`, `/deposits`, `/withdrawals` | PENDING |
+| Clients | `/users`, `/kyc` | PENDING |
+| Trading | `/binary`, `/settlements`, `/spot` | PENDING |
+| Wallet & Finance | `/networks`, `/deposits`, `/withdrawals`, `/ledger` | PENDING |
 | Markets | `/assets`, `/market-feeds` | PENDING |
 | Products | `/mining`, `/loans` | PENDING |
-| Communications | `/messages`, `/announcements`, `/learn`, `/notifications` | PENDING |
-| Administration & Settings | `/admins`, `/roles`, `/approvals`, `/audit`, `/frontend-control`, `/navigation`, `/localization`, `/feature-flags`, `/health`, `/maintenance` | PENDING |
+| Communications | `/messages`, `/notifications`, `/announcements`, `/learn` | PENDING |
+| Administration & Settings | `/frontend-control`, `/admins`, `/maintenance` | PENDING |
 
-**Compatibility-only:** `/support` remains a retired-ticket page linking to `/messages`, not a functional ticket workflow. **Hidden:** `/reconciliation` has no verified durable backend authority. Both are excluded from the **32 functional destinations**; 34 named route files exist excluding index/root.
+This is 21 direct navigation destinations across eight groups. The distinct named-file inventory has 34 page routes; all remain source routes even when absent from `NAV_GROUPS`.
+
+| Route file outside `NAV_GROUPS` | Classification / required disposition | Current-release browser status |
+| --- | --- | --- |
+| `/approvals` | Source route; absent from direct sidebar; verify direct/contextual access and role behavior | PENDING |
+| `/audit` | Source route; absent from direct sidebar; verify direct/contextual access and role behavior | PENDING |
+| `/exposure` | Source route; absent from direct sidebar; verify direct/contextual access and role behavior | PENDING |
+| `/feature-flags` | Source route; absent from direct sidebar; verify direct/contextual access and role behavior | PENDING |
+| `/health` | Source route; absent from direct sidebar; verify direct/contextual access and role behavior | PENDING |
+| `/localization` | Source route; absent from direct sidebar; verify direct/contextual access and role behavior | PENDING |
+| `/navigation` | Source route; absent from direct sidebar; verify direct/contextual access and role behavior | PENDING |
+| `/reconciliation` | Hidden/unsupported; verify its current direct-route disposition; no durable reconciliation authority is established | PENDING |
+| `/roles` | Source route; absent from direct sidebar; verify direct/contextual access and role behavior | PENDING |
+| `/sandbox` | Contextual Binary sandbox, not a sidebar destination | PENDING |
+| `/sessions` | Source route; absent from direct sidebar; verify direct/contextual access and role behavior | PENDING |
+| `/support` | Compatibility-only retired-ticket page linking to `/messages`; no ticket workflow | PENDING |
+| `/wallets` | Source route; absent from direct sidebar; verify direct/contextual access and role behavior | PENDING |
+
+The 2026-11-01 32-destination count is dated source history. It does not change the 113 canonical requirement count or establish current-release browser behavior.
 
 ### Common Admin desktop proof
 
-- [ ] Verify eight workspace entrypoints plus 31 sidebar destinations and contextual `/sandbox` (32 functional), permitted-role direct URL, refresh, back/forward and active contextual tab.
+- [ ] Verify all 21 current `NAV_GROUPS` destinations across eight workspaces; disposition all 34 named page route files, including contextual `/sandbox`, compatibility-only `/support`, and hidden/unsupported `/reconciliation`. Test permitted-role direct URL, refresh, back/forward and active contextual tab against the exact Admin release under test.
 - [ ] At ~979×715 and 1365×723 inspect density, tables, filters, selected-client detail, modal controls, desktop overflow and keyboard focus; a narrow viewport requires accessible fallback rather than Public-style mobile-first parity.
 - [ ] Verify authenticated role-sensitive actions against NestJS RBAC including a denied restricted-role request only with an existing authorized restricted identity.
 - [ ] Trace Admin provider → NestJS DTO/endpoint → durable readback → Public presentation for asset/network, Binary, Mining, Loan and notification/content configuration.
@@ -244,7 +264,7 @@ The source-authored operator workspace inventory is drawn from `Admin/docs/OPERA
 | `tasks/evidence/nexi-final-product-acceptance-20261031.md` | Scoped current contract/receipt; preserve date, SHA and proof class |
 | `tasks/evidence/nexi-five-batch-source-reconciliation-20261101.md` | Scoped current contract/receipt; preserve date, SHA and proof class |
 | `Admin/docs/OPERATOR_WORKSPACE_IMPLEMENTATION_MAP.md` | Scoped current contract/receipt; preserve date, SHA and proof class |
-| `Admin/docs/TANSTACK_ARCHITECTURE_AND_ROUTE_MAP.md` | October 21 historical route snapshot; November 1 source correction at top governs current count |
+| `Admin/docs/TANSTACK_ARCHITECTURE_AND_ROUTE_MAP.md` | October 21 route snapshot is historical; the November 7 correction at top governs current `NAV_GROUPS` and named-file counts |
 | `Admin/docs/ADMIN_IMPLEMENTATION_CONTRACT_MAP_A_F_2026-10-21.md` | Historical design/hand-off snapshot; verify against current source |
 | `Admin/docs/ADMIN_VERIFIED_DIAGRAMS_AND_HANDOFF.md` | Scoped current contract/receipt; preserve date, SHA and proof class |
 | `Admin/docs/CURRENT_STATUS.md` | Historical design/hand-off snapshot; verify against current source |
@@ -261,7 +281,7 @@ The source-authored operator workspace inventory is drawn from `Admin/docs/OPERA
 
 ## Known dependencies and unresolved evidence
 
-1. Current source changes are not yet deployed under matching Backend/Public/Admin artifact identifiers. The Admin Stage B dated receipt and current Admin marker conflict.
+1. GitHub `main` is `27b78bb6f74a0ddb44e9121b15fdbb7c9f1c3c32`; the live Public marker matches it, while Backend/Admin markers remain `45a857de6a4d4101fc3f42738eb7d83f52bd62eb`. Current-source authenticated browser acceptance is not established. The Admin route receipt at `111a5010f04a6592c290b0b0bc93240ab0cec69b` is historical and not current-release proof.
 2. Public Binary default internal USDT accounts exist in newer source, but funded BINARY placement/settlement browser and economic proof remains permission- and deployment-dependent.
 3. Older Public Margin browser notes `Market data error`/`Chart updates paused` despite HTTP 200. Verify data freshness, candle/chart status on the actual new release; do not assume old result persists or was fixed.
 4. Admin restricted-role negative authorization proof requires an existing authorized restricted identity. Desktop operator actions are not established by eight-workspace navigation.

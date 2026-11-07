@@ -12,3 +12,9 @@ SQLite local durable-job and workflow journals retain async state. Aiven Valkey 
 Historical 2026-10-19 observation: `nexi-api.service` was active and `https://api.nexitrading.app/readyz` returned READY with database=true, redis=true, authority=SQLite. On 2026-10-25, all three services were restarted under Node 24.21.0; the API returned READY with SQLite/Redis, and canonical Public/Admin HTTPS routes returned 200. Exact process, configuration, artifact and proof-limit details are in `tasks/evidence/nexi-final-vm-consolidation-20261025.md`. Readiness does not prove financial reconciliation, complete recovery or owner acceptance.
 Source renames do not deploy frontend builds or alter running services. Maintain exactly one main checkout; production changes require separate authorization and verification.
 Historical migration receipts and compatibility code are retained as evidence, not active platform authority.
+
+## Trace collection
+
+The VPS also runs Jaeger v2.23.0 as a loopback-only trace backend. OTLP HTTP/gRPC receivers accept traces on 127.0.0.1:4318 and 127.0.0.1:4317; Jaeger Query/UI listens on 127.0.0.1:16686 (gRPC 16685). Persistent Badger trace/archive stores are under /var/lib/nexi/jaeger, with configured span TTLs of 48 hours and 720 hours. This is observability storage, not application or financial authority.
+
+The Node OTLP HTTP exporter/instrumentation package is staged under the operator's user data and has a route allowlist/privacy filter, but the live nexi-api.service process currently has no preload for it. A smoke trace proves the local collector/storage path; it does not prove API or browser traffic is currently instrumented. See the [dated Graphify and tracing reconciliation](NEXI_GRAPHIFY_COVERAGE_20261107.md) and the [VPS runbook](../operations/NEXI_VPS_SQLITE_BULLMQ_RUNBOOK.md).
