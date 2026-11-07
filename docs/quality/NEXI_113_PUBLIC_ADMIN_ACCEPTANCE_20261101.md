@@ -1,3 +1,7 @@
+## CURRENT INTERACTIVE EXECUTION OVERLAY — 2026-11-08
+
+The 113 owner criteria, IDs, 72 P0 / 41 P1 priorities, domain grouping, and historic proof remain unchanged in this canonical document and [CSV](NEXI_113_ACCEPTANCE_TRACKER_20261101.csv). **Use [NEXI Interactive Cloud Browser Acceptance](NEXI_INTERACTIVE_CLOUD_BROWSER_ACCEPTANCE_20261108.md) as the new Phase A execution order**: actual signed-in Public/Admin UI interactions, click/type/submit/wait/cross-surface readback and one append-only run record, not route or snapshot inspection alone. Preserve earlier release-based statuses; assign a current-release PASS only from direct same-release evidence. The current Admin overlay is eight workspaces, 21 direct navigation destinations and 13 route-only page files. Work Cloud Browser has no Chrome DevTools or mobile emulation; an independent actual-phone or VM DevTools viewport lane is needed for Public mobile-first geometry. Do not change the canonical 113 wording to accommodate the new procedure.
+
 ## Current-source evidence addendum — 2026-11-04
 
 The candle-integrity source batch is implemented and final-SHA CI-verified at 188fdba1b9e703f04f1c3fbe32186f7daa6dce22. Focused tests cover reconnect/replay ordering, independent quote and candle freshness, provider precedence/provenance, and the source-labelled non-Binance publication path. Final GitHub Source CI run 41706263277 and CodeQL run 41706263177 succeeded. Details and limitations are in tasks/evidence/nexi-market-candle-source-closure-20261103.md.

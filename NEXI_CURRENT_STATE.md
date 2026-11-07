@@ -1,3 +1,7 @@
+## CURRENT OWNER PHASE DECISION — 2026-11-08 interactive acceptance
+
+Product acceptance is entering a **new planned interactive Cloud Browser test-first campaign**, not completed browser proof. The governing test order is [docs/quality/NEXI_INTERACTIVE_CLOUD_BROWSER_ACCEPTANCE_20261108.md](docs/quality/NEXI_INTERACTIVE_CLOUD_BROWSER_ACCEPTANCE_20261108.md); the 113 original owner criteria/CSV remain authoritative and the current Admin inventory is 21 direct sidebar destinations plus 13 route-only files. Preserve signed-in Public/Admin Work Cloud Browser tabs. Cloud Browser is functional UI interaction only; it has no VM Chrome DevTools/CDP or phone-size emulation, so Public mobile-first viewport evidence requires a separate authorized phone/VM lane. Collect all feasible browser results **before** one coherent repair/deployment cycle. No new acceptance test, source repair, production mutation or release occurred in this document update. The dated source/deployed/graph identities below remain their cited checkpoints and must be refreshed live before execution.
+
 ## CURRENT VERIFIED CHECKPOINT — 2026-11-08 (documentation reconciliation)
 
 - At the start of this 2026-11-08 reconciliation, repository and GitHub main were 0ebf93b3e910a1fffa39f455e81d8550a35f0859. This documentation record was committed as 213099d8a3b579eeb429eb6c6c3c0b1f367abfd7; application-source snapshot remains 27b78bb6f74a0ddb44e9121b15fdbb7c9f1c3c32. The unified Graphify extract covers code-only source, so these documentation commits do not invalidate its analyzed source inputs.

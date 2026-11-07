@@ -1,3 +1,11 @@
+# CURRENT PLAN — NEXI interactive browser acceptance (owner decision 2026-11-08)
+
+1. Recover the two already authenticated Public/Admin Work Cloud Browser tabs; current release markers and the 113 canonical requirements once. Follow [current interactive acceptance specification](../docs/quality/NEXI_INTERACTIVE_CLOUD_BROWSER_ACCEPTANCE_20261108.md) and [Work prompt](NEXI_WORK_INTERACTIVE_CLOUD_BROWSER_ACCEPTANCE_PROMPT_20261108.md), not the old VM-CDP-first sequence.
+2. Phase A: operate real UI controls across all feasible Public/Admin journeys, record each result and cross-surface behavior, distinguish economic authorization boundaries, cover 21 Admin nav routes and disposition 13 route-only files, reconcile all 113 IDs. No fixes, builds, deployments or graph rebuilds during Phase A.
+3. Mobile-first Public: record real Android visual candidates and verify actual dimensions later through a separate authorized phone/VM DevTools lane. Cloud Browser is not a mobile emulator; no invented viewport proof.
+4. Only after Phase A, deduplicate defects and perform a bounded one-batch source repair, one consolidated affected-scope verification, authorized coordinated final release and one grouped regression. Preserve all historical accepted/untested dispositions and valid source proof.
+5. Keep the previous completed task-state/Evolver plan below as historical context. **This planning update is not a new runtime or test result.**
+
 # CURRENT PLAN — NEXI task-state and capability continuity (2026-11-08)
 
 1. **Authority:** use root/surface `AGENTS.md`, `NEXI_CURRENT_STATE.md` and current dated evidence; treat old task entries as historical when superseded. Older `CURRENT` headings below are time-scoped snapshots, not current task pointers.

@@ -1,3 +1,7 @@
+## 2026-11-08 EXECUTION BOUNDARY — Work Cloud Browser versus VM Chrome DevTools
+
+The current owner-selected interactive acceptance campaign uses the **already signed-in ChatGPT Work Cloud Browser Public/Admin tabs as the primary functional workflow environment**, governed by [NEXI Interactive Cloud Browser Acceptance](NEXI_INTERACTIVE_CLOUD_BROWSER_ACCEPTANCE_20261108.md). Cloud Browser does **not** expose this VM Chrome DevTools MCP, CDP, or mobile emulation. The setup and tool catalog below remain valid as a **separate specialized VM Codex/Chrome diagnostics and responsive-viewport lane**, not an instruction to restart or replace the Work browser. Never claim CDP/console/network/viewport proof from Cloud Browser alone. Reuse existing profiles when the specialist lane is authorized.
+
 # NEXI Chrome DevTools MCP and Browser Workbench Guide
 
 **Authority:** paired Codex session, current MCP registration and the installed Chrome DevTools MCP package. **Checked:** 2026-10-26.
