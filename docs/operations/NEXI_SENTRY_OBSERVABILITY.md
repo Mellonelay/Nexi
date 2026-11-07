@@ -1,3 +1,7 @@
+## Current release pointer — 2026-11-08
+
+Release identities and query results in the dated sections below are point-in-time evidence, not current-release assertions. Current Backend/Public/Admin deployed markers are recorded in [NEXI_CURRENT_STATE.md](../../NEXI_CURRENT_STATE.md). Recheck Sentry with a current authorized account before making claims about event ingestion, alert delivery, or symbolication for those markers.
+
 ## 2026-10-29 — three-surface release identity and upload result
 
 Release `7e434daab146fe9c297c04e46ba9d4a0ee81401d` was created, associated with repository commits, finalized, and recorded as a production deployment after all three services started. Backend runtime `SENTRY_RELEASE`, Public runtime `SENTRY_RELEASE` / `NEXT_PUBLIC_SENTRY_RELEASE`, and Admin runtime `VITE_SENTRY_RELEASE` match the artifact markers. Public and Admin generated JavaScript contains Sentry debug IDs (67 and 62 matching files). Admin client/server Vite uploads reported success; the server upload report included at least one chunk without an identifiable sourcemap reference. Public build used the Sentry-enabled Next configuration; its plugin is silent, so remote artifact lookup remains unverified with the current session.

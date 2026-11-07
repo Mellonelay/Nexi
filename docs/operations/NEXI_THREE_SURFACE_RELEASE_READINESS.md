@@ -1,3 +1,7 @@
+## Current release identity pointer — 2026-11-08
+
+The release checkpoints in this file are dated historical records. The latest live release markers and readiness observation are in [NEXI_CURRENT_STATE.md](../../NEXI_CURRENT_STATE.md); do not use older tables below as current deployment identity. The owner-directed archive policy below remains the documented policy unless superseded by a newer owner instruction.
+
 # CURRENT 2026-11-04 — owner release archive policy
 
 The owner has directed that release rollback/archive copies are not required or retained. Do not create rollback bundles or dedicated rollback archive directories. Keep historical release receipts as records. This policy does not authorize deleting active build/runtime output, dependency stores, logs, financial backups, or live data.

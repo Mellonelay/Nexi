@@ -1,114 +1,31 @@
-# CURRENT OWNER ROUTING OVERRIDE — 2026-10-21
-
-## CURRENT OWNER OVERRIDE — 2026-10-30 capability routing
-
-The native Codex session is the only execution parent. The Kernel owns lifecycle, the Capability Router discovers specialists, and Agent Skills provide phase methods. The Capability Orchestrator may select a direct specialist; it does not own execution. Load the smallest task-fit set and record only capabilities actually read, called, and used.
-
-| Capability | Use it for | Evidence boundary |
-|---|---|---|
-| Agent Skills (`using-agent-skills`) | Select Define/Plan/Build/Verify/Review/Ship methods; read the exact selected `SKILL.md`. | Selection or hook output is not invocation. Do not load the full catalog by default. |
-| Ponytail | Minimal implementation; `ponytail-review` for a concrete diff, `ponytail-audit` for a requested broad simplification audit, `ponytail-debt` for explicit shortcut inventory, `ponytail-gain` for published benchmark figures, and `ponytail-help` for its command map. | These are separate skills with separate triggers; do not run unrelated audits or benchmarks on every change. |
-| Vibe Coding Library | Retrieve a missing engineering workflow via catalog → domain/topic → workflow ID → current step. | Instructions only; it does not inspect NEXI source or prove a check ran. Use a direct source owner for implementation. |
-| Short Circuit | Bound context, execution phases and orchestration for tasks its workflows fit, especially Python-oriented work. | Not the default NEXI TypeScript/financial correctness authority. |
-| Graphify MCP | Bounded ownership, dependency, path, caller and blast-radius questions. | Structural navigation only; verify important edges in source. |
-| Fallow MCP | TypeScript/JavaScript impact, symbols, dependencies, duplication and changed-code risk. | Static evidence; it does not prove behavior, runtime or tests. |
-| CodeScene MCP | Changed-file maintainability and pre-commit/change-set review when available. | Code health is not correctness or security proof. |
-| NestJS Doctor / React Doctor | Installed CLI diagnostics for NestJS Backend and React surfaces respectively. | Check analyzed-file coverage; a zero-file report is not useful validation. |
-| AGNIX | Lint supported agent/configuration and instruction files. | Configuration lint is not application behavior validation. |
-| Sentry | Current-release diagnostics when the required project and issue access are available. | A missing/denied query is access unknown, not a clean release. |
-| Context7 / official docs | Version-matched framework semantics when repository knowledge is insufficient. | Retrieved docs inform the design; current code determines NEXI behavior. |
-
-Use only the exact MCP namespaces exposed in the current Codex session. `nexi-mcpc`, Worker-0 `mcpc`, and ChatGPT-side plugin availability do not establish Codex MCP callability.
-
-**Before consequential coding:** recover latest owner contract/proof, exact installed framework versions, official docs/Context7, NEXI External Engineering Reference Library v3.1 source corpus at `/home/mellonelay1999/.codex/reference-libraries/NEXI_Engineering_Reference_Library_v3.1/NEXI_Engineering_Reference_Library_v3.1/`, and its Graphify outputs at `/home/mellonelay1999/.codex/reference-libraries/NEXI_Engineering_Reference_Library_v3.1/graphify-out/` (including `INDEX_GUIDE.md` and `wiki/index.md`). Also read finance requirements, current OpenAPI, and relevant repository Graphify/source topology. Read the exact domain bundle and primary contract/source references; apply CONTRACT/ADAPT/STUDY cautiously and verify versions, license and security. The library index is navigation, not implementation/runtime proof. Derive expected state, DTO, authorization, persistence, events/retries and Public/Admin consumers; compare against actual source. Use Addy selected phase workflow and Ponytail/domain specialist as appropriate. Tests and scanners follow this design-to-source comparison, not replace it.
-
-**Vibe Coding Library 1.6.1:** optional task-fit *method retrieval* for a demonstrated missing workflow. Discover actual domain/topic keys with `search_workflows(view=catalog,query="")`, select a topic, then `get_workflow(id,host=codex,response_format=workflow,intent=requested)` and apply only the current relevant step. Prefer `vibe-map` ownership-invariant/API/runtime/traceability maps for missing cross-layer design, `vibe-probe` instant-architecture/backend/frontend probes for a concrete unclear defect, `vibe-reliability`/`vibe-sql`/`vibe-realtime`/`vibe-redis` only when those contracts are affected, and `vibe-workflow` evidence normalization for contradictory proof. Library retrieval is instructions, not execution or verification. Do not load whole catalogs per task or start a recursive audit/repair workflow without the task's mutation authority. Existing NEXI maps and Addy methods take precedence where they already answer the question.
-
-**Routing matrix:** framework semantics = installed versions + official docs/Knowledge Index; business/API contract = current NEXI requirements/OpenAPI; ownership/topology = direct source + bounded Graphify; implementation method = selected Agent Skill + Ponytail/domain specialist; changed-code structure = Fallow; maintainability = CodeScene; framework diagnostics = NestJS Doctor/React Doctor; proof = only changed or previously unsupported contracts. Record the actual call, result and limit; never infer invocation from routing or registration.
-
-CURRENT 2026-10-26 OVERRIDE: The paired Codex CLI session is the sole Worker-0 lifecycle/execution parent. The local NEXI Work Kernel owns task method and continuity; the local Capability Router discovers specialists; Agent Skills provide phase methods. ChatGPT Work Control Plane governs separate ChatGPT Work sessions and is not this VM session's controller or transport. Exactly one canonical checkout, canonical build directories and three separate shared dependency stores. Chrome DevTools MCP attaches to the owner's existing profile using `--autoConnect --userDataDir /home/mellonelay1999/.local/share/nexi-admin-browser-acceptance`; it reads that profile's active `DevToolsActivePort` endpoint. Port 5858 was a stale MCP target, and Polypane 5859/Cloud Browser split is historical. NestJS/Prisma/SQLite/Ledger/Outbox remain application authority; Cloudflare app runtime is retired. Current owner decisions and verified Worker-0 runtime supersede old task/ledger checkboxes. Do not create parallel writers or reinstall frameworks for routine work.
-
 # NEXI Capability and Execution Routing
 
-Purpose: NEXI-only execution overlay. Global Worker-0 skills, CLI/MCP ownership, browser fabric, Graphify operating guidance, and capability routing live under `/home/mellonelay1999/RDC_ONBOARDING.md` and `/home/mellonelay1999/.agents/`. This file contains only NEXI-specific authority, runtime boundaries, and project routing. It does not authorize production mutation.
+## Authority
 
-## Dynamic routing model
-Global control stack for this VM: `paired Codex parent -> local NEXI Work Kernel -> Agent Skills method -> local Capability Router -> direct specialists/evidence tools -> Codex reconciliation`. Get-Fable and Riqor CLI/plugin/owned-hook runtimes were removed by owner decision on 2026-09-30. Do not route to or reinstall them; retained standalone skill instructions do not establish an active runtime.
+Use current owner instructions and the root [AGENTS.md](../../AGENTS.md), then the relevant surface guidance and live source/runtime evidence. This page is a repository tool-routing guide; it does not establish that a capability is installed, authenticated, callable, authorized, or used. Session-specific controllers and permissions take precedence. Historical routes must not be assumed active.
 
-NEXI execution overlay:
-`OWNER MESSAGE -> COMPLETE TASK CONTRACT -> CURRENT NEXI AUTHORITY -> CORRECTION/DRIFT HANDLING WHEN REQUIRED -> AGENT SKILLS METHOD -> ONE PRIMARY RESPONSIBILITY OWNER -> 0..N NON-OVERLAPPING SPECIALISTS/EVIDENCE TOOLS -> FASTEST PRECISE TOOL/MCP/CLI -> EXECUTE -> FOCUSED VERIFY -> PARENT FAN-IN -> DURABLE STATE RECONCILIATION WHEN REQUIRED -> REPORT`
+Current system boundary: NestJS owns business decisions; promoted VPS SQLite and its ledger/outbox/inbox/journals own durable application state; BullMQ/Aiven Valkey carries jobs and Socket.IO/Redis Streams carries realtime/cache traffic. Cloudflare Worker/Container/D1/Queues/Workflows are retired from NEXI runtime.
 
-Compile the complete owner message before execution: required actions/evidence/sequencing, must-preserve state, explicit non-goals, mutation/production authority, completion conditions, and required documentation/state updates. Do not silently drop secondary requirements.
+## Route by evidence responsibility
 
-Do not maintain a second permanent catalog of every installed plugin, skill or version. `@skill`/plugin mentions are capability hints, not a mandatory reading queue: classify them as PRIMARY, SUPPORTING, or AVAILABLE-BUT-NOT-NEEDED. Discover or reread a skill/tool only when its operating contract can materially change the current task; reuse proven capability routing while unchanged.
+| Need | Primary capability | Evidence limit |
+|---|---|---|
+| VM state, files, commands, services | Authorized SentinelX host tools for this VM; use native read/edit/Git operations for their scoped responsibilities. Use `sentinel_capabilities` before commands and inspect current state before mutation. | A command result proves only what it directly observed. Production, financial, service, deployment and destructive actions need explicit current authority. |
+| Existing VM MCP sessions | `/usr/local/bin/nexi-mcpc`; inspect active sessions and tool schema before calling. Reuse the existing Graphify session; do not connect a duplicate session or change its target as a side effect of documentation work. | MCP registration/session presence is not a successful query or proof of application behavior. |
+| Repository source and history | Git/GitHub for branch, commit, review, CI and push. Confirm HEAD, remote and dirty state before edits; stage only task files. | A Git commit or CI run does not establish the deployed release identity. |
+| Source topology and blast radius | Canonical Graphify graph via `@nexi-graphify-live`. | Structural source evidence only. It does not prove runtime HTTP requests, authorization, financial outcomes, or deployed behavior. |
+| Framework/API semantics | Version-matched official documentation or Context7 when a specific contract question requires it. | Retrieved documentation informs the expected contract; current NEXI source and runtime establish implementation and behavior. |
+| Static changed-code risk | Fallow for JavaScript/TypeScript scope; relevant language/framework diagnostics only when source changes warrant them. | Static findings are not runtime proof; report analyzed scope and degraded inputs. |
+| Runtime failures and traces | Sentry, systemd/journald, and Jaeger as available and authorized. Check each data source's freshness and access. | Missing data, denied access, or collector smoke traces do not prove absence of production errors or production trace emission. |
+| Rendered browser behavior | Reuse the existing authenticated browser tab/profile when available; inspect the requested surface and exact deployed identity. | A rendered page is point-in-time evidence, not full route, role, responsive, or financial workflow acceptance. |
 
-## Authority and reuse
-Third-party skills specialize work; they do not override NEXI architecture, security boundaries, or owner authorization.
+## Execution sequence
 
-## Responsibility owners
-- Source/files: direct source, native RDC files/search, `rg`/`fd`/`ast-grep`.
-- Graph/topology: Graphify local/cloud; paths/ownership/affected/blast radius, never behavioral proof.
-- Semantic lookup: DeepWiki; cross-check consequential conclusions.
-- Static/change risk: Fallow + CodeScene; add specialist static tools only for distinct risk.
-- External docs: Context7 + current official vendor docs; current web research only when repo/runtime is not authority.
-- Git/PR/CI: Git + GitHub.
-- Browser: CURRENT paired Codex connects Chrome DevTools MCP to the existing Chrome profile with `--autoConnect --userDataDir /home/mellonelay1999/.local/share/nexi-admin-browser-acceptance --categoryExtensions` for applicable authenticated Public/Admin acceptance under owner control. The MCP reads the dynamic CDP port/path from `DevToolsActivePort`; the Chrome `chrome://inspect/#devices` discovery list is not MCP client configuration. Use `docs/quality/NEXI_CHROME_DEVTOOLS_MCP_GUIDE.md` for active actions and DevTools/extension-panel workflows. Port 5858 was a stale MCP target; Polypane/5859, Cloud Browser split and BrowserStack route descriptions below are historical, not parallel acceptance owners.
-- Direct bounded editing: parent/RDC when owner and proof are deterministic.
-- Heavy workers: Codex/Kilo only for substantial bounded work or independent review where separate reasoning context adds value.
+1. Recover the task frontier and current authority. Reuse unchanged evidence; refresh volatile source, release, service and auth state.
+2. Identify the exact question and choose one primary tool for each evidence responsibility. Read the relevant tool contract before using it.
+3. Keep read-only inspection separate from authorized mutation. Do not restart services, alter production data, deploy, or perform financial operations as a documentation or graph task.
+4. Make the smallest source or documentation correction. Preserve dated receipts as dated evidence and label superseded/current claims explicitly.
+5. Verify the exact changed files, Git diff, and any claimed runtime facts. Distinguish implemented, tested, deployed, runtime-verified, browser-verified, and owner-accepted evidence.
+6. Commit and push only after confirming the branch/remote and reviewing the scoped diff when requested or authorized.
 
-## Skill selection
-Classify the task first. Select one primary skill/workflow owner for each responsibility, then only non-overlapping specialists. Do not activate duplicate planning, TDD, debugging, review, or parallelism owners simultaneously unless they have distinct jobs.
-Use Selective Intelligence when a current owner correction, drift, repeated failure, duplicated authority, or reopened proven work requires realignment.
-If the owner/path/procedure are already known, begin execution immediately. Do not spend the preflight rereading every mentioned skill, dumping whole tool catalogs, or rediscovering proven MCP/CLI capability. Tool availability is not an instruction to invoke everything and never expands mutation or production authority.
-
-## Worker-0 execution
-For VM work, read `/home/mellonelay1999/RDC_ONBOARDING.md`. Recover existing sessions/processes/searches/tool-call continuity before spawning equivalents.
-Fast path:
-`RECOVER LIVE STATE -> CLASSIFY TASK -> LOCATE EXACT OWNER -> PARALLEL READ/EVIDENCE -> FAN-IN -> SERIALIZED SHARED MUTATION -> FOCUSED VERIFY -> RUNTIME/RENDER VERIFY WHEN REQUIRED -> TARGETED BLAST-RADIUS CHECK -> FINAL FAN-IN`
-
-Not every task enters every lane. Capability availability is not an instruction to use everything.
-
-Before the first execution call of each new substantive NEXI task, emit:
-```text
-ROUTING
-- Orchestrator:
-- Primary skill:
-- Supporting skills:
-- Execution owner:
-- Tool lane:
-- Why:
-```
-Then execute immediately.
-
-## MCP/CLI transport policy
-Use one primary transport owner per responsibility. Worker-0 MCP transport is owned by `mcpc` named sessions; `rdc-mcp` is the compatibility facade over that same client and route table. For Next.js 16+ development diagnostics use the official `@nexi-nextjs` (`next-devtools-mcp`) route, which discovers running development servers through `/_next/mcp`; direct source/types remain implementation authority. Current route/auth canaries belong in `RDC_ONBOARDING.md` / `GLOBAL_MCP_CATALOG.md`; do not duplicate mutable auth state here.
-Codex `/mcp` remains authoritative for Codex-visible MCP tools and Codex OAuth state. Worker-0 mcpc profiles/sessions are a separate transport/auth domain, not a universal mirror of Codex MCPs.
-Never create Remote-Desktop-Commander-via-Remote-Desktop-Commander recursion.
-
-## Browser responsibility split
-
-- HISTORICAL ONLY: Polypane + Chrome DevTools port 5859 was a prior responsive environment; the former MCP target 5858 is also retired. Current paired Codex uses profile-aware Chrome autoConnect, not a hardcoded port.
-- Recover the existing Coinbase Wallet authenticated profile through the current browser-fabric contract. Older MetaMask profiles and stale ports are historical, not current acceptance owners.
-- Verify actual page, profile, wallet identity and SIWE authentication before browser claims; do not fabricate sessions or create redundant browser harnesses.
-- Playwright, DevTools and device tools provide scoped interaction/diagnostic evidence only, not independent financial authority.
-- HISTORICAL ONLY: VPS API was reached by public DNS in the prior campaign. Its same-time statement that SQLite was empty while D1 remained populated, and its resulting synchronization gate, were superseded by the later promoted SQLite/Prisma authority decision. Do not use that observation as a current storage claim.
-
-**CURRENT AUTHORITY — 2026-10-29:** Current NEXI architecture and financial-integrity requirements establish promoted VPS SQLite/Prisma as durable application and financial authority; `D1*` class names may implement that SQLite gateway. This authority does not assert current row counts or prove runtime storage state. For the current task scope and release evidence, follow the leading sections of `NEXI_CURRENT_STATE.md` and `docs/operations/NEXI_THREE_SURFACE_RELEASE_READINESS.md`.
-
-## Astra lineage
-`NEXI_ASTRA_FRONTEND_BINDING_MANIFEST.md` and the `nexi-frontend-astra-controller` skill are retained as historical frontend-binding/execution lineage. They are not the active project routing controller. Current owner decisions and this routing model control new work.
-Do not erase valid binding knowledge merely because its historical name contains “Astra”.
-
-## Verification
-Match proof to the claim: deterministic checks -> runtime observation -> source reconciliation -> independent review. A graph path does not prove behavior; a build does not prove runtime; browser success does not repair a source/contract failure.
-Keep `IMPLEMENTED`, `STATICALLY_VALIDATED`, `TESTED`, `INTEGRATED`, `RUNTIME_VERIFIED`, `DEPLOYED`, and `OWNER_ACCEPTED` distinct.
-
-## Maintainability specialists
-
-Use Fallow for affected JS/TS risk, Graphify for topology, and official framework checks as relevant. CodeScene historical workflows are retained only as reference; no CodeScene 10.0 score gate applies under current owner direction. Do not re-run unaffected scans or equate static proof with browser or production acceptance.
-
-## Workspace Memory and cross-session evidence
-
-Use the installed ChatGPT `workspace-memory` skill for Workspace Memory operations, with `nexi-workspace-memory` as the Worker-0/NEXI companion. Preserve independent ownership: Workspace Memory keeps navigable topic lines with real `dc://` provenance; Agent Kernel keeps approved governance; the Worker-0 checkpoint keeps verified operational continuity; Graphify keeps revision-bound relationships; GitHub `main` keeps project source and reviewed project documentation; chat exports are historical evidence. A write/query in one store does not prove persistence in another.
-
-Before a memory operation, verify the active Workspace Memory index/root or exact native tool capability. Do not guess a `.memory` path, workspace/chat/message ID, or citation. Graphify Work Memory may be unsupported: read native `recall_state` and stop on unsupported. For Worker-0 actions, follow `RDC_ONBOARDING.md`, recover handles, use `worker0-protect unlock` only for authorized bounded edits, and restore protection with `worker0-protect refresh-lock`. Use skills.sh only to discover a distinct missing capability; inspect and audit a candidate before adoption. Do not commit/push/publish beyond the explicit owner scope. Never put private chat memory in the project repo.
+Do not infer capability use from an @mention, installed package, MCP registration, or old session transcript. Record only tools actually invoked and results actually used.

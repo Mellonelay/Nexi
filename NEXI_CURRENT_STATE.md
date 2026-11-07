@@ -1,4 +1,12 @@
-## CURRENT 2026-11-07 — Graphify snapshot and tracing boundary
+## CURRENT VERIFIED CHECKPOINT — 2026-11-08 (documentation reconciliation)
+
+- Repository and GitHub main: 0ebf93b3e910a1fffa39f455e81d8550a35f0859. This is a documentation-only commit on top of application-source snapshot 27b78bb6f74a0ddb44e9121b15fdbb7c9f1c3c32; the latest tracked changes updated the root/surface AGENTS guidance and Admin documentation. The unified Graphify extract covers code-only source, so those documentation edits do not invalidate its analyzed source inputs.
+- Live check on this date: nexi-api.service, nexi-public.service, and nexi-admin.service were active. https://api.nexitrading.app/readyz returned READY with database and Redis dependencies true and authority SQLite.
+- Deployed release markers: Backend 45a857de6a4d4101fc3f42738eb7d83f52bd62eb; Public 27b78bb6f74a0ddb44e9121b15fdbb7c9f1c3c32; Admin 45a857de6a4d4101fc3f42738eb7d83f52bd62eb. Keep these surface identities separate from repository HEAD.
+- The existing @nexi-graphify-live MCP session was queried through /usr/local/bin/nexi-mcpc; it reports Graphify 0.9.103 and 5,953 nodes, 17,481 edges, 208 communities (94% EXTRACTED, 6% INFERRED, 0% AMBIGUOUS). The MCP target remains /srv/nexi/graphify-live/20261107/merged-graph.json, SHA-256 0c18266bab126d924e5e77acde7e940e004534a03a0bf033785fdeecf5f8337d. It is the merged current-main source graph, not a runtime trace graph; detailed extraction scope and known gaps are in docs/architecture/NEXI_GRAPHIFY_COVERAGE_20261107.md.
+- No service, database, financial, deployment, or graph artifact was changed for this documentation checkpoint. The dated sections below remain historical evidence at their stated revisions.
+
+## DATED SNAPSHOT — 2026-11-07 Graphify and tracing boundary
 
 Current source checkout and GitHub main are 27b78bb6f74a0ddb44e9121b15fdbb7c9f1c3c32. Live Public marker is the same; Backend and Admin runtime markers are 45a857de6a4d4101fc3f42738eb7d83f52bd62eb. Do not confuse these surface-specific deployed identities.
 

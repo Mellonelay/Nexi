@@ -1,7 +1,6 @@
 # NEXI Platform User and Admin Operations Guide
 
-**As of:** 2026-11-04
-**Source basis:** current repository HEAD 2a74ce1b60940221ddb53f95baf4ec04a1f6eac4; route/provider contracts in Admin/src and backend source. **Runtime is separate:** current Backend and Public release marker 188fdba1b9e703f04f1c3fbe32186f7daa6dce22; current Admin release marker 111a5010f04a6592c290b0b0bc93240ab0cec69b. This guide describes source-backed intent; browser acceptance and live persisted configuration are recorded separately in tasks/evidence/nexi-browser-acceptance-v2-20261104.md.
+**Dated source/runtime snapshot:** 2026-11-04. Source basis at that snapshot: repository HEAD `2a74ce1b60940221ddb53f95baf4ec04a1f6eac4`; its recorded Backend/Public marker was `188fdba1b9e703f04f1c3fbe32186f7daa6dce22` and Admin marker was `111a5010f04a6592c290b0b0bc93240ab0cec69b`. These are historical identities, not current release claims. The later live markers and readiness check are recorded in [NEXI_CURRENT_STATE.md](../../NEXI_CURRENT_STATE.md). This guide describes source-backed user/operator intent; browser acceptance and live persisted configuration remain bounded by their dated receipts, including `tasks/evidence/nexi-browser-acceptance-v2-20261104.md`.
 **Authority:** NestJS owns business decisions; promoted VPS SQLite/Prisma owns durable state; Ledger/Activity and EventOutbox/EventInbox prove financial accounting and durable publication. BullMQ with Aiven Valkey transports async jobs; Socket.IO Redis Streams/Valkey transport realtime and cache. Neither Valkey nor BullMQ is financial truth. Cloudflare Worker/Container/D1/Queues/Workflows are retired runtime. Do not infer runtime from source or release SHA alone.
 
 ## Public customer journeys
