@@ -71,7 +71,8 @@ const normalizePosition = (value: unknown): BinaryPosition | null => {
   const row = value as Record<string, unknown>;
   const id = typeof row.id === 'string' ? row.id : '';
   if (!id) return null;
-  const rawSide = String(row.direction ?? row.side ?? '').toUpperCase();
+  // The persisted CALL/PUT side is authoritative; a display-only direction cannot override it.
+  const rawSide = String(row.side ?? row.direction ?? '').toUpperCase();
   return {
     id,
     symbol: String(row.symbol ?? row.pair ?? '—'),
@@ -86,7 +87,7 @@ const normalizePosition = (value: unknown): BinaryPosition | null => {
     realizedProfit: finiteMarketNumber(row.realizedProfit ?? row.profit),
     openedAt: typeof row.openedAt === 'string' ? row.openedAt : typeof row.createdAt === 'string' ? row.createdAt : null,
     expiresAt: typeof row.expiresAt === 'string' ? row.expiresAt : null,
-    status: normalizeBinaryPositionState(row.status),
+    status: normalizeBinaryPositionState(row.state ?? row.status),
     referenceId: typeof row.referenceId === 'string' ? row.referenceId : id,
   };
 };
@@ -131,6 +132,7 @@ const INTERRUPTIBLE_BINARY_STATES = new Set<BinaryPositionState>(['OPEN', 'SETTL
 
 const binaryStateLabel = (state: BinaryPositionState) => {
   if (state === 'ERROR') return 'Settlement failure';
+  if (state === 'UNKNOWN') return 'Submission outcome unknown';
   return state
     .split('_')
     .map((word) => `${word.slice(0, 1)}${word.slice(1).toLowerCase()}`)
@@ -168,6 +170,7 @@ export default function BinaryPage() {
   const [selectedResult, setSelectedResult] = useState<BinaryPosition | null>(null);
   const [selectedChartTradeId, setSelectedChartTradeId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [unknownBinaryIntentKey, setUnknownBinaryIntentKey] = useState<string | null>(null);
   const [optionWalletBalanceResult, setOptionWalletBalanceResult] = useState<{ userId: string; balance: OptionWalletBalance } | null>(null);
   const optionWalletBalance: OptionWalletBalance = !userId
     ? { state: sessionChecked ? 'UNAUTHENTICATED' : 'LOADING' }
@@ -181,6 +184,7 @@ export default function BinaryPage() {
   const [binaryDurations, setBinaryDurations] = useState<number[]>([]);
   const submissionLock = useRef(false);
   const pendingBinaryIntent = useRef<PendingIntentKey | null>(null);
+  const lastSubmittedPositionId = useRef<string | null>(null);
   const chartPairRef = useRef(normalizedPair);
   const { marketPairs, metal, shares, forex } = useMarketData();
 
@@ -219,6 +223,9 @@ export default function BinaryPage() {
         setConfirmationOpen(false);
         setFundingOpen(false);
         setState('DRAFT');
+        pendingBinaryIntent.current = null;
+        lastSubmittedPositionId.current = null;
+        setUnknownBinaryIntentKey(null);
         previousUserId.current = next;
       }
       setUserId(next);
@@ -280,12 +287,9 @@ export default function BinaryPage() {
       reconnectionAttempts: 8,
       reconnectionDelayMax: 8_000,
     });
-    let hasConnected = false;
     const handleReconnect = () => {
-      if (!hasConnected) {
-        hasConnected = true;
-        return;
-      }
+      // Resnapshot even on first socket connect: REST may have completed
+      // before the authenticated socket joined the user's event room.
       Promise.allSettled([
         api.get('/binary/positions/current'),
         api.get('/binary/positions/history'),
@@ -297,6 +301,26 @@ export default function BinaryPage() {
         if (historyResult.status === 'fulfilled' && Array.isArray(historyResult.value.data)) {
           setHistory(historyResult.value.data.map(normalizePosition).filter((item): item is BinaryPosition => Boolean(item)));
         }
+        // A socket reconnection may miss the original acceptance event.
+        // Reconcile the persisted intent against both authoritative read models.
+        const key = pendingBinaryIntent.current?.key;
+        if (key) {
+          const rows = [currentResult, historyResult].flatMap((result) =>
+            result.status === 'fulfilled' && Array.isArray(result.value.data)
+              ? result.value.data as unknown[]
+              : [],
+          );
+          const match = rows.find((row) => row !== null && typeof row === 'object'
+            && (row as Record<string, unknown>).idempotencyKey === key);
+          const recovered = normalizePosition(match);
+          if (recovered && pendingBinaryIntent.current?.key === key) {
+            lastSubmittedPositionId.current = recovered.id;
+            pendingBinaryIntent.current = null;
+            setUnknownBinaryIntentKey(null);
+            setState(recovered.status);
+            setFeedback('The submitted position was recovered from account records.');
+          }
+        }
       });
     };
     const handlePositionUpdate = (raw: unknown) => {
@@ -304,15 +328,29 @@ export default function BinaryPage() {
       const payload = raw as { event: string; position: unknown };
       const position = normalizePosition(payload.position);
       if (!position) return;
+      const receivedIntentKey = payload.position && typeof payload.position === 'object'
+        ? (payload.position as Record<string, unknown>).idempotencyKey : null;
+      if (pendingBinaryIntent.current && receivedIntentKey === pendingBinaryIntent.current.key) {
+        lastSubmittedPositionId.current = position.id;
+        pendingBinaryIntent.current = null;
+        setUnknownBinaryIntentKey(null);
+        setFeedback('The submitted position was confirmed by the server.');
+      }
       setActivePositions((current) => [position, ...current.filter((item) => item.id !== position.id)]);
+      const isTrackedPosition = lastSubmittedPositionId.current === position.id;
       if (FINAL_BINARY_STATES.has(position.status)) {
         setActivePositions((current) => current.filter((item) => item.id !== position.id));
         setHistory((current) => [position, ...current.filter((item) => item.id !== position.id)]);
-        setSelectedResult(position);
-        setSelectedChartTradeId((current) => current ?? (normalizePair(position.symbol) === chartPairRef.current ? position.id : null));
-        setTab('HISTORY');
+        if (isTrackedPosition) {
+          setSelectedResult(position);
+          setSelectedChartTradeId((current) => current ?? (normalizePair(position.symbol) === chartPairRef.current ? position.id : null));
+          setTab('HISTORY');
+          lastSubmittedPositionId.current = null;
+        }
       }
-      setState(position.status);
+      if (isTrackedPosition) {
+        setState((current) => current === 'UNKNOWN' && pendingBinaryIntent.current ? current : position.status);
+      }
     };
     const handleConnectionLoss = () => {
       if (disposed || sessionPrincipalId() !== userId) return;
@@ -448,7 +486,7 @@ export default function BinaryPage() {
       || optionWalletBalance.state === 'ZERO'
       || (optionWalletBalance.state === 'POSITIVE' && stake > Number(optionWalletBalance.available)));
   // Permit an underfunded customer to request help, never an unfunded order.
-  const reviewReady = ready || fundingRequired;
+  const reviewReady = !unknownBinaryIntentKey && (ready || (fundingRequired && optionWalletBalance.state !== 'POSITIVE'));
   const stateTone = ['WIN', 'OPEN'].includes(state)
     ? 'border-emerald-300/25 bg-emerald-400/5 text-[#98FCE4]'
     : ['LOSS', 'ERROR', 'CONNECTION_LOST'].includes(state)
@@ -502,13 +540,43 @@ export default function BinaryPage() {
           : 'Select an enabled duration and enter a valid stake.');
   };
 
+  const reconcileUnknownSubmission = async (key: string) => {
+    if (!userId) return;
+    const [currentResult, historyResult] = await Promise.allSettled([
+      api.get('/binary/positions/current'),
+      api.get('/binary/positions/history'),
+    ]);
+    if (sessionPrincipalId() !== userId || pendingBinaryIntent.current?.key !== key) return;
+    let recovered: BinaryPosition | null = null;
+    for (const [result, update] of [
+      [currentResult, setActivePositions],
+      [historyResult, setHistory],
+    ] as const) {
+      if (result.status !== 'fulfilled' || !Array.isArray(result.value.data)) continue;
+      const rows = result.value.data as unknown[];
+      update(rows.map(normalizePosition).filter((item): item is BinaryPosition => item !== null));
+      const match = rows.find((row) => row !== null && typeof row === 'object'
+        && (row as Record<string, unknown>).idempotencyKey === key);
+      if (match) recovered = normalizePosition(match);
+    }
+    if (recovered) {
+      lastSubmittedPositionId.current = recovered.id;
+      pendingBinaryIntent.current = null;
+      setUnknownBinaryIntentKey(null);
+      setState(recovered.status);
+      setFeedback('The submitted position was found in your account records.');
+    }
+  };
+
   const submitPosition = async () => {
-    if (submissionLock.current || !ready || !userId) return;
+    if (submissionLock.current || !ready || !userId || unknownBinaryIntentKey) return;
     submissionLock.current = true;
     setState('SUBMITTING');
+    let submittedKey: string | null = null;
     try {
       const intent = { pair: normalizedPair, stake: String(amount), side: direction === 'LONG' ? 'CALL' : 'PUT', durationSeconds: duration };
       pendingBinaryIntent.current = getIntentKey(pendingBinaryIntent.current, JSON.stringify(intent), 'binary');
+      submittedKey = pendingBinaryIntent.current.key;
       const response = await api.post('/binary/position', {
         pair: normalizedPair,
         stake: String(amount),
@@ -519,18 +587,38 @@ export default function BinaryPage() {
       const position = normalizePosition(response.data);
       if (!position) throw new Error('Invalid position response');
       if (sessionPrincipalId() !== userId) return;
+      lastSubmittedPositionId.current = position.id;
       pendingBinaryIntent.current = null;
+      setUnknownBinaryIntentKey(null);
       setActivePositions((current) => [position, ...current.filter((item) => item.id !== position.id)]);
-      setState('OPEN');
+      setState(position.status);
       setConfirmationOpen(false);
       setAmount('');
       setTab('ACTIVE');
       setFeedback('Position request accepted.');
-    } catch {
+    } catch (error) {
       if (sessionPrincipalId() !== userId) return;
-      setState('ERROR');
+      const status = (error as { response?: { status?: number } } | null)?.response?.status;
+      const rejected = typeof status === 'number' && status >= 400 && status < 500;
       setConfirmationOpen(false);
-      setFeedback('The position request could not be accepted.');
+      if (rejected) {
+        pendingBinaryIntent.current = null;
+        setState('DRAFT');
+        setFeedback('The position request was rejected. Review your inputs before trying again.');
+      } else if (!pendingBinaryIntent.current && submittedKey) {
+        // A matching server event already confirmed this intent while its HTTP response failed.
+        setFeedback('The position was confirmed by the server. Review Active trades or History.');
+      } else if (!pendingBinaryIntent.current) {
+        // No idempotency key was prepared, so the economic request was never dispatched.
+        setState('DRAFT');
+        setFeedback('The request could not be prepared. No position was submitted.');
+      } else {
+        const key = pendingBinaryIntent.current.key;
+        setState('UNKNOWN');
+        setUnknownBinaryIntentKey(key);
+        setFeedback('The position outcome is unknown. Check Active trades and History before another submission.');
+        if (key) void reconcileUnknownSubmission(key);
+      }
     } finally {
       submissionLock.current = false;
     }
@@ -582,10 +670,12 @@ export default function BinaryPage() {
             <div><dt className="text-[#8C8299]">Duration</dt><dd className="mt-1 font-mono">{selectedDuration ? formatDuration(duration) : '—'}</dd></div>
           </dl>
           {feedback && <p role="status" className="mt-3 text-sm text-[#C3BBD0]">{feedback}</p>}
+          {unknownBinaryIntentKey && <button type="button" onClick={() => void reconcileUnknownSubmission(unknownBinaryIntentKey)} className="mt-3 min-h-11 w-full rounded-lg border border-amber-300/30 px-3 text-sm font-semibold text-amber-100">Recheck position status</button>}
           <div className="mt-4 grid grid-cols-2 gap-3">
             <button type="button" onClick={() => openReview('LONG')} disabled={!reviewReady} className="nexi-interactive nexi-ripple flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#159B78] font-semibold disabled:cursor-not-allowed disabled:bg-[#17332E] disabled:text-[#6E9188]"><ArrowUp size={16} />Long</button>
             <button type="button" onClick={() => openReview('SHORT')} disabled={!reviewReady} className="nexi-interactive nexi-ripple flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#D9465F] font-semibold disabled:cursor-not-allowed disabled:bg-[#3A1D25] disabled:text-[#99707A]"><ArrowDown size={16} />Short</button>
           </div>
+          {fundingRequired && optionWalletBalance.state === 'POSITIVE' && <button type="button" onClick={() => setFundingOpen(true)} className="mt-3 min-h-11 w-full rounded-xl border border-violet-300/20 text-sm font-semibold text-[#CFC4FF]">Add funds</button>}
         </aside>
 
         <section className="nexi-station-card min-w-0 rounded-2xl xl:col-start-1 xl:row-start-2" aria-label="Binary activity">
@@ -634,13 +724,14 @@ function PositionList({ positions, now, empty, onSelect }: { positions: BinaryPo
   return <ul className="divide-y divide-white/5">{positions.map((position) => {
     const openedAt = position.openedAt ? Date.parse(position.openedAt) : Number.NaN;
     const expiresAt = position.expiresAt ? Date.parse(position.expiresAt) : Number.NaN;
+    const terminal = FINAL_BINARY_STATES.has(position.status);
     const durationMs = Number.isFinite(openedAt) && Number.isFinite(expiresAt) ? Math.max(0, expiresAt - openedAt) : 0;
-    const remaining = Number.isFinite(expiresAt) ? Math.max(0, Math.ceil((expiresAt - now) / 1_000)) : null;
-    const progress = durationMs > 0 ? Math.min(100, Math.max(0, ((now - openedAt) / durationMs) * 100)) : null;
+    const remaining = !terminal && Number.isFinite(expiresAt) ? Math.max(0, Math.ceil((expiresAt - now) / 1_000)) : null;
+    const progress = !terminal && durationMs > 0 ? Math.min(100, Math.max(0, ((now - openedAt) / durationMs) * 100)) : null;
     return <li key={position.id}><button type="button" onClick={() => onSelect(position)} className="nexi-interactive block min-h-20 w-full px-4 py-3 text-left hover:bg-white/[.03]">
       <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
         <div className="min-w-0"><p className="truncate font-semibold">{position.symbol} · {position.direction}</p><p className="mt-1 text-xs text-[#8C8299]">{binaryStateLabel(position.status)}</p></div>
-        <div className="text-right font-mono text-xs"><p>{position.amount === null ? '—' : `${position.amount} USDT`}</p><p role="timer" aria-live="off" aria-label={remaining === null ? "Position expiry unavailable" : `${remaining} seconds remaining`} className="mt-1 flex items-center justify-end gap-1 text-[#8C8299]"><Clock3 size={12} aria-hidden="true" />{remaining === null ? '—' : `${remaining}s`}</p></div>
+        <div className="text-right font-mono text-xs"><p>{position.amount === null ? '—' : `${position.amount} USDT`}</p>{!terminal && <p role="timer" aria-live="off" aria-label={remaining === null ? "Position expiry unavailable" : `${remaining} seconds remaining`} className="mt-1 flex items-center justify-end gap-1 text-[#8C8299]"><Clock3 size={12} aria-hidden="true" />{remaining === null ? '—' : `${remaining}s`}</p>}</div>
       </div>
       {progress !== null && <div role="progressbar" aria-label="Position duration elapsed" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)} className="mt-3 h-2.5 overflow-hidden rounded-full bg-white/5"><div className="h-full rounded-full bg-[#7C3AED] transition-[width] duration-500" style={{ width: `${progress}%` }} /></div>}
     </button></li>;

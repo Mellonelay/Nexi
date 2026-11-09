@@ -20,7 +20,7 @@ import WalletDashboardLayout from './components/WalletDashboardLayout';
 type Tab = 'Overview' | 'Funding' | 'Spot' | 'Margin' | 'Binary' | 'Finance';
 type Action = 'Deposit' | 'Withdraw' | 'Transfer' | 'Convert';
 type Category = 'All' | AssetCategory;
-type WalletAsset = { name: string; displayName: string; iconUrl: string | null; available: unknown; locked: unknown; total: unknown; accountExists: boolean };
+type WalletAsset = { name: string; displayName: string; iconUrl: string | null; available: unknown; locked: unknown; total: unknown; accountExists: boolean; category?: AssetCategory; depositSupported?: boolean; depositNetworks?: string[] };
 type Activity = { id: string; type: unknown; source: unknown; destination: unknown; asset: unknown; amount: unknown; status: unknown; createdAt: unknown; ledgerId: unknown; referenceType: unknown; referenceId: unknown; correlationId: unknown; details: Record<string, unknown>; postings: Array<Record<string, unknown>> };
 
 const tabs: Tab[] = ['Overview', 'Funding', 'Spot', 'Margin', 'Binary', 'Finance'];
@@ -63,13 +63,84 @@ function readAssets(payload: unknown, selectedTab: Tab): WalletAsset[] {
       name: symbol,
       displayName: String(asset.name ?? symbol),
       iconUrl: typeof asset.logo === 'string' ? asset.logo : null,
-      available, locked, total, accountExists: balances.length > 0,
+      available, locked, total, accountExists: balances.length > 0, category: assetMeta(symbol)?.category ?? (symbol === 'USDT' ? 'Crypto' : undefined),
     }];
   });
 }
 
 type PortfolioValuation = { available: string; locked: string; total: string; state: 'LIVE' | 'STALE' | 'UNAVAILABLE'; unpriced: number };
 type WalletQuote = ReturnType<typeof useMarketData>['marketPairs'][number];
+type DepositDestination = { asset?: unknown; network?: unknown; networkName?: unknown; depositAddressId?: unknown; address?: unknown };
+
+function mergeMarketAssets(walletAssets: WalletAsset[], markets: WalletQuote[], includeUsdt: boolean): WalletAsset[] {
+  const merged = new Map(walletAssets.map((asset) => [asset.name.toUpperCase(), asset]));
+  for (const market of markets) {
+    const symbol = market.displaySymbol.trim().toUpperCase();
+    if (!symbol) continue;
+    const current = merged.get(symbol);
+    merged.set(symbol, current
+      ? { ...current, category: market.category }
+      : {
+          name: symbol,
+          displayName: market.name || symbol,
+          iconUrl: null,
+          available: null,
+          locked: null,
+          total: null,
+          accountExists: false,
+          category: market.category,
+        });
+  }
+  if (includeUsdt && !merged.has('USDT')) {
+    merged.set('USDT', {
+      name: 'USDT',
+      displayName: 'Tether',
+      iconUrl: null,
+      available: null,
+      locked: null,
+      total: null,
+      accountExists: false,
+      category: 'Crypto',
+    });
+  }
+  return [...merged.values()];
+}
+
+function mergeDepositAssets(walletAssets: WalletAsset[], destinations: DepositDestination[]): WalletAsset[] {
+  const merged = new Map(walletAssets.map((asset) => [asset.name.toUpperCase(), asset]));
+  for (const destination of destinations) {
+    const symbol = typeof destination.asset === 'string' ? destination.asset.trim().toUpperCase() : '';
+    if (!symbol || typeof destination.network !== 'string' || !destination.network.trim()
+      || typeof destination.depositAddressId !== 'string' || !destination.depositAddressId.trim()
+      || typeof destination.address !== 'string' || !destination.address.trim()) continue;
+    const current = merged.get(symbol);
+    const networkLabel = typeof destination.networkName === 'string' && destination.networkName.trim()
+      ? destination.networkName.trim()
+      : destination.network.trim();
+    if (current) {
+      merged.set(symbol, {
+        ...current,
+        depositSupported: true,
+        depositNetworks: [...new Set([...(current.depositNetworks ?? []), networkLabel])],
+      });
+      continue;
+    }
+    const asset = assetMeta(symbol);
+    merged.set(symbol, {
+      name: symbol,
+      displayName: asset?.name ?? symbol,
+      iconUrl: null,
+      available: null,
+      locked: null,
+      total: null,
+      accountExists: false,
+      category: asset?.category ?? (symbol === 'USDT' ? 'Crypto' : undefined),
+      depositSupported: true,
+      depositNetworks: [networkLabel],
+    });
+  }
+  return [...merged.values()];
+}
 
 function estimatePortfolio(assets: WalletAsset[], currencies: unknown, quotes: WalletQuote[]): PortfolioValuation {
   const supported = Array.isArray(currencies) && currencies.some((value) => String(value).toUpperCase() === 'USDT');
@@ -115,8 +186,8 @@ function readActivities(payload: unknown): Activity[] {
     const details = readActivityDetails(item.details);
     const postings = Array.isArray(item.relatedLedgerPostings) ? item.relatedLedgerPostings.map(record) : [];
     const id = item.activityId ?? item.id;
-    const ledgerId = item.ledgerTransactionId ?? item.ledgerId ?? item.ledgerCorrelationId ?? item.ledgerCorrelationId ?? item.ledgerPostingId ?? details.debitPostingId ?? postings[0]?.id;
-    if (!isActivityIdentifier(id) || !isActivityIdentifier(ledgerId)) return [];
+    const ledgerId = item.ledgerTransactionId ?? item.ledgerId ?? item.ledgerCorrelationId ?? item.ledgerPostingId ?? details.debitPostingId ?? postings[0]?.id ?? null;
+    if (!isActivityIdentifier(id)) return [];
     return [{
       id, ledgerId, type: item.type, asset: item.asset, amount: item.amount, status: item.status, createdAt: item.createdAt,
       source: item.sourceAccount ?? details.sourceScope ?? details.fromScope ?? details.fromUserId,
@@ -125,7 +196,7 @@ function readActivities(payload: unknown): Activity[] {
       details, postings,
     }];
   });
-  if (activities.length !== source.length) throw new Error('Wallet activity ledger identity is unavailable.');
+  if (activities.length !== source.length) throw new Error('Wallet activity rows are missing their Activity identifier.');
   return activities;
 }
 
@@ -158,7 +229,7 @@ function activityTypeLabel(value: unknown) {
 }
 
 function WalletActivityHistory({ state, activities }: { state: ReadState; activities: Activity[] }) {
-  return <div id="wallet-activity"><Panel className="p-3 sm:p-4"><PanelHeading title="Activity History" action={<History size={18} className="text-[#8C8299]" />} />{state !== 'LIVE' ? <DataStatePanel state={state} title="Activity authority unavailable" message="Activity details could not be loaded yet. Refresh to try again." /> : activities.length === 0 ? <DataStatePanel state="EMPTY" title="No wallet activity yet" message="Ledger-backed wallet activity will appear here when it is available." /> : <div className="divide-y divide-[#2B2037] overflow-hidden rounded-xl border border-[#2B2037]">{activities.map((item) => <article key={item.id} className="bg-[#171022] p-3"><div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-sm font-semibold">{activityTypeLabel(item.type)} · {text(item.asset)}</p><StatusBadge state={text(item.status)} /></div><p className="mt-1 truncate text-xs text-[#8C8299]">{text(item.createdAt)} · Activity {item.id} · Ledger {text(item.ledgerId)}</p></div><div className="flex gap-4 text-xs text-[#C3BBD0] sm:text-right"><span>Amount <strong className="font-mono">{text(item.amount)}</strong></span><span>{text(item.source)}{text(item.destination) !== '—' ? ` → ${text(item.destination)}` : ''}</span></div></div><details className="mt-2 rounded-lg border border-violet-300/10 px-3 py-2 text-xs"><summary className="min-h-7 cursor-pointer text-[#C3BBD0]">Accounting details · {item.postings.length} ledger posting{item.postings.length === 1 ? '' : 's'}</summary><div className="mt-2 space-y-2"><p className="break-all text-[#8C8299]">Reference {text(item.referenceType)} · {text(item.referenceId)} · Correlation {text(item.correlationId)}</p>{Object.keys(item.details).length > 0 && <p className="break-all text-[#8C8299]">{Object.entries(item.details).map(([key, value]) => `${key}: ${typeof value === 'object' ? JSON.stringify(value) : String(value)}`).join(' · ')}</p>}{item.postings.map((posting, index) => <div key={String(posting.id ?? index)} className="grid gap-x-3 gap-y-1 rounded-md bg-[#0B0711] p-2 sm:grid-cols-2"><span>Posting {text(posting.id)} · {text(posting.scope)} · {text(posting.kind)}</span><span>Amount {text(posting.amount)} {text(posting.asset)}</span><span>Available Δ {text(posting.availableDelta)}</span><span>Locked Δ {text(posting.lockedDelta)}</span></div>)}</div></details></article>)}</div>}</Panel></div>;
+  return <div id="wallet-activity"><Panel className="p-3 sm:p-4"><PanelHeading title="Activity History" action={<History size={18} className="text-[#8C8299]" />} />{state !== 'LIVE' ? <DataStatePanel state={state} title="Activity authority unavailable" message="Activity details could not be loaded yet. Refresh to try again." /> : activities.length === 0 ? <DataStatePanel state="EMPTY" title="No wallet activity yet" message="Ledger-backed wallet activity will appear here when it is available." /> : <div className="divide-y divide-[#2B2037] overflow-hidden rounded-xl border border-[#2B2037]">{activities.map((item) => <article key={item.id} className="bg-[#171022] p-3"><div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-sm font-semibold">{activityTypeLabel(item.type)} · {text(item.asset)}</p><StatusBadge state={text(item.status)} /></div><p className="mt-1 truncate text-xs text-[#8C8299]">{text(item.createdAt)} · Activity {item.id} · Ledger {isActivityIdentifier(item.ledgerId) ? item.ledgerId : 'Not linked'}</p></div><div className="flex gap-4 text-xs text-[#C3BBD0] sm:text-right"><span>Amount <strong className="font-mono">{text(item.amount)}</strong></span><span>{text(item.source)}{text(item.destination) !== '—' ? ` → ${text(item.destination)}` : ''}</span></div></div><details className="mt-2 rounded-lg border border-violet-300/10 px-3 py-2 text-xs"><summary className="min-h-7 cursor-pointer text-[#C3BBD0]">Accounting details · {item.postings.length} ledger posting{item.postings.length === 1 ? '' : 's'}</summary><div className="mt-2 space-y-2"><p className="break-all text-[#8C8299]">Reference {text(item.referenceType)} · {text(item.referenceId)} · Correlation {text(item.correlationId)}</p>{Object.keys(item.details).length > 0 && <p className="break-all text-[#8C8299]">{Object.entries(item.details).map(([key, value]) => `${key}: ${typeof value === 'object' ? JSON.stringify(value) : String(value)}`).join(' · ')}</p>}{item.postings.map((posting, index) => <div key={String(posting.id ?? index)} className="grid gap-x-3 gap-y-1 rounded-md bg-[#0B0711] p-2 sm:grid-cols-2"><span>Posting {text(posting.id)} · {text(posting.scope)} · {text(posting.kind)}</span><span>Amount {text(posting.amount)} {text(posting.asset)}</span><span>Available Δ {text(posting.availableDelta)}</span><span>Locked Δ {text(posting.lockedDelta)}</span></div>)}</div></details></article>)}</div>}</Panel></div>;
 }
 
 function useWalletSession(onPrincipalChange: (next: string | null) => void) {
@@ -253,10 +324,12 @@ function WalletSummary({ root, state, valuation }: { root: Record<string, unknow
             {valuation.state !== 'LIVE' && <StatusBadge state={valuation.state} />}
           </div>
           <p className="mt-1 text-[10px] leading-4 text-[#8C8299]">Estimated portfolio value · USDT. Native balances remain unchanged.</p>
-          <div className="mt-3 grid min-w-0 grid-cols-3 gap-2" aria-label="Estimated available, locked and total portfolio value in USDT">
+          <div className="mt-3 grid min-w-0 grid-cols-1 gap-2 min-[380px]:grid-cols-2 md:grid-cols-3" aria-label="Estimated available, locked and total portfolio value in USDT">
+            <div className="min-w-0 min-[380px]:col-span-2 md:col-span-1">
+              <Metric label="Total · USDT" value={state === 'LIVE' ? valuation.total : 'UNAVAILABLE'} />
+            </div>
             <Metric label="Available · USDT" value={state === 'LIVE' ? valuation.available : 'UNAVAILABLE'} />
             <Metric label="Locked · USDT" value={state === 'LIVE' ? valuation.locked : 'UNAVAILABLE'} />
-            <Metric label="Total · USDT" value={state === 'LIVE' ? valuation.total : 'UNAVAILABLE'} />
           </div>
           <WalletPerformance root={root} state={state} />
         </Panel>
@@ -267,8 +340,47 @@ function assetLabel(asset: ReturnType<typeof assetMeta>, key: 'id' | 'symbol' | 
   return asset?.[key] ?? fallback;
 }
 
-function WalletAssetRow({ item }: { item: WalletAsset }) {
-  const asset = assetMeta(item.name); const iconItem = { assetId: assetLabel(asset, 'id', item.name), symbol: assetLabel(asset, 'symbol', item.name), displaySymbol: assetLabel(asset, 'displaySymbol', item.name), name: asset?.name ?? item.displayName, iconUrl: item.iconUrl }; return <div key={item.name} className="grid min-w-0 grid-cols-[minmax(3rem,1fr)_repeat(3,minmax(3rem,auto))] items-center gap-1.5 bg-[#171022] px-2 py-2 sm:grid-cols-[minmax(0,1fr)_repeat(3,minmax(5rem,auto))] sm:gap-3 sm:px-4"><div className="flex min-w-0 items-center gap-2"><AssetIcon item={iconItem} /><span className="min-w-0"><span className="block truncate text-xs font-semibold sm:text-sm">{item.displayName}</span><span className="block truncate text-[10px] text-[#8C8299] sm:text-xs">{assetLabel(asset, 'displaySymbol', item.name)}{!item.accountExists && <span className="ml-1 text-amber-200">· Account not opened</span>}</span></span></div><span className="truncate text-right font-mono text-xs tabular-nums">{item.accountExists ? text(item.available) : '—'}</span><span className="truncate text-right font-mono text-[10px] tabular-nums sm:text-xs">{item.accountExists ? text(item.locked) : '—'}</span><span className="truncate text-right font-mono text-xs font-semibold tabular-nums">{item.accountExists ? text(item.total) : '—'}</span></div>;
+function WalletAssetRow({ item, tab }: { item: WalletAsset; tab: Tab }) {
+  const asset = assetMeta(item.name);
+  const iconItem = {
+    assetId: assetLabel(asset, 'id', item.name),
+    symbol: assetLabel(asset, 'symbol', item.name),
+    displaySymbol: assetLabel(asset, 'displaySymbol', item.name),
+    name: asset?.name ?? item.displayName,
+    iconUrl: item.iconUrl,
+  };
+
+  return (
+    <div key={item.name} className="grid min-w-0 grid-cols-2 items-center gap-x-3 gap-y-2 bg-[#171022] px-3 py-3 sm:grid-cols-[minmax(0,1fr)_repeat(3,minmax(5rem,auto))] sm:gap-3 sm:px-4 sm:py-2">
+      <div className="col-span-2 flex min-w-0 items-center gap-2 sm:col-span-1">
+        <AssetIcon item={iconItem} />
+        <span className="min-w-0">
+          <span className="block break-words text-sm font-semibold">{item.displayName}</span>
+          <span className="block break-words text-xs text-[#8C8299]">
+            {assetLabel(asset, 'displaySymbol', item.name)}
+            {item.depositSupported && (
+              <span className="ml-1 text-cyan-200">
+                · Deposit supported{item.depositNetworks?.length ? ` · ${item.depositNetworks.join(', ')}` : ''}
+              </span>
+            )}
+            {!item.accountExists && <span className="ml-1 text-amber-200">· No balance recorded</span>}
+          </span>
+        </span>
+      </div>
+      <span className="min-w-0 break-all text-right font-mono text-xs tabular-nums sm:whitespace-nowrap">
+        <span className="mb-1 block text-[10px] text-[#8C8299] sm:hidden">Available</span>
+        {item.accountExists ? text(item.available) : '—'}
+      </span>
+      <span className="min-w-0 break-all text-right font-mono text-xs tabular-nums sm:whitespace-nowrap">
+        <span className="mb-1 block text-[10px] text-[#8C8299] sm:hidden">{tab === "Finance" ? "Committed" : "Locked"}</span>
+        {item.accountExists ? text(item.locked) : '—'}
+      </span>
+      <span className="col-span-2 min-w-0 break-all text-right font-mono text-xs font-semibold tabular-nums sm:col-span-1 sm:whitespace-nowrap">
+        <span className="mb-1 block text-[10px] text-[#8C8299] sm:hidden">Total</span>
+        {item.accountExists ? text(item.total) : '—'}
+      </span>
+    </div>
+  );
 }
 
 function WalletActionButton({ item, action, enabled, onSelect }: { item: Action; action: Action | null; enabled: boolean; onSelect: (action: Action) => void }) {
@@ -290,19 +402,56 @@ function WalletAccountPanel({ tab }: { tab: Tab }) {
   return <Panel className="flex flex-wrap items-center justify-between gap-2 p-3 sm:p-4"><div><p className="text-sm font-semibold">Finance commitments and loans</p><p className="mt-1 text-xs text-[#8C8299]">Committed or locked funds are not available to transfer. Loan balances and repayment terms remain tied to loan records.</p></div><Link href="/dashboard/loans" className="inline-flex min-h-11 items-center rounded-lg border border-violet-300/20 px-3 text-sm font-semibold text-[#CFC4FF] hover:bg-[#2A1742]">Review loan obligations</Link></Panel>;
 }
 
-function WalletAssets({ tab, category, onCategoryChange, state, userId, error, visibleAssets }: { tab: Tab; category: Category; onCategoryChange: (category: Category) => void; state: ReadState; userId: string | null; error: string; visibleAssets: WalletAsset[] }) {
-  return <Panel className="p-3 sm:p-4"><div className="flex flex-wrap items-center justify-between gap-3"><PanelHeading title={tab === 'Overview' ? 'All account assets' : `${tab === 'Binary' ? 'Options' : tab} assets`} /><label className="shrink-0 text-xs text-[#C3BBD0]">Asset filter <select aria-label="Asset category" value={category} onChange={(event) => onCategoryChange(event.target.value as Category)} className="nexi-input ml-2 min-h-[44px] px-2 text-xs"><option>All</option><option>Crypto</option><option>Stocks</option><option>Metals</option><option>Forex</option></select></label></div>{state !== 'LIVE' ? <DataStatePanel state={state} title={userId ? 'Wallet data unavailable' : 'Wallet is locked'} message={error || 'No authenticated wallet session is available.'} /> : visibleAssets.length === 0 ? <DataStatePanel state="UNAVAILABLE" title="No asset data for this filter" message="No matching wallet assets are available right now." /> : <div className="overflow-hidden rounded-xl border border-[#2B2037]"><div className="grid grid-cols-[minmax(3rem,1fr)_repeat(3,minmax(3rem,auto))] gap-1.5 bg-[#171022] px-2 py-2 text-[9px] uppercase tracking-[0.04em] text-[#8C8299] sm:grid-cols-[minmax(0,1fr)_repeat(3,minmax(5rem,auto))] sm:gap-3 sm:px-4 sm:text-[10px] sm:tracking-[0.12em]"><span>Asset</span><span className="text-right">Available</span><span className="text-right">{tab === 'Finance' ? 'Committed' : 'Locked'}</span><span className="text-right">Total</span></div><div className="divide-y divide-[#2B2037]">{visibleAssets.map((item) => <WalletAssetRow key={item.name} item={item} />)}</div></div>}</Panel>;
+function WalletAssets({ tab, category, onCategoryChange, state, userId, error, visibleAssets, marketCatalogUnavailable, depositCatalogUnavailable, search, onSearchChange }: { tab: Tab; category: Category; onCategoryChange: (category: Category) => void; state: ReadState; userId: string | null; error: string; visibleAssets: WalletAsset[]; marketCatalogUnavailable: boolean; depositCatalogUnavailable: boolean; search: string; onSearchChange: (value: string) => void }) {
+  return (
+    <Panel className="p-3 sm:p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <PanelHeading title={tab === 'Overview' ? 'All account assets' : `${tab === 'Binary' ? 'Options' : tab} assets`} />
+        <label className="shrink-0 text-xs text-[#C3BBD0]">
+          Asset filter
+          <select aria-label="Asset category" value={category} onChange={(event) => onCategoryChange(event.target.value as Category)} className="nexi-input ml-2 min-h-[44px] px-2 text-xs">
+            <option>All</option><option>Crypto</option><option>Stocks</option><option>Metals</option><option>Forex</option>
+          </select>
+        </label>
+        <label className="w-full text-xs text-[#C3BBD0] sm:w-auto">
+          Search assets
+          <input type="search" value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder="Name or symbol" className="nexi-input mt-1 min-h-[44px] w-full px-3 text-sm sm:ml-2 sm:mt-0 sm:w-48" />
+        </label>
+      </div>
+      {tab === 'Overview' && marketCatalogUnavailable && (
+        <p role="status" className="mt-2 text-xs text-amber-200">Market catalog is unavailable; showing recorded wallet balances only.</p>
+      )}
+      {tab === 'Funding' && depositCatalogUnavailable && (
+        <p role="status" className="mt-2 text-xs text-amber-200">Deposit availability could not be loaded; showing recorded Funding balances only.</p>
+      )}
+      {state !== 'LIVE' ? (
+        <DataStatePanel state={state} title={userId ? 'Wallet data unavailable' : 'Wallet is locked'} message={error || 'No authenticated wallet session is available.'} />
+      ) : visibleAssets.length === 0 ? (
+        <DataStatePanel state="UNAVAILABLE" title="No asset data for this filter" message="No matching wallet assets are available right now." />
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-[#2B2037]">
+          <div className="hidden grid-cols-[minmax(0,1fr)_repeat(3,minmax(5rem,auto))] gap-3 bg-[#171022] px-4 py-2 text-[10px] uppercase tracking-[0.12em] text-[#8C8299] sm:grid">
+            <span>Asset</span><span className="text-right">Available</span><span className="text-right">{tab === 'Finance' ? 'Committed' : 'Locked'}</span><span className="text-right">Total</span>
+          </div>
+          <div className="divide-y divide-[#2B2037]">{visibleAssets.map((item) => <WalletAssetRow key={item.name} item={item} tab={tab} />)}</div>
+        </div>
+      )}
+    </Panel>
+  );
 }
 
 export default function WalletPage() {
   const [tab, setTab] = useState<Tab>('Overview');
   const [category, setCategory] = useState<Category>('All');
+  const [assetSearch, setAssetSearch] = useState('');
   const { userId, sessionChecked, state, payload, activities, activityState, error, loadWallet } = useWalletAuthority();
-  const { marketPairs, metal, shares, forex } = useMarketData();
+  const { marketPairs, metal, shares, forex, loading: marketLoading, error: marketError } = useMarketData();
   const [action, setAction] = useState<Action | null>(null);
   const [currency, setCurrency] = useState('');
   const [optionsReturn, setOptionsReturn] = useState<string | null>(null);
   const fundingActionOpened = useRef(false);
+  const [depositDestinations, setDepositDestinations] = useState<DepositDestination[]>([]);
+  const [depositCatalogError, setDepositCatalogError] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -327,16 +476,50 @@ export default function WalletPage() {
   }, [optionsReturn, userId, state]);
 
   const root = record(payload);
-  const assets = useMemo(() => readAssets(payload, tab), [payload, tab]);
+  const allMarketPairs = useMemo(() => [...marketPairs, ...metal, ...shares, ...forex], [marketPairs, metal, shares, forex]);
+  const marketCatalogRows = useMemo(() => !marketLoading && !marketError ? allMarketPairs.filter((item) => item.source !== 'fallback') : [], [allMarketPairs, marketLoading, marketError]);
+  const supportedUsdt = Array.isArray(root.currencies) && root.currencies.some((value) => String(value).trim().toUpperCase() === 'USDT');
+  const walletScopedAssets = useMemo(() => readAssets(payload, tab), [payload, tab]);
+  const assets = useMemo(() => {
+    if (tab === 'Funding') return mergeDepositAssets(walletScopedAssets, depositDestinations);
+    return tab === 'Overview'
+      ? mergeMarketAssets(walletScopedAssets, marketCatalogRows, supportedUsdt)
+      : walletScopedAssets;
+  }, [walletScopedAssets, tab, marketCatalogRows, supportedUsdt, depositDestinations]);
   const overviewAssets = useMemo(() => readAssets(payload, 'Overview'), [payload]);
-  const valuation = useMemo(() => estimatePortfolio(overviewAssets, root.currencies, [...marketPairs, ...metal, ...shares, ...forex]), [overviewAssets, root.currencies, marketPairs, metal, shares, forex]);
-  const visibleAssets = useMemo(() => assets.filter((item) => category === 'All' || assetMeta(item.name)?.category === category), [assets, category]);
+  const fundingBalances = useMemo(() => readAssets(payload, 'Funding').filter((asset) => asset.accountExists).map((asset) => ({ asset: asset.name, available: String(asset.available ?? '0') })), [payload]);
+  const valuation = useMemo(() => estimatePortfolio(overviewAssets, root.currencies, allMarketPairs), [overviewAssets, root.currencies, allMarketPairs]);
+  const visibleAssets = useMemo(() => {
+    const query = assetSearch.trim().toLowerCase();
+    return assets.filter((item) => (category === 'All' || (item.category ?? assetMeta(item.name)?.category) === category)
+      && (!query || `${item.name} ${item.displayName}`.toLowerCase().includes(query)));
+  }, [assets, category, assetSearch]);
   const authenticated = Boolean(userId);
-  const currencies = useMemo(() => assets.map((asset) => ({ symbol: asset.name })), [assets]);
+  const currencies = useMemo(() => walletScopedAssets.map((asset) => ({ symbol: asset.name })), [walletScopedAssets]);
   const transferCurrencies = useMemo(() => Array.isArray(root.currencies) ? root.currencies.map((symbol) => ({ symbol: String(symbol).toUpperCase() })) : currencies, [root.currencies, currencies]);
   const [conversionPairs, setConversionPairs] = useState<Array<{ from: string; to: string }>>([]);
   const [conversionPairState, setConversionPairState] = useState<'IDLE' | 'LOADING' | 'READY' | 'ERROR'>('IDLE');
   const [conversionRefreshKey, setConversionRefreshKey] = useState(0);
+
+  useEffect(() => {
+    if (tab !== 'Funding' || !userId) {
+      setDepositDestinations([]);
+      setDepositCatalogError(false);
+      return;
+    }
+    let cancelled = false;
+    setDepositDestinations([]);
+    setDepositCatalogError(false);
+    api.get<DepositDestination[]>('/financial/deposit-destinations').then((response) => {
+      if (cancelled || sessionPrincipalId() !== userId) return;
+      setDepositDestinations(Array.isArray(response.data) ? response.data : []);
+    }).catch(() => {
+      if (cancelled || sessionPrincipalId() !== userId) return;
+      setDepositDestinations([]);
+      setDepositCatalogError(true);
+    });
+    return () => { cancelled = true; };
+  }, [tab, userId]);
 
   useEffect(() => {
     if (action !== 'Convert' || !authenticated || !userId) {
@@ -388,13 +571,13 @@ export default function WalletPage() {
       <WalletAccountTabs tab={tab} onTabChange={setTab} />
       <section className="min-w-0"><div className="min-w-0 space-y-3">
         <WalletAccountPanel tab={tab} />
-        <WalletAssets tab={tab} category={category} onCategoryChange={setCategory} state={state} userId={userId} error={error} visibleAssets={visibleAssets} />
+        <WalletAssets tab={tab} category={category} onCategoryChange={setCategory} state={state} userId={userId} error={error} visibleAssets={visibleAssets} marketCatalogUnavailable={marketError} depositCatalogUnavailable={depositCatalogError} search={assetSearch} onSearchChange={setAssetSearch} />
         <WalletActivityHistory state={activityState} activities={activities} />
       </div></section>
       <DepositModal isOpen={action === 'Deposit'} onClose={() => setAction(null)} currencies={currencies} selectedCurrency={currency} onSelectCurrency={setCurrency} onCompleted={loadWallet} />
       <WithdrawModal isOpen={action === 'Withdraw'} onClose={() => setAction(null)} currencies={currencies} selectedCurrency={currency} onSelectCurrency={setCurrency} onCompleted={loadWallet} />
       <TransferModal isOpen={action === 'Transfer'} onClose={() => setAction(null)} currencies={transferCurrencies} selectedCurrency={currency} onSelectCurrency={setCurrency} initialDestinationScope={optionsReturn ? 'BINARY' : undefined} onCompleted={loadWallet} />
-      <ConvertModal isOpen={action === 'Convert'} onClose={() => setAction(null)} eligiblePairs={conversionPairs} eligibilityStatus={conversionPairState} onRetryEligibility={() => setConversionRefreshKey((current) => current + 1)} selectedCurrency={currency} onCompleted={loadWallet} />
+      <ConvertModal isOpen={action === 'Convert'} onClose={() => setAction(null)} eligiblePairs={conversionPairs} fundingBalances={fundingBalances} walletReadState={state} eligibilityStatus={conversionPairState} onRetryEligibility={() => setConversionRefreshKey((current) => current + 1)} selectedCurrency={currency} onCompleted={loadWallet} />
     </WalletDashboardLayout>
   </PageShell>;
 }

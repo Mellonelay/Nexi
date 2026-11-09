@@ -15,6 +15,7 @@ export interface MarginPositionResponse {
   markPrice: string | null;
   unrealizedPnl: string;
   status: 'PENDING' | 'OPEN' | 'CLOSING' | 'CLOSED' | 'LIQUIDATED';
+  openIdempotencyKey?: string;
   openedAt: string;
   closedAt: string | null;
   state?: string;
@@ -43,8 +44,30 @@ export async function openMarginPosition(input: { pair: string; direction: Margi
   return response.data;
 }
 
+// A close can remain CLOSING while its matching order is unfilled. The
+// acknowledgement is not necessarily a full persisted position projection.
+export interface MarginCloseResponse {
+  positionId: string;
+  state: 'CLOSING' | 'CLOSED' | 'LIQUIDATED';
+  replayed?: boolean;
+  orderId?: string;
+  closeOrderId?: string;
+}
+
 export async function closeMarginPosition(positionId: string, idempotencyKey: string) {
-  const response = await api.post<MarginPositionResponse>(`/spot/margin/positions/${encodeURIComponent(positionId)}/close`, { positionId, idempotencyKey });
+  const response = await api.post<MarginCloseResponse>(`/spot/margin/positions/${encodeURIComponent(positionId)}/close`, { positionId, idempotencyKey });
+  return response.data;
+}
+
+export interface CancelPendingMarginPositionResponse {
+  positionId: string;
+  state: 'CLOSED';
+  replayed: boolean;
+  repayment?: unknown;
+}
+
+export async function cancelPendingMarginPosition(positionId: string, idempotencyKey: string) {
+  const response = await api.post<CancelPendingMarginPositionResponse>(`/spot/margin/positions/${encodeURIComponent(positionId)}/cancel-pending`, { idempotencyKey });
   return response.data;
 }
 

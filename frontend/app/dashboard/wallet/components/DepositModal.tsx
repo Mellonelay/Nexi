@@ -6,6 +6,7 @@ import { ArrowLeft, Check, Copy, Image as ImageIcon, X } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
 import api from '../../../lib/api';
+import { sessionPrincipalId } from '../../../lib/wallet-auth';
 import { sameDepositClaim, uploadDepositProofObject, type PendingDepositClaim } from './deposit-proof-intent';
 import { getIntentKey } from '../../../lib/intent-key';
 import { findAsset } from '../../../lib/asset-registry';
@@ -25,10 +26,14 @@ type Destination = {
   assetName?: string;
   assetLogo?: string;
   network: string;
+  networkName?: string;
   depositAddressId: string;
   address: string;
   label?: string;
   minDeposit?: string;
+  maxDeposit?: string;
+  notice?: string;
+  instructions?: string;
   confirmationCount?: number;
   decimals?: number;
 };
@@ -46,6 +51,7 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
   const [busy, setBusy] = useState(false);
   const submissionLock = useRef(false);
   const pendingClaim = useRef<PendingDepositClaim | null>(null);
+  const [unknownClaimKey, setUnknownClaimKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -54,7 +60,8 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
   useEffect(() => {
     if (!isOpen) return;
     let cancelled = false;
-    pendingClaim.current = null;
+    // Keep an unresolved claim key across modal close/reopen.
+    if (!unknownClaimKey) pendingClaim.current = null;
     setStep('asset');
     setAmount('');
     setTxHash('');
@@ -98,6 +105,12 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
 
   const destination = assetDestinations.find((item) => item.network === network) ?? assetDestinations[0];
   const selectedMeta = findAsset(selectedCurrency);
+  const numericClaim = Number(amount);
+  const minClaim = destination?.minDeposit == null ? null : Number(destination.minDeposit);
+  const maxClaim = destination?.maxDeposit == null ? null : Number(destination.maxDeposit);
+  const withinClaimLimits = Number.isFinite(numericClaim) && numericClaim > 0
+    && (minClaim === null || (Number.isFinite(minClaim) && numericClaim >= minClaim))
+    && (maxClaim === null || (Number.isFinite(maxClaim) && numericClaim <= maxClaim));
 
   const chooseAsset = (asset: string) => {
     onSelectCurrency(asset);
@@ -121,12 +134,33 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
     }
   };
 
+  const recheckUnknownClaim = async (key: string) => {
+    const principal = sessionPrincipalId();
+    if (!principal || pendingClaim.current?.intent.key !== key) return;
+    try {
+      const response = await api.get<Array<{ idempotencyKey?: string }>>('/financial/deposit-claims');
+      if (sessionPrincipalId() !== principal || pendingClaim.current?.intent.key !== key) return;
+      if (!Array.isArray(response.data) || !response.data.some((claim) => claim?.idempotencyKey === key)) {
+        toast.warning('Deposit claim remains unconfirmed. Check deposit history or contact Support before resubmitting.');
+        return;
+      }
+      pendingClaim.current = null;
+      setUnknownClaimKey(null);
+      toast.success('The deposit claim was found in account history.');
+      try { await onCompleted?.(); }
+      catch { toast.warning('Deposit claim was found, but Wallet refresh failed.'); }
+    } catch {
+      if (sessionPrincipalId() === principal) toast.error('Deposit history could not be checked. The original claim remains unresolved.');
+    }
+  };
+
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (submissionLock.current) return;
-    if (busy || !destination || !proof || !amount || !Number.isFinite(Number(amount)) || Number(amount) <= 0) return;
+    if (submissionLock.current || unknownClaimKey) return;
+    if (busy || !destination || !proof || !withinClaimLimits) return;
     submissionLock.current = true;
     setBusy(true);
+    let claimPostAttempted = false;
     try {
       const fingerprint = JSON.stringify([destination.asset, destination.network, destination.depositAddressId, amount.trim(), txHash.trim(), proof.name, proof.size, proof.type, proof.lastModified]);
       let claim = pendingClaim.current;
@@ -135,6 +169,7 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
         claim = { proof, fingerprint, objectKey, intent: getIntentKey(null, fingerprint, 'deposit-claim') };
         pendingClaim.current = claim;
       }
+      claimPostAttempted = true;
       await api.post('/financial/deposit-claims', {
         asset: destination.asset,
         network: destination.network,
@@ -146,10 +181,23 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
       });
       pendingClaim.current = null;
       toast.success('Deposit claim submitted for review.');
-      await onCompleted?.();
       onClose();
+      try {
+        await onCompleted?.();
+      } catch {
+        toast.warning('Deposit claim submitted, but Wallet refresh failed. Check your deposit history before submitting another claim.');
+      }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Deposit claim could not be submitted.');
+      const status = (error as { response?: { status?: number } } | null)?.response?.status;
+      if (claimPostAttempted && ![400, 401, 403, 404, 422].includes(status ?? -1) && pendingClaim.current) {
+        const key = pendingClaim.current.intent.key;
+        setUnknownClaimKey(key);
+        toast.warning('Deposit claim outcome is unknown. Recheck history before another submission.');
+        void recheckUnknownClaim(key);
+      } else {
+        if (claimPostAttempted) pendingClaim.current = null;
+        toast.error(error instanceof Error ? error.message : 'Deposit proof or claim was rejected.');
+      }
     } finally {
       submissionLock.current = false;
       setBusy(false);
@@ -168,12 +216,16 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
             )}
             <div className="min-w-0 flex-1">
               <h2 id="deposit-title" className="truncate text-lg font-semibold text-white sm:text-xl">{step === 'asset' ? 'Deposit' : `Deposit ${selectedCurrency}`}</h2>
-              <p className="mt-0.5 truncate text-xs text-[#8C8299]">{step === 'asset' ? 'Select an asset to deposit' : (destination?.network ?? 'Select a configured network')}</p>
+              <p className="mt-0.5 truncate text-xs text-[#8C8299]">{step === 'asset' ? 'Select an asset to deposit' : (destination?.networkName ?? destination?.network ?? 'Select a configured network')}</p>
             </div>
             <button type="button" onClick={onClose} aria-label="Close deposit dialog" className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-[#C3BBD0] hover:bg-white/5"><X size={21} /></button>
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4 sm:px-5 sm:pb-5">
+            {unknownClaimKey && <div role="alert" className="mb-4 rounded-xl border border-amber-300/30 p-3 text-sm text-amber-100">
+              Deposit claim outcome is unresolved. New submissions are disabled until the original claim is confirmed.
+              <button type="button" onClick={() => void recheckUnknownClaim(unknownClaimKey)} className="mt-2 block min-h-11 rounded-lg border border-amber-300/30 px-3 font-semibold">Recheck deposit claim</button>
+            </div>}
             {step === 'asset' ? (
               <div className="space-y-3">
                 {loading && <p className="rounded-2xl border border-[#2B2037] bg-[#171022] p-4 text-sm text-[#8C8299]">Loading configured deposit assets…</p>}
@@ -187,7 +239,7 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
                 {!loading && !loadFailed && assetGroups.map(({ asset, rows }) => {
                   const meta = findAsset(asset);
                   const name = rows[0]?.assetName || meta?.name || asset;
-                  const networks = Array.from(new Set(rows.map((row: Destination) => row.network)));
+                  const networks = Array.from(new Set(rows.map((row: Destination) => row.networkName || row.network)));
                   const iconItem = { assetId: meta?.id ?? asset, symbol: meta?.symbol ?? asset, displaySymbol: meta?.displaySymbol ?? asset, name, iconUrl: rows[0]?.assetLogo };
                   return (
                     <button key={asset} type="button" onClick={() => chooseAsset(asset)} className="flex min-h-20 w-full items-center gap-3 rounded-2xl border border-[#2B2037] bg-[#171022] px-4 py-3 text-left transition hover:border-violet-300/35 hover:bg-[#1B1229] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF]">
@@ -211,10 +263,10 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
                   {assetDestinations.length > 1 ? (
                     <label className="mt-4 block text-xs font-medium text-[#C3BBD0]">Network
                       <select className="nexi-input mt-1 w-full" value={network} onChange={(event) => { setNetwork(event.target.value); setCopied(false); }}>
-                        {assetDestinations.map((item) => <option key={item.depositAddressId} value={item.network}>{item.network}</option>)}
+                        {assetDestinations.map((item) => <option key={item.depositAddressId} value={item.network}>{item.networkName || item.network} ({item.network})</option>)}
                       </select>
                     </label>
-                  ) : <div className="mt-4 rounded-xl border border-[#2B2037] bg-[#0B0912] px-3 py-2 text-xs"><span className="text-[#8C8299]">Network</span><span className="float-right font-semibold text-white">{destination.network}</span></div>}
+                  ) : <div className="mt-4 rounded-xl border border-[#2B2037] bg-[#0B0912] px-3 py-2 text-xs"><span className="text-[#8C8299]">Network</span><span className="float-right font-semibold text-white">{destination.networkName || destination.network} ({destination.network})</span></div>}
                 </section>
 
                 <section className="rounded-2xl border border-[#2B2037] bg-[#171022] p-4">
@@ -226,7 +278,8 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
                   </button>
                   <div className="mt-4 grid grid-cols-2 gap-2">
                     <div className="rounded-xl border border-[#2B2037] bg-[#0B0912] p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-[#8C8299]">Minimum</p><p className="mt-1 font-mono text-xs font-semibold text-white">{destination.minDeposit ?? '—'} {destination.asset}</p></div>
-                    <div className="rounded-xl border border-[#2B2037] bg-[#0B0912] p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-[#8C8299]">Confirmations</p><p className="mt-1 font-mono text-xs font-semibold text-white">{destination.confirmationCount ?? '—'}</p></div>
+                    <div className="rounded-xl border border-[#2B2037] bg-[#0B0912] p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-[#8C8299]">Maximum</p><p className="mt-1 font-mono text-xs font-semibold text-white">{destination.maxDeposit ?? '—'} {destination.asset}</p></div>
+                    <div className="col-span-2 rounded-xl border border-[#2B2037] bg-[#0B0912] p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-[#8C8299]">Required confirmations</p><p className="mt-1 font-mono text-xs font-semibold text-white">{destination.confirmationCount ?? '—'}</p></div>
                   </div>
                 </section>
 
@@ -237,10 +290,18 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
                   </section>
                 )}
 
+                {(destination.notice?.trim() || destination.instructions?.trim()) && (
+                  <section className="rounded-2xl border border-violet-300/15 bg-[#151020] p-4 text-xs leading-5 text-[#C3BBD0]">
+                    {destination.notice?.trim() && <p>{destination.notice}</p>}
+                    {destination.instructions?.trim() && <p className="mt-2">{destination.instructions}</p>}
+                  </section>
+                )}
+                <p className="text-xs leading-5 text-[#C3BBD0]">This form submits deposit evidence for review. Sending funds or uploading a screenshot does not automatically credit your NEXI account; the claim requires authoritative verification.</p>
                 <section className="space-y-4 rounded-2xl border border-[#2B2037] bg-[#12101A] p-4">
                   <label className="block text-xs font-medium text-[#C3BBD0]">Recharge amount
                     <input className="nexi-input mt-1 w-full" inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder={`Amount in ${destination.asset}`} required />
                   </label>
+                  {amount.trim() && !withinClaimLimits && <p role="alert" className="text-xs text-amber-200">Enter an amount within the configured deposit limits.</p>}
                   <label className="block text-xs font-medium text-[#C3BBD0]">Transaction hash <span className="font-normal text-[#8C8299]">(optional)</span>
                     <input className="nexi-input mt-1 w-full font-mono" value={txHash} onChange={(event) => setTxHash(event.target.value)} placeholder="TXID / transaction hash" />
                   </label>
@@ -251,7 +312,7 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
                       <input className="sr-only" type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={(event) => setProof(event.target.files?.[0] ?? null)} required />
                     </span>
                   </label>
-                  <button type="submit" disabled={busy || !proof || !amount || Number(amount) <= 0} className="min-h-12 w-full rounded-xl bg-[#8B5CF6] px-4 font-semibold text-white shadow-[0_0_24px_rgba(139,92,246,0.22)] disabled:cursor-not-allowed disabled:opacity-50">{busy ? 'Submitting…' : 'Submit deposit claim'}</button>
+                  <button type="submit" disabled={busy || !proof || !withinClaimLimits} className="min-h-12 w-full rounded-xl bg-[#8B5CF6] px-4 font-semibold text-white shadow-[0_0_24px_rgba(139,92,246,0.22)] disabled:cursor-not-allowed disabled:opacity-50">{busy ? 'Submitting…' : 'Submit deposit claim'}</button>
                 </section>
               </form>
             ) : (

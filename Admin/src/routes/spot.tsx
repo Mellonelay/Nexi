@@ -56,7 +56,7 @@ function Inner() {
 
   const pairs = pairsQ.data ?? [];
   const orders = ordersQ.data ?? [];
-  const openOrders = orders.filter((o) => o.status === "open").length;
+  const openOrders = orders.filter((o) => o.status === "open" || o.status === "partially_filled").length;
   const maintenance = pairs.filter((p) => p.maintenance).length;
 
   return (
@@ -588,7 +588,7 @@ function OrdersPanel({ orders }: { orders: SpotOrder[] }) {
   const canCancel = session.can("spot.cancel_order");
   const [pending, setPending] = useState<SpotOrder | null>(null);
 
-  const filtered = orders.filter((o) => o.status === "open");
+  const filtered = orders.filter((o) => o.status === "open" || o.status === "partially_filled");
   if (filtered.length === 0) {
     return (
       <EmptyState

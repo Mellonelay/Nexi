@@ -5,12 +5,15 @@ import ModalSurface from '../../../components/ModalSurface';
 import { X } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../../lib/api';
+import { sessionPrincipalId } from '../../../lib/wallet-auth';
 import { getIntentKey, type PendingIntentKey } from '../../../lib/intent-key';
 
 interface ConvertModalProps {
   isOpen: boolean;
   onClose: () => void;
   eligiblePairs: Array<{ from: string; to: string }>;
+  fundingBalances: Array<{ asset: string; available: string }>;
+  walletReadState: 'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR';
   eligibilityStatus: 'IDLE' | 'LOADING' | 'READY' | 'ERROR';
   onRetryEligibility: () => void;
   selectedCurrency: string;
@@ -23,20 +26,28 @@ function conversionFailureMessage(error: unknown, phase: 'quote' | 'accept') {
   const response = (error as { response?: { data?: { message?: unknown } } } | null)?.response;
   const raw = response?.data?.message;
   const message = Array.isArray(raw) ? raw.join(' ') : typeof raw === 'string' ? raw : '';
-  if (/insufficient (?:funds|balance)/i.test(message)) return 'Your available balance is too low for this conversion.';
+  if (/insufficient (?:funds|balance)/i.test(message)) return 'The Funding account has insufficient available source asset. Transfer holdings from Spot to Funding, then request a fresh quote. No conversion has been confirmed.';
   if (/quote expired|conversion quote expired/i.test(message)) return 'This quote expired. Request a fresh quote to continue.';
   if (/unsupported|conversion market unavailable|conversion market quote unavailable/i.test(message)) return 'This pair is no longer eligible. Refresh the pair list and try again.';
-  if (!response) return 'Network connection failed. Check your connection and retry.';
+  if (!response) return phase === 'accept'
+    ? 'Conversion outcome is unknown. Check Wallet balances and activity before starting another conversion.'
+    : 'Network connection failed. Check your connection before requesting a new quote.';
   return phase === 'quote' ? 'A quote could not be created for this pair. Review the amount and try again.' : 'The conversion could not be confirmed. Refresh wallet activity before retrying.';
 }
 
-export default function ConvertModal({ isOpen, onClose, eligiblePairs, eligibilityStatus, onRetryEligibility, selectedCurrency, onCompleted }: ConvertModalProps) {
+export default function ConvertModal({ isOpen, onClose, eligiblePairs, fundingBalances, walletReadState, eligibilityStatus, onRetryEligibility, selectedCurrency, onCompleted }: ConvertModalProps) {
   const [fromAsset, setFromAsset] = useState('');
   const [toAsset, setToAsset] = useState('');
   const eligibleFrom = useMemo(() => [...new Set(eligiblePairs.map((pair) => pair.from))], [eligiblePairs]);
   const eligibleTargets = useMemo(() => [...new Set(eligiblePairs.filter((pair) => pair.from === fromAsset).map((pair) => pair.to))], [eligiblePairs, fromAsset]);
   const eligibleKey = eligiblePairs.map((pair) => `${pair.from}>${pair.to}`).sort().join('|');
   const [amount, setAmount] = useState('');
+  const fundingAvailable = fundingBalances.find((balance) => balance.asset === fromAsset)?.available ?? '0';
+  const fundingAmount = Number(fundingAvailable);
+  const requestedAmount = Number(amount);
+  const fundingReady = walletReadState === 'LIVE' && Number.isFinite(fundingAmount) && fundingAmount > 0;
+  const fundingSufficient = fundingReady && Number.isFinite(requestedAmount)
+    && requestedAmount > 0 && requestedAmount <= fundingAmount;
   const [quote, setQuote] = useState<Quote | null>(null);
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -44,6 +55,9 @@ export default function ConvertModal({ isOpen, onClose, eligiblePairs, eligibili
   const submissionLock = useRef(false);
   const pendingQuoteIntent = useRef<PendingIntentKey | null>(null);
   const pendingAcceptIntent = useRef<PendingIntentKey | null>(null);
+  const [unknownAcceptKey, setUnknownAcceptKey] = useState<string | null>(null);
+  const pendingAcceptedQuoteId = useRef<string | null>(null);
+  const pendingPrincipal = useRef<string | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -53,7 +67,7 @@ export default function ConvertModal({ isOpen, onClose, eligiblePairs, eligibili
     const source = availableFrom.includes(preferred) ? preferred : (availableFrom[0] ?? '');
     setFromAsset(source);
     setToAsset(pairs.find(([from]) => from === source)?.[1] ?? '');
-    setQuote(null);
+    if (!pendingAcceptedQuoteId.current) setQuote(null);
     setFeedback(null);
   }, [isOpen, selectedCurrency, eligibleKey]);
 
@@ -65,17 +79,60 @@ export default function ConvertModal({ isOpen, onClose, eligiblePairs, eligibili
 
   const quoteExpiry = quote ? Date.parse(quote.expiresAt) : Number.NaN;
   const quoteExpired = Boolean(quote) && (!Number.isFinite(quoteExpiry) || quoteExpiry <= now);
-  const close = () => { pendingQuoteIntent.current = null; pendingAcceptIntent.current = null; onClose(); };
+  const close = () => {
+    if (!unknownAcceptKey) {
+      pendingQuoteIntent.current = null;
+      pendingAcceptIntent.current = null;
+    }
+    onClose();
+  };
+
+  const recheckUnknownConversion = async (key: string) => {
+    const principal = sessionPrincipalId();
+    const quoteId = pendingAcceptedQuoteId.current;
+    if (!principal || principal !== pendingPrincipal.current || !quoteId || pendingAcceptIntent.current?.key !== key) {
+      setFeedback('Verify the original wallet session before checking this conversion.');
+      return;
+    }
+    try {
+      const response = await api.get<{ activities: Array<{ type?: string; referenceId?: string; ledgerCorrelationId?: string }> }>('/wallet/activity', { params: { limit: 100 } });
+      if (sessionPrincipalId() !== principal || pendingAcceptIntent.current?.key !== key) return;
+      const confirmed = Array.isArray(response.data?.activities) && response.data.activities.some((item) =>
+        item?.type === 'CONVERSION' && item.referenceId === quoteId
+        && item.ledgerCorrelationId === `gate2:conversion:${quoteId}`);
+      if (!confirmed) {
+        setFeedback('Conversion outcome is unresolved. Do not accept another quote; review Wallet activity or contact Support.');
+        return;
+      }
+      pendingAcceptIntent.current = null;
+      pendingAcceptedQuoteId.current = null;
+      pendingPrincipal.current = null;
+      pendingQuoteIntent.current = null;
+      setUnknownAcceptKey(null);
+      setQuote(null);
+      setFeedback('Conversion confirmed in account activity.');
+      try { await onCompleted?.(); } catch { toast.warning('Conversion confirmed, but Wallet refresh failed.'); }
+    } catch {
+      if (sessionPrincipalId() === principal && pendingAcceptIntent.current?.key === key)
+        setFeedback('Conversion activity could not be checked. The original acceptance remains unresolved.');
+    }
+  };
 
   const requestQuote = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (submissionLock.current) return;
+    if (submissionLock.current || unknownAcceptKey) return;
     if (!eligiblePairs.some((pair) => pair.from === fromAsset && pair.to === toAsset)) {
       setFeedback('This conversion pair is not currently supported. Refresh the pair list.');
       return;
     }
     if (fromAsset === toAsset || !amount || !Number.isFinite(Number(amount)) || Number(amount) <= 0) {
       setFeedback('Enter a valid amount greater than zero.');
+      return;
+    }
+    if (!fundingSufficient) {
+      setFeedback(walletReadState !== 'LIVE'
+        ? 'Funding balances are unavailable. Refresh Wallet before requesting a quote.'
+        : `Available Funding balance is ${fundingAvailable} ${fromAsset}. Transfer funds from Spot to Funding before requesting this conversion.`);
       return;
     }
     const intent = getIntentKey(pendingQuoteIntent.current, JSON.stringify([fromAsset, toAsset, amount]), 'conversion-quote');
@@ -98,26 +155,49 @@ export default function ConvertModal({ isOpen, onClose, eligiblePairs, eligibili
   };
 
   const accept = async () => {
-    if (!quote || submissionLock.current) return;
+    if (!quote || submissionLock.current || unknownAcceptKey) return;
     if (quoteExpired) {
       setFeedback('This quote expired. Request a fresh quote to continue.');
       return;
     }
-    const intent = getIntentKey(pendingAcceptIntent.current, quote.id, 'conversion-accept');
+    const principal = sessionPrincipalId();
+    if (!principal) { setFeedback('Verify your wallet session before accepting the quote.'); return; }
+    const intent = getIntentKey(pendingAcceptIntent.current, `${principal}:${quote.id}`, 'conversion-accept');
     pendingAcceptIntent.current = intent;
+    pendingAcceptedQuoteId.current = quote.id;
+    pendingPrincipal.current = principal;
     submissionLock.current = true;
     setBusy(true);
     setFeedback(null);
     try {
       await api.post('/financial/conversion/accept', { quoteId: quote.id, acceptanceKey: intent.key });
+      if (sessionPrincipalId() !== principal) return;
+      pendingAcceptIntent.current = null;
+      pendingAcceptedQuoteId.current = null;
+      pendingPrincipal.current = null;
       toast.success('Conversion completed.');
-      await onCompleted?.();
       setQuote(null);
       close();
+      try {
+        await onCompleted?.();
+      } catch {
+        toast.warning('Conversion completed, but Wallet could not refresh. Reload balances and activity before starting another conversion.');
+      }
     } catch (error) {
-      const message = conversionFailureMessage(error, 'accept');
-      setFeedback(message);
-      toast.error(message);
+      if (sessionPrincipalId() !== principal) return;
+      const status = (error as { response?: { status?: number } } | null)?.response?.status;
+      if ([400, 401, 403, 404, 422].includes(status ?? -1)) {
+        pendingAcceptIntent.current = null;
+        pendingAcceptedQuoteId.current = null;
+        pendingPrincipal.current = null;
+        const message = conversionFailureMessage(error, 'accept');
+        setFeedback(message);
+        toast.error(message);
+      } else {
+        setUnknownAcceptKey(intent.key);
+        setFeedback('Conversion outcome is unknown. Recheck Wallet activity before accepting another quote.');
+        void recheckUnknownConversion(intent.key);
+      }
     } finally {
       submissionLock.current = false;
       setBusy(false);
@@ -129,12 +209,16 @@ export default function ConvertModal({ isOpen, onClose, eligiblePairs, eligibili
   return <ModalSurface open={isOpen} onClose={close} title="Convert">
     <section className="relative w-full max-w-md overflow-hidden rounded-2xl border border-violet-300/20 bg-[#121022] shadow-2xl">
       <div className="flex items-center justify-between border-b border-violet-300/10 p-6"><h2 id="convert-title" className="text-xl font-bold text-white">Convert</h2><button type="button" onClick={close} aria-label="Close conversion dialog" className="inline-flex h-11 w-11 items-center justify-center text-[#C3BBD0]"><X size={22} /></button></div>
+      {unknownAcceptKey && <div role="alert" className="mx-4 mt-4 rounded-lg border border-amber-300/25 p-3 text-sm text-amber-100">
+        Conversion acceptance outcome is unresolved. Further acceptance is disabled.
+        <button type="button" onClick={() => void recheckUnknownConversion(unknownAcceptKey)} className="mt-2 block min-h-11 rounded-lg border border-amber-300/30 px-3 font-semibold">Recheck conversion</button>
+      </div>}
       {quote ? <div className="space-y-4 p-6">
         {feedback && <p role="alert" className="rounded-lg border border-amber-300/20 bg-amber-300/5 p-3 text-sm text-amber-100">{feedback}</p>}
         <div className="rounded-xl border border-[#2B2037] bg-[#171022] p-4"><p className="text-sm text-[#C3BBD0]">{quote.inputAmount} {quote.fromAsset} → <strong className="text-white">{quote.outputAmount} {quote.toAsset}</strong></p><p className="mt-2 text-xs text-[#8C8299]">Rate {quote.rate} · expires {Number.isFinite(quoteExpiry) ? new Date(quoteExpiry).toLocaleTimeString() : 'unknown'}</p></div>
         {quoteExpired && <p role="status" className="text-sm text-amber-200">Quote expired. Request another quote to continue.</p>}
-        <button type="button" disabled={busy || quoteExpired} onClick={() => void accept()} className="min-h-11 w-full rounded-xl bg-[#8B5CF6] px-4 font-semibold text-white disabled:opacity-50">{busy ? 'Converting…' : quoteExpired ? 'Quote expired' : 'Accept quote'}</button>
-        <button type="button" disabled={busy} onClick={() => { pendingQuoteIntent.current = null; pendingAcceptIntent.current = null; setQuote(null); setFeedback(null); }} className="min-h-11 w-full rounded-xl border border-[#2B2037] text-[#C3BBD0] disabled:opacity-50">Request another quote</button>
+        <button type="button" disabled={busy || quoteExpired || Boolean(unknownAcceptKey)} onClick={() => void accept()} className="min-h-11 w-full rounded-xl bg-[#8B5CF6] px-4 font-semibold text-white disabled:opacity-50">{busy ? 'Converting…' : quoteExpired ? 'Quote expired' : 'Accept quote'}</button>
+        <button type="button" disabled={busy || Boolean(unknownAcceptKey)} onClick={() => { pendingQuoteIntent.current = null; pendingAcceptIntent.current = null; setQuote(null); setFeedback(null); }} className="min-h-11 w-full rounded-xl border border-[#2B2037] text-[#C3BBD0] disabled:opacity-50">Request another quote</button>
       </div> : <form onSubmit={requestQuote} className="space-y-4 p-6">
         {feedback && <p role="alert" className="rounded-lg border border-amber-300/20 bg-amber-300/5 p-3 text-sm text-amber-100">{feedback}</p>}
         {loadingPairs && <p role="status" className="text-sm text-[#C3BBD0]">Loading eligible conversion pairs…</p>}
@@ -142,8 +226,9 @@ export default function ConvertModal({ isOpen, onClose, eligiblePairs, eligibili
         {eligibilityStatus === 'READY' && eligiblePairs.length === 0 && <p role="status" className="text-sm text-amber-200">No conversion pair is currently eligible under backend configuration and fresh market data.</p>}
         <label className="block text-xs text-[#C3BBD0]">From<select className="nexi-input mt-1 w-full" value={fromAsset} onChange={(event) => { const next = event.target.value; setFromAsset(next); setToAsset(eligiblePairs.find((pair) => pair.from === next)?.to ?? ''); }} disabled={loadingPairs || eligibilityStatus !== 'READY' || !eligibleFrom.length}>{eligibleFrom.map((symbol) => <option key={symbol} value={symbol}>{symbol}</option>)}</select></label>
         <label className="block text-xs text-[#C3BBD0]">To<select className="nexi-input mt-1 w-full" value={toAsset} onChange={(event) => setToAsset(event.target.value)} disabled={loadingPairs || eligibilityStatus !== 'READY' || !eligibleTargets.length}>{eligibleTargets.map((symbol) => <option key={symbol} value={symbol}>{symbol}</option>)}</select></label>
+        <p className="text-xs text-[#C3BBD0]" role="status">Funding available: {walletReadState === 'LIVE' ? `${fundingAvailable} ${fromAsset || '—'}` : 'Unavailable'}. Conversion spends Funding (MAIN), not Spot. Move Spot holdings to Funding using Wallet Transfer first.</p>
         <label className="block text-xs text-[#C3BBD0]">Amount<input className="nexi-input mt-1 w-full" inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} required /></label>
-        <button type="submit" disabled={busy || eligibilityStatus !== 'READY' || !fromAsset || !toAsset || fromAsset === toAsset || !eligiblePairs.some((pair) => pair.from === fromAsset && pair.to === toAsset)} className="min-h-11 w-full rounded-xl bg-[#8B5CF6] px-4 font-semibold text-white disabled:opacity-50">{busy ? 'Quoting…' : 'Get quote'}</button>
+        <button type="submit" disabled={busy || Boolean(unknownAcceptKey) || eligibilityStatus !== 'READY' || !fundingSufficient || !fromAsset || !toAsset || fromAsset === toAsset || !eligiblePairs.some((pair) => pair.from === fromAsset && pair.to === toAsset)} className="min-h-11 w-full rounded-xl bg-[#8B5CF6] px-4 font-semibold text-white disabled:opacity-50">{busy ? 'Quoting…' : 'Get quote'}</button>
       </form>}
     </section>
   </ModalSurface>;

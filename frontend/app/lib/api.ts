@@ -49,8 +49,11 @@ async function recoverPublicSession(rejectedAuthorization?: string) {
         setAuthSession(response.data);
         return true;
       })
-      .catch(() => {
-        clearAuthSession();
+      .catch((error: unknown) => {
+        // A disconnected network or timeout does not revoke an authenticated session.
+        // Only a definitive server-side refresh rejection invalidates the stored token.
+        const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+        if (status === 400 || status === 401 || status === 403) clearAuthSession();
         return false;
       })
       .finally(() => { refreshPromise = null; });

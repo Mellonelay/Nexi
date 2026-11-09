@@ -31,6 +31,18 @@ export class FinancialOperationsService {
     return { deposit: await this.d1.creditDepositAtomic(String(deposit.id), 'Deposit observation reached confirmation threshold', undefined, `gate2:deposit:credit:${deposit.id}`), credited: true, providerLive: false };
   }
 
+  async getWithdrawalCapabilities() {
+    const rows = await this.d1.listPublicWithdrawalCapabilities();
+    return rows.map((row) => ({
+      asset: String(row.asset),
+      network: String(row.network),
+      networkName: String(row.networkName ?? row.network),
+      minWithdrawal: String(row.minWithdrawal),
+      maxWithdrawal: String(row.maxWithdrawal),
+      withdrawalFee: String(row.withdrawalFee),
+    }));
+  }
+
   private hasWithdrawalCapability(config: Awaited<ReturnType<D1FinancialCommandGateway['getWalletAssetNetworkConfig']>>): boolean {
     return Boolean(config) && [
       config?.assetActive,

@@ -253,6 +253,18 @@ export function NotificationsPanel({
   }, [loadNotifications, loadUnreadCount, open, principalId, retryNonce]);
 
   useEffect(() => {
+    if (!principalId) return;
+    const refreshWhenVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      if (getAccessTokenPrincipalId() !== principalId) return;
+      void loadUnreadCount();
+      if (openRef.current) void loadNotifications();
+    };
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => document.removeEventListener("visibilitychange", refreshWhenVisible);
+  }, [loadNotifications, loadUnreadCount, principalId]);
+
+  useEffect(() => {
     if (!principalId || typeof window === "undefined") return;
     const token = getAccessToken();
     if (!token) return;

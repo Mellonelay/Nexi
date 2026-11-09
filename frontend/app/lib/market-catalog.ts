@@ -41,6 +41,18 @@ const isRecord = (value: unknown): value is Record<string, unknown> => Boolean(v
 const marketDataState = (value: unknown): MarketPair['dataState'] | undefined =>
   typeof value === 'string' && MARKET_DATA_STATES.has(value) ? value as MarketPair['dataState'] : undefined;
 
+const marketCategory = (value: unknown, fallback: AssetCategory): AssetCategory => {
+  switch (typeof value === 'string' ? value.trim().toLowerCase() : '') {
+    case 'crypto': return 'Crypto';
+    case 'stock':
+    case 'stocks': return 'Stocks';
+    case 'forex': return 'Forex';
+    case 'metal':
+    case 'metals': return 'Metals';
+    default: return fallback;
+  }
+};
+
 const marketSequence = (value: unknown): string | undefined => {
   switch (typeof value) {
     case 'bigint':
@@ -116,6 +128,7 @@ const pairFromPriceRow = (row: unknown, responseState: MarketPair['dataState'] |
   const dataState = marketDataState(row.state ?? row.dataState) ?? responseState ?? (lastPrice === null ? 'UNAVAILABLE' : 'LIVE');
   return {
     ...base,
+    category: marketCategory(row.assetClass, base.category),
     price: lastPrice,
     change: finiteMarketNumber(row.priceChangePercent),
     vol: finiteMarketNumber(row.volume),

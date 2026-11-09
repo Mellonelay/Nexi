@@ -367,38 +367,42 @@ export class AdminService {
     actor?: string;
     action?: string;
     target?: string;
+    targetExact?: string;
+    actionPrefix?: string;
     environment?: string;
     correlationId?: string;
     result?: string;
     limit?: number;
   }) {
     if (this.d1?.isEnabled()) {
-      const rows: any[] = await this.d1.listAdminAuditLogs(query.limit ?? 50);
-      return rows
-        .filter(
-          (row) =>
-            (!query.actor ||
-              String(row.adminId)
-                .toLowerCase()
-                .includes(query.actor.toLowerCase())) &&
-            (!query.action ||
-              String(row.action)
-                .toLowerCase()
-                .includes(query.action.toLowerCase())) &&
-            (!query.target ||
-              String(row.target ?? "")
-                .toLowerCase()
-                .includes(query.target.toLowerCase())),
-        )
-        .map((row) => ({
+      // Apply the DTO filters in SQLite before LIMIT, so old matching events
+      // are not silently excluded by newer unrelated audit rows.
+      const rows: any[] = await this.d1.listAdminAuditLogs(query.limit ?? 50, query);
+      return rows.map((row) => {
+        let details: unknown = row.details;
+        if (typeof details === "string") {
+          try {
+            details = JSON.parse(details);
+          } catch {
+            details = null;
+          }
+        }
+        const correlationId =
+          details && typeof details === "object" && !Array.isArray(details)
+            ? (details as Record<string, unknown>).correlationId
+            : null;
+        return {
           id: row.id,
           actor: row.adminId,
           action: row.action,
           target: row.target,
           createdAt: row.createdAt,
           details: row.details,
-          correlationId: null,
-        }));
+          // Only the matching persisted Ledger posting can verify success.
+          verifiedPostingResult: row.verifiedPostingResult === "ok" ? "ok" : null,
+          correlationId: typeof correlationId === "string" ? correlationId : null,
+        };
+      });
     }
     const rows = await this.prisma.adminAuditLog.findMany({
       orderBy: { createdAt: "desc" },
@@ -410,8 +414,14 @@ export class AdminService {
         ...(query.action
           ? { action: { contains: query.action, mode: "insensitive" } }
           : {}),
+        ...(query.actionPrefix
+          ? { action: { startsWith: query.actionPrefix } }
+          : {}),
         ...(query.target
           ? { target: { contains: query.target, mode: "insensitive" } }
+          : {}),
+        ...(query.targetExact
+          ? { target: query.targetExact }
           : {}),
       },
     });

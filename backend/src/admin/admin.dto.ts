@@ -320,6 +320,8 @@ export class AdminAuditQueryDto {
   @IsOptional() @IsString() @Length(1, 128) actor?: string;
   @IsOptional() @IsString() @Length(1, 128) action?: string;
   @IsOptional() @IsString() @Length(1, 256) target?: string;
+  @IsOptional() @IsString() @Length(1, 256) targetExact?: string;
+  @IsOptional() @IsString() @Length(1, 128) actionPrefix?: string;
   @IsOptional() @IsString() @Length(1, 32) environment?: string;
   @IsOptional() @IsString() @Length(1, 128) correlationId?: string;
   @IsOptional()

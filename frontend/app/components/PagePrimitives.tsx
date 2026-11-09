@@ -92,7 +92,7 @@ export function DataStatePanel({ state, title = 'Data is not available right now
 }
 
 export function Metric({ label, value, hint }: { label: string; value: string; hint?: string }) {
-  return <div className="nexi-execution-surface min-w-0 rounded-xl border border-[var(--nexi-border-subtle)] p-4"><p className="text-xs uppercase tracking-[0.12em] text-[#8C8299]">{label}</p><p className="nexi-data mt-2 truncate font-mono text-lg text-[#48C0CC]">{value}</p>{hint && <p className="mt-1 text-xs text-[#8C8299]">{hint}</p>}</div>;
+  return <div className="nexi-execution-surface min-w-0 rounded-xl border border-[var(--nexi-border-subtle)] p-4"><p className="text-xs uppercase tracking-[0.12em] text-[#8C8299]">{label}</p><p className="nexi-data mt-2 whitespace-normal break-all font-mono text-lg text-[#48C0CC]">{value}</p>{hint && <p className="mt-1 text-xs text-[#8C8299]">{hint}</p>}</div>;
 }
 
 export function TabButton({ active, children, onClick }: { active: boolean; children: ReactNode; onClick: () => void }) {

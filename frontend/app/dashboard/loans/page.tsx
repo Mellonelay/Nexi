@@ -182,6 +182,12 @@ export default function LoansPage() {
   const durationDays = positiveInteger(duration);
   const selectedPlan = plans.find((plan) => String(plan.id) === selectedPlanId);
   const selectedRate = selectedPlan ? finiteMarketNumber(selectedPlan.interestRate) : null;
+  const selectedMin = selectedPlan ? finiteMarketNumber(selectedPlan.minAmount) : null;
+  const selectedMax = selectedPlan ? finiteMarketNumber(selectedPlan.maxAmount) : null;
+  const principalWithinPlan = principal !== null && selectedMin !== null && selectedMax !== null
+    && principal >= selectedMin && principal <= selectedMax;
+  const durationMatchesPlan = selectedPlan !== undefined && durationDays !== null
+    && durationDays === Number(selectedPlan.durationDays);
   const interestPreview = principal !== null && selectedRate !== null ? principal * selectedRate : null;
   const totalPreview = principal !== null && interestPreview !== null ? principal + interestPreview : null;
   const reviewApplication = async (event: FormEvent) => {
@@ -199,8 +205,8 @@ export default function LoansPage() {
       setMessage('Select a loan product before applying.');
       return;
     }
-    if (principal === null || durationDays === null) {
-      setMessage('Enter a positive principal and duration.');
+    if (!principalWithinPlan || !durationMatchesPlan) {
+      setMessage('Enter an amount within the selected plan limits and use its configured duration.');
       return;
     }
     if (!collateral.trim() || !collateralImg.trim()) {
@@ -343,7 +349,7 @@ function LoanProductsPanel({ plans, plansState }: { plans: LoanPlan[]; plansStat
               <dl className="mt-3 grid grid-cols-2 gap-3 text-sm">
                 <ReviewRow label="Asset" value={authoritativeValue(plan.currency)} stacked />
                 <ReviewRow label="Term" value={`${authoritativeValue(plan.durationDays)} days`} stacked />
-                <ReviewRow label="Rate" value={authoritativeValue(plan.interestRate)} stacked />
+                <ReviewRow label="Term rate" value={finiteMarketNumber(plan.interestRate) === null ? '—' : `${(Number(plan.interestRate) * 100).toFixed(2)}% per plan term`} stacked />
                 <ReviewRow label="Limits" value={`${authoritativeValue(plan.minAmount)} – ${authoritativeValue(plan.maxAmount)}`} stacked />
               </dl>
             </article>
@@ -440,6 +446,11 @@ function LoanApplicationPanel({
   onSubmit: (event: FormEvent) => Promise<void>;
 }) {
   const selectedPlan = plans.find((item) => String(item.id) === selectedPlanId);
+  const min = selectedPlan ? finiteMarketNumber(selectedPlan.minAmount) : null;
+  const max = selectedPlan ? finiteMarketNumber(selectedPlan.maxAmount) : null;
+  const withinLimits = principal !== null && min !== null && max !== null && principal >= min && principal <= max;
+  const matchesDuration = selectedPlan !== undefined && durationDays !== null && durationDays === Number(selectedPlan.durationDays);
+  const canApply = Boolean(userId && selectedPlan && withinLimits && matchesDuration && collateral.trim() && collateralImg.trim());
   const selectPlan = (planId: string) => {
     onSelectedPlanIdChange(planId);
     const plan = plans.find((item) => String(item.id) === planId);
@@ -489,7 +500,12 @@ function LoanApplicationPanel({
             <AlertTriangle size={16} className="mr-2 inline" />{message}
           </div>
         )}
-        <PrimaryButton type="submit" disabled={submitting || !userId || plans.length === 0}>
+        {selectedPlan && !withinLimits && <p role="status" className="text-xs text-amber-200">
+          Enter a principal from {authoritativeValue(selectedPlan.minAmount)} to {authoritativeValue(selectedPlan.maxAmount)} {authoritativeValue(selectedPlan.currency)}.
+        </p>}
+        {selectedPlan && !matchesDuration && <p role="status" className="text-xs text-amber-200">Use the selected plan's {authoritativeValue(selectedPlan.durationDays)}-day term.</p>}
+        <p className="text-xs text-[#8C8299]">Applications require both collateral details and a previously approved document reference. Product availability does not establish individual approval.</p>
+        <PrimaryButton type="submit" disabled={submitting || !canApply}>
           {submitting ? 'Submitting…' : plans.length === 0 ? 'No active products' : 'Submit application'}
         </PrimaryButton>
       </form>

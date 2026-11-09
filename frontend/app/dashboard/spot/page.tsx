@@ -21,6 +21,7 @@ import { sessionPrincipalId } from '../../lib/wallet-auth';
 import LocalDateTime from '../../components/LocalDateTime';
 import {
   closeMarginPosition,
+  cancelPendingMarginPosition,
   getMarginQuote,
   listMarginPositions,
   markMarginPosition,
@@ -157,7 +158,7 @@ const compareTradesNewestFirst = (left: MarketTradeRow, right: MarketTradeRow) =
   return leftSequence === rightSequence ? 0 : leftSequence > rightSequence ? -1 : 1;
 };
 
-function useSpotHistory(userId: string | null, historyTab: HistoryTab) {
+function useSpotHistory(userId: string | null, historyTab: HistoryTab, refreshRevision: number) {
   const [rows, setRows] = useState<SpotHistoryRow[]>([]);
   const [status, setStatus] = useState<'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR' | 'CONNECTION_LOST'>('UNAVAILABLE');
 
@@ -172,18 +173,18 @@ function useSpotHistory(userId: string | null, historyTab: HistoryTab) {
     setStatus('LOADING');
     api.get(endpoint, { timeout: 15_000 })
       .then((response) => {
-        if (cancelled) return;
+        if (cancelled || sessionPrincipalId() !== userId) return;
         const nextRows = Array.isArray(response.data) ? response.data.filter((row): row is SpotHistoryRow => Boolean(row && typeof row === 'object')) : [];
         setRows(nextRows);
         setStatus(nextRows.length > 0 ? 'LIVE' : 'UNAVAILABLE');
       })
       .catch(() => {
-        if (cancelled) return;
+        if (cancelled || sessionPrincipalId() !== userId) return;
         setRows([]);
         setStatus('ERROR');
       });
     return () => { cancelled = true; };
-  }, [historyTab, userId]);
+  }, [historyTab, userId, refreshRevision]);
 
   return { rows, status };
 }
@@ -347,7 +348,8 @@ function MarginWorkspace({
   displayPair, normalizedSymbol, chartInterval, setChartInterval, sessionClosed,
   marginDirection, setMarginDirection, marginLeverageOptions, effectiveMarginLeverage, setMarginLeverage,
   marginCollateral, setMarginCollateral, marginQuote, handleOpenMargin, marginReady, marginPositions,
-  userId, marginSubmitting, handleMarkMargin, handleCloseMargin, marginFeedback, walletState, marginUsdtBalance,
+  userId, marginSubmitting, handleMarkMargin, handleCloseMargin, handleCancelPendingMargin, marginFeedback,
+  marginUnknownIntentKey, recheckUnknownMarginOpening, walletState, marginUsdtBalance,
 }: {
   displayPair: string; normalizedSymbol: string; chartInterval: ChartInterval;
   setChartInterval: React.Dispatch<React.SetStateAction<ChartInterval>>; sessionClosed: boolean;
@@ -358,7 +360,9 @@ function MarginWorkspace({
   marginQuote: MarginQuoteResponse | null; handleOpenMargin: () => void | Promise<void>; marginReady: boolean;
   marginPositions: MarginPositionResponse[]; userId: string | null; marginSubmitting: boolean;
   handleMarkMargin: (positionId: string) => void | Promise<void>;
-  handleCloseMargin: (positionId: string) => void | Promise<void>; marginFeedback: string | null;
+  handleCloseMargin: (positionId: string) => void | Promise<void>;
+  handleCancelPendingMargin: (positionId: string) => void | Promise<void>; marginFeedback: string | null;
+  marginUnknownIntentKey: string | null; recheckUnknownMarginOpening: (key: string) => void | Promise<void>;
   walletState: WalletReadState; marginUsdtBalance: ScopedBalance | undefined;
 }) {
   return (
@@ -404,10 +408,12 @@ function MarginWorkspace({
           </div>
           <div className="min-w-0 rounded-xl border border-violet-300/10 bg-[#0B0711] p-3">
             <div className="flex items-center justify-between gap-2"><h3 className="text-sm font-semibold">Positions</h3><span className="text-xs text-[#8C8299]">{marginPositions.length} loaded</span></div>
-            {marginPositions.length === 0 ? <p className="mt-5 text-center text-sm text-[#8C8299]">{userId ? 'No margin positions are available.' : 'Verify the wallet to load margin positions.'}</p> : <div className="mt-3 space-y-2">{marginPositions.map((position) => <article key={position.id} className="rounded-lg border border-violet-300/10 p-3 text-xs"><div className="flex flex-wrap items-center justify-between gap-2"><span className={position.direction === 'LONG' ? 'text-[#22D3A6]' : 'text-[#FF5C7C]'}>{position.direction} {position.leverage}x</span><span className="rounded-full border border-violet-300/15 px-2 py-1 uppercase text-[#C3BBD0]">{position.status}</span></div><p className="mt-2 font-mono">Collateral {position.collateral} · Entry {position.entryPrice} · Mark {position.markPrice ?? '—'}</p><div className="mt-2 flex flex-wrap gap-2">{position.status === 'OPEN' && <button type="button" disabled={marginSubmitting} onClick={() => void handleMarkMargin(position.id)} className="rounded border border-cyan-300/20 px-2 py-1 text-[#48C0CC] disabled:opacity-50">Mark</button>}{['PENDING', 'OPEN'].includes(position.status) && <button type="button" disabled={marginSubmitting} onClick={() => void handleCloseMargin(position.id)} className="rounded border border-rose-300/20 px-2 py-1 text-[#FF9CB0] disabled:opacity-50">Close</button>}</div></article>)}</div>}
+            {marginPositions.length === 0 ? <p className="mt-5 text-center text-sm text-[#8C8299]">{userId ? 'No margin positions are available.' : 'Verify the wallet to load margin positions.'}</p> : <div className="mt-3 space-y-2">{marginPositions.map((position) => <article key={position.id} className="rounded-lg border border-violet-300/10 p-3 text-xs"><div className="flex flex-wrap items-center justify-between gap-2"><span className={position.direction === 'LONG' ? 'text-[#22D3A6]' : 'text-[#FF5C7C]'}>{position.direction} {position.leverage}x</span><span className="rounded-full border border-violet-300/15 px-2 py-1 uppercase text-[#C3BBD0]">{position.status}</span></div><p className="mt-2 font-mono">Collateral {position.collateral} · Entry {position.entryPrice} · Mark {position.markPrice ?? '—'}</p><div className="mt-2 flex flex-wrap gap-2">{position.status === 'OPEN' && <button type="button" disabled={marginSubmitting} onClick={() => void handleMarkMargin(position.id)} className="rounded border border-cyan-300/20 px-2 py-1 text-[#48C0CC] disabled:opacity-50">Mark</button>} {position.status === 'OPEN' && <button type="button" disabled={marginSubmitting} onClick={() => void handleCloseMargin(position.id)} className="min-h-11 rounded border border-rose-300/20 px-3 py-2 text-[#FF9CB0] disabled:opacity-50">Close</button>}
+{position.status === 'PENDING' && /^0+(?:\.0+)?$/.test(position.quantity) && <button type="button" disabled={marginSubmitting} onClick={() => void handleCancelPendingMargin(position.id)} className="min-h-11 rounded border border-amber-300/25 px-3 py-2 text-amber-100 disabled:opacity-50">Cancel pending entry</button>}</div></article>)}</div>}
           </div>
         </div>
         {marginFeedback && <p role="status" className="mt-3 text-xs text-[#C3BBD0]">{marginFeedback}</p>}
+        {marginUnknownIntentKey && <button type="button" onClick={() => void recheckUnknownMarginOpening(marginUnknownIntentKey)} className="mt-3 min-h-11 w-full rounded-lg border border-amber-300/30 px-3 text-sm font-semibold text-amber-100">Recheck margin submission</button>}
         <p className="mt-3 text-[10px] text-[#8C8299]">Isolated margin uses only the collateral assigned to each position. Leverage increases both potential gains and losses.</p>
       </section>
   );
@@ -421,6 +427,7 @@ type SpotWorkspaceProps = {
   setPrice: React.Dispatch<React.SetStateAction<string>>; marketTrades: MarketTradeRow[]; tradeStatus: MarketConnectionStatus;
   historyTab: HistoryTab; setHistoryTab: React.Dispatch<React.SetStateAction<HistoryTab>>;
   historyRows: SpotHistoryRow[]; historyStatus: MarketConnectionStatus;
+  onCancelOrder: (orderId: string) => void; cancellingOrderId: string | null; cancelFeedback: string | null;
   side: 'BUY' | 'SELL'; setSide: React.Dispatch<React.SetStateAction<'BUY' | 'SELL'>>;
   orderType: OrderType; setOrderType: React.Dispatch<React.SetStateAction<OrderType>>;
   price: string; stopPrice: string; setStopPrice: React.Dispatch<React.SetStateAction<string>>;
@@ -546,7 +553,7 @@ function SpotReferenceArea(props: SpotWorkspaceProps) {
   );
 }
 
-function SpotActivityArea({historyTab, setHistoryTab, historyRows, historyStatus, displayPair}: SpotWorkspaceProps) {
+function SpotActivityArea({historyTab, setHistoryTab, historyRows, historyStatus, displayPair, onCancelOrder, cancellingOrderId, cancelFeedback}: SpotWorkspaceProps) {
   return (
           <section className="nexi-station-card order-6 min-w-0 rounded-2xl xl:order-none" aria-label="Spot activity">
             <div className="grid min-w-0 grid-cols-3 border-b border-white/5" role="tablist" aria-label="Spot activity">
@@ -562,6 +569,7 @@ function SpotActivityArea({historyTab, setHistoryTab, historyRows, historyStatus
               ))}
             </div>
             <div className="p-4">
+              {cancelFeedback && <p role="status" className="mb-3 text-xs text-amber-200">{cancelFeedback}</p>}
               {historyRows.length > 0 ? (
                 <div className="space-y-2">{historyRows.slice(0, 30).map((row) => {
                   const id = String(row.id ?? row.orderId ?? [historyTab, row.pair, row.side, row.amount ?? row.quantity, row.price, row.createdAt ?? row.executedAt].map((value) => String(value ?? '')).join(':'));
@@ -571,7 +579,13 @@ function SpotActivityArea({historyTab, setHistoryTab, historyRows, historyStatus
                   const rowAmount = String(row.amount ?? row.quantity ?? row.filled ?? '—');
                   const rowPrice = String(row.price ?? row.entryPrice ?? '—');
                   const when = row.createdAt ?? row.executedAt ?? row.updatedAt;
-                  return <article key={id} className="rounded-xl border border-violet-300/10 bg-[#0B0711] p-3 text-xs"><div className="flex flex-wrap items-center justify-between gap-2"><span className="font-semibold">{pair}{rowSide ? ` · ${rowSide}` : ''}</span><span className="rounded-full border border-violet-300/20 px-2 py-1 uppercase text-[#C3BBD0]">{status}</span></div><div className="mt-2 grid grid-cols-2 gap-2 font-mono sm:grid-cols-4"><span>Amount {rowAmount}</span><span>Price {rowPrice}</span><span className="truncate">ID {id}</span><span><LocalDateTime value={when == null ? null : String(when)} dateStyle="short" timeStyle="short" /></span></div></article>;
+                  const isOrder = historyTab !== 'TRADES';
+                  const canCancel = historyTab === 'OPEN' && typeof row.id === 'string' && ['OPEN', 'PARTIALLY FILLED'].includes(status);
+                  const filled = row.filled === undefined ? null : String(row.filled);
+                  const remaining = row.remaining === undefined ? null : String(row.remaining);
+                  const reserved = row.reservedAmount === undefined ? null : String(row.reservedAmount);
+                  const reserveAsset = String(row.reserveAsset ?? '');
+                  return <article key={id} className="rounded-xl border border-violet-300/10 bg-[#0B0711] p-3 text-xs"><div className="flex flex-wrap items-center justify-between gap-2"><span className="font-semibold">{pair}{rowSide ? ` · ${rowSide}` : ''}</span><span className="rounded-full border border-violet-300/20 px-2 py-1 uppercase text-[#C3BBD0]">{status}</span></div><div className="mt-2 grid grid-cols-2 gap-2 font-mono sm:grid-cols-4"><span>{isOrder ? 'Ordered base qty' : 'Filled base qty'} {rowAmount}</span><span>{isOrder ? String(row.type ?? '').toUpperCase() === 'MARKET' ? 'Protection price' : 'Order limit price' : 'Execution price'} {rowPrice}</span><span className="break-all">ID {id}</span><span><LocalDateTime value={when == null ? null : String(when)} dateStyle="short" timeStyle="short" /></span></div>{isOrder && <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-[#A99DB8]">{filled !== null && <span>Filled {filled}</span>}{remaining !== null && <span>Remaining {remaining}</span>}{reserved !== null && <span>Initial reserve {reserved} {reserveAsset}</span>}</div>}{canCancel && <button type="button" aria-label={`Cancel Spot order ${id}`} disabled={cancellingOrderId !== null} onClick={() => onCancelOrder(id)} className="mt-3 min-h-11 rounded-lg border border-amber-300/30 px-3 text-xs font-semibold text-amber-100 disabled:opacity-50">{cancellingOrderId === id ? 'Cancelling…' : 'Cancel remaining order'}</button>}</article>;
                 })}</div>
               ) : (
                 <div className="flex min-h-32 items-center justify-center text-center text-sm text-[#8C8299]">{historyStatus === 'LOADING' ? 'Loading activity…' : historyStatus === 'ERROR' ? 'Activity request failed.' : historyTab === 'OPEN' ? 'No open orders.' : historyTab === 'ORDERS' ? 'No order history.' : 'No trade history.'}</div>
@@ -694,12 +708,14 @@ function useSpotOrderState({
   userId,
   backendConfigured,
   displayPair,
+  onOrderChanged,
 }: {
   normalizedSymbol: string;
   currentPrice: number | null;
   userId: string | null;
   backendConfigured: boolean;
   displayPair: string;
+  onOrderChanged: () => void;
 }) {
   const [mobileMarketPanel, setMobileMarketPanel] = useState<MobileMarketPanel>('CHART');
   const [side, setSide] = useState<'BUY' | 'SELL'>('BUY');
@@ -789,15 +805,30 @@ function useSpotOrderState({
       });
       if (sessionPrincipalId() !== userId) return;
       pendingSpotIntent.current = null;
-      setOrderState(normalizeSpotOrderState((response.data as { status?: unknown })?.status));
+      onOrderChanged();
+      const finalOrderState = normalizeSpotOrderState((response.data as { status?: unknown })?.status);
+      setOrderState(finalOrderState);
       setConfirmationOpen(false);
       setAmount('');
-      setFeedback('Order accepted.');
-    } catch {
+      setFeedback(finalOrderState === 'FILLED'
+        ? 'Order filled. Review trade history for execution details.'
+        : finalOrderState === 'PARTIALLY_FILLED'
+          ? 'Order partially filled. Remaining quantity is shown in Open orders.'
+          : finalOrderState === 'OPEN'
+            ? 'Order accepted and open; execution is not yet confirmed.'
+            : finalOrderState === 'CANCELLED'
+              ? 'Unfilled order quantity was cancelled. Review trade and order history.'
+              : 'Order response received, but the final order state is not confirmed. Refresh history before retrying.');
+    } catch (error) {
       if (sessionPrincipalId() !== userId) return;
-      setOrderState('FAILED');
+      const status = (error as { response?: { status?: number } } | null)?.response?.status;
+      const rejected = typeof status === 'number' && status >= 400 && status < 500;
+      setOrderState(rejected ? 'REJECTED' : 'UNKNOWN');
+      if (!rejected) onOrderChanged();
       setConfirmationOpen(false);
-      setFeedback('The order could not be accepted.');
+      setFeedback(rejected
+        ? 'The order was rejected. Review order details before retrying.'
+        : 'Order outcome is unknown. Check Open orders and Trade history before submitting again.');
     } finally {
       orderSubmissionLock.current = false;
     }
@@ -834,9 +865,11 @@ function useMarginTradingState({
   const [marginQuote, setMarginQuote] = useState<MarginQuoteResponse | null>(null);
   const [marginPositions, setMarginPositions] = useState<MarginPositionResponse[]>([]);
   const [marginFeedback, setMarginFeedback] = useState<string | null>(null);
+  const [marginUnknownIntentKey, setMarginUnknownIntentKey] = useState<string | null>(null);
   const [marginSubmitting, setMarginSubmitting] = useState(false);
   const marginSubmissionLock = useRef(false);
   const pendingMarginIntent = useRef<PendingIntentKey | null>(null);
+  const pendingMarginExitIntents = useRef(new Map<string, PendingIntentKey>());
 
   useEffect(() => {
     let cancelled = false;
@@ -856,6 +889,12 @@ function useMarginTradingState({
     return () => { cancelled = true; };
   }, [displayPair, userId]);
 
+  useEffect(() => {
+    pendingMarginIntent.current = null;
+    setMarginUnknownIntentKey(null);
+    pendingMarginExitIntents.current.clear();
+  }, [userId]);
+
   const marginCollateralValue = positiveNumber(marginCollateral);
   const marginLeverageOptions = useMemo(
     () => (marginQuote?.leverageOptions ?? []).filter((value) => [2, 3, 5].includes(value)),
@@ -866,7 +905,8 @@ function useMarginTradingState({
     : (marginLeverageOptions[0] ?? 0);
   const marginReady = Boolean(
     userId && marginQuote?.state === 'LIVE' && normalizePair(marginQuote.pair) === normalizedSymbol
-    && effectiveMarginLeverage !== 0 && marginCollateralValue !== null && !marginSubmitting,
+    && effectiveMarginLeverage !== 0 && marginCollateralValue !== null && !marginSubmitting
+    && !marginUnknownIntentKey,
   );
 
   const refreshMarginPositions = async (requestUserId: string) => {
@@ -878,8 +918,29 @@ function useMarginTradingState({
     }
   };
 
+  const recheckUnknownMarginOpening = async (key: string) => {
+    if (!userId) return;
+    try {
+      const positions = await listMarginPositions();
+      if (sessionPrincipalId() !== userId || pendingMarginIntent.current?.key !== key) return;
+      setMarginPositions(positions);
+      if (positions.some((position) => position.openIdempotencyKey === key)) {
+        pendingMarginIntent.current = null;
+        setMarginUnknownIntentKey(null);
+        setMarginCollateral('');
+        setMarginFeedback('The submitted margin position was found in your account records.');
+      } else {
+        setMarginFeedback('The margin submission is still unconfirmed. Do not open another position; contact Support if it remains unresolved.');
+      }
+    } catch {
+      if (sessionPrincipalId() === userId && pendingMarginIntent.current?.key === key) {
+        setMarginFeedback('Position records could not be checked. The submission outcome remains unknown.');
+      }
+    }
+  };
+
   const handleOpenMargin = async () => {
-    if (marginSubmissionLock.current) return;
+    if (marginSubmissionLock.current || marginUnknownIntentKey) return;
     if (!marginReady || marginCollateralValue === null || !userId || sessionPrincipalId() !== userId) {
       setMarginFeedback(!userId ? 'Verify the wallet before opening an isolated-margin position.' : 'Enter positive collateral and wait for the latest margin quote.');
       return;
@@ -902,9 +963,20 @@ function useMarginTradingState({
       setMarginCollateral('');
       setMarginFeedback(`${marginDirection} ${effectiveMarginLeverage}x position submitted.`);
       await refreshMarginPositions(userId);
-    } catch {
+    } catch (error) {
       if (sessionPrincipalId() !== userId) return;
-      setMarginFeedback('This margin position could not be opened.');
+      const status = (error as { response?: { status?: number } } | null)?.response?.status;
+      if (typeof status === 'number' && status >= 400 && status < 500) {
+        pendingMarginIntent.current = null;
+        setMarginFeedback('The margin opening was rejected. Review the account and order inputs.');
+      } else if (pendingMarginIntent.current) {
+        const key = pendingMarginIntent.current.key;
+        setMarginUnknownIntentKey(key);
+        setMarginFeedback('Margin opening outcome is unknown. Recheck account positions; do not submit another opening.');
+        void recheckUnknownMarginOpening(key);
+      } else {
+        setMarginFeedback('Margin opening could not be prepared. No position was submitted.');
+      }
     } finally {
       marginSubmissionLock.current = false;
       setMarginSubmitting(false);
@@ -917,13 +989,42 @@ function useMarginTradingState({
     setMarginSubmitting(true);
     setMarginFeedback(null);
     try {
-      await closeMarginPosition(positionId, `margin:close:${positionId}:${Date.now()}`);
+      const intent = getIntentKey(pendingMarginExitIntents.current.get(`close:${positionId}`) ?? null, `${userId}:${positionId}`, 'margin:close');
+      pendingMarginExitIntents.current.set(`close:${positionId}`, intent);
+      const result = await closeMarginPosition(positionId, intent.key);
       if (sessionPrincipalId() !== userId) return;
-      setMarginFeedback('Margin close request accepted.');
+      pendingMarginExitIntents.current.delete(`close:${positionId}`);
+      setMarginFeedback(result.state === 'CLOSING'
+        ? 'Margin close order is pending execution. The position remains open until settlement is confirmed.'
+        : result.state === 'CLOSED' || result.state === 'LIQUIDATED'
+          ? 'Margin position settlement confirmed.'
+          : 'Margin close response was not recognized. Refresh the position before taking another action.');
       await refreshMarginPositions(userId);
     } catch {
       if (sessionPrincipalId() !== userId) return;
-      setMarginFeedback('The margin close request failed.');
+      setMarginFeedback('The margin close request was not confirmed. Refresh the position before retrying with the same intent.');
+    } finally {
+      marginSubmissionLock.current = false;
+      setMarginSubmitting(false);
+    }
+  };
+
+  const handleCancelPendingMargin = async (positionId: string) => {
+    if (marginSubmissionLock.current || !userId || sessionPrincipalId() !== userId) return;
+    marginSubmissionLock.current = true;
+    setMarginSubmitting(true);
+    setMarginFeedback(null);
+    try {
+      const intent = getIntentKey(pendingMarginExitIntents.current.get(`cancel:${positionId}`) ?? null, `${userId}:${positionId}`, 'margin:cancel-pending');
+      pendingMarginExitIntents.current.set(`cancel:${positionId}`, intent);
+      await cancelPendingMarginPosition(positionId, intent.key);
+      if (sessionPrincipalId() !== userId) return;
+      pendingMarginExitIntents.current.delete(`cancel:${positionId}`);
+      setMarginFeedback('Pending margin entry cancellation accepted.');
+      await refreshMarginPositions(userId);
+    } catch {
+      if (sessionPrincipalId() !== userId) return;
+      setMarginFeedback('Pending margin entry cancellation was not confirmed. Refresh position status before retrying.');
     } finally {
       marginSubmissionLock.current = false;
       setMarginSubmitting(false);
@@ -952,7 +1053,8 @@ function useMarginTradingState({
   return {
     marginDirection, setMarginDirection, marginLeverageOptions, effectiveMarginLeverage, setMarginLeverage,
     marginCollateral, setMarginCollateral, marginQuote, marginReady, marginPositions, marginSubmitting,
-    handleOpenMargin, handleMarkMargin, handleCloseMargin, marginFeedback,
+    handleOpenMargin, handleMarkMargin, handleCloseMargin, handleCancelPendingMargin, marginFeedback,
+    marginUnknownIntentKey, recheckUnknownMarginOpening,
   };
 }
 
@@ -1043,18 +1145,20 @@ function SpotPageBody({
   });
   const [chartInterval, setChartInterval] = useState<ChartInterval>('1m');
   const [historyTab, setHistoryTab] = useState<HistoryTab>('OPEN');
-  const { rows: historyRows, status: historyStatus } = useSpotHistory(userId, historyTab);
+  const [historyRevision, setHistoryRevision] = useState(0);
+  const { rows: historyRows, status: historyStatus } = useSpotHistory(userId, historyTab, historyRevision);
   const [activeSurface, setActiveSurface] = useState<SpotSurface>('SPOT');
   const {
     mobileMarketPanel, setMobileMarketPanel, side, setSide, orderType, setOrderType, price, setPrice,
     stopPrice, setStopPrice, amount, setAmount, tp, setTp, sl, setSl, tpSlState, orderState,
     confirmationOpen, setConfirmationOpen, feedback, total, reviewReady, ready, openReview,
     submitOrder, configureTpSl,
-  } = useSpotOrderState({ normalizedSymbol, currentPrice, userId, backendConfigured, displayPair });
+  } = useSpotOrderState({ normalizedSymbol, currentPrice, userId, backendConfigured, displayPair, onOrderChanged: () => setHistoryRevision((value) => value + 1) });
   const {
     marginDirection, setMarginDirection, marginLeverageOptions, effectiveMarginLeverage, setMarginLeverage,
     marginCollateral, setMarginCollateral, marginQuote, marginReady, marginPositions, marginSubmitting,
-    handleOpenMargin, handleMarkMargin, handleCloseMargin, marginFeedback,
+    handleOpenMargin, handleMarkMargin, handleCloseMargin, handleCancelPendingMargin, marginFeedback,
+    marginUnknownIntentKey, recheckUnknownMarginOpening,
   } = useMarginTradingState({ userId, displayPair, normalizedSymbol });
 
   useEffect(() => {
@@ -1085,6 +1189,31 @@ function SpotPageBody({
   const marginUsdtBalance = walletOverview.scopes.MARGIN?.USDT;
   const spotSpendAsset = side === 'BUY' ? 'USDT' : baseSymbol.toUpperCase();
   const spotAvailableBalance = walletAmountLabel(walletOverview.state, spotBalances[spotSpendAsset], spotSpendAsset);
+  const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
+  const [cancelFeedback, setCancelFeedback] = useState<string | null>(null);
+  const cancelInFlight = useRef(false);
+  const handleCancelSpotOrder = async (orderId: string) => {
+    if (!userId || sessionPrincipalId() !== userId || cancelInFlight.current) return;
+    if (!window.confirm('Cancel the remaining unfilled quantity for this Spot order?')) return;
+    cancelInFlight.current = true;
+    setCancellingOrderId(orderId);
+    setCancelFeedback(null);
+    try {
+      await api.post('/spot/cancel', { orderId }, { timeout: 15_000 });
+      if (sessionPrincipalId() === userId) setCancelFeedback('Order cancellation accepted. Refreshed order history will show the final state.');
+    } catch (error) {
+      if (sessionPrincipalId() === userId) {
+        const status = (error as { response?: { status?: number } } | null)?.response?.status;
+        setCancelFeedback(typeof status === 'number' && status >= 400 && status < 500
+          ? 'Cancellation was rejected. Review the current order status.'
+          : 'Cancellation outcome is unknown. Check Open orders and Order history before retrying.');
+      }
+    } finally {
+      cancelInFlight.current = false;
+      setCancellingOrderId(null);
+      if (sessionPrincipalId() === userId) setHistoryRevision((value) => value + 1);
+    }
+  };
 
   return (
     <main className="nexi-trading-page nexi-page-shell min-h-full w-full min-w-0 overflow-x-clip pb-8 text-[#F8F6FF]">
@@ -1103,8 +1232,9 @@ function SpotPageBody({
         marginLeverageOptions={marginLeverageOptions} effectiveMarginLeverage={effectiveMarginLeverage} setMarginLeverage={setMarginLeverage}
         marginCollateral={marginCollateral} setMarginCollateral={setMarginCollateral} marginQuote={marginQuote}
         handleOpenMargin={handleOpenMargin} marginReady={marginReady} marginPositions={marginPositions} userId={userId}
-        marginSubmitting={marginSubmitting} handleMarkMargin={handleMarkMargin} handleCloseMargin={handleCloseMargin}
-        marginFeedback={marginFeedback} walletState={walletOverview.state} marginUsdtBalance={marginUsdtBalance}
+        marginSubmitting={marginSubmitting} handleMarkMargin={handleMarkMargin} handleCloseMargin={handleCloseMargin} handleCancelPendingMargin={handleCancelPendingMargin}
+        marginFeedback={marginFeedback} marginUnknownIntentKey={marginUnknownIntentKey}
+        recheckUnknownMarginOpening={recheckUnknownMarginOpening} walletState={walletOverview.state} marginUsdtBalance={marginUsdtBalance}
       />}
 
       {activeSurface === 'SPOT' && <SpotWorkspace
@@ -1113,6 +1243,7 @@ function SpotPageBody({
         sessionClosed={market?.sessionState === 'CLOSED'} mobileMarketPanel={mobileMarketPanel} setMobileMarketPanel={setMobileMarketPanel}
         bids={bids} asks={asks} bookStatus={bookStatus} setPrice={setPrice} marketTrades={marketTrades} tradeStatus={tradeStatus}
         historyTab={historyTab} setHistoryTab={setHistoryTab} historyRows={historyRows} historyStatus={historyStatus}
+        onCancelOrder={(orderId) => { void handleCancelSpotOrder(orderId); }} cancellingOrderId={cancellingOrderId} cancelFeedback={cancelFeedback}
         side={side} setSide={setSide} orderType={orderType} setOrderType={setOrderType} price={price} stopPrice={stopPrice}
         setStopPrice={setStopPrice} amount={amount} setAmount={setAmount} baseSymbol={baseSymbol} quoteSymbol={quoteSymbol} tpSlState={tpSlState}
         configureTpSl={configureTpSl} tp={tp} setTp={setTp} sl={sl} setSl={setSl} total={total} orderState={orderState}

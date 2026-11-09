@@ -165,8 +165,9 @@ function Inner() {
                       Opened from operator alert
                     </p>
                   ) : null}
-                  <span>
-                    {row.userEmail ?? row.userId} · {row.planName ?? "plan"}
+                  <span className="min-w-0 break-words">
+                    {row.userEmail || "Customer"} · {row.planName || "Plan unavailable"}
+                    <span className="mt-1 block break-all font-mono text-xs text-muted-foreground">User ID: {row.userId || "unavailable"}</span>
                   </span>
                   <span className="font-mono">
                     {row.amount} {row.currency} · rewards {row.totalRewards}

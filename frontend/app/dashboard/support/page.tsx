@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { LifeBuoy, Mail, Search, Send } from 'lucide-react';
+import Link from 'next/link';
 import api from '../../lib/api';
 import { inputClass, PageHeader, PageShell, Panel, PanelHeading, TabButton } from '../../components/PagePrimitives';
 
@@ -102,7 +103,7 @@ export default function SupportPage() {
           ) : contactsState === 'unavailable' ? (
             <p className="text-sm text-[#8C8299]" role="status">Contact options are unavailable right now.</p>
           ) : !contacts.telegramUrl && !contacts.email ? (
-            <p className="text-sm text-[#8C8299]" role="status">No support contact methods are configured.</p>
+            <div className="text-sm text-[#8C8299]" role="status"><p>No external support contact methods are configured.</p><p className="mt-2 text-[#C3BBD0]">For in-app help, message NEXI Support.</p><Link href="/dashboard/messages" className="mt-2 inline-flex min-h-11 items-center font-semibold text-[#A995FF] underline-offset-4 hover:underline">Open Messages</Link></div>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
               {contacts.telegramUrl && (

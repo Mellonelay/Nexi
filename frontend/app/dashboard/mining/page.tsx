@@ -35,6 +35,7 @@ export default function MiningPage() {
   const [sessionChecked, setSessionChecked] = useState(false);
   const previousUserId = useRef<string | null | undefined>(undefined);
   const pendingSubscription = useRef<PendingIntentKey | null>(null);
+  const [unknownSubscriptionKey, setUnknownSubscriptionKey] = useState<string | null>(null);
   const plansEndpoint = process.env.NEXT_PUBLIC_MINING_PLANS_ENDPOINT || '/mining/plans';
   const positionsEndpoint = userId
     ? resolveEndpointTemplate(process.env.NEXT_PUBLIC_MINING_POSITIONS_ENDPOINT || '/mining/my/{userId}', { userId })
@@ -117,7 +118,30 @@ export default function MiningPage() {
 
   useEffect(() => { void load(); }, [load]);
 
+  const recheckUnknownSubscription = async (key: string) => {
+    if (!userId || sessionPrincipalId() !== userId || pendingSubscription.current?.key !== key) return;
+    try {
+      const response = await api.get<{ activities: Array<{ type?: string; ledgerCorrelationId?: string }> }>('/wallet/activity', { params: { limit: 100 } });
+      if (sessionPrincipalId() !== userId || pendingSubscription.current?.key !== key) return;
+      const confirmed = Array.isArray(response.data?.activities) && response.data.activities.some((row) =>
+        row?.type === 'MINING_SUBSCRIPTION' && row.ledgerCorrelationId === key);
+      if (!confirmed) {
+        setMessage('Subscription outcome remains unconfirmed. Do not subscribe again; review Wallet activity or contact Support.');
+        return;
+      }
+      pendingSubscription.current = null;
+      setUnknownSubscriptionKey(null);
+      setStage('PENDING_CONFIRMATION');
+      setMessage('Subscription reserve confirmed in your account activity. Refresh subscription records for current status.');
+      await load({ preserveFlow: true });
+    } catch {
+      if (sessionPrincipalId() === userId && pendingSubscription.current?.key === key)
+        setMessage('Subscription activity could not be checked. The original submission remains unresolved.');
+    }
+  };
+
   const submit = async () => {
+    if (unknownSubscriptionKey) return;
     if (!userId || sessionPrincipalId() !== userId || !selectedPlan || selectedPlan.isActive !== true || !subscribeEndpoint || !actionCanSubmit({ authenticated: true, valid: Number(amount) > 0, backendAvailable: catalogState === 'LIVE' })) return;
     const requestedAmount = Number(amount);
     const minDeposit = Number(selectedPlan.minDeposit);
@@ -130,27 +154,40 @@ export default function MiningPage() {
     setStage('SUBMITTING');
     setMessage('');
     try {
-      pendingSubscription.current = getIntentKey(pendingSubscription.current, JSON.stringify([selectedPlan.id, amount.trim()]), 'mining:subscribe');
-      await api.post(subscribeEndpoint, {
+      pendingSubscription.current = getIntentKey(pendingSubscription.current, JSON.stringify([userId, selectedPlan.id, amount.trim()]), 'mining:subscribe');
+      const response = await api.post<RecordValue>(subscribeEndpoint, {
         planId: selectedPlan.id,
         amount: amount.trim(),
         idempotencyKey: pendingSubscription.current.key,
       });
       if (sessionPrincipalId() !== userId) return;
       pendingSubscription.current = null;
+      const persistedStatus = String(response.data?.status ?? '').toUpperCase();
       setStage('PENDING_CONFIRMATION');
-      setMessage('Request sent. Activation and reward values will appear after confirmation.');
+      setMessage(persistedStatus === 'ACTIVE'
+        ? 'Subscription active. Principal is locked for the configured term; rewards accrue only when posted.'
+        : 'Subscription request received. Review the subscription list for its authoritative status.');
       await load({ preserveFlow: true });
     } catch (error) {
       if (sessionPrincipalId() !== userId) return;
-      setStage('ERROR');
-      setMessage(error instanceof Error ? error.message : 'This subscription could not be accepted.');
+      const status = (error as { response?: { status?: number } } | null)?.response?.status;
+      if ([400, 401, 403, 404, 422].includes(status ?? -1)) {
+        pendingSubscription.current = null;
+        setStage('ERROR');
+        setMessage('Subscription request was rejected. Review the plan and available Finance balance.');
+      } else if (pendingSubscription.current) {
+        const key = pendingSubscription.current.key;
+        setUnknownSubscriptionKey(key);
+        setStage('ERROR');
+        setMessage('Subscription outcome is unknown. Check account activity before trying another subscription.');
+        void recheckUnknownSubscription(key);
+      }
     }
   };
 
-  const onSubmit = (event: FormEvent) => { event.preventDefault(); if (stage === 'REVIEW') void submit(); else setStage('REVIEW'); };
+  const onSubmit = (event: FormEvent) => { event.preventDefault(); if (unknownSubscriptionKey) return; if (stage === 'REVIEW') void submit(); else setStage('REVIEW'); };
 
-  return <PageShell><PageHeader title="Mining" description="Review available plans and track your subscriptions." action={<SecondaryButton onClick={() => void load()}><RefreshCw size={16} className="mr-2 inline" />Refresh</SecondaryButton>} /><section className="mx-auto mb-4 grid max-w-7xl grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4"><Metric label="Locked principal" value={authoritativeValue(summary?.lockedPrincipal)} hint="Active subscriptions" /><Metric label="Subscriptions" value={authoritativeValue(summary?.totalSubscriptions)} hint="All lifecycle records" /><Metric label="Rewards" value={authoritativeValue(summary?.postedRewards ?? summary?.accruedRewards)} hint="Posted reward accruals" /><Metric label="Active products" value={catalogState === 'LIVE' ? authoritativeValue(plans.length) : '—'} hint="Available products" /></section><main className="mx-auto grid max-w-7xl gap-5 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,.6fr)]"><div className="space-y-5"><Panel><PanelHeading title="Available plans" description="Review each plan’s term, yield and limits." />{catalogState === 'LOADING' && <DataStatePanel state="LOADING" title="Loading product catalog" />}{catalogState === 'ERROR' && <DataStatePanel state="ERROR" title="Mining catalog unavailable" />}{catalogState === 'LIVE' && plans.length === 0 && <DataStatePanel state="UNAVAILABLE" title="No products returned" />}{catalogState === 'LIVE' && plans.length > 0 && <div className="grid gap-3 md:grid-cols-2">{plans.map((plan) => { const state = plan.isActive === true ? 'AVAILABLE' : 'UNAVAILABLE'; return <article key={String(plan.id)} className="rounded-xl border border-[#2B2037] bg-[#171022] p-4"><div className="flex items-center justify-between gap-3"><h3 className="font-semibold">{authoritativeValue(plan.name)}</h3><StatusBadge state={state} /></div><dl className="mt-4 space-y-2.5 text-base leading-6"><div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3"><dt className="text-[#8C8299]">Asset</dt><dd className="text-right">{authoritativeValue(plan.currency)}</dd></div><div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3"><dt className="text-[#8C8299]">Term</dt><dd className="text-right font-mono">{authoritativeValue(plan.lockupPeriod)} days</dd></div><div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3"><dt className="text-[#8C8299]">Daily yield</dt><dd className="text-right font-mono">{authoritativeValue(plan.dailyYieldDecimal ?? plan.dailyYield)}</dd></div><div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3"><dt className="text-[#8C8299]">Limits</dt><dd className="max-w-full break-words text-right font-mono">{authoritativeValue(plan.minDeposit)} – {authoritativeValue(plan.maxDeposit)}</dd></div></dl><div className="mt-4 flex justify-start"><PrimaryButton size="compact" className="min-h-11 w-full px-4 text-base sm:w-auto" onClick={() => { setSelectedPlan(plan); setStage('IDLE'); setAmount(''); setMessage(''); }} disabled={!userId || state !== 'AVAILABLE'}>Choose plan</PrimaryButton></div></article>; })}</div>}</Panel><Panel><PanelHeading title="Reward history" description="Recent rewards from your subscriptions." />{positionState === 'ERROR' ? <DataStatePanel state="ERROR" title="Reward history unavailable" /> : positionState === 'LOADING' ? <DataStatePanel state="LOADING" title="Loading reward history" /> : rewards.length === 0 ? <DataStatePanel state="UNAVAILABLE" title="No rewards yet" /> : <div className="space-y-2">{rewards.slice(0, 8).map((reward) => <div key={String(reward.id)} className="flex items-center justify-between rounded-xl border border-[#2B2037] bg-[#171022] p-3 text-sm"><span>{authoritativeValue(reward.currency)} · {authoritativeValue(reward.rewardedAt)}</span><span className="font-mono text-[#98FCE4]">+{authoritativeValue(reward.amount)}</span></div>)}</div>}</Panel><Panel><PanelHeading title="My subscriptions" action={<History size={18} className="text-[#8C8299]" />} />{positionState === 'LOADING' && <DataStatePanel state="LOADING" title="Loading positions" />}{positionState === 'ERROR' && <DataStatePanel state="ERROR" title="Position history unavailable" />}{positionState === 'LIVE' && positions.length === 0 && <DataStatePanel state="UNAVAILABLE" title="No subscriptions yet" />}{positionState === 'LIVE' && positions.length > 0 && <div className="space-y-3">{positions.map((position) => <MiningPosition key={String(position.id)} position={position} onChanged={() => void load()} />)}</div>}</Panel></div><aside>{selectedPlan ? <Panel><PanelHeading title={`Review ${authoritativeValue(selectedPlan.name)}`} description="Review your amount before confirming." /><form onSubmit={onSubmit} className="space-y-4"><Field label="Subscription amount"><input className={inputClass} value={amount} onChange={(event) => setAmount(event.target.value)} inputMode="decimal" placeholder="Enter amount" aria-label="Subscription amount" /></Field>{message && <div className={`rounded-xl border p-4 text-sm ${stage === 'ERROR' ? 'border-[#FF5C7C]/30 bg-[#561626]/50 text-[#FFD9E0]' : 'border-[#48C0CC]/30 bg-[#12373E]/40 text-[#C8FCFF]'}`} role={stage === 'ERROR' ? 'alert' : 'status'}>{message}</div>}<PrimaryButton type="submit" disabled={stage === 'SUBMITTING' || stage === 'PENDING_CONFIRMATION' || !userId || Number(amount) <= 0}>{stage === 'REVIEW' ? 'Confirm subscription' : stage === 'SUBMITTING' ? 'Submitting…' : stage === 'PENDING_CONFIRMATION' ? 'Request sent' : 'Review subscription'}</PrimaryButton></form></Panel> : <DataStatePanel state="AVAILABLE" title="Select a product to review" message="Choose a product to see its terms." />}</aside></main></PageShell>;
+  return <PageShell><PageHeader title="Mining" description="Review available plans and track your subscriptions." action={<SecondaryButton onClick={() => void load()}><RefreshCw size={16} className="mr-2 inline" />Refresh</SecondaryButton>} /><section className="mx-auto mb-4 grid max-w-7xl grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4"><Metric label="Locked principal" value={authoritativeValue(summary?.lockedPrincipal)} hint="Active subscriptions" /><Metric label="Subscriptions" value={authoritativeValue(summary?.totalSubscriptions)} hint="All lifecycle records" /><Metric label="Rewards" value={authoritativeValue(summary?.postedRewards ?? summary?.accruedRewards)} hint="Posted reward accruals" /><Metric label="Active products" value={catalogState === 'LIVE' ? authoritativeValue(plans.length) : '—'} hint="Available products" /></section><main className="mx-auto grid max-w-7xl gap-5 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,.6fr)]"><div className="space-y-5"><Panel><PanelHeading title="Available plans" description="Review each plan’s term, yield and limits." />{catalogState === 'LOADING' && <DataStatePanel state="LOADING" title="Loading product catalog" />}{catalogState === 'ERROR' && <DataStatePanel state="ERROR" title="Mining catalog unavailable" />}{catalogState === 'LIVE' && plans.length === 0 && <DataStatePanel state="UNAVAILABLE" title="No products returned" />}{catalogState === 'LIVE' && plans.length > 0 && <div className="grid gap-3 md:grid-cols-2">{plans.map((plan) => { const state = plan.isActive === true ? 'AVAILABLE' : 'UNAVAILABLE'; return <article key={String(plan.id)} className="rounded-xl border border-[#2B2037] bg-[#171022] p-4"><div className="flex items-center justify-between gap-3"><h3 className="font-semibold">{authoritativeValue(plan.name)}</h3><StatusBadge state={state} /></div><dl className="mt-4 space-y-2.5 text-base leading-6"><div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3"><dt className="text-[#8C8299]">Asset</dt><dd className="text-right">{authoritativeValue(plan.currency)}</dd></div><div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3"><dt className="text-[#8C8299]">Term</dt><dd className="text-right font-mono">{authoritativeValue(plan.lockupPeriod)} days</dd></div><div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3"><dt className="text-[#8C8299]">Daily yield</dt><dd className="text-right font-mono">{Number.isFinite(Number(plan.dailyYieldDecimal ?? plan.dailyYield)) ? `${(Number(plan.dailyYieldDecimal ?? plan.dailyYield) * 100).toFixed(2)}% / day` : '—'}</dd></div><div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3"><dt className="text-[#8C8299]">Limits</dt><dd className="max-w-full break-words text-right font-mono">{authoritativeValue(plan.minDeposit)} – {authoritativeValue(plan.maxDeposit)}</dd></div></dl><div className="mt-4 flex justify-start"><PrimaryButton size="compact" className="min-h-11 w-full px-4 text-base sm:w-auto" onClick={() => { setSelectedPlan(plan); setStage('IDLE'); setAmount(''); setMessage(''); }} disabled={!userId || state !== 'AVAILABLE'}>Choose plan</PrimaryButton></div></article>; })}</div>}</Panel><Panel><PanelHeading title="Reward history" description="Recent rewards from your subscriptions." />{positionState === 'ERROR' ? <DataStatePanel state="ERROR" title="Reward history unavailable" /> : positionState === 'LOADING' ? <DataStatePanel state="LOADING" title="Loading reward history" /> : rewards.length === 0 ? <DataStatePanel state="UNAVAILABLE" title="No rewards yet" /> : <div className="space-y-2">{rewards.slice(0, 8).map((reward) => <div key={String(reward.id)} className="flex items-center justify-between rounded-xl border border-[#2B2037] bg-[#171022] p-3 text-sm"><span>{authoritativeValue(reward.currency)} · {authoritativeValue(reward.rewardedAt)}</span><span className="font-mono text-[#98FCE4]">+{authoritativeValue(reward.amount)}</span></div>)}</div>}</Panel><Panel><PanelHeading title="My subscriptions" action={<History size={18} className="text-[#8C8299]" />} />{positionState === 'LOADING' && <DataStatePanel state="LOADING" title="Loading positions" />}{positionState === 'ERROR' && <DataStatePanel state="ERROR" title="Position history unavailable" />}{positionState === 'LIVE' && positions.length === 0 && <DataStatePanel state="UNAVAILABLE" title="No subscriptions yet" />}{positionState === 'LIVE' && positions.length > 0 && <div className="space-y-3">{positions.map((position) => <MiningPosition key={String(position.id)} position={position} onChanged={() => void load()} />)}</div>}</Panel></div><aside>{selectedPlan ? <Panel><PanelHeading title={`Review ${authoritativeValue(selectedPlan.name)}`} description="Review your amount before confirming." /><form onSubmit={onSubmit} className="space-y-4"><Field label="Subscription amount"><input className={inputClass} value={amount} onChange={(event) => setAmount(event.target.value)} inputMode="decimal" placeholder="Enter amount" aria-label="Subscription amount" /></Field>{message && <div className={`rounded-xl border p-4 text-sm ${stage === 'ERROR' ? 'border-[#FF5C7C]/30 bg-[#561626]/50 text-[#FFD9E0]' : 'border-[#48C0CC]/30 bg-[#12373E]/40 text-[#C8FCFF]'}`} role={stage === 'ERROR' ? 'alert' : 'status'}>{message}</div>}{unknownSubscriptionKey && <div role="alert" className="rounded-lg border border-amber-300/30 p-3 text-xs text-amber-100">Subscription outcome unresolved. <button type="button" onClick={() => void recheckUnknownSubscription(unknownSubscriptionKey)} className="ml-2 min-h-11 underline">Recheck subscription</button></div>}<PrimaryButton type="submit" disabled={Boolean(unknownSubscriptionKey) || stage === 'SUBMITTING' || stage === 'PENDING_CONFIRMATION' || !userId || Number(amount) <= 0}>{stage === 'REVIEW' ? 'Confirm subscription' : stage === 'SUBMITTING' ? 'Submitting…' : stage === 'PENDING_CONFIRMATION' ? 'Request sent' : 'Review subscription'}</PrimaryButton></form></Panel> : <DataStatePanel state="AVAILABLE" title="Select a product to review" message="Choose a product to see its terms." />}</aside></main></PageShell>;
 }
 
 function MiningPosition({ position, onChanged }: { position: RecordValue; onChanged: () => void }) {

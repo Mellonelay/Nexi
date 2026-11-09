@@ -45,6 +45,32 @@ export class FinancialOperationsController {
   ) {}
 
   @ApiBearerAuth()
+  @ApiOkResponse({
+    description: "Backend-configured enabled withdrawal asset/networks and string-exact limits and fees. Read-only.",
+    schema: {
+      type: "array",
+      items: {
+        type: "object",
+        required: ["asset", "network", "networkName", "minWithdrawal", "maxWithdrawal", "withdrawalFee"],
+        properties: {
+          asset: { type: "string" },
+          network: { type: "string" },
+          networkName: { type: "string" },
+          minWithdrawal: { type: "string" },
+          maxWithdrawal: { type: "string" },
+          withdrawalFee: { type: "string" },
+        },
+      },
+    },
+  })
+  @Get("withdrawal-capabilities")
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
+  withdrawalCapabilities() {
+    return this.financial.getWithdrawalCapabilities();
+  }
+
+  @ApiBearerAuth()
   @Post("withdrawals")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")

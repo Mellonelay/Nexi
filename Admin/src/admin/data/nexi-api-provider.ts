@@ -62,7 +62,7 @@ import type {
 } from "../types";
 import { io } from "socket.io-client";
 import { reorderByIds } from "./banner-order";
-import { mapBinaryPositionStatus, mapWalletAccount, mapLedgerPosting } from "../types";
+import { mapBinaryPositionStatus, mapBinaryPublicDirection, mapWalletAccount, mapLedgerPosting } from "../types";
 import { isPublishedAnnouncement } from "./announcement-status";
 import { buildFeatureFlagUpdate } from "./feature-flag-update";
 
@@ -1314,13 +1314,15 @@ export class NexiAdminApiProvider implements AdminDataProvider {
           size: stringValue(row.amount),
           filled: stringValue(row.filled),
           status:
-            status === "canceled"
+            status === "cancelled" || status === "canceled"
               ? "cancelled"
-              : status === "filled"
-                ? "filled"
-                : status === "rejected"
-                  ? "rejected"
-                  : "open",
+              : status === "partially_filled"
+                ? "partially_filled"
+                : status === "filled"
+                  ? "filled"
+                  : status === "rejected"
+                    ? "rejected"
+                    : "open",
           createdAt: stringValue(row.createdAt, new Date(0).toISOString()),
         } as SpotOrder;
       }),
@@ -1433,7 +1435,7 @@ export class NexiAdminApiProvider implements AdminDataProvider {
           id: stringValue(row.id),
           userId: stringValue(row.userId),
           pair: stringValue(row.pair),
-          direction: side === "DOWN" ? "short" : "long",
+          direction: mapBinaryPublicDirection(side),
           duration: Number(row.durationSeconds) as BinaryPosition["duration"],
           stake: stringValue(row.stake),
           openPrice: stringValue(row.entryPrice),
@@ -1642,12 +1644,28 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       }),
     };
   }
-  async listAudit(): Promise<AuditEvent[]> {
-    const rows = await this.request<unknown[]>("/admin/audit");
+  async listAudit(filters?: { target?: string; targetExact?: string; action?: string; actionPrefix?: string; limit?: number }): Promise<AuditEvent[]> {
+    // Filter in the Backend before its LIMIT. A client-side filter of the
+    // newest global events can silently hide older events for this target.
+    const params = new URLSearchParams();
+    if (filters?.target) params.set("target", filters.target);
+    if (filters?.targetExact) params.set("targetExact", filters.targetExact);
+    if (filters?.action) params.set("action", filters.action);
+    if (filters?.actionPrefix) params.set("actionPrefix", filters.actionPrefix);
+    if (filters?.limit !== undefined) params.set("limit", String(Math.min(100, Math.max(1, Math.floor(filters.limit)))));
+    const query = params.toString();
+    const rows = await this.request<unknown[]>(`/admin/audit${query ? `?${query}` : ""}`);
     return rows.map((value) => {
       const row = record(value);
-      const details = record(row.details);
-      const result = stringValue(details.result, "unknown");
+      // SQLite AdminAuditLog.details is JSON text on the promoted VPS read path.
+      // Preserve structured audit evidence rather than treating that string as empty.
+      let parsedDetails: unknown = row.details;
+      if (typeof parsedDetails === "string") {
+        try { parsedDetails = JSON.parse(parsedDetails); }
+        catch { parsedDetails = {}; }
+      }
+      const details = record(parsedDetails);
+      const result = stringValue(row.verifiedPostingResult, stringValue(details.result, "unknown")).toLowerCase();
       return {
         id: stringValue(row.id),
         ts: stringValue(row.createdAt, new Date(0).toISOString()),
@@ -1664,7 +1682,11 @@ export class NexiAdminApiProvider implements AdminDataProvider {
           stringValue(details.correlationId, row.id as string),
         ),
         result:
-          result === "ok" ? "ok" : result === "error" || result === "denied" ? "failed" : "unknown",
+          result === "ok" || result === "success" || result === "succeeded"
+            ? "ok"
+            : result === "error" || result === "denied" || result === "failed" || result === "failure"
+              ? "failed"
+              : "unknown",
       };
     });
   }
@@ -1726,10 +1748,10 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     return rows.map((row) => ({
       id: stringValue(row.id),
       userId: stringValue(row.userId),
-      userEmail: stringValue(record(row.user).email),
-      planName: stringValue(record(row.plan).name),
+      userEmail: stringValue(row.userEmail, stringValue(record(row.user).email)),
+      planName: stringValue(row.planName, stringValue(record(row.plan).name)),
       amount: stringValue(row.amountDecimal, stringValue(row.amount)),
-      currency: stringValue(record(row.plan).currency, "USDT"),
+      currency: stringValue(row.planCurrency, stringValue(record(row.plan).currency, "USDT")),
       status: stringValue(row.status),
       startDate: stringValue(row.startDate),
       endDate: typeof row.endDate === "string" ? row.endDate : null,
@@ -1741,7 +1763,7 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     return rows.map((row) => ({
       id: stringValue(row.id),
       userId: stringValue(row.userId),
-      userEmail: stringValue(record(row.user).email),
+      userEmail: stringValue(row.userEmail, stringValue(record(row.user).email)),
       amount: stringValue(row.amountDecimal, stringValue(row.amount)),
       currency: stringValue(row.currency),
       status: stringValue(row.status),
@@ -1909,7 +1931,7 @@ export class NexiAdminApiProvider implements AdminDataProvider {
           positionId: stringValue(row.id),
           userId: stringValue(row.userId),
           pair: stringValue(row.pair),
-          direction: side === "DOWN" ? "short" : "long",
+          direction: mapBinaryPublicDirection(side),
           duration: Number(row.durationSeconds) as SettlementRecord["duration"],
           stake: stringValue(row.stake),
           openPrice: stringValue(row.entryPrice),

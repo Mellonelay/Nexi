@@ -5,6 +5,7 @@ import ModalSurface from '../../../components/ModalSurface';
 import { X } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../../lib/api';
+import { sessionPrincipalId } from '../../../lib/wallet-auth';
 import { getIntentKey, type PendingIntentKey } from '../../../lib/intent-key';
 
 interface TransferModalProps {
@@ -37,7 +38,47 @@ export default function TransferModal({ isOpen, onClose, currencies, selectedCur
   const [busy, setBusy] = useState(false);
   const submissionLock = useRef(false);
   const pendingIntent = useRef<PendingIntentKey | null>(null);
-  const close = () => { pendingIntent.current = null; onClose(); };
+  const [unknownIntentKey, setUnknownIntentKey] = useState<string | null>(null);
+  const pendingMode = useRef<'WALLETS' | 'USER' | null>(null);
+  const pendingPrincipal = useRef<string | null>(null);
+  const close = () => { if (!unknownIntentKey) pendingIntent.current = null; onClose(); };
+
+  const recheckUnknownTransfer = async (key: string) => {
+    const principal = sessionPrincipalId();
+    if (!principal || principal !== pendingPrincipal.current || pendingIntent.current?.key !== key) {
+      toast.warning('Verify the original wallet session before checking this transfer.');
+      return;
+    }
+    try {
+      let confirmed = false;
+      if (pendingMode.current === 'WALLETS') {
+        const response = await api.get<{ activities: Array<{ type?: string; ledgerCorrelationId?: string }> }>('/wallet/activity', { params: { limit: 100 } });
+        confirmed = Array.isArray(response.data?.activities) && response.data.activities.some((item) =>
+          item?.type === 'WALLET_ACCOUNT_TRANSFER' && item.ledgerCorrelationId === key);
+      } else if (pendingMode.current === 'USER') {
+        const response = await api.get<Array<{ idempotencyKey?: string; fromUserId?: string }>>('/financial/transfers');
+        confirmed = Array.isArray(response.data) && response.data.some((item) =>
+          item?.idempotencyKey === key && item.fromUserId === principal);
+      }
+      if (sessionPrincipalId() !== principal || pendingIntent.current?.key !== key) return;
+      if (!confirmed) {
+        toast.warning('Transfer outcome remains unknown. Do not send it again; review Wallet activity or contact Support.');
+        return;
+      }
+      pendingIntent.current = null;
+      pendingMode.current = null;
+      pendingPrincipal.current = null;
+      setUnknownIntentKey(null);
+      setAmount('');
+      setRecipientCode('');
+      toast.success('The transfer was confirmed in account records.');
+      try { await onCompleted?.(); } catch { toast.warning('Transfer confirmed, but Wallet refresh failed.'); }
+      onClose();
+    } catch {
+      if (sessionPrincipalId() === principal && pendingIntent.current?.key === key)
+        toast.error('Transfer records could not be checked. The original request remains unresolved.');
+    }
+  };
 
   useEffect(() => {
     if (!internalAsset && currencies[0]) setInternalAsset(currencies[0].symbol);
@@ -53,7 +94,8 @@ export default function TransferModal({ isOpen, onClose, currencies, selectedCur
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (submissionLock.current || !validAmount(amount)) return;
+    const principal = sessionPrincipalId();
+    if (submissionLock.current || unknownIntentKey || !principal || !validAmount(amount)) return;
     const asset = mode === 'WALLETS' ? internalAsset : selectedCurrency;
     if (!asset || !currencies.some((currency) => currency.symbol === asset)) return;
     if (mode === 'WALLETS') {
@@ -70,8 +112,10 @@ export default function TransferModal({ isOpen, onClose, currencies, selectedCur
       if (!Number.isInteger(toUserCode) || toUserCode < 100000 || toUserCode > 999999) return;
     }
 
-    const intent = getIntentKey(pendingIntent.current, JSON.stringify([mode, sourceScope, destinationScope, asset, mode === 'USER' ? Number(recipientCode) : null, amount]), mode === 'WALLETS' ? 'wallet-account-transfer' : 'transfer');
+    const intent = getIntentKey(pendingIntent.current, JSON.stringify([principal, mode, sourceScope, destinationScope, asset, mode === 'USER' ? Number(recipientCode) : null, amount]), mode === 'WALLETS' ? 'wallet-account-transfer' : 'transfer');
     pendingIntent.current = intent;
+    pendingMode.current = mode;
+    pendingPrincipal.current = principal;
     submissionLock.current = true;
     setBusy(true);
     try {
@@ -95,6 +139,10 @@ export default function TransferModal({ isOpen, onClose, currencies, selectedCur
         });
         confirmation = `${amount} ${asset} transferred to NEXI user ${recipientCode}.`;
       }
+      if (sessionPrincipalId() !== principal) return;
+      pendingIntent.current = null;
+      pendingMode.current = null;
+      pendingPrincipal.current = null;
       // A readback failure must not misreport an already committed transfer.
       try { await onCompleted?.(); }
       catch { toast.warning('Transfer completed, but balances could not be refreshed.'); }
@@ -103,10 +151,22 @@ export default function TransferModal({ isOpen, onClose, currencies, selectedCur
       setRecipientCode('');
       close();
     } catch (error) {
+      if (sessionPrincipalId() !== principal) return;
       const response = error && typeof error === 'object' && 'response' in error
         ? (error as { response?: { data?: { message?: unknown } } }).response?.data?.message
         : undefined;
-      toast.error(typeof response === 'string' ? response : Array.isArray(response) ? response.join(', ') : 'The transfer could not be completed.');
+      const status = (error as { response?: { status?: number } } | null)?.response?.status;
+      if ([400, 401, 403, 404, 422].includes(status ?? -1)) {
+        pendingIntent.current = null;
+        pendingMode.current = null;
+        pendingPrincipal.current = null;
+        toast.error(typeof response === 'string' ? response : Array.isArray(response)
+          ? response.join(', ') : 'Transfer request was rejected. Review the details.');
+      } else {
+        setUnknownIntentKey(intent.key);
+        toast.warning('Transfer outcome is unknown. Recheck account records before any other transfer.');
+        void recheckUnknownTransfer(intent.key);
+      }
     } finally {
       submissionLock.current = false;
       setBusy(false);
@@ -132,6 +192,10 @@ export default function TransferModal({ isOpen, onClose, currencies, selectedCur
       <label className="block text-xs text-[#C3BBD0]">Recipient NEXI User ID<input className="nexi-input mt-1 w-full font-mono" inputMode="numeric" pattern="[0-9]{6}" value={recipientCode} onChange={(event) => setRecipientCode(event.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="123456" required /></label>
       <label className="block text-xs text-[#C3BBD0]">Amount<input className="nexi-input mt-1 w-full" inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="0.00" required /></label>
     </>}
-    <button type="submit" disabled={busy || !validAmount(amount) || (mode === 'WALLETS' ? !internalAsset || sourceScope === destinationScope || ((destinationScope === 'MARGIN' || destinationScope === 'BINARY') && internalAsset.toUpperCase() !== 'USDT') : recipientCode.length !== 6)} className="min-h-11 w-full rounded-xl bg-[#8B5CF6] px-4 font-semibold text-white disabled:opacity-50">{busy ? 'Sending…' : mode === 'WALLETS' ? 'Confirm wallet transfer' : 'Transfer to user'}</button>
+    {unknownIntentKey && <div role="alert" className="rounded-lg border border-amber-300/25 p-3 text-sm text-amber-100">
+      Transfer outcome is unresolved. Do not submit another transfer.
+      <button type="button" onClick={() => void recheckUnknownTransfer(unknownIntentKey)} className="mt-2 block min-h-11 rounded-lg border border-amber-300/30 px-3 font-semibold">Recheck transfer</button>
+    </div>}
+    <button type="submit" disabled={busy || Boolean(unknownIntentKey) || !validAmount(amount) || (mode === 'WALLETS' ? !internalAsset || sourceScope === destinationScope || ((destinationScope === 'MARGIN' || destinationScope === 'BINARY') && internalAsset.toUpperCase() !== 'USDT') : recipientCode.length !== 6)} className="min-h-11 w-full rounded-xl bg-[#8B5CF6] px-4 font-semibold text-white disabled:opacity-50">{busy ? 'Sending…' : mode === 'WALLETS' ? 'Confirm wallet transfer' : 'Transfer to user'}</button>
   </form></section></ModalSurface>;
 }

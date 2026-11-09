@@ -1,4 +1,84 @@
-# CURRENT PLAN — NEXI interactive browser acceptance (owner decision 2026-11-08)
+# ACTIVE PLAN — NEXI consolidated cross-surface repair (2026-11-08)
+
+Source of scope: `NEXI_WORK_ONE_BATCH_PARALLEL_REPAIR_EXECUTION_20261108.md` (Library ID `libfile_9c658cc7ccb08191961902c40083b184`). This is the current campaign pointer; preserve the dated acceptance receipts and all existing dirty/untracked work.
+
+1. **Preflight once:** refresh branch/HEAD/origin/status and active writers; inspect current root and affected-surface AGENTS; read the current acceptance tracker and the scoped receipt; verify source/runtime identity separately. Do not assume historical counts or releases remain current.
+2. **Freeze repair matrix:** include every current FAIL row and confirmed observed defect; map evidence → causal owner → exact source/interface → dependencies → bounded repair → post-batch proof. Keep unknown causes unknown and retain blocked/not-tested criteria.
+3. **Route owners:** R0 is the single coordinator/Git/task-file owner. Backend Ledger/Outbox and financial semantics have one writer; Public Next.js shared primitives have one writer; Admin TanStack has one writer. Read-only graph/static and UX/evidence reviewers stay distinct. Use concurrent lanes only when real delegation handles are returned and file ownership is disjoint; otherwise serialize.
+4. **Implement all safe in-scope source changes before verification.** No per-patch tests/builds; static inspection and diff review only during editing. No economic replay, direct production SQLite/Ledger write, migration, restart, commit, push or deploy.
+5. **Integration barrier:** reconcile lane changes once; record all changed files and resolve cross-surface contract conflicts before validation.
+6. **Single verification campaign:** run the smallest combined checks for all changed owners (diff integrity, affected lint/type/API checks, relevant focused tests and safe financial invariants); build each changed app at most once after checks. Then use available real browser sessions/viewport support for changed UI only, preserving authentication and avoiding transaction actions. If one consolidated correction batch is required, rerun only invalidated checks.
+7. **Close evidence:** reconcile all 113 rows against exact new evidence; preserve unchanged PASS, prerequisite BLOCKED and unsupported NOT_TESTED. Record proof layer per behavior. Stop before production/release approval boundaries and report exact changed artifacts, proof, remaining prerequisite and approval needed.
+
+**Goal completion bar:** all feasible confirmed source repairs in the frozen matrix are integrated; every changed owner has its agreed post-batch proof recorded; the 113-row tracker is reconciled without invented PASS; production mutations and deployment remain unperformed absent separate authorization.
+
+**This entry registers/organizes the authorized campaign only. It does not claim source changes, testing, browser acceptance, release, or a platform Goal record.**
+
+
+## CURRENT EXECUTION — signed-in acceptance profile 757621 (2026-11-08 UTC)
+- Reuse the existing signed-in tabs. Public is mobile-first at 390×844 CSS px, DPR 3, touch enabled; Admin is desktop-first at 978×770 CSS px, DPR 1, without mobile emulation. Keep tabs open.
+- Current Public identity is profile 757621 / UUID 3ecc85a9-c243-4da3-bde0-a24bdf532e8f / 0x339a…8b33. Do not merge evidence with prior profile 138324.
+- The owner-funded 5,000 USDT credit and four 1,000 USDT account transfers are complete. Do not repeat.
+- Latest cross-surface results: Public Funding lists BTC 0 and USDT 1,000; Spot lists BTC 0.00014 and USDT 989.3810554638. Admin Networks lists five configured assets across eight ENABLED deposit networks; Admin Spot lists 53 pairs. Record the mismatch between account holdings rows and supported catalog separately.
+- Binary trade ended with Public “Settlement failure” despite Activity Completed and Admin LOSS/POSTED. Countdown eventually reached zero; do not report a persistent countdown defect. Margin close returned failure and left the position pending. Exact results are in the dated receipt and targeted 113-row entries.
+- Continue any independent browser checks that remain feasible; record direct UI evidence and cross-surface outcomes. No source repair, build, deployment, restart or repeat financial operation in Phase A.
+- Public Support search and a labeled Public→Admin message delivery check are now recorded; no Admin reply was submitted. Keep historical statuses and profile-scoped evidence. The campaign is not complete while untested criteria remain; consolidate findings after the feasible sweep.
+
+
+### LATEST EXECUTION DELTA — read-only product and settings checks (2026-11-08 UTC)
+- Existing Public/Admin tabs only. Current profile 757621 remains distinct from older profile 138324. No user financial operation was repeated.
+- Added actual Public Settings, Learn, Announcements, Loan product preview and Admin Products → Mining/Loans readbacks to the dated receipt and targeted 113-row evidence. Keep incomplete criteria NOT_TESTED/BLOCKED; do not promote partial observations to PASS.
+- Admin Client Inspect and Ledger now corroborate profile 757621 balances and a POSTED 10 USDT Mining reserve. Admin entitlement shows MINING NO while Public has an active 10 USDT subscription; meaning is unresolved. LOANS is NO and Public eligibility is Unavailable, so no loan application was submitted. Admin loan rows still omit the target profile ID; Approve/Reject controls were not used.
+- Continue Phase A with profile attribution and remaining feasible journeys. Preserve findings for the later single repair batch; no source/build/deploy/restart.
+---
+
+
+## ACTIVE PLAN — NEXI browser acceptance continuation (2026-11-08 UTC)
+1. Reuse authenticated Public/Admin tabs; preserve owner-completed 5K credit and four 1K transfers. Cross-surface balances and all eight paired postings are verified; details in the dated receipt.
+2. Continue Phase A without source repair/build/deploy: stage one lowest-risk transaction at a time only to its final browser action, request user takeover there, then verify Activity/Admin/Ledger before the next economic journey. Current acceptance does not claim Spot execution, Options settlement, Mining subscription or Loan application.
+3. Continue independent read-only Admin/Public pages and controls; classify unavailable entitlements, market feeds and loading states separately from passed behavior. No unnecessary retries or repeat operations.
+4. Map only fully evidenced criteria in the preserved 113-row CSV. Mobile phone screenshots are not device-emulation results. After feasible sweep, deduplicate repair backlog for one batch.
+5. Current live proof: evidence/nexi-interactive-cloud-browser-acceptance-20261108.md.
+
+---
+
+## ACTIVE EXECUTION — NEXI funded browser acceptance (2026-11-08 UTC)
+1. Owner reports 1,000 USDT in each of Funding, Spot, Margin, Options and Finance. Do not repeat funding or transfers. Screenshot evidence records this state; the MAIN→FINANCE 1,000 transfer is shown Completed, but full Ledger correlation still needs live readback.
+2. Wallet presentation defects W-01/W-02 are recorded in the current receipt: misleading “Account not opened” for BTC/ETH/SOL/TRX; Overview truncation and cramped narrow-screen layout/horizontal tabs. Asset filter “All” only is an observed gap pending backend catalog verification. Preserve separation of custody, deposit support and trading instruments; do not invent Ledger/network support.
+3. Browser continuation cannot run in this session: CUA Chrome ID 1 currently exposes tabs=[]. Do not recreate tabs or infer application behavior. Resume with existing authenticated tabs when exposed; first verify owner-reported balances and transfer in Public Activity/Admin Ledger without submitting another transfer.
+4. Then continue non-submitting and eligible real UI workflows across Spot, Margin, Options/Binary, Convert, Mining, Loans, Wallet and Admin. Stop before any consequential browser transaction final action per handoff rule; keep independent tests moving.
+5. TEST FIRST; record actual statuses/cross-surface results in the receipt and map only demonstrated evidence into the preserved tracker. No fixes/build/deploy during Phase A. Mobile screenshot evidence is not device-emulation proof.
+
+---
+
+## ACTIVE EXECUTION — NEXI funded browser acceptance (2026-11-07 UTC)
+1. Reuse the authenticated Public/Admin tabs. The owner’s 5,000 USDT Funding credit is verified; never repeat it.
+2. Continue Phase A across independent Public/Admin journeys. Record results in the dated receipt and map evidence into existing 113 criteria without replacing historical statuses.
+3. Current transaction dependency: 20 USDT Funding→Spot form enables confirmation but remains unsubmitted. Browser policy requires the owner to perform each final financial transaction action. Verify both account balances, activity and Ledger after any owner-completed transfer before considering further funded tests.
+4. Confirmed defect: same credit is Public Completed / Ledger POSTED / Admin audit FAILED. Candidate mismatches: Convert options disabled despite Funding USDT; Public Loan says no active products while Admin exposes an active loan plan. Resolve against source/eligibility semantics after Phase A.
+5. No fixes, build, deployment, service restart or Graphify rebuild during Phase A. Mobile-first visual review remains device-unverified in Cloud Browser.
+6. Preserve the original 113 criteria, dated receipts and prior acceptance classifications. Detailed current evidence: [interactive acceptance receipt](evidence/nexi-interactive-cloud-browser-acceptance-20261108.md).
+
+---
+
+
+
+## CURRENT CHECKPOINT — owner credit verified
+Owner has credited 5,000 USDT to the matched customer’s MAIN · Funding account. Public overview/Funding = 5000 available, 0 locked, 5000 total; Spot/Margin/Options/Finance remain 0. Admin Ledger = POSTED; Public Activity = Completed; Admin customer audit timeline = FAILED for the same adjustment. Confirmed cross-surface status defect. Do NOT repeat the credit. Continue browser acceptance and test user-requested workflows; hand off only when a final consequential transaction click is required. No source repair/build/deploy until full feasible sweep.
+
+
+## HISTORICAL HANDOFF — SUPERSEDED BY OWNER CREDIT (2026-11-07)
+The earlier 20 USDT Admin Funding credit was only staged and was superseded by the owner’s completed 5,000 USDT credit, now verified in Public Funding, Admin customer details and Ledger. The Admin audit status mismatch is recorded in the current checkpoint and evidence. No second credit is authorized or needed.
+
+
+## HISTORICAL CHECKPOINT — pre-credit resumed browser pass (superseded 2026-11-07)
+Signed-in Public and Admin tabs restored and preserved; previous browser permission block is historical. Phase A read-only browser acceptance is in progress. Verified Public Dashboard, Wallet account tabs and safe dialog states, Spot chart/order disabled at zero balance, Margin selectors/zero collateral, Options durations/empty activity, Earn plan review without submission, Loan product/empty records, Support page. Admin Clients and KYC were inspected read-only. Do not change criterion status until mapped; no financial mutation, order, subscription, loan application, build, or deployment occurred. Current pages: Public Support; Admin KYC Reviews. Resume remaining Public routes/search, Admin route coverage, then map evidence to 113 criteria. Exact bounded production balance-credit amount/account still required before any credit; mobile layout remains NOT TESTED. See the dated evidence receipt for details.
+## HISTORICAL CHECKPOINT — browser unavailable at initial intake (superseded 2026-11-07)
+Phase A is active but browser execution is **BLOCKED**: this Work session exposes no authenticated Public/Admin Work Cloud Browser tabs (CUA Chrome inventory: browser ID 1, `tabs=[]`). No new tab was opened. No UI action or criterion disposition was made in this run. Keep all 113 tracker rows and prior evidence unchanged. Run receipt: [interactive acceptance checkpoint](evidence/nexi-interactive-cloud-browser-acceptance-20261108.md). Resume by binding the already authenticated tabs when they are exposed; then continue all feasible workflows and log actual results. Financial/privileged mutations remain gated by the specification.
+
+---
+
+# HISTORICAL PLAN — initial NEXI interactive browser acceptance directive (superseded by live checkpoint above)
 
 1. Recover the two already authenticated Public/Admin Work Cloud Browser tabs; current release markers and the 113 canonical requirements once. Follow [current interactive acceptance specification](../docs/quality/NEXI_INTERACTIVE_CLOUD_BROWSER_ACCEPTANCE_20261108.md) and [Work prompt](NEXI_WORK_INTERACTIVE_CLOUD_BROWSER_ACCEPTANCE_PROMPT_20261108.md), not the old VM-CDP-first sequence.
 2. Phase A: operate real UI controls across all feasible Public/Admin journeys, record each result and cross-surface behavior, distinguish economic authorization boundaries, cover 21 Admin nav routes and disposition 13 route-only files, reconcile all 113 IDs. No fixes, builds, deployments or graph rebuilds during Phase A.
@@ -1095,3 +1175,36 @@ Phase A feasible read-only browser coverage is reconciled in `tasks/evidence/nex
 - One frontend batch repaired Spot indicator controls and stale/reconnecting candle presentation. Focused receipts and the typegen permission gap are recorded in `tasks/evidence/nexi-browser-acceptance-v2-source-repair-20261104.md` (canonical evidence filename below is 20261104; no application build/deploy/restart).
 - 23/23 focused tests PASS; direct TypeScript PASS; changed-file ESLint PASS with five existing warnings; scoped React Doctor PASS on changed lines; `git diff --check` PASS. `next typegen` is blocked by root-owned canonical-checkout `.next/types/routes.d.ts` (EACCES); no artifact ownership or permissions were altered.
 - Source commit/push remains authorized. Do not deploy/restart. Refresh Graphify against the exact committed source SHA; browser retest requires separate release authorization and a new deployed SHA.
+
+## VERIFIED OPTIONS FAILURE — Public/Admin/Ledger cross-check (2026-11-08 UTC)
+
+- [x] Verified the owner-submitted BTCUSDT Options result in existing Public/Admin tabs and correlated it to Admin Ledger by reference f7c1471d-fb05-4a3f-a6d2-b731023b45c0.
+- [x] Record failures: Public SHORT vs Admin LONG/UP; Admin LOSS at a higher settlement price; Public “Settlement failure” and stale 126s History countdown; ledger detail omits debit/credit/balance.
+- [x] Public Wallet readback shows total/available reduced from 5,000 to 4,000 USDT; expanded activity accounting shows reserve available −1,000/locked +1,000 and settlement available 0/locked −1,000. Net loss confirmed. Admin Ledger Inspect still omits posting deltas. Do not retry, adjust, or correct the position.
+- [ ] Continue independent acceptance journeys in Phase A; no repair/build/deploy before the browser sweep is reconciled.
+- Evidence: tasks/evidence/nexi-interactive-cloud-browser-acceptance-20261108.md
+
+## VERIFIED SPOT ORDER RESULT — Public/Admin/Ledger cross-check (2026-11-08 UTC)
+
+- [x] Submitted one minimum BTC/USDT Market BUY after reviewing 0.00002 BTC / ~1.52 USDT. Public history records CANCELED order fb6aad9a-f98b-4581-9090-43cfc7c922ba at 77,270.763 while displayed market was ~75,755.65; status banner said “Order accepted.”
+- [x] Admin’s only open order is another user’s older limit order. Admin Ledger search has no row for this order. Public Open Orders is empty.
+- [ ] Post-submit Public balance/Activity is unavailable: wallet route reports no authenticated session while header still shows connected address. Do not retry until authoritative readback is restored.
+- [ ] Margin, Convert, Mining, Loan and remaining independent journeys continue; no repairs/build/deploy during Phase A.
+- Evidence: tasks/evidence/nexi-interactive-cloud-browser-acceptance-20261108.md
+
+## Acceptance frontier update — 2026-11-08
+Margin workspace verified with 10 USDT collateral and LONG 2x enabled; no position opened. Next: user performs the final leveraged open through Cloud Browser handoff, then verify Public/Admin/Ledger without replay. Continue non-financial UI checks while Wallet session is unavailable. Loan application remains unsubmitted because no approved collateral reference is available; Mining catalog remains loading.
+
+## Acceptance frontier update — Margin submitted by owner
+Screen recording reviewed; user submitted one BTC/USDT SHORT 2x position with 1000 USDT collateral. Public shows PENDING with 1000 available/0 locked; Admin Customer Inspect shows 1001.9979999999999501 USDT available and 0.026369953677653413 BTC locked; customer Ledger search (13 entries) contains no matching opening posting. Next is reconcile this one position’s lifecycle/status via read-only Public/Admin evidence; do not create another position. Close/interest/liquidation acceptance remains untested and any close remains a final financial handoff.
+- [ ] Notifications inbox/read-state remains NOT_TESTED: Public bell reports 11 unread, but Chrome DevTools MCP click timed out and did not open the panel; no notification state changed. Continue with another independent browser check. See 2026-11-08 acceptance receipt.
+- [ ] Phase A latest: current profile Options history confirms the existing 1 USDT LONG has no active position but still says “Settlement failure” while Admin Ledger has POSTED reserve/settlement. Confirmed guard defect: 1,000 stake against 999 available displays insufficient-balance text but leaves Long/Short enabled; no click/submission. Tracker NEXI-05-03 now FAIL. Notifications/card clicks time out in DevTools; keyboard tab navigation works. See acceptance receipt.
+- [ ] Phase A margin readback: current profile 757621 has one 10 USDT collateral LONG 2x PENDING position. Admin Ledger shows 10 USDT borrow credit and 20.02 reserve; reserve note incorrectly says GATE2_SPOT_ORDER_RESERVE and omits debit/credit/balance. Admin risk settings 2,3,5 / 0.5 match Public; NEXI-07-06 PASS. No close/replay. See receipt.
+- [ ] Admin desktop Spot/Margin audit view was checked: 0 events / “No audit events yet”; treat as that panel’s empty state only. Exact-user Ledger still shows the current profile’s posted margin/Options records. No config or financial action. See acceptance receipt.
+- [ ] Phase A Public Loans: profile 757621 shows eligibility Unavailable but one Standard 30D product Available; 100/30d draft previews 10 interest / 110 total, rate displayed as bare 0.1; blank approved collateral reference yet Submit enabled/native form valid. No submission. NEXI-08-04 stays BLOCKED. Record enabled-submit and eligibility mismatch for batch repair; see receipt.
+- [x] Phase A messaging readback: Public Nexi Customer Service is Connected; Admin Communications > Messages contains the exact current UUID and the same acceptance message; earlier Admin reply/attachment match Public history. NEXI-10-01, 10-04, 10-06 PASS. Contact Us says no support methods are configured; 10-02/03/05/07 remain untested as documented. No message sent in this pass.
+- [x] Phase A Settings readback: profile 757621 / chain 1 / KYC NOT_SUBMITTED / referral NEXI757621 / VIP0; notification categories 4/4 enabled; Security renders 100 rows (99 revoked, one active). No settings, KYC, or session mutation. Related persistence/lifecycle criteria remain NOT_TESTED; see receipt.
+- [x] Reconciled this acceptance slice against the 113-criterion evidence: 16 PASS / 24 FAIL / 8 BLOCKED / 65 NOT_TESTED. Updated receipt with current-profile Options, Margin, Wallet, Mining, Loans, Support/Messages and Settings evidence. Phase A remains partial; no repairs or financial/admin mutations in this slice. See reconciliation checkpoint in acceptance receipt.
+
+
+Final successor handover: `tasks/evidence/NEXI_INTERACTIVE_ACCEPTANCE_HANDOVER_20261108.md`. Acceptance tracker remains 113 criteria: 16 PASS / 24 FAIL / 8 BLOCKED / 65 NOT_TESTED; handover preserves the next repair frontier and exact proof limits.

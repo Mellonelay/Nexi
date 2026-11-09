@@ -89,7 +89,11 @@ function Inner() {
       header: "Result",
       sortValue: (e) => e.result,
       cell: (e) => (
-        <StatusBadge tone={e.result === "ok" ? "success" : "destructive"}>{e.result}</StatusBadge>
+        <StatusBadge
+          tone={e.result === "ok" ? "success" : e.result === "failed" ? "destructive" : "neutral"}
+        >
+          {e.result}
+        </StatusBadge>
       ),
     },
   ];
@@ -115,7 +119,15 @@ function Inner() {
         subtitle={selected?.target}
         badges={
           selected ? (
-            <StatusBadge tone={selected.result === "ok" ? "success" : "destructive"}>
+            <StatusBadge
+              tone={
+                selected.result === "ok"
+                  ? "success"
+                  : selected.result === "failed"
+                    ? "destructive"
+                    : "neutral"
+              }
+            >
               {selected.result}
             </StatusBadge>
           ) : null

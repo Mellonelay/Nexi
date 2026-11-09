@@ -2856,7 +2856,10 @@ export class D1FinancialCommandGateway {
   ): Promise<Record<string, unknown>[]> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const result = await this.bridge.select<Record<string, unknown>>(
-      `SELECT * FROM "LoanApplication"${userId ? ' WHERE "userId"=?' : ""} ORDER BY "createdAt" DESC`,
+      userId
+        ? `SELECT * FROM "LoanApplication" WHERE "userId"=? ORDER BY "createdAt" DESC`
+        : `SELECT l.*,u."email" AS "userEmail" FROM "LoanApplication" l
+           LEFT JOIN "User" u ON u."id"=l."userId" ORDER BY l."createdAt" DESC`,
       userId ? [userId] : [],
     );
     return result.results;
@@ -4079,11 +4082,78 @@ export class D1FinancialCommandGateway {
     return result.results;
   }
 
-  async listAdminAuditLogs(limit = 50): Promise<Record<string, unknown>[]> {
+  async listAdminAuditLogs(limit = 50, query: {
+    actor?: string;
+    action?: string;
+    target?: string;
+    targetExact?: string;
+    actionPrefix?: string;
+    environment?: string;
+    correlationId?: string;
+    result?: string;
+  } = {}): Promise<Record<string, unknown>[]> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const conditions: string[] = [];
+    const params: Array<string | number> = [];
+    for (const [column, value] of [
+      ["adminId", query.actor],
+      ["action", query.action],
+      ["target", query.target],
+    ] as const) {
+      if (!value) continue;
+      // instr() implements literal substring matching; LIKE would treat '%' and '_' as wildcards.
+      conditions.push(`instr(lower("${column}"), lower(?)) > 0`);
+      params.push(value);
+    }
+    if (query.targetExact) { conditions.push('"target"=?'); params.push(query.targetExact); }
+    if (query.actionPrefix) {
+      conditions.push('substr("action", 1, length(?))=?');
+      params.push(query.actionPrefix, query.actionPrefix);
+    }
+    const detailField = (field: "environment" | "correlationId" | "result") =>
+      `CASE WHEN json_valid("details") THEN json_extract("details", '$.${field}') ELSE NULL END`;
+    if (query.environment) {
+      conditions.push(`(${detailField("environment")}) = ?`);
+      params.push(query.environment);
+    }
+    if (query.correlationId) {
+      conditions.push(`(${detailField("correlationId")}) = ?`);
+      params.push(query.correlationId);
+    }
+    if (query.result) {
+      conditions.push(`(CASE WHEN "verifiedPostingResult"='ok' THEN 'ok' ELSE lower(coalesce(${detailField("result")}, 'unknown')) END) = ?`);
+      params.push(query.result);
+    }
+    params.push(Math.min(Math.max(limit, 1), 500));
+    const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
     const result = await this.bridge.select<Record<string, unknown>>(
-      `SELECT * FROM "AdminAuditLog" ORDER BY "createdAt" DESC LIMIT ?`,
-      [Math.min(Math.max(limit, 1), 500)],
+      `SELECT * FROM (
+        SELECT a.*,
+          CASE WHEN a."action" IN ('ADMIN_BALANCE_ADJUSTMENT_CREDIT', 'ADMIN_BALANCE_ADJUSTMENT_DEBIT')
+            AND json_valid(a."details")
+            AND json_type(a."details", '$.postingId') = 'text'
+            AND EXISTS (
+              SELECT 1 FROM "LedgerPosting" p
+              WHERE p."id"=json_extract(a."details", '$.postingId')
+                AND p."referenceType"='ADMIN_BALANCE_ADJUSTMENT'
+                AND p."referenceId"='admin-correction:' || json_extract(a."details", '$.idempotencyKey')
+                AND p."idempotencyKey"=p."referenceId"
+                AND p."kind"=json_extract(a."details", '$.direction')
+                AND p."asset"=json_extract(a."details", '$.asset')
+                AND p."amount"=json_extract(a."details", '$.amount')
+                AND p."accountId" IN (
+                  SELECT acc."id" FROM "LedgerAccount" acc
+                  WHERE acc."userId"=a."target"
+                    AND acc."asset"=json_extract(a."details", '$.asset')
+                    AND acc."scope"=json_extract(a."details", '$.scope')
+                )
+            )
+            THEN 'ok'
+            ELSE NULL
+          END AS "verifiedPostingResult"
+        FROM "AdminAuditLog" a
+      ) audit ${where} ORDER BY "createdAt" DESC, "id" DESC LIMIT ?`,
+      params,
     );
     return result.results;
   }
@@ -4734,6 +4804,21 @@ export class D1FinancialCommandGateway {
     const result = await this.bridge.select<Record<string, unknown>>(
       `SELECT w.*,c."symbol" AS "asset" FROM "WalletNetwork" w JOIN "Currency" c ON c."id"=w."currencyId" WHERE (? IS NULL OR w."currencyId"=?) ORDER BY c."symbol",w."code"`,
       [currencyId ?? null, currencyId ?? null],
+    );
+    return result.results;
+  }
+
+  async listPublicWithdrawalCapabilities(): Promise<Record<string, unknown>[]> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const result = await this.bridge.select<Record<string, unknown>>(
+      `SELECT c."symbol" AS "asset", w."code" AS "network", w."name" AS "networkName",
+        c."minWithdrawal", c."maxWithdrawal", c."withdrawalFee"
+        FROM "Currency" c
+        JOIN "WalletNetwork" w ON w."currencyId"=c."id"
+        WHERE c."isActive"=1 AND c."withdrawEnabled"=1
+          AND w."isActive"=1 AND w."withdrawEnabled"=1
+        ORDER BY c."symbol", w."code"`,
+      [],
     );
     return result.results;
   }
@@ -8159,6 +8244,9 @@ export class D1FinancialCommandGateway {
     );
     const locked = this.nonNegativeDecimal(current.locked);
     const reserved = this.decimal(command.reservedAmount);
+    const reserveReferenceType = command.reserveScope.toUpperCase() === "MARGIN"
+      ? "SPOT_MARGIN_ORDER_RESERVE"
+      : "GATE2_SPOT_ORDER_RESERVE";
     if (available.lt(reserved))
       throw new BadRequestException("Insufficient available funds");
 
@@ -8202,7 +8290,7 @@ export class D1FinancialCommandGateway {
       this.rollbackIfNoChanges(command.idempotencyKey, "RESERVE"),
       {
         sql: `INSERT INTO "LedgerPosting" ("id", "accountId", "asset", "kind", "amount", "availableDelta", "lockedDelta", "referenceType", "referenceId", "idempotencyKey", "correlationId", "economicGroup", "createdAt", "metadata")
-          SELECT ?, ?, ?, 'RESERVE', ?, ?, ?, 'GATE2_SPOT_ORDER_RESERVE', ?, ?, ?, ?, CURRENT_TIMESTAMP, ?
+          SELECT ?, ?, ?, 'RESERVE', ?, ?, ?, '${reserveReferenceType}', ?, ?, ?, ?, CURRENT_TIMESTAMP, ?
           WHERE EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "id" = ? AND "idempotencyKey" = ? AND "debitPostingId" IS NULL)`,
         params: [
           postingId,
@@ -8235,12 +8323,12 @@ export class D1FinancialCommandGateway {
         "RESERVE_POSTED",
         command.idempotencyKey,
         command.correlationId,
-        "GATE2_SPOT_ORDER_RESERVE",
+        reserveReferenceType,
         command.idempotencyKey,
       ),
       {
         sql: `INSERT OR IGNORE INTO "Activity" ("id", "userId", "type", "status", "referenceType", "referenceId", "idempotencyKey", "ledgerCorrelationId", "ledgerPostingId", "asset", "amount", "details", "createdAt")
-          SELECT ?, ?, 'GATE2_SPOT_ORDER', 'COMPLETED', 'GATE2_SPOT_ORDER_RESERVE', ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP
+          SELECT ?, ?, 'GATE2_SPOT_ORDER', 'COMPLETED', '${reserveReferenceType}', ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP
           WHERE EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "id" = ? AND "debitPostingId" = ?)`,
         params: [
           randomUUID(),
@@ -9379,8 +9467,12 @@ export class D1FinancialCommandGateway {
   async listSpotTrades(userId: string): Promise<Record<string, unknown>[]> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const result = await this.bridge.select<Record<string, unknown>>(
-      `SELECT t.* FROM "Gate2SpotTrade" t JOIN "Gate2SpotOrder" b ON b."id"=t."buyerOrderId" JOIN "Gate2SpotOrder" s ON s."id"=t."sellerOrderId" WHERE b."userId"=? OR s."userId"=? ORDER BY t."createdAt" DESC`,
-      [userId, userId],
+      `SELECT t.*, CASE WHEN b."userId"=? THEN 'BUY' ELSE 'SELL' END AS "side"
+        FROM "Gate2SpotTrade" t
+        JOIN "Gate2SpotOrder" b ON b."id"=t."buyerOrderId"
+        JOIN "Gate2SpotOrder" s ON s."id"=t."sellerOrderId"
+        WHERE b."userId"=? OR s."userId"=? ORDER BY t."createdAt" DESC`,
+      [userId, userId, userId],
     );
     return result.results;
   }

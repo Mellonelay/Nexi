@@ -137,15 +137,20 @@ function Inner() {
         ),
     },
     {
-      key: "balance",
-      header: "Balance",
+      key: "availableDelta",
+      header: "Available Δ",
       align: "right",
-      cell: (e) =>
-        e.balance ? (
-          <span className="mono text-xs">{e.balance}</span>
-        ) : (
-          <span className="text-xs text-muted-foreground/60">—</span>
-        ),
+      cell: (e) => e.availableDelta !== undefined
+        ? <span className="mono text-xs">{e.availableDelta}</span>
+        : <span className="text-xs text-muted-foreground/60">—</span>,
+    },
+    {
+      key: "lockedDelta",
+      header: "Locked Δ",
+      align: "right",
+      cell: (e) => e.lockedDelta !== undefined
+        ? <span className="mono text-xs">{e.lockedDelta}</span>
+        : <span className="text-xs text-muted-foreground/60">—</span>,
     },
     {
       key: "ref",
@@ -266,7 +271,9 @@ function Inner() {
                     { label: "Amount", value: selected.amount, mono: true },
                     { label: "Debit", value: selected.debit ?? "—", mono: true },
                     { label: "Credit", value: selected.credit ?? "—", mono: true },
-                    { label: "Resulting balance", value: selected.balance ?? "—", mono: true },
+                    { label: "Available change", value: selected.availableDelta ?? "Not provided", mono: true },
+                    { label: "Locked change", value: selected.lockedDelta ?? "Not provided", mono: true },
+                    { label: "Resulting balance", value: selected.balance ?? "Not recorded on this posting", mono: true },
                     { label: "Linked ref", value: selected.refId, mono: true },
                     { label: "Status", value: selected.status ?? "posted", mono: true },
                   ],

@@ -359,7 +359,7 @@ export interface SpotOrder {
   price?: string;
   size: string;
   filled: string;
-  status: "open" | "filled" | "cancelled" | "rejected";
+  status: "open" | "partially_filled" | "filled" | "cancelled" | "rejected";
   createdAt: string;
 }
 
@@ -436,9 +436,16 @@ export function mapBinaryPositionStatus(state: string): BinaryPosition["status"]
   );
 }
 
-/** Internal side mapping for Binary. Public shows long/short. */
-export function mapBinaryInternal(dir: "long" | "short"): "UP" | "DOWN" {
-  return dir === "long" ? "UP" : "DOWN";
+/** NEXI persists CALL/PUT. Public and Admin customer labels are long/short. */
+export function mapBinaryPublicDirection(side: unknown): "long" | "short" {
+  const normalized = String(side ?? "").trim().toUpperCase();
+  if (normalized === "CALL" || normalized === "UP" || normalized === "LONG") return "long";
+  if (normalized === "PUT" || normalized === "DOWN" || normalized === "SHORT") return "short";
+  throw new Error("Binary position has an unrecognized persisted side");
+}
+
+export function mapBinaryInternal(dir: "long" | "short"): "CALL" | "PUT" {
+  return dir === "long" ? "CALL" : "PUT";
 }
 
 export type WalletDomain = "overview" | "spot" | "margin" | "option" | "funding" | "financial";
@@ -492,6 +499,9 @@ export interface LedgerEntry {
   note?: string;
   /** Positive side of the entry (empty for zero). */
   debit?: string;
+  /** Exact persisted LedgerPosting deltas. */
+  availableDelta?: string;
+  lockedDelta?: string;
   credit?: string;
   /** Optional running balance after posting (mock only). */
   balance?: string;
@@ -569,6 +579,8 @@ export function mapLedgerPosting(value: unknown): LedgerEntry | undefined {
     note: typeof row.referenceType === "string" ? `${row.kind} · ${row.referenceType}` : row.kind,
     debit: row.kind === "DEBIT" ? row.amount : undefined,
     credit: row.kind === "CREDIT" ? row.amount : undefined,
+    availableDelta: typeof row.availableDelta === "string" ? row.availableDelta : undefined,
+    lockedDelta: typeof row.lockedDelta === "string" ? row.lockedDelta : undefined,
     status: "posted",
   };
 }

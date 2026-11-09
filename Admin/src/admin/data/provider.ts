@@ -451,7 +451,7 @@ export interface AdminDataProvider {
   listAdmins(): Promise<AdminUser[]>;
   /** Optional read-only detail projection for live Admin providers. */
   getAdminDetail?(id: string): Promise<AdminUser>;
-  listAudit(): Promise<AuditEvent[]>;
+  listAudit(filters?: { target?: string; targetExact?: string; action?: string; actionPrefix?: string; limit?: number }): Promise<AuditEvent[]>;
   listFlags(): Promise<FeatureFlag[]>;
   toggleFlag(key: string, ctx: ConsequentialContext): Promise<MutationResult>;
   updateFlag(

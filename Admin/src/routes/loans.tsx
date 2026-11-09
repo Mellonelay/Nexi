@@ -226,7 +226,8 @@ function Inner() {
                 ) : null}
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <p className="font-medium">{application.userEmail ?? application.userId}</p>
+                    <p className="font-medium">{application.userEmail || "Customer"}</p>
+                    <p className="break-all font-mono text-xs text-muted-foreground">User ID: {application.userId || "unavailable"}</p>
                     <p className="text-xs text-muted-foreground">
                       {application.amount} {application.currency} · {application.durationDays} days
                       · total repayment {application.totalRepayment} · repaid{" "}

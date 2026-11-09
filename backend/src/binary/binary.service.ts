@@ -210,7 +210,16 @@ export class BinaryService {
 
   async getHistory(userId: string) {
     const positions: any[] = await this.d1.listBinaryPositions(userId, false);
-    return positions.map((position) => this.withPersistedSandboxSimulation(position));
+    // Current positions and settled history are separate public read models.
+    // Do not surface ACTIVE/SETTLING/SETTLEMENT_DELAYED as completed trades.
+    const terminalStates = new Set<string>([
+      Gate2BinaryState.WIN,
+      Gate2BinaryState.LOSS,
+      Gate2BinaryState.ERROR,
+    ]);
+    return positions
+      .filter((position) => terminalStates.has(String(position.state)))
+      .map((position) => this.withPersistedSandboxSimulation(position));
   }
 
   async getConfig() {

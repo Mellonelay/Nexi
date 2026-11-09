@@ -3,9 +3,9 @@ import type { AuditEvent } from "@/admin/types";
 import { EnvironmentBadge } from "@/admin/components/EnvironmentBadge";
 import { StatusBadge } from "@/admin/components/StatusBadge";
 import { useAdminQuery } from "@/admin/data/context";
-import { LoadingSkeleton, EmptyState } from "@/admin/components/states";
+import { LoadingSkeleton, EmptyState, ErrorState } from "@/admin/components/states";
 import { cn } from "@/lib/utils";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, CircleHelp, XCircle } from "lucide-react";
 
 interface AuditTimelineProps {
   /** Filter to events whose target matches this id (e.g. usr_1001). */
@@ -31,7 +31,9 @@ export function AuditTimeline({
   className,
 }: AuditTimelineProps) {
   const shouldQuery = !events;
-  const q = useAdminQuery((p) => p.listAudit(), [shouldQuery]);
+  const q = useAdminQuery((p) => shouldQuery
+    ? p.listAudit({ targetExact: targetId, actionPrefix, limit })
+    : Promise.resolve([] as AuditEvent[]), [shouldQuery, targetId, actionPrefix, limit]);
 
   const filtered = useMemo(() => {
     let list = events ?? q.data ?? [];
@@ -42,6 +44,9 @@ export function AuditTimeline({
 
   if (shouldQuery && q.loading) {
     return <LoadingSkeleton rows={3} />;
+  }
+  if (shouldQuery && q.error) {
+    return <ErrorState title="Could not load audit events" description={q.error.message} onRetry={q.refresh} />;
   }
 
   return (
@@ -74,12 +79,18 @@ export function AuditTimeline({
                 <div className="flex items-center gap-2">
                   {e.result === "ok" ? (
                     <CheckCircle2 className="h-3.5 w-3.5 text-success" />
-                  ) : (
+                  ) : e.result === "failed" ? (
                     <XCircle className="h-3.5 w-3.5 text-destructive" />
+                  ) : (
+                    <CircleHelp className="h-3.5 w-3.5 text-muted-foreground" />
                   )}
                   <span className="mono text-xs text-primary">{e.action}</span>
                   <EnvironmentBadge env={e.environment} />
-                  {e.result !== "ok" ? <StatusBadge tone="destructive">Failed</StatusBadge> : null}
+                  {e.result === "failed" ? (
+                    <StatusBadge tone="destructive">Failed</StatusBadge>
+                  ) : e.result === "unknown" ? (
+                    <StatusBadge tone="neutral">Outcome unknown</StatusBadge>
+                  ) : null}
                 </div>
                 <span className="mono text-[10px] text-muted-foreground">
                   {new Date(e.ts).toLocaleString()}
