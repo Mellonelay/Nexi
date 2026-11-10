@@ -64,6 +64,18 @@ export class SpotService {
     }));
   }
 
+  getOwnedOrder(userId: string, orderId: string) {
+    if (typeof orderId !== 'string' || !/^[A-Za-z0-9._:-]{1,180}$/.test(orderId)) {
+      throw new BadRequestException('Spot order identifier is invalid');
+    }
+    return this.d1.getSpotOrder(userId, orderId);
+  }
+
+  getOrderByIntent(userId: string, idempotencyKey: string) {
+    this.assertIdempotencyKey(idempotencyKey);
+    return this.d1.getSpotOrderByIntent(userId, idempotencyKey);
+  }
+
   getOpenOrders(userId: string) {
     return this.d1.listSpotOrders(userId, true);
   }

@@ -209,7 +209,7 @@ function AssetDetailView({
 
   return (
     <div className="nexi-page-shell relative min-h-full w-full min-w-0 overflow-x-clip px-3 pb-6 pt-3 text-[#F8F6FF] sm:px-4 md:px-8 md:pb-8 md:pt-8">
-      <div className="relative mx-auto max-w-6xl">
+      <div className="relative mx-auto w-full min-w-0 max-w-6xl">
         <header className="nexi-station-header mb-4 grid grid-cols-[44px_minmax(0,1fr)_44px] items-center gap-2 rounded-2xl border p-2.5 sm:gap-3 sm:p-3">
           <SafeBackButton fallback="/dashboard" label="Back to Quotes Hub" className="!min-h-[44px] !min-w-[44px] border-violet-300/20 bg-[#100A18] hover:border-violet-300/45" />
           <div className="min-w-0 flex-1">
@@ -309,9 +309,9 @@ function AssetDetailView({
           </div>
         </section>
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Link href={`/dashboard/spot?symbol=${encodeURIComponent(instrument.pair)}`} className="flex min-h-12 items-center justify-center gap-2 rounded-lg bg-[#8B5CF6] px-4 text-sm font-semibold text-white transition hover:bg-[#A375FF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF]">Open Spot / Margin <ArrowUpRight className="h-4 w-4" aria-hidden="true" /></Link>
-          <Link href={`/dashboard/binary?symbol=${encodeURIComponent(instrument.pair)}`} className="flex min-h-12 items-center justify-center gap-2 rounded-lg border border-violet-300/25 bg-[#21152F] px-4 text-sm font-semibold text-[#F8F6FF] transition hover:border-violet-300/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF]">Open Options <ChevronRight className="h-4 w-4" aria-hidden="true" /></Link>
+        <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
+          <Link href={`/dashboard/spot?symbol=${encodeURIComponent(instrument.pair)}`} className="flex min-h-12 w-full min-w-0 flex-wrap items-center justify-center gap-2 rounded-lg bg-[#8B5CF6] px-4 text-sm font-semibold text-white transition hover:bg-[#A375FF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF]">Open Spot / Margin <ArrowUpRight className="h-4 w-4" aria-hidden="true" /></Link>
+          <Link href={`/dashboard/binary?symbol=${encodeURIComponent(instrument.pair)}`} className="flex min-h-12 w-full min-w-0 flex-wrap items-center justify-center gap-2 rounded-lg border border-violet-300/25 bg-[#21152F] px-4 text-sm font-semibold text-[#F8F6FF] transition hover:border-violet-300/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF]">Open Options <ChevronRight className="h-4 w-4" aria-hidden="true" /></Link>
         </div>
       </div>
     </div>

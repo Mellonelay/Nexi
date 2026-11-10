@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import api from '../../../lib/api';
 import { getIntentKey, type PendingIntentKey } from '../../../lib/intent-key';
 import { sessionPrincipalId } from '../../../lib/wallet-auth';
+import { clearPendingEconomicIntent, persistPendingEconomicIntent, readPendingEconomicIntent } from '../../../lib/pending-economic-intent';
 
 interface WithdrawModalProps {
   isOpen: boolean;
@@ -38,6 +39,18 @@ export default function WithdrawModal({ isOpen, onClose, currencies, selectedCur
   const [unknownIntentKey, setUnknownIntentKey] = useState<string | null>(null);
   const submissionLock = useRef(false);
   const pendingIntent = useRef<PendingIntentKey | null>(null);
+
+  useEffect(() => {
+    const restore = () => {
+      const principal = sessionPrincipalId();
+      const stored = principal ? readPendingEconomicIntent('withdrawal', principal) : null;
+      pendingIntent.current = stored?.intent ?? null;
+      setUnknownIntentKey(stored?.intent.key ?? null);
+    };
+    restore();
+    window.addEventListener('nexi:wallet-session', restore);
+    return () => window.removeEventListener('nexi:wallet-session', restore);
+  }, []);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -78,12 +91,13 @@ export default function WithdrawModal({ isOpen, onClose, currencies, selectedCur
     const principal = sessionPrincipalId();
     if (!principal || pendingIntent.current?.key !== key) return;
     try {
-      const response = await api.get<Array<{ requestKey?: string }>>('/financial/withdrawals');
+      const response = await api.get<Array<{ requestKey?: string }>>('/financial/withdrawals', { params: { requestKey: key } });
       if (sessionPrincipalId() !== principal || pendingIntent.current?.key !== key) return;
       if (!Array.isArray(response.data) || !response.data.some((item) => item?.requestKey === key)) {
         toast.warning('Withdrawal outcome remains unconfirmed. Check withdrawal history or contact Support; do not submit another request.');
         return;
       }
+      clearPendingEconomicIntent('withdrawal', principal, key);
       pendingIntent.current = null;
       setUnknownIntentKey(null);
       setReviewOpen(false);
@@ -103,12 +117,20 @@ export default function WithdrawModal({ isOpen, onClose, currencies, selectedCur
       || Number(amount) > Number(selectedCapability.maxWithdrawal)) return;
     if (security.mfa.enabled && !mfaToken) return;
     if (!reviewOpen) { setReviewOpen(true); return; }
-    const intent = getIntentKey(pendingIntent.current, JSON.stringify([selectedCurrency, network.trim(), address.trim(), amount]), 'withdrawal');
+    const principal = sessionPrincipalId();
+    if (!principal) { toast.error('Verify the original wallet session before withdrawing.'); return; }
+    const intent = getIntentKey(pendingIntent.current, JSON.stringify([principal, selectedCurrency, network.trim(), address.trim(), amount]), 'withdrawal');
+    // No password, MFA token or destination address is persisted in recovery storage.
+    if (!persistPendingEconomicIntent('withdrawal', { principal, intent: { key: intent.key, fingerprint: 'redacted' }, context: {} })) {
+      setUnknownIntentKey(readPendingEconomicIntent('withdrawal', principal)?.intent.key ?? 'unresolved');
+      toast.error('An earlier withdrawal may be unresolved or recovery storage is unavailable. New withdrawal requests are blocked.');
+      return;
+    }
     pendingIntent.current = intent;
     submissionLock.current = true;
     setBusy(true);
     try {
-      await api.post('/financial/withdrawals', {
+      const accepted = await api.post<{ withdrawal?: { requestKey?: string } }>('/financial/withdrawals', {
         asset: selectedCurrency,
         network: network.trim(),
         address: address.trim(),
@@ -117,6 +139,16 @@ export default function WithdrawModal({ isOpen, onClose, currencies, selectedCur
         securityPassword,
         ...(security.mfa.enabled ? { mfaToken } : {}),
       });
+      if (sessionPrincipalId() !== principal) return;
+      if (accepted.data?.withdrawal?.requestKey !== intent.key) {
+        setUnknownIntentKey(intent.key);
+        toast.warning('Withdrawal response did not confirm the original request. Recheck account history before another request.');
+        void recheckUnknownWithdrawal(intent.key);
+        return;
+      }
+      clearPendingEconomicIntent('withdrawal', principal, intent.key);
+      pendingIntent.current = null;
+      setUnknownIntentKey(null);
       toast.success('Withdrawal submitted for review.');
       close();
       try {
@@ -127,7 +159,9 @@ export default function WithdrawModal({ isOpen, onClose, currencies, selectedCur
     } catch (error) {
       const status = (error as { response?: { status?: number } } | null)?.response?.status;
       // A 5xx, timeout or conflict does not establish that the reserve was rolled back.
+      if (sessionPrincipalId() !== principal) return;
       if ([400, 401, 403, 404, 422].includes(status ?? -1)) {
+        clearPendingEconomicIntent('withdrawal', principal, intent.key);
         pendingIntent.current = null;
         setReviewOpen(false);
         toast.error('Withdrawal request was rejected. Review the entered details before retrying.');

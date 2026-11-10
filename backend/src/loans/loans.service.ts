@@ -176,6 +176,12 @@ export class LoanService {
   async getUserLoans(userId: string) {
     return this.d1.listLoanApplications(userId);
   }
+
+  async getApplicationByIntent(userId: string, idempotencyKey: string) {
+    if (!/^[A-Za-z0-9._:-]{8,160}$/.test(idempotencyKey))
+      throw new BadRequestException('Loan application idempotency key is invalid');
+    return this.d1.getLoanApplication(this.idempotentId(userId, idempotencyKey), userId);
+  }
   async getAllLoans() {
     return this.d1.listLoanApplications();
   }

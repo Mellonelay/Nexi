@@ -20,7 +20,7 @@ import WalletDashboardLayout from './components/WalletDashboardLayout';
 type Tab = 'Overview' | 'Funding' | 'Spot' | 'Margin' | 'Binary' | 'Finance';
 type Action = 'Deposit' | 'Withdraw' | 'Transfer' | 'Convert';
 type Category = 'All' | AssetCategory;
-type WalletAsset = { name: string; displayName: string; iconUrl: string | null; available: unknown; locked: unknown; total: unknown; accountExists: boolean; category?: AssetCategory; depositSupported?: boolean; depositNetworks?: string[] };
+type WalletAsset = { name: string; displayName: string; iconUrl: string | null; available: unknown; locked: unknown; total: unknown; accountExists: boolean; category?: AssetCategory; marketListed?: boolean; depositSupported?: boolean; depositNetworks?: string[] };
 type Activity = { id: string; type: unknown; source: unknown; destination: unknown; asset: unknown; amount: unknown; status: unknown; createdAt: unknown; ledgerId: unknown; referenceType: unknown; referenceId: unknown; correlationId: unknown; details: Record<string, unknown>; postings: Array<Record<string, unknown>> };
 
 const tabs: Tab[] = ['Overview', 'Funding', 'Spot', 'Margin', 'Binary', 'Finance'];
@@ -79,7 +79,7 @@ function mergeMarketAssets(walletAssets: WalletAsset[], markets: WalletQuote[], 
     if (!symbol) continue;
     const current = merged.get(symbol);
     merged.set(symbol, current
-      ? { ...current, category: market.category }
+      ? { ...current, category: market.category, marketListed: true }
       : {
           name: symbol,
           displayName: market.name || symbol,
@@ -88,6 +88,7 @@ function mergeMarketAssets(walletAssets: WalletAsset[], markets: WalletQuote[], 
           locked: null,
           total: null,
           accountExists: false,
+          marketListed: true,
           category: market.category,
         });
   }
@@ -229,7 +230,7 @@ function activityTypeLabel(value: unknown) {
 }
 
 function WalletActivityHistory({ state, activities }: { state: ReadState; activities: Activity[] }) {
-  return <div id="wallet-activity"><Panel className="p-3 sm:p-4"><PanelHeading title="Activity History" action={<History size={18} className="text-[#8C8299]" />} />{state !== 'LIVE' ? <DataStatePanel state={state} title="Activity authority unavailable" message="Activity details could not be loaded yet. Refresh to try again." /> : activities.length === 0 ? <DataStatePanel state="EMPTY" title="No wallet activity yet" message="Ledger-backed wallet activity will appear here when it is available." /> : <div className="divide-y divide-[#2B2037] overflow-hidden rounded-xl border border-[#2B2037]">{activities.map((item) => <article key={item.id} className="bg-[#171022] p-3"><div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-sm font-semibold">{activityTypeLabel(item.type)} · {text(item.asset)}</p><StatusBadge state={text(item.status)} /></div><p className="mt-1 truncate text-xs text-[#8C8299]">{text(item.createdAt)} · Activity {item.id} · Ledger {isActivityIdentifier(item.ledgerId) ? item.ledgerId : 'Not linked'}</p></div><div className="flex gap-4 text-xs text-[#C3BBD0] sm:text-right"><span>Amount <strong className="font-mono">{text(item.amount)}</strong></span><span>{text(item.source)}{text(item.destination) !== '—' ? ` → ${text(item.destination)}` : ''}</span></div></div><details className="mt-2 rounded-lg border border-violet-300/10 px-3 py-2 text-xs"><summary className="min-h-7 cursor-pointer text-[#C3BBD0]">Accounting details · {item.postings.length} ledger posting{item.postings.length === 1 ? '' : 's'}</summary><div className="mt-2 space-y-2"><p className="break-all text-[#8C8299]">Reference {text(item.referenceType)} · {text(item.referenceId)} · Correlation {text(item.correlationId)}</p>{Object.keys(item.details).length > 0 && <p className="break-all text-[#8C8299]">{Object.entries(item.details).map(([key, value]) => `${key}: ${typeof value === 'object' ? JSON.stringify(value) : String(value)}`).join(' · ')}</p>}{item.postings.map((posting, index) => <div key={String(posting.id ?? index)} className="grid gap-x-3 gap-y-1 rounded-md bg-[#0B0711] p-2 sm:grid-cols-2"><span>Posting {text(posting.id)} · {text(posting.scope)} · {text(posting.kind)}</span><span>Amount {text(posting.amount)} {text(posting.asset)}</span><span>Available Δ {text(posting.availableDelta)}</span><span>Locked Δ {text(posting.lockedDelta)}</span></div>)}</div></details></article>)}</div>}</Panel></div>;
+  return <div id="wallet-activity"><Panel className="p-3 sm:p-4"><PanelHeading title="Activity History" action={<History size={18} className="text-[#8C8299]" />} />{state !== 'LIVE' ? <DataStatePanel state={state} title="Activity authority unavailable" message="Activity details could not be loaded yet. Refresh to try again." /> : activities.length === 0 ? <DataStatePanel state="EMPTY" title="No wallet activity yet" message="Ledger-backed wallet activity will appear here when it is available." /> : <div className="divide-y divide-[#2B2037] overflow-hidden rounded-xl border border-[#2B2037]">{activities.map((item) => <article key={item.id} className="bg-[#171022] p-3"><div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-sm font-semibold">{activityTypeLabel(item.type)} · {text(item.asset)}</p><StatusBadge state={text(item.status)} /></div><p className="mt-1 break-all text-xs text-[#8C8299]">{text(item.createdAt)} · Activity {item.id} · Ledger {isActivityIdentifier(item.ledgerId) ? item.ledgerId : 'Not linked'}</p></div><div className="flex gap-4 text-xs text-[#C3BBD0] sm:text-right"><span>Amount <strong className="font-mono">{text(item.amount)}</strong></span><span>{text(item.source)}{text(item.destination) !== '—' ? ` → ${text(item.destination)}` : ''}</span></div></div><details className="mt-2 rounded-lg border border-violet-300/10 px-3 py-2 text-xs"><summary className="min-h-7 cursor-pointer text-[#C3BBD0]">Accounting details · {item.postings.length} ledger posting{item.postings.length === 1 ? '' : 's'}</summary><div className="mt-2 space-y-2"><p className="break-all text-[#8C8299]">Reference {text(item.referenceType)} · {text(item.referenceId)} · Correlation {text(item.correlationId)}</p>{Object.keys(item.details).length > 0 && <p className="break-all text-[#8C8299]">{Object.entries(item.details).map(([key, value]) => `${key}: ${typeof value === 'object' ? JSON.stringify(value) : String(value)}`).join(' · ')}</p>}{item.postings.map((posting, index) => <div key={String(posting.id ?? index)} className="grid gap-x-3 gap-y-1 rounded-md bg-[#0B0711] p-2 sm:grid-cols-2"><span>Posting {text(posting.id)} · {text(posting.scope)} · {text(posting.kind)}</span><span>Amount {text(posting.amount)} {text(posting.asset)}</span><span>Available Δ {text(posting.availableDelta)}</span><span>Locked Δ {text(posting.lockedDelta)}</span></div>)}</div></details></article>)}</div>}</Panel></div>;
 }
 
 function useWalletSession(onPrincipalChange: (next: string | null) => void) {
@@ -313,7 +314,7 @@ function WalletPerformance({ root, state }: { root: Record<string, unknown>; sta
     { label: 'Total return', value: root.totalReturn ?? root.allTimeReturn, percent: root.totalReturnPercent ?? root.allTimeReturnPercent },
   ].filter((item) => item.value !== undefined);
   if (!metrics.length) return null;
-  return <div className="mt-2 grid min-w-0 grid-cols-2 gap-2 border-t border-violet-300/10 pt-2" aria-label="Portfolio performance">{metrics.map((item) => <Metric key={item.label} label={item.label} value={performanceValue(state, item.value, item.percent)} />)}</div>;
+  return <div className="mt-2 grid min-w-0 grid-cols-1 gap-2 border-t border-violet-300/10 pt-2 min-[430px]:grid-cols-2" aria-label="Portfolio performance">{metrics.map((item) => <Metric key={item.label} label={item.label} value={performanceValue(state, item.value, item.percent)} />)}</div>;
 }
 
 function WalletSummary({ root, state, valuation }: { root: Record<string, unknown>; state: ReadState; valuation: PortfolioValuation }) {
@@ -324,8 +325,8 @@ function WalletSummary({ root, state, valuation }: { root: Record<string, unknow
             {valuation.state !== 'LIVE' && <StatusBadge state={valuation.state} />}
           </div>
           <p className="mt-1 text-[10px] leading-4 text-[#8C8299]">Estimated portfolio value · USDT. Native balances remain unchanged.</p>
-          <div className="mt-3 grid min-w-0 grid-cols-1 gap-2 min-[380px]:grid-cols-2 md:grid-cols-3" aria-label="Estimated available, locked and total portfolio value in USDT">
-            <div className="min-w-0 min-[380px]:col-span-2 md:col-span-1">
+          <div className="mt-3 grid min-w-0 grid-cols-1 gap-2 min-[430px]:grid-cols-2" aria-label="Estimated available, locked and total portfolio value in USDT">
+            <div className="min-w-0 min-[430px]:col-span-2">
               <Metric label="Total · USDT" value={state === 'LIVE' ? valuation.total : 'UNAVAILABLE'} />
             </div>
             <Metric label="Available · USDT" value={state === 'LIVE' ? valuation.available : 'UNAVAILABLE'} />
@@ -351,8 +352,8 @@ function WalletAssetRow({ item, tab }: { item: WalletAsset; tab: Tab }) {
   };
 
   return (
-    <div key={item.name} className="grid min-w-0 grid-cols-2 items-center gap-x-3 gap-y-2 bg-[#171022] px-3 py-3 sm:grid-cols-[minmax(0,1fr)_repeat(3,minmax(5rem,auto))] sm:gap-3 sm:px-4 sm:py-2">
-      <div className="col-span-2 flex min-w-0 items-center gap-2 sm:col-span-1">
+    <div key={item.name} className="grid min-w-0 grid-cols-2 items-center gap-x-3 gap-y-3 bg-[#171022] px-3 py-3 lg:grid-cols-[minmax(0,1fr)_repeat(3,minmax(7rem,auto))] lg:gap-3 lg:px-4 lg:py-2">
+      <div className="col-span-2 flex min-w-0 items-center gap-2 lg:col-span-1">
         <AssetIcon item={iconItem} />
         <span className="min-w-0">
           <span className="block break-words text-sm font-semibold">{item.displayName}</span>
@@ -363,20 +364,20 @@ function WalletAssetRow({ item, tab }: { item: WalletAsset; tab: Tab }) {
                 · Deposit supported{item.depositNetworks?.length ? ` · ${item.depositNetworks.join(', ')}` : ''}
               </span>
             )}
-            {!item.accountExists && <span className="ml-1 text-amber-200">· No balance recorded</span>}
+            {!item.accountExists && <span className="ml-1 text-amber-200">{item.marketListed && !item.depositSupported ? '· Market quote only · no wallet balance' : '· No recorded custody balance'}</span>}
           </span>
         </span>
       </div>
-      <span className="min-w-0 break-all text-right font-mono text-xs tabular-nums sm:whitespace-nowrap">
-        <span className="mb-1 block text-[10px] text-[#8C8299] sm:hidden">Available</span>
+      <span className="min-w-0 break-all text-right font-mono text-sm tabular-nums lg:whitespace-normal">
+        <span className="mb-1 block text-xs text-[#8C8299] lg:hidden">Available</span>
         {item.accountExists ? text(item.available) : '—'}
       </span>
-      <span className="min-w-0 break-all text-right font-mono text-xs tabular-nums sm:whitespace-nowrap">
-        <span className="mb-1 block text-[10px] text-[#8C8299] sm:hidden">{tab === "Finance" ? "Committed" : "Locked"}</span>
+      <span className="min-w-0 break-all text-right font-mono text-sm tabular-nums lg:whitespace-normal">
+        <span className="mb-1 block text-xs text-[#8C8299] lg:hidden">{tab === "Finance" ? "Committed" : "Locked"}</span>
         {item.accountExists ? text(item.locked) : '—'}
       </span>
-      <span className="col-span-2 min-w-0 break-all text-right font-mono text-xs font-semibold tabular-nums sm:col-span-1 sm:whitespace-nowrap">
-        <span className="mb-1 block text-[10px] text-[#8C8299] sm:hidden">Total</span>
+      <span className="col-span-2 min-w-0 break-all text-right font-mono text-base font-semibold tabular-nums lg:col-span-1 lg:whitespace-normal">
+        <span className="mb-1 block text-xs text-[#8C8299] lg:hidden">Total</span>
         {item.accountExists ? text(item.total) : '—'}
       </span>
     </div>
@@ -385,12 +386,12 @@ function WalletAssetRow({ item, tab }: { item: WalletAsset; tab: Tab }) {
 
 function WalletActionButton({ item, action, enabled, onSelect }: { item: Action; action: Action | null; enabled: boolean; onSelect: (action: Action) => void }) {
   const Icon = actionIcons[item];
-  return <button key={item} type="button" disabled={!enabled} onClick={() => onSelect(item)} aria-label={`${item}${enabled ? '' : ' unavailable'}`} className={`flex min-h-16 min-w-0 flex-col items-center justify-center gap-1 rounded-xl border p-1 text-center text-[11px] font-semibold sm:min-h-14 sm:flex-row sm:gap-2 sm:text-xs ${action === item ? 'border-[#8B5CF6] bg-[#2A1742]' : 'border-[#2B2037] bg-[#171022]'} disabled:cursor-not-allowed disabled:opacity-50`}><Icon size={16} className="shrink-0 text-[#48C0CC]" /><span className="truncate">{item}</span></button>;
+  return <button key={item} type="button" disabled={!enabled} onClick={() => onSelect(item)} aria-label={`${item}${enabled ? '' : ' unavailable'}`} className={`flex min-h-16 min-w-0 flex-col items-center justify-center gap-1 rounded-xl border p-1 text-center text-[11px] font-semibold sm:min-h-14 sm:flex-row sm:gap-2 sm:text-xs ${action === item ? 'border-[#8B5CF6] bg-[#2A1742]' : 'border-[#2B2037] bg-[#171022]'} disabled:cursor-not-allowed disabled:opacity-50`}><Icon size={16} className="shrink-0 text-[#48C0CC]" /><span className="min-w-0 break-words">{item}</span></button>;
 }
 
 function WalletActions({ authenticated, state, action, onSelect }: { authenticated: boolean; state: ReadState; action: Action | null; onSelect: (action: Action) => void }) {
   const enabled = authenticated && state === 'LIVE';
-  return <section aria-label="Wallet actions"><Panel className="p-3 sm:p-4"><PanelHeading title="Quick actions" description="Choose an available wallet action." /><div className="grid grid-cols-4 gap-2">{(['Deposit', 'Withdraw', 'Transfer', 'Convert'] as Action[]).map((item) => <WalletActionButton key={item} item={item} action={action} enabled={enabled} onSelect={onSelect} />)}</div><button type="button" onClick={() => document.getElementById('wallet-activity')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="mt-2 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-[#2B2037] bg-[#171022] text-xs font-semibold text-[#C3BBD0]"><Clock3 size={15} />View activity</button></Panel></section>;
+  return <section aria-label="Wallet actions"><Panel className="p-3 sm:p-4"><PanelHeading title="Quick actions" description="Choose an available wallet action." /><div className="grid grid-cols-2 gap-2 min-[380px]:grid-cols-4">{(['Deposit', 'Withdraw', 'Transfer', 'Convert'] as Action[]).map((item) => <WalletActionButton key={item} item={item} action={action} enabled={enabled} onSelect={onSelect} />)}</div><button type="button" onClick={() => document.getElementById('wallet-activity')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="mt-2 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-[#2B2037] bg-[#171022] text-xs font-semibold text-[#C3BBD0]"><Clock3 size={15} />View activity</button></Panel></section>;
 }
 
 function WalletAccountTabs({ tab, onTabChange }: { tab: Tab; onTabChange: (tab: Tab) => void }) {
@@ -430,7 +431,7 @@ function WalletAssets({ tab, category, onCategoryChange, state, userId, error, v
         <DataStatePanel state="UNAVAILABLE" title="No asset data for this filter" message="No matching wallet assets are available right now." />
       ) : (
         <div className="overflow-hidden rounded-xl border border-[#2B2037]">
-          <div className="hidden grid-cols-[minmax(0,1fr)_repeat(3,minmax(5rem,auto))] gap-3 bg-[#171022] px-4 py-2 text-[10px] uppercase tracking-[0.12em] text-[#8C8299] sm:grid">
+          <div className="hidden grid-cols-[minmax(0,1fr)_repeat(3,minmax(7rem,auto))] gap-3 bg-[#171022] px-4 py-2 text-xs uppercase tracking-[0.12em] text-[#8C8299] lg:grid">
             <span>Asset</span><span className="text-right">Available</span><span className="text-right">{tab === 'Finance' ? 'Committed' : 'Locked'}</span><span className="text-right">Total</span>
           </div>
           <div className="divide-y divide-[#2B2037]">{visibleAssets.map((item) => <WalletAssetRow key={item.name} item={item} tab={tab} />)}</div>

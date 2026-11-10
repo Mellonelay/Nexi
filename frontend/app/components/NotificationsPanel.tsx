@@ -148,6 +148,12 @@ export function NotificationsPanel({
   const loadNotifications = useCallback(async () => {
     const requestId = ++loadRequestRef.current;
     const requestPrincipalId = getAccessTokenPrincipalId();
+    if (!requestPrincipalId) {
+      setNotifications([]);
+      setLoading(false);
+      setFailed(false);
+      return;
+    }
     setLoading(true);
     setFailed(false);
     try {
@@ -394,7 +400,7 @@ export function NotificationsPanel({
                   aria-selected={category === item}
                   onClick={() => setCategory(item)}
                   className={cn(
-                    "min-h-9 shrink-0 rounded-lg border px-3 text-xs font-semibold transition-colors",
+                    "min-h-11 shrink-0 rounded-lg border px-3 text-xs font-semibold transition-colors",
                     category === item
                       ? "border-[#8B5CF6] bg-[#2A1742] text-white"
                       : "border-[#2B2037] bg-[#171022] text-[#A99DB8] hover:text-white",
@@ -427,8 +433,10 @@ export function NotificationsPanel({
             )}
             {!loading && !failed && visibleNotifications.length === 0 && (
               <p className="px-4 py-6 text-sm text-[#8C8299]">
-                {notifications.length === 0
-                  ? "No notifications available."
+                {!principalId
+                  ? "Verify your Ethereum wallet to view notifications."
+                  : notifications.length === 0
+                    ? "No notifications available."
                   : `No ${category.toLowerCase()} notifications.`}
               </p>
             )}
@@ -446,7 +454,7 @@ export function NotificationsPanel({
                       if (!notif.read) void markRead(notif.id);
                     }}
                     className={cn(
-                      "flex gap-3 px-4 py-3 border-b border-[#2B2037]/60 text-left last:border-0 transition-colors",
+                      "flex w-full min-w-0 gap-3 px-4 py-3 border-b border-[#2B2037]/60 text-left last:border-0 transition-colors",
                       !notif.read && "bg-[#6d41ff]/5",
                     )}
                   >
@@ -458,14 +466,14 @@ export function NotificationsPanel({
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
-                        <p className="text-sm font-semibold text-[#F8F6FF] leading-snug">
+                        <p className="break-words text-sm font-semibold text-[#F8F6FF] leading-snug">
                           {notif.title}
                         </p>
                         {!notif.read && (
                           <span className="w-1.5 h-1.5 rounded-full bg-[#6d41ff] flex-shrink-0 mt-1.5" />
                         )}
                       </div>
-                      <p className="text-xs text-[#8C8299] leading-5 mt-0.5">
+                      <p className="mt-0.5 break-words text-xs leading-5 text-[#8C8299]">
                         {notif.message}
                       </p>
                       <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-[#55546A]">

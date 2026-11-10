@@ -239,9 +239,9 @@ export interface LoanPlan {
   name: string;
   currency: string;
   durationDays: number;
-  interestRate: number;
-  minAmount: number;
-  maxAmount: number;
+  interestRate: string | number;
+  minAmount: string | number;
+  maxAmount: string | number;
   isActive: boolean;
 }
 
@@ -414,7 +414,7 @@ export interface BinaryPosition {
   stake: string;
   openPrice: string;
   expiresAt: string;
-  status: "open" | "settling" | "won" | "lost" | "error";
+  status: "open" | "settling" | "won" | "lost" | "error" | "unavailable";
   payout?: string;
   researchDefault?: "NORMAL" | "WIN" | "LOSS";
   researchOverride?: "WIN" | "LOSS" | null;
@@ -431,8 +431,10 @@ export function mapBinaryPositionStatus(state: string): BinaryPosition["status"]
         settlement_delayed: "settling",
         win: "won",
         loss: "lost",
+        error: "error",
+        failed: "error",
       } satisfies Record<string, BinaryPosition["status"]>
-    )[state] ?? "error"
+    )[state] ?? "unavailable"
   );
 }
 
@@ -780,7 +782,7 @@ export interface TranslationKey {
 }
 
 export type SettlementState =
-  "open" | "settling" | "win" | "loss" | "draw" | "refund" | "failed" | "cancelled" | "error";
+  "open" | "settling" | "win" | "loss" | "draw" | "refund" | "failed" | "cancelled" | "error" | "unavailable";
 
 export interface SettlementRecord {
   id: string;

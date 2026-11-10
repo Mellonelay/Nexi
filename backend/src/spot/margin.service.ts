@@ -225,6 +225,16 @@ export class MarginService {
     return this.d1.markMarginPosition(positionId, userId, quote.id, quote.price, pnl.toString());
   }
 
+  getExitIntent(userId: string, positionId: string, idempotencyKey: string, operation: string) {
+    if (!/^[A-Za-z0-9._:-]{8,160}$/.test(idempotencyKey)) {
+      throw new BadRequestException('Margin exit idempotency key is invalid');
+    }
+    if (operation !== 'close' && operation !== 'cancel-pending') {
+      throw new BadRequestException('Margin exit operation is invalid');
+    }
+    return this.d1.getMarginExitIntent(userId, positionId, idempotencyKey, operation);
+  }
+
   closePosition(userId: string, positionId: string, idempotencyKey: string) {
     return this.closePositionOnD1(userId, positionId, idempotencyKey, false);
   }

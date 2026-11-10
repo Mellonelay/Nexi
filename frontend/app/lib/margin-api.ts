@@ -54,6 +54,24 @@ export interface MarginCloseResponse {
   closeOrderId?: string;
 }
 
+export interface MarginExitIntentReadback {
+  positionId: string;
+  state: 'PENDING' | 'OPEN' | 'CLOSING' | 'CLOSED' | 'LIQUIDATED';
+  confirmed: boolean;
+}
+
+export async function getMarginExitIntent(
+  positionId: string,
+  idempotencyKey: string,
+  operation: 'close' | 'cancel-pending',
+) {
+  const response = await api.get<MarginExitIntentReadback>(
+    `/spot/margin/positions/${encodeURIComponent(positionId)}/exit-intent`,
+    { params: { idempotencyKey, operation } },
+  );
+  return response.data;
+}
+
 export async function closeMarginPosition(positionId: string, idempotencyKey: string) {
   const response = await api.post<MarginCloseResponse>(`/spot/margin/positions/${encodeURIComponent(positionId)}/close`, { positionId, idempotencyKey });
   return response.data;

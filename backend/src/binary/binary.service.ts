@@ -131,11 +131,21 @@ export class BinaryService {
     const position = simulated
       ? { ...settled, sandboxSimulation: this.buildSandboxSimulation(context.raw, context.sandbox!, context.expiryPrice, true) }
       : settled;
-    this.binaryGateway.emitPositionUpdate(String(context.raw.userId), { event: 'binary.position.settled', position });
-    return { position, replayed: false };
+    if (!settled.replayed)
+      this.binaryGateway.emitPositionUpdate(String(context.raw.userId), { event: 'binary.position.settled', position });
+    return { position, replayed: Boolean(settled.replayed) };
   }
 
   private async openPositionOnD1(userId: string, input: OpenBinaryPositionInput, stake: Prisma.Decimal) {
+    const previous = await this.d1.getBinaryPositionForIntent(userId, input.idempotencyKey);
+    if (previous) {
+      if (String(previous.pair).toUpperCase() !== input.pair.trim().toUpperCase() ||
+          String(previous.side) !== input.side ||
+          Number(previous.durationSeconds) !== input.durationSeconds ||
+          !new Prisma.Decimal(String(previous.stake)).eq(stake))
+        throw new BadRequestException('Binary opening key was reused with different terms');
+      return { ...previous, replayed: true };
+    }
     const pair = await this.d1.getActiveMarketPair(input.pair);
     if (!pair || !this.isBinaryPairAvailable(pair.symbol)) {
       throw new ServiceUnavailableException(`Binary settlement authority unavailable for ${input.pair}`);
@@ -162,7 +172,7 @@ export class BinaryService {
       configurationVersion: Number(configuration.version), idempotencyKey: input.idempotencyKey, correlationId: input.idempotencyKey,
       researchDefault,
     });
-    this.binaryGateway.emitPositionUpdate(userId, { event: 'binary.position.opened', position });
+    if (!position.replayed) this.binaryGateway.emitPositionUpdate(userId, { event: 'binary.position.opened', position });
     return position;
   }
 

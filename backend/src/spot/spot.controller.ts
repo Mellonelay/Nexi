@@ -3,6 +3,7 @@ import {
   Post,
   Body,
   Get,
+  Param,
   Query,
   Req,
   UseGuards,
@@ -81,6 +82,16 @@ export class SpotController {
   }
 
   @ApiBearerAuth()
+  @Get("orders/by-intent")
+  @ApiQuery({ name: "idempotencyKey", required: true, type: String })
+  @ApiOkResponse({ description: "Owned Spot order matched by exact idempotency key, or null if not yet materialized." })
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
+  getOrderByIntent(@Req() request: AuthenticatedRequest, @Query("idempotencyKey") idempotencyKey: string) {
+    return this.spotService.getOrderByIntent(request.user.userId, idempotencyKey);
+  }
+
+  @ApiBearerAuth()
   @Get("orders/open")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
@@ -94,6 +105,15 @@ export class SpotController {
   @RequireAuthSurface("PUBLIC")
   async getOrderHistory(@Req() request: AuthenticatedRequest) {
     return this.spotService.getOrderHistory(request.user.userId);
+  }
+
+  @ApiBearerAuth()
+  @Get("orders/:orderId")
+  @ApiOkResponse({ description: "Exact owned Spot order state, or null when no such owned order exists." })
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
+  getOwnedOrder(@Req() request: AuthenticatedRequest, @Param("orderId") orderId: string) {
+    return this.spotService.getOwnedOrder(request.user.userId, orderId);
   }
 
   @ApiBearerAuth()

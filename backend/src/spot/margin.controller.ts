@@ -73,6 +73,21 @@ export class MarginController {
   }
 
   @ApiBearerAuth()
+  @Get("positions/:positionId/exit-intent")
+  @ApiQuery({ name: "idempotencyKey", required: true, type: String })
+  @ApiQuery({ name: "operation", required: true, enum: ["close", "cancel-pending"] })
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
+  getExitIntent(
+    @Param("positionId") positionId: string,
+    @Query("idempotencyKey") idempotencyKey: string,
+    @Query("operation") operation: string,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.marginService.getExitIntent(request.user.userId, positionId, idempotencyKey, operation);
+  }
+
+  @ApiBearerAuth()
   @Post("positions/:positionId/cancel-pending")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")

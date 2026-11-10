@@ -1,3 +1,21 @@
+# CURRENT OWNER TASK — FULL NEXI SOURCE + MOBILE-FIRST PUBLIC UI CLOSURE (2026-11-09)
+
+**ACTIVE, NOT COMPLETED.** Execute the entire directive: [NEXI_ONE_SHOT_FULL_SOURCE_AND_MOBILE_UI_CLOSURE_20261109.md](NEXI_ONE_SHOT_FULL_SOURCE_AND_MOBILE_UI_CLOSURE_20261109.md). Same existing working session; recover checkpoint `09c2fd4`; no duplicate source edits. Current owner rule supersedes older "finish Phase A/test first" scheduling below. The actual interactive Public/Admin testing and dated FAIL receipts are **already recorded**; reuse them. Historical source tests statuses unchanged. Finish all source work **including full mobile-first Public visual/interaction/component source** before any application test, lint/typecheck campaign, build, browser/emulated-device acceptance or deployment.
+
+- [x] PREPARATION ONLY: registered directive, preserved original 113-item coverage and 11-group checkpoint, uploaded three complete Nov 8 Public mobile-first research sources at `tasks/evidence/`. **This is not source repair completion.**
+- [ ] Active execution owner: verify live writer and latest Git state (Host Gate removed 2026-11-10; no grant bootstrap); reuse prior Graphify and source work. Read applicable current AGENTS, Knowledge Index, design and three research files **fully before UI edits**.
+- [ ] Close known defects and all necessary related source contracts across Binary, Margin, Convert, Transfer, Mining, Auth, Wallet, Spot/Markets, Admin Finance, Comms/Notifications. Preserve implemented AUDIT and earlier patches.
+  - [x] 2026-11-10 scoped source slices: eliminate SQLite REAL-zero Margin/Spot cancel guards; separate Margin settlement terminal activity identity; sum Mining posted rewards as decimals; protect Mining locked-principal RELEASE; persist/recheck original Mining redeem/cancel intent in Public. Existing matrix receipt appended. MARGIN and MINING groups remain PARTIAL; other groups unchanged.
+  - [x] 2026-11-10 continued scoped source: owner-keyed Margin recovery/settlement guards, Mining terminal original-key replay and event dedupe, Wallet/Transfer/Convert authoritative HTTP success confirmation, account-switch-safe API refresh and Loan application/repayment reload-resilient original-key readbacks. Each existing matrix receipt is SOURCE_IMPLEMENTED only; LOANS and affected financial groups not fully closed.
+  - [x] 2026-11-10 additional source slices: Binary original-key immutable terms, replay-only readback before quote and single-event realtime; Binary terminal precision; unknown 408/409/425/429 preserved across Spot/Margin/Options POST; Loans exact-decimal read models, blocked-state clarity and estimate labelling; Notifications mobile text/reflow. Pending all-group/113-criterion source closure; application proof deferred.
+- [ ] Make mobile-first Public source closure part of **this same batch**: shared Metric/balance precision; Wallet Summary and asset semantics/list; five-dock/safe area; responsive Quotes/Asset Detail/Spot/Margin/Binary/Earn/Loans/Support; charts, order tickets, sheets/forms, loading/error/reconnect, financial readback. Admin remains desktop-first.
+- [ ] Reconcile original **113 requirements as source-contract coverage** using common Graphify natural-language L0/L1 + current source, not 65 new browser tests; update the existing 11-group/evidence matrix without invented PASS.
+- [ ] Finish all authorized source and cross-file consumers, provide exact file/proof/skill receipts and unresolved blockers. `TEST/BUILD/BROWSER/DEPLOY = DEFERRED_BY_OWNER_SOURCE_FIRST_RULE`.
+
+Older task entries below are dated history and cannot override this current owner instruction.
+
+---
+
 # ACTIVE TASK — NEXI consolidated cross-surface repair campaign (2026-11-08)
 
 **Goal:** Resolve the confirmed, source-repairable defects across Public, Admin and Backend in one coordinated source batch, then run one consolidated affected-scope verification campaign. Completion evidence must include the changed-file/criterion repair matrix, actual focused validation results, and an updated 113-row tracker with no unsupported status upgrades. The full owner scope and constraints are in the supplied Library artifact **NEXI_WORK_ONE_BATCH_PARALLEL_REPAIR_EXECUTION_20261108.md** (Library ID `libfile_9c658cc7ccb08191961902c40083b184`).

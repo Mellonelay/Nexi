@@ -1,5 +1,5 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from "@nestjs/common";
-import { ApiBadRequestResponse, ApiBearerAuth, ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import { Body, Controller, Get, Post, Query, Req, UseGuards } from "@nestjs/common";
+import { ApiBadRequestResponse, ApiBearerAuth, ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { Role } from "../prisma/d1-client";
 import type { AuthenticatedRequest } from "../auth/auth.types";
 import { AuthService } from "../auth/auth.service";
@@ -279,26 +279,29 @@ export class FinancialOperationsController {
 
   @ApiBearerAuth()
   @Get("deposit-claims")
+  @ApiQuery({ name: "idempotencyKey", required: false, type: String, description: "Exact owned claim key; filter before result limit." })
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
-  getDepositClaims(@Req() request: AuthenticatedRequest) {
-    return this.financial.getDepositClaims(request.user.userId);
+  getDepositClaims(@Req() request: AuthenticatedRequest, @Query("idempotencyKey") idempotencyKey?: string) {
+    return this.financial.getDepositClaims(request.user.userId, idempotencyKey);
   }
 
   @ApiBearerAuth()
   @Get("withdrawals")
+  @ApiQuery({ name: "requestKey", required: false, type: String, description: "Exact owned withdrawal request key; filter before result limit." })
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
-  withdrawals(@Req() request: AuthenticatedRequest) {
-    return this.financial.getWithdrawals(request.user.userId);
+  withdrawals(@Req() request: AuthenticatedRequest, @Query("requestKey") requestKey?: string) {
+    return this.financial.getWithdrawals(request.user.userId, requestKey);
   }
 
   @ApiBearerAuth()
   @Get("transfers")
+  @ApiQuery({ name: "idempotencyKey", required: false, type: String, description: "Exact owned transfer key; filter before result limit." })
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
-  transfers(@Req() request: AuthenticatedRequest) {
-    return this.financial.getTransfers(request.user.userId);
+  transfers(@Req() request: AuthenticatedRequest, @Query("idempotencyKey") idempotencyKey?: string) {
+    return this.financial.getTransfers(request.user.userId, idempotencyKey);
   }
 
   @ApiBearerAuth()

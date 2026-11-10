@@ -41,11 +41,14 @@ let refreshPromise: Promise<boolean> | null = null;
 
 async function recoverPublicSession(rejectedAuthorization?: string) {
   const token = getAccessToken();
+  const principal = getAccessTokenPrincipalId();
   // A late 401 may belong to the token another request already renewed.
   if (token && `Bearer ${token}` !== rejectedAuthorization) return true;
   if (!refreshPromise) {
     refreshPromise = refreshClient.post<AuthSessionPayload>('/auth/refresh')
       .then((response) => {
+        // An earlier refresh must never install credentials after account switch or logout.
+        if (getAccessTokenPrincipalId() !== principal || getAccessToken() !== token) return false;
         setAuthSession(response.data);
         return true;
       })
@@ -53,7 +56,8 @@ async function recoverPublicSession(rejectedAuthorization?: string) {
         // A disconnected network or timeout does not revoke an authenticated session.
         // Only a definitive server-side refresh rejection invalidates the stored token.
         const status = axios.isAxiosError(error) ? error.response?.status : undefined;
-        if (status === 400 || status === 401 || status === 403) clearAuthSession();
+        if ((status === 400 || status === 401 || status === 403)
+            && getAccessTokenPrincipalId() === principal && getAccessToken() === token) clearAuthSession();
         return false;
       })
       .finally(() => { refreshPromise = null; });
@@ -99,7 +103,7 @@ api.interceptors.response.use((response) => {
 
   const recovered = await recoverPublicSession(config.headers.get('Authorization')?.toString());
   const token = getAccessToken();
-  if (!recovered || !token) return Promise.reject(error);
+  if (!recovered || !token || config._nexiPrincipalId !== getAccessTokenPrincipalId()) return Promise.reject(error);
   config._nexiAuthRetry = true;
   config.headers.Authorization = `Bearer ${token}`;
   return api(config);

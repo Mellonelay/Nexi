@@ -652,6 +652,7 @@ function PositionsPanel({
         { value: "won", label: "Won" },
         { value: "lost", label: "Lost" },
         { value: "error", label: "Error" },
+        { value: "unavailable", label: "Unrecognized" },
       ],
       match: (p, v) => (v === "ongoing" ? isOngoingBinaryPositionStatus(p.status) : p.status === v),
     },

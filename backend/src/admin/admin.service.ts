@@ -17,6 +17,7 @@ import {
   Prisma,
   AdminRoleId,
   Gate2BinaryConfiguration,
+  Gate2BinaryState,
 } from "../prisma/d1-client";
 import { LedgerAuthorityService } from "../ledger/ledger-authority.service";
 import { SpotService } from "../spot/spot.service";
@@ -1876,14 +1877,14 @@ export class AdminService {
 
   async getAdminSettlements() {
     if (this.d1?.isEnabled())
-      return (await this.d1.listBinaryPositions()).filter(
-        (row) =>
-          !["ACTIVE", "SETTLING", "SETTLEMENT_DELAYED"].includes(
-            String(row.state),
-          ),
+      return (await this.d1.listBinaryPositions()).filter((row) =>
+        [Gate2BinaryState.WIN, Gate2BinaryState.LOSS, Gate2BinaryState.ERROR].includes(
+          String(row.state) as Gate2BinaryState,
+        ),
       );
     return this.prisma.gate2BinaryPosition.findMany({
-      where: { state: { not: "ACTIVE" } },
+      // Match the SQLite command gateway's terminal-only read model.
+      where: { state: { in: [Gate2BinaryState.WIN, Gate2BinaryState.LOSS, Gate2BinaryState.ERROR] } },
       orderBy: { updatedAt: "desc" },
       take: 500,
     });

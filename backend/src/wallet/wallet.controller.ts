@@ -52,6 +52,8 @@ export class WalletController {
   @ApiQuery({ name: "type", required: false, type: String })
   @ApiQuery({ name: "asset", required: false, type: String })
   @ApiQuery({ name: "status", required: false, type: String })
+  @ApiQuery({ name: "correlationId", required: false, type: String, description: "Exact owned Activity correlation ID; filtered before pagination." })
+  @ApiQuery({ name: "referenceId", required: false, type: String, description: "Exact owned Activity reference ID; filtered before pagination." })
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
   async getActivity(
@@ -61,8 +63,10 @@ export class WalletController {
     @Query("type") type?: string,
     @Query("asset") asset?: string,
     @Query("status") status?: string,
+    @Query("correlationId") correlationId?: string,
+    @Query("referenceId") referenceId?: string,
   ) {
-    return this.walletService.getActivity(request.user.userId, { limit, cursor, type, asset, status });
+    return this.walletService.getActivity(request.user.userId, { limit, cursor, type, asset, status, correlationId, referenceId });
   }
 
   @ApiBearerAuth()

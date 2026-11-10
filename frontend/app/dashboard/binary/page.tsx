@@ -18,6 +18,7 @@ import { normalizePair } from '../../state/active-instrument';
 import { findAsset } from '../../lib/asset-registry';
 import { finiteMarketNumber } from '../../lib/market-data';
 import { getIntentKey, type PendingIntentKey } from '../../lib/intent-key';
+import { clearPendingEconomicIntent, persistPendingEconomicIntent, readPendingEconomicIntent } from '../../lib/pending-economic-intent';
 import { binarySandboxChartFeed, selectBinarySandboxPosition } from '../../lib/binary-sandbox-chart';
 import {
   binaryOrderReady,
@@ -41,12 +42,12 @@ type BinaryPosition = {
   id: string;
   symbol: string;
   direction: Direction | 'UNKNOWN';
-  amount: number | null;
-  entryPrice: number | null;
-  closePrice: number | null;
+  amount: string | null;
+  entryPrice: string | null;
+  closePrice: string | null;
   duration: number | null;
-  payout: number | null;
-  realizedProfit: number | null;
+  payout: string | null;
+  realizedProfit: string | null;
   openedAt: string | null;
   expiresAt: string | null;
   status: BinaryPositionState;
@@ -58,6 +59,12 @@ type BinaryPosition = {
 const toPositive = (value: unknown) => {
   const number = Number(value);
   return Number.isFinite(number) && number > 0 ? number : null;
+};
+
+const financialDecimal = (value: unknown): string | null => {
+  if (value === null || value === undefined) return null;
+  const text = String(value).trim();
+  return /^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/.test(text) ? text : null;
 };
 
 const formatDuration = (seconds: number) => {
@@ -79,12 +86,12 @@ const normalizePosition = (value: unknown): BinaryPosition | null => {
     direction: ['SHORT', 'PUT', 'DOWN'].includes(rawSide) ? 'SHORT' : ['LONG', 'CALL', 'UP'].includes(rawSide) ? 'LONG' : 'UNKNOWN',
     side: ['SHORT', 'PUT', 'DOWN'].includes(rawSide) ? 'PUT' : ['LONG', 'CALL', 'UP'].includes(rawSide) ? 'CALL' : 'UNKNOWN',
     sandboxSimulation: row.sandboxSimulation,
-    amount: toPositive(row.amount ?? row.stake),
-    entryPrice: toPositive(row.entryPrice),
-    closePrice: toPositive(row.closePrice ?? row.resultPrice ?? row.expiryPrice),
+    amount: financialDecimal(row.amount ?? row.stake),
+    entryPrice: financialDecimal(row.entryPrice),
+    closePrice: financialDecimal(row.closePrice ?? row.resultPrice ?? row.expiryPrice),
     duration: toPositive(row.duration ?? row.durationSeconds ?? row.timeframe),
-    payout: finiteMarketNumber(row.payout ?? row.payoutAmount ?? row.targetPayout),
-    realizedProfit: finiteMarketNumber(row.realizedProfit ?? row.profit),
+    payout: financialDecimal(row.payout ?? row.payoutAmount ?? row.targetPayout),
+    realizedProfit: financialDecimal(row.realizedProfit ?? row.profit),
     openedAt: typeof row.openedAt === 'string' ? row.openedAt : typeof row.createdAt === 'string' ? row.createdAt : null,
     expiresAt: typeof row.expiresAt === 'string' ? row.expiresAt : null,
     status: normalizeBinaryPositionState(row.state ?? row.status),
@@ -223,9 +230,10 @@ export default function BinaryPage() {
         setConfirmationOpen(false);
         setFundingOpen(false);
         setState('DRAFT');
-        pendingBinaryIntent.current = null;
+        const stored = next ? readPendingEconomicIntent('binary-position', next) : null;
+        pendingBinaryIntent.current = stored?.intent ?? null;
         lastSubmittedPositionId.current = null;
-        setUnknownBinaryIntentKey(null);
+        setUnknownBinaryIntentKey(stored?.intent.key ?? null);
         previousUserId.current = next;
       }
       setUserId(next);
@@ -315,6 +323,7 @@ export default function BinaryPage() {
           const recovered = normalizePosition(match);
           if (recovered && pendingBinaryIntent.current?.key === key) {
             lastSubmittedPositionId.current = recovered.id;
+            clearPendingEconomicIntent('binary-position', userId, key);
             pendingBinaryIntent.current = null;
             setUnknownBinaryIntentKey(null);
             setState(recovered.status);
@@ -332,6 +341,7 @@ export default function BinaryPage() {
         ? (payload.position as Record<string, unknown>).idempotencyKey : null;
       if (pendingBinaryIntent.current && receivedIntentKey === pendingBinaryIntent.current.key) {
         lastSubmittedPositionId.current = position.id;
+        clearPendingEconomicIntent('binary-position', userId, pendingBinaryIntent.current.key);
         pendingBinaryIntent.current = null;
         setUnknownBinaryIntentKey(null);
         setFeedback('The submitted position was confirmed by the server.');
@@ -561,12 +571,20 @@ export default function BinaryPage() {
     }
     if (recovered) {
       lastSubmittedPositionId.current = recovered.id;
+      clearPendingEconomicIntent('binary-position', userId, key);
       pendingBinaryIntent.current = null;
       setUnknownBinaryIntentKey(null);
       setState(recovered.status);
       setFeedback('The submitted position was found in your account records.');
     }
   };
+
+  useEffect(() => {
+    const key = pendingBinaryIntent.current?.key;
+    if (userId && key && sessionPrincipalId() === userId) void reconcileUnknownSubmission(key);
+    // A restored immutable intent is read from the owned current/history models.
+    // An unmatched read is inconclusive and never permits a new order.
+  }, [userId]);
 
   const submitPosition = async () => {
     if (submissionLock.current || !ready || !userId || unknownBinaryIntentKey) return;
@@ -575,8 +593,20 @@ export default function BinaryPage() {
     let submittedKey: string | null = null;
     try {
       const intent = { pair: normalizedPair, stake: String(amount), side: direction === 'LONG' ? 'CALL' : 'PUT', durationSeconds: duration };
-      pendingBinaryIntent.current = getIntentKey(pendingBinaryIntent.current, JSON.stringify(intent), 'binary');
+      pendingBinaryIntent.current = getIntentKey(pendingBinaryIntent.current, JSON.stringify([userId, intent]), 'binary');
       submittedKey = pendingBinaryIntent.current.key;
+      if (!persistPendingEconomicIntent('binary-position', {
+        principal: userId,
+        intent: { key: submittedKey, fingerprint: 'redacted' },
+        context: {},
+      })) {
+        const existing = readPendingEconomicIntent('binary-position', userId);
+        pendingBinaryIntent.current = existing?.intent ?? null;
+        setUnknownBinaryIntentKey(existing?.intent.key ?? 'unresolved');
+        setState('UNKNOWN');
+        setFeedback('An earlier position may be unresolved, or recovery storage is unavailable. No new order was submitted.');
+        return;
+      }
       const response = await api.post('/binary/position', {
         pair: normalizedPair,
         stake: String(amount),
@@ -588,6 +618,7 @@ export default function BinaryPage() {
       if (!position) throw new Error('Invalid position response');
       if (sessionPrincipalId() !== userId) return;
       lastSubmittedPositionId.current = position.id;
+      clearPendingEconomicIntent('binary-position', userId, submittedKey!);
       pendingBinaryIntent.current = null;
       setUnknownBinaryIntentKey(null);
       setActivePositions((current) => [position, ...current.filter((item) => item.id !== position.id)]);
@@ -599,10 +630,13 @@ export default function BinaryPage() {
     } catch (error) {
       if (sessionPrincipalId() !== userId) return;
       const status = (error as { response?: { status?: number } } | null)?.response?.status;
-      const rejected = typeof status === 'number' && status >= 400 && status < 500;
+      // 408, 409, 425 and 429 may follow an accepted economic request; preserve its original key.
+      const rejected = [400, 401, 403, 404, 422].includes(status ?? -1);
       setConfirmationOpen(false);
       if (rejected) {
+        if (submittedKey) clearPendingEconomicIntent('binary-position', userId, submittedKey);
         pendingBinaryIntent.current = null;
+        setUnknownBinaryIntentKey(null);
         setState('DRAFT');
         setFeedback('The position request was rejected. Review your inputs before trying again.');
       } else if (!pendingBinaryIntent.current && submittedKey) {
@@ -754,7 +788,7 @@ function ResultDialog({ position, onClose }: { position: BinaryPosition; onClose
           <p className="font-mono text-sm tabular-nums">{position.symbol} · {position.direction}</p>
         </div>
       </div>
-      <dl className="mt-3 grid grid-cols-2 gap-2 rounded-xl border border-violet-300/10 bg-[#0B0711] p-3 text-sm">
+      <dl className="mt-3 grid grid-cols-1 gap-2 rounded-xl border border-violet-300/10 bg-[#0B0711] p-3 text-sm min-[430px]:grid-cols-2">
         <SummaryValue label="Stake" value={position.amount === null ? '—' : `${position.amount} USDT`} />
         <SummaryValue label="Duration" value={position.duration === null ? '—' : `${position.duration}s`} />
         <SummaryValue label="Realized P/L" value={position.realizedProfit === null ? '—' : `${position.realizedProfit} USDT`} />

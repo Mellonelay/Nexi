@@ -1,0 +1,3 @@
+# Bounded, reusable defaults for local Graphify CLI queries.
+query_budget=4000
+query_depth=2

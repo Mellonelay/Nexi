@@ -1,3 +1,20 @@
+# CURRENT OWNER PLAN — ONE-SHOT COMPLETE SOURCE + MOBILE-FIRST UI REPAIR (2026-11-09)
+
+**Single execution contract:** [NEXI_ONE_SHOT_FULL_SOURCE_AND_MOBILE_UI_CLOSURE_20261109.md](NEXI_ONE_SHOT_FULL_SOURCE_AND_MOBILE_UI_CLOSURE_20261109.md). This is the authoritative top-of-file pointer; earlier 2026-11-08 "test first" plan sections are historical. Do not restart already completed real Public/Admin interactions, financial operations or source work.
+
+1. **Recover:** current owner authority, optional Kernel run evidence and cross-session writer coordination (Host Gate removed 2026-11-10; no grant); checkpoint `09c2fd4`, existing 31 committed app-source files and untracked artifacts; original November 1 canonical 113 requirements, November 7–8 observed failures, November 9 11-group source matrix.
+2. **Read UI design inputs:** `frontend/DESIGN.md` and full `tasks/evidence/{NEXI_PUBLIC_MOBILE_FIRST_UI_RESEARCH_20261108.md,NEXI_PUBLIC_PROVEN_EXCHANGE_UI_COMPONENT_STANDARD_20261108.md,09_PUBLIC_UI_CROSS_SURFACE_INTEGRATION_20261108.md}` plus current code; use NEXI theme and five dock destinations. Research is not implementation proof.
+3. **Graphify source coverage:** existing verified advanced graph, natural-language `query` BFS/DFS + `explain/path/affected` L0/L1; inspect current source owners, incoming/outgoing consumers and contracts; L2 only where cross-surface ambiguity exists. Reuse accepted evidence and map **all 113 source contracts** by causal group, prioritizing actual browser failures.
+4. **Repair complete source:** Backend NestJS/SQLite-Ledger/Outbox state and recovery; API/DTO/auth; Public Next.js functionality, UI components/layout/responsive mobile-first geometry and state; Admin TanStack real read models. Fix shared owners first then all affected route consumers; avoid redundant rewrites or unrelated redesign.
+   - 2026-11-10 source continuation: scoped Margin exact-decimal/terminal-activity and Mining exact-reward/locked-principal/redeem-cancel recovery source implemented in existing dirty checkout. Continue remaining Margin/MINING consumers, then other open causal groups and all 113 source dispositions; do not infer group closure or perform application verification.
+   - 2026-11-10 cross-surface continuation: added Loan original-key application readback (PUBLIC auth), persisted Public application/repayment markers plus owner-owned Ledger correlation recheck; preserved other previous patches. Continue consumer and mobile integration before the verification boundary.
+5. **Close source frontier once:** record each group and each original criterion source disposition, changed files, source evidence, applied skills and exact blocker. Never mark browser/test pass from source inspection.
+6. **Stop at verification boundary:** NO tests, typecheck/lint campaign, builds, browser/mobile emulation, deployment, service restarts or economic operations in this phase. Verification campaign is separately deferred until complete source closure.
+
+The prior task sections below retain chronology and evidence but not authority over the current source-first phase.
+
+---
+
 # ACTIVE PLAN — NEXI consolidated cross-surface repair (2026-11-08)
 
 Source of scope: `NEXI_WORK_ONE_BATCH_PARALLEL_REPAIR_EXECUTION_20261108.md` (Library ID `libfile_9c658cc7ccb08191961902c40083b184`). This is the current campaign pointer; preserve the dated acceptance receipts and all existing dirty/untracked work.
@@ -1208,3 +1225,5 @@ Screen recording reviewed; user submitted one BTC/USDT SHORT 2x position with 10
 
 
 Final successor handover: `tasks/evidence/NEXI_INTERACTIVE_ACCEPTANCE_HANDOVER_20261108.md`. Acceptance tracker remains 113 criteria: 16 PASS / 24 FAIL / 8 BLOCKED / 65 NOT_TESTED; handover preserves the next repair frontier and exact proof limits.
+
+2026-11-10 source continuation: Binary replay-key checks/readback before live quote, exact Public financial history decimals, Spot/Margin/Options ambiguous HTTP status preservation, Loans original-key/precision source and Notifications mobile touch/reflow SOURCE_IMPLEMENTED scoped; cross-feature and 113-criterion source closure still in progress. No application verification.

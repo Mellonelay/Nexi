@@ -123,9 +123,9 @@ function Inner() {
       name: name.trim(),
       currency,
       durationDays: Number(days),
-      interestRate: Number(rate),
-      minAmount: Number(min),
-      maxAmount: Number(max),
+      interestRate: rate.trim(),
+      minAmount: min.trim(),
+      maxAmount: max.trim(),
       isActive: editing?.isActive ?? true,
     };
     try {

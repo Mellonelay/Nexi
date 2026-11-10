@@ -187,7 +187,7 @@ export class WalletService {
 
   async getActivity(
     userId: string,
-    input: { limit?: string | number; cursor?: string; type?: string; asset?: string; status?: string } = {},
+    input: { limit?: string | number; cursor?: string; type?: string; asset?: string; status?: string; correlationId?: string; referenceId?: string } = {},
   ) {
     const d1 = this.requireD1ReadAuthority();
     const query = this.prepareActivityQuery(input);
@@ -211,6 +211,8 @@ export class WalletService {
     type?: string;
     asset?: string;
     status?: string;
+    correlationId?: string;
+    referenceId?: string;
   }) {
     const cursor = input.cursor ? this.decodeActivityCursor(input.cursor) : undefined;
     return {
@@ -220,6 +222,8 @@ export class WalletService {
       type: this.normalizeActivityFilter(input.type),
       asset: this.normalizeActivityAsset(input.asset),
       status: this.normalizeActivityFilter(input.status),
+      correlationId: this.normalizeActivityIdentity(input.correlationId),
+      referenceId: this.normalizeActivityIdentity(input.referenceId),
     };
   }
 
@@ -235,6 +239,15 @@ export class WalletService {
     const normalized = value?.trim().toUpperCase() || undefined;
     if ((normalized?.length ?? 0) > 80) {
       throw new BadRequestException("Activity filter is invalid");
+    }
+    return normalized;
+  }
+
+  private normalizeActivityIdentity(value?: string) {
+    if (value === undefined) return undefined;
+    const normalized = value.trim();
+    if (!/^[A-Za-z0-9._:/-]{1,180}$/.test(normalized)) {
+      throw new BadRequestException("Activity identity filter is invalid");
     }
     return normalized;
   }

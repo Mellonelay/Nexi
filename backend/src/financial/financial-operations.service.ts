@@ -351,14 +351,14 @@ export class FinancialOperationsService {
     return { depositRequestId: claim.id, status: claim.state, claim, replayed: Boolean(claim.replayed) };
   }
 
-  getDepositClaims(userId: string) { return this.d1.listDepositClaims(userId); }
+  getDepositClaims(userId: string, idempotencyKey?: string) { if (idempotencyKey !== undefined) this.assertIdempotencyKey(idempotencyKey); return this.d1.listDepositClaims(userId, idempotencyKey); }
   getAdminDepositClaims() { return this.d1.listDepositClaims(); }
   async confirmDepositClaim(id: string, reason: string, adminId: string, idempotencyKey: string) { if (!reason?.trim()) throw new BadRequestException('Confirmation reason is required'); const claim: any = await this.d1.updateDepositClaimState(id, 'APPROVED', adminId, reason, idempotencyKey); return { claim, replayed: Boolean(claim.replayed) }; }
   async creditDepositClaim(id: string, reason: string, adminId: string, idempotencyKey: string) { if (!reason?.trim()) throw new BadRequestException('Credit reason is required'); const claim: any = await this.d1.creditDepositClaim(id, adminId, reason, idempotencyKey); return { claim, replayed: Boolean(claim.replayed) }; }
   async rejectDepositClaim(id: string, reason: string, adminId: string, idempotencyKey: string) { if (!reason?.trim()) throw new BadRequestException('Rejection reason is required'); const claim: any = await this.d1.updateDepositClaimState(id, 'REJECTED', adminId, reason, idempotencyKey); return { claim, replayed: Boolean(claim.replayed) }; }
   getDeposits(userId: string) { return this.d1.listDeposits(userId); }
-  getWithdrawals(userId: string) { return this.d1.listWithdrawals(userId); }
-  getTransfers(userId: string) { return this.d1.listInternalTransfers(userId); }
+  getWithdrawals(userId: string, requestKey?: string) { if (requestKey !== undefined) this.assertIdempotencyKey(requestKey); return this.d1.listWithdrawals(userId, requestKey); }
+  getTransfers(userId: string, idempotencyKey?: string) { if (idempotencyKey !== undefined) this.assertIdempotencyKey(idempotencyKey); return this.d1.listInternalTransfers(userId, idempotencyKey); }
 
   async convertExactAmount(input: { fromAsset: string; toAsset: string; amount: string }) {
     const fromAsset = input.fromAsset.trim().toUpperCase();

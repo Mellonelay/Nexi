@@ -25,7 +25,8 @@ test('binary lifecycle exposes governed result and recovery states', () => {
   assert.equal(canTransitionBinary('LOSS', 'HISTORY'), true);
   assert.equal(canTransitionBinary('LOSS', 'OPEN'), false);
   assert.equal(normalizeBinaryPositionState('price_stale'), 'PRICE_STALE');
-  assert.equal(normalizeBinaryPositionState('refund'), 'ERROR');
+  assert.equal(normalizeBinaryPositionState('refund'), 'UNAVAILABLE');
+  assert.equal(normalizeBinaryPositionState(undefined), 'UNAVAILABLE');
   assert.equal(normalizeBinaryPositionState('failed'), 'ERROR');
 });
 

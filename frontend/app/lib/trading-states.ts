@@ -93,9 +93,11 @@ export function normalizeSpotOrderState(value: unknown): SpotOrderState {
 export function normalizeBinaryPositionState(value: unknown): BinaryPositionState {
   const state = String(value ?? '').toUpperCase();
   const normalized = state === 'FAILED' ? 'ERROR' : state === 'ACTIVE' ? 'OPEN' : state;
+  // An unrecognized read-model state is not evidence of a financial settlement failure.
+  // Preserve explicit ERROR/legacy FAILED, but never fabricate ERROR for a new or missing state.
   return (BINARY_POSITION_STATES as readonly string[]).includes(normalized)
     ? normalized as BinaryPositionState
-    : 'ERROR';
+    : 'UNAVAILABLE';
 }
 
 export function positiveNumber(value: unknown): number | null {

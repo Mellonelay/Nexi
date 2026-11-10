@@ -66,7 +66,7 @@ function Inner() {
   const counts = {
     open: rows.filter((r) => r.state === "open").length,
     settling: rows.filter((r) => r.state === "settling").length,
-    failed: rows.filter((r) => r.state === "failed").length,
+    failed: rows.filter((r) => r.state === "failed" || r.state === "error").length,
   };
 
   const columns: DataTableColumn<SettlementRecord>[] = [
@@ -154,6 +154,8 @@ function Inner() {
           "draw",
           "refund",
           "failed",
+          "error",
+          "unavailable",
           "cancelled",
         ] as SettlementState[]
       ).map((s) => ({ value: s, label: s })),
@@ -382,7 +384,10 @@ function stateTone(s: SettlementState) {
     case "refund":
       return "warning" as const;
     case "failed":
+    case "error":
       return "destructive" as const;
+    case "unavailable":
+      return "neutral" as const;
     case "cancelled":
       return "neutral" as const;
   }

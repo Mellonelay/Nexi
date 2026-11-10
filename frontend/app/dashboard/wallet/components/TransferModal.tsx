@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import api from '../../../lib/api';
 import { sessionPrincipalId } from '../../../lib/wallet-auth';
 import { getIntentKey, type PendingIntentKey } from '../../../lib/intent-key';
+import { clearPendingEconomicIntent, persistPendingEconomicIntent, readPendingEconomicIntent } from '../../../lib/pending-economic-intent';
 
 interface TransferModalProps {
   isOpen: boolean;
@@ -43,6 +44,20 @@ export default function TransferModal({ isOpen, onClose, currencies, selectedCur
   const pendingPrincipal = useRef<string | null>(null);
   const close = () => { if (!unknownIntentKey) pendingIntent.current = null; onClose(); };
 
+  useEffect(() => {
+    const restore = () => {
+      const principal = sessionPrincipalId();
+      const stored = principal ? readPendingEconomicIntent('transfer', principal) : null;
+      pendingIntent.current = stored?.intent ?? null;
+      pendingMode.current = stored?.context.mode === 'USER' ? 'USER' : stored ? 'WALLETS' : null;
+      pendingPrincipal.current = stored?.principal ?? null;
+      setUnknownIntentKey(stored?.intent.key ?? null);
+    };
+    restore();
+    window.addEventListener('nexi:wallet-session', restore);
+    return () => window.removeEventListener('nexi:wallet-session', restore);
+  }, []);
+
   const recheckUnknownTransfer = async (key: string) => {
     const principal = sessionPrincipalId();
     if (!principal || principal !== pendingPrincipal.current || pendingIntent.current?.key !== key) {
@@ -52,11 +67,11 @@ export default function TransferModal({ isOpen, onClose, currencies, selectedCur
     try {
       let confirmed = false;
       if (pendingMode.current === 'WALLETS') {
-        const response = await api.get<{ activities: Array<{ type?: string; ledgerCorrelationId?: string }> }>('/wallet/activity', { params: { limit: 100 } });
+        const response = await api.get<{ activities: Array<{ type?: string; ledgerCorrelationId?: string }> }>('/wallet/activity', { params: { limit: 1, type: 'WALLET_ACCOUNT_TRANSFER', correlationId: key } });
         confirmed = Array.isArray(response.data?.activities) && response.data.activities.some((item) =>
           item?.type === 'WALLET_ACCOUNT_TRANSFER' && item.ledgerCorrelationId === key);
       } else if (pendingMode.current === 'USER') {
-        const response = await api.get<Array<{ idempotencyKey?: string; fromUserId?: string }>>('/financial/transfers');
+        const response = await api.get<Array<{ idempotencyKey?: string; fromUserId?: string }>>('/financial/transfers', { params: { idempotencyKey: key } });
         confirmed = Array.isArray(response.data) && response.data.some((item) =>
           item?.idempotencyKey === key && item.fromUserId === principal);
       }
@@ -65,6 +80,7 @@ export default function TransferModal({ isOpen, onClose, currencies, selectedCur
         toast.warning('Transfer outcome remains unknown. Do not send it again; review Wallet activity or contact Support.');
         return;
       }
+      clearPendingEconomicIntent('transfer', principal, key);
       pendingIntent.current = null;
       pendingMode.current = null;
       pendingPrincipal.current = null;
@@ -113,6 +129,11 @@ export default function TransferModal({ isOpen, onClose, currencies, selectedCur
     }
 
     const intent = getIntentKey(pendingIntent.current, JSON.stringify([principal, mode, sourceScope, destinationScope, asset, mode === 'USER' ? Number(recipientCode) : null, amount]), mode === 'WALLETS' ? 'wallet-account-transfer' : 'transfer');
+    if (!persistPendingEconomicIntent('transfer', { principal, intent: { key: intent.key, fingerprint: 'redacted' }, context: { mode } })) {
+      setUnknownIntentKey(readPendingEconomicIntent('transfer', principal)?.intent.key ?? 'unresolved');
+      toast.error('A previous transfer may be unresolved or secure recovery storage is unavailable. Do not submit another transfer in this session.');
+      return;
+    }
     pendingIntent.current = intent;
     pendingMode.current = mode;
     pendingPrincipal.current = principal;
@@ -121,28 +142,36 @@ export default function TransferModal({ isOpen, onClose, currencies, selectedCur
     try {
       let confirmation: string;
       if (mode === 'WALLETS') {
-        await api.post('/financial/account-transfers', {
+        const response = await api.post<{ transfer?: { asset?: string; amount?: string; sourceScope?: string; destinationScope?: string }; postings?: { debitPostingId?: string; creditPostingId?: string } }>('/financial/account-transfers', {
           sourceScope,
           destinationScope,
           asset,
           amount,
           idempotencyKey: intent.key,
         });
+        if (response.data?.transfer?.asset !== asset ||
+            response.data?.transfer?.sourceScope !== sourceScope || response.data?.transfer?.destinationScope !== destinationScope ||
+            !response.data?.postings?.debitPostingId || !response.data?.postings?.creditPostingId)
+          throw new Error('Original account transfer acknowledgement was not confirmed');
         confirmation = `${amount} ${asset} transferred from ${accountName(sourceScope)} to ${accountName(destinationScope)}.`;
       } else {
         const toUserCode = Number(recipientCode);
-        await api.post('/financial/transfers', {
+        const response = await api.post<{ transfer?: { idempotencyKey?: string; fromUserId?: string } }>('/financial/transfers', {
           toUserCode,
           asset,
           amount,
           idempotencyKey: intent.key,
         });
+        if (response.data?.transfer?.idempotencyKey !== intent.key || response.data?.transfer?.fromUserId !== principal)
+          throw new Error('Original user transfer acknowledgement was not confirmed');
         confirmation = `${amount} ${asset} transferred to NEXI user ${recipientCode}.`;
       }
       if (sessionPrincipalId() !== principal) return;
+      clearPendingEconomicIntent('transfer', principal, intent.key);
       pendingIntent.current = null;
       pendingMode.current = null;
       pendingPrincipal.current = null;
+      setUnknownIntentKey(null);
       // A readback failure must not misreport an already committed transfer.
       try { await onCompleted?.(); }
       catch { toast.warning('Transfer completed, but balances could not be refreshed.'); }
@@ -157,6 +186,7 @@ export default function TransferModal({ isOpen, onClose, currencies, selectedCur
         : undefined;
       const status = (error as { response?: { status?: number } } | null)?.response?.status;
       if ([400, 401, 403, 404, 422].includes(status ?? -1)) {
+        clearPendingEconomicIntent('transfer', principal, intent.key);
         pendingIntent.current = null;
         pendingMode.current = null;
         pendingPrincipal.current = null;

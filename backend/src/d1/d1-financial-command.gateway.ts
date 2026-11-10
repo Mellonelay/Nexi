@@ -1797,8 +1797,9 @@ export class D1FinancialCommandGateway {
       command.positionId,
       command.userId,
     );
-    if (!position || !["OPEN", "CLOSING"].includes(String(position.status)))
-      throw new BadRequestException("Margin position is not settleable");
+    if (!position || String(position.status) !== "CLOSING" ||
+        String(position.closeOrderId ?? "") !== command.closeOrderId)
+      throw new BadRequestException("Margin position is not settleable with this closing order");
     const account = await this.getAccountForUser(
       command.userId,
       command.debtAsset,
@@ -1816,7 +1817,19 @@ export class D1FinancialCommandGateway {
       command.state === "LIQUIDATED" ? "LIQUIDATION" : "REPAYMENT";
     const result = await this.bridge.batch([
       {
-        sql: `INSERT OR IGNORE INTO "LedgerIdempotency" ("id","idempotencyKey","operation","accountId","createdAt","updatedAt") SELECT ?,?,'DEBIT',?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP WHERE NOT EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=?) AND EXISTS (SELECT 1 FROM "LedgerAccount" WHERE "id"=? AND "asset"=? AND "scope"='MARGIN' AND "available"=? AND "locked"=?)`,
+        sql: `INSERT OR IGNORE INTO "LedgerIdempotency" ("id","idempotencyKey","operation","accountId","createdAt","updatedAt") SELECT ?,?,'DEBIT',?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP WHERE NOT EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=?) AND EXISTS (SELECT 1 FROM "LedgerAccount" WHERE "id"=? AND "asset"=? AND "scope"='MARGIN' AND "available"=? AND "locked"=?)
+          AND EXISTS (
+            SELECT 1 FROM "SpotMarginPosition" p
+            JOIN "SpotMarginAccount" m ON m."id"=p."accountId"
+            JOIN "SpotMarginActivity" a ON a."positionId"=p."id"
+              AND a."userId"=m."userId" AND a."status"='ACCEPTED'
+              AND a."type"=? AND a."idempotencyKey"=?
+              AND json_extract(a."details",'$.orderId')=p."closeOrderId"
+            JOIN "Gate2SpotOrder" o ON o."id"=p."closeOrderId"
+              AND o."userId"=m."userId" AND o."status"='FILLED'
+            WHERE p."id"=? AND m."userId"=? AND p."status"='CLOSING'
+              AND p."closeOrderId"=?
+          )`,
         params: [
           idemId,
           `${receipt}:debit`,
@@ -1826,6 +1839,11 @@ export class D1FinancialCommandGateway {
           command.debtAsset,
           current.available,
           current.locked,
+          command.state === "LIQUIDATED" ? "LIQUIDATION" : "CLOSE",
+          command.idempotencyKey,
+          command.positionId,
+          command.userId,
+          command.closeOrderId,
         ],
       },
       {
@@ -1871,13 +1889,17 @@ export class D1FinancialCommandGateway {
         command.positionId,
       ),
       {
-        sql: `UPDATE "SpotMarginPosition" SET "status"=? ,"closeOrderId"=? ,"closedAt"=CURRENT_TIMESTAMP,"realizedPnl"=? ,"unrealizedPnl"='0',"markPrice"=? ,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "status" IN ('OPEN','CLOSING')`,
+        sql: `UPDATE "SpotMarginPosition" SET "status"=? ,"closeOrderId"=? ,"closedAt"=CURRENT_TIMESTAMP,"realizedPnl"=? ,"unrealizedPnl"='0',"markPrice"=? ,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "status"='CLOSING' AND "closeOrderId"=?
+          AND EXISTS (SELECT 1 FROM "SpotMarginAccount" a
+            WHERE a."id"="SpotMarginPosition"."accountId" AND a."userId"=?)`,
         params: [
           command.state,
           command.closeOrderId,
           command.realizedPnl,
           command.markPrice,
           command.positionId,
+          command.closeOrderId,
+          command.userId,
         ],
       },
       {
@@ -1916,7 +1938,7 @@ export class D1FinancialCommandGateway {
           String(position.accountId),
           command.positionId,
           eventType,
-          command.idempotencyKey,
+          `margin:settlement:${command.positionId}:${command.idempotencyKey}`,
           JSON.stringify({
             state: command.state,
             closeOrderId: command.closeOrderId,
@@ -2472,7 +2494,19 @@ export class D1FinancialCommandGateway {
     );
     if (!subscription)
       throw new NotFoundException("Mining subscription not found");
-    if (String(subscription.status) !== "ACTIVE") return subscription;
+    const idem = `mining-release:${subscriptionId}:${idempotencyKey}`;
+    if (String(subscription.status) !== "ACTIVE") {
+      if (String(subscription.status) !== status)
+        throw new BadRequestException("Mining subscription already has a different terminal state");
+      const receipt = await this.bridge.select<{ id: string }>(
+        `SELECT "id" FROM "Activity" WHERE "userId"=? AND "referenceId"=?
+           AND "type"='MINING_REDEMPTION' AND "idempotencyKey"=? LIMIT 1`,
+        [userId, subscriptionId, idem],
+      );
+      if (!receipt.results[0])
+        throw new BadRequestException("Mining subscription already closed under a different request");
+      return { ...subscription, replayed: true };
+    }
     const account = await this.getAccountForUser(
       userId,
       String(subscription.planCurrency),
@@ -2480,7 +2514,9 @@ export class D1FinancialCommandGateway {
     );
     const current = await this.findAccount(account.id);
     const amount = this.decimal(String(subscription.amountDecimal));
-    const idem = `mining-release:${subscriptionId}:${idempotencyKey}`;
+    const available = this.nonNegativeDecimal(current.available);
+    const locked = this.nonNegativeDecimal(current.locked);
+    if (locked.lt(amount)) throw new BadRequestException("Insufficient locked mining principal for release");
     const ledgerId = randomUUID();
     const postingId = randomUUID();
     const result = await this.bridge.batch([
@@ -2500,8 +2536,8 @@ export class D1FinancialCommandGateway {
       {
         sql: `UPDATE "LedgerAccount" SET "available"=? ,"locked"=? ,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "available"=? AND "locked"=? AND EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "id"=? AND "debitPostingId" IS NULL)`,
         params: [
-          this.nonNegativeDecimal(current.available).plus(amount).toString(),
-          this.nonNegativeDecimal(current.locked).minus(amount).toString(),
+          available.plus(amount).toString(),
+          locked.minus(amount).toString(),
           account.id,
           current.available,
           current.locked,
@@ -2792,7 +2828,7 @@ export class D1FinancialCommandGateway {
       [userId],
     );
     const rewards = await this.bridge.select<any>(
-      `SELECT COALESCE(SUM(CAST("amount" AS REAL)),0) AS "postedRewards" FROM "MiningRewardAccrual" WHERE "userId"=?`,
+      `SELECT "amount" FROM "MiningRewardAccrual" WHERE "userId"=?`,
       [userId],
     );
     const sum = (rows: any[], field: string) =>
@@ -2817,7 +2853,7 @@ export class D1FinancialCommandGateway {
         "amountDecimal",
       ),
       accruedRewards: sum(subscriptions.results, "totalRewardsDecimal"),
-      postedRewards: String(rewards.results[0]?.postedRewards ?? "0"),
+      postedRewards: sum(rewards.results, "amount"),
     };
   }
 
@@ -4391,6 +4427,8 @@ export class D1FinancialCommandGateway {
       type?: string;
       asset?: string;
       status?: string;
+      correlationId?: string;
+      referenceId?: string;
     },
   ): Promise<{ rows: Record<string, unknown>[]; hasMore: boolean }> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
@@ -4407,6 +4445,14 @@ export class D1FinancialCommandGateway {
     if (options.status) {
       where.push('a."status"=?');
       params.push(options.status);
+    }
+    if (options.correlationId) {
+      where.push('a."ledgerCorrelationId"=?');
+      params.push(options.correlationId);
+    }
+    if (options.referenceId) {
+      where.push('a."referenceId"=?');
+      params.push(options.referenceId);
     }
     if (options.beforeCreatedAt && options.beforeId) {
       where.push('(a."createdAt"<? OR (a."createdAt"=? AND a."id"<?))');
@@ -6030,7 +6076,15 @@ export class D1FinancialCommandGateway {
       `SELECT * FROM "Gate2BinaryPosition" WHERE "userId"=? AND "idempotencyKey"=? LIMIT 1`,
       [command.userId, command.idempotencyKey],
     );
-    if (existing.results[0]) return existing.results[0];
+    if (existing.results[0]) {
+      const prior = existing.results[0];
+      if (String(prior.pair) !== command.pair ||
+          String(prior.side) !== command.side ||
+          Number(prior.durationSeconds) !== command.durationSeconds ||
+          !this.decimal(String(prior.stake)).eq(this.decimal(command.stake)))
+        throw new BadRequestException("Binary opening key was reused with different terms");
+      return { ...prior, replayed: true };
+    }
     const account = await this.getAccountForUser(
       command.userId,
       quoteAsset,
@@ -6184,7 +6238,19 @@ export class D1FinancialCommandGateway {
     );
     if (!created.results[0])
       throw new BadRequestException("D1 binary position was not materialized");
-    return created.results[0];
+    return { ...created.results[0], replayed: false };
+  }
+
+  async getBinaryPositionForIntent(
+    userId: string,
+    idempotencyKey: string,
+  ): Promise<Record<string, unknown> | null> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const result = await this.bridge.select<Record<string, unknown>>(
+      `SELECT * FROM "Gate2BinaryPosition" WHERE "userId"=? AND "idempotencyKey"=? LIMIT 1`,
+      [userId, idempotencyKey],
+    );
+    return result.results[0] ?? null;
   }
 
   async getBinaryPosition(
@@ -6988,11 +7054,12 @@ export class D1FinancialCommandGateway {
     };
   }
 
-  async listDepositClaims(userId?: string): Promise<Record<string, unknown>[]> {
+  async listDepositClaims(userId?: string, idempotencyKey?: string): Promise<Record<string, unknown>[]> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const where = [userId ? '"userId"=?' : null, idempotencyKey ? '"idempotencyKey"=?' : null].filter(Boolean);
     const result = await this.bridge.select<Record<string, unknown>>(
-      `SELECT * FROM "DepositClaim"${userId ? ' WHERE "userId"=?' : ""} ORDER BY "submittedAt" DESC LIMIT 500`,
-      userId ? [userId] : [],
+      `SELECT * FROM "DepositClaim"${where.length ? ` WHERE ${where.join(" AND ")}` : ""} ORDER BY "submittedAt" DESC LIMIT 500`,
+      [...(userId ? [userId] : []), ...(idempotencyKey ? [idempotencyKey] : [])],
     );
     return result.results;
   }
@@ -7188,22 +7255,23 @@ export class D1FinancialCommandGateway {
     return row.results;
   }
 
-  async listWithdrawals(userId: string): Promise<Record<string, unknown>[]> {
+  async listWithdrawals(userId: string, requestKey?: string): Promise<Record<string, unknown>[]> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const row = await this.bridge.select<Record<string, unknown>>(
-      `SELECT * FROM "Gate2Withdrawal" WHERE "userId"=? ORDER BY "createdAt" DESC LIMIT 500`,
-      [userId],
+      `SELECT * FROM "Gate2Withdrawal" WHERE "userId"=?${requestKey ? ' AND "requestKey"=?' : ""} ORDER BY "createdAt" DESC LIMIT 500`,
+      requestKey ? [userId, requestKey] : [userId],
     );
     return row.results;
   }
 
   async listInternalTransfers(
     userId: string,
+    idempotencyKey?: string,
   ): Promise<Record<string, unknown>[]> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const row = await this.bridge.select<Record<string, unknown>>(
-      `SELECT * FROM "Gate2InternalTransfer" WHERE "fromUserId"=? OR "toUserId"=? ORDER BY "createdAt" DESC LIMIT 500`,
-      [userId, userId],
+      `SELECT * FROM "Gate2InternalTransfer" WHERE ("fromUserId"=? OR "toUserId"=?)${idempotencyKey ? ' AND "idempotencyKey"=?' : ""} ORDER BY "createdAt" DESC LIMIT 500`,
+      idempotencyKey ? [userId, userId, idempotencyKey] : [userId, userId],
     );
     return row.results;
   }
@@ -7408,8 +7476,8 @@ export class D1FinancialCommandGateway {
       {
         sql: `UPDATE "LedgerAccount" SET "available"=? ,"locked"=? ,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "asset"=? AND "available"=? AND "locked"=? AND EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=? AND "debitPostingId" IS NULL)`,
         params: [
-          this.nonNegativeDecimal(current.available).plus(amount).toString(),
-          this.nonNegativeDecimal(current.locked).minus(amount).toString(),
+          available.plus(amount).toString(),
+          locked.minus(amount).toString(),
           account.id,
           String(withdrawal.asset).toUpperCase(),
           current.available,
@@ -7969,7 +8037,7 @@ export class D1FinancialCommandGateway {
         "Binary research setting changed; retry settlement",
       );
     if (["WIN", "LOSS", "ERROR"].includes(String(existing.state)))
-      return existing;
+      return { ...existing, replayed: true };
     const account = await this.getAccountForUser(
       command.userId,
       command.asset,
@@ -8179,7 +8247,7 @@ export class D1FinancialCommandGateway {
       throw new BadRequestException(
         "D1 binary settlement was not materialized",
       );
-    return row;
+    return { ...row, replayed: false };
   }
 
   async reserveSpotOrder(command: D1SpotOrderCommand): Promise<any> {
@@ -8475,7 +8543,7 @@ export class D1FinancialCommandGateway {
           WHERE "id" = ? AND "userId" = ? AND "status" IN ('OPEN', 'PARTIALLY_FILLED')
           ${
             requireUnfilled
-              ? `AND "status"='OPEN' AND CAST("filled" AS REAL)=0 AND "reserveScope"='MARGIN'
+              ? `AND "status"='OPEN' AND "filled"='0' AND "reserveScope"='MARGIN'
             AND NOT EXISTS (SELECT 1 FROM "Gate2SpotTrade" t WHERE t."buyerOrderId"=? OR t."sellerOrderId"=?)`
               : ""
           }`,
@@ -8621,7 +8689,7 @@ export class D1FinancialCommandGateway {
           WHERE "id" = ? AND "userId" = ? AND "status" IN ('OPEN', 'PARTIALLY_FILLED') AND EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "id" = ? AND "debitPostingId" = ?)
           ${
             requireUnfilled
-              ? `AND "status"='OPEN' AND CAST("filled" AS REAL)=0 AND "reserveScope"='MARGIN'
+              ? `AND "status"='OPEN' AND "filled"='0' AND "reserveScope"='MARGIN'
              AND NOT EXISTS (SELECT 1 FROM "Gate2SpotTrade" t WHERE t."buyerOrderId"=? OR t."sellerOrderId"=?)`
               : ""
           }`,
@@ -9310,6 +9378,33 @@ export class D1FinancialCommandGateway {
     return statements;
   }
 
+  async getMarginExitIntent(
+    userId: string,
+    positionId: string,
+    idempotencyKey: string,
+    operation: 'close' | 'cancel-pending',
+  ): Promise<{ positionId: string; state: string; confirmed: boolean }> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const position = await this.getMarginPosition(positionId, userId);
+    if (!position) throw new BadRequestException("Owned Margin position not found");
+    const matching = operation === 'close'
+      ? await this.bridge.select<{ id: string }>(
+          `SELECT a."id" FROM "SpotMarginActivity" a
+           WHERE a."userId"=? AND a."positionId"=? AND a."type"='CLOSE'
+             AND a."idempotencyKey"=? AND a."status" IN ('ACCEPTED','COMPLETED')
+             AND json_extract(a."details",'$.orderId')=?
+           LIMIT 1`,
+          [userId, positionId, idempotencyKey, String(position.closeOrderId ?? '')],
+        )
+      : await this.bridge.select<{ id: string }>(
+          `SELECT e."id" FROM "SpotMarginPositionEvent" e
+           WHERE e."positionId"=? AND e."idempotencyKey"=?
+             AND e."type"='CLOSE' AND ?='CLOSED' LIMIT 1`,
+          [positionId, `margin:pending-cancel:${positionId}:${idempotencyKey}`, String(position.status)],
+        );
+    return { positionId, state: String(position.status), confirmed: matching.results.length > 0 };
+  }
+
   async getMarginCloseRequest(
     positionId: string,
     userId: string,
@@ -9362,6 +9457,8 @@ export class D1FinancialCommandGateway {
        JOIN "SpotMarginActivity" a ON a."positionId"=p."id"
            AND a."type" IN ('CLOSE','LIQUIDATION')
            AND a."status"='ACCEPTED'
+           AND a."userId"=m."userId"
+           AND json_extract(a."details",'$.orderId')=p."closeOrderId"
        JOIN "Gate2SpotOrder" o ON o."id"=p."closeOrderId"
            AND o."userId"=m."userId" AND o."status"='FILLED'
        WHERE p."status"='CLOSING'
@@ -9404,6 +9501,15 @@ export class D1FinancialCommandGateway {
     const result = await this.bridge.select<Record<string, unknown>>(
       `SELECT * FROM "Gate2SpotOrder" WHERE "id"=? AND "userId"=? LIMIT 1`,
       [orderId, userId],
+    );
+    return result.results[0] ?? null;
+  }
+
+  async getSpotOrderByIntent(userId: string, idempotencyKey: string): Promise<Record<string, unknown> | null> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const result = await this.bridge.select<Record<string, unknown>>(
+      `SELECT * FROM "Gate2SpotOrder" WHERE "userId"=? AND "idempotencyKey"=? LIMIT 1`,
+      [userId, idempotencyKey],
     );
     return result.results[0] ?? null;
   }
@@ -9674,11 +9780,11 @@ export class D1FinancialCommandGateway {
         sql: `EXISTS (
           SELECT 1 FROM "SpotMarginPosition" p JOIN "SpotMarginAccount" a ON a."id"=p."accountId"
           WHERE p."id"=? AND a."userId"=? AND p."status"='PENDING'
-            AND CAST(p."quantity" AS REAL)=0 AND p."entryOrderId"=?
+            AND p."quantity"='0' AND p."entryOrderId"=?
         ) AND EXISTS (
           SELECT 1 FROM "Gate2SpotOrder" o WHERE o."id"=? AND o."userId"=?
             AND o."status"='CANCELED' AND o."reserveScope"='MARGIN'
-            AND CAST(o."filled" AS REAL)=0 AND CAST(o."reservedAmount" AS REAL)=0
+            AND o."filled"='0' AND o."reservedAmount"='0'
         ) AND NOT EXISTS (
           SELECT 1 FROM "Gate2SpotTrade" t WHERE t."buyerOrderId"=? OR t."sellerOrderId"=?
         )`,
@@ -9709,11 +9815,11 @@ export class D1FinancialCommandGateway {
       {
         sql: `UPDATE "SpotMarginPosition" SET "status"='CLOSED',"closedAt"=CURRENT_TIMESTAMP,
                 "updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "status"='PENDING'
-              AND CAST("quantity" AS REAL)=0
+              AND "quantity"='0'
               AND EXISTS (SELECT 1 FROM "SpotMarginAccount" a WHERE a."id"="SpotMarginPosition"."accountId" AND a."userId"=?)
               AND EXISTS (SELECT 1 FROM "LedgerPosting" p WHERE p."idempotencyKey"=? AND p."kind"='DEBIT')
               AND EXISTS (SELECT 1 FROM "Gate2SpotOrder" o WHERE o."id"=? AND o."status"='CANCELED'
-                AND CAST(o."filled" AS REAL)=0 AND CAST(o."reservedAmount" AS REAL)=0)
+                AND o."filled"='0' AND o."reservedAmount"='0')
               AND NOT EXISTS (SELECT 1 FROM "Gate2SpotTrade" t WHERE t."buyerOrderId"=? OR t."sellerOrderId"=?)
               RETURNING "id"`,
         params: [
@@ -9858,8 +9964,8 @@ export class D1FinancialCommandGateway {
       sql: `EXISTS (
           SELECT 1 FROM "Gate2SpotOrder" o WHERE o."id"=? AND o."userId"=?
           AND o."idempotencyKey"=? AND o."status"='CANCELED'
-          AND o."reserveScope"='MARGIN' AND CAST(o."filled" AS REAL)=0
-          AND CAST(o."reservedAmount" AS REAL)=0
+          AND o."reserveScope"='MARGIN' AND o."filled"='0'
+          AND o."reservedAmount"='0'
         )
         AND NOT EXISTS (SELECT 1 FROM "Gate2SpotTrade" t
           WHERE t."buyerOrderId"=? OR t."sellerOrderId"=?)

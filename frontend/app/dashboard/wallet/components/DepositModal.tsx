@@ -9,6 +9,7 @@ import api from '../../../lib/api';
 import { sessionPrincipalId } from '../../../lib/wallet-auth';
 import { sameDepositClaim, uploadDepositProofObject, type PendingDepositClaim } from './deposit-proof-intent';
 import { getIntentKey } from '../../../lib/intent-key';
+import { clearPendingEconomicIntent, persistPendingEconomicIntent, readPendingEconomicIntent } from '../../../lib/pending-economic-intent';
 import { findAsset } from '../../../lib/asset-registry';
 import AssetIcon from '../../../components/AssetIcon';
 
@@ -56,6 +57,18 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
   const [loadFailed, setLoadFailed] = useState(false);
   const [copied, setCopied] = useState(false);
   const [retryNonce, setRetryNonce] = useState(0);
+
+  useEffect(() => {
+    const restore = () => {
+      const principal = sessionPrincipalId();
+      const stored = principal ? readPendingEconomicIntent('deposit-claim', principal) : null;
+      setUnknownClaimKey(stored?.intent.key ?? null);
+      if (!stored) pendingClaim.current = null;
+    };
+    restore();
+    window.addEventListener('nexi:wallet-session', restore);
+    return () => window.removeEventListener('nexi:wallet-session', restore);
+  }, []);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -136,14 +149,16 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
 
   const recheckUnknownClaim = async (key: string) => {
     const principal = sessionPrincipalId();
-    if (!principal || pendingClaim.current?.intent.key !== key) return;
+    const stored = principal ? readPendingEconomicIntent('deposit-claim', principal) : null;
+    if (!principal || (pendingClaim.current?.intent.key !== key && stored?.intent.key !== key)) return;
     try {
-      const response = await api.get<Array<{ idempotencyKey?: string }>>('/financial/deposit-claims');
-      if (sessionPrincipalId() !== principal || pendingClaim.current?.intent.key !== key) return;
+      const response = await api.get<Array<{ idempotencyKey?: string }>>('/financial/deposit-claims', { params: { idempotencyKey: key } });
+      if (sessionPrincipalId() !== principal || (pendingClaim.current?.intent.key !== key && readPendingEconomicIntent('deposit-claim', principal)?.intent.key !== key)) return;
       if (!Array.isArray(response.data) || !response.data.some((claim) => claim?.idempotencyKey === key)) {
         toast.warning('Deposit claim remains unconfirmed. Check deposit history or contact Support before resubmitting.');
         return;
       }
+      clearPendingEconomicIntent('deposit-claim', principal, key);
       pendingClaim.current = null;
       setUnknownClaimKey(null);
       toast.success('The deposit claim was found in account history.');
@@ -161,6 +176,7 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
     submissionLock.current = true;
     setBusy(true);
     let claimPostAttempted = false;
+    let claimPrincipal: string | null = null;
     try {
       const fingerprint = JSON.stringify([destination.asset, destination.network, destination.depositAddressId, amount.trim(), txHash.trim(), proof.name, proof.size, proof.type, proof.lastModified]);
       let claim = pendingClaim.current;
@@ -168,6 +184,14 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
         const objectKey = await uploadDepositProofObject(proof);
         claim = { proof, fingerprint, objectKey, intent: getIntentKey(null, fingerprint, 'deposit-claim') };
         pendingClaim.current = claim;
+      }
+      const principal = sessionPrincipalId();
+      if (!principal) { toast.error('Verify your wallet session before submitting deposit evidence.'); return; }
+      claimPrincipal = principal;
+      if (!persistPendingEconomicIntent('deposit-claim', { principal, intent: { key: claim.intent.key, fingerprint: 'redacted' }, context: {} })) {
+        setUnknownClaimKey(readPendingEconomicIntent('deposit-claim', principal)?.intent.key ?? 'unresolved');
+        toast.error('An earlier deposit claim may be unresolved or recovery storage is unavailable. New claims are blocked.');
+        return;
       }
       claimPostAttempted = true;
       await api.post('/financial/deposit-claims', {
@@ -179,7 +203,10 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
         ...(txHash.trim() ? { txHash: txHash.trim() } : {}),
         idempotencyKey: claim.intent.key,
       });
+      if (sessionPrincipalId() !== principal) return;
+      clearPendingEconomicIntent('deposit-claim', principal, claim.intent.key);
       pendingClaim.current = null;
+      setUnknownClaimKey(null);
       toast.success('Deposit claim submitted for review.');
       onClose();
       try {
@@ -188,6 +215,8 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
         toast.warning('Deposit claim submitted, but Wallet refresh failed. Check your deposit history before submitting another claim.');
       }
     } catch (error) {
+      // A session switch cannot reclassify or clear another principal's submitted claim.
+      if (claimPrincipal && sessionPrincipalId() !== claimPrincipal) return;
       const status = (error as { response?: { status?: number } } | null)?.response?.status;
       if (claimPostAttempted && ![400, 401, 403, 404, 422].includes(status ?? -1) && pendingClaim.current) {
         const key = pendingClaim.current.intent.key;
@@ -195,7 +224,11 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
         toast.warning('Deposit claim outcome is unknown. Recheck history before another submission.');
         void recheckUnknownClaim(key);
       } else {
-        if (claimPostAttempted) pendingClaim.current = null;
+        if (claimPostAttempted && pendingClaim.current) {
+          const principal = sessionPrincipalId();
+          if (principal) clearPendingEconomicIntent('deposit-claim', principal, pendingClaim.current.intent.key);
+          pendingClaim.current = null;
+        }
         toast.error(error instanceof Error ? error.message : 'Deposit proof or claim was rejected.');
       }
     } finally {
@@ -215,8 +248,8 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
               </button>
             )}
             <div className="min-w-0 flex-1">
-              <h2 id="deposit-title" className="truncate text-lg font-semibold text-white sm:text-xl">{step === 'asset' ? 'Deposit' : `Deposit ${selectedCurrency}`}</h2>
-              <p className="mt-0.5 truncate text-xs text-[#8C8299]">{step === 'asset' ? 'Select an asset to deposit' : (destination?.networkName ?? destination?.network ?? 'Select a configured network')}</p>
+              <h2 id="deposit-title" className="break-words text-lg font-semibold text-white sm:text-xl">{step === 'asset' ? 'Deposit' : `Deposit ${selectedCurrency}`}</h2>
+              <p className="mt-0.5 break-words text-xs leading-5 text-[#8C8299]">{step === 'asset' ? 'Select an asset to deposit' : (destination?.networkName ?? destination?.network ?? 'Select a configured network')}</p>
             </div>
             <button type="button" onClick={onClose} aria-label="Close deposit dialog" className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-[#C3BBD0] hover:bg-white/5"><X size={21} /></button>
           </div>
@@ -245,8 +278,8 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
                     <button key={asset} type="button" onClick={() => chooseAsset(asset)} className="flex min-h-20 w-full items-center gap-3 rounded-2xl border border-[#2B2037] bg-[#171022] px-4 py-3 text-left transition hover:border-violet-300/35 hover:bg-[#1B1229] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF]">
                       <AssetIcon item={iconItem} size="md" />
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-semibold text-white">{name}</span>
-                        <span className="mt-1 block truncate text-xs text-[#8C8299]">Crypto · {networks.join(' · ')}</span>
+                        <span className="block break-words text-sm font-semibold text-white">{name}</span>
+                        <span className="mt-1 block break-words text-xs leading-5 text-[#8C8299]">Crypto · {networks.join(' · ')}</span>
                       </span>
                       <span className="shrink-0 font-mono text-xs font-semibold text-[#C3BBD0]">{asset}</span>
                     </button>
@@ -276,10 +309,10 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
                   <button type="button" onClick={() => void copyAddress()} className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-violet-300/20 bg-[#21152F] px-4 text-sm font-semibold text-[#D9D2E6]">
                     {copied ? <Check size={16} className="text-emerald-300" /> : <Copy size={16} />}{copied ? 'Copied' : 'Copy address'}
                   </button>
-                  <div className="mt-4 grid grid-cols-2 gap-2">
-                    <div className="rounded-xl border border-[#2B2037] bg-[#0B0912] p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-[#8C8299]">Minimum</p><p className="mt-1 font-mono text-xs font-semibold text-white">{destination.minDeposit ?? '—'} {destination.asset}</p></div>
-                    <div className="rounded-xl border border-[#2B2037] bg-[#0B0912] p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-[#8C8299]">Maximum</p><p className="mt-1 font-mono text-xs font-semibold text-white">{destination.maxDeposit ?? '—'} {destination.asset}</p></div>
-                    <div className="col-span-2 rounded-xl border border-[#2B2037] bg-[#0B0912] p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-[#8C8299]">Required confirmations</p><p className="mt-1 font-mono text-xs font-semibold text-white">{destination.confirmationCount ?? '—'}</p></div>
+                  <div className="mt-4 grid min-w-0 grid-cols-1 gap-2 min-[430px]:grid-cols-2">
+                    <div className="rounded-xl border border-[#2B2037] bg-[#0B0912] p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-[#8C8299]">Minimum</p><p className="mt-1 break-all font-mono text-sm font-semibold text-white">{destination.minDeposit ?? '—'} {destination.asset}</p></div>
+                    <div className="rounded-xl border border-[#2B2037] bg-[#0B0912] p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-[#8C8299]">Maximum</p><p className="mt-1 break-all font-mono text-sm font-semibold text-white">{destination.maxDeposit ?? '—'} {destination.asset}</p></div>
+                    <div className="min-[430px]:col-span-2 rounded-xl border border-[#2B2037] bg-[#0B0912] p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-[#8C8299]">Required confirmations</p><p className="mt-1 font-mono text-xs font-semibold text-white">{destination.confirmationCount ?? '—'}</p></div>
                   </div>
                 </section>
 

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import api from '../../lib/api';
 import { getIntentKey, type PendingIntentKey } from '../../lib/intent-key';
+import { clearPendingEconomicIntent, persistPendingEconomicIntent, readPendingEconomicIntent } from '../../lib/pending-economic-intent';
 import { finiteMarketNumber } from '../../lib/market-data';
 import {
   authoritativeValue,
@@ -38,12 +39,16 @@ type LoadState = 'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR';
 
 type LoanRecord = {
   id?: unknown;
+  userId?: unknown;
   amount?: unknown;
+  amountDecimal?: unknown;
   currency?: unknown;
   durationDays?: unknown;
   term?: unknown;
   interestRate?: unknown;
   totalRepayment?: unknown;
+  totalRepaymentDecimal?: unknown;
+  totalRepaidDecimal?: unknown;
   status?: unknown;
   createdAt?: unknown;
   approvedAt?: unknown;
@@ -106,7 +111,9 @@ export default function LoansPage() {
   const [repaymentAmount, setRepaymentAmount] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const pendingApplication = useRef<PendingIntentKey | null>(null);
+  const [unknownApplicationKey, setUnknownApplicationKey] = useState<string | null>(null);
   const pendingRepayment = useRef<PendingIntentKey | null>(null);
+  const [unknownRepaymentKey, setUnknownRepaymentKey] = useState<string | null>(null);
   const backendConfigured = true;
   useEffect(() => {
     const sync = () => {
@@ -121,6 +128,12 @@ export default function LoansPage() {
         setRepaymentLoanId(null);
         setRepaymentAmount('');
         setMessage(null);
+        const previous = next ? readPendingEconomicIntent('loan-application', next) : null;
+        pendingApplication.current = previous?.intent ?? null;
+        setUnknownApplicationKey(previous?.intent.key ?? null);
+        const repayment = next ? readPendingEconomicIntent('loan-repayment', next) : null;
+        pendingRepayment.current = repayment?.intent ?? null;
+        setUnknownRepaymentKey(repayment?.intent.key ?? null);
         setState(next ? 'LOADING' : 'UNAVAILABLE');
         previousUserId.current = next;
       }
@@ -190,8 +203,38 @@ export default function LoansPage() {
     && durationDays === Number(selectedPlan.durationDays);
   const interestPreview = principal !== null && selectedRate !== null ? principal * selectedRate : null;
   const totalPreview = principal !== null && interestPreview !== null ? principal + interestPreview : null;
+  const recheckLoanApplication = async (key: string) => {
+    const principal = sessionPrincipalId();
+    if (!principal || principal !== userId || pendingApplication.current?.key !== key) {
+      setMessage('Verify the original loan applicant wallet session.');
+      return;
+    }
+    try {
+      const response = await api.get<LoanRecord | null>('/loans/applications/by-intent', {
+        params: { idempotencyKey: key },
+      });
+      if (sessionPrincipalId() !== principal || pendingApplication.current?.key !== key) return;
+      if (!response.data || typeof response.data.id !== 'string') {
+        setMessage('The original loan application is not yet confirmed. Do not resubmit it.');
+        return;
+      }
+      clearPendingEconomicIntent('loan-application', principal, key);
+      pendingApplication.current = null;
+      setUnknownApplicationKey(null);
+      setMessage('Original loan application confirmed in your account records.');
+      await load();
+    } catch {
+      if (sessionPrincipalId() === principal && pendingApplication.current?.key === key)
+        setMessage('Loan application readback unavailable. Original request remains unresolved.');
+    }
+  };
+
   const reviewApplication = async (event: FormEvent) => {
     event.preventDefault();
+    if (unknownApplicationKey || submitting) {
+      setMessage('An original loan application is unresolved. Recheck it before submitting another.');
+      return;
+    }
     if (!userId || sessionPrincipalId() !== userId) {
       setMessage('Verify your wallet before submitting a loan application.');
       return;
@@ -216,9 +259,19 @@ export default function LoansPage() {
     setSubmitting(true);
     setMessage(null);
     try {
-      pendingApplication.current = getIntentKey(pendingApplication.current, JSON.stringify([selectedPlanId, amount.trim(), durationDays, collateral.trim(), collateralImg.trim()]), 'loan:apply');
+      pendingApplication.current = getIntentKey(pendingApplication.current, JSON.stringify([userId, selectedPlanId, amount.trim(), durationDays, collateral.trim(), collateralImg.trim()]), 'loan:apply');
       const idempotencyKey = pendingApplication.current.key;
-      await api.post('/loans/apply', {
+      if (!persistPendingEconomicIntent('loan-application', {
+        principal: userId, intent: { key: idempotencyKey, fingerprint: 'redacted' }, context: { planId: selectedPlanId },
+      })) {
+        const saved = readPendingEconomicIntent('loan-application', userId);
+        pendingApplication.current = saved?.intent ?? null;
+        setUnknownApplicationKey(saved?.intent.key ?? 'unresolved');
+        setMessage('Previous loan application or recovery storage is unresolved. Do not submit another.');
+        return;
+      }
+      setUnknownApplicationKey(idempotencyKey);
+      const response = await api.post<LoanRecord>('/loans/apply', {
         planId: selectedPlanId,
         amount: amount.trim(),
         duration: durationDays,
@@ -227,7 +280,12 @@ export default function LoansPage() {
         idempotencyKey,
       });
       if (sessionPrincipalId() !== userId) return;
-      pendingApplication.current = null;
+      if (typeof response.data?.id !== 'string' || !response.data.id || String(response.data.userId) !== userId) {
+        setMessage('Loan application acknowledgement was incomplete. Recheck the original request.');
+        return;
+      }
+      await recheckLoanApplication(idempotencyKey);
+      if (pendingApplication.current?.key === idempotencyKey) return;
       setAmount('');
       setDuration('');
       setCollateral('');
@@ -236,33 +294,87 @@ export default function LoansPage() {
       await load();
     } catch (error) {
       if (sessionPrincipalId() !== userId) return;
-      const responseMessage = (error as { response?: { data?: { message?: unknown } } })?.response?.data?.message;
-      setMessage(typeof responseMessage === 'string' ? responseMessage : 'Loan application could not be submitted.');
+      const status = (error as { response?: { status?: number; data?: { message?: unknown } } })?.response?.status;
+      if ([400, 401, 403, 404, 422].includes(status ?? -1) && pendingApplication.current) {
+        clearPendingEconomicIntent('loan-application', userId, pendingApplication.current.key);
+        pendingApplication.current = null;
+        setUnknownApplicationKey(null);
+        setMessage('Loan application was rejected. Review eligibility before retrying.');
+      } else {
+        setMessage('Loan application outcome unknown. Recheck the original request before retrying.');
+      }
     } finally {
       setSubmitting(false);
     }
   };
+  const recheckLoanRepayment = async (key: string) => {
+    const principal = sessionPrincipalId();
+    const saved = principal ? readPendingEconomicIntent('loan-repayment', principal) : null;
+    const loanId = saved?.context.loanId;
+    if (!principal || principal !== userId || pendingRepayment.current?.key !== key || !loanId) {
+      setMessage('Verify the original wallet session and repayment request.');
+      return;
+    }
+    try {
+      const response = await api.get<{ activities: Array<{ type?: string; status?: string; referenceId?: string; ledgerCorrelationId?: string }> }>('/wallet/activity', {
+        params: { type: 'LOAN_REPAYMENT', status: 'COMPLETED', referenceId: loanId, correlationId: key, limit: 1 },
+      });
+      if (sessionPrincipalId() !== principal || pendingRepayment.current?.key !== key) return;
+      if (!Array.isArray(response.data?.activities) || !response.data.activities.some((row) =>
+        row.type === 'LOAN_REPAYMENT' && row.status === 'COMPLETED' && row.referenceId === loanId && row.ledgerCorrelationId === key)) {
+        setMessage('Original repayment is not confirmed in the Ledger activity. Do not submit it again.');
+        return;
+      }
+      clearPendingEconomicIntent('loan-repayment', principal, key);
+      pendingRepayment.current = null;
+      setUnknownRepaymentKey(null);
+      setRepaymentAmount('');
+      setRepaymentLoanId(null);
+      setMessage('Original loan repayment confirmed in account activity.');
+      await load();
+    } catch {
+      if (sessionPrincipalId() === principal && pendingRepayment.current?.key === key)
+        setMessage('Repayment activity unavailable. The original request remains unresolved.');
+    }
+  };
+
   const repayLoan = async () => {
-    if (!userId || sessionPrincipalId() !== userId || !repaymentLoanId || positiveNumber(repaymentAmount) === null) return;
+    if (!userId || sessionPrincipalId() !== userId || !repaymentLoanId || positiveNumber(repaymentAmount) === null || unknownRepaymentKey || repaying) return;
     setRepaying(true);
     setMessage(null);
     try {
-      pendingRepayment.current = getIntentKey(pendingRepayment.current, JSON.stringify([repaymentLoanId, repaymentAmount.trim()]), 'loan:repay');
-      await api.post('/loans/repay', {
+      pendingRepayment.current = getIntentKey(null, JSON.stringify([userId, repaymentLoanId, repaymentAmount.trim()]), 'loan:repay');
+      const intentKey = pendingRepayment.current.key;
+      if (!persistPendingEconomicIntent('loan-repayment', {
+        principal: userId, intent: pendingRepayment.current, context: { loanId: repaymentLoanId },
+      })) {
+        const saved = readPendingEconomicIntent('loan-repayment', userId);
+        pendingRepayment.current = saved?.intent ?? null;
+        setUnknownRepaymentKey(saved?.intent.key ?? 'unresolved');
+        setMessage('A previous repayment or recovery storage is unresolved. Do not retry.');
+        return;
+      }
+      setUnknownRepaymentKey(intentKey);
+      const response = await api.post<LoanRecord>('/loans/repay', {
         loanId: repaymentLoanId,
         amount: repaymentAmount.trim(),
-        idempotencyKey: pendingRepayment.current.key,
+        idempotencyKey: intentKey,
       });
       if (sessionPrincipalId() !== userId) return;
-      pendingRepayment.current = null;
-      setRepaymentAmount('');
-      setRepaymentLoanId(null);
-      setMessage('Repayment submitted.');
-      await load();
+      if (String(response.data?.id ?? '') !== repaymentLoanId || String(response.data?.userId ?? '') !== userId) {
+        setMessage('Repayment acknowledgement was incomplete. Recheck original Ledger activity.');
+        return;
+      }
+      await recheckLoanRepayment(intentKey);
     } catch (error) {
       if (sessionPrincipalId() !== userId) return;
-      const responseMessage = (error as { response?: { data?: { message?: unknown } } })?.response?.data?.message;
-      setMessage(typeof responseMessage === 'string' ? responseMessage : 'Repayment could not be submitted.');
+      const status = (error as { response?: { status?: number } } | null)?.response?.status;
+      if ([400, 401, 403, 404, 422].includes(status ?? -1) && pendingRepayment.current) {
+        clearPendingEconomicIntent('loan-repayment', userId, pendingRepayment.current.key);
+        pendingRepayment.current = null;
+        setUnknownRepaymentKey(null);
+        setMessage('Repayment request was rejected. Review amount and loan status.');
+      } else setMessage('Repayment outcome is unknown. Recheck the original Ledger activity before retrying.');
     } finally {
       setRepaying(false);
     }
@@ -276,8 +388,10 @@ export default function LoansPage() {
         action={<SecondaryButton onClick={() => void load()}><RefreshCw size={16} className="mr-2 inline" />Refresh</SecondaryButton>}
       />
 
+      {unknownRepaymentKey && <div role="alert" className="mx-auto mb-4 max-w-7xl rounded-xl border border-amber-300/30 p-4 text-sm text-amber-100">An earlier loan repayment outcome is unresolved. New repayments are blocked until Ledger activity confirms the original key. <button type="button" onClick={() => void recheckLoanRepayment(unknownRepaymentKey)} className="ml-2 min-h-11 rounded-lg border border-amber-300/30 px-3 font-semibold">Recheck original repayment</button></div>}
+      {unknownApplicationKey && <div role="alert" className="mx-auto mb-4 max-w-7xl rounded-xl border border-amber-300/30 p-4 text-sm text-amber-100">An earlier loan application outcome is unresolved. New applications are blocked until its original request is confirmed. <button type="button" onClick={() => void recheckLoanApplication(unknownApplicationKey)} className="ml-2 min-h-11 rounded-lg border border-amber-300/30 px-3 font-semibold">Recheck original loan application</button></div>}
       <main className="mx-auto max-w-7xl space-y-4">
-        <section className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Loan summary">
+        <section className="grid grid-cols-1 gap-3 min-[430px]:grid-cols-2 lg:grid-cols-4" aria-label="Loan summary">
           <Metric label="Eligibility" value="—" hint="Unavailable" />
           <Metric label="Products" value={plansState === 'LIVE' ? authoritativeValue(plans.length) : '—'} hint="Available products" />
           <Metric label="Active loans" value={state === 'LIVE' ? authoritativeValue(activeLoans.length) : '—'} hint="Includes overdue records" />
@@ -310,6 +424,7 @@ export default function LoansPage() {
               totalPreview={totalPreview}
               message={message}
               submitting={submitting}
+              blocked={Boolean(unknownApplicationKey)}
               userId={userId}
               onSubmit={reviewApplication}
             />
@@ -322,6 +437,7 @@ export default function LoansPage() {
               onRepaymentAmountChange={setRepaymentAmount}
               onRepay={repayLoan}
               repaying={repaying}
+              blocked={Boolean(unknownRepaymentKey)}
             />
           </aside>
         </div>
@@ -346,7 +462,7 @@ function LoanProductsPanel({ plans, plansState }: { plans: LoanPlan[]; plansStat
           {plans.map((plan) => (
             <article key={String(plan.id)} className="rounded-xl border border-[#2B2037] bg-[#171022] p-3 sm:p-4">
               <div className="flex items-center justify-between gap-3"><h3 className="font-semibold">{authoritativeValue(plan.name)}</h3><StatusBadge state="AVAILABLE" /></div>
-              <dl className="mt-3 grid grid-cols-2 gap-3 text-sm">
+              <dl className="mt-3 grid grid-cols-1 gap-3 text-sm min-[430px]:grid-cols-2">
                 <ReviewRow label="Asset" value={authoritativeValue(plan.currency)} stacked />
                 <ReviewRow label="Term" value={`${authoritativeValue(plan.durationDays)} days`} stacked />
                 <ReviewRow label="Term rate" value={finiteMarketNumber(plan.interestRate) === null ? '—' : `${(Number(plan.interestRate) * 100).toFixed(2)}% per plan term`} stacked />
@@ -422,6 +538,7 @@ function LoanApplicationPanel({
   totalPreview,
   message,
   submitting,
+  blocked,
   userId,
   onSubmit,
 }: {
@@ -442,6 +559,7 @@ function LoanApplicationPanel({
   totalPreview: number | null;
   message: string | null;
   submitting: boolean;
+  blocked: boolean;
   userId: string | null;
   onSubmit: (event: FormEvent) => Promise<void>;
 }) {
@@ -488,13 +606,14 @@ function LoanApplicationPanel({
         </Field>
         <div className="rounded-xl border border-[#49335E] bg-[#0B0711] p-3 text-sm text-[#C3BBD0]">
           <div className="flex items-center gap-2 font-semibold"><WalletCards size={16} className="text-[#48C0CC]" />Repayment preview</div>
-          <dl className="mt-3 grid grid-cols-2 gap-3 text-xs">
+          <dl className="mt-3 grid grid-cols-1 gap-3 text-xs min-[430px]:grid-cols-2">
             <ProductFact label="Principal" value={principal === null || !selectedPlan ? '—' : `${principal} ${authoritativeValue(selectedPlan.currency)}`} compact />
             <ProductFact label="Duration" value={durationDays === null ? '—' : `${durationDays} days`} compact />
-            <ProductFact label="Interest" value={interestPreview === null || !selectedPlan ? '—' : `${interestPreview.toFixed(4)} ${authoritativeValue(selectedPlan.currency)}`} compact />
-            <ProductFact label="Total repayment" value={totalPreview === null || !selectedPlan ? '—' : `${totalPreview.toFixed(4)} ${authoritativeValue(selectedPlan.currency)}`} compact />
+            <ProductFact label="Estimated interest" value={interestPreview === null || !selectedPlan ? '—' : `${interestPreview.toFixed(4)} ${authoritativeValue(selectedPlan.currency)}`} compact />
+            <ProductFact label="Estimated total repayment" value={totalPreview === null || !selectedPlan ? '—' : `${totalPreview.toFixed(4)} ${authoritativeValue(selectedPlan.currency)}`} compact />
           </dl>
         </div>
+        <p className="text-xs text-[#8C8299]">Illustrative plan-term estimate only; the recorded loan agreement and Ledger amounts are authoritative.</p>
         {message && (
           <div className="rounded-xl border border-[#F2C94C]/30 bg-[#3D3110]/40 p-4 text-sm leading-6 text-[#FDE68A]" role="status">
             <AlertTriangle size={16} className="mr-2 inline" />{message}
@@ -505,8 +624,8 @@ function LoanApplicationPanel({
         </p>}
         {selectedPlan && !matchesDuration && <p role="status" className="text-xs text-amber-200">Use the selected plan's {authoritativeValue(selectedPlan.durationDays)}-day term.</p>}
         <p className="text-xs text-[#8C8299]">Applications require both collateral details and a previously approved document reference. Product availability does not establish individual approval.</p>
-        <PrimaryButton type="submit" disabled={submitting || !canApply}>
-          {submitting ? 'Submitting…' : plans.length === 0 ? 'No active products' : 'Submit application'}
+        <PrimaryButton type="submit" disabled={submitting || blocked || !canApply}>
+          {blocked ? 'Recheck original application' : submitting ? 'Submitting…' : plans.length === 0 ? 'No active products' : 'Submit application'}
         </PrimaryButton>
       </form>
     </Panel>
@@ -521,6 +640,7 @@ function LoanRepaymentCenter({
   onRepaymentAmountChange,
   onRepay,
   repaying,
+  blocked,
 }: {
   activeLoans: LoanRecord[];
   repaymentLoanId: string | null;
@@ -529,6 +649,7 @@ function LoanRepaymentCenter({
   onRepaymentAmountChange: (value: string) => void;
   onRepay: () => Promise<void>;
   repaying: boolean;
+  blocked: boolean;
 }) {
   return (
     <Panel>
@@ -540,10 +661,10 @@ function LoanRepaymentCenter({
           {activeLoans.map((loan) => (
             <div key={loanKey(loan)} className="rounded-xl border border-[#2B2037] bg-[#171022] p-3 sm:p-4">
               <div className="flex items-center justify-between gap-3"><p className="font-semibold">Loan {authoritativeValue(loan.id)}</p><StatusBadge state={normalizeLoanState(loan.status)} /></div>
-              <dl className="mt-3 space-y-2 text-sm"><ReviewRow label="Total repayment" value={authoritativeValue(loan.totalRepayment)} /><ReviewRow label="Due date" value={<LocalDateTime value={typeof loan.dueDate === 'string' ? loan.dueDate : null} dateStyle="medium" />} /></dl>
-              <div className="mt-3 flex gap-2">
+              <dl className="mt-3 space-y-2 text-sm"><ReviewRow label="Total repayment" value={authoritativeValue(loan.totalRepaymentDecimal ?? loan.totalRepayment)} /><ReviewRow label="Due date" value={<LocalDateTime value={typeof loan.dueDate === 'string' ? loan.dueDate : null} dateStyle="medium" />} /></dl>
+              <div className="mt-3 flex flex-col gap-2 min-[430px]:flex-row">
                 <input aria-label="Repayment amount" className={`${inputClass} min-w-0`} value={repaymentLoanId === String(loan.id) ? repaymentAmount : ''} onChange={(event) => { onRepaymentLoanIdChange(String(loan.id)); onRepaymentAmountChange(event.target.value); }} inputMode="decimal" placeholder="Payment amount" />
-                <SecondaryButton onClick={() => void onRepay()} disabled={repaying || repaymentLoanId !== String(loan.id) || positiveNumber(repaymentAmount) === null}>{repaying && repaymentLoanId === String(loan.id) ? 'Paying…' : 'Repay'}</SecondaryButton>
+                <SecondaryButton onClick={() => void onRepay()} disabled={repaying || blocked || repaymentLoanId !== String(loan.id) || positiveNumber(repaymentAmount) === null}>{blocked ? 'Recheck prior repayment' : repaying && repaymentLoanId === String(loan.id) ? 'Paying…' : 'Repay'}</SecondaryButton>
               </div>
             </div>
           ))}
@@ -565,9 +686,10 @@ function LoanRecordCard({ loan }: { loan: LoanRecord }) {
         <StatusBadge state={status} />
       </div>
       <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2 xl:grid-cols-4">
-        <ReviewRow label="Principal" value={`${authoritativeValue(loan.amount)} ${authoritativeValue(loan.currency)}`} stacked />
+        <ReviewRow label="Principal" value={`${authoritativeValue(loan.amountDecimal ?? loan.amount)} ${authoritativeValue(loan.currency)}`} stacked />
         <ReviewRow label="Term" value={`${authoritativeValue(loan.durationDays ?? loan.term)} days`} stacked />
-        <ReviewRow label="Total repayment" value={authoritativeValue(loan.totalRepayment)} stacked />
+        <ReviewRow label="Total repayment" value={authoritativeValue(loan.totalRepaymentDecimal ?? loan.totalRepayment)} stacked />
+        <ReviewRow label="Repaid" value={authoritativeValue(loan.totalRepaidDecimal ?? '0')} stacked />
         <ReviewRow label="Due date" value={<LocalDateTime value={typeof (loan.dueDate ?? loan.nextRepaymentAt) === 'string' ? String(loan.dueDate ?? loan.nextRepaymentAt) : null} dateStyle="medium" />} stacked />
       </dl>
     </article>

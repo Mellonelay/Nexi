@@ -4,6 +4,7 @@ import {
   Body,
   Get,
   Param,
+  Query,
   UseGuards,
   Req,
 } from "@nestjs/common";
@@ -50,6 +51,17 @@ export class LoansController {
       body.idempotencyKey,
       body.planId,
     );
+  }
+
+  @ApiBearerAuth()
+  @Get("applications/by-intent")
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
+  @RequireAuthSurface("PUBLIC")
+  async getApplicationByIntent(
+    @Query("idempotencyKey") idempotencyKey: string,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.loanService.getApplicationByIntent(request.user.userId, idempotencyKey);
   }
 
   @ApiBearerAuth()

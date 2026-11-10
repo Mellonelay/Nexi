@@ -143,14 +143,14 @@ export class MiningService {
     if (!subscription) throw new NotFoundException('Mining subscription not found');
     if (!matured && subscription.endDate && new Date(String(subscription.endDate)) > new Date()) throw new BadRequestException('Mining subscription has not matured');
     const result = await d1.releaseMiningSubscription(subscriptionId, String(subscription.userId), idempotencyKey?.trim() || `redeem:${subscriptionId}`, 'COMPLETED');
-    await this.publish('MINING_REDEEMED', subscriptionId, {});
+    if (!result.replayed) await this.publish('MINING_REDEEMED', subscriptionId, {});
     return result;
   }
 
   async cancel(userId: string, subscriptionId: string, idempotencyKey?: string) {
     const d1 = this.requireD1FinancialAuthority();
     const result = await d1.releaseMiningSubscription(subscriptionId, userId, idempotencyKey?.trim() || `cancel:${subscriptionId}`, 'CANCELLED');
-    await this.publish('MINING_CANCELLED', subscriptionId, {});
+    if (!result.replayed) await this.publish('MINING_CANCELLED', subscriptionId, {});
     return result;
   }
 

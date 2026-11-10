@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import api from '../../../lib/api';
 import { sessionPrincipalId } from '../../../lib/wallet-auth';
 import { getIntentKey, type PendingIntentKey } from '../../../lib/intent-key';
+import { clearPendingEconomicIntent, persistPendingEconomicIntent, readPendingEconomicIntent } from '../../../lib/pending-economic-intent';
 
 interface ConvertModalProps {
   isOpen: boolean;
@@ -60,6 +61,20 @@ export default function ConvertModal({ isOpen, onClose, eligiblePairs, fundingBa
   const pendingPrincipal = useRef<string | null>(null);
 
   useEffect(() => {
+    const restore = () => {
+      const principal = sessionPrincipalId();
+      const stored = principal ? readPendingEconomicIntent('conversion', principal) : null;
+      pendingAcceptIntent.current = stored?.intent ?? null;
+      pendingAcceptedQuoteId.current = stored?.context.quoteId ?? null;
+      pendingPrincipal.current = stored?.principal ?? null;
+      setUnknownAcceptKey(stored?.intent.key ?? null);
+    };
+    restore();
+    window.addEventListener('nexi:wallet-session', restore);
+    return () => window.removeEventListener('nexi:wallet-session', restore);
+  }, []);
+
+  useEffect(() => {
     if (!isOpen) return;
     const pairs = eligibleKey.split('|').filter(Boolean).map((value) => value.split('>'));
     const availableFrom = [...new Set(pairs.map(([from]) => from).filter(Boolean))];
@@ -95,7 +110,7 @@ export default function ConvertModal({ isOpen, onClose, eligiblePairs, fundingBa
       return;
     }
     try {
-      const response = await api.get<{ activities: Array<{ type?: string; referenceId?: string; ledgerCorrelationId?: string }> }>('/wallet/activity', { params: { limit: 100 } });
+      const response = await api.get<{ activities: Array<{ type?: string; referenceId?: string; ledgerCorrelationId?: string }> }>('/wallet/activity', { params: { limit: 1, type: 'CONVERSION', referenceId: quoteId } });
       if (sessionPrincipalId() !== principal || pendingAcceptIntent.current?.key !== key) return;
       const confirmed = Array.isArray(response.data?.activities) && response.data.activities.some((item) =>
         item?.type === 'CONVERSION' && item.referenceId === quoteId
@@ -104,6 +119,7 @@ export default function ConvertModal({ isOpen, onClose, eligiblePairs, fundingBa
         setFeedback('Conversion outcome is unresolved. Do not accept another quote; review Wallet activity or contact Support.');
         return;
       }
+      clearPendingEconomicIntent('conversion', principal, key);
       pendingAcceptIntent.current = null;
       pendingAcceptedQuoteId.current = null;
       pendingPrincipal.current = null;
@@ -163,6 +179,11 @@ export default function ConvertModal({ isOpen, onClose, eligiblePairs, fundingBa
     const principal = sessionPrincipalId();
     if (!principal) { setFeedback('Verify your wallet session before accepting the quote.'); return; }
     const intent = getIntentKey(pendingAcceptIntent.current, `${principal}:${quote.id}`, 'conversion-accept');
+    if (!persistPendingEconomicIntent('conversion', { principal, intent, context: { quoteId: quote.id } })) {
+      setUnknownAcceptKey(readPendingEconomicIntent('conversion', principal)?.intent.key ?? 'unresolved');
+      setFeedback('A previous conversion may be unresolved or recovery storage is unavailable. New acceptance is blocked until the original outcome is reconciled.');
+      return;
+    }
     pendingAcceptIntent.current = intent;
     pendingAcceptedQuoteId.current = quote.id;
     pendingPrincipal.current = principal;
@@ -170,11 +191,19 @@ export default function ConvertModal({ isOpen, onClose, eligiblePairs, fundingBa
     setBusy(true);
     setFeedback(null);
     try {
-      await api.post('/financial/conversion/accept', { quoteId: quote.id, acceptanceKey: intent.key });
+      const accepted = await api.post<{ quote?: { id?: string; acceptanceKey?: string; state?: string } }>('/financial/conversion/accept', { quoteId: quote.id, acceptanceKey: intent.key });
       if (sessionPrincipalId() !== principal) return;
+      if (accepted.data?.quote?.id !== quote.id || accepted.data?.quote?.acceptanceKey !== intent.key || accepted.data?.quote?.state !== 'ACCEPTED') {
+        setUnknownAcceptKey(intent.key);
+        setFeedback('Conversion response did not confirm the original acceptance. Recheck durable activity before another conversion.');
+        void recheckUnknownConversion(intent.key);
+        return;
+      }
+      clearPendingEconomicIntent('conversion', principal, intent.key);
       pendingAcceptIntent.current = null;
       pendingAcceptedQuoteId.current = null;
       pendingPrincipal.current = null;
+      setUnknownAcceptKey(null);
       toast.success('Conversion completed.');
       setQuote(null);
       close();
@@ -187,6 +216,7 @@ export default function ConvertModal({ isOpen, onClose, eligiblePairs, fundingBa
       if (sessionPrincipalId() !== principal) return;
       const status = (error as { response?: { status?: number } } | null)?.response?.status;
       if ([400, 401, 403, 404, 422].includes(status ?? -1)) {
+        clearPendingEconomicIntent('conversion', principal, intent.key);
         pendingAcceptIntent.current = null;
         pendingAcceptedQuoteId.current = null;
         pendingPrincipal.current = null;

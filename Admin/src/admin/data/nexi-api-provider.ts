@@ -1923,9 +1923,11 @@ export class NexiAdminApiProvider implements AdminDataProvider {
               ? "loss"
               : state === "error"
                 ? "error"
-                : state === "settling" || state === "settlement_delayed"
-                  ? "settling"
-                  : "open";
+                : state === "failed"
+                  ? "error"
+                  : state === "settling" || state === "settlement_delayed"
+                    ? "settling"
+                    : "unavailable";
         return {
           id: stringValue(row.id),
           positionId: stringValue(row.id),
