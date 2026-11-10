@@ -50,13 +50,13 @@ export function PageHeader({ eyebrow, title, description, action }: {
   action?: ReactNode;
 }) {
   return (
-    <header className="nexi-station-header mx-auto mb-6 flex max-w-7xl flex-col gap-4 rounded-2xl border px-4 py-4 sm:flex-row sm:items-end sm:justify-between sm:px-5">
-      <div className="min-w-0">
+    <header className="nexi-station-header mx-auto mb-6 flex min-w-0 max-w-7xl flex-col gap-4 rounded-2xl border px-4 py-4 sm:flex-row sm:items-end sm:justify-between sm:px-5">
+      <div className="min-w-0 flex-1">
         {eyebrow && <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#48C0CC]">{eyebrow}</p>}
         <h1 className="text-[clamp(1.25rem,5.6vw,1.875rem)] leading-[1.3] font-semibold tracking-tight gradient-text">{title}</h1>
         <p className="mt-2 max-w-2xl text-base leading-6 text-[#C3BBD0]">{description}</p>
       </div>
-      {action}
+      {action && <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2 [&>*]:max-w-full">{action}</div>}
     </header>
   );
 }
@@ -67,12 +67,12 @@ export function Panel({ children, className = '' }: { children: ReactNode; class
 
 export function PanelHeading({ title, description, action }: { title: string; description?: string; action?: ReactNode }) {
   return (
-    <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-      <div>
-        <h2 className="text-xl leading-[1.3] font-semibold text-[#F2ECFA]">{title}</h2>
-        {description && <p className="mt-1 text-base leading-6 text-[#8C8299]">{description}</p>}
+    <div className="mb-4 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+      <div className="min-w-0 flex-1">
+        <h2 className="break-words text-xl leading-[1.3] font-semibold text-[#F2ECFA]">{title}</h2>
+        {description && <p className="mt-1 break-words text-base leading-6 text-[#8C8299]">{description}</p>}
       </div>
-      {action}
+      {action && <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2 [&>*]:max-w-full">{action}</div>}
     </div>
   );
 }
@@ -96,7 +96,20 @@ export function Metric({ label, value, hint }: { label: string; value: string; h
 }
 
 export function TabButton({ active, children, onClick }: { active: boolean; children: ReactNode; onClick: () => void }) {
-  return <button type="button" role="tab" aria-selected={active} tabIndex={active ? 0 : -1} onClick={onClick} className={cn(controlVariants({ intent: active ? 'primary' : 'secondary', size: 'compact', selected: active }), 'nexi-tab-control shrink-0')}>{children}</button>;
+  const onKeyDown = (event: import('react').KeyboardEvent<HTMLButtonElement>) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    const list = event.currentTarget.closest('[role="tablist"]');
+    if (!list) return;
+    const tabs = Array.from(list.querySelectorAll<HTMLButtonElement>('button[role="tab"]:not(:disabled)'));
+    const current = tabs.indexOf(event.currentTarget);
+    if (current < 0 || tabs.length === 0) return;
+    event.preventDefault();
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1
+      : (current + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+    tabs[next].focus();
+    tabs[next].click();
+  };
+  return <button type="button" role="tab" aria-selected={active} tabIndex={active ? 0 : -1} onClick={onClick} onKeyDown={onKeyDown} className={cn(controlVariants({ intent: active ? 'primary' : 'secondary', size: 'compact', selected: active }), 'nexi-tab-control shrink-0')}>{children}</button>;
 }
 
 export function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: string }) {

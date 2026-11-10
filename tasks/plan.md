@@ -1227,3 +1227,46 @@ Screen recording reviewed; user submitted one BTC/USDT SHORT 2x position with 10
 Final successor handover: `tasks/evidence/NEXI_INTERACTIVE_ACCEPTANCE_HANDOVER_20261108.md`. Acceptance tracker remains 113 criteria: 16 PASS / 24 FAIL / 8 BLOCKED / 65 NOT_TESTED; handover preserves the next repair frontier and exact proof limits.
 
 2026-11-10 source continuation: Binary replay-key checks/readback before live quote, exact Public financial history decimals, Spot/Margin/Options ambiguous HTTP status preservation, Loans original-key/precision source and Notifications mobile touch/reflow SOURCE_IMPLEMENTED scoped; cross-feature and 113-criterion source closure still in progress. No application verification.
+
+2026-11-10 maintenance: committed in-progress source checkpoint `58ce48917715e3b86ccec4a59397b10d219f43db` (46 selected paths, no push), then reclaimed ~407 MiB net via bounded systemd journal vacuum and pnpm metadata cache deletion; retained untracked recovery artifacts and all live services, disk 1.3G free (98%). Resume unfinished source repairs; all 113 source criteria and full group closure still outstanding; no application tests/build/browser/deploy. See current source matrix receipt.
+
+Post-checkpoint source frontier: `frontend/app/dashboard/binary/page.tsx::submitPosition` now requires accepted response's exact original key before clearing the persisted intent; mismatches remain UNKNOWN and use existing owner-scoped readback. This repair and maintenance receipts are intentionally uncommitted after checkpoint `58ce48917715e3b86ccec4a59397b10d219f43db`. Continue other source gaps; no application tests/build/browser/deploy.
+
+2026-11-10 source continuation: Mining subscription/action HTTP-error paths no longer clear original economic-intent markers without owner-scoped durable Activity readback; gateway rejects orphan Activity receipt. Scoped SOURCE_IMPLEMENTED, application verification deferred; remaining 113-source disposition and cross-surface integration still open.
+
+2026-11-10 direct source continuation: Strengthened Mining original-key readback to require COMPLETED Activity and matching Ledger reserve posting; improved Spot amount validation to avoid floating-point underflow. Prior changes preserved, source-only proof; remaining producers/consumers and 113 criterion dispositions not closed. No application tests/typecheck/build/browser/deploy.
+
+2026-11-10 source continuation: after current source/Graphify and SQLite transactional-owner checks, patched Mining reserve original idempotency-key race and insufficient Finance balance plus Public Mining/Loan original-key LedgerPosting receipt checks and Binary exact funding eligibility. Five observed source gaps moved to scoped SOURCE_IMPLEMENTED; no app tests, build or browser. Continue unfinished 113 source-contract coverage without duplicating old repairs.
+
+2026-11-10 transfer source integration: Backend same-wallet transfer response carries original key; Public requires matching key plus both postings; readback requires completed owner Activity and matching debit/credit Ledger postings and scopes. SOURCE_IMPLEMENTED scoped, full source closure/113 criteria outstanding. No application verification.
+
+2026-11-10 source continuation: Converted ambiguous conversion acceptance recovery from quote/correlation-only Activity readback to original idempotencyKey + COMPLETED status + both matching posted Ledger entries; additive Wallet Activity DTO source. Reused existing unique SQLite/Outbox writer, no application tests/build/browser/deploy; 113 source reconciliation remains pending.
+
+2026-11-10 Public UI source: shared PagePrimitives TabButton now supports tablist roving keyboard interaction instead of inaccessible inactive tabIndex-only controls. Source-implemented across existing consumers; later WCAG/viewport verification deferred.
+
+2026-11-10 Loan original repayment readback now checks exact persisted prefixed Activity idempotencyKey in addition to posted debit evidence. Source-only; full 113 criteria still not closed, application verification deferred.
+
+2026-11-10 owner source-first continuation: scoped producer-consumer repair completed for Loan original application replay after product configuration changes, Withdrawal original-key immutable terms after fee/network changes, and Admin settlements pending/error timestamps. Existing matrix contains source receipt. Continue outstanding source coverage, do not run application validation yet.
+
+- [ ] 2026-11-10 Mining source continuation: original-key Activity readback confirmed in current gateway; Public recovery-clear failure guard SOURCE_IMPLEMENTED (see source matrix). Remaining source-contract/113-row reconciliation pending; application verification deferred.
+
+2026-11-10 source continuation (no new phase): source-implemented fail-closed local economic-intent clearing on matched HTTP and owner-scoped readback across Binary, Spot/Margin, Loans, Wallet Transfer/Convert/Withdraw/Deposit; deposit 2xx claim owner/key contract checked against existing NestJS response; Binary Options duration/stake mobile ticket reflow, exact string input, estimated payout. See existing source matrix for trace. Continue uninspected 113 source contracts and remaining cross-surface consumers; TEST/TYPECHECK/LINT/BUILD/BROWSER/DEPLOY deferred by owner.
+
+2026-11-10 source follow-on: Public Margin `MarginPositionResponse` and position card now consume existing SQLite debt principal, accrued interest and asset (source NEXI-07-03); Admin client product entitlement labels distinguish feature access from existing positions; Spot ticket mobile targets/estimated total corrected. These are source-only, not acceptance. Continue original 113 source-contract/consumer inventory with current owner, no app tests/typecheck/lint/build/browser/deploy.\n
+2026-11-10 source continuation: Spot immutable replay before current quote/config; Public shared PageHeader mobile flex/action geometry. Existing `SpotService` / `getSpotOrderByIntent` and PagePrimitives reused; no additional financial writer, new worktree, test, build or deploy. Graphify L0 locator and current source used; original 113 criteria still not fully source-disposed.
+
+2026-11-10 additional source integration: W1 SpotService and W2 Public Wallet Activity exact edits genuinely overlapped in single bounded SentinelX dispatcher, then serial Spot history consumer and SQLite matcher self-trade fix, shared market-candle/Next API state source changes. No worktree needed given disk/clean ownership. Existing financial settlement/ledger authority unchanged; continue unresolved original 113 cross-surface source contracts and mobile UI. No tests/build/browser/deploy.
+
+2026-11-10 W1/W2 source implementation receipt: disjoint actual ProcessPool SentinelX writes (W1 Spot history API schema; W2 decimal zero minimum Public consumers), followed by scoped Mining stage/Admin Margin reserve meaning/mobile dashboard wrapping. Current source diff only; retain 113 rows and owner-source-first deferral.
+
+2026-11-10 additional source-only: checked actual pending-economic-intent storage boolean semantics; Public financial error/terminal consumers now preserve unresolved keys when marker clear fails. Mobile header and market value wrapping source corrected. All app verification deferred until entire source closure.
+
+2026-11-10 further source-only: support messaging unknown POST now uses persisted request key and Backend owner-scoped deterministic-message lookup; Mining asynchronous reads preserve active subscriptions independent of reward/summary failure; Support mailto restricted; phone header wraps. Stage SOURCE_IMPLEMENTED only, existing 113 still pending source reconciliation.
+
+2026-11-10 continuation: Admin ledger-purpose mapping is now consumed by both ledger list and detail; raw MARGIN entry reserve remains a LedgerPosting with exact account deltas and no invented resulting balance. Public Loan summary now distinguishes unassessed eligibility from explicit denial. Source matrix receipt added, source-first deferred all application proof; continue cross-surface owner audit and 113 criteria without upgrading historical browser statuses.
+
+2026-11-10 source continuation: after Admin Margin reserve note producer→consumer and Public Loan eligibility language, Admin Spot status mapping now fails closed on unknown Backend status; orders fetch errors and unknown records are visible rather than reported as empty successful open orders. Current Prisma Gate2SpotOrderStatus traced; no DB/API financial mutation or application verification.
+
+2026-11-10 Spot source consumer: MARKET readiness no longer falsely blocks a valid small quote whose display Number serializes in exponent notation; LIMIT/STOP precise string constraints retained. Still source-only, no tests/build/browser/deploy. Continue other 113 criteria source paths.
+
+2026-11-11: VM disk 99% used; verified disposable pnpm metadata-only cache cleanup recovered 141,144,064 bytes; 904,019,968 bytes available afterward, insufficient for safe broad graph rebuild. Existing Graphify November 7 snapshot queried but not accepted as upgraded 0.9.105. Admin Spot orders loading now isolated from Pairs/Margin/Audit source. No app verification.

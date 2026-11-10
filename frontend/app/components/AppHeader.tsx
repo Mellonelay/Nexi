@@ -15,7 +15,7 @@ export default function AppHeader() {
   const [unreadCount, setUnreadCount] = useState<number | null>(null);
   const { locale, setLocale, languages, t } = useLocale();
   return (
-    <header className="nexi-app-header nexi-safe-area-header nexi-topbar relative z-40 flex h-auto min-h-14 min-w-0 flex-wrap items-center gap-[8px] border-b border-violet-300/15 md:min-h-16">
+    <header className="nexi-app-header nexi-safe-area-header nexi-topbar relative z-40 flex h-auto min-h-14 w-full max-w-full min-w-0 flex-wrap items-center gap-[8px] border-b border-violet-300/15 md:min-h-16">
       <div className="lg:hidden min-w-0">
         <NavigationDrawer
           triggerContent={
@@ -26,7 +26,7 @@ export default function AppHeader() {
         />
       </div>
       <div className="hidden min-w-0 flex-1 lg:block" aria-hidden="true" />
-      <div className="ml-auto flex min-w-0 items-center gap-[6px] md:gap-2">
+      <div className="ml-auto flex max-w-full min-w-0 flex-wrap items-center justify-end gap-[6px] md:flex-nowrap md:gap-2">
         <span
           aria-label="Ethereum network"
           title="Ethereum network"

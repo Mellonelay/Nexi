@@ -105,12 +105,33 @@ export function positiveNumber(value: unknown): number | null {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }
 
-function optionsStakeWithinBalance(amount: number | null, accountActive: boolean, available: unknown): amount is number {
-  const optionsAvailableBalance = positiveNumber(available);
-  return accountActive === true
-    && amount !== null
-    && optionsAvailableBalance !== null
-    && amount <= optionsAvailableBalance;
+export function positiveDecimalAmount(value: unknown): boolean {
+  const amount = String(value ?? '').trim();
+  return /^\d+(?:\.\d+)?$/.test(amount) && /[1-9]/.test(amount);
+}
+
+export function decimalLessThanOrEqual(left: unknown, right: unknown): boolean {
+  const a = String(left ?? '').trim();
+  const b = String(right ?? '').trim();
+  if (!/^\d+(?:\.\d+)?$/.test(a) || !/^\d+(?:\.\d+)?$/.test(b)) return false;
+  const normalize = (value: string) => {
+    const [integer, fraction = ''] = value.split('.');
+    return [integer.replace(/^0+(?=\d)/, ''), fraction.replace(/0+$/, '')] as const;
+  };
+  const [aWhole, aFraction] = normalize(a);
+  const [bWhole, bFraction] = normalize(b);
+  if (aWhole.length !== bWhole.length) return aWhole.length < bWhole.length;
+  if (aWhole !== bWhole) return aWhole < bWhole;
+  return aFraction.padEnd(Math.max(aFraction.length, bFraction.length), '0')
+    <= bFraction.padEnd(Math.max(aFraction.length, bFraction.length), '0');
+}
+
+export function decimalAmountWithinBalance(amount: unknown, available: unknown): boolean {
+  return positiveDecimalAmount(amount) && decimalLessThanOrEqual(amount, available);
+}
+
+function optionsStakeWithinBalance(amount: unknown, accountActive: boolean, available: unknown): boolean {
+  return accountActive === true && decimalAmountWithinBalance(amount, available);
 }
 
 export function spotOrderReady(input: {
@@ -121,11 +142,12 @@ export function spotOrderReady(input: {
   price?: unknown;
   stopPrice?: unknown;
 }) {
-  if (!input.authenticated || !input.backendConfigured || positiveNumber(input.amount) === null) return false;
-  if (input.orderType === 'LIMIT') return positiveNumber(input.price) !== null;
+  if (!input.authenticated || !input.backendConfigured || !positiveDecimalAmount(input.amount)) return false;
+  if (input.orderType === 'LIMIT') return positiveDecimalAmount(input.price);
+  // MARKET submits against a fresh server quote; the displayed JS number can stringify in exponent notation.
   if (input.orderType === 'MARKET') return positiveNumber(input.price) !== null;
   if (input.orderType === 'STOP') {
-    return positiveNumber(input.price) !== null && positiveNumber(input.stopPrice) !== null;
+    return positiveDecimalAmount(input.price) && positiveDecimalAmount(input.stopPrice);
   }
   return false;
 }
@@ -142,16 +164,13 @@ export function binaryOrderReady(input: {
   minimumAmount?: unknown;
   maximumAmount?: unknown;
 }) {
-  const amount = positiveNumber(input.amount);
-  const minimumAmount = positiveNumber(input.minimumAmount);
-  const maximumAmount = positiveNumber(input.maximumAmount);
   return input.authenticated
     && input.backendConfigured
-    && optionsStakeWithinBalance(amount, input.optionsAccountActive, input.optionsAvailableBalance)
+    && optionsStakeWithinBalance(input.amount, input.optionsAccountActive, input.optionsAvailableBalance)
     && positiveNumber(input.currentPrice) !== null
     && input.durationEnabled
     && positiveNumber(input.payoutRate) !== null
-    && minimumAmount !== null && maximumAmount !== null
-    && minimumAmount <= maximumAmount
-    && amount >= minimumAmount && amount <= maximumAmount;
+    && decimalLessThanOrEqual(input.minimumAmount, input.maximumAmount)
+    && decimalLessThanOrEqual(input.minimumAmount, input.amount)
+    && decimalAmountWithinBalance(input.amount, input.maximumAmount);
 }

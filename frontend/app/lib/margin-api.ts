@@ -11,6 +11,9 @@ export interface MarginPositionResponse {
   leverage: MarginLeverage;
   collateral: string;
   quantity: string;
+  debtAsset: string;
+  debtPrincipal: string;
+  interestAccrued: string;
   entryPrice: string;
   markPrice: string | null;
   unrealizedPnl: string;

@@ -31,6 +31,9 @@ const OP_TYPES: LedgerOperationType[] = [
 ];
 const DOMAINS: WalletDomain[] = ["overview", "spot", "margin", "option", "funding", "financial"];
 
+const positiveDecimalText = (value: string | undefined) =>
+  typeof value === "string" && /^(?:0|[1-9]\d*)(?:\.\d+)?$/.test(value) && /[1-9]/.test(value);
+
 function Page() {
   return (
     <RouteGuard permission="ledger.view">
@@ -115,11 +118,16 @@ function Inner() {
       ),
     },
     {
+      key: "note",
+      header: "Posting purpose",
+      cell: (e) => <span className="text-xs">{e.note ?? "—"}</span>,
+    },
+    {
       key: "debit",
       header: "Debit",
       align: "right",
       cell: (e) =>
-        e.debit && Number(e.debit) > 0 ? (
+        positiveDecimalText(e.debit) ? (
           <span className="mono text-xs text-destructive">{e.debit}</span>
         ) : (
           <span className="text-xs text-muted-foreground/60">—</span>
@@ -130,7 +138,7 @@ function Inner() {
       header: "Credit",
       align: "right",
       cell: (e) =>
-        e.credit && Number(e.credit) > 0 ? (
+        positiveDecimalText(e.credit) ? (
           <span className="mono text-xs text-success">{e.credit}</span>
         ) : (
           <span className="text-xs text-muted-foreground/60">—</span>
@@ -268,6 +276,7 @@ function Inner() {
                     { label: "Domain", value: selected.domain, mono: true },
                     { label: "Asset", value: selected.asset, mono: true },
                     { label: "Operation type", value: selected.type, mono: true },
+                    { label: "Posting purpose", value: selected.note ?? "—", mono: true },
                     { label: "Amount", value: selected.amount, mono: true },
                     { label: "Debit", value: selected.debit ?? "—", mono: true },
                     { label: "Credit", value: selected.credit ?? "—", mono: true },

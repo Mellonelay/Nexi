@@ -7,6 +7,7 @@ import { getIntentKey, type PendingIntentKey } from '../../lib/intent-key';
 import { clearPendingEconomicIntent, persistPendingEconomicIntent, readPendingEconomicIntent } from '../../lib/pending-economic-intent';
 import { actionCanSubmit, authoritativeValue, EARN_STATES, normalizeProductState, resolveEndpointTemplate } from '../../lib/product-states';
 import { sessionPrincipalId } from '../../lib/wallet-auth';
+import { decimalAmountWithinBalance, decimalLessThanOrEqual } from '../../lib/trading-states';
 import { DataStatePanel, Field, inputClass, Metric, PageHeader, PageShell, Panel, PanelHeading, PrimaryButton, SecondaryButton, StatusBadge } from '../../components/PagePrimitives';
 
 type RecordValue = Record<string, unknown>;
@@ -30,6 +31,8 @@ export default function MiningPage() {
   const [amount, setAmount] = useState('');
   const [catalogState, setCatalogState] = useState<'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR'>('LOADING');
   const [positionState, setPositionState] = useState<'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR'>('LOADING');
+  const [summaryState, setSummaryState] = useState<'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR'>('LOADING');
+  const [rewardState, setRewardState] = useState<'LOADING' | 'LIVE' | 'UNAVAILABLE' | 'ERROR'>('LOADING');
   const [stage, setStage] = useState<FlowStage>('IDLE');
   const [message, setMessage] = useState('');
   const [userId, setUserId] = useState<string | null>(null);
@@ -42,6 +45,8 @@ export default function MiningPage() {
     ? resolveEndpointTemplate(process.env.NEXT_PUBLIC_MINING_POSITIONS_ENDPOINT || '/mining/my/{userId}', { userId })
     : null;
   const subscribeEndpoint = process.env.NEXT_PUBLIC_MINING_SUBSCRIBE_ENDPOINT || '/mining/subscribe';
+  const subscriptionAmountValid = Boolean(selectedPlan && decimalLessThanOrEqual(selectedPlan.minDeposit, amount.trim())
+    && decimalAmountWithinBalance(amount.trim(), selectedPlan.maxDeposit));
 
   useEffect(() => {
     const sync = () => {
@@ -55,6 +60,8 @@ export default function MiningPage() {
         setMessage('');
         setStage('IDLE');
         setPositionState(next ? 'LOADING' : 'UNAVAILABLE');
+        setSummaryState(next ? 'LOADING' : 'UNAVAILABLE');
+        setRewardState(next ? 'LOADING' : 'UNAVAILABLE');
         const stored = next ? readPendingEconomicIntent('mining-subscribe', next) : null;
         pendingSubscription.current = stored?.intent ?? null;
         setUnknownSubscriptionKey(stored?.intent.key ?? null);
@@ -76,48 +83,66 @@ export default function MiningPage() {
       setMessage('');
     }
 
-    if (!plansEndpoint) {
-      setPlans([]);
-      setCatalogState('UNAVAILABLE');
-    } else {
-      setCatalogState('LOADING');
-      try {
-        const result = await api.get(plansEndpoint);
-        setPlans(Array.isArray(result.data) ? result.data.map(normalizePlan) : []);
-        setCatalogState('LIVE');
-      } catch {
+    const catalogLoad = (async () => {
+      if (!plansEndpoint) {
         setPlans([]);
-        setCatalogState('ERROR');
+        setCatalogState('UNAVAILABLE');
+      } else {
+        setCatalogState('LOADING');
+        try {
+          const result = await api.get(plansEndpoint);
+          setPlans(Array.isArray(result.data) ? result.data.map(normalizePlan) : []);
+          setCatalogState('LIVE');
+        } catch {
+          setPlans([]);
+          setCatalogState('ERROR');
+        }
       }
-    }
-
-    if (sessionPrincipalId() !== userId) return;
-    if (!userId || !positionsEndpoint) {
-      setPositions([]);
-      setSummary(null);
-      setRewards([]);
-      setPositionState('UNAVAILABLE');
-      return;
-    }
-    setPositionState('LOADING');
-    try {
-      const [result, summaryResult, rewardsResult] = await Promise.all([
+    })();
+    const positionsLoad = (async () => {
+      if (sessionPrincipalId() !== userId) return;
+      if (!userId || !positionsEndpoint) {
+        setPositions([]);
+        setSummary(null);
+        setRewards([]);
+        setPositionState('UNAVAILABLE');
+        setSummaryState('UNAVAILABLE');
+        setRewardState('UNAVAILABLE');
+        return;
+      }
+      setPositionState('LOADING');
+      setSummaryState('LOADING');
+      setRewardState('LOADING');
+      const [positionsResult, summaryResult, rewardsResult] = await Promise.allSettled([
         api.get(positionsEndpoint),
         api.get('/mining/summary'),
         api.get(`/mining/rewards/${userId}`),
       ]);
       if (sessionPrincipalId() !== userId) return;
-      setPositions(Array.isArray(result.data) ? result.data : []);
-      setSummary(summaryResult.data && typeof summaryResult.data === 'object' ? summaryResult.data : null);
-      setRewards(Array.isArray(rewardsResult.data) ? rewardsResult.data : []);
-      setPositionState('LIVE');
-    } catch {
-      if (sessionPrincipalId() !== userId) return;
-      setPositions([]);
-      setSummary(null);
-      setRewards([]);
-      setPositionState('ERROR');
-    }
+      if (positionsResult.status === 'fulfilled' && Array.isArray(positionsResult.value.data)) {
+        setPositions(positionsResult.value.data);
+        setPositionState('LIVE');
+      } else {
+        setPositions([]);
+        setPositionState('ERROR');
+      }
+      if (summaryResult.status === 'fulfilled' && summaryResult.value.data
+        && typeof summaryResult.value.data === 'object' && !Array.isArray(summaryResult.value.data)) {
+        setSummary(summaryResult.value.data);
+        setSummaryState('LIVE');
+      } else {
+        setSummary(null);
+        setSummaryState('ERROR');
+      }
+      if (rewardsResult.status === 'fulfilled' && Array.isArray(rewardsResult.value.data)) {
+        setRewards(rewardsResult.value.data);
+        setRewardState('LIVE');
+      } else {
+        setRewards([]);
+        setRewardState('ERROR');
+      }
+    })();
+    await Promise.all([catalogLoad, positionsLoad]);
   }, [plansEndpoint, positionsEndpoint, sessionChecked, userId]);
 
   useEffect(() => { void load(); }, [load]);
@@ -125,19 +150,29 @@ export default function MiningPage() {
   const recheckUnknownSubscription = async (key: string) => {
     if (!userId || sessionPrincipalId() !== userId || pendingSubscription.current?.key !== key) return;
     try {
-      const response = await api.get<{ activities: Array<{ type?: string; ledgerCorrelationId?: string }> }>('/wallet/activity', { params: { limit: 1, type: 'MINING_SUBSCRIPTION', correlationId: key } });
+      const response = await api.get<{ activities: Array<{
+        type?: string; status?: string; idempotencyKey?: string; referenceId?: string; ledgerCorrelationId?: string;
+        ledgerPostingId?: string; relatedLedgerPostings?: Array<{ id?: string; kind?: string; referenceId?: string; correlationId?: string }>;
+      }> }>('/wallet/activity', { params: { limit: 1, type: 'MINING_SUBSCRIPTION', status: 'COMPLETED', correlationId: key } });
       if (sessionPrincipalId() !== userId || pendingSubscription.current?.key !== key) return;
       const confirmed = Array.isArray(response.data?.activities) && response.data.activities.some((row) =>
-        row?.type === 'MINING_SUBSCRIPTION' && row.ledgerCorrelationId === key);
+        row?.type === 'MINING_SUBSCRIPTION' && row.status === 'COMPLETED' && row.idempotencyKey === key && row.ledgerCorrelationId === key
+        && typeof row.referenceId === 'string' && row.referenceId.length > 0
+        && Array.isArray(row.relatedLedgerPostings) && row.relatedLedgerPostings.some((posting) =>
+          posting.id === row.ledgerPostingId && posting.kind === 'RESERVE'
+          && posting.referenceId === row.referenceId && posting.correlationId === key));
       if (!confirmed) {
         setMessage('Subscription outcome remains unconfirmed. Do not subscribe again; review Wallet activity or contact Support.');
         return;
       }
-      clearPendingEconomicIntent('mining-subscribe', userId, key);
+      if (!clearPendingEconomicIntent('mining-subscribe', userId, key)) {
+        setMessage('Subscription reserve is confirmed, but local recovery state could not be cleared. Keep this original request blocked until recovery storage is available.');
+        return;
+      }
       pendingSubscription.current = null;
       setUnknownSubscriptionKey(null);
-      setStage('PENDING_CONFIRMATION');
-      setMessage('Subscription reserve confirmed in your account activity. Refresh subscription records for current status.');
+      setStage('IDLE');
+      setMessage('Subscription reserve confirmed in your account activity. See My subscriptions for its current activation and reward status.');
       await load({ preserveFlow: true });
     } catch {
       if (sessionPrincipalId() === userId && pendingSubscription.current?.key === key)
@@ -147,11 +182,8 @@ export default function MiningPage() {
 
   const submit = async () => {
     if (unknownSubscriptionKey) return;
-    if (!userId || sessionPrincipalId() !== userId || !selectedPlan || selectedPlan.isActive !== true || !subscribeEndpoint || !actionCanSubmit({ authenticated: true, valid: Number(amount) > 0, backendAvailable: catalogState === 'LIVE' })) return;
-    const requestedAmount = Number(amount);
-    const minDeposit = Number(selectedPlan.minDeposit);
-    const maxDeposit = Number(selectedPlan.maxDeposit);
-    if (!Number.isFinite(requestedAmount) || requestedAmount <= 0 || (Number.isFinite(minDeposit) && requestedAmount < minDeposit) || (Number.isFinite(maxDeposit) && requestedAmount > maxDeposit)) {
+    if (!userId || sessionPrincipalId() !== userId || !selectedPlan || selectedPlan.isActive !== true || !subscribeEndpoint) return;
+    if (!actionCanSubmit({ authenticated: true, valid: subscriptionAmountValid, backendAvailable: catalogState === 'LIVE' })) {
       setStage('ERROR');
       setMessage(`Enter an amount within the product limits: ${authoritativeValue(selectedPlan.minDeposit)} – ${authoritativeValue(selectedPlan.maxDeposit)}.`);
       return;
@@ -174,28 +206,25 @@ export default function MiningPage() {
         idempotencyKey: pendingSubscription.current.key,
       });
       if (sessionPrincipalId() !== userId) return;
-      clearPendingEconomicIntent('mining-subscribe', userId, pendingSubscription.current!.key);
-      pendingSubscription.current = null;
-      setUnknownSubscriptionKey(null);
-      const persistedStatus = String(response.data?.status ?? '').toUpperCase();
-      setStage('PENDING_CONFIRMATION');
-      setMessage(persistedStatus === 'ACTIVE'
-        ? 'Subscription active. Principal is locked for the configured term; rewards accrue only when posted.'
-        : 'Subscription request received. Review the subscription list for its authoritative status.');
-      await load({ preserveFlow: true });
+      const submittedKey = pendingSubscription.current?.key;
+      if (!submittedKey) return;
+      setUnknownSubscriptionKey(submittedKey);
+      setStage('ERROR');
+      setMessage('Subscription request returned. Confirming the original Ledger activity before allowing another request.');
+      if (typeof response.data?.id !== 'string' || String(response.data.userId) !== userId) {
+        setMessage('Subscription response was incomplete. Recheck the original request before trying again.');
+      }
+      await recheckUnknownSubscription(submittedKey);
     } catch (error) {
       if (sessionPrincipalId() !== userId) return;
       const status = (error as { response?: { status?: number } } | null)?.response?.status;
-      if ([400, 401, 403, 404, 422].includes(status ?? -1)) {
-        if (pendingSubscription.current) clearPendingEconomicIntent('mining-subscribe', userId, pendingSubscription.current.key);
-        pendingSubscription.current = null;
-        setStage('ERROR');
-        setMessage('Subscription request was rejected. Review the plan and available Finance balance.');
-      } else if (pendingSubscription.current) {
+      if (pendingSubscription.current) {
         const key = pendingSubscription.current.key;
         setUnknownSubscriptionKey(key);
         setStage('ERROR');
-        setMessage('Subscription outcome is unknown. Check account activity before trying another subscription.');
+        setMessage(status
+          ? `Subscription returned HTTP ${status}; the original financial outcome remains unresolved. Recheck account activity before trying another.`
+          : 'Subscription outcome is unknown. Check account activity before trying another subscription.');
         void recheckUnknownSubscription(key);
       }
     }
@@ -203,7 +232,7 @@ export default function MiningPage() {
 
   const onSubmit = (event: FormEvent) => { event.preventDefault(); if (unknownSubscriptionKey) return; if (stage === 'REVIEW') void submit(); else setStage('REVIEW'); };
 
-  return <PageShell><PageHeader title="Mining" description="Review available plans and track your subscriptions." action={<SecondaryButton onClick={() => void load()}><RefreshCw size={16} className="mr-2 inline" />Refresh</SecondaryButton>} />{unknownSubscriptionKey && <div role="alert" className="mx-auto mb-4 max-w-7xl rounded-xl border border-amber-300/30 bg-amber-300/5 p-4 text-sm text-amber-100">An earlier subscription outcome remains unresolved. New subscriptions are blocked, including after a page reload. <button type="button" onClick={() => void recheckUnknownSubscription(unknownSubscriptionKey)} className="ml-2 min-h-11 rounded-lg border border-amber-300/40 px-3 font-semibold">Recheck subscription activity</button></div>}<section className="mx-auto mb-4 grid max-w-7xl grid-cols-1 gap-2 min-[430px]:grid-cols-2 sm:gap-3 lg:grid-cols-4"><Metric label="Locked principal" value={authoritativeValue(summary?.lockedPrincipal)} hint="Active subscriptions" /><Metric label="Subscriptions" value={authoritativeValue(summary?.totalSubscriptions)} hint="All lifecycle records" /><Metric label="Rewards" value={authoritativeValue(summary?.postedRewards ?? summary?.accruedRewards)} hint="Posted reward accruals" /><Metric label="Active products" value={catalogState === 'LIVE' ? authoritativeValue(plans.length) : '—'} hint="Available products" /></section><main className="mx-auto grid max-w-7xl gap-5 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,.6fr)]"><div className="space-y-5"><Panel><PanelHeading title="Available plans" description="Review each plan’s term, yield and limits." />{catalogState === 'LOADING' && <DataStatePanel state="LOADING" title="Loading product catalog" />}{catalogState === 'ERROR' && <DataStatePanel state="ERROR" title="Mining catalog unavailable" />}{catalogState === 'LIVE' && plans.length === 0 && <DataStatePanel state="UNAVAILABLE" title="No products returned" />}{catalogState === 'LIVE' && plans.length > 0 && <div className="grid gap-3 md:grid-cols-2">{plans.map((plan) => { const state = plan.isActive === true ? 'AVAILABLE' : 'UNAVAILABLE'; return <article key={String(plan.id)} className="rounded-xl border border-[#2B2037] bg-[#171022] p-4"><div className="flex items-center justify-between gap-3"><h3 className="font-semibold">{authoritativeValue(plan.name)}</h3><StatusBadge state={state} /></div><dl className="mt-4 space-y-2.5 text-base leading-6"><div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3"><dt className="text-[#8C8299]">Asset</dt><dd className="text-right">{authoritativeValue(plan.currency)}</dd></div><div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3"><dt className="text-[#8C8299]">Term</dt><dd className="text-right font-mono">{authoritativeValue(plan.lockupPeriod)} days</dd></div><div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3"><dt className="text-[#8C8299]">Daily yield</dt><dd className="text-right font-mono">{Number.isFinite(Number(plan.dailyYieldDecimal ?? plan.dailyYield)) ? `${(Number(plan.dailyYieldDecimal ?? plan.dailyYield) * 100).toFixed(2)}% / day` : '—'}</dd></div><div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3"><dt className="text-[#8C8299]">Limits</dt><dd className="max-w-full break-words text-right font-mono">{authoritativeValue(plan.minDeposit)} – {authoritativeValue(plan.maxDeposit)}</dd></div></dl><div className="mt-4 flex justify-start"><PrimaryButton size="compact" className="min-h-11 w-full px-4 text-base sm:w-auto" onClick={() => { setSelectedPlan(plan); setStage('IDLE'); setAmount(''); setMessage(''); }} disabled={!userId || state !== 'AVAILABLE'}>Choose plan</PrimaryButton></div></article>; })}</div>}</Panel><Panel><PanelHeading title="Reward history" description="Recent rewards from your subscriptions." />{positionState === 'ERROR' ? <DataStatePanel state="ERROR" title="Reward history unavailable" /> : positionState === 'LOADING' ? <DataStatePanel state="LOADING" title="Loading reward history" /> : rewards.length === 0 ? <DataStatePanel state="UNAVAILABLE" title="No rewards yet" /> : <div className="space-y-2">{rewards.slice(0, 8).map((reward) => <div key={String(reward.id)} className="flex items-center justify-between rounded-xl border border-[#2B2037] bg-[#171022] p-3 text-sm"><span>{authoritativeValue(reward.currency)} · {authoritativeValue(reward.rewardedAt)}</span><span className="font-mono text-[#98FCE4]">+{authoritativeValue(reward.amount)}</span></div>)}</div>}</Panel><Panel><PanelHeading title="My subscriptions" action={<History size={18} className="text-[#8C8299]" />} />{positionState === 'LOADING' && <DataStatePanel state="LOADING" title="Loading positions" />}{positionState === 'ERROR' && <DataStatePanel state="ERROR" title="Position history unavailable" />}{positionState === 'LIVE' && positions.length === 0 && <DataStatePanel state="UNAVAILABLE" title="No subscriptions yet" />}{positionState === 'LIVE' && positions.length > 0 && <div className="space-y-3">{positions.map((position) => <MiningPosition key={String(position.id)} position={position} onChanged={() => void load()} />)}</div>}</Panel></div><aside>{selectedPlan ? <Panel><PanelHeading title={`Review ${authoritativeValue(selectedPlan.name)}`} description="Review your amount before confirming." /><form onSubmit={onSubmit} className="space-y-4"><Field label="Subscription amount"><input className={inputClass} value={amount} onChange={(event) => setAmount(event.target.value)} inputMode="decimal" placeholder="Enter amount" aria-label="Subscription amount" /></Field>{message && <div className={`rounded-xl border p-4 text-sm ${stage === 'ERROR' ? 'border-[#FF5C7C]/30 bg-[#561626]/50 text-[#FFD9E0]' : 'border-[#48C0CC]/30 bg-[#12373E]/40 text-[#C8FCFF]'}`} role={stage === 'ERROR' ? 'alert' : 'status'}>{message}</div>}{unknownSubscriptionKey && <div role="alert" className="rounded-lg border border-amber-300/30 p-3 text-xs text-amber-100">Subscription outcome unresolved. <button type="button" onClick={() => void recheckUnknownSubscription(unknownSubscriptionKey)} className="ml-2 min-h-11 underline">Recheck subscription</button></div>}<PrimaryButton type="submit" disabled={Boolean(unknownSubscriptionKey) || stage === 'SUBMITTING' || stage === 'PENDING_CONFIRMATION' || !userId || Number(amount) <= 0}>{stage === 'REVIEW' ? 'Confirm subscription' : stage === 'SUBMITTING' ? 'Submitting…' : stage === 'PENDING_CONFIRMATION' ? 'Request sent' : 'Review subscription'}</PrimaryButton></form></Panel> : <DataStatePanel state="AVAILABLE" title="Select a product to review" message="Choose a product to see its terms." />}</aside></main></PageShell>;
+  return <PageShell><PageHeader title="Mining" description="Review available plans and track your subscriptions." action={<SecondaryButton onClick={() => void load()}><RefreshCw size={16} className="mr-2 inline" />Refresh</SecondaryButton>} />{unknownSubscriptionKey && <div role="alert" className="mx-auto mb-4 max-w-7xl rounded-xl border border-amber-300/30 bg-amber-300/5 p-4 text-sm text-amber-100">An earlier subscription outcome remains unresolved. New subscriptions are blocked, including after a page reload. <button type="button" onClick={() => void recheckUnknownSubscription(unknownSubscriptionKey)} className="ml-2 min-h-11 rounded-lg border border-amber-300/40 px-3 font-semibold">Recheck subscription activity</button></div>}<section className="mx-auto mb-4 grid max-w-7xl grid-cols-1 gap-2 min-[430px]:grid-cols-2 sm:gap-3 lg:grid-cols-4"><Metric label="Locked principal" value={authoritativeValue(summary?.lockedPrincipal)} hint={summaryState === 'ERROR' ? 'Summary unavailable' : 'Active subscriptions'} /><Metric label="Subscriptions" value={authoritativeValue(summary?.totalSubscriptions)} hint={summaryState === 'ERROR' ? 'Summary unavailable' : 'All lifecycle records'} /><Metric label="Rewards" value={authoritativeValue(summary?.postedRewards ?? summary?.accruedRewards)} hint={summaryState === 'ERROR' ? 'Summary unavailable' : 'Posted reward accruals'} /><Metric label="Active products" value={catalogState === 'LIVE' ? authoritativeValue(plans.length) : '—'} hint="Available products" /></section><main className="mx-auto grid max-w-7xl gap-5 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,.6fr)]"><div className="space-y-5"><Panel><PanelHeading title="Available plans" description="Review each plan’s term, yield and limits." />{catalogState === 'LOADING' && <DataStatePanel state="LOADING" title="Loading product catalog" />}{catalogState === 'ERROR' && <DataStatePanel state="ERROR" title="Mining catalog unavailable" />}{catalogState === 'LIVE' && plans.length === 0 && <DataStatePanel state="UNAVAILABLE" title="No products returned" />}{catalogState === 'LIVE' && plans.length > 0 && <div className="grid gap-3 md:grid-cols-2">{plans.map((plan) => { const state = plan.isActive === true ? 'AVAILABLE' : 'UNAVAILABLE'; return <article key={String(plan.id)} className="rounded-xl border border-[#2B2037] bg-[#171022] p-4"><div className="flex items-center justify-between gap-3"><h3 className="font-semibold">{authoritativeValue(plan.name)}</h3><StatusBadge state={state} /></div><dl className="mt-4 space-y-2.5 text-base leading-6"><div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3"><dt className="text-[#8C8299]">Asset</dt><dd className="text-right">{authoritativeValue(plan.currency)}</dd></div><div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3"><dt className="text-[#8C8299]">Term</dt><dd className="text-right font-mono">{authoritativeValue(plan.lockupPeriod)} days</dd></div><div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3"><dt className="text-[#8C8299]">Daily yield</dt><dd className="text-right font-mono">{Number.isFinite(Number(plan.dailyYieldDecimal ?? plan.dailyYield)) ? `${(Number(plan.dailyYieldDecimal ?? plan.dailyYield) * 100).toFixed(2)}% / day` : '—'}</dd></div><div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3"><dt className="text-[#8C8299]">Limits</dt><dd className="max-w-full break-words text-right font-mono">{authoritativeValue(plan.minDeposit)} – {authoritativeValue(plan.maxDeposit)}</dd></div></dl><div className="mt-4 flex justify-start"><PrimaryButton size="compact" className="min-h-11 w-full px-4 text-base sm:w-auto" onClick={() => { setSelectedPlan(plan); setStage('IDLE'); setAmount(''); setMessage(''); }} disabled={!userId || state !== 'AVAILABLE'}>Choose plan</PrimaryButton></div></article>; })}</div>}</Panel><Panel><PanelHeading title="Reward history" description="Recent rewards from your subscriptions." />{rewardState === 'ERROR' ? <DataStatePanel state="ERROR" title="Reward history unavailable" /> : rewardState === 'LOADING' ? <DataStatePanel state="LOADING" title="Loading reward history" /> : rewardState === 'UNAVAILABLE' ? <DataStatePanel state="UNAVAILABLE" title="Verify your wallet to load rewards" /> : rewards.length === 0 ? <DataStatePanel state="UNAVAILABLE" title="No rewards yet" /> : <div className="space-y-2">{rewards.slice(0, 8).map((reward) => <div key={String(reward.id)} className="flex items-center justify-between rounded-xl border border-[#2B2037] bg-[#171022] p-3 text-sm"><span>{authoritativeValue(reward.currency)} · {authoritativeValue(reward.rewardedAt)}</span><span className="font-mono text-[#98FCE4]">+{authoritativeValue(reward.amount)}</span></div>)}</div>}</Panel><Panel><PanelHeading title="My subscriptions" action={<History size={18} className="text-[#8C8299]" />} />{positionState === 'LOADING' && <DataStatePanel state="LOADING" title="Loading positions" />}{positionState === 'ERROR' && <DataStatePanel state="ERROR" title="Position history unavailable" />}{positionState === 'LIVE' && positions.length === 0 && <DataStatePanel state="UNAVAILABLE" title="No subscriptions yet" />}{positionState === 'LIVE' && positions.length > 0 && <div className="space-y-3">{positions.map((position) => <MiningPosition key={String(position.id)} position={position} onChanged={() => void load()} />)}</div>}</Panel></div><aside>{selectedPlan ? <Panel><PanelHeading title={`Review ${authoritativeValue(selectedPlan.name)}`} description="Review your amount before confirming." /><form onSubmit={onSubmit} className="space-y-4"><Field label="Subscription amount"><input className={inputClass} value={amount} onChange={(event) => setAmount(event.target.value)} inputMode="decimal" placeholder="Enter amount" aria-label="Subscription amount" /></Field>{message && <div className={`rounded-xl border p-4 text-sm ${stage === 'ERROR' ? 'border-[#FF5C7C]/30 bg-[#561626]/50 text-[#FFD9E0]' : 'border-[#48C0CC]/30 bg-[#12373E]/40 text-[#C8FCFF]'}`} role={stage === 'ERROR' ? 'alert' : 'status'}>{message}</div>}{unknownSubscriptionKey && <div role="alert" className="rounded-lg border border-amber-300/30 p-3 text-xs text-amber-100">Subscription outcome unresolved. <button type="button" onClick={() => void recheckUnknownSubscription(unknownSubscriptionKey)} className="ml-2 min-h-11 underline">Recheck subscription</button></div>}<PrimaryButton type="submit" disabled={Boolean(unknownSubscriptionKey) || stage === 'SUBMITTING' || stage === 'PENDING_CONFIRMATION' || !userId || !subscriptionAmountValid}>{stage === 'REVIEW' ? 'Confirm subscription' : stage === 'SUBMITTING' ? 'Submitting…' : stage === 'PENDING_CONFIRMATION' ? 'Request sent' : 'Review subscription'}</PrimaryButton></form></Panel> : <DataStatePanel state="AVAILABLE" title="Select a product to review" message="Choose a product to see its terms." />}</aside></main></PageShell>;
 }
 
 function MiningPosition({ position, onChanged }: { position: RecordValue; onChanged: () => void }) {
@@ -238,23 +267,33 @@ function MiningPosition({ position, onChanged }: { position: RecordValue; onChan
     }
     const correlationId = `mining-release:${subscriptionId}:${key}`;
     try {
-      const result = await api.get<{ activities: Array<{ type?: string; referenceId?: string; ledgerCorrelationId?: string; details?: unknown }> }>('/wallet/activity', {
-        params: { limit: 1, type: 'MINING_REDEMPTION', correlationId, referenceId: subscriptionId },
+      const result = await api.get<{ activities: Array<{
+        type?: string; status?: string; idempotencyKey?: string; referenceId?: string; ledgerCorrelationId?: string;
+        ledgerPostingId?: string; details?: unknown;
+        relatedLedgerPostings?: Array<{ id?: string; kind?: string; referenceId?: string; correlationId?: string }>;
+      }> }>('/wallet/activity', {
+        params: { limit: 1, type: 'MINING_REDEMPTION', status: 'COMPLETED', correlationId, referenceId: subscriptionId },
       });
       if (sessionPrincipalId() !== principal || original.current?.key !== key) return;
       const expected = operation === 'redeem' ? 'COMPLETED' : 'CANCELLED';
       const confirmed = Array.isArray(result.data?.activities) && result.data.activities.some((item) => {
         let details: unknown = item.details;
         try { if (typeof details === 'string') details = JSON.parse(details); } catch { return false; }
-        return item.type === 'MINING_REDEMPTION' && item.referenceId === subscriptionId
-          && item.ledgerCorrelationId === correlationId && !!details && typeof details === 'object'
-          && (details as { status?: unknown }).status === expected;
+        return item.type === 'MINING_REDEMPTION' && item.status === 'COMPLETED'
+          && item.referenceId === subscriptionId && item.ledgerCorrelationId === correlationId
+          && !!details && typeof details === 'object' && (details as { status?: unknown }).status === expected
+          && Array.isArray(item.relatedLedgerPostings) && item.relatedLedgerPostings.some((posting) =>
+            posting.id === item.ledgerPostingId && posting.kind === 'RELEASE'
+            && posting.referenceId === subscriptionId && posting.correlationId === key);
       });
       if (!confirmed) {
         setError('Original action is not confirmed in durable account activity. Do not submit it again.');
         return;
       }
-      clearPendingEconomicIntent(kind, principal, key);
+      if (!clearPendingEconomicIntent(kind, principal, key)) {
+        setError('Mining release is confirmed, but local recovery state could not be cleared. Keep the original action blocked and retry readback.');
+        return;
+      }
       original.current = null;
       setUnknown(null);
       setError('');
@@ -291,14 +330,11 @@ function MiningPosition({ position, onChanged }: { position: RecordValue; onChan
     } catch (cause) {
       if (sessionPrincipalId() !== principal) return;
       const status = (cause as { response?: { status?: number } } | null)?.response?.status;
-      if ([400, 401, 403, 404, 422].includes(status ?? -1)) {
-        clearPendingEconomicIntent(kind, principal, intent.key);
-        original.current = null;
-        setUnknown(null);
-        setError('Mining action was rejected. Review subscription eligibility and status.');
-      } else {
-        setError('Mining outcome is unknown. Recheck the original action before submitting another.');
-      }
+      // A rejected replay can follow an earlier committed reserve/release.
+      // Only the owner-scoped durable activity can resolve this original key.
+      setError(status
+        ? `Mining action returned HTTP ${status}; its original outcome remains unresolved. Recheck account activity before another request.`
+        : 'Mining outcome is unknown. Recheck the original action before submitting another.');
     } finally {
       setBusy(null);
     }

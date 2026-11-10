@@ -28,6 +28,29 @@ export class SpotService {
     this.assertIdempotencyKey(input.idempotencyKey);
     const amount = assertPositiveDecimal(input.amount);
     const accountScope = input.accountScope ?? LedgerAccountScope.SPOT;
+    // Resolve the original immutable intent before recalculating a MARKET
+    // protection price or rechecking a quote/configuration that may have changed.
+    const replay = await this.d1.getSpotOrderByIntent(userId, input.idempotencyKey);
+    if (replay) {
+      const sameOptionalDecimal = (stored: unknown, requested?: string) =>
+        requested === undefined || requested === null || requested === ''
+          ? stored === null || stored === undefined
+          : stored !== null && stored !== undefined &&
+            new Prisma.Decimal(String(stored)).eq(new Prisma.Decimal(requested));
+      const normalizedPair = input.pair.trim().toUpperCase().replaceAll('/', '');
+      const sameTerms =
+        String(replay.pair).toUpperCase().replaceAll('/', '') === normalizedPair &&
+        String(replay.side) === input.side &&
+        String(replay.type) === input.type &&
+        new Prisma.Decimal(String(replay.amount)).eq(amount) &&
+        String(replay.reserveScope ?? LedgerAccountScope.SPOT) === accountScope &&
+        (input.type === Gate2SpotOrderType.MARKET || sameOptionalDecimal(replay.price, input.price)) &&
+        sameOptionalDecimal(replay.stopPrice, input.stopPrice);
+      if (!sameTerms) {
+        throw new BadRequestException('Spot order idempotency key was reused with different parameters');
+      }
+      return replay;
+    }
     const order = await this.placeOrderOnD1(userId, input, amount, accountScope);
     await this.broadcastOrderBook(input.pair);
     return order;
@@ -80,8 +103,35 @@ export class SpotService {
     return this.d1.listSpotOrders(userId, true);
   }
 
-  getOrderHistory(userId: string) {
-    return this.d1.listSpotOrders(userId, false);
+  async getOrderHistory(userId: string) {
+    const [orders, trades] = await Promise.all([
+      this.d1.listSpotOrders(userId, false),
+      this.d1.listSpotTrades(userId),
+    ]);
+    const executions = new Map<string, { base: Prisma.Decimal; quote: Prisma.Decimal }>();
+    for (const trade of trades) {
+      const quantity = new Prisma.Decimal(String(trade.amount));
+      const quote = quantity.mul(new Prisma.Decimal(String(trade.price)));
+      for (const orderId of [trade.buyerOrderId, trade.sellerOrderId]) {
+        if (typeof orderId !== 'string') continue;
+        const prior = executions.get(orderId);
+        executions.set(orderId, {
+          base: (prior?.base ?? new Prisma.Decimal(0)).add(quantity),
+          quote: (prior?.quote ?? new Prisma.Decimal(0)).add(quote),
+        });
+      }
+    }
+    return orders.map((order) => {
+      const execution = executions.get(String(order.id));
+      return {
+        ...order,
+        executedBase: execution?.base.toString() ?? '0',
+        executedQuote: execution?.quote.toString() ?? '0',
+        averageExecutionPrice: execution && execution.base.gt(0)
+          ? execution.quote.div(execution.base).toString()
+          : null,
+      };
+    });
   }
 
   getTradeHistory(userId: string) {

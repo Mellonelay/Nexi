@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import type { Candle } from '../../../lib/market-data';
+import { normalizeCandle, type Candle } from '../../../lib/market-data';
 
 export const revalidate = 20;
 
@@ -10,11 +10,6 @@ const unavailable = (message: string, status = 200) => NextResponse.json(
   { dataState: 'UNAVAILABLE', candles: [], message },
   { status, headers: { 'Cache-Control': 'no-store' } },
 );
-
-const finite = (value: unknown) => {
-  const number = Number(value);
-  return Number.isFinite(number) ? number : null;
-};
 
 async function readConfiguredEndpoint(endpoint: string, symbol: string, interval: string, limit: number) {
   const url = new URL(endpoint);
@@ -33,23 +28,12 @@ function normalizeConfiguredRows(payload: unknown): Candle[] {
   return payload.flatMap((row) => {
     if (!row || typeof row !== 'object') return [];
     const item = row as Record<string, unknown>;
-    const time = finite(item.time);
-    const open = finite(item.open);
-    const high = finite(item.high);
-    const low = finite(item.low);
-    const close = finite(item.close);
-    const volume = item.volume === undefined ? undefined : finite(item.volume);
-    if ([time, open, high, low, close].some((value) => value === null)) return [];
-    if (volume === null || high! < Math.max(open!, close!) || low! > Math.min(open!, close!)) return [];
-    const normalizedTime = time! > 10_000_000_000 ? Math.floor(time! / 1000) : Math.floor(time!);
-    return [{
-      time: normalizedTime,
-      open: open!,
-      high: high!,
-      low: low!,
-      close: close!,
-      ...(volume === undefined ? {} : { volume }),
-    }];
+    const candle = normalizeCandle(item);
+    if (!candle) return [];
+    const normalizedTime = candle.time > 10_000_000_000
+      ? Math.floor(candle.time / 1000)
+      : Math.floor(candle.time);
+    return [{ ...candle, time: normalizedTime }];
   });
 }
 
@@ -71,7 +55,19 @@ export async function GET(request: NextRequest) {
     }
     const baseline = await readConfiguredEndpoint(endpoint, symbol, interval, limit);
     const candles = normalizeConfiguredRows(baseline.rows);
-    if (candles.length === 0) throw new Error('No valid market candles were returned.');
+    if (candles.length === 0) {
+      return NextResponse.json(
+        {
+          dataState: baseline.dataState === 'ERROR' ? 'ERROR' : 'UNAVAILABLE',
+          symbol,
+          interval,
+          candles: [],
+          observedAt: null,
+          message: 'No valid authoritative market candles were returned.',
+        },
+        { headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
     return NextResponse.json(
       {
         dataState: baseline.dataState === 'LIVE' || baseline.dataState === 'STALE' || baseline.dataState === 'ERROR' ? baseline.dataState : 'UNAVAILABLE',

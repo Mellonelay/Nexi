@@ -72,13 +72,20 @@ export class FinancialOperationsService {
   async requestWithdrawal(userId: string, input: WithdrawalInput): Promise<any> {
     this.assertIdempotencyKey(input.idempotencyKey);
     const amount = assertPositiveDecimal(input.amount);
-    const fee = await this.configuredWithdrawalFee(input.asset, input.network, amount);
     const existing = await this.d1.getWithdrawal(input.idempotencyKey);
     if (existing) {
       if (String(existing.userId) !== userId) throw new BadRequestException('Withdrawal ownership mismatch');
-      if (String(existing.asset).toUpperCase() !== input.asset.trim().toUpperCase() || String(existing.network).toUpperCase() !== input.network.trim().toUpperCase() || String(existing.address) !== input.address || String(existing.amount) !== amount.toString() || String(existing.fee) !== fee.toString() || String(existing.reservedAmount) !== amount.add(fee).toString()) throw new BadRequestException('Withdrawal idempotency key was reused with different parameters');
+      const storedAmount = assertPositiveDecimal(String(existing.amount));
+      const storedFee = assertNonNegativeDecimal(String(existing.fee));
+      if (String(existing.asset).toUpperCase() !== input.asset.trim().toUpperCase()
+        || String(existing.network).toUpperCase() !== input.network.trim().toUpperCase()
+        || String(existing.address) !== input.address || !storedAmount.eq(amount)
+        || !assertPositiveDecimal(String(existing.reservedAmount)).eq(storedAmount.add(storedFee)))
+        throw new BadRequestException('Withdrawal idempotency key was reused with different parameters');
+      // The accepted original fee/network terms remain authoritative on replay.
       return { withdrawal: existing, replayed: true, providerLive: false };
     }
+    const fee = await this.configuredWithdrawalFee(input.asset, input.network, amount);
     return { withdrawal: await this.d1.reserveWithdrawal({ userId, asset: input.asset, network: input.network, address: input.address, amount: amount.toString(), fee: fee.toString(), reservedAmount: amount.add(fee).toString(), requestKey: input.idempotencyKey, reserveKey: `gate2:withdrawal:reserve:${input.idempotencyKey}`, providerState: 'DETERMINISTIC_TEST_NON_LIVE' }), replayed: false, providerLive: false };
   }
 
@@ -207,7 +214,7 @@ export class FinancialOperationsService {
       total: new Prisma.Decimal(balance.available).plus(balance.locked).toString(),
     });
     return {
-      transfer: { asset, amount: amount.toString(), sourceScope, destinationScope, sourceAccountId: debit.id, destinationAccountId: credit.id },
+      transfer: { idempotencyKey: input.idempotencyKey, asset, amount: amount.toString(), sourceScope, destinationScope, sourceAccountId: debit.id, destinationAccountId: credit.id },
       balances: { source: withTotal(sourceBalance), destination: withTotal(destinationBalance) },
       postings,
       replayed: postings.replayed,

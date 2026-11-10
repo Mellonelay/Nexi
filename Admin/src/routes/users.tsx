@@ -621,12 +621,12 @@ function Inner() {
                   : []),
                 {
                   id: "entitlements",
-                  title: "Entitlements & flags",
+                  title: "Product access flags (not holdings)",
                   fields: [
                     { label: "Spot", value: <BoolPill on={selected.entitlements.spot} /> },
                     { label: "Binary", value: <BoolPill on={selected.entitlements.binary} /> },
-                    { label: "Mining", value: <BoolPill on={selected.entitlements.mining} /> },
-                    { label: "Loans", value: <BoolPill on={selected.entitlements.loans} /> },
+                    { label: "Mining access", value: <BoolPill on={selected.entitlements.mining} /> },
+                    { label: "Loans access", value: <BoolPill on={selected.entitlements.loans} /> },
                     {
                       label: "Approved research account",
                       value: <BoolPill on={!!selected.binaryResearchEligible} />,

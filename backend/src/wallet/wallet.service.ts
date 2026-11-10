@@ -276,6 +276,7 @@ export class WalletService {
       status: activity.status,
       referenceType: activity.referenceType,
       referenceId: activity.referenceId,
+      idempotencyKey: activity.idempotencyKey,
       ledgerCorrelationId: activity.ledgerCorrelationId,
       ledgerPostingId: activity.ledgerPostingId,
       relatedLedgerPostings,

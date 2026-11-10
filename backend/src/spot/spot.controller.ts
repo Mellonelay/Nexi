@@ -101,6 +101,26 @@ export class SpotController {
 
   @ApiBearerAuth()
   @Get("orders/history")
+  @ApiOkResponse({
+    description: "Owned orders with exact decimal execution aggregates from matched trades; order price and initial reserve are not executed quote values.",
+    schema: {
+      type: "array",
+      items: {
+        type: "object",
+        required: ["id", "amount", "executedBase", "executedQuote"],
+        properties: {
+          id: { type: "string" },
+          amount: { type: "string", description: "Requested base quantity." },
+          price: { type: "string", nullable: true, description: "Order limit or protection price, not average execution price." },
+          executedBase: { type: "string", description: "Matched base quantity as an exact decimal." },
+          executedQuote: { type: "string", description: "Matched quote notional before fees as an exact decimal." },
+          averageExecutionPrice: { type: "string", nullable: true, description: "Matched quote divided by executed base, or null with no fills." },
+          reservedAmount: { type: "string", nullable: true, description: "Initial reserved amount, not final execution cost." },
+        },
+        additionalProperties: true,
+      },
+    },
+  })
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
   async getOrderHistory(@Req() request: AuthenticatedRequest) {

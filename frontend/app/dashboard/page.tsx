@@ -335,11 +335,11 @@ export default function Dashboard() {
                     <MarketSparkline item={item} compact />
                   </span>
                   <span className="flex min-w-0 flex-col items-end md:hidden">
-                    <span className="font-mono text-xs tabular-nums text-white">
+                    <span className="max-w-full break-all text-right font-mono text-xs tabular-nums text-white">
                       {formatValue(item, "price")}
                     </span>
                     <span
-                      className={`mt-1 font-mono text-[10px] tabular-nums ${item.dataState !== "LIVE" ? "text-[var(--nexi-text-muted)]" : item.change !== null && item.change >= 0 ? "text-[var(--nexi-positive)]" : "text-[var(--nexi-negative)]"}`}
+                      className={`mt-1 max-w-full break-all text-right font-mono text-[10px] tabular-nums ${item.dataState !== "LIVE" ? "text-[var(--nexi-text-muted)]" : item.change !== null && item.change >= 0 ? "text-[var(--nexi-positive)]" : "text-[var(--nexi-negative)]"}`}
                     >
                       {formatValue(item, "change")}
                     </span>
@@ -350,7 +350,7 @@ export default function Dashboard() {
                         <MarketSparkline item={item} compact />
                       </span>
                     </span>
-                    <span className="font-mono text-[9px] tabular-nums text-[var(--nexi-text-secondary)]">
+                    <span className="min-w-0 max-w-[calc(100%-5.5rem)] break-all text-right font-mono text-[9px] tabular-nums text-[var(--nexi-text-secondary)]">
                       <span className="mr-1 font-sans uppercase text-[var(--nexi-text-muted)]">
                         24h vol
                       </span>

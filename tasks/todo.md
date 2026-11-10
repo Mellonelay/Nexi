@@ -1390,3 +1390,46 @@ Phase B evidence update — 2026-11-04: the two confirmed P2 chart source fixes 
 
 
 Final successor handover: `tasks/evidence/NEXI_INTERACTIVE_ACCEPTANCE_HANDOVER_20261108.md`. Acceptance tracker remains 113 criteria: 16 PASS / 24 FAIL / 8 BLOCKED / 65 NOT_TESTED; handover preserves the next repair frontier and exact proof limits.
+
+- [x] 2026-11-10 owner-authorized selective LOCAL source checkpoint `58ce48917715e3b86ccec4a59397b10d219f43db`: 46 paths reviewed/committed, no push; 630 editor backups and five recovery artifacts preserved. Journal vacuum + pnpm metadata cache eviction reclaimed ~407 MiB net; 1.3G free (98% used) after; active services preserved. Full 113 source criteria remain open; no app verification. See matrix maintenance receipt.
+
+- [x] Post-checkpoint 2026-11-10 Binary source slice: preserve original request marker for HTTP success-shaped Binary openings without exact idempotency-key acknowledgement; existing owner-scoped history readback reconciles, no second economic POST. SOURCE_IMPLEMENTED only; Binary group and all 113 criteria remain incomplete. Uncommitted after local checkpoint `58ce48917715e3b86ccec4a59397b10d219f43db`.
+
+2026-11-10 source continuation: Mining subscription/action HTTP-error paths no longer clear original economic-intent markers without owner-scoped durable Activity readback; gateway rejects orphan Activity receipt. Scoped SOURCE_IMPLEMENTED, application verification deferred; remaining 113-source disposition and cross-surface integration still open.
+
+- [x] Current 2026-11-10 source: Mining unknown-subscription readback now requires completed owner-linked Activity plus matching RESERVE LedgerPosting; Spot input eligibility uses exact positive-decimal validation. SOURCE_IMPLEMENTED scoped; Mining/Spot group and 113 criteria still open; application verification deferred.
+
+- [x] 2026-11-10 bounded method/source audit identified and patched five independently evidenced source gaps: Mining original-key cross-plan reserve fence and Finance available-balance guard; durable redeem/cancel LedgerPosting readback; Loan repayment DEBIT receipt readback; Binary underfunded UI exact stake comparison. All SOURCE_IMPLEMENTED scoped, still untested. Historical 113 criteria not treated as 113 present defects; see matrix.
+
+- [x] 2026-11-10 scoped Transfer contract: success acknowledgement matches original key and paired posting IDs; unresolved same-user transfers require owner-scoped COMPLETED Activity and both matching Ledger postings before clearing pending intent; exact input decimal validation. Transfer group remains PARTIAL; application verification deferred.
+
+- [x] 2026-11-10 Convert receipt: persisted owner-scoped Activity now surfaces original acceptance key; Public unknown conversion readback requires exact key and completed paired debit/credit Ledger postings before clearing the economic intent. SOURCE_IMPLEMENTED scoped, CONVERT full closure pending.
+
+- [x] 2026-11-10 shared Public TabButton keyboard accessibility source patch: ArrowLeft/Right/Home/End navigates enabled tabs and invokes existing state handlers across Wallet/Support/Learn/Announcement/Settings; no runtime/browser acceptance.
+
+- [x] 2026-11-10 Loan readback: exact persisted prefixed idempotency key required alongside completed Ledger activity/posting before clearing original repayment. SOURCE_IMPLEMENTED scoped.
+
+- [x] Current 2026-11-10 additional scoped source: Loan original-key replay before inactive/editable plan and planId immutability on gateway race; Withdraw original-key replay before changed network/fee config plus gateway race checks; Admin Binary Settled at reserved for WIN/LOSS. Producer/consumer traced, SOURCE_IMPLEMENTED only, no tests. Remaining 113 source dispositions unresolved.
+
+- [ ] 2026-11-10 Mining source continuation: original-key Activity readback confirmed in current gateway; Public recovery-clear failure guard SOURCE_IMPLEMENTED (see source matrix). Remaining source-contract/113-row reconciliation pending; application verification deferred.
+
+- [x] 2026-11-10 source-only recovery-lock/Options mobile slice: Binary, Spot/Margin, Loans, Transfer, Convert, Withdraw, Deposit original-key success and REST readback paths now retain economic lock when local pending-intent storage cannot be cleared; deposit success requires matching owner/key claim acknowledgement. Binary ticket preserves full selected stake range and exact decimal input on narrow phone. Existing source matrix contains detailed evidence. SOURCE_IMPLEMENTED only; 113 criteria and other source groups remain open, no app verification.
+
+- [x] 2026-11-10 source-only NEXI-07-03: expose existing Backend Margin `debtAsset` / `debtPrincipal` / `interestAccrued` in Public positions separately from collateral, with exact-string mobile reflow; Admin client entitlement flags explicitly labelled access rather than holdings; Spot mobile entry targets >=44px and derived total labelled estimate. Source matrix receipt recorded; original 113 criteria remain unverified/partially mapped.\n
+- [x] 2026-11-10 source-only: Spot original-key replay now reads existing owner-scoped order before volatile MARKET protection price/fee recomputation, rejects changed immutable terms, and avoids a duplicate reservation; Public shared PageHeader bounds/wraps actions for narrow screens. Two disjoint SentinelX worker packets succeeded, actual timestamp overlap unproven. Existing matrix receipt; application verification deferred.
+
+- [x] 2026-11-10 genuine W1/W2 concurrent source edits (not separate AI agents): Backend owner-scoped Spot order history gains exact Decimal executedBase/executedQuote; Public Wallet Activity wraps precision and disambiguates financial receipts from final order statuses. Integrated Public Spot execution amounts serially. Fixed ineffective same-order-ID Spot self-trade guard by excluding own counterparty. Market candle normalization and unavailable/error source distinction repaired. Source matrix details; 113 full coverage still open. No app verification.
+
+- [x] Source-only parallel W1/W2 2026-11-10: Spot order-history exact execution API schema; shared zero-minimum decimal comparator and affected Public Binary/Mining/Loan/Withdraw consumers; source-only follow-ons Mining stage, Admin Margin reserve note, mobile dashboard price wrapping. Real concurrent child PIDs 2297181/2297182 proved via one SentinelX finite dispatcher. No app verification; original 113 remain unresolved.
+
+- [x] Source-only continuation 2026-11-10: fail-closed original-key local cleanup in terminal HTTP errors and Spot Margin cancel/exit outcomes; viewport-bounded mobile header, precise untruncated dashboard quote text. Existing source matrix receipt. No runtime proof.
+
+- [x] Source-only 2026-11-10 Communications: support-message original-key owner-scoped readback API plus reload-safe Public uncertain POST lock/recovery; Mining positions/summary/rewards independent read states; safe Admin-configured mailto URL; narrow AppHeader action wrapping. Ledger unchanged. Existing source matrix receipt; tests/build/browser deferred.
+
+- [x] 2026-11-10 Admin Margin reserve purpose source-consumer closure: ledger mapper's existing MARGIN_ENTRY_SPOT_ORDER note now appears in Admin ledger table and detail; Public Loan eligibility placeholder now accurately says not assessed rather than unavailable. Original margin lifecycle and loan activation outcomes remain deferred; see existing source matrix.
+
+- [x] 2026-11-10 Admin Spot order state consumer: unrecognized/missing Backend order status no longer becomes OPEN, and failed orders fetch no longer masquerades as zero open orders. Admin Spot warns about unknown records; see existing source matrix (SOURCE_IMPLEMENTED, application acceptance deferred).
+
+- [x] 2026-11-10 Spot MARKET quote readiness: allow valid exponent-formatted client display Number through existing positiveNumber guard while LIMIT/STOP still require exact positive decimal strings; Backend live quote remains execution authority. Source matrix receipt recorded.
+
+- [x] 2026-11-11 recovered 141,144,064 bytes from verified disposable pnpm metadata cache; preserved source, active services and graph. Admin Spot independent Orders loading state no longer blocks Pairs/Margin/Audit. Source-only, acceptance pending.

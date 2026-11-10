@@ -76,6 +76,19 @@ export class LoanService {
     const id = this.idempotentId(userId, idempotencyKey);
     if (!planId?.trim())
       throw new BadRequestException("A configured loan plan is required");
+    const prior = await this.d1.getLoanApplication(id, userId);
+    if (prior) {
+      const snapshot = typeof prior.productSnapshot === "string"
+        ? JSON.parse(prior.productSnapshot) as { planId?: string }
+        : prior.productSnapshot as { planId?: string } | null;
+      if (snapshot?.planId !== planId ||
+          !new Prisma.Decimal(String(prior.amountDecimal ?? prior.amount)).eq(amount) ||
+          Number(prior.durationDays) !== durationDays ||
+          String(prior.collateral ?? "") !== collateral ||
+          String(prior.collateralImg ?? "") !== collateralImg)
+        throw new BadRequestException("Loan original request key belongs to different application terms");
+      return { ...prior, replayed: true };
+    }
     const plan: any = await this.d1.getLoanPlan(planId);
     if (!plan || !plan.isActive)
       throw new NotFoundException("Loan plan not found");

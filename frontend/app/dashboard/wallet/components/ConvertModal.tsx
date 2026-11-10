@@ -8,6 +8,7 @@ import api from '../../../lib/api';
 import { sessionPrincipalId } from '../../../lib/wallet-auth';
 import { getIntentKey, type PendingIntentKey } from '../../../lib/intent-key';
 import { clearPendingEconomicIntent, persistPendingEconomicIntent, readPendingEconomicIntent } from '../../../lib/pending-economic-intent';
+import { decimalAmountWithinBalance } from '../../../lib/trading-states';
 
 interface ConvertModalProps {
   isOpen: boolean;
@@ -44,11 +45,8 @@ export default function ConvertModal({ isOpen, onClose, eligiblePairs, fundingBa
   const eligibleKey = eligiblePairs.map((pair) => `${pair.from}>${pair.to}`).sort().join('|');
   const [amount, setAmount] = useState('');
   const fundingAvailable = fundingBalances.find((balance) => balance.asset === fromAsset)?.available ?? '0';
-  const fundingAmount = Number(fundingAvailable);
-  const requestedAmount = Number(amount);
-  const fundingReady = walletReadState === 'LIVE' && Number.isFinite(fundingAmount) && fundingAmount > 0;
-  const fundingSufficient = fundingReady && Number.isFinite(requestedAmount)
-    && requestedAmount > 0 && requestedAmount <= fundingAmount;
+  const fundingReady = walletReadState === 'LIVE' && decimalAmountWithinBalance(fundingAvailable, fundingAvailable);
+  const fundingSufficient = fundingReady && decimalAmountWithinBalance(amount.trim(), fundingAvailable);
   const [quote, setQuote] = useState<Quote | null>(null);
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -110,16 +108,36 @@ export default function ConvertModal({ isOpen, onClose, eligiblePairs, fundingBa
       return;
     }
     try {
-      const response = await api.get<{ activities: Array<{ type?: string; referenceId?: string; ledgerCorrelationId?: string }> }>('/wallet/activity', { params: { limit: 1, type: 'CONVERSION', referenceId: quoteId } });
+      const correlationId = `gate2:conversion:${quoteId}`;
+      const response = await api.get<{ activities: Array<{
+        type?: string; status?: string; idempotencyKey?: string; referenceId?: string; ledgerCorrelationId?: string;
+        details?: string; relatedLedgerPostings?: Array<{ id?: string; kind?: string; referenceId?: string; correlationId?: string }>;
+      }> }>('/wallet/activity', { params: { limit: 1, type: 'CONVERSION', status: 'COMPLETED', referenceId: quoteId, correlationId } });
       if (sessionPrincipalId() !== principal || pendingAcceptIntent.current?.key !== key) return;
-      const confirmed = Array.isArray(response.data?.activities) && response.data.activities.some((item) =>
-        item?.type === 'CONVERSION' && item.referenceId === quoteId
-        && item.ledgerCorrelationId === `gate2:conversion:${quoteId}`);
+      const confirmed = Array.isArray(response.data?.activities) && response.data.activities.some((item) => {
+        if (item?.type !== 'CONVERSION' || item.status !== 'COMPLETED'
+          || item.idempotencyKey !== key || item.referenceId !== quoteId
+          || item.ledgerCorrelationId !== correlationId) return false;
+        let details: { debitPostingId?: string; creditPostingId?: string };
+        try { details = JSON.parse(item.details ?? 'null') ?? {}; } catch { return false; }
+        if (!details.debitPostingId || !details.creditPostingId || details.debitPostingId === details.creditPostingId) return false;
+        const postings = item.relatedLedgerPostings ?? [];
+        return postings.some((posting) =>
+          posting.id === details.debitPostingId && posting.kind === 'DEBIT'
+          && posting.referenceId === quoteId && posting.correlationId === correlationId)
+          && postings.some((posting) =>
+            posting.id === details.creditPostingId && posting.kind === 'CREDIT'
+            && posting.referenceId === quoteId && posting.correlationId === correlationId);
+      });
       if (!confirmed) {
         setFeedback('Conversion outcome is unresolved. Do not accept another quote; review Wallet activity or contact Support.');
         return;
       }
-      clearPendingEconomicIntent('conversion', principal, key);
+      if (!clearPendingEconomicIntent('conversion', principal, key)) {
+        setUnknownAcceptKey(key);
+        setFeedback('Conversion confirmed, but recovery storage could not be cleared. Do not accept another quote.');
+        return;
+      }
       pendingAcceptIntent.current = null;
       pendingAcceptedQuoteId.current = null;
       pendingPrincipal.current = null;
@@ -141,7 +159,7 @@ export default function ConvertModal({ isOpen, onClose, eligiblePairs, fundingBa
       setFeedback('This conversion pair is not currently supported. Refresh the pair list.');
       return;
     }
-    if (fromAsset === toAsset || !amount || !Number.isFinite(Number(amount)) || Number(amount) <= 0) {
+    if (fromAsset === toAsset || !decimalAmountWithinBalance(amount.trim(), amount.trim())) {
       setFeedback('Enter a valid amount greater than zero.');
       return;
     }
@@ -199,7 +217,11 @@ export default function ConvertModal({ isOpen, onClose, eligiblePairs, fundingBa
         void recheckUnknownConversion(intent.key);
         return;
       }
-      clearPendingEconomicIntent('conversion', principal, intent.key);
+      if (!clearPendingEconomicIntent('conversion', principal, intent.key)) {
+        setUnknownAcceptKey(intent.key);
+        setFeedback('Conversion accepted, but recovery storage could not be cleared. Do not accept another quote.');
+        return;
+      }
       pendingAcceptIntent.current = null;
       pendingAcceptedQuoteId.current = null;
       pendingPrincipal.current = null;
@@ -216,7 +238,11 @@ export default function ConvertModal({ isOpen, onClose, eligiblePairs, fundingBa
       if (sessionPrincipalId() !== principal) return;
       const status = (error as { response?: { status?: number } } | null)?.response?.status;
       if ([400, 401, 403, 404, 422].includes(status ?? -1)) {
-        clearPendingEconomicIntent('conversion', principal, intent.key);
+        if (!clearPendingEconomicIntent('conversion', principal, intent.key)) {
+          setUnknownAcceptKey(intent.key);
+          setFeedback('Conversion request rejected, but recovery storage could not be cleared. Do not accept another quote.');
+          return;
+        }
         pendingAcceptIntent.current = null;
         pendingAcceptedQuoteId.current = null;
         pendingPrincipal.current = null;

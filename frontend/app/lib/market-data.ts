@@ -43,6 +43,7 @@ export function normalizeCandle(value: UnknownCandle): Candle | null {
   const close = finiteMarketNumber(value.close);
   const volume = value.volume == null ? undefined : finiteMarketNumber(value.volume);
   if (time === null || open === null || high === null || low === null || close === null || volume === null) return null;
+  if (time <= 0 || open <= 0 || high <= 0 || low <= 0 || close <= 0 || (volume !== undefined && volume < 0)) return null;
   if (high < Math.max(open, close) || low > Math.min(open, close) || high < low) return null;
   const normalizedVolume = volume ?? undefined;
   return { time, open, high, low, close, ...(normalizedVolume === undefined ? {} : { volume: normalizedVolume }) };

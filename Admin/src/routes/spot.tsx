@@ -41,7 +41,7 @@ function Inner() {
   const pairsQ = useAdminQuery((p) => p.listSpotPairs());
   const ordersQ = useAdminQuery((p) => p.listSpotOrders());
 
-  if (pairsQ.loading || ordersQ.loading)
+  if (pairsQ.loading)
     return (
       <Shell>
         <LoadingSkeleton rows={5} />
@@ -57,10 +57,11 @@ function Inner() {
   const pairs = pairsQ.data ?? [];
   const orders = ordersQ.data ?? [];
   const openOrders = orders.filter((o) => o.status === "open" || o.status === "partially_filled").length;
+  const unknownOrders = orders.filter((o) => o.status === "unknown").length;
   const maintenance = pairs.filter((p) => p.maintenance).length;
 
   return (
-    <Shell total={pairs.length} maintenance={maintenance} openOrders={openOrders}>
+    <Shell total={pairs.length} maintenance={maintenance} openOrders={ordersQ.error ? undefined : openOrders}>
       <p className="text-xs text-muted-foreground">
         Spot and isolated margin are canonical. Futures, perpetuals, cross margin and portfolio
         margin are not exposed.
@@ -71,7 +72,7 @@ function Inner() {
             Pairs ({pairs.length})
           </TabsTrigger>
           <TabsTrigger value="orders" data-testid="spot-tab-orders">
-            Open orders ({openOrders})
+            Open orders ({ordersQ.error ? "Unavailable" : openOrders})
           </TabsTrigger>
           <TabsTrigger value="margin" data-testid="spot-tab-margin">
             Margin config
@@ -84,7 +85,14 @@ function Inner() {
           <PairsPanel pairs={pairs} />
         </TabsContent>
         <TabsContent value="orders">
-          <OrdersPanel orders={orders} />
+          {ordersQ.loading
+            ? <LoadingSkeleton rows={5} />
+            : ordersQ.error
+              ? <ErrorState title="Could not load orders" description={ordersQ.error.message} />
+            : <>
+                {unknownOrders > 0 && <p role="alert" className="mb-3 text-sm text-destructive">{unknownOrders} order record(s) have an unrecognized Backend status. They are excluded from open-order counts and cancellation until reconciled.</p>}
+                <OrdersPanel orders={orders} />
+              </>}
         </TabsContent>
         <TabsContent value="margin">
           <MarginConfigurationPanel />

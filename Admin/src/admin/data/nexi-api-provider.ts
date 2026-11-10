@@ -1322,7 +1322,9 @@ export class NexiAdminApiProvider implements AdminDataProvider {
                   ? "filled"
                   : status === "rejected"
                     ? "rejected"
-                    : "open",
+                    : status === "open"
+                      ? "open"
+                      : "unknown",
           createdAt: stringValue(row.createdAt, new Date(0).toISOString()),
         } as SpotOrder;
       }),
@@ -1939,7 +1941,9 @@ export class NexiAdminApiProvider implements AdminDataProvider {
           openPrice: stringValue(row.entryPrice),
           settlePrice: typeof row.expiryPrice === "string" ? row.expiryPrice : undefined,
           state: settlementState,
-          settledAt: typeof row.updatedAt === "string" ? row.updatedAt : undefined,
+          settledAt: (settlementState === "win" || settlementState === "loss")
+            ? stringValue(row.settledAt, stringValue(row.updatedAt)) || undefined
+            : undefined,
           payout: typeof row.payoutAmount === "string" ? row.payoutAmount : undefined,
         } as SettlementRecord;
       }),

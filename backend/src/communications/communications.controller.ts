@@ -89,6 +89,16 @@ export class CommunicationsController {
   supportThread(@Req() req: AuthenticatedRequest, @Query() q: PageQueryDto) {
     return this.service.supportThread(req.user.userId, q.page, q.limit);
   }
+  @Get("support/messages/by-intent")
+  @ApiBearerAuth()
+  @ApiQuery({ name: "idempotencyKey", required: true, type: String, description: "Exact original support message request key, scoped to the authenticated customer." })
+  @ApiOkResponse({ description: "Original owned support message or null when it is not yet persisted." })
+  @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard)
+  @RequireAuthSurface("PUBLIC")
+  @Roles(Role.USER)
+  supportMessageByIntent(@Req() req: AuthenticatedRequest, @Query("idempotencyKey") idempotencyKey: string) {
+    return this.service.getSupportMessageByIntent(req.user.userId, idempotencyKey);
+  }
   @Post("support/messages")
   @ApiBearerAuth()
   @ApiBadRequestResponse({ description: "Message text or at least one valid attachment is required." })

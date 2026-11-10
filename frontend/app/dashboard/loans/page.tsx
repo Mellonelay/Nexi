@@ -16,6 +16,7 @@ import api from '../../lib/api';
 import { getIntentKey, type PendingIntentKey } from '../../lib/intent-key';
 import { clearPendingEconomicIntent, persistPendingEconomicIntent, readPendingEconomicIntent } from '../../lib/pending-economic-intent';
 import { finiteMarketNumber } from '../../lib/market-data';
+import { decimalAmountWithinBalance, decimalLessThanOrEqual } from '../../lib/trading-states';
 import {
   authoritativeValue,
   LoanState,
@@ -195,10 +196,8 @@ export default function LoansPage() {
   const durationDays = positiveInteger(duration);
   const selectedPlan = plans.find((plan) => String(plan.id) === selectedPlanId);
   const selectedRate = selectedPlan ? finiteMarketNumber(selectedPlan.interestRate) : null;
-  const selectedMin = selectedPlan ? finiteMarketNumber(selectedPlan.minAmount) : null;
-  const selectedMax = selectedPlan ? finiteMarketNumber(selectedPlan.maxAmount) : null;
-  const principalWithinPlan = principal !== null && selectedMin !== null && selectedMax !== null
-    && principal >= selectedMin && principal <= selectedMax;
+  const principalWithinPlan = Boolean(selectedPlan && decimalLessThanOrEqual(selectedPlan.minAmount, amount.trim())
+    && decimalAmountWithinBalance(amount.trim(), selectedPlan.maxAmount));
   const durationMatchesPlan = selectedPlan !== undefined && durationDays !== null
     && durationDays === Number(selectedPlan.durationDays);
   const interestPreview = principal !== null && selectedRate !== null ? principal * selectedRate : null;
@@ -218,7 +217,10 @@ export default function LoansPage() {
         setMessage('The original loan application is not yet confirmed. Do not resubmit it.');
         return;
       }
-      clearPendingEconomicIntent('loan-application', principal, key);
+      if (!clearPendingEconomicIntent('loan-application', principal, key)) {
+        setMessage('Loan application confirmed, but recovery storage could not be cleared. Do not submit another application.');
+        return;
+      }
       pendingApplication.current = null;
       setUnknownApplicationKey(null);
       setMessage('Original loan application confirmed in your account records.');
@@ -296,7 +298,11 @@ export default function LoansPage() {
       if (sessionPrincipalId() !== userId) return;
       const status = (error as { response?: { status?: number; data?: { message?: unknown } } })?.response?.status;
       if ([400, 401, 403, 404, 422].includes(status ?? -1) && pendingApplication.current) {
-        clearPendingEconomicIntent('loan-application', userId, pendingApplication.current.key);
+        if (!clearPendingEconomicIntent('loan-application', userId, pendingApplication.current.key)) {
+          setUnknownApplicationKey(pendingApplication.current.key);
+          setMessage('Application rejected, but recovery storage could not be cleared. Do not submit another until reconciled.');
+          return;
+        }
         pendingApplication.current = null;
         setUnknownApplicationKey(null);
         setMessage('Loan application was rejected. Review eligibility before retrying.');
@@ -316,16 +322,29 @@ export default function LoansPage() {
       return;
     }
     try {
-      const response = await api.get<{ activities: Array<{ type?: string; status?: string; referenceId?: string; ledgerCorrelationId?: string }> }>('/wallet/activity', {
+      const response = await api.get<{ activities: Array<{
+        type?: string; status?: string; idempotencyKey?: string; referenceId?: string; ledgerCorrelationId?: string;
+        ledgerPostingId?: string;
+        relatedLedgerPostings?: Array<{ id?: string; kind?: string; referenceId?: string; correlationId?: string }>;
+      }> }>('/wallet/activity', {
         params: { type: 'LOAN_REPAYMENT', status: 'COMPLETED', referenceId: loanId, correlationId: key, limit: 1 },
       });
       if (sessionPrincipalId() !== principal || pendingRepayment.current?.key !== key) return;
       if (!Array.isArray(response.data?.activities) || !response.data.activities.some((row) =>
-        row.type === 'LOAN_REPAYMENT' && row.status === 'COMPLETED' && row.referenceId === loanId && row.ledgerCorrelationId === key)) {
+        row.type === 'LOAN_REPAYMENT' && row.status === 'COMPLETED'
+        && row.idempotencyKey === `loan-repayment:${loanId}:${key}`
+        && row.referenceId === loanId && row.ledgerCorrelationId === key
+        && Array.isArray(row.relatedLedgerPostings) && row.relatedLedgerPostings.some((posting) =>
+          posting.id === row.ledgerPostingId && posting.kind === 'DEBIT'
+          && posting.referenceId === loanId && posting.correlationId === key))) {
         setMessage('Original repayment is not confirmed in the Ledger activity. Do not submit it again.');
         return;
       }
-      clearPendingEconomicIntent('loan-repayment', principal, key);
+      if (!clearPendingEconomicIntent('loan-repayment', principal, key)) {
+        setUnknownRepaymentKey(key);
+        setMessage('Repayment confirmed, but recovery storage could not be cleared. Do not submit another repayment.');
+        return;
+      }
       pendingRepayment.current = null;
       setUnknownRepaymentKey(null);
       setRepaymentAmount('');
@@ -339,7 +358,7 @@ export default function LoansPage() {
   };
 
   const repayLoan = async () => {
-    if (!userId || sessionPrincipalId() !== userId || !repaymentLoanId || positiveNumber(repaymentAmount) === null || unknownRepaymentKey || repaying) return;
+    if (!userId || sessionPrincipalId() !== userId || !repaymentLoanId || !decimalAmountWithinBalance(repaymentAmount.trim(), repaymentAmount.trim()) || unknownRepaymentKey || repaying) return;
     setRepaying(true);
     setMessage(null);
     try {
@@ -370,7 +389,11 @@ export default function LoansPage() {
       if (sessionPrincipalId() !== userId) return;
       const status = (error as { response?: { status?: number } } | null)?.response?.status;
       if ([400, 401, 403, 404, 422].includes(status ?? -1) && pendingRepayment.current) {
-        clearPendingEconomicIntent('loan-repayment', userId, pendingRepayment.current.key);
+        if (!clearPendingEconomicIntent('loan-repayment', userId, pendingRepayment.current.key)) {
+          setUnknownRepaymentKey(pendingRepayment.current.key);
+          setMessage('Repayment request rejected, but recovery storage could not be cleared. Keep the original action locked.');
+          return;
+        }
         pendingRepayment.current = null;
         setUnknownRepaymentKey(null);
         setMessage('Repayment request was rejected. Review amount and loan status.');
@@ -392,7 +415,7 @@ export default function LoansPage() {
       {unknownApplicationKey && <div role="alert" className="mx-auto mb-4 max-w-7xl rounded-xl border border-amber-300/30 p-4 text-sm text-amber-100">An earlier loan application outcome is unresolved. New applications are blocked until its original request is confirmed. <button type="button" onClick={() => void recheckLoanApplication(unknownApplicationKey)} className="ml-2 min-h-11 rounded-lg border border-amber-300/30 px-3 font-semibold">Recheck original loan application</button></div>}
       <main className="mx-auto max-w-7xl space-y-4">
         <section className="grid grid-cols-1 gap-3 min-[430px]:grid-cols-2 lg:grid-cols-4" aria-label="Loan summary">
-          <Metric label="Eligibility" value="—" hint="Unavailable" />
+          <Metric label="Eligibility" value="Not assessed" hint="Applications require Backend review and approval" />
           <Metric label="Products" value={plansState === 'LIVE' ? authoritativeValue(plans.length) : '—'} hint="Available products" />
           <Metric label="Active loans" value={state === 'LIVE' ? authoritativeValue(activeLoans.length) : '—'} hint="Includes overdue records" />
           <Metric label="Next repayment" value={nextDue} hint="Available due date" />
@@ -564,9 +587,8 @@ function LoanApplicationPanel({
   onSubmit: (event: FormEvent) => Promise<void>;
 }) {
   const selectedPlan = plans.find((item) => String(item.id) === selectedPlanId);
-  const min = selectedPlan ? finiteMarketNumber(selectedPlan.minAmount) : null;
-  const max = selectedPlan ? finiteMarketNumber(selectedPlan.maxAmount) : null;
-  const withinLimits = principal !== null && min !== null && max !== null && principal >= min && principal <= max;
+  const withinLimits = Boolean(selectedPlan && decimalLessThanOrEqual(selectedPlan.minAmount, amount.trim())
+    && decimalAmountWithinBalance(amount.trim(), selectedPlan.maxAmount));
   const matchesDuration = selectedPlan !== undefined && durationDays !== null && durationDays === Number(selectedPlan.durationDays);
   const canApply = Boolean(userId && selectedPlan && withinLimits && matchesDuration && collateral.trim() && collateralImg.trim());
   const selectPlan = (planId: string) => {
@@ -664,7 +686,7 @@ function LoanRepaymentCenter({
               <dl className="mt-3 space-y-2 text-sm"><ReviewRow label="Total repayment" value={authoritativeValue(loan.totalRepaymentDecimal ?? loan.totalRepayment)} /><ReviewRow label="Due date" value={<LocalDateTime value={typeof loan.dueDate === 'string' ? loan.dueDate : null} dateStyle="medium" />} /></dl>
               <div className="mt-3 flex flex-col gap-2 min-[430px]:flex-row">
                 <input aria-label="Repayment amount" className={`${inputClass} min-w-0`} value={repaymentLoanId === String(loan.id) ? repaymentAmount : ''} onChange={(event) => { onRepaymentLoanIdChange(String(loan.id)); onRepaymentAmountChange(event.target.value); }} inputMode="decimal" placeholder="Payment amount" />
-                <SecondaryButton onClick={() => void onRepay()} disabled={repaying || blocked || repaymentLoanId !== String(loan.id) || positiveNumber(repaymentAmount) === null}>{blocked ? 'Recheck prior repayment' : repaying && repaymentLoanId === String(loan.id) ? 'Paying…' : 'Repay'}</SecondaryButton>
+                <SecondaryButton onClick={() => void onRepay()} disabled={repaying || blocked || repaymentLoanId !== String(loan.id) || !decimalAmountWithinBalance(repaymentAmount.trim(), repaymentAmount.trim())}>{blocked ? 'Recheck prior repayment' : repaying && repaymentLoanId === String(loan.id) ? 'Paying…' : 'Repay'}</SecondaryButton>
               </div>
             </div>
           ))}

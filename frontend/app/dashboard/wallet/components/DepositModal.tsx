@@ -158,7 +158,11 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
         toast.warning('Deposit claim remains unconfirmed. Check deposit history or contact Support before resubmitting.');
         return;
       }
-      clearPendingEconomicIntent('deposit-claim', principal, key);
+      if (!clearPendingEconomicIntent('deposit-claim', principal, key)) {
+        setUnknownClaimKey(key);
+        toast.warning('Claim found, but recovery storage could not be cleared. Do not submit another claim.');
+        return;
+      }
       pendingClaim.current = null;
       setUnknownClaimKey(null);
       toast.success('The deposit claim was found in account history.');
@@ -194,7 +198,10 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
         return;
       }
       claimPostAttempted = true;
-      await api.post('/financial/deposit-claims', {
+      const accepted = await api.post<{
+        depositRequestId?: string;
+        claim?: { id?: string; userId?: string; idempotencyKey?: string };
+      }>('/financial/deposit-claims', {
         asset: destination.asset,
         network: destination.network,
         depositAddressId: destination.depositAddressId,
@@ -204,7 +211,18 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
         idempotencyKey: claim.intent.key,
       });
       if (sessionPrincipalId() !== principal) return;
-      clearPendingEconomicIntent('deposit-claim', principal, claim.intent.key);
+      if (!accepted.data?.depositRequestId || accepted.data.claim?.id !== accepted.data.depositRequestId
+        || accepted.data.claim?.userId !== principal || accepted.data.claim?.idempotencyKey !== claim.intent.key) {
+        setUnknownClaimKey(claim.intent.key);
+        toast.warning('Claim response did not confirm the original request. Recheck deposit history before another claim.');
+        void recheckUnknownClaim(claim.intent.key);
+        return;
+      }
+      if (!clearPendingEconomicIntent('deposit-claim', principal, claim.intent.key)) {
+        setUnknownClaimKey(claim.intent.key);
+        toast.warning('Claim accepted, but recovery storage could not be cleared. Do not submit another claim.');
+        return;
+      }
       pendingClaim.current = null;
       setUnknownClaimKey(null);
       toast.success('Deposit claim submitted for review.');
@@ -226,7 +244,11 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
       } else {
         if (claimPostAttempted && pendingClaim.current) {
           const principal = sessionPrincipalId();
-          if (principal) clearPendingEconomicIntent('deposit-claim', principal, pendingClaim.current.intent.key);
+          if (!principal || !clearPendingEconomicIntent('deposit-claim', principal, pendingClaim.current.intent.key)) {
+            setUnknownClaimKey(pendingClaim.current.intent.key);
+            toast.warning('Claim was rejected or not sent, but its recovery marker could not be cleared. Keep the original claim blocked.');
+            return;
+          }
           pendingClaim.current = null;
         }
         toast.error(error instanceof Error ? error.message : 'Deposit proof or claim was rejected.');

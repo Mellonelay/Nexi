@@ -7,6 +7,7 @@ import Image from 'next/image';
 import api, { apiBaseUrl } from '../../lib/api';
 import { getAccessToken } from '../../lib/auth-session';
 import { sessionPrincipalId } from '../../lib/wallet-auth';
+import { clearPendingEconomicIntent, persistPendingEconomicIntent, readPendingEconomicIntent } from '../../lib/pending-economic-intent';
 import LocalDateTime from '../../components/LocalDateTime';
 import ModalSurface from '../../components/ModalSurface';
 import { NexiLogoMark } from '../components/QuotesHubVisuals';
@@ -80,6 +81,7 @@ export default function MessagesPage() {
   const [sending, setSending] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [pendingMessageKey, setPendingMessageKey] = useState<string | null>(null);
+  const [unknownMessageKey, setUnknownMessageKey] = useState<string | null>(null);
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
 
@@ -99,8 +101,10 @@ export default function MessagesPage() {
         setAttachments([]);
         setUploading(false);
         setSending(false);
-        setPendingMessageKey(null);
-        setFeedback(null);
+        const original = nextUserId ? readPendingEconomicIntent('support-message', nextUserId) : null;
+        setPendingMessageKey(original?.intent.key ?? null);
+        setUnknownMessageKey(original?.intent.key ?? null);
+        setFeedback(original ? 'An earlier support message may have been sent. Recheck it before sending another.' : null);
         setHistoryOpen(false);
         setState(nextUserId ? 'LOADING' : 'SIGNED_OUT');
         setConnection(nextUserId ? 'CONNECTING' : 'SIGNED_OUT');
@@ -250,24 +254,85 @@ export default function MessagesPage() {
     }
   };
 
+  const recheckUnknownMessage = async (key: string) => {
+    const principal = sessionPrincipalId();
+    if (!principal || principal !== userIdRef.current || unknownMessageKey !== key) return;
+    try {
+      const response = await api.get<SupportMessage & { conversationId?: string } | null>(
+        '/communications/support/messages/by-intent', { params: { idempotencyKey: key } },
+      );
+      if (principal !== userIdRef.current || unknownMessageKey !== key) return;
+      const confirmed = response.data;
+      if (!confirmed || typeof confirmed.id !== 'string' || confirmed.senderId !== principal
+        || confirmed.conversationId !== conversationIdRef.current) {
+        setFeedback('The original message is not yet confirmed. Keep the original request locked and contact Support if it remains unresolved.');
+        return;
+      }
+      if (!clearPendingEconomicIntent('support-message', principal, key)) {
+        setFeedback('Message confirmed, but recovery storage could not be cleared. Keep the original request locked.');
+        return;
+      }
+      setUnknownMessageKey(null);
+      setPendingMessageKey(null);
+      if (draftRef.current.trim() === confirmed.body.trim()) {
+        draftRef.current = '';
+        setDraft('');
+        setAttachments([]);
+      }
+      setFeedback('The original message is confirmed in your support conversation.');
+      await load();
+    } catch {
+      if (principal === userIdRef.current && unknownMessageKey === key)
+        setFeedback('Support message readback is unavailable. Do not submit another message until the original is reconciled.');
+    }
+  };
+
   const send = async (event?: FormEvent) => {
     event?.preventDefault();
     const body = draft.trim();
-    if ((!body && attachments.length === 0) || !userId || !conversationId || sending || uploading) return;
+    if ((!body && attachments.length === 0) || !userId || !conversationId || sending || uploading || unknownMessageKey) return;
     const requestUserId = userId;
     const requestConversationId = conversationId;
     const requestAttachments = attachments;
     const idempotencyKey = pendingMessageKey ?? globalThis.crypto?.randomUUID?.() ?? `support-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    if (!persistPendingEconomicIntent('support-message', {
+      principal: requestUserId,
+      intent: { key: idempotencyKey, fingerprint: 'redacted' },
+      context: { conversationId: requestConversationId },
+    })) {
+      const previous = readPendingEconomicIntent('support-message', requestUserId);
+      if (previous) {
+        setPendingMessageKey(previous.intent.key);
+        setUnknownMessageKey(previous.intent.key);
+        setFeedback('An original support message remains unresolved. Recheck it before sending.');
+      } else {
+        setFeedback('Message was not sent because recovery storage is unavailable. Retry when storage is available.');
+      }
+      return;
+    }
     setPendingMessageKey(idempotencyKey);
     setSending(true);
     setFeedback(null);
     try {
-      await api.post('/communications/support/messages', {
+      const accepted = await api.post<SupportMessage & { conversationId?: string }>('/communications/support/messages', {
         body,
         idempotencyKey,
         ...(requestAttachments.length ? { attachmentIds: requestAttachments.map((item) => item.id) } : {}),
       });
       if (requestUserId !== userIdRef.current || requestConversationId !== conversationIdRef.current) return;
+      if (!accepted.data || typeof accepted.data.id !== 'string' || accepted.data.senderId !== requestUserId
+        || accepted.data.conversationId !== requestConversationId || accepted.data.body !== body) {
+        setUnknownMessageKey(idempotencyKey);
+        setFeedback('Message acknowledgement did not match the original request. Recheck its persisted status.');
+        return;
+      }
+      if (!clearPendingEconomicIntent('support-message', requestUserId, idempotencyKey)) {
+        setUnknownMessageKey(idempotencyKey);
+        setFeedback('Message accepted, but recovery storage could not be cleared. Recheck before sending another.');
+        return;
+      }
+      setUnknownMessageKey(null);
+      setPendingMessageKey(null);
       if (draftRef.current.trim() === body) {
         draftRef.current = '';
         setDraft('');
@@ -277,7 +342,10 @@ export default function MessagesPage() {
       }
       await load();
     } catch {
-      if (requestUserId === userIdRef.current && requestConversationId === conversationIdRef.current) setFeedback('Your message could not be sent. Your draft is still here so you can retry.');
+      if (requestUserId === userIdRef.current && requestConversationId === conversationIdRef.current) {
+        setUnknownMessageKey(idempotencyKey);
+        setFeedback('Message outcome is unknown. Your draft is preserved. Recheck the original message before sending another.');
+      }
     } finally {
       if (requestUserId === userIdRef.current) setSending(false);
     }
@@ -304,7 +372,7 @@ export default function MessagesPage() {
   };
 
   const connectionLabel = connection === 'CONNECTED' ? 'Connected' : connection === 'CONNECTING' ? 'Connecting' : connection === 'SIGNED_OUT' ? 'Sign in required' : 'Offline · retrying';
-  const canSend = Boolean(userId && conversationId && state === 'READY' && !sending && !uploading && (draft.trim() || attachments.length));
+  const canSend = Boolean(userId && conversationId && state === 'READY' && !sending && !uploading && !unknownMessageKey && (draft.trim() || attachments.length));
 
   return (
     <main className="mx-auto flex min-h-[calc(100dvh-9rem)] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-[var(--nexi-border-raised)] bg-[var(--nexi-surface-deep)] shadow-[var(--nexi-shadow-panel)]">
@@ -334,18 +402,19 @@ export default function MessagesPage() {
           {attachments.map((item) => <li key={item.id} className="flex max-w-full items-center gap-2 rounded-lg border border-[#49335E] bg-[#171022] px-3 py-2 text-xs text-[#C3BBD0]">
             {item.mimeType.startsWith('image/') ? <ImageIcon size={15} aria-hidden="true" /> : <FileText size={15} aria-hidden="true" />}
             <span className="max-w-48 truncate">{item.name}</span>
-            <button type="button" aria-label={`Remove ${item.name}`} onClick={() => { setAttachments((current) => current.filter((attachment) => attachment.id !== item.id)); setPendingMessageKey(null); }} className="grid h-7 w-7 place-items-center rounded hover:bg-white/5"><X size={14} /></button>
+            <button type="button" aria-label={`Remove ${item.name}`} onClick={() => { setAttachments((current) => current.filter((attachment) => attachment.id !== item.id)); setPendingMessageKey(null); }} disabled={Boolean(unknownMessageKey)} className="grid h-7 w-7 place-items-center rounded hover:bg-white/5"><X size={14} /></button>
           </li>)}
         </ul>}
         {feedback && <p className="mb-2 px-1 text-xs text-[#C9B7FF]" role="status">{feedback}</p>}
+        {unknownMessageKey && <button type="button" onClick={() => void recheckUnknownMessage(unknownMessageKey)} className="mb-3 min-h-11 w-full rounded-lg border border-amber-300/30 px-3 text-sm font-semibold text-amber-100">Recheck original support message</button>}
         <div className="flex items-end gap-2">
           <input ref={fileInputRef} type="file" multiple className="sr-only" onChange={(event) => void onFiles(event)} aria-label="Choose message attachments" />
-          <button type="button" aria-label="Attach a file or image" onClick={() => fileInputRef.current?.click()} disabled={!userId || uploading || sending} className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[#C3BBD0] hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF] disabled:opacity-40"><Paperclip size={19} /></button>
+          <button type="button" aria-label="Attach a file or image" onClick={() => fileInputRef.current?.click()} disabled={!userId || uploading || sending || Boolean(unknownMessageKey)} className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[#C3BBD0] hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF] disabled:opacity-40"><Paperclip size={19} /></button>
           <div className="relative grid h-11 w-11 shrink-0 place-items-center">
-            <button type="button" aria-label="Insert emoji" aria-expanded={emojiOpen} onClick={() => setEmojiOpen((value) => !value)} disabled={!userId || sending} className="grid h-11 w-11 place-items-center rounded-xl text-[#C3BBD0] hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF] disabled:opacity-40"><Smile size={19} /></button>
+            <button type="button" aria-label="Insert emoji" aria-expanded={emojiOpen} onClick={() => setEmojiOpen((value) => !value)} disabled={!userId || sending || Boolean(unknownMessageKey)} className="grid h-11 w-11 place-items-center rounded-xl text-[#C3BBD0] hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF] disabled:opacity-40"><Smile size={19} /></button>
             {emojiOpen && <div className="absolute bottom-12 left-0 z-10 grid grid-cols-4 gap-1 rounded-xl border border-[#49335E] bg-[#171022] p-2 shadow-xl" role="group" aria-label="Emoji picker">{EMOJI.map((emoji) => <button type="button" key={emoji} aria-label={`Insert ${emoji}`} onClick={() => insertEmoji(emoji)} className="grid h-10 w-10 place-items-center rounded-lg text-xl hover:bg-white/5">{emoji}</button>)}</div>}
           </div>
-          <textarea ref={inputRef} value={draft} onChange={(event) => { draftRef.current = event.target.value; setDraft(event.target.value); setPendingMessageKey(null); }} onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); void send(); } }} disabled={!userId || state !== 'READY' || sending} rows={1} aria-label="Write a message" placeholder={userId ? 'Write a message…' : 'Sign in to message support'} className="max-h-32 min-h-11 min-w-0 flex-1 resize-y rounded-xl border border-[#49335E] bg-[#171022] px-3 py-3 text-sm text-[#F5F7FB] placeholder:text-[#8C8299] focus:border-violet-300/60 focus:outline-none focus:ring-1 focus:ring-violet-300/30 disabled:opacity-50" />
+          <textarea ref={inputRef} value={draft} onChange={(event) => { draftRef.current = event.target.value; setDraft(event.target.value); setPendingMessageKey(null); }} onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); void send(); } }} disabled={!userId || state !== 'READY' || sending || Boolean(unknownMessageKey)} rows={1} aria-label="Write a message" placeholder={userId ? 'Write a message…' : 'Sign in to message support'} className="max-h-32 min-h-11 min-w-0 flex-1 resize-y rounded-xl border border-[#49335E] bg-[#171022] px-3 py-3 text-sm text-[#F5F7FB] placeholder:text-[#8C8299] focus:border-violet-300/60 focus:outline-none focus:ring-1 focus:ring-violet-300/30 disabled:opacity-50" />
           <button type="submit" aria-label="Send message" disabled={!canSend} className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-violet-300/40 bg-violet-300/15 text-violet-100 hover:bg-violet-300/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF] disabled:cursor-not-allowed disabled:opacity-40">{sending ? <LoaderCircle size={18} className="animate-spin" /> : <Send size={18} />}</button>
         </div>
         <p className="mt-2 pl-1 text-[11px] text-[#8C8299]">Enter to send · Shift+Enter for a new line</p>

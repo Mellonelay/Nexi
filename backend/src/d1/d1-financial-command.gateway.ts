@@ -2290,6 +2290,28 @@ export class D1FinancialCommandGateway {
     return result.results[0] ?? null;
   }
 
+  async getMiningSubscriptionForIntent(
+    userId: string,
+    idempotencyKey: string,
+  ): Promise<Record<string, unknown> | null> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const result = await this.bridge.select<{ referenceId: string }>(
+      `SELECT "referenceId" FROM "Activity"
+       WHERE "userId"=? AND "type"='MINING_SUBSCRIPTION'
+         AND "idempotencyKey"=? LIMIT 1`,
+      [userId, idempotencyKey],
+    );
+    const referenceId = result.results[0]?.referenceId;
+    if (!referenceId) return null;
+    const subscription = await this.getMiningSubscription(referenceId, userId);
+    if (!subscription) {
+      throw new BadRequestException(
+        "Mining original request has a durable activity receipt but its subscription record is unavailable; do not submit a new reserve",
+      );
+    }
+    return subscription;
+  }
+
   async listMiningSubscriptions(
     userId: string,
   ): Promise<Record<string, unknown>[]> {
@@ -2333,31 +2355,21 @@ export class D1FinancialCommandGateway {
     idempotencyKey: string;
   }): Promise<Record<string, unknown>> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const prior = await this.getMiningSubscriptionForIntent(
+      command.userId,
+      command.idempotencyKey,
+    );
+    if (prior) {
+      if (String(prior.planId) !== command.planId ||
+          !this.decimal(String(prior.amountDecimal ?? prior.amount)).eq(command.amount))
+        throw new BadRequestException("Mining original key belongs to different terms");
+      return { ...prior, replayed: true };
+    }
+    if (await this.getMiningSubscription(command.subscriptionId, command.userId))
+      throw new BadRequestException("Mining subscription exists without matching original receipt");
     const plan: any = await this.getMiningPlan(command.planId);
     if (!plan || !plan.isActive)
       throw new NotFoundException("Mining plan not found");
-    const existing = await this.getMiningSubscription(
-      command.subscriptionId,
-      command.userId,
-    );
-    if (existing) {
-      const snapshot =
-        typeof existing.planSnapshot === "string"
-          ? existing.planSnapshot
-          : JSON.stringify(existing.planSnapshot ?? {});
-      if (
-        String(existing.planId) !== command.planId ||
-        !this.decimal(String(existing.amountDecimal ?? existing.amount)).eq(
-          command.amount,
-        ) ||
-        snapshot !== JSON.stringify(command.planSnapshot)
-      ) {
-        throw new BadRequestException(
-          "Mining subscription idempotency key was already used with different terms",
-        );
-      }
-      return existing;
-    }
     const account = await this.getAccountForUser(
       command.userId,
       String(plan.currency),
@@ -2365,17 +2377,20 @@ export class D1FinancialCommandGateway {
     );
     const current = await this.findAccount(account.id);
     const amount = this.decimal(command.amount);
+    if (this.nonNegativeDecimal(current.available).lt(amount))
+      throw new BadRequestException("Insufficient available Finance balance for mining subscription");
     const idem = `mining-reserve:${command.subscriptionId}`;
     const ledgerId = randomUUID();
     const postingId = randomUUID();
     const result = await this.bridge.batch([
       {
-        sql: `INSERT OR IGNORE INTO "LedgerIdempotency" ("id","idempotencyKey","operation","accountId","createdAt","updatedAt") SELECT ?,?,'RESERVE',?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP WHERE NOT EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=?) AND EXISTS (SELECT 1 FROM "LedgerAccount" WHERE "id"=? AND "asset"=? AND "available"=? AND "locked"=?)`,
+        sql: `INSERT OR IGNORE INTO "LedgerIdempotency" ("id","idempotencyKey","operation","accountId","createdAt","updatedAt") SELECT ?,?,'RESERVE',?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP WHERE NOT EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=?) AND NOT EXISTS (SELECT 1 FROM "Activity" WHERE "idempotencyKey"=?) AND EXISTS (SELECT 1 FROM "LedgerAccount" WHERE "id"=? AND "asset"=? AND "available"=? AND "locked"=?)`,
         params: [
           ledgerId,
           idem,
           account.id,
           idem,
+          command.idempotencyKey,
           account.id,
           String(plan.currency),
           current.available,
@@ -2469,6 +2484,7 @@ export class D1FinancialCommandGateway {
     ]);
     this.requireChanges(result, 1, "D1 mining reservation");
     this.requireChanges(result, 3, "D1 mining reservation posting");
+    this.requireChanges(result, 6, "D1 mining reservation activity");
     this.requireChanges(result, 7, "D1 mining subscription");
     const row = await this.getMiningSubscription(
       command.subscriptionId,
@@ -2958,7 +2974,11 @@ export class D1FinancialCommandGateway {
     const row = await this.getLoanApplication(command.id, command.userId);
     if (!row)
       throw new BadRequestException("D1 loan application was not materialized");
+    const storedSnapshot = typeof row.productSnapshot === "string"
+      ? JSON.parse(String(row.productSnapshot)) as Record<string, unknown>
+      : row.productSnapshot as Record<string, unknown> | null;
     if (
+      String(storedSnapshot?.planId ?? "") !== String(command.productSnapshot.planId ?? "") ||
       this.decimal(String(row.amountDecimal)).comparedTo(
         this.decimal(command.amount),
       ) !== 0 ||
@@ -7314,7 +7334,17 @@ export class D1FinancialCommandGateway {
   ): Promise<Record<string, unknown>> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const existing = await this.getWithdrawal(command.requestKey);
-    if (existing) return existing;
+    if (existing) {
+      if (String(existing.userId) !== command.userId
+        || String(existing.asset).toUpperCase() !== command.asset.trim().toUpperCase()
+        || String(existing.network).toUpperCase() !== command.network.trim().toUpperCase()
+        || String(existing.address) !== command.address
+        || !this.decimal(String(existing.amount)).eq(this.decimal(command.amount))
+        || !this.nonNegativeDecimal(String(existing.fee)).eq(this.nonNegativeDecimal(command.fee))
+        || !this.decimal(String(existing.reservedAmount)).eq(this.decimal(command.reservedAmount)))
+        throw new BadRequestException("Withdrawal original key belongs to different request terms");
+      return existing;
+    }
     const account = await this.getAccountForUser(command.userId, command.asset);
     const current = await this.findAccount(account.id);
     const reserved = this.decimal(command.reservedAmount);
@@ -8771,14 +8801,23 @@ export class D1FinancialCommandGateway {
         String(a.createdAt).localeCompare(String(b.createdAt)) ||
         String(a.id).localeCompare(String(b.id)),
     );
-    const buy = buys[0];
-    const sell = sells[0];
-    if (!buy || !sell || price(buy).lt(price(sell))) return null;
-    if (
-      String(buy.userId) === String(sell.userId) &&
-      String(buy.id) === String(sell.id)
-    )
-      return null;
+    // A customer cannot trade against their own order. The old same-ID
+    // check could never reject a distinct BUY/SELL order pair.
+    let buy: Record<string, unknown> | undefined;
+    let sell: Record<string, unknown> | undefined;
+    for (const candidateBuy of buys) {
+      const eligibleSell = sells.find(
+        (candidateSell) =>
+          String(candidateSell.userId) !== String(candidateBuy.userId) &&
+          price(candidateBuy).gte(price(candidateSell)),
+      );
+      if (eligibleSell) {
+        buy = candidateBuy;
+        sell = eligibleSell;
+        break;
+      }
+    }
+    if (!buy || !sell) return null;
 
     const amount = Prisma.Decimal.min(
       this.decimal(String(buy.remaining)),

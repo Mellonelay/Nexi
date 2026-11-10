@@ -8,6 +8,7 @@ import api from '../../../lib/api';
 import { getIntentKey, type PendingIntentKey } from '../../../lib/intent-key';
 import { sessionPrincipalId } from '../../../lib/wallet-auth';
 import { clearPendingEconomicIntent, persistPendingEconomicIntent, readPendingEconomicIntent } from '../../../lib/pending-economic-intent';
+import { decimalAmountWithinBalance, decimalLessThanOrEqual } from '../../../lib/trading-states';
 
 interface WithdrawModalProps {
   isOpen: boolean;
@@ -23,6 +24,20 @@ type WithdrawalCapability = {
   asset: string; network: string; networkName: string;
   minWithdrawal: string; maxWithdrawal: string; withdrawalFee: string;
 };
+
+function addUnsignedDecimals(a: string, b: string): string | null {
+  if (!/^\d+(?:\.\d+)?$/.test(a) || !/^\d+(?:\.\d+)?$/.test(b)) return null;
+  const [ai, af = ''] = a.split('.');
+  const [bi, bf = ''] = b.split('.');
+  const scale = Math.max(af.length, bf.length);
+  const multiplier = 10n ** BigInt(scale);
+  const total = (BigInt(ai) + BigInt(bi)) * multiplier
+    + BigInt(af.padEnd(scale, '0') || '0') + BigInt(bf.padEnd(scale, '0') || '0');
+  const digits = total.toString().padStart(scale + 1, '0');
+  if (scale === 0) return digits;
+  const fraction = digits.slice(-scale).replace(/0+$/, '');
+  return digits.slice(0, -scale) + (fraction ? `.${fraction}` : '');
+}
 
 export default function WithdrawModal({ isOpen, onClose, currencies, selectedCurrency, onSelectCurrency, onCompleted }: WithdrawModalProps) {
   const [network, setNetwork] = useState('');
@@ -72,6 +87,10 @@ export default function WithdrawModal({ isOpen, onClose, currencies, selectedCur
 
   const availableCapabilities = capabilities.filter((entry) => entry.asset.toUpperCase() === selectedCurrency.toUpperCase());
   const selectedCapability = availableCapabilities.find((entry) => entry.network === network);
+  const amountInRange = Boolean(selectedCapability && decimalLessThanOrEqual(selectedCapability.minWithdrawal, amount.trim())
+    && decimalAmountWithinBalance(amount.trim(), selectedCapability.maxWithdrawal));
+  const expectedDebit = selectedCapability && amountInRange
+    ? addUnsignedDecimals(amount.trim(), selectedCapability.withdrawalFee) : null;
   const selectableAssets = [...new Set(capabilities.map((entry) => entry.asset))];
   useEffect(() => {
     setNetwork((current) => availableCapabilities.some((entry) => entry.network === current)
@@ -97,7 +116,11 @@ export default function WithdrawModal({ isOpen, onClose, currencies, selectedCur
         toast.warning('Withdrawal outcome remains unconfirmed. Check withdrawal history or contact Support; do not submit another request.');
         return;
       }
-      clearPendingEconomicIntent('withdrawal', principal, key);
+      if (!clearPendingEconomicIntent('withdrawal', principal, key)) {
+        setUnknownIntentKey(key);
+        toast.warning('Withdrawal found, but recovery storage could not be cleared. Do not submit another request.');
+        return;
+      }
       pendingIntent.current = null;
       setUnknownIntentKey(null);
       setReviewOpen(false);
@@ -112,9 +135,7 @@ export default function WithdrawModal({ isOpen, onClose, currencies, selectedCur
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (submissionLock.current || unknownIntentKey) return;
-    if (!selectedCapability || !address.trim() || !amount || !/^(?:0|[1-9]\d*)(?:\.\d+)?$/.test(amount.trim()) || Number(amount) <= 0 || !securityPassword || !security) return;
-    if (Number(amount) < Number(selectedCapability.minWithdrawal)
-      || Number(amount) > Number(selectedCapability.maxWithdrawal)) return;
+    if (!selectedCapability || !address.trim() || !amountInRange || !expectedDebit || !securityPassword || !security) return;
     if (security.mfa.enabled && !mfaToken) return;
     if (!reviewOpen) { setReviewOpen(true); return; }
     const principal = sessionPrincipalId();
@@ -146,7 +167,11 @@ export default function WithdrawModal({ isOpen, onClose, currencies, selectedCur
         void recheckUnknownWithdrawal(intent.key);
         return;
       }
-      clearPendingEconomicIntent('withdrawal', principal, intent.key);
+      if (!clearPendingEconomicIntent('withdrawal', principal, intent.key)) {
+        setUnknownIntentKey(intent.key);
+        toast.warning('Withdrawal accepted, but recovery storage could not be cleared. Do not submit another.');
+        return;
+      }
       pendingIntent.current = null;
       setUnknownIntentKey(null);
       toast.success('Withdrawal submitted for review.');
@@ -161,7 +186,11 @@ export default function WithdrawModal({ isOpen, onClose, currencies, selectedCur
       // A 5xx, timeout or conflict does not establish that the reserve was rolled back.
       if (sessionPrincipalId() !== principal) return;
       if ([400, 401, 403, 404, 422].includes(status ?? -1)) {
-        clearPendingEconomicIntent('withdrawal', principal, intent.key);
+        if (!clearPendingEconomicIntent('withdrawal', principal, intent.key)) {
+          setUnknownIntentKey(intent.key);
+          toast.warning('Withdrawal rejected, but recovery storage could not be cleared. Do not submit another withdrawal.');
+          return;
+        }
         pendingIntent.current = null;
         setReviewOpen(false);
         toast.error('Withdrawal request was rejected. Review the entered details before retrying.');
@@ -207,8 +236,7 @@ export default function WithdrawModal({ isOpen, onClose, currencies, selectedCur
           <input className="nexi-input mt-1 w-full" inputMode="decimal" value={amount} onChange={(event) => { setReviewOpen(false); setAmount(event.target.value); }}
             placeholder={selectedCapability ? `${selectedCapability.minWithdrawal}–${selectedCapability.maxWithdrawal}` : 'Unavailable'} required />
         </label>
-        {selectedCapability && amount.trim() && Number.isFinite(Number(amount))
-          && (Number(amount) < Number(selectedCapability.minWithdrawal) || Number(amount) > Number(selectedCapability.maxWithdrawal)) &&
+        {selectedCapability && amount.trim() && !amountInRange &&
           <p role="alert" className="text-xs text-amber-200">Amount is outside the configured withdrawal limits.</p>}
         <label className="block text-xs text-[#C3BBD0]">Security password
           <input className="nexi-input mt-1 w-full" type="password" autoComplete="current-password" value={securityPassword} onChange={(event) => { setReviewOpen(false); setSecurityPassword(event.target.value); }} required />
@@ -222,6 +250,7 @@ export default function WithdrawModal({ isOpen, onClose, currencies, selectedCur
           <p className="break-all">Destination: <span className="font-mono text-white">{address.trim()}</span></p>
           <p>Requested amount: <span className="font-mono text-white">{amount.trim()} {selectedCurrency}</span></p>
           <p>Fee: <span className="font-mono text-white">{selectedCapability.withdrawalFee} {selectedCurrency}</span></p>
+          <p>Expected amount plus fee: <span className="break-all font-mono text-white">{expectedDebit ?? 'Unavailable'} {selectedCurrency}</span></p>
           <p className="text-amber-100">Confirming reserves the amount plus fee for review. This does not broadcast a blockchain transaction.</p>
           <button type="button" className="mt-2 min-h-11 rounded-lg border border-violet-300/20 px-3" onClick={() => setReviewOpen(false)}>Edit request</button>
         </section>}
@@ -230,8 +259,7 @@ export default function WithdrawModal({ isOpen, onClose, currencies, selectedCur
           <button type="button" onClick={() => void recheckUnknownWithdrawal(unknownIntentKey)} className="mt-2 block min-h-11 rounded-lg border border-amber-300/30 px-3 font-semibold">Recheck withdrawal</button>
         </div>}
         <button type="submit" disabled={Boolean(unknownIntentKey) || busy || !security || !selectedCapability || capabilitiesLoading || capabilitiesError ||
-          !amount.trim() || !Number.isFinite(Number(amount)) || Number(amount) <= 0 ||
-          Number(amount) < Number(selectedCapability.minWithdrawal) || Number(amount) > Number(selectedCapability.maxWithdrawal)}
+          !amountInRange || !expectedDebit}
           className="min-h-11 w-full rounded-xl bg-[#FF4D5F] px-4 font-semibold text-white disabled:opacity-50">
           {busy ? 'Submitting…' : reviewOpen ? 'Confirm withdrawal request' : 'Review withdrawal'}
         </button>

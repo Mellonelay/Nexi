@@ -83,6 +83,13 @@ export class MiningService {
     const d1 = this.requireD1FinancialAuthority();
     const amount = this.decimal(amountText, 'amount');
     const subscriptionId = this.idempotentId(`mining:${userId}:${planId}`, idempotencyKey);
+    const prior = await d1.getMiningSubscriptionForIntent(userId, idempotencyKey);
+    if (prior) {
+      if (String(prior.planId) !== planId ||
+          !new Prisma.Decimal(String(prior.amountDecimal ?? prior.amount)).eq(amount))
+        throw new BadRequestException('Mining original request key belongs to different subscription terms');
+      return { ...prior, replayed: true };
+    }
     const plan: any = await d1.getMiningPlan(planId);
     if (!plan || !plan.isActive) throw new NotFoundException('Mining plan not found');
     const min = new Prisma.Decimal(String(plan.minDepositDecimal));

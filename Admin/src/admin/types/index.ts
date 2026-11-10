@@ -359,7 +359,7 @@ export interface SpotOrder {
   price?: string;
   size: string;
   filled: string;
-  status: "open" | "partially_filled" | "filled" | "cancelled" | "rejected";
+  status: "open" | "partially_filled" | "filled" | "cancelled" | "rejected" | "unknown";
   createdAt: string;
 }
 
@@ -578,7 +578,9 @@ export function mapLedgerPosting(value: unknown): LedgerEntry | undefined {
     amount: row.amount,
     type: row.kind === "SETTLEMENT" ? "settlement" : "posting",
     refId: row.referenceId,
-    note: typeof row.referenceType === "string" ? `${row.kind} · ${row.referenceType}` : row.kind,
+    note: domain === "margin" && row.kind === "RESERVE" && row.referenceType === "GATE2_SPOT_ORDER_RESERVE" && row.referenceId.startsWith("margin:entry:")
+      ? "RESERVE · MARGIN_ENTRY_SPOT_ORDER"
+      : typeof row.referenceType === "string" ? `${row.kind} · ${row.referenceType}` : row.kind,
     debit: row.kind === "DEBIT" ? row.amount : undefined,
     credit: row.kind === "CREDIT" ? row.amount : undefined,
     availableDelta: typeof row.availableDelta === "string" ? row.availableDelta : undefined,

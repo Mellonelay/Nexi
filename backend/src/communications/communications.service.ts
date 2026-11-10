@@ -360,6 +360,20 @@ export class CommunicationsService {
     return this.attachmentStorage.read(userId, id);
   }
 
+  async getSupportMessageByIntent(userId: string, idempotencyKey: string) {
+    if (typeof idempotencyKey !== 'string' || !idempotencyKey.trim() || idempotencyKey.length > 128) {
+      throw new BadRequestException('Support message idempotency key is invalid');
+    }
+    const identity = this.supportConversationIdentity(userId);
+    const id = this.id(`message:${userId}:${NEXI_SUPPORT_CHANNEL_ID}`, idempotencyKey);
+    const row = await this.database.persistentMessage.findUnique({ where: { id } });
+    if (!row) return null;
+    if (row.conversationId !== identity.conversationId || row.senderId !== userId || row.recipientId !== NEXI_SUPPORT_CHANNEL_ID) {
+      throw new ForbiddenException('Support message ownership mismatch');
+    }
+    return this.supportMessageResponse(row);
+  }
+
   async sendSupportMessage(userId: string, body: string, idempotencyKey: string, attachmentIds: string[] = []) {
     const messageBody = body.trim();
     if (!messageBody && !attachmentIds.length) throw new BadRequestException("Message body or attachment is required");

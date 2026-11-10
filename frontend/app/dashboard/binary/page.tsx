@@ -22,6 +22,8 @@ import { clearPendingEconomicIntent, persistPendingEconomicIntent, readPendingEc
 import { binarySandboxChartFeed, selectBinarySandboxPosition } from '../../lib/binary-sandbox-chart';
 import {
   binaryOrderReady,
+  decimalAmountWithinBalance,
+  decimalLessThanOrEqual,
   BinaryPositionState,
   normalizeBinaryPositionState,
 } from '../../lib/trading-states';
@@ -323,7 +325,11 @@ export default function BinaryPage() {
           const recovered = normalizePosition(match);
           if (recovered && pendingBinaryIntent.current?.key === key) {
             lastSubmittedPositionId.current = recovered.id;
-            clearPendingEconomicIntent('binary-position', userId, key);
+            if (!clearPendingEconomicIntent('binary-position', userId, key)) {
+              setUnknownBinaryIntentKey(key);
+              setFeedback('Position confirmed, but recovery storage could not be cleared. Recheck before another order.');
+              return;
+            }
             pendingBinaryIntent.current = null;
             setUnknownBinaryIntentKey(null);
             setState(recovered.status);
@@ -341,10 +347,14 @@ export default function BinaryPage() {
         ? (payload.position as Record<string, unknown>).idempotencyKey : null;
       if (pendingBinaryIntent.current && receivedIntentKey === pendingBinaryIntent.current.key) {
         lastSubmittedPositionId.current = position.id;
-        clearPendingEconomicIntent('binary-position', userId, pendingBinaryIntent.current.key);
-        pendingBinaryIntent.current = null;
-        setUnknownBinaryIntentKey(null);
-        setFeedback('The submitted position was confirmed by the server.');
+        if (clearPendingEconomicIntent('binary-position', userId, pendingBinaryIntent.current.key)) {
+          pendingBinaryIntent.current = null;
+          setUnknownBinaryIntentKey(null);
+          setFeedback('The submitted position was confirmed by the server.');
+        } else {
+          setUnknownBinaryIntentKey(pendingBinaryIntent.current.key);
+          setFeedback('Position confirmed, but recovery storage could not be cleared. Recheck before another order.');
+        }
       }
       setActivePositions((current) => [position, ...current.filter((item) => item.id !== position.id)]);
       const isTrackedPosition = lastSubmittedPositionId.current === position.id;
@@ -452,9 +462,9 @@ export default function BinaryPage() {
       const item = configured.get(seconds);
       const raw = item ? Number(item.payoutRate) : Number.NaN;
       const rate = Number.isFinite(raw) && raw > 0 ? raw : null;
-      const minimumAmount = item ? toPositive(item.minStake) : null;
-      const maximumAmount = item ? toPositive(item.maxStake) : null;
-      const validRange = minimumAmount !== null && maximumAmount !== null && minimumAmount <= maximumAmount;
+      const minimumAmount = item?.minStake == null ? null : String(item.minStake);
+      const maximumAmount = item?.maxStake == null ? null : String(item.maxStake);
+      const validRange = decimalLessThanOrEqual(minimumAmount, maximumAmount);
       return { seconds, enabled: Boolean(item?.enabled && rate && validRange), rate, minimumAmount, maximumAmount };
     });
   }, [binaryConfigurations, binaryDurations, normalizedPair]);
@@ -467,14 +477,11 @@ export default function BinaryPage() {
 
   const selectedDuration = durationOptions.find((item) => item.seconds === duration);
   const payoutRate = selectedDuration?.rate ?? null;
-  const minimumStake = selectedDuration?.minimumAmount !== null && selectedDuration?.minimumAmount !== undefined && Number.isFinite(selectedDuration.minimumAmount)
-    ? selectedDuration.minimumAmount
-    : null;
-  const maximumStake = selectedDuration?.maximumAmount !== null && selectedDuration?.maximumAmount !== undefined && Number.isFinite(selectedDuration.maximumAmount)
-    ? selectedDuration.maximumAmount
-    : null;
+  const minimumStake = selectedDuration?.minimumAmount ?? null;
+  const maximumStake = selectedDuration?.maximumAmount ?? null;
   const stake = toPositive(amount);
-  const potentialReturn = stake !== null && payoutRate !== null ? stake * (1 + payoutRate) : null;
+  const estimatedReturn = stake !== null && payoutRate !== null ? stake * (1 + payoutRate) : null;
+  const potentialReturn = estimatedReturn !== null && Number.isFinite(estimatedReturn) ? estimatedReturn : null;
   const ready = binaryOrderReady({
     authenticated: Boolean(userId),
     backendConfigured: submissionConfigured,
@@ -489,12 +496,12 @@ export default function BinaryPage() {
   });
   const fundingRequired = Boolean(userId) && submissionConfigured
     && currentPrice !== null && Boolean(selectedDuration?.enabled)
-    && stake !== null && payoutRate !== null
+    && payoutRate !== null
     && minimumStake !== null && maximumStake !== null
-    && stake >= minimumStake && stake <= maximumStake
+    && decimalLessThanOrEqual(minimumStake, amount) && decimalAmountWithinBalance(amount, maximumStake)
     && (optionWalletBalance.state === 'MISSING_ACCOUNT'
       || optionWalletBalance.state === 'ZERO'
-      || (optionWalletBalance.state === 'POSITIVE' && stake > Number(optionWalletBalance.available)));
+      || (optionWalletBalance.state === 'POSITIVE' && !decimalAmountWithinBalance(amount, optionWalletBalance.available)));
   // Permit an underfunded customer to request help, never an unfunded order.
   const reviewReady = !unknownBinaryIntentKey && (ready || (fundingRequired && optionWalletBalance.state !== 'POSITIVE'));
   const stateTone = ['WIN', 'OPEN'].includes(state)
@@ -520,7 +527,7 @@ export default function BinaryPage() {
             ? 'Checking Options wallet availability…'
           : optionWalletBalance.state === 'ZERO'
             ? 'Options wallet has no available USDT. Use Wallet → Transfer to add funds before trading.'
-          : optionWalletBalance.state === 'POSITIVE' && stake !== null && stake > Number(optionWalletBalance.available)
+          : optionWalletBalance.state === 'POSITIVE' && stake !== null && !decimalAmountWithinBalance(amount, optionWalletBalance.available)
             ? 'Stake exceeds the available Options balance.'
       : currentPrice === null
         ? 'A fresh market price is required before submission.'
@@ -571,7 +578,11 @@ export default function BinaryPage() {
     }
     if (recovered) {
       lastSubmittedPositionId.current = recovered.id;
-      clearPendingEconomicIntent('binary-position', userId, key);
+      if (!clearPendingEconomicIntent('binary-position', userId, key)) {
+        setUnknownBinaryIntentKey(key);
+        setFeedback('Position confirmed, but recovery storage could not be cleared. Do not submit another order.');
+        return;
+      }
       pendingBinaryIntent.current = null;
       setUnknownBinaryIntentKey(null);
       setState(recovered.status);
@@ -615,10 +626,20 @@ export default function BinaryPage() {
         idempotencyKey: pendingBinaryIntent.current.key,
       });
       const position = normalizePosition(response.data);
-      if (!position) throw new Error('Invalid position response');
       if (sessionPrincipalId() !== userId) return;
+      if (!position || !response.data || (response.data as { idempotencyKey?: unknown }).idempotencyKey !== submittedKey) {
+        setUnknownBinaryIntentKey(submittedKey);
+        setState('UNKNOWN');
+        setFeedback('Options response could not confirm the original request key. Recheck account positions before another order.');
+        if (submittedKey) void reconcileUnknownSubmission(submittedKey);
+        return;
+      }
       lastSubmittedPositionId.current = position.id;
-      clearPendingEconomicIntent('binary-position', userId, submittedKey!);
+      if (!clearPendingEconomicIntent('binary-position', userId, submittedKey!)) {
+        setUnknownBinaryIntentKey(submittedKey);
+        setFeedback('Position accepted, but recovery storage could not be cleared. Do not submit another order.');
+        return;
+      }
       pendingBinaryIntent.current = null;
       setUnknownBinaryIntentKey(null);
       setActivePositions((current) => [position, ...current.filter((item) => item.id !== position.id)]);
@@ -634,7 +655,12 @@ export default function BinaryPage() {
       const rejected = [400, 401, 403, 404, 422].includes(status ?? -1);
       setConfirmationOpen(false);
       if (rejected) {
-        if (submittedKey) clearPendingEconomicIntent('binary-position', userId, submittedKey);
+        if (submittedKey && !clearPendingEconomicIntent('binary-position', userId, submittedKey)) {
+          setUnknownBinaryIntentKey(submittedKey);
+          setState('UNKNOWN');
+          setFeedback('Request rejected, but recovery storage could not be cleared. Keep the original intent locked.');
+          return;
+        }
         pendingBinaryIntent.current = null;
         setUnknownBinaryIntentKey(null);
         setState('DRAFT');
@@ -689,18 +715,19 @@ export default function BinaryPage() {
             </div>
             <Wallet className="hidden h-5 w-5 shrink-0 text-[#A995FF] sm:mt-1 sm:block" aria-hidden="true" />
           </div>
-          <div className="mt-2 grid min-w-0 grid-cols-5 gap-1.5 sm:mt-4 sm:gap-2" aria-label="Expiry duration">
-            {durationOptions.map((option) => <button key={option.seconds} type="button" aria-pressed={duration === option.seconds} disabled={!option.enabled} onClick={() => setDuration(option.seconds)} className={`nexi-interactive nexi-ripple group min-h-[64px] min-w-0 rounded-lg border px-1.5 py-2 text-center transition sm:min-h-[84px] sm:rounded-xl sm:px-2 sm:py-2.5 ${duration === option.seconds ? 'border-[#8B5CF6] bg-[linear-gradient(145deg,rgba(109,65,255,.22),rgba(26,16,36,.92))] text-white shadow-[0_0_22px_rgba(109,65,255,.14)]' : 'border-violet-300/10 bg-[#0B0711]/70 text-[#8C8299] hover:border-violet-300/25'} disabled:cursor-not-allowed disabled:opacity-55`}><span className="block text-center text-[9px] font-semibold uppercase tracking-[.04em] sm:text-[11px] sm:tracking-[.08em]">{formatDuration(option.seconds)}</span><span className="mt-1 block font-mono text-xs text-[#F5F7FB] sm:mt-2 sm:text-base">{option.rate === null ? '—' : `${(option.rate * 100).toFixed(0)}%`}</span><span className="mt-1 block break-words text-[8px] leading-3 text-[#8C8299] sm:text-[10px]">{option.minimumAmount === null || option.maximumAmount === null ? 'Range unavailable' : `${option.minimumAmount}–${option.maximumAmount} USDT`}</span></button>)}
+          <div className="mt-2 grid min-w-0 grid-cols-5 gap-1.5 sm:mt-4 sm:gap-2" role="group" aria-label="Expiry duration">
+            {durationOptions.map((option) => <button key={option.seconds} type="button" aria-pressed={duration === option.seconds} aria-label={`${formatDuration(option.seconds)} expiry. ${option.minimumAmount ?? 'Unknown'}–${option.maximumAmount ?? 'unknown'} USDT stake range`} disabled={!option.enabled} onClick={() => setDuration(option.seconds)} className={`nexi-interactive nexi-ripple group min-h-[64px] min-w-0 rounded-lg border px-1.5 py-2 text-center transition sm:min-h-[84px] sm:rounded-xl sm:px-2 sm:py-2.5 ${duration === option.seconds ? 'border-[#8B5CF6] bg-[linear-gradient(145deg,rgba(109,65,255,.22),rgba(26,16,36,.92))] text-white shadow-[0_0_22px_rgba(109,65,255,.14)]' : 'border-violet-300/10 bg-[#0B0711]/70 text-[#8C8299] hover:border-violet-300/25'} disabled:cursor-not-allowed disabled:opacity-55`}><span className="block text-center text-[9px] font-semibold uppercase tracking-[.04em] sm:text-[11px] sm:tracking-[.08em]">{formatDuration(option.seconds)}</span><span className="mt-1 block font-mono text-xs text-[#F5F7FB] sm:mt-2 sm:text-base">{option.rate === null ? '—' : `${(option.rate * 100).toFixed(0)}%`}</span></button>)}
           </div>
+          <p className="mt-2 min-w-0 break-words text-xs leading-5 text-[#C3BBD0]">Selected stake range: <span className="break-all font-mono text-white">{minimumStake !== null && maximumStake !== null ? `${minimumStake}–${maximumStake} USDT` : 'Unavailable'}</span></p>
           <div className="mt-2 rounded-xl border border-violet-300/10 bg-[#0B0711]/75 px-3 py-2 text-[10px] leading-4 text-[#AFA4BC] sm:mt-3 sm:py-2.5 sm:text-xs sm:leading-5">{availabilityCopy}</div>
           <label className="mt-4 block text-xs text-[#C3BBD0]">Stake (USDT)
-            <div className="relative mt-1"><input type="number" inputMode="decimal" min={minimumStake ?? undefined} max={maximumStake ?? undefined} value={amount} onChange={(event) => setAmount(event.target.value)} placeholder={minimumStake !== null && maximumStake !== null ? `${minimumStake}–${maximumStake}` : '0.00'} aria-describedby="binary-stake-range" className="min-h-12 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 pr-14 text-right font-mono outline-none focus:border-[#8B5CF6]" /><span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#8C8299]">USDT</span></div>
+            <div className="relative mt-1"><input type="text" inputMode="decimal" autoComplete="off" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder={minimumStake !== null && maximumStake !== null ? `${minimumStake}–${maximumStake}` : '0.00'} aria-describedby="binary-stake-range" className="min-h-12 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 pr-14 text-right font-mono outline-none focus:border-[#8B5CF6]" /><span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#8C8299]">USDT</span></div>
             <span id="binary-stake-range" className="mt-1 block text-[10px] text-[#8C8299]">{minimumStake !== null && maximumStake !== null ? `Allowed range: ${minimumStake}–${maximumStake} USDT` : 'Stake range unavailable'}</span>
           </label>
-          <dl className="mt-4 grid grid-cols-2 gap-3 rounded-xl border border-violet-300/10 bg-[#0B0711] p-3 text-xs">
-            <div><dt className="text-[#8C8299]">Options Wallet</dt><dd className="mt-1 font-mono" aria-live="polite">{optionWalletBalanceLabel(optionWalletBalance)}</dd></div>
+          <dl className="mt-4 grid min-w-0 grid-cols-1 gap-3 rounded-xl border border-violet-300/10 bg-[#0B0711] p-3 text-xs min-[390px]:grid-cols-2">
+            <div className="min-w-0"><dt className="text-[#8C8299]">Options Wallet</dt><dd className="mt-1 break-all font-mono tabular-nums" aria-live="polite">{optionWalletBalanceLabel(optionWalletBalance)}</dd></div>
             <div><dt className="text-[#8C8299]">Payout rate</dt><dd className="mt-1 font-mono">{payoutRate === null ? '—' : `${(payoutRate * 100).toFixed(0)}%`}</dd></div>
-            <div><dt className="text-[#8C8299]">Potential return</dt><dd className="mt-1 font-mono">{potentialReturn === null ? '—' : `${potentialReturn.toFixed(2)} USDT`}</dd></div>
+            <div className="min-w-0"><dt className="text-[#8C8299]">Estimated potential return</dt><dd className="mt-1 break-all font-mono tabular-nums">{potentialReturn === null ? '—' : `${potentialReturn.toFixed(2)} USDT`}</dd></div>
             <div><dt className="text-[#8C8299]">Duration</dt><dd className="mt-1 font-mono">{selectedDuration ? formatDuration(duration) : '—'}</dd></div>
           </dl>
           {feedback && <p role="status" className="mt-3 text-sm text-[#C3BBD0]">{feedback}</p>}

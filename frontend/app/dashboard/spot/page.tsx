@@ -418,7 +418,12 @@ function MarginWorkspace({
           </div>
           <div className="min-w-0 rounded-xl border border-violet-300/10 bg-[#0B0711] p-3">
             <div className="flex items-center justify-between gap-2"><h3 className="text-sm font-semibold">Positions</h3><span className="text-xs text-[#8C8299]">{marginPositions.length} loaded</span></div>
-            {marginPositions.length === 0 ? <p className="mt-5 text-center text-sm text-[#8C8299]">{userId ? 'No margin positions are available.' : 'Verify the wallet to load margin positions.'}</p> : <div className="mt-3 space-y-2">{marginPositions.map((position) => <article key={position.id} className="rounded-lg border border-violet-300/10 p-3 text-xs"><div className="flex flex-wrap items-center justify-between gap-2"><span className={position.direction === 'LONG' ? 'text-[#22D3A6]' : 'text-[#FF5C7C]'}>{position.direction} {position.leverage}x</span><span className="rounded-full border border-violet-300/15 px-2 py-1 uppercase text-[#C3BBD0]">{position.status}</span></div><p className="mt-2 break-all font-mono">Collateral {position.collateral} · Entry {position.entryPrice} · Mark {position.markPrice ?? '—'}</p><div className="mt-2 flex flex-wrap gap-2">{position.status === 'OPEN' && <button type="button" disabled={marginSubmitting} onClick={() => void handleMarkMargin(position.id)} className="rounded border border-cyan-300/20 px-2 py-1 text-[#48C0CC] disabled:opacity-50">Mark</button>} {position.status === 'OPEN' && <button type="button" disabled={marginSubmitting} onClick={() => void handleCloseMargin(position.id)} className="min-h-11 rounded border border-rose-300/20 px-3 py-2 text-[#FF9CB0] disabled:opacity-50">Close</button>}
+            {marginPositions.length === 0 ? <p className="mt-5 text-center text-sm text-[#8C8299]">{userId ? 'No margin positions are available.' : 'Verify the wallet to load margin positions.'}</p> : <div className="mt-3 space-y-2">{marginPositions.map((position) => <article key={position.id} className="rounded-lg border border-violet-300/10 p-3 text-xs"><div className="flex flex-wrap items-center justify-between gap-2"><span className={position.direction === 'LONG' ? 'text-[#22D3A6]' : 'text-[#FF5C7C]'}>{position.direction} {position.leverage}x</span><span className="rounded-full border border-violet-300/15 px-2 py-1 uppercase text-[#C3BBD0]">{position.status}</span></div><dl className="mt-3 grid min-w-0 grid-cols-1 gap-x-4 gap-y-2 min-[430px]:grid-cols-2">
+              <div className="min-w-0"><dt className="text-[#8C8299]">Isolated collateral</dt><dd className="break-all font-mono tabular-nums">{position.collateral} {position.debtAsset || ''}</dd></div>
+              <div className="min-w-0"><dt className="text-[#8C8299]">Borrowed liability</dt><dd className="break-all font-mono tabular-nums">{position.debtPrincipal ?? '—'} {position.debtAsset || ''}</dd></div>
+              <div className="min-w-0"><dt className="text-[#8C8299]">Accrued interest</dt><dd className="break-all font-mono tabular-nums">{position.interestAccrued ?? '—'} {position.debtAsset || ''}</dd></div>
+              <div className="min-w-0"><dt className="text-[#8C8299]">Entry / mark price</dt><dd className="break-all font-mono tabular-nums">{position.entryPrice} / {position.markPrice ?? '—'}</dd></div>
+            </dl><p className="mt-2 text-[11px] leading-5 text-[#AFA4BC]">Borrowed principal and interest are liabilities, not transferable available balance.</p><div className="mt-2 flex flex-wrap gap-2">{position.status === 'OPEN' && <button type="button" disabled={marginSubmitting} onClick={() => void handleMarkMargin(position.id)} className="rounded border border-cyan-300/20 px-2 py-1 text-[#48C0CC] disabled:opacity-50">Mark</button>} {position.status === 'OPEN' && <button type="button" disabled={marginSubmitting} onClick={() => void handleCloseMargin(position.id)} className="min-h-11 rounded border border-rose-300/20 px-3 py-2 text-[#FF9CB0] disabled:opacity-50">Close</button>}
 {position.status === 'PENDING' && /^0+(?:\.0+)?$/.test(position.quantity) && <button type="button" disabled={marginSubmitting} onClick={() => void handleCancelPendingMargin(position.id)} className="min-h-11 rounded border border-amber-300/25 px-3 py-2 text-amber-100 disabled:opacity-50">Cancel pending entry</button>}</div></article>)}</div>}
           </div>
         </div>
@@ -599,7 +604,7 @@ function SpotActivityArea({historyTab, setHistoryTab, historyRows, historyStatus
                   const remaining = row.remaining === undefined ? null : String(row.remaining);
                   const reserved = row.reservedAmount === undefined ? null : String(row.reservedAmount);
                   const reserveAsset = String(row.reserveAsset ?? '');
-                  return <article key={id} className="rounded-xl border border-violet-300/10 bg-[#0B0711] p-3 text-xs"><div className="flex flex-wrap items-center justify-between gap-2"><span className="font-semibold">{pair}{rowSide ? ` · ${rowSide}` : ''}</span><span className="rounded-full border border-violet-300/20 px-2 py-1 uppercase text-[#C3BBD0]">{status}</span></div><div className="mt-2 grid grid-cols-2 gap-2 font-mono sm:grid-cols-4"><span>{isOrder ? 'Ordered base qty' : 'Filled base qty'} {rowAmount}</span><span>{isOrder ? String(row.type ?? '').toUpperCase() === 'MARKET' ? 'Protection price' : 'Order limit price' : 'Execution price'} {rowPrice}</span><span className="break-all">ID {id}</span><span><LocalDateTime value={when == null ? null : String(when)} dateStyle="short" timeStyle="short" /></span></div>{isOrder && <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-[#A99DB8]">{filled !== null && <span>Filled {filled}</span>}{remaining !== null && <span>Remaining {remaining}</span>}{reserved !== null && <span>Initial reserve {reserved} {reserveAsset}</span>}</div>}{canCancel && <button type="button" aria-label={`Cancel Spot order ${id}`} disabled={cancellingOrderId !== null || unknownSpotCancelOrderId !== null} onClick={() => onCancelOrder(id)} className="mt-3 min-h-11 rounded-lg border border-amber-300/30 px-3 text-xs font-semibold text-amber-100 disabled:opacity-50">{cancellingOrderId === id ? 'Cancelling…' : 'Cancel remaining order'}</button>}</article>;
+                  return <article key={id} className="rounded-xl border border-violet-300/10 bg-[#0B0711] p-3 text-xs"><div className="flex flex-wrap items-center justify-between gap-2"><span className="font-semibold">{pair}{rowSide ? ` · ${rowSide}` : ''}</span><span className="rounded-full border border-violet-300/20 px-2 py-1 uppercase text-[#C3BBD0]">{status}</span></div><div className="mt-2 grid grid-cols-2 gap-2 font-mono sm:grid-cols-4"><span>{isOrder ? 'Ordered base qty' : 'Filled base qty'} {rowAmount}</span><span>{isOrder ? String(row.type ?? '').toUpperCase() === 'MARKET' ? 'Protection price' : 'Order limit price' : 'Execution price'} {rowPrice}</span><span className="break-all">ID {id}</span><span><LocalDateTime value={when == null ? null : String(when)} dateStyle="short" timeStyle="short" /></span></div>{isOrder && <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-[#A99DB8]">{filled !== null && <span>Filled {filled}</span>}{remaining !== null && <span>Remaining {remaining}</span>}{reserved !== null && <span>Initial reserve {reserved} {reserveAsset}</span>}</div>}{historyTab === 'ORDERS' && row.executedBase !== undefined && <p className="mt-2 min-w-0 break-all font-mono text-[11px] text-[#C3BBD0]">Executed base: {String(row.executedBase)} · Executed quote before fees: {String(row.executedQuote ?? '—')} {String(row.quoteAsset ?? '')}{row.averageExecutionPrice != null ? ` · Average execution price: ${String(row.averageExecutionPrice)} ${String(row.quoteAsset ?? '')} per base asset` : ''}. Order price and initial reserve are not actual execution totals.</p>}{canCancel && <button type="button" aria-label={`Cancel Spot order ${id}`} disabled={cancellingOrderId !== null || unknownSpotCancelOrderId !== null} onClick={() => onCancelOrder(id)} className="mt-3 min-h-11 rounded-lg border border-amber-300/30 px-3 text-xs font-semibold text-amber-100 disabled:opacity-50">{cancellingOrderId === id ? 'Cancelling…' : 'Cancel remaining order'}</button>}</article>;
                 })}</div>
               ) : (
                 <div className="flex min-h-32 items-center justify-center text-center text-sm text-[#8C8299]">{historyStatus === 'LOADING' ? 'Loading activity…' : historyStatus === 'ERROR' ? 'Activity request failed.' : historyTab === 'OPEN' ? 'No open orders.' : historyTab === 'ORDERS' ? 'No order history.' : 'No trade history.'}</div>
@@ -635,13 +640,13 @@ function SpotOrderTicket({side, setSide, orderType, setOrderType, price, setPric
 
           <div className="mt-2.5 space-y-2 sm:mt-3 sm:space-y-2.5" data-testid="spot-inputs">
             <label className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 text-xs text-[#C3BBD0] sm:block"><span>Price (USDT)</span>
-              <input type="number" inputMode="decimal" value={price} onChange={(event) => setPrice(event.target.value)} disabled={orderType === 'MARKET'} placeholder={orderType === 'MARKET' ? 'Market price' : '—'} className="min-h-9 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 text-right font-mono outline-none focus:border-[#8B5CF6] sm:mt-1 sm:min-h-11" />
+              <input type="number" inputMode="decimal" value={price} onChange={(event) => setPrice(event.target.value)} disabled={orderType === 'MARKET'} placeholder={orderType === 'MARKET' ? 'Market price' : '—'} className="min-h-11 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 text-right font-mono outline-none focus:border-[#8B5CF6] sm:mt-1" />
             </label>
             {orderType === 'STOP' && <label className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 text-xs text-[#C3BBD0] sm:block"><span>Stop price (USDT)</span>
-              <input type="number" inputMode="decimal" value={stopPrice} onChange={(event) => setStopPrice(event.target.value)} placeholder="—" className="min-h-9 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 text-right font-mono outline-none focus:border-[#8B5CF6] sm:mt-1 sm:min-h-11" />
+              <input type="number" inputMode="decimal" value={stopPrice} onChange={(event) => setStopPrice(event.target.value)} placeholder="—" className="min-h-11 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 text-right font-mono outline-none focus:border-[#8B5CF6] sm:mt-1" />
             </label>}
             <label className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 text-xs text-[#C3BBD0] sm:block"><span>Amount ({baseSymbol})</span>
-              <input type="number" inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="0.00" className="min-h-9 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 text-right font-mono outline-none focus:border-[#8B5CF6] sm:mt-1 sm:min-h-11" />
+              <input type="number" inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="0.00" className="min-h-11 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 text-right font-mono outline-none focus:border-[#8B5CF6] sm:mt-1" />
             </label>
             <div className="grid min-w-0 grid-cols-4 gap-1.5">
               {[25, 50, 75, 100].map((percentage) => <button key={percentage} type="button" disabled aria-label={`${percentage}% allocation requires an available balance`} className="min-h-8 min-w-0 rounded-lg border border-violet-300/10 px-0 text-[10px] text-[#8C8299] disabled:cursor-not-allowed sm:min-h-9">{percentage}%</button>)}
@@ -658,7 +663,7 @@ function SpotOrderTicket({side, setSide, orderType, setOrderType, price, setPric
           </div>
 
           <dl className="mt-1.5 grid min-w-0 grid-cols-1 gap-2 rounded-xl border border-violet-300/10 bg-[#0B0711] p-3 text-xs min-[430px]:grid-cols-2 lg:grid-cols-4">
-            <div className="min-w-0"><dt className="text-[#8C8299]">Total</dt><dd className="mt-0.5 break-words font-mono">{total === null ? '—' : `${total.toFixed(2)} USDT`}</dd></div>
+            <div className="min-w-0"><dt className="text-[#8C8299]">Estimated total</dt><dd className="mt-0.5 break-words font-mono">{total === null ? '—' : `${total.toFixed(2)} USDT`}</dd></div>
             <div className="min-w-0"><dt className="text-[#8C8299]">Fee</dt><dd className="mt-0.5 break-words font-mono">—</dd></div>
             <div className="min-w-0"><dt className="text-[#8C8299]">Available</dt><dd className="mt-0.5 break-words font-mono">{availableBalance}</dd></div>
             <div className="hidden min-w-0 lg:block"><dt className="text-[#8C8299]">State</dt><dd className="mt-0.5 break-words font-mono">{productStateLabel(orderState)}</dd></div>
@@ -820,7 +825,11 @@ function useSpotOrderState({
         setFeedback('Spot order outcome remains unknown. Do not submit another order until account history confirms the result.');
         return;
       }
-      clearPendingEconomicIntent('spot-order', userId, key);
+      if (!clearPendingEconomicIntent('spot-order', userId, key)) {
+        setUnknownSpotIntentKey(key);
+        setFeedback('Order confirmed, but recovery storage could not be cleared. Do not submit another order.');
+        return;
+      }
       pendingSpotIntent.current = null;
       setUnknownSpotIntentKey(null);
       setOrderState(normalizeSpotOrderState(response.data.status));
@@ -867,7 +876,12 @@ function useSpotOrderState({
         void recheckUnknownSpotOrder(submittedKey);
         return;
       }
-      clearPendingEconomicIntent('spot-order', userId, submittedKey);
+      if (!clearPendingEconomicIntent('spot-order', userId, submittedKey)) {
+        setOrderState('UNKNOWN');
+        setUnknownSpotIntentKey(submittedKey);
+        setFeedback('Spot order accepted, but recovery storage could not be cleared. Do not submit another.');
+        return;
+      }
       pendingSpotIntent.current = null;
       setUnknownSpotIntentKey(null);
       onOrderChanged();
@@ -891,7 +905,11 @@ function useSpotOrderState({
       const rejected = [400, 401, 403, 404, 422].includes(status ?? -1);
       setOrderState(rejected ? 'REJECTED' : 'UNKNOWN');
       if (rejected && pendingSpotIntent.current) {
-        clearPendingEconomicIntent('spot-order', userId, pendingSpotIntent.current.key);
+        if (!clearPendingEconomicIntent('spot-order', userId, pendingSpotIntent.current.key)) {
+          setUnknownSpotIntentKey(pendingSpotIntent.current.key);
+          setFeedback('Spot request rejected, but recovery storage could not be cleared. Do not submit another order.');
+          return;
+        }
         pendingSpotIntent.current = null;
         setUnknownSpotIntentKey(null);
       } else if (!rejected && pendingSpotIntent.current) {
@@ -1005,7 +1023,11 @@ function useMarginTradingState({
       if (sessionPrincipalId() !== userId || pendingMarginIntent.current?.key !== key) return;
       setMarginPositions(positions);
       if (positions.some((position) => position.openIdempotencyKey === key)) {
-        clearPendingEconomicIntent('margin-open', userId, key);
+        if (!clearPendingEconomicIntent('margin-open', userId, key)) {
+          setMarginUnknownIntentKey(key);
+          setMarginFeedback('Position confirmed, but recovery storage could not be cleared. Do not open another.');
+          return;
+        }
         pendingMarginIntent.current = null;
         setMarginUnknownIntentKey(null);
         setMarginCollateral('');
@@ -1054,7 +1076,11 @@ function useMarginTradingState({
         void recheckUnknownMarginOpening(submittedMarginKey);
         return;
       }
-      clearPendingEconomicIntent('margin-open', userId, submittedMarginKey);
+      if (!clearPendingEconomicIntent('margin-open', userId, submittedMarginKey)) {
+        setMarginUnknownIntentKey(submittedMarginKey);
+        setMarginFeedback('Margin opening accepted, but recovery storage could not be cleared. Do not submit another.');
+        return;
+      }
       pendingMarginIntent.current = null;
       setMarginUnknownIntentKey(null);
       setMarginCollateral('');
@@ -1064,7 +1090,11 @@ function useMarginTradingState({
       if (sessionPrincipalId() !== userId) return;
       const status = (error as { response?: { status?: number } } | null)?.response?.status;
       if ([400, 401, 403, 404, 422].includes(status ?? -1)) {
-        if (pendingMarginIntent.current) clearPendingEconomicIntent('margin-open', userId, pendingMarginIntent.current.key);
+        if (pendingMarginIntent.current && !clearPendingEconomicIntent('margin-open', userId, pendingMarginIntent.current.key)) {
+          setMarginUnknownIntentKey(pendingMarginIntent.current.key);
+          setMarginFeedback('Margin opening rejected, but recovery storage could not be cleared. Do not open another position.');
+          return;
+        }
         pendingMarginIntent.current = null;
         setMarginUnknownIntentKey(null);
         setMarginFeedback('The margin opening was rejected. Review the account and order inputs.');
@@ -1092,7 +1122,10 @@ function useMarginTradingState({
         setMarginFeedback('The original Margin exit remains unconfirmed. Do not submit another exit request.');
         return;
       }
-      clearPendingEconomicIntent('margin-exit', userId, pending.key);
+      if (!clearPendingEconomicIntent('margin-exit', userId, pending.key)) {
+        setMarginFeedback('Margin exit confirmed, but recovery storage could not be cleared. Do not send another exit.');
+        return;
+      }
       setUnknownMarginExit(null);
       setMarginFeedback(result.state === 'CLOSING'
         ? 'Original close order confirmed. Settlement remains pending.'
@@ -1138,7 +1171,10 @@ function useMarginTradingState({
         setMarginFeedback('Margin exit response was not confirmed. Recheck the original request before proceeding.');
         return;
       }
-      clearPendingEconomicIntent('margin-exit', userId, intent.key);
+      if (!clearPendingEconomicIntent('margin-exit', userId, intent.key)) {
+        setMarginFeedback('Margin exit was confirmed, but recovery storage could not be cleared. Keep the original exit locked.');
+        return;
+      }
       setUnknownMarginExit(null);
       setMarginFeedback(result.state === 'CLOSING'
         ? 'Close order is recorded. The position remains CLOSING until settlement.'
@@ -1341,7 +1377,10 @@ function SpotPageBody({
         setCancelFeedback('Original cancellation remains unconfirmed. Review the order without submitting another cancellation.');
         return;
       }
-      clearPendingEconomicIntent('spot-cancel', userId, orderId);
+      if (!clearPendingEconomicIntent('spot-cancel', userId, orderId)) {
+        setCancelFeedback('Order reached a terminal state, but recovery storage could not be cleared. Keep the original cancellation locked.');
+        return;
+      }
       setUnknownSpotCancelOrderId(null);
       setCancelFeedback(order.status === 'CANCELED'
         ? 'Original cancellation confirmed by the persisted order.'
@@ -1373,7 +1412,10 @@ function SpotPageBody({
         setCancelFeedback('Cancellation response is not definitive. Recheck the original order before further action.');
         return;
       }
-      clearPendingEconomicIntent('spot-cancel', userId, orderId);
+      if (!clearPendingEconomicIntent('spot-cancel', userId, orderId)) {
+        setCancelFeedback('Order reached a terminal state, but recovery storage could not be cleared. Keep the original cancellation locked.');
+        return;
+      }
       setUnknownSpotCancelOrderId(null);
       setCancelFeedback('Order cancellation confirmed. Refreshed order history shows the final state.');
     } catch {

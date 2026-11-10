@@ -28,7 +28,8 @@ function configuredTelegramUrl(value: unknown): string | null {
 function configuredSupportEmail(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const email = value.trim();
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null;
+  // The address becomes a mailto: URL; reject URI delimiters and control characters.
+  return /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email) ? email : null;
 }
 
 function supportActions(value: unknown): SupportContacts {

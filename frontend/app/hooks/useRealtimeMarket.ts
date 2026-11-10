@@ -70,7 +70,10 @@ async function loadBaseline(
     })
     .sort((left, right) => left.time - right.time);
   const latest = candles.at(-1);
-  if (!latest) throw new Error("Market baseline contained no valid candles.");
+  if (!latest) {
+    const state = normalizedState(payload.dataState);
+    return { ...EMPTY_STREAM_SNAPSHOT, status: state === "LIVE" ? "UNAVAILABLE" : state };
+  }
   const lastKlineTimestamp = revisions[String(latest.time)]?.observedAt || null;
   return {
     status: normalizedState(payload.dataState),
@@ -135,7 +138,7 @@ export function useRealtimeMarket(symbol: string, interval = "1m") {
 
     const initialize = async () => {
       const initialPromise = loadBaseline(symbol, interval).catch(
-        () => EMPTY_STREAM_SNAPSHOT,
+        () => ({ ...EMPTY_STREAM_SNAPSHOT, status: "ERROR" as const }),
       );
       const apiUrl = apiBaseUrl;
       if (!apiUrl) {
