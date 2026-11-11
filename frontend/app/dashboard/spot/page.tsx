@@ -503,12 +503,12 @@ function SpotOrderBook({mobileMarketPanel, bids, asks, bookStatus, setPrice, bas
               </div>
               <div className="grid min-w-0 grid-cols-2 text-xs">
                 <div className="min-w-0 border-r border-white/5 p-3">
-                  <div className="mb-2 flex justify-between text-[10px] text-[#8C8299]"><span>Bid · {quoteSymbol}</span><span>Quantity {baseSymbol}</span></div>
-                  {bids.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(row.price)} className="nexi-interactive flex min-h-9 min-w-0 w-full flex-col justify-center rounded px-1 text-left font-mono tabular-nums hover:bg-emerald-400/5"><span className="text-xs text-[#22D3A6]">{row.price}</span><span className="break-all text-[10px] text-[#C3BBD0]">{row.amount} {baseSymbol}</span></button>)}
+                  <div className="mb-2 flex flex-wrap justify-between gap-x-2 gap-y-1 text-xs text-[#8C8299]"><span>Bid · {quoteSymbol}</span><span>Quantity {baseSymbol}</span></div>
+                  {bids.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(row.price)} className="nexi-interactive flex min-h-9 min-w-0 w-full flex-col justify-center rounded px-1 text-left font-mono tabular-nums hover:bg-emerald-400/5"><span className="break-all text-xs text-[#22D3A6]">{row.price}</span><span className="break-all text-xs text-[#C3BBD0]">{row.amount} {baseSymbol}</span></button>)}
                 </div>
                 <div className="min-w-0 p-3">
-                  <div className="mb-2 flex justify-between text-[10px] text-[#8C8299]"><span>Ask · {quoteSymbol}</span><span>Quantity {baseSymbol}</span></div>
-                  {asks.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(row.price)} className="nexi-interactive flex min-h-9 min-w-0 w-full flex-col items-end justify-center rounded px-1 text-right font-mono tabular-nums hover:bg-rose-400/5"><span className="text-xs text-[#FF5C7C]">{row.price}</span><span className="break-all text-[10px] text-[#C3BBD0]">{row.amount} {baseSymbol}</span></button>)}
+                  <div className="mb-2 flex flex-wrap justify-between gap-x-2 gap-y-1 text-xs text-[#8C8299]"><span>Ask · {quoteSymbol}</span><span>Quantity {baseSymbol}</span></div>
+                  {asks.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(row.price)} className="nexi-interactive flex min-h-9 min-w-0 w-full flex-col items-end justify-center rounded px-1 text-right font-mono tabular-nums hover:bg-rose-400/5"><span className="break-all text-xs text-[#FF5C7C]">{row.price}</span><span className="break-all text-xs text-[#C3BBD0]">{row.amount} {baseSymbol}</span></button>)}
                 </div>
               </div>
               {bids.length === 0 && asks.length === 0 && (
@@ -545,7 +545,7 @@ function recentTradesEmptyText(status: MarketConnectionStatus) {
 
 function SpotRecentTrades({mobileMarketPanel, marketTrades, tradeStatus, baseSymbol, quoteSymbol}: SpotWorkspaceProps) {
   const statusText = streamStatusText(tradeStatus, 'Live reference trades', 'Connection lost · showing last received trades');
-  const statusClass = tradeStatus === 'CONNECTION_LOST' || tradeStatus === 'STALE' ? 'text-[10px] text-amber-200' : 'text-[10px] text-[#8C8299]';
+  const statusClass = tradeStatus === 'CONNECTION_LOST' || tradeStatus === 'STALE' ? 'text-xs text-amber-200' : 'text-xs text-[#8C8299]';
   return (
             <section className={`nexi-station-card min-w-0 overflow-hidden rounded-2xl xl:block ${mobileMarketPanel === 'TRADES' ? 'block' : 'hidden'}`} aria-labelledby="recent-trades-heading">
               <div className="flex items-center justify-between gap-2 border-b border-white/5 px-3 py-3 sm:px-4">
@@ -554,8 +554,8 @@ function SpotRecentTrades({mobileMarketPanel, marketTrades, tradeStatus, baseSym
               </div>
               {marketTrades.length > 0
                 ? <>
-                    <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-1 border-b border-white/5 px-3 py-2 text-[9px] text-[#8C8299] sm:px-4 sm:text-[10px]"><span>Price ({quoteSymbol})</span><span>Amount ({baseSymbol})</span><span className="text-right">Time</span></div>
-                    <div className="max-h-[min(55vh,520px)] divide-y divide-white/5 overflow-y-auto text-[10px] sm:text-xs">{marketTrades.slice(0, 50).map((trade) => <div key={trade.id} aria-label={`${trade.side} Binance reference trade at ${trade.price} ${quoteSymbol}, amount ${trade.amount} ${baseSymbol}`} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-1 px-3 py-2 font-mono tabular-nums sm:px-4"><span className={`min-w-0 break-all ${trade.side === 'BUY' ? 'text-[#22D3A6]' : 'text-[#FF5C7C]'}`}>{formatMarketDecimal(trade.price)}</span><span className="min-w-0 break-all text-[#C3BBD0]">{formatMarketDecimal(trade.amount)}</span><span className="min-w-[54px] whitespace-nowrap text-right text-[#8C8299]"><LocalDateTime value={trade.executedAt} timeStyle="medium" /></span></div>)}</div>
+                    <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-1 border-b border-white/5 px-3 py-2 text-xs text-[#8C8299] sm:px-4"><span>Price ({quoteSymbol})</span><span>Amount ({baseSymbol})</span><span className="text-right">Time</span></div>
+                    <div className="max-h-[min(55vh,520px)] divide-y divide-white/5 overflow-y-auto text-xs">{marketTrades.slice(0, 50).map((trade) => <div key={trade.id} aria-label={`${trade.side} Binance reference trade at ${trade.price} ${quoteSymbol}, amount ${trade.amount} ${baseSymbol}`} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-1 px-3 py-2 font-mono tabular-nums sm:px-4"><span className={`min-w-0 break-all ${trade.side === 'BUY' ? 'text-[#22D3A6]' : 'text-[#FF5C7C]'}`}>{formatMarketDecimal(trade.price)}</span><span className="min-w-0 break-all text-[#C3BBD0]">{formatMarketDecimal(trade.amount)}</span><span className="min-w-[54px] whitespace-nowrap text-right text-[#8C8299]"><LocalDateTime value={trade.executedAt} timeStyle="medium" /></span></div>)}</div>
                   </>
                 : <div className="flex min-h-52 items-center justify-center p-6 text-center text-sm text-[#8C8299]" role="status">{recentTradesEmptyText(tradeStatus)}</div>}
             </section>
@@ -960,11 +960,13 @@ function useMarginTradingState({
   const [marginUnknownIntentKey, setMarginUnknownIntentKey] = useState<string | null>(null);
   const [marginSubmitting, setMarginSubmitting] = useState(false);
   const marginSubmissionLock = useRef(false);
+  const marginPositionReadRevision = useRef(0);
   const pendingMarginIntent = useRef<PendingIntentKey | null>(null);
   const [unknownMarginExit, setUnknownMarginExit] = useState<{ positionId: string; operation: 'close' | 'cancel-pending'; key: string } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+    const revision = ++marginPositionReadRevision.current;
     const hasToken = hasAuthSession();
     setMarginQuote(null);
     setMarginPositions([]);
@@ -976,9 +978,10 @@ function useMarginTradingState({
     Promise.allSettled([getMarginQuote(displayPair), listMarginPositions()]).then(([quoteResult, positionsResult]) => {
       if (cancelled || sessionPrincipalId() !== userId) return;
       setMarginQuote(quoteResult.status === 'fulfilled' ? quoteResult.value : null);
-      setMarginPositions(positionsResult.status === 'fulfilled' ? positionsResult.value : []);
+      if (revision === marginPositionReadRevision.current)
+        setMarginPositions(positionsResult.status === 'fulfilled' ? positionsResult.value : []);
     });
-    return () => { cancelled = true; };
+    return () => { cancelled = true; ++marginPositionReadRevision.current; };
   }, [displayPair, userId]);
 
   useEffect(() => {
@@ -1008,20 +1011,24 @@ function useMarginTradingState({
   );
 
   const refreshMarginPositions = async (requestUserId: string) => {
+    const revision = ++marginPositionReadRevision.current;
     try {
       const positions = await listMarginPositions();
-      if (sessionPrincipalId() === requestUserId) setMarginPositions(positions);
+      if (sessionPrincipalId() === requestUserId && revision === marginPositionReadRevision.current)
+        setMarginPositions(positions);
     } catch {
-      if (sessionPrincipalId() === requestUserId) setMarginFeedback('Margin positions could not be refreshed.');
+      if (sessionPrincipalId() === requestUserId && revision === marginPositionReadRevision.current)
+        setMarginFeedback('Margin positions could not be refreshed.');
     }
   };
 
   const recheckUnknownMarginOpening = async (key: string) => {
     if (!userId) return;
+    const revision = ++marginPositionReadRevision.current;
     try {
       const positions = await listMarginPositions();
       if (sessionPrincipalId() !== userId || pendingMarginIntent.current?.key !== key) return;
-      setMarginPositions(positions);
+      if (revision === marginPositionReadRevision.current) setMarginPositions(positions);
       if (positions.some((position) => position.openIdempotencyKey === key)) {
         if (!clearPendingEconomicIntent('margin-open', userId, key)) {
           setMarginUnknownIntentKey(key);

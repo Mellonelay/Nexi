@@ -38,6 +38,7 @@ export default function MiningPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
   const previousUserId = useRef<string | null | undefined>(undefined);
+  const loadRevision = useRef(0);
   const pendingSubscription = useRef<PendingIntentKey | null>(null);
   const [unknownSubscriptionKey, setUnknownSubscriptionKey] = useState<string | null>(null);
   const plansEndpoint = process.env.NEXT_PUBLIC_MINING_PLANS_ENDPOINT || '/mining/plans';
@@ -52,6 +53,7 @@ export default function MiningPage() {
     const sync = () => {
       const next = sessionPrincipalId();
       if (previousUserId.current !== next) {
+        ++loadRevision.current; // Invalidate old principal-scoped reads before clearing their state.
         setPositions([]);
         setSummary(null);
         setRewards([]);
@@ -77,6 +79,8 @@ export default function MiningPage() {
 
   const load = useCallback(async (options: { preserveFlow?: boolean } = {}) => {
     if (!sessionChecked || sessionPrincipalId() !== userId) return;
+    const revision = ++loadRevision.current;
+    const isCurrent = () => loadRevision.current === revision && sessionPrincipalId() === userId;
     if (!options.preserveFlow) {
       setSelectedPlan(null);
       setStage('IDLE');
@@ -91,9 +95,12 @@ export default function MiningPage() {
         setCatalogState('LOADING');
         try {
           const result = await api.get(plansEndpoint);
-          setPlans(Array.isArray(result.data) ? result.data.map(normalizePlan) : []);
+          if (!isCurrent()) return;
+          if (!Array.isArray(result.data)) throw new Error('Mining plan catalog returned an invalid shape');
+          setPlans(result.data.map(normalizePlan));
           setCatalogState('LIVE');
         } catch {
+          if (!isCurrent()) return;
           setPlans([]);
           setCatalogState('ERROR');
         }
@@ -118,7 +125,7 @@ export default function MiningPage() {
         api.get('/mining/summary'),
         api.get(`/mining/rewards/${userId}`),
       ]);
-      if (sessionPrincipalId() !== userId) return;
+      if (!isCurrent()) return;
       if (positionsResult.status === 'fulfilled' && Array.isArray(positionsResult.value.data)) {
         setPositions(positionsResult.value.data);
         setPositionState('LIVE');

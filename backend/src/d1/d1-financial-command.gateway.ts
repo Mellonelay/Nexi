@@ -8532,6 +8532,7 @@ export class D1FinancialCommandGateway {
     userId: string,
     orderId: string,
     requireUnfilled = false,
+    adminAudit?: { adminId: string; reason: string; idempotencyKey: string },
   ): Promise<any> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const found = await this.bridge.select<any>(
@@ -8540,7 +8541,15 @@ export class D1FinancialCommandGateway {
     );
     const order = found.results[0];
     if (!order) throw new BadRequestException("Order not found");
-    if (order.status === "CANCELED") return { ...order, replayed: true };
+    if (order.status === "CANCELED") {
+      if (!adminAudit) return { ...order, replayed: true };
+      const prior = await this.bridge.select<{ id: string }>(
+        `SELECT "id" FROM "AdminAuditLog" WHERE "adminId"=? AND "target"=? AND "action"='ADMIN_SPOT_ORDER_CANCELLED' AND json_extract("details", '$.idempotencyKey')=? LIMIT 1`,
+        [adminAudit.adminId, orderId, adminAudit.idempotencyKey],
+      );
+      if (!prior.results[0]) throw new BadRequestException("Order was already cancelled by a different request");
+      return { ...order, replayed: true, adminAuditId: prior.results[0].id };
+    }
     if (!["OPEN", "PARTIALLY_FILLED"].includes(String(order.status))) {
       throw new BadRequestException("Order is already terminal");
     }
@@ -8563,14 +8572,20 @@ export class D1FinancialCommandGateway {
     const current = await this.findAccount(account.id);
     const available = this.nonNegativeDecimal(current.available);
     const locked = this.nonNegativeDecimal(current.locked);
+    if (locked.lt(release)) throw new BadRequestException("Spot cancellation reserve is not fully locked");
     const key = `gate2:spot:cancel-release:${orderId}`;
     const idem = randomUUID();
     const postingId = randomUUID();
+    const adminAuditId = adminAudit ? randomUUID() : null;
+    const adminAuditStatements: D1BridgeBatchStatement[] = adminAuditId && adminAudit ? [{
+      sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") SELECT ?,?,'ADMIN_SPOT_ORDER_CANCELLED',?,?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "Gate2SpotOrder" WHERE "id"=? AND "userId"=? AND "status"='CANCELED')`,
+      params: [adminAuditId, adminAudit.adminId, orderId, JSON.stringify({ reason: adminAudit.reason, idempotencyKey: adminAudit.idempotencyKey }), orderId, userId],
+    }] : [];
     if (release.isZero()) {
       const result = await this.bridge.batch([
         {
           sql: `UPDATE "Gate2SpotOrder" SET "status" = 'CANCELED', "reservedAmount" = '0', "updatedAt" = CURRENT_TIMESTAMP
-          WHERE "id" = ? AND "userId" = ? AND "status" IN ('OPEN', 'PARTIALLY_FILLED')
+          WHERE "id" = ? AND "userId" = ? AND "status" IN ('OPEN', 'PARTIALLY_FILLED') AND "reservedAmount" = ?
           ${
             requireUnfilled
               ? `AND "status"='OPEN' AND "filled"='0' AND "reserveScope"='MARGIN'
@@ -8578,12 +8593,10 @@ export class D1FinancialCommandGateway {
               : ""
           }`,
           params: requireUnfilled
-            ? [orderId, userId, orderId, orderId]
-            : [orderId, userId],
+            ? [orderId, userId, String(order.reservedAmount), orderId, orderId]
+            : [orderId, userId, String(order.reservedAmount)],
         },
-        ...(requireUnfilled
-          ? [this.rollbackIfNoChanges(key, "MARGIN_UNFILLED_CANCEL")]
-          : []),
+        this.rollbackIfNoChanges(key, requireUnfilled ? "MARGIN_UNFILLED_CANCEL" : "SPOT_CANCEL_STATE"),
         {
           sql: `INSERT OR IGNORE INTO "Activity" ("id","userId","type","status","referenceType","referenceId","idempotencyKey","ledgerCorrelationId","ledgerPostingId","asset","amount","details","createdAt") VALUES (?,?,'GATE2_SPOT_ORDER','COMPLETED','GATE2_SPOT_ORDER_CANCEL',?,?,?,NULL,?,'0',?,CURRENT_TIMESTAMP)`,
           params: [
@@ -8609,23 +8622,25 @@ export class D1FinancialCommandGateway {
             params: [orderId],
           },
         }),
+        ...adminAuditStatements,
       ]);
       this.requireChanges(result, 0, "D1 Spot zero-reserve cancellation");
       this.requireChanges(
         result,
-        1 + Number(requireUnfilled),
+        2,
         "D1 Spot zero-reserve cancellation activity",
       );
       this.requireChanges(
         result,
-        2 + Number(requireUnfilled),
+        3,
         "D1 Spot zero-reserve cancellation outbox",
       );
+      if (adminAuditId) this.requireChanges(result, 4, "D1 Admin Spot cancellation audit");
       const updated = await this.bridge.select<any>(
         `SELECT * FROM "Gate2SpotOrder" WHERE "id" = ? LIMIT 1`,
         [orderId],
       );
-      return { ...updated.results[0], replayed: false };
+      return { ...updated.results[0], replayed: false, ...(adminAuditId ? { adminAuditId } : {}) };
     }
     const statements: D1BridgeBatchStatement[] = [
       {
@@ -8648,7 +8663,8 @@ export class D1FinancialCommandGateway {
       {
         sql: `UPDATE "LedgerAccount" SET "available" = ?, "locked" = ?, "updatedAt" = CURRENT_TIMESTAMP
           WHERE "id" = ? AND "asset" = ? AND "scope" = ? AND "status" = 'ACTIVE' AND "available" = ? AND "locked" = ?
-            AND EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "id" = ? AND "idempotencyKey" = ? AND "debitPostingId" IS NULL)`,
+            AND EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "id" = ? AND "idempotencyKey" = ? AND "debitPostingId" IS NULL)
+            AND EXISTS (SELECT 1 FROM "Gate2SpotOrder" WHERE "id" = ? AND "userId" = ? AND "status" IN ('OPEN', 'PARTIALLY_FILLED') AND "reservedAmount" = ?)`,
         params: [
           available.plus(release).toString(),
           locked.minus(release).toString(),
@@ -8659,6 +8675,9 @@ export class D1FinancialCommandGateway {
           current.locked,
           idem,
           key,
+          orderId,
+          userId,
+          String(order.reservedAmount),
         ],
       },
       this.rollbackIfNoChanges(key, "RELEASE"),
@@ -8716,7 +8735,7 @@ export class D1FinancialCommandGateway {
       },
       {
         sql: `UPDATE "Gate2SpotOrder" SET "status" = 'CANCELED', "reservedAmount" = '0', "updatedAt" = CURRENT_TIMESTAMP
-          WHERE "id" = ? AND "userId" = ? AND "status" IN ('OPEN', 'PARTIALLY_FILLED') AND EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "id" = ? AND "debitPostingId" = ?)
+          WHERE "id" = ? AND "userId" = ? AND "status" IN ('OPEN', 'PARTIALLY_FILLED') AND "reservedAmount" = ? AND EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "id" = ? AND "debitPostingId" = ?)
           ${
             requireUnfilled
               ? `AND "status"='OPEN' AND "filled"='0' AND "reserveScope"='MARGIN'
@@ -8724,12 +8743,10 @@ export class D1FinancialCommandGateway {
               : ""
           }`,
         params: requireUnfilled
-          ? [orderId, userId, idem, postingId, orderId, orderId]
-          : [orderId, userId, idem, postingId],
+          ? [orderId, userId, String(order.reservedAmount), idem, postingId, orderId, orderId]
+          : [orderId, userId, String(order.reservedAmount), idem, postingId],
       },
-      ...(requireUnfilled
-        ? [this.rollbackIfNoChanges(key, "MARGIN_UNFILLED_CANCEL")]
-        : []),
+      this.rollbackIfNoChanges(key, requireUnfilled ? "MARGIN_UNFILLED_CANCEL" : "SPOT_CANCEL_STATE"),
       this.eventOutboxStatement({
         idempotencyKey: `event:spot:cancel:${orderId}`,
         aggregateType: "SPOT_ORDER",
@@ -8748,6 +8765,7 @@ export class D1FinancialCommandGateway {
           params: [orderId],
         },
       }),
+      ...adminAuditStatements,
     ];
     const result = await this.bridge.batch(statements);
     this.requireChanges(result, 1, "D1 Spot cancellation release");
@@ -8755,16 +8773,17 @@ export class D1FinancialCommandGateway {
     this.requireChanges(result, 7, "D1 Spot cancellation order transition");
     this.requireChanges(
       result,
-      8 + Number(requireUnfilled),
+      9,
       "D1 Spot cancellation outbox",
     );
+    if (adminAuditId) this.requireChanges(result, 10, "D1 Admin Spot cancellation audit");
     const updated = await this.bridge.select<any>(
       `SELECT * FROM "Gate2SpotOrder" WHERE "id" = ? LIMIT 1`,
       [orderId],
     );
     if (!updated.results[0])
       throw new Error("D1 Spot cancellation was not materialized");
-    return { ...updated.results[0], replayed: false };
+    return { ...updated.results[0], replayed: false, ...(adminAuditId ? { adminAuditId } : {}) };
   }
 
   /**

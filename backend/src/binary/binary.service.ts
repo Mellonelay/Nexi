@@ -47,7 +47,9 @@ export class BinaryService {
     const pair = await this.d1.getMarketPairForSettlement(String(raw.pair));
     if (!pair) return { position: raw, delayed: true };
     const configuration: any = await this.d1.getBinaryConfiguration(String(raw.pair), Number(raw.durationSeconds), Number(raw.configurationVersion));
-    if (!configuration) return { position: raw, error: true };
+    // A missing versioned configuration is not a terminal financial loss or refund.
+    // Preserve the locked stake and retryable position until settlement authority is restored.
+    if (!configuration) return { position: raw, delayed: true, reason: 'configuration-unavailable' };
     const researchMode = this.isBinaryResearchAccount(String(raw.userId))
       ? this.binaryMode(raw.researchOverride ?? raw.researchDefault)
       : "NORMAL";

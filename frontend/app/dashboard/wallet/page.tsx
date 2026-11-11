@@ -323,10 +323,10 @@ function WalletSummary({ root, state, valuation }: { root: Record<string, unknow
   return <section aria-label="Total assets and portfolio summary">
         <Panel className="overflow-hidden p-3 sm:p-4">
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#C3BBD0] sm:text-xs"><WalletCards size={16} className="shrink-0 text-[#48C0CC]" /> Wallet balance</div>
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.10em] text-[#C3BBD0]"><WalletCards size={16} className="shrink-0 text-[#48C0CC]" /> Wallet balance</div>
             {valuation.state !== 'LIVE' && <StatusBadge state={valuation.state} />}
           </div>
-          <p className="mt-1 text-[10px] leading-4 text-[#8C8299]">Estimated portfolio value · USDT. Native balances remain unchanged.</p>
+          <p className="mt-1 text-xs leading-5 text-[#8C8299]">Estimated portfolio value · USDT. Native balances remain unchanged.</p>
           <div className="mt-3 grid min-w-0 grid-cols-1 gap-2 min-[430px]:grid-cols-2" aria-label="Estimated available, locked and total portfolio value in USDT">
             <div className="min-w-0 min-[430px]:col-span-2">
               <Metric label="Total · USDT" value={state === 'LIVE' ? valuation.total : 'UNAVAILABLE'} />
@@ -388,7 +388,7 @@ function WalletAssetRow({ item, tab }: { item: WalletAsset; tab: Tab }) {
 
 function WalletActionButton({ item, action, enabled, onSelect }: { item: Action; action: Action | null; enabled: boolean; onSelect: (action: Action) => void }) {
   const Icon = actionIcons[item];
-  return <button key={item} type="button" disabled={!enabled} onClick={() => onSelect(item)} aria-label={`${item}${enabled ? '' : ' unavailable'}`} className={`flex min-h-16 min-w-0 flex-col items-center justify-center gap-1 rounded-xl border p-1 text-center text-[11px] font-semibold sm:min-h-14 sm:flex-row sm:gap-2 sm:text-xs ${action === item ? 'border-[#8B5CF6] bg-[#2A1742]' : 'border-[#2B2037] bg-[#171022]'} disabled:cursor-not-allowed disabled:opacity-50`}><Icon size={16} className="shrink-0 text-[#48C0CC]" /><span className="min-w-0 break-words">{item}</span></button>;
+  return <button key={item} type="button" disabled={!enabled} onClick={() => onSelect(item)} aria-label={`${item}${enabled ? '' : ' unavailable'}`} className={`flex min-h-16 min-w-0 flex-col items-center justify-center gap-1 rounded-xl border p-1 text-center text-xs font-semibold sm:min-h-14 sm:flex-row sm:gap-2 ${action === item ? 'border-[#8B5CF6] bg-[#2A1742]' : 'border-[#2B2037] bg-[#171022]'} disabled:cursor-not-allowed disabled:opacity-50`}><Icon size={16} className="shrink-0 text-[#48C0CC]" /><span className="min-w-0 break-words">{item}</span></button>;
 }
 
 function WalletActions({ authenticated, state, action, onSelect }: { authenticated: boolean; state: ReadState; action: Action | null; onSelect: (action: Action) => void }) {

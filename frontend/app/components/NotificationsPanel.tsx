@@ -165,11 +165,10 @@ export function NotificationsPanel({
         requestPrincipalId !== getAccessTokenPrincipalId()
       )
         return;
-      const rows = Array.isArray(data)
-        ? data
-        : Array.isArray(data?.notifications)
-          ? data.notifications
-          : [];
+      if (!Array.isArray(data) && !Array.isArray(data?.notifications)) {
+        throw new Error("Invalid notifications response");
+      }
+      const rows = Array.isArray(data) ? data : data.notifications;
       setNotifications(
         rows.map((item: Record<string, unknown>) => {
           const sourceType = String(item.type ?? "SYSTEM");

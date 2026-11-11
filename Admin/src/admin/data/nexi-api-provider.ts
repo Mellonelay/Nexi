@@ -1941,7 +1941,7 @@ export class NexiAdminApiProvider implements AdminDataProvider {
           openPrice: stringValue(row.entryPrice),
           settlePrice: typeof row.expiryPrice === "string" ? row.expiryPrice : undefined,
           state: settlementState,
-          settledAt: (settlementState === "win" || settlementState === "loss")
+          settledAt: (settlementState === "win" || settlementState === "loss" || settlementState === "error")
             ? stringValue(row.settledAt, stringValue(row.updatedAt)) || undefined
             : undefined,
           payout: typeof row.payoutAmount === "string" ? row.payoutAmount : undefined,

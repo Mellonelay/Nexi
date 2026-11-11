@@ -102,6 +102,7 @@ export default function LoansPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
   const previousUserId = useRef<string | null | undefined>(undefined);
+  const loanReadRevision = useRef(0);
   const [amount, setAmount] = useState('');
   const [duration, setDuration] = useState('');
   const [collateral, setCollateral] = useState('');
@@ -120,6 +121,7 @@ export default function LoansPage() {
     const sync = () => {
       const next = sessionPrincipalId();
       if (previousUserId.current !== next) {
+        ++loanReadRevision.current;
         setLoans([]);
         setSelectedPlanId('');
         setAmount('');
@@ -148,16 +150,21 @@ export default function LoansPage() {
 
   const load = useCallback(async () => {
     if (!sessionChecked || sessionPrincipalId() !== userId) return;
+    const revision = ++loanReadRevision.current;
+    const isCurrent = () => revision === loanReadRevision.current && sessionPrincipalId() === userId;
     setPlansState('LOADING');
     try {
       const planResult = await api.get('/loans/plans');
-      setPlans(Array.isArray(planResult.data) ? planResult.data : []);
+      if (!isCurrent()) return;
+      if (!Array.isArray(planResult.data)) throw new Error('Invalid loan plan response');
+      setPlans(planResult.data);
       setPlansState('LIVE');
     } catch {
+      if (!isCurrent()) return;
       setPlans([]);
       setPlansState('ERROR');
     }
-    if (sessionPrincipalId() !== userId) return;
+    if (!isCurrent()) return;
     if (!userId || !backendConfigured) {
       setLoans([]);
       setState('UNAVAILABLE');
@@ -166,11 +173,12 @@ export default function LoansPage() {
     setState('LOADING');
     try {
       const result = await api.get(`/loans/my/${userId}`);
-      if (sessionPrincipalId() !== userId) return;
-      setLoans(Array.isArray(result.data) ? result.data : []);
+      if (!isCurrent()) return;
+      if (!Array.isArray(result.data)) throw new Error('Invalid loan history response');
+      setLoans(result.data);
       setState('LIVE');
     } catch {
-      if (sessionPrincipalId() !== userId) return;
+      if (!isCurrent()) return;
       setLoans([]);
       setState('ERROR');
     }

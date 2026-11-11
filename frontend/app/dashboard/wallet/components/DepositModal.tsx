@@ -321,20 +321,20 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
                         {assetDestinations.map((item) => <option key={item.depositAddressId} value={item.network}>{item.networkName || item.network} ({item.network})</option>)}
                       </select>
                     </label>
-                  ) : <div className="mt-4 rounded-xl border border-[#2B2037] bg-[#0B0912] px-3 py-2 text-xs"><span className="text-[#8C8299]">Network</span><span className="float-right font-semibold text-white">{destination.networkName || destination.network} ({destination.network})</span></div>}
+                  ) : <div className="mt-4 flex flex-wrap items-start justify-between gap-2 rounded-xl border border-[#2B2037] bg-[#0B0912] px-3 py-2 text-xs"><span className="text-[#8C8299]">Network</span><span className="min-w-0 break-words font-semibold text-white">{destination.networkName || destination.network} ({destination.network})</span></div>}
                 </section>
 
                 <section className="rounded-2xl border border-[#2B2037] bg-[#171022] p-4">
                   <div className="mx-auto w-fit rounded-2xl bg-white p-3"><QRCodeSVG value={destination.address} size={176} level="M" includeMargin={false} /></div>
-                  <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8C8299]">Deposit address</p>
+                  <p className="mt-4 text-xs font-semibold uppercase tracking-[0.08em] text-[#8C8299]">Deposit address</p>
                   <p className="mt-1 break-all font-mono text-xs leading-5 text-white">{destination.address}</p>
                   <button type="button" onClick={() => void copyAddress()} className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-violet-300/20 bg-[#21152F] px-4 text-sm font-semibold text-[#D9D2E6]">
                     {copied ? <Check size={16} className="text-emerald-300" /> : <Copy size={16} />}{copied ? 'Copied' : 'Copy address'}
                   </button>
                   <div className="mt-4 grid min-w-0 grid-cols-1 gap-2 min-[430px]:grid-cols-2">
-                    <div className="rounded-xl border border-[#2B2037] bg-[#0B0912] p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-[#8C8299]">Minimum</p><p className="mt-1 break-all font-mono text-sm font-semibold text-white">{destination.minDeposit ?? '—'} {destination.asset}</p></div>
-                    <div className="rounded-xl border border-[#2B2037] bg-[#0B0912] p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-[#8C8299]">Maximum</p><p className="mt-1 break-all font-mono text-sm font-semibold text-white">{destination.maxDeposit ?? '—'} {destination.asset}</p></div>
-                    <div className="min-[430px]:col-span-2 rounded-xl border border-[#2B2037] bg-[#0B0912] p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-[#8C8299]">Required confirmations</p><p className="mt-1 font-mono text-xs font-semibold text-white">{destination.confirmationCount ?? '—'}</p></div>
+                    <div className="rounded-xl border border-[#2B2037] bg-[#0B0912] p-3"><p className="text-xs uppercase tracking-[0.08em] text-[#8C8299]">Minimum</p><p className="mt-1 break-all font-mono text-sm font-semibold text-white">{destination.minDeposit ?? '—'} {destination.asset}</p></div>
+                    <div className="rounded-xl border border-[#2B2037] bg-[#0B0912] p-3"><p className="text-xs uppercase tracking-[0.08em] text-[#8C8299]">Maximum</p><p className="mt-1 break-all font-mono text-sm font-semibold text-white">{destination.maxDeposit ?? '—'} {destination.asset}</p></div>
+                    <div className="min-[430px]:col-span-2 rounded-xl border border-[#2B2037] bg-[#0B0912] p-3"><p className="text-xs uppercase tracking-[0.08em] text-[#8C8299]">Required confirmations</p><p className="mt-1 font-mono text-xs font-semibold text-white">{destination.confirmationCount ?? '—'}</p></div>
                   </div>
                 </section>
 

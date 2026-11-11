@@ -56,8 +56,8 @@ export class SpotService {
     return order;
   }
 
-  async cancelOrder(userId: string, orderId: string) {
-    const order = await this.d1.cancelSpotOrder(userId, orderId);
+  async cancelOrder(userId: string, orderId: string, adminAudit?: { adminId: string; reason: string; idempotencyKey: string }) {
+    const order = await this.d1.cancelSpotOrder(userId, orderId, false, adminAudit);
     await this.broadcastOrderBook(String(order.pair));
     return order;
   }

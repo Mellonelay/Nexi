@@ -8,7 +8,7 @@ import api from '../../../lib/api';
 import { sessionPrincipalId } from '../../../lib/wallet-auth';
 import { getIntentKey, type PendingIntentKey } from '../../../lib/intent-key';
 import { clearPendingEconomicIntent, persistPendingEconomicIntent, readPendingEconomicIntent } from '../../../lib/pending-economic-intent';
-import { positiveDecimalAmount } from '../../../lib/trading-states';
+import { decimalLessThanOrEqual, positiveDecimalAmount } from '../../../lib/trading-states';
 
 interface TransferModalProps {
   isOpen: boolean;
@@ -29,6 +29,9 @@ const walletScopes: Array<{ value: WalletScope; label: string }> = [
   { value: 'FINANCE', label: 'Finance' },
 ];
 const validAmount = positiveDecimalAmount;
+const sameAmount = (left: unknown, right: unknown) =>
+  positiveDecimalAmount(left) && positiveDecimalAmount(right)
+  && decimalLessThanOrEqual(left, right) && decimalLessThanOrEqual(right, left);
 
 export default function TransferModal({ isOpen, onClose, currencies, selectedCurrency, onSelectCurrency, onCompleted, initialDestinationScope }: TransferModalProps) {
   const [mode, setMode] = useState<'WALLETS' | 'USER'>('WALLETS');
@@ -171,18 +174,23 @@ export default function TransferModal({ isOpen, onClose, currencies, selectedCur
         });
         if (response.data?.transfer?.idempotencyKey !== intent.key || response.data?.transfer?.asset !== asset ||
             response.data?.transfer?.sourceScope !== sourceScope || response.data?.transfer?.destinationScope !== destinationScope ||
-            !response.data?.postings?.debitPostingId || !response.data?.postings?.creditPostingId)
+            !sameAmount(response.data?.transfer?.amount, amount) ||
+            !response.data?.postings?.debitPostingId || !response.data?.postings?.creditPostingId ||
+            response.data.postings.debitPostingId === response.data.postings.creditPostingId)
           throw new Error('Original account transfer acknowledgement was not confirmed');
         confirmation = `${amount} ${asset} transferred from ${accountName(sourceScope)} to ${accountName(destinationScope)}.`;
       } else {
         const toUserCode = Number(recipientCode);
-        const response = await api.post<{ transfer?: { idempotencyKey?: string; fromUserId?: string } }>('/financial/transfers', {
+        const response = await api.post<{ transfer?: { idempotencyKey?: string; fromUserId?: string; asset?: string; amount?: string; debitPostingId?: string; creditPostingId?: string } }>('/financial/transfers', {
           toUserCode,
           asset,
           amount,
           idempotencyKey: intent.key,
         });
-        if (response.data?.transfer?.idempotencyKey !== intent.key || response.data?.transfer?.fromUserId !== principal)
+        if (response.data?.transfer?.idempotencyKey !== intent.key || response.data?.transfer?.fromUserId !== principal ||
+            response.data?.transfer?.asset !== asset || !sameAmount(response.data?.transfer?.amount, amount) ||
+            !response.data?.transfer?.debitPostingId || !response.data?.transfer?.creditPostingId ||
+            response.data.transfer.debitPostingId === response.data.transfer.creditPostingId)
           throw new Error('Original user transfer acknowledgement was not confirmed');
         confirmation = `${amount} ${asset} transferred to NEXI user ${recipientCode}.`;
       }

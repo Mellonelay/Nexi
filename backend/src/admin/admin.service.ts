@@ -1901,20 +1901,23 @@ export class AdminService {
         "A reason is required to settle a Binary position",
       );
     const result = await this.binaryService.settlePosition(id);
+    const settlementState = String(result.position?.state ?? '').toUpperCase();
+    const finalized = !result.delayed && (settlementState === 'WIN' || settlementState === 'LOSS');
     const audit = await this.prisma.adminAuditLog.create({
       data: {
         adminId,
-        action: "ADMIN_BINARY_POSITION_SETTLED",
+        action: finalized ? "ADMIN_BINARY_POSITION_SETTLED" : "ADMIN_BINARY_SETTLEMENT_DEFERRED",
         target: id,
         details: {
           reason,
           idempotencyKey,
           state: result.position?.state ?? null,
-          delayed: result.delayed ?? false,
+          delayed: !finalized,
+          reasonCode: result.reason ?? (finalized ? null : 'settlement-not-finalized'),
         },
       },
     });
-    return { ok: true, auditId: audit.id, ...result };
+    return { ...result, ok: finalized, auditId: audit.id };
   }
 
   async setBinaryPairMaintenance(
@@ -2324,16 +2327,10 @@ export class AdminService {
       select: { userId: true },
     });
     if (!order) throw new NotFoundException("Spot order not found");
-    const result = await this.spotService.cancelOrder(order.userId, id);
-    await this.prisma.adminAuditLog.create({
-      data: {
-        adminId,
-        action: "ADMIN_SPOT_ORDER_CANCELLED",
-        target: id,
-        details: { reason, idempotencyKey },
-      },
-    });
-    return { ok: true, auditId: idempotencyKey, state: result.status };
+    // The operator audit must commit with the same SQLite Ledger/Outbox cancellation.
+    const result = await this.spotService.cancelOrder(order.userId, id, { adminId, reason, idempotencyKey });
+    if (typeof result.adminAuditId !== 'string') throw new Error('Admin cancellation audit was not confirmed');
+    return { ok: true, auditId: result.adminAuditId, state: result.status, replayed: Boolean(result.replayed) };
   }
 
   async setSpotPairMaintenance(

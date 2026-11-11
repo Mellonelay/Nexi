@@ -101,6 +101,30 @@ const normalizePosition = (value: unknown): BinaryPosition | null => {
   };
 };
 
+// An HTTP snapshot may have started before the newest socket event reached us.
+// Preserve observed terminal history that a delayed snapshot has not caught up with.
+function reconcileTerminalPositions(snapshot: BinaryPosition[], previous: BinaryPosition[], knownTerminalIds: Set<string>, socketVersions: Map<string, number>, startedAtVersion: number) {
+  const rows = new Map(snapshot.map((position) => [position.id, position]));
+  for (const position of previous) {
+    if (knownTerminalIds.has(position.id) && FINAL_BINARY_STATES.has(position.status)
+      && (!rows.has(position.id) || (socketVersions.get(position.id) ?? 0) > startedAtVersion)) {
+      // A newer socket result wins over a REST request started before that event.
+      rows.set(position.id, position);
+    }
+  }
+  return [...rows.values()];
+}
+
+function reconcileActivePositions(snapshot: BinaryPosition[], previous: BinaryPosition[], knownTerminalIds: Set<string>, socketVersions: Map<string, number>, startedAtVersion: number) {
+  const rows = new Map(snapshot.filter((position) => !knownTerminalIds.has(position.id)).map((position) => [position.id, position]));
+  for (const position of previous) {
+    if (!knownTerminalIds.has(position.id) && (socketVersions.get(position.id) ?? 0) > startedAtVersion) {
+      rows.set(position.id, position);
+    }
+  }
+  return [...rows.values()];
+}
+
 type OptionWalletBalance =
   | { state: 'UNAUTHENTICATED' | 'LOADING' | 'UNSUPPORTED' | 'MISSING_ACCOUNT' | 'ERROR' }
   | { state: 'ZERO' | 'POSITIVE'; available: string };
@@ -194,6 +218,10 @@ export default function BinaryPage() {
   const submissionLock = useRef(false);
   const pendingBinaryIntent = useRef<PendingIntentKey | null>(null);
   const lastSubmittedPositionId = useRef<string | null>(null);
+  const terminalPositionIds = useRef<Set<string>>(new Set());
+  const positionSnapshotRequest = useRef(0);
+  const positionSocketRevision = useRef(0);
+  const latestPositionEventRevision = useRef<Map<string, number>>(new Map());
   const chartPairRef = useRef(normalizedPair);
   const { marketPairs, metal, shares, forex } = useMarketData();
 
@@ -224,6 +252,10 @@ export default function BinaryPage() {
     const sync = () => {
       const next = sessionPrincipalId();
       if (previousUserId.current !== next) {
+        positionSnapshotRequest.current += 1;
+        positionSocketRevision.current = 0;
+        latestPositionEventRevision.current.clear();
+        terminalPositionIds.current.clear();
         setActivePositions([]);
         setHistory([]);
         setSelectedResult(null);
@@ -298,18 +330,23 @@ export default function BinaryPage() {
       reconnectionDelayMax: 8_000,
     });
     const handleReconnect = () => {
+      const snapshotRequest = ++positionSnapshotRequest.current;
+      const startedAtEventRevision = positionSocketRevision.current;
       // Resnapshot even on first socket connect: REST may have completed
       // before the authenticated socket joined the user's event room.
       Promise.allSettled([
         api.get('/binary/positions/current'),
         api.get('/binary/positions/history'),
       ]).then(([currentResult, historyResult]) => {
-        if (disposed || sessionPrincipalId() !== userId) return;
-        if (currentResult.status === 'fulfilled' && Array.isArray(currentResult.value.data)) {
-          setActivePositions(currentResult.value.data.map(normalizePosition).filter((item): item is BinaryPosition => Boolean(item)));
-        }
+        if (disposed || sessionPrincipalId() !== userId || snapshotRequest !== positionSnapshotRequest.current) return;
         if (historyResult.status === 'fulfilled' && Array.isArray(historyResult.value.data)) {
-          setHistory(historyResult.value.data.map(normalizePosition).filter((item): item is BinaryPosition => Boolean(item)));
+          const settled = historyResult.value.data.map(normalizePosition).filter((item): item is BinaryPosition => Boolean(item));
+          settled.filter((item) => FINAL_BINARY_STATES.has(item.status)).forEach((item) => terminalPositionIds.current.add(item.id));
+          setHistory((previous) => reconcileTerminalPositions(settled, previous, terminalPositionIds.current, latestPositionEventRevision.current, startedAtEventRevision));
+        }
+        if (currentResult.status === 'fulfilled' && Array.isArray(currentResult.value.data)) {
+          const snapshot = currentResult.value.data.map(normalizePosition).filter((item): item is BinaryPosition => Boolean(item));
+          setActivePositions((previous) => reconcileActivePositions(snapshot, previous, terminalPositionIds.current, latestPositionEventRevision.current, startedAtEventRevision));
         }
         // A socket reconnection may miss the original acceptance event.
         // Reconcile the persisted intent against both authoritative read models.
@@ -324,7 +361,7 @@ export default function BinaryPage() {
             && (row as Record<string, unknown>).idempotencyKey === key);
           const recovered = normalizePosition(match);
           if (recovered && pendingBinaryIntent.current?.key === key) {
-            lastSubmittedPositionId.current = recovered.id;
+            if (!FINAL_BINARY_STATES.has(recovered.status) && !terminalPositionIds.current.has(recovered.id)) lastSubmittedPositionId.current = recovered.id;
             if (!clearPendingEconomicIntent('binary-position', userId, key)) {
               setUnknownBinaryIntentKey(key);
               setFeedback('Position confirmed, but recovery storage could not be cleared. Recheck before another order.');
@@ -343,10 +380,13 @@ export default function BinaryPage() {
       const payload = raw as { event: string; position: unknown };
       const position = normalizePosition(payload.position);
       if (!position) return;
+      // An older opened event cannot overturn an already observed terminal result.
+      if (!FINAL_BINARY_STATES.has(position.status) && terminalPositionIds.current.has(position.id)) return;
+      latestPositionEventRevision.current.set(position.id, ++positionSocketRevision.current);
       const receivedIntentKey = payload.position && typeof payload.position === 'object'
         ? (payload.position as Record<string, unknown>).idempotencyKey : null;
       if (pendingBinaryIntent.current && receivedIntentKey === pendingBinaryIntent.current.key) {
-        lastSubmittedPositionId.current = position.id;
+        if (!FINAL_BINARY_STATES.has(position.status)) lastSubmittedPositionId.current = position.id;
         if (clearPendingEconomicIntent('binary-position', userId, pendingBinaryIntent.current.key)) {
           pendingBinaryIntent.current = null;
           setUnknownBinaryIntentKey(null);
@@ -356,9 +396,9 @@ export default function BinaryPage() {
           setFeedback('Position confirmed, but recovery storage could not be cleared. Recheck before another order.');
         }
       }
-      setActivePositions((current) => [position, ...current.filter((item) => item.id !== position.id)]);
       const isTrackedPosition = lastSubmittedPositionId.current === position.id;
       if (FINAL_BINARY_STATES.has(position.status)) {
+        terminalPositionIds.current.add(position.id);
         setActivePositions((current) => current.filter((item) => item.id !== position.id));
         setHistory((current) => [position, ...current.filter((item) => item.id !== position.id)]);
         if (isTrackedPosition) {
@@ -367,6 +407,8 @@ export default function BinaryPage() {
           setTab('HISTORY');
           lastSubmittedPositionId.current = null;
         }
+      } else {
+        setActivePositions((current) => [position, ...current.filter((item) => item.id !== position.id)]);
       }
       if (isTrackedPosition) {
         setState((current) => current === 'UNKNOWN' && pendingBinaryIntent.current ? current : position.status);
@@ -418,16 +460,21 @@ export default function BinaryPage() {
       return;
     }
     let cancelled = false;
+    const snapshotRequest = ++positionSnapshotRequest.current;
+    const startedAtEventRevision = positionSocketRevision.current;
     Promise.allSettled([
       api.get('/binary/positions/current'),
       api.get('/binary/positions/history'),
     ]).then(([currentResult, historyResult]) => {
-      if (cancelled || sessionPrincipalId() !== userId) return;
-      if (currentResult.status === 'fulfilled' && Array.isArray(currentResult.value.data)) {
-        setActivePositions(currentResult.value.data.map(normalizePosition).filter((item): item is BinaryPosition => Boolean(item)));
-      }
+      if (cancelled || sessionPrincipalId() !== userId || snapshotRequest !== positionSnapshotRequest.current) return;
       if (historyResult.status === 'fulfilled' && Array.isArray(historyResult.value.data)) {
-        setHistory(historyResult.value.data.map(normalizePosition).filter((item): item is BinaryPosition => Boolean(item)));
+        const settled = historyResult.value.data.map(normalizePosition).filter((item): item is BinaryPosition => Boolean(item));
+        settled.filter((item) => FINAL_BINARY_STATES.has(item.status)).forEach((item) => terminalPositionIds.current.add(item.id));
+        setHistory((previous) => reconcileTerminalPositions(settled, previous, terminalPositionIds.current, latestPositionEventRevision.current, startedAtEventRevision));
+      }
+      if (currentResult.status === 'fulfilled' && Array.isArray(currentResult.value.data)) {
+        const snapshot = currentResult.value.data.map(normalizePosition).filter((item): item is BinaryPosition => Boolean(item));
+        setActivePositions((previous) => reconcileActivePositions(snapshot, previous, terminalPositionIds.current, latestPositionEventRevision.current, startedAtEventRevision));
       }
     });
     return () => { cancelled = true; };
@@ -503,7 +550,8 @@ export default function BinaryPage() {
       || optionWalletBalance.state === 'ZERO'
       || (optionWalletBalance.state === 'POSITIVE' && !decimalAmountWithinBalance(amount, optionWalletBalance.available)));
   // Permit an underfunded customer to request help, never an unfunded order.
-  const reviewReady = !unknownBinaryIntentKey && (ready || (fundingRequired && optionWalletBalance.state !== 'POSITIVE'));
+  // Insufficient positive balance must open the funding dialog, not disable both trade actions.
+  const reviewReady = !unknownBinaryIntentKey && (ready || fundingRequired);
   const stateTone = ['WIN', 'OPEN'].includes(state)
     ? 'border-emerald-300/25 bg-emerald-400/5 text-[#98FCE4]'
     : ['LOSS', 'ERROR', 'CONNECTION_LOST'].includes(state)
@@ -559,25 +607,36 @@ export default function BinaryPage() {
 
   const reconcileUnknownSubmission = async (key: string) => {
     if (!userId) return;
+    const snapshotRequest = ++positionSnapshotRequest.current;
+    const startedAtEventRevision = positionSocketRevision.current;
     const [currentResult, historyResult] = await Promise.allSettled([
       api.get('/binary/positions/current'),
       api.get('/binary/positions/history'),
     ]);
-    if (sessionPrincipalId() !== userId || pendingBinaryIntent.current?.key !== key) return;
+    if (sessionPrincipalId() !== userId || pendingBinaryIntent.current?.key !== key || snapshotRequest !== positionSnapshotRequest.current) return;
     let recovered: BinaryPosition | null = null;
-    for (const [result, update] of [
-      [currentResult, setActivePositions],
-      [historyResult, setHistory],
-    ] as const) {
-      if (result.status !== 'fulfilled' || !Array.isArray(result.value.data)) continue;
-      const rows = result.value.data as unknown[];
-      update(rows.map(normalizePosition).filter((item): item is BinaryPosition => item !== null));
+    if (historyResult.status === 'fulfilled' && Array.isArray(historyResult.value.data)) {
+      const rows = historyResult.value.data as unknown[];
+      const settled = rows.map(normalizePosition).filter((item): item is BinaryPosition => item !== null);
+      settled.filter((item) => FINAL_BINARY_STATES.has(item.status)).forEach((item) => terminalPositionIds.current.add(item.id));
+      setHistory((previous) => reconcileTerminalPositions(settled, previous, terminalPositionIds.current, latestPositionEventRevision.current, startedAtEventRevision));
       const match = rows.find((row) => row !== null && typeof row === 'object'
         && (row as Record<string, unknown>).idempotencyKey === key);
       if (match) recovered = normalizePosition(match);
     }
+    if (currentResult.status === 'fulfilled' && Array.isArray(currentResult.value.data)) {
+      const rows = currentResult.value.data as unknown[];
+      const snapshot = rows.map(normalizePosition).filter((item): item is BinaryPosition => item !== null);
+      setActivePositions((previous) => reconcileActivePositions(snapshot, previous, terminalPositionIds.current, latestPositionEventRevision.current, startedAtEventRevision));
+      if (!recovered) {
+        const match = rows.find((row) => row !== null && typeof row === 'object'
+          && (row as Record<string, unknown>).idempotencyKey === key);
+        if (match) recovered = normalizePosition(match);
+      }
+    }
     if (recovered) {
-      lastSubmittedPositionId.current = recovered.id;
+      const alreadySettled = terminalPositionIds.current.has(recovered.id);
+      if (!alreadySettled && !FINAL_BINARY_STATES.has(recovered.status)) lastSubmittedPositionId.current = recovered.id;
       if (!clearPendingEconomicIntent('binary-position', userId, key)) {
         setUnknownBinaryIntentKey(key);
         setFeedback('Position confirmed, but recovery storage could not be cleared. Do not submit another order.');
@@ -585,7 +644,14 @@ export default function BinaryPage() {
       }
       pendingBinaryIntent.current = null;
       setUnknownBinaryIntentKey(null);
-      setState(recovered.status);
+      if (FINAL_BINARY_STATES.has(recovered.status)) {
+        terminalPositionIds.current.add(recovered.id);
+        setSelectedResult(recovered);
+        setTab('HISTORY');
+        setState(recovered.status);
+      } else if (!alreadySettled) {
+        setState(recovered.status);
+      }
       setFeedback('The submitted position was found in your account records.');
     }
   };
@@ -634,7 +700,8 @@ export default function BinaryPage() {
         if (submittedKey) void reconcileUnknownSubmission(submittedKey);
         return;
       }
-      lastSubmittedPositionId.current = position.id;
+      const alreadySettled = terminalPositionIds.current.has(position.id);
+      if (!alreadySettled && !FINAL_BINARY_STATES.has(position.status)) lastSubmittedPositionId.current = position.id;
       if (!clearPendingEconomicIntent('binary-position', userId, submittedKey!)) {
         setUnknownBinaryIntentKey(submittedKey);
         setFeedback('Position accepted, but recovery storage could not be cleared. Do not submit another order.');
@@ -642,12 +709,26 @@ export default function BinaryPage() {
       }
       pendingBinaryIntent.current = null;
       setUnknownBinaryIntentKey(null);
-      setActivePositions((current) => [position, ...current.filter((item) => item.id !== position.id)]);
-      setState(position.status);
       setConfirmationOpen(false);
       setAmount('');
-      setTab('ACTIVE');
-      setFeedback('Position request accepted.');
+      if (FINAL_BINARY_STATES.has(position.status)) {
+        terminalPositionIds.current.add(position.id);
+        setActivePositions((current) => current.filter((item) => item.id !== position.id));
+        setHistory((current) => [position, ...current.filter((item) => item.id !== position.id)]);
+        setSelectedResult(position);
+        setState(position.status);
+        setTab('HISTORY');
+      } else if (alreadySettled) {
+        // A late HTTP acknowledgement cannot reopen a position already settled by socket.
+        setTab('HISTORY');
+      } else {
+        setActivePositions((current) => [position, ...current.filter((item) => item.id !== position.id)]);
+        setState(position.status);
+        setTab('ACTIVE');
+      }
+      setFeedback(alreadySettled || FINAL_BINARY_STATES.has(position.status)
+        ? 'Position confirmed. Review the final outcome in History.'
+        : 'Position request accepted.');
     } catch (error) {
       if (sessionPrincipalId() !== userId) return;
       const status = (error as { response?: { status?: number } } | null)?.response?.status;
@@ -716,13 +797,13 @@ export default function BinaryPage() {
             <Wallet className="hidden h-5 w-5 shrink-0 text-[#A995FF] sm:mt-1 sm:block" aria-hidden="true" />
           </div>
           <div className="mt-2 grid min-w-0 grid-cols-5 gap-1.5 sm:mt-4 sm:gap-2" role="group" aria-label="Expiry duration">
-            {durationOptions.map((option) => <button key={option.seconds} type="button" aria-pressed={duration === option.seconds} aria-label={`${formatDuration(option.seconds)} expiry. ${option.minimumAmount ?? 'Unknown'}–${option.maximumAmount ?? 'unknown'} USDT stake range`} disabled={!option.enabled} onClick={() => setDuration(option.seconds)} className={`nexi-interactive nexi-ripple group min-h-[64px] min-w-0 rounded-lg border px-1.5 py-2 text-center transition sm:min-h-[84px] sm:rounded-xl sm:px-2 sm:py-2.5 ${duration === option.seconds ? 'border-[#8B5CF6] bg-[linear-gradient(145deg,rgba(109,65,255,.22),rgba(26,16,36,.92))] text-white shadow-[0_0_22px_rgba(109,65,255,.14)]' : 'border-violet-300/10 bg-[#0B0711]/70 text-[#8C8299] hover:border-violet-300/25'} disabled:cursor-not-allowed disabled:opacity-55`}><span className="block text-center text-[9px] font-semibold uppercase tracking-[.04em] sm:text-[11px] sm:tracking-[.08em]">{formatDuration(option.seconds)}</span><span className="mt-1 block font-mono text-xs text-[#F5F7FB] sm:mt-2 sm:text-base">{option.rate === null ? '—' : `${(option.rate * 100).toFixed(0)}%`}</span></button>)}
+            {durationOptions.map((option) => <button key={option.seconds} type="button" aria-pressed={duration === option.seconds} aria-label={`${formatDuration(option.seconds)} expiry. ${option.minimumAmount ?? 'Unknown'}–${option.maximumAmount ?? 'unknown'} USDT stake range`} disabled={!option.enabled} onClick={() => setDuration(option.seconds)} className={`nexi-interactive nexi-ripple group min-h-[64px] min-w-0 rounded-lg border px-1.5 py-2 text-center transition sm:min-h-[84px] sm:rounded-xl sm:px-2 sm:py-2.5 ${duration === option.seconds ? 'border-[#8B5CF6] bg-[linear-gradient(145deg,rgba(109,65,255,.22),rgba(26,16,36,.92))] text-white shadow-[0_0_22px_rgba(109,65,255,.14)]' : 'border-violet-300/10 bg-[#0B0711]/70 text-[#8C8299] hover:border-violet-300/25'} disabled:cursor-not-allowed disabled:opacity-55`}><span className="block text-center text-xs font-semibold uppercase tracking-[.02em] sm:tracking-[.08em]">{formatDuration(option.seconds)}</span><span className="mt-1 block font-mono text-xs text-[#F5F7FB] sm:mt-2 sm:text-base">{option.rate === null ? '—' : `${(option.rate * 100).toFixed(0)}%`}</span></button>)}
           </div>
           <p className="mt-2 min-w-0 break-words text-xs leading-5 text-[#C3BBD0]">Selected stake range: <span className="break-all font-mono text-white">{minimumStake !== null && maximumStake !== null ? `${minimumStake}–${maximumStake} USDT` : 'Unavailable'}</span></p>
-          <div className="mt-2 rounded-xl border border-violet-300/10 bg-[#0B0711]/75 px-3 py-2 text-[10px] leading-4 text-[#AFA4BC] sm:mt-3 sm:py-2.5 sm:text-xs sm:leading-5">{availabilityCopy}</div>
+          <div className="mt-2 rounded-xl border border-violet-300/10 bg-[#0B0711]/75 px-3 py-2 text-xs leading-5 text-[#AFA4BC] sm:mt-3 sm:py-2.5">{availabilityCopy}</div>
           <label className="mt-4 block text-xs text-[#C3BBD0]">Stake (USDT)
-            <div className="relative mt-1"><input type="text" inputMode="decimal" autoComplete="off" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder={minimumStake !== null && maximumStake !== null ? `${minimumStake}–${maximumStake}` : '0.00'} aria-describedby="binary-stake-range" className="min-h-12 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 pr-14 text-right font-mono outline-none focus:border-[#8B5CF6]" /><span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#8C8299]">USDT</span></div>
-            <span id="binary-stake-range" className="mt-1 block text-[10px] text-[#8C8299]">{minimumStake !== null && maximumStake !== null ? `Allowed range: ${minimumStake}–${maximumStake} USDT` : 'Stake range unavailable'}</span>
+            <div className="relative mt-1"><input type="text" inputMode="decimal" autoComplete="off" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder={minimumStake !== null && maximumStake !== null ? `${minimumStake}–${maximumStake}` : '0.00'} aria-describedby="binary-stake-range" className="min-h-12 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 pr-14 text-right font-mono text-base outline-none focus:border-[#8B5CF6]" /><span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#8C8299]">USDT</span></div>
+            <span id="binary-stake-range" className="mt-1 block text-xs text-[#8C8299]">{minimumStake !== null && maximumStake !== null ? `Allowed range: ${minimumStake}–${maximumStake} USDT` : 'Stake range unavailable'}</span>
           </label>
           <dl className="mt-4 grid min-w-0 grid-cols-1 gap-3 rounded-xl border border-violet-300/10 bg-[#0B0711] p-3 text-xs min-[390px]:grid-cols-2">
             <div className="min-w-0"><dt className="text-[#8C8299]">Options Wallet</dt><dd className="mt-1 break-all font-mono tabular-nums" aria-live="polite">{optionWalletBalanceLabel(optionWalletBalance)}</dd></div>

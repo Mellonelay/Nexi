@@ -1,5 +1,17 @@
 # CURRENT OWNER TASK — FULL NEXI SOURCE + MOBILE-FIRST PUBLIC UI CLOSURE (2026-11-09)
 
+## 2026-11-11 v3.4 — Active source-first closure execution
+
+**Owner phase lock:** complete all authorized Backend/Public/Admin source and consumer integrations before application tests, lint/typecheck, builds, browser acceptance, service restarts or deployment. Retain prior source receipts and historical browser verdicts; no Graphify/Kernel development. Current campaign reference: `tasks/plan.md`, `tasks/evidence/NEXI_SOURCE_CLOSURE_MATRIX_20261109.md`, original `docs/quality/NEXI_113_ACCEPTANCE_TRACKER_20261101.csv`, continuation `tasks/evidence/nexi-browser-acceptance-113-continuation-20261105.csv`.
+
+- [ ] Reconcile the original 113 IDs one by one: preserve historical 16 PASS / 24 FAIL / 8 BLOCKED / 65 NOT_TESTED separately; classify current **source** as `SOURCE_IMPLEMENTED`, `PROVEN_SOURCE_GAP`, or `INSUFFICIENT_EVIDENCE` against current source and preserved receipts, not historical status alone.
+- [ ] Complete proven functional contracts and producer→consumer readbacks across Backend Prisma7/SQLite Ledger/Outbox, Public Next.js, and Admin TanStack, prioritizing Binary terminal/reconnect, Spot/Margin lifecycle, Wallet/Transfer/Convert, Mining/Loans, auth, communications and market state.
+- [ ] Complete mobile-first source geometry and typography from `frontend/DESIGN.md` and three retained Nov8 research documents: monetary precision, Wallet asset semantics/list, shared primitives, 5 labeled dock destinations, responsive trading/forms, safe areas, a11y at 320–430 CSS px and 200% text resize. These are design/source criteria only until later rendered acceptance.
+- [ ] Reconcile shared components and source-to-consumer API/DTO, status, policy, principal ownership, outbox/realtime and Admin/Public configuration contracts; reuse unchanged accepted implementation and do not add duplicate financial authority.
+- [ ] Record source diffs, exact Knowledge v4 file:line, Graphify L0/L1 owner/impact, skills applied, affected criteria, per-criterion source disposition and unresolved frontier in the *existing* matrix. All application verification `DEFERRED_BY_OWNER_SOURCE_FIRST_RULE` until full repository source closure.
+
+
+
 **ACTIVE, NOT COMPLETED.** Execute the entire directive: [NEXI_ONE_SHOT_FULL_SOURCE_AND_MOBILE_UI_CLOSURE_20261109.md](NEXI_ONE_SHOT_FULL_SOURCE_AND_MOBILE_UI_CLOSURE_20261109.md). Same existing working session; recover checkpoint `09c2fd4`; no duplicate source edits. Current owner rule supersedes older "finish Phase A/test first" scheduling below. The actual interactive Public/Admin testing and dated FAIL receipts are **already recorded**; reuse them. Historical source tests statuses unchanged. Finish all source work **including full mobile-first Public visual/interaction/component source** before any application test, lint/typecheck campaign, build, browser/emulated-device acceptance or deployment.
 
 - [x] PREPARATION ONLY: registered directive, preserved original 113-item coverage and 11-group checkpoint, uploaded three complete Nov 8 Public mobile-first research sources at `tasks/evidence/`. **This is not source repair completion.**
