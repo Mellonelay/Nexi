@@ -53,11 +53,16 @@ export class MarketKlineQueryService {
     const configuredStaleAfterMs = Number(
       process.env.MARKET_QUOTE_STALE_AFTER_MS ?? '30000',
     );
-    // Higher intervals are refreshed from each finalized 1m provider candle,
-    // so allow one full aggregation cadence plus jitter before declaring them stale.
+    // An aggregated candle is not stale merely because its interval has not ended.
+    // Allow its full cadence and a bounded provider/aggregation delay.
+    const intervalMinutes: Record<string, number> = {
+      '3m': 3, '5m': 5, '15m': 15, '30m': 30,
+      '1h': 60, '2h': 120, '4h': 240, '6h': 360, '8h': 480, '12h': 720,
+      '1d': 1440, '3d': 4320, '1w': 10080, '1M': 44640,
+    };
     const staleAfterMs = query.interval === '1m'
       ? configuredStaleAfterMs
-      : Math.max(configuredStaleAfterMs, 90_000);
+      : Math.max(configuredStaleAfterMs, (intervalMinutes[query.interval] ?? 1) * 60_000 + 90_000);
     const dataState =
       candles.length === 0
         ? 'UNAVAILABLE'
