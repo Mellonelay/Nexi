@@ -3,7 +3,6 @@ import { BinaryService } from './binary.service';
 import { BinaryController } from './binary.controller';
 import { BinaryGateway } from './binary.gateway';
 import { WalletModule } from '../wallet/wallet.module';
-import { ScheduleModule } from '@nestjs/schedule';
 import { LedgerModule } from '../ledger/ledger.module';
 import { AuthModule } from '../auth/auth.module';
 import { SandboxModule } from '../sandbox/sandbox.module';
@@ -14,7 +13,6 @@ import { D1PrismaModule } from '../d1/d1-prisma.module';
 @Module({
   imports: [
       WalletModule,
-      ScheduleModule.forRoot(),
       LedgerModule,
       AuthModule,
       SandboxModule,
