@@ -497,6 +497,12 @@ At 200% zoom, required content should not overlap or truncate.
 
 At 400% zoom, reflow should avoid simultaneous horizontal and vertical page scrolling where the UI can reasonably reflow into a single-column reading/task sequence.
 
+### Mobile Web3 browser runtime
+
+NEXI Public primarily runs inside mobile wallet dApp browsers (including Trust Wallet and MetaMask), with ordinary mobile browsers and desktop as adaptations. Use the available CSS/visual viewport rather than device-name or user-agent presets. Preserve keyboard-accessible amounts, scrollable sheets, safe-area clearance and five labeled navigation destinations when wallet toolbars or the soft keyboard reduce visible height. Hide only the mobile dock during focused text entry; do not discard an in-progress order or wallet form state. Anchor instrument menus to their trigger while clamping them within the visible viewport.
+
+All Options expiry labels are **seconds-only**: `30s`, `60s`, `180s`, `280s`, `420s`. This is presentation policy; the authoritative duration remains the unchanged numeric seconds sent to the Backend.
+
 ## 17. Accessibility
 
 Baseline:

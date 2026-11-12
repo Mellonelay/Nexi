@@ -371,7 +371,7 @@ export function NotificationsPanel({
                 Notifications
               </span>
               {unreadCount !== null && unreadCount > 0 && (
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#6d41ff] text-white">
+                <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-[#6d41ff] text-white">
                   {unreadCount}
                 </span>
               )}
@@ -475,14 +475,14 @@ export function NotificationsPanel({
                       <p className="mt-0.5 break-words text-xs leading-5 text-[#8C8299]">
                         {notif.message}
                       </p>
-                      <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-[#55546A]">
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-[#8C8299]">
                         <span>{notif.time}</span>
                         <span className="uppercase tracking-[0.08em]">
                           {notif.sourceType}
                         </span>
                       </div>
                       {readErrors[notif.id] && (
-                        <p className="mt-1 text-[10px] text-[#FFB6C2]">
+                        <p className="mt-1 text-xs text-[#FFB6C2]">
                           Could not mark as read.
                         </p>
                       )}
@@ -495,7 +495,7 @@ export function NotificationsPanel({
           {/* Footer */}
           <div className="px-4 py-3 pb-[calc(12px+env(safe-area-inset-bottom))] border-t border-[var(--nexi-border-subtle)]">
             <p
-              className="text-center text-[11px] leading-5 text-[#8C8299]"
+              className="text-center text-xs leading-5 text-[#8C8299]"
               role="status"
             >
               Open a notification to mark it as read.

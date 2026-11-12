@@ -83,27 +83,27 @@ function AccountIdentityCard({
         />
       </div>
       <div className={`${compact ? "mt-2" : "mt-4"} min-w-0`}>
-        <p className="truncate text-sm font-semibold text-white">
+        <p className="break-words text-sm font-semibold text-white">
           {displayName !== "—" ? displayName : t("profile")}
         </p>
-        <p className="mt-1 truncate font-mono text-[11px] text-[#C3BBD0]">
+        <p className="mt-1 break-all font-mono text-xs text-[#C3BBD0]">
           {profileId === "—" ? profileId : shortenId(profileId)}
         </p>
       </div>
       {!compact && (
-        <div className="mt-4 grid grid-cols-2 gap-2 text-[11px]">
+        <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
           <div className="rounded-xl border border-violet-300/10 bg-black/15 px-2.5 py-2">
             <p className="text-[#8C8299]">{t("score")}</p>
             <p className="mt-1 font-medium text-[#F8F6FF]">—</p>
           </div>
           <div className="rounded-xl border border-violet-300/10 bg-black/15 px-2.5 py-2">
             <p className="text-[#8C8299]">{t("vipLevel")}</p>
-            <p className="mt-1 truncate font-medium text-[#F8F6FF]">{vipLabel}</p>
+            <p className="mt-1 break-words font-medium text-[#F8F6FF]">{vipLabel}</p>
           </div>
         </div>
       )}
       <div
-        className={`${compact ? "mt-2" : "mt-3"} flex items-center gap-2 text-[11px] text-[#C3BBD0]`}
+        className={`${compact ? "mt-2" : "mt-3"} flex items-center gap-2 text-xs text-[#C3BBD0]`}
         aria-live="polite"
       >
         <span

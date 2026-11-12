@@ -9,11 +9,20 @@ import { sessionPrincipalId } from '../lib/wallet-auth';
 function useVisibleViewportHeight() {
   useEffect(() => {
     const viewport = window.visualViewport;
-    if (!viewport) return;
-
     const root = document.documentElement;
+    const isTextEntry = (element: Element | null) =>
+      element instanceof HTMLTextAreaElement ||
+      element instanceof HTMLSelectElement ||
+      (element instanceof HTMLInputElement &&
+        !['checkbox', 'radio', 'range', 'hidden', 'button', 'submit', 'reset', 'file'].includes(element.type)) ||
+      (element instanceof HTMLElement && element.isContentEditable);
+
+    const updateFocusedInput = (event?: FocusEvent) => {
+      const element = event?.type === 'focusout' ? null : event?.target instanceof Element ? event.target : document.activeElement;
+      root.classList.toggle('nexi-input-focused', isTextEntry(element));
+    };
     const updateViewportHeight = () => {
-      if (viewport.scale > 1.01) {
+      if (!viewport || viewport.scale > 1.01) {
         root.style.removeProperty('--nexi-visible-viewport-height');
         return;
       }
@@ -21,13 +30,19 @@ function useVisibleViewportHeight() {
     };
 
     updateViewportHeight();
-    viewport.addEventListener('resize', updateViewportHeight);
-    viewport.addEventListener('scroll', updateViewportHeight);
+    updateFocusedInput();
+    viewport?.addEventListener('resize', updateViewportHeight);
+    viewport?.addEventListener('scroll', updateViewportHeight);
     window.addEventListener('resize', updateViewportHeight);
+    document.addEventListener('focusin', updateFocusedInput);
+    document.addEventListener('focusout', updateFocusedInput);
     return () => {
-      viewport.removeEventListener('resize', updateViewportHeight);
-      viewport.removeEventListener('scroll', updateViewportHeight);
+      viewport?.removeEventListener('resize', updateViewportHeight);
+      viewport?.removeEventListener('scroll', updateViewportHeight);
       window.removeEventListener('resize', updateViewportHeight);
+      document.removeEventListener('focusin', updateFocusedInput);
+      document.removeEventListener('focusout', updateFocusedInput);
+      root.classList.remove('nexi-input-focused');
       root.style.removeProperty('--nexi-visible-viewport-height');
     };
   }, []);

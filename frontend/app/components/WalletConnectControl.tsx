@@ -343,7 +343,7 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
                       )}
                     </span>
                     {connected && (
-                      <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--nexi-cyan)]">
+                      <span className="shrink-0 text-xs font-semibold uppercase tracking-[0.1em] text-[var(--nexi-cyan)]">
                         Connected
                       </span>
                     )}

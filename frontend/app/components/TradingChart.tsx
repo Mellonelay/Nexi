@@ -78,7 +78,7 @@ function ChartMetricsRail({
   overlays: { ma20: number | undefined; ema20: number | undefined; ema50: number | undefined };
 }) {
   return (
-    <div role="region" aria-label="Chart values" tabIndex={0} className="nexi-chart-rail [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex min-w-0 shrink-0 items-center overflow-x-auto whitespace-nowrap gap-x-3 gap-y-1 border-b border-violet-300/10 bg-black/15 px-3 py-2 font-mono text-[11px] sm:text-xs">
+    <div role="region" aria-label="Chart values" tabIndex={0} className="nexi-chart-rail [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex min-w-0 shrink-0 items-center overflow-x-auto whitespace-nowrap gap-x-3 gap-y-1 border-b border-violet-300/10 bg-black/15 px-3 py-2 font-mono text-xs sm:text-xs">
       <span className="hidden text-[#8C8299] sm:inline">O <b className="font-medium text-[#C3BBD0]">{formatMetric(latest?.open)}</b></span>
       <span className="hidden text-[#8C8299] sm:inline">H <b className="font-medium text-[#98FCE4]">{formatMetric(latest?.high)}</b></span>
       <span className="hidden text-[#8C8299] sm:inline">L <b className="font-medium text-[#FF9CB0]">{formatMetric(latest?.low)}</b></span>
@@ -98,7 +98,7 @@ function ChartIndicatorRail({ activeIndicators, onToggle }: { activeIndicators: 
     <div className="nexi-chart-indicators nexi-scroll-rail flex min-w-0 gap-1 overflow-x-auto border-b border-violet-300/10 bg-black/10 px-2 py-1.5" aria-label="Chart indicators">
       {INDICATORS.map((indicator) => {
         const active = activeIndicators.has(indicator);
-        return <button key={indicator} type="button" aria-pressed={active} onClick={() => onToggle(indicator)} className={`nexi-interactive min-h-11 min-w-11 shrink-0 rounded-md border px-2 text-[10px] font-semibold ${active ? "border-violet-300/30 bg-[#2A1742] text-white" : "border-transparent text-[#8C8299] hover:text-white"}`}>{indicator}</button>;
+        return <button key={indicator} type="button" aria-pressed={active} onClick={() => onToggle(indicator)} className={`nexi-interactive min-h-11 min-w-11 shrink-0 rounded-md border px-2 text-xs font-semibold ${active ? "border-violet-300/30 bg-[#2A1742] text-white" : "border-transparent text-[#8C8299] hover:text-white"}`}>{indicator}</button>;
       })}
     </div>
   );
@@ -379,8 +379,8 @@ export default function TradingChart({
     <div
       className={`nexi-trading-chart relative flex h-full w-full flex-col overflow-hidden rounded-lg ${responsiveHeight}`}
     >
-      {sandboxed && <div role="status" className="border-b border-amber-300/20 bg-amber-300/5 px-3 py-1 text-center font-mono text-[10px] font-semibold uppercase tracking-wider text-amber-100">Sandbox simulation · test data</div>}
-      {!sandboxed && candleLineageLabel && <div className="border-b border-sky-300/15 bg-sky-300/5 px-3 py-1 text-center text-[10px] font-medium text-sky-100" aria-label={candleLineageLabel}>{candleLineageLabel}</div>}
+      {sandboxed && <div role="status" className="border-b border-amber-300/20 bg-amber-300/5 px-3 py-1 text-center font-mono text-xs font-semibold uppercase tracking-wider text-amber-100">Sandbox simulation · test data</div>}
+      {!sandboxed && candleLineageLabel && <div className="border-b border-sky-300/15 bg-sky-300/5 px-3 py-1 text-center text-xs font-medium text-sky-100" aria-label={candleLineageLabel}>{candleLineageLabel}</div>}
       <ChartMetricsRail latest={latest} rsi={metrics.rsi} macdHistogram={macdHistogram} activeIndicators={activeIndicators} overlays={overlays} />
       <div
         ref={chartContainerRef}

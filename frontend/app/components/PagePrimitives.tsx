@@ -79,7 +79,7 @@ export function PanelHeading({ title, description, action }: { title: string; de
 
 export function StatusBadge({ state }: { state: string }) {
   const label = productStateLabel(state);
-  return <span className={`inline-flex min-h-7 items-center rounded-full border px-2.5 text-[11px] font-semibold tracking-[0.04em] ${stateTone[state] ?? stateTone.UNAVAILABLE}`}>{label}</span>;
+  return <span className={`inline-flex min-h-7 items-center rounded-full border px-2.5 text-xs font-semibold tracking-[0.04em] ${stateTone[state] ?? stateTone.UNAVAILABLE}`}>{label}</span>;
 }
 
 export function DataStatePanel({ state, title = 'Data is not available right now', message = 'Try again shortly.' }: { state: string; title?: string; message?: string }) {
@@ -92,7 +92,7 @@ export function DataStatePanel({ state, title = 'Data is not available right now
 }
 
 export function Metric({ label, value, hint }: { label: string; value: string; hint?: string }) {
-  return <div className="nexi-execution-surface min-w-0 rounded-xl border border-[var(--nexi-border-subtle)] p-4"><p className="text-xs uppercase tracking-[0.12em] text-[#8C8299]">{label}</p><p className="nexi-data mt-2 whitespace-normal break-all font-mono text-lg text-[#48C0CC]">{value}</p>{hint && <p className="mt-1 text-xs text-[#8C8299]">{hint}</p>}</div>;
+  return <div className="nexi-execution-surface min-w-0 rounded-xl border border-[var(--nexi-border-subtle)] p-4"><p className="text-xs uppercase tracking-[0.12em] text-[#8C8299]">{label}</p><p className="nexi-data mt-2 whitespace-normal break-all font-mono text-lg tabular-nums leading-snug text-[#48C0CC]">{value}</p>{hint && <p className="mt-1 break-words text-xs leading-5 text-[#8C8299]">{hint}</p>}</div>;
 }
 
 export function TabButton({ active, children, onClick }: { active: boolean; children: ReactNode; onClick: () => void }) {

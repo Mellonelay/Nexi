@@ -379,7 +379,7 @@ function MarginWorkspace({
     <section className="nexi-margin-workspace nexi-station-card mx-3 mt-3 min-w-0 rounded-2xl p-3 sm:mx-4 sm:p-5" aria-labelledby="isolated-margin-heading">
         <div className="nexi-margin-heading flex min-w-0 flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-[.18em] text-[#48C0CC]">Spot isolated margin</p>
+            <p className="text-xs font-semibold uppercase tracking-[.12em] text-[#48C0CC]">Spot isolated margin</p>
             <h2 id="isolated-margin-heading" className="mt-1 text-lg font-semibold">{displayPair} margin workspace</h2>
           </div>
         </div>
@@ -387,11 +387,11 @@ function MarginWorkspace({
           <div className="nexi-trading-intervals flex min-w-0 items-center gap-2 border-b border-white/5 px-3 py-2">
             <div className="nexi-scroll-rail flex min-w-0 flex-1 items-center justify-between gap-1 overflow-x-auto" role="tablist" aria-label="Margin chart interval">
               {CHART_INTERVALS.map((value) => (
-                <button key={value} type="button" role="tab" aria-selected={chartInterval === value} onClick={() => setChartInterval(value)} className={`nexi-interactive min-h-11 min-w-11 shrink-0 rounded-md px-2 text-[10px] font-semibold ${chartInterval === value ? 'bg-[#2C146C] text-white' : 'text-[#8C8299] hover:text-white'}`}>{value}</button>
+                <button key={value} type="button" role="tab" aria-selected={chartInterval === value} onClick={() => setChartInterval(value)} className={`nexi-interactive min-h-11 min-w-11 shrink-0 rounded-md px-2 text-xs font-semibold ${chartInterval === value ? 'bg-[#2C146C] text-white' : 'text-[#8C8299] hover:text-white'}`}>{value}</button>
               ))}
             </div>
           </div>
-          <div className="nexi-trading-plot-shell h-[300px] md:h-[360px] xl:h-[430px]">
+          <div className="nexi-trading-plot-shell h-[clamp(230px,55dvh,300px)] md:h-[360px] xl:h-[430px]">
             <SpotRealtimeTradingChart symbol={normalizedSymbol} interval={chartInterval} marketStatus={sessionClosed ? 'CLOSED' : undefined} />
           </div>
         </div>
@@ -408,7 +408,7 @@ function MarginWorkspace({
               <div><p className="text-[#8C8299]">Margin locked</p><p className="mt-1 min-w-0 break-all font-mono">{walletAmountLabel(walletState, marginUsdtBalance, 'USDT', 'locked')}</p></div>
             </div>
             <label className="block text-xs text-[#C3BBD0]">Collateral (USDT)
-              <input type="number" inputMode="decimal" min="0" step="any" value={marginCollateral} onChange={(event) => setMarginCollateral(event.target.value)} placeholder="Enter positive collateral" className="mt-1 min-h-11 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 text-right font-mono outline-none focus:border-[#8B5CF6]" />
+              <input type="number" inputMode="decimal" min="0" step="any" value={marginCollateral} onChange={(event) => setMarginCollateral(event.target.value)} placeholder="Enter positive collateral" className="mt-1 min-h-11 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 text-right font-mono text-base outline-none focus:border-[#8B5CF6]" />
             </label>
             <dl className="grid min-w-0 grid-cols-2 gap-2 rounded-xl border border-violet-300/10 bg-[#0B0711] p-3 text-xs">
               {marginQuote?.price != null && <div><dt className="text-[#8C8299]">Mark price</dt><dd className="mt-1 font-mono">{marginQuote.price}</dd></div>}
@@ -430,7 +430,7 @@ function MarginWorkspace({
         {marginFeedback && <p role="status" className="mt-3 text-xs text-[#C3BBD0]">{marginFeedback}</p>}
         {marginUnknownIntentKey && <button type="button" onClick={() => void recheckUnknownMarginOpening(marginUnknownIntentKey)} className="mt-3 min-h-11 w-full rounded-lg border border-amber-300/30 px-3 text-sm font-semibold text-amber-100">Recheck margin submission</button>}
         {unknownMarginExit && <button type="button" onClick={() => void recheckUnknownMarginExit()} className="mt-3 min-h-11 w-full rounded-lg border border-amber-300/30 px-3 text-sm font-semibold text-amber-100">Recheck original Margin {unknownMarginExit.operation === 'close' ? 'close' : 'cancellation'}</button>}
-        <p className="mt-3 text-[10px] text-[#8C8299]">Isolated margin uses only the collateral assigned to each position. Leverage increases both potential gains and losses.</p>
+        <p className="mt-3 text-xs leading-5 text-[#8C8299]">Isolated margin uses only the collateral assigned to each position. Leverage increases both potential gains and losses.</p>
       </section>
   );
 }
@@ -472,11 +472,11 @@ function SpotChartArea({displayPair, normalizedSymbol, chartInterval, setChartIn
             <div className="nexi-trading-intervals flex min-w-0 items-center gap-2 border-b border-white/5 px-3 py-2">
               <div className="nexi-scroll-rail flex min-w-0 flex-1 items-center justify-between gap-1 overflow-x-auto" role="tablist" aria-label="Chart interval">
                 {CHART_INTERVALS.map((value) => (
-                  <button key={value} type="button" role="tab" aria-selected={chartInterval === value} onClick={() => setChartInterval(value)} className={`nexi-interactive min-h-11 min-w-11 shrink-0 rounded-md px-2 text-[10px] font-semibold ${chartInterval === value ? 'bg-[#2C146C] text-white' : 'text-[#8C8299] hover:text-white'}`}>{value}</button>
+                  <button key={value} type="button" role="tab" aria-selected={chartInterval === value} onClick={() => setChartInterval(value)} className={`nexi-interactive min-h-11 min-w-11 shrink-0 rounded-md px-2 text-xs font-semibold ${chartInterval === value ? 'bg-[#2C146C] text-white' : 'text-[#8C8299] hover:text-white'}`}>{value}</button>
                 ))}
               </div>
             </div>
-            <div className="nexi-trading-plot-shell h-[300px] md:h-[360px] xl:h-[430px]">
+            <div className="nexi-trading-plot-shell h-[clamp(230px,55dvh,300px)] md:h-[360px] xl:h-[430px]">
               <SpotRealtimeTradingChart symbol={normalizedSymbol} interval={chartInterval} marketStatus={sessionClosed ? 'CLOSED' : undefined} />
             </div>
           </div>
@@ -498,17 +498,17 @@ function SpotOrderBook({mobileMarketPanel, bids, asks, bookStatus, setPrice, bas
   return (
             <section className={`nexi-station-card min-w-0 overflow-hidden rounded-2xl xl:block ${mobileMarketPanel === 'BOOK' ? 'block' : 'hidden'}`} aria-labelledby="order-book-heading">
               <div className="flex items-center justify-between border-b border-white/5 px-4 py-3">
-                <div><h2 id="order-book-heading" className="font-semibold">Market depth</h2><p className="text-[10px] text-[#8C8299]">Binance Spot reference data · not executable NEXI liquidity</p></div>
+                <div><h2 id="order-book-heading" className="font-semibold">Market depth</h2><p className="text-xs leading-4 text-[#8C8299]">Binance Spot reference data · not executable NEXI liquidity</p></div>
                 {bookStatus === 'LIVE' ? <span className="text-xs text-[#8C8299]">Live</span> : bookStatus === 'CONNECTION_LOST' ? <span className="text-xs text-amber-200">Updates paused · last received depth</span> : bookStatus === 'LOADING' ? <span className="text-xs text-[#8C8299]">Loading</span> : bookStatus === 'ERROR' ? <span className="text-xs text-[#8C8299]">Request error</span> : bookStatus === 'UNAVAILABLE' ? <span className="text-xs text-amber-200">Unavailable</span> : null}
               </div>
-              <div className="grid min-w-0 grid-cols-2 text-xs">
-                <div className="min-w-0 border-r border-white/5 p-3">
+              <div className="grid min-w-0 grid-cols-1 text-xs min-[430px]:grid-cols-2">
+                <div className="min-w-0 border-b border-white/5 p-3 min-[430px]:border-b-0 min-[430px]:border-r">
                   <div className="mb-2 flex flex-wrap justify-between gap-x-2 gap-y-1 text-xs text-[#8C8299]"><span>Bid · {quoteSymbol}</span><span>Quantity {baseSymbol}</span></div>
-                  {bids.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(row.price)} className="nexi-interactive flex min-h-9 min-w-0 w-full flex-col justify-center rounded px-1 text-left font-mono tabular-nums hover:bg-emerald-400/5"><span className="break-all text-xs text-[#22D3A6]">{row.price}</span><span className="break-all text-xs text-[#C3BBD0]">{row.amount} {baseSymbol}</span></button>)}
+                  {bids.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(row.price)} className="nexi-interactive flex min-h-11 min-w-0 w-full flex-col justify-center rounded px-1 text-left font-mono tabular-nums hover:bg-emerald-400/5"><span className="break-all text-xs text-[#22D3A6]">{row.price}</span><span className="break-all text-xs text-[#C3BBD0]">{row.amount} {baseSymbol}</span></button>)}
                 </div>
                 <div className="min-w-0 p-3">
                   <div className="mb-2 flex flex-wrap justify-between gap-x-2 gap-y-1 text-xs text-[#8C8299]"><span>Ask · {quoteSymbol}</span><span>Quantity {baseSymbol}</span></div>
-                  {asks.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(row.price)} className="nexi-interactive flex min-h-9 min-w-0 w-full flex-col items-end justify-center rounded px-1 text-right font-mono tabular-nums hover:bg-rose-400/5"><span className="break-all text-xs text-[#FF5C7C]">{row.price}</span><span className="break-all text-xs text-[#C3BBD0]">{row.amount} {baseSymbol}</span></button>)}
+                  {asks.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(row.price)} className="nexi-interactive flex min-h-11 min-w-0 w-full flex-col items-end justify-center rounded px-1 text-right font-mono tabular-nums hover:bg-rose-400/5"><span className="break-all text-xs text-[#FF5C7C]">{row.price}</span><span className="break-all text-xs text-[#C3BBD0]">{row.amount} {baseSymbol}</span></button>)}
                 </div>
               </div>
               {bids.length === 0 && asks.length === 0 && (
@@ -580,7 +580,7 @@ function SpotActivityArea({historyTab, setHistoryTab, historyRows, historyStatus
                 ['ORDERS', 'Orders', 'Order history'],
                 ['TRADES', 'Trades', 'Trade history'],
               ] as const).map(([value, mobileLabel, desktopLabel]) => (
-                <button key={value} type="button" role="tab" aria-selected={historyTab === value} onClick={() => setHistoryTab(value)} className={`min-h-12 min-w-0 px-1 text-[11px] sm:px-2 sm:text-sm ${historyTab === value ? 'border-b-2 border-[#8B5CF6] text-white' : 'text-[#8C8299]'}`}>
+                <button key={value} type="button" role="tab" aria-selected={historyTab === value} onClick={() => setHistoryTab(value)} className={`min-h-12 min-w-0 px-1 text-xs sm:px-2 sm:text-sm ${historyTab === value ? 'border-b-2 border-[#8B5CF6] text-white' : 'text-[#8C8299]'}`}>
                   <span className="sm:hidden">{mobileLabel}</span>
                   <span className="hidden sm:inline">{desktopLabel}</span>
                 </button>
@@ -628,30 +628,30 @@ function SpotOrderTicket({side, setSide, orderType, setOrderType, price, setPric
   return (
         <aside className="nexi-station-card order-5 h-fit min-w-0 overflow-hidden rounded-xl p-3 sm:rounded-2xl sm:p-5 xl:sticky xl:top-20 xl:order-none" aria-labelledby="spot-ticket-heading">
           <div className="hidden items-start justify-between gap-3 sm:flex">
-            <div><p className="text-[10px] font-semibold uppercase tracking-[.18em] text-[#48C0CC]">Execution ticket</p><h2 id="spot-ticket-heading" className="mt-1 text-xl font-semibold gradient-text">Place a Spot order</h2></div>
+            <div><p className="text-xs font-semibold uppercase tracking-[.12em] text-[#48C0CC]">Execution ticket</p><h2 id="spot-ticket-heading" className="mt-1 text-xl font-semibold gradient-text">Place a Spot order</h2></div>
             <Wallet className="mt-1 h-5 w-5 shrink-0 text-[#A995FF]" aria-hidden="true" />
           </div>
           <div className="mt-2.5 grid min-w-0 grid-cols-2 rounded-xl bg-[#0B0711] p-1 sm:mt-3" data-testid="spot-buy-sell">
             {(['BUY', 'SELL'] as const).map((value) => <button key={value} type="button" onClick={() => setSide(value)} className={`nexi-interactive min-h-11 min-w-0 rounded-lg px-1 text-xs font-semibold sm:text-sm ${side === value ? value === 'BUY' ? 'bg-emerald-400/15 text-[#22D3A6]' : 'bg-rose-400/15 text-[#FF5C7C]' : 'text-[#8C8299]'}`}>{value === 'BUY' ? 'Buy' : 'Sell'}</button>)}
           </div>
           <div className="mt-2 grid min-w-0 grid-cols-3 gap-1 rounded-xl bg-[#0B0711] p-1" role="tablist" aria-label="Order type" data-testid="spot-order-type">
-            {(['MARKET', 'LIMIT', 'STOP'] as const).map((value) => <button key={value} type="button" role="tab" aria-selected={orderType === value} onClick={() => setOrderType(value)} className={`nexi-interactive min-h-11 min-w-0 whitespace-normal rounded-lg px-1 text-[10px] leading-tight sm:text-xs ${orderType === value ? 'bg-[#2A1742] text-white' : 'text-[#8C8299]'}`}>{value === 'STOP' ? 'Stop Limit' : value[0] + value.slice(1).toLowerCase()}</button>)}
+            {(['MARKET', 'LIMIT', 'STOP'] as const).map((value) => <button key={value} type="button" role="tab" aria-selected={orderType === value} onClick={() => setOrderType(value)} className={`nexi-interactive min-h-11 min-w-0 whitespace-normal rounded-lg px-1 text-xs leading-tight ${orderType === value ? 'bg-[#2A1742] text-white' : 'text-[#8C8299]'}`}>{value === 'STOP' ? 'Stop Limit' : value[0] + value.slice(1).toLowerCase()}</button>)}
           </div>
 
           <div className="mt-2.5 space-y-2 sm:mt-3 sm:space-y-2.5" data-testid="spot-inputs">
-            <label className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 text-xs text-[#C3BBD0] sm:block"><span>Price (USDT)</span>
+            <label className="grid min-w-0 grid-cols-1 gap-1 text-xs text-[#C3BBD0] min-[430px]:grid-cols-[auto_minmax(0,1fr)] min-[430px]:items-center sm:block"><span>Price (USDT)</span>
               <input type="number" inputMode="decimal" value={price} onChange={(event) => setPrice(event.target.value)} disabled={orderType === 'MARKET'} placeholder={orderType === 'MARKET' ? 'Market price' : '—'} className="min-h-11 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 text-right font-mono outline-none focus:border-[#8B5CF6] sm:mt-1" />
             </label>
-            {orderType === 'STOP' && <label className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 text-xs text-[#C3BBD0] sm:block"><span>Stop price (USDT)</span>
+            {orderType === 'STOP' && <label className="grid min-w-0 grid-cols-1 gap-1 text-xs text-[#C3BBD0] min-[430px]:grid-cols-[auto_minmax(0,1fr)] min-[430px]:items-center sm:block"><span>Stop price (USDT)</span>
               <input type="number" inputMode="decimal" value={stopPrice} onChange={(event) => setStopPrice(event.target.value)} placeholder="—" className="min-h-11 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 text-right font-mono outline-none focus:border-[#8B5CF6] sm:mt-1" />
             </label>}
-            <label className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 text-xs text-[#C3BBD0] sm:block"><span>Amount ({baseSymbol})</span>
+            <label className="grid min-w-0 grid-cols-1 gap-1 text-xs text-[#C3BBD0] min-[430px]:grid-cols-[auto_minmax(0,1fr)] min-[430px]:items-center sm:block"><span>Amount ({baseSymbol})</span>
               <input type="number" inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="0.00" className="min-h-11 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 text-right font-mono outline-none focus:border-[#8B5CF6] sm:mt-1" />
             </label>
             <div className="grid min-w-0 grid-cols-4 gap-1.5">
-              {[25, 50, 75, 100].map((percentage) => <button key={percentage} type="button" disabled aria-label={`${percentage}% allocation requires an available balance`} className="min-h-8 min-w-0 rounded-lg border border-violet-300/10 px-0 text-[10px] text-[#8C8299] disabled:cursor-not-allowed sm:min-h-9">{percentage}%</button>)}
+              {[25, 50, 75, 100].map((percentage) => <button key={percentage} type="button" disabled aria-label={`${percentage}% allocation requires an available balance`} className="min-h-11 min-w-0 rounded-lg border border-violet-300/10 px-0 text-xs text-[#8C8299] disabled:cursor-not-allowed">{percentage}%</button>)}
             </div>
-            <label className="flex min-h-8 items-center gap-2 rounded-xl border border-violet-300/10 px-3 text-xs sm:min-h-9">
+            <label className="flex min-h-11 items-center gap-2 rounded-xl border border-violet-300/10 px-3 text-xs sm:min-h-9">
               <input type="checkbox" checked={tpSlState !== 'NOT_CONFIGURED'} onChange={(event) => configureTpSl(event.target.checked)} className="h-4 w-4 accent-violet-500" />
               Configure TP/SL
             </label>
@@ -666,7 +666,7 @@ function SpotOrderTicket({side, setSide, orderType, setOrderType, price, setPric
             <div className="min-w-0"><dt className="text-[#8C8299]">Estimated total</dt><dd className="mt-0.5 break-all font-mono tabular-nums">{total === null ? '—' : `${total.toString()} USDT`}</dd></div>
             <div className="min-w-0"><dt className="text-[#8C8299]">Fee</dt><dd className="mt-0.5 break-words font-mono">—</dd></div>
             <div className="min-w-0"><dt className="text-[#8C8299]">Available</dt><dd className="mt-0.5 break-words font-mono">{availableBalance}</dd></div>
-            <div className="hidden min-w-0 lg:block"><dt className="text-[#8C8299]">State</dt><dd className="mt-0.5 break-words font-mono">{productStateLabel(orderState)}</dd></div>
+            <div className="min-w-0"><dt className="text-[#8C8299]">State</dt><dd className="mt-0.5 break-words font-mono">{productStateLabel(orderState)}</dd></div>
           </dl>
 
           {feedback && <p role="status" className="mt-3 text-sm text-[#C3BBD0]">{feedback}</p>}

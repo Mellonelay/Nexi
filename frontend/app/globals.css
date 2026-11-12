@@ -755,6 +755,7 @@ body {
 
   .nexi-input {
     min-height: var(--nexi-control-height);
+    font-size: 1rem;
     width: 100%;
     border: 1px solid var(--nexi-border-raised);
     border-radius: var(--nexi-radius-sm);
@@ -840,9 +841,7 @@ body {
   .nexi-dashboard-hero .nexi-active-pair button:first-child {
     min-height: 44px;
   }
-  .nexi-dashboard-hero .nexi-active-pair-favorite {
-    display: none;
-  }
+  /* Keep the supported favorite action operable on phone widths. */
 }
 
 @media (min-width: 500px) and (max-width: 767px) {
@@ -875,8 +874,7 @@ body {
   }
 
   .nexi-bottom-nav {
-    height: 58px !important;
-    border-radius: 16px !important;
+    border-radius: 16px;
   }
 }
 
@@ -984,6 +982,21 @@ body {
     .nexi-promo-button
   ) {
     background: #0b0711;
+  }
+}
+
+/* Wallet in-app browsers shrink the visible area during text entry.
+   Keep the focused form usable rather than reserving space for a hidden dock. */
+@media (max-width: 1023px) {
+  .nexi-modal-viewport {
+    max-height: max(0px, calc(var(--nexi-visible-viewport-height, 100dvh) - 76px - env(safe-area-inset-bottom)));
+  }
+  :root.nexi-input-focused .nexi-mobile-dock-wrap {
+    display: none;
+  }
+  :root.nexi-input-focused .nexi-modal-viewport {
+    bottom: 0;
+    max-height: var(--nexi-visible-viewport-height, 100dvh);
   }
 }
 

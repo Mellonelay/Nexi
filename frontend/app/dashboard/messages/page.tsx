@@ -375,11 +375,11 @@ export default function MessagesPage() {
   const canSend = Boolean(userId && conversationId && state === 'READY' && !sending && !uploading && !unknownMessageKey && (draft.trim() || attachments.length));
 
   return (
-    <main className="mx-auto flex min-h-[calc(100dvh-9rem)] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-[var(--nexi-border-raised)] bg-[var(--nexi-surface-deep)] shadow-[var(--nexi-shadow-panel)]">
+    <main className="mx-auto flex h-[max(14rem,calc(var(--nexi-visible-viewport-height,100dvh)-9rem))] min-h-0 w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-[var(--nexi-border-raised)] bg-[var(--nexi-surface-deep)] shadow-[var(--nexi-shadow-panel)]">
       <header className="flex min-h-16 items-center gap-3 border-b border-[#2B2037] px-4 py-3">
         <button type="button" onClick={() => setHistoryOpen(true)} aria-label="Open message history" aria-haspopup="dialog" className="grid h-11 w-11 shrink-0 place-items-center rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF]"><NexiLogoMark compact /></button>
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-base font-semibold text-[#F5F7FB]">Nexi Customer Service</h1>
+          <h1 className="break-words text-base font-semibold text-[#F5F7FB]">Nexi Customer Service</h1>
           <p className="mt-0.5 text-xs text-[var(--nexi-text-secondary)]" role="status" aria-live="polite">{connectionLabel}</p>
         </div>
         {state === 'ERROR' && <button type="button" onClick={() => { setState('LOADING'); void load(); }} className="min-h-11 rounded-lg px-3 text-sm font-semibold text-[var(--nexi-focus)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)]">Retry</button>}
@@ -402,7 +402,7 @@ export default function MessagesPage() {
           {attachments.map((item) => <li key={item.id} className="flex max-w-full items-center gap-2 rounded-lg border border-[#49335E] bg-[#171022] px-3 py-2 text-xs text-[#C3BBD0]">
             {item.mimeType.startsWith('image/') ? <ImageIcon size={15} aria-hidden="true" /> : <FileText size={15} aria-hidden="true" />}
             <span className="max-w-48 truncate">{item.name}</span>
-            <button type="button" aria-label={`Remove ${item.name}`} onClick={() => { setAttachments((current) => current.filter((attachment) => attachment.id !== item.id)); setPendingMessageKey(null); }} disabled={Boolean(unknownMessageKey)} className="grid h-7 w-7 place-items-center rounded hover:bg-white/5"><X size={14} /></button>
+            <button type="button" aria-label={`Remove ${item.name}`} onClick={() => { setAttachments((current) => current.filter((attachment) => attachment.id !== item.id)); setPendingMessageKey(null); }} disabled={Boolean(unknownMessageKey)} className="grid h-11 w-11 shrink-0 place-items-center rounded hover:bg-white/5"><X size={14} /></button>
           </li>)}
         </ul>}
         {feedback && <p className="mb-2 px-1 text-xs text-[#C9B7FF]" role="status">{feedback}</p>}
@@ -412,12 +412,12 @@ export default function MessagesPage() {
           <button type="button" aria-label="Attach a file or image" onClick={() => fileInputRef.current?.click()} disabled={!userId || uploading || sending || Boolean(unknownMessageKey)} className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[#C3BBD0] hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF] disabled:opacity-40"><Paperclip size={19} /></button>
           <div className="relative grid h-11 w-11 shrink-0 place-items-center">
             <button type="button" aria-label="Insert emoji" aria-expanded={emojiOpen} onClick={() => setEmojiOpen((value) => !value)} disabled={!userId || sending || Boolean(unknownMessageKey)} className="grid h-11 w-11 place-items-center rounded-xl text-[#C3BBD0] hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF] disabled:opacity-40"><Smile size={19} /></button>
-            {emojiOpen && <div className="absolute bottom-12 left-0 z-10 grid grid-cols-4 gap-1 rounded-xl border border-[#49335E] bg-[#171022] p-2 shadow-xl" role="group" aria-label="Emoji picker">{EMOJI.map((emoji) => <button type="button" key={emoji} aria-label={`Insert ${emoji}`} onClick={() => insertEmoji(emoji)} className="grid h-10 w-10 place-items-center rounded-lg text-xl hover:bg-white/5">{emoji}</button>)}</div>}
+            {emojiOpen && <div className="absolute bottom-12 left-0 z-10 grid grid-cols-4 gap-1 rounded-xl border border-[#49335E] bg-[#171022] p-2 shadow-xl" role="group" aria-label="Emoji picker">{EMOJI.map((emoji) => <button type="button" key={emoji} aria-label={`Insert ${emoji}`} onClick={() => insertEmoji(emoji)} className="grid h-11 w-11 place-items-center rounded-lg text-xl hover:bg-white/5">{emoji}</button>)}</div>}
           </div>
           <textarea ref={inputRef} value={draft} onChange={(event) => { draftRef.current = event.target.value; setDraft(event.target.value); setPendingMessageKey(null); }} onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); void send(); } }} disabled={!userId || state !== 'READY' || sending || Boolean(unknownMessageKey)} rows={1} aria-label="Write a message" placeholder={userId ? 'Write a message…' : 'Sign in to message support'} className="max-h-32 min-h-11 min-w-0 flex-1 resize-y rounded-xl border border-[#49335E] bg-[#171022] px-3 py-3 text-sm text-[#F5F7FB] placeholder:text-[#8C8299] focus:border-violet-300/60 focus:outline-none focus:ring-1 focus:ring-violet-300/30 disabled:opacity-50" />
           <button type="submit" aria-label="Send message" disabled={!canSend} className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-violet-300/40 bg-violet-300/15 text-violet-100 hover:bg-violet-300/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF] disabled:cursor-not-allowed disabled:opacity-40">{sending ? <LoaderCircle size={18} className="animate-spin" /> : <Send size={18} />}</button>
         </div>
-        <p className="mt-2 pl-1 text-[11px] text-[#8C8299]">Enter to send · Shift+Enter for a new line</p>
+        <p className="mt-2 pl-1 text-xs text-[#8C8299]">Enter to send · Shift+Enter for a new line</p>
       </form>
 
       <ModalSurface open={historyOpen} onClose={() => setHistoryOpen(false)} title="Message history" align="left">
@@ -431,7 +431,7 @@ export default function MessagesPage() {
             {messages.map((message) => <li key={messageKey(message)}><button type="button" onClick={() => jumpToMessage(message.id)} className="w-full rounded-lg px-3 py-3 text-left hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF]">
               <span className="block text-xs font-semibold text-[#C9B7FF]">{message.senderId === userId ? 'You' : 'NEXI Support'}</span>
               <span className="mt-1 block truncate text-sm text-[#C3BBD0]">{message.body || 'Attachment'}</span>
-              <span className="mt-1 block text-[11px] text-[#8C8299]"><LocalDateTime value={message.createdAt} dateStyle="medium" timeStyle="short" /></span>
+              <span className="mt-1 block text-xs text-[#8C8299]"><LocalDateTime value={message.createdAt} dateStyle="medium" timeStyle="short" /></span>
             </button></li>)}
           </ol> : <p className="py-6 text-sm text-[#8C8299]">Saved messages will appear here.</p>}
         </aside>

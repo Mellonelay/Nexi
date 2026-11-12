@@ -36,9 +36,9 @@ export default function BottomNav() {
   return (
     <nav
       aria-label={t("primary")}
-      className="relative z-50 shrink-0 px-3 pb-[calc(4px+env(safe-area-inset-bottom))] pt-1 lg:hidden"
+      className="nexi-mobile-dock-wrap relative z-50 shrink-0 px-3 pb-[calc(4px+env(safe-area-inset-bottom))] pt-1 lg:hidden"
     >
-      <div className="nexi-bottom-nav mx-auto grid h-[60px] max-w-[420px] grid-cols-5 items-center rounded-[18px] border px-1">
+      <div className="nexi-bottom-nav mx-auto grid min-h-[64px] max-w-[420px] grid-cols-5 items-center rounded-[18px] border px-1">
         {configuredItems.map((item) => {
           const Icon = item.icon;
           const disabled = item.state === "maintenance";
@@ -57,7 +57,7 @@ export default function BottomNav() {
               onClick={(event) => {
                 if (disabled) event.preventDefault();
               }}
-              className={`nexi-interactive relative flex min-h-[44px] flex-col items-center justify-center gap-0.5 rounded-[12px] px-1 text-[10px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)] ${disabled ? "cursor-not-allowed opacity-55" : ""} ${active ? "text-violet-300" : "text-[var(--nexi-text-secondary)] hover:bg-white/[0.03] hover:text-white"}`}
+              className={`nexi-interactive relative flex min-h-[44px] flex-col items-center justify-center gap-0.5 rounded-[12px] px-0.5 text-[clamp(0.625rem,2.8vw,0.75rem)] leading-tight font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)] ${disabled ? "cursor-not-allowed opacity-55" : ""} ${active ? "text-violet-300" : "text-[var(--nexi-text-secondary)] hover:bg-white/[0.03] hover:text-white"}`}
             >
               {active && (
                 <span
@@ -70,7 +70,7 @@ export default function BottomNav() {
                 strokeWidth={1.7}
                 aria-hidden="true"
               />
-              <span className="relative">
+              <span className="relative max-w-full break-words text-center">
                 {item.key === "spot"
                   ? item.label
                   : t(item.key as Parameters<typeof t>[0])}

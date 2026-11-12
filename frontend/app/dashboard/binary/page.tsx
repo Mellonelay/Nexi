@@ -69,11 +69,8 @@ const financialDecimal = (value: unknown): string | null => {
   return /^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/.test(text) ? text : null;
 };
 
-const formatDuration = (seconds: number) => {
-  if (seconds < 60) return `${seconds}s`;
-  if (seconds % 60 === 0) return `${seconds / 60}m`;
-  return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
-};
+// Options durations are stored as seconds and shown as seconds everywhere.
+const formatDuration = (seconds: number) => `${seconds}s`;
 
 const normalizePosition = (value: unknown): BinaryPosition | null => {
   if (!value || typeof value !== 'object') return null;
@@ -782,7 +779,7 @@ export default function BinaryPage() {
       <header className="nexi-station-header sticky top-0 z-20 flex min-w-0 items-center justify-between gap-2 border-b px-3 py-3 sm:gap-3 sm:px-4">
         <SafeBackButton fallback="/dashboard" label="Back to Quotes Hub" />
         <div className="min-w-0 flex-1"><SymbolSelector compact currentSymbol={pair} onSelect={(next) => { setPair(next); setActivePair(next); router.push(`/dashboard/binary?symbol=${next}`); }} /></div>
-        {currentPrice !== null && <div className="shrink-0 text-right" aria-label="Current market price"><p className="font-mono text-sm text-[#C3BBD0]">{currentPrice.toLocaleString()}</p>{marketChange !== null && <p className={`mt-0.5 font-mono text-[10px] ${marketChange >= 0 ? 'text-[#22D3A6]' : 'text-[#FF5C7C]'}`}>{marketChange > 0 ? '+' : ''}{marketChange.toFixed(2)}% 24h</p>}</div>}
+        {currentPrice !== null && <div className="shrink-0 text-right" aria-label="Current market price"><p className="font-mono text-sm text-[#C3BBD0]">{currentPrice.toLocaleString()}</p>{marketChange !== null && <p className={`mt-0.5 font-mono text-xs ${marketChange >= 0 ? 'text-[#22D3A6]' : 'text-[#FF5C7C]'}`}>{marketChange > 0 ? '+' : ''}{marketChange.toFixed(2)}% 24h</p>}</div>}
       </header>
 
       <div className="grid min-w-0 gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_400px] xl:items-start">
@@ -793,7 +790,7 @@ export default function BinaryPage() {
           </div>
           <div className="nexi-station-card min-w-0 rounded-2xl p-2">
             <div className="border-b border-white/5 px-2 pb-2"><TimeframeSelector interval={interval} onChange={setInterval} /></div>
-            <div className="nexi-options-chart-frame h-[clamp(22rem,110vw,32rem)] sm:h-[420px] xl:h-[500px]"><RealtimeTradingChart symbol={normalizedPair} type="binary" interval={interval} marketStatus={market?.sessionState === 'CLOSED' ? 'CLOSED' : undefined} sandboxFeed={sandboxChartFeed} showIndicatorControls={false} /></div>
+            <div className="nexi-options-chart-frame h-[clamp(18rem,80dvh,28rem)] sm:h-[420px] xl:h-[500px]"><RealtimeTradingChart symbol={normalizedPair} type="binary" interval={interval} marketStatus={market?.sessionState === 'CLOSED' ? 'CLOSED' : undefined} sandboxFeed={sandboxChartFeed} showIndicatorControls={false} /></div>
           </div>
 
         </section>
@@ -801,15 +798,15 @@ export default function BinaryPage() {
         <aside className="nexi-station-card h-fit min-w-0 overflow-hidden rounded-2xl p-3 sm:p-5 xl:sticky xl:top-20 xl:col-start-2 xl:row-span-2 xl:row-start-1" aria-labelledby="binary-ticket-heading">
           <div className="flex items-center justify-between gap-4 sm:items-start">
             <div>
-              <p className="hidden text-[10px] font-semibold uppercase tracking-[.18em] text-[#48C0CC] sm:block">Position ticket</p>
-              <h2 id="binary-ticket-heading" className="text-xs font-semibold uppercase tracking-[.16em] text-[#CFC4FF] sm:mt-1 sm:text-xl sm:normal-case sm:tracking-normal sm:text-white">
+              <p className="hidden text-xs font-semibold uppercase tracking-[.12em] text-[#48C0CC] sm:block">Position ticket</p>
+              <h2 id="binary-ticket-heading" className="text-sm font-semibold uppercase tracking-[.08em] text-[#CFC4FF] sm:mt-1 sm:text-xl sm:normal-case sm:tracking-normal sm:text-white">
                 <span className="sm:hidden">Duration</span><span className="hidden sm:inline">Choose the expiry</span>
               </h2>
             </div>
             <Wallet className="hidden h-5 w-5 shrink-0 text-[#A995FF] sm:mt-1 sm:block" aria-hidden="true" />
           </div>
-          <div className="mt-2 grid min-w-0 grid-cols-5 gap-1.5 sm:mt-4 sm:gap-2" role="group" aria-label="Expiry duration">
-            {durationOptions.map((option) => <button key={option.seconds} type="button" aria-pressed={duration === option.seconds} aria-label={`${formatDuration(option.seconds)} expiry. ${option.minimumAmount ?? 'Unknown'}–${option.maximumAmount ?? 'unknown'} USDT stake range`} disabled={!option.enabled} onClick={() => setDuration(option.seconds)} className={`nexi-interactive nexi-ripple group min-h-[64px] min-w-0 rounded-lg border px-1.5 py-2 text-center transition sm:min-h-[84px] sm:rounded-xl sm:px-2 sm:py-2.5 ${duration === option.seconds ? 'border-[#8B5CF6] bg-[linear-gradient(145deg,rgba(109,65,255,.22),rgba(26,16,36,.92))] text-white shadow-[0_0_22px_rgba(109,65,255,.14)]' : 'border-violet-300/10 bg-[#0B0711]/70 text-[#8C8299] hover:border-violet-300/25'} disabled:cursor-not-allowed disabled:opacity-55`}><span className="block text-center text-xs font-semibold uppercase tracking-[.02em] sm:tracking-[.08em]">{formatDuration(option.seconds)}</span><span className="mt-1 block font-mono text-xs text-[#F5F7FB] sm:mt-2 sm:text-base">{option.rate === null ? '—' : `${(option.rate * 100).toFixed(0)}%`}</span></button>)}
+          <div className="mt-2 grid min-w-0 grid-cols-3 gap-1.5 min-[430px]:grid-cols-5 sm:mt-4 sm:gap-2" role="group" aria-label="Expiry duration">
+            {durationOptions.map((option) => <button key={option.seconds} type="button" aria-pressed={duration === option.seconds} aria-label={`${formatDuration(option.seconds)} expiry. ${option.minimumAmount ?? 'Unknown'}–${option.maximumAmount ?? 'unknown'} USDT stake range`} disabled={!option.enabled} onClick={() => setDuration(option.seconds)} className={`nexi-interactive nexi-ripple group min-h-[64px] min-w-0 rounded-lg border px-1.5 py-2 text-center transition sm:min-h-[84px] sm:rounded-xl sm:px-2 sm:py-2.5 ${duration === option.seconds ? 'border-[#8B5CF6] bg-[linear-gradient(145deg,rgba(109,65,255,.22),rgba(26,16,36,.92))] text-white shadow-[0_0_22px_rgba(109,65,255,.14)]' : 'border-violet-300/10 bg-[#0B0711]/70 text-[#8C8299] hover:border-violet-300/25'} disabled:cursor-not-allowed disabled:opacity-55`}><span className="block text-center text-xs font-semibold tabular-nums">{formatDuration(option.seconds)}</span><span className="mt-1 block font-mono text-xs text-[#F5F7FB] sm:mt-2 sm:text-base">{option.rate === null ? '—' : `${(option.rate * 100).toFixed(0)}%`}</span></button>)}
           </div>
           <p className="mt-2 min-w-0 break-words text-xs leading-5 text-[#C3BBD0]">Selected stake range: <span className="break-all font-mono text-white">{minimumStake !== null && maximumStake !== null ? `${minimumStake}–${maximumStake} USDT` : 'Unavailable'}</span></p>
           <div className="mt-2 rounded-xl border border-violet-300/10 bg-[#0B0711]/75 px-3 py-2 text-xs leading-5 text-[#AFA4BC] sm:mt-3 sm:py-2.5">{availabilityCopy}</div>
@@ -884,7 +881,7 @@ function PositionList({ positions, now, empty, onSelect }: { positions: BinaryPo
     const progress = !terminal && durationMs > 0 ? Math.min(100, Math.max(0, ((now - openedAt) / durationMs) * 100)) : null;
     return <li key={position.id}><button type="button" onClick={() => onSelect(position)} className="nexi-interactive block min-h-20 w-full px-4 py-3 text-left hover:bg-white/[.03]">
       <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
-        <div className="min-w-0"><p className="truncate font-semibold">{position.symbol} · {position.direction}</p><p className="mt-1 text-xs text-[#8C8299]">{binaryPositionLabel(position, now)}</p></div>
+        <div className="min-w-0"><p className="break-words font-semibold">{position.symbol} · {position.direction}</p><p className="mt-1 text-xs text-[#8C8299]">{binaryPositionLabel(position, now)}</p></div>
         <div className="text-right font-mono text-xs"><p>{position.amount === null ? '—' : `${position.amount} USDT`}</p>{!terminal && <p role="timer" aria-live="off" aria-label={remaining === null ? "Position expiry unavailable" : remaining === 0 ? "Expiry reached; result pending" : `${remaining} seconds remaining`} className="mt-1 flex items-center justify-end gap-1 text-[#8C8299]"><Clock3 size={12} aria-hidden="true" />{remaining === null ? '—' : remaining === 0 ? 'Result pending' : `${remaining}s`}</p>}</div>
       </div>
       {progress !== null && <div role="progressbar" aria-label="Position duration elapsed" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)} className="mt-3 h-2.5 overflow-hidden rounded-full bg-white/5"><div className="h-full rounded-full bg-[#7C3AED] transition-[width] duration-500" style={{ width: `${progress}%` }} /></div>}
@@ -902,7 +899,7 @@ function ResultDialog({ position, now, onClose }: { position: BinaryPosition; no
   return <ModalSurface open onClose={onClose} title="Options result">
     <div className="max-h-[min(calc(100dvh-2rem),34rem)] w-[min(100%,22rem)] overflow-y-auto rounded-2xl border border-violet-300/15 bg-[#100A18] p-4 shadow-2xl sm:p-5">
       <div className={`rounded-xl border p-3 ${resultTone}`}>
-        <p className="text-[11px] font-semibold uppercase tracking-[.16em]">{publicResult ? 'Trade settled' : 'Trade status'}</p>
+        <p className="text-xs font-semibold uppercase tracking-[.12em]">{publicResult ? 'Trade settled' : 'Trade status'}</p>
         <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
           <h2 id="binary-result-heading" className="text-lg font-semibold leading-tight">{binaryPositionLabel(position, now)}</h2>
           <p className="font-mono text-sm tabular-nums">{position.symbol} · {position.direction}</p>

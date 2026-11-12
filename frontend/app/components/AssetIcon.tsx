@@ -52,7 +52,7 @@ function AssetIconImage({ item, asset, iconPath, size, dimensions, fallback }: A
           className="h-full w-full object-cover"
         />
       ) : (
-        <span className="text-[9px] font-bold tracking-[-0.04em] text-white/90" aria-hidden="true">{fallback}</span>
+        <span className="text-[10px] font-bold tracking-[-0.04em] text-white/90" aria-hidden="true">{fallback}</span>
       )}
     </span>
   );

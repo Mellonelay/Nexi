@@ -171,9 +171,9 @@ export default function Dashboard() {
             />
           </label>
         )}
-        <section className="nexi-dashboard-hero mt-3 grid grid-cols-[minmax(0,1fr)_164px] items-start gap-2 md:mt-8 md:grid-cols-[minmax(0,1fr)_320px] md:items-end md:gap-3 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <section className="nexi-dashboard-hero mt-3 grid min-w-0 grid-cols-1 items-start gap-2 min-[430px]:grid-cols-[minmax(0,1fr)_164px] md:mt-8 md:grid-cols-[minmax(0,1fr)_320px] md:items-end md:gap-3 lg:grid-cols-[minmax(0,1fr)_360px]">
           <div className="min-w-0 pt-1">
-            <h1 className="nexi-dashboard-title whitespace-nowrap text-[clamp(1.875rem,8vw,3rem)] font-semibold leading-[1.02] tracking-[var(--nexi-type-display-tracking)] gradient-text">
+            <h1 className="nexi-dashboard-title break-words text-[clamp(1.875rem,8vw,3rem)] font-semibold leading-[1.02] tracking-[var(--nexi-type-display-tracking)] gradient-text">
               Quotes Hub
             </h1>
             <div className="mt-1.5 flex flex-wrap items-center gap-2 md:mt-3">
@@ -196,7 +196,7 @@ export default function Dashboard() {
                     <span className="flex min-w-0 items-center gap-0.5 text-[14px] font-semibold leading-none md:gap-1.5 md:text-[1.35rem]">
                       <span>{instrumentFromMarketPair(activePair).pair}</span>
                     </span>
-                    <span className="mt-1 inline-flex rounded border border-violet-300/20 bg-violet-500/20 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-[0.1em] text-violet-300 md:mt-2 md:rounded-md md:px-2 md:py-1 md:text-[10px]">
+                    <span className="mt-1 inline-flex rounded border border-violet-300/20 bg-violet-500/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-violet-300 md:mt-2 md:rounded-md md:px-2 md:py-1 md:text-[10px]">
                       {activePair.category === "Crypto" ? "SPOT" : "MARKET"}
                     </span>
                   </span>
@@ -223,7 +223,7 @@ export default function Dashboard() {
 
         <section className="nexi-tabs-shell mt-3 overflow-hidden rounded-[10px] md:mt-5 md:rounded-[22px]">
           <div
-            className="grid grid-cols-5 gap-0 p-1 md:gap-1 md:p-1.5"
+            className="nexi-scroll-rail flex min-w-0 gap-0 overflow-x-auto p-1 md:grid md:grid-cols-5 md:gap-1 md:p-1.5"
             role="tablist"
             aria-label="Market categories"
           >
@@ -236,7 +236,7 @@ export default function Dashboard() {
                   role="tab"
                   aria-selected={active}
                   onClick={() => selectTab(label)}
-                  className={`relative flex min-h-11 min-w-0 flex-col items-center justify-center gap-0.5 overflow-hidden rounded-[8px] px-1 text-[10px] font-medium transition md:min-h-14 md:flex-row md:gap-2 md:rounded-[16px] md:text-sm ${index < tabs.length - 1 ? "border-r border-white/[0.05] md:border-r-0" : ""} ${active ? "text-white" : "text-[var(--nexi-text-secondary)] hover:bg-white/[0.04] hover:text-white"}`}
+                  className={`relative flex min-h-12 min-w-[70px] flex-1 flex-col items-center justify-center gap-0.5 rounded-[8px] px-1 text-xs font-medium transition md:min-h-14 md:flex-row md:gap-2 md:rounded-[16px] md:text-sm ${index < tabs.length - 1 ? "border-r border-white/[0.05] md:border-r-0" : ""} ${active ? "text-white" : "text-[var(--nexi-text-secondary)] hover:bg-white/[0.04] hover:text-white"}`}
                 >
                   {active && (
                     <LazyMotion features={domAnimation}>
@@ -252,7 +252,7 @@ export default function Dashboard() {
                     strokeWidth={1.7}
                     aria-hidden="true"
                   />
-                  <span className="relative truncate">{label}</span>
+                  <span className="relative whitespace-nowrap">{label}</span>
                 </button>
               );
             })}
@@ -270,7 +270,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 px-2 text-[10px] font-medium uppercase tracking-[0.04em] text-[var(--nexi-text-muted)] md:mt-4 md:grid-cols-[minmax(0,1.35fr)_140px_minmax(0,.82fr)_minmax(0,.72fr)_minmax(0,.72fr)] md:gap-3 md:px-4 md:text-[10px]">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 px-2 text-xs font-medium uppercase tracking-[0.04em] text-[var(--nexi-text-muted)] md:mt-4 md:grid-cols-[minmax(0,1.35fr)_140px_minmax(0,.82fr)_minmax(0,.72fr)_minmax(0,.72fr)] md:gap-3 md:px-4 md:text-[10px]">
             <span className="md:hidden">Market</span>
             <span className="hidden md:block">{t("asset")}</span>
             <span className="text-right md:hidden">Price / 24h</span>
@@ -320,13 +320,13 @@ export default function Dashboard() {
                       <AssetMark item={item} />
                     </span>
                     <span className="min-w-0">
-                      <span className="block truncate text-[12px] font-semibold text-white group-hover:text-[var(--nexi-cyan)] md:text-[15px]">
+                      <span className="block break-words text-sm font-semibold text-white group-hover:text-[var(--nexi-cyan)] md:text-[15px]">
                         {instrumentFromMarketPair(item).pair}
                       </span>
-                      <span className="mt-0.5 block truncate text-[10px] text-[var(--nexi-text-muted)] md:mt-1 md:text-xs">
+                      <span className="mt-0.5 block break-words text-xs leading-4 text-[var(--nexi-text-muted)] md:mt-1 md:text-xs">
                         {item.name}
                       </span>
-                      <span className={`mt-1 inline-flex rounded border px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-[0.1em] md:text-[9px] ${marketDisplayStatus(item.dataState, item.sessionState) === "Closed" ? "border-white/15 text-[var(--nexi-text-muted)]" : marketDisplayStatus(item.dataState, item.sessionState) === "Live" ? "border-emerald-300/20 text-emerald-200" : "border-rose-300/20 text-rose-200"}`}>
+                      <span className={`mt-1 inline-flex rounded border px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.04em] md:text-xs ${marketDisplayStatus(item.dataState, item.sessionState) === "Closed" ? "border-white/15 text-[var(--nexi-text-muted)]" : marketDisplayStatus(item.dataState, item.sessionState) === "Live" ? "border-emerald-300/20 text-emerald-200" : "border-rose-300/20 text-rose-200"}`}>
                         {marketDisplayStatus(item.dataState, item.sessionState)}
                       </span>
                     </span>
@@ -339,7 +339,7 @@ export default function Dashboard() {
                       {formatValue(item, "price")}
                     </span>
                     <span
-                      className={`mt-1 max-w-full break-all text-right font-mono text-[10px] tabular-nums ${item.dataState !== "LIVE" ? "text-[var(--nexi-text-muted)]" : item.change !== null && item.change >= 0 ? "text-[var(--nexi-positive)]" : "text-[var(--nexi-negative)]"}`}
+                      className={`mt-1 max-w-full break-all text-right font-mono text-xs tabular-nums ${item.dataState !== "LIVE" ? "text-[var(--nexi-text-muted)]" : item.change !== null && item.change >= 0 ? "text-[var(--nexi-positive)]" : "text-[var(--nexi-negative)]"}`}
                     >
                       {formatValue(item, "change")}
                     </span>

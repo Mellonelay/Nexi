@@ -313,7 +313,7 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
                 <section className="rounded-2xl border border-violet-300/15 bg-[#151020] p-4">
                   <div className="flex items-center gap-3">
                     <AssetIcon item={{ assetId: selectedMeta?.id ?? destination.asset, symbol: selectedMeta?.symbol ?? destination.asset, displaySymbol: selectedMeta?.displaySymbol ?? destination.asset, name: destination.assetName || selectedMeta?.name || destination.asset, iconUrl: destination.assetLogo }} size="md" />
-                    <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-white">{destination.assetName || selectedMeta?.name || destination.asset}</p><p className="mt-0.5 text-xs text-[#8C8299]">{destination.asset} deposit</p></div>
+                    <div className="min-w-0 flex-1"><p className="break-words text-sm font-semibold text-white">{destination.assetName || selectedMeta?.name || destination.asset}</p><p className="mt-0.5 text-xs text-[#8C8299]">{destination.asset} deposit</p></div>
                   </div>
                   {assetDestinations.length > 1 ? (
                     <label className="mt-4 block text-xs font-medium text-[#C3BBD0]">Network

@@ -523,7 +523,7 @@ function LoanLifecyclePanel() {
       <ol className="grid gap-2 sm:grid-cols-3">
         {['REVIEW', 'PENDING', 'APPROVED', 'ACTIVE', 'OVERDUE', 'PAID'].map((stage, index) => (
           <li key={stage} className="rounded-xl border border-[#2B2037] bg-[#171022] p-3">
-            <p className="font-mono text-[10px] text-[#8C8299]">0{index + 1}</p>
+            <p className="font-mono text-xs text-[#8C8299]">0{index + 1}</p>
             <p className="mt-1 text-xs font-semibold uppercase tracking-[0.08em] text-[#F2ECFA]">{stage.replaceAll('_', ' ')}</p>
           </li>
         ))}
@@ -705,7 +705,7 @@ function LoanRepaymentCenter({
 }
 
 function ProductFact({ label, value, compact = false }: { label: string; value: string; compact?: boolean }) {
-  return <div className={`min-w-0 rounded-xl border border-[#2B2037] bg-[#171022] ${compact ? 'p-3' : 'p-4'}`}><dt className="text-[10px] uppercase tracking-[0.1em] text-[#8C8299]">{label}</dt><dd className="mt-2 break-words font-mono text-sm text-[#F8F6FF]">{value}</dd></div>;
+  return <div className={`min-w-0 rounded-xl border border-[#2B2037] bg-[#171022] ${compact ? 'p-3' : 'p-4'}`}><dt className="text-xs uppercase tracking-[0.06em] text-[#8C8299]">{label}</dt><dd className="mt-2 break-words font-mono text-sm text-[#F8F6FF]">{value}</dd></div>;
 }
 function LoanRecordCard({ loan }: { loan: LoanRecord }) {
   const status = normalizeLoanState(loan.status);

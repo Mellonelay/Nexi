@@ -16,6 +16,7 @@ interface SymbolSelectorProps {
 
 export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = false, compact = false }: SymbolSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [menuGeometry, setMenuGeometry] = useState({ top: 72, left: 12, width: 296, maxHeight: 320 });
   const [activeTab, setActiveTab] = useState<AssetCategory>('Crypto');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -40,6 +41,49 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
   };
 
   useEffect(() => {
+    if (!isOpen) return;
+
+    const positionMenu = () => {
+      const viewport = window.visualViewport;
+      const visibleTop = (viewport?.offsetTop ?? 0) + 8;
+      const visibleBottom = (viewport?.offsetTop ?? 0) + (viewport?.height ?? window.innerHeight) - 8;
+      const visibleLeft = (viewport?.offsetLeft ?? 0) + 12;
+      const visibleRight = (viewport?.offsetLeft ?? 0) + (viewport?.width ?? window.innerWidth) - 12;
+      const anchor = dropdownRef.current?.getBoundingClientRect();
+      if (!anchor) return;
+
+      const below = Math.max(0, visibleBottom - anchor.bottom - 8);
+      const above = Math.max(0, anchor.top - visibleTop - 8);
+      const placeAbove = below < 180 && above > below;
+      const maxHeight = Math.min(360, Math.max(0, placeAbove ? above : below));
+      const proposedTop = placeAbove ? anchor.top - maxHeight - 8 : anchor.bottom + 8;
+      const width = Math.min(320, Math.max(0, visibleRight - visibleLeft));
+      setMenuGeometry({
+        top: Math.max(visibleTop, Math.min(proposedTop, visibleBottom - maxHeight)),
+        left: Math.max(visibleLeft, Math.min(anchor.left, visibleRight - width)),
+        width,
+        maxHeight,
+      });
+    };
+
+    const handlePageScroll = (event: Event) => {
+      if (event.target instanceof Node && dropdownRef.current?.contains(event.target)) return;
+      positionMenu();
+    };
+    positionMenu();
+    window.addEventListener('resize', positionMenu);
+    window.addEventListener('scroll', handlePageScroll, true);
+    window.visualViewport?.addEventListener('resize', positionMenu);
+    window.visualViewport?.addEventListener('scroll', positionMenu);
+    return () => {
+      window.removeEventListener('resize', positionMenu);
+      window.removeEventListener('scroll', handlePageScroll, true);
+      window.visualViewport?.removeEventListener('resize', positionMenu);
+      window.visualViewport?.removeEventListener('scroll', positionMenu);
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
@@ -56,7 +100,7 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
       {/* Trigger */}
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => setIsOpen((open) => !open)}
         className={`nexi-interactive nexi-symbol-selector-trigger flex min-h-[44px] min-w-0 max-w-full items-center gap-2 ${compact ? "text-base sm:text-lg" : "text-lg"} font-bold transition-colors hover:text-gray-300`}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
@@ -70,10 +114,10 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
 
       {/* Dropdown Content */}
       {isOpen && (
-        <div onKeyDown={(event) => { if (event.key === 'Escape') { setIsOpen(false); dropdownRef.current?.querySelector('button')?.focus(); } }} className="absolute left-0 top-full z-[100] mt-2 w-[min(320px,calc(100vw-32px))] overflow-hidden rounded-lg border border-white/10 bg-[#100A18] shadow-xl">
+        <div onKeyDown={(event) => { if (event.key === 'Escape') { setIsOpen(false); dropdownRef.current?.querySelector('button')?.focus(); } }} className="fixed z-[100] flex flex-col overflow-hidden rounded-lg border border-white/10 bg-[#100A18] shadow-xl" style={{ top: menuGeometry.top, left: menuGeometry.left, width: menuGeometry.width, maxHeight: menuGeometry.maxHeight }}>
           {/* Tabs */}
           {!cryptoOnly && (
-            <div className="grid grid-cols-4 border-b border-white/10" role="tablist" aria-label="Asset categories">
+            <div className="grid shrink-0 grid-cols-4 border-b border-white/10" role="tablist" aria-label="Asset categories">
               {(['Crypto', 'Stocks', 'Metals', 'Forex'] as AssetCategory[]).map((tab) => (
                 <button
                   key={tab}
@@ -81,7 +125,7 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
                   role="tab"
                   aria-selected={activeTab === tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`min-h-[44px] min-w-0 py-2 text-[10px] font-bold transition-colors ${activeTab === tab
+                  className={`min-h-[44px] min-w-0 px-1 py-2 text-xs font-semibold transition-colors ${activeTab === tab
                       ? 'border-b-2 border-[#7353DD] bg-white/5 text-white'
                       : 'text-gray-500 hover:text-gray-300'
                     }`}
@@ -93,7 +137,7 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
           )}
 
           {/* List */}
-          <div className="max-h-[min(55vh,360px)] overflow-y-auto overscroll-contain" role="listbox">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain" role="listbox">
             {(loading || error) && <p className="p-4 text-sm text-[#8C8299]" role="status">{loading ? 'Loading prices…' : 'Prices unavailable. You can still explore instruments.'}</p>}
             {options.map((item: MarketPair) => {
               const hasPrice = item.dataState === 'LIVE' && item.source !== 'fallback' && item.price !== null && Number.isFinite(item.price);
@@ -112,14 +156,14 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
                   <div className="flex min-w-0 items-center gap-3">
                     <AssetIcon item={item} />
                     <div className="min-w-0">
-                      <div className="truncate text-sm font-bold text-white">
+                      <div className="break-words text-sm font-bold text-white">
                         {item.pair}
                       </div>
-                      <div className="truncate text-[10px] text-gray-500">{item.name}</div>
+                      <div className="break-words text-xs leading-4 text-gray-400">{item.name}</div>
                     </div>
                   </div>
-                  <div className="shrink-0 pl-2 text-right">
-                    <span className="block text-xs font-semibold text-white">{hasPrice ? item.price!.toLocaleString() : 'Unavailable'}</span>
+                  <div className="min-w-0 max-w-[46%] pl-2 text-right">
+                    <span className="block break-all font-mono text-xs font-semibold tabular-nums text-white">{hasPrice ? item.price!.toLocaleString() : 'Unavailable'}</span>
                   </div>
                 </button>
               );

@@ -190,7 +190,7 @@ export default function NavigationDrawer({
             <>
                   {orderedGroups.map((group) => (
                     <div key={group.titleKey} className="mb-5">
-                      <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8C8299]">
+                      <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-[0.12em] text-[#8C8299]">
                         {t(group.titleKey)}
                       </p>
                       <div className="space-y-1">

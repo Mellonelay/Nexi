@@ -13,7 +13,7 @@ export default function ModalSurface({ open, onClose, title, children, align = '
   align?: 'center' | 'left' | 'right';
 }) {
   const previousFocus = useRef<HTMLElement | null>(null);
-  const bounds = 'fixed inset-x-0 top-0 bottom-[calc(76px+env(safe-area-inset-bottom))] lg:bottom-0';
+  const bounds = 'nexi-modal-viewport fixed inset-x-0 top-0 bottom-[calc(76px+env(safe-area-inset-bottom))] lg:bottom-0';
   return <Dialog.Root open={open} onOpenChange={(value) => { if (!value) onClose(); }}>
     <Dialog.Portal>
       <Dialog.Overlay className={`${bounds} z-[80] bg-black/70 backdrop-blur-sm`} />
