@@ -159,7 +159,7 @@ function Inner() {
                 <div>
                   <h2 className="font-semibold">{plan.name}</h2>
                   <p className="text-xs text-muted-foreground">
-                    {plan.currency} · {plan.durationDays} days · rate {plan.interestRate}
+                    {plan.currency} · {plan.durationDays} days · term interest {plan.interestRate} (fraction; 0.10 = 10%)
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -316,12 +316,15 @@ function Inner() {
             onChange={(event) => setDays(event.target.value)}
             disabled={!canEdit}
           />
-          <Input
-            placeholder="Interest rate"
-            value={rate}
-            onChange={(event) => setRate(event.target.value)}
-            disabled={!canEdit}
-          />
+          <label className="flex flex-col gap-1.5 text-xs">
+            Interest per plan term (fraction; 0.10 = 10%)
+            <Input
+              placeholder="e.g. 0.10"
+              value={rate}
+              onChange={(event) => setRate(event.target.value)}
+              disabled={!canEdit}
+            />
+          </label>
           <Input
             placeholder="Minimum amount"
             value={min}
