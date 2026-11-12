@@ -3,13 +3,14 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import WalletConnectControl from "../components/WalletConnectControl";
+import { sessionPrincipalId } from "../lib/wallet-auth";
 import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const onSession = () => router.push('/dashboard');
+    const onSession = () => { if (sessionPrincipalId()) router.push('/dashboard'); };
     window.addEventListener('nexi:wallet-session', onSession);
     return () => window.removeEventListener('nexi:wallet-session', onSession);
   }, [router]);

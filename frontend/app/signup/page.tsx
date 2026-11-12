@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import WalletConnectControl from '../components/WalletConnectControl';
-import { captureReferralCode } from '../lib/wallet-auth';
+import { captureReferralCode, sessionPrincipalId } from '../lib/wallet-auth';
 import Link from 'next/link';
 
 export default function SignupPage() {
@@ -11,7 +11,7 @@ export default function SignupPage() {
 
   useEffect(() => {
     captureReferralCode();
-    const onSession = () => router.push('/dashboard');
+    const onSession = () => { if (sessionPrincipalId()) router.push('/dashboard'); };
     window.addEventListener('nexi:wallet-session', onSession);
     return () => window.removeEventListener('nexi:wallet-session', onSession);
   }, [router]);
