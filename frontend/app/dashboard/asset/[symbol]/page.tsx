@@ -269,7 +269,7 @@ function AssetDetailView({
 
         <section className="mb-5 grid gap-4 md:grid-cols-2">
           <div className="min-w-0 rounded-xl border border-violet-300/15 bg-[#100A18] p-4">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-2"><h2 className="font-semibold">Market data</h2>{instrument.category === 'Crypto' && <span className={`text-[10px] ${details?.status === 'STALE' ? 'text-amber-200' : 'text-[#8C8299]'}`}>{details?.status === 'STALE' ? 'CoinGecko metrics may be stale' : details?.status === 'FRESH' ? 'CoinGecko profile metrics · USD' : 'CoinGecko profile metrics partial or unavailable'}</span>}</div>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2"><h2 className="font-semibold">Market data</h2>{instrument.category === 'Crypto' && <span className={`text-xs ${details?.status === 'STALE' ? 'text-amber-200' : 'text-[#8C8299]'}`}>{details?.status === 'STALE' ? 'CoinGecko metrics may be stale' : details?.status === 'FRESH' ? 'CoinGecko profile metrics · USD' : 'CoinGecko profile metrics partial or unavailable'}</span>}</div>
             <dl className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,7rem),1fr))] gap-x-4 gap-y-4 text-sm">
               <div><dt className="text-[#8C8299]">Last price</dt><dd className="mt-1 font-mono">{formatNumber(instrument.price, instrument.precision ?? 8)}</dd></div>
               <div><dt className="text-[#8C8299]">24h change</dt><dd className="mt-1 font-mono">{formatChange(instrument.change24h)}</dd></div>

@@ -549,7 +549,7 @@ function SpotRecentTrades({mobileMarketPanel, marketTrades, tradeStatus, baseSym
   return (
             <section className={`nexi-station-card min-w-0 overflow-hidden rounded-2xl xl:block ${mobileMarketPanel === 'TRADES' ? 'block' : 'hidden'}`} aria-labelledby="recent-trades-heading">
               <div className="flex items-center justify-between gap-2 border-b border-white/5 px-3 py-3 sm:px-4">
-                <div className="min-w-0"><h2 id="recent-trades-heading" className="font-semibold">Recent trades</h2><p className="text-[10px] text-[#8C8299]">Binance Spot reference trades</p></div>
+                <div className="min-w-0"><h2 id="recent-trades-heading" className="font-semibold">Recent trades</h2><p className="text-xs leading-4 text-[#8C8299]">Binance Spot reference trades</p></div>
                 {statusText && <span className={`${statusClass} shrink-0 text-right`}>{statusText}</span>}
               </div>
               {marketTrades.length > 0
@@ -698,7 +698,7 @@ function SpotOrderReview({
   return (
     <ModalSurface open onClose={() => onClose()} title="Review Spot order">
         <div className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-violet-300/15 bg-[#100A18] p-5 shadow-2xl">
-          <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#48C0CC]">Review order</p><h2 id="spot-confirm-title" className="mt-1 text-xl font-semibold">Confirm Spot order</h2></div></div>
+          <div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.1em] text-[#48C0CC]">Review order</p><h2 id="spot-confirm-title" className="mt-1 text-xl font-semibold">Confirm Spot order</h2></div></div>
           <dl className="mt-4 space-y-2 text-sm">
             <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-3"><dt className="text-[#8C8299]">Pair</dt><dd className="min-w-0 break-words text-right">{displayPair}</dd></div>
             <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-3"><dt className="text-[#8C8299]">Side / type</dt><dd className="min-w-0 break-words text-right">{side} · {orderType === 'STOP' ? 'STOP LIMIT' : orderType}</dd></div>
@@ -1251,7 +1251,7 @@ function SpotHeader({
         <div className="shrink-0 text-right" aria-label="Current market price">
           <p className="font-mono text-sm text-[#C3BBD0]">{numberFormatter.format(currentPrice)}</p>
           {marketChange !== null && (
-            <p className={`mt-0.5 font-mono text-[10px] ${changeClass}`}>
+            <p className={`mt-0.5 font-mono text-xs ${changeClass}`}>
               {marketChange > 0 ? '+' : ''}{marketChange.toFixed(2)}% 24h
             </p>
           )}
@@ -1259,7 +1259,7 @@ function SpotHeader({
       )}
       {priceStatus !== 'LIVE' && priceStatus !== 'LOADING' && (
         <div className="max-w-24 shrink-0 text-right" role="status" aria-label="Market data status">
-          <p className={`text-[10px] font-semibold uppercase tracking-[0.08em] ${priceStatus === 'ERROR' ? 'text-[#FF9CB0]' : 'text-amber-200'}`}>
+          <p className={`text-xs font-semibold uppercase tracking-[0.08em] ${priceStatus === 'ERROR' ? 'text-[#FF9CB0]' : 'text-amber-200'}`}>
             {priceStatus === 'CLOSED' ? 'Market closed' : priceStatus === 'STALE' ? 'Price stale' : priceStatus === 'ERROR' ? 'Market error' : 'Price unavailable'}
           </p>
         </div>

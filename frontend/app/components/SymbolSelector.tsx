@@ -102,7 +102,7 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
         type="button"
         onClick={() => setIsOpen((open) => !open)}
         className={`nexi-interactive nexi-symbol-selector-trigger flex min-h-[44px] min-w-0 max-w-full items-center gap-2 ${compact ? "text-base sm:text-lg" : "text-lg"} font-bold transition-colors hover:text-gray-300`}
-        aria-haspopup="listbox"
+        aria-controls="nexi-symbol-picker"
         aria-expanded={isOpen}
       >
         {currentAsset && <AssetIcon item={{ assetId: currentAsset.id, symbol: currentAsset.symbol, displaySymbol: currentAsset.displaySymbol, name: currentAsset.name }} size={compact ? "sm" : "md"} />}
@@ -114,7 +114,7 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
 
       {/* Dropdown Content */}
       {isOpen && (
-        <div onKeyDown={(event) => { if (event.key === 'Escape') { setIsOpen(false); dropdownRef.current?.querySelector('button')?.focus(); } }} className="fixed z-[100] flex flex-col overflow-hidden rounded-lg border border-white/10 bg-[#100A18] shadow-xl" style={{ top: menuGeometry.top, left: menuGeometry.left, width: menuGeometry.width, maxHeight: menuGeometry.maxHeight }}>
+        <div onKeyDown={(event) => { if (event.key === 'Escape') { setIsOpen(false); dropdownRef.current?.querySelector('button')?.focus(); } }} id="nexi-symbol-picker" role="group" aria-label="Choose an instrument" className="fixed z-[100] flex flex-col overflow-hidden rounded-lg border border-white/10 bg-[#100A18] shadow-xl" style={{ top: menuGeometry.top, left: menuGeometry.left, width: menuGeometry.width, maxHeight: menuGeometry.maxHeight }}>
           {/* Tabs */}
           {!cryptoOnly && (
             <div className="grid shrink-0 grid-cols-4 border-b border-white/10" role="tablist" aria-label="Asset categories">
@@ -137,7 +137,7 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
           )}
 
           {/* List */}
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain" role="listbox">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain" role="group" aria-label="Available instruments">
             {(loading || error) && <p className="p-4 text-sm text-[#8C8299]" role="status">{loading ? 'Loading prices…' : 'Prices unavailable. You can still explore instruments.'}</p>}
             {options.map((item: MarketPair) => {
               const hasPrice = item.dataState === 'LIVE' && item.source !== 'fallback' && item.price !== null && Number.isFinite(item.price);
@@ -145,8 +145,7 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
                 <button
                   key={item.symbol}
                   type="button"
-                  role="option"
-                  aria-selected={normalizedCurrent === normalizePair(item.symbol)}
+                  aria-pressed={normalizedCurrent === normalizePair(item.symbol)}
                   onClick={() => {
                     onSelect(item.symbol);
                     setIsOpen(false);

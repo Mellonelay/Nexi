@@ -196,7 +196,7 @@ export default function Dashboard() {
                     <span className="flex min-w-0 items-center gap-0.5 text-[14px] font-semibold leading-none md:gap-1.5 md:text-[1.35rem]">
                       <span>{instrumentFromMarketPair(activePair).pair}</span>
                     </span>
-                    <span className="mt-1 inline-flex rounded border border-violet-300/20 bg-violet-500/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-violet-300 md:mt-2 md:rounded-md md:px-2 md:py-1 md:text-[10px]">
+                    <span className="mt-1 inline-flex rounded border border-violet-300/20 bg-violet-500/20 px-1.5 py-0.5 text-xs font-semibold uppercase tracking-[0.06em] text-violet-300 md:mt-2 md:rounded-md md:px-2 md:py-1 md:text-[10px]">
                       {activePair.category === "Crypto" ? "SPOT" : "MARKET"}
                     </span>
                   </span>
@@ -350,7 +350,7 @@ export default function Dashboard() {
                         <MarketSparkline item={item} compact />
                       </span>
                     </span>
-                    <span className="min-w-0 max-w-[calc(100%-5.5rem)] break-all text-right font-mono text-[9px] tabular-nums text-[var(--nexi-text-secondary)]">
+                    <span className="min-w-0 max-w-[calc(100%-5.5rem)] break-all text-right font-mono text-xs tabular-nums text-[var(--nexi-text-secondary)]">
                       <span className="mr-1 font-sans uppercase text-[var(--nexi-text-muted)]">
                         24h vol
                       </span>
