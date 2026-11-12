@@ -172,6 +172,14 @@ const binaryStateLabel = (state: BinaryPositionState) => {
     .join(' ');
 };
 
+// Expiry ends the countdown, not the authoritative financial settlement.
+// Preserve the persisted state until an authoritative WIN/LOSS outcome arrives.
+const binaryPositionLabel = (position: BinaryPosition, now: number) => {
+  const expiry = position.expiresAt ? Date.parse(position.expiresAt) : Number.NaN;
+  if (position.status === 'OPEN' && Number.isFinite(expiry) && expiry <= now) return 'Settling';
+  return binaryStateLabel(position.status);
+};
+
 export default function BinaryPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -552,11 +560,15 @@ export default function BinaryPage() {
   // Permit an underfunded customer to request help, never an unfunded order.
   // Insufficient positive balance must open the funding dialog, not disable both trade actions.
   const reviewReady = !unknownBinaryIntentKey && (ready || fundingRequired);
-  const stateTone = ['WIN', 'OPEN'].includes(state)
+  const trackedPosition = activePositions.find((position) => position.id === lastSubmittedPositionId.current);
+  const expiredOpenPosition = state === 'OPEN' && trackedPosition
+    ? binaryPositionLabel(trackedPosition, now) === 'Settling'
+    : false;
+  const stateTone = (['WIN', 'OPEN'].includes(state) && !expiredOpenPosition)
     ? 'border-emerald-300/25 bg-emerald-400/5 text-[#98FCE4]'
     : ['LOSS', 'ERROR', 'CONNECTION_LOST'].includes(state)
       ? 'border-rose-300/25 bg-rose-400/5 text-[#FF9CB0]'
-      : ['SETTLING', 'SETTLEMENT_DELAYED'].includes(state)
+      : ['SETTLING', 'SETTLEMENT_DELAYED'].includes(state) || expiredOpenPosition
         ? 'border-[#48C0CC]/20 bg-[#48C0CC]/5 text-[#48C0CC]'
         : 'border-violet-300/20 bg-violet-400/5 text-[#CFC4FF]';
   const availabilityCopy = !submissionConfigured
@@ -777,7 +789,7 @@ export default function BinaryPage() {
         <section className="min-w-0 space-y-4 xl:col-start-1 xl:row-start-1" aria-labelledby="binary-heading">
           <div className="flex min-w-0 flex-wrap items-end justify-between gap-3">
             <h1 id="binary-heading" className="min-w-0 break-words text-[clamp(1.25rem,5.6vw,1.5rem)] font-semibold leading-[1.3]">Options</h1>
-            {state !== 'DRAFT' && <span className={`shrink-0 rounded-full border px-3 py-1 font-mono text-xs ${stateTone}`}>{binaryStateLabel(state)}</span>}
+            {state !== 'DRAFT' && <span className={`shrink-0 rounded-full border px-3 py-1 font-mono text-xs ${stateTone}`}>{expiredOpenPosition ? 'Settling' : binaryStateLabel(state)}</span>}
           </div>
           <div className="nexi-station-card min-w-0 rounded-2xl p-2">
             <div className="border-b border-white/5 px-2 pb-2"><TimeframeSelector interval={interval} onChange={setInterval} /></div>
@@ -856,7 +868,7 @@ export default function BinaryPage() {
         </div>
       </ModalSurface>}
 
-      {selectedResult && <ResultDialog position={selectedResult} onClose={() => setSelectedResult(null)} />}
+      {selectedResult && <ResultDialog position={selectedResult} now={now} onClose={() => setSelectedResult(null)} />}
     </main>
   );
 }
@@ -872,15 +884,15 @@ function PositionList({ positions, now, empty, onSelect }: { positions: BinaryPo
     const progress = !terminal && durationMs > 0 ? Math.min(100, Math.max(0, ((now - openedAt) / durationMs) * 100)) : null;
     return <li key={position.id}><button type="button" onClick={() => onSelect(position)} className="nexi-interactive block min-h-20 w-full px-4 py-3 text-left hover:bg-white/[.03]">
       <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
-        <div className="min-w-0"><p className="truncate font-semibold">{position.symbol} · {position.direction}</p><p className="mt-1 text-xs text-[#8C8299]">{binaryStateLabel(position.status)}</p></div>
-        <div className="text-right font-mono text-xs"><p>{position.amount === null ? '—' : `${position.amount} USDT`}</p>{!terminal && <p role="timer" aria-live="off" aria-label={remaining === null ? "Position expiry unavailable" : `${remaining} seconds remaining`} className="mt-1 flex items-center justify-end gap-1 text-[#8C8299]"><Clock3 size={12} aria-hidden="true" />{remaining === null ? '—' : `${remaining}s`}</p>}</div>
+        <div className="min-w-0"><p className="truncate font-semibold">{position.symbol} · {position.direction}</p><p className="mt-1 text-xs text-[#8C8299]">{binaryPositionLabel(position, now)}</p></div>
+        <div className="text-right font-mono text-xs"><p>{position.amount === null ? '—' : `${position.amount} USDT`}</p>{!terminal && <p role="timer" aria-live="off" aria-label={remaining === null ? "Position expiry unavailable" : remaining === 0 ? "Expiry reached; result pending" : `${remaining} seconds remaining`} className="mt-1 flex items-center justify-end gap-1 text-[#8C8299]"><Clock3 size={12} aria-hidden="true" />{remaining === null ? '—' : remaining === 0 ? 'Result pending' : `${remaining}s`}</p>}</div>
       </div>
       {progress !== null && <div role="progressbar" aria-label="Position duration elapsed" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)} className="mt-3 h-2.5 overflow-hidden rounded-full bg-white/5"><div className="h-full rounded-full bg-[#7C3AED] transition-[width] duration-500" style={{ width: `${progress}%` }} /></div>}
     </button></li>;
   })}</ul>;
 }
 
-function ResultDialog({ position, onClose }: { position: BinaryPosition; onClose: () => void }) {
+function ResultDialog({ position, now, onClose }: { position: BinaryPosition; now: number; onClose: () => void }) {
   const publicResult = ['WIN', 'LOSS'].includes(position.status);
   const resultTone = position.status === 'WIN'
     ? 'border-emerald-300/25 bg-emerald-300/10 text-emerald-100'
@@ -892,7 +904,7 @@ function ResultDialog({ position, onClose }: { position: BinaryPosition; onClose
       <div className={`rounded-xl border p-3 ${resultTone}`}>
         <p className="text-[11px] font-semibold uppercase tracking-[.16em]">{publicResult ? 'Trade settled' : 'Trade status'}</p>
         <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-          <h2 id="binary-result-heading" className="text-lg font-semibold leading-tight">{binaryStateLabel(position.status)}</h2>
+          <h2 id="binary-result-heading" className="text-lg font-semibold leading-tight">{binaryPositionLabel(position, now)}</h2>
           <p className="font-mono text-sm tabular-nums">{position.symbol} · {position.direction}</p>
         </div>
       </div>
@@ -908,7 +920,7 @@ function ResultDialog({ position, onClose }: { position: BinaryPosition; onClose
           <Row label="Entry price" value={position.entryPrice === null ? '—' : String(position.entryPrice)} />
           <Row label="Result price" value={position.closePrice === null ? '—' : String(position.closePrice)} />
           <Row label="Opened / expiry" value={`${position.openedAt ?? '—'} / ${position.expiresAt ?? '—'}`} />
-          <Row label="Settlement" value={binaryStateLabel(position.status)} />
+          <Row label="Settlement" value={binaryPositionLabel(position, now)} />
           <Row label="Reference ID" value={position.referenceId ?? '—'} />
         </dl>
       </details>

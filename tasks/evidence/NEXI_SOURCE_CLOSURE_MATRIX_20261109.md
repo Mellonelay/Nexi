@@ -497,3 +497,16 @@ Method: current source/AGENTS, v4 precision reference, Ponytail existing async r
 **GRAPH L0/L1:** Source graph b420f0f served as an exact locator; BinaryModule backend::src_binary_binary_module_binarymodule imports in AppModule, AdminModule and MarketModule (EXTRACTED) and references to their module_import declarations (INFERRED). BinarySettlementScheduler backend::src_binary_binary_settlement_scheduler_binarysettlementscheduler is imported by BinaryModule and implements settleExpiredPositions. Dirty BinaryModule required direct current source comparison. No graph refresh can be claimed until commit/re-extraction.
 
 **SOURCE PROOF / DISPOSITION:** Duplicate root scheduling registration is a demonstrated framework-source contradiction removed by the already-existing dirty correction. NEXI-05-07 and NEXI-05-09 have improved **partial** producer ownership evidence but retain INSUFFICIENT_EVIDENCE for their full user-facing requirements. Other 111 original criteria unchanged. DEFERRED_BY_OWNER_SOURCE_FIRST_RULE: no application tests, compilation/build, lint/typecheck, browser acceptance, migrations, service restart, production financial changes or deployment.
+
+
+## 2026-11-12 — Public Binary expired pending-state presentation (source-only)
+
+**OWNER:** Existing Public Next.js BinaryPage/PositionList/ResultDialog; Backend BinaryService can return delayed while retaining a retryable nonterminal position. An expired persisted ACTIVE was normalized to OPEN, formerly displayed Open and 0 seconds after expiry.
+
+**KNOWLEDGE:** NEXI Knowledge v4 NEXI_PUBLIC_PROVEN_EXCHANGE_UI_COMPONENT_STANDARD_20261108.md:34 and 09_PUBLIC_UI_CROSS_SURFACE_INTEGRATION_20261108.md:27 — a timer is presentation, not settlement authority.
+
+**GRAPH L0/L1:** frontend::app_dashboard_binary_page_positionlist -> binaryStateLabel (EXTRACTED), called from BinaryPage (EXTRACTED); backend::src_binary_binary_service_binaryservice_settlepositionond1 returns delayed when quote/config absent. Fallow inspect_target recognized the Next.js route as entry point; CodeScene complexity warning not a separate repair authorization.
+
+**SOURCE:** frontend/app/dashboard/binary/page.tsx now uses Settling/Result pending for expired OPEN without changing persisted position state, funds, Admin, Ledger, Outbox or settlement outcome. The page header and details dialog also share the derived status, including the pending-state color. Kernel source-map Knowledge gate, VM nextjs-app-router-patterns and host frontend/source-driven methods read; Caveman/Ponytail/Anti-Slop minimal owner principle applied.
+
+**PROOF:** Scoped SOURCE_IMPLEMENTED for truthful expired-position display, full NEXI-05-06 retains INSUFFICIENT_EVIDENCE. New evidence records NEXI_ARCHITECTURE_CLOSURE_INCREMENTAL_20261112.md plus two bounded reconciliation CSVs. No application tests, builds, lint/typechecks, browser acceptance, migrations, restarts, financial mutations or deployment.
