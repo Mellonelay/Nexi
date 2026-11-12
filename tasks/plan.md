@@ -1,3 +1,24 @@
+## SOURCE EXECUTION 2026-11-13: Reused Nov1–12 receipts and prior implementations; parallel disjoint Public Spot and Admin Loans display changes integrated serially. Current original 113 owner paths exist and are graph-indexed but full criterion semantics remain insufficiently proven. Loan collateral-approved-reference policy is unresolved. See tasks/evidence/NEXI_SOURCE_RECONCILIATION_20261113.md; source-first rule still controls.
+
+---
+
+# NEXI — ACTIVE ARCHITECTURE SOURCE EXECUTION PLAN (owner revision 2026-11-12)
+
+**Single controlling template:** [NEXI_ARCHITECTURE_SOURCE_CLOSURE_WORKFLOW_TEMPLATE_20261112.md](NEXI_ARCHITECTURE_SOURCE_CLOSURE_WORKFLOW_TEMPLATE_20261112.md). The current mission is completion and simplification of the **entire Backend/Public/Admin architecture**, not source mapping against the 113 browser tests. Superseded earlier Nov12 planning blocks were moved verbatim into tasks/evidence/NEXI_SUPERSEDED_SOURCE_WORKFLOW_SECTIONS_20261112.md; historical Nov9 and earlier receipts remain below.
+
+**Execution sequence** (full contracts, skills, evidence fields and stop condition in controlling template):
+1. **Preflight once:** four AGENTS.md, owner phase lock, HEAD/dirty/writers/free disk, state/proof-reuse, matching code graph and distinct Knowledge v4. Do not repeat established tool upgrades or stale inventory research. No app tests/builds/browser/restart/deploy.
+2. **Architecture inventory by actual code:** discover Backend modules/controllers/DTO/guards/services/Prisma SQLite commands, Public Next.js routes/hooks/components, Admin TanStack routes/provider/commands, transport/outbox/Socket.IO/schedulers. Define required producer/consumer/error/retry/recovery and UI contracts per domain, not browser test IDs.
+3. **One comprehensive, bounded source-structure review:** local Graphify exact L0/L1 owner/impact; Fallow structural/dead-code/duplication/type-aware consumers/boundaries/CSS and Oct28 retained ledger; CodeScene real health/complexity/hotspots and risk for consequential source. Select appropriate Agent Skills and Context7 official framework semantics; cache unchanged results. Fallow and CodeScene may be independent read lanes; never mechanically re-run a full inventory per edit.
+4. **Implement coherent source slices:** fix domain owner and all necessary Backend/Public/Admin consumers. Complete mandatory mobile-first Public UI. Preserve NestJS single financial writer, SQLite Ledger/Outbox, exact decimal/idempotency/replay, SIWE chain1, realtime state recovery, Admin audit and permissions. Repair source even when issue predates or falls outside 113 acceptance.
+5. **Proven simplify/delete:** each candidate must pass reachability (including framework/dynamic), actual duplication of responsibility, and safe/beneficial behavior-preserving refactor evidence. Remove genuinely dead/redundant wrappers and stale logic; retain uncertain or runtime/compatibility/financial consumers. No mass automatic pruning, score-chasing or speculative redesign. Record source-only evidence, not fabricated passing tests.
+6. **Integrated final source frontier:** reconcile all producer/consumer contracts and required source UX across entire repo. Record source evidence and exact unresolved policies; update current state/proof ledgers proportionally, preserve dates, source SHA and graph provenance. Finish implementation before later tests.
+7. **Separate approval boundary:** only after complete source and explicit owner go-ahead, run combined app verification, canonical builds/deployment and browser acceptance (113 plus extra failure/recovery regressions). Until then DEFERRED_BY_OWNER_SOURCE_FIRST_RULE.
+
+**Stop:** Verified source-only implementation + cross-surface integration + justified simplification disposition, or exact material source/policy blocker. A generic source-traceability UNKNOWN or scanner warning is not a release blocker by itself; do not invent completion.
+
+---
+
 # CURRENT OWNER PLAN — ONE-SHOT COMPLETE SOURCE + MOBILE-FIRST UI REPAIR (2026-11-09)
 
 **Single execution contract:** [NEXI_ONE_SHOT_FULL_SOURCE_AND_MOBILE_UI_CLOSURE_20261109.md](NEXI_ONE_SHOT_FULL_SOURCE_AND_MOBILE_UI_CLOSURE_20261109.md). This is the authoritative top-of-file pointer; earlier 2026-11-08 "test first" plan sections are historical. Do not restart already completed real Public/Admin interactions, financial operations or source work.

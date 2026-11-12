@@ -1,3 +1,9 @@
+# ACTIVE BACKEND SOURCE-FIRST ADDENDUM — 2026-11-12
+
+Current owner/source phase and canonical graph are in root `../AGENTS.md` (2026-11-12 header), superseding the older November 7 graph and historical test-first clauses below. The canonical code graph is the full-checkout `../graphify-out/graph.json` served by `@nexi-graphify-live`, not the retired November 7 merged artifact. Backend NestJS owns policy/DTO/guards, financial authority and durable SQLite Prisma7 Ledger/Outbox/Inbox state; the source-only producer-to-consumer review covers Public and Admin effects. Preserve current source repairs and accepted historic proofs; inspect any unresolved audit-after-settlement, state/replay, cross-surface status or recovery contract against current HEAD before reopening. NestJS decorators, DI providers, BullMQ processors, scheduler and Socket.IO gateways are framework entry points; static unused warnings are candidates, not deletion approval. Knowledge v4 and installed-version NestJS docs govern relevant source rules. No app tests, lint/typecheck, builds, restarts, migrations, database/financial mutations or deployment before complete owner-authorized source closure; read-only source/Kernel/graph checks allowed. Use the current dated `../tasks/todo.md`, `../tasks/plan.md` and Nov9–12 matrix, not October/Nov7 current-looking headings below.
+
+---
+
 # Cross-surface Graphify reference
 
 For Public-to-Backend-to-Admin relationships, use the canonical unified graph and MCP route in root `AGENTS.md` under **CANONICAL CROSS-SURFACE GRAPH**. Verified 2026-11-07 graph: `/srv/nexi/graphify-live/20261107/merged-graph.json`, 5,953 nodes / 17,481 edges / 208 communities, SHA-256 `0c18266bab126d924e5e77acde7e940e004534a03a0bf033785fdeecf5f8337d`; MCP alias `@nexi-graphify-live`. See `../docs/architecture/NEXI_GRAPHIFY_COVERAGE_20261107.md`.

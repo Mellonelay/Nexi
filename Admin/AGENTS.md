@@ -1,3 +1,9 @@
+# ACTIVE ADMIN SOURCE-FIRST ADDENDUM — 2026-11-12
+
+Root `../AGENTS.md` 2026-11-12 authority and current `../graphify-out/graph.json` via `@nexi-graphify-live` supersede the dated November 7 merged graph and October browser/test-first routing below. Preserve the existing React/TanStack Router/Start + Vite/Nitro Admin application, live `NexiAdminApiProvider`, generated route tree, deep links, permissions, existing operator controls and existing source fixes. Reconcile only proven mismatches among Admin route/provider/DTO, NestJS guards/service, exact SQLite Ledger/audit status and Public readback; unsupported backend capabilities fail closed. Check factual audit/settlement and Spot/Margin/Mining/Loan customer/provenance contracts before touching code. Do not translate an analyzer's complexity score, route discovery or missing direct import into permission to remove an Admin route or financial control. Use current version-matched TanStack docs, Knowledge v4, exact L0/L1 graph edges, and Fallow/CodeScene only for distinct unresolved questions. All application tests/lint/typechecks/builds/browser/restarts/deployments remain deferred until full authorized source closure and separate owner authorization. Current task/plan and Nov9–12 receipts override older phase/order clauses.
+
+---
+
 # Cross-surface Graphify reference
 
 For Public-to-Backend-to-Admin relationships, use the canonical unified graph and MCP route in root `AGENTS.md` under **CANONICAL CROSS-SURFACE GRAPH**. Verified 2026-11-07 graph: `/srv/nexi/graphify-live/20261107/merged-graph.json`, 5,953 nodes / 17,481 edges / 208 communities, SHA-256 `0c18266bab126d924e5e77acde7e940e004534a03a0bf033785fdeecf5f8337d`; MCP alias `@nexi-graphify-live`. See `../docs/architecture/NEXI_GRAPHIFY_COVERAGE_20261107.md`.

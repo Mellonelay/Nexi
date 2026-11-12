@@ -1,3 +1,32 @@
+## SOURCE PROGRESS 2026-11-13: Original 113 source-path and graph candidate map recorded; two isolated Public/Admin source-only UI fixes integrated; prior source and Fallow work preserved. Full semantic source closure remains unproven. Exact Loan collateral reference-approval source authority needs owner policy. See tasks/evidence/NEXI_SOURCE_RECONCILIATION_20261113.md. No tests/builds/deploy.
+
+---
+
+# NEXI — ACTIVE ARCHITECTURE-WIDE SOURCE ENGINEERING (owner revision 2026-11-12)
+
+**Execution authority:** [NEXI architecture-wide source closure template](NEXI_ARCHITECTURE_SOURCE_CLOSURE_WORKFLOW_TEMPLATE_20261112.md). Continue existing NEXI implementation, not a 113-criterion source-review campaign. Source goal is complete functional, structural, framework-aware, Backend→Public/Admin producer-to-consumer, mobile-first and necessary simplification/removal closure across the **entire** repository. This is not only browser defects and not a code-style cleanup for its own sake.
+
+**Hard phase lock:** Source and required consumer integration first. No application tests, typechecks/lint, builds, browser/mobile rendering, service restart, deployment, release or live financial operations until complete source closure and separate owner approval. Direct source/graph/docs, source diff integrity and VM Kernel/harness read-only checks allowed. Do not invent money, recovery or policy.
+
+**Evidence and ownership:** Current owner directive > root + three surface AGENTS.md (Nov12 supersession headers) > exact source and NEXI_CURRENT_STATE.md / NEXI_PROOF_REUSE_REGISTER.md receipts > current local Graphify source graph > Knowledge v4 and official installed-version docs > dated history. Respect all existing dirty files and concurrent writers; source Git HEAD, graph SHA and deployed artifact IDs are separate. The full previous Nov12 planning material is archived in tasks/evidence/NEXI_SUPERSEDED_SOURCE_WORKFLOW_SECTIONS_20261112.md without removing the earlier Nov9–12 implementation receipts below.
+
+**113 separation:** Original 113 tests are a deferred browser-acceptance workflow, not the architecture inventory, engineering task board, or completion bar. Historical Nov1/5/8 observations may be reused for bug causality, but 5/108 criterion mapping must never become 108 repair tasks. Do not run or relabel acceptance now.
+
+## Active source task queue
+- [ ] Recheck current Git HEAD/dirty paths/active writers, current four AGENTS, current state/proof reuse ledger, source graph provenance, Knowledge v4 and relevant installed framework versions. Read only changed authority and scoped domain evidence; preserve previous valid receipts.
+- [ ] **Map and reconcile the entire actual architecture once**, using current Backend/Public/Admin source and full-checkout Graphify L0/L1: auth/SIWE, financial Wallet/Ledger/Outbox, markets/Spot, Margin, Binary, Convert/transfers, Mining/Loans/Earn, communications, Admin operator policy, transport/realtime/observability, mobile shell and shared UI. Produce source owner→consumer→failure/recovery contracts independently of 113 browser IDs.
+- [ ] **Run one bounded Fallow 3.42.0 structural baseline** for real repo-wide unused/duplicate/complex/architecture/style candidates; preserve Oct28 dispositions, confirm framework/dynamic consumers, investigate the 31 pending consumer and two public API reviews. Follow with affected-path-only analysis as code changes.
+- [ ] **Use CodeScene MCP 1.5.20/code health and owner/impact analysis** on changed/high-centrality source hotspots, prioritize proven maintainability regressions and consolidation candidates. Apply actual current vendor skills rather than absent stale pointers; no arbitrary score or bulk remediation.
+- [ ] **Complete domain-wide authorized functionality + required cross-surface integrations**, implementing current source contract gaps even if no browser criterion covers them. One NestJS financial writer, exact decimals, durable Ledger/Outbox/Inbox, idempotent intents, SIWE chain 1, producer-to-consumer DTO/guards/auth/status/error/recovery, Socket.IO resnapshot, Admin truthful audit/readback.
+- [ ] **Complete mandatory Public mobile-first source** against DESIGN.md, five owner-approved screens and all three Nov8 UI research references: 320–430 CSS-px/short height source geometry, five labeled safe-area dock entries, precision, Wallet, trading charts/orderbook, tickets, drawers/sheets, loading/error/accessibility; Admin desktop-first TanStack intact.
+- [ ] **Remove genuinely unnecessary or duplicated code and simplify overcomplication**, but only on triple source proof: reachability, actual responsibility equivalence/duplication, safe behavior-preserving benefit; protect NestJS DI/BullMQ/schedules/WebSocket, Next.js special files, TanStack generated routes, compatibility consumers, financial Ledger/replay semantics. Record every retain/fix/remove with source evidence.
+- [ ] **Cross-surface static integration closure** across all actual routes/types/identities/financial and realtime readbacks; preserve dated Oct–Nov receipts, current matrix, source proof and exact policy blockers. No source completion claim while known correctable source gaps remain.
+- [ ] **Separate later owner-authorized verification/release:** application tests/lint/types/build, deployments, authenticated browser acceptance including original 113, plus architecture failure-path regressions. Status now DEFERRED_BY_OWNER_SOURCE_FIRST_RULE.
+
+**Source-only progress receipt:** TASK | CONTRACT | SOURCE FILE:LINE | KNOWLEDGE | GRAPH L0/L1 | FALLOW/CODESCENE RESULT WHERE ACTUALLY USED | SKILL APPLIED | SOURCE DIFF | REUSED PROOF | NEXT. Do not claim tests, live runtime or production success.
+
+---
+
 # CURRENT OWNER TASK — FULL NEXI SOURCE + MOBILE-FIRST PUBLIC UI CLOSURE (2026-11-09)
 
 ## 2026-11-11 v3.4 — Active source-first closure execution
