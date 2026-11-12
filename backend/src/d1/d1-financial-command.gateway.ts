@@ -184,6 +184,7 @@ export interface D1BinarySettleCommand {
   idempotencyKey: string;
   correlationId: string;
   expectedResearchControlVersion?: number;
+  adminAudit?: { adminId: string; reason: string; idempotencyKey: string };
 }
 
 export interface D1WithdrawalCreateCommand {
@@ -8261,6 +8262,40 @@ export class D1FinancialCommandGateway {
         },
       }),
     );
+    // For an Admin-initiated settlement, operator audit and economic effects
+    // must commit through the same authoritative SQLite bridge transaction.
+    const adminAuditId = command.adminAudit ? randomUUID() : null;
+    const adminAuditIndex = statements.length;
+    if (command.adminAudit && adminAuditId) {
+      statements.push({
+        sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt")
+              SELECT ?,?,'ADMIN_BINARY_POSITION_SETTLED',?,?,CURRENT_TIMESTAMP
+              WHERE EXISTS (SELECT 1 FROM "Gate2BinaryPosition"
+                            WHERE "id"=? AND "userId"=? AND "state"=?
+                              AND "settlementReceiptId"=?)`,
+        params: [
+          adminAuditId,
+          command.adminAudit.adminId,
+          command.positionId,
+          JSON.stringify({
+            reason: command.adminAudit.reason,
+            idempotencyKey: command.adminAudit.idempotencyKey,
+            state: command.state,
+            delayed: false,
+            reasonCode: null,
+          }),
+          command.positionId,
+          command.userId,
+          command.state,
+          receipt,
+        ],
+      });
+      // Fail the *same* SQLite transaction if the operator audit is absent.
+      statements.push(this.rollbackIfNoChanges(
+        `admin:binary:settle:${command.positionId}`,
+        'ADMIN_BINARY_SETTLEMENT_AUDIT',
+      ));
+    }
     const result = await this.bridge.batch(statements);
     const accountIndex = payout.isZero() ? 1 : 2;
     const stakePostingIndex = accountIndex + 2;
@@ -8272,12 +8307,14 @@ export class D1FinancialCommandGateway {
       outboxIndex,
       "D1 binary settlement EventOutbox publication",
     );
+    if (adminAuditId)
+      this.requireChanges(result, adminAuditIndex, "D1 Admin Binary settlement audit");
     const row = await this.getBinaryPosition(command.positionId);
     if (!row)
       throw new BadRequestException(
         "D1 binary settlement was not materialized",
       );
-    return { ...row, replayed: false };
+    return { ...row, replayed: false, ...(adminAuditId ? { adminAuditId } : {}) };
   }
 
   async reserveSpotOrder(command: D1SpotOrderCommand): Promise<any> {

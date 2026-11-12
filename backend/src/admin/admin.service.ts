@@ -1900,19 +1900,33 @@ export class AdminService {
       throw new BadRequestException(
         "A reason is required to settle a Binary position",
       );
-    const result = await this.binaryService.settlePosition(id);
+    const result = await this.binaryService.settlePosition(id, undefined, {
+      adminId,
+      reason,
+      idempotencyKey,
+    });
     const settlementState = String(result.position?.state ?? '').toUpperCase();
     const finalized = !result.delayed && (settlementState === 'WIN' || settlementState === 'LOSS');
+    const replayed = 'replayed' in result && Boolean(result.replayed);
+    const adminAuditId = 'adminAuditId' in result && typeof result.adminAuditId === 'string'
+      ? result.adminAuditId : undefined;
+    if (finalized && !replayed) {
+      if (!adminAuditId)
+        throw new Error('Atomic Admin Binary settlement audit was not confirmed');
+      return { ...result, ok: true, auditId: adminAuditId };
+    }
+    // A replay/deferred request has no new financial posting to audit atomically.
     const audit = await this.prisma.adminAuditLog.create({
       data: {
         adminId,
-        action: finalized ? "ADMIN_BINARY_POSITION_SETTLED" : "ADMIN_BINARY_SETTLEMENT_DEFERRED",
+        action: finalized ? "ADMIN_BINARY_SETTLEMENT_REPLAYED" : "ADMIN_BINARY_SETTLEMENT_DEFERRED",
         target: id,
         details: {
           reason,
           idempotencyKey,
           state: result.position?.state ?? null,
           delayed: !finalized,
+          replayed,
           reasonCode: result.reason ?? (finalized ? null : 'settlement-not-finalized'),
         },
       },

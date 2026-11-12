@@ -6,7 +6,7 @@ import { assertPositiveDecimal, decimalProduct } from '../gate2/gate2-rules';
 import { BinaryGateway } from './binary.gateway';
 import { SandboxScenarioService } from '../sandbox/sandbox-scenario.service';
 import { getMarketSourcePolicy, getProviderMapping, isDeterministicTestProvider, isSettlementApproved } from '../market/market-source-registry';
-import { D1FinancialCommandGateway } from '../d1/d1-financial-command.gateway';
+import { D1FinancialCommandGateway, type D1BinarySettleCommand } from '../d1/d1-financial-command.gateway';
 
 export interface OpenBinaryPositionInput {
   pair: string;
@@ -32,11 +32,19 @@ export class BinaryService {
     return this.openPositionOnD1(userId, input, stake);
   }
 
-  async settlePosition(positionId: string, actorUserId?: string) {
-    return this.settlePositionOnD1(positionId, actorUserId);
+  async settlePosition(
+    positionId: string,
+    actorUserId?: string,
+    adminAudit?: D1BinarySettleCommand['adminAudit'],
+  ) {
+    return this.settlePositionOnD1(positionId, actorUserId, adminAudit);
   }
 
-  private async settlePositionOnD1(positionId: string, actorUserId?: string) {
+  private async settlePositionOnD1(
+    positionId: string,
+    actorUserId?: string,
+    adminAudit?: D1BinarySettleCommand['adminAudit'],
+  ) {
     const raw: any = await this.d1.getBinaryPosition(positionId);
     if (!raw) throw new NotFoundException('Binary position not found');
     if (actorUserId && String(raw.userId) !== actorUserId) throw new BadRequestException('Binary position ownership mismatch');
@@ -60,16 +68,16 @@ export class BinaryService {
         result: researchMode,
         expiresAt,
       } as const;
-      return this.settleSandboxPosition({ raw, pair, configuration, expiresAt, sandbox: directive });
+      return this.settleSandboxPosition({ raw, pair, configuration, expiresAt, sandbox: directive, adminAudit });
     }
     const sandbox = await this.sandboxScenarios.findBinaryDirective(this.prisma, String(raw.userId), String(raw.id));
-    if (sandbox) return this.settleSandboxPosition({ raw, pair, configuration, expiresAt, sandbox });
+    if (sandbox) return this.settleSandboxPosition({ raw, pair, configuration, expiresAt, sandbox, adminAudit });
     const quote = await this.getApprovedSettlementQuote(pair, {
       observedAt: expiresAt.toISOString(),
       sequence: String(raw.entrySequence),
     });
     if (!quote) return { position: raw, delayed: true };
-    return this.settleProviderPosition({ raw, pair, configuration, expiresAt, sandbox: null, quote });
+    return this.settleProviderPosition({ raw, pair, configuration, expiresAt, sandbox: null, quote, adminAudit });
   }
 
   private async settleSandboxPosition(context: {
@@ -78,6 +86,7 @@ export class BinaryService {
     configuration: any;
     expiresAt: Date;
     sandbox: NonNullable<Awaited<ReturnType<SandboxScenarioService['findBinaryDirective']>>>;
+    adminAudit?: D1BinarySettleCommand['adminAudit'];
   }) {
     const entryPrice = new Prisma.Decimal(String(context.raw.entryPrice));
     const expiryPrice = this.sandboxExpiryPrice(entryPrice, String(context.raw.side) as BinarySide, context.sandbox.result);
@@ -91,6 +100,7 @@ export class BinaryService {
     expiresAt: Date;
     sandbox: null;
     quote: NonNullable<Awaited<ReturnType<BinaryService['getApprovedSettlementQuote']>>>;
+    adminAudit?: D1BinarySettleCommand['adminAudit'];
   }) {
     const entryPrice = new Prisma.Decimal(String(context.raw.entryPrice));
     const expiryPrice = new Prisma.Decimal(String(context.quote.price));
@@ -108,6 +118,7 @@ export class BinaryService {
     entryPrice: Prisma.Decimal;
     expiryPrice: Prisma.Decimal;
     state: 'WIN' | 'LOSS';
+    adminAudit?: D1BinarySettleCommand['adminAudit'];
   }) {
     const payout = this.payoutFor(context.state, new Prisma.Decimal(String(context.raw.stake)), context.configuration);
     const simulated = Boolean(context.sandbox);
@@ -129,13 +140,18 @@ export class BinaryService {
       idempotencyKey: String(context.raw.idempotencyKey),
       correlationId: String(context.raw.correlationId),
       expectedResearchControlVersion: Number(context.raw.researchControlVersion ?? 0),
+      ...(context.adminAudit ? { adminAudit: context.adminAudit } : {}),
     });
     const position = simulated
       ? { ...settled, sandboxSimulation: this.buildSandboxSimulation(context.raw, context.sandbox!, context.expiryPrice, true) }
       : settled;
     if (!settled.replayed)
       this.binaryGateway.emitPositionUpdate(String(context.raw.userId), { event: 'binary.position.settled', position });
-    return { position, replayed: Boolean(settled.replayed) };
+    return {
+      position,
+      replayed: Boolean(settled.replayed),
+      ...(typeof settled.adminAuditId === 'string' ? { adminAuditId: settled.adminAuditId } : {}),
+    };
   }
 
   private async openPositionOnD1(userId: string, input: OpenBinaryPositionInput, stake: Prisma.Decimal) {
