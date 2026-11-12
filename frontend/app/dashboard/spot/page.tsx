@@ -663,7 +663,7 @@ function SpotOrderTicket({side, setSide, orderType, setOrderType, price, setPric
           </div>
 
           <dl className="mt-1.5 grid min-w-0 grid-cols-1 gap-2 rounded-xl border border-violet-300/10 bg-[#0B0711] p-3 text-xs min-[430px]:grid-cols-2 lg:grid-cols-4">
-            <div className="min-w-0"><dt className="text-[#8C8299]">Estimated total</dt><dd className="mt-0.5 break-words font-mono">{total === null ? '—' : `${total.toFixed(2)} USDT`}</dd></div>
+            <div className="min-w-0"><dt className="text-[#8C8299]">Estimated total</dt><dd className="mt-0.5 break-all font-mono tabular-nums">{total === null ? '—' : `${total.toString()} USDT`}</dd></div>
             <div className="min-w-0"><dt className="text-[#8C8299]">Fee</dt><dd className="mt-0.5 break-words font-mono">—</dd></div>
             <div className="min-w-0"><dt className="text-[#8C8299]">Available</dt><dd className="mt-0.5 break-words font-mono">{availableBalance}</dd></div>
             <div className="hidden min-w-0 lg:block"><dt className="text-[#8C8299]">State</dt><dd className="mt-0.5 break-words font-mono">{productStateLabel(orderState)}</dd></div>
