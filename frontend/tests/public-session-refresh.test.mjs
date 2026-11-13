@@ -14,6 +14,7 @@ function client(adapter) {
   });
   function load(path, require) {
     context.exports = {};
+    context.module = { exports: context.exports };
     context.require = require;
     const source = readFileSync(new URL(path, import.meta.url), 'utf8');
     vm.runInContext(ts.transpileModule(source, {

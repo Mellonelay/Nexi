@@ -222,10 +222,10 @@ export default function BinaryPage() {
   const [binaryDurations, setBinaryDurations] = useState<number[]>([]);
   const submissionLock = useRef(false);
   const pendingBinaryIntent = useRef<PendingIntentKey | null>(null);
-  const lastSubmittedPositionId = useRef<string | null>(null);
   const [renderTrackedPositionId, setRenderTrackedPositionId] = useState<string | null>(null);
+  const trackedPositionIdRef = useRef<string | null>(null);
   const setTrackedPositionId = (id: string | null) => {
-    lastSubmittedPositionId.current = id;
+    trackedPositionIdRef.current = id;
     setRenderTrackedPositionId(id);
   };
   const terminalPositionIds = useRef<Set<string>>(new Set());
@@ -406,7 +406,7 @@ export default function BinaryPage() {
           setFeedback('Position confirmed, but recovery storage could not be cleared. Recheck before another order.');
         }
       }
-      const isTrackedPosition = lastSubmittedPositionId.current === position.id;
+      const isTrackedPosition = trackedPositionIdRef.current === position.id;
       if (FINAL_BINARY_STATES.has(position.status)) {
         terminalPositionIds.current.add(position.id);
         setActivePositions((current) => current.filter((item) => item.id !== position.id));
