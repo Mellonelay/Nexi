@@ -70,6 +70,8 @@ export class LoanService {
   ): Promise<any> {
     if (!idempotencyKey?.trim())
       throw new BadRequestException("Idempotency key is required");
+    if (!collateral.trim() || !collateralImg.trim())
+      throw new BadRequestException("Collateral details and a document reference are required for Admin review");
     const amount = this.decimal(amountText, "amount");
     if (!Number.isInteger(durationDays) || durationDays < 1)
       throw new BadRequestException("duration must be a positive integer");

@@ -194,7 +194,7 @@ function Inner() {
               <div>
                 <h2 className="font-semibold">Loan applications</h2>
                 <p className="text-xs text-muted-foreground">
-                  Review backend loan requests before disbursement.
+                  Review the submitted collateral details and document reference before approving disbursement.
                 </p>
               </div>
               <StatusBadge tone="info">Governed review</StatusBadge>

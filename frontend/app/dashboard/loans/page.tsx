@@ -263,7 +263,7 @@ export default function LoansPage() {
       return;
     }
     if (!collateral.trim() || !collateralImg.trim()) {
-      setMessage('Provide collateral details and an approved document reference.');
+      setMessage('Provide collateral details and a document reference for Admin review.');
       return;
     }
     setSubmitting(true);
@@ -628,8 +628,8 @@ function LoanApplicationPanel({
           <input aria-label="Duration in days" className={`${inputClass} text-right font-mono`} value={duration} onChange={(event) => onDurationChange(event.target.value)} inputMode="numeric" placeholder="—" />
         </Field>
         <Field label="Collateral document">
-          <input aria-label="Collateral document reference" className={inputClass} value={collateralImg} onChange={(event) => onCollateralImgChange(event.target.value)} aria-describedby="collateral-help" placeholder="Approved URL or storage key" />
-          <span id="collateral-help" className="mt-2 block text-xs leading-5 text-[#8C8299]">Use a reference from the approved document-storage flow; this form does not upload files.</span>
+          <input aria-label="Collateral document reference" className={inputClass} value={collateralImg} onChange={(event) => onCollateralImgChange(event.target.value)} aria-describedby="collateral-help" placeholder="Document reference or storage key" />
+          <span id="collateral-help" className="mt-2 block text-xs leading-5 text-[#8C8299]">Provide a document reference for Admin to review; this form does not upload files.</span>
         </Field>
         <Field label="Collateral details">
           <textarea aria-label="Collateral details" className={`${inputClass} min-h-24 resize-y`} value={collateral} onChange={(event) => onCollateralChange(event.target.value)} placeholder="Describe the collateral supporting this application." />
@@ -653,7 +653,7 @@ function LoanApplicationPanel({
           Enter a principal from {authoritativeValue(selectedPlan.minAmount)} to {authoritativeValue(selectedPlan.maxAmount)} {authoritativeValue(selectedPlan.currency)}.
         </p>}
         {selectedPlan && !matchesDuration && <p role="status" className="text-xs text-amber-200">Use the selected plan's {authoritativeValue(selectedPlan.durationDays)}-day term.</p>}
-        <p className="text-xs text-[#8C8299]">Applications require both collateral details and a previously approved document reference. Product availability does not establish individual approval.</p>
+        <p className="text-xs text-[#8C8299]">Applications require collateral details and a document reference. An Admin must review the application before disbursement.</p>
         <PrimaryButton type="submit" disabled={submitting || blocked || !canApply}>
           {blocked ? 'Recheck original application' : submitting ? 'Submitting…' : plans.length === 0 ? 'No active products' : 'Submit application'}
         </PrimaryButton>

@@ -3013,6 +3013,8 @@ export class D1FinancialCommandGateway {
     if (["ACTIVE", "APPROVED"].includes(String(loan.status))) return loan;
     if (String(loan.status) !== "PENDING")
       throw new BadRequestException("Loan is not pending review");
+    if (!String(loan.collateral ?? "").trim() || !String(loan.collateralImg ?? "").trim())
+      throw new BadRequestException("Loan collateral details and document reference must be reviewed before approval");
     const account = await this.getAccountForUser(
       String(loan.userId),
       String(loan.currency),
