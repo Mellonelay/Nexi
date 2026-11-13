@@ -38,11 +38,12 @@ describe('Gate 2 binary settlement correction semantics', () => {
     expect(d1.getBinaryConfiguration).toHaveBeenCalledWith('BTCUSDT', 30, 7);
   });
 
-  it('compensates a terminal settlement error through the D1 state result', async () => {
+  it('defers unavailable versioned settlement configuration without posting a terminal result', async () => {
     const { service, d1 } = createSettlement(Gate2BinaryState.ACTIVE, null);
     d1.getBinaryConfiguration.mockResolvedValue(null);
     const result = await service.settlePosition('position-1');
-    expect(result.error).toBe(true);
+    expect(result.delayed).toBe(true);
+    expect(result.reason).toBe('configuration-unavailable');
     expect(result.position.state).toBe(Gate2BinaryState.ACTIVE);
     expect(d1.settleBinaryPositionAtomic).not.toHaveBeenCalled();
   });

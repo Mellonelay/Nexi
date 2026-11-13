@@ -1878,9 +1878,7 @@ export class AdminService {
   async getAdminSettlements() {
     if (this.d1?.isEnabled())
       return (await this.d1.listBinaryPositions()).filter((row) =>
-        [Gate2BinaryState.WIN, Gate2BinaryState.LOSS, Gate2BinaryState.ERROR].includes(
-          String(row.state) as Gate2BinaryState,
-        ),
+        new Set<string>([Gate2BinaryState.WIN, Gate2BinaryState.LOSS, Gate2BinaryState.ERROR]).has(String(row.state)),
       );
     return this.prisma.gate2BinaryPosition.findMany({
       // Match the SQLite command gateway's terminal-only read model.
@@ -1906,7 +1904,8 @@ export class AdminService {
       idempotencyKey,
     });
     const settlementState = String(result.position?.state ?? '').toUpperCase();
-    const finalized = !result.delayed && (settlementState === 'WIN' || settlementState === 'LOSS');
+    const delayed = 'delayed' in result && result.delayed === true;
+    const finalized = !delayed && (settlementState === 'WIN' || settlementState === 'LOSS');
     const replayed = 'replayed' in result && Boolean(result.replayed);
     const adminAuditId = 'adminAuditId' in result && typeof result.adminAuditId === 'string'
       ? result.adminAuditId : undefined;
@@ -1927,7 +1926,7 @@ export class AdminService {
           state: result.position?.state ?? null,
           delayed: !finalized,
           replayed,
-          reasonCode: result.reason ?? (finalized ? null : 'settlement-not-finalized'),
+          reasonCode: ('reason' in result ? result.reason : undefined) ?? (finalized ? null : 'settlement-not-finalized'),
         },
       },
     });

@@ -1,16 +1,12 @@
-import { forwardRef, Module } from '@nestjs/common';
-import { AuthModule } from '../auth/auth.module';
+import { Module } from '@nestjs/common';
 import { LedgerModule } from '../ledger/ledger.module';
-import { FinancialOperationsController } from './financial-operations.controller';
 import { FinancialOperationsService } from './financial-operations.service';
 import { LocalDepositProofStore } from './local-deposit-proof.store';
-import { LocalDepositProofController } from './local-deposit-proof.controller';
 import { D1PrismaModule } from '../d1/d1-prisma.module';
 
 @Module({
-  imports: [LedgerModule, forwardRef(() => AuthModule), D1PrismaModule],
-  controllers: [FinancialOperationsController, LocalDepositProofController],
+  imports: [LedgerModule, D1PrismaModule],
   providers: [FinancialOperationsService, LocalDepositProofStore],
-  exports: [FinancialOperationsService],
+  exports: [FinancialOperationsService, LocalDepositProofStore],
 })
 export class FinancialOperationsModule {}

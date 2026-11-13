@@ -2362,7 +2362,8 @@ export class D1FinancialCommandGateway {
     );
     if (prior) {
       if (String(prior.planId) !== command.planId ||
-          !this.decimal(String(prior.amountDecimal ?? prior.amount)).eq(command.amount))
+          !this.decimal(String(prior.amountDecimal ?? prior.amount)).eq(command.amount) ||
+          String(prior.planSnapshot ?? '') !== JSON.stringify(command.planSnapshot))
         throw new BadRequestException("Mining original key belongs to different terms");
       return { ...prior, replayed: true };
     }
@@ -7494,7 +7495,9 @@ export class D1FinancialCommandGateway {
     );
     const current = await this.findAccount(account.id);
     const amount = this.decimal(String(withdrawal.reservedAmount));
-    if (this.nonNegativeDecimal(current.locked).lt(amount))
+    const available = this.nonNegativeDecimal(current.available);
+    const locked = this.nonNegativeDecimal(current.locked);
+    if (locked.lt(amount))
       throw new BadRequestException("Withdrawal locked funds are insufficient");
     const key =
       requestedIdempotencyKey?.trim() ||

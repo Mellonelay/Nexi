@@ -32,6 +32,7 @@ import { SandboxModule } from "./sandbox/sandbox.module";
 import { RuntimeLifecycleService } from "./runtime/runtime-lifecycle.service";
 import { validateRuntimeEnvironment } from "./runtime/runtime.config";
 import { FinancialOperationsModule } from "./financial/financial-operations.module";
+import { FinancialHttpModule } from "./financial/financial-http.module";
 import { ObservabilityModule } from "./observability/observability.module";
 import { D1WorkerBridgeModule } from "./d1/d1-worker-bridge.module";
 import { D1PrismaModule } from "./d1/d1-prisma.module";
@@ -73,6 +74,7 @@ import { ProfileModule } from "./profile/profile.module";
     EventsModule,
     MarketModule,
     FinancialOperationsModule,
+    FinancialHttpModule,
     ObservabilityModule,
     D1WorkerBridgeModule,
     D1PrismaModule,

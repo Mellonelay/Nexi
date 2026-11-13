@@ -254,8 +254,8 @@ describe('financial operations on local SQLite', () => {
     };
     await gateway.subscribeMining(command);
     await gateway.subscribeMining({ ...command, endDate: '2030-01-02T00:00:00.000Z' });
-    await expect(gateway.subscribeMining({ ...command, amount: '6' })).rejects.toThrow('Mining subscription idempotency key was already used with different terms');
-    await expect(gateway.subscribeMining({ ...command, planSnapshot: { ...command.planSnapshot, dailyYield: '0.02' } })).rejects.toThrow('Mining subscription idempotency key was already used with different terms');
+    await expect(gateway.subscribeMining({ ...command, amount: '6' })).rejects.toThrow('Mining original key belongs to different terms');
+    await expect(gateway.subscribeMining({ ...command, planSnapshot: { ...command.planSnapshot, dailyYield: '0.02' } })).rejects.toThrow('Mining original key belongs to different terms');
     await expect(bridge.select<{ available: string; locked: string }>(`SELECT available,locked FROM LedgerAccount WHERE id='finance-1'`)).resolves.toMatchObject({ results: [{ available: '15', locked: '10' }] });
     for (const table of ['LedgerPosting', 'Activity', 'EventOutbox']) {
       await expect(bridge.select<{ count: number }>(`SELECT COUNT(*) AS count FROM "${table}"`)).resolves.toMatchObject({ results: [{ count: 1 }] });
@@ -395,8 +395,9 @@ describe('financial operations on local SQLite', () => {
       positionEventId:'margin-open-close-event',
     });
     await bridge.batch([{
-      sql:`UPDATE SpotMarginPosition SET status='CLOSING',closeOrderId='margin-close-order' WHERE id='margin-position-close'`,
+      sql:`INSERT INTO Gate2SpotOrder (id,userId,pair,baseAsset,quoteAsset,side,type,status,amount,filled,remaining,price,reserveAsset,reserveScope,reservedAmount,feeRate,idempotencyKey,correlationId,updatedAt) VALUES ('margin-close-order','user-1','BTCUSDT','BTC','USDT','SELL','LIMIT','FILLED','1','1','0','11','BTC','MARGIN','0','0','margin-close-order-key','margin-settlement-key-1',CURRENT_TIMESTAMP)`,
     }]);
+    await gateway.markMarginClosing('margin-position-close', 'user-1', 'margin-account-close', 'margin-close-intent', 'margin-close-order', 'margin-settlement-key-1');
     const command = {
       positionId:'margin-position-close',userId:'user-1',closeOrderId:'margin-close-order',
       state:'CLOSED' as const,markPrice:'11',realizedPnl:'1',repayment:'2',
