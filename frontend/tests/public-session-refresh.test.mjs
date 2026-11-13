@@ -22,11 +22,11 @@ function client(adapter) {
     return context.exports;
   }
   const session = load('../app/lib/auth-session.ts');
-  const module = load('../app/lib/api.ts', (name) => name === './auth-session' ? session : {
+  const apiModule = load('../app/lib/api.ts', (name) => name === './auth-session' ? session : {
     ...axios,
     create: (config) => axios.create({ ...config, adapter }),
   });
-  return { api: module.default, recover: module.recoverPublicSession, session };
+  return { api: apiModule.default, recover: apiModule.recoverPublicSession, session };
 }
 
 function response(config, data) {

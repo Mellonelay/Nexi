@@ -30,7 +30,7 @@ function addUnsignedDecimals(a: string, b: string): string | null {
   const [ai, af = ''] = a.split('.');
   const [bi, bf = ''] = b.split('.');
   const scale = Math.max(af.length, bf.length);
-  const multiplier = 10n ** BigInt(scale);
+  const multiplier = BigInt(10) ** BigInt(scale);
   const total = (BigInt(ai) + BigInt(bi)) * multiplier
     + BigInt(af.padEnd(scale, '0') || '0') + BigInt(bf.padEnd(scale, '0') || '0');
   const digits = total.toString().padStart(scale + 1, '0');

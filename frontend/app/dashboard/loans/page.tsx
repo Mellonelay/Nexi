@@ -652,7 +652,7 @@ function LoanApplicationPanel({
         {selectedPlan && !withinLimits && <p role="status" className="text-xs text-amber-200">
           Enter a principal from {authoritativeValue(selectedPlan.minAmount)} to {authoritativeValue(selectedPlan.maxAmount)} {authoritativeValue(selectedPlan.currency)}.
         </p>}
-        {selectedPlan && !matchesDuration && <p role="status" className="text-xs text-amber-200">Use the selected plan's {authoritativeValue(selectedPlan.durationDays)}-day term.</p>}
+        {selectedPlan && !matchesDuration && <p role="status" className="text-xs text-amber-200">Use the selected plan&apos;s {authoritativeValue(selectedPlan.durationDays)}-day term.</p>}
         <p className="text-xs text-[#8C8299]">Applications require collateral details and a document reference. An Admin must review the application before disbursement.</p>
         <PrimaryButton type="submit" disabled={submitting || blocked || !canApply}>
           {blocked ? 'Recheck original application' : submitting ? 'Submitting…' : plans.length === 0 ? 'No active products' : 'Submit application'}

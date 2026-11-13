@@ -223,6 +223,11 @@ export default function BinaryPage() {
   const submissionLock = useRef(false);
   const pendingBinaryIntent = useRef<PendingIntentKey | null>(null);
   const lastSubmittedPositionId = useRef<string | null>(null);
+  const [renderTrackedPositionId, setRenderTrackedPositionId] = useState<string | null>(null);
+  const setTrackedPositionId = (id: string | null) => {
+    lastSubmittedPositionId.current = id;
+    setRenderTrackedPositionId(id);
+  };
   const terminalPositionIds = useRef<Set<string>>(new Set());
   const positionSnapshotRequest = useRef(0);
   const positionSocketRevision = useRef(0);
@@ -271,7 +276,7 @@ export default function BinaryPage() {
         setState('DRAFT');
         const stored = next ? readPendingEconomicIntent('binary-position', next) : null;
         pendingBinaryIntent.current = stored?.intent ?? null;
-        lastSubmittedPositionId.current = null;
+        setTrackedPositionId(null);
         setUnknownBinaryIntentKey(stored?.intent.key ?? null);
         previousUserId.current = next;
       }
@@ -366,7 +371,7 @@ export default function BinaryPage() {
             && (row as Record<string, unknown>).idempotencyKey === key);
           const recovered = normalizePosition(match);
           if (recovered && pendingBinaryIntent.current?.key === key) {
-            if (!FINAL_BINARY_STATES.has(recovered.status) && !terminalPositionIds.current.has(recovered.id)) lastSubmittedPositionId.current = recovered.id;
+            if (!FINAL_BINARY_STATES.has(recovered.status) && !terminalPositionIds.current.has(recovered.id)) setTrackedPositionId(recovered.id);
             if (!clearPendingEconomicIntent('binary-position', userId, key)) {
               setUnknownBinaryIntentKey(key);
               setFeedback('Position confirmed, but recovery storage could not be cleared. Recheck before another order.');
@@ -391,7 +396,7 @@ export default function BinaryPage() {
       const receivedIntentKey = payload.position && typeof payload.position === 'object'
         ? (payload.position as Record<string, unknown>).idempotencyKey : null;
       if (pendingBinaryIntent.current && receivedIntentKey === pendingBinaryIntent.current.key) {
-        if (!FINAL_BINARY_STATES.has(position.status)) lastSubmittedPositionId.current = position.id;
+        if (!FINAL_BINARY_STATES.has(position.status)) setTrackedPositionId(position.id);
         if (clearPendingEconomicIntent('binary-position', userId, pendingBinaryIntent.current.key)) {
           pendingBinaryIntent.current = null;
           setUnknownBinaryIntentKey(null);
@@ -410,7 +415,7 @@ export default function BinaryPage() {
           setSelectedResult(position);
           setSelectedChartTradeId((current) => current ?? (normalizePair(position.symbol) === chartPairRef.current ? position.id : null));
           setTab('HISTORY');
-          lastSubmittedPositionId.current = null;
+          setTrackedPositionId(null);
         }
       } else {
         setActivePositions((current) => [position, ...current.filter((item) => item.id !== position.id)]);
@@ -557,7 +562,7 @@ export default function BinaryPage() {
   // Permit an underfunded customer to request help, never an unfunded order.
   // Insufficient positive balance must open the funding dialog, not disable both trade actions.
   const reviewReady = !unknownBinaryIntentKey && (ready || fundingRequired);
-  const trackedPosition = activePositions.find((position) => position.id === lastSubmittedPositionId.current);
+  const trackedPosition = activePositions.find((position) => position.id === renderTrackedPositionId);
   const expiredOpenPosition = state === 'OPEN' && trackedPosition
     ? binaryPositionLabel(trackedPosition, now) === 'Settling'
     : false;
@@ -645,7 +650,7 @@ export default function BinaryPage() {
     }
     if (recovered) {
       const alreadySettled = terminalPositionIds.current.has(recovered.id);
-      if (!alreadySettled && !FINAL_BINARY_STATES.has(recovered.status)) lastSubmittedPositionId.current = recovered.id;
+      if (!alreadySettled && !FINAL_BINARY_STATES.has(recovered.status)) setTrackedPositionId(recovered.id);
       if (!clearPendingEconomicIntent('binary-position', userId, key)) {
         setUnknownBinaryIntentKey(key);
         setFeedback('Position confirmed, but recovery storage could not be cleared. Do not submit another order.');
@@ -710,7 +715,7 @@ export default function BinaryPage() {
         return;
       }
       const alreadySettled = terminalPositionIds.current.has(position.id);
-      if (!alreadySettled && !FINAL_BINARY_STATES.has(position.status)) lastSubmittedPositionId.current = position.id;
+      if (!alreadySettled && !FINAL_BINARY_STATES.has(position.status)) setTrackedPositionId(position.id);
       if (!clearPendingEconomicIntent('binary-position', userId, submittedKey!)) {
         setUnknownBinaryIntentKey(submittedKey);
         setFeedback('Position accepted, but recovery storage could not be cleared. Do not submit another order.');

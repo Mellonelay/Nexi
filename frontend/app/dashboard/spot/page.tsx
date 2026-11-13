@@ -1470,6 +1470,7 @@ function SpotPageBody({
         setStopPrice={setStopPrice} amount={amount} setAmount={setAmount} baseSymbol={baseSymbol} quoteSymbol={quoteSymbol} tpSlState={tpSlState}
         configureTpSl={configureTpSl} tp={tp} setTp={setTp} sl={sl} setSl={setSl} total={total} orderState={orderState}
         feedback={feedback} reviewReady={reviewReady} ready={ready} openReview={openReview}
+        unknownSpotIntentKey={unknownSpotIntentKey} recheckUnknownSpotOrder={recheckUnknownSpotOrder}
       />}
 
       {confirmationOpen && <SpotOrderReview
