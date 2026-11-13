@@ -570,6 +570,35 @@
         ]
       }
     },
+    "/communications/support/messages/by-intent": {
+      "get": {
+        "operationId": "CommunicationsController_supportMessageByIntent",
+        "parameters": [
+          {
+            "name": "idempotencyKey",
+            "required": true,
+            "in": "query",
+            "description": "Exact original support message request key, scoped to the authenticated customer.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Original owned support message or null when it is not yet persisted."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
     "/communications/support/messages": {
       "post": {
         "operationId": "CommunicationsController_supportMessage",
@@ -1558,6 +1587,89 @@
                 }
               }
             }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
+    "/communications/admin/operator-alerts": {
+      "get": {
+        "operationId": "CommunicationsController_operatorAlertsList",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
+    "/communications/admin/operator-alerts/preferences": {
+      "get": {
+        "operationId": "CommunicationsController_operatorAlertPreferences",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Communications"
+        ]
+      },
+      "patch": {
+        "operationId": "CommunicationsController_updateOperatorAlertPreferences",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Communications"
+        ]
+      }
+    },
+    "/communications/admin/operator-alerts/{id}/read": {
+      "patch": {
+        "operationId": "CommunicationsController_markOperatorAlertRead",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
           }
         },
         "security": [
@@ -3473,6 +3585,24 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "correlationId",
+            "required": false,
+            "in": "query",
+            "description": "Exact owned Activity correlation ID; filtered before pagination.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "referenceId",
+            "required": false,
+            "in": "query",
+            "description": "Exact owned Activity reference ID; filtered before pagination.",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -4355,6 +4485,34 @@
         ]
       }
     },
+    "/spot/orders/by-intent": {
+      "get": {
+        "operationId": "SpotController_getOrderByIntent",
+        "parameters": [
+          {
+            "name": "idempotencyKey",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Owned Spot order matched by exact idempotency key, or null if not yet materialized."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Spot Trading"
+        ]
+      }
+    },
     "/spot/orders/open": {
       "get": {
         "operationId": "SpotController_getOpenOrders",
@@ -4390,17 +4548,84 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
+            "description": "Owned orders with exact decimal execution aggregates from matched trades; order price and initial reserve are not executed quote values.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "array",
                   "items": {
-                    "type": "object"
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "amount",
+                      "executedBase",
+                      "executedQuote"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "amount": {
+                        "type": "string",
+                        "description": "Requested base quantity."
+                      },
+                      "price": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Order limit or protection price, not average execution price."
+                      },
+                      "executedBase": {
+                        "type": "string",
+                        "description": "Matched base quantity as an exact decimal."
+                      },
+                      "executedQuote": {
+                        "type": "string",
+                        "description": "Matched quote notional before fees as an exact decimal."
+                      },
+                      "averageExecutionPrice": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Matched quote divided by executed base, or null with no fills."
+                      },
+                      "reservedAmount": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Initial reserved amount, not final execution cost."
+                      }
+                    },
+                    "additionalProperties": true
                   }
                 }
               }
             }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Spot Trading"
+        ]
+      }
+    },
+    "/spot/orders/{orderId}": {
+      "get": {
+        "operationId": "SpotController_getOwnedOrder",
+        "parameters": [
+          {
+            "name": "orderId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact owned Spot order state, or null when no such owned order exists."
           }
         },
         "security": [
@@ -4576,6 +4801,54 @@
                 }
               }
             }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Margin Trading"
+        ]
+      }
+    },
+    "/spot/margin/positions/{positionId}/exit-intent": {
+      "get": {
+        "operationId": "MarginController_getExitIntent",
+        "parameters": [
+          {
+            "name": "positionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "idempotencyKey",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "operation",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "close",
+                "cancel-pending"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
           }
         },
         "security": [
@@ -5647,6 +5920,41 @@
         ]
       }
     },
+    "/loans/applications/by-intent": {
+      "get": {
+        "operationId": "LoansController_getApplicationByIntent",
+        "parameters": [
+          {
+            "name": "idempotencyKey",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Loans"
+        ]
+      }
+    },
     "/loans/my/{userId}": {
       "get": {
         "operationId": "LoansController_getMyLoans",
@@ -6170,6 +6478,8 @@
                           "exposure.view",
                           "wallets.view",
                           "ledger.view",
+                          "ledger.adjust",
+                          "ledger.freeze",
                           "deposits.view",
                           "deposits.confirm",
                           "withdrawals.view",
@@ -6190,6 +6500,7 @@
                           "learn.publish",
                           "notifications.view",
                           "notifications.send",
+                          "operator_alerts.view",
                           "admins.view",
                           "admins.edit",
                           "roles.view",
@@ -6459,6 +6770,8 @@
                             "exposure.view",
                             "wallets.view",
                             "ledger.view",
+                            "ledger.adjust",
+                            "ledger.freeze",
                             "deposits.view",
                             "deposits.confirm",
                             "withdrawals.view",
@@ -6479,6 +6792,7 @@
                             "learn.publish",
                             "notifications.view",
                             "notifications.send",
+                            "operator_alerts.view",
                             "admins.view",
                             "admins.edit",
                             "roles.view",
@@ -6615,6 +6929,26 @@
             "schema": {
               "minLength": 1,
               "maxLength": 256,
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetExact",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minLength": 1,
+              "maxLength": 256,
+              "type": "string"
+            }
+          },
+          {
+            "name": "actionPrefix",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minLength": 1,
+              "maxLength": 128,
               "type": "string"
             }
           },
@@ -7307,6 +7641,34 @@
         ]
       }
     },
+    "/admin/financial-corrections/options/{userId}": {
+      "get": {
+        "operationId": "AdminController_getFinancialCorrectionOptions",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
     "/admin/financial-corrections": {
       "post": {
         "operationId": "AdminController_applyFinancialCorrection",
@@ -7420,6 +7782,51 @@
         "parameters": [],
         "responses": {
           "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/users/{id}/ledger-freeze": {
+      "post": {
+        "operationId": "AdminController_setUserLedgerFreeze",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LedgerFreezeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
             "description": "",
             "content": {
               "application/json": {
@@ -9660,6 +10067,32 @@
         ]
       }
     },
+    "/admin/loan-assets": {
+      "get": {
+        "operationId": "AdminController_getLoanAssets",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
     "/admin/loan-plans/{id}": {
       "patch": {
         "operationId": "AdminController_updateLoanPlan",
@@ -9859,6 +10292,66 @@
         "parameters": [],
         "responses": {
           "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
+    "/admin/binary/global-config": {
+      "get": {
+        "operationId": "AdminController_getBinaryGlobalConfiguration",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Control Plane"
+        ]
+      },
+      "post": {
+        "operationId": "AdminController_updateBinaryGlobalConfiguration",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBinaryGlobalConfigurationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
             "description": "",
             "content": {
               "application/json": {
@@ -10171,6 +10664,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "userCode",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -10210,21 +10711,19 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "userCode",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": "VIP customer state with qualification progress, next tier, and first-deposit referral decision."
           }
         },
         "security": [
@@ -10397,6 +10896,164 @@
         ]
       }
     },
+    "/admin/vip/policy": {
+      "get": {
+        "operationId": "ReferralVipAdminController_vipPolicy",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Referral and VIP"
+        ]
+      },
+      "post": {
+        "operationId": "ReferralVipAdminController_upsertVipPolicy",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVipPolicyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Referral and VIP"
+        ]
+      }
+    },
+    "/admin/referrals/reward-policy": {
+      "get": {
+        "operationId": "ReferralVipAdminController_referralRewardPolicy",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Referral and VIP"
+        ]
+      },
+      "post": {
+        "operationId": "ReferralVipAdminController_upsertReferralRewardPolicy",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReferralRewardPolicyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Referral and VIP"
+        ]
+      }
+    },
+    "/admin/deposits/invalidate": {
+      "post": {
+        "operationId": "ReferralVipAdminController_invalidateExternalDeposit",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvalidateExternalDepositDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Invalidate an external deposit and recover its credit and any referral reward through audited Ledger corrections.",
+        "tags": [
+          "Admin Referral and VIP"
+        ]
+      }
+    },
+    "/admin/vip/override/clear": {
+      "post": {
+        "operationId": "ReferralVipAdminController_clearVipOverride",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClearVipOverrideDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Referral and VIP"
+        ]
+      }
+    },
     "/admin/vip/assign": {
       "post": {
         "operationId": "ReferralVipAdminController_assign",
@@ -10487,6 +11144,63 @@
         ]
       }
     },
+    "/financial/withdrawal-capabilities": {
+      "get": {
+        "operationId": "FinancialOperationsController_withdrawalCapabilities",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Backend-configured enabled withdrawal asset/networks and string-exact limits and fees. Read-only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "asset",
+                      "network",
+                      "networkName",
+                      "minWithdrawal",
+                      "maxWithdrawal",
+                      "withdrawalFee"
+                    ],
+                    "properties": {
+                      "asset": {
+                        "type": "string"
+                      },
+                      "network": {
+                        "type": "string"
+                      },
+                      "networkName": {
+                        "type": "string"
+                      },
+                      "minWithdrawal": {
+                        "type": "string"
+                      },
+                      "maxWithdrawal": {
+                        "type": "string"
+                      },
+                      "withdrawalFee": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Financial Operations"
+        ]
+      }
+    },
     "/financial/withdrawals": {
       "post": {
         "operationId": "FinancialOperationsController_requestWithdrawal",
@@ -10524,7 +11238,17 @@
       },
       "get": {
         "operationId": "FinancialOperationsController_withdrawals",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "requestKey",
+            "required": false,
+            "in": "query",
+            "description": "Exact owned withdrawal request key; filter before result limit.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -10734,7 +11458,17 @@
       },
       "get": {
         "operationId": "FinancialOperationsController_transfers",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "idempotencyKey",
+            "required": false,
+            "in": "query",
+            "description": "Exact owned transfer key; filter before result limit.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -11314,7 +12048,17 @@
       },
       "get": {
         "operationId": "FinancialOperationsController_getDepositClaims",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "idempotencyKey",
+            "required": false,
+            "in": "query",
+            "description": "Exact owned claim key; filter before result limit.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -14321,9 +15065,16 @@
             "minLength": 8,
             "maxLength": 128
           },
-          "governanceCommandId": {
+          "scope": {
             "type": "string",
-            "format": "uuid"
+            "enum": [
+              "MAIN",
+              "MARGIN",
+              "SPOT",
+              "BINARY",
+              "FINANCE"
+            ],
+            "pattern": "^(MAIN|SPOT|MARGIN|BINARY|FINANCE)$"
           },
           "reason": {
             "type": "string",
@@ -14337,7 +15088,6 @@
           "amount",
           "direction",
           "idempotencyKey",
-          "governanceCommandId",
           "reason"
         ]
       },
@@ -14394,6 +15144,29 @@
           "target",
           "mode",
           "expiresAt",
+          "reason",
+          "idempotencyKey"
+        ]
+      },
+      "LedgerFreezeDto": {
+        "type": "object",
+        "properties": {
+          "frozen": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 500
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "frozen",
           "reason",
           "idempotencyKey"
         ]
@@ -15047,6 +15820,12 @@
             "minLength": 1,
             "maxLength": 128
           },
+          "currency": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 20,
+            "pattern": "^[A-Z0-9._-]+$"
+          },
           "durationDays": {
             "type": "number",
             "minimum": 1
@@ -15079,6 +15858,7 @@
         },
         "required": [
           "name",
+          "currency",
           "durationDays",
           "interestRate",
           "minAmount",
@@ -15094,6 +15874,12 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 128
+          },
+          "currency": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 20,
+            "pattern": "^[A-Z0-9._-]+$"
           },
           "durationDays": {
             "type": "number",
@@ -15143,6 +15929,64 @@
         "required": [
           "idempotencyKey",
           "reason"
+        ]
+      },
+      "BinaryGlobalDurationDto": {
+        "type": "object",
+        "properties": {
+          "durationSeconds": {
+            "type": "number"
+          },
+          "payoutRate": {
+            "type": "number",
+            "minimum": 1
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "durationSeconds",
+          "payoutRate",
+          "enabled"
+        ]
+      },
+      "UpdateBinaryGlobalConfigurationDto": {
+        "type": "object",
+        "properties": {
+          "minStake": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9][0-9]*)(?:[.][0-9]{1,18})?$"
+          },
+          "maxStake": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9][0-9]*)(?:[.][0-9]{1,18})?$"
+          },
+          "durations": {
+            "minItems": 5,
+            "maxItems": 5,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BinaryGlobalDurationDto"
+            }
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 500
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "minStake",
+          "maxStake",
+          "durations",
+          "reason",
+          "idempotencyKey"
         ]
       },
       "UpdateBinaryConfigurationDto": {
@@ -15261,6 +16105,116 @@
           "level",
           "name",
           "threshold",
+          "reason"
+        ]
+      },
+      "UpdateVipPolicyDto": {
+        "type": "object",
+        "properties": {
+          "baseAsset": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 20
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "baseAsset",
+          "reason"
+        ]
+      },
+      "UpdateReferralRewardPolicyDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "FIXED",
+              "PERCENT"
+            ],
+            "minLength": 1,
+            "maxLength": 16
+          },
+          "value": {
+            "type": "string",
+            "nullable": true,
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "asset": {
+            "type": "string",
+            "nullable": true,
+            "minLength": 2,
+            "maxLength": 20
+          },
+          "minimumFirstDeposit": {
+            "type": "string",
+            "nullable": true,
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "enabled",
+          "mode",
+          "reason"
+        ]
+      },
+      "InvalidateExternalDepositDto": {
+        "type": "object",
+        "properties": {
+          "sourceType": {
+            "type": "string",
+            "enum": [
+              "DEPOSIT",
+              "DEPOSIT_CLAIM"
+            ]
+          },
+          "sourceId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "sourceType",
+          "sourceId",
+          "reason"
+        ]
+      },
+      "ClearVipOverrideDto": {
+        "type": "object",
+        "properties": {
+          "userCode": {
+            "type": "number",
+            "minimum": 100000,
+            "maximum": 999999
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "userCode",
           "reason"
         ]
       },

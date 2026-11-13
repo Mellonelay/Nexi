@@ -381,6 +381,7 @@ export class CommunicationsController {
     return this.operatorAlerts.markRead(req.user.userId, id);
   }
 
+  @ApiBearerAuth()
   @Get("admin/learn/articles")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
   @RequireAuthSurface("ADMIN")
