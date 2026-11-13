@@ -608,7 +608,7 @@ function LoanApplicationPanel({
     <Panel>
       <PanelHeading
         title="Application review"
-        description="Enter an application with an approved collateral document reference."
+        description="Submit collateral details and a document reference for Admin review."
         action={<FileText size={18} className="text-[#48C0CC]" />}
       />
       <form onSubmit={onSubmit} className="space-y-4">

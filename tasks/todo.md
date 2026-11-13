@@ -1,4 +1,4 @@
-## SOURCE PROGRESS 2026-11-13: Original 113 source-path and graph candidate map recorded; two isolated Public/Admin source-only UI fixes integrated; prior source and Fallow work preserved. Full semantic source closure remains unproven. Exact Loan collateral reference-approval source authority needs owner policy. See tasks/evidence/NEXI_SOURCE_RECONCILIATION_20261113.md. No tests/builds/deploy.
+## SOURCE HANDOFF 2026-11-13 (latest owner decision): Source work is owner-declared closed/frozen for the next Doctor/framework verification phase. Loan document authority is resolved: applicant supplies a reference and Admin reviews it; a separate approved-document registry is NOT a requirement. Source evidence and remaining unknowns are documented at tasks/evidence/NEXI_SOURCE_RECONCILIATION_20261113.md. Earlier unchecked research/evidence tasks below are not automatically missing source features. Doctor/build/production outcomes are NOT yet claimed.
 
 ---
 

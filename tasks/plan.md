@@ -1,4 +1,4 @@
-## SOURCE EXECUTION 2026-11-13: Reused Nov1–12 receipts and prior implementations; parallel disjoint Public Spot and Admin Loans display changes integrated serially. Current original 113 owner paths exist and are graph-indexed but full criterion semantics remain insufficiently proven. Loan collateral-approved-reference policy is unresolved. See tasks/evidence/NEXI_SOURCE_RECONCILIATION_20261113.md; source-first rule still controls.
+## TRANSITION 2026-11-13 (latest owner decision): Owner declares source implementation closed/frozen and directs NestJS Doctor, React Doctor, framework compatibility and subsequent build/deployment-readiness verification. Loan collateral submission→Admin review policy is resolved without inventing a separate approved-document registry. Current source and scoped proof are in tasks/evidence/NEXI_SOURCE_RECONCILIATION_20261113.md; source freeze is not proof of 113 acceptance or runtime/deployment. Preserve earlier unfinished evidence checkboxes below as historical, not a new implementation queue.
 
 ---
 
