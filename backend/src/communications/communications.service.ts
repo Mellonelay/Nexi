@@ -8,7 +8,7 @@ import {
   ServiceUnavailableException,
 } from "@nestjs/common";
 import { Role, Prisma } from "../prisma/d1-client";
-import { createHash } from "crypto";
+import { createHash, randomUUID } from "crypto";
 import { D1PrismaService } from "../d1/d1-prisma.service";
 import { RedisService } from "../redis/redis.service";
 import { EventOutboxService } from "../events/event-outbox.service";
@@ -26,6 +26,8 @@ type ResolveMessageModerationInput = {
 };
 
 type LearnArticleUpdateData = {
+  reason?: string;
+  idempotencyKey?: string;
   title?: string;
   body?: string;
   summary?: string;
@@ -51,7 +53,6 @@ type LearnArticleUpdateContext = {
   id: string;
   data: LearnArticleUpdateData;
   next: any;
-  revision: number;
   now: string;
 };
 
@@ -779,7 +780,9 @@ export class CommunicationsService {
     });
   }
 
-  private async createAndPublishNotification(data: { userId: string; type: string; title: string; body: string; idempotencyKey: string; reason?: string }, source: "admin" | "system") {
+  private async createAndPublishNotification(data: { userId: string; type: string; title: string; body: string; idempotencyKey: string; reason?: string }, source: "admin" | "system", adminId?: string) {
+    if (adminId && !data.reason?.trim())
+      throw new BadRequestException("Admin notification requires an audit reason");
     const notificationKey = source === "system" ? `notification:system:${this.id("source-event", data.idempotencyKey)}` : data.idempotencyKey;
     const id = this.id(`${source}-notification`, notificationKey);
     let notification: any;
@@ -791,6 +794,7 @@ export class CommunicationsService {
         body: data.body,
         idempotencyKey: notificationKey,
         eventType: "NOTIFICATION_SENT",
+        ...(adminId ? { adminId, reason: data.reason } : {}),
     });
     notification = await this.database.notification.findUnique({ where: { id } });
     if (!notification) throw new BadRequestException("Notification was not materialized");
@@ -801,11 +805,11 @@ export class CommunicationsService {
       throw new BadRequestException("Notification idempotency key was already used");
     }
     await this.publishRealtimeEvent("NOTIFICATION_SENT", id, { userId: data.userId, type: data.type });
-    return notification;
+    return adminId ? { ...notification, auditId: id } : notification;
   }
 
-  async sendAdminNotification(data: { userId: string; type: string; title: string; body: string; idempotencyKey: string; reason?: string }) {
-    return this.createAndPublishNotification(data, "admin");
+  async sendAdminNotification(data: { userId: string; type: string; title: string; body: string; idempotencyKey: string; reason?: string }, adminId?: string) {
+    return this.createAndPublishNotification(data, "admin", adminId);
   }
 
   async sendSystemNotification(data: { userId: string; type: string; title: string; body: string; idempotencyKey: string }) {
@@ -927,30 +931,26 @@ export class CommunicationsService {
     reason?: string;
     idempotencyKey?: string;
   }) {
-    const id = data.idempotencyKey ? this.id("announcement", data.idempotencyKey) : undefined;
-    const { idempotencyKey: _idempotencyKey, reason: _reason, startsAt, endsAt, ...announcementData } = data;
-    const announcement = await this.database.announcement.upsert({
-      where: { id: id ?? this.id("announcement", `${data.title}:${data.body}`) },
-      update: {},
-      create: {
-        ...(id ? { id } : {}),
-        ...announcementData,
-        startsAt: startsAt ? new Date(startsAt) : undefined,
-        endsAt: endsAt ? new Date(endsAt) : undefined,
-        targeting: data.targeting as Prisma.InputJsonValue | undefined,
-        localizations:
-          data.localizations === undefined
-            ? undefined
-            : JSON.stringify(data.localizations),
-      },
+    const key = data.idempotencyKey ?? randomUUID();
+    const id = this.id("announcement", key);
+    const values: Record<string, string | number | null> = {
+      title: data.title,
+      body: data.body,
+      targeting: data.targeting === undefined ? null : JSON.stringify(data.targeting),
+      localizations: data.localizations === undefined ? null : JSON.stringify(data.localizations),
+      published: data.published ? 1 : 0,
+      pinned: data.pinned ? 1 : 0,
+      pinOrder: data.pinOrder ?? 0,
+      startsAt: data.startsAt ? new Date(data.startsAt).getTime() : null,
+      endsAt: data.endsAt ? new Date(data.endsAt).getTime() : null,
+    };
+    const intentHash = createHash("sha256")
+      .update(JSON.stringify({ values, reason: data.reason ?? null })).digest("hex");
+    await this.d1Communications.mutateAnnouncementAtomic({
+      id, key, intentHash, mode: "create", values, published: Boolean(data.published),
     });
-    await this.durableEvent(
-      "announcement:" + announcement.id,
-      "ANNOUNCEMENT",
-      announcement.id,
-      "ANNOUNCEMENT_CREATED",
-      { published: announcement.published },
-    );
+    const announcement = await this.database.announcement.findUnique({ where: { id } });
+    if (!announcement) throw new ServiceUnavailableException("Announcement creation not materialized");
     return announcement;
   }
 
@@ -983,19 +983,22 @@ export class CommunicationsService {
     if (data.pinOrder !== undefined) update.pinOrder = data.pinOrder;
     if (data.startsAt !== undefined) update.startsAt = data.startsAt ? new Date(data.startsAt) : null;
     if (data.endsAt !== undefined) update.endsAt = data.endsAt ? new Date(data.endsAt) : null;
-    const announcement = await this.database.announcement.update({ where: { id }, data: update });
-    const eventType = !current.published && announcement.published
-      ? "ANNOUNCEMENT_PUBLISHED"
-      : current.published && !announcement.published
-        ? "ANNOUNCEMENT_UNPUBLISHED"
-        : "ANNOUNCEMENT_UPDATED";
-    await this.durableEvent(
-      `announcement:${id}:${data.idempotencyKey}`,
-      "ANNOUNCEMENT",
-      id,
-      eventType,
-      { published: announcement.published },
-    );
+    const values: Record<string, string | number | null> = {};
+    for (const [field, value] of Object.entries(update)) {
+      values[field] = value instanceof Date ? value.getTime() :
+        value === null ? null : typeof value === "boolean" ? Number(value) :
+        typeof value === "number" || typeof value === "string" ? value :
+        JSON.stringify(value);
+    }
+    const intentHash = createHash("sha256")
+      .update(JSON.stringify({ id, values, reason: data.reason ?? null })).digest("hex");
+    // The gateway derives the event type and resulting publication state
+    // from the row held by SQLite's BEGIN IMMEDIATE transaction.
+    await this.d1Communications.mutateAnnouncementAtomic({
+      id, key: data.idempotencyKey, intentHash, mode: "update", values,
+    });
+    const announcement = await this.database.announcement.findUnique({ where: { id } });
+    if (!announcement) throw new NotFoundException("Announcement not found");
     return announcement;
   }
 
@@ -1087,27 +1090,66 @@ export class CommunicationsService {
     return articles.map((article) => this.localizedContent(article));
   }
 
-  async createLearnCategory(data: {
+  async createLearnCategory(adminId: string, data: {
     slug: string;
     name: string;
     description?: string;
     sortOrder?: number;
     status?: string;
+    reason: string;
+    idempotencyKey: string;
   }) {
     const status = data.status ?? "ACTIVE";
     if (!["ACTIVE", "INACTIVE"].includes(status))
       throw new BadRequestException("Learn category status is invalid");
-    const category = await this.database.learnCategory.create({
-      data: { ...data, status },
+    if (!data.reason.trim() || !data.idempotencyKey)
+      throw new BadRequestException("Category creation requires audit reason and idempotency key");
+    const id = this.id("learn-category", data.idempotencyKey);
+    const auditId = this.id("learn-category-audit:" + adminId, data.idempotencyKey);
+    const eventKey = "learn-category:" + id;
+    const description = data.description ?? null;
+    const sortOrder = data.sortOrder ?? 0;
+    const intentHash = createHash("sha256").update(JSON.stringify({
+      slug: data.slug, name: data.name, description, sortOrder,
+      status, reason: data.reason.trim(), adminId,
+    })).digest("hex");
+    const details = JSON.stringify({
+      reason: data.reason.trim(), idempotencyKey: data.idempotencyKey,
+      slug: data.slug, name: data.name, description, sortOrder, status,
     });
-    await this.durableEvent(
-      "learn-category:" + category.id,
-      "LEARN_CATEGORY",
-      category.id,
-      "LEARN_CATEGORY_CREATED",
-      { slug: category.slug, status: category.status },
-    );
-    return category;
+    const payload = JSON.stringify({ slug: data.slug, status, intentHash });
+    // The deterministic original intent, category and durable notification are
+    // committed by the existing single SQLite writer. An incompatible retry
+    // fails while the transaction is open.
+    try {
+      await this.d1.atomicBatch([
+        {
+          sql: 'INSERT OR IGNORE INTO "LearnCategory" ("id","slug","name","description","sortOrder","status","createdAt","updatedAt") VALUES (?,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)',
+          params: [id, data.slug, data.name, description, sortOrder, status],
+        },
+        {
+          sql: 'INSERT OR IGNORE INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") SELECT ?,?,\'LEARN_CATEGORY_CREATED\',?,?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "LearnCategory" WHERE "id"=?)',
+          params: [auditId, adminId, id, details, id],
+        },
+        {
+          sql: 'INSERT OR IGNORE INTO "EventOutbox" ("id","idempotencyKey","aggregateType","aggregateId","eventType","eventVersion","correlationId","payload","state","availableAt","createdAt","updatedAt") SELECT ?,?,\'LEARN_CATEGORY\',?,\'LEARN_CATEGORY_CREATED\',1,?,?,\'PENDING\',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "LearnCategory" WHERE "id"=? AND "slug"=? AND "name"=? AND COALESCE("description",\'\')=COALESCE(?,\'\') AND "sortOrder"=? AND "status"=?)',
+          params: [this.id("learn-category-outbox", id), eventKey, id, eventKey,
+            payload, id, data.slug, data.name, description, sortOrder, status],
+        },
+        {
+          sql: 'INSERT INTO "LearnCategory" ("id","slug","name") SELECT ?,NULL,NULL WHERE NOT EXISTS (SELECT 1 FROM "EventOutbox" WHERE "idempotencyKey"=? AND "aggregateType"=\'LEARN_CATEGORY\' AND "aggregateId"=? AND "eventType"=\'LEARN_CATEGORY_CREATED\' AND json_valid("payload") AND json_extract("payload",\'$.intentHash\')=?) OR NOT EXISTS (SELECT 1 FROM "AdminAuditLog" WHERE "id"=? AND "adminId"=? AND "action"=\'LEARN_CATEGORY_CREATED\' AND "target"=? AND "details"=?)',
+          params: ["learn-category-intent-guard:" + randomUUID(), eventKey, id,
+            intentHash, auditId, adminId, id, details],
+        },
+      ]);
+    } catch (error) {
+      if (error instanceof Error && /NOT NULL constraint failed: LearnCategory\.(slug|name)/i.test(error.message))
+        throw new ConflictException("Learn category key or slug belongs to another request");
+      throw error;
+    }
+    const category = await this.database.learnCategory.findUnique({ where: { id } });
+    if (!category) throw new ServiceUnavailableException("Learn category creation not materialized");
+    return { ...category, auditId };
   }
 
   async updateLearnCategoryStatus(
@@ -1202,74 +1244,114 @@ export class CommunicationsService {
       throw new BadRequestException("Learn category idempotency key was already used");
   }
 
-  async createLearn(data: LearnArticleCreateData) {
+  private learnOriginalIntentHash(data: LearnArticleCreateData | LearnArticleUpdateData, adminId?: string): string {
+    const values = Object.keys(data).filter((key) => key !== "reason" && key !== "idempotencyKey")
+      .sort().map((key) => [key, (data as Record<string, unknown>)[key]]);
+    return createHash("sha256").update(JSON.stringify({
+      values, reason: data.reason?.trim() ?? null,
+      key: data.idempotencyKey ?? null, ...(adminId ? { adminId } : {}),
+    })).digest("hex");
+  }
+
+  private async existingLearnIntent(
+    eventKey: string, articleId: string, type: string, expectedHash: string,
+  ): Promise<boolean> {
+    const previous = await this.database.eventOutbox.findUnique({
+      where: { idempotencyKey: eventKey },
+    });
+    if (!previous) return false;
+    let payload: Record<string, unknown> | null = null;
+    try { payload = JSON.parse(previous.payload); } catch { /* fail closed */ }
+    if (previous.aggregateId !== articleId || previous.aggregateType !== "LEARN_ARTICLE" ||
+      previous.eventType !== type || payload?.intentHash !== expectedHash) {
+      throw new ConflictException("Learn idempotency key belongs to a different original request");
+    }
+    return true;
+  }
+
+  async createLearn(data: LearnArticleCreateData, adminId?: string) {
     const status = this.learnStatus(data.status);
     const scheduledAt = this.learnDate(data.scheduledAt);
     if (status === "SCHEDULED" && !scheduledAt)
-      throw new BadRequestException(
-        "Scheduled Learn articles require scheduledAt",
-      );
-    const publishedAt = status === "PUBLISHED" ? new Date() : undefined;
+      throw new BadRequestException("Scheduled Learn articles require scheduledAt");
     const articleId = this.id("learn-article", data.slug);
-    const revisionId = this.id(`learn-revision:${articleId}`, "1");
+    const eventKey = "learn-article:create:" + (data.idempotencyKey ?? articleId);
+    const intentHash = data.idempotencyKey ? this.learnOriginalIntentHash(data, adminId) : null;
+    if (intentHash && await this.existingLearnIntent(eventKey, articleId, "LEARN_ARTICLE_CREATED", intentHash)) {
+      const replay = await this.database.learnArticle.findUnique({
+        where: { id: articleId }, include: this.learnInclude(),
+      });
+      if (!replay) throw new ServiceUnavailableException("Original Learn article no longer exists");
+      return replay;
+    }
+    const publishedAt = status === "PUBLISHED" ? new Date() : undefined;
+    const revisionId = this.id("learn-revision:" + articleId, "1");
     const now = new Date().toISOString();
     const statements = this.learnCreationStatements({
-      data,
-      articleId,
-      revisionId,
-      status,
-      scheduledAt,
-      publishedAt,
-      now,
+      data, articleId, revisionId, status, scheduledAt, publishedAt, now,
     });
-    await this.d1.atomicBatch(statements);
+    this.appendLearnEvent(statements, eventKey, articleId, "LEARN_ARTICLE_CREATED",
+      { status, slug: data.slug, ...(intentHash ? { intentHash } : {}) });
+    const auditId = adminId && data.idempotencyKey && data.reason
+      ? this.appendLearnAdminAudit(statements, adminId, articleId, eventKey,
+          "LEARN_ARTICLE_CREATED", data.reason, intentHash)
+      : null;
+    try {
+      await this.d1.atomicBatch(statements);
+    } catch (error) {
+      // A concurrent identical command may commit after our initial read;
+      // its unique outbox key is the authoritative reconciliation receipt.
+      if (!intentHash || !(await this.existingLearnIntent(
+        eventKey, articleId, "LEARN_ARTICLE_CREATED", intentHash,
+      ))) throw error;
+    }
     const article = await this.database.learnArticle.findUnique({
-      where: { id: articleId },
-      include: this.learnInclude(),
+      where: { id: articleId }, include: this.learnInclude(),
     });
-    if (!article)
-      throw new BadRequestException("Learn article was not materialized");
-    await this.durableEvent(
-      "learn-article:create:" + article.id,
-      "LEARN_ARTICLE",
-      article.id,
-      "LEARN_ARTICLE_CREATED",
-      { status: article.status, slug: article.slug },
-    );
-    return article;
+    if (!article) throw new ServiceUnavailableException("Learn article not materialized");
+    return auditId ? { ...article, auditId } : article;
   }
 
-  async updateLearn(id: string, data: LearnArticleUpdateData) {
+  async updateLearn(id: string, data: LearnArticleUpdateData, adminId?: string) {
+    const eventKey = "learn-article:update:" + id + ":" +
+      (data.idempotencyKey ?? new Date().toISOString());
+    const intentHash = data.idempotencyKey ? this.learnOriginalIntentHash(data, adminId) : null;
+    if (intentHash && await this.existingLearnIntent(eventKey, id, "LEARN_ARTICLE_UPDATED", intentHash)) {
+      const replay = await this.database.learnArticle.findUnique({
+        where: { id }, include: this.learnInclude(),
+      });
+      if (!replay) throw new ServiceUnavailableException("Original Learn article no longer exists");
+      return replay;
+    }
     const current = await this.database.learnArticle.findUnique({ where: { id } });
     if (!current) throw new NotFoundException("Learn article not found");
     const next = this.resolveLearnUpdate(current, data);
-    const latest = await this.database.learnArticleRevision.findFirst({
-      where: { articleId: id },
-      orderBy: { revision: "desc" },
-      select: { revision: true },
-    });
     const now = new Date().toISOString();
-    await this.d1.atomicBatch(this.learnUpdateStatements({
-      id, data, next, revision: (latest?.revision ?? 0) + 1, now,
-    }));
+    const statements = this.learnUpdateStatements({ id, data, next, now });
+    this.appendLearnEvent(statements, eventKey, id, "LEARN_ARTICLE_UPDATED",
+      { status: next.status, slug: current.slug, ...(intentHash ? { intentHash } : {}) });
+    // The original-key INSERT must run first under BEGIN IMMEDIATE.
+    // A concurrent retry fails the unique outbox key before any content,
+    // revision or relation mutation; durable readback resolves its result.
+    const originalEvent = statements.pop();
+    if (!originalEvent) throw new ServiceUnavailableException("Learn event command missing");
+    statements.unshift(originalEvent);
+    const auditId = adminId && data.idempotencyKey && data.reason
+      ? this.appendLearnAdminAudit(statements, adminId, id, eventKey,
+          "LEARN_ARTICLE_UPDATED", data.reason, intentHash)
+      : null;
+    try {
+      await this.d1.atomicBatch(statements);
+    } catch (error) {
+      if (!intentHash || !(await this.existingLearnIntent(
+        eventKey, id, "LEARN_ARTICLE_UPDATED", intentHash,
+      ))) throw error;
+    }
     const article = await this.database.learnArticle.findUnique({
-      where: { id },
-      include: this.learnInclude(),
+      where: { id }, include: this.learnInclude(),
     });
-    if (!article)
-      throw new BadRequestException("Learn article was not materialized");
-    const updatedAt =
-      article.updatedAt instanceof Date
-        ? article.updatedAt.toISOString()
-        : new Date(article.updatedAt).toISOString();
-    await this.durableEvent(
-      "learn-article:update:" + article.id + ":" + updatedAt,
-      "LEARN_ARTICLE",
-      article.id,
-      "LEARN_ARTICLE_UPDATED",
-      { status: article.status, slug: article.slug },
-    );
-    return article;
+    if (!article) throw new ServiceUnavailableException("Learn article not materialized");
+    return auditId ? { ...article, auditId } : article;
   }
 
   private resolveLearnUpdate(current: any, data: LearnArticleUpdateData) {
@@ -1323,7 +1405,7 @@ export class CommunicationsService {
   private learnUpdateStatements(
     input: LearnArticleUpdateContext,
   ): D1BridgeBatchStatement[] {
-    const { id, data, next, revision, now } = input;
+    const { id, data, next, now } = input;
     const statements: D1BridgeBatchStatement[] = [
       {
         sql: 'UPDATE "LearnContent" SET "title"=?,"body"=?,"summary"=?,"localizations"=?,"status"=?,"attachments"=?,"categoryId"=?,"scheduledAt"=?,"publishedAt"=?,"archivedAt"=?,"updatedAt"=? WHERE "id"=?',
@@ -1336,9 +1418,11 @@ export class CommunicationsService {
         ],
       },
       {
-        sql: 'INSERT INTO "LearnArticleRevision" ("id","articleId","revision","title","body","summary","localizations","status","attachments","scheduledAt","publishedAt","createdAt") VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
+        // Revision is allocated under SQLite's BEGIN IMMEDIATE writer lock,
+        // avoiding the stale pre-read MAX(revision) race across admins.
+        sql: 'INSERT INTO "LearnArticleRevision" ("id","articleId","revision","title","body","summary","localizations","status","attachments","scheduledAt","publishedAt","createdAt") SELECT ?,?,COALESCE((SELECT MAX("revision") FROM "LearnArticleRevision" WHERE "articleId"=?),0)+1,?,?,?,?,?,?,?,?,?',
         params: [
-          this.id("learn-revision:" + id, String(revision)), id, revision,
+          randomUUID(), id, id,
           next.title, next.body, next.summary, next.localizations, next.status,
           this.learnStoredValue(next.attachments),
           next.scheduledAt?.toISOString() ?? null,
@@ -1351,18 +1435,68 @@ export class CommunicationsService {
     return statements;
   }
 
-  async publishLearn(id: string, idempotencyKey?: string) {
-    const article = await this.updateLearn(id, { status: "PUBLISHED" });
-    if (idempotencyKey) {
-      await this.durableEvent(
-        `learn-article:publish:${id}:${idempotencyKey}`,
-        "LEARN_ARTICLE",
-        id,
-        "LEARN_ARTICLE_PUBLISHED",
-        { status: article.status, slug: article.slug },
-      );
+  async publishLearn(id: string, idempotencyKey?: string, adminId?: string, reason?: string) {
+    if (adminId && !reason?.trim())
+      throw new BadRequestException("Learn publication requires an audit reason");
+    const current = await this.database.learnArticle.findUnique({ where: { id } });
+    if (!current) throw new NotFoundException("Learn article not found");
+    const eventKey = "learn-article:publish:" + id + ":" + (idempotencyKey ?? randomUUID());
+    const eventId = randomUUID();
+    const now = new Date().toISOString();
+    const eventPayload = JSON.stringify({
+      status: "PUBLISHED", slug: current.slug,
+      ...(adminId ? { adminId, reason: reason?.trim() } : {}),
+    });
+    // The publish intent, article transition, revision and both durable
+    // event envelopes must commit together. Replayed keys cannot mutate.
+    const newEvent = 'EXISTS (SELECT 1 FROM "EventOutbox" WHERE "id"=? AND "idempotencyKey"=?)';
+    const statements: D1BridgeBatchStatement[] = [
+      {
+        sql: 'INSERT OR IGNORE INTO "EventOutbox" ("id","idempotencyKey","aggregateType","aggregateId","eventType","eventVersion","correlationId","payload","state","availableAt","createdAt","updatedAt") SELECT ?,?,\'LEARN_ARTICLE\',?,\'LEARN_ARTICLE_PUBLISHED\',1,?,?,\'PENDING\',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "LearnContent" WHERE "id"=?)',
+        params: [eventId, eventKey, id, eventKey, eventPayload, id],
+      },
+      {
+        sql: 'UPDATE "LearnContent" SET "status"=\'PUBLISHED\',"publishedAt"=COALESCE("publishedAt",?),"updatedAt"=? WHERE "id"=? AND ' + newEvent,
+        params: [now, now, id, eventId, eventKey],
+      },
+      {
+        sql: 'INSERT INTO "LearnArticleRevision" ("id","articleId","revision","title","body","summary","localizations","status","attachments","scheduledAt","publishedAt") SELECT ?, "id", COALESCE((SELECT MAX("revision") FROM "LearnArticleRevision" WHERE "articleId"=?),0)+1,"title","body","summary","localizations","status","attachments","scheduledAt","publishedAt" FROM "LearnContent" WHERE "id"=? AND ' + newEvent,
+        params: [randomUUID(), id, id, eventId, eventKey],
+      },
+      {
+        sql: 'INSERT OR IGNORE INTO "EventOutbox" ("id","idempotencyKey","aggregateType","aggregateId","eventType","eventVersion","correlationId","payload","state","availableAt","createdAt","updatedAt") SELECT ?,?,\'LEARN_ARTICLE\',?,\'LEARN_ARTICLE_UPDATED\',1,?,?,\'PENDING\',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP WHERE ' + newEvent,
+        params: [randomUUID(), "learn-article:update:" + id + ":" + now,
+          id, eventKey, eventPayload, eventId, eventKey],
+      },
+      {
+        // Force SQLite to roll back all preceding writes for a conflicting
+        // original key. LearnContent.slug is NOT NULL in the canonical schema.
+        sql: 'INSERT INTO "LearnContent" ("id","slug","title","body","status") SELECT ?,NULL,NULL,NULL,NULL WHERE NOT EXISTS (SELECT 1 FROM "EventOutbox" WHERE "idempotencyKey"=? AND "aggregateType"=\'LEARN_ARTICLE\' AND "aggregateId"=? AND "eventType"=\'LEARN_ARTICLE_PUBLISHED\' AND "payload"=?)',
+        params: ["learn-publish-guard:" + eventId, eventKey, id, eventPayload],
+      },
+    ];
+    const auditId = adminId && reason
+      ? this.id("learn-article-publish-audit:" + adminId, eventKey)
+      : null;
+    if (auditId) {
+      statements.push({
+        sql: 'INSERT OR IGNORE INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,\'LEARN_ARTICLE_PUBLISHED\',?,?,CURRENT_TIMESTAMP)',
+        params: [auditId, adminId!, id,
+          JSON.stringify({ reason: reason!.trim(), eventKey })],
+      });
     }
-    return article;
+    try {
+      await this.d1.atomicBatch(statements);
+    } catch (error) {
+      if (error instanceof Error && /NOT NULL constraint failed: LearnContent\.(slug|title|body|status)/i.test(error.message))
+        throw new ConflictException("Learn publication key belongs to a different original request");
+      throw error;
+    }
+    const article = await this.database.learnArticle.findUnique({
+      where: { id }, include: this.learnInclude(),
+    });
+    if (!article) throw new NotFoundException("Learn article not found");
+    return auditId ? { ...article, auditId } : article;
   }
 
   private learnCreationStatements(input: {
@@ -1413,6 +1547,42 @@ export class CommunicationsService {
     return statements;
   }
 
+  private appendLearnAdminAudit(
+    statements: D1BridgeBatchStatement[],
+    adminId: string,
+    articleId: string,
+    eventKey: string,
+    action: "LEARN_ARTICLE_CREATED" | "LEARN_ARTICLE_UPDATED",
+    reason: string,
+    intentHash: string | null,
+  ): string {
+    if (statements.length >= 16)
+      throw new BadRequestException("Learn command exceeds the atomic SQLite batch limit");
+    const auditId = this.id("learn-article-audit:" + adminId, eventKey);
+    statements.push({
+      sql: 'INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)',
+      params: [auditId, adminId, action, articleId,
+        JSON.stringify({ reason: reason.trim(), eventKey, intentHash })],
+    });
+    return auditId;
+  }
+
+  private appendLearnEvent(
+    statements: D1BridgeBatchStatement[],
+    eventKey: string,
+    articleId: string,
+    eventType: string,
+    payload: Record<string, unknown>,
+  ): void {
+    if (statements.length >= 16)
+      throw new BadRequestException("Learn article atomic batch exceeds the SQLite statement limit");
+    statements.push({
+      sql: 'INSERT INTO "EventOutbox" ("id","idempotencyKey","aggregateType","aggregateId","eventType","eventVersion","correlationId","payload","state","availableAt","createdAt","updatedAt") VALUES (?,?,\'LEARN_ARTICLE\',?,?,1,?,?,\'PENDING\',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)',
+      params: [this.id("learn-outbox", eventKey), eventKey, articleId,
+        eventType, eventKey, JSON.stringify(payload)],
+    });
+  }
+
   private learnStoredValue(value: unknown): string | null {
     if (value === undefined || value === null) return null;
     return typeof value === "string" ? value : JSON.stringify(value);
@@ -1458,8 +1628,9 @@ export class CommunicationsService {
     const { statements, articleId, now } = input;
     const selectedTags = (input.tags ?? []).map((name) => name.trim()).filter(Boolean);
     const selectedMedia = input.media ?? [];
-    if (statements.length + selectedTags.length * 2 + selectedMedia.length > 16)
-      throw new BadRequestException("Learn article relations exceed the atomic D1 batch limit");
+    // One additional slot is reserved for the domain EventOutbox insert.
+    if (statements.length + selectedTags.length * 2 + selectedMedia.length > 15)
+      throw new BadRequestException("Learn article relations exceed the atomic SQLite batch limit");
     for (const name of selectedTags) {
       const slug = name.toLowerCase().replace(/\s+/g, "-");
       statements.push({

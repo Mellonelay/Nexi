@@ -39,6 +39,10 @@ export class UpdateSystemConfigDto {
   @IsString()
   @Length(3, 500)
   reason!: string;
+
+  @IsString()
+  @Length(8, 128)
+  idempotencyKey!: string;
 }
 
 export class UpdateUserControlDto {
@@ -50,16 +54,18 @@ export class UpdateUserControlDto {
   outcome!: string;
 }
 
+const nonNegativeCurrencyDecimal = /^(?:0|[1-9]\d*)(?:\.\d+)?$/;
+
 export class CreateCurrencyDto {
   @IsString() @Length(2, 20) @Matches(/^[A-Z0-9._-]+$/) symbol!: string;
   @IsString() @Length(1, 128) name!: string;
   @IsOptional() @IsUrl({ require_protocol: true }) logo?: string;
   @IsOptional() @Type(() => Number) @IsNumber() @IsPositive() rate?: number;
-  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) minDeposit?: number;
-  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) maxDeposit?: number;
-  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) minWithdrawal?: number;
-  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) maxWithdrawal?: number;
-  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) withdrawalFee?: number;
+  @IsOptional() @IsString() @Length(1, 80) @Matches(nonNegativeCurrencyDecimal) minDeposit?: string;
+  @IsOptional() @IsString() @Length(1, 80) @Matches(nonNegativeCurrencyDecimal) maxDeposit?: string;
+  @IsOptional() @IsString() @Length(1, 80) @Matches(nonNegativeCurrencyDecimal) minWithdrawal?: string;
+  @IsOptional() @IsString() @Length(1, 80) @Matches(nonNegativeCurrencyDecimal) maxWithdrawal?: string;
+  @IsOptional() @IsString() @Length(1, 80) @Matches(nonNegativeCurrencyDecimal) withdrawalFee?: string;
   @IsOptional() @IsBoolean() depositEnabled?: boolean;
   @IsOptional() @IsBoolean() withdrawEnabled?: boolean;
   @IsOptional() @Type(() => Number) @IsInt() @Min(0) confirmationCount?: number;
@@ -122,9 +128,9 @@ export class CreateMiningPlanDto {
   @Matches(/^[A-Z0-9._-]+$/)
   currency?: string;
   @Type(() => Number) @IsInt() @Min(1) lockupPeriod!: number;
-  @Type(() => Number) @IsNumber() @Min(0) dailyYield!: number;
-  @Type(() => Number) @IsNumber() @Min(0) minDeposit!: number;
-  @Type(() => Number) @IsNumber() @Min(0) maxDeposit!: number;
+  @IsString() @Length(1, 80) @Matches(nonNegativeCurrencyDecimal) dailyYield!: string;
+  @IsString() @Length(1, 80) @Matches(nonNegativeCurrencyDecimal) minDeposit!: string;
+  @IsString() @Length(1, 80) @Matches(nonNegativeCurrencyDecimal) maxDeposit!: string;
   @IsOptional() @IsBoolean() isActive?: boolean;
   @IsString() @Length(1, 256) reason!: string;
   @IsString() @Length(8, 128) idempotencyKey!: string;
@@ -136,9 +142,10 @@ export class CreateLoanPlanDto {
   @IsString() @Length(1, 128) name!: string;
   @IsString() @Length(2, 20) @Matches(/^[A-Z0-9._-]+$/) currency!: string;
   @Type(() => Number) @IsInt() @Min(1) durationDays!: number;
-  @Type(() => Number) @IsNumber() @Min(0) interestRate!: number;
-  @Type(() => Number) @IsNumber() @Min(0) minAmount!: number;
-  @Type(() => Number) @IsNumber() @Min(0) maxAmount!: number;
+  // Financial plan terms remain exact decimal strings across Admin -> NestJS -> SQLite.
+  @IsString() @Length(1, 80) @Matches(/^(?:0|[1-9][0-9]*)(?:[.][0-9]+)?$/) interestRate!: string;
+  @IsString() @Length(1, 80) @Matches(/^(?:0|[1-9][0-9]*)(?:[.][0-9]+)?$/) minAmount!: string;
+  @IsString() @Length(1, 80) @Matches(/^(?:0|[1-9][0-9]*)(?:[.][0-9]+)?$/) maxAmount!: string;
   @IsOptional() @IsBoolean() isActive?: boolean;
   @IsString() @Length(1, 256) reason!: string;
   @IsString() @Length(8, 128) idempotencyKey!: string;
@@ -232,6 +239,7 @@ export class UpdateFeatureFlagDto {
   @IsBoolean() enabled!: boolean;
   @IsOptional() @IsString() @Length(1, 32) environment?: string;
   @IsString() @Length(3, 500) reason!: string;
+  @IsString() @Length(8, 128) idempotencyKey!: string;
 }
 
 export class FinancialCorrectionDto {

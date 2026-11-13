@@ -45,7 +45,7 @@ describe('D1 atomic communications creation', () => {
     const db = new DatabaseSync(':memory:');
     try {
       const migration = readFileSync('prisma/migrations-d1/0001_initial.sql', 'utf8');
-      for (const table of ['LearnCategory', 'LearnContent', 'LearnArticleRevision', 'LearnTag', 'LearnArticleTag', 'LearnMediaAsset']) {
+      for (const table of ['LearnCategory', 'LearnContent', 'LearnArticleRevision', 'LearnTag', 'LearnArticleTag', 'LearnMediaAsset', 'EventOutbox']) {
         const start = migration.indexOf(`CREATE TABLE "${table}" (`);
         const end = migration.indexOf(');', start);
         db.exec(migration.slice(start, end + 2));
@@ -70,7 +70,7 @@ describe('D1 atomic communications creation', () => {
         tags: ['Wallet', ' Backend '], media: [{ url: 'https://test.invalid/image.png', metadata: { testOnly: true } }],
       });
       expect(article).toMatchObject({ slug: 'controlled-test', title: 'Controlled' });
-      expect(atomicBatch.mock.calls[0][0]).toHaveLength(7);
+      expect(atomicBatch.mock.calls[0][0]).toHaveLength(8);
       expect(db.prepare('SELECT COUNT(*) AS n FROM LearnContent').get().n).toBe(1);
       expect(db.prepare('SELECT COUNT(*) AS n FROM LearnArticleRevision').get().n).toBe(1);
       expect(db.prepare('SELECT COUNT(*) AS n FROM LearnArticleTag').get().n).toBe(2);
@@ -83,7 +83,7 @@ describe('D1 atomic communications creation', () => {
     const db = new DatabaseSync(':memory:');
     try {
       const migration = readFileSync('prisma/migrations-d1/0001_initial.sql', 'utf8');
-      for (const table of ['LearnCategory', 'LearnContent', 'LearnArticleRevision']) {
+      for (const table of ['LearnCategory', 'LearnContent', 'LearnArticleRevision', 'EventOutbox']) {
         const start = migration.indexOf('CREATE TABLE "' + table + '" (');
         const end = migration.indexOf(');', start);
         db.exec(migration.slice(start, end + 2));
@@ -114,10 +114,11 @@ describe('D1 atomic communications creation', () => {
       const published = await service.publishLearn(created.id, 'publish-key');
       expect(published.status).toBe('PUBLISHED');
       expect(atomicBatch).toHaveBeenCalledTimes(2);
-      expect(atomicBatch.mock.calls[1][0]).toHaveLength(2);
+      expect(atomicBatch.mock.calls[1][0]).toHaveLength(5);
       expect(db.prepare('SELECT status FROM LearnContent WHERE id = ?').get(created.id).status).toBe('PUBLISHED');
       expect(db.prepare('SELECT status, revision FROM LearnArticleRevision WHERE articleId = ? ORDER BY revision DESC LIMIT 1').get(created.id)).toMatchObject({ status: 'PUBLISHED', revision: 2 });
-      expect(outbox.recordEvent).toHaveBeenCalledTimes(3);
+      expect(outbox.recordEvent).not.toHaveBeenCalled();
+      expect(db.prepare('SELECT COUNT(*) AS n FROM EventOutbox WHERE "aggregateType"=\'LEARN_ARTICLE\'').get().n).toBe(3);
     } finally { db.close(); }
   });
 });

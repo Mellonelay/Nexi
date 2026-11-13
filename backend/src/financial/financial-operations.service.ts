@@ -104,7 +104,7 @@ export class FinancialOperationsService {
     if (!reason?.trim()) throw new BadRequestException('Rejection reason is required');
     const withdrawal: any = await this.d1.getWithdrawalById(id);
     if (!withdrawal) throw new NotFoundException('Withdrawal not found');
-    if (withdrawal.state === Gate2WithdrawalState.REJECTED) return { withdrawal, replayed: true, providerLive: false };
+    if (withdrawal.state === Gate2WithdrawalState.REJECTED) return { withdrawal: await this.d1.releaseWithdrawal(id, reason, adminId, 'REJECTED', idempotencyKey), replayed: true, providerLive: false };
     if (withdrawal.state !== Gate2WithdrawalState.PENDING_REVIEW) throw new BadRequestException('Withdrawal is not pending review');
     return { withdrawal: await this.d1.releaseWithdrawal(id, reason, adminId, 'REJECTED', idempotencyKey), replayed: false, providerLive: false };
   }
@@ -131,7 +131,7 @@ export class FinancialOperationsService {
     if (!reason?.trim()) throw new BadRequestException('Failure reason is required');
     const withdrawal: any = await this.d1.getWithdrawalById(id);
     if (!withdrawal) throw new NotFoundException('Withdrawal not found');
-    if (withdrawal.state === Gate2WithdrawalState.FAILED) return { withdrawal, replayed: true, providerLive: false };
+    if (withdrawal.state === Gate2WithdrawalState.FAILED) return { withdrawal: await this.d1.releaseWithdrawal(id, reason, adminId, 'FAILED', idempotencyKey), replayed: true, providerLive: false };
     if (withdrawal.state === Gate2WithdrawalState.SETTLED) throw new BadRequestException('Settled withdrawal cannot fail');
     return { withdrawal: await this.d1.releaseWithdrawal(id, reason, adminId, 'FAILED', idempotencyKey), replayed: false, providerLive: false };
   }

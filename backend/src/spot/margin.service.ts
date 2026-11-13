@@ -278,7 +278,7 @@ export class MarginService {
       }
     }
     const filled: any = await this.d1.getSpotOrder(userId, String(order.id));
-    if (!filled || String(filled.status) !== 'FILLED') return { positionId, closeOrderId: order.id, state: 'CLOSING', replayed: false };
+    if (!filled || String(filled.status) !== 'FILLED') return { positionId, closeOrderId: order.id, state: 'CLOSING', replayed: closing };
     const closePrice = new Prisma.Decimal(await this.d1.getSpotOrderExecutionPrice(String(order.id)));
     const pnl = marginPnl(String(position.direction) as MarginPositionDirection, new Prisma.Decimal(String(position.quantity)), new Prisma.Decimal(String(position.entryPrice)), closePrice);
     const repayment = new Prisma.Decimal(String(position.debtPrincipal)).add(new Prisma.Decimal(String(position.interestAccrued ?? '0')));

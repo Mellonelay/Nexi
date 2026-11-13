@@ -12,6 +12,20 @@ import { Input } from "@/components/ui/input";
 import type { MiningPlan } from "@/admin/types";
 
 export const Route = createFileRoute("/mining")({ component: Page });
+
+const validPlanDecimal = (value: string) =>
+  value.length <= 80 && /^(?:0|[1-9]\d*)(?:\.\d+)?$/.test(value);
+
+function planMaximumAtLeastMinimum(maximum: string, minimum: string): boolean {
+  if (!validPlanDecimal(maximum) || !validPlanDecimal(minimum)) return false;
+  const [maxWhole, maxFraction = ""] = maximum.split(".");
+  const [minWhole, minFraction = ""] = minimum.split(".");
+  if (maxWhole.length !== minWhole.length) return maxWhole.length > minWhole.length;
+  if (maxWhole !== minWhole) return maxWhole > minWhole;
+  const scale = Math.max(maxFraction.length, minFraction.length);
+  return maxFraction.padEnd(scale, "0") >= minFraction.padEnd(scale, "0");
+}
+
 function Page() {
   return (
     <RouteGuard permission="mining.view">
@@ -64,12 +78,9 @@ function Inner() {
       !name.trim() ||
       !Number.isInteger(Number(lockupPeriod)) ||
       Number(lockupPeriod) < 1 ||
-      !Number.isFinite(Number(dailyYield)) ||
-      Number(dailyYield) < 0 ||
-      !Number.isFinite(Number(minDeposit)) ||
-      Number(minDeposit) < 0 ||
-      !Number.isFinite(Number(maxDeposit)) ||
-      Number(maxDeposit) < Number(minDeposit)
+      !validPlanDecimal(dailyYield) ||
+      !validPlanDecimal(minDeposit) ||
+      !planMaximumAtLeastMinimum(maxDeposit, minDeposit)
     ) {
       setMessage("Enter a valid plan name, duration, payout and deposit limits.");
       return;
@@ -118,7 +129,7 @@ function Inner() {
                 <div>
                   <h2 className="font-semibold">{plan.name}</h2>
                   <p className="text-xs text-muted-foreground">
-                    {plan.currency} · {plan.lockupPeriod} days · daily {plan.dailyYield}
+                    {plan.currency} · {plan.lockupPeriod} days · daily rate {plan.dailyYield} × principal
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -197,7 +208,7 @@ function Inner() {
             disabled={!canEdit}
           />
           <label htmlFor="mining-daily-payout" className="text-xs font-medium">
-            Daily payout rate (decimal)
+            Daily yield rate (fraction of principal per day; 0.005 = 0.5%)
           </label>
           <Input
             id="mining-daily-payout"

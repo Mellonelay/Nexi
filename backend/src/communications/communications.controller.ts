@@ -340,7 +340,11 @@ export class CommunicationsController {
   @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
   @RequireAdminPermission("notifications.send")
-  sendAdminNotification(@Body() dto: SendNotificationDto) { return this.service.sendAdminNotification(dto); }
+  sendAdminNotification(@Body() dto: SendNotificationDto, @Req() req?: AuthenticatedRequest) {
+    return req?.user?.userId
+      ? this.service.sendAdminNotification(dto, req.user.userId)
+      : this.service.sendAdminNotification(dto);
+  }
   @ApiBearerAuth()
   @Get("admin/operator-alerts")
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard, RolesGuard, AdminPermissionGuard)
@@ -405,8 +409,8 @@ export class CommunicationsController {
   @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
   @RequireAdminPermission("learn.publish")
-  createLearnCategory(@Body() dto: CreateLearnCategoryDto) {
-    return this.service.createLearnCategory(dto);
+  createLearnCategory(@Req() req: AuthenticatedRequest, @Body() dto: CreateLearnCategoryDto) {
+    return this.service.createLearnCategory(req.user.userId, dto);
   }
   @ApiBearerAuth()
   @Patch("admin/learn/categories/:id")
@@ -427,8 +431,8 @@ export class CommunicationsController {
   @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
   @RequireAdminPermission("learn.publish")
-  createLearn(@Body() dto: CreateLearnContentDto) {
-    return this.service.createLearn(dto);
+  createLearn(@Body() dto: CreateLearnContentDto, @Req() req?: AuthenticatedRequest) {
+    return req?.user?.userId ? this.service.createLearn(dto, req.user.userId) : this.service.createLearn(dto);
   }
   @ApiBearerAuth()
   @Patch("admin/learn/:id")
@@ -436,8 +440,8 @@ export class CommunicationsController {
   @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
   @RequireAdminPermission("learn.publish")
-  updateLearn(@Param("id") id: string, @Body() dto: UpdateLearnContentDto) {
-    return this.service.updateLearn(id, dto);
+  updateLearn(@Param("id") id: string, @Body() dto: UpdateLearnContentDto, @Req() req?: AuthenticatedRequest) {
+    return req?.user?.userId ? this.service.updateLearn(id, dto, req.user.userId) : this.service.updateLearn(id, dto);
   }
   @ApiBearerAuth()
   @Post("admin/learn/:id/publish")
@@ -445,7 +449,9 @@ export class CommunicationsController {
   @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
   @RequireAdminPermission("learn.publish")
-  publishLearn(@Param("id") id: string, @Body() dto: AdminMutationDto) {
-    return this.service.publishLearn(id, dto.idempotencyKey);
+  publishLearn(@Param("id") id: string, @Body() dto: AdminMutationDto, @Req() req?: AuthenticatedRequest) {
+    return req?.user?.userId
+      ? this.service.publishLearn(id, dto.idempotencyKey, req.user.userId, dto.reason)
+      : this.service.publishLearn(id, dto.idempotencyKey);
   }
 }

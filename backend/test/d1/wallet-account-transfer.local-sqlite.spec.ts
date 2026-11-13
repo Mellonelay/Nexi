@@ -552,6 +552,9 @@ describe('financial operations on local SQLite', () => {
     const released = await operations.rejectWithdrawal(rejectedId, 'controlled rejection refund', 'admin-1', 'withdrawal-reject-001');
     expect(released.withdrawal.state).toBe('REJECTED');
     expect((await operations.rejectWithdrawal(rejectedId, 'controlled rejection refund', 'admin-1', 'withdrawal-reject-001')).replayed).toBe(true);
+    await expect(operations.rejectWithdrawal(rejectedId, 'controlled rejection refund', 'admin-1', 'another-reject-key')).rejects.toThrow('original intent does not match');
+    await expect(operations.rejectWithdrawal(rejectedId, 'controlled rejection refund', 'another-admin', 'withdrawal-reject-001')).rejects.toThrow('original intent does not match');
+    await expect(operations.rejectWithdrawal(rejectedId, 'different reason', 'admin-1', 'withdrawal-reject-001')).rejects.toThrow('original intent does not match');
     await expect(bridge.select<{ available: string; locked: string }>(
       'SELECT "available","locked" FROM "LedgerAccount" WHERE "id"=?', ['main-1'],
     )).resolves.toMatchObject({ results: [{ available: '8.65', locked: '0' }] });

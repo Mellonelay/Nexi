@@ -46,8 +46,8 @@ test('production wallet configuration selects only Ethereum Mainnet', () => {
   assert.deepEqual(chains.productionSupported, [1]);
 });
 
-test('non-production wallet configuration retains only Sepolia', () => {
+test('non-production wallet configuration also selects only Ethereum Mainnet', () => {
   const chains = loadWalletChainIds();
-  assert.equal(chains.development, 11155111);
-  assert.deepEqual(chains.developmentSupported, [11155111]);
+  assert.equal(chains.development, 1);
+  assert.deepEqual(chains.developmentSupported, [1]);
 });

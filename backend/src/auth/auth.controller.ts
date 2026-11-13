@@ -351,8 +351,8 @@ export class AuthController {
   @ApiCreatedResponse({ schema: { type: "object", required: ["codes"], properties: { codes: { type: "array", minItems: 10, maxItems: 10, items: { type: "string" } } } } })
   @UseGuards(JwtAuthGuard, AuthSurfaceGuard)
   @RequireAuthSurface("PUBLIC")
-  async generateBackupCodes(@Request() request: AuthenticatedRequest, @Body() _body: GenerateBackupCodesDto) {
-    return this.authService.generateBackupCodes(request.user.userId);
+  async generateBackupCodes(@Request() request: AuthenticatedRequest, @Body() body: GenerateBackupCodesDto) {
+    return this.authService.generateBackupCodes(request.user.userId, body.securityPassword, body.token);
   }
 
   @ApiBearerAuth()

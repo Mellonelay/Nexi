@@ -239,7 +239,7 @@ function AssetDetailView({
               </div>
             </div>
             <div className="ml-auto min-w-0 text-right">
-              <p className="break-all font-mono text-xl tabular-nums leading-tight sm:text-2xl">{formatNumber(instrument.price, instrument.precision ?? 8)}</p>
+              <p className="min-w-0 break-words font-mono text-[clamp(1.125rem,4.8vw,1.5rem)] tabular-nums leading-tight">{formatNumber(instrument.price, instrument.precision ?? 8)}</p>
               <div className="mt-1 flex flex-wrap items-center justify-end gap-2">
                 <span className={`inline-flex rounded border px-1.5 py-0.5 text-xs font-semibold uppercase tracking-[0.06em] ${statusClass}`}>{displayStatus}</span>
                 <p className="font-mono text-xs text-[#8C8299]">24h {formatChange(instrument.change24h)}</p>

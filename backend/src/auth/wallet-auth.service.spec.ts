@@ -4,7 +4,7 @@ import { buildSiweMessage, isSiweOriginMatch, validateSiweOrigin } from './walle
 const base = {
   address: '0x0000000000000000000000000000000000000001',
   statement: 'Sign in to NEXI.',
-  chainId: 11155111,
+  chainId: 1,
   nonce: '0123456789abcdef',
   issuedAt: '2026-08-05T00:00:00.000Z',
   expirationTime: '2026-08-05T00:05:00.000Z',

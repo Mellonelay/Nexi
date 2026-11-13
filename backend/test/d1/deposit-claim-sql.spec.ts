@@ -35,6 +35,8 @@ it('executes claim submission, review and credit against migrated schema with du
     await expect(gateway.submitDepositClaim({...command,claimedAmount:'101'})).rejects.toThrow('different parameters');
     await expect(gateway.updateDepositClaimState('claim','APPROVED','admin','TEST_ONLY','test-approve')).resolves.toMatchObject({state:'APPROVED'});
     await expect(gateway.updateDepositClaimState('claim','APPROVED','admin','TEST_ONLY','test-approve')).resolves.toMatchObject({replayed:true});
+    await expect(gateway.updateDepositClaimState('claim','APPROVED','another-admin','TEST_ONLY','test-approve')).rejects.toThrow('idempotency key was reused');
+    await expect(gateway.updateDepositClaimState('claim','APPROVED','admin','TEST_ONLY','different-approve-key')).rejects.toThrow('idempotency key was reused');
     db.exec(`CREATE TRIGGER reject_credit_event BEFORE INSERT ON EventOutbox WHEN NEW.eventType='DEPOSIT_CLAIM_CREDITED' BEGIN SELECT RAISE(ABORT,'injected outbox failure'); END`);
     await expect(gateway.creditDepositClaim('claim','admin','TEST_ONLY','test-credit')).rejects.toThrow('injected outbox failure');
     expect(db.prepare('SELECT state FROM DepositClaim WHERE id=?').get('claim').state).toBe('APPROVED');
@@ -42,6 +44,8 @@ it('executes claim submission, review and credit against migrated schema with du
     db.exec('DROP TRIGGER reject_credit_event');
     await expect(gateway.creditDepositClaim('claim','admin','TEST_ONLY','test-credit')).resolves.toMatchObject({state:'CREDITED'});
     await expect(gateway.creditDepositClaim('claim','admin','TEST_ONLY','test-credit')).resolves.toMatchObject({replayed:true});
+    await expect(gateway.creditDepositClaim('claim','admin','TEST_ONLY','different-credit-key')).rejects.toThrow('idempotency key was reused');
+    await expect(gateway.creditDepositClaim('claim','another-admin','TEST_ONLY','test-credit')).rejects.toThrow('idempotency key was reused');
     expect(db.prepare('SELECT available FROM LedgerAccount WHERE id=?').get('account').available).toBe('100');
     expect(db.prepare('SELECT COUNT(*) count FROM LedgerPosting').get().count).toBe(1);
     expect(db.prepare('SELECT COUNT(*) count FROM Activity').get().count).toBe(1);

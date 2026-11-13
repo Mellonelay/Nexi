@@ -23,15 +23,16 @@ describe('persistent message conversation D1 command boundary', () => {
 
     expect(changed).toBe(true);
     const statements = bridge.batch.mock.calls[0][0];
-    expect(statements).toHaveLength(3);
-    expect(statements[0].sql).toContain('UPDATE "MessageModerationCase"');
-    expect(statements[1].sql).toContain('UPDATE "MessageConversation"');
-    expect(statements[2].sql).toContain('INSERT OR IGNORE INTO "EventOutbox"');
-    expect(statements[2].params).toEqual(expect.arrayContaining([
+    expect(statements).toHaveLength(4);
+    expect(statements[0].sql).toContain('INSERT OR IGNORE INTO "EventOutbox"');
+    expect(statements[1].sql).toContain('UPDATE "MessageModerationCase"');
+    expect(statements[1].sql).toContain('"id"=? AND "idempotencyKey"=?');
+    expect(statements[2].sql).toContain('UPDATE "MessageConversation"');
+    expect(statements[3].sql).toContain('WHERE NOT EXISTS');
+    expect(statements[0].params).toEqual(expect.arrayContaining([
       'message-moderation:case-1:review-1',
-      'MESSAGE_MODERATION',
       'case-1',
-      'MESSAGE_MODERATION_RESOLVED',
+      'conversation:user-1:user-2',
     ]));
   });
   it('preserves the existing moderation resolution when an update omits one', async () => {
@@ -49,9 +50,28 @@ describe('persistent message conversation D1 command boundary', () => {
       idempotencyKey: 'review-2',
     });
 
-    const [update] = bridge.batch.mock.calls[0][0];
+    const [event, update, guard] = bridge.batch.mock.calls[0][0];
+    expect(event.sql).toContain('INSERT OR IGNORE INTO "EventOutbox"');
     expect(update.sql).toContain('COALESCE(?, "resolution")');
-    expect(update.params).toEqual(['OPEN', null, 'admin-1', 'case-1']);
+    expect(update.params).toEqual(expect.arrayContaining([
+      'OPEN', null, 'admin-1', 'case-1',
+      'conversation:user-1:user-2', 'message-moderation:case-1:review-2',
+    ]));
+    expect(guard.sql).toContain('NOT EXISTS');
+  });
+
+  it('fails closed when the durable moderation key belongs to another request', async () => {
+    const bridge: any = {
+      isEnabled: () => true,
+      batch: jest.fn(async () => {
+        throw new Error('NOT NULL constraint failed: MessageModerationCase.conversationId');
+      }),
+    };
+    const gateway = new D1CommunicationsCommandGateway(bridge);
+    await expect(gateway.resolveMessageModeration({
+      id: 'case-1', conversationId: 'conversation:user-1:user-2',
+      adminId: 'admin-2', status: 'RESOLVED', idempotencyKey: 'review-1',
+    })).rejects.toMatchObject({ status: 409 });
   });
 
   beforeEach(() => { process.env.D1_RUNTIME_ENABLED = 'true'; });

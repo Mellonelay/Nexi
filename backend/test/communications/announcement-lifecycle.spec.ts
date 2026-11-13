@@ -19,22 +19,26 @@ describe('A17 announcement lifecycle closure', () => {
     const d1: any = {
       announcement: {
         upsert: jest.fn(async () => draft),
-        findUnique: jest.fn(async () => draft),
+        findUnique: jest.fn()
+          .mockResolvedValueOnce(draft)
+          .mockResolvedValueOnce(draft)
+          .mockResolvedValueOnce(published),
         update: jest.fn(async () => published),
         findMany,
       },
     };
     const outbox: any = { recordEvent: jest.fn(async () => ({})) };
-    const service = new CommunicationsService(d1, outbox, {} as any, { isAvailable: () => false } as any);
+    const commands: any = { mutateAnnouncementAtomic: jest.fn(async () => undefined) };
+    const service = new CommunicationsService(d1, outbox, commands, { isAvailable: () => false } as any);
 
     expect(await service.createAnnouncement({ title: 'Maintenance', body: 'Window', published: false, idempotencyKey: 'announcement-create-1' })).toBe(draft);
-    expect(outbox.recordEvent).toHaveBeenNthCalledWith(1, expect.objectContaining({ eventType: 'ANNOUNCEMENT_CREATED', aggregateId: draft.id }));
+    expect(commands.mutateAnnouncementAtomic).toHaveBeenCalledWith(expect.objectContaining({
+      mode: 'create', values: expect.objectContaining({ title: 'Maintenance', published: 0 }),
+    }));
 
     expect(await service.publishAnnouncement(draft.id, 'announcement-publish-1')).toBe(published);
-    expect(d1.announcement.update).toHaveBeenCalledWith(expect.objectContaining({ where: { id: draft.id }, data: expect.objectContaining({ published: true }) }));
-    expect(outbox.recordEvent).toHaveBeenNthCalledWith(2, expect.objectContaining({
-      eventType: 'ANNOUNCEMENT_PUBLISHED',
-      idempotencyKey: `announcement:${draft.id}:announcement-publish-1`,
+    expect(commands.mutateAnnouncementAtomic).toHaveBeenLastCalledWith(expect.objectContaining({
+      mode: 'update', values: expect.objectContaining({ published: 1 }),
     }));
 
     expect(await service.announcements()).toEqual([expect.objectContaining(published)]);

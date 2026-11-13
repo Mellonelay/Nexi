@@ -42,22 +42,76 @@ describe('A18 Learn lifecycle closure', () => {
     expect(await service.publishLearn(current.id, 'learn-publish-1')).toEqual(published);
     expect(d1.atomicBatch).toHaveBeenCalledWith(expect.arrayContaining([
       expect.objectContaining({
-        sql: expect.stringContaining('UPDATE "LearnContent"'),
+        sql: expect.stringContaining('LEARN_ARTICLE_PUBLISHED'),
+        params: expect.arrayContaining(['learn-article:publish:' + current.id + ':learn-publish-1']),
       }),
-      expect.objectContaining({
-        sql: expect.stringContaining('INSERT INTO "LearnArticleRevision"'),
-      }),
+      expect.objectContaining({ sql: expect.stringContaining('UPDATE "LearnContent"') }),
+      expect.objectContaining({ sql: expect.stringContaining('INSERT INTO "LearnArticleRevision"') }),
+      expect.objectContaining({ sql: expect.stringContaining('LEARN_ARTICLE_UPDATED') }),
     ]));
-    expect(outbox.recordEvent).toHaveBeenCalledWith(expect.objectContaining({ eventType: 'LEARN_ARTICLE_UPDATED', aggregateId: current.id }));
-    expect(outbox.recordEvent).toHaveBeenCalledWith(expect.objectContaining({
-      eventType: 'LEARN_ARTICLE_PUBLISHED',
-      idempotencyKey: `learn-article:publish:${current.id}:learn-publish-1`,
-    }));
+    expect(outbox.recordEvent).not.toHaveBeenCalled();
 
     expect(await service.learn()).toEqual([expect.objectContaining(published)]);
     expect(findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: expect.objectContaining({ status: 'PUBLISHED', archivedAt: null }),
     }));
+  });
+
+  it('keeps category insertion and created outbox in one SQLite command batch', async () => {
+    const category = { id: 'category-1', slug: 'risk', name: 'Risk', status: 'ACTIVE' };
+    const atomicBatch = jest.fn(async (_statements: Array<{ sql: string; params?: unknown[] }>) => []);
+    const findUnique = jest.fn(async () => category);
+    const recordEvent = jest.fn();
+    const service = new CommunicationsService(
+      { atomicBatch, learnCategory: { findUnique } } as any,
+      { recordEvent } as any, {} as any, {} as any,
+    );
+    expect(await service.createLearnCategory('admin-1', { slug: 'risk', name: 'Risk', reason: 'Create category', idempotencyKey: 'category-create-1' })).toEqual(expect.objectContaining({ ...category, auditId: expect.any(String) }));
+    const statements = atomicBatch.mock.calls[0][0] as Array<{ sql: string; params: unknown[] }>;
+    expect(statements).toHaveLength(4);
+    expect(statements[0].sql).toContain('INSERT OR IGNORE INTO "LearnCategory"');
+    expect(statements[1].sql).toContain('INSERT OR IGNORE INTO "AdminAuditLog"');
+    expect(statements[2].sql).toContain('INSERT OR IGNORE INTO "EventOutbox"');
+    expect(statements[3].sql).toContain('NOT EXISTS');
+    expect(statements[3].params).toEqual(expect.arrayContaining([expect.stringContaining('learn-category:')]));
+    expect(statements[2].sql).toContain("'LEARN_CATEGORY'");
+    expect(statements[2].sql).toContain("'LEARN_CATEGORY_CREATED'");
+    expect(statements[2].params).toContain('risk');
+    expect(statements[1].params).toContain('admin-1');
+    expect(recordEvent).not.toHaveBeenCalled();
+  });
+
+  it('does not report successful category creation if its atomic outbox batch fails', async () => {
+    const findUnique = jest.fn();
+    const service = new CommunicationsService(
+      { atomicBatch: jest.fn(async () => { throw new Error('outbox unavailable'); }),
+        learnCategory: { findUnique } } as any,
+      { recordEvent: jest.fn() } as any, {} as any, {} as any,
+    );
+    await expect(service.createLearnCategory('admin-1', { slug: 'risk', name: 'Risk', reason: 'Create category', idempotencyKey: 'category-create-1' }))
+      .rejects.toThrow('outbox unavailable');
+    expect(findUnique).not.toHaveBeenCalled();
+  });
+
+  it('rejects conflicting category key and rolls back the atomic category/outbox command', async () => {
+    const service = new CommunicationsService(
+      { atomicBatch: jest.fn(async () => {
+        throw new Error('NOT NULL constraint failed: LearnCategory.slug');
+      }) } as any, { recordEvent: jest.fn() } as any, {} as any, {} as any,
+    );
+    await expect(service.createLearnCategory('admin-1', {
+      slug: 'risk', name: 'Different', reason: 'Different intent',
+      idempotencyKey: 'category-create-1',
+    })).rejects.toMatchObject({ status: 409 });
+  });
+
+  it('derives the Learn category audit principal from the authenticated Admin request', async () => {
+    const service: any = { createLearnCategory: jest.fn(async () => ({ id: 'category-1' })) };
+    const controller = new CommunicationsController(service);
+    const request: any = { user: { userId: 'admin-1' } };
+    const dto: any = { slug: 'risk', name: 'Risk', reason: 'Create category', idempotencyKey: 'category-create-1' };
+    await controller.createLearnCategory(request, dto);
+    expect(service.createLearnCategory).toHaveBeenCalledWith('admin-1', dto);
   });
 
   it('restricts Learn article operations to the Admin surface and matching permissions', async () => {

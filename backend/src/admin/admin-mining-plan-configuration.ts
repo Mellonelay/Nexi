@@ -49,8 +49,10 @@ export function miningPlanDecimalPatch(data: any): any {
     ["maxDeposit", "maxDepositDecimal"],
   ]) {
     const value = data[field];
-    if (!hasPrismaSetValue(value)) continue;
-    patch[decimalField] = new Prisma.Decimal(String(value.set)).toString();
+    if (value === undefined) continue;
+    const decimal = new Prisma.Decimal(String(hasPrismaSetValue(value) ? value.set : value)).toString();
+    patch[field] = hasPrismaSetValue(value) ? { set: decimal } : decimal;
+    patch[decimalField] = decimal;
   }
   return patch;
 }

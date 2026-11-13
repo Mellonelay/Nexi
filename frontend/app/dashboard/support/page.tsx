@@ -72,19 +72,19 @@ export default function SupportPage() {
   return (
     <PageShell>
       <PageHeader eyebrow="Help center" title="Help" description="Browse help topics or contact NEXI." />
-      <main className="mx-auto max-w-7xl space-y-5">
+      <main className="mx-auto min-w-0 max-w-7xl space-y-3 sm:space-y-5">
         <Panel>
           <PanelHeading title="Find help" description="Search guidance for common account and product questions." />
           <div className="relative">
             <Search size={17} className="absolute left-3 top-3 text-[#8C8299]" />
             <input className={`${inputClass} pl-10`} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search help topics" aria-label="Search help topics" />
           </div>
-          <div className="mt-4 flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Support categories">
+          <div className="nexi-scroll-rail mt-3 flex min-w-0 gap-2 overflow-x-auto pb-1 sm:mt-4" role="tablist" aria-label="Support categories">
             {categories.map((item) => <TabButton key={item} active={category === item} onClick={() => setCategory(item)}>{item}</TabButton>)}
           </div>
-          <div className="mt-5 space-y-3">
+          <div className="mt-3 space-y-2 sm:mt-5 sm:space-y-3">
             {filtered.length ? filtered.map((topic) => (
-              <article key={topic.title} className="rounded-xl border border-[#2B2037] bg-[#171022] p-4">
+              <article key={topic.title} className="rounded-xl border border-[#2B2037] bg-[#171022] p-3 sm:p-4">
                 <div className="flex items-start gap-3">
                   <LifeBuoy size={18} className="mt-0.5 shrink-0 text-[#48C0CC]" />
                   <div>
@@ -108,16 +108,16 @@ export default function SupportPage() {
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
               {contacts.telegramUrl && (
-                <div className="rounded-xl border border-[#2B2037] bg-[#171022] p-4">
+                <div className="rounded-xl border border-[#2B2037] bg-[#171022] p-3 sm:p-4">
                   <div className="flex items-center gap-2 text-sm font-semibold"><Send size={17} aria-hidden="true" className="text-[#48C0CC]" />Telegram</div>
                   <p className="mt-2 text-sm text-[#C3BBD0]">{telegramUsername?.startsWith('+') ? 'Telegram support' : `@${telegramUsername}`}</p>
                   <a href={contacts.telegramUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-[#A995FF] underline-offset-4 hover:underline">Open Telegram</a>
                 </div>
               )}
               {contacts.email && (
-                <div className="rounded-xl border border-[#2B2037] bg-[#171022] p-4">
+                <div className="rounded-xl border border-[#2B2037] bg-[#171022] p-3 sm:p-4">
                   <div className="flex items-center gap-2 text-sm font-semibold"><Mail size={17} aria-hidden="true" className="text-[#48C0CC]" />Email</div>
-                  <p className="mt-2 break-all text-sm text-[#C3BBD0]">{contacts.email}</p>
+                  <p className="mt-2 break-words text-sm text-[#C3BBD0]">{contacts.email}</p>
                   <a href={`mailto:${contacts.email}`} className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-[#A995FF] underline-offset-4 hover:underline">Send email</a>
                 </div>
               )}

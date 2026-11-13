@@ -27,7 +27,7 @@ import { SandboxExecutionService } from "../sandbox/sandbox-execution.service";
 import { ADMIN_ROLE_DEFINITIONS } from "./admin-rbac";
 import { D1FinancialCommandGateway } from "../d1/d1-financial-command.gateway";
 import { D1PrismaService } from "../d1/d1-prisma.service";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { CommunicationsService } from "../communications/communications.service";
 import {
   assertPublicBannerSettings,
@@ -754,7 +754,22 @@ export class AdminService {
     const existing = await this.prisma.adminMaintenanceWindow.findUnique({
       where: { idempotencyKey: input.idempotencyKey },
     });
-    if (existing) return { ...existing, replayed: true };
+    if (existing) {
+      if (existing.createdBy !== input.createdBy ||
+        existing.scope !== input.scope.toUpperCase() ||
+        existing.target !== input.target.trim() ||
+        existing.reason !== input.reason.trim() ||
+        existing.environment !== input.environment ||
+        new Date(existing.scheduledAt).getTime() !== start.getTime() ||
+        new Date(existing.endsAt).getTime() !== end.getTime())
+        throw new ConflictException("Maintenance scheduling key belongs to a different original request");
+      const audit = await this.prisma.adminAuditLog.findFirst({
+        where: { adminId: input.createdBy, action: "MAINTENANCE_WINDOW_SCHEDULED",
+          target: existing.id, details: { contains: '"idempotencyKey":"' + input.idempotencyKey + '"' } },
+        orderBy: { createdAt: "desc" },
+      });
+      return { ...existing, auditId: audit?.id ?? null, replayed: true };
+    }
     const correlationId = `maintenance:${input.idempotencyKey}`;
     const created = await this.prisma.$transaction(async (tx) => {
       const row = await tx.adminMaintenanceWindow.create({
@@ -770,7 +785,7 @@ export class AdminService {
           correlationId,
         },
       });
-      await tx.adminAuditLog.create({
+      const audit = await tx.adminAuditLog.create({
         data: {
           adminId: input.createdBy,
           action: "MAINTENANCE_WINDOW_SCHEDULED",
@@ -796,7 +811,7 @@ export class AdminService {
           },
         },
       });
-      return row;
+      return { ...row, auditId: audit.id };
     });
     return { ...created, replayed: false };
   }
@@ -820,12 +835,22 @@ export class AdminService {
     const replay = await this.prisma.adminMaintenanceWindow.findUnique({
       where: { cancelIdempotencyKey: input.idempotencyKey },
     });
-    if (replay) return { ...replay, replayed: true };
+    if (replay) {
+      if (replay.id !== id || replay.cancelledBy !== adminId ||
+        replay.cancelReason !== input.reason.trim())
+        throw new ConflictException("Maintenance cancellation key belongs to a different original request");
+      const audit = await this.prisma.adminAuditLog.findFirst({
+        where: { adminId, action: "MAINTENANCE_WINDOW_CANCELLED",
+          target: id, details: { contains: '"idempotencyKey":"' + input.idempotencyKey + '"' } },
+        orderBy: { createdAt: "desc" },
+      });
+      return { ...replay, auditId: audit?.id ?? null, replayed: true };
+    }
     const existing = await this.prisma.adminMaintenanceWindow.findUnique({
       where: { id },
     });
     if (!existing) throw new NotFoundException("Maintenance window not found");
-    if (existing.status === "CANCELLED") return { ...existing, replayed: true };
+    if (existing.status === "CANCELLED") throw new ConflictException("Window already cancelled by a different command");
     const updated = await this.prisma.$transaction(async (tx) => {
       const row = await tx.adminMaintenanceWindow.update({
         where: { id },
@@ -837,7 +862,7 @@ export class AdminService {
           cancelIdempotencyKey: input.idempotencyKey,
         },
       });
-      await tx.adminAuditLog.create({
+      const audit = await tx.adminAuditLog.create({
         data: {
           adminId,
           action: "MAINTENANCE_WINDOW_CANCELLED",
@@ -878,7 +903,7 @@ export class AdminService {
           },
         },
       });
-      return row;
+      return { ...row, auditId: audit.id };
     });
     return { ...updated, replayed: false };
   }
@@ -951,11 +976,10 @@ export class AdminService {
     description?: string,
     reason?: string,
     adminId?: string,
+    idempotencyKey?: string,
   ) {
-    if (!reason?.trim())
-      throw new BadRequestException(
-        "A reason is required for Admin configuration changes",
-      );
+    if (!reason?.trim() || !adminId || !idempotencyKey?.trim())
+      throw new BadRequestException("Admin config changes require principal, reason and original key");
     if (key === "admin.frontend.quoteCategories")
       assertVisiblePublicQuotesCategory(value);
     if (key === "admin.frontend.routes") assertPublicRouteSettings(value);
@@ -964,26 +988,29 @@ export class AdminService {
       assertSupportEntryPoints(value);
     if (this.d1?.isEnabled())
       return this.d1.updateSystemConfig({
-        key,
-        value,
-        description,
-        reason,
-        adminId: adminId ?? "unknown-admin",
+        key, value, description, reason, adminId, idempotencyKey,
       });
-    const result = await this.prisma.systemConfig.upsert({
-      where: { key },
-      update: { value, description },
-      create: { key, value, description },
+    const auditId = this.marketMutationAuditId("SYSTEM_CONFIG_UPDATED", adminId, idempotencyKey);
+    const details = JSON.stringify({ key, value, description: description ?? null,
+      reason, idempotencyKey });
+    return this.prisma.$transaction(async (tx) => {
+      const previous = await tx.adminAuditLog.findUnique({ where: { id: auditId } });
+      if (previous) {
+        if (previous.adminId !== adminId || previous.action !== "SYSTEM_CONFIG_UPDATED" ||
+          previous.target !== key || previous.details !== details)
+          throw new ConflictException("System configuration key belongs to another original request");
+        const current = await tx.systemConfig.findUnique({ where: { key } });
+        if (!current) throw new NotFoundException("Original configuration no longer exists");
+        return { ...current, ok: true, auditId, replayed: true };
+      }
+      const result = await tx.systemConfig.upsert({
+        where: { key }, update: { value, description }, create: { key, value, description },
+      });
+      await tx.adminAuditLog.create({ data: {
+        id: auditId, adminId, action: "SYSTEM_CONFIG_UPDATED", target: key, details,
+      } });
+      return { ...result, ok: true, auditId };
     });
-    await this.prisma.adminAuditLog.create({
-      data: {
-        adminId: adminId ?? "unknown-admin",
-        action: "SYSTEM_CONFIG_UPDATED",
-        target: key,
-        details: { value, description, reason },
-      },
-    });
-    return result;
   }
 
   async createGovernanceCommand(input: {
@@ -1128,7 +1155,10 @@ export class AdminService {
     environment?: string;
     reason: string;
     updatedBy: string;
+    idempotencyKey: string;
   }) {
+    if (!input.idempotencyKey?.trim())
+      throw new BadRequestException("Feature flag original request key is required");
     if (!input.reason?.trim())
       throw new BadRequestException(
         "A reason is required for feature flag changes",
@@ -1140,36 +1170,39 @@ export class AdminService {
         environment: input.environment ?? "sandbox",
         reason: input.reason,
         updatedBy: input.updatedBy,
+        idempotencyKey: input.idempotencyKey,
       });
-    const flag = await this.prisma.adminFeatureFlag.upsert({
-      where: { key: input.key },
-      update: {
-        enabled: input.enabled,
-        environment: input.environment ?? "sandbox",
-        reason: input.reason,
-        updatedBy: input.updatedBy,
-      },
-      create: {
-        key: input.key,
-        enabled: input.enabled,
-        environment: input.environment ?? "sandbox",
-        reason: input.reason,
-        updatedBy: input.updatedBy,
-      },
+    const hex = createHash("sha256").update(JSON.stringify([
+      "feature-flag", input.updatedBy, input.idempotencyKey,
+    ])).digest("hex");
+    const auditId = [hex.slice(0, 8), hex.slice(8, 12), "4" + hex.slice(13, 16),
+      "8" + hex.slice(17, 20), hex.slice(20, 32)].join("-");
+    const environment = input.environment ?? "sandbox";
+    const details = JSON.stringify({
+      idempotencyKey: input.idempotencyKey, enabled: input.enabled,
+      environment, reason: input.reason,
     });
-    await this.prisma.adminAuditLog.create({
-      data: {
-        adminId: input.updatedBy,
-        action: "FEATURE_FLAG_UPDATED",
-        target: input.key,
-        details: {
-          enabled: input.enabled,
-          environment: input.environment ?? "sandbox",
-          reason: input.reason,
-        },
-      },
+    return this.prisma.$transaction(async (tx) => {
+      const previous = await tx.adminAuditLog.findUnique({ where: { id: auditId } });
+      if (previous) {
+        if (previous.adminId !== input.updatedBy || previous.action !== "FEATURE_FLAG_UPDATED" ||
+          previous.target !== input.key || previous.details !== details)
+          throw new ConflictException("Feature flag idempotency key belongs to another request");
+        const current = await tx.adminFeatureFlag.findUnique({ where: { key: input.key } });
+        if (!current) throw new NotFoundException("Feature flag replay cannot resolve");
+        return { ...current, ok: true, auditId };
+      }
+      const flag = await tx.adminFeatureFlag.upsert({
+        where: { key: input.key },
+        update: { enabled: input.enabled, environment, reason: input.reason, updatedBy: input.updatedBy },
+        create: { key: input.key, enabled: input.enabled, environment, reason: input.reason, updatedBy: input.updatedBy },
+      });
+      await tx.adminAuditLog.create({
+        data: { id: auditId, adminId: input.updatedBy, action: "FEATURE_FLAG_UPDATED",
+          target: input.key, details },
+      });
+      return { ...flag, ok: true, auditId };
     });
-    return flag;
   }
 
   async listFeatureFlags() {
@@ -1536,44 +1569,51 @@ export class AdminService {
     });
   }
 
+  private marketMutationAuditId(action: string, adminId: string, key: string): string {
+    const hex = createHash("sha256")
+      .update(JSON.stringify(["market-admin", action, adminId, key]))
+      .digest("hex");
+    return [hex.slice(0, 8), hex.slice(8, 12), "4" + hex.slice(13, 16),
+      "8" + hex.slice(17, 20), hex.slice(20, 32)].join("-");
+  }
+
   async setMarketAssetVisibility(input: {
-    id: string;
-    visible: boolean;
-    adminId: string;
-    reason: string;
-    idempotencyKey: string;
+    id: string; visible: boolean; adminId: string; reason: string; idempotencyKey: string;
   }) {
-    if (!input.reason?.trim())
-      throw new BadRequestException(
-        "A reason is required to change asset visibility",
-      );
+    if (!input.reason?.trim() || !input.idempotencyKey?.trim())
+      throw new BadRequestException("Asset visibility requires reason and original request key");
+    const action = "MARKET_ASSET_VISIBILITY_UPDATED";
+    const auditId = this.marketMutationAuditId(action, input.adminId, input.idempotencyKey);
     const db = this.marketDatabase();
-    const asset = await db.marketAsset.findUnique({
-      where: { id: input.id },
-      select: { id: true, symbol: true },
+    return db.$transaction(async (tx: any) => {
+      const previous = await tx.adminAuditLog.findUnique({ where: { id: auditId } });
+      if (previous) {
+        const asset = await tx.marketAsset.findUnique({ where: { id: input.id } });
+        const expected = asset && JSON.stringify({
+          symbol: asset.symbol, visible: input.visible,
+          reason: input.reason, idempotencyKey: input.idempotencyKey,
+        });
+        if (!asset || previous.adminId !== input.adminId || previous.action !== action ||
+          previous.target !== input.id || previous.details !== expected)
+          throw new ConflictException("Asset visibility key belongs to another original request");
+        return { ok: true, auditId, status: asset.status, replayed: true };
+      }
+      const asset = await tx.marketAsset.findUnique({
+        where: { id: input.id }, select: { id: true, symbol: true },
+      });
+      if (!asset) throw new NotFoundException("Market asset not found");
+      const updated = await tx.marketAsset.update({
+        where: { id: asset.id },
+        data: { status: input.visible ? "ACTIVE" : "MAINTENANCE",
+          maintenanceNote: input.visible ? null : input.reason },
+      });
+      const audit = await tx.adminAuditLog.create({ data: {
+        id: auditId, adminId: input.adminId, action, target: asset.id,
+        details: JSON.stringify({ symbol: asset.symbol, visible: input.visible,
+          reason: input.reason, idempotencyKey: input.idempotencyKey }),
+      } });
+      return { ok: true, auditId: audit.id, status: updated.status };
     });
-    if (!asset) throw new NotFoundException("Market asset not found");
-    const updated = await db.marketAsset.update({
-      where: { id: asset.id },
-      data: {
-        status: input.visible ? "ACTIVE" : "MAINTENANCE",
-        maintenanceNote: input.visible ? null : input.reason,
-      },
-    });
-    const audit = await db.adminAuditLog.create({
-      data: {
-        adminId: input.adminId,
-        action: "MARKET_ASSET_VISIBILITY_UPDATED",
-        target: asset.id,
-        details: {
-          symbol: asset.symbol,
-          visible: input.visible,
-          reason: input.reason,
-          idempotencyKey: input.idempotencyKey,
-        },
-      },
-    });
-    return { ok: true, auditId: audit.id, status: updated.status };
   }
 
   async getMarketNetworks() {
@@ -1584,43 +1624,42 @@ export class AdminService {
   }
 
   async setMarketNetworkVisibility(input: {
-    id: string;
-    enabled: boolean;
-    adminId: string;
-    reason: string;
-    idempotencyKey: string;
+    id: string; enabled: boolean; adminId: string; reason: string; idempotencyKey: string;
   }) {
-    if (!input.reason?.trim())
-      throw new BadRequestException(
-        "A reason is required to change network visibility",
-      );
+    if (!input.reason?.trim() || !input.idempotencyKey?.trim())
+      throw new BadRequestException("Network visibility requires reason and original request key");
+    const action = "MARKET_NETWORK_VISIBILITY_UPDATED";
+    const auditId = this.marketMutationAuditId(action, input.adminId, input.idempotencyKey);
     const db = this.marketDatabase();
-    const network = await db.marketNetwork.findUnique({
-      where: { id: input.id },
-      select: { id: true, code: true },
+    return db.$transaction(async (tx: any) => {
+      const previous = await tx.adminAuditLog.findUnique({ where: { id: auditId } });
+      if (previous) {
+        const network = await tx.marketNetwork.findUnique({ where: { id: input.id } });
+        const expected = network && JSON.stringify({
+          code: network.code, enabled: input.enabled,
+          reason: input.reason, idempotencyKey: input.idempotencyKey,
+        });
+        if (!network || previous.adminId !== input.adminId || previous.action !== action ||
+          previous.target !== input.id || previous.details !== expected)
+          throw new ConflictException("Network visibility key belongs to another original request");
+        return { ok: true, auditId, status: network.status, replayed: true };
+      }
+      const network = await tx.marketNetwork.findUnique({
+        where: { id: input.id }, select: { id: true, code: true },
+      });
+      if (!network) throw new NotFoundException("Market network not found");
+      const updated = await tx.marketNetwork.update({
+        where: { id: network.id },
+        data: { status: input.enabled ? "ACTIVE" : "MAINTENANCE",
+          maintenanceNote: input.enabled ? null : input.reason },
+      });
+      const audit = await tx.adminAuditLog.create({ data: {
+        id: auditId, adminId: input.adminId, action, target: network.id,
+        details: JSON.stringify({ code: network.code, enabled: input.enabled,
+          reason: input.reason, idempotencyKey: input.idempotencyKey }),
+      } });
+      return { ok: true, auditId: audit.id, status: updated.status };
     });
-    if (!network) throw new NotFoundException("Market network not found");
-    const updated = await db.marketNetwork.update({
-      where: { id: network.id },
-      data: {
-        status: input.enabled ? "ACTIVE" : "MAINTENANCE",
-        maintenanceNote: input.enabled ? null : input.reason,
-      },
-    });
-    const audit = await db.adminAuditLog.create({
-      data: {
-        adminId: input.adminId,
-        action: "MARKET_NETWORK_VISIBILITY_UPDATED",
-        target: network.id,
-        details: {
-          code: network.code,
-          enabled: input.enabled,
-          reason: input.reason,
-          idempotencyKey: input.idempotencyKey,
-        },
-      },
-    });
-    return { ok: true, auditId: audit.id, status: updated.status };
   }
 
   async getMarketFeeds() {
@@ -1637,61 +1676,47 @@ export class AdminService {
   }
 
   async setMarketFeedStatus(input: {
-    id: string;
-    status: "LIVE" | "STALE" | "UNAVAILABLE" | "DISABLED";
-    adminId: string;
-    reason: string;
-    idempotencyKey: string;
+    id: string; status: "LIVE" | "STALE" | "UNAVAILABLE" | "DISABLED";
+    adminId: string; reason: string; idempotencyKey: string;
   }) {
-    if (!input.reason?.trim())
-      throw new BadRequestException(
-        "A reason is required to change provider status",
-      );
+    if (!input.reason?.trim() || !input.idempotencyKey?.trim())
+      throw new BadRequestException("Provider status requires reason and original request key");
     if (input.status === "LIVE" || input.status === "STALE")
-      throw new BadRequestException(
-        "LIVE and STALE are runtime-derived states, not admin configuration",
-      );
+      throw new BadRequestException("LIVE and STALE are runtime-derived states, not admin configuration");
+    const action = "MARKET_PROVIDER_STATUS_UPDATED";
+    const auditId = this.marketMutationAuditId(action, input.adminId, input.idempotencyKey);
     const db = this.marketDatabase();
-    const replay = await db.adminAuditLog.findFirst({
-      where: {
-        action: "MARKET_PROVIDER_STATUS_UPDATED",
-        details: { path: ["idempotencyKey"], equals: input.idempotencyKey },
-      },
-      orderBy: { createdAt: "desc" },
+    return db.$transaction(async (tx: any) => {
+      const symbol = await tx.marketProviderSymbol.findFirst({
+        where: { OR: [{ id: input.id }, { providerId: input.id }] },
+        select: { providerId: true },
+      });
+      const provider = await tx.marketProviderConfig.findUnique({
+        where: { id: symbol?.providerId ?? input.id },
+        select: { id: true, key: true, status: true },
+      });
+      if (!provider) throw new NotFoundException("Market provider not found");
+      const status = input.status === "DISABLED" ? "DISABLED" : "ACTIVE";
+      const details = JSON.stringify({
+        status: input.status, providerStatus: status,
+        reason: input.reason, idempotencyKey: input.idempotencyKey,
+      });
+      const previous = await tx.adminAuditLog.findUnique({ where: { id: auditId } });
+      if (previous) {
+        if (previous.adminId !== input.adminId || previous.action !== action ||
+          previous.target !== provider.key || previous.details !== details)
+          throw new ConflictException("Provider status key belongs to another original request");
+        return { ok: true, auditId, status: provider.status, replayed: true };
+      }
+      // Runtime LIVE/STALE are observed states, not writable lifecycle gates.
+      const updated = await tx.marketProviderConfig.update({
+        where: { id: provider.id }, data: { status },
+      });
+      const audit = await tx.adminAuditLog.create({ data: {
+        id: auditId, adminId: input.adminId, action, target: provider.key, details,
+      } });
+      return { ok: true, auditId: audit.id, status: updated.status };
     });
-    if (replay) return { ok: true, auditId: replay.id, replayed: true };
-    const symbol = await db.marketProviderSymbol.findFirst({
-      where: { OR: [{ id: input.id }, { providerId: input.id }] },
-      select: { providerId: true, provider: { select: { key: true } } },
-    });
-    const providerId = symbol?.providerId ?? input.id;
-    const provider = await db.marketProviderConfig.findUnique({
-      where: { id: providerId },
-      select: { id: true, key: true },
-    });
-    if (!provider) throw new NotFoundException("Market provider not found");
-    // Runtime states (LIVE/STALE/UNAVAILABLE) are observed by the market
-    // pollers. The admin action only changes the lifecycle gate: DISABLED
-    // turns polling off; every other accepted action re-enables the provider.
-    const status = input.status === "DISABLED" ? "DISABLED" : "ACTIVE";
-    const updated = await db.marketProviderConfig.update({
-      where: { id: provider.id },
-      data: { status },
-    });
-    const audit = await db.adminAuditLog.create({
-      data: {
-        adminId: input.adminId,
-        action: "MARKET_PROVIDER_STATUS_UPDATED",
-        target: provider.key,
-        details: {
-          status: input.status,
-          providerStatus: status,
-          reason: input.reason,
-          idempotencyKey: input.idempotencyKey,
-        },
-      },
-    });
-    return { ok: true, auditId: audit.id, status: updated.status };
   }
 
   async getSpotPairs() {
@@ -1915,20 +1940,22 @@ export class AdminService {
       return { ...result, ok: true, auditId: adminAuditId };
     }
     // A replay/deferred request has no new financial posting to audit atomically.
-    const audit = await this.prisma.adminAuditLog.create({
-      data: {
-        adminId,
-        action: finalized ? "ADMIN_BINARY_SETTLEMENT_REPLAYED" : "ADMIN_BINARY_SETTLEMENT_DEFERRED",
-        target: id,
-        details: {
-          reason,
-          idempotencyKey,
-          state: result.position?.state ?? null,
-          delayed: !finalized,
-          replayed,
-          reasonCode: ('reason' in result ? result.reason : undefined) ?? (finalized ? null : 'settlement-not-finalized'),
-        },
-      },
+    // Preserve the original operator intent on retries; do not create an audit
+    // entry for every scheduler-delayed response or repeat Admin command.
+    const action = finalized ? "ADMIN_BINARY_SETTLEMENT_REPLAYED" : "ADMIN_BINARY_SETTLEMENT_DEFERRED";
+    const auditId = this.marketMutationAuditId(action, adminId, idempotencyKey);
+    const details = JSON.stringify({ reason, idempotencyKey });
+    const audit = await this.prisma.$transaction(async (tx) => {
+      const previous = await tx.adminAuditLog.findUnique({ where: { id: auditId } });
+      if (previous) {
+        if (previous.adminId !== adminId || previous.action !== action ||
+            previous.target !== id || previous.details !== details)
+          throw new ConflictException("Binary settlement key belongs to another original request");
+        return previous;
+      }
+      return tx.adminAuditLog.create({
+        data: { id: auditId, adminId, action, target: id, details },
+      });
     });
     return { ...result, ok: finalized, auditId: audit.id };
   }
@@ -2353,30 +2380,35 @@ export class AdminService {
     reason: string,
     idempotencyKey: string,
   ) {
-    if (!reason?.trim())
-      throw new BadRequestException(
-        "A reason is required to change pair maintenance",
-      );
-    const pair = await this.prisma.marketPair.findFirst({
-      where: { OR: [{ id: symbol }, { symbol }] },
+    if (!reason?.trim() || !idempotencyKey?.trim())
+      throw new BadRequestException("Pair maintenance requires reason and original request key");
+    const action = "ADMIN_SPOT_PAIR_MAINTENANCE";
+    const auditId = this.marketMutationAuditId(action, adminId, idempotencyKey);
+    return this.prisma.$transaction(async (tx) => {
+      const pair = await tx.marketPair.findFirst({
+        where: { OR: [{ id: symbol }, { symbol }] },
+      });
+      if (!pair) throw new NotFoundException("Spot pair not found");
+      const details = JSON.stringify({
+        reason, idempotencyKey, enabled, symbol: pair.symbol,
+      });
+      const previous = await tx.adminAuditLog.findUnique({ where: { id: auditId } });
+      if (previous) {
+        if (previous.adminId !== adminId || previous.action !== action ||
+          previous.target !== pair.id || previous.details !== details)
+          throw new ConflictException("Pair maintenance key belongs to another original request");
+        return { ok: true, auditId, status: pair.status, replayed: true };
+      }
+      const row = await tx.marketPair.update({
+        where: { id: pair.id },
+        data: { status: enabled ? "ACTIVE" : "MAINTENANCE",
+          maintenanceNote: enabled ? null : reason },
+      });
+      const audit = await tx.adminAuditLog.create({ data: {
+        id: auditId, adminId, action, target: pair.id, details,
+      } });
+      return { ok: true, auditId: audit.id, status: row.status, replayed: false };
     });
-    if (!pair) throw new NotFoundException("Spot pair not found");
-    const row = await this.prisma.marketPair.update({
-      where: { id: pair.id },
-      data: {
-        status: enabled ? "ACTIVE" : "MAINTENANCE",
-        maintenanceNote: enabled ? null : reason,
-      },
-    });
-    await this.prisma.adminAuditLog.create({
-      data: {
-        adminId,
-        action: "ADMIN_SPOT_PAIR_MAINTENANCE",
-        target: pair.id,
-        details: { reason, idempotencyKey, enabled, symbol: pair.symbol },
-      },
-    });
-    return { ok: true, auditId: idempotencyKey, status: row.status };
   }
 
   async getMarginConfiguration() {
@@ -2421,63 +2453,69 @@ export class AdminService {
       throw new BadRequestException(
         "Maintenance ratio must be between 0 and 1",
       );
+    let auditId: string;
     if (this.d1?.isEnabled()) {
-      await this.d1.updateSystemConfig({
-        key: "gate2.margin.maintenanceRatio",
-        value: String(input.maintenanceRatio),
-        description: "Isolated margin maintenance ratio",
-        adminId,
-        reason: input.reason,
-      });
-      await this.d1.updateSystemConfig({
-        key: "gate2.margin.leverages",
-        value: leverages.join(","),
-        description: "Allowed isolated margin leverage multipliers",
-        adminId,
-        reason: input.reason,
-      });
-    } else {
-      await this.prisma.$transaction([
-        this.prisma.systemConfig.upsert({
-          where: { key: "gate2.margin.maintenanceRatio" },
-          update: {
-            value: String(input.maintenanceRatio),
-            description: "Isolated margin maintenance ratio",
-          },
-          create: {
-            key: "gate2.margin.maintenanceRatio",
-            value: String(input.maintenanceRatio),
-            description: "Isolated margin maintenance ratio",
-          },
-        }),
-        this.prisma.systemConfig.upsert({
-          where: { key: "gate2.margin.leverages" },
-          update: {
-            value: leverages.join(","),
-            description: "Allowed isolated margin leverage multipliers",
-          },
-          create: {
-            key: "gate2.margin.leverages",
-            value: leverages.join(","),
-            description: "Allowed isolated margin leverage multipliers",
-          },
-        }),
-        this.prisma.adminAuditLog.create({
-          data: {
-            adminId,
-            action: "MARGIN_CONFIGURATION_UPDATED",
-            target: "isolated-margin",
-            details: {
-              reason: input.reason,
-              idempotencyKey: input.idempotencyKey,
-              maintenanceRatio: input.maintenanceRatio,
-              leverages,
-            },
-          },
-        }),
+      const receipts = await this.d1.updateSystemConfigsAtomically([
+        {
+          key: "gate2.margin.maintenanceRatio",
+          value: String(input.maintenanceRatio),
+          description: "Isolated margin maintenance ratio",
+          adminId, reason: input.reason,
+          idempotencyKey: input.idempotencyKey + ":maintenanceRatio",
+        },
+        {
+          key: "gate2.margin.leverages",
+          value: leverages.join(","),
+          description: "Allowed isolated margin leverage multipliers",
+          adminId, reason: input.reason,
+          idempotencyKey: input.idempotencyKey + ":leverages",
+        },
       ]);
+      auditId = String(receipts[0].auditId);
+    } else {
+      const commandAuditId = this.marketMutationAuditId(
+        "MARGIN_CONFIGURATION_UPDATED", adminId, input.idempotencyKey,
+      );
+      const details = JSON.stringify({
+        reason: input.reason, idempotencyKey: input.idempotencyKey,
+        maintenanceRatio: input.maintenanceRatio, leverages,
+      });
+      await this.prisma.$transaction(async (tx) => {
+        const previous = await tx.adminAuditLog.findUnique({
+          where: { id: commandAuditId },
+        });
+        if (previous) {
+          if (previous.adminId !== adminId ||
+            previous.action !== "MARGIN_CONFIGURATION_UPDATED" ||
+            previous.target !== "isolated-margin" || previous.details !== details)
+            throw new ConflictException("Margin configuration key belongs to another original request");
+          return;
+        }
+        await tx.systemConfig.upsert({
+          where: { key: "gate2.margin.maintenanceRatio" },
+          update: { value: String(input.maintenanceRatio),
+            description: "Isolated margin maintenance ratio" },
+          create: { key: "gate2.margin.maintenanceRatio",
+            value: String(input.maintenanceRatio),
+            description: "Isolated margin maintenance ratio" },
+        });
+        await tx.systemConfig.upsert({
+          where: { key: "gate2.margin.leverages" },
+          update: { value: leverages.join(","),
+            description: "Allowed isolated margin leverage multipliers" },
+          create: { key: "gate2.margin.leverages",
+            value: leverages.join(","),
+            description: "Allowed isolated margin leverage multipliers" },
+        });
+        await tx.adminAuditLog.create({ data: {
+          id: commandAuditId, adminId,
+          action: "MARGIN_CONFIGURATION_UPDATED",
+          target: "isolated-margin", details,
+        } });
+      });
+      auditId = commandAuditId;
     }
-    return { maintenanceRatio: input.maintenanceRatio, leverages };
+    return { ok: true, auditId, maintenanceRatio: input.maintenanceRatio, leverages };
   }
 
   async updateCurrency(id: number, data: any, adminId: string) {
@@ -2687,6 +2725,30 @@ export class AdminService {
     });
   }
 
+  private loanPlanAuditId(action: "CREATED" | "UPDATED", context: AdminPlanMutationContext): string {
+    const hex = createHash("sha256")
+      .update(JSON.stringify(["loan-plan", action, context.adminId, context.idempotencyKey]))
+      .digest("hex");
+    return [hex.slice(0, 8), hex.slice(8, 12), "4" + hex.slice(13, 16),
+      "8" + hex.slice(17, 20), hex.slice(20, 32)].join("-");
+  }
+
+  private assertLoanPlanTerms(interestRate: unknown, minAmount: unknown, maxAmount: unknown): void {
+    const decimal = (value: unknown, field: string) => {
+      let amount: Prisma.Decimal;
+      try { amount = new Prisma.Decimal(String(value)); }
+      catch { throw new BadRequestException(`Loan plan ${field} is not a decimal`); }
+      if (!amount.isFinite() || amount.isNegative())
+        throw new BadRequestException(`Loan plan ${field} must be non-negative`);
+      return amount;
+    };
+    decimal(interestRate, 'interestRate');
+    const minimum = decimal(minAmount, 'minAmount');
+    const maximum = decimal(maxAmount, 'maxAmount');
+    if (!maximum.gt(minimum))
+      throw new BadRequestException('Loan plan maximum must exceed minimum');
+  }
+
   async createLoanPlan(data: any, context?: AdminPlanMutationContext) {
     const currency = String(data.currency ?? "")
       .trim()
@@ -2699,24 +2761,18 @@ export class AdminService {
       minAmount: String(data.minAmount),
       maxAmount: String(data.maxAmount),
     };
+    this.assertLoanPlanTerms(planData.interestRate, planData.minAmount, planData.maxAmount);
+    const auditId = context ? this.loanPlanAuditId("CREATED", context) : null;
     return this.prisma.$transaction(async (tx) => {
-      if (context) {
-        const prior = await tx.adminAuditLog.findFirst({
-          where: {
-            adminId: context.adminId,
-            action: "LOAN_PLAN_CREATED",
-            details: {
-              contains: `"idempotencyKey":"${context.idempotencyKey}"`,
-            },
-          },
-        });
+      if (context && auditId) {
+        const prior = await tx.adminAuditLog.findUnique({ where: { id: auditId } });
         if (prior) {
           const expected = JSON.stringify({
             reason: context.reason,
             idempotencyKey: context.idempotencyKey,
             payload: planData,
           });
-          if (prior.details !== expected)
+          if (prior.adminId !== context.adminId || prior.action !== "LOAN_PLAN_CREATED" || prior.details !== expected)
             throw new BadRequestException(
               "Loan plan idempotency key was reused with different parameters",
             );
@@ -2732,6 +2788,7 @@ export class AdminService {
       if (!context) return plan;
       const audit = await tx.adminAuditLog.create({
         data: {
+          id: auditId!,
           adminId: context.adminId,
           action: "LOAN_PLAN_CREATED",
           target: plan.id,
@@ -2765,25 +2822,17 @@ export class AdminService {
     for (const field of ["interestRate", "minAmount", "maxAmount"] as const)
       if (planData[field] !== undefined)
         planData[field] = String(planData[field]);
+    const auditId = context ? this.loanPlanAuditId("UPDATED", context) : null;
     return this.prisma.$transaction(async (tx) => {
-      if (context) {
-        const prior = await tx.adminAuditLog.findFirst({
-          where: {
-            adminId: context.adminId,
-            action: "LOAN_PLAN_UPDATED",
-            target: id,
-            details: {
-              contains: `"idempotencyKey":"${context.idempotencyKey}"`,
-            },
-          },
-        });
+      if (context && auditId) {
+        const prior = await tx.adminAuditLog.findUnique({ where: { id: auditId } });
         if (prior) {
           const expected = JSON.stringify({
             reason: context.reason,
             idempotencyKey: context.idempotencyKey,
             payload: planData,
           });
-          if (prior.details !== expected)
+          if (prior.adminId !== context.adminId || prior.action !== "LOAN_PLAN_UPDATED" || prior.target !== id || prior.details !== expected)
             throw new BadRequestException(
               "Loan plan idempotency key was reused with different parameters",
             );
@@ -2793,10 +2842,18 @@ export class AdminService {
           return existing;
         }
       }
+      const current = await tx.loanPlan.findUnique({ where: { id } });
+      if (!current) throw new NotFoundException('Loan plan not found');
+      this.assertLoanPlanTerms(
+        planData.interestRate ?? current.interestRate,
+        planData.minAmount ?? current.minAmount,
+        planData.maxAmount ?? current.maxAmount,
+      );
       const plan = await tx.loanPlan.update({ where: { id }, data: planData });
       if (!context) return plan;
       const audit = await tx.adminAuditLog.create({
         data: {
+          id: auditId!,
           adminId: context.adminId,
           action: "LOAN_PLAN_UPDATED",
           target: id,

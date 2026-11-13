@@ -1445,10 +1445,11 @@ describe("D1FinancialCommandGateway", () => {
                 kind: "CREDIT",
                 amount: "2",
                 referenceId: "admin-correction:corr-replay",
-                metadata: JSON.stringify({ reason: "reconcile" }),
+                metadata: JSON.stringify({ reason: "reconcile", adminId: "admin-1" }),
               },
             ],
           };
+        if (sql.includes('"AdminAuditLog"')) return { results: [{ id: "audit-replay-1" }] };
         return { results: [] };
       }),
     });
@@ -1466,12 +1467,15 @@ describe("D1FinancialCommandGateway", () => {
 
     await expect(
       gateway.applyAdminFinancialCorrection(command),
-    ).resolves.toMatchObject({ replayed: true });
+    ).resolves.toMatchObject({ replayed: true, auditId: "audit-replay-1" });
     await expect(
       gateway.applyAdminFinancialCorrection(command),
-    ).resolves.toMatchObject({ replayed: true });
+    ).resolves.toMatchObject({ replayed: true, auditId: "audit-replay-1" });
     await expect(
       gateway.applyAdminFinancialCorrection({ ...command, amount: "3" }),
+    ).rejects.toThrow("idempotency key was reused with different parameters");
+    await expect(
+      gateway.applyAdminFinancialCorrection({ ...command, adminId: "another-admin" }),
     ).rejects.toThrow("idempotency key was reused with different parameters");
     expect(bridge.batch).not.toHaveBeenCalled();
   });
@@ -1578,6 +1582,9 @@ describe("D1FinancialCommandGateway", () => {
       adminId: "admin-executor",
     });
     expect(result.replayed).toBe(false);
+    expect(typeof result.auditId).toBe("string");
+    const auditInsert = statements.find((statement) => statement.sql.includes('"AdminAuditLog"'));
+    expect(result.auditId).toBe(auditInsert?.params[0]);
     expect(statements).toHaveLength(9);
     const activity = statements.find((statement) => statement.sql.includes('"Activity"'));
     expect(activity).toBeDefined();

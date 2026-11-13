@@ -788,6 +788,19 @@ function Shell({ children }: { children: React.ReactNode }) {
   );
 }
 
+const validCurrencyDecimal = (value: string) =>
+  value.length <= 80 && /^(?:0|[1-9]\d*)(?:\.\d+)?$/.test(value);
+
+function decimalAtLeast(value: string, minimum: string): boolean {
+  if (!validCurrencyDecimal(value) || !validCurrencyDecimal(minimum)) return false;
+  const [valueWhole, valueFraction = ""] = value.split(".");
+  const [minWhole, minFraction = ""] = minimum.split(".");
+  if (valueWhole.length !== minWhole.length) return valueWhole.length > minWhole.length;
+  if (valueWhole !== minWhole) return valueWhole > minWhole;
+  const scale = Math.max(valueFraction.length, minFraction.length);
+  return valueFraction.padEnd(scale, "0") >= minFraction.padEnd(scale, "0");
+}
+
 function NetworkEditForm({
   net,
   onClose,
@@ -845,11 +858,11 @@ function NetworkEditForm({
 
   const reasonOk = reason.trim().length >= 6;
   const limitsValid =
-    Number(state.minDeposit) >= 0 &&
-    Number(state.maxDeposit) >= Number(state.minDeposit) &&
-    Number(state.minWithdrawal) >= 0 &&
-    Number(state.maxWithdrawal) >= Number(state.minWithdrawal) &&
-    Number(state.withdrawalFee) >= 0;
+    validCurrencyDecimal(state.minDeposit) &&
+    decimalAtLeast(state.maxDeposit, state.minDeposit) &&
+    validCurrencyDecimal(state.minWithdrawal) &&
+    decimalAtLeast(state.maxWithdrawal, state.minWithdrawal) &&
+    validCurrencyDecimal(state.withdrawalFee);
 
   return (
     <FormDrawer

@@ -13,6 +13,7 @@ import {
 import { findCommandByIdempotencyKey } from "./d1-command-queries";
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -2279,6 +2280,41 @@ export class D1FinancialCommandGateway {
     );
   }
 
+  // Subscription terms were locked when the Finance principal was reserved.
+  // Later Admin plan edits must not silently change active reward amounts or assets.
+  private withMiningSubscriptionTerms(row: Record<string, unknown>): Record<string, unknown> {
+    if (row.planSnapshot === null || row.planSnapshot === undefined || row.planSnapshot === '') {
+      // Old subscriptions without an immutable snapshot keep their existing
+      // legacy plan projection; no historical terms can be inferred.
+      return row;
+    }
+    let snapshot: Record<string, unknown>;
+    try {
+      const parsed: unknown = JSON.parse(String(row.planSnapshot));
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed))
+        throw new Error('Invalid mining plan snapshot');
+      snapshot = parsed as Record<string, unknown>;
+    } catch {
+      throw new BadRequestException('Mining subscription plan snapshot is malformed');
+    }
+    const currency = snapshot.currency;
+    const dailyYield = snapshot.dailyYield;
+    const duration = snapshot.lockupPeriod;
+    if (typeof currency !== 'string' || !/^[A-Z0-9]{2,24}$/.test(currency) ||
+        typeof dailyYield !== 'string' || !/^(?:0|[1-9][0-9]*)(?:[.][0-9]+)?$/.test(dailyYield) ||
+        !Number.isInteger(Number(duration)) || Number(duration) < 1) {
+      throw new BadRequestException('Mining subscription locked terms are invalid');
+    }
+    return {
+      ...row,
+      planCurrency: currency,
+      planDailyYieldDecimal: dailyYield,
+      planLockupPeriod: Number(duration),
+      planName: typeof snapshot.name === 'string' && snapshot.name.trim()
+        ? snapshot.name : row.planName,
+    };
+  }
+
   async getMiningSubscription(
     subscriptionId: string,
     userId?: string,
@@ -2288,7 +2324,7 @@ export class D1FinancialCommandGateway {
       `SELECT s.*,p."name" AS "planName",p."currency" AS "planCurrency",p."dailyYieldDecimal" AS "planDailyYieldDecimal",p."lockupPeriod" AS "planLockupPeriod" FROM "MiningSubscription" s JOIN "MiningPlan" p ON p."id"=s."planId" WHERE s."id"=?${userId ? ' AND s."userId"=?' : ""} LIMIT 1`,
       userId ? [subscriptionId, userId] : [subscriptionId],
     );
-    return result.results[0] ?? null;
+    return result.results[0] ? this.withMiningSubscriptionTerms(result.results[0]) : null;
   }
 
   async getMiningSubscriptionForIntent(
@@ -2321,7 +2357,7 @@ export class D1FinancialCommandGateway {
       `SELECT s.*,p."name" AS "planName",p."currency" AS "planCurrency",p."dailyYieldDecimal" AS "planDailyYieldDecimal",p."lockupPeriod" AS "planLockupPeriod" FROM "MiningSubscription" s JOIN "MiningPlan" p ON p."id"=s."planId" WHERE s."userId"=? ORDER BY s."createdAt" DESC`,
       [userId],
     );
-    return result.results;
+    return result.results.map((row) => this.withMiningSubscriptionTerms(row));
   }
 
   async listMiningSubscriptionsForScheduler(): Promise<
@@ -2343,7 +2379,7 @@ export class D1FinancialCommandGateway {
        JOIN "User" u ON u."id"=s."userId"
        ORDER BY s."createdAt" DESC`,
     );
-    return result.results;
+    return result.results.map((row) => this.withMiningSubscriptionTerms(row));
   }
 
   async subscribeMining(command: {
@@ -2361,9 +2397,11 @@ export class D1FinancialCommandGateway {
       command.idempotencyKey,
     );
     if (prior) {
+      // The customer intent contains plan identity and principal, not a fresh
+      // catalog snapshot. On replay, honor the previously accepted locked
+      // terms even when the operator has since edited the product.
       if (String(prior.planId) !== command.planId ||
-          !this.decimal(String(prior.amountDecimal ?? prior.amount)).eq(command.amount) ||
-          String(prior.planSnapshot ?? '') !== JSON.stringify(command.planSnapshot))
+          !this.decimal(String(prior.amountDecimal ?? prior.amount)).eq(command.amount))
         throw new BadRequestException("Mining original key belongs to different terms");
       return { ...prior, replayed: true };
     }
@@ -2372,6 +2410,15 @@ export class D1FinancialCommandGateway {
     const plan: any = await this.getMiningPlan(command.planId);
     if (!plan || !plan.isActive)
       throw new NotFoundException("Mining plan not found");
+    const locked = command.planSnapshot;
+    // The operator may edit a plan after Public displayed its terms.
+    // A new economic reserve must not capture those stale original terms.
+    if (String(locked.currency) !== String(plan.currency) ||
+        Number(locked.lockupPeriod) !== Number(plan.lockupPeriod) ||
+        !this.nonNegativeDecimal(String(locked.dailyYield)).eq(String(plan.dailyYieldDecimal)) ||
+        !this.nonNegativeDecimal(String(locked.minDeposit)).eq(String(plan.minDepositDecimal)) ||
+        !this.nonNegativeDecimal(String(locked.maxDeposit)).eq(String(plan.maxDepositDecimal)))
+      throw new BadRequestException("Mining plan terms changed; refresh before subscribing");
     const account = await this.getAccountForUser(
       command.userId,
       String(plan.currency),
@@ -2386,7 +2433,8 @@ export class D1FinancialCommandGateway {
     const postingId = randomUUID();
     const result = await this.bridge.batch([
       {
-        sql: `INSERT OR IGNORE INTO "LedgerIdempotency" ("id","idempotencyKey","operation","accountId","createdAt","updatedAt") SELECT ?,?,'RESERVE',?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP WHERE NOT EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=?) AND NOT EXISTS (SELECT 1 FROM "Activity" WHERE "idempotencyKey"=?) AND EXISTS (SELECT 1 FROM "LedgerAccount" WHERE "id"=? AND "asset"=? AND "available"=? AND "locked"=?)`,
+        sql: `INSERT OR IGNORE INTO "LedgerIdempotency" ("id","idempotencyKey","operation","accountId","createdAt","updatedAt") SELECT ?,?,'RESERVE',?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP WHERE NOT EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=?) AND NOT EXISTS (SELECT 1 FROM "Activity" WHERE "idempotencyKey"=?) AND EXISTS (SELECT 1 FROM "LedgerAccount" WHERE "id"=? AND "asset"=? AND "available"=? AND "locked"=?)
+          AND EXISTS (SELECT 1 FROM "MiningPlan" WHERE "id"=? AND "isActive"=1 AND "currency"=? AND "dailyYieldDecimal"=? AND "lockupPeriod"=? AND "minDepositDecimal"=? AND "maxDepositDecimal"=?)`,
         params: [
           ledgerId,
           idem,
@@ -2397,6 +2445,12 @@ export class D1FinancialCommandGateway {
           String(plan.currency),
           current.available,
           current.locked,
+          command.planId,
+          String(plan.currency),
+          String(plan.dailyYieldDecimal),
+          Number(plan.lockupPeriod),
+          String(plan.minDepositDecimal),
+          String(plan.maxDepositDecimal),
         ],
       },
       {
@@ -3971,7 +4025,23 @@ export class D1FinancialCommandGateway {
       `SELECT * FROM "AdminMaintenanceWindow" WHERE "idempotencyKey"=? LIMIT 1`,
       [command.idempotencyKey],
     );
-    if (replay.results[0]) return { ...replay.results[0], replayed: true };
+    if (replay.results[0]) {
+      const prior = replay.results[0];
+      if (prior.createdBy !== command.createdBy ||
+        prior.scope !== command.scope.toUpperCase() ||
+        prior.target !== command.target.trim() ||
+        prior.reason !== command.reason.trim() ||
+        prior.environment !== command.environment ||
+        new Date(String(prior.scheduledAt)).getTime() !== new Date(command.scheduledAt).getTime() ||
+        new Date(String(prior.endsAt)).getTime() !== new Date(command.endsAt).getTime())
+        throw new ConflictException("Maintenance scheduling key belongs to a different original request");
+      const audit = await this.bridge.select<{ id: string }>(
+        'SELECT "id" FROM "AdminAuditLog" WHERE "action"=? AND "target"=? AND "adminId"=? AND json_valid("details") AND json_extract("details",?)=? ORDER BY "createdAt" DESC LIMIT 1',
+        ["MAINTENANCE_WINDOW_SCHEDULED", prior.id, command.createdBy,
+          "$.idempotencyKey", command.idempotencyKey],
+      );
+      return { ...prior, auditId: audit.results[0]?.id ?? null, replayed: true };
+    }
     const correlationId = "maintenance:" + command.idempotencyKey,
       auditId = randomUUID();
     const result = await this.bridge.batch([
@@ -4022,7 +4092,7 @@ export class D1FinancialCommandGateway {
       `SELECT * FROM "AdminMaintenanceWindow" WHERE "id"=? LIMIT 1`,
       [command.id],
     );
-    return { ...(row.results[0] ?? {}), replayed: false };
+    return { ...(row.results[0] ?? {}), auditId, replayed: false };
   }
 
   async cancelMaintenanceWindow(command: {
@@ -4036,7 +4106,18 @@ export class D1FinancialCommandGateway {
       `SELECT * FROM "AdminMaintenanceWindow" WHERE "cancelIdempotencyKey"=? LIMIT 1`,
       [command.idempotencyKey],
     );
-    if (replay.results[0]) return { ...replay.results[0], replayed: true };
+    if (replay.results[0]) {
+      const prior = replay.results[0];
+      if (prior.id !== command.windowId || prior.cancelledBy !== command.adminId ||
+        prior.cancelReason !== command.reason.trim())
+        throw new ConflictException("Maintenance cancellation key belongs to a different original request");
+      const audit = await this.bridge.select<{ id: string }>(
+        'SELECT "id" FROM "AdminAuditLog" WHERE "action"=? AND "target"=? AND "adminId"=? AND json_valid("details") AND json_extract("details",?)=? ORDER BY "createdAt" DESC LIMIT 1',
+        ["MAINTENANCE_WINDOW_CANCELLED", prior.id, command.adminId,
+          "$.idempotencyKey", command.idempotencyKey],
+      );
+      return { ...prior, auditId: audit.results[0]?.id ?? null, replayed: true };
+    }
     const existing = await this.bridge.select<Record<string, unknown>>(
       `SELECT * FROM "AdminMaintenanceWindow" WHERE "id"=? LIMIT 1`,
       [command.windowId],
@@ -4088,7 +4169,7 @@ export class D1FinancialCommandGateway {
       `SELECT * FROM "AdminMaintenanceWindow" WHERE "id"=? LIMIT 1`,
       [command.windowId],
     );
-    return { ...(row.results[0] ?? {}), replayed: false };
+    return { ...(row.results[0] ?? {}), auditId, replayed: false };
   }
 
   async getAdminStats(): Promise<Record<string, unknown>> {
@@ -5515,38 +5596,67 @@ export class D1FinancialCommandGateway {
   }
 
   async updateSystemConfig(command: {
-    key: string;
-    value: string;
-    description?: string;
-    adminId: string;
-    reason: string;
+    key: string; value: string; description?: string;
+    adminId: string; reason: string; idempotencyKey: string;
   }): Promise<Record<string, unknown>> {
+    const [result] = await this.updateSystemConfigsAtomically([command]);
+    return result;
+  }
+
+  async updateSystemConfigsAtomically(commands: Array<{
+    key: string; value: string; description?: string;
+    adminId: string; reason: string; idempotencyKey: string;
+  }>): Promise<Record<string, unknown>[]> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
-    const id = randomUUID();
-    const result = await this.bridge.batch([
-      {
-        sql: `INSERT INTO "SystemConfig" ("id","key","value","description","updatedAt") VALUES (?,?,?,?,CURRENT_TIMESTAMP) ON CONFLICT("key") DO UPDATE SET "value"=excluded."value","description"=excluded."description","updatedAt"=CURRENT_TIMESTAMP`,
-        params: [id, command.key, command.value, command.description ?? null],
-      },
-      {
-        sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`,
-        params: [
-          randomUUID(),
-          command.adminId,
-          "SYSTEM_CONFIG_UPDATED",
-          command.key,
-          JSON.stringify({ reason: command.reason }),
-        ],
-      },
-    ]);
-    this.requireChanges(result, 0, "D1 system configuration update");
-    const row = await this.bridge.select<Record<string, unknown>>(
-      `SELECT * FROM "SystemConfig" WHERE "key"=? LIMIT 1`,
-      [command.key],
-    );
-    if (!row.results[0])
-      throw new BadRequestException("D1 system config was not materialized");
-    return row.results[0];
+    if (commands.length < 1 || commands.length > 4)
+      throw new BadRequestException("System config batch size is invalid");
+    const statements: D1BridgeBatchStatement[] = [];
+    const auditIds: string[] = [];
+    for (const command of commands) {
+      const hex = createHash("sha256").update(JSON.stringify([
+        "market-admin", "SYSTEM_CONFIG_UPDATED", command.adminId, command.idempotencyKey,
+      ])).digest("hex");
+      const auditId = [hex.slice(0, 8), hex.slice(8, 12), "4" + hex.slice(13, 16),
+        "8" + hex.slice(17, 20), hex.slice(20, 32)].join("-");
+      auditIds.push(auditId);
+      const details = JSON.stringify({ key: command.key, value: command.value,
+        description: command.description ?? null, reason: command.reason,
+        idempotencyKey: command.idempotencyKey });
+      statements.push(
+        {
+          sql: 'INSERT OR IGNORE INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)',
+          params: [auditId, command.adminId, "SYSTEM_CONFIG_UPDATED", command.key, details],
+        },
+        {
+          sql: 'INSERT INTO "SystemConfig" ("id","key","value","description","updatedAt") SELECT ?,?,?,?,CURRENT_TIMESTAMP WHERE changes()=1 ON CONFLICT("key") DO UPDATE SET "value"=excluded."value","description"=excluded."description","updatedAt"=CURRENT_TIMESTAMP',
+          params: [randomUUID(), command.key, command.value, command.description ?? null],
+        },
+        {
+          sql: 'INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details") SELECT ?,NULL,NULL,NULL,NULL WHERE NOT EXISTS (SELECT 1 FROM "AdminAuditLog" WHERE "id"=? AND "adminId"=? AND "action"=? AND "target"=? AND "details"=?)',
+          params: [randomUUID(), auditId, command.adminId, "SYSTEM_CONFIG_UPDATED", command.key, details],
+        },
+      );
+    }
+    // LocalSqliteBridgeService owns one BEGIN IMMEDIATE across all commands:
+    // neither of the margin configuration keys can partially commit.
+    try {
+      await this.bridge.batch(statements);
+    } catch (error) {
+      if (error instanceof Error &&
+          /NOT NULL constraint failed: AdminAuditLog\.(adminId|action|target|details)/i.test(error.message))
+        throw new ConflictException("System configuration key belongs to another original request");
+      throw error;
+    }
+    const results: Record<string, unknown>[] = [];
+    for (let i = 0; i < commands.length; i++) {
+      const row = await this.bridge.select<Record<string, unknown>>(
+        'SELECT * FROM "SystemConfig" WHERE "key"=? LIMIT 1', [commands[i].key],
+      );
+      if (!row.results[0])
+        throw new BadRequestException("System configuration was not materialized");
+      results.push({ ...row.results[0], ok: true, auditId: auditIds[i] });
+    }
+    return results;
   }
 
   async updateFeatureFlag(command: {
@@ -5555,43 +5665,55 @@ export class D1FinancialCommandGateway {
     environment: string;
     reason: string;
     updatedBy: string;
+    idempotencyKey: string;
   }): Promise<Record<string, unknown>> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
-    const result = await this.bridge.batch([
+    const digest = createHash("sha256").update(JSON.stringify([
+      "feature-flag", command.updatedBy, command.idempotencyKey,
+    ])).digest("hex");
+    const auditId = [digest.slice(0, 8), digest.slice(8, 12),
+      "4" + digest.slice(13, 16), "8" + digest.slice(17, 20),
+      digest.slice(20, 32)].join("-");
+    const details = JSON.stringify({
+      idempotencyKey: command.idempotencyKey,
+      enabled: command.enabled,
+      environment: command.environment,
+      reason: command.reason,
+    });
+    try {
+      await this.bridge.batch([
       {
-        sql: `INSERT INTO "AdminFeatureFlag" ("id","key","enabled","environment","reason","updatedBy","createdAt","updatedAt") VALUES (?,?,?, ?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ON CONFLICT("key") DO UPDATE SET "enabled"=excluded."enabled","environment"=excluded."environment","reason"=excluded."reason","updatedBy"=excluded."updatedBy","updatedAt"=CURRENT_TIMESTAMP`,
-        params: [
-          randomUUID(),
-          command.key,
-          command.enabled ? 1 : 0,
-          command.environment,
-          command.reason,
-          command.updatedBy,
-        ],
+        sql: 'INSERT OR IGNORE INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,' +
+          "'FEATURE_FLAG_UPDATED'" + ',?,?,CURRENT_TIMESTAMP)',
+        params: [auditId, command.updatedBy, command.key, details],
       },
       {
-        sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`,
-        params: [
-          randomUUID(),
-          command.updatedBy,
-          "FEATURE_FLAG_UPDATED",
-          command.key,
-          JSON.stringify({
-            enabled: command.enabled,
-            environment: command.environment,
-            reason: command.reason,
-          }),
-        ],
+        // The audit key is the original command receipt. A replay cannot
+        // reapply an older toggle over a newer administrator's decision.
+        sql: 'INSERT INTO "AdminFeatureFlag" ("id","key","enabled","environment","reason","updatedBy","createdAt","updatedAt") SELECT ?,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP WHERE changes()=1 ON CONFLICT("key") DO UPDATE SET "enabled"=excluded."enabled","environment"=excluded."environment","reason"=excluded."reason","updatedBy"=excluded."updatedBy","updatedAt"=CURRENT_TIMESTAMP',
+        params: [randomUUID(), command.key, command.enabled ? 1 : 0,
+          command.environment, command.reason, command.updatedBy],
       },
-    ]);
-    this.requireChanges(result, 0, "D1 feature flag update");
+      {
+        // The deliberately invalid row is conditional and must abort the
+        // whole transaction when the key belongs to different intent.
+        sql: 'INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details") SELECT ?,NULL,NULL,NULL,NULL WHERE NOT EXISTS (SELECT 1 FROM "AdminAuditLog" WHERE "id"=? AND "adminId"=? AND "action"=' +
+          "'FEATURE_FLAG_UPDATED'" + ' AND "target"=? AND "details"=?)',
+        params: [randomUUID(), auditId, command.updatedBy, command.key, details],
+      },
+      ]);
+    } catch (error) {
+      if (error instanceof Error &&
+        /NOT NULL constraint failed: AdminAuditLog\.(adminId|action|target|details)/i.test(error.message))
+        throw new ConflictException("Feature flag idempotency key belongs to another request");
+      throw error;
+    }
     const row = await this.bridge.select<Record<string, unknown>>(
-      `SELECT * FROM "AdminFeatureFlag" WHERE "key"=? LIMIT 1`,
-      [command.key],
+      'SELECT * FROM "AdminFeatureFlag" WHERE "key"=? LIMIT 1', [command.key],
     );
     if (!row.results[0])
       throw new BadRequestException("D1 feature flag was not materialized");
-    return row.results[0];
+    return { ...row.results[0], ok: true, auditId };
   }
 
   async listGovernanceCommands(): Promise<Record<string, unknown>[]> {
@@ -5935,15 +6057,28 @@ export class D1FinancialCommandGateway {
         String(posting.kind) !== command.direction ||
         this.decimal(String(posting.amount)).comparedTo(amount) !== 0 ||
         String(posting.referenceId) !== referenceId ||
-        String(priorMetadata.reason ?? "") !== command.reason
+        String(priorMetadata.reason ?? "") !== command.reason ||
+        String(priorMetadata.adminId ?? "") !== command.adminId
       ) {
         throw new BadRequestException(
           "Financial correction idempotency key was reused with different parameters",
         );
       }
+      const originalAudit = await this.bridge.select<{ id: string }>(
+        `SELECT "id" FROM "AdminAuditLog" WHERE "action"=? AND "target"=? AND json_extract("details",'$.idempotencyKey')=? AND json_extract("details",'$.postingId')=? LIMIT 1`,
+        [
+          `ADMIN_BALANCE_ADJUSTMENT_${command.direction}`,
+          command.userId,
+          command.idempotencyKey,
+          existing.debitPostingId,
+        ],
+      );
+      if (!originalAudit.results[0]?.id)
+        throw new BadRequestException("Original financial correction audit receipt is missing");
       return {
         posting: { postingId: existing.debitPostingId },
         replayed: true,
+        auditId: originalAudit.results[0].id,
       };
     }
     const current = await this.findAccount(account.id);
@@ -5956,6 +6091,7 @@ export class D1FinancialCommandGateway {
         "Ledger account cannot satisfy the requested mutation",
       );
     const postingId = randomUUID();
+    const auditId = randomUUID();
     const ledgerId = randomUUID();
     const availableDelta =
       command.direction === "CREDIT"
@@ -6053,7 +6189,7 @@ export class D1FinancialCommandGateway {
       {
         sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?, ?,?,CURRENT_TIMESTAMP)`,
         params: [
-          randomUUID(),
+          auditId,
           command.adminId,
           `ADMIN_BALANCE_ADJUSTMENT_${command.direction}`,
           command.userId,
@@ -6088,6 +6224,7 @@ export class D1FinancialCommandGateway {
         false,
       ),
       replayed: false,
+      auditId,
     };
   }
 
@@ -6286,6 +6423,41 @@ export class D1FinancialCommandGateway {
       [positionId],
     );
     return result.results[0] ?? null;
+  }
+
+  /**
+   * A missing settlement quote/configuration must remain financial non-terminal.
+   * Persist the retryable delayed state and its event together; do not touch
+   * LedgerAccount, LedgerPosting or the locked stake.
+   */
+  async markBinarySettlementDelayed(
+    positionId: string,
+    userId: string,
+    reason: "pair-unavailable" | "configuration-unavailable" | "quote-unavailable",
+  ): Promise<Record<string, unknown>> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const eventKey = "event:binary:settlement-delayed:" + positionId;
+    await this.bridge.batch([
+      {
+        sql: 'UPDATE "Gate2BinaryPosition" SET "state"=\'SETTLEMENT_DELAYED\',"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "userId"=? AND "state" IN (\'ACTIVE\',\'SETTLING\')',
+        params: [positionId, userId],
+      },
+      {
+        // changes() is the row count from the preceding UPDATE in this same
+        // immediate writer transaction. A terminal position cannot emit a
+        // false delayed event after settlement.
+        sql: 'INSERT INTO "EventOutbox" ("id","idempotencyKey","aggregateType","aggregateId","eventType","eventVersion","correlationId","payload","state","availableAt","createdAt","updatedAt") SELECT ?,?,\'BINARY\',?,\'BINARY_SETTLEMENT_DELAYED\',1,?,?,\'PENDING\',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP WHERE changes()=1 ON CONFLICT("idempotencyKey") DO NOTHING',
+        params: [randomUUID(), eventKey, positionId, eventKey,
+          JSON.stringify({ userId, reason })],
+      },
+    ]);
+    const read = await this.bridge.select<Record<string, unknown>>(
+      'SELECT * FROM "Gate2BinaryPosition" WHERE "id"=? AND "userId"=? LIMIT 1',
+      [positionId, userId],
+    );
+    if (!read.results[0])
+      throw new NotFoundException("Binary position not found");
+    return read.results[0];
   }
 
   async listBinaryPositions(
@@ -7088,6 +7260,33 @@ export class D1FinancialCommandGateway {
     return result.results;
   }
 
+  private async assertDepositClaimReplayAudit(
+    id: string,
+    action: string,
+    adminId: string,
+    reason: string,
+    idempotencyKey: string,
+  ): Promise<void> {
+    const prior = await this.bridge.select<{ adminId: string; details: string }>(
+      `SELECT "adminId","details" FROM "AdminAuditLog" WHERE "action"=? AND "target"=? ORDER BY "createdAt" DESC LIMIT 1`,
+      [action, id],
+    );
+    if (!prior.results[0])
+      throw new BadRequestException("Deposit claim replay audit is missing");
+    let details: Record<string, unknown>;
+    try {
+      details = JSON.parse(String(prior.results[0].details ?? "{}")) as Record<string, unknown>;
+    } catch {
+      throw new BadRequestException("Deposit claim replay audit is invalid");
+    }
+    if (
+      prior.results[0].adminId !== adminId ||
+      details.reason !== reason ||
+      details.idempotencyKey !== idempotencyKey
+    )
+      throw new BadRequestException("Deposit claim idempotency key was reused with different parameters");
+  }
+
   async updateDepositClaimState(
     id: string,
     state: string,
@@ -7103,7 +7302,12 @@ export class D1FinancialCommandGateway {
       )
     ).results[0];
     if (!claim) throw new NotFoundException("Deposit claim not found");
-    if (String(claim.state) === state) return { ...claim, replayed: true };
+    if (String(claim.state) === state) {
+      await this.assertDepositClaimReplayAudit(
+        id, "DEPOSIT_CLAIM_" + state, adminId, reason, idempotencyKey,
+      );
+      return { ...claim, replayed: true };
+    }
     assertDepositClaimReview(String(claim.state));
     const result = await this.bridge.batch(
       depositClaimReviewStatements(
@@ -7140,7 +7344,12 @@ export class D1FinancialCommandGateway {
       )
     ).results[0];
     if (!claim) throw new NotFoundException("Deposit claim not found");
-    if (String(claim.state) === "CREDITED") return { ...claim, replayed: true };
+    if (String(claim.state) === "CREDITED") {
+      await this.assertDepositClaimReplayAudit(
+        id, "DEPOSIT_CLAIM_CREDITED", adminId, reason, idempotencyKey,
+      );
+      return { ...claim, replayed: true };
+    }
     if (String(claim.state) !== "APPROVED")
       throw new BadRequestException(
         "Deposit claim must be approved before credit",
@@ -7484,7 +7693,30 @@ export class D1FinancialCommandGateway {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const withdrawal: any = await this.getWithdrawalById(requestId);
     if (!withdrawal) throw new NotFoundException("Withdrawal not found");
-    if (String(withdrawal.state) === terminalState) return withdrawal;
+    if (String(withdrawal.state) === terminalState) {
+      const originalKey =
+        requestedIdempotencyKey?.trim() ||
+        `gate2:withdrawal:${terminalState.toLowerCase()}:${requestId}`;
+      const originalPosting = await this.bridge.select<{ metadata: string }>(
+        `SELECT "metadata" FROM "LedgerPosting" WHERE "referenceType"='GATE2_WITHDRAWAL_RELEASE' AND "referenceId"=? AND "idempotencyKey"=? AND "kind"='RELEASE' LIMIT 1`,
+        [requestId, originalKey],
+      );
+      if (!originalPosting.results[0])
+        throw new BadRequestException("Withdrawal release original intent does not match");
+      let original: Record<string, unknown>;
+      try {
+        original = JSON.parse(String(originalPosting.results[0].metadata ?? "{}")) as Record<string, unknown>;
+      } catch {
+        throw new BadRequestException("Withdrawal release original posting metadata is invalid");
+      }
+      if (
+        original.actorId !== actorId ||
+        original.reason !== reason ||
+        original.state !== terminalState
+      )
+        throw new BadRequestException("Withdrawal release original intent does not match");
+      return withdrawal;
+    }
     if (!["PENDING_REVIEW", "APPROVED"].includes(String(withdrawal.state)))
       throw new BadRequestException(
         "Withdrawal cannot be released from its current state",
@@ -8586,8 +8818,8 @@ export class D1FinancialCommandGateway {
     if (order.status === "CANCELED") {
       if (!adminAudit) return { ...order, replayed: true };
       const prior = await this.bridge.select<{ id: string }>(
-        `SELECT "id" FROM "AdminAuditLog" WHERE "adminId"=? AND "target"=? AND "action"='ADMIN_SPOT_ORDER_CANCELLED' AND json_extract("details", '$.idempotencyKey')=? LIMIT 1`,
-        [adminAudit.adminId, orderId, adminAudit.idempotencyKey],
+        `SELECT "id" FROM "AdminAuditLog" WHERE "adminId"=? AND "target"=? AND "action"='ADMIN_SPOT_ORDER_CANCELLED' AND json_extract("details", '$.idempotencyKey')=? AND json_extract("details", '$.reason')=? LIMIT 1`,
+        [adminAudit.adminId, orderId, adminAudit.idempotencyKey, adminAudit.reason],
       );
       if (!prior.results[0]) throw new BadRequestException("Order was already cancelled by a different request");
       return { ...order, replayed: true, adminAuditId: prior.results[0].id };

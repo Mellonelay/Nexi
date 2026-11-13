@@ -6,6 +6,7 @@ describe('MiningService', () => {
     const plan = { id: 'plan-1', isActive: true, currency: 'USDT', minDepositDecimal: new Prisma.Decimal('1'), maxDepositDecimal: new Prisma.Decimal('100'), lockupPeriod: 30, dailyYieldDecimal: new Prisma.Decimal('0.01') };
     const d1: any = {
       getMiningPlan: jest.fn().mockResolvedValue(plan),
+      getMiningSubscriptionForIntent: jest.fn().mockResolvedValue(null),
       subscribeMining: jest.fn(async (command: any) => ({ ...command, amount: command.amount })),
     };
     const service = new MiningService({ isAvailable: () => false } as any, d1);
@@ -16,6 +17,27 @@ describe('MiningService', () => {
     expect(d1.subscribeMining).toHaveBeenCalledWith(expect.objectContaining({ userId: 'user-1', planId: 'plan-1', amount: '12.34567890123456789', idempotencyKey: 'key-1' }));
   });
 
+  it('replays an accepted mining subscription after Admin changes its plan without quoting new terms', async () => {
+    const originalReceipt = {
+      id: 'subscription-1',
+      userId: 'user-1',
+      planId: 'plan-1',
+      amountDecimal: '12.5',
+      planSnapshot: JSON.stringify({ dailyYield: '0.01', minDeposit: '1', maxDeposit: '100' }),
+    };
+    const d1: any = {
+      getMiningSubscriptionForIntent: jest.fn().mockResolvedValue(originalReceipt),
+      getMiningPlan: jest.fn().mockResolvedValue({ id: 'plan-1', dailyYieldDecimal: '0.02' }),
+      subscribeMining: jest.fn(),
+    };
+    const service = new MiningService({ isAvailable: () => false } as any, d1);
+
+    await expect(service.subscribe('user-1', 'plan-1', '12.5', 'original-key'))
+      .resolves.toMatchObject({ ...originalReceipt, replayed: true });
+    expect(d1.getMiningPlan).not.toHaveBeenCalled();
+    expect(d1.subscribeMining).not.toHaveBeenCalled();
+  });
+
   it.each([
     ['subscribe', (service: MiningService) => service.subscribe('user-1', 'plan-1', '1', 'key-1'), 'getMiningPlan'],
     ['accrue', (service: MiningService) => service.accrue('subscription-1'), 'getMiningSubscription'],
@@ -23,6 +45,7 @@ describe('MiningService', () => {
     ['cancel', (service: MiningService) => service.cancel('user-1', 'subscription-1', 'key-1'), 'releaseMiningSubscription'],
   ])('propagates D1 unavailability for %s without legacy storage', async (_name, operation, method) => {
     const d1: any = {
+      getMiningSubscriptionForIntent: jest.fn().mockResolvedValue(null),
       getMiningPlan: jest.fn().mockRejectedValue(new Error('D1 financial authority is unavailable')),
       getMiningSubscription: jest.fn().mockRejectedValue(new Error('D1 financial authority is unavailable')),
       releaseMiningSubscription: jest.fn().mockRejectedValue(new Error('D1 financial authority is unavailable')),

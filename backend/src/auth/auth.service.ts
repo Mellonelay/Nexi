@@ -1,4 +1,4 @@
-import { Injectable, Optional, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Injectable, Optional, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -40,21 +40,23 @@ export class AuthService {
   }
 
   async login(user: LoginUser, surface: AuthSurface = 'PUBLIC', metadata: AuthSessionMetadata = {}) {
-    const session = this.authSessionService
-      ? Object.keys(metadata).length > 0
-        ? await this.authSessionService.createSession(user.id, surface, metadata)
-        : await this.authSessionService.createSession(user.id, surface)
-      : undefined;
+    // JWTs must always bind to a persisted, revocable session.
+    if (!this.authSessionService)
+      throw new UnauthorizedException('Session persistence is unavailable');
+    const session = Object.keys(metadata).length > 0
+      ? await this.authSessionService.createSession(user.id, surface, metadata)
+      : await this.authSessionService.createSession(user.id, surface);
     const payload = {
       email: user.email,
       sub: user.id,
       role: user.role,
       surface,
-      ...(session ? { sid: session.sessionId, jti: randomUUID() } : {}),
+      sid: session.sessionId,
+      jti: randomUUID(),
     };
     return {
       access_token: this.jwtService.sign(payload),
-      ...(session ? { refresh_token: session.refreshToken } : {}),
+      refresh_token: session.refreshToken,
       user: {
           id: user.publicId ?? user.id,
           email: user.email,
@@ -113,6 +115,9 @@ export class AuthService {
   }
 
   async setupMfa(userId: string, label: string) {
+    const existing = await this.usersService.getUserMfa(userId);
+    if (existing?.enabled)
+      throw new ConflictException('Disable the existing MFA factor before setting up another');
     const totp = new TOTP({
       issuer: 'NEXI',
       label: label || `user-${userId}`,
@@ -144,9 +149,12 @@ export class AuthService {
     return { enabled: true };
   }
 
-  async generateBackupCodes(userId: string) {
+  async generateBackupCodes(userId: string, securityPassword: string, mfaToken: string) {
     const mfa = await this.usersService.getUserMfa(userId);
-    if (!mfa || !mfa.enabled) throw new Error('MFA is not enabled');
+    if (!mfa || !mfa.enabled) throw new ConflictException('MFA is not enabled');
+    // Recovery-code rotation is a sensitive action: a stolen Public JWT
+    // alone must never replace the user's remaining recovery factors.
+    await this.verifySensitiveAction(userId, securityPassword, mfaToken);
     const rawCodes: string[] = [];
     for (let i = 0; i < 10; i++) {
       rawCodes.push(randomBytes(8).toString('hex').slice(0, 10).toUpperCase());

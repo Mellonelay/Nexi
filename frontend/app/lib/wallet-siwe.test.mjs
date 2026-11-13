@@ -77,7 +77,7 @@ test("SIWE rejects a challenge for a different chain before opening a signing re
       address,
       chainId: 1,
       referralCode: null,
-      requestChallenge: async () => ({ ...challenge, chainId: 11155111 }),
+      requestChallenge: async () => ({ ...challenge, chainId: 8453 }),
       getWalletClient: async () =>
         client({
           signMessage: async () => {

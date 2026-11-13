@@ -548,6 +548,10 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     method: "POST" | "PATCH" = "POST",
     idempotencyKey?: string,
   ): Promise<MutationResult> {
+    const intentPayload = Object.keys(payload)
+      .filter((key) => key !== "reason" && key !== "idempotencyKey" && payload[key] !== undefined)
+      .sort()
+      .map((key) => [key, payload[key]]);
     const result = await this.request<JsonRecord>(path, {
       method,
       body: JSON.stringify({
@@ -555,7 +559,10 @@ export class NexiAdminApiProvider implements AdminDataProvider {
         reason: ctx.reason,
         idempotencyKey:
           idempotencyKey ??
-          boundedIdempotencyKey("admin", [path, ctx.actor, ctx.reason, ...keyValues]),
+          boundedIdempotencyKey("admin", [
+            path, ctx.actor, ctx.reason, ...keyValues,
+            ...(intentPayload.length ? [JSON.stringify(intentPayload)] : []),
+          ]),
       }),
     });
     return { ok: result.ok !== false, auditId: stringValue(result.auditId ?? result.id) };
@@ -590,11 +597,8 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     description: string,
     ctx: ConsequentialContext,
   ): Promise<MutationResult> {
-    const result = await this.request<JsonRecord>("/admin/system-config", {
-      method: "POST",
-      body: JSON.stringify({ key, value: JSON.stringify(value), description, reason: ctx.reason }),
-    });
-    return { ok: true, auditId: stringValue(result.auditId ?? result.id) };
+    return this.requestMutation("/admin/system-config", ctx,
+      { key, value: JSON.stringify(value), description }, [key]);
   }
 
   async login(email: string, password: string) {
@@ -1801,11 +1805,9 @@ export class NexiAdminApiProvider implements AdminDataProvider {
   async toggleFlag(key: string, ctx: ConsequentialContext): Promise<MutationResult> {
     const current = (await this.listFlags()).find((flag) => flag.key === key);
     if (!current) return { ok: false, auditId: "" };
-    await this.request("/admin/feature-flags", {
-      method: "POST",
-      body: JSON.stringify({ key, enabled: !current.enabled, reason: ctx.reason }),
-    });
-    return { ok: true, auditId: "" };
+    return this.requestMutation("/admin/feature-flags", ctx,
+      { key, enabled: !current.enabled, environment: current.environment },
+      [key, String(current.enabled)]);
   }
   async updateFlag(
     key: string,
@@ -1815,11 +1817,7 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     const current = (await this.listFlags()).find((flag) => flag.key === key);
     if (!current) return { ok: false, auditId: "" };
     const payload = buildFeatureFlagUpdate(current, patch, ctx.reason);
-    await this.request("/admin/feature-flags", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-    return { ok: true, auditId: "" };
+    return this.requestMutation("/admin/feature-flags", ctx, payload, [key]);
   }
   updateAsset(
     id: string,
@@ -1848,11 +1846,11 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       throw new NexiAdminApiError(404, "Canonical currency configuration not found for network");
     const payload: JsonRecord = {};
     if (patch.decimals !== undefined) payload.decimals = patch.decimals;
-    if (patch.minDeposit !== undefined) payload.minDeposit = Number(patch.minDeposit);
-    if (patch.maxDeposit !== undefined) payload.maxDeposit = Number(patch.maxDeposit);
-    if (patch.minWithdrawal !== undefined) payload.minWithdrawal = Number(patch.minWithdrawal);
-    if (patch.maxWithdrawal !== undefined) payload.maxWithdrawal = Number(patch.maxWithdrawal);
-    if (patch.withdrawalFee !== undefined) payload.withdrawalFee = Number(patch.withdrawalFee);
+    if (patch.minDeposit !== undefined) payload.minDeposit = patch.minDeposit;
+    if (patch.maxDeposit !== undefined) payload.maxDeposit = patch.maxDeposit;
+    if (patch.minWithdrawal !== undefined) payload.minWithdrawal = patch.minWithdrawal;
+    if (patch.maxWithdrawal !== undefined) payload.maxWithdrawal = patch.maxWithdrawal;
+    if (patch.withdrawalFee !== undefined) payload.withdrawalFee = patch.withdrawalFee;
     if (patch.confirmations !== undefined) payload.confirmationCount = patch.confirmations;
     if (patch.depositEnabled !== undefined) payload.depositEnabled = patch.depositEnabled;
     if (patch.withdrawEnabled !== undefined) payload.withdrawEnabled = patch.withdrawEnabled;
@@ -2900,32 +2898,17 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     },
     ctx: ConsequentialContext,
   ): Promise<MutationResult> {
-    const result = await this.request<JsonRecord>("/admin/maintenance-windows", {
-      method: "POST",
-      body: JSON.stringify({
-        ...payload,
-        environment: ctx.environment,
-        idempotencyKey: `maintenance:${ctx.actor}:${payload.scope}:${payload.target}:${payload.scheduledAt}:${payload.endsAt}`,
-      }),
-    });
-    const audit = (await this.listAudit()).find(
-      (entry) =>
-        entry.action === "MAINTENANCE_WINDOW_SCHEDULED" && entry.target === stringValue(result.id),
-    );
-    return { ok: true, auditId: audit?.id ?? stringValue(result.auditId) };
+    return this.requestMutation("/admin/maintenance-windows", ctx, {
+      ...payload,
+      environment: ctx.environment,
+      reason: ctx.reason,
+    }, [payload.scope, payload.target, payload.scheduledAt, payload.endsAt]);
   }
   async cancelMaintenanceWindow(id: string, ctx: ConsequentialContext): Promise<MutationResult> {
-    const result = await this.request<JsonRecord>(
-      `/admin/maintenance-windows/${encodeURIComponent(id)}/cancel`,
-      {
-        method: "POST",
-        body: JSON.stringify({ reason: ctx.reason, idempotencyKey: `maintenance-cancel:${id}` }),
-      },
+    return this.requestMutation(
+      "/admin/maintenance-windows/" + encodeURIComponent(id) + "/cancel",
+      ctx, {}, [id],
     );
-    const audit = (await this.listAudit()).find(
-      (entry) => entry.action === "MAINTENANCE_WINDOW_CANCELLED" && entry.target === id,
-    );
-    return { ok: true, auditId: audit?.id ?? stringValue(result.auditId) };
   }
   subscribe(fn: () => void) {
     this.listeners.add(fn);

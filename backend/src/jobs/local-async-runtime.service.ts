@@ -74,7 +74,7 @@ export function resolveValkeyConnectionOptions(
   }
 
   const path = config.get<string>('NEXI_VALKEY_SOCKET', '')?.trim() ?? '';
-  if (!path.startsWith('/') || path.includes('\\0')) {
+  if (!path.startsWith('/') || path.includes('\0')) {
     throw new Error('NEXI_VALKEY_SOCKET must identify an absolute Unix socket');
   }
   return {

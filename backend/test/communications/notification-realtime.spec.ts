@@ -22,10 +22,26 @@ describe('A19 notification durable realtime closure', () => {
       idempotencyKey: 'notification-send-1', eventType: 'NOTIFICATION_SENT',
     });
     const statements = bridge.batch.mock.calls[0][0];
-    expect(statements).toHaveLength(2);
+    expect(statements).toHaveLength(3);
     expect(statements[0].sql).toContain('INSERT OR IGNORE INTO "Notification"');
     expect(statements[1].sql).toContain('INSERT OR IGNORE INTO "EventOutbox"');
     expect(statements[1].params).toEqual(expect.arrayContaining(['notification-send-1', 'NOTIFICATION', 'notification-1', 'NOTIFICATION_SENT']));
+    expect(statements[2].sql).toContain('NOT EXISTS');
+    expect(statements[2].params).toContain('notification-send-1');
+  });
+
+  it('fails closed for a conflicting persisted notification key within SQLite', async () => {
+    const bridge: any = {
+      isEnabled: () => true,
+      batch: jest.fn(async () => {
+        throw new Error('NOT NULL constraint failed: Notification.userId');
+      }),
+    };
+    const gateway = new D1CommunicationsCommandGateway(bridge);
+    await expect(gateway.createNotification({
+      id: 'notification-1', userId: 'user-2', type: 'info',
+      title: 'Different', body: 'Payload', idempotencyKey: 'notification-send-1',
+    })).rejects.toMatchObject({ status: 409 });
   });
 
   it('publishes durable notification mutations onto the existing communications Redis channel', async () => {

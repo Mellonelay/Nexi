@@ -12,6 +12,19 @@ import { Input } from "@/components/ui/input";
 import type { LoanApplicationAdmin, LoanPlan } from "@/admin/types";
 
 export const Route = createFileRoute("/loans")({ component: Page });
+
+const validLoanDecimal = (value: string) =>
+  value.length <= 80 && /^(?:0|[1-9][0-9]*)(?:[.][0-9]+)?$/.test(value);
+
+function maxLoanAmountAboveMinimum(maximum: string, minimum: string): boolean {
+  if (!validLoanDecimal(maximum) || !validLoanDecimal(minimum)) return false;
+  const [maxWhole, maxFraction = ""] = maximum.split(".");
+  const [minWhole, minFraction = ""] = minimum.split(".");
+  if (maxWhole.length !== minWhole.length) return maxWhole.length > minWhole.length;
+  if (maxWhole !== minWhole) return maxWhole > minWhole;
+  const scale = Math.max(maxFraction.length, minFraction.length);
+  return maxFraction.padEnd(scale, "0") > minFraction.padEnd(scale, "0");
+}
 function Page() {
   return (
     <RouteGuard permission="loans.view">
@@ -98,21 +111,14 @@ function Inner() {
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     const durationDays = Number(days);
-    const interestRate = Number(rate);
-    const minAmount = Number(min);
-    const maxAmount = Number(max);
     if (
       !canEdit ||
       !name.trim() ||
       !currency ||
       !Number.isInteger(durationDays) ||
       durationDays < 1 ||
-      !Number.isFinite(interestRate) ||
-      interestRate < 0 ||
-      !Number.isFinite(minAmount) ||
-      minAmount < 0 ||
-      !Number.isFinite(maxAmount) ||
-      maxAmount <= minAmount
+      !validLoanDecimal(rate.trim()) ||
+      !maxLoanAmountAboveMinimum(max.trim(), min.trim())
     ) {
       setMessage(
         "Choose a supported loan asset and enter valid plan terms with maximum above minimum.",

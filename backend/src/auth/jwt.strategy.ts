@@ -33,7 +33,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Invalid authentication claims');
     }
 
-    if (payload.sid) {
+    // All issued tokens must identify a durable, revocable session.
+    // A sid-less token would bypass logout, session revocation, and role rechecks.
+    if (typeof payload.sid !== 'string' || !payload.sid.trim())
+      throw new UnauthorizedException('Authentication session identity is missing');
+    {
       try {
         const [session, user] = await Promise.all([
           this.d1.getAuthSessionById(payload.sid),
@@ -51,6 +55,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       }
     }
 
-    return { userId: payload.sub, email: payload.email, role: payload.role, surface, ...(payload.sid ? { sessionId: payload.sid } : {}) };
+    return { userId: payload.sub, email: payload.email, role: payload.role, surface, sessionId: payload.sid };
   }
 }

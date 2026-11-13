@@ -172,8 +172,8 @@ export class CreateLearnContentDto {
   @IsString() @Length(1, 200) title!: string;
   @IsString() @Length(1, 50000) body!: string;
   @IsOptional() @IsString() status?: string;
-  @IsOptional() @IsString() @Length(1, 500) reason?: string;
-  @IsOptional() @IsString() @Length(8, 128) idempotencyKey?: string;
+  @IsString() @Length(1, 500) reason!: string;
+  @IsString() @Length(8, 128) idempotencyKey!: string;
   @IsOptional() attachments?: unknown;
   @IsOptional() @IsString() @Length(0, 500) summary?: string;
   @IsOptional() localizations?: unknown;
@@ -185,8 +185,8 @@ export class CreateLearnContentDto {
 
 export class UpdateLearnContentDto {
   @IsOptional() @IsString() @Length(1, 200) title?: string;
-  @IsOptional() @IsString() @Length(1, 500) reason?: string;
-  @IsOptional() @IsString() @Length(8, 128) idempotencyKey?: string;
+  @IsString() @Length(1, 500) reason!: string;
+  @IsString() @Length(8, 128) idempotencyKey!: string;
   @IsOptional() @IsString() @Length(1, 50000) body?: string;
   @IsOptional() @IsString() @Length(0, 500) summary?: string;
   @IsOptional() localizations?: unknown;
@@ -211,6 +211,8 @@ export class CreateLearnCategoryDto {
   @IsOptional() @IsString() @Length(0, 1000) description?: string;
   @IsOptional() @IsInt() @Min(0) sortOrder?: number;
   @IsOptional() @IsIn(['ACTIVE', 'INACTIVE']) status?: string;
+  @IsString() @Length(1, 500) reason!: string;
+  @IsString() @Length(8, 128) idempotencyKey!: string;
 }
 
 export class UpdateLearnCategoryStatusDto {

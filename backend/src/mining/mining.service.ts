@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException, Optional } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '../prisma/d1-client';
 import { createHash, randomUUID } from 'crypto';
@@ -10,6 +10,7 @@ import * as Sentry from '@sentry/nestjs';
 
 @Injectable()
 export class MiningService {
+  private readonly logger = new Logger(MiningService.name);
   constructor(
     private readonly redis: RedisService,
     private readonly d1: D1FinancialCommandGateway,
@@ -83,6 +84,14 @@ export class MiningService {
     const d1 = this.requireD1FinancialAuthority();
     const amount = this.decimal(amountText, 'amount');
     const subscriptionId = this.idempotentId(`mining:${userId}:${planId}`, idempotencyKey);
+    const planSnapshot = (current: any) => ({
+      name: current.name,
+      currency: current.currency,
+      lockupPeriod: current.lockupPeriod,
+      dailyYield: String(current.dailyYieldDecimal),
+      minDeposit: new Prisma.Decimal(String(current.minDepositDecimal)).toString(),
+      maxDeposit: new Prisma.Decimal(String(current.maxDepositDecimal)).toString(),
+    });
     const prior = await d1.getMiningSubscriptionForIntent(userId, idempotencyKey);
     if (prior) {
       if (String(prior.planId) !== planId ||
@@ -97,7 +106,7 @@ export class MiningService {
     if (amount.lt(min) || amount.gt(max)) throw new BadRequestException('Amount is outside plan limits');
     const startDate = new Date();
     const endDate = new Date(startDate.getTime() + Number(plan.lockupPeriod) * 86400000);
-    return d1.subscribeMining({ subscriptionId, userId, planId, amount: amount.toString(), endDate: endDate.toISOString(), idempotencyKey, planSnapshot: { name: plan.name, currency: plan.currency, lockupPeriod: plan.lockupPeriod, dailyYield: String(plan.dailyYieldDecimal), minDeposit: min.toString(), maxDeposit: max.toString() } });
+    return d1.subscribeMining({ subscriptionId, userId, planId, amount: amount.toString(), endDate: endDate.toISOString(), idempotencyKey, planSnapshot: planSnapshot(plan) });
   }
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
@@ -116,12 +125,23 @@ export class MiningService {
     try {
       const subscriptions = await d1.listMiningSubscriptionsForScheduler();
       let processed = 0;
+      let failed = 0;
       for (const subscription of subscriptions) {
-        await this.accrue(String(subscription.id));
-        processed += 1;
+        try {
+          await this.accrue(String(subscription.id));
+          processed += 1;
+        } catch (error) {
+          // One failed financial command must not stop independent accounts.
+          // The SQLite writer remains atomic and retries retain the daily key.
+          failed += 1;
+          this.logger.warn(
+            `Mining reward deferred for ${String(subscription.id)}: ${error instanceof Error ? error.message : 'unknown error'}`,
+          );
+        }
       }
       Sentry.metrics.count('nexi.mining.rewards.processed', processed);
-      return { processed };
+      if (failed) Sentry.metrics.count('nexi.mining.rewards.failed', failed);
+      return failed ? { processed, failed } : { processed };
     } finally {
       await this.redis.releaseLock(lockKey, owner);
     }

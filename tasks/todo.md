@@ -1,3 +1,45 @@
+- [x] SOURCE_ONLY Admin loan plan exact decimal DTO/form, create/update Prisma Decimal min/max validation and current TanStack/Public integrations; tests deferred.
+- [x] SOURCE_ONLY Mining reward scheduler: isolate failures per subscription within existing single lock; preserve successful response contract, report failed count only on partial failure. No application tests executed.
+- [x] SOURCE_ONLY Mining immutable subscription snapshot reward/currency and Admin fractional daily rate display; exact original terms conditional reserve, legacy no-snapshot exception; application tests deferred.
+## 2026-11-14 Communications source owner follow-up
+
+- [x] Source-only Communications owner repair: announcements; notification and moderation original-key guards; Learn category audited atomic intent; Learn article create/update/publish outbox and SQLite revision allocation. Regression test source written, NOT EXECUTED.
+- [ ] NEXT: source original idempotency for Learn article create/update; historical outbox compatibility; remaining Communications, Backend, Public, Admin integration and 113/301/68 source closure.
+- [ ] OWNER SOURCE-FIRST: application tests, types/lint, builds, browser, services and deployment deferred. Future batch test execution only by one SentinelX script_run after full authorized source closure.
+
+- [ ] Communications announcement atomicity: SQLite in-transaction original-intent rollback guard and source-only regression spec added 2026-11-14; still reconcile historical payload replay (changed publication-state retries now compare immutable intentHash) before source closure. Application tests deferred.\n## 2026-11-13 -- Financial replay and Admin shared mutation source correction
+
+- [x] Reused current Graphify v1.1 and Kernel v3.4, performed three actual concurrent bounded read lanes, anchored every remaining 82 mutation operation to current handler/source guard/DTO/delegate/graph client without falsely closing semantics.
+- [x] Repaired real Admin financial-correction audit receipt + replay administrator mismatch in canonical SQLite gateway; existing test spec source updated, NOT EXECUTED.
+- [x] Repaired already-reviewed/credited DepositClaim replay against original AdminAuditLog administrator/reason/idempotency key; existing source regression spec revised, NOT EXECUTED.
+- [x] Corrected central Admin requestMutation key to distinguish effective nonempty payloads across existing callers while preserving explicit keys and empty-payload fallback.
+- [ ] SOURCE OPEN: finish 82 mutation semantic contracts, 93 handler-only source consumers, 68 custom Graphify unknowns, independent expected-contract denominator and original 113 source clauses. Investigate new payload-key release compatibility/32-bit collision risk and legacy missing audit receipts before any deploy. Preserve original finance single-writer and no application verification phase.
+
+---
+
+## 2026-11-13 — Four Admin Binary read-path contracts reconciled
+
+- [x] Reused the existing HTTP inventory and current source graph; used Graphify CLI and MCPC exact node/typed path/reverse impact plus Knowledge v4, Kernel source-map, Fallow and CodeScene. Four GET Admin Binary read contracts recorded as scoped SOURCE_CONNECTED with their complete source paths in the existing CSV/audit. **Architecture source closure is still OPEN**, all 301 broad architecture_disposition values remain INSUFFICIENT_EVIDENCE.
+- [ ] Remaining HTTP semantic frontier: **256** NOT_YET_ADJUDICATED; preserve 27 EXTRACTOR_UNSUPPORTED, 10 CROSS_REPO_OR_EXTERNAL, 3 DYNAMIC_PATH, 1 PROXY_OR_ALIAS; separate 68 custom semantics. No application tests/builds/deployment.
+
+---
+
+## 2026-11-13 — Fallow full-spectrum + Binary socket source increment
+
+- [x] Fully read official Fallow skill/docs and the 325-line local NestJS documentation index. Verified live 3.42.0/38 Fallow MCP tools, 14 NEXI framework integrations and full-spectrum routing in existing SentinelX VM Kernel. Preserved earlier 519/41 source evidence and all dirty paths.
+- [x] Patched backend/src/binary/binary.gateway.ts to validate current session and PUBLIC surface before joining private Binary socket room; reused existing AuthModule/JwtStrategy. Source diff and DI inspected; Fallow postpatch inspect_target six sections succeeded, CodeScene health 10. No application verification.
+- [ ] Keep source closure OPEN: 260 HTTP semantics, 68 Graphify unknowns, independent denominator, other cross-framework contracts. Reconcile mid-connection revocation separately; do not create new infrastructure without proof. Fallow type-aware unavailable (blocking-diagnostics); decision_surface temp-worktree creation denied. No application tests/build/browser/restarts/deployment.
+
+---
+
+## SOURCE REOPENED — latest owner instruction, 2026-11-13
+
+The owner explicitly reopened full Backend/Public/Admin source closure. The older source-freeze/Doctor instruction below is a historical checkpoint, not the current phase. Continue source-first review and complete existing producer-to-consumer repairs, preserving concurrent dirty files and proof receipts. Current scoped evidence: tasks/evidence/NEXI_ADVANCED_GRAPHIFY_CONNECTIVITY_SOURCE_AUDIT_20261113.md and tasks/evidence/NEXI_GRAPH_HTTP_OPERATION_RECONCILIATION_20261113.csv. No tests/lint/typechecks/build/browser/restarts/deployment/financial mutations until source closure.
+
+**Latest source coverage:** 519 existing declaration candidates have graph extraction classification (359 exact-line, 158 nearby, 2 file-only); 41 of 301 HTTP operations have source-role classification, 260 require semantic adjudication. Of 167 dual-sided HTTP graph operations, 166 match committed NestJS OpenAPI and one is a Next.js internal route; this is structural proof only. Source closure remains open; runtime verification deferred. See existing canonical audit and CSV evidence.
+
+---
+
 ## SOURCE HANDOFF 2026-11-13 (latest owner decision): Source work is owner-declared closed/frozen for the next Doctor/framework verification phase. Loan document authority is resolved: applicant supplies a reference and Admin reviews it; a separate approved-document registry is NOT a requirement. Source evidence and remaining unknowns are documented at tasks/evidence/NEXI_SOURCE_RECONCILIATION_20261113.md. Earlier unchecked research/evidence tasks below are not automatically missing source features. Doctor/build/production outcomes are NOT yet claimed.
 
 ---
@@ -1474,3 +1516,5 @@ Final successor handover: `tasks/evidence/NEXI_INTERACTIVE_ACCEPTANCE_HANDOVER_2
 - [x] 2026-11-10 Spot MARKET quote readiness: allow valid exponent-formatted client display Number through existing positiveNumber guard while LIMIT/STOP still require exact positive decimal strings; Backend live quote remains execution authority. Source matrix receipt recorded.
 
 - [x] 2026-11-11 recovered 141,144,064 bytes from verified disposable pnpm metadata cache; preserved source, active services and graph. Admin Spot independent Orders loading state no longer blocks Pairs/Margin/Audit. Source-only, acceptance pending.
+
+- [x] 2026-11-13 KERNEL_RUN_run_13e13bea074248a2ae30: source-only withdrawal terminal replay integrity; exact VM NestJS skill SHA 7f41406abaf10185d9a784e894108ded771a0177b1051e0b2c65d14f226bd581, Graphify CLI+MCPC traces, source regression assertions NOT EXECUTED. Continue remaining 82 mutation/93 handler-only/68 custom semantics and original 113 source obligations.

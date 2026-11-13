@@ -44,6 +44,8 @@ describe('BullMQ Valkey connection configuration', () => {
       .toThrow('NEXI_VALKEY_URL must use redis:// or rediss://');
     expect(() => resolveValkeyConnectionOptions(settings({ NEXI_VALKEY_SOCKET: 'relative.sock' }), null))
       .toThrow('NEXI_VALKEY_SOCKET must identify an absolute Unix socket');
+    expect(() => resolveValkeyConnectionOptions(settings({ NEXI_VALKEY_SOCKET: '/run/nexi/valkey.sock\0suffix' }), null))
+      .toThrow('NEXI_VALKEY_SOCKET must identify an absolute Unix socket');
   });
 });
 

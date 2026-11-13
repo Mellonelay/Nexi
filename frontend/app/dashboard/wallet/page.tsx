@@ -14,7 +14,7 @@ import DepositModal from './components/DepositModal';
 import TransferModal from './components/TransferModal';
 import WithdrawModal from './components/WithdrawModal';
 import ConvertModal from './components/ConvertModal';
-import { DataStatePanel, Metric, PageShell, Panel, PanelHeading, SecondaryButton, StatusBadge, TabButton } from '../../components/PagePrimitives';
+import { DataStatePanel, PageShell, Panel, PanelHeading, SecondaryButton, StatusBadge, TabButton } from '../../components/PagePrimitives';
 import WalletDashboardLayout from './components/WalletDashboardLayout';
 
 type Tab = 'Overview' | 'Funding' | 'Spot' | 'Margin' | 'Binary' | 'Finance';
@@ -316,27 +316,49 @@ function WalletPerformance({ root, state }: { root: Record<string, unknown>; sta
     { label: 'Total return', value: root.totalReturn ?? root.allTimeReturn, percent: root.totalReturnPercent ?? root.allTimeReturnPercent },
   ].filter((item) => item.value !== undefined);
   if (!metrics.length) return null;
-  return <div className="mt-2 grid min-w-0 grid-cols-1 gap-2 border-t border-violet-300/10 pt-2 min-[430px]:grid-cols-2" aria-label="Portfolio performance">{metrics.map((item) => <Metric key={item.label} label={item.label} value={performanceValue(state, item.value, item.percent)} />)}</div>;
+  return (
+    <dl className="mt-2 grid min-w-0 grid-cols-1 gap-x-4 gap-y-2 border-t border-violet-300/10 pt-2 min-[430px]:grid-cols-2" aria-label="Portfolio performance">
+      {metrics.map((item) => (
+        <div key={item.label} className="min-w-0">
+          <dt className="text-xs text-[#C3BBD0]">{item.label}</dt>
+          <dd className="mt-0.5 min-w-0 break-words font-mono text-sm leading-snug tabular-nums text-[#48C0CC]">{performanceValue(state, item.value, item.percent)}</dd>
+        </div>
+      ))}
+    </dl>
+  );
 }
-
 function WalletSummary({ root, state, valuation }: { root: Record<string, unknown>; state: ReadState; valuation: PortfolioValuation }) {
-  return <section aria-label="Total assets and portfolio summary">
-        <Panel className="overflow-hidden p-3 sm:p-4">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.10em] text-[#C3BBD0]"><WalletCards size={16} className="shrink-0 text-[#48C0CC]" /> Wallet balance</div>
-            {valuation.state !== 'LIVE' && <StatusBadge state={valuation.state} />}
-          </div>
-          <p className="mt-1 text-xs leading-5 text-[#8C8299]">Estimated portfolio value · USDT. Native balances remain unchanged.</p>
-          <div className="mt-3 grid min-w-0 grid-cols-1 gap-2 min-[430px]:grid-cols-2" aria-label="Estimated available, locked and total portfolio value in USDT">
-            <div className="min-w-0 min-[430px]:col-span-2">
-              <Metric label="Total · USDT" value={state === 'LIVE' ? valuation.total : 'UNAVAILABLE'} />
+  const total = state === 'LIVE' ? valuation.total : 'UNAVAILABLE';
+  const available = state === 'LIVE' ? valuation.available : 'UNAVAILABLE';
+  const locked = state === 'LIVE' ? valuation.locked : 'UNAVAILABLE';
+  return (
+    <section aria-label="Total assets and portfolio summary">
+      <Panel className="min-w-0 p-3 sm:p-4">
+        <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+          <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.10em] text-[#C3BBD0]">
+            <WalletCards size={16} className="shrink-0 text-[#48C0CC]" /> Wallet balance
+          </h2>
+          {valuation.state !== 'LIVE' && <StatusBadge state={valuation.state} />}
+        </div>
+        <p className="mt-1 text-xs leading-5 text-[#8C8299]">Estimated portfolio value in USDT · Native balances unchanged.</p>
+        <div className="mt-2 min-w-0" aria-label="Estimated wallet portfolio value in USDT">
+          <p className="text-xs font-medium text-[#C3BBD0]">Total · USDT</p>
+          <p className="mt-1 min-w-0 break-words font-mono text-[clamp(1.25rem,4.8vw,1.75rem)] font-semibold leading-snug tabular-nums text-[#48C0CC]">{total}</p>
+          <dl className="mt-3 grid min-w-0 grid-cols-1 gap-x-4 gap-y-2 border-t border-violet-300/10 pt-2 min-[400px]:grid-cols-2">
+            <div className="min-w-0">
+              <dt className="text-xs text-[#C3BBD0]">Available · USDT</dt>
+              <dd className="mt-0.5 min-w-0 break-words font-mono text-base leading-snug tabular-nums text-[#48C0CC]">{available}</dd>
             </div>
-            <Metric label="Available · USDT" value={state === 'LIVE' ? valuation.available : 'UNAVAILABLE'} />
-            <Metric label="Locked · USDT" value={state === 'LIVE' ? valuation.locked : 'UNAVAILABLE'} />
-          </div>
-          <WalletPerformance root={root} state={state} />
-        </Panel>
-      </section>;
+            <div className="min-w-0">
+              <dt className="text-xs text-[#C3BBD0]">Locked · USDT</dt>
+              <dd className="mt-0.5 min-w-0 break-words font-mono text-base leading-snug tabular-nums text-[#48C0CC]">{locked}</dd>
+            </div>
+          </dl>
+        </div>
+        <WalletPerformance root={root} state={state} />
+      </Panel>
+    </section>
+  );
 }
 
 function assetLabel(asset: ReturnType<typeof assetMeta>, key: 'id' | 'symbol' | 'displaySymbol' | 'name', fallback: string) {
@@ -370,15 +392,15 @@ function WalletAssetRow({ item, tab }: { item: WalletAsset; tab: Tab }) {
           </span>
         </span>
       </div>
-      <span className="min-w-0 break-all text-right font-mono text-sm tabular-nums lg:whitespace-normal">
+      <span className="min-w-0 break-words text-right font-mono text-sm tabular-nums lg:whitespace-normal">
         <span className="mb-1 block text-xs text-[#8C8299] lg:hidden">Available</span>
         {item.accountExists ? text(item.available) : '—'}
       </span>
-      <span className="min-w-0 break-all text-right font-mono text-sm tabular-nums lg:whitespace-normal">
+      <span className="min-w-0 break-words text-right font-mono text-sm tabular-nums lg:whitespace-normal">
         <span className="mb-1 block text-xs text-[#8C8299] lg:hidden">{tab === "Finance" ? "Committed" : "Locked"}</span>
         {item.accountExists ? text(item.locked) : '—'}
       </span>
-      <span className="col-span-2 min-w-0 break-all text-right font-mono text-base font-semibold tabular-nums lg:col-span-1 lg:whitespace-normal">
+      <span className="col-span-2 min-w-0 break-words text-right font-mono text-base font-semibold tabular-nums lg:col-span-1 lg:whitespace-normal">
         <span className="mb-1 block text-xs text-[#8C8299] lg:hidden">Total</span>
         {item.accountExists ? text(item.total) : '—'}
       </span>
@@ -388,18 +410,73 @@ function WalletAssetRow({ item, tab }: { item: WalletAsset; tab: Tab }) {
 
 function WalletActionButton({ item, action, enabled, onSelect }: { item: Action; action: Action | null; enabled: boolean; onSelect: (action: Action) => void }) {
   const Icon = actionIcons[item];
-  return <button key={item} type="button" disabled={!enabled} onClick={() => onSelect(item)} aria-label={`${item}${enabled ? '' : ' unavailable'}`} className={`flex min-h-16 min-w-0 flex-col items-center justify-center gap-1 rounded-xl border p-1 text-center text-xs font-semibold sm:min-h-14 sm:flex-row sm:gap-2 ${action === item ? 'border-[#8B5CF6] bg-[#2A1742]' : 'border-[#2B2037] bg-[#171022]'} disabled:cursor-not-allowed disabled:opacity-50`}><Icon size={16} className="shrink-0 text-[#48C0CC]" /><span className="min-w-0 break-words">{item}</span></button>;
+  return (
+    <button
+      type="button"
+      disabled={!enabled}
+      onClick={() => onSelect(item)}
+      aria-label={`${item}${enabled ? '' : ' unavailable'}`}
+      className={`flex min-h-14 min-w-0 flex-col items-center justify-center gap-1 rounded-xl border px-1 py-2 text-center text-xs font-semibold ${action === item ? 'border-[#8B5CF6] bg-[#2A1742]' : 'border-[#2B2037] bg-[#171022]'} disabled:cursor-not-allowed disabled:opacity-50`}
+    >
+      <Icon size={18} className="shrink-0 text-[#48C0CC]" />
+      <span className="min-w-0 break-words">{item}</span>
+    </button>
+  );
 }
 
 function WalletActions({ authenticated, state, action, onSelect }: { authenticated: boolean; state: ReadState; action: Action | null; onSelect: (action: Action) => void }) {
   const enabled = authenticated && state === 'LIVE';
-  return <section aria-label="Wallet actions"><Panel className="p-3 sm:p-4"><PanelHeading title="Quick actions" description="Choose an available wallet action." /><div className="grid grid-cols-2 gap-2 min-[380px]:grid-cols-4">{(['Deposit', 'Withdraw', 'Transfer', 'Convert'] as Action[]).map((item) => <WalletActionButton key={item} item={item} action={action} enabled={enabled} onSelect={onSelect} />)}</div><button type="button" onClick={() => document.getElementById('wallet-activity')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="mt-2 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-[#2B2037] bg-[#171022] text-xs font-semibold text-[#C3BBD0]"><Clock3 size={15} />View activity</button></Panel></section>;
+  return (
+    <section aria-label="Wallet actions">
+      <Panel className="p-2.5 sm:p-3">
+        <h2 className="mb-2 text-base font-semibold text-[#F2ECFA]">Quick actions</h2>
+        <div className="grid min-w-0 grid-cols-2 gap-2 min-[360px]:grid-cols-4">
+          {(['Deposit', 'Withdraw', 'Transfer', 'Convert'] as Action[]).map((item) => (
+            <WalletActionButton key={item} item={item} action={action} enabled={enabled} onSelect={onSelect} />
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={() => document.getElementById('wallet-activity')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' })}
+          className="mt-1 inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-xs font-semibold text-[#C3BBD0] hover:bg-[#2A1742] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#A78BFA]"
+        >
+          <Clock3 size={16} className="shrink-0" /> View activity
+        </button>
+      </Panel>
+    </section>
+  );
 }
 
 function WalletAccountTabs({ tab, onTabChange }: { tab: Tab; onTabChange: (tab: Tab) => void }) {
-  return <section aria-label="Wallet account tabs"><Panel className="p-2 sm:p-3"><div className="nexi-scroll-rail flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Wallet account tabs">{tabs.map((item) => <TabButton key={item} active={tab === item} onClick={() => onTabChange(item)}>{item === 'Binary' ? 'Options' : item}</TabButton>)}</div></Panel></section>;
-}
+  const railRef = useRef<HTMLDivElement>(null);
+  const previousTab = useRef(tab);
 
+  useEffect(() => {
+    if (previousTab.current === tab) return;
+    previousTab.current = tab;
+    const rail = railRef.current;
+    const active = rail?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]');
+    if (!rail || !active) return;
+    const railBounds = rail.getBoundingClientRect();
+    const selectedBounds = active.getBoundingClientRect();
+    const behavior: ScrollBehavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+    if (selectedBounds.left < railBounds.left) {
+      rail.scrollBy({ left: selectedBounds.left - railBounds.left - 8, behavior });
+    } else if (selectedBounds.right > railBounds.right) {
+      rail.scrollBy({ left: selectedBounds.right - railBounds.right + 8, behavior });
+    }
+  }, [tab]);
+
+  return (
+    <section aria-label="Wallet account tabs">
+      <Panel className="p-1.5 sm:p-2">
+        <div ref={railRef} className="nexi-scroll-rail flex min-w-0 gap-1.5 overflow-x-auto pb-1" role="tablist" aria-label="Wallet account tabs">
+          {tabs.map((item) => <TabButton key={item} active={tab === item} onClick={() => onTabChange(item)}>{item === 'Binary' ? 'Options' : item}</TabButton>)}
+        </div>
+      </Panel>
+    </section>
+  );
+}
 function WalletAccountPanel({ tab }: { tab: Tab }) {
   if (tab !== 'Finance') return null;
   return <Panel className="flex flex-wrap items-center justify-between gap-2 p-3 sm:p-4"><div><p className="text-sm font-semibold">Finance commitments and loans</p><p className="mt-1 text-xs text-[#8C8299]">Committed or locked funds are not available to transfer. Loan balances and repayment terms remain tied to loan records.</p></div><Link href="/dashboard/loans" className="inline-flex min-h-11 items-center rounded-lg border border-violet-300/20 px-3 text-sm font-semibold text-[#CFC4FF] hover:bg-[#2A1742]">Review loan obligations</Link></Panel>;
@@ -564,8 +641,8 @@ export default function WalletPage() {
   }
 
   return <PageShell>
-    <header className="mx-auto mb-4 flex max-w-7xl items-center justify-between gap-3 pl-14 sm:pl-0">
-      <div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#48C0CC]">Financial control center</p><h1 className="mt-1 break-words text-xl font-semibold tracking-tight gradient-text sm:text-2xl">Wallet</h1><p className="mt-1 truncate text-xs text-[#8C8299]">Wallet accounts, assets and activity.</p></div>
+    <header className="mx-auto mb-3 flex max-w-7xl items-center justify-between gap-3 pl-14 sm:pl-0">
+      <div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#48C0CC]">Financial control center</p><h1 className="mt-1 break-words text-xl font-semibold tracking-tight gradient-text sm:text-2xl">Wallet</h1><p className="mt-1 text-xs text-[#8C8299]">Wallet accounts, assets and activity.</p></div>
       <div className="flex shrink-0 items-center gap-2">{optionsReturn && <Link href={optionsReturn} className="inline-flex min-h-11 items-center rounded-lg border border-violet-300/20 px-3 text-xs font-semibold text-[#CFC4FF]">Return to Options</Link>}<SecondaryButton onClick={() => void loadWallet()}><RefreshCw size={15} className="sm:mr-2" /><span className="sr-only sm:not-sr-only">Refresh</span></SecondaryButton></div>
     </header>
     <WalletDashboardLayout>

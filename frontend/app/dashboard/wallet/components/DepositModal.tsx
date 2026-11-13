@@ -11,6 +11,7 @@ import { sameDepositClaim, uploadDepositProofObject, type PendingDepositClaim } 
 import { getIntentKey } from '../../../lib/intent-key';
 import { clearPendingEconomicIntent, persistPendingEconomicIntent, readPendingEconomicIntent } from '../../../lib/pending-economic-intent';
 import { findAsset } from '../../../lib/asset-registry';
+import { decimalAmountWithinBalance, decimalLessThanOrEqual, positiveDecimalAmount } from '../../../lib/trading-states';
 import AssetIcon from '../../../components/AssetIcon';
 
 interface DepositModalProps {
@@ -118,12 +119,11 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
 
   const destination = assetDestinations.find((item) => item.network === network) ?? assetDestinations[0];
   const selectedMeta = findAsset(selectedCurrency);
-  const numericClaim = Number(amount);
-  const minClaim = destination?.minDeposit == null ? null : Number(destination.minDeposit);
-  const maxClaim = destination?.maxDeposit == null ? null : Number(destination.maxDeposit);
-  const withinClaimLimits = Number.isFinite(numericClaim) && numericClaim > 0
-    && (minClaim === null || (Number.isFinite(minClaim) && numericClaim >= minClaim))
-    && (maxClaim === null || (Number.isFinite(maxClaim) && numericClaim <= maxClaim));
+  const claimAmount = amount.trim();
+  const withinClaimLimits = /^(?:0|[1-9]\d*)(?:\.\d{1,18})?$/.test(claimAmount)
+    && positiveDecimalAmount(claimAmount)
+    && (destination?.minDeposit == null || decimalLessThanOrEqual(destination.minDeposit, claimAmount))
+    && (destination?.maxDeposit == null || decimalAmountWithinBalance(claimAmount, destination.maxDeposit));
 
   const chooseAsset = (asset: string) => {
     onSelectCurrency(asset);

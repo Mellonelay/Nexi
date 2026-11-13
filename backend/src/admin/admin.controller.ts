@@ -435,6 +435,7 @@ export class AdminController {
       body.description,
       body.reason,
       request.user.userId,
+      body.idempotencyKey,
     );
   }
 

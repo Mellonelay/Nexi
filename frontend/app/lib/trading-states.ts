@@ -174,3 +174,17 @@ export function binaryOrderReady(input: {
     && decimalLessThanOrEqual(input.minimumAmount, input.amount)
     && decimalAmountWithinBalance(input.amount, input.maximumAmount);
 }
+
+export function formatDecimalRatePercent(value: unknown, suffix: string): string {
+  const rate = String(value ?? '').trim();
+  const parsed = /^(0|[1-9]\d*)(?:\.(\d+))?(?:e([+-]?\d{1,3}))?$/i.exec(rate);
+  if (!parsed) return '—';
+  const [, integer, fraction = '', exponent = '0'] = parsed;
+  // Prisma Decimal may serialize very small nonzero rates in scientific notation.
+  const point = integer.length + Number(exponent) + 2;
+  if (point < -80 || point > 80) return '—';
+  const digits = integer + fraction;
+  const percentInteger = (point > 0 ? digits.padEnd(point, '0').slice(0, point) : '0').replace(/^0+(?=\d)/, '');
+  const percentFraction = (point < 0 ? '0'.repeat(-point) + digits : digits.slice(point)).replace(/0+$/, '');
+  return percentInteger + (percentFraction ? '.' + percentFraction : '') + suffix;
+}

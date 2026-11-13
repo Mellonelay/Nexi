@@ -155,4 +155,11 @@ export class DisableMfaDto {
   token?: string;
 }
 
-export class GenerateBackupCodesDto {}
+export class GenerateBackupCodesDto {
+  @IsString()
+  @MinLength(1)
+  securityPassword!: string;
+  @IsString()
+  @Length(6, 64)
+  token!: string;
+}

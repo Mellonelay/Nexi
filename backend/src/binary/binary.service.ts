@@ -40,6 +40,27 @@ export class BinaryService {
     return this.settlePositionOnD1(positionId, actorUserId, adminAudit);
   }
 
+  private async delayedSettlement(
+    raw: any,
+    reason: "pair-unavailable" | "configuration-unavailable" | "quote-unavailable",
+  ) {
+    const position = await this.d1.markBinarySettlementDelayed(
+      String(raw.id), String(raw.userId), reason,
+    );
+    const terminal = [Gate2BinaryState.WIN, Gate2BinaryState.LOSS, Gate2BinaryState.ERROR]
+      .includes(String(position.state) as Gate2BinaryState);
+    if (terminal)
+      return { position: this.withPersistedSandboxSimulation(position), replayed: true };
+    // Notify connected Public clients when the durable position first becomes delayed.
+    // Reconnecting clients recover the same authoritative state through current positions.
+    if (String(raw.state) !== Gate2BinaryState.SETTLEMENT_DELAYED &&
+        String(position.state) === Gate2BinaryState.SETTLEMENT_DELAYED)
+      this.binaryGateway.emitPositionUpdate(String(raw.userId), {
+        event: 'binary.position.delayed', position,
+      });
+    return { position, delayed: true, reason };
+  }
+
   private async settlePositionOnD1(
     positionId: string,
     actorUserId?: string,
@@ -53,11 +74,11 @@ export class BinaryService {
     const expiresAt = new Date(String(raw.expiresAt));
     if (expiresAt.getTime() > Date.now()) throw new BadRequestException('Binary position has not expired');
     const pair = await this.d1.getMarketPairForSettlement(String(raw.pair));
-    if (!pair) return { position: raw, delayed: true };
+    if (!pair) return this.delayedSettlement(raw, 'pair-unavailable');
     const configuration: any = await this.d1.getBinaryConfiguration(String(raw.pair), Number(raw.durationSeconds), Number(raw.configurationVersion));
     // A missing versioned configuration is not a terminal financial loss or refund.
     // Preserve the locked stake and retryable position until settlement authority is restored.
-    if (!configuration) return { position: raw, delayed: true, reason: 'configuration-unavailable' };
+    if (!configuration) return this.delayedSettlement(raw, 'configuration-unavailable');
     const researchMode = this.isBinaryResearchAccount(String(raw.userId))
       ? this.binaryMode(raw.researchOverride ?? raw.researchDefault)
       : "NORMAL";
@@ -76,7 +97,7 @@ export class BinaryService {
       observedAt: expiresAt.toISOString(),
       sequence: String(raw.entrySequence),
     });
-    if (!quote) return { position: raw, delayed: true };
+    if (!quote) return this.delayedSettlement(raw, 'quote-unavailable');
     return this.settleProviderPosition({ raw, pair, configuration, expiresAt, sandbox: null, quote, adminAudit });
   }
 

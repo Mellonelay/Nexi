@@ -16,7 +16,7 @@ import api from '../../lib/api';
 import { getIntentKey, type PendingIntentKey } from '../../lib/intent-key';
 import { clearPendingEconomicIntent, persistPendingEconomicIntent, readPendingEconomicIntent } from '../../lib/pending-economic-intent';
 import { finiteMarketNumber } from '../../lib/market-data';
-import { decimalAmountWithinBalance, decimalLessThanOrEqual } from '../../lib/trading-states';
+import { decimalAmountWithinBalance, decimalLessThanOrEqual, formatDecimalRatePercent } from '../../lib/trading-states';
 import {
   authoritativeValue,
   LoanState,
@@ -496,7 +496,7 @@ function LoanProductsPanel({ plans, plansState }: { plans: LoanPlan[]; plansStat
               <dl className="mt-3 grid grid-cols-1 gap-3 text-sm min-[430px]:grid-cols-2">
                 <ReviewRow label="Asset" value={authoritativeValue(plan.currency)} stacked />
                 <ReviewRow label="Term" value={`${authoritativeValue(plan.durationDays)} days`} stacked />
-                <ReviewRow label="Term rate" value={finiteMarketNumber(plan.interestRate) === null ? '—' : `${(Number(plan.interestRate) * 100).toFixed(2)}% per plan term`} stacked />
+                <ReviewRow label="Term rate" value={formatDecimalRatePercent(plan.interestRate, '% per plan term')} stacked />
                 <ReviewRow label="Limits" value={`${authoritativeValue(plan.minAmount)} – ${authoritativeValue(plan.maxAmount)}`} stacked />
               </dl>
             </article>
