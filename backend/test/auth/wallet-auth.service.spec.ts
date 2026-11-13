@@ -41,7 +41,7 @@ jest.unstable_mockModule('@spruceid/siwe-parser', () => ({
 const { WalletAuthService } = await import('../../src/auth/wallet-auth.service');
 const { verifyMessage } = await import('viem') as unknown as { verifyMessage: jest.Mock };
 
-function makeService() {
+function makeService(chainIds = '1') {
   const records = new Map<string, string>();
   const redis = {
     set: jest.fn(async (key: string, value: string) => { records.set(key, value); }),
@@ -63,7 +63,7 @@ function makeService() {
     createWalletUser: jest.fn().mockResolvedValue(user),
     ensureDefaultUserAccounts: jest.fn().mockResolvedValue(undefined),
   };
-  const config = { get: (key: string) => ({ WALLET_AUTH_SUPPORTED_CHAIN_IDS: '1', WALLET_AUTH_DOMAIN: 'nexi.local', WALLET_AUTH_URI: 'http://nexi.local' } as Record<string, string>)[key] };
+  const config = { get: (key: string) => ({ WALLET_AUTH_SUPPORTED_CHAIN_IDS: chainIds, WALLET_AUTH_DOMAIN: 'nexi.local', WALLET_AUTH_URI: 'http://nexi.local' } as Record<string, string>)[key] };
   return { service: new WalletAuthService(config as any, redis as any, auth as any, referralVip as any, d1 as any), redis, prisma, auth, d1 };
 }
 
@@ -73,6 +73,13 @@ describe('WalletAuthService', () => {
   it('fails closed when the wallet policy is not configured', async () => {
     const service = new WalletAuthService({ get: () => undefined } as any, {} as any, {} as any, {} as any, {} as any);
     await expect(service.createChallenge({ address: '0xabc', chainId: 1 })).rejects.toBeInstanceOf(ServiceUnavailableException);
+  });
+
+  it('fails closed when configuration includes a non-mainnet chain', async () => {
+    const { service, redis } = makeService('1,137');
+    await expect(service.createChallenge({ address: '0xabc', chainId: 1 })).rejects.toBeInstanceOf(ServiceUnavailableException);
+    await expect(service.createChallenge({ address: '0xabc', chainId: 137 })).rejects.toBeInstanceOf(ServiceUnavailableException);
+    expect(redis.set).not.toHaveBeenCalled();
   });
 
   it('creates a single-use challenge and rejects unsupported chains', async () => {

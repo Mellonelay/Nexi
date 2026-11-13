@@ -58,7 +58,7 @@ export class WalletAuthService {
     const chainIds = (this.config.get<string>('WALLET_AUTH_SUPPORTED_CHAIN_IDS') ?? '').split(',').map((value) => Number(value.trim())).filter((value) => Number.isSafeInteger(value) && value > 0);
     const domain = this.config.get<string>('WALLET_AUTH_DOMAIN');
     const uri = this.config.get<string>('WALLET_AUTH_URI');
-    if (chainIds.length === 0 || !domain || !uri) throw new ServiceUnavailableException('Wallet authentication policy is not configured');
+    if (chainIds.length !== 1 || chainIds[0] !== 1 || !domain || !uri) throw new ServiceUnavailableException('Wallet authentication policy is not configured for Ethereum mainnet');
     try { return { chainIds, ...validateSiweOrigin(domain, uri) }; }
     catch { throw new ServiceUnavailableException('Wallet authentication origin policy is invalid'); }
   }
