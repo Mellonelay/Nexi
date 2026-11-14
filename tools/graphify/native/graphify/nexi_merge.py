@@ -610,31 +610,53 @@ def add_declared_infrastructure(nodes, links):
             edge(operation, resource, 'configures_reference', sf, line_no)
 
 
+def iter_source_relation_facts(links):
+    """Yield each typed source fact once, regardless of simple-graph packing.
+
+    A NetworkX simple edge is a storage container, not necessarily one
+    architectural dependency. Prefer its explicit NEXI parallel fact records
+    when present, falling back to the original edge on older graph files.
+    """
+    for edge in links:
+        members = edge.get("parallel_relations")
+        if not isinstance(members, list) or len(members) < 2:
+            yield edge
+            continue
+        for member in members:
+            if not isinstance(member, dict):
+                continue
+            yield {**edge, **member,
+                   "source": member.get("_src", edge.get("source")),
+                   "target": member.get("_tgt", edge.get("target"))}
+
+
 def report_graph(data):
     nodes = data.get('nodes', [])
     links = data.get('links', data.get('edges', []))
+    facts = list(iter_source_relation_facts(links))
     node_ids = {n.get('id') for n in nodes}
+    by_id = {n.get('id'): n for n in nodes}
     ops = {n['id']: n for n in nodes if operation_key(n)}
     unresolved_http_nodes = [
         n for n in nodes
         if (n.get('metadata') or {}).get('entity_type') == 'http_unresolved_call'
     ]
     unresolved_http_edges = [
-        e for e in links if e.get('relation') == 'http_call_unresolved'
+        e for e in facts if e.get('relation') == 'http_call_unresolved'
     ]
-    calls = [e for e in links if e.get('relation') == 'http_calls' and e.get('target') in ops]
-    handlers = [e for e in links if e.get('relation') == 'http_handled_by' and e.get('source') in ops]
-    delegates = [e for e in links if e.get('relation') == 'http_route_delegates_to']
-    candidates = [e for e in links if e.get('relation') == 'http_path_pattern_may_match']
+    calls = [e for e in facts if e.get('relation') == 'http_calls' and e.get('target') in ops]
+    handlers = [e for e in facts if e.get('relation') == 'http_handled_by' and e.get('source') in ops]
+    delegates = [e for e in facts if e.get('relation') == 'http_route_delegates_to']
+    candidates = [e for e in facts if e.get('relation') == 'http_path_pattern_may_match']
     call_ops = {e['target'] for e in calls}
     handler_ops = {e['source'] for e in handlers}
     delegated_ops = {e['source'] for e in delegates}
     call_surfaces, handler_surfaces = defaultdict(set), defaultdict(set)
     for e in calls:
-        src = next((n for n in nodes if n.get('id') == e.get('source')), {})
+        src = by_id.get(e.get('source'), {})
         call_surfaces[e['target']].add(src.get('repo', 'unknown'))
     for e in handlers:
-        dst = next((n for n in nodes if n.get('id') == e.get('target')), {})
+        dst = by_id.get(e.get('target'), {})
         handler_surfaces[e['source']].add(dst.get('repo', 'unknown'))
     pairs = Counter()
     for op in call_ops & handler_ops:
@@ -647,11 +669,11 @@ def report_graph(data):
         sf = n.get('source_file')
         if repo in source_files and sf:
             source_files[repo].add(sf)
-    http_edges = [e for e in links if e.get('relation') in HTTP_RELATIONS]
-    dangling = sum(e.get('source') not in node_ids or e.get('target') not in node_ids for e in links)
+    http_edges = [e for e in facts if e.get('relation') in HTTP_RELATIONS]
+    dangling = sum(e.get('source') not in node_ids or e.get('target') not in node_ids for e in facts)
     manifest = source_manifest()
     nexi_nodes = [n for n in nodes if (n.get('metadata') or {}).get('nexi_version')]
-    nexi_edges = [e for e in links if e.get('context') == 'nexi']
+    nexi_edges = [e for e in facts if e.get('context') == 'nexi']
     report = {
         'graphify_version': graphify_version(),
         'generated_at_utc': __import__('datetime').datetime.now(__import__('datetime').timezone.utc).isoformat(),
@@ -672,6 +694,7 @@ def report_graph(data):
         'nexi_unresolved_operations': sum(bool((n.get('metadata') or {}).get('unresolved_reason') or (n.get('metadata') or {}).get('unresolved_target')) for n in nexi_nodes),
         'merged_graph_sha256': hashlib.sha256(GRAPH.read_bytes()).hexdigest(),
         'nodes': len(nodes), 'edges': len(links),
+        'source_relation_facts': len(facts),
         'source_files_with_graph_nodes': {s: len(v) for s, v in source_files.items()},
         'community_count': len({n.get('community') for n in nodes if isinstance(n.get('community'), int)}),
         'community_count_note': 'Count of integer community ids serialized on graph nodes by Graphify cluster-only.',

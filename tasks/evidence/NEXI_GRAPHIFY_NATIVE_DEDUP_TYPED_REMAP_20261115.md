@@ -26,3 +26,7 @@ Upstream native `graphify/dedup.py:deduplicate_entities` remaps ordinary `edge["
 TASK | `SOURCE_IMPLEMENTED` for typed dedup endpoint integrity, not global NEXI source mapping.
 PROOF CLASS | `ISOLATED_GRAPHIFY_ENGINE_VERIFIED`.
 NEXT | Native downstream semantic completeness, producer-to-consumer extraction/source coverage, final source-first closure; full canonical graph/real application verification remains deferred.
+
+## Native source coverage report fact-grain correction
+
+Reproduced downstream loss after dedup: a serialized simple graph carried `http_calls` and `references_imported_symbol` on the same packed edge. Previous `graphify/nexi_merge.py:report_graph` counted only the primary `nexi` relation and reported **zero** HTTP clients. Native report now expands existing typed `parallel_relations` as individual source facts with their real direction, evidence and surface, retaining separate physical `edges` and `source_relation_facts` counts. It also avoids repeated O(N) node scans through an ID lookup. Isolated source fixture: **2 physical edges / 3 typed facts / 1 HTTP caller / 1 handler / 1 exact join / 1 NEXI reference**. No canonical graph rebuild or application execution.
