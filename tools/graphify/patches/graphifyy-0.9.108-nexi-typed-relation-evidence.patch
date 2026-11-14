@@ -94,7 +94,21 @@ diff --git a/graphify/build.py b/graphify/build.py
 diff --git a/graphify/serve.py b/graphify/serve.py
 --- a/graphify/serve.py
 +++ b/graphify/serve.py
-@@ -2522,10 +2522,33 @@
+@@ -1472,11 +1472,12 @@
+         if u in nodes and v in nodes:
+             # One EDGE line per relationship: on a multigraph a pair can
+             # carry several edges (e.g. contains + calls), each with its
+             # own metadata (#4500). The traversal records one entry per
+             # pair; expanding here keeps every relationship visible.
+-            for d in edge_datas(G, u, v):
++            for d in (fact for primary in edge_datas(G, u, v)
++                      for fact in _path_edge_facts(primary)):
+                 # (u, v) is BFS/DFS visit order, not necessarily the true edge
+                 # direction: on an undirected graph G.neighbors() walks callers
+                 # and callees alike, so a caller->callee edge renders backwards
+                 # whenever the callee is visited first. _src/_tgt (stashed on the
+                 # edge data by the `query` CLI loader) carry the real direction;
+@@ -2522,10 +2523,33 @@
          else:
              return False
      return True
@@ -128,7 +142,7 @@ diff --git a/graphify/serve.py b/graphify/serve.py
  
      Deterministic path (#2074): the hash-seeded undirected view picked an
      arbitrary route among equal-length paths, so the search runs on a graph
-@@ -2551,25 +2574,33 @@
+@@ -2551,25 +2575,33 @@
          # order: legacy canonicalized files persist a flipped arc with
          # _src/_tgt markers (#2309), so build the digraph from _src/_tgt
          # (falling back to the loaded arc) rather than to_directed().
@@ -165,7 +179,7 @@ diff --git a/graphify/serve.py b/graphify/serve.py
      return H
  
  
-@@ -2632,11 +2663,14 @@
+@@ -2632,11 +2664,14 @@
          u, v = path_nodes[i], path_nodes[i + 1]
          fwd, bwd = [], []
          for a, b in ((u, v), (v, u)):
@@ -181,7 +195,7 @@ diff --git a/graphify/serve.py b/graphify/serve.py
  
  
  def _path_confidence_key(hop_datas: list[list[dict]]):
-@@ -2780,11 +2814,14 @@
+@@ -2780,11 +2815,14 @@
          # hop by _src (falling back to the arc tail) instead of raw arc order.
          fwd, bwd = [], []
          for a, b in ((u, v), (v, u)):
@@ -197,7 +211,7 @@ diff --git a/graphify/serve.py b/graphify/serve.py
          forward = bool(fwd)
          rels = sorted({d.get("relation") for d in datas if d.get("relation")})
          rel = "/".join(rels) if rels else "related"
-@@ -2863,21 +2900,59 @@
+@@ -2863,21 +2901,59 @@
          return (
              f" at={sanitize_label(str(d.get('source_file') or ''))}:{sanitize_label(loc)}"
              if loc else ""

@@ -25,3 +25,6 @@ Native Graphify 0.9.108 simple Graph/DiGraph retains only one primary relation p
 
 ## Open frontier
 Candidate-to-node coverage, TypeScript/framework semantic precision, other query consumers and clustering, fresh canonical graph, and application correctness remain unproven; source-first owner restrictions remain in force.
+## Additional adjacent query consumer proof
+
+The native `_subgraph_to_text` MCP query renderer previously emitted only the primary edge from a simple graph even where two NEXI source-directed `parallel_relations` existed. It now iterates valid preserved facts in the same existing render loop. Isolated engine fixture returned two EDGE lines: `producer --calls [EXTRACTED context=nexi]--> consumer at=f.ts:L3` and `consumer --responds [INFERRED context=nexi]--> producer at=f.ts:L7`. Reproducible upstream 0.9.108 four-module patch rerun passed. This establishes output evidence preservation for the tested NEXI case; full query relevance/recall and other consumers remain unproven.
