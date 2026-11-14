@@ -81,7 +81,8 @@ def ensure_native_graph_patch() -> str:
     affected = NATIVE_AFFECTED.read_text(encoding="utf-8")
     cli = NATIVE_CLI.read_text(encoding="utf-8")
     has_build = build.count("def _nexi_relation_variants(") == 1
-    has_serve = serve.count("def _emit_parallel(d: dict)") == 1
+    has_serve = (serve.count("def _emit_parallel(d: dict)") == 1
+                 and serve.count("def _path_edge_facts(") == 1)
     has_affected = affected.count("def _incoming_source_facts(") == 1
     has_cli = cli.count("NEXI_NATIVE_MERGE_CLI_V1") == 1
     if has_build and has_serve and has_affected and has_cli:

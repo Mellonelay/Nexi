@@ -94,7 +94,110 @@ diff --git a/graphify/build.py b/graphify/build.py
 diff --git a/graphify/serve.py b/graphify/serve.py
 --- a/graphify/serve.py
 +++ b/graphify/serve.py
-@@ -2863,21 +2863,59 @@
+@@ -2522,10 +2522,33 @@
+         else:
+             return False
+     return True
+ 
+ 
++def _path_edge_facts(data: dict, nodes: set[str] | None = None) -> list[dict]:
++    """Expand source-directed NEXI facts stored on a simple graph edge.
++
++    Keep the original edge as fallback for unmodified upstream graphs. Only
++    trust secondary facts whose logical endpoints exist and are in the same
++    endpoint pair as their primary edge (checked by the caller).
++    """
++    variants = data.get("parallel_relations")
++    if not isinstance(variants, list) or len(variants) < 2:
++        return [data]
++    facts = []
++    for fact in variants:
++        if not isinstance(fact, dict) or fact.get("context") != "nexi":
++            continue
++        src, tgt = fact.get("_src"), fact.get("_tgt")
++        if not isinstance(src, str) or not isinstance(tgt, str):
++            continue
++        if nodes is not None and (src not in nodes or tgt not in nodes):
++            continue
++        facts.append(fact)
++    return facts if facts else [data]
++
++
+ def _path_search_graph(G: nx.Graph, undirected: bool) -> nx.Graph:
+     """The sorted, materialized graph `_shortest_path_text` searches.
+ 
+     Deterministic path (#2074): the hash-seeded undirected view picked an
+     arbitrary route among equal-length paths, so the search runs on a graph
+@@ -2551,25 +2574,33 @@
+         # order: legacy canonicalized files persist a flipped arc with
+         # _src/_tgt markers (#2309), so build the digraph from _src/_tgt
+         # (falling back to the loaded arc) rather than to_directed().
+         H = nx.DiGraph()
+         H.add_nodes_from(sorted(G.nodes))
++        node_ids = set(G.nodes)
++        # Each NEXI parallel fact has its own source-directed arc. The
++        # primary NetworkX edge may only represent one of several facts.
+         H.add_edges_from(sorted(
+-            (d.get("_src", u), d.get("_tgt", v)) for u, v, d in G.edges(data=True)
++            (fact.get("_src", u), fact.get("_tgt", v))
++            for u, v, d in G.edges(data=True)
++            for fact in _path_edge_facts(d, node_ids)
++            if {fact.get("_src", u), fact.get("_tgt", v)} == {u, v}
+         ))
+         # A `contains` edge only runs file -> symbol; there is no stored
+         # edge back out to the containing file, so a route that reaches a
+         # symbol (via an `imports`/`calls`/`references` hop) can never
+         # continue on to the file that defines it, and a file-to-file
+         # dependency routed through a shared symbol finds no path at all
+         # even though both halves exist (#3878). Add the implied reverse hop
+         # for traversal only — the printed segment still recovers the real
+         # stored `contains` edge and its true direction from G below.
+         H.add_edges_from(sorted(
+-            (d.get("_tgt", v), d.get("_src", u))
++            (fact.get("_tgt", v), fact.get("_src", u))
+             for u, v, d in G.edges(data=True)
+-            if d.get("relation") == "contains"
++            for fact in _path_edge_facts(d, node_ids)
++            if fact.get("relation") == "contains"
++            and {fact.get("_src", u), fact.get("_tgt", v)} == {u, v}
+         ))
+     cache[undirected] = H
+     return H
+ 
+ 
+@@ -2632,11 +2663,14 @@
+         u, v = path_nodes[i], path_nodes[i + 1]
+         fwd, bwd = [], []
+         for a, b in ((u, v), (v, u)):
+             if G.has_edge(a, b):
+                 for d in edge_datas(G, a, b):
+-                    (fwd if d.get("_src", a) == u else bwd).append(d)
++                    for fact in _path_edge_facts(d, set(G.nodes)):
++                        if {fact.get("_src", a), fact.get("_tgt", b)} != {a, b}:
++                            continue
++                        (fwd if fact.get("_src", a) == u else bwd).append(fact)
+         hop_datas.append(fwd or bwd)
+     return hop_datas
+ 
+ 
+ def _path_confidence_key(hop_datas: list[list[dict]]):
+@@ -2780,11 +2814,14 @@
+         # hop by _src (falling back to the arc tail) instead of raw arc order.
+         fwd, bwd = [], []
+         for a, b in ((u, v), (v, u)):
+             if G.has_edge(a, b):
+                 for d in edge_datas(G, a, b):
+-                    (fwd if d.get("_src", a) == u else bwd).append(d)
++                    for fact in _path_edge_facts(d, set(G.nodes)):
++                        if {fact.get("_src", a), fact.get("_tgt", b)} != {a, b}:
++                            continue
++                        (fwd if fact.get("_src", a) == u else bwd).append(fact)
+         datas = fwd or bwd
+         hop_datas.append(datas)
+         forward = bool(fwd)
+         rels = sorted({d.get("relation") for d in datas if d.get("relation")})
+         rel = "/".join(rels) if rels else "related"
+@@ -2863,21 +2900,59 @@
          return (
              f" at={sanitize_label(str(d.get('source_file') or ''))}:{sanitize_label(loc)}"
              if loc else ""
