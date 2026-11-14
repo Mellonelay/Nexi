@@ -1,0 +1,131 @@
+diff --git a/graphify/build.py b/graphify/build.py
+--- a/graphify/build.py
++++ b/graphify/build.py
+@@ -308,10 +308,43 @@
+             kept.append(ev)
+     if kept:
+         winner["also_seen"] = sorted(kept, key=_evidence_sort_key)
+     else:
+         winner.pop("also_seen", None)
++
++
++def _nexi_relation_variants(existing: dict, incoming: dict) -> list[dict] | None:
++    """Keep distinct NEXI edge facts when a simple graph collapses a node pair.
++
++    Native Graph/DiGraph still has one primary edge per pair for compatibility.
++    This sidecar is *evidence*, not an independently traversable graph edge.
++    Same-relation repeated provenance remains owned by ``also_seen``.
++    """
++    old = existing.get("parallel_relations")
++    new = incoming.get("parallel_relations")
++    if not (existing.get("context") == "nexi" or incoming.get("context") == "nexi"
++            or isinstance(old, list) or isinstance(new, list)):
++        return None
++
++    allowed = ("relation", "_src", "_tgt", "context", "confidence",
++               "confidence_score", "source_file", "source_location")
++    variants: dict[tuple[str, str, str], dict] = {}
++    for edge in (existing, incoming):
++        members = edge.get("parallel_relations")
++        candidates = members if isinstance(members, list) else [edge]
++        for item in candidates:
++            if not isinstance(item, dict) or not item.get("relation"):
++                continue
++            record = {key: item[key] for key in allowed if key in item}
++            key = (str(record.get("relation")), str(record.get("_src")),
++                   str(record.get("_tgt")))
++            variants.setdefault(key, record)
++    # A sole relation has no parallel fact; keep any preexisting sidecar intact.
++    if len(variants) < 2:
++        return old if isinstance(old, list) else new if isinstance(new, list) else None
++    return [variants[key] for key in sorted(variants)]
++
+ 
+ # Import-family relations whose target may legitimately be a module OUTSIDE the
+ # graph (stdlib, a third-party dependency, another repo). Historically the edge
+ # to such a target was dropped, which left the in-memory graph clean but let the
+ # on-disk graph.json (written by the incremental update path) keep the edge with
+@@ -2141,10 +2174,20 @@
+             continue
+         # Preserve original edge direction - undirected graphs lose it otherwise,
+         # causing display functions to show edges backwards.
+         attrs["_src"] = src
+         attrs["_tgt"] = tgt
++        # The native simple graph can store only one relationship per node pair.
++        # Preserve NEXI's other typed directional facts as an explicit sidecar
++        # before the priority/reverse-direction branches may skip or overwrite.
++        # Query consumers still traverse the primary edge only.
++        if G.has_edge(src, tgt):
++            _previous = edge_data(G, src, tgt)
++            _parallel = _nexi_relation_variants(_previous, attrs)
++            if _parallel is not None:
++                _previous["parallel_relations"] = _parallel
++                attrs["parallel_relations"] = _parallel
+         # Before the drops below, so a runtime import that folds into a
+         # type-only edge still clears its marker (#3159). The reverse-direction
+         # duplicate that the undirected graph drops (#1061) is another file's
+         # import, not this one: the surviving edge keeps its own marker.
+         # `_EXTERNAL_STUB_RELATIONS` is the import family (imports, imports_from, re_exports).
+diff --git a/graphify/serve.py b/graphify/serve.py
+--- a/graphify/serve.py
++++ b/graphify/serve.py
+@@ -2863,21 +2863,59 @@
+         return (
+             f" at={sanitize_label(str(d.get('source_file') or ''))}:{sanitize_label(loc)}"
+             if loc else ""
+         )
+     lines: list[str] = []
++    # A simple graph may have preserved distinct NEXI facts for one node pair
++    # as parallel_relations. Display their real directed arcs instead of
++    # silently reporting only the single primary Graph/DiGraph edge.
++    seen_variants: set[int] = set()
++
++    def _emit_parallel(d: dict) -> bool:
++        variants = d.get("parallel_relations")
++        if not isinstance(variants, list) or len(variants) < 2:
++            return False
++        # The same stored arc can be visited in both successor/predecessor
++        # loops (self loops). Render each stored relationship only once.
++        if id(d) in seen_variants:
++            return True
++        seen_variants.add(id(d))
++        for variant in variants:
++            if not isinstance(variant, dict):
++                continue
++            rel = str(variant.get("relation") or "")
++            if rel_filter and rel_filter not in rel.lower():
++                continue
++            src, tgt = variant.get("_src"), variant.get("_tgt")
++            if src == nid and tgt in G:
++                arrow, other = "-->", tgt
++            elif tgt == nid and src in G:
++                arrow, other = "<--", src
++            else:
++                continue  # malformed evidence must not fabricate a connection
++            lines.append(
++                f"  {arrow} {sanitize_label(G.nodes[other].get('label', other))} "
++                f"[{sanitize_label(rel)}] [{sanitize_label(_confidence_tag(variant))}]"
++                f"{_edge_at(variant)}"
++            )
++        return True
++
+     for nb in G.successors(nid):
+         for d in edge_datas(G, nid, nb):
++            if _emit_parallel(d):
++                continue
+             rel = d.get("relation", "")
+             if rel_filter and rel_filter not in rel.lower():
+                 continue
+             lines.append(
+                 f"  --> {sanitize_label(G.nodes[nb].get('label', nb))} "
+                 f"[{sanitize_label(str(rel))}] [{sanitize_label(_confidence_tag(d))}]{_edge_at(d)}"
+             )
+     for nb in G.predecessors(nid):
+         for d in edge_datas(G, nb, nid):
++            if _emit_parallel(d):
++                continue
+             rel = d.get("relation", "")
+             if rel_filter and rel_filter not in rel.lower():
+                 continue
+             lines.append(
+                 f"  <-- {sanitize_label(G.nodes[nb].get('label', nb))} "
