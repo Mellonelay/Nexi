@@ -383,7 +383,7 @@ function MarginWorkspace({
             <h2 id="isolated-margin-heading" className="mt-1 text-lg font-semibold">{displayPair} margin workspace</h2>
           </div>
         </div>
-        <div className="nexi-margin-chart-frame mt-4 min-w-0 overflow-hidden rounded-xl border border-violet-300/10 bg-[#0B0711]">
+        <div className="nexi-margin-chart-frame -mx-2 mt-4 min-w-0 overflow-hidden rounded-xl border border-violet-300/10 bg-[#0B0711] sm:-mx-5">
           <div className="nexi-trading-intervals flex min-w-0 items-center gap-2 border-b border-white/5 px-3 py-2">
             <div className="nexi-scroll-rail flex min-w-0 flex-1 items-center justify-between gap-1 overflow-x-auto" role="tablist" aria-label="Margin chart interval">
               {CHART_INTERVALS.map((value) => (
@@ -391,7 +391,7 @@ function MarginWorkspace({
               ))}
             </div>
           </div>
-          <div className="nexi-trading-plot-shell h-[clamp(230px,55dvh,300px)] md:h-[360px] xl:h-[430px]">
+          <div className="nexi-trading-plot-shell h-[clamp(16rem,52dvh,24rem)] sm:h-[420px] xl:h-[500px]">
             <SpotRealtimeTradingChart symbol={normalizedSymbol} interval={chartInterval} marketStatus={sessionClosed ? 'CLOSED' : undefined} />
           </div>
         </div>
@@ -476,7 +476,7 @@ function SpotChartArea({displayPair, normalizedSymbol, chartInterval, setChartIn
                 ))}
               </div>
             </div>
-            <div className="nexi-trading-plot-shell h-[clamp(230px,55dvh,300px)] md:h-[360px] xl:h-[430px]">
+            <div className="nexi-trading-plot-shell h-[clamp(16rem,52dvh,24rem)] sm:h-[420px] xl:h-[500px]">
               <SpotRealtimeTradingChart symbol={normalizedSymbol} interval={chartInterval} marketStatus={sessionClosed ? 'CLOSED' : undefined} />
             </div>
           </div>
