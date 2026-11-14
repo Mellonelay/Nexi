@@ -1,66 +1,75 @@
-# NEXI native Graphify engine patch (0.9.108)
+# NEXI native Graphify 0.9.108 engine
 
-The authoritative customized Graphify runtime is the owner-installed `uv` tool
-`graphifyy[all]==0.9.108`, with Python package at:
+**Authoritative source:** `tools/graphify/native/graphify/` and the version-pinned
+`tools/graphify/patches/graphifyy-0.9.108-nexi-typed-relation-evidence.patch`.
+`tools/graphify/install_native.py` is the maintained reinstall procedure; the
+older `~/.local/share/graphify-nexi/graphify-http-extractor/install_patch.py`
+entrypoint is synchronized with it for compatibility, but its older Python
+extractor files are **not** source-of-truth after this migration.
 
-`/home/mellonelay1999/.local/share/uv/tools/graphifyy/lib/python3.12/site-packages/graphify/`
+Installed runtime: `graphifyy[all]==0.9.108` at
+`~/.local/share/uv/tools/graphifyy/lib/python3.12/site-packages/graphify/`.
+This is offline/local Graphify, not the hosted Graphify Platform.
 
-The upstream wheel is unchanged in Git. The **version-controlled native patch**
-`patches/graphifyy-0.9.108-nexi-typed-relation-evidence.patch` modifies the
-installed `graphify/build.py` and `graphify/serve.py`; it was applied on the VM.
-Do not confuse this with NEXI's separate framework extractor under
-`~/.local/share/graphify-nexi/graphify-http-extractor/`.
+## Native components and contract
 
-## Confirmed defect
+| Installed module | NEXI responsibility |
+| --- | --- |
+| `detect.py` | `.prisma` classified as code; existing security/ignore checks preserved. |
+| `extract.py` | Native `.prisma` extractor dispatch, plus one combined framework hook before AST provenance finalization. |
+| `extractors/prisma.py` | Native, source-bounded Prisma model, field, table and relation declarations. Exact NEXI IDs and source locations preserved. |
+| `nexi_relationships.py` | Native-packaged compiler-backed NestJS, Prisma operation, SQLite, BullMQ/Valkey, Socket.IO, Next/TanStack/React relationship interpretation. |
+| `http_relationships.py` | Native-packaged HTTP endpoints, calls, delegation and React Context source interpretation. |
+| `nexi_semantic_scan.cjs` | Native-packaged TypeScript 6.0.2 `Program`/`TypeChecker` companion, executed with the existing Node 24 runtime and project-local TypeScript. Not reimplemented in weaker Python regex. |
+| `build.py` | Preserve distinct NEXI source-directed typed facts and provenance when the native simple graph collapses endpoint pairs. |
+| `serve.py` | Expose the retained facts through existing MCP `get_neighbors`, retaining direction, confidence, line and `relation_filter`. |
+| `affected.py` | Reverse-dependency traversal reads those retained NEXI facts, including oppositely oriented relationships and correct source sites; caller must explicitly select extra NEXI relations. |
 
-A native simple Graph/DiGraph collapses different `relation` facts between the
-same two node IDs (e.g., `reads_model` and `writes_model`), silently overwriting
-one and its provenance. The existing `also_seen` attribute preserves provenance
-for a repeated *same* relation, not a different relation. This was reproduced
-against the unmodified 0.9.108 builder in an isolated Python fixture.
+Graphify still uses its original Python `detect -> extract -> build -> cluster ->
+analyze -> export/serve` pipeline. The native TypeScript companion is a *parser*
+within that flow, not a second graph engine or controller. The older external
+`merge_surface_graphs.py` canonicalizer remains in use for three-surface merges;
+its source-manifest/fingerprint and graph-consumer rules are NOT yet replaced
+with an upstream-native merge implementation.
 
-## Applied ownership and compatibility
-
-- `graphify/build.py`: preserve distinct NEXI typed arcs, including `_src`,
-  `_tgt`, `relation`, `context`, confidence and source location, in a sorted
-  `parallel_relations` evidence sidecar on the surviving edge. The primary edge
-  and native graph class are intentionally unchanged. Repeat provenance still
-  uses upstream `also_seen`. Non-NEXI edges retain upstream behavior.
-- `graphify/serve.py`: the existing MCP `get_neighbors` renderer expands those
-  saved facts with true direction, confidence and provenance. The built-in
-  `relation_filter` can select individual retained relationships. Invalid arc
-  endpoints are ignored rather than fabricated.
-- The maintained `install_patch.py` now checks the two patch markers and applies
-  the repo patch on supported clean 0.9.108 package files, refusing partial or
-  fuzzy patch mismatches. Upgrading Graphify to another version requires a
-  deliberate patch rebase; do not blindly carry this patch to a new release.
-
-## Reapply after reinstalling the exact compatible upstream wheel
-
-Run the existing maintained installer after installing `graphifyy[all]==0.9.108`:
+## Reinstall (after exact same upstream version)
 
 ```bash
-python3 /home/mellonelay1999/.local/share/graphify-nexi/graphify-http-extractor/install_patch.py
+python3 /home/mellonelay1999/workspaces/Nexi/tools/graphify/install_native.py
 ```
 
-It restores the existing framework hooks and this native engine patch.
-Without the installer, the native patch can be applied from a clean upstream
-0.9.108 site-packages directory with `patch -p1 --fuzz=0`, using this tracked
-patch as stdin. Applying it a second time is not supported; inspect markers.
-The installer does not rebuild the canonical graph or restart services.
+The installer detects the exact 0.9.108 package, parses candidate Python files,
+checks the companion scanner with Node, and refuses absent or ambiguous upstream
+hook anchors. It applies the zero-fuzz patch to a pristine upstream `build.py`,
+`serve.py`, and `affected.py` or confirms all three are already modified;
+it rejects partial native core patch states. It copies tracked native framework,
+HTTP, Prisma, and CJS source into the installed package before turning on hooks.
+Modified installed files are backed up into the old toolkit's backup directory.
+The compatibility installer entrypoint has the same bytes as this tracked file.
 
-## Proof and limits
+Do **not** run `uv tool upgrade` without first reviewing this version pin and
+rebasing the patch and native hooks for the new upstream source. The installer
+neither regenerates the canonical graph nor restarts application services.
 
-Engine-only checks reproduced the failure before the patch, then verified typed
-forward/reverse edges, relation filters, provenance, JSON round-trip, and
-non-NEXI compatibility. The patch applied with `--fuzz=0` against the original
-verified 0.9.108 wheel in an isolated scratch directory. Existing native MCP
-remains accessible. **The canonical NEXI graph is not regenerated.** The
-`parallel_relations` sidecar is inspectable through `get_neighbors`, but native
-query BFS, `path`, `affected`, and clustering still operate on the *primary*
-structural edge. The patch is not a full MultiDiGraph migration nor a proof of
-all NEXI extractor input coverage or application semantics.
+## Evidence and limitations
 
-The 0.9.108 upstream source and wheel must be rechecked on any future package
-upgrade. Do not run NEXI application tests/builds/deployments as part of this
-Graphify-engine maintenance slice.
+The native Prisma per-file extractor returns 98 schema models, 1,237 fields,
+98 model-to-table mapping edges and 170 model relation-target edges for the
+current `backend/prisma/schema.d1.prisma` schema. Full isolated `extract()`
+proves native dispatch and no duplicate node IDs/invalid structural endpoints.
+Native typed multi-relation edge preservation and `affected()` traversal were
+checked through `to_json()` and `load_graph()` using isolated tiny graphs.
+The patch was also applied with `patch --fuzz=0` to untouched upstream wheel
+0.9.108 in a temporary directory.
+
+**Not proven:** full repo source-file coverage, unindexed CSS/SCSS, native multi-
+relation BFS/shortest path/clustering, cross-surface merge replacement, dynamic
+runtime events, and application correctness. `affected` default relation names
+remain intentionally conservative; custom NEXI relations require explicit
+selection. The current `graphify-out/graph.json` is an older 0.9.105 extract;
+new native semantics are not reflected there without a separately authorized
+canonical graph regeneration. Knowledge-first Kernel source-map currently
+reports an extractor-manifest SHA mismatch. Source-first defers NEXI application
+tests/builds/restarts/deployment.
+
+Reference: `tasks/evidence/NEXI_GRAPHIFY_NATIVE_ENGINE_MIGRATION_20261115.md`.
