@@ -332,7 +332,7 @@ diff --git a/graphify/serve.py b/graphify/serve.py
 diff --git a/graphify/affected.py b/graphify/affected.py
 --- a/graphify/affected.py
 +++ b/graphify/affected.py
-@@ -35,10 +35,15 @@
+@@ -35,10 +35,23 @@
      # relation (calls, references, imports) targets the *file* node, not the
      # symbol node. The reverse walk follows `defines` from the symbol back to
      # its defining file and then continues through `imports` to consumers.
@@ -343,12 +343,20 @@ diff --git a/graphify/affected.py b/graphify/affected.py
 +    "http_calls",
 +    "http_handled_by",
 +    "http_route_delegates_to",
++    # NEXI TypeScript TypeChecker and unique NestJS DI resolution edges.
++    # Unresolved symbols, token-only candidates and transport-name matches
++    # are intentionally excluded from the default impact walk.
++    "references_resolved_symbol",
++    "references_imported_symbol",
++    "resolves_injected_provider",
++    "resolves_factory_provider",
++    "resolves_existing_provider_alias",
  )
  
  
  # Edges from a type to the types it derives from. A method declared again in a
  # subtype overrides the supertype's same-named member.
-@@ -295,10 +300,55 @@
+@@ -295,10 +308,55 @@
                  member = str(member)
                  if (str(data.get("relation", "")) == "method" and member != node
                          and graph.nodes[member].get("label") == label):
@@ -404,7 +412,7 @@ diff --git a/graphify/affected.py b/graphify/affected.py
  def affected_nodes(
      graph: nx.Graph,
      seed: str,
-@@ -355,19 +405,11 @@
+@@ -355,19 +413,11 @@
                      seen.add(overridden)
                      stepping_stones.add(overridden)
                      # front of the queue: same depth as `current`, so it must be

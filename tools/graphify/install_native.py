@@ -45,7 +45,7 @@ NATIVE_PATCH = Path(
     "/home/mellonelay1999/workspaces/Nexi/tools/graphify/patches/"
     "graphifyy-0.9.108-nexi-typed-relation-evidence.patch"
 )
-NATIVE_MODULE_SHA256 = {'build.py': 'c558f0721b9ea4e7e9e394ae21a26a9373544c807398e45dc05e1d7a4e9abc2f', 'serve.py': '2c8fff3ebe65861dd08486234bc929657e9cf581c0bc8980535f37d33fc8e260', 'affected.py': 'a805d07b1b02e480d720681cad9ec4d6eb5bc1919667d5bd8b8a20cac6a84a70', 'cli.py': '062faf6fc342e131b843a9aefdea89f0ae128e9368aeab3ea3abdd522705460d', 'dedup.py': '852c04eefae3811e285ebbeae9ce81e331e44715a45ff0fb7dcb9a8a95163c8e'}
+NATIVE_MODULE_SHA256 = {'build.py': 'c558f0721b9ea4e7e9e394ae21a26a9373544c807398e45dc05e1d7a4e9abc2f', 'serve.py': '2c8fff3ebe65861dd08486234bc929657e9cf581c0bc8980535f37d33fc8e260', 'affected.py': '6c0fcba14b23ef1e6bb1b4a0a16b1a9a5fef8aa21417ade755b240d12d883155', 'cli.py': '062faf6fc342e131b843a9aefdea89f0ae128e9368aeab3ea3abdd522705460d', 'dedup.py': '852c04eefae3811e285ebbeae9ce81e331e44715a45ff0fb7dcb9a8a95163c8e'}
 MARKER = "    # NEXI_FRAMEWORK_RELATIONSHIPS_V1"
 OLD_MARKER = "    # NEXI_HTTP_RELATIONSHIPS_V1"
 ORIGIN_ANCHOR = "    # Tag AST provenance so the incremental watch rebuild can distinguish"
