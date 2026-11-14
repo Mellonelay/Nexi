@@ -27,10 +27,12 @@ This is offline/local Graphify, not the hosted Graphify Platform.
 
 Graphify still uses its original Python `detect -> extract -> build -> cluster ->
 analyze -> export/serve` pipeline. The native TypeScript companion is a *parser*
-within that flow, not a second graph engine or controller. The older external
-`merge_surface_graphs.py` canonicalizer remains in use for three-surface merges;
-its source-manifest/fingerprint and graph-consumer rules are NOT yet replaced
-with an upstream-native merge implementation.
+within that flow, not a second graph engine or controller. The NEXI HTTP/Socket.IO and infrastructure canonicalizer is now packaged as
+`graphify/nexi_merge.py` and callable through `python -m graphify.nexi_merge`.
+The old `merge_surface_graphs.py` forwards to that native-packaged module.
+However, upstream `graphify merge-graphs` has NOT yet been wired to invoke
+NEXI canonicalization automatically; NEXI's source-manifest validation is
+required before promotion. Existing graph-consumer and completeness limits remain.
 
 ## Reinstall (after exact same upstream version)
 

@@ -29,6 +29,8 @@ HTTP = PKG / "http_relationships.py"
 HTTP_SOURCE = NATIVE_SOURCE / "http_relationships.py"
 PRISMA = PKG / "extractors" / "prisma.py"
 PRISMA_SOURCE = NATIVE_SOURCE / "extractors" / "prisma.py"
+NEXI_MERGE = PKG / "nexi_merge.py"
+NEXI_MERGE_SOURCE = NATIVE_SOURCE / "nexi_merge.py"
 # NEXI_NATIVE_ENGINE_PATCH_V1 — tracked patch; no competing extraction pipeline.
 NATIVE_BUILD = PKG / "build.py"
 NATIVE_SERVE = PKG / "serve.py"
@@ -107,11 +109,11 @@ def main() -> None:
     if installed != "0.9.108":
         raise SystemExit(f"Requires installed graphifyy 0.9.108, found {installed!r}")
 
-    for p in (DETECT, EXTRACT, SOURCE, SCANNER_SOURCE, HTTP_SOURCE, PRISMA_SOURCE):
+    for p in (DETECT, EXTRACT, SOURCE, SCANNER_SOURCE, HTTP_SOURCE, PRISMA_SOURCE, NEXI_MERGE_SOURCE):
         if not p.is_file():
             raise SystemExit(f"Required integration source missing: {p}")
     # Validate every candidate before touching the installed package.
-    for source in (SOURCE, HTTP_SOURCE, PRISMA_SOURCE):
+    for source in (SOURCE, HTTP_SOURCE, PRISMA_SOURCE, NEXI_MERGE_SOURCE):
         ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
     node = Path("/opt/nexi/runtime/node-v24.21.0/bin/node")
     if not node.is_file():
@@ -123,6 +125,7 @@ def main() -> None:
     native_patch_status = ensure_native_graph_patch()
     desired_scanner = SCANNER_SOURCE.read_bytes()
     desired_prisma = PRISMA_SOURCE.read_bytes()
+    desired_merge = NEXI_MERGE_SOURCE.read_bytes()
     existing_http = HTTP.read_bytes() if HTTP.exists() else b""
     desired_http = HTTP_SOURCE.read_bytes()
     # Tracked native modules replace their installed copies with a backup.
@@ -203,7 +206,8 @@ def main() -> None:
                    or not MODULE.exists() or MODULE.read_bytes() != SOURCE.read_bytes()
                    or not HTTP.exists() or HTTP.read_bytes() != desired_http
                    or not SCANNER.exists() or SCANNER.read_bytes() != desired_scanner
-                   or not PRISMA.exists() or PRISMA.read_bytes() != desired_prisma)
+                   or not PRISMA.exists() or PRISMA.read_bytes() != desired_prisma
+                   or not NEXI_MERGE.exists() or NEXI_MERGE.read_bytes() != desired_merge)
     if will_update:
         backup = STATE / "backups"
         backup.mkdir(parents=True, exist_ok=True)
@@ -219,7 +223,8 @@ def main() -> None:
         for name, deployed, desired in (("nexi_relationships", MODULE, SOURCE.read_bytes()),
                                         ("http_relationships", HTTP, desired_http),
                                         ("nexi_semantic_scan", SCANNER, desired_scanner),
-                                        ("prisma", PRISMA, desired_prisma)):
+                                        ("prisma", PRISMA, desired_prisma),
+                                        ("nexi_merge", NEXI_MERGE, desired_merge)):
             if deployed.exists() and deployed.read_bytes() != desired:
                 saved = backup / f"{name}-{stamp}-{digest(deployed.read_bytes())[:12]}{deployed.suffix}"
                 if not saved.exists():
@@ -234,6 +239,8 @@ def main() -> None:
         atomic_write(SCANNER, desired_scanner)
     if not PRISMA.exists() or PRISMA.read_bytes() != desired_prisma:
         atomic_write(PRISMA, desired_prisma)
+    if not NEXI_MERGE.exists() or NEXI_MERGE.read_bytes() != desired_merge:
+        atomic_write(NEXI_MERGE, desired_merge)
     if desired_detect != detected_original:
         atomic_write(DETECT, desired_detect.encode("utf-8"))
     if text != original:
