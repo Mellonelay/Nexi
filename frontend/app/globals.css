@@ -1099,3 +1099,14 @@ body {
     grid-template-columns: minmax(0, 1fr) 160px;
   }
 }
+
+/* Wallet-browser chrome can leave little vertical room in portrait mode. */
+@media (max-width: 767px) and (max-height: 650px) and (orientation: portrait) {
+  .nexi-trading-page .nexi-trading-chart-card {
+    min-height: 0;
+  }
+  .nexi-trading-page .nexi-trading-plot-shell,
+  .nexi-trading-page .nexi-options-chart-frame {
+    height: clamp(180px, 38dvh, 220px);
+  }
+}
