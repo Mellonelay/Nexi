@@ -213,6 +213,7 @@ def extract_http_relationships(paths, root, all_nodes, all_edges):
             symbols_by_file_line.setdefault(sf, {}).setdefault(int(m.group(1)), []).append(n)
 
     endpoints, new_edges, seen_edges = {}, [], set()
+    unresolved_calls = {}
     def endpoint(verb, route, origin=None):
         eid = _operation_id(verb, route, origin)
         if eid not in endpoints:
@@ -491,6 +492,28 @@ def extract_http_relationships(paths, root, all_nodes, all_edges):
                 route = route_hints.get(_text(args[0], data).strip())
                 path_inferred = route is not None
             if not route:
+                # A syntactically explicit outbound HTTP call is still a
+                # source fact. Do not silently erase it because the target
+                # URL is dynamic or cannot be tied to a unique operation.
+                caller = _nearest_graph_symbol(call, by_line) or file_id
+                if caller:
+                    unresolved_id = f"http_unresolved:{sf}:{call.start_byte}"
+                    unresolved_calls.setdefault(unresolved_id, {
+                        "id": unresolved_id,
+                        "label": f"Unresolved HTTP request at {sf}:{_line(call)}",
+                        "file_type": "concept",
+                        "source_file": sf,
+                        "source_location": f"L{_line(call)}",
+                        "metadata": {
+                            "entity_type": "http_unresolved_call",
+                            "unresolved_reason": "dynamic-or-unsupported-url",
+                            "callee": callee[:160],
+                            "http_scope": "unknown",
+                        },
+                        "_origin": "ast",
+                    })
+                    add_edge(caller, unresolved_id, "http_call_unresolved",
+                             sf, _line(call), "AMBIGUOUS", 0.0)
                 continue
 
             confidence = "INFERRED" if path_inferred else "EXTRACTED"
@@ -708,6 +731,7 @@ def extract_http_relationships(paths, root, all_nodes, all_edges):
                     context_edge(owner, context_id, "wraps_context", sf, _line(jsx))
 
     all_nodes.extend(endpoints.values())
+    all_nodes.extend(unresolved_calls.values())
     all_nodes.extend(context_nodes.values())
     all_edges.extend(new_edges)
     all_edges.extend(context_edges)

@@ -1,7 +1,7 @@
 diff --git a/graphify/build.py b/graphify/build.py
 --- a/graphify/build.py
 +++ b/graphify/build.py
-@@ -308,10 +308,43 @@
+@@ -308,10 +308,47 @@
              kept.append(ev)
      if kept:
          winner["also_seen"] = sorted(kept, key=_evidence_sort_key)
@@ -18,7 +18,11 @@ diff --git a/graphify/build.py b/graphify/build.py
 +    """
 +    old = existing.get("parallel_relations")
 +    new = incoming.get("parallel_relations")
-+    if not (existing.get("context") == "nexi" or incoming.get("context") == "nexi"
++    # Preserve all NEXI native adapters, not only the framework context:
++    # HTTP, React Context and CSS are emitted under their own provenance tags.
++    nexi_contexts = {"nexi", "http", "react_context", "css"}
++    if not (existing.get("context") in nexi_contexts
++            or incoming.get("context") in nexi_contexts
 +            or isinstance(old, list) or isinstance(new, list)):
 +        return None
 +
@@ -45,7 +49,7 @@ diff --git a/graphify/build.py b/graphify/build.py
  # graph (stdlib, a third-party dependency, another repo). Historically the edge
  # to such a target was dropped, which left the in-memory graph clean but let the
  # on-disk graph.json (written by the incremental update path) keep the edge with
-@@ -2141,10 +2174,20 @@
+@@ -2141,10 +2178,20 @@
              continue
          # Preserve original edge direction - undirected graphs lose it otherwise,
          # causing display functions to show edges backwards.
@@ -66,7 +70,7 @@ diff --git a/graphify/build.py b/graphify/build.py
          # duplicate that the undirected graph drops (#1061) is another file's
          # import, not this one: the surviving edge keeps its own marker.
          # `_EXTERNAL_STUB_RELATIONS` is the import family (imports, imports_from, re_exports).
-@@ -3356,10 +3399,24 @@
+@@ -3356,10 +3403,24 @@
      for u, v, data in H.edges(data=True):
          if "_src" in data and data["_src"] in relabel:
              data["_src"] = relabel[data["_src"]]
@@ -94,7 +98,59 @@ diff --git a/graphify/build.py b/graphify/build.py
 diff --git a/graphify/serve.py b/graphify/serve.py
 --- a/graphify/serve.py
 +++ b/graphify/serve.py
-@@ -1472,11 +1472,12 @@
+@@ -1218,25 +1218,43 @@
+     filters = set(_normalize_context_filters(context_filters))
+     if not filters:
+         return G
+     relations = filters & _HERITAGE_RELATIONS
+ 
+-    def keep(data: dict) -> bool:
+-        if data.get("context") in filters:
+-            return True
+-        return data.get("relation") in relations
++    def selected(data: dict) -> dict | None:
++        variants = data.get("parallel_relations")
++        if isinstance(variants, list) and len(variants) > 1:
++            matching = [v for v in variants if isinstance(v, dict) and
++                        (v.get("context") in filters or v.get("relation") in relations)]
++            if not matching:
++                return None
++            # The original primary fact may belong to another context. Give
++            # this filtered view its own primary fact so downstream consumers
++            # do not silently skip or disclose unrelated relationships.
++            chosen = dict(data)
++            chosen.update(matching[0])
++            if len(matching) > 1:
++                chosen["parallel_relations"] = matching
++            else:
++                chosen.pop("parallel_relations", None)
++            return chosen
++        if data.get("context") in filters or data.get("relation") in relations:
++            return data
++        return None
+ 
+     H = G.__class__()
+     H.add_nodes_from(G.nodes(data=True))
+     if isinstance(G, (nx.MultiGraph, nx.MultiDiGraph)):
+         for u, v, key, data in G.edges(keys=True, data=True):
+-            if keep(data):
+-                H.add_edge(u, v, key=key, **data)
++            selected_data = selected(data)
++            if selected_data is not None:
++                H.add_edge(u, v, key=key, **selected_data)
+     else:
+         for u, v, data in G.edges(data=True):
+-            if keep(data):
+-                H.add_edge(u, v, **data)
++            selected_data = selected(data)
++            if selected_data is not None:
++                H.add_edge(u, v, **selected_data)
+     return H
+ 
+ 
+ def _complete_induced_edges(G: nx.Graph, visited: set[str], edges_seen: list[tuple]) -> None:
+     """Append edges between visited nodes that the traversal never recorded (#2323).
+@@ -1472,11 +1490,12 @@
          if u in nodes and v in nodes:
              # One EDGE line per relationship: on a multigraph a pair can
              # carry several edges (e.g. contains + calls), each with its
@@ -108,7 +164,7 @@ diff --git a/graphify/serve.py b/graphify/serve.py
                  # and callees alike, so a caller->callee edge renders backwards
                  # whenever the callee is visited first. _src/_tgt (stashed on the
                  # edge data by the `query` CLI loader) carry the real direction;
-@@ -2522,10 +2523,33 @@
+@@ -2522,10 +2541,35 @@
          else:
              return False
      return True
@@ -126,7 +182,9 @@ diff --git a/graphify/serve.py b/graphify/serve.py
 +        return [data]
 +    facts = []
 +    for fact in variants:
-+        if not isinstance(fact, dict) or fact.get("context") != "nexi":
++        if not isinstance(fact, dict) or fact.get("context") not in {
++            "nexi", "http", "react_context", "css"
++        }:
 +            continue
 +        src, tgt = fact.get("_src"), fact.get("_tgt")
 +        if not isinstance(src, str) or not isinstance(tgt, str):
@@ -142,7 +200,7 @@ diff --git a/graphify/serve.py b/graphify/serve.py
  
      Deterministic path (#2074): the hash-seeded undirected view picked an
      arbitrary route among equal-length paths, so the search runs on a graph
-@@ -2551,25 +2575,33 @@
+@@ -2551,25 +2595,33 @@
          # order: legacy canonicalized files persist a flipped arc with
          # _src/_tgt markers (#2309), so build the digraph from _src/_tgt
          # (falling back to the loaded arc) rather than to_directed().
@@ -179,7 +237,7 @@ diff --git a/graphify/serve.py b/graphify/serve.py
      return H
  
  
-@@ -2632,11 +2664,14 @@
+@@ -2632,11 +2684,14 @@
          u, v = path_nodes[i], path_nodes[i + 1]
          fwd, bwd = [], []
          for a, b in ((u, v), (v, u)):
@@ -195,7 +253,7 @@ diff --git a/graphify/serve.py b/graphify/serve.py
  
  
  def _path_confidence_key(hop_datas: list[list[dict]]):
-@@ -2780,11 +2815,14 @@
+@@ -2780,11 +2835,14 @@
          # hop by _src (falling back to the arc tail) instead of raw arc order.
          fwd, bwd = [], []
          for a, b in ((u, v), (v, u)):
@@ -211,7 +269,7 @@ diff --git a/graphify/serve.py b/graphify/serve.py
          forward = bool(fwd)
          rels = sorted({d.get("relation") for d in datas if d.get("relation")})
          rel = "/".join(rels) if rels else "related"
-@@ -2863,21 +2901,59 @@
+@@ -2863,21 +2921,59 @@
          return (
              f" at={sanitize_label(str(d.get('source_file') or ''))}:{sanitize_label(loc)}"
              if loc else ""
@@ -305,7 +363,7 @@ diff --git a/graphify/affected.py b/graphify/affected.py
 +            if not isinstance(fact, dict):
 +                continue
 +            has_nexi_direction = (
-+                fact.get("context") == "nexi"
++                fact.get("context") in {"nexi", "http", "react_context", "css"}
 +                and "_src" in fact and "_tgt" in fact
 +            )
 +            if has_nexi_direction:

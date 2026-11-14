@@ -44,6 +44,7 @@ NATIVE_PATCH = Path(
     "/home/mellonelay1999/workspaces/Nexi/tools/graphify/patches/"
     "graphifyy-0.9.108-nexi-typed-relation-evidence.patch"
 )
+NATIVE_MODULE_SHA256 = {'build.py': 'c558f0721b9ea4e7e9e394ae21a26a9373544c807398e45dc05e1d7a4e9abc2f', 'serve.py': '2c8fff3ebe65861dd08486234bc929657e9cf581c0bc8980535f37d33fc8e260', 'affected.py': '4744c613b1a9c070d771e6c489b5426ced6e5f1b8a28eb62ada309ce33dbdb71', 'cli.py': '062faf6fc342e131b843a9aefdea89f0ae128e9368aeab3ea3abdd522705460d'}
 MARKER = "    # NEXI_FRAMEWORK_RELATIONSHIPS_V1"
 OLD_MARKER = "    # NEXI_HTTP_RELATIONSHIPS_V1"
 ORIGIN_ANCHOR = "    # Tag AST provenance so the incremental watch rebuild can distinguish"
@@ -94,6 +95,8 @@ def ensure_native_graph_patch() -> str:
     if has_build and has_serve and has_affected and has_cli:
         for file in (NATIVE_BUILD, NATIVE_SERVE, NATIVE_AFFECTED, NATIVE_CLI):
             ast.parse(file.read_text(encoding="utf-8"), filename=str(file))
+            if digest(file.read_bytes()) != NATIVE_MODULE_SHA256[file.name]:
+                raise SystemExit(f"NEXI native module has drifted: {file}")
         return "unchanged"
     if has_build or has_serve or has_affected or has_cli:
         raise SystemExit("NEXI native engine partially patched; refusing overwrite")
@@ -109,6 +112,8 @@ def ensure_native_graph_patch() -> str:
         raise SystemExit(f"NEXI native patch failed: {result.stdout[-900:]} {result.stderr[-900:]}")
     for file in (NATIVE_BUILD, NATIVE_SERVE, NATIVE_AFFECTED, NATIVE_CLI):
         ast.parse(file.read_text(encoding="utf-8"), filename=str(file))
+        if digest(file.read_bytes()) != NATIVE_MODULE_SHA256[file.name]:
+            raise SystemExit(f"NEXI installed core module hash mismatch: {file}")
     return "installed"
 
 
