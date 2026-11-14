@@ -35,6 +35,7 @@ NEXI_MERGE_SOURCE = NATIVE_SOURCE / "nexi_merge.py"
 NATIVE_BUILD = PKG / "build.py"
 NATIVE_SERVE = PKG / "serve.py"
 NATIVE_AFFECTED = PKG / "affected.py"
+NATIVE_CLI = PKG / "cli.py"
 NATIVE_PATCH = Path(
     "/home/mellonelay1999/workspaces/Nexi/tools/graphify/patches/"
     "graphifyy-0.9.108-nexi-typed-relation-evidence.patch"
@@ -72,20 +73,22 @@ def ensure_native_graph_patch() -> str:
 
     Never accept a half-patched engine or fuzzy patch offsets as success.
     """
-    for file in (NATIVE_BUILD, NATIVE_SERVE, NATIVE_AFFECTED, NATIVE_PATCH):
+    for file in (NATIVE_BUILD, NATIVE_SERVE, NATIVE_AFFECTED, NATIVE_CLI, NATIVE_PATCH):
         if not file.is_file():
             raise SystemExit(f"Missing NEXI native engine input: {file}")
     build = NATIVE_BUILD.read_text(encoding="utf-8")
     serve = NATIVE_SERVE.read_text(encoding="utf-8")
     affected = NATIVE_AFFECTED.read_text(encoding="utf-8")
+    cli = NATIVE_CLI.read_text(encoding="utf-8")
     has_build = build.count("def _nexi_relation_variants(") == 1
     has_serve = serve.count("def _emit_parallel(d: dict)") == 1
     has_affected = affected.count("def _incoming_source_facts(") == 1
-    if has_build and has_serve and has_affected:
-        for file in (NATIVE_BUILD, NATIVE_SERVE, NATIVE_AFFECTED):
+    has_cli = cli.count("NEXI_NATIVE_MERGE_CLI_V1") == 1
+    if has_build and has_serve and has_affected and has_cli:
+        for file in (NATIVE_BUILD, NATIVE_SERVE, NATIVE_AFFECTED, NATIVE_CLI):
             ast.parse(file.read_text(encoding="utf-8"), filename=str(file))
         return "unchanged"
-    if has_build or has_serve or has_affected:
+    if has_build or has_serve or has_affected or has_cli:
         raise SystemExit("NEXI native engine partially patched; refusing overwrite")
     args = ["patch", "--batch", "--forward", "--fuzz=0", "-p1", "-d", str(PKG.parent)]
     payload = NATIVE_PATCH.read_text(encoding="utf-8")
@@ -97,7 +100,7 @@ def ensure_native_graph_patch() -> str:
                             capture_output=True, text=True, timeout=20)
     if result.returncode:
         raise SystemExit(f"NEXI native patch failed: {result.stdout[-900:]} {result.stderr[-900:]}")
-    for file in (NATIVE_BUILD, NATIVE_SERVE, NATIVE_AFFECTED):
+    for file in (NATIVE_BUILD, NATIVE_SERVE, NATIVE_AFFECTED, NATIVE_CLI):
         ast.parse(file.read_text(encoding="utf-8"), filename=str(file))
     return "installed"
 

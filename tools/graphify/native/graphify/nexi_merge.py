@@ -175,6 +175,18 @@ def normalize_graph(data):
             e['_src'] = old_to_new.get(e['_src'], e['_src'])
         if '_tgt' in e:
             e['_tgt'] = old_to_new.get(e['_tgt'], e['_tgt'])
+        variants = e.get("parallel_relations")
+        if isinstance(variants, list):
+            rewritten = []
+            for variant in variants:
+                if not isinstance(variant, dict):
+                    continue
+                item = dict(variant)
+                for key in ("_src", "_tgt"):
+                    if key in item:
+                        item[key] = old_to_new.get(item[key], item[key])
+                rewritten.append(item)
+            e["parallel_relations"] = rewritten
     link_explicit_socket_events(final_nodes, final_links)
     add_declared_infrastructure(final_nodes, final_links)
     data['nodes'] = final_nodes
@@ -184,11 +196,138 @@ def normalize_graph(data):
         data['edges'] = final_links
     return data
 
+def typed_relation_integrity(data: dict) -> dict:
+    """Check NEXI parallel edge facts against actual serialized graph nodes."""
+    nodes = {n.get("id") for n in data.get("nodes", [])}
+    links = data.get("links", data.get("edges", []))
+    errors: list[str] = []
+    preserved = 0
+    for edge in links:
+        variants = edge.get("parallel_relations")
+        if not isinstance(variants, list):
+            continue
+        pair = {edge.get("source"), edge.get("target")}
+        if len(variants) < 2:
+            errors.append("parallel_relations requires distinct facts")
+            continue
+        seen: set[tuple] = set()
+        for item in variants:
+            if not isinstance(item, dict):
+                errors.append("non-object secondary relation")
+                continue
+            src, tgt, relation = item.get("_src"), item.get("_tgt"), item.get("relation")
+            if not src or not tgt or not isinstance(relation, str) or not relation:
+                errors.append("secondary relation lacks directed identity")
+                continue
+            if src not in nodes or tgt not in nodes or {src, tgt} != pair:
+                errors.append("secondary relation references unrelated endpoints")
+                continue
+            signature = (src, tgt, relation)
+            if signature in seen:
+                errors.append("duplicate secondary relation fact")
+                continue
+            seen.add(signature)
+            preserved += 1
+    return {"preserved_typed_facts": preserved, "issues": errors}
+
+
+def normalize_native_merge(data: dict, out_path: Path, graph_paths: list[Path]) -> dict:
+    """NEXI's opt-in native Graphify merge finalization.
+
+    Only the explicitly requested, version-matched three-surface artifact may
+    be normalized. Stale or omitted manifests fail closed before graph output.
+    No application execution, network access, or graph rebuild happens here.
+    """
+    if os.environ.get("GRAPHIFY_NEXI_NATIVE_MERGE") != "1":
+        return data
+    destination = Path(out_path).resolve()
+    if destination.parent != ROOT.resolve() or destination != GRAPH.resolve():
+        raise ValueError("NEXI native merge destination must be its explicit merged-graph.json")
+    if not SOURCE_MANIFEST.is_file():
+        raise ValueError("NEXI native merge requires a current source-manifest.json")
+    manifest = source_manifest()
+    if manifest.get("manifest_format") != "nexi-native-v2":
+        raise ValueError("NEXI native merge requires v2 source coverage inventory")
+    expected = manifest.get("surface_graphs") or {}
+    if set(expected) != set(SURFACES):
+        raise ValueError("NEXI merge manifest must cover all three known surfaces")
+    paths = {Path(p).resolve() for p in graph_paths}
+    registered = {Path(v["path"]).resolve() for v in expected.values()}
+    if paths != registered or len(graph_paths) != len(SURFACES):
+        raise ValueError("NEXI native merge inputs differ from the manifest")
+    for item in expected.values():
+        path = Path(item["path"]).resolve()
+        if hashlib.sha256(path.read_bytes()).hexdigest() != item.get("sha256"):
+            raise ValueError(f"Stale NEXI surface graph: {path}")
+    for surface, files in (manifest.get("source_files") or {}).items():
+        if surface not in SURFACES or not isinstance(files, dict):
+            raise ValueError("Invalid NEXI surface source manifest")
+        repo = Path(SURFACES[surface]["root"]).resolve()
+        for relative, expected_sha in files.items():
+            source = (repo / relative).resolve()
+            if not source.is_relative_to(repo) or not source.is_file():
+                raise ValueError(f"Missing or escaped NEXI source: {surface}: {relative}")
+            if hashlib.sha256(source.read_bytes()).hexdigest() != expected_sha:
+                raise ValueError(f"Changed NEXI source: {surface}: {relative}")
+    result = normalize_graph(data)
+    ids = {node.get("id") for node in result.get("nodes", [])}
+    if len(ids) != len(result.get("nodes", [])):
+        raise ValueError("NEXI merge yielded duplicate canonical node IDs")
+    links = result.get("links", result.get("edges", []))
+    issues = typed_relation_integrity(result)
+    if issues["issues"]:
+        raise ValueError(f"NEXI typed relation integrity failure: {issues['issues'][:3]}")
+    for edge in links:
+        if edge.get("source") not in ids or edge.get("target") not in ids:
+            raise ValueError("NEXI merge yielded a dangling edge")
+        if edge.get("relation") in HTTP_RELATIONS and (
+            not edge.get("source_file") or not edge.get("source_location")
+        ):
+            raise ValueError("NEXI HTTP edge lacks source provenance")
+    return result
+
+
 def graphify_version():
     from importlib import metadata
     site = Path('/home/mellonelay1999/.local/share/uv/tools/graphifyy/lib/python3.12/site-packages')
     return next((d.version for d in metadata.distributions(path=[str(site)])
                  if d.metadata.get('Name', '').lower().replace('_', '-') == 'graphifyy'), None)
+
+
+def candidate_source_inventory(root: Path) -> dict[str, str]:
+    """Bounded tracked/new source candidates for gap and freshness accounting.
+
+    This is an input inventory, not an assertion that each file has symbols.
+    Ignore sensitive paths and non-source assets. Include stylesheet/config
+    candidates that the current Graphify extractor may not yet support.
+    """
+    from graphify.detect import FileType, classify_file, _is_sensitive
+    cmd = ["git", "-C", str(root), "ls-files", "--cached", "--others",
+           "--exclude-standard", "-z", "--", "."]
+    outcome = subprocess.run(cmd, capture_output=True, timeout=12)
+    if outcome.returncode:
+        raise ValueError(f"Cannot enumerate NEXI source candidates: {root}")
+    candidates: dict[str, str] = {}
+    for raw in outcome.stdout.split(b"\0"):
+        if not raw:
+            continue
+        relative = os.fsdecode(raw)
+        path = (root / relative).resolve()
+        if not path.is_relative_to(root) or not path.is_file():
+            continue
+        if _is_sensitive(path):
+            continue
+        extension = path.suffix.lower()
+        # CSS and infrastructure files remain coverage candidates even when
+        # Graphify's own CODE_EXTENSIONS does not recognize them yet.
+        explicit = extension in {".css", ".scss", ".sass", ".conf", ".service", ".jsonc"}
+        if classify_file(path) != FileType.CODE and not explicit:
+            continue
+        if path.stat().st_size > 8_000_000:
+            continue  # source input size cap; not a graph correctness claim
+        rel = path.relative_to(root).as_posix()
+        candidates[rel] = hashlib.sha256(path.read_bytes()).hexdigest()
+    return dict(sorted(candidates.items()))
 
 
 def write_source_manifest():
@@ -202,6 +341,9 @@ def write_source_manifest():
         'profile': PROFILE,
         'created_at_utc': __import__('datetime').datetime.now(__import__('datetime').timezone.utc).isoformat(),
         'graphify_version': graphify_version(),
+        'manifest_format': 'nexi-native-v2',
+        'candidate_source_files': {},
+        'source_coverage': {},
         'source_revisions': {},
         'source_file_counts': {},
         'source_files': {},
@@ -239,6 +381,16 @@ def write_source_manifest():
             files[rel] = hashlib.sha256(path.read_bytes()).hexdigest()
         if not files:
             raise ValueError(f'No readable source files in {surface} graph')
+        candidates = candidate_source_inventory(src_root)
+        missing = sorted(set(candidates) - set(files))
+        manifest['candidate_source_files'][surface] = candidates
+        manifest['source_coverage'][surface] = {
+            'candidate_inputs': len(candidates),
+            'represented_candidate_inputs': len(set(candidates) & set(files)),
+            'candidate_inputs_without_nodes': len(missing),
+            'candidate_inputs_without_nodes_sample': missing[:35],
+            'classification_note': 'candidate files without nodes may be unsupported, empty, excluded or extraction failures',
+        }
         encoded = '\n'.join(k + '\0' + files[k] for k in sorted(files)).encode('utf-8')
         tree_sha = hashlib.sha256(encoded).hexdigest()
         state = {'git_head': None, 'dirty': None, 'source_tree_sha256': tree_sha}
@@ -281,6 +433,21 @@ def source_manifest():
         'prisma_sha256': NEXI_PRISMA,
         'native_patch_sha256': NEXI_PATCH,
     }
+    if m.get("manifest_format") == "nexi-native-v2":
+        inputs = m.get("candidate_source_files")
+        if not isinstance(inputs, dict) or set(inputs) != set(SURFACES):
+            raise ValueError("Incomplete NEXI candidate source inventory")
+        for surface, files in inputs.items():
+            root = Path(SURFACES[surface]["root"]).resolve()
+            current = candidate_source_inventory(root)
+            if files != current:
+                before, now = set(files), set(current)
+                added, missing = len(now - before), len(before - now)
+                changed = len({k for k in before & now if files[k] != current[k]})
+                raise ValueError(
+                    f"Stale NEXI source candidate inventory: {surface}: "
+                    f"added={added}, removed={missing}, changed={changed}"
+                )
     versions = m.get('extensions') or {}
     for name, source in expected.items():
         previous = versions.get(name)
@@ -488,6 +655,7 @@ def report_graph(data):
         'admin_runtime_comparison': manifest.get('admin_runtime_comparison') if manifest else None,
         'source_roots': {s: v['root'] for s, v in SURFACES.items()},
         'code_files_detected_and_extracted': manifest.get('source_file_counts') if manifest else None,
+        'candidate_source_coverage': manifest.get('source_coverage') if manifest else None,
         'graph_outputs': {s: str(ROOT / 'surfaces' / s / 'graphify-out' / 'graph.json') for s in SURFACES},
         'extractor_sha256': hashlib.sha256(EXTRACTOR.read_bytes()).hexdigest(),
         'nexi_extension_sha256': hashlib.sha256(NEXI_EXTENSION.read_bytes()).hexdigest() if NEXI_EXTENSION.exists() else None,

@@ -75,3 +75,21 @@ reports an extractor-manifest SHA mismatch. Source-first defers NEXI application
 tests/builds/restarts/deployment.
 
 Reference: `tasks/evidence/NEXI_GRAPHIFY_NATIVE_ENGINE_MIGRATION_20261115.md`.
+
+## Native merge and candidate-inventory extension (2026-11-15)
+
+`graphify merge-graphs` now accepts the NEXI-only environment gate
+`GRAPHIFY_NEXI_NATIVE_MERGE=1`, where the requested destination and all three
+input graph hashes must match a current `nexi-native-v2` source manifest.
+Without that gate, upstream merge behavior remains unchanged. The NEXI merge
+resolves HTTP operation IDs and conservative Socket.IO candidate links before
+writing. Invalid secondary typed-edge endpoints, duplicate relation facts,
+dangling edges and source-less HTTP facts fail closed. The native source
+inventory hashes tracked and newly-added eligible files; it separately counts
+candidate inputs without graph nodes. This is a freshness/coverage report, **not**
+a claim that every candidate is graph-covered or semantically correct.
+
+The currently recorded candidate counts (Public 177, Backend 399, Admin 110)
+are source-snapshot dependent. The canonical NEXI graph remains untouched.
+No application tests, builds, runtime changes or deployments are performed by
+this engine workflow.

@@ -66,6 +66,31 @@ diff --git a/graphify/build.py b/graphify/build.py
          # duplicate that the undirected graph drops (#1061) is another file's
          # import, not this one: the surviving edge keeps its own marker.
          # `_EXTERNAL_STUB_RELATIONS` is the import family (imports, imports_from, re_exports).
+@@ -3356,10 +3399,24 @@
+     for u, v, data in H.edges(data=True):
+         if "_src" in data and data["_src"] in relabel:
+             data["_src"] = relabel[data["_src"]]
+         if "_tgt" in data and data["_tgt"] in relabel:
+             data["_tgt"] = relabel[data["_tgt"]]
++        # NEXI's secondary typed arcs are first-class provenance records.
++        # A cross-repo prefix must rewrite their logical endpoints as well.
++        variants = data.get("parallel_relations")
++        if isinstance(variants, list):
++            updated = []
++            for variant in variants:
++                if not isinstance(variant, dict):
++                    continue
++                item = dict(variant)
++                for field in ("_src", "_tgt"):
++                    if item.get(field) in relabel:
++                        item[field] = relabel[item[field]]
++                updated.append(item)
++            data["parallel_relations"] = updated
+     # Out-of-band hyperedges must be relabeled with the nodes (#2484, after
+     # @oleksii-tumanov's diagnosis in PR #1691): relabel_nodes copies graph
+     # attrs by reference, so member ids kept their pre-prefix form and dangled
+     # after a cross-repo merge. Rebuild the list (fresh dicts — the input
+     # graph's list is shared with H) with member ids mapped through the same
 diff --git a/graphify/serve.py b/graphify/serve.py
 --- a/graphify/serve.py
 +++ b/graphify/serve.py
@@ -209,3 +234,22 @@ diff --git a/graphify/affected.py b/graphify/affected.py
                  continue
              source = str(source)
              queued = source in stepping_stones
+diff --git a/graphify/cli.py b/graphify/cli.py
+--- a/graphify/cli.py
++++ b/graphify/cli.py
+@@ -3886,10 +3886,15 @@
+         # Persist BOTH hyperedge slots (#2484): node_link_data only nests graph
+         # attrs under `graph`, so without this line the union would survive
+         # solely in the slot historic readers ignored (#2485). Mirror to_json's
+         # dual-slot shape so every writer agrees.
+         out_data["hyperedges"] = merged.graph.get("hyperedges", [])
++        # NEXI_NATIVE_MERGE_CLI_V1: explicit opt-in, existing merge-graphs
++        # pipeline only. Fail closed before touching the destination graph.
++        if os.environ.get("GRAPHIFY_NEXI_NATIVE_MERGE") == "1":
++            from graphify.nexi_merge import normalize_native_merge
++            out_data = normalize_native_merge(out_data, out_path, graph_paths)
+         out_path.parent.mkdir(parents=True, exist_ok=True)
+         from graphify.paths import write_json_atomic as _wja
+         _wja(out_path, out_data, compact=True)
+         unified = input_node_total - merged.number_of_nodes()
+         if unified > 0:
