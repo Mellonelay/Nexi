@@ -332,8 +332,8 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
                     {copied ? <Check size={16} className="text-emerald-300" /> : <Copy size={16} />}{copied ? 'Copied' : 'Copy address'}
                   </button>
                   <div className="mt-4 grid min-w-0 grid-cols-1 gap-2 min-[430px]:grid-cols-2">
-                    <div className="rounded-xl border border-[#2B2037] bg-[#0B0912] p-3"><p className="text-xs uppercase tracking-[0.08em] text-[#8C8299]">Minimum</p><p className="mt-1 break-all font-mono text-sm font-semibold text-white">{destination.minDeposit ?? '—'} {destination.asset}</p></div>
-                    <div className="rounded-xl border border-[#2B2037] bg-[#0B0912] p-3"><p className="text-xs uppercase tracking-[0.08em] text-[#8C8299]">Maximum</p><p className="mt-1 break-all font-mono text-sm font-semibold text-white">{destination.maxDeposit ?? '—'} {destination.asset}</p></div>
+                    <div className="rounded-xl border border-[#2B2037] bg-[#0B0912] p-3"><p className="text-xs uppercase tracking-[0.08em] text-[#8C8299]">Minimum</p><p className="mt-1 break-words font-mono text-sm font-semibold text-white">{destination.minDeposit ?? '—'} {destination.asset}</p></div>
+                    <div className="rounded-xl border border-[#2B2037] bg-[#0B0912] p-3"><p className="text-xs uppercase tracking-[0.08em] text-[#8C8299]">Maximum</p><p className="mt-1 break-words font-mono text-sm font-semibold text-white">{destination.maxDeposit ?? '—'} {destination.asset}</p></div>
                     <div className="min-[430px]:col-span-2 rounded-xl border border-[#2B2037] bg-[#0B0912] p-3"><p className="text-xs uppercase tracking-[0.08em] text-[#8C8299]">Required confirmations</p><p className="mt-1 font-mono text-xs font-semibold text-white">{destination.confirmationCount ?? '—'}</p></div>
                   </div>
                 </section>

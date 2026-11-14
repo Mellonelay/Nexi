@@ -86,7 +86,7 @@ function AccountIdentityCard({
         <p className="break-words text-sm font-semibold text-white">
           {displayName !== "—" ? displayName : t("profile")}
         </p>
-        <p className="mt-1 break-all font-mono text-xs text-[#C3BBD0]">
+        <p className="mt-1 min-w-0 break-words font-mono text-xs text-[#C3BBD0]" title={profileId === "—" ? undefined : profileId} aria-label={profileId === "—" ? undefined : profileId}>
           {profileId === "—" ? profileId : shortenId(profileId)}
         </p>
       </div>

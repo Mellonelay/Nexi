@@ -75,7 +75,7 @@ export default function SupportPage() {
       <main className="mx-auto min-w-0 max-w-7xl space-y-3 sm:space-y-5">
         <Panel>
           <PanelHeading title="Find help" description="Search guidance for common account and product questions." />
-          <div className="relative">
+          <div className="relative min-w-0">
             <Search size={17} className="absolute left-3 top-3 text-[#8C8299]" />
             <input className={`${inputClass} pl-10`} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search help topics" aria-label="Search help topics" />
           </div>
@@ -85,11 +85,11 @@ export default function SupportPage() {
           <div className="mt-3 space-y-2 sm:mt-5 sm:space-y-3">
             {filtered.length ? filtered.map((topic) => (
               <article key={topic.title} className="rounded-xl border border-[#2B2037] bg-[#171022] p-3 sm:p-4">
-                <div className="flex items-start gap-3">
+                <div className="flex min-w-0 items-start gap-2.5">
                   <LifeBuoy size={18} className="mt-0.5 shrink-0 text-[#48C0CC]" />
-                  <div>
-                    <h2 className="font-semibold">{topic.title}</h2>
-                    <p className="mt-2 text-sm leading-6 text-[#C3BBD0]">{topic.copy}</p>
+                  <div className="min-w-0">
+                    <h2 className="break-words font-semibold">{topic.title}</h2>
+                    <p className="mt-1 break-words text-sm leading-5 text-[#C3BBD0] sm:mt-2 sm:leading-6">{topic.copy}</p>
                   </div>
                 </div>
               </article>
@@ -106,7 +106,7 @@ export default function SupportPage() {
           ) : !contacts.telegramUrl && !contacts.email ? (
             <div className="text-sm text-[#8C8299]" role="status"><p>No external support contact methods are configured.</p><p className="mt-2 text-[#C3BBD0]">For in-app help, message NEXI Support.</p><Link href="/dashboard/messages" className="mt-2 inline-flex min-h-11 items-center font-semibold text-[#A995FF] underline-offset-4 hover:underline">Open Messages</Link></div>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid min-w-0 gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 15rem), 1fr))" }}>
               {contacts.telegramUrl && (
                 <div className="rounded-xl border border-[#2B2037] bg-[#171022] p-3 sm:p-4">
                   <div className="flex items-center gap-2 text-sm font-semibold"><Send size={17} aria-hidden="true" className="text-[#48C0CC]" />Telegram</div>
@@ -123,6 +123,7 @@ export default function SupportPage() {
               )}
             </div>
           )}
+          {(contacts.telegramUrl || contacts.email) && <Link href="/dashboard/messages" className="mt-2 inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-semibold text-[#A995FF] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)]">Message NEXI Support</Link>}
         </Panel>
       </main>
     </PageShell>

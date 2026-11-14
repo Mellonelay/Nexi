@@ -376,7 +376,7 @@ export default function MessagesPage() {
 
   return (
     <main className="mx-auto flex h-[max(14rem,calc(var(--nexi-visible-viewport-height,100dvh)-9rem))] min-h-0 w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-[var(--nexi-border-raised)] bg-[var(--nexi-surface-deep)] shadow-[var(--nexi-shadow-panel)]">
-      <header className="flex min-h-16 items-center gap-3 border-b border-[#2B2037] px-4 py-3">
+      <header className="flex min-h-14 min-w-0 items-center gap-2 border-b border-[#2B2037] px-3 py-2 sm:min-h-16 sm:gap-3 sm:px-4 sm:py-3">
         <button type="button" onClick={() => setHistoryOpen(true)} aria-label="Open message history" aria-haspopup="dialog" className="grid h-11 w-11 shrink-0 place-items-center rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF]"><NexiLogoMark compact /></button>
         <div className="min-w-0 flex-1">
           <h1 className="break-words text-base font-semibold text-[#F5F7FB]">Nexi Customer Service</h1>
@@ -385,7 +385,7 @@ export default function MessagesPage() {
         {state === 'ERROR' && <button type="button" onClick={() => { setState('LOADING'); void load(); }} className="min-h-11 rounded-lg px-3 text-sm font-semibold text-[var(--nexi-focus)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)]">Retry</button>}
       </header>
 
-      <div ref={messageListRef} className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-5 sm:px-6" aria-live="polite" aria-label="Support conversation">
+      <div ref={messageListRef} className="min-h-0 min-w-0 flex-1 space-y-3 overflow-y-auto px-3 py-3 overscroll-contain sm:space-y-4 sm:px-6 sm:py-5" aria-live="polite" aria-label="Support conversation">
         {state === 'LOADING' && <p className="py-8 text-center text-sm text-[#93A4BD]">Loading your conversation…</p>}
         {state === 'ERROR' && <p className="py-8 text-center text-sm text-rose-200" role="alert">Conversation could not be loaded. Retry to reconnect.</p>}
         {state === 'SIGNED_OUT' && <p className="py-8 text-center text-sm text-[#C3BBD0]" role="status">Sign in to view and send support messages.</p>}
@@ -397,7 +397,7 @@ export default function MessagesPage() {
         <div aria-hidden="true" className="h-1" />
       </div>
 
-      <form onSubmit={(event) => void send(event)} className="border-t border-[var(--nexi-foundation-border-divider)] bg-[var(--nexi-foundation-main-surface)] px-3 py-3 sm:px-4">
+      <form onSubmit={(event) => void send(event)} className="min-w-0 shrink-0 border-t border-[var(--nexi-foundation-border-divider)] bg-[var(--nexi-foundation-main-surface)] px-2 py-2 sm:px-4 sm:py-3">
         {attachments.length > 0 && <ul className="mb-3 flex flex-wrap gap-2" aria-label="Attachments ready to send">
           {attachments.map((item) => <li key={item.id} className="flex max-w-full items-center gap-2 rounded-lg border border-[#49335E] bg-[#171022] px-3 py-2 text-xs text-[#C3BBD0]">
             {item.mimeType.startsWith('image/') ? <ImageIcon size={15} aria-hidden="true" /> : <FileText size={15} aria-hidden="true" />}
@@ -407,7 +407,7 @@ export default function MessagesPage() {
         </ul>}
         {feedback && <p className="mb-2 px-1 text-xs text-[#C9B7FF]" role="status">{feedback}</p>}
         {unknownMessageKey && <button type="button" onClick={() => void recheckUnknownMessage(unknownMessageKey)} className="mb-3 min-h-11 w-full rounded-lg border border-amber-300/30 px-3 text-sm font-semibold text-amber-100">Recheck original support message</button>}
-        <div className="flex items-end gap-2">
+        <div className="flex min-w-0 items-end gap-1 sm:gap-2">
           <input ref={fileInputRef} type="file" multiple className="sr-only" onChange={(event) => void onFiles(event)} aria-label="Choose message attachments" />
           <button type="button" aria-label="Attach a file or image" onClick={() => fileInputRef.current?.click()} disabled={!userId || uploading || sending || Boolean(unknownMessageKey)} className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[#C3BBD0] hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF] disabled:opacity-40"><Paperclip size={19} /></button>
           <div className="relative grid h-11 w-11 shrink-0 place-items-center">
@@ -442,7 +442,7 @@ export default function MessagesPage() {
 
 function MessageBubble({ message, own }: { message: SupportMessage; own: boolean }) {
   return <article data-message-id={message.id} className={`flex ${own ? 'justify-end' : 'justify-start'}`}>
-    <div className={`max-w-[88%] rounded-2xl px-4 py-3 sm:max-w-[78%] ${own ? 'rounded-br-md border border-violet-300/30 bg-[#38245A]' : 'rounded-bl-md border border-[#2B2037] bg-[#171022]'}`}>
+    <div className={`min-w-0 max-w-[92%] rounded-2xl px-3 py-2.5 sm:max-w-[78%] sm:px-4 sm:py-3 ${own ? 'rounded-br-md border border-violet-300/30 bg-[#38245A]' : 'rounded-bl-md border border-[#2B2037] bg-[#171022]'}`}>
       <p className="whitespace-pre-wrap break-words text-sm leading-6 text-[#F5F7FB]">{message.body}</p>
       {Array.isArray(message.attachments) && message.attachments.map((attachment) => <AttachmentLink key={attachment.id} attachment={attachment} />)}
       <div className={`mt-2 flex items-center gap-2 text-[11px] ${own ? 'justify-end text-[#D8CCF4]' : 'text-[#93A4BD]'}`}>

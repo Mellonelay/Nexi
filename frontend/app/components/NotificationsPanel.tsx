@@ -353,7 +353,7 @@ export function NotificationsPanel({
           role="dialog"
           aria-modal="true"
           aria-label="Notifications"
-          className="nexi-drawer flex w-full max-w-[360px] flex-col overflow-hidden rounded-2xl border border-violet-300/20"
+          className="nexi-drawer flex min-h-0 min-w-0 w-full max-w-[360px] flex-col overflow-hidden rounded-2xl border border-violet-300/20"
           initial={shouldReduceMotion ? { opacity: 0 } : { x: "100%" }}
           animate={{ x: 0, opacity: 1 }}
           exit={shouldReduceMotion ? { opacity: 0 } : { x: "100%" }}
@@ -364,7 +364,7 @@ export function NotificationsPanel({
           }
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--nexi-border-subtle)]">
+          <div className="flex min-w-0 items-center justify-between gap-2 px-3 py-2 sm:px-5 sm:py-4 border-b border-[var(--nexi-border-subtle)]">
             <div className="flex items-center gap-2">
               <Bell size={16} className="text-[#6d41ff]" />
               <span className="font-semibold text-[#F8F6FF]">
@@ -412,7 +412,7 @@ export function NotificationsPanel({
           </div>
 
           {/* Notification list */}
-          <div className="flex-1 overflow-y-auto py-2">
+          <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain py-2">
             {loading && (
               <p className="px-4 py-6 text-sm text-[#8C8299]">
                 Loading notifications…

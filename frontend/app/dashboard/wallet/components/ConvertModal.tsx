@@ -263,19 +263,19 @@ export default function ConvertModal({ isOpen, onClose, eligiblePairs, fundingBa
   if (!isOpen) return null;
   const loadingPairs = eligibilityStatus === 'IDLE' || eligibilityStatus === 'LOADING';
   return <ModalSurface open={isOpen} onClose={close} title="Convert">
-    <section className="relative w-full max-w-md overflow-hidden rounded-2xl border border-violet-300/20 bg-[#121022] shadow-2xl">
+    <section className="relative flex min-h-0 w-full max-w-md flex-col overflow-hidden rounded-2xl border border-violet-300/20 bg-[#121022] shadow-2xl">
       <div className="flex items-center justify-between border-b border-violet-300/10 p-6"><h2 id="convert-title" className="text-xl font-bold text-white">Convert</h2><button type="button" onClick={close} aria-label="Close conversion dialog" className="inline-flex h-11 w-11 items-center justify-center text-[#C3BBD0]"><X size={22} /></button></div>
       {unknownAcceptKey && <div role="alert" className="mx-4 mt-4 rounded-lg border border-amber-300/25 p-3 text-sm text-amber-100">
         Conversion acceptance outcome is unresolved. Further acceptance is disabled.
         <button type="button" onClick={() => void recheckUnknownConversion(unknownAcceptKey)} className="mt-2 block min-h-11 rounded-lg border border-amber-300/30 px-3 font-semibold">Recheck conversion</button>
       </div>}
-      {quote ? <div className="space-y-4 p-6">
+      {quote ? <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-3 sm:space-y-4 sm:p-6">
         {feedback && <p role="alert" className="rounded-lg border border-amber-300/20 bg-amber-300/5 p-3 text-sm text-amber-100">{feedback}</p>}
-        <div className="rounded-xl border border-[#2B2037] bg-[#171022] p-4"><p className="text-sm text-[#C3BBD0]">{quote.inputAmount} {quote.fromAsset} → <strong className="text-white">{quote.outputAmount} {quote.toAsset}</strong></p><p className="mt-2 text-xs text-[#8C8299]">Rate {quote.rate} · expires {Number.isFinite(quoteExpiry) ? new Date(quoteExpiry).toLocaleTimeString() : 'unknown'}</p></div>
+        <div className="rounded-xl border border-[#2B2037] bg-[#171022] p-4"><p className="break-words text-sm text-[#C3BBD0]">{quote.inputAmount} {quote.fromAsset} → <strong className="text-white">{quote.outputAmount} {quote.toAsset}</strong></p><p className="mt-2 text-xs text-[#8C8299]">Rate {quote.rate} · expires {Number.isFinite(quoteExpiry) ? new Date(quoteExpiry).toLocaleTimeString() : 'unknown'}</p></div>
         {quoteExpired && <p role="status" className="text-sm text-amber-200">Quote expired. Request another quote to continue.</p>}
         <button type="button" disabled={busy || quoteExpired || Boolean(unknownAcceptKey)} onClick={() => void accept()} className="min-h-11 w-full rounded-xl bg-[#8B5CF6] px-4 font-semibold text-white disabled:opacity-50">{busy ? 'Converting…' : quoteExpired ? 'Quote expired' : 'Accept quote'}</button>
         <button type="button" disabled={busy || Boolean(unknownAcceptKey)} onClick={() => { pendingQuoteIntent.current = null; pendingAcceptIntent.current = null; setQuote(null); setFeedback(null); }} className="min-h-11 w-full rounded-xl border border-[#2B2037] text-[#C3BBD0] disabled:opacity-50">Request another quote</button>
-      </div> : <form onSubmit={requestQuote} className="space-y-4 p-6">
+      </div> : <form onSubmit={requestQuote} className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-3 sm:space-y-4 sm:p-6">
         {feedback && <p role="alert" className="rounded-lg border border-amber-300/20 bg-amber-300/5 p-3 text-sm text-amber-100">{feedback}</p>}
         {loadingPairs && <p role="status" className="text-sm text-[#C3BBD0]">Loading eligible conversion pairs…</p>}
         {eligibilityStatus === 'ERROR' && <div role="alert" className="space-y-2 text-sm text-amber-100"><p>Eligible conversion pairs could not be loaded. No quote has been requested.</p><button type="button" onClick={onRetryEligibility} className="min-h-11 rounded-lg border border-amber-200/25 px-3 font-semibold">Retry pair list</button></div>}

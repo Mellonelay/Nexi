@@ -162,7 +162,7 @@ export default function SymbolSelector({ currentSymbol, onSelect, cryptoOnly = f
                     </div>
                   </div>
                   <div className="min-w-0 max-w-[46%] pl-2 text-right">
-                    <span className="block break-all font-mono text-xs font-semibold tabular-nums text-white">{hasPrice ? item.price!.toLocaleString() : 'Unavailable'}</span>
+                    <span className="block min-w-0 break-words font-mono text-sm font-semibold tabular-nums text-white">{hasPrice ? item.price!.toLocaleString() : 'Unavailable'}</span>
                   </div>
                 </button>
               );

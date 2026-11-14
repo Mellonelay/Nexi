@@ -421,22 +421,22 @@ export default function LoansPage() {
 
       {unknownRepaymentKey && <div role="alert" className="mx-auto mb-4 max-w-7xl rounded-xl border border-amber-300/30 p-4 text-sm text-amber-100">An earlier loan repayment outcome is unresolved. New repayments are blocked until Ledger activity confirms the original key. <button type="button" onClick={() => void recheckLoanRepayment(unknownRepaymentKey)} className="ml-2 min-h-11 rounded-lg border border-amber-300/30 px-3 font-semibold">Recheck original repayment</button></div>}
       {unknownApplicationKey && <div role="alert" className="mx-auto mb-4 max-w-7xl rounded-xl border border-amber-300/30 p-4 text-sm text-amber-100">An earlier loan application outcome is unresolved. New applications are blocked until its original request is confirmed. <button type="button" onClick={() => void recheckLoanApplication(unknownApplicationKey)} className="ml-2 min-h-11 rounded-lg border border-amber-300/30 px-3 font-semibold">Recheck original loan application</button></div>}
-      <main className="mx-auto max-w-7xl space-y-4">
-        <section className="grid grid-cols-1 gap-3 min-[430px]:grid-cols-2 lg:grid-cols-4" aria-label="Loan summary">
+      <main className="mx-auto min-w-0 max-w-7xl space-y-3 sm:space-y-4">
+        <section className="grid min-w-0 gap-2 sm:gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 13rem), 1fr))" }} aria-label="Loan summary">
           <Metric label="Eligibility" value="Not assessed" hint="Applications require Backend review and approval" />
           <Metric label="Products" value={plansState === 'LIVE' ? authoritativeValue(plans.length) : '—'} hint="Available products" />
           <Metric label="Active loans" value={state === 'LIVE' ? authoritativeValue(activeLoans.length) : '—'} hint="Includes overdue records" />
           <Metric label="Next repayment" value={nextDue} hint="Available due date" />
         </section>
 
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)] lg:items-start">
-          <div className="space-y-4">
+        <div className="grid min-w-0 gap-3 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)] lg:items-start lg:gap-5">
+          <div className="min-w-0 space-y-3 sm:space-y-4">
             <LoanProductsPanel plans={plans} plansState={plansState} />
             <LoanLifecyclePanel />
             <LoanHistoryPanel state={state} loans={loans} backendConfigured={backendConfigured} />
           </div>
 
-          <aside className="space-y-4 lg:sticky lg:top-5">
+          <aside className="min-w-0 space-y-3 sm:space-y-4 lg:sticky lg:top-5">
             <LoanApplicationPanel
               plans={plans}
               selectedPlanId={selectedPlanId}
@@ -489,7 +489,7 @@ function LoanProductsPanel({ plans, plansState }: { plans: LoanPlan[]; plansStat
       {plansState === 'ERROR' && <DataStatePanel state="ERROR" title="Loan product catalog unavailable" message="Loan products could not be loaded." />}
       {plansState === 'LIVE' && plans.length === 0 && <DataStatePanel state="UNAVAILABLE" title="No active loan products" message="No active loan products are available." />}
       {plansState === 'LIVE' && plans.length > 0 && (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid min-w-0 gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 16rem), 1fr))" }}>
           {plans.map((plan) => (
             <article key={String(plan.id)} className="rounded-xl border border-[#2B2037] bg-[#171022] p-3 sm:p-4">
               <div className="flex items-center justify-between gap-3"><h3 className="font-semibold">{authoritativeValue(plan.name)}</h3><StatusBadge state="AVAILABLE" /></div>
@@ -718,8 +718,8 @@ function LoanRecordCard({ loan }: { loan: LoanRecord }) {
       <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2 xl:grid-cols-4">
         <ReviewRow label="Principal" value={`${authoritativeValue(loan.amountDecimal ?? loan.amount)} ${authoritativeValue(loan.currency)}`} stacked />
         <ReviewRow label="Term" value={`${authoritativeValue(loan.durationDays ?? loan.term)} days`} stacked />
-        <ReviewRow label="Total repayment" value={authoritativeValue(loan.totalRepaymentDecimal ?? loan.totalRepayment)} stacked />
-        <ReviewRow label="Repaid" value={authoritativeValue(loan.totalRepaidDecimal ?? '0')} stacked />
+        <ReviewRow label="Total repayment" value={`${authoritativeValue(loan.totalRepaymentDecimal ?? loan.totalRepayment)} ${authoritativeValue(loan.currency)}`} stacked />
+        <ReviewRow label="Repaid" value={`${authoritativeValue(loan.totalRepaidDecimal ?? '0')} ${authoritativeValue(loan.currency)}`} stacked />
         <ReviewRow label="Due date" value={<LocalDateTime value={typeof (loan.dueDate ?? loan.nextRepaymentAt) === 'string' ? String(loan.dueDate ?? loan.nextRepaymentAt) : null} dateStyle="medium" />} stacked />
       </dl>
     </article>
@@ -728,7 +728,7 @@ function LoanRecordCard({ loan }: { loan: LoanRecord }) {
 
 function ReviewRow({ label, value, stacked = false }: { label: string; value: ReactNode; stacked?: boolean }) {
   if (stacked) {
-    return <div className="min-w-0"><dt className="text-xs text-[#8C8299]">{label}</dt><dd className="mt-1 break-words font-mono text-sm text-[#F8F6FF]">{value}</dd></div>;
+    return <div className="min-w-0"><dt className="text-xs text-[#8C8299]">{label}</dt><dd className="mt-1 min-w-0 break-words [overflow-wrap:anywhere] font-mono text-sm text-[#F8F6FF]">{value}</dd></div>;
   }
-  return <div className="flex min-w-0 items-start justify-between gap-4"><dt className="text-[#8C8299]">{label}</dt><dd className="min-w-0 break-words text-right font-mono text-[#F8F6FF]">{value}</dd></div>;
+  return <div className="flex min-w-0 items-start justify-between gap-4"><dt className="text-[#8C8299]">{label}</dt><dd className="min-w-0 break-words [overflow-wrap:anywhere] text-right font-mono text-[#F8F6FF]">{value}</dd></div>;
 }

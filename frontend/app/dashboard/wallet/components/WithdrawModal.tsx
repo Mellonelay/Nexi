@@ -205,12 +205,12 @@ export default function WithdrawModal({ isOpen, onClose, currencies, selectedCur
 
   if (!isOpen) return null;
   return <ModalSurface open={isOpen} onClose={close} title="Withdraw">
-    <section className="relative w-full max-w-md overflow-hidden rounded-2xl border border-violet-300/20 bg-[#121022] shadow-2xl">
+    <section className="relative flex min-h-0 w-full max-w-md flex-col overflow-hidden rounded-2xl border border-violet-300/20 bg-[#121022] shadow-2xl">
       <div className="flex items-center justify-between border-b border-violet-300/10 p-4 sm:p-6">
         <h2 id="withdraw-title" className="text-xl font-bold text-white">Withdraw {selectedCurrency}</h2>
         <button type="button" onClick={close} aria-label="Close withdrawal dialog" className="inline-flex h-11 w-11 items-center justify-center text-[#C3BBD0]"><X size={22} /></button>
       </div>
-      <form onSubmit={submit} className="max-h-[75dvh] space-y-4 overflow-y-auto overscroll-contain p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:p-6">
+      <form onSubmit={submit} className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-3 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:space-y-4 sm:p-6">
         {capabilitiesLoading && <p role="status" className="text-sm text-[#C3BBD0]">Loading withdrawal availability…</p>}
         {capabilitiesError && <p role="alert" className="text-sm text-amber-200">Withdrawal fees and limits are unavailable. Submission is disabled until configuration loads.</p>}
         {!capabilitiesLoading && !capabilitiesError && selectableAssets.length === 0 && <p role="status" className="text-sm text-amber-200">No withdrawal networks are currently enabled.</p>}
@@ -250,7 +250,7 @@ export default function WithdrawModal({ isOpen, onClose, currencies, selectedCur
           <p className="break-all">Destination: <span className="font-mono text-white">{address.trim()}</span></p>
           <p>Requested amount: <span className="font-mono text-white">{amount.trim()} {selectedCurrency}</span></p>
           <p>Fee: <span className="font-mono text-white">{selectedCapability.withdrawalFee} {selectedCurrency}</span></p>
-          <p>Expected amount plus fee: <span className="break-all font-mono text-white">{expectedDebit ?? 'Unavailable'} {selectedCurrency}</span></p>
+          <p>Expected amount plus fee: <span className="break-words font-mono text-white">{expectedDebit ?? 'Unavailable'} {selectedCurrency}</span></p>
           <p className="text-amber-100">Confirming reserves the amount plus fee for review. This does not broadcast a blockchain transaction.</p>
           <button type="button" className="mt-2 min-h-11 rounded-lg border border-violet-300/20 px-3" onClick={() => setReviewOpen(false)}>Edit request</button>
         </section>}

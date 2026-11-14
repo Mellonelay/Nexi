@@ -253,7 +253,7 @@ function AssetDetailView({
             <div className="flex items-center gap-2"><BarChart3 className="h-4 w-4 text-[#A995FF]" aria-hidden="true" /><h2 className="font-semibold">Market chart</h2></div>
             <span className="text-xs text-[#8C8299]">{timeframe === '1d' ? '1D' : timeframe}</span>
           </div>
-          <div className="min-w-0 h-[clamp(260px,38svh,440px)] sm:h-[clamp(300px,48svh,560px)] lg:h-[min(62vh,640px)]">
+          <div className="min-w-0 h-[clamp(200px,36svh,400px)] sm:h-[clamp(260px,46svh,560px)] lg:h-[min(62vh,640px)]">
             <RealtimeTradingChart
               symbol={normalizePair(instrument.pair)}
               type="spot"

@@ -36,7 +36,7 @@ export function PageShell({ children }: { children: ReactNode }) {
   return (
     <div className="nexi-page-shell relative min-h-full min-w-0 overflow-x-clip text-[#F8F6FF]">
       <div aria-hidden="true" className="nexi-atmosphere pointer-events-none absolute inset-0" />
-      <div className="relative min-w-0 px-4 py-5 pb-6 sm:px-6 lg:px-8 [&>main]:min-w-0 [&>main>*]:min-w-0">
+      <div className="relative min-w-0 px-3 py-3 pb-4 sm:px-6 sm:py-5 sm:pb-6 lg:px-8 [&>main]:min-w-0 [&>main>*]:min-w-0">
         {children}
       </div>
     </div>
@@ -50,11 +50,11 @@ export function PageHeader({ eyebrow, title, description, action }: {
   action?: ReactNode;
 }) {
   return (
-    <header className="nexi-station-header mx-auto mb-6 flex min-w-0 max-w-7xl flex-col gap-4 rounded-2xl border px-4 py-4 sm:flex-row sm:items-end sm:justify-between sm:px-5">
+    <header className="nexi-station-header mx-auto mb-3 flex min-w-0 max-w-7xl flex-col gap-2 rounded-2xl border px-3 py-3 sm:mb-6 sm:flex-row sm:items-end sm:justify-between sm:gap-4 sm:px-5 sm:py-4">
       <div className="min-w-0 flex-1">
-        {eyebrow && <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#48C0CC]">{eyebrow}</p>}
+        {eyebrow && <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#48C0CC] sm:mb-2">{eyebrow}</p>}
         <h1 className="text-[clamp(1.25rem,5.6vw,1.875rem)] leading-[1.3] font-semibold tracking-tight gradient-text">{title}</h1>
-        <p className="mt-2 max-w-2xl text-base leading-6 text-[#C3BBD0]">{description}</p>
+        <p className="mt-1 max-w-2xl text-sm leading-5 text-[#C3BBD0] sm:mt-2 sm:text-base sm:leading-6">{description}</p>
       </div>
       {action && <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2 [&>*]:max-w-full">{action}</div>}
     </header>
@@ -67,10 +67,10 @@ export function Panel({ children, className = '' }: { children: ReactNode; class
 
 export function PanelHeading({ title, description, action }: { title: string; description?: string; action?: ReactNode }) {
   return (
-    <div className="mb-4 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+    <div className="mb-2 flex min-w-0 flex-col gap-1 sm:mb-4 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
       <div className="min-w-0 flex-1">
-        <h2 className="break-words text-xl leading-[1.3] font-semibold text-[#F2ECFA]">{title}</h2>
-        {description && <p className="mt-1 break-words text-base leading-6 text-[#8C8299]">{description}</p>}
+        <h2 className="break-words text-base leading-[1.3] font-semibold text-[#F2ECFA] sm:text-xl">{title}</h2>
+        {description && <p className="mt-1 break-words text-sm leading-5 text-[#8C8299] sm:text-base sm:leading-6">{description}</p>}
       </div>
       {action && <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2 [&>*]:max-w-full">{action}</div>}
     </div>
@@ -92,7 +92,7 @@ export function DataStatePanel({ state, title = 'Data is not available right now
 }
 
 export function Metric({ label, value, hint }: { label: string; value: string; hint?: string }) {
-  return <div className="nexi-execution-surface min-w-0 rounded-xl border border-[var(--nexi-border-subtle)] p-4"><p className="text-xs uppercase tracking-[0.12em] text-[#8C8299]">{label}</p><p className="nexi-data mt-2 whitespace-normal break-all font-mono text-lg tabular-nums leading-snug text-[#48C0CC]">{value}</p>{hint && <p className="mt-1 break-words text-xs leading-5 text-[#8C8299]">{hint}</p>}</div>;
+  return <div className="nexi-execution-surface min-w-0 rounded-xl border border-[var(--nexi-border-subtle)] p-4"><p className="text-xs uppercase tracking-[0.12em] text-[#8C8299]">{label}</p><p className="nexi-data mt-1 min-w-0 whitespace-normal break-words font-mono text-base tabular-nums leading-snug text-[#48C0CC] sm:mt-2 sm:text-lg">{value}</p>{hint && <p className="mt-1 break-words text-xs leading-5 text-[#8C8299]">{hint}</p>}</div>;
 }
 
 export function TabButton({ active, children, onClick }: { active: boolean; children: ReactNode; onClick: () => void }) {

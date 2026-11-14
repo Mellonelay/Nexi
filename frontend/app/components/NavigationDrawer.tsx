@@ -138,7 +138,7 @@ export default function NavigationDrawer({
           event.preventDefault();
           close();
         }}
-        className="nexi-drawer fixed inset-y-0 left-0 m-0 flex h-[calc(100dvh-76px-env(safe-area-inset-bottom))] w-[84vw] max-w-[320px] flex-col overflow-y-auto overscroll-contain border-r border-violet-300/20 px-4 pb-[calc(20px+env(safe-area-inset-bottom))] pt-4 shadow-2xl backdrop:bg-black/70 backdrop:backdrop-blur-sm"
+        className="nexi-drawer fixed inset-y-0 left-0 m-0 flex h-[max(0px,calc(var(--nexi-visible-viewport-height,100dvh)_-_76px_-_env(safe-area-inset-bottom)))] w-[84vw] max-w-[320px] flex-col overflow-y-auto overscroll-contain border-r border-violet-300/20 px-4 pb-[calc(20px+env(safe-area-inset-bottom))] pt-4 shadow-2xl backdrop:bg-black/70 backdrop:backdrop-blur-sm"
       >
         <h2 id="nexi-application-drawer-title" className="sr-only">
               {t("openApplicationMenu")}

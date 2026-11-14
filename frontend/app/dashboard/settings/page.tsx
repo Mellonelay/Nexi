@@ -247,7 +247,7 @@ function ReferralHistoryPanel() {
                   {history.rewards.items.map((item) => (
                     <li key={item.id} className="rounded-xl border border-[#2B2037] bg-[#171022] p-3">
                       <div className="flex flex-wrap items-start justify-between gap-2">
-                        <span className="break-all font-mono text-sm tabular-nums text-white">{item.amount} {item.asset}</span>
+                        <span className="min-w-0 break-words font-mono text-sm tabular-nums text-white">{item.amount} {item.asset}</span>
                         <span className="text-xs capitalize text-[#C3BBD0]">{referralStatusLabel(item.status)}</span>
                       </div>
                       <p className="mt-1 text-xs text-[#8C8299]">From NEXI user {item.referredUserCode} · {referralHistoryDate(item.rewardedAt)}</p>
@@ -280,7 +280,7 @@ function ReferralMembershipPanel({ referral }: { referral: WalletProfile['referr
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="text-xs text-[#8C8299]">Your referral code</p>
-              <p className="mt-1 break-all font-mono text-sm text-white">{referral.referralCode}</p>
+              <p className="mt-1 min-w-0 break-words font-mono text-sm text-white">{referral.referralCode}</p>
             </div>
             <button
               type="button"
@@ -297,7 +297,7 @@ function ReferralMembershipPanel({ referral }: { referral: WalletProfile['referr
             </div>
             <div className="min-w-0 rounded-xl border border-[#2B2037] bg-[#171022] p-3">
               <dt className="text-xs text-[#8C8299]">Referral earnings</dt>
-              <dd className="mt-1 break-all font-mono tabular-nums text-white">{referral.totalEarnings}</dd>
+              <dd className="mt-1 min-w-0 break-words font-mono tabular-nums text-white">{referral.totalEarnings}</dd>
             </div>
           </dl>
           <p className="text-xs text-[#C3BBD0]">

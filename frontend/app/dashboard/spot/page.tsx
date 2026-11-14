@@ -504,11 +504,11 @@ function SpotOrderBook({mobileMarketPanel, bids, asks, bookStatus, setPrice, bas
               <div className="grid min-w-0 grid-cols-1 text-xs min-[430px]:grid-cols-2">
                 <div className="min-w-0 border-b border-white/5 p-3 min-[430px]:border-b-0 min-[430px]:border-r">
                   <div className="mb-2 flex flex-wrap justify-between gap-x-2 gap-y-1 text-xs text-[#8C8299]"><span>Bid · {quoteSymbol}</span><span>Quantity {baseSymbol}</span></div>
-                  {bids.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(row.price)} className="nexi-interactive flex min-h-11 min-w-0 w-full flex-col justify-center rounded px-1 text-left font-mono tabular-nums hover:bg-emerald-400/5"><span className="break-all text-xs text-[#22D3A6]">{row.price}</span><span className="break-all text-xs text-[#C3BBD0]">{row.amount} {baseSymbol}</span></button>)}
+                  {bids.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(row.price)} className="nexi-interactive flex min-h-11 min-w-0 w-full flex-col justify-center rounded px-1 text-left font-mono tabular-nums hover:bg-emerald-400/5"><span className="min-w-0 break-words text-sm text-[#22D3A6]">{row.price}</span><span className="min-w-0 break-words text-xs text-[#C3BBD0]">{row.amount} {baseSymbol}</span></button>)}
                 </div>
                 <div className="min-w-0 p-3">
                   <div className="mb-2 flex flex-wrap justify-between gap-x-2 gap-y-1 text-xs text-[#8C8299]"><span>Ask · {quoteSymbol}</span><span>Quantity {baseSymbol}</span></div>
-                  {asks.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(row.price)} className="nexi-interactive flex min-h-11 min-w-0 w-full flex-col items-end justify-center rounded px-1 text-right font-mono tabular-nums hover:bg-rose-400/5"><span className="break-all text-xs text-[#FF5C7C]">{row.price}</span><span className="break-all text-xs text-[#C3BBD0]">{row.amount} {baseSymbol}</span></button>)}
+                  {asks.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(row.price)} className="nexi-interactive flex min-h-11 min-w-0 w-full flex-col items-end justify-center rounded px-1 text-right font-mono tabular-nums hover:bg-rose-400/5"><span className="min-w-0 break-words text-sm text-[#FF5C7C]">{row.price}</span><span className="min-w-0 break-words text-xs text-[#C3BBD0]">{row.amount} {baseSymbol}</span></button>)}
                 </div>
               </div>
               {bids.length === 0 && asks.length === 0 && (
@@ -555,7 +555,7 @@ function SpotRecentTrades({mobileMarketPanel, marketTrades, tradeStatus, baseSym
               {marketTrades.length > 0
                 ? <>
                     <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-1 border-b border-white/5 px-3 py-2 text-xs text-[#8C8299] sm:px-4"><span>Price ({quoteSymbol})</span><span>Amount ({baseSymbol})</span><span className="text-right">Time</span></div>
-                    <div className="max-h-[min(55vh,520px)] divide-y divide-white/5 overflow-y-auto text-xs">{marketTrades.slice(0, 50).map((trade) => <div key={trade.id} aria-label={`${trade.side} Binance reference trade at ${trade.price} ${quoteSymbol}, amount ${trade.amount} ${baseSymbol}`} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-1 px-3 py-2 font-mono tabular-nums sm:px-4"><span className={`min-w-0 break-all ${trade.side === 'BUY' ? 'text-[#22D3A6]' : 'text-[#FF5C7C]'}`}>{formatMarketDecimal(trade.price)}</span><span className="min-w-0 break-all text-[#C3BBD0]">{formatMarketDecimal(trade.amount)}</span><span className="min-w-[54px] whitespace-nowrap text-right text-[#8C8299]"><LocalDateTime value={trade.executedAt} timeStyle="medium" /></span></div>)}</div>
+                    <div className="max-h-[min(55vh,520px)] divide-y divide-white/5 overflow-y-auto text-xs">{marketTrades.slice(0, 50).map((trade) => <div key={trade.id} aria-label={`${trade.side} Binance reference trade at ${trade.price} ${quoteSymbol}, amount ${trade.amount} ${baseSymbol}`} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-1 px-3 py-2 font-mono tabular-nums sm:px-4"><span className={`min-w-0 break-words ${trade.side === 'BUY' ? 'text-[#22D3A6]' : 'text-[#FF5C7C]'}`}>{formatMarketDecimal(trade.price)}</span><span className="min-w-0 break-words text-[#C3BBD0]">{formatMarketDecimal(trade.amount)}</span><span className="min-w-[54px] whitespace-nowrap text-right text-[#8C8299]"><LocalDateTime value={trade.executedAt} timeStyle="medium" /></span></div>)}</div>
                   </>
                 : <div className="flex min-h-52 items-center justify-center p-6 text-center text-sm text-[#8C8299]" role="status">{recentTradesEmptyText(tradeStatus)}</div>}
             </section>
@@ -663,7 +663,7 @@ function SpotOrderTicket({side, setSide, orderType, setOrderType, price, setPric
           </div>
 
           <dl className="mt-1.5 grid min-w-0 grid-cols-1 gap-2 rounded-xl border border-violet-300/10 bg-[#0B0711] p-3 text-xs min-[430px]:grid-cols-2 lg:grid-cols-4">
-            <div className="min-w-0"><dt className="text-[#8C8299]">Estimated total</dt><dd className="mt-0.5 break-all font-mono tabular-nums">{total === null ? '—' : `${total.toString()} USDT`}</dd></div>
+            <div className="min-w-0"><dt className="text-[#8C8299]">Estimated total</dt><dd className="mt-0.5 min-w-0 break-words font-mono tabular-nums">{total === null ? '—' : `${total.toString()} USDT`}</dd></div>
             <div className="min-w-0"><dt className="text-[#8C8299]">Fee</dt><dd className="mt-0.5 break-words font-mono">—</dd></div>
             <div className="min-w-0"><dt className="text-[#8C8299]">Available</dt><dd className="mt-0.5 break-words font-mono">{availableBalance}</dd></div>
             <div className="min-w-0"><dt className="text-[#8C8299]">State</dt><dd className="mt-0.5 break-words font-mono">{productStateLabel(orderState)}</dd></div>

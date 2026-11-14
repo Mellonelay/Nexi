@@ -16,6 +16,7 @@ import WithdrawModal from './components/WithdrawModal';
 import ConvertModal from './components/ConvertModal';
 import { DataStatePanel, PageShell, Panel, PanelHeading, SecondaryButton, StatusBadge, TabButton } from '../../components/PagePrimitives';
 import WalletDashboardLayout from './components/WalletDashboardLayout';
+import walletAdaptive from './wallet-adaptive.module.css';
 
 type Tab = 'Overview' | 'Funding' | 'Spot' | 'Margin' | 'Binary' | 'Finance';
 type Action = 'Deposit' | 'Withdraw' | 'Transfer' | 'Convert';
@@ -317,7 +318,7 @@ function WalletPerformance({ root, state }: { root: Record<string, unknown>; sta
   ].filter((item) => item.value !== undefined);
   if (!metrics.length) return null;
   return (
-    <dl className="mt-2 grid min-w-0 grid-cols-1 gap-x-4 gap-y-2 border-t border-violet-300/10 pt-2 min-[430px]:grid-cols-2" aria-label="Portfolio performance">
+    <dl className="mt-2 grid min-w-0 gap-x-4 gap-y-2 border-t border-violet-300/10 pt-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 11rem), 1fr))" }} aria-label="Portfolio performance">
       {metrics.map((item) => (
         <div key={item.label} className="min-w-0">
           <dt className="text-xs text-[#C3BBD0]">{item.label}</dt>
@@ -342,16 +343,16 @@ function WalletSummary({ root, state, valuation }: { root: Record<string, unknow
         </div>
         <p className="mt-1 text-xs leading-5 text-[#8C8299]">Estimated portfolio value in USDT · Native balances unchanged.</p>
         <div className="mt-2 min-w-0" aria-label="Estimated wallet portfolio value in USDT">
-          <p className="text-xs font-medium text-[#C3BBD0]">Total · USDT</p>
-          <p className="mt-1 min-w-0 break-words font-mono text-[clamp(1.25rem,4.8vw,1.75rem)] font-semibold leading-snug tabular-nums text-[#48C0CC]">{total}</p>
-          <dl className="mt-3 grid min-w-0 grid-cols-1 gap-x-4 gap-y-2 border-t border-violet-300/10 pt-2 min-[400px]:grid-cols-2">
+          <p className="text-xs font-medium text-[#C3BBD0]">Total</p>
+          <p className="mt-1 min-w-0 break-words [overflow-wrap:anywhere] font-mono text-[clamp(1.25rem,4.8vw,1.75rem)] font-semibold leading-snug tabular-nums text-[#48C0CC]">{total}</p>
+          <dl className="mt-3 grid min-w-0 gap-x-4 gap-y-2 border-t border-violet-300/10 pt-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 11rem), 1fr))" }}>
             <div className="min-w-0">
-              <dt className="text-xs text-[#C3BBD0]">Available · USDT</dt>
-              <dd className="mt-0.5 min-w-0 break-words font-mono text-base leading-snug tabular-nums text-[#48C0CC]">{available}</dd>
+              <dt className="text-xs text-[#C3BBD0]">Available</dt>
+              <dd className="mt-0.5 min-w-0 break-words [overflow-wrap:anywhere] font-mono text-base leading-snug tabular-nums text-[#48C0CC]">{available}</dd>
             </div>
             <div className="min-w-0">
-              <dt className="text-xs text-[#C3BBD0]">Locked · USDT</dt>
-              <dd className="mt-0.5 min-w-0 break-words font-mono text-base leading-snug tabular-nums text-[#48C0CC]">{locked}</dd>
+              <dt className="text-xs text-[#C3BBD0]">Locked</dt>
+              <dd className="mt-0.5 min-w-0 break-words [overflow-wrap:anywhere] font-mono text-base leading-snug tabular-nums text-[#48C0CC]">{locked}</dd>
             </div>
           </dl>
         </div>
@@ -392,15 +393,15 @@ function WalletAssetRow({ item, tab }: { item: WalletAsset; tab: Tab }) {
           </span>
         </span>
       </div>
-      <span className="min-w-0 break-words text-right font-mono text-sm tabular-nums lg:whitespace-normal">
+      <span className="min-w-0 break-words [overflow-wrap:anywhere] text-right font-mono text-sm tabular-nums lg:whitespace-normal">
         <span className="mb-1 block text-xs text-[#8C8299] lg:hidden">Available</span>
         {item.accountExists ? text(item.available) : '—'}
       </span>
-      <span className="min-w-0 break-words text-right font-mono text-sm tabular-nums lg:whitespace-normal">
+      <span className="min-w-0 break-words [overflow-wrap:anywhere] text-right font-mono text-sm tabular-nums lg:whitespace-normal">
         <span className="mb-1 block text-xs text-[#8C8299] lg:hidden">{tab === "Finance" ? "Committed" : "Locked"}</span>
         {item.accountExists ? text(item.locked) : '—'}
       </span>
-      <span className="col-span-2 min-w-0 break-words text-right font-mono text-base font-semibold tabular-nums lg:col-span-1 lg:whitespace-normal">
+      <span className="col-span-2 min-w-0 break-words [overflow-wrap:anywhere] text-right font-mono text-base font-semibold tabular-nums lg:col-span-1 lg:whitespace-normal">
         <span className="mb-1 block text-xs text-[#8C8299] lg:hidden">Total</span>
         {item.accountExists ? text(item.total) : '—'}
       </span>
@@ -427,10 +428,10 @@ function WalletActionButton({ item, action, enabled, onSelect }: { item: Action;
 function WalletActions({ authenticated, state, action, onSelect }: { authenticated: boolean; state: ReadState; action: Action | null; onSelect: (action: Action) => void }) {
   const enabled = authenticated && state === 'LIVE';
   return (
-    <section aria-label="Wallet actions">
+    <section aria-label="Wallet actions" className={walletAdaptive.actionContainer}>
       <Panel className="p-2.5 sm:p-3">
         <h2 className="mb-2 text-base font-semibold text-[#F2ECFA]">Quick actions</h2>
-        <div className="grid min-w-0 grid-cols-2 gap-2 min-[360px]:grid-cols-4">
+        <div className={`grid min-w-0 gap-2 ${walletAdaptive.actionGrid}`}>
           {(['Deposit', 'Withdraw', 'Transfer', 'Convert'] as Action[]).map((item) => (
             <WalletActionButton key={item} item={item} action={action} enabled={enabled} onSelect={onSelect} />
           ))}
