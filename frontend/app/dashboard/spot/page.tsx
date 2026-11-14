@@ -385,9 +385,9 @@ function MarginWorkspace({
         </div>
         <div className="nexi-margin-chart-frame -mx-2 mt-4 min-w-0 overflow-hidden rounded-xl border border-violet-300/10 bg-[#0B0711] sm:-mx-5">
           <div className="nexi-trading-intervals flex min-w-0 items-center gap-2 border-b border-white/5 px-3 py-2">
-            <div className="nexi-scroll-rail flex min-w-0 flex-1 items-center justify-between gap-1 overflow-x-auto" role="tablist" aria-label="Margin chart interval">
+            <div className="nexi-scroll-rail flex min-w-0 flex-1 items-center justify-between gap-1 overflow-x-auto" role="group" aria-label="Margin chart interval">
               {CHART_INTERVALS.map((value) => (
-                <button key={value} type="button" role="tab" aria-selected={chartInterval === value} onClick={() => setChartInterval(value)} className={`nexi-interactive min-h-11 min-w-11 shrink-0 rounded-md px-2 text-xs font-semibold ${chartInterval === value ? 'bg-[#2C146C] text-white' : 'text-[#8C8299] hover:text-white'}`}>{value}</button>
+                <button key={value} type="button" aria-pressed={chartInterval === value} onClick={() => setChartInterval(value)} className={`nexi-interactive min-h-11 min-w-11 shrink-0 rounded-md px-2 text-xs font-semibold ${chartInterval === value ? 'bg-[#2C146C] text-white' : 'text-[#8C8299] hover:text-white'}`}>{value}</button>
               ))}
             </div>
           </div>
@@ -397,11 +397,11 @@ function MarginWorkspace({
         </div>
         <div className="mt-4 grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
           <div className="min-w-0 space-y-3">
-            <div className="grid min-w-0 grid-cols-2 gap-2 rounded-xl bg-[#0B0711] p-1" role="tablist" aria-label="Margin direction">
-              {(['LONG', 'SHORT'] as const).map((value) => <button key={value} type="button" role="tab" aria-selected={marginDirection === value} onClick={() => setMarginDirection(value)} className={`min-h-11 rounded-lg text-xs font-semibold ${marginDirection === value ? value === 'LONG' ? 'bg-emerald-400/15 text-[#22D3A6]' : 'bg-rose-400/15 text-[#FF5C7C]' : 'text-[#8C8299]'}`}>{value}</button>)}
+            <div className="grid min-w-0 grid-cols-2 gap-2 rounded-xl bg-[#0B0711] p-1" role="group" aria-label="Margin direction">
+              {(['LONG', 'SHORT'] as const).map((value) => <button key={value} type="button" aria-pressed={marginDirection === value} onClick={() => setMarginDirection(value)} className={`min-h-11 rounded-lg text-xs font-semibold ${marginDirection === value ? value === 'LONG' ? 'bg-emerald-400/15 text-[#22D3A6]' : 'bg-rose-400/15 text-[#FF5C7C]' : 'text-[#8C8299]'}`}>{value}</button>)}
             </div>
-            <div className="grid min-w-0 grid-cols-3 gap-2" role="tablist" aria-label="Margin leverage">
-              {marginLeverageOptions.map((value) => <button key={value} type="button" role="tab" aria-selected={effectiveMarginLeverage === value} onClick={() => setMarginLeverage(value)} className={`min-h-11 rounded-lg border text-xs font-semibold ${effectiveMarginLeverage === value ? 'border-violet-300/35 bg-[#2A1742] text-white' : 'border-violet-300/10 text-[#8C8299]'}`}>{value}x</button>)}
+            <div className="grid min-w-0 grid-cols-3 gap-2" role="group" aria-label="Margin leverage">
+              {marginLeverageOptions.map((value) => <button key={value} type="button" aria-pressed={effectiveMarginLeverage === value} onClick={() => setMarginLeverage(value)} className={`min-h-11 rounded-lg border text-xs font-semibold ${effectiveMarginLeverage === value ? 'border-violet-300/35 bg-[#2A1742] text-white' : 'border-violet-300/10 text-[#8C8299]'}`}>{value}x</button>)}
             </div>
             <div className="grid min-w-0 grid-cols-1 gap-2 rounded-xl border border-violet-300/10 bg-[#0B0711] px-3 py-2 text-xs min-[430px]:grid-cols-2" aria-label="Margin wallet USDT balance">
               <div><p className="text-[#8C8299]">Margin available</p><p className="mt-1 min-w-0 break-words font-mono">{walletAmountLabel(walletState, marginUsdtBalance, 'USDT')}</p></div>
@@ -470,9 +470,9 @@ function SpotChartArea({displayPair, normalizedSymbol, chartInterval, setChartIn
 
           <div className={`nexi-trading-chart-card nexi-station-card order-2 min-h-[210px] min-w-0 overflow-hidden rounded-xl sm:rounded-2xl xl:block md:min-h-[360px] xl:order-none xl:min-h-[430px] ${mobileMarketPanel === 'CHART' ? 'block' : 'hidden'}`}>
             <div className="nexi-trading-intervals flex min-w-0 items-center gap-2 border-b border-white/5 px-3 py-2">
-              <div className="nexi-scroll-rail flex min-w-0 flex-1 items-center justify-between gap-1 overflow-x-auto" role="tablist" aria-label="Chart interval">
+              <div className="nexi-scroll-rail flex min-w-0 flex-1 items-center justify-between gap-1 overflow-x-auto" role="group" aria-label="Chart interval">
                 {CHART_INTERVALS.map((value) => (
-                  <button key={value} type="button" role="tab" aria-selected={chartInterval === value} onClick={() => setChartInterval(value)} className={`nexi-interactive min-h-11 min-w-11 shrink-0 rounded-md px-2 text-xs font-semibold ${chartInterval === value ? 'bg-[#2C146C] text-white' : 'text-[#8C8299] hover:text-white'}`}>{value}</button>
+                  <button key={value} type="button" aria-pressed={chartInterval === value} onClick={() => setChartInterval(value)} className={`nexi-interactive min-h-11 min-w-11 shrink-0 rounded-md px-2 text-xs font-semibold ${chartInterval === value ? 'bg-[#2C146C] text-white' : 'text-[#8C8299] hover:text-white'}`}>{value}</button>
                 ))}
               </div>
             </div>
@@ -481,13 +481,13 @@ function SpotChartArea({displayPair, normalizedSymbol, chartInterval, setChartIn
             </div>
           </div>
 
-          <div className="order-3 grid min-w-0 grid-cols-3 border-b border-violet-300/20 xl:hidden" role="tablist" aria-label="Mobile market view">
+          <div className="order-3 grid min-w-0 grid-cols-3 border-b border-violet-300/20 xl:hidden" role="group" aria-label="Mobile market view">
             {([
               ['CHART', 'Chart'],
               ['BOOK', 'Order book'],
               ['TRADES', 'Trades'],
             ] as const).map(([value, label]) => (
-              <button key={value} type="button" role="tab" aria-selected={mobileMarketPanel === value} onClick={() => setMobileMarketPanel(value)} className={`nexi-interactive min-h-11 min-w-0 px-1 text-xs ${mobileMarketPanel === value ? 'border-b-2 border-[#7353DD] text-white' : 'text-[#8C8299]'}`}>{label}</button>
+              <button key={value} type="button" aria-pressed={mobileMarketPanel === value} onClick={() => setMobileMarketPanel(value)} className={`nexi-interactive min-h-11 min-w-0 px-1 text-xs ${mobileMarketPanel === value ? 'border-b-2 border-[#7353DD] text-white' : 'text-[#8C8299]'}`}>{label}</button>
             ))}
           </div>
     </>
@@ -574,13 +574,13 @@ function SpotReferenceArea(props: SpotWorkspaceProps) {
 function SpotActivityArea({historyTab, setHistoryTab, historyRows, historyStatus, displayPair, onCancelOrder, cancellingOrderId, cancelFeedback, unknownSpotCancelOrderId, recheckSpotCancel}: SpotWorkspaceProps) {
   return (
           <section className="nexi-station-card order-6 min-w-0 rounded-2xl xl:order-none" aria-label="Spot activity">
-            <div className="grid min-w-0 grid-cols-3 border-b border-white/5" role="tablist" aria-label="Spot activity">
+            <div className="grid min-w-0 grid-cols-3 border-b border-white/5" role="group" aria-label="Spot activity">
               {([
                 ['OPEN', 'Open', 'Open orders'],
                 ['ORDERS', 'Orders', 'Order history'],
                 ['TRADES', 'Trades', 'Trade history'],
               ] as const).map(([value, mobileLabel, desktopLabel]) => (
-                <button key={value} type="button" role="tab" aria-selected={historyTab === value} onClick={() => setHistoryTab(value)} className={`min-h-12 min-w-0 px-1 text-xs sm:px-2 sm:text-sm ${historyTab === value ? 'border-b-2 border-[#8B5CF6] text-white' : 'text-[#8C8299]'}`}>
+                <button key={value} type="button" aria-pressed={historyTab === value} onClick={() => setHistoryTab(value)} className={`min-h-12 min-w-0 px-1 text-xs sm:px-2 sm:text-sm ${historyTab === value ? 'border-b-2 border-[#8B5CF6] text-white' : 'text-[#8C8299]'}`}>
                   <span className="sm:hidden">{mobileLabel}</span>
                   <span className="hidden sm:inline">{desktopLabel}</span>
                 </button>
@@ -634,8 +634,8 @@ function SpotOrderTicket({side, setSide, orderType, setOrderType, price, setPric
           <div className="mt-2.5 grid min-w-0 grid-cols-2 rounded-xl bg-[#0B0711] p-1 sm:mt-3" data-testid="spot-buy-sell">
             {(['BUY', 'SELL'] as const).map((value) => <button key={value} type="button" onClick={() => setSide(value)} className={`nexi-interactive min-h-11 min-w-0 rounded-lg px-1 text-xs font-semibold sm:text-sm ${side === value ? value === 'BUY' ? 'bg-emerald-400/15 text-[#22D3A6]' : 'bg-rose-400/15 text-[#FF5C7C]' : 'text-[#8C8299]'}`}>{value === 'BUY' ? 'Buy' : 'Sell'}</button>)}
           </div>
-          <div className="mt-2 grid min-w-0 grid-cols-3 gap-1 rounded-xl bg-[#0B0711] p-1" role="tablist" aria-label="Order type" data-testid="spot-order-type">
-            {(['MARKET', 'LIMIT', 'STOP'] as const).map((value) => <button key={value} type="button" role="tab" aria-selected={orderType === value} onClick={() => setOrderType(value)} className={`nexi-interactive min-h-11 min-w-0 whitespace-normal rounded-lg px-1 text-xs leading-tight ${orderType === value ? 'bg-[#2A1742] text-white' : 'text-[#8C8299]'}`}>{value === 'STOP' ? 'Stop Limit' : value[0] + value.slice(1).toLowerCase()}</button>)}
+          <div className="mt-2 grid min-w-0 grid-cols-3 gap-1 rounded-xl bg-[#0B0711] p-1" role="group" aria-label="Order type" data-testid="spot-order-type">
+            {(['MARKET', 'LIMIT', 'STOP'] as const).map((value) => <button key={value} type="button" aria-pressed={orderType === value} onClick={() => setOrderType(value)} className={`nexi-interactive min-h-11 min-w-0 whitespace-normal rounded-lg px-1 text-xs leading-tight ${orderType === value ? 'bg-[#2A1742] text-white' : 'text-[#8C8299]'}`}>{value === 'STOP' ? 'Stop Limit' : value[0] + value.slice(1).toLowerCase()}</button>)}
           </div>
 
           <div className="mt-2.5 space-y-2 sm:mt-3 sm:space-y-2.5" data-testid="spot-inputs">
@@ -1276,9 +1276,9 @@ function SpotProductTabs({
   setActiveSurface: React.Dispatch<React.SetStateAction<SpotSurface>>;
 }) {
   return (
-    <div className="nexi-trading-products mx-3 mt-3 grid grid-cols-2 rounded-xl border border-violet-300/10 bg-[#0B0711] p-1 sm:mx-4" role="tablist" aria-label="Spot product">
+    <div className="nexi-trading-products mx-3 mt-3 grid grid-cols-2 rounded-xl border border-violet-300/10 bg-[#0B0711] p-1 sm:mx-4" role="group" aria-label="Spot product">
       {(['SPOT', 'MARGIN'] as const).map((value) => (
-        <button key={value} type="button" role="tab" aria-selected={activeSurface === value} onClick={() => setActiveSurface(value)} className={`nexi-interactive min-h-11 rounded-lg text-xs font-semibold sm:min-h-11 sm:text-sm ${activeSurface === value ? 'bg-[#2A1742] text-white shadow-[0_0_18px_rgba(109,65,255,.16)]' : 'text-[#8C8299]'}`}>
+        <button key={value} type="button" aria-pressed={activeSurface === value} onClick={() => setActiveSurface(value)} className={`nexi-interactive min-h-11 rounded-lg text-xs font-semibold sm:min-h-11 sm:text-sm ${activeSurface === value ? 'bg-[#2A1742] text-white shadow-[0_0_18px_rgba(109,65,255,.16)]' : 'text-[#8C8299]'}`}>
           {value === 'SPOT' ? 'Spot' : 'Margin'}
         </button>
       ))}

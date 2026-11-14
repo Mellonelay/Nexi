@@ -98,7 +98,7 @@ function ChartIndicatorRail({ activeIndicators, onToggle }: { activeIndicators: 
     <div role="group" aria-label="Chart indicators" className="nexi-chart-indicators nexi-scroll-rail grid min-w-0 grid-cols-6 gap-0 overflow-hidden border-b border-violet-300/10 bg-black/10 px-1 py-1 md:flex md:gap-1 md:overflow-x-auto md:px-2 md:py-1.5">
       {INDICATORS.map((indicator) => {
         const active = activeIndicators.has(indicator);
-        return <button key={indicator} type="button" aria-pressed={active} onClick={() => onToggle(indicator)} className="nexi-interactive flex min-h-11 min-w-0 w-full items-center justify-center p-0 text-[11px] font-semibold focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#B996FF] focus-visible:outline-offset-[-2px] md:min-w-11 md:w-auto md:shrink-0 md:px-2 md:text-xs"><span className={`flex min-h-8 w-full max-w-12 items-center justify-center rounded-md border px-0.5 md:min-h-11 md:max-w-none md:px-0.5 ${active ? "border-violet-300/30 bg-[#2A1742] text-white" : "border-transparent text-[#8C8299] hover:text-white"}`}>{indicator}</span></button>;
+        return <button key={indicator} type="button" aria-pressed={active} onClick={() => onToggle(indicator)} className="nexi-interactive flex min-h-11 min-w-0 w-full items-center justify-center p-0 text-xs font-semibold focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#B996FF] focus-visible:outline-offset-[-2px] md:min-w-11 md:w-auto md:shrink-0 md:px-2"><span className={`flex min-h-8 w-full max-w-12 items-center justify-center rounded-md border px-0.5 md:min-h-11 md:max-w-none md:px-0.5 ${active ? "border-violet-300/30 bg-[#2A1742] text-white" : "border-transparent text-[#8C8299] hover:text-white"}`}>{indicator}</span></button>;
       })}
     </div>
   );
@@ -379,7 +379,7 @@ export default function TradingChart({
     <div
       className={`nexi-trading-chart relative flex h-full w-full flex-col overflow-hidden rounded-lg ${responsiveHeight}`}
     >
-      {sandboxed && <div role="status" className="border-b border-amber-300/20 bg-amber-300/5 px-3 py-1 text-center font-mono text-xs font-semibold uppercase tracking-wider text-amber-100">Sandbox simulation · test data</div>}
+      {sandboxed && <div role="status" className="border-b border-amber-300/20 bg-amber-300/5 px-3 py-2 text-center text-xs font-semibold text-amber-100">Sandbox simulation · test data</div>}
       {!sandboxed && candleLineageLabel && <div className="border-b border-sky-300/15 bg-sky-300/5 px-3 py-1 text-center text-xs font-medium text-sky-100" aria-label={candleLineageLabel}>{candleLineageLabel}</div>}
       <ChartMetricsRail latest={latest} rsi={metrics.rsi} macdHistogram={macdHistogram} activeIndicators={activeIndicators} overlays={overlays} />
       <div

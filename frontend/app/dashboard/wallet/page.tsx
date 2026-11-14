@@ -490,13 +490,13 @@ function WalletAssets({ tab, category, onCategoryChange, state, userId, error, v
         <PanelHeading title={tab === 'Overview' ? 'All account assets' : `${tab === 'Binary' ? 'Options' : tab} assets`} />
         <label className="shrink-0 text-xs text-[#C3BBD0]">
           Asset filter
-          <select aria-label="Asset category" value={category} onChange={(event) => onCategoryChange(event.target.value as Category)} className="nexi-input ml-2 min-h-[44px] px-2 text-xs">
+          <select aria-label="Asset category" value={category} onChange={(event) => onCategoryChange(event.target.value as Category)} className="nexi-input ml-2 min-h-[44px] px-2 text-base sm:text-xs">
             <option>All</option><option>Crypto</option><option>Stocks</option><option>Metals</option><option>Forex</option>
           </select>
         </label>
         <label className="w-full text-xs text-[#C3BBD0] sm:w-auto">
           Search assets
-          <input type="search" value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder="Name or symbol" className="nexi-input mt-1 min-h-[44px] w-full px-3 text-sm sm:ml-2 sm:mt-0 sm:w-48" />
+          <input type="search" value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder="Name or symbol" className="nexi-input mt-1 min-h-[44px] w-full px-3 text-base sm:ml-2 sm:mt-0 sm:w-48 sm:text-sm" />
         </label>
       </div>
       {tab === 'Overview' && marketCatalogUnavailable && (

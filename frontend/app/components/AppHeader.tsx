@@ -43,7 +43,7 @@ export default function AppHeader() {
         </span>
         <WalletConnectControl compact />
         <label
-          className="nexi-header-icon relative h-[44px] w-[44px] shrink-0 cursor-pointer"
+          className="nexi-header-icon relative h-[44px] w-[44px] shrink-0 cursor-pointer focus-within:ring-2 focus-within:ring-[#A995FF] focus-within:ring-offset-2 focus-within:ring-offset-[#08060D]"
           title={t("languageSelection")}
         >
           <Languages className="h-[18px] w-[18px]" aria-hidden="true" />
