@@ -29,6 +29,10 @@ HTTP = PKG / "http_relationships.py"
 HTTP_SOURCE = NATIVE_SOURCE / "http_relationships.py"
 PRISMA = PKG / "extractors" / "prisma.py"
 PRISMA_SOURCE = NATIVE_SOURCE / "extractors" / "prisma.py"
+CSS = PKG / "extractors" / "css.py"
+CSS_SOURCE = NATIVE_SOURCE / "extractors" / "css.py"
+GRAPHIFY_PYTHON = PKG.parents[3] / "bin" / "python"
+
 NEXI_MERGE = PKG / "nexi_merge.py"
 NEXI_MERGE_SOURCE = NATIVE_SOURCE / "nexi_merge.py"
 # NEXI_NATIVE_ENGINE_PATCH_V1 — tracked patch; no competing extraction pipeline.
@@ -44,6 +48,8 @@ MARKER = "    # NEXI_FRAMEWORK_RELATIONSHIPS_V1"
 OLD_MARKER = "    # NEXI_HTTP_RELATIONSHIPS_V1"
 ORIGIN_ANCHOR = "    # Tag AST provenance so the incremental watch rebuild can distinguish"
 PRISMA_DETECT_MARKER = "# NEXI_PRISMA_DETECT_V1"
+CSS_DETECT_MARKER = "# NEXI_CSS_DETECT_V1"
+CSS_EXTRACT_MARKER = "    # NEXI_CSS_EXTRACT_V1"
 PRISMA_DETECT_ANCHOR = "DOC_EXTENSIONS = "
 PRISMA_EXTRACT_MARKER = "    # NEXI_PRISMA_EXTRACT_V1"
 PRISMA_EXTRACT_ANCHOR = '    if suffix == ".h":'
@@ -113,11 +119,11 @@ def main() -> None:
     if installed != "0.9.108":
         raise SystemExit(f"Requires installed graphifyy 0.9.108, found {installed!r}")
 
-    for p in (DETECT, EXTRACT, SOURCE, SCANNER_SOURCE, HTTP_SOURCE, PRISMA_SOURCE, NEXI_MERGE_SOURCE):
+    for p in (DETECT, EXTRACT, SOURCE, SCANNER_SOURCE, HTTP_SOURCE, PRISMA_SOURCE, CSS_SOURCE, NEXI_MERGE_SOURCE):
         if not p.is_file():
             raise SystemExit(f"Required integration source missing: {p}")
     # Validate every candidate before touching the installed package.
-    for source in (SOURCE, HTTP_SOURCE, PRISMA_SOURCE, NEXI_MERGE_SOURCE):
+    for source in (SOURCE, HTTP_SOURCE, PRISMA_SOURCE, CSS_SOURCE, NEXI_MERGE_SOURCE):
         ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
     node = Path("/opt/nexi/runtime/node-v24.21.0/bin/node")
     if not node.is_file():
@@ -126,9 +132,21 @@ def main() -> None:
                              capture_output=True, text=True, timeout=20, check=False)
     if checked.returncode:
         raise SystemExit(f"NEXI scanner JavaScript syntax invalid: {checked.stderr[-1200:]}")
+    # Install the missing native CSS parser dependency inside the isolated
+    # Graphify uv tool, never the NEXI application dependency stores.
+    probe = subprocess.run([str(GRAPHIFY_PYTHON), "-c", "import tinycss2"],
+                           capture_output=True, text=True, timeout=20)
+    if probe.returncode:
+        uv = shutil.which("uv") or "/home/mellonelay1999/.local/bin/uv"
+        result = subprocess.run([str(uv), "pip", "install", "--python",
+                                 str(GRAPHIFY_PYTHON), "tinycss2==1.5.1"],
+                                capture_output=True, text=True, timeout=90)
+        if result.returncode:
+            raise SystemExit(f"Cannot install native CSS parser: {result.stderr[-900:]}")
     native_patch_status = ensure_native_graph_patch()
     desired_scanner = SCANNER_SOURCE.read_bytes()
     desired_prisma = PRISMA_SOURCE.read_bytes()
+    desired_css = CSS_SOURCE.read_bytes()
     desired_merge = NEXI_MERGE_SOURCE.read_bytes()
     existing_http = HTTP.read_bytes() if HTTP.exists() else b""
     desired_http = HTTP_SOURCE.read_bytes()
@@ -147,6 +165,16 @@ def main() -> None:
         if detected_original.count(detect_hook) != 1:
             raise SystemExit("Existing NEXI detect hook differs; refusing patch")
         desired_detect = detected_original
+    css_detect_hook = '# NEXI_CSS_DETECT_V1\nCODE_EXTENSIONS.add(".css")\n'
+    if desired_detect.count(CSS_DETECT_MARKER) > 1:
+        raise SystemExit("Duplicate native CSS detection hook")
+    if CSS_DETECT_MARKER not in desired_detect:
+        if desired_detect.count(PRISMA_DETECT_ANCHOR) != 1:
+            raise SystemExit("Graphify native CSS detector anchor changed")
+        desired_detect = desired_detect.replace(
+            PRISMA_DETECT_ANCHOR, css_detect_hook + PRISMA_DETECT_ANCHOR, 1)
+    elif desired_detect.count(css_detect_hook) != 1:
+        raise SystemExit("Native CSS detection hook differs")
     ast.parse(desired_detect)
     original = EXTRACT.read_text(encoding="utf-8")
     if original.count(ORIGIN_ANCHOR) != 1 or original.count(CLEANUP_ANCHOR) != 1:
@@ -200,6 +228,21 @@ def main() -> None:
         if text.count(legacy_prisma_hook) != 1:
             raise SystemExit("Existing NEXI Prisma extractor hook differs")
         text = text.replace(legacy_prisma_hook, prisma_hook, 1)
+    css_hook = (
+        "    # NEXI_CSS_EXTRACT_V1\n"
+        '    if path.suffix.lower() == ".css":\n'
+        "        from graphify.extractors.css import extract_css_file\n"
+        "        return extract_css_file\n"
+    )
+    if text.count(CSS_EXTRACT_MARKER) > 1:
+        raise SystemExit("Duplicate native CSS extractor hook")
+    if CSS_EXTRACT_MARKER not in text:
+        if text.count(PRISMA_EXTRACT_ANCHOR) != 1:
+            raise SystemExit("Graphify CSS dispatch anchor changed")
+        text = text.replace(PRISMA_EXTRACT_ANCHOR,
+                            css_hook + PRISMA_EXTRACT_ANCHOR, 1)
+    elif text.count(css_hook) != 1:
+        raise SystemExit("Existing native CSS extractor hook differs")
     ast.parse(text)
     if text.count(MARKER) != 1 or OLD_MARKER in text:
         raise SystemExit("Invalid unified NEXI hook cardinality")
@@ -211,6 +254,7 @@ def main() -> None:
                    or not HTTP.exists() or HTTP.read_bytes() != desired_http
                    or not SCANNER.exists() or SCANNER.read_bytes() != desired_scanner
                    or not PRISMA.exists() or PRISMA.read_bytes() != desired_prisma
+                   or not CSS.exists() or CSS.read_bytes() != desired_css
                    or not NEXI_MERGE.exists() or NEXI_MERGE.read_bytes() != desired_merge)
     if will_update:
         backup = STATE / "backups"
@@ -228,6 +272,7 @@ def main() -> None:
                                         ("http_relationships", HTTP, desired_http),
                                         ("nexi_semantic_scan", SCANNER, desired_scanner),
                                         ("prisma", PRISMA, desired_prisma),
+                                        ("css", CSS, desired_css),
                                         ("nexi_merge", NEXI_MERGE, desired_merge)):
             if deployed.exists() and deployed.read_bytes() != desired:
                 saved = backup / f"{name}-{stamp}-{digest(deployed.read_bytes())[:12]}{deployed.suffix}"
@@ -243,6 +288,8 @@ def main() -> None:
         atomic_write(SCANNER, desired_scanner)
     if not PRISMA.exists() or PRISMA.read_bytes() != desired_prisma:
         atomic_write(PRISMA, desired_prisma)
+    if not CSS.exists() or CSS.read_bytes() != desired_css:
+        atomic_write(CSS, desired_css)
     if not NEXI_MERGE.exists() or NEXI_MERGE.read_bytes() != desired_merge:
         atomic_write(NEXI_MERGE, desired_merge)
     if desired_detect != detected_original:

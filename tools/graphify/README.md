@@ -93,3 +93,9 @@ The currently recorded candidate counts (Public 177, Backend 399, Admin 110)
 are source-snapshot dependent. The canonical NEXI graph remains untouched.
 No application tests, builds, runtime changes or deployments are performed by
 this engine workflow.
+
+## Native CSS source-input installation (2026-11-15)
+
+The existing `graphifyy[all]==0.9.108` installation does not provide CSS structural extraction. NEXI now installs pinned `tinycss2==1.5.1` in Graphify's isolated uv Python environment and maintains `native/graphify/extractors/css.py`. `install_native.py` registers the `.css` extension with native `detect.py` and native `extract.py`, preserving the existing HTTP, Prisma and TypeScript hooks. CSS input contributes source-located selector and custom-property declarations, not runtime-applied styling or cross-file JSX class resolution. `.scss` and `.sass` remain unsupported and are not falsely classified as CSS.
+
+This is an installation/source change, **not a full-graph or application-verification claim**. Source-first application restrictions continue to apply.
