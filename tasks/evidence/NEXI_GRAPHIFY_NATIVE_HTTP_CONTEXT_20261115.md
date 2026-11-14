@@ -35,3 +35,9 @@ Owner authorized native Graphify 0.9.108 Python source improvements, in the exis
 - SOURCE: `SOURCE_IMPLEMENTED` for these bounded defects; global comprehensive source coverage remains `INSUFFICIENT_EVIDENCE`.
 - PROOF: `ISOLATED_GRAPHIFY_ENGINE_VERIFIED`; NEXI application verification `DEFERRED_BY_OWNER_SOURCE_FIRST_RULE`.
 - NEXT: source-symbol resolution and additional producer/consumer extraction gaps, graph-consumer completeness, canonical input inventory after eventual source closure. Do not mistake installed extractor coverage for production runtime correctness.
+
+## Additional native HTTP parser and coverage-report integration
+
+- **HTTP JavaScript grammar dispatch:** previous `http_relationships._parse` sent `.js`, `.jsx`, `.mjs`, `.cjs` through the TypeScript grammar. Updated the existing native HTTP module to use the already-installed `tree_sitter_javascript` grammar for JavaScript/JSX and the corresponding `tree_sitter_typescript` grammar for TypeScript/TSX. Isolated engine parser checks for `.js`, `.jsx`, `.ts`, `.tsx` returned parse trees without syntax errors; no new packages installed.
+- **Native merge reporting:** `graphify/nexi_merge.py` now includes `http_call_unresolved` in HTTP provenance checks and reports `http_unresolved_call_nodes`, `http_unresolved_call_edges`, and `http_unresolved_source_files` independently of exact joins. Synthetic source-graph fixture returned (1 node, 1 edge, 1 source file, zero missing HTTP provenance). Real canonical graph remains unchanged.
+- Only native Graphify source and the tracked installer were changed. Source input exhaustiveness and app runtime remain **unverified/deferred**.

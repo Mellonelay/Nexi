@@ -37,7 +37,7 @@ SURFACE_PROFILES = {
     },
 }
 SURFACES = SURFACE_PROFILES[PROFILE]
-HTTP_RELATIONS = {'http_calls', 'http_handled_by', 'http_route_delegates_to', 'http_path_pattern_may_match'}
+HTTP_RELATIONS = {'http_calls', 'http_handled_by', 'http_route_delegates_to', 'http_path_pattern_may_match', 'http_call_unresolved'}
 
 def operation_key(node):
     m = node.get('metadata') or {}
@@ -615,6 +615,13 @@ def report_graph(data):
     links = data.get('links', data.get('edges', []))
     node_ids = {n.get('id') for n in nodes}
     ops = {n['id']: n for n in nodes if operation_key(n)}
+    unresolved_http_nodes = [
+        n for n in nodes
+        if (n.get('metadata') or {}).get('entity_type') == 'http_unresolved_call'
+    ]
+    unresolved_http_edges = [
+        e for e in links if e.get('relation') == 'http_call_unresolved'
+    ]
     calls = [e for e in links if e.get('relation') == 'http_calls' and e.get('target') in ops]
     handlers = [e for e in links if e.get('relation') == 'http_handled_by' and e.get('source') in ops]
     delegates = [e for e in links if e.get('relation') == 'http_route_delegates_to']
@@ -670,6 +677,12 @@ def report_graph(data):
         'community_count_note': 'Count of integer community ids serialized on graph nodes by Graphify cluster-only.',
         'http_operation_nodes': len(ops),
         'http_calls_edges': len(calls), 'http_handled_by_edges': len(handlers),
+        'http_unresolved_call_nodes': len(unresolved_http_nodes),
+        'http_unresolved_call_edges': len(unresolved_http_edges),
+        'http_unresolved_source_files': len({
+            (n.get('repo'), n.get('source_file')) for n in unresolved_http_nodes
+            if n.get('source_file')
+        }),
         'http_route_delegation_edges': len(delegates),
         'inferred_path_pattern_candidate_edges': len(candidates),
         'exact_method_path_client_handler_joins': len(call_ops & handler_ops),

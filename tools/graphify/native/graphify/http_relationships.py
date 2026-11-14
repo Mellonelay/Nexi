@@ -17,9 +17,14 @@ _ROUTE_DECORATORS = {"get": "GET", "post": "POST", "put": "PUT", "patch": "PATCH
 
 def _parse(path: Path, data: bytes):
     from tree_sitter import Language, Parser
-    import tree_sitter_typescript as tst
-    factory = tst.language_tsx if path.suffix.lower() in {".tsx", ".jsx"} else tst.language_typescript
-    return Parser(Language(factory())).parse(data)
+    suffix = path.suffix.lower()
+    if suffix in {".js", ".jsx", ".mjs", ".cjs"}:
+        import tree_sitter_javascript as js
+        grammar = js.language()
+    else:
+        import tree_sitter_typescript as ts
+        grammar = ts.language_tsx() if suffix == ".tsx" else ts.language_typescript()
+    return Parser(Language(grammar)).parse(data)
 
 def _walk(node):
     stack = [node]
