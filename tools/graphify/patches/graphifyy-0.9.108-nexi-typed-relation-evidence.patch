@@ -332,12 +332,30 @@ diff --git a/graphify/serve.py b/graphify/serve.py
 diff --git a/graphify/affected.py b/graphify/affected.py
 --- a/graphify/affected.py
 +++ b/graphify/affected.py
-@@ -297,10 +297,55 @@
+@@ -35,10 +35,15 @@
+     # relation (calls, references, imports) targets the *file* node, not the
+     # symbol node. The reverse walk follows `defines` from the symbol back to
+     # its defining file and then continues through `imports` to consumers.
+     "defines",
+     "requires",
++    # Source-confirmed NEXI API dependencies: handler <- operation <- client.
++    # Deliberately exclude ambiguous pattern candidates and unresolved calls.
++    "http_calls",
++    "http_handled_by",
++    "http_route_delegates_to",
+ )
+ 
+ 
+ # Edges from a type to the types it derives from. A method declared again in a
+ # subtype overrides the supertype's same-named member.
+@@ -295,10 +300,55 @@
+                 member = str(member)
+                 if (str(data.get("relation", "")) == "method" and member != node
                          and graph.nodes[member].get("label") == label):
                      found.append(member)
      return found
- 
- 
++
++
 +
 +def _incoming_source_facts(graph: nx.Graph, current: str):
 +    """Yield true incoming facts, including NEXI relations sharing an edge pair.
@@ -381,14 +399,12 @@ diff --git a/graphify/affected.py b/graphify/affected.py
 +            if key not in seen:
 +                seen.add(key)
 +                yield logical_source, logical_target, fact
-+
-+
+ 
+ 
  def affected_nodes(
      graph: nx.Graph,
      seed: str,
-     *,
-     relations: Iterable[str] = DEFAULT_AFFECTED_RELATIONS,
-@@ -355,19 +400,11 @@
+@@ -355,19 +405,11 @@
                      seen.add(overridden)
                      stepping_stones.add(overridden)
                      # front of the queue: same depth as `current`, so it must be
