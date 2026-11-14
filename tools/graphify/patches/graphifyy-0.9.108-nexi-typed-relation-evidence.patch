@@ -444,3 +444,39 @@ diff --git a/graphify/cli.py b/graphify/cli.py
          _wja(out_path, out_data, compact=True)
          unified = input_node_total - merged.number_of_nodes()
          if unified > 0:
+diff --git a/graphify/dedup.py b/graphify/dedup.py
+--- a/graphify/dedup.py
++++ b/graphify/dedup.py
+@@ -1613,10 +1613,32 @@
+         tgt = e["target"] if "target" in e else e.get("to")
+         if src is None or tgt is None:
+             continue
+         e["source"] = remap.get(src, src)
+         e["target"] = remap.get(tgt, tgt)
++        # NEXI_DEDUP_TYPED_REMAP_V1
++        # NEXI source-directed edge facts must follow the same survivor ID as
++        # the primary edge. A shallow edge copy alone leaves deleted node IDs
++        # inside _src/_tgt and nested parallel_relations after deduplication.
++        for key in ("_src", "_tgt"):
++            value = e.get(key)
++            if isinstance(value, str):
++                e[key] = remap.get(value, value)
++        variants = e.get("parallel_relations")
++        if isinstance(variants, list):
++            rewritten = []
++            for variant in variants:
++                if not isinstance(variant, dict):
++                    rewritten.append(variant)
++                    continue
++                item = dict(variant)
++                for key in ("_src", "_tgt"):
++                    value = item.get(key)
++                    if isinstance(value, str):
++                        item[key] = remap.get(value, value)
++                rewritten.append(item)
++            e["parallel_relations"] = rewritten
+         # Remove legacy keys so they don't leak into edge attrs in graph.json.
+         e.pop("from", None)
+         e.pop("to", None)
+         # Drop only self-loops created by the merge (an edge whose distinct
+         # endpoints collapsed into one node); preserve pre-existing self-loops

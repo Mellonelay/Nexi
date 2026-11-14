@@ -40,11 +40,12 @@ NATIVE_BUILD = PKG / "build.py"
 NATIVE_SERVE = PKG / "serve.py"
 NATIVE_AFFECTED = PKG / "affected.py"
 NATIVE_CLI = PKG / "cli.py"
+NATIVE_DEDUP = PKG / "dedup.py"
 NATIVE_PATCH = Path(
     "/home/mellonelay1999/workspaces/Nexi/tools/graphify/patches/"
     "graphifyy-0.9.108-nexi-typed-relation-evidence.patch"
 )
-NATIVE_MODULE_SHA256 = {'build.py': 'c558f0721b9ea4e7e9e394ae21a26a9373544c807398e45dc05e1d7a4e9abc2f', 'serve.py': '2c8fff3ebe65861dd08486234bc929657e9cf581c0bc8980535f37d33fc8e260', 'affected.py': 'a805d07b1b02e480d720681cad9ec4d6eb5bc1919667d5bd8b8a20cac6a84a70', 'cli.py': '062faf6fc342e131b843a9aefdea89f0ae128e9368aeab3ea3abdd522705460d'}
+NATIVE_MODULE_SHA256 = {'build.py': 'c558f0721b9ea4e7e9e394ae21a26a9373544c807398e45dc05e1d7a4e9abc2f', 'serve.py': '2c8fff3ebe65861dd08486234bc929657e9cf581c0bc8980535f37d33fc8e260', 'affected.py': 'a805d07b1b02e480d720681cad9ec4d6eb5bc1919667d5bd8b8a20cac6a84a70', 'cli.py': '062faf6fc342e131b843a9aefdea89f0ae128e9368aeab3ea3abdd522705460d', 'dedup.py': '852c04eefae3811e285ebbeae9ce81e331e44715a45ff0fb7dcb9a8a95163c8e'}
 MARKER = "    # NEXI_FRAMEWORK_RELATIONSHIPS_V1"
 OLD_MARKER = "    # NEXI_HTTP_RELATIONSHIPS_V1"
 ORIGIN_ANCHOR = "    # Tag AST provenance so the incremental watch rebuild can distinguish"
@@ -80,25 +81,27 @@ def ensure_native_graph_patch() -> str:
 
     Never accept a half-patched engine or fuzzy patch offsets as success.
     """
-    for file in (NATIVE_BUILD, NATIVE_SERVE, NATIVE_AFFECTED, NATIVE_CLI, NATIVE_PATCH):
+    for file in (NATIVE_BUILD, NATIVE_SERVE, NATIVE_AFFECTED, NATIVE_CLI, NATIVE_DEDUP, NATIVE_PATCH):
         if not file.is_file():
             raise SystemExit(f"Missing NEXI native engine input: {file}")
     build = NATIVE_BUILD.read_text(encoding="utf-8")
     serve = NATIVE_SERVE.read_text(encoding="utf-8")
     affected = NATIVE_AFFECTED.read_text(encoding="utf-8")
     cli = NATIVE_CLI.read_text(encoding="utf-8")
+    dedup = NATIVE_DEDUP.read_text(encoding="utf-8")
     has_build = build.count("def _nexi_relation_variants(") == 1
     has_serve = (serve.count("def _emit_parallel(d: dict)") == 1
                  and serve.count("def _path_edge_facts(") == 1)
     has_affected = affected.count("def _incoming_source_facts(") == 1
     has_cli = cli.count("NEXI_NATIVE_MERGE_CLI_V1") == 1
-    if has_build and has_serve and has_affected and has_cli:
-        for file in (NATIVE_BUILD, NATIVE_SERVE, NATIVE_AFFECTED, NATIVE_CLI):
+    has_dedup = dedup.count("NEXI_DEDUP_TYPED_REMAP_V1") == 1
+    if has_build and has_serve and has_affected and has_cli and has_dedup:
+        for file in (NATIVE_BUILD, NATIVE_SERVE, NATIVE_AFFECTED, NATIVE_CLI, NATIVE_DEDUP):
             ast.parse(file.read_text(encoding="utf-8"), filename=str(file))
             if digest(file.read_bytes()) != NATIVE_MODULE_SHA256[file.name]:
                 raise SystemExit(f"NEXI native module has drifted: {file}")
         return "unchanged"
-    if has_build or has_serve or has_affected or has_cli:
+    if has_build or has_serve or has_affected or has_cli or has_dedup:
         raise SystemExit("NEXI native engine partially patched; refusing overwrite")
     args = ["patch", "--batch", "--forward", "--fuzz=0", "-p1", "-d", str(PKG.parent)]
     payload = NATIVE_PATCH.read_text(encoding="utf-8")
@@ -110,7 +113,7 @@ def ensure_native_graph_patch() -> str:
                             capture_output=True, text=True, timeout=20)
     if result.returncode:
         raise SystemExit(f"NEXI native patch failed: {result.stdout[-900:]} {result.stderr[-900:]}")
-    for file in (NATIVE_BUILD, NATIVE_SERVE, NATIVE_AFFECTED, NATIVE_CLI):
+    for file in (NATIVE_BUILD, NATIVE_SERVE, NATIVE_AFFECTED, NATIVE_CLI, NATIVE_DEDUP):
         ast.parse(file.read_text(encoding="utf-8"), filename=str(file))
         if digest(file.read_bytes()) != NATIVE_MODULE_SHA256[file.name]:
             raise SystemExit(f"NEXI installed core module hash mismatch: {file}")
