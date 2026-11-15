@@ -1282,7 +1282,11 @@ export class CommunicationsService {
         where: { id: articleId }, include: this.learnInclude(),
       });
       if (!replay) throw new ServiceUnavailableException("Original Learn article no longer exists");
-      return replay;
+      // A successful replay must return the same durable audit receipt as
+      // the original atomic command, not an article id masquerading as one.
+      return adminId && data.reason
+        ? { ...replay, auditId: this.id("learn-article-audit:" + adminId, eventKey) }
+        : replay;
     }
     const publishedAt = status === "PUBLISHED" ? new Date() : undefined;
     const revisionId = this.id("learn-revision:" + articleId, "1");
@@ -1321,7 +1325,11 @@ export class CommunicationsService {
         where: { id }, include: this.learnInclude(),
       });
       if (!replay) throw new ServiceUnavailableException("Original Learn article no longer exists");
-      return replay;
+      // A successful replay must return the same durable audit receipt as
+      // the original atomic command, not an article id masquerading as one.
+      return adminId && data.reason
+        ? { ...replay, auditId: this.id("learn-article-audit:" + adminId, eventKey) }
+        : replay;
     }
     const current = await this.database.learnArticle.findUnique({ where: { id } });
     if (!current) throw new NotFoundException("Learn article not found");
