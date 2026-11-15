@@ -1,6 +1,6 @@
 # NEXI — ACTIVE PROOF REUSE INDEX (2026-11-15)
 
-Current checkout main `5b3edd99383e` (graph built at `0c2ce55f7f56`), Graphify 0.9.108 source SHA `d89d224547400ca9dccde3b46eef1c15249f8d663c61d238fb6ae85bc873f5ee`. Graph source snapshot predates the committed Communications replay change. Original documents are archived byte-for-byte at `tasks/evidence/archive/source-board-before-20261115/`.
+Last recorded source checkpoint `5b3edd99383e` (2026-11-15; graph built at `0c2ce55f7f56`). Verify live Git HEAD for every new execution., Graphify 0.9.108 source SHA `d89d224547400ca9dccde3b46eef1c15249f8d663c61d238fb6ae85bc873f5ee`. Graph source snapshot predates the committed Communications replay change. Original documents are archived byte-for-byte at `tasks/evidence/archive/source-board-before-20261115/`.
 
 ## Rules
 - `PROVEN + UNCHANGED = REUSE`; never reopen prior implementation for missing paperwork alone.
