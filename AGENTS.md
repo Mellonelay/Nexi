@@ -1,3 +1,14 @@
+# ACTIVE NEXI SOURCE CONTINUITY — 2026-11-15 (supersedes historical fixed versions below)
+
+- **Current owner direction:** Finish only remaining evidence-proven Backend/Public/Admin source contracts and Public mobile-first integration, reusing completed repairs. Do not restart Graphify/Kernel development or treat 113 acceptance criteria, historical FAILs, Graphify unknowns, or missing source receipts as 113 missing features.
+- **Active concise task authority:** `tasks/todo.md`, `tasks/plan.md`, `NEXI_CURRENT_STATE.md`, `NEXI_PROOF_REUSE_REGISTER.md`. Their prior full historical versions are preserved unchanged under `tasks/evidence/archive/source-board-before-20261115/`, with SHA manifest. Detailed source receipts remain in `tasks/evidence/NEXI_SOURCE_CLOSURE_MATRIX_20261109.md`. Historical sections elsewhere remain date-scoped, not current execution instructions.
+- **Current Graphify workflow:** installed native CLI 0.9.108 at the November 15 checkpoint. `graphify-out/graph.json` and `@nexi-graphify-live` are canonical **locators**, with source manifest and report checked live, not immutable checksums, version pins or fixed node/edge counts. Latest observed graph was generated from application source at `0c2ce55`; later source/docs commits require direct changed-source inspection. `@nexi-knowledge` is a distinct Knowledge v4 graph. Never repair or regenerate Graphify as a side effect of normal NEXI source work.
+- **Kernel:** VM source-first Kernel v3.5 runbook under `~/.local/share/sentinelx-vm-kernel/NEXI_NORMAL_CHAT_GRAPHIFY_VM_KERNEL_RUNBOOK_v3.5_20261115.md`; knowledge-first `sx_kernel.py source-map`, exact Graphify L0/L1, then direct current source. Dated v3.4 and Graphify 0.9.103/0.9.105 text below is retained only for historical reference.
+- **Parallel execution:** up to 3 genuinely independent read lanes; two isolated source-only write worktrees **only after** live owner/writer, disk and Kernel lane eligibility. November 15 VM has less than 2 GiB free; use one coordinated source writer rather than creating redundant worktrees. Preserve financial SQLite single-writer authority and existing untracked recovery assets.
+- **Phase boundary:** owner SOURCE-FIRST: finish all necessary source repairs and producer→consumer integrations before NEXI application tests, lint, typecheck, builds, browser/mobile acceptance, service restart, deployment, migrations or financial mutation. Narrow source/Kernel diagnostic checks and Git diff integrity are permitted. Source-only repair is not runtime proof.
+
+---
+
 ## SOURCE CONTINUATION 2026-11-13: New current source/proof receipt is tasks/evidence/NEXI_SOURCE_RECONCILIATION_20261113.md. The fixed November 12 Git and graph hashes below are dated snapshots, not a current HEAD guarantee. Recheck live git and graph manifests; preserve the owner source-first ban and existing integrations.
 
 ---

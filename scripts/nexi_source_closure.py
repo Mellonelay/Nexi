@@ -29,7 +29,9 @@ def cmd(args, timeout=25, limit=3800):
 def preflight():
  def git():
   h=cmd(['git','rev-parse','--short','HEAD'])
-  st=cmd(['git','status','--porcelain=v1'])
+  # Track source modifications only; preserved .bak/untracked recovery files
+  # must not masquerade as active dirty source or additional writers.
+  st=cmd(['git','status','--porcelain=v1','--untracked-files=no'])
   return dict(head=h['out'],status_rc=st['rc'],dirty_count_bounded=len(st['out'].splitlines()),dirty_sample=st['out'].splitlines()[:10])
  def authority():
   paths=REQUIRED+['graphify-out/graph.json']
