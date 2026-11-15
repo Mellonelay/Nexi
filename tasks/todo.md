@@ -12,6 +12,7 @@ Last recorded source checkpoint `5b3edd99383e` (2026-11-15; graph built at `0c2c
 **Current count:** 4 unchecked source-closure workstreams after the scoped Learn audit-replay source item was checked. These are broad tasks, not four proven application defects. The November 13 113-row evidence file has 5 SOURCE_IMPLEMENTED and 108 INSUFFICIENT_EVIDENCE criteria; these denote proof coverage, not missing implementations. Backend withdrawal provider explicitly remains DETERMINISTIC_TEST_NON_LIVE; enabling external transfers is a separate owner decision.
 
 ## Completed — reuse
+- 2026-11-15 scoped audit-identity source correction: Backend currency, wallet-network, and deposit-address-state mutations now project the actual persisted Admin audit receipt on first write/replay; shared Admin provider no longer treats resource IDs as audit IDs. Source receipt in the matrix; application verification deferred.
 - Prior Oct–Nov source corrections across Binary, Margin, Spot, Wallet, Convert, Transfer, Mining, Loans, SIWE/auth, communications, Admin audit and Public mobile. Consult `tasks/evidence/NEXI_SOURCE_CLOSURE_MATRIX_20261109.md` only for relevant prior receipts.
 - Nov13 recorded NestJS Doctor 0 architecture errors, backend TypeScript exit 0, and scoped financial regression PASS at that revision, not current HEAD.
 - Nov13 original 113 owner source paths indexed; previous 5 source-implemented / 108 insufficient-evidence was DOCUMENTATION coverage, not 108 missing features.

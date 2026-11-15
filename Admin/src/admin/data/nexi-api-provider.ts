@@ -565,7 +565,7 @@ export class NexiAdminApiProvider implements AdminDataProvider {
           ]),
       }),
     });
-    return { ok: result.ok !== false, auditId: stringValue(result.auditId ?? result.id) };
+    return { ok: result.ok !== false, auditId: stringValue(result.auditId) };
   }
 
   private async getSystemConfigMap(): Promise<Record<string, string>> {
@@ -668,7 +668,7 @@ export class NexiAdminApiProvider implements AdminDataProvider {
         ]),
       }),
     });
-    return { ok: result.ok !== false, auditId: stringValue(result.auditId ?? result.id) };
+    return { ok: result.ok !== false, auditId: stringValue(result.auditId) };
   }
 
   async executeSandboxCommand(
@@ -679,7 +679,7 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       `/admin/sandbox/controls/${encodeURIComponent(commandId)}/execute`,
       { method: "POST" },
     );
-    return { ok: result.ok !== false, auditId: stringValue(result.auditId ?? result.id) };
+    return { ok: result.ok !== false, auditId: stringValue(result.auditId) };
   }
 
   private mapUser(value: unknown): User {
@@ -839,7 +839,7 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       method: "POST",
       body: JSON.stringify(body),
     });
-    return { ok: result.ok !== false, auditId: stringValue(result.auditId ?? result.id) };
+    return { ok: result.ok !== false, auditId: stringValue(result.auditId) };
   }
 
   saveVipAdminLevel(input: VipAdminLevel & { reason: string }): Promise<MutationResult> {
@@ -971,7 +971,7 @@ export class NexiAdminApiProvider implements AdminDataProvider {
         idempotencyKey: boundedIdempotencyKey("kyc", [id, decision, ctx.actor, ctx.reason]),
       }),
     });
-    return { ok: result.ok !== false, auditId: stringValue(result.auditId ?? result.id) };
+    return { ok: result.ok !== false, auditId: stringValue(result.auditId) };
   }
   assignKycReviewer() {
     return this.unsupportedAuthority(
@@ -1178,7 +1178,7 @@ export class NexiAdminApiProvider implements AdminDataProvider {
         ]),
       }),
     });
-    return { ok: result.ok !== false, auditId: stringValue(result.auditId ?? result.id) };
+    return { ok: result.ok !== false, auditId: stringValue(result.auditId) };
   }
 
   async disableDepositAddress(id: string, ctx: ConsequentialContext): Promise<MutationResult> {

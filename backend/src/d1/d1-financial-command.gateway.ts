@@ -16,6 +16,7 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
+  ServiceUnavailableException,
 } from "@nestjs/common";
 import { Prisma } from "../prisma/d1-client";
 import { createHash, randomUUID } from "crypto";
@@ -4660,6 +4661,23 @@ export class D1FinancialCommandGateway {
     };
   }
 
+  // A resource id is not an audit receipt. Resolve the durable audit
+  // written in the same SQLite command before acknowledging Admin mutations.
+  private async withAdminMutationAuditReceipt(
+    action: string,
+    target: string,
+    command: { adminId: string; idempotencyKey: string },
+    row: Record<string, unknown>,
+  ): Promise<Record<string, unknown>> {
+    const audit = await this.bridge.select<{ id: string }>(
+      "SELECT \"id\" FROM \"AdminAuditLog\" WHERE \"action\"=? AND \"target\"=? AND \"adminId\"=? AND json_extract(\"details\",'$.idempotencyKey')=? ORDER BY \"createdAt\" DESC LIMIT 1",
+      [action, target, command.adminId, command.idempotencyKey],
+    );
+    if (!audit.results[0]?.id)
+      throw new ServiceUnavailableException("Admin mutation audit receipt is unavailable");
+    return { ...row, auditId: audit.results[0].id };
+  }
+
   private async findAdminCurrencyReplay(
     command: D1AdminCurrencyCommand,
     payload: D1AdminCurrencyPayload,
@@ -4700,7 +4718,7 @@ export class D1FinancialCommandGateway {
       throw new BadRequestException(
         "Currency creation replay no longer resolves",
       );
-    return existing.results[0];
+    return this.withAdminMutationAuditReceipt("CURRENCY_CREATED", payload.symbol, command, existing.results[0]);
   }
 
   private adminCurrencyCreateStatements(
@@ -4776,7 +4794,7 @@ export class D1FinancialCommandGateway {
       throw new BadRequestException(
         "D1 currency creation was not materialized",
       );
-    return created.results[0];
+    return this.withAdminMutationAuditReceipt("CURRENCY_CREATED", payload.symbol, command, created.results[0]);
   }
 
   private assertAdminCurrencyCreateContext(
@@ -4870,7 +4888,7 @@ export class D1FinancialCommandGateway {
       throw new BadRequestException(
         "Currency update replay no longer resolves",
       );
-    return row.results[0];
+    return this.withAdminMutationAuditReceipt("CURRENCY_CONFIGURATION_UPDATED", String(command.id), command, row.results[0]);
   }
 
   private async persistAdminCurrencyUpdate(
@@ -4925,7 +4943,8 @@ export class D1FinancialCommandGateway {
       `SELECT * FROM "Currency" WHERE "id"=? LIMIT 1`,
       [command.id],
     );
-    return row.results[0];
+    if (!row.results[0]) throw new ServiceUnavailableException("Updated currency is unavailable");
+    return this.withAdminMutationAuditReceipt("CURRENCY_CONFIGURATION_UPDATED", String(command.id), command, row.results[0]);
   }
 
   async updateAdminCurrency(command: {
@@ -5045,7 +5064,7 @@ export class D1FinancialCommandGateway {
       throw new BadRequestException(
         `Wallet ${entity} replay no longer resolves`,
       );
-    return row.results[0];
+    return this.withAdminMutationAuditReceipt(action, String(target), command, row.results[0]);
   }
 
   private async insertAdminWalletNetwork(
@@ -5107,7 +5126,8 @@ export class D1FinancialCommandGateway {
       `SELECT * FROM "WalletNetwork" WHERE "id"=? LIMIT 1`,
       [id],
     );
-    return row.results[0] ?? {};
+    if (!row.results[0]) throw new ServiceUnavailableException("Created wallet network is unavailable");
+    return this.withAdminMutationAuditReceipt("WALLET_NETWORK_CREATED", id, command, row.results[0]);
   }
 
   async createAdminWalletNetwork(command: {
@@ -5193,7 +5213,8 @@ export class D1FinancialCommandGateway {
       `SELECT * FROM "WalletNetwork" WHERE "id"=? LIMIT 1`,
       [command.id],
     );
-    return row.results[0] ?? {};
+    if (!row.results[0]) throw new ServiceUnavailableException("Updated wallet network is unavailable");
+    return this.withAdminMutationAuditReceipt("WALLET_NETWORK_UPDATED", command.id, command, row.results[0]);
   }
 
   async updateAdminWalletNetwork(command: {
@@ -5388,7 +5409,8 @@ export class D1FinancialCommandGateway {
       `SELECT * FROM "DepositAddress" WHERE "id"=? LIMIT 1`,
       [command.id],
     );
-    return row.results[0] ?? {};
+    if (!row.results[0]) throw new ServiceUnavailableException("Updated deposit address is unavailable");
+    return this.withAdminMutationAuditReceipt(action, command.id, command, row.results[0]);
   }
 
   async deactivateAdminDepositAddress(command: {
