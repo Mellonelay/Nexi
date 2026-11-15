@@ -2532,19 +2532,18 @@ export class AdminService {
         reason,
         idempotencyKey,
       });
-    const updated = await this.prisma.currency.update({
-      where: { id },
-      data: patch,
+    return this.prisma.$transaction(async (tx: any) => {
+      const updated = await tx.currency.update({ where: { id }, data: patch });
+      const audit = await tx.adminAuditLog.create({
+        data: {
+          adminId,
+          action: "CURRENCY_CONFIGURATION_UPDATED",
+          target: String(id),
+          details: { reason, idempotencyKey, fields: Object.keys(patch) },
+        },
+      });
+      return { ...updated, auditId: audit.id };
     });
-    await this.prisma.adminAuditLog.create({
-      data: {
-        adminId,
-        action: "CURRENCY_CONFIGURATION_UPDATED",
-        target: String(id),
-        details: { reason, idempotencyKey, fields: Object.keys(patch) },
-      },
-    });
-    return updated;
   }
 
   async addDepositAddress(
@@ -2566,18 +2565,20 @@ export class AdminService {
         reason,
         idempotencyKey,
       });
-    const created = await this.prisma.depositAddress.create({
-      data: { currencyId, network, address, label },
+    return this.prisma.$transaction(async (tx: any) => {
+      const created = await tx.depositAddress.create({
+        data: { currencyId, network, address, label },
+      });
+      const audit = await tx.adminAuditLog.create({
+        data: {
+          adminId,
+          action: "DEPOSIT_ADDRESS_CREATED",
+          target: created.id,
+          details: { currencyId, network, reason, idempotencyKey },
+        },
+      });
+      return { ...created, auditId: audit.id };
     });
-    await this.prisma.adminAuditLog.create({
-      data: {
-        adminId,
-        action: "DEPOSIT_ADDRESS_CREATED",
-        target: created.id,
-        details: { currencyId, network, reason, idempotencyKey },
-      },
-    });
-    return created;
   }
 
   async deleteDepositAddress(
@@ -2593,19 +2594,21 @@ export class AdminService {
         reason,
         idempotencyKey,
       });
-    const updated = await this.prisma.depositAddress.update({
-      where: { id },
-      data: { isActive: false },
+    return this.prisma.$transaction(async (tx: any) => {
+      const updated = await tx.depositAddress.update({
+        where: { id },
+        data: { isActive: false },
+      });
+      const audit = await tx.adminAuditLog.create({
+        data: {
+          adminId,
+          action: "DEPOSIT_ADDRESS_DISABLED",
+          target: id,
+          details: { reason, idempotencyKey },
+        },
+      });
+      return { ...updated, auditId: audit.id };
     });
-    await this.prisma.adminAuditLog.create({
-      data: {
-        adminId,
-        action: "DEPOSIT_ADDRESS_DISABLED",
-        target: id,
-        details: { reason, idempotencyKey },
-      },
-    });
-    return updated;
   }
 
   // --- Mining Management ---

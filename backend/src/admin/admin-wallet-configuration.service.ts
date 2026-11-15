@@ -21,7 +21,7 @@ export class AdminWalletConfigurationService {
     }
     return this.prisma.$transaction(async (tx: any) => {
       const created = await tx.currency.create({ data: currency });
-      await tx.adminAuditLog.create({
+      const audit = await tx.adminAuditLog.create({
         data: {
           adminId,
           action: "CURRENCY_CREATED",
@@ -29,7 +29,7 @@ export class AdminWalletConfigurationService {
           details: { reason, idempotencyKey, symbol: created.symbol },
         },
       });
-      return created;
+      return { ...created, auditId: audit.id };
     });
   }
 
@@ -69,7 +69,7 @@ export class AdminWalletConfigurationService {
           withdrawEnabled: false,
         },
       });
-      await tx.adminAuditLog.create({
+      const audit = await tx.adminAuditLog.create({
         data: {
           adminId,
           action: "WALLET_NETWORK_CREATED",
@@ -80,7 +80,7 @@ export class AdminWalletConfigurationService {
           },
         },
       });
-      return created;
+      return { ...created, auditId: audit.id };
     });
   }
 
@@ -113,7 +113,7 @@ export class AdminWalletConfigurationService {
         where: { id },
         data: patch,
       });
-      await tx.adminAuditLog.create({
+      const audit = await tx.adminAuditLog.create({
         data: {
           adminId,
           action: "WALLET_NETWORK_UPDATED",
@@ -121,7 +121,7 @@ export class AdminWalletConfigurationService {
           details: { reason, idempotencyKey, fields: Object.keys(patch) },
         },
       });
-      return updated;
+      return { ...updated, auditId: audit.id };
     });
   }
 
@@ -142,7 +142,7 @@ export class AdminWalletConfigurationService {
         where: { id },
         data: { isActive: input.isActive },
       });
-      await tx.adminAuditLog.create({
+      const audit = await tx.adminAuditLog.create({
         data: {
           adminId,
           action: input.isActive
@@ -152,7 +152,7 @@ export class AdminWalletConfigurationService {
           details: { reason: input.reason, idempotencyKey: input.idempotencyKey },
         },
       });
-      return updated;
+      return { ...updated, auditId: audit.id };
     });
   }
 }
