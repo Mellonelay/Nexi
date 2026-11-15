@@ -436,7 +436,11 @@ export class MarketAuthorityService implements OnModuleInit {
   async getSnapshot(symbol: string): Promise<MarketQuoteEvent['quote'] | null> {
     const latest = await this.db.marketQuoteLatest.findFirst({ where: { symbol: this.normalizeSymbol(symbol) } });
     if (!latest) return null;
-    const snapshot = await this.db.marketQuoteSnapshot.findFirst({ where: { pairId: latest.pairId }, orderBy: { sequence: 'desc' } });
+    // Sequence is TEXT in SQLite. Ordering it lexically can select an older
+    // quote ('9' sorts after '10'); use exact current-pair lineage.
+    const snapshot = await this.db.marketQuoteSnapshot.findUnique({
+      where: { pairId_sequence: { pairId: latest.pairId, sequence: latest.sequence } },
+    });
     return this.toQuote(latest, this.snapshotLineage(snapshot?.rawData));
   }
 

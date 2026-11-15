@@ -172,6 +172,27 @@ describe("MarketAuthorityService", () => {
     };
   };
 
+  it("looks up snapshot lineage by the exact canonical sequence, not TEXT sorting", async () => {
+    const { service, d1, latest } = createService();
+    latest.set("pair-BTCUSDT", {
+      pairId: "pair-BTCUSDT",
+      symbol: "BTCUSDT",
+      sequence: "10",
+      provider: "binance-spot",
+      source: "websocket",
+      price: "100",
+      state: "LIVE",
+      receivedAt: new Date("2026-11-15T00:00:00Z"),
+    });
+    d1.marketQuoteSnapshot.findUnique = jest.fn().mockResolvedValue({
+      rawData: JSON.stringify({ _nexi: { providerInstrument: "BTCUSDT", priceType: "LAST" } }),
+    });
+    await expect(service.getSnapshot("BTCUSDT")).resolves.not.toBeNull();
+    expect(d1.marketQuoteSnapshot.findUnique).toHaveBeenCalledWith({
+      where: { pairId_sequence: { pairId: "pair-BTCUSDT", sequence: "10" } },
+    });
+  });
+
   it("resolves a canonical base ticker to its canonical market pair", async () => {
     const { service } = createService();
     jest.spyOn(service, "getAssets").mockResolvedValue([
