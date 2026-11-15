@@ -12,7 +12,8 @@ EnvironmentFile=/etc/nexi/backend.env
 Environment=NODE_ENV=production
 Environment=HOST=127.0.0.1
 Environment=PORT=3002
-ExecStart=/usr/local/bin/node /srv/nexi/backend/dist/src/main.js
+Environment=PATH=/opt/nexi/runtime/node-v24.21.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/opt/nexi/runtime/node-v24.21.0/bin/node /srv/nexi/backend/dist/src/main.js
 Restart=on-failure
 RestartSec=5
 TimeoutStopSec=30
