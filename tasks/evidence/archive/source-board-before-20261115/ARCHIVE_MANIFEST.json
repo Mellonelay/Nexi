@@ -1,0 +1,29 @@
+{
+  "head": "0c2ce55f7f5665dc13744bb8c7e8a2cf21eca211",
+  "files": {
+    "tasks/todo.md": {
+      "before_sha256": "ce8b43e0db07a61323b28df70287be154630e20695110a533a6c3f428a910cf1",
+      "bytes": 271995,
+      "archive": "tasks/evidence/archive/source-board-before-20261115/tasks__todo.md",
+      "active_lines": 23
+    },
+    "tasks/plan.md": {
+      "before_sha256": "a721b8e9a6e6cff8a956a2e95fa12095452f119f9b85d75d81e1444c726e3ec3",
+      "bytes": 254537,
+      "archive": "tasks/evidence/archive/source-board-before-20261115/tasks__plan.md",
+      "active_lines": 19
+    },
+    "NEXI_CURRENT_STATE.md": {
+      "before_sha256": "41873179673f42e2fff606cd6f32c56e503cd0da49e1425c80a42b8cc8186f3e",
+      "bytes": 214687,
+      "archive": "tasks/evidence/archive/source-board-before-20261115/NEXI_CURRENT_STATE.md",
+      "active_lines": 22
+    },
+    "NEXI_PROOF_REUSE_REGISTER.md": {
+      "before_sha256": "99c5cef9e9be6cfbd762150d51cb81bd203cb52973c3b60b9468a73c15a5861d",
+      "bytes": 202250,
+      "archive": "tasks/evidence/archive/source-board-before-20261115/NEXI_PROOF_REUSE_REGISTER.md",
+      "active_lines": 26
+    }
+  }
+}
