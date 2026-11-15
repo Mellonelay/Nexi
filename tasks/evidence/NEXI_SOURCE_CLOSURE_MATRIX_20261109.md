@@ -685,3 +685,11 @@ Both 113-tracker rows reclassified PROVEN_SOURCE_GAP to INSUFFICIENT_EVIDENCE ra
 **PROOF CLASS:** Seven affected fallback paths read directly; four independent parallel source-presence checks passed across Backend/D1/Admin, with `git diff --check` clean. Fallow `inspect` returned reachable and zero analyzer warnings for both modified Backend services. No typecheck, lint, build, application test, browser, service restart, deployment or database write executed. `SOURCE_IMPLEMENTED` for this scoped source contract; runtime and other source features remain `INSUFFICIENT_EVIDENCE` / `DEFERRED_BY_OWNER_SOURCE_FIRST_RULE`.
 
 **NEXT:** Continue remaining current financial/UX/producer→consumer source gaps without re-opening implemented historical features.
+
+## 2026-11-15 — Public Help versus Messages source ownership reconciliation
+
+**TASK:** Revisit the historical Help/Messages contradiction using current source, rather than assuming the old browser failure remains an implementation defect.
+
+**SOURCE INSPECTED:** `frontend/app/components/NavigationDrawer.tsx` declares distinct `/dashboard/support` and `/dashboard/messages` navigation entries. `frontend/app/dashboard/support/page.tsx` owns knowledge/help topic browsing and configured external contact options, explicitly links `Message NEXI Support` to `/dashboard/messages`, including external-contact-unavailable fallback. `frontend/app/dashboard/messages/page.tsx` owns the authenticated in-app support thread, pagination/reconnect/read receipt state. `backend/src/communications/communications.controller.ts` and `communications.service.ts` own support thread/send/replay endpoints. `Admin/src/routes/support.tsx` explicitly identifies retired support-ticket UI and directs operators to `/messages`; Admin provider owns the current messages surface.
+
+**RESULT / PROOF CLASS:** No current source-level route contradiction found; this scoped Help-versus-Messages owner mapping is `SOURCE_IMPLEMENTED` (source navigation and consumer linkage only). Investigations used actual bounded concurrent SentinelX Python three-lane reads (Public, Backend, Admin). No application tests, browser acceptance, build or deployment were executed. The prior visually observed failure is not declared runtime fixed; app/UX acceptance `DEFERRED_BY_OWNER_SOURCE_FIRST_RULE`. No code change.
