@@ -47,8 +47,8 @@ export class BinaryService {
     const position = await this.d1.markBinarySettlementDelayed(
       String(raw.id), String(raw.userId), reason,
     );
-    const terminal = [Gate2BinaryState.WIN, Gate2BinaryState.LOSS, Gate2BinaryState.ERROR]
-      .includes(String(position.state) as Gate2BinaryState);
+    const terminal = new Set<string>([Gate2BinaryState.WIN, Gate2BinaryState.LOSS, Gate2BinaryState.ERROR])
+      .has(String(position.state));
     if (terminal)
       return { position: this.withPersistedSandboxSimulation(position), replayed: true };
     // Notify connected Public clients when the durable position first becomes delayed.

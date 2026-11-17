@@ -4339,7 +4339,7 @@ export class D1FinancialCommandGateway {
         throw new ConflictException("Maintenance scheduling key belongs to a different original request");
       const audit = await this.bridge.select<{ id: string }>(
         'SELECT "id" FROM "AdminAuditLog" WHERE "action"=? AND "target"=? AND "adminId"=? AND json_valid("details") AND json_extract("details",?)=? ORDER BY "createdAt" DESC LIMIT 1',
-        ["MAINTENANCE_WINDOW_SCHEDULED", prior.id, command.createdBy,
+        ["MAINTENANCE_WINDOW_SCHEDULED", String(prior.id), command.createdBy,
           "$.idempotencyKey", command.idempotencyKey],
       );
       const auditId = audit.results[0]?.id;

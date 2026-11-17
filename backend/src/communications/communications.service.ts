@@ -769,6 +769,21 @@ export class CommunicationsService {
     );
   }
 
+  private async resolveAdminMessageRoute(adminId: string, input: { recipientId: string; conversationId?: string; attachmentIds?: string[] }) {
+    if (!input.conversationId) {
+      if (input.attachmentIds?.length) throw new BadRequestException("Attachments are available only in support conversations");
+      return { senderId: adminId, attachments: undefined };
+    }
+    const identity = this.supportConversationIdentity(input.recipientId);
+    if (input.conversationId !== identity.conversationId) throw new ForbiddenException("Admin reply does not match the customer's support conversation");
+    const conversation = await this.database.messageConversation.findUnique({ where: { id: identity.conversationId } });
+    if (!conversation || conversation.state !== "ACTIVE") throw new NotFoundException("Support conversation not found");
+    const attachments = input.attachmentIds?.length
+      ? await this.attachmentStorage.resolve(input.recipientId, input.attachmentIds)
+      : [];
+    return { senderId: NEXI_SUPPORT_CHANNEL_ID, attachments: attachments.length ? attachments : undefined };
+  }
+
   async markAdminMessageRead(adminId: string, messageId: string) {
     const message = await this.database.persistentMessage.findUnique({ where: { id: messageId } });
     if (!message) throw new NotFoundException("Message not found");
