@@ -49,7 +49,7 @@ Applying requires a quiesced service and independently verified consistent backu
 
 Observed 2026-11-06 on `/var/lib/nexi/sqlite/nexi-staging.sqlite` (read-only): journal ends at 0015; physical 0016 loan CAS and 0017 Binary research schema are present; `LoanPlan.currency` from 0018 and 0019/0020 objects are absent. The new migrator dry-run reported 18 additive statements and made no changes. Reinspect live schema/history immediately before any future apply; this snapshot is not a standing runtime guarantee.
 
-For exact static request/context joins and their remaining gaps, see the [Graphify coverage snapshot](../architecture/NEXI_GRAPHIFY_COVERAGE_20261107.md). The graph is source topology, separate from Jaeger runtime traces.
+For exact static request/context joins and their remaining gaps, see the [Graphify coverage snapshot](NEXI_GRAPHIFY_CLOUD_CLI_MCPC_RUNBOOK_20261116.md). The graph is source topology, separate from Jaeger runtime traces.
 
 ## Verified package and managed-service versions — 2026-11-15
 

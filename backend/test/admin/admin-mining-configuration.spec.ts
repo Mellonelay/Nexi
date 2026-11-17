@@ -15,6 +15,41 @@ describe('Admin mining configuration authority', () => {
     return { service, d1, prisma };
   };
 
+  it('reuses the original Admin audit receipt for a Prisma mining-plan replay', async () => {
+    const plan = {
+      id: 'plan-1', name: 'Basic', currency: 'USDT', lockupPeriod: 7,
+      dailyYield: '0.01', minDeposit: '10', maxDeposit: '100',
+    };
+    const receipts: any[] = [];
+    const tx: any = {
+      miningPlan: {
+        create: jest.fn(async () => plan),
+        findUnique: jest.fn(async () => plan),
+      },
+      adminAuditLog: {
+        findMany: jest.fn(async () => receipts),
+        create: jest.fn(async ({ data }: any) => {
+          const receipt = { ...data, createdAt: new Date() };
+          receipts.push(receipt);
+          return receipt;
+        }),
+      },
+    };
+    const prisma: any = { $transaction: jest.fn(async (work: any) => work(tx)) };
+    const d1: any = { isEnabled: () => false };
+    const service = Object.assign(Object.create(AdminService.prototype), { d1, prisma });
+    const payload = {
+      name: 'Basic', currency: 'USDT', lockupPeriod: 7,
+      dailyYield: '0.01', minDeposit: '10', maxDeposit: '100',
+    };
+    const first = await service.createMiningPlan(payload, context);
+    const replay = await service.createMiningPlan(payload, context);
+    expect(first.auditId).toBe(replay.auditId);
+    expect(replay.replayed).toBe(true);
+    expect(tx.miningPlan.create).toHaveBeenCalledTimes(1);
+    expect(tx.adminAuditLog.create).toHaveBeenCalledTimes(1);
+  });
+
   it('lists disabled plans from D1 so Admin can re-enable them', async () => {
     const { service, d1, prisma } = createService();
     await expect(service.getMiningPlans()).resolves.toEqual([{ id: 'disabled-plan', isActive: 0 }]);

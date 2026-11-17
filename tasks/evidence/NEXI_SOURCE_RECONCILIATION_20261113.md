@@ -15,7 +15,7 @@ Proof boundary: SOURCE ONLY. No application tests, lint/typecheck/build, browser
 - All 113 original owner-path candidates currently exist in the source checkout and have Graphify indexed symbol locations. This is OWNER PATH / GRAPH COVERAGE, not 113 complete producer–consumer behavioral proofs.
 - 23 original criterion IDs explicitly appear within the existing source matrix, 90 do not. This is evidence-association deficiency, not proof of 90 absent features.
 - Existing source disposition unchanged: 5 SOURCE_IMPLEMENTED; 108 INSUFFICIENT_EVIDENCE; no new PROVEN_SOURCE_GAP automatically inferred.
-- Source owner, last source-commit, exact graph symbol-count candidates and prior matrix ID lines: NEXI_113_SOURCE_OWNER_GRAPH_COVERAGE_20261113.csv.
+- Historical browser acceptance source owner/Graphify inventory, now relocated to docs/quality/acceptance-evidence/NEXI_113_SOURCE_OWNER_GRAPH_COVERAGE_20261113.csv. Not an active source-closure gate.
 - Nov8 browser historical states preserved at 16 PASS, 24 FAIL, 8 BLOCKED, 65 NOT_TESTED. No retesting.
 
 ## Material policy/semantic frontier

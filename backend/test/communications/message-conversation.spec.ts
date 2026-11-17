@@ -18,17 +18,18 @@ describe('persistent message conversation D1 command boundary', () => {
       status: 'RESOLVED',
       resolution: 'reviewed',
       conversationState: 'RESTRICTED',
-      idempotencyKey: 'review-1',
+      idempotencyKey: 'review-1', auditId: 'audit-1', auditDetails: 'request-one',
     });
 
-    expect(changed).toBe(true);
+    expect(changed).toEqual({ replayed: false });
     const statements = bridge.batch.mock.calls[0][0];
-    expect(statements).toHaveLength(4);
+    expect(statements).toHaveLength(5);
     expect(statements[0].sql).toContain('INSERT OR IGNORE INTO "EventOutbox"');
     expect(statements[1].sql).toContain('UPDATE "MessageModerationCase"');
     expect(statements[1].sql).toContain('"id"=? AND "idempotencyKey"=?');
     expect(statements[2].sql).toContain('UPDATE "MessageConversation"');
-    expect(statements[3].sql).toContain('WHERE NOT EXISTS');
+    expect(statements[3].sql).toContain('AdminAuditLog');
+    expect(statements[4].sql).toContain('NOT EXISTS');
     expect(statements[0].params).toEqual(expect.arrayContaining([
       'message-moderation:case-1:review-1',
       'case-1',
@@ -47,16 +48,17 @@ describe('persistent message conversation D1 command boundary', () => {
       conversationId: 'conversation:user-1:user-2',
       adminId: 'admin-1',
       status: 'OPEN',
-      idempotencyKey: 'review-2',
+      idempotencyKey: 'review-2', auditId: 'audit-2', auditDetails: 'request-two',
     });
 
-    const [event, update, guard] = bridge.batch.mock.calls[0][0];
+    const [event, update, audit, guard] = bridge.batch.mock.calls[0][0];
     expect(event.sql).toContain('INSERT OR IGNORE INTO "EventOutbox"');
     expect(update.sql).toContain('COALESCE(?, "resolution")');
     expect(update.params).toEqual(expect.arrayContaining([
       'OPEN', null, 'admin-1', 'case-1',
       'conversation:user-1:user-2', 'message-moderation:case-1:review-2',
     ]));
+    expect(audit.sql).toContain('AdminAuditLog');
     expect(guard.sql).toContain('NOT EXISTS');
   });
 
@@ -71,6 +73,7 @@ describe('persistent message conversation D1 command boundary', () => {
     await expect(gateway.resolveMessageModeration({
       id: 'case-1', conversationId: 'conversation:user-1:user-2',
       adminId: 'admin-2', status: 'RESOLVED', idempotencyKey: 'review-1',
+      auditId: 'audit-1', auditDetails: 'changed',
     })).rejects.toMatchObject({ status: 409 });
   });
 
@@ -78,6 +81,33 @@ describe('persistent message conversation D1 command boundary', () => {
   afterEach(() => {
     if (previous === undefined) delete process.env.D1_RUNTIME_ENABLED;
     else process.env.D1_RUNTIME_ENABLED = previous;
+  });
+
+  it('includes the original Admin message audit and replay guard in the same SQLite batch', async () => {
+    const bridge: any = {
+      isEnabled: () => true,
+      batch: jest.fn(async () => ({ results: [
+        {}, { meta: { changes: 1 } }, { meta: { changes: 1 } },
+        {}, { meta: { changes: 1 } }, {},
+      ] })),
+    };
+    const gateway = new D1CommunicationsCommandGateway(bridge);
+    const input = {
+      id: 'admin-message-1', conversationId: 'conversation:admin-1:user-1',
+      participantAId: 'admin-1', participantBId: 'user-1',
+      senderId: 'admin-1', recipientId: 'user-1',
+      body: 'Hello', idempotencyKey: 'message:admin-message-1',
+      adminAudit: { id: 'audit-1', adminId: 'admin-1', target: 'user-1', details: 'original-reason-and-key' },
+    };
+    await expect(gateway.sendMessage(input)).resolves.toBe(true);
+    const statements = bridge.batch.mock.calls[0][0];
+    expect(statements).toHaveLength(6);
+    expect(statements[1].sql).toContain('PersistentMessage');
+    expect(statements[2].sql).toContain('AdminAuditLog');
+    expect(statements[2].sql).toContain('changes()=1');
+    expect(statements[4].sql).toContain('EventOutbox');
+    expect(statements[5].sql).toContain('NOT EXISTS');
+    expect(statements[5].params).toEqual(expect.arrayContaining(['audit-1', 'admin-1', 'user-1', input.adminAudit.details]));
   });
 
   it('batches conversation, message, timestamp, and EventOutbox in one D1 command', async () => {

@@ -1,5 +1,7 @@
 # NEXI Cross-Surface Feature and Authority Map
 
+**2026-11-17 current-source addendum:** For live system ownership and revision-specific proof boundaries, read [NEXI system architecture](NEXI_SYSTEM_ARCHITECTURE.md). The prior 2026-11-07 graph snapshot is historical; the source graph is at graphify-out/graph.json and the local Graphify runbook is authoritative for CLI/MCPC. The 113 criteria are deferred browser acceptance, not this source map.
+
 **Use:** navigation from user/admin behavior to canonical implementation. Source mappings use repository `main`; actual deployed behavior requires independent proof. This is a cross-reference, not a second specification of financial or market rules.
 
 ## Runtime topology
@@ -43,7 +45,7 @@ flowchart LR
 
 ## Acceptance/evidence separation
 
-Feature map presence proves navigation only. For every feature, record separately when asked: `SOURCE_IMPLEMENTED`, `TESTED`, `DEPLOYED`, `RUNTIME_VERIFIED`, `BROWSER_VERIFIED`, `OWNER_ACCEPTED`. Use actual source SHA and deployed artifact IDs. For the current paired-Codex workflow, Chrome DevTools MCP attaches to the owner's profile with `--autoConnect --userDataDir /home/mellonelay1999/.local/share/nexi-admin-browser-acceptance`; the previous MCP target 5858 and Polypane/5859 are retired. Authenticated Coinbase/other EIP-1193 owner signatures remain separately authorized. Do not infer browser verification from a source map.
+Feature map presence proves navigation only. For every feature, record separately when asked: `SOURCE_IMPLEMENTED`, `TESTED`, `DEPLOYED`, `RUNTIME_VERIFIED`, `BROWSER_VERIFIED`, `OWNER_ACCEPTED`. Use actual source SHA and deployed artifact IDs. Historically, Chrome DevTools MCP attached to the owner's profile with `--autoConnect --userDataDir /home/mellonelay1999/.local/share/nexi-admin-browser-acceptance`; the previous MCP target 5858 and Polypane/5859 are retired. Authenticated Coinbase/other EIP-1193 owner signatures remain separately authorized. Do not infer browser verification from a source map.
 
 The 92-table/11,802,372-row export and the 2026-10-17 empty-SQLite/D1 sample are HISTORICAL migration-phase evidence, not current runtime state. Promoted VPS SQLite is the active canonical application/financial database under the October 25 owner and source authority. Four later financial gates were closed by owner acceptance with untested outcomes; do not reopen them from the old snapshot. Independent off-site backup/restore and present runtime claims still require distinct proof. No historical D1 equality assumption applies to the current production source.
 
@@ -51,4 +53,4 @@ The 92-table/11,802,372-row export and the 2026-10-17 empty-SQLite/D1 sample are
 
 Backend domain and contracts: [Backend](../backend/README.md). VPS components/data flow: [Runtime map](NEXI_VPS_BACKEND_RUNTIME.md). User behavior/design: [Frontend](../frontend/README.md). Admin permission/control: [Admin](../admin/README.md). Release/telemetry: [Sentry](../operations/NEXI_SENTRY_OBSERVABILITY.md). Older dated phase and production-program records are historical only.
 
-Current static cross-surface request/context coverage and its exact proof boundaries: [Graphify coverage snapshot](NEXI_GRAPHIFY_COVERAGE_20261107.md). It complements this feature map; it is not runtime traffic or browser proof.
+Current static cross-surface request/context coverage and its exact proof boundaries: [Graphify CLI/MCPC operations](../operations/NEXI_GRAPHIFY_CLOUD_CLI_MCPC_RUNBOOK_20261116.md). It complements this feature map; it is not runtime traffic or browser proof.

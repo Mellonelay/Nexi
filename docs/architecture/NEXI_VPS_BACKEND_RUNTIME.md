@@ -1,4 +1,6 @@
-# NEXI VPS Runtime
+# NEXI VPS Runtime — historical operational snapshot
+
+**Dated October 2026:** This is an earlier routing/runtime receipt, not a live 2026-11-17 service-status report. For current repository architecture, use [NEXI_SYSTEM_ARCHITECTURE.md](NEXI_SYSTEM_ARCHITECTURE.md). Local SQLite authority and transport boundaries remain the accepted model; do not infer active service, deployed artifact SHA or database health from this dated report.
 
 
 Name.com DNS routes Public, Admin and API hostnames to VPS Nginx, which serves Public Next.js, Admin, and the NestJS API/WebSocket service.

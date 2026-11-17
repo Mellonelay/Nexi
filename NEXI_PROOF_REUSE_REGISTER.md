@@ -5,7 +5,7 @@ Last recorded source checkpoint `5b3edd99383e` (2026-11-15; graph built at `0c2c
 ## Rules
 - `PROVEN + UNCHANGED = REUSE`; never reopen prior implementation for missing paperwork alone.
 - Distinguish source implementation, structural analysis, past executed tests, dated production evidence and current deployment.
-- Old 113 acceptance statuses are 16 PASS / 24 FAIL / 8 BLOCKED / 65 NOT_TESTED (Nov8); 113 source owner paths were indexed Nov13. 108 insufficient-evidence source items is a proof association gap, not 108 missing features.
+- Historical 113 acceptance statuses and Nov13 source-owner association are assigned to browser acceptance, not the active source backlog; the dated source association count is not a defect count.
 - Existing financial/Backend/Public/Admin work across Oct–Nov is preserved in dated `tasks/evidence/` receipts. Historical Fallow 118 candidates included 7 verified removals and 111 retained/pending; no mass deletion.
 - Nov13 NestJS Doctor 0 errors and scoped type/financial tests PASS at that revision are retained but not extrapolated to the current dirty checkout.
 - Nov15 Fallow 3.42.0 read-only analysis: Backend Communications, Public Wallet and Admin provider reachable; no warning requiring removal. Graphify 0.9.108 is static navigation, Kernel v3.5 uses dynamic graph identity.
@@ -17,7 +17,7 @@ Last recorded source checkpoint `5b3edd99383e` (2026-11-15; graph built at `0c2c
 ## Primary retained receipts
 - `tasks/evidence/NEXI_SOURCE_CLOSURE_MATRIX_20261109.md`
 - `tasks/evidence/NEXI_SOURCE_RECONCILIATION_20261113.md`
-- `tasks/evidence/NEXI_113_SOURCE_OWNER_GRAPH_COVERAGE_20261113.csv`
+- `docs/quality/acceptance-evidence/NEXI_113_SOURCE_OWNER_GRAPH_COVERAGE_20261113.csv`
 - `tasks/evidence/NEXI_ADVANCED_GRAPHIFY_CONNECTIVITY_SOURCE_AUDIT_20261113.md`
 - `tasks/evidence/NEXI_GRAPH_HTTP_OPERATION_RECONCILIATION_20261113.csv`
 - `tasks/evidence/NEXI_INTERACTIVE_ACCEPTANCE_HANDOVER_20261108.md`

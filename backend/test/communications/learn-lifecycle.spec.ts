@@ -16,6 +16,30 @@ describe('A18 Learn lifecycle closure', () => {
     else process.env.D1_RUNTIME_ENABLED = previous;
   });
 
+  it('requires the original Admin audit receipt before returning a Learn replay', async () => {
+    const data = { slug: 'risk', title: 'Risk', body: 'Content', reason: 'Create article', idempotencyKey: 'learn-create-1' };
+    const eventKey = 'learn-article:create:' + data.idempotencyKey;
+    const outbox: any = { recordEvent: jest.fn() };
+    const db: any = {
+      eventOutbox: { findUnique: jest.fn() },
+      adminAuditLog: { findUnique: jest.fn(async () => null) },
+      learnArticle: { findUnique: jest.fn() },
+      atomicBatch: jest.fn(),
+    };
+    const service = new CommunicationsService(db, outbox, {} as any, {} as any);
+    db.eventOutbox.findUnique.mockResolvedValue({
+      aggregateType: 'LEARN_ARTICLE',
+      aggregateId: (service as any).id('learn-article', data.slug),
+      eventType: 'LEARN_ARTICLE_CREATED',
+      payload: JSON.stringify({ intentHash: (service as any).learnOriginalIntentHash(data, 'admin-1') }),
+    });
+    await expect(service.createLearn(data, 'admin-1'))
+      .rejects.toThrow('Original Learn audit receipt is missing or mismatched');
+    expect(db.atomicBatch).not.toHaveBeenCalled();
+    expect(db.learnArticle.findUnique).not.toHaveBeenCalled();
+    expect(db.eventOutbox.findUnique).toHaveBeenCalledWith({ where: { idempotencyKey: eventKey } });
+  });
+
   it('publishes through durable Learn authority and public reads remain publication-scoped', async () => {
     const current = {
       id: 'learn-1', slug: 'risk-basics', title: 'Risk', body: 'Draft', summary: null,

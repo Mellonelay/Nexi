@@ -110,6 +110,7 @@ describe("Binary global policy initialization", () => {
         maxStake: "500",
       }),
     );
+    expect(saved.auditId).toEqual(expect.any(String));
     await expect(
       gateway.updateBinaryGlobalConfiguration(input),
     ).resolves.toEqual({ ...saved, replayed: true });

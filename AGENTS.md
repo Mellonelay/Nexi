@@ -31,7 +31,7 @@
 
 # CANONICAL CROSS-SURFACE GRAPH — verified 2026-11-07
 
-The authoritative NEXI source graph covering the Public frontend, Backend, and Admin is `/srv/nexi/graphify-live/20261107/merged-graph.json`. It is the merged three-surface graph; the separate deployed-root comparison graph is documented in [the dated coverage report](docs/architecture/NEXI_GRAPHIFY_COVERAGE_20261107.md).
+The authoritative NEXI source graph covering the Public frontend, Backend, and Admin is `/srv/nexi/graphify-live/20261107/merged-graph.json`. It is the merged three-surface graph; the separate deployed-root comparison graph is documented in [the dated coverage report](docs/operations/NEXI_GRAPHIFY_CLOUD_CLI_MCPC_RUNBOOK_20261116.md).
 
 - Graphify version: `0.9.103`; SHA-256: `0c18266bab126d924e5e77acde7e940e004534a03a0bf033785fdeecf5f8337d`.
 - Verified graph summary: 5,953 nodes, 17,481 edges, 208 communities.

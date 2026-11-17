@@ -409,13 +409,15 @@ export class CommunicationsService {
     body: string,
     key: string,
     attachments?: unknown,
+    adminAudit?: { id: string; adminId: string; target: string; details: string },
   ) {
     const messageId = this.id(`message:${senderId}:${recipientId}`, key);
     const identity = this.conversationIdentity(senderId, recipientId);
     const serializedAttachments = attachments === undefined ? null : JSON.stringify(attachments);
     const expected = { conversationId: identity.conversationId, senderId, recipientId, body, attachments: serializedAttachments };
+    let created: boolean;
     if (this.d1Communications.isEnabled()) {
-      await this.d1Communications.sendMessage({
+      created = await this.d1Communications.sendMessage({
         id: messageId,
         ...identity,
         senderId,
@@ -423,28 +425,37 @@ export class CommunicationsService {
         body,
         attachments,
         idempotencyKey: `message:${messageId}`,
+        adminAudit,
       });
-    } else await this.persistPrismaMessage(messageId, expected, identity);
+    } else created = await this.persistPrismaMessage(messageId, expected, identity, adminAudit);
     const message = await this.database.persistentMessage.findUnique({
       where: { id: messageId },
     });
     if (!message) throw new ForbiddenException("Conversation is restricted");
     this.assertMessageMatches(message, expected);
-    await this.publishRealtimeEvent("MESSAGE_SENT", message.id, {
+    if (created) await this.publishRealtimeEvent("MESSAGE_SENT", message.id, {
       conversationId: identity.conversationId,
       senderId,
       recipientId,
       sequence: message.sequence,
     });
-    return message;
+    return adminAudit ? { ...message, auditId: adminAudit.id } : message;
   }
 
   private async persistPrismaMessage(
     messageId: string,
     expected: { conversationId: string; senderId: string; recipientId: string; body: string; attachments: string | null },
     identity: { conversationId: string; participantAId: string; participantBId: string },
-  ) {
-    await this.database.$transaction(async (tx: any) => {
+    adminAudit?: { id: string; adminId: string; target: string; details: string },
+  ): Promise<boolean> {
+    return this.database.$transaction(async (tx: any) => {
+      const previous = await tx.persistentMessage.findUnique({ where: { id: messageId } });
+      if (adminAudit && previous) {
+        const audit = await tx.adminAuditLog.findUnique({ where: { id: adminAudit.id } });
+        if (!audit || audit.adminId !== adminAudit.adminId || audit.action !== "ADMIN_MESSAGE_SENT" ||
+            audit.target !== adminAudit.target || audit.details !== adminAudit.details)
+          throw new ConflictException("Original Admin message audit receipt is missing or mismatched");
+      }
       const conversation = await tx.messageConversation.upsert({
         where: { participantAId_participantBId: { participantAId: identity.participantAId, participantBId: identity.participantBId } },
         update: { updatedAt: new Date() },
@@ -468,6 +479,15 @@ export class CommunicationsService {
           payload: JSON.stringify({ conversationId: identity.conversationId, senderId: expected.senderId, recipientId: expected.recipientId }),
         },
       });
+      if (adminAudit && !previous)
+        await tx.adminAuditLog.create({
+          data: {
+            id: adminAudit.id, adminId: adminAudit.adminId,
+            action: "ADMIN_MESSAGE_SENT", target: adminAudit.target,
+            details: adminAudit.details,
+          },
+        });
+      return !previous;
     });
   }
 
@@ -598,19 +618,29 @@ export class CommunicationsService {
     adminId: string,
     input: ResolveMessageModerationInput,
   ) {
-    const current = await this.database.messageModerationCase.findUnique({
-      where: { id },
-    });
+    const current = await this.database.messageModerationCase.findUnique({ where: { id } });
     if (!current) throw new NotFoundException("Moderation case not found");
-    const updated = this.d1Communications.isEnabled()
-      ? await this.resolveMessageModerationWithD1(id, current.conversationId, adminId, input)
-      : await this.resolveMessageModerationWithTransaction(id, current.conversationId, adminId, input);
-    await this.publishRealtimeEvent("MESSAGE_MODERATION_UPDATED", id, {
+    const eventKey = `message-moderation:${id}:${input.idempotencyKey}`;
+    const eventPayload = {
+      status: input.status,
       conversationId: current.conversationId,
-      status: updated.status,
-      conversationState: input.conversationState,
-    });
-    return updated;
+      reviewedById: adminId,
+      conversationState: input.conversationState ?? null,
+      resolution: input.resolution ?? null,
+    };
+    const auditId = this.id("message-moderation-audit", eventKey);
+    const auditDetails = JSON.stringify({ idempotencyKey: input.idempotencyKey, ...eventPayload });
+    const result = this.d1Communications.isEnabled()
+      ? await this.resolveMessageModerationWithD1(id, current.conversationId, adminId, input, auditId, auditDetails)
+      : await this.resolveMessageModerationWithTransaction(id, current.conversationId, adminId, input, eventKey, eventPayload, auditId, auditDetails);
+    if (!result.replayed) {
+      await this.publishRealtimeEvent("MESSAGE_MODERATION_UPDATED", id, {
+        conversationId: current.conversationId,
+        status: result.status,
+        conversationState: input.conversationState,
+      });
+    }
+    return result;
   }
 
   private async resolveMessageModerationWithD1(
@@ -618,21 +648,18 @@ export class CommunicationsService {
     conversationId: string,
     adminId: string,
     input: ResolveMessageModerationInput,
+    auditId: string,
+    auditDetails: string,
   ) {
-    const changed = await this.d1Communications.resolveMessageModeration({
-      id,
-      conversationId,
-      adminId,
-      status: input.status,
-      resolution: input.resolution,
+    const receipt = await this.d1Communications.resolveMessageModeration({
+      id, conversationId, adminId,
+      status: input.status, resolution: input.resolution,
       conversationState: input.conversationState,
-      idempotencyKey: input.idempotencyKey,
+      idempotencyKey: input.idempotencyKey, auditId, auditDetails,
     });
-    if (!changed) throw new NotFoundException("Moderation case not found");
     const updated = await this.database.messageModerationCase.findUnique({ where: { id } });
-    if (!updated)
-      throw new BadRequestException("Moderation case was not materialized");
-    return updated;
+    if (!updated) throw new BadRequestException("Moderation case was not materialized");
+    return { ...updated, auditId, replayed: receipt.replayed };
   }
 
   private async resolveMessageModerationWithTransaction(
@@ -640,36 +667,52 @@ export class CommunicationsService {
     conversationId: string,
     adminId: string,
     input: ResolveMessageModerationInput,
+    eventKey: string,
+    eventPayload: Record<string, unknown>,
+    auditId: string,
+    auditDetails: string,
   ) {
-    const updated = await this.database.$transaction(async (tx) => {
-      await (input.conversationState
-        ? tx.messageConversation.update({
-            where: { id: conversationId },
-            data: { state: input.conversationState },
-          })
-        : Promise.resolve());
-      return tx.messageModerationCase.update({
+    return this.database.$transaction(async (tx: any) => {
+      const prior = await tx.eventOutbox.findUnique({ where: { idempotencyKey: eventKey } });
+      if (prior) {
+        const audit = await tx.adminAuditLog.findUnique({ where: { id: auditId } });
+        if (prior.aggregateType !== "MESSAGE_MODERATION" ||
+            prior.aggregateId !== id ||
+            prior.eventType !== "MESSAGE_MODERATION_RESOLVED" ||
+            prior.payload !== JSON.stringify(eventPayload) ||
+            !audit || audit.adminId !== adminId || audit.target !== id ||
+            audit.action !== "MESSAGE_MODERATION_RESOLVED" || audit.details !== auditDetails)
+          throw new ConflictException("Moderation key belongs to a different original request");
+        const row = await tx.messageModerationCase.findUnique({ where: { id } });
+        if (!row) throw new NotFoundException("Moderation case not found");
+        return { ...row, auditId, replayed: true };
+      }
+      if (input.conversationState) {
+        await tx.messageConversation.update({
+          where: { id: conversationId },
+          data: { state: input.conversationState },
+        });
+      }
+      const updated = await tx.messageModerationCase.update({
         where: { id },
+        data: { status: input.status, resolution: input.resolution, reviewedById: adminId },
+      });
+      await tx.eventOutbox.create({
         data: {
-          status: input.status,
-          resolution: input.resolution,
-          reviewedById: adminId,
+          id: randomUUID(), idempotencyKey: eventKey,
+          aggregateType: "MESSAGE_MODERATION", aggregateId: id,
+          eventType: "MESSAGE_MODERATION_RESOLVED",
+          correlationId: eventKey, payload: JSON.stringify(eventPayload),
         },
       });
+      await tx.adminAuditLog.create({
+        data: {
+          id: auditId, adminId, action: "MESSAGE_MODERATION_RESOLVED",
+          target: id, details: auditDetails,
+        },
+      });
+      return { ...updated, auditId, replayed: false };
     });
-    await this.durableEvent(
-      `message-moderation:${id}:${input.idempotencyKey}`,
-      "MESSAGE_MODERATION",
-      id,
-      "MESSAGE_MODERATION_RESOLVED",
-      {
-        status: updated.status,
-        conversationId,
-        conversationState: input.conversationState,
-        reviewedById: adminId,
-      },
-    );
-    return updated;
   }
 
   async adminMessages(page = 1, limit = 100) {
@@ -715,50 +758,15 @@ export class CommunicationsService {
     if (!recipient) throw new NotFoundException("Client not found");
     const { senderId, attachments } = await this.resolveAdminMessageRoute(adminId, input);
     if (!body && !attachments?.length) throw new BadRequestException("Message body or attachment is required");
-    const message = await this.sendMessage(
-      senderId,
-      input.recipientId,
-      body,
-      input.idempotencyKey,
-      attachments,
-    );
-    if (
-      message.senderId !== senderId || message.recipientId !== input.recipientId || message.body !== body
-    ) {
-      throw new BadRequestException("Message idempotency key was already used");
-    }
     const messageId = this.id(`message:${senderId}:${input.recipientId}`, input.idempotencyKey);
-    const details = JSON.stringify({ messageId, reason, idempotencyKey: input.idempotencyKey });
-    const audit = await this.database.adminAuditLog.upsert({
-      where: { id: this.id(`admin-message-audit:${adminId}:${input.recipientId}`, input.idempotencyKey) },
-      update: {},
-      create: {
-        id: this.id(`admin-message-audit:${adminId}:${input.recipientId}`, input.idempotencyKey),
-        adminId,
-        action: "ADMIN_MESSAGE_SENT",
-        target: input.recipientId,
-        details,
-      },
-    });
-    if (audit.details !== details) {
-      throw new BadRequestException("Message idempotency key was already used");
-    }
-    return { ...message, auditId: audit.id };
-  }
-
-  private async resolveAdminMessageRoute(adminId: string, input: { recipientId: string; conversationId?: string; attachmentIds?: string[] }) {
-    if (!input.conversationId) {
-      if (input.attachmentIds?.length) throw new BadRequestException("Attachments are available only in support conversations");
-      return { senderId: adminId, attachments: undefined };
-    }
-    const identity = this.supportConversationIdentity(input.recipientId);
-    if (input.conversationId !== identity.conversationId) throw new ForbiddenException("Admin reply does not match the customer's support conversation");
-    const conversation = await this.database.messageConversation.findUnique({ where: { id: identity.conversationId } });
-    if (!conversation || conversation.state !== "ACTIVE") throw new NotFoundException("Support conversation not found");
-    const attachments = input.attachmentIds?.length
-      ? await this.attachmentStorage.resolve(input.recipientId, input.attachmentIds)
-      : [];
-    return { senderId: NEXI_SUPPORT_CHANNEL_ID, attachments: attachments.length ? attachments : undefined };
+    const audit = {
+      id: this.id(`admin-message-audit:${adminId}:${input.recipientId}`, input.idempotencyKey),
+      adminId, target: input.recipientId,
+      details: JSON.stringify({ messageId, reason, idempotencyKey: input.idempotencyKey }),
+    };
+    return this.sendMessage(
+      senderId, input.recipientId, body, input.idempotencyKey, attachments, audit,
+    );
   }
 
   async markAdminMessageRead(adminId: string, messageId: string) {
@@ -786,7 +794,7 @@ export class CommunicationsService {
     const notificationKey = source === "system" ? `notification:system:${this.id("source-event", data.idempotencyKey)}` : data.idempotencyKey;
     const id = this.id(`${source}-notification`, notificationKey);
     let notification: any;
-    await this.d1Communications.createNotification({
+    const receipt = await this.d1Communications.createNotification({
         id,
         userId: data.userId,
         type: data.type,
@@ -804,7 +812,8 @@ export class CommunicationsService {
         notification.title !== data.title || notification.body !== data.body) {
       throw new BadRequestException("Notification idempotency key was already used");
     }
-    await this.publishRealtimeEvent("NOTIFICATION_SENT", id, { userId: data.userId, type: data.type });
+    if (!receipt.replayed)
+      await this.publishRealtimeEvent("NOTIFICATION_SENT", id, { userId: data.userId, type: data.type });
     return adminId ? { ...notification, auditId: id } : notification;
   }
 
@@ -1260,6 +1269,7 @@ export class CommunicationsService {
 
   private async existingLearnIntent(
     eventKey: string, articleId: string, type: string, expectedHash: string,
+    adminId?: string, reason?: string,
   ): Promise<boolean> {
     const previous = await this.database.eventOutbox.findUnique({
       where: { idempotencyKey: eventKey },
@@ -1270,6 +1280,14 @@ export class CommunicationsService {
     if (previous.aggregateId !== articleId || previous.aggregateType !== "LEARN_ARTICLE" ||
       previous.eventType !== type || payload?.intentHash !== expectedHash) {
       throw new ConflictException("Learn idempotency key belongs to a different original request");
+    }
+    if (adminId && reason) {
+      const auditId = this.id("learn-article-audit:" + adminId, eventKey);
+      const audit = await this.database.adminAuditLog.findUnique({ where: { id: auditId } });
+      const details = JSON.stringify({ reason: reason.trim(), eventKey, intentHash: expectedHash });
+      if (!audit || audit.adminId !== adminId || audit.target !== articleId ||
+          audit.action !== type || audit.details !== details)
+        throw new ConflictException("Original Learn audit receipt is missing or mismatched");
     }
     return true;
   }
@@ -1282,7 +1300,7 @@ export class CommunicationsService {
     const articleId = this.id("learn-article", data.slug);
     const eventKey = "learn-article:create:" + (data.idempotencyKey ?? articleId);
     const intentHash = data.idempotencyKey ? this.learnOriginalIntentHash(data, adminId) : null;
-    if (intentHash && await this.existingLearnIntent(eventKey, articleId, "LEARN_ARTICLE_CREATED", intentHash)) {
+    if (intentHash && await this.existingLearnIntent(eventKey, articleId, "LEARN_ARTICLE_CREATED", intentHash, adminId, data.reason)) {
       const replay = await this.database.learnArticle.findUnique({
         where: { id: articleId }, include: this.learnInclude(),
       });
@@ -1312,6 +1330,7 @@ export class CommunicationsService {
       // its unique outbox key is the authoritative reconciliation receipt.
       if (!intentHash || !(await this.existingLearnIntent(
         eventKey, articleId, "LEARN_ARTICLE_CREATED", intentHash,
+        adminId, data.reason,
       ))) throw error;
     }
     const article = await this.database.learnArticle.findUnique({
@@ -1325,7 +1344,7 @@ export class CommunicationsService {
     const eventKey = "learn-article:update:" + id + ":" +
       (data.idempotencyKey ?? new Date().toISOString());
     const intentHash = data.idempotencyKey ? this.learnOriginalIntentHash(data, adminId) : null;
-    if (intentHash && await this.existingLearnIntent(eventKey, id, "LEARN_ARTICLE_UPDATED", intentHash)) {
+    if (intentHash && await this.existingLearnIntent(eventKey, id, "LEARN_ARTICLE_UPDATED", intentHash, adminId, data.reason)) {
       const replay = await this.database.learnArticle.findUnique({
         where: { id }, include: this.learnInclude(),
       });
@@ -1358,6 +1377,7 @@ export class CommunicationsService {
     } catch (error) {
       if (!intentHash || !(await this.existingLearnIntent(
         eventKey, id, "LEARN_ARTICLE_UPDATED", intentHash,
+        adminId, data.reason,
       ))) throw error;
     }
     const article = await this.database.learnArticle.findUnique({
@@ -1493,9 +1513,16 @@ export class CommunicationsService {
       : null;
     if (auditId) {
       statements.push({
-        sql: 'INSERT OR IGNORE INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,\'LEARN_ARTICLE_PUBLISHED\',?,?,CURRENT_TIMESTAMP)',
+        sql: 'INSERT OR IGNORE INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") SELECT ?,?,\'LEARN_ARTICLE_PUBLISHED\',?,?,CURRENT_TIMESTAMP WHERE ' + newEvent,
         params: [auditId, adminId!, id,
-          JSON.stringify({ reason: reason!.trim(), eventKey })],
+          JSON.stringify({ reason: reason!.trim(), eventKey }), eventId, eventKey],
+      });
+      // Do not manufacture a historical audit on replay. A missing or
+      // mismatched original receipt must roll back the entire command.
+      statements.push({
+        sql: 'INSERT INTO "LearnContent" ("id","slug","title","body","status") SELECT ?,NULL,NULL,NULL,NULL WHERE NOT EXISTS (SELECT 1 FROM "AdminAuditLog" WHERE "id"=? AND "adminId"=? AND "action"=\'LEARN_ARTICLE_PUBLISHED\' AND "target"=? AND "details"=?)',
+        params: ["learn-publish-audit-guard:" + eventId, auditId, adminId!,
+          id, JSON.stringify({ reason: reason!.trim(), eventKey })],
       });
     }
     try {

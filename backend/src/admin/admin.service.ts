@@ -2278,9 +2278,25 @@ export class AdminService {
           throw new ConflictException(
             "Binary pair idempotency key was already used",
           );
+        const audit = await tx.adminAuditLog.findUnique({
+          where: { id: payload.auditId },
+        });
+        if (!audit || audit.adminId !== adminId || audit.action !== action ||
+            audit.target !== pair.id)
+          throw new ConflictException("Original Binary pair audit receipt is missing or mismatched");
+        let details: Record<string, unknown> | null = null;
+        try {
+          const parsed = typeof audit.details === "string"
+            ? JSON.parse(audit.details) : audit.details;
+          if (parsed && typeof parsed === "object" && !Array.isArray(parsed))
+            details = parsed as Record<string, unknown>;
+        } catch { /* The original receipt must be readable. */ }
+        if (!details || details.symbol !== pair.symbol || details.enabled !== enabled ||
+            details.reason !== reason || details.idempotencyKey !== idempotencyKey)
+          throw new ConflictException("Original Binary pair audit receipt does not match intent");
         return {
           ok: true,
-          auditId: payload.auditId,
+          auditId: audit.id,
           status: enabled ? "ACTIVE" : "MAINTENANCE",
           replayed: true,
         };
@@ -2946,30 +2962,26 @@ export class AdminService {
         idempotencyKey: auditContext.idempotencyKey,
       });
     }
-    return this.prisma.$transaction(async (tx) => {
-      const plan = await tx.miningPlan.create({
-        data: {
-          ...data,
-          dailyYieldDecimal: dailyYield.toString(),
-          minDepositDecimal: minDeposit.toString(),
-          maxDepositDecimal: maxDeposit.toString(),
-        },
-      });
-      if (!context) return plan;
-      const audit = await tx.adminAuditLog.create({
-        data: {
-          adminId: context.adminId,
-          action: "MINING_PLAN_CREATED",
-          target: plan.id,
-          details: {
-            reason: context.reason,
-            idempotencyKey: context.idempotencyKey,
-            name: plan.name,
-          },
-        },
-      });
-      return { ...plan, ok: true, auditId: audit.id };
-    });
+    const values = {
+      ...data,
+      dailyYieldDecimal: dailyYield.toString(),
+      minDepositDecimal: minDeposit.toString(),
+      maxDepositDecimal: maxDeposit.toString(),
+    };
+    if (!context) return this.prisma.miningPlan.create({ data: values });
+    return executeAdminMutation(
+      this.prisma,
+      {
+        action: "MINING_PLAN_CREATED",
+        adminId: context.adminId,
+        reason: context.reason,
+        idempotencyKey: context.idempotencyKey,
+        payload: values,
+      },
+      (tx) => tx.miningPlan.create({ data: values }),
+      (plan) => String(plan.id),
+      (tx, target) => tx.miningPlan.findUnique({ where: { id: target } }),
+    );
   }
 
   async updateMiningPlan(
@@ -2990,25 +3002,21 @@ export class AdminService {
         context: auditContext,
       });
     }
-    return this.prisma.$transaction(async (tx) => {
-      const plan = await tx.miningPlan.update({
-        where: { id },
-        data: decimalPatch,
-      });
-      if (!context) return plan;
-      const audit = await tx.adminAuditLog.create({
-        data: {
-          adminId: context.adminId,
-          action: "MINING_PLAN_UPDATED",
-          target: id,
-          details: {
-            reason: context.reason,
-            idempotencyKey: context.idempotencyKey,
-          },
-        },
-      });
-      return { ...plan, ok: true, auditId: audit.id };
-    });
+    if (!context) return this.prisma.miningPlan.update({ where: { id }, data: decimalPatch });
+    return executeAdminMutation(
+      this.prisma,
+      {
+        action: "MINING_PLAN_UPDATED",
+        adminId: context.adminId,
+        reason: context.reason,
+        idempotencyKey: context.idempotencyKey,
+        target: id,
+        payload: decimalPatch,
+      },
+      (tx) => tx.miningPlan.update({ where: { id }, data: decimalPatch }),
+      (plan) => String(plan.id),
+      (tx, target) => tx.miningPlan.findUnique({ where: { id: target } }),
+    );
   }
 
   // --- Loan Management ---
@@ -3087,7 +3095,7 @@ export class AdminService {
           });
           if (!existing)
             throw new NotFoundException("Loan plan replay no longer resolves");
-          return existing;
+          return { ...existing, ok: true, auditId: prior.id, replayed: true };
         }
       }
       const plan = await tx.loanPlan.create({ data: planData });
@@ -3145,7 +3153,7 @@ export class AdminService {
           const existing = await tx.loanPlan.findUnique({ where: { id } });
           if (!existing)
             throw new NotFoundException("Loan plan replay no longer resolves");
-          return existing;
+          return { ...existing, ok: true, auditId: prior.id, replayed: true };
         }
       }
       const current = await tx.loanPlan.findUnique({ where: { id } });

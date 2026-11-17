@@ -74,7 +74,7 @@ describe("AdminService sandbox source contract", () => {
         findUnique: jest.fn().mockResolvedValue(plan),
       },
       adminAuditLog: {
-        findFirst: jest
+        findUnique: jest
           .fn()
           .mockResolvedValueOnce(null)
           .mockResolvedValueOnce(audit),
@@ -110,8 +110,11 @@ describe("AdminService sandbox source contract", () => {
       reason: "test",
       idempotencyKey: "loan-plan-key-1",
     };
-    await subject.createLoanPlan(input, context);
-    await subject.createLoanPlan(input, context);
+    const first = await subject.createLoanPlan(input, context);
+    const replay = await subject.createLoanPlan(input, context);
+    expect(first.auditId).toBe(audit.id);
+    expect(replay.auditId).toBe(first.auditId);
+    expect(replay.replayed).toBe(true);
     expect(tx.loanPlan.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         interestRate: "0.05",

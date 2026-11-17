@@ -48,7 +48,7 @@ describe('A19 notification durable realtime closure', () => {
     const notification = { id: 'notification-1', userId: '11111111-1111-4111-8111-111111111111', type: 'info', title: 'Alert', body: 'Body', readAt: null };
     const d1: any = { notification: { findUnique: jest.fn(async () => notification) }, userPreference: { findUnique: jest.fn(async () => null) } };
     const d1Gateway: any = {
-      createNotification: jest.fn(async () => undefined),
+      createNotification: jest.fn(async () => ({ replayed: false })),
       markNotificationRead: jest.fn(async () => true),
     };
     const redis: any = { isAvailable: () => true, publish: jest.fn(async () => 1) };
@@ -60,6 +60,13 @@ describe('A19 notification durable realtime closure', () => {
     })).toEqual(notification);
     expect(d1Gateway.createNotification).toHaveBeenCalledWith(expect.objectContaining({ eventType: 'NOTIFICATION_SENT', idempotencyKey: 'notification-send-1' }));
     expect(redis.publish).toHaveBeenCalledWith('nexi:b8:communications', expect.stringContaining('NOTIFICATION_SENT'));
+    const initialPublishes = redis.publish.mock.calls.length;
+    d1Gateway.createNotification.mockResolvedValueOnce({ replayed: true });
+    await service.sendAdminNotification({
+      userId: notification.userId, type: "info", title: "Alert", body: "Body",
+      idempotencyKey: "notification-send-1", reason: "operator request",
+    });
+    expect(redis.publish).toHaveBeenCalledTimes(initialPublishes);
 
     // Simulate the separately materialized system notification returned by the DB.
     Object.assign(notification, { type: 'TRANSFER_COMPLETED', title: 'Wallet transfer completed', body: '10 USDT transferred from Funding to Options.' });

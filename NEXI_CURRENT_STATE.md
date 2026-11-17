@@ -13,7 +13,7 @@ Last recorded source checkpoint `5b3edd99383e` (2026-11-15; graph built at `0c2c
 - Prior source fixes and historical production acceptance are recorded in dated matrix and archived proof register.
 - Nov8 acceptance 113 cases: 16 PASS / 24 FAIL / 8 BLOCKED / 65 NOT_TESTED. Nov13 source owner paths indexed 113/113, but not 113 behaviors proven.
 
-**2026-11-15 bounded source review:** Learn original-key replay audit and Admin readback source inspected, narrow task checked; unmatched historical outbox intent fails closed. Public notification REST read/unread/mark and socket reconnect; Backend user-scoped notification SQLite read/mark and PubSub source inspected. No new source defect proved in the inspected scope; no runtime claim. Four broad unchecked source-closure tasks. Historical 113-row proof: 5 SOURCE_IMPLEMENTED, 108 INSUFFICIENT_EVIDENCE. Withdrawal provider remains deterministic non-live.
+**2026-11-15 bounded source review:** Learn original-key replay audit and Admin readback source inspected, narrow task checked; unmatched historical outbox intent fails closed. Public notification REST read/unread/mark and socket reconnect; Backend user-scoped notification SQLite read/mark and PubSub source inspected. No new source defect proved in the inspected scope; no runtime claim. Four broad unchecked source-closure tasks. The historical 113-row source association snapshot now resides under deferred browser acceptance; its dated counts do not gate source closure. Withdrawal provider remains deterministic non-live.
 
 ## Active uncertainty
 - Full current source contract closure not established. This does NOT mean all Backend/Public/Admin services are broken.
@@ -55,3 +55,10 @@ Exact unresolved source question: route-to-Backend persisted intent and mismatch
 - Preserved existing Admin provider formulas and all other dirty edits. Changed source file: backend/src/admin/admin.service.ts. Current SHA-256: ae92d1371ef03f344f6759fa97bba40f78c18d1ee7910e63571a9c6790c06cef.
 - Reused correction-audit and Binary settlement/readback evidence; no new inspection was made in those areas.
 - Remaining source frontier: other shared Admin fallback callers still need exact Backend persisted-key/replay mapping. Status SOURCE_OPEN; no application tests/builds/lint/typechecks/browser checks/services were run.
+
+## 2026-11-17 — documentation and architecture reconciliation (SOURCE ONLY)
+- At precommit inspection main HEAD 03cf396788d1897cd700a5edd5de55f065db6562; dirty changes are preserved. Current source graph built_at_commit matches that HEAD (8,602 nodes / 20,904 edges), but does not capture dirty changes. The November 16 Graphify runbook graph sizes are a dated earlier graph receipt.
+- Current source architecture and transaction/producer-consumer boundaries are documented in docs/architecture/NEXI_SYSTEM_ARCHITECTURE.md. Source-tracked documentation inventory and November 16 225-receipt hash reconciliation are in docs/DOCUMENTATION_AND_RECEIPT_INDEX_20261117.md.
+- Browser-acceptance 113 criterion artifacts remain intact under docs/quality; three historical source-association artifacts were relocated byte-for-byte to docs/quality/acceptance-evidence. The 5/108 figures are not source-closure gates.
+- Admin provider AST currently inventories 49 mutation callers (46 fallback, three explicit); crosswalk maps 49 Backend owner source symbols. Exact persisted replay acceptance for every route is NOT established merely by owner mapping. Prior source repairs remain source-only and SOURCE_OPEN until the actual remaining contracts are resolved.
+- No app tests, typechecks, builds, browser sessions, service operations, SQLite economic transactions or deployment were performed during this documentation pass. Historic runtime/CI observations remain dated, not current verified release.

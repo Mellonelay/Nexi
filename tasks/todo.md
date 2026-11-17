@@ -9,13 +9,13 @@ Last recorded source checkpoint `5b3edd99383e` (2026-11-15; graph built at `0c2c
 - [ ] Reconcile current source evidence per domain; `INSUFFICIENT_EVIDENCE` is not a defect and Graphify missing calls do not imply broken features. No invented 301-operation / 113-feature reimplementation queue.
 - [ ] Make final source-only disposition, then request separately authorized application verification/release phase.
 
-**Current count:** 4 unchecked source-closure workstreams after the scoped Learn audit-replay source item was checked. These are broad tasks, not four proven application defects. The November 13 113-row evidence file has 5 SOURCE_IMPLEMENTED and 108 INSUFFICIENT_EVIDENCE criteria; these denote proof coverage, not missing implementations. Backend withdrawal provider explicitly remains DETERMINISTIC_TEST_NON_LIVE; enabling external transfers is a separate owner decision.
+**Current count:** 4 unchecked source-closure workstreams after the scoped Learn audit-replay source item was checked. These are broad tasks, not four proven application defects. The original 113 browser-acceptance criteria and historical 5/108 mapping were transferred to the deferred browser-acceptance evidence lane and are not source closure gates. Backend withdrawal provider explicitly remains DETERMINISTIC_TEST_NON_LIVE; enabling external transfers is a separate owner decision.
 
 ## Completed — reuse
 - 2026-11-15 scoped audit-identity source correction: Backend currency, wallet-network, and deposit-address-state mutations now project the actual persisted Admin audit receipt on first write/replay; shared Admin provider no longer treats resource IDs as audit IDs. Source receipt in the matrix; application verification deferred.
 - Prior Oct–Nov source corrections across Binary, Margin, Spot, Wallet, Convert, Transfer, Mining, Loans, SIWE/auth, communications, Admin audit and Public mobile. Consult `tasks/evidence/NEXI_SOURCE_CLOSURE_MATRIX_20261109.md` only for relevant prior receipts.
 - Nov13 recorded NestJS Doctor 0 architecture errors, backend TypeScript exit 0, and scoped financial regression PASS at that revision, not current HEAD.
-- Nov13 original 113 owner source paths indexed; previous 5 source-implemented / 108 insufficient-evidence was DOCUMENTATION coverage, not 108 missing features.
+- Nov13 historical owner-path index was transferred unchanged to the browser-acceptance evidence directory. It does not define active source tasks.
 - Graphify engine and Kernel work closed. Knowledge v4 and current Graphify CLI/MCPC are read-only source navigation tools.
 
 ## Execution contract
@@ -64,3 +64,15 @@ See `tasks/evidence/NEXI_FINAL_SOURCE_CLOSURE_20261116.md`. Two of the three exa
 
 ## 2026-11-17 — Source-closure checkpoint
 Spot/Binary pair maintenance key collisions are corrected at the Backend writer; see the dated matrix addendum and updated Admin crosswalk. The remaining shared fallback caller contracts are still being reconciled against their Backend persisted identities. Keep app verification and release deferred while source status is SOURCE_OPEN.
+
+## 2026-11-17 — Source-only Admin replay continuation
+- [x] AST inventory 49 Admin requestMutation callers (46 fallback, 3 explicit), with 49 current Backend owner/source locations in the existing crosswalk JSON. Source owner mapping is not a complete replay-proof classification.
+- [x] Repair proven source contradictions: moderation audit/outbox atomicity and readback, notification/message replay realtime deduplication, Learn original audit checks, Binary pair/global original audit readback, Mining Prisma fallback replay, Loan-plan original receipt readback, and Admin message atomic audit.
+- [ ] Reconcile remaining evidence-proven Backend/Public/Admin source integration gaps and historical-key/guard contradictions; do not classify the 113 browser acceptance criteria as a source-closure prerequisite.
+- Source status: SOURCE_OPEN. Application tests, lint/typechecks, builds, browser acceptance, service operations and deployment: DEFERRED_BY_OWNER_SOURCE_FIRST_RULE.
+
+
+## 2026-11-17 — documentation reconciliation checkpoint
+- [x] Reconcile seven architecture Markdown owners, source package/runtime boundaries, and historical Graphify/Admin/acceptance routes; document controlling references in docs/architecture/NEXI_SYSTEM_ARCHITECTURE.md.
+- [x] Locate tracked documentation and reconcile the immutable 225-receipt index; three acceptance receipts relocated byte-identically, two source receipts changed after prior index, no missing evidence inferred. See docs/DOCUMENTATION_AND_RECEIPT_INDEX_20261117.md.
+- [ ] Source work after this documentation commit remains the exact demonstrated Admin replay/producer-to-consumer frontier, NOT the original 113 browser cases. No application verification by owner SOURCE-FIRST rule.

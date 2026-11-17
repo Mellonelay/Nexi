@@ -87,3 +87,8 @@ Work controller: `SentinelX Work Controller → Work Fast Kernel → Capability 
 **A complete:** One evidence row per attempted feature/control and all 113 criteria reconciled with statuses; all 21 Admin nav destinations and 13 route-only dispositions recorded; functional clicks/typing documented; bounded economic actions completed where authorized; all genuine defects captured—including Admin failed-after-credit, Options confirmation/settlement, countdown and mobile balance truncation—with no source repair yet. Remaining blocked actions have exact dependencies. Then prepare ranked single repair batch, not another discovery loop.
 
 **B complete only later:** All confirmed defects corrected at causal source owners in one batch, targeted validation completed, source revisions/commit recorded, owner-approved final build/deployment performed once, and one regression sweep observed on newly deployed SHAs. Never call Phase A or a historical release proof `BROWSER_VERIFIED` for a new deployment.
+
+
+## 2026-11-17 — owner phase routing
+
+Historical 113-row source-owner and traceability inventories are preserved under `docs/quality/acceptance-evidence/` and are inputs to the **later browser acceptance** campaign, not active source-closure tasks. The canonical 113 requirements and historical browser statuses remain unchanged. The 5/108 dated source-association distribution is not a source backlog count.

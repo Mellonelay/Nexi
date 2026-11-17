@@ -44,3 +44,11 @@ Correction-audit receipt integrity and Communications session disconnect are sou
 
 ## 2026-11-17 — Pair idempotency correction
 Spot/Binary maintenance now scopes persisted replay identity by resolved pair and desired state while retaining exact legacy audit replay. See the 2026-11-17 addendum in tasks/evidence/NEXI_SOURCE_CLOSURE_MATRIX_20261109.md and live_reconciliation_20261117 in the crosswalk JSON. The remaining non-pair fallback caller contracts are still insufficiently reconciled; repository source status remains SOURCE_OPEN. Next: map those existing crosswalk callers to Backend persisted identity/replay guards, without reopening completed correction-audit or settlement receipts. No application verification before source closure.
+
+## 2026-11-17 — documentation-first commit boundary
+- [x] Locate tracked architecture, operations, task and evidence docs and index 225 dated receipt hashes without deleting history.
+- [x] Reconcile live Backend/Admin/Public architecture against source manifests, guards, SQLite adapter/ledger/outbox/async and Graphify source revision.
+- [x] Redirect missing current Graphify links to the existing CLI/MCPC runbook, and preserve dated source-map/route snapshots.
+- [x] Separate 113 browser criteria and historical 5/108 source-association evidence from source closure.
+- [x] Prepare a single scoped documentation/source checkpoint commit from the reviewed tracked changes and intended documentation index files; leave unrelated untracked backups untouched. Capture final SHA after Git creation.
+- Source-first continues: no application tests, lint/typechecks, builds, browser acceptance, service restart/deploy during this documentation/commit stage.

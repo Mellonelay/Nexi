@@ -7052,12 +7052,16 @@ export class D1FinancialCommandGateway {
       durations,
     };
     const prior = await this.bridge.select<{
+      id: string;
       adminId: string;
+      target: string;
       details: string;
     }>(
-      `SELECT "adminId","details" FROM "AdminAuditLog" WHERE "action"='BINARY_GLOBAL_CONFIGURATION_UPDATED' AND json_extract("details",'$.idempotencyKey')=? ORDER BY "createdAt" DESC LIMIT 1`,
+      `SELECT "id","adminId","target","details" FROM "AdminAuditLog" WHERE "action"='BINARY_GLOBAL_CONFIGURATION_UPDATED' AND json_valid("details") AND json_extract("details",'$.idempotencyKey')=? ORDER BY "createdAt" DESC LIMIT 2`,
       [command.idempotencyKey],
     );
+    if (prior.results.length > 1)
+      throw new ConflictException("Multiple original Binary global configuration receipts exist");
     if (prior.results[0]) {
       let details: Record<string, any>;
       try {
@@ -7069,6 +7073,7 @@ export class D1FinancialCommandGateway {
       }
       if (
         prior.results[0].adminId !== command.adminId ||
+        prior.results[0].target !== "global" ||
         details.reason !== command.reason ||
         JSON.stringify(details.payload) !== JSON.stringify(payload)
       )
@@ -7079,7 +7084,7 @@ export class D1FinancialCommandGateway {
         throw new BadRequestException(
           "Binary global configuration replay has no saved result",
         );
-      return { ...details.policy, replayed: true };
+      return { ...details.policy, auditId: prior.results[0].id, replayed: true };
     }
 
     const latestRows = await this.listBinaryConfigurationRows();
@@ -7108,6 +7113,7 @@ export class D1FinancialCommandGateway {
       maxStake: command.maxStake,
       durations,
     };
+    const auditId = randomUUID();
     const statements: D1BridgeBatchStatement[] = [];
     for (const current of latestRows) {
       const setting = durations.find(
@@ -7147,7 +7153,7 @@ export class D1FinancialCommandGateway {
     statements.push({
       sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`,
       params: [
-        randomUUID(),
+        auditId,
         command.adminId,
         "BINARY_GLOBAL_CONFIGURATION_UPDATED",
         "global",
@@ -7177,7 +7183,7 @@ export class D1FinancialCommandGateway {
         index,
         "D1 Binary global config materialization",
       );
-    return policy;
+    return { ...policy, auditId, replayed: false };
   }
 
   private async listBinaryConfigurationRows(): Promise<

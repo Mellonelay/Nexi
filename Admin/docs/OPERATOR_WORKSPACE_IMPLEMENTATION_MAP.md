@@ -86,7 +86,7 @@ Product configuration remains Admin-controlled **where existing backend authorit
 
 ## Current source reconciliation — 2026-11-07
 
-Canonical three-surface topology: use `@nexi-graphify-live` backed by `/srv/nexi/graphify-live/20261107/merged-graph.json`; exact SHA/counts and coverage are in [the Graphify coverage report](../../docs/architecture/NEXI_GRAPHIFY_COVERAGE_20261107.md). This map is source ownership evidence, not browser/runtime proof.
+Canonical three-surface topology: use `@nexi-graphify-live` backed by `/srv/nexi/graphify-live/20261107/merged-graph.json`; exact SHA/counts and coverage are in [the Graphify coverage report](../../docs/operations/NEXI_GRAPHIFY_CLOUD_CLI_MCPC_RUNBOOK_20261116.md). This map is source ownership evidence, not browser/runtime proof.
 
 The historical inventory above must not be read as the current sidebar. Source main `27b78bb6f74a0ddb44e9121b15fdbb7c9f1c3c32` (2026-11-07) has eight workspaces, 21 direct NAV_GROUPS destinations and 34 named page files; Sandbox remains contextual and is not a direct navigation item. Clients contains KYC Reviews and customer Security & Sessions; the `/users` customer detail also owns VIP/referral profile, referral reward decision, policy editing and audited manual VIP override/clear controls. Do not restore standalone Sessions or hidden legacy destinations. Public App Settings consolidates route/navigation, markets/quotes, content/notices, Contact Us and advanced feature controls while preserving provider/backend ownership.
 

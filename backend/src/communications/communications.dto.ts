@@ -95,6 +95,8 @@ export class MessageModerationCaseResponseDto {
   @ApiProperty({ type: String, nullable: true }) reviewedById!: string | null;
   @ApiProperty({ type: String, format: 'date-time' }) createdAt!: Date;
   @ApiProperty({ type: String, format: 'date-time' }) updatedAt!: Date;
+  @ApiPropertyOptional() auditId?: string;
+  @ApiPropertyOptional() replayed?: boolean;
 }
 
 export class AdminMessageModerationCaseResponseDto extends MessageModerationCaseResponseDto {

@@ -15,6 +15,7 @@ describe("Admin Binary pair availability", () => {
       enabled: true,
     }));
     const outbox = new Map<string, any>();
+    const audits = new Map<string, any>();
     const marketPair = {
       findFirst: jest
         .fn()
@@ -33,7 +34,15 @@ describe("Admin Binary pair availability", () => {
         }),
       },
       adminAuditLog: {
-        create: jest.fn(async () => ({ id: "audit-" + outbox.size })),
+        findMany: jest.fn(async ({ where }: any) =>
+          [...audits.values()].filter((row) =>
+            row.adminId === where.adminId && row.action === where.action && row.target === where.target)),
+        findUnique: jest.fn(async ({ where }: any) => audits.get(where.id) ?? null),
+        create: jest.fn(async ({ data }: any) => {
+          const audit = { ...data, id: "audit-" + (audits.size + 1) };
+          audits.set(audit.id, audit);
+          return audit;
+        }),
       },
       eventOutbox: {
         findUnique: jest.fn(
@@ -104,7 +113,7 @@ describe("Admin Binary pair availability", () => {
         "Pause Binary",
         "pause-key-123",
       ),
-    ).rejects.toThrow("idempotency key was already used");
+    ).rejects.toThrow("key was reused with different request context");
     expect(rows).toHaveLength(6);
     expect(outbox.size).toBe(2);
   });

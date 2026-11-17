@@ -85,7 +85,7 @@ export class D1CommunicationsCommandGateway {
     metadata?: Record<string, unknown>;
     adminId?: string;
     reason?: string;
-  }): Promise<void> {
+  }): Promise<{ replayed: boolean }> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const metadata = input.metadata ? JSON.stringify(input.metadata) : null;
     const eventType = input.eventType ?? "NOTIFICATION_CREATED";
@@ -124,7 +124,11 @@ export class D1CommunicationsCommandGateway {
           ...(input.adminId ? [input.id, input.adminId, input.id, auditDetails] : [])],
       });
     try {
-      await this.bridge.batch(statements);
+      const result = await this.bridge.batch(statements);
+      const changed = result.results[0]?.meta?.changes;
+      if (typeof changed !== "number")
+        throw new ConflictException("Notification persistence result is unavailable");
+      return { replayed: changed === 0 };
     } catch (error) {
       if (error instanceof Error &&
           /NOT NULL constraint failed: Notification\.(userId|type|title|body)/i.test(error.message)) {
@@ -142,7 +146,9 @@ export class D1CommunicationsCommandGateway {
     resolution?: string;
     conversationState?: "ACTIVE" | "RESTRICTED";
     idempotencyKey: string;
-  }): Promise<boolean> {
+    auditId: string;
+    auditDetails: string;
+  }): Promise<{ replayed: boolean }> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const eventKey = "message-moderation:" + input.id + ":" + input.idempotencyKey;
     const eventId = randomUUID();
@@ -153,8 +159,7 @@ export class D1CommunicationsCommandGateway {
       conversationState: input.conversationState ?? null,
       resolution: input.resolution ?? null,
     });
-    // Insert the original event before any mutation. Only this new event ID
-    // authorizes updates; identical retries never reapply an older command.
+    // A fresh event ID gates the state update. Replayed requests never reapply it.
     const original = 'EXISTS (SELECT 1 FROM "EventOutbox" WHERE "id"=? AND "idempotencyKey"=?)';
     const statements: D1BridgeBatchStatement[] = [
       {
@@ -173,14 +178,23 @@ export class D1CommunicationsCommandGateway {
         params: [input.conversationState, input.conversationId, eventId, eventKey],
       });
     }
-    // A conflicting key must abort inside BEGIN IMMEDIATE, rolling back all
-    // preceding statements. MessageModerationCase.conversationId is NOT NULL.
     statements.push({
-      sql: 'INSERT INTO "MessageModerationCase" ("id","conversationId","reporterId","reason") SELECT ?,NULL,NULL,NULL WHERE NOT EXISTS (SELECT 1 FROM "EventOutbox" WHERE "idempotencyKey"=? AND "aggregateType"=\'MESSAGE_MODERATION\' AND "aggregateId"=? AND "eventType"=\'MESSAGE_MODERATION_RESOLVED\' AND "payload"=?)',
-      params: ["moderation-intent-guard:" + eventId, eventKey, input.id, payload],
+      sql: 'INSERT OR IGNORE INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") SELECT ?,?,\'MESSAGE_MODERATION_RESOLVED\',?,?,CURRENT_TIMESTAMP WHERE ' + original,
+      params: [input.auditId, input.adminId, input.id, input.auditDetails, eventId, eventKey],
+    });
+    // A conflicting key, missing original event, or missing/mismatched
+    // persisted audit aborts inside the same SQLite BEGIN IMMEDIATE batch.
+    statements.push({
+      sql: 'INSERT INTO "MessageModerationCase" ("id","conversationId","reporterId","reason") SELECT ?,NULL,NULL,NULL WHERE NOT EXISTS (SELECT 1 FROM "EventOutbox" WHERE "idempotencyKey"=? AND "aggregateType"=\'MESSAGE_MODERATION\' AND "aggregateId"=? AND "eventType"=\'MESSAGE_MODERATION_RESOLVED\' AND "payload"=?) OR NOT EXISTS (SELECT 1 FROM "AdminAuditLog" WHERE "id"=? AND "adminId"=? AND "action"=\'MESSAGE_MODERATION_RESOLVED\' AND "target"=? AND "details"=?)',
+      params: ["moderation-intent-guard:" + eventId, eventKey, input.id, payload,
+        input.auditId, input.adminId, input.id, input.auditDetails],
     });
     try {
-      await this.bridge.batch(statements);
+      const batch = await this.bridge.batch(statements);
+      const changes = batch.results[0]?.meta?.changes;
+      if (typeof changes !== "number")
+        throw new ConflictException("Moderation event persistence result is unavailable");
+      return { replayed: changes === 0 };
     } catch (error) {
       if (error instanceof Error &&
           /NOT NULL constraint failed: MessageModerationCase\.(conversationId|reporterId|reason)/i.test(error.message)) {
@@ -188,7 +202,6 @@ export class D1CommunicationsCommandGateway {
       }
       throw error;
     }
-    return true;
   }
 
   async sendMessage(input: {
@@ -201,9 +214,10 @@ export class D1CommunicationsCommandGateway {
     body: string;
     attachments?: unknown;
     idempotencyKey: string;
+    adminAudit?: { id: string; adminId: string; target: string; details: string };
   }): Promise<boolean> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
-    const result = await this.bridge.batch([
+    const statements: D1BridgeBatchStatement[] = [
       {
         sql: `INSERT OR IGNORE INTO "MessageConversation" ("id","participantAId","participantBId","state","createdAt","updatedAt") VALUES (?,?,?,'ACTIVE',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`,
         params: [input.conversationId, input.participantAId, input.participantBId],
@@ -244,9 +258,31 @@ export class D1CommunicationsCommandGateway {
         `EXISTS (SELECT 1 FROM "PersistentMessage" WHERE "id"=?)`,
         [input.id],
       ),
-    ]);
+    ];
+    if (input.adminAudit) {
+      const audit = input.adminAudit;
+      // The immediately preceding message INSERT must have created a fresh
+      // row; a retry cannot manufacture an audit for an older message.
+      statements.splice(2, 0, {
+        sql: 'INSERT OR IGNORE INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") SELECT ?,?,\'ADMIN_MESSAGE_SENT\',?,?,CURRENT_TIMESTAMP WHERE changes()=1',
+        params: [audit.id, audit.adminId, audit.target, audit.details],
+      });
+      statements.push({
+        sql: 'INSERT INTO "PersistentMessage" ("id","senderId","recipientId","body") SELECT ?,NULL,NULL,NULL WHERE NOT EXISTS (SELECT 1 FROM "AdminAuditLog" WHERE "id"=? AND "adminId"=? AND "action"=\'ADMIN_MESSAGE_SENT\' AND "target"=? AND "details"=?)',
+        params: ["admin-message-audit-guard:" + input.id, audit.id, audit.adminId, audit.target, audit.details],
+      });
+    }
+    let result;
+    try {
+      result = await this.bridge.batch(statements);
+    } catch (error) {
+      if (input.adminAudit && error instanceof Error &&
+          /NOT NULL constraint failed: PersistentMessage\.(senderId|recipientId|body)/i.test(error.message))
+        throw new ConflictException("Original Admin message audit receipt is missing or mismatched");
+      throw error;
+    }
     return Number(result.results[1]?.meta?.changes ?? 0) === 1
-      || Number(result.results[3]?.meta?.changes ?? 0) === 1;
+      || Number(result.results[input.adminAudit ? 4 : 3]?.meta?.changes ?? 0) === 1;
   }
 
   /** One SQLite BEGIN IMMEDIATE transaction owns original intent and outbox. */

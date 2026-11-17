@@ -34,7 +34,7 @@ describe('CommunicationsService', () => {
     };
     const d1Commands = {
       isEnabled: jest.fn(() => true),
-      resolveMessageModeration: jest.fn().mockResolvedValue(true),
+      resolveMessageModeration: jest.fn().mockResolvedValue({ replayed: false }),
     };
     const durableOutbox = { recordEvent: jest.fn() };
     const service = new CommunicationsService(
@@ -49,7 +49,7 @@ describe('CommunicationsService', () => {
       resolution: 'reviewed',
       conversationState: 'RESTRICTED',
       idempotencyKey: 'review-1',
-    })).resolves.toBe(updated);
+    })).resolves.toEqual(expect.objectContaining({ ...updated, auditId: expect.any(String), replayed: false }));
 
     expect(d1Commands.resolveMessageModeration).toHaveBeenCalledWith(expect.objectContaining({
       id: 'case-1',
@@ -60,6 +60,56 @@ describe('CommunicationsService', () => {
     }));
     expect(prisma.$transaction).not.toHaveBeenCalled();
     expect(durableOutbox.recordEvent).not.toHaveBeenCalled();
+  });
+
+  it('commits moderation, outbox and Admin audit in the same Prisma transaction', async () => {
+    const current = { id: 'case-1', conversationId: 'conversation:user-1:user-2' };
+    const updated = { ...current, status: 'RESOLVED' };
+    const tx: any = {
+      eventOutbox: { findUnique: jest.fn(async () => null), create: jest.fn(async ({ data }: any) => data) },
+      adminAuditLog: { create: jest.fn(async ({ data }: any) => data) },
+      messageConversation: { update: jest.fn(async () => ({})) },
+      messageModerationCase: { update: jest.fn(async () => updated) },
+    };
+    const db: any = {
+      messageModerationCase: { findUnique: jest.fn(async () => current) },
+      $transaction: jest.fn((work: any) => work(tx)),
+    };
+    const service = new CommunicationsService(
+      db, { recordEvent: jest.fn() } as any, { isEnabled: () => false } as any, redis as any,
+    );
+    const result = await service.resolveMessageModeration('case-1', 'admin-1', {
+      status: 'RESOLVED', conversationState: 'RESTRICTED', idempotencyKey: 'review-1',
+    });
+    expect(result).toEqual(expect.objectContaining({ ...updated, auditId: expect.any(String), replayed: false }));
+    expect(tx.eventOutbox.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ idempotencyKey: 'message-moderation:case-1:review-1' }),
+    }));
+    expect(tx.adminAuditLog.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ adminId: 'admin-1', target: 'case-1', id: result.auditId }),
+    }));
+    expect(db.$transaction).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects a moderation replay if its original Admin audit receipt is absent', async () => {
+    const current = { id: 'case-1', conversationId: 'conversation:user-1:user-2' };
+    const tx: any = {
+      eventOutbox: { findUnique: jest.fn(async () => ({
+        aggregateType: 'MESSAGE_MODERATION', aggregateId: current.id, eventType: 'MESSAGE_MODERATION_RESOLVED',
+        payload: JSON.stringify({ status: 'RESOLVED', conversationId: current.conversationId, reviewedById: 'admin-1', conversationState: null, resolution: null }),
+      })) },
+      adminAuditLog: { findUnique: jest.fn(async () => null) },
+      messageModerationCase: { update: jest.fn() },
+    };
+    const db: any = {
+      messageModerationCase: { findUnique: jest.fn(async () => current) },
+      $transaction: (work: any) => work(tx),
+    };
+    const service = new CommunicationsService(db, {} as any, { isEnabled: () => false } as any, redis as any);
+    await expect(service.resolveMessageModeration(current.id, 'admin-1', {
+      status: 'RESOLVED', idempotencyKey: 'review-1',
+    })).rejects.toThrow('Moderation key belongs to a different original request');
+    expect(tx.messageModerationCase.update).not.toHaveBeenCalled();
   });
 
   it('creates an idempotent ticket with its first reply', async () => {
@@ -90,6 +140,7 @@ describe('CommunicationsService', () => {
       },
       eventOutbox: { upsert: outboxUpsert },
       persistentMessage: {
+        findUnique: jest.fn(async () => null),
         findFirst: jest.fn(async () => ({ sequence: 3 })),
         upsert: jest.fn(async ({ create }: any) => {
           message = create;
@@ -140,6 +191,7 @@ describe('CommunicationsService', () => {
         upsert: jest.fn(async () => ({ id: existing.conversationId, state: 'ACTIVE' })),
       },
       persistentMessage: {
+        findUnique: jest.fn(async () => existing),
         findFirst: jest.fn(async () => null),
         upsert: jest.fn(async () => existing),
       },
@@ -160,8 +212,10 @@ describe('CommunicationsService', () => {
     let persistedMessage: any;
     const tx: any = {
       messageConversation: { upsert: conversationUpsert },
+      adminAuditLog: { create: jest.fn(async ({ data }: any) => data) },
       eventOutbox: { upsert: jest.fn(async ({ create }: any) => create) },
       persistentMessage: {
+        findUnique: jest.fn(async () => null),
         findFirst: jest.fn(async () => lastSequence ? { sequence: lastSequence } : null),
         upsert: jest.fn(async ({ create }: any) => {
           lastSequence = create.sequence;
@@ -206,8 +260,10 @@ describe('CommunicationsService', () => {
     let persistedMessage: any;
     const tx: any = {
       messageConversation: { upsert: jest.fn(async ({ create }: any) => ({ ...create, state: 'ACTIVE' })) },
+      adminAuditLog: { create: jest.fn(async ({ data }: any) => data) },
       eventOutbox: { upsert: jest.fn(async ({ create }: any) => create) },
       persistentMessage: {
+        findUnique: jest.fn(async () => null),
         findFirst: jest.fn(async () => lastSequence ? { sequence: lastSequence } : null),
         upsert: jest.fn(async ({ create }: any) => {
           lastSequence = create.sequence;
@@ -242,7 +298,9 @@ describe('CommunicationsService', () => {
     expect(first.recipientId).toBe(NEXI_SUPPORT_CHANNEL_ID);
     expect(reply.conversationId).toBe(supportConversationId);
     expect(reply.senderId).toBe(NEXI_SUPPORT_CHANNEL_ID);
-    expect(prisma.adminAuditLog.upsert.mock.calls[0][0].create.adminId).toBe('admin-1');
+    expect(tx.adminAuditLog.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ adminId: 'admin-1', action: 'ADMIN_MESSAGE_SENT' }),
+    }));
     expect(tx.messageConversation.upsert).toHaveBeenCalledTimes(2);
   });
 
@@ -438,6 +496,7 @@ describe('CommunicationsService', () => {
         upsert: jest.fn(async () => ({ id: 'conversation:user-1:user-2', state: 'RESTRICTED' })),
       },
       persistentMessage: {
+        findUnique: jest.fn(async () => null),
         findFirst: jest.fn(),
         upsert: jest.fn(),
       },
@@ -491,7 +550,7 @@ describe('CommunicationsService', () => {
         findUnique: jest.fn(async () => notification),
       },
     };
-    const d1Gateway = { createNotification: jest.fn().mockResolvedValue(undefined) };
+    const d1Gateway = { createNotification: jest.fn().mockResolvedValue({ replayed: false }) };
     const service = new CommunicationsService(d1, outbox as any, d1Gateway as any, redis as any);
     const result = await service.sendAdminNotification({
       userId: 'user-1', type: 'info', title: 'Hello', body: 'Body', idempotencyKey: 'key-1',
@@ -553,27 +612,26 @@ describe('CommunicationsService', () => {
 
   it('sends Admin messages through the conversation store with an idempotent audit record', async () => {
     const message = { id: 'message-1', senderId: 'admin-1', recipientId: 'user-1', body: 'Hello' };
-    const auditUpsert = jest.fn(async ({ create }: any) => create);
     const prisma: any = {
       user: { findFirst: jest.fn().mockResolvedValue({ id: 'user-1' }) },
-      adminAuditLog: { upsert: auditUpsert },
     };
     const service = new CommunicationsService(prisma, outbox as any, d1Communications as any, redis as any);
-    const send = jest.spyOn(service, 'sendMessage').mockResolvedValue(message as any);
+    const send = jest.spyOn(service, 'sendMessage').mockImplementation(
+      async (_sender, _recipient, _body, _key, _attachments, audit) =>
+        ({ ...message, auditId: audit?.id } as any),
+    );
 
     await expect(service.sendAdminMessage('admin-1', {
       recipientId: 'user-1', body: 'Hello', reason: 'Customer follow-up', idempotencyKey: 'message-key-1',
     })).resolves.toEqual(expect.objectContaining({ ...message, auditId: expect.any(String) }));
 
-    expect(send).toHaveBeenCalledWith('admin-1', 'user-1', 'Hello', 'message-key-1', undefined);
-    expect(auditUpsert).toHaveBeenCalledWith(expect.objectContaining({
-      create: expect.objectContaining({
-        action: 'ADMIN_MESSAGE_SENT',
-        adminId: 'admin-1',
-        target: 'user-1',
+    expect(send).toHaveBeenCalledWith(
+      'admin-1', 'user-1', 'Hello', 'message-key-1', undefined,
+      expect.objectContaining({
+        adminId: 'admin-1', target: 'user-1',
         details: expect.stringContaining('Customer follow-up'),
       }),
-    }));
+    );
   });
   it('hides internal replies from the public ticket timeline', async () => {
     const findMany = jest.fn(async () => []);

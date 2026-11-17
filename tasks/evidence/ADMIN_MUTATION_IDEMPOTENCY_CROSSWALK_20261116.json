@@ -455,5 +455,926 @@
       "scope": "Entries 26-45; previous indices are retained. Other pre-26 callers remain under prior crosswalk disposition."
     },
     "next_operation": "Resolve the spot-pair cross-caller identity gap without invalidating either legacy key, then map persisted identity for remaining INSUFFICIENT_EVIDENCE entries. No app verification/runtime work under SOURCE-FIRST."
+  },
+  "source_continuation_20261117": {
+    "source_head": "03cf396788d1897cd700a5edd5de55f065db6562",
+    "provider_sha256": "170b3b78570144f6e3c52e6dde8b3453d45387124a8075a4a20ebd53623d00d0",
+    "call_inventory": [
+      {
+        "method": "writeJsonConfig",
+        "line": 609,
+        "route": "\"/admin/system-config\"",
+        "explicitKey": true
+      },
+      {
+        "method": "setBinaryResearchDefault",
+        "line": 926,
+        "route": "`/admin/users/${encodeURIComponent(id)}/binary-research-default`",
+        "explicitKey": false
+      },
+      {
+        "method": "revokeSession",
+        "line": 1017,
+        "route": "`/admin/sessions/${encodeURIComponent(id)}/revoke`",
+        "explicitKey": false
+      },
+      {
+        "method": "revokeUserSessions",
+        "line": 1020,
+        "route": "`/admin/users/${encodeURIComponent(id)}/sessions/revoke`",
+        "explicitKey": false
+      },
+      {
+        "method": "toggleAssetVisibility",
+        "line": 1057,
+        "route": "\"/admin/market/assets/visibility\"",
+        "explicitKey": false
+      },
+      {
+        "method": "createDepositAsset",
+        "line": 1082,
+        "route": "\"/admin/currencies\"",
+        "explicitKey": false
+      },
+      {
+        "method": "updateDepositAsset",
+        "line": 1105,
+        "route": "`/admin/currencies/${id}`",
+        "explicitKey": false
+      },
+      {
+        "method": "createDepositNetwork",
+        "line": 1111,
+        "route": "\"/admin/wallet-networks\"",
+        "explicitKey": false
+      },
+      {
+        "method": "disableDepositAddress",
+        "line": 1200,
+        "route": "`/admin/address/${encodeURIComponent(id)}/disable`",
+        "explicitKey": false
+      },
+      {
+        "method": "toggleNetwork",
+        "line": 1207,
+        "route": "`/admin/wallet-networks/${encodeURIComponent(id)}`",
+        "explicitKey": false
+      },
+      {
+        "method": "setFeedStatus",
+        "line": 1288,
+        "route": "\"/admin/market/feeds/status\"",
+        "explicitKey": false
+      },
+      {
+        "method": "pauseSpotPair",
+        "line": 1358,
+        "route": "path",
+        "explicitKey": false
+      },
+      {
+        "method": "cancelSpotOrder",
+        "line": 1365,
+        "route": "`/admin/spot/orders/${encodeURIComponent(id)}/cancel`",
+        "explicitKey": false
+      },
+      {
+        "method": "updateMarginConfiguration",
+        "line": 1376,
+        "route": "\"/admin/spot/margin/config\"",
+        "explicitKey": false
+      },
+      {
+        "method": "updateBinaryGlobalConfiguration",
+        "line": 1395,
+        "route": "\"/admin/binary/global-config\"",
+        "explicitKey": true
+      },
+      {
+        "method": "pauseBinaryPair",
+        "line": 1489,
+        "route": "path",
+        "explicitKey": false
+      },
+      {
+        "method": "settleBinaryPosition",
+        "line": 1496,
+        "route": "`/admin/binary/positions/${encodeURIComponent(id)}/settle`",
+        "explicitKey": false
+      },
+      {
+        "method": "setBinaryResearchPositionOverride",
+        "line": 1504,
+        "route": "`/admin/binary/positions/${encodeURIComponent(id)}/research-control`",
+        "explicitKey": false
+      },
+      {
+        "method": "confirmDeposit",
+        "line": 1568,
+        "route": "`/admin/deposits/${encodeURIComponent(id)}/confirm`",
+        "explicitKey": false
+      },
+      {
+        "method": "decideWithdrawal",
+        "line": 1602,
+        "route": "`/admin/withdrawals/${encodeURIComponent(id)}/${decision === \"approved\" ? \"approve\" : \"reject\"}`",
+        "explicitKey": false
+      },
+      {
+        "method": "createMiningPlan",
+        "line": 1725,
+        "route": "\"/admin/mining-plans\"",
+        "explicitKey": false
+      },
+      {
+        "method": "updateMiningPlan",
+        "line": 1732,
+        "route": "`/admin/mining-plans/${encodeURIComponent(id)}`",
+        "explicitKey": false
+      },
+      {
+        "method": "createLoanPlan",
+        "line": 1756,
+        "route": "\"/admin/loan-plans\"",
+        "explicitKey": false
+      },
+      {
+        "method": "updateLoanPlan",
+        "line": 1763,
+        "route": "`/admin/loan-plans/${encodeURIComponent(id)}`",
+        "explicitKey": false
+      },
+      {
+        "method": "approveLoanApplication",
+        "line": 1806,
+        "route": "`/admin/loans/applications/${encodeURIComponent(id)}/approve`",
+        "explicitKey": false
+      },
+      {
+        "method": "rejectLoanApplication",
+        "line": 1814,
+        "route": "`/admin/loans/applications/${encodeURIComponent(id)}/reject`",
+        "explicitKey": false
+      },
+      {
+        "method": "toggleFlag",
+        "line": 1827,
+        "route": "\"/admin/feature-flags\"",
+        "explicitKey": false
+      },
+      {
+        "method": "updateFlag",
+        "line": 1839,
+        "route": "\"/admin/feature-flags\"",
+        "explicitKey": false
+      },
+      {
+        "method": "updateNetwork",
+        "line": 1877,
+        "route": "`/admin/currencies/${network.currencyId}`",
+        "explicitKey": false
+      },
+      {
+        "method": "updateSpotPair",
+        "line": 1900,
+        "route": "path",
+        "explicitKey": false
+      },
+      {
+        "method": "updateBinaryPair",
+        "line": 1928,
+        "route": "path",
+        "explicitKey": false
+      },
+      {
+        "method": "setIncidentActive",
+        "line": 2186,
+        "route": "path",
+        "explicitKey": false
+      },
+      {
+        "method": "creditDeposit",
+        "line": 2289,
+        "route": "`/admin/deposits/${encodeURIComponent(id)}/credit`",
+        "explicitKey": false
+      },
+      {
+        "method": "failDeposit",
+        "line": 2292,
+        "route": "`/admin/deposits/${encodeURIComponent(id)}/fail`",
+        "explicitKey": false
+      },
+      {
+        "method": "requestWithdrawalReview",
+        "line": 2300,
+        "route": "`/admin/withdrawals/${encodeURIComponent(id)}/review`",
+        "explicitKey": false
+      },
+      {
+        "method": "setWithdrawalProcessing",
+        "line": 2310,
+        "route": "`/admin/withdrawals/${encodeURIComponent(id)}/fail`",
+        "explicitKey": false
+      },
+      {
+        "method": "createAnnouncement",
+        "line": 2382,
+        "route": "\"/communications/admin/announcements\"",
+        "explicitKey": false
+      },
+      {
+        "method": "updateAnnouncement",
+        "line": 2399,
+        "route": "`/communications/admin/announcements/${encodeURIComponent(id)}`",
+        "explicitKey": false
+      },
+      {
+        "method": "publishAnnouncement",
+        "line": 2408,
+        "route": "`/communications/admin/announcements/${encodeURIComponent(id)}/publish`",
+        "explicitKey": false
+      },
+      {
+        "method": "sendAdminMessage",
+        "line": 2479,
+        "route": "\"/admin/messages\"",
+        "explicitKey": true
+      },
+      {
+        "method": "resolveMessageModeration",
+        "line": 2525,
+        "route": "`/communications/admin/messages/moderation/${encodeURIComponent(id)}`",
+        "explicitKey": false
+      },
+      {
+        "method": "sendNotification",
+        "line": 2599,
+        "route": "\"/communications/admin/notifications\"",
+        "explicitKey": false
+      },
+      {
+        "method": "createLearnCategory",
+        "line": 2657,
+        "route": "\"/communications/admin/learn/categories\"",
+        "explicitKey": false
+      },
+      {
+        "method": "updateLearnCategoryStatus",
+        "line": 2665,
+        "route": "`/communications/admin/learn/categories/${encodeURIComponent(id)}`",
+        "explicitKey": false
+      },
+      {
+        "method": "createLearnArticle",
+        "line": 2688,
+        "route": "\"/communications/admin/learn\"",
+        "explicitKey": false
+      },
+      {
+        "method": "updateLearnArticle",
+        "line": 2705,
+        "route": "`/communications/admin/learn/${encodeURIComponent(id)}`",
+        "explicitKey": false
+      },
+      {
+        "method": "publishLearnArticle",
+        "line": 2714,
+        "route": "`/communications/admin/learn/${encodeURIComponent(id)}/publish`",
+        "explicitKey": false
+      },
+      {
+        "method": "scheduleMaintenanceWindow",
+        "line": 2921,
+        "route": "\"/admin/maintenance-windows\"",
+        "explicitKey": false
+      },
+      {
+        "method": "cancelMaintenanceWindow",
+        "line": 2928,
+        "route": "\"/admin/maintenance-windows/\" + encodeURIComponent(id) + \"/cancel\"",
+        "explicitKey": false
+      }
+    ],
+    "call_totals": {
+      "total": 49,
+      "fallback": 46,
+      "explicit": 3
+    },
+    "scoped_dispositions": [
+      {
+        "entry": 31,
+        "route": "POST /admin/deposits/{id}/fail",
+        "caller": "failDeposit",
+        "classification": "SOURCE_IMPLEMENTED_CURRENT",
+        "evidence_paths": [
+          "backend/src/financial/financial-operations.service.ts:158",
+          "backend/src/d1/d1-financial-command.gateway.ts:7493"
+        ],
+        "proof_class": "SOURCE_ONLY; NOT TESTED OR DEPLOYED"
+      },
+      {
+        "entry": 32,
+        "route": "POST /admin/withdrawals/{id}/review",
+        "caller": "requestWithdrawalReview",
+        "classification": "SOURCE_IMPLEMENTED_CURRENT",
+        "evidence_paths": [
+          "backend/src/financial/financial-operations.service.ts:112",
+          "backend/src/d1/d1-financial-command.gateway.ts:8570"
+        ],
+        "proof_class": "SOURCE_ONLY; NOT TESTED OR DEPLOYED"
+      },
+      {
+        "entry": 33,
+        "route": "POST /admin/withdrawals/{id}/fail",
+        "caller": "setWithdrawalProcessing(failed)",
+        "classification": "SOURCE_IMPLEMENTED_CURRENT",
+        "evidence_paths": [
+          "backend/src/financial/financial-operations.service.ts:132",
+          "backend/src/d1/d1-financial-command.gateway.ts:8143"
+        ],
+        "proof_class": "SOURCE_ONLY; NOT TESTED OR DEPLOYED"
+      },
+      {
+        "entry": 34,
+        "route": "POST /communications/admin/announcements",
+        "caller": "createAnnouncement",
+        "classification": "SOURCE_IMPLEMENTED_CURRENT",
+        "evidence_paths": [
+          "backend/src/communications/communications.controller.ts:257",
+          "backend/src/communications/communications.service.ts:945",
+          "backend/src/d1/d1-communications-command.gateway.ts:266"
+        ],
+        "proof_class": "SOURCE_ONLY; NOT TESTED OR DEPLOYED"
+      },
+      {
+        "entry": 35,
+        "route": "PATCH /communications/admin/announcements/{id}",
+        "caller": "updateAnnouncement",
+        "classification": "SOURCE_IMPLEMENTED_CURRENT",
+        "evidence_paths": [
+          "backend/src/communications/communications.controller.ts:266",
+          "backend/src/communications/communications.service.ts:1000",
+          "backend/src/d1/d1-communications-command.gateway.ts:266"
+        ],
+        "proof_class": "SOURCE_ONLY; NOT TESTED OR DEPLOYED"
+      },
+      {
+        "entry": 36,
+        "route": "POST /communications/admin/announcements/{id}/publish",
+        "caller": "publishAnnouncement",
+        "classification": "SOURCE_IMPLEMENTED_CURRENT",
+        "evidence_paths": [
+          "backend/src/communications/communications.controller.ts:275",
+          "backend/src/communications/communications.service.ts:1030",
+          "backend/src/d1/d1-communications-command.gateway.ts:266"
+        ],
+        "proof_class": "SOURCE_ONLY; NOT TESTED OR DEPLOYED"
+      },
+      {
+        "entry": 37,
+        "route": "PATCH /communications/admin/messages/moderation/{id}",
+        "caller": "resolveMessageModeration",
+        "classification": "SOURCE_IMPLEMENTED_CURRENT",
+        "evidence_paths": [
+          "backend/src/communications/communications.controller.ts:323",
+          "backend/src/communications/communications.service.ts:596",
+          "backend/src/d1/d1-communications-command.gateway.ts:137"
+        ],
+        "proof_class": "SOURCE_ONLY; NOT TESTED OR DEPLOYED"
+      },
+      {
+        "entry": 38,
+        "route": "POST /communications/admin/notifications",
+        "caller": "sendNotification",
+        "classification": "SOURCE_IMPLEMENTED_CURRENT",
+        "evidence_paths": [
+          "backend/src/communications/communications.controller.ts:343",
+          "backend/src/communications/communications.service.ts:804",
+          "backend/src/d1/d1-communications-command.gateway.ts:80"
+        ],
+        "proof_class": "SOURCE_ONLY; NOT TESTED OR DEPLOYED"
+      },
+      {
+        "entry": 39,
+        "route": "POST /communications/admin/learn/categories",
+        "caller": "createLearnCategory",
+        "classification": "SOURCE_IMPLEMENTED_CURRENT",
+        "evidence_paths": [
+          "backend/src/communications/communications.service.ts:1121"
+        ],
+        "proof_class": "SOURCE_ONLY; NOT TESTED OR DEPLOYED"
+      },
+      {
+        "entry": 40,
+        "route": "PATCH /communications/admin/learn/categories/{id}",
+        "caller": "updateLearnCategoryStatus",
+        "classification": "SOURCE_IMPLEMENTED_CURRENT",
+        "evidence_paths": [
+          "backend/src/communications/communications.service.ts:1183"
+        ],
+        "proof_class": "SOURCE_ONLY; NOT TESTED OR DEPLOYED"
+      },
+      {
+        "entry": 41,
+        "route": "POST /communications/admin/learn",
+        "caller": "createLearnArticle",
+        "classification": "SOURCE_IMPLEMENTED_CURRENT",
+        "evidence_paths": [
+          "backend/src/communications/communications.service.ts:1300"
+        ],
+        "proof_class": "SOURCE_ONLY; NOT TESTED OR DEPLOYED"
+      },
+      {
+        "entry": 42,
+        "route": "PATCH /communications/admin/learn/{id}",
+        "caller": "updateLearnArticle",
+        "classification": "SOURCE_IMPLEMENTED_CURRENT",
+        "evidence_paths": [
+          "backend/src/communications/communications.service.ts:1355"
+        ],
+        "proof_class": "SOURCE_ONLY; NOT TESTED OR DEPLOYED"
+      },
+      {
+        "entry": 43,
+        "route": "POST /communications/admin/learn/{id}/publish",
+        "caller": "publishLearnArticle",
+        "classification": "SOURCE_IMPLEMENTED_CURRENT",
+        "evidence_paths": [
+          "backend/src/communications/communications.service.ts:1484"
+        ],
+        "proof_class": "SOURCE_ONLY; NOT TESTED OR DEPLOYED"
+      },
+      {
+        "entry": 44,
+        "route": "POST /admin/maintenance-windows",
+        "caller": "scheduleMaintenanceWindow",
+        "classification": "SOURCE_IMPLEMENTED_CURRENT",
+        "evidence_paths": [
+          "backend/src/admin/admin.service.ts:753",
+          "backend/src/d1/d1-financial-command.gateway.ts:4314"
+        ],
+        "proof_class": "SOURCE_ONLY; NOT TESTED OR DEPLOYED"
+      },
+      {
+        "entry": 45,
+        "route": "POST /admin/maintenance-windows/{id}/cancel",
+        "caller": "cancelMaintenanceWindow",
+        "classification": "SOURCE_IMPLEMENTED_CURRENT",
+        "evidence_paths": [
+          "backend/src/admin/admin.service.ts:846",
+          "backend/src/d1/d1-financial-command.gateway.ts:4405"
+        ],
+        "proof_class": "SOURCE_ONLY; NOT TESTED OR DEPLOYED"
+      }
+    ],
+    "scoped_source_implemented": 15,
+    "not_proven_by_this_slice": "Callers outside entries 31-45 retain earlier classifications until independently reconciled; static source is not runtime proof.",
+    "current_closure": "SOURCE_OPEN",
+    "app_verification": "DEFERRED_BY_OWNER_SOURCE_FIRST_RULE",
+    "owner_map_49": [
+      {
+        "admin_caller": "writeJsonConfig",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:609",
+        "backend_owner": "backend/src/admin/admin.service.ts:1029",
+        "backend_symbol": "updateSystemConfig",
+        "key_generation": "EXPLICIT",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "setBinaryResearchDefault",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:926",
+        "backend_owner": "backend/src/admin/admin.service.ts:1966",
+        "backend_symbol": "persistBinaryResearchControl",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "revokeSession",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:1017",
+        "backend_owner": "backend/src/admin/admin.service.ts:1625",
+        "backend_symbol": "revokeAuthSession",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "revokeUserSessions",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:1020",
+        "backend_owner": "backend/src/admin/admin.service.ts:1697",
+        "backend_symbol": "revokeUserSessions",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "toggleAssetVisibility",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:1057",
+        "backend_owner": "backend/src/admin/admin.service.ts:1786",
+        "backend_symbol": "setMarketAssetVisibility",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "createDepositAsset",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:1082",
+        "backend_owner": "backend/src/admin/admin-wallet-configuration.service.ts:13",
+        "backend_symbol": "createCurrency",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "updateDepositAsset",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:1105",
+        "backend_owner": "backend/src/admin/admin.service.ts:2840",
+        "backend_symbol": "updateAdminCurrency",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "createDepositNetwork",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:1111",
+        "backend_owner": "backend/src/admin/admin-wallet-configuration.service.ts:46",
+        "backend_symbol": "createWalletNetwork",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "disableDepositAddress",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:1200",
+        "backend_owner": "backend/src/admin/admin.service.ts:2898",
+        "backend_symbol": "deleteDepositAddress",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "toggleNetwork",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:1207",
+        "backend_owner": "backend/src/admin/admin-wallet-configuration.service.ts:91",
+        "backend_symbol": "updateWalletNetwork",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "setFeedStatus",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:1288",
+        "backend_owner": "backend/src/admin/admin.service.ts:1884",
+        "backend_symbol": "setMarketFeedStatus",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "pauseSpotPair",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:1358",
+        "backend_owner": "backend/src/admin/admin.service.ts:2662",
+        "backend_symbol": "setSpotPairMaintenance",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "cancelSpotOrder",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:1365",
+        "backend_owner": "backend/src/admin/admin.service.ts:2643",
+        "backend_symbol": "cancelAdminSpotOrder",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "updateMarginConfiguration",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:1376",
+        "backend_owner": "backend/src/admin/admin.service.ts:2750",
+        "backend_symbol": "updateMarginConfiguration",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "updateBinaryGlobalConfiguration",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:1395",
+        "backend_owner": "backend/src/d1/d1-financial-command.gateway.ts:7002",
+        "backend_symbol": "updateBinaryGlobalConfiguration",
+        "key_generation": "EXPLICIT",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "pauseBinaryPair",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:1489",
+        "backend_owner": "backend/src/admin/admin.service.ts:2194",
+        "backend_symbol": "setBinaryPairMaintenance",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "settleBinaryPosition",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:1496",
+        "backend_owner": "backend/src/admin/admin.service.ts:2147",
+        "backend_symbol": "settleAdminBinaryPosition",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "setBinaryResearchPositionOverride",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:1504",
+        "backend_owner": "backend/src/admin/admin.service.ts:1966",
+        "backend_symbol": "persistBinaryResearchControl",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "confirmDeposit",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:1568",
+        "backend_owner": "backend/src/admin/admin.service.ts:2500",
+        "backend_symbol": "confirmAdminDeposit",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "decideWithdrawal",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:1602",
+        "backend_owner": "backend/src/admin/admin.service.ts:2566",
+        "backend_symbol": "decideAdminWithdrawal",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "createMiningPlan",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:1725",
+        "backend_owner": "backend/src/admin/admin.service.ts:2942",
+        "backend_symbol": "createMiningPlan",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "updateMiningPlan",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:1732",
+        "backend_owner": "backend/src/admin/admin.service.ts:2987",
+        "backend_symbol": "updateMiningPlan",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "createLoanPlan",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:1756",
+        "backend_owner": "backend/src/admin/admin.service.ts:3066",
+        "backend_symbol": "createLoanPlan",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "updateLoanPlan",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:1763",
+        "backend_owner": "backend/src/admin/admin.service.ts:3120",
+        "backend_symbol": "updateLoanPlan",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "approveLoanApplication",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:1806",
+        "backend_owner": "backend/src/loans/loans.service.ts:138",
+        "backend_symbol": "approveLoan",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "rejectLoanApplication",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:1814",
+        "backend_owner": "backend/src/loans/loans.service.ts:153",
+        "backend_symbol": "rejectLoan",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "toggleFlag",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:1827",
+        "backend_owner": "backend/src/admin/admin.service.ts:1263",
+        "backend_symbol": "updateFeatureFlag",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "updateFlag",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:1839",
+        "backend_owner": "backend/src/admin/admin.service.ts:1263",
+        "backend_symbol": "updateFeatureFlag",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "updateNetwork",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:1877",
+        "backend_owner": "backend/src/admin/admin.service.ts:2840",
+        "backend_symbol": "updateAdminCurrency",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "updateSpotPair",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:1900",
+        "backend_owner": "backend/src/admin/admin.service.ts:2662",
+        "backend_symbol": "setSpotPairMaintenance",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "updateBinaryPair",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:1928",
+        "backend_owner": "backend/src/admin/admin.service.ts:2194",
+        "backend_symbol": "setBinaryPairMaintenance",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "setIncidentActive",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:2186",
+        "backend_owner": "backend/src/admin/admin.service.ts:633",
+        "backend_symbol": "acknowledgeIncident",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "creditDeposit",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:2289",
+        "backend_owner": "backend/src/admin/admin.service.ts:2522",
+        "backend_symbol": "creditAdminDeposit",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "failDeposit",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:2292",
+        "backend_owner": "backend/src/admin/admin.service.ts:2544",
+        "backend_symbol": "failAdminDeposit",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "requestWithdrawalReview",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:2300",
+        "backend_owner": "backend/src/admin/admin.service.ts:2584",
+        "backend_symbol": "requestAdminWithdrawalReview",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "setWithdrawalProcessing",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:2310",
+        "backend_owner": "backend/src/financial/financial-operations.service.ts:132",
+        "backend_symbol": "failWithdrawal",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "createAnnouncement",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:2382",
+        "backend_owner": "backend/src/communications/communications.service.ts:930",
+        "backend_symbol": "createAnnouncement",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "updateAnnouncement",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:2399",
+        "backend_owner": "backend/src/communications/communications.service.ts:968",
+        "backend_symbol": "updateAnnouncement",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "publishAnnouncement",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:2408",
+        "backend_owner": "backend/src/communications/communications.service.ts:1019",
+        "backend_symbol": "publishAnnouncement",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "sendAdminMessage",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:2479",
+        "backend_owner": "backend/src/communications/communications.service.ts:746",
+        "backend_symbol": "sendAdminMessage",
+        "key_generation": "EXPLICIT",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "resolveMessageModeration",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:2525",
+        "backend_owner": "backend/src/communications/communications.service.ts:616",
+        "backend_symbol": "resolveMessageModeration",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "sendNotification",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:2599",
+        "backend_owner": "backend/src/communications/communications.service.ts:820",
+        "backend_symbol": "sendAdminNotification",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "createLearnCategory",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:2657",
+        "backend_owner": "backend/src/communications/communications.service.ts:1107",
+        "backend_symbol": "createLearnCategory",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "updateLearnCategoryStatus",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:2665",
+        "backend_owner": "backend/src/communications/communications.service.ts:1169",
+        "backend_symbol": "updateLearnCategoryStatus",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "createLearnArticle",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:2688",
+        "backend_owner": "backend/src/communications/communications.service.ts:1295",
+        "backend_symbol": "createLearn",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "updateLearnArticle",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:2705",
+        "backend_owner": "backend/src/communications/communications.service.ts:1343",
+        "backend_symbol": "updateLearn",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "publishLearnArticle",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:2714",
+        "backend_owner": "backend/src/communications/communications.service.ts:1471",
+        "backend_symbol": "publishLearn",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "scheduleMaintenanceWindow",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:2921",
+        "backend_owner": "backend/src/admin/admin.service.ts:753",
+        "backend_symbol": "createMaintenanceWindow",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      },
+      {
+        "admin_caller": "cancelMaintenanceWindow",
+        "admin_location": "Admin/src/admin/data/nexi-api-provider.ts:2928",
+        "backend_owner": "backend/src/admin/admin.service.ts:846",
+        "backend_symbol": "cancelMaintenanceWindow",
+        "key_generation": "FALLBACK",
+        "owner_mapping_evidence": "CURRENT_SOURCE_SYMBOL_EXACT",
+        "replay_contract_disposition": "INSUFFICIENT_EVIDENCE_WHERE_NOT_IN_PRIOR_REUSED_RECEIPT"
+      }
+    ],
+    "owner_map_method_count": 49,
+    "source_modified_after_graph_build": true
   }
 }
