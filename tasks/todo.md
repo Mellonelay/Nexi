@@ -75,4 +75,11 @@ Spot/Binary pair maintenance key collisions are corrected at the Backend writer;
 ## 2026-11-17 — documentation reconciliation checkpoint
 - [x] Reconcile seven architecture Markdown owners, source package/runtime boundaries, and historical Graphify/Admin/acceptance routes; document controlling references in docs/architecture/NEXI_SYSTEM_ARCHITECTURE.md.
 - [x] Locate tracked documentation and reconcile the immutable 225-receipt index; three acceptance receipts relocated byte-identically, two source receipts changed after prior index, no missing evidence inferred. See docs/DOCUMENTATION_AND_RECEIPT_INDEX_20261117.md.
-- [ ] Source work after this documentation commit remains the exact demonstrated Admin replay/producer-to-consumer frontier, NOT the original 113 browser cases. No application verification by owner SOURCE-FIRST rule.
+- [x] Apply the outcome-based source disposition: the scoped Admin replay crosswalk has no evidence-proven remaining defect; its unresolved route mapping remains INSUFFICIENT_EVIDENCE and is not a defect backlog.
+
+
+## 2026-11-17 — Final source-phase disposition
+
+- [x] Make the outcome-based source-closure decision at `a71270f77c842db3c96e47f985836b4686e718c7`; reuse existing source-only receipts and repairs.
+- Admin fallback mappings not dispositioned by the scoped crosswalk remain INSUFFICIENT_EVIDENCE. This is not a proven source defect or an instruction to audit all 49 callers. Reopen a specific route only if contradictory source evidence appears.
+- SOURCE_CLOSED applies only to source work. Application verification, authenticated browser acceptance, and release remain deferred pending explicit authorization.
