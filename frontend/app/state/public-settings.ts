@@ -122,7 +122,7 @@ export function normalizePublicNavigation(
         const route = routeByPath.get(target);
         const requiresAuthentication =
           route?.state === 'authenticated' || item?.audience === 'authenticated';
-        const state = route?.state === 'hidden'
+        const state: PublicRouteState = route?.state === 'hidden'
           ? 'hidden'
           : route?.state === 'maintenance'
             ? 'maintenance'
