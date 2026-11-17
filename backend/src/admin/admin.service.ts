@@ -27,6 +27,8 @@ import { SandboxExecutionService } from "../sandbox/sandbox-execution.service";
 import { ADMIN_ROLE_DEFINITIONS } from "./admin-rbac";
 import { D1FinancialCommandGateway } from "../d1/d1-financial-command.gateway";
 import { D1PrismaService } from "../d1/d1-prisma.service";
+import { executeAdminMutation } from "./admin-mutation-replay";
+import { AuthSecurityEventsService } from "../auth/auth-security-events.service";
 import { createHash, randomUUID } from "node:crypto";
 import { CommunicationsService } from "../communications/communications.service";
 import {
@@ -209,6 +211,7 @@ export class AdminService {
     private readonly sandboxExecution: SandboxExecutionService,
     private readonly d1: D1FinancialCommandGateway,
     @Optional() private readonly communications?: CommunicationsService,
+    @Optional() private readonly authSecurityEvents?: AuthSecurityEventsService,
   ) {}
 
   private marketDatabase(): any {
@@ -632,22 +635,44 @@ export class AdminService {
     adminId: string,
     input: { reason: string; idempotencyKey: string },
   ) {
-    if (!input.reason?.trim())
+    if (!input.reason?.trim() || !input.idempotencyKey?.trim())
       throw new BadRequestException(
-        "A reason is required for incident acknowledgement",
+        "Incident acknowledgement requires a reason and original request key",
       );
     if (this.d1?.isEnabled()) {
       return this.d1.acknowledgeIncident({ incidentId: id, adminId, ...input });
     }
-    const existing = await this.prisma.adminIncident.findUnique({
-      where: { acknowledgementIdempotencyKey: input.idempotencyKey },
-    });
-    if (existing) return { ...existing, replayed: true };
-    const incident = await this.prisma.adminIncident.findUnique({
-      where: { id },
-    });
-    if (!incident) throw new NotFoundException("Incident not found");
-    const updated = await this.prisma.$transaction(async (tx) => {
+    const action = "INCIDENT_ACKNOWLEDGED";
+    const auditId = this.marketMutationAuditId(action, adminId, input.idempotencyKey);
+    return this.prisma.$transaction(async (tx) => {
+      const existing = await tx.adminIncident.findUnique({
+        where: { acknowledgementIdempotencyKey: input.idempotencyKey },
+      });
+      if (existing) {
+        if (existing.id !== id || existing.acknowledgedBy !== adminId ||
+            existing.acknowledgementReason !== input.reason)
+          throw new ConflictException("Incident acknowledgement key belongs to another original request");
+        const previousAudit = await tx.adminAuditLog.findUnique({ where: { id: auditId } }) ??
+          await tx.adminAuditLog.findFirst({
+            where: {
+              adminId,
+              action,
+              target: id,
+              details: { contains: input.idempotencyKey },
+            },
+            orderBy: { createdAt: "desc" },
+          });
+        if (!previousAudit)
+          throw new ConflictException("Original incident acknowledgement audit receipt is unavailable");
+        const previousDetails = JSON.parse(previousAudit.details ?? "{}") as Record<string, unknown>;
+        if (previousAudit.adminId !== adminId || previousAudit.action !== action ||
+            previousAudit.target !== id || previousDetails.reason !== input.reason ||
+            previousDetails.idempotencyKey !== input.idempotencyKey)
+          throw new ConflictException("Incident acknowledgement key belongs to another original request");
+        return { ...existing, auditId: previousAudit.id, replayed: true };
+      }
+      const incident = await tx.adminIncident.findUnique({ where: { id } });
+      if (!incident) throw new NotFoundException("Incident not found");
       const row = await tx.adminIncident.update({
         where: { id },
         data: {
@@ -657,12 +682,13 @@ export class AdminService {
           acknowledgementIdempotencyKey: input.idempotencyKey,
         },
       });
-      await tx.adminAuditLog.create({
+      const audit = await tx.adminAuditLog.create({
         data: {
+          id: auditId,
           adminId,
-          action: "INCIDENT_ACKNOWLEDGED",
+          action,
           target: id,
-          details: {
+          details: JSON.stringify({
             reason: input.reason,
             idempotencyKey: input.idempotencyKey,
             before: {
@@ -674,12 +700,11 @@ export class AdminService {
               acknowledgedBy: row.acknowledgedBy,
             },
             result: "ok",
-          },
+          }),
         },
       });
-      return row;
+      return { ...row, auditId: audit.id, replayed: false };
     });
-    return { ...updated, replayed: false };
   }
 
   async listMaintenanceWindows(query: {
@@ -735,9 +760,9 @@ export class AdminService {
     idempotencyKey: string;
     createdBy: string;
   }) {
-    if (!input.reason?.trim())
+    if (!input.reason?.trim() || !input.idempotencyKey?.trim())
       throw new BadRequestException(
-        "A reason is required for maintenance scheduling",
+        "Maintenance scheduling requires a reason and original request key",
       );
     const start = new Date(input.scheduledAt);
     const end = new Date(input.endsAt);
@@ -768,7 +793,9 @@ export class AdminService {
           target: existing.id, details: { contains: '"idempotencyKey":"' + input.idempotencyKey + '"' } },
         orderBy: { createdAt: "desc" },
       });
-      return { ...existing, auditId: audit?.id ?? null, replayed: true };
+      if (!audit)
+        throw new ConflictException("Original maintenance scheduling audit receipt is unavailable");
+      return { ...existing, auditId: audit.id, replayed: true };
     }
     const correlationId = `maintenance:${input.idempotencyKey}`;
     const created = await this.prisma.$transaction(async (tx) => {
@@ -821,9 +848,9 @@ export class AdminService {
     adminId: string,
     input: { reason: string; idempotencyKey: string },
   ) {
-    if (!input.reason?.trim())
+    if (!input.reason?.trim() || !input.idempotencyKey?.trim())
       throw new BadRequestException(
-        "A reason is required for maintenance cancellation",
+        "Maintenance cancellation requires a reason and original request key",
       );
     if (this.d1?.isEnabled()) {
       return this.d1.cancelMaintenanceWindow({
@@ -844,7 +871,9 @@ export class AdminService {
           target: id, details: { contains: '"idempotencyKey":"' + input.idempotencyKey + '"' } },
         orderBy: { createdAt: "desc" },
       });
-      return { ...replay, auditId: audit?.id ?? null, replayed: true };
+      if (!audit)
+        throw new ConflictException("Original maintenance cancellation audit receipt is unavailable");
+      return { ...replay, auditId: audit.id, replayed: true };
     }
     const existing = await this.prisma.adminMaintenanceWindow.findUnique({
       where: { id },
@@ -852,8 +881,8 @@ export class AdminService {
     if (!existing) throw new NotFoundException("Maintenance window not found");
     if (existing.status === "CANCELLED") throw new ConflictException("Window already cancelled by a different command");
     const updated = await this.prisma.$transaction(async (tx) => {
-      const row = await tx.adminMaintenanceWindow.update({
-        where: { id },
+      const claimed = await tx.adminMaintenanceWindow.updateMany({
+        where: { id, status: existing.status, cancelIdempotencyKey: null },
         data: {
           status: "CANCELLED",
           cancelledAt: new Date(),
@@ -862,6 +891,33 @@ export class AdminService {
           cancelIdempotencyKey: input.idempotencyKey,
         },
       });
+      if (claimed.count !== 1) {
+        const replay = await tx.adminMaintenanceWindow.findUnique({
+          where: { cancelIdempotencyKey: input.idempotencyKey },
+        });
+        if (replay) {
+          if (replay.id !== id || replay.cancelledBy !== adminId ||
+              replay.cancelReason !== input.reason.trim())
+            throw new ConflictException("Maintenance cancellation key belongs to a different original request");
+          const audit = await tx.adminAuditLog.findFirst({
+            where: { adminId, action: "MAINTENANCE_WINDOW_CANCELLED",
+              target: id, details: { contains: '"idempotencyKey":"' + input.idempotencyKey + '"' } },
+            orderBy: { createdAt: "desc" },
+          });
+          if (!audit)
+            throw new ConflictException("Original maintenance cancellation audit receipt is unavailable");
+          return { ...replay, auditId: audit.id, replayed: true };
+        }
+        const current = await tx.adminMaintenanceWindow.findUnique({ where: { id } });
+        if (!current) throw new NotFoundException("Maintenance window not found");
+        throw new ConflictException(
+          current.status === "CANCELLED"
+            ? "Window already cancelled by a different command"
+            : "Maintenance window changed while cancellation was being applied",
+        );
+      }
+      const row = await tx.adminMaintenanceWindow.findUnique({ where: { id } });
+      if (!row) throw new NotFoundException("Maintenance window not found");
       const audit = await tx.adminAuditLog.create({
         data: {
           adminId,
@@ -903,9 +959,9 @@ export class AdminService {
           },
         },
       });
-      return { ...row, auditId: audit.id };
+      return { ...row, auditId: audit.id, replayed: false };
     });
-    return { ...updated, replayed: false };
+    return updated;
   }
 
   // --- Dashboard & Stats ---
@@ -1087,22 +1143,66 @@ export class AdminService {
         decision,
         reason,
       );
-    const command = await this.prisma.adminGovernanceCommand.findUnique({
-      where: { id: commandId },
-    });
-    if (!command) throw new NotFoundException("Governance command not found");
-    if (command.requestedBy === approverId)
-      throw new ForbiddenException(
-        "The requester cannot approve their own command",
-      );
-    if (command.status !== "PENDING") {
-      if (command.status !== decision)
-        throw new BadRequestException(
-          `Governance command is already ${String(command.status).toLowerCase()}`,
-        );
-      return command;
-    }
+    const action = `GOVERNANCE_COMMAND_${decision}`;
     return this.prisma.$transaction(async (tx: any) => {
+      const command = await tx.adminGovernanceCommand.findUnique({
+        where: { id: commandId },
+      });
+      if (!command)
+        throw new NotFoundException("Governance command not found");
+      if (command.requestedBy === approverId)
+        throw new ForbiddenException(
+          "The requester cannot approve their own command",
+        );
+
+      const receiptForOriginalDecision = async (current: any) => {
+        const approval = await tx.adminGovernanceApproval.findFirst({
+          where: { commandId, decision },
+          orderBy: { createdAt: "asc" },
+        });
+        if (!approval || approval.approverId !== approverId ||
+            approval.reason !== reason)
+          throw new ConflictException(
+            "Governance decision is complete under a different original request",
+          );
+        const auditId = this.marketMutationAuditId(
+          action,
+          approverId,
+          `governance:${commandId}:${decision}`,
+        );
+        const audit = await tx.adminAuditLog.findUnique({ where: { id: auditId } }) ??
+          await tx.adminAuditLog.findFirst({
+            where: { adminId: approverId, action, target: commandId },
+            orderBy: { createdAt: "asc" },
+          });
+        if (!audit)
+          throw new ConflictException(
+            "Original governance decision audit receipt is unavailable",
+          );
+        let details: Record<string, unknown>;
+        try {
+          details = JSON.parse(audit.details ?? "{}") as Record<string, unknown>;
+        } catch {
+          throw new ConflictException(
+            "Original governance decision audit receipt is invalid",
+          );
+        }
+        if (audit.adminId !== approverId || audit.action !== action ||
+            audit.target !== commandId || details.reason !== reason)
+          throw new ConflictException(
+            "Original governance decision audit receipt does not match the request",
+          );
+        return { ...current, auditId: audit.id };
+      };
+
+      if (command.status !== "PENDING") {
+        if (command.status !== decision)
+          throw new BadRequestException(
+            `Governance command is already ${String(command.status).toLowerCase()}`,
+          );
+        return receiptForOriginalDecision(command);
+      }
+
       const claimed = await tx.adminGovernanceCommand.updateMany({
         where: { id: commandId, status: "PENDING" },
         data:
@@ -1124,20 +1224,31 @@ export class AdminService {
           throw new BadRequestException(
             `Governance command is already ${String(current.status).toLowerCase()}`,
           );
-        return current;
+        return receiptForOriginalDecision(current);
       }
       await tx.adminGovernanceApproval.create({
         data: { commandId, approverId, decision, reason },
       });
-      await tx.adminAuditLog.create({
+      const auditId = this.marketMutationAuditId(
+        action,
+        approverId,
+        `governance:${commandId}:${decision}`,
+      );
+      const audit = await tx.adminAuditLog.create({
         data: {
+          id: auditId,
           adminId: approverId,
-          action: `GOVERNANCE_COMMAND_${decision}`,
+          action,
           target: commandId,
-          details: { reason },
+          details: JSON.stringify({ reason }),
         },
       });
-      return tx.adminGovernanceCommand.findUnique({ where: { id: commandId } });
+      const updated = await tx.adminGovernanceCommand.findUnique({
+        where: { id: commandId },
+      });
+      if (!updated)
+        throw new NotFoundException("Governance command not found");
+      return { ...updated, auditId: audit.id };
     });
   }
 
@@ -1338,25 +1449,59 @@ export class AdminService {
     idempotencyKey: string;
     adminId: string;
   }) {
-    if (!input.reason?.trim())
-      throw new BadRequestException("A reason is required to decide KYC");
+    if (!input.reason?.trim() || !input.idempotencyKey?.trim())
+      throw new BadRequestException(
+        "A KYC decision requires a reason and original request key",
+      );
     if (this.d1?.isEnabled()) {
       return this.d1.decideKyc({
         ...input,
         decision: input.decision.toUpperCase() as "APPROVED" | "REJECTED",
       });
     }
-    const existing = await this.prisma.adminGovernanceCommand.findUnique({
-      where: { idempotencyKey: input.idempotencyKey },
-    });
-    if (existing)
-      return {
-        ok: true,
-        auditId: existing.id,
-        replayed: true,
-        status: existing.status,
-      };
+    const action = "KYC_DECISION";
+    const auditId = this.marketMutationAuditId(
+      action,
+      "KYC_DECISION",
+      input.idempotencyKey,
+    );
     return this.prisma.$transaction(async (tx) => {
+      const previous = await tx.adminAuditLog.findUnique({
+        where: { id: auditId },
+      }) ?? await tx.adminAuditLog.findFirst({
+        where: {
+          action,
+          details: { path: ["idempotencyKey"], equals: input.idempotencyKey },
+        },
+        orderBy: { createdAt: "asc" },
+      });
+      if (previous) {
+        let details: Record<string, unknown>;
+        try {
+          const parsed = typeof previous.details === "string"
+            ? JSON.parse(previous.details)
+            : previous.details;
+          if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
+            throw new Error("Invalid audit detail shape");
+          details = parsed as Record<string, unknown>;
+        } catch {
+          throw new ConflictException("Original KYC decision audit receipt is invalid");
+        }
+        const expectedStatus = input.decision === "approved" ? "APPROVED" : "REJECTED";
+        if (previous.adminId !== input.adminId || previous.action !== action ||
+            previous.target !== input.id || details.decision !== input.decision ||
+            details.reason !== input.reason || details.idempotencyKey !== input.idempotencyKey)
+          throw new ConflictException(
+            "KYC decision key belongs to a different original request",
+          );
+        return {
+          ok: true,
+          auditId: previous.id,
+          replayed: true,
+          status: expectedStatus,
+        };
+      }
+
       const kyc = await tx.kYC.findUnique({
         where: { id: input.id },
         select: { id: true, userId: true, status: true },
@@ -1370,8 +1515,9 @@ export class AdminService {
       });
       const audit = await tx.adminAuditLog.create({
         data: {
+          id: auditId,
           adminId: input.adminId,
-          action: "KYC_DECISION",
+          action,
           target: input.id,
           details: {
             decision: input.decision,
@@ -1482,36 +1628,70 @@ export class AdminService {
     reason: string,
     idempotencyKey: string,
   ) {
-    if (!reason?.trim())
-      throw new BadRequestException("A reason is required to revoke a session");
-    if (this.d1?.isEnabled())
-      return this.d1.revokeAdminSession({
+    if (!reason?.trim() || !idempotencyKey?.trim())
+      throw new BadRequestException("Session revocation requires a reason and original request key");
+    let sessionIdentity: { userId: string; surface: "PUBLIC" | "ADMIN" } | null;
+    let result: { ok: boolean; auditId: string };
+    if (this.d1?.isEnabled()) {
+      const session = await this.d1.getAuthSessionById(id);
+      if (!session) throw new NotFoundException("Session not found");
+      if (session.surface !== "PUBLIC" && session.surface !== "ADMIN")
+        throw new ConflictException("Session surface is invalid");
+      sessionIdentity = { userId: session.userId, surface: session.surface };
+      result = await this.d1.revokeAdminSession({
         sessionId: id,
         adminId,
         reason,
         idempotencyKey,
-      });
-    return this.prisma.$transaction(async (tx) => {
-      const session = await tx.authSession.findUnique({
+      }) as { ok: boolean; auditId: string };
+    } else {
+      sessionIdentity = await this.prisma.authSession.findUnique({
         where: { id },
-        select: { id: true, userId: true, revokedAt: true },
+        select: { userId: true, surface: true },
       });
-      if (!session) throw new NotFoundException("Session not found");
-      if (!session.revokedAt)
-        await tx.authSession.update({
+      if (!sessionIdentity) throw new NotFoundException("Session not found");
+      const action = "ADMIN_SESSION_REVOKED";
+      const auditId = this.marketMutationAuditId(action, adminId, idempotencyKey);
+      result = await this.prisma.$transaction(async (tx) => {
+        const previous = await tx.adminAuditLog.findUnique({ where: { id: auditId } });
+        if (previous) {
+          const previousDetails = JSON.parse(previous.details ?? "{}") as Record<string, unknown>;
+          if (previous.adminId !== adminId || previous.action !== action || previous.target !== id ||
+              previousDetails.reason !== reason || previousDetails.idempotencyKey !== idempotencyKey)
+            throw new ConflictException("Session revocation key belongs to another original request");
+          return { ok: true, auditId: previous.id };
+        }
+        const session = await tx.authSession.findUnique({
           where: { id },
-          data: { revokedAt: new Date(), revokeReason: reason },
+          select: { id: true, userId: true, revokedAt: true },
         });
-      await tx.adminAuditLog.create({
-        data: {
-          adminId,
-          action: "ADMIN_SESSION_REVOKED",
-          target: id,
-          details: { reason, idempotencyKey, userId: session.userId },
-        },
+        if (!session) throw new NotFoundException("Session not found");
+        if (!session.revokedAt)
+          await tx.authSession.update({
+            where: { id },
+            data: { revokedAt: new Date(), revokeReason: reason },
+          });
+        const audit = await tx.adminAuditLog.create({
+          data: {
+            id: auditId,
+            adminId,
+            action,
+            target: id,
+            details: JSON.stringify({ reason, idempotencyKey, userId: session.userId }),
+          },
+        });
+        return { ok: true, auditId: audit.id };
       });
-      return { ok: true, auditId: idempotencyKey };
+    }
+    this.authSecurityEvents?.emit({
+      type: "LOGOUT",
+      occurredAt: new Date(),
+      userId: sessionIdentity.userId,
+      sessionId: id,
+      surface: sessionIdentity.surface,
+      reason,
     });
+    return result;
   }
 
   async revokeUserSessions(
@@ -1520,30 +1700,56 @@ export class AdminService {
     reason: string,
     idempotencyKey: string,
   ) {
-    if (!reason?.trim())
-      throw new BadRequestException("A reason is required to revoke sessions");
-    if (this.d1?.isEnabled())
-      return this.d1.revokeAdminUserSessions({
+    if (!reason?.trim() || !idempotencyKey?.trim())
+      throw new BadRequestException("Session revocation requires a reason and original request key");
+    let result: { ok: boolean; auditId: string; count: number };
+    if (this.d1?.isEnabled()) {
+      result = await this.d1.revokeAdminUserSessions({
         userId,
         adminId,
         reason,
         idempotencyKey,
+      }) as { ok: boolean; auditId: string; count: number };
+    } else {
+      const action = "ADMIN_USER_SESSIONS_REVOKED";
+      const auditId = this.marketMutationAuditId(action, adminId, idempotencyKey);
+      result = await this.prisma.$transaction(async (tx) => {
+        const previous = await tx.adminAuditLog.findUnique({ where: { id: auditId } });
+        if (previous) {
+          const previousDetails = JSON.parse(previous.details ?? "{}") as Record<string, unknown>;
+          const count = previousDetails.count;
+          if (previous.adminId !== adminId || previous.action !== action || previous.target !== userId ||
+              previousDetails.reason !== reason || previousDetails.idempotencyKey !== idempotencyKey ||
+              typeof count !== "number" || !Number.isInteger(count) || count < 0)
+            throw new ConflictException("Session revocation key belongs to another original request");
+          return { ok: true, auditId: previous.id, count };
+        }
+        const updated = await tx.authSession.updateMany({
+          where: { userId, revokedAt: null },
+          data: { revokedAt: new Date(), revokeReason: reason },
+        });
+        const audit = await tx.adminAuditLog.create({
+          data: {
+            id: auditId,
+            adminId,
+            action,
+            target: userId,
+            details: JSON.stringify({ reason, idempotencyKey, count: updated.count }),
+          },
+        });
+        return { ok: true, auditId: audit.id, count: updated.count };
       });
-    return this.prisma.$transaction(async (tx) => {
-      const result = await tx.authSession.updateMany({
-        where: { userId, revokedAt: null },
-        data: { revokedAt: new Date(), revokeReason: reason },
+    }
+    for (const surface of ["PUBLIC", "ADMIN"] as const) {
+      this.authSecurityEvents?.emit({
+        type: "LOGOUT_ALL",
+        occurredAt: new Date(),
+        userId,
+        surface,
+        reason,
       });
-      await tx.adminAuditLog.create({
-        data: {
-          adminId,
-          action: "ADMIN_USER_SESSIONS_REVOKED",
-          target: userId,
-          details: { reason, idempotencyKey, count: result.count },
-        },
-      });
-      return { ok: true, auditId: idempotencyKey, count: result.count };
-    });
+    }
+    return result;
   }
 
   async setWinRate(userId: string, outcome: string) {
@@ -1766,8 +1972,8 @@ export class AdminService {
     idempotencyKey: string;
     expectedVersion?: number;
   }) {
-    if (!input.reason.trim())
-      throw new BadRequestException("A reason is required");
+    if (!input.reason.trim() || !input.idempotencyKey.trim())
+      throw new BadRequestException("A reason and original request key are required");
     if (
       input.scope === "account" &&
       !this.isBinaryResearchAccount(input.target)
@@ -1781,6 +1987,14 @@ export class AdminService {
       mode: input.mode,
       expectedVersion: input.expectedVersion,
     });
+    const action = input.scope === "account"
+      ? "BINARY_RESEARCH_DEFAULT_UPDATED"
+      : "BINARY_RESEARCH_POSITION_UPDATED";
+    const auditId = this.marketMutationAuditId(
+      action,
+      input.adminId,
+      input.idempotencyKey,
+    );
     return this.prisma.$transaction(async (tx) => {
       const existing = await tx.adminGovernanceCommand.findUnique({
         where: { idempotencyKey: input.idempotencyKey },
@@ -1798,7 +2012,26 @@ export class AdminService {
             "Binary control idempotency key was already used",
           );
         }
-        return { ok: true, auditId: existing.id, replayed: true };
+        const audit = await tx.adminAuditLog.findUnique({ where: { id: auditId } });
+        if (!audit || audit.adminId !== input.adminId || audit.action !== action ||
+            audit.target !== input.target)
+          throw new ConflictException(
+            "Original Binary control audit receipt is unavailable or mismatched",
+          );
+        let details: Record<string, unknown>;
+        try {
+          details = JSON.parse(audit.details ?? "{}") as Record<string, unknown>;
+        } catch {
+          throw new ConflictException("Original Binary control audit receipt is invalid");
+        }
+        if (details.scope !== input.scope || details.mode !== input.mode ||
+            details.reason !== input.reason.trim() ||
+            details.idempotencyKey !== input.idempotencyKey ||
+            details.expectedVersion !== input.expectedVersion)
+          throw new ConflictException(
+            "Binary control key belongs to a different original request",
+          );
+        return { ok: true, auditId: audit.id, replayed: true };
       }
 
       await tx.adminGovernanceCommand.create({
@@ -1852,11 +2085,9 @@ export class AdminService {
       }
       const audit = await tx.adminAuditLog.create({
         data: {
+          id: auditId,
           adminId: input.adminId,
-          action:
-            input.scope === "account"
-              ? "BINARY_RESEARCH_DEFAULT_UPDATED"
-              : "BINARY_RESEARCH_POSITION_UPDATED",
+          action,
           target: input.target,
           details: JSON.stringify({
             scope: input.scope,
@@ -1977,8 +2208,46 @@ export class AdminService {
       select: { id: true, symbol: true },
     });
     if (!pair) throw new NotFoundException("Binary market pair not found");
-    const eventKey = `admin:binary-pair:${idempotencyKey}`;
+    const action = "ADMIN_BINARY_PAIR_MAINTENANCE";
+    // Keep old client keys compatible but scope the persisted outbox identity
+    // to the resolved pair and requested state.
+    const intent = JSON.stringify([idempotencyKey, pair.id, enabled, reason]);
+    const eventKey = `admin:binary-pair:${this.marketMutationAuditId(action, adminId, intent)}`;
     return this.prisma.$transaction(async (tx) => {
+      const auditCandidates = await tx.adminAuditLog.findMany({
+        where: { adminId, action, target: pair.id },
+        orderBy: { createdAt: "desc" },
+      });
+      const matches: typeof auditCandidates = [];
+      for (const candidate of auditCandidates) {
+        let previousDetails: Record<string, unknown> | null = null;
+        try {
+          const parsed = typeof candidate.details === "string"
+            ? JSON.parse(candidate.details)
+            : candidate.details;
+          if (parsed && typeof parsed === "object" && !Array.isArray(parsed))
+            previousDetails = parsed as Record<string, unknown>;
+        } catch {
+          if (candidate.details?.includes(JSON.stringify(idempotencyKey)))
+            throw new ConflictException("Original Binary pair maintenance receipt is unreadable");
+        }
+        if (previousDetails?.idempotencyKey !== idempotencyKey) continue;
+        if (previousDetails.reason !== reason || previousDetails.symbol !== pair.symbol)
+          throw new ConflictException("Binary pair maintenance key was reused with different request context");
+        if (previousDetails.enabled !== true && previousDetails.enabled !== false)
+          throw new ConflictException("Original Binary pair maintenance receipt lacks intent state; reconcile before retrying");
+        if (previousDetails.enabled === enabled) matches.push(candidate);
+      }
+      if (matches.length > 1)
+        throw new ConflictException("Multiple original Binary pair maintenance receipts require reconciliation");
+      if (matches[0])
+        return {
+          ok: true,
+          auditId: matches[0].id,
+          status: enabled ? "ACTIVE" : "MAINTENANCE",
+          replayed: true,
+        };
+
       const prior = await tx.eventOutbox.findUnique({
         where: { idempotencyKey: eventKey },
       });
@@ -1999,6 +2268,7 @@ export class AdminService {
         }
         if (
           prior.eventType !== "BINARY_PAIR_AVAILABILITY_UPDATED" ||
+          prior.aggregateId !== pair.id ||
           payload.adminId !== adminId ||
           payload.symbol !== pair.symbol ||
           payload.enabled !== enabled ||
@@ -2065,7 +2335,7 @@ export class AdminService {
       const audit = await tx.adminAuditLog.create({
         data: {
           adminId,
-          action: "ADMIN_BINARY_PAIR_MAINTENANCE",
+          action,
           target: pair.id,
           details: { symbol: pair.symbol, enabled, reason, idempotencyKey },
         },
@@ -2383,22 +2653,52 @@ export class AdminService {
     if (!reason?.trim() || !idempotencyKey?.trim())
       throw new BadRequestException("Pair maintenance requires reason and original request key");
     const action = "ADMIN_SPOT_PAIR_MAINTENANCE";
-    const auditId = this.marketMutationAuditId(action, adminId, idempotencyKey);
     return this.prisma.$transaction(async (tx) => {
       const pair = await tx.marketPair.findFirst({
         where: { OR: [{ id: symbol }, { symbol }] },
       });
       if (!pair) throw new NotFoundException("Spot pair not found");
+
+      // The legacy client key omits pair and desired state. Scope the durable
+      // identity to this exact intent while still reconciling old audit rows.
+      const intent = JSON.stringify([idempotencyKey, pair.id, enabled]);
+      const auditId = this.marketMutationAuditId(action, adminId, intent);
       const details = JSON.stringify({
         reason, idempotencyKey, enabled, symbol: pair.symbol,
       });
-      const previous = await tx.adminAuditLog.findUnique({ where: { id: auditId } });
-      if (previous) {
-        if (previous.adminId !== adminId || previous.action !== action ||
-          previous.target !== pair.id || previous.details !== details)
-          throw new ConflictException("Pair maintenance key belongs to another original request");
-        return { ok: true, auditId, status: pair.status, replayed: true };
+      const candidates = await tx.adminAuditLog.findMany({
+        where: { adminId, action, target: pair.id },
+        orderBy: { createdAt: "desc" },
+      });
+      const matches: typeof candidates = [];
+      for (const candidate of candidates) {
+        let previousDetails: Record<string, unknown> | null = null;
+        try {
+          const parsed = typeof candidate.details === "string"
+            ? JSON.parse(candidate.details)
+            : candidate.details;
+          if (parsed && typeof parsed === "object" && !Array.isArray(parsed))
+            previousDetails = parsed as Record<string, unknown>;
+        } catch {
+          if (candidate.details?.includes(JSON.stringify(idempotencyKey)))
+            throw new ConflictException("Original pair maintenance receipt is unreadable");
+        }
+        if (previousDetails?.idempotencyKey !== idempotencyKey) continue;
+        if (previousDetails.reason !== reason || previousDetails.symbol !== pair.symbol)
+          throw new ConflictException("Pair maintenance key was reused with different request context");
+        if (previousDetails.enabled !== true && previousDetails.enabled !== false)
+          throw new ConflictException("Original pair maintenance receipt lacks intent state; reconcile before retrying");
+        if (previousDetails.enabled === enabled) matches.push(candidate);
       }
+      if (matches.length > 1)
+        throw new ConflictException("Multiple original pair maintenance receipts require reconciliation");
+      if (matches[0])
+        return { ok: true, auditId: matches[0].id, status: pair.status, replayed: true };
+
+      const previous = await tx.adminAuditLog.findUnique({ where: { id: auditId } });
+      if (previous)
+        throw new ConflictException("Pair maintenance intent identity has an inconsistent audit receipt");
+
       const row = await tx.marketPair.update({
         where: { id: pair.id },
         data: { status: enabled ? "ACTIVE" : "MAINTENANCE",
@@ -2519,11 +2819,7 @@ export class AdminService {
   }
 
   async updateCurrency(id: number, data: any, adminId: string) {
-    const {
-      reason = "Admin currency configuration update",
-      idempotencyKey = `currency:${id}:${Date.now()}`,
-      ...patch
-    } = data;
+    const { reason, idempotencyKey, ...patch } = data;
     if (this.d1?.isEnabled())
       return this.d1.updateAdminCurrency({
         id,
@@ -2532,18 +2828,20 @@ export class AdminService {
         reason,
         idempotencyKey,
       });
-    return this.prisma.$transaction(async (tx: any) => {
-      const updated = await tx.currency.update({ where: { id }, data: patch });
-      const audit = await tx.adminAuditLog.create({
-        data: {
-          adminId,
-          action: "CURRENCY_CONFIGURATION_UPDATED",
-          target: String(id),
-          details: { reason, idempotencyKey, fields: Object.keys(patch) },
-        },
-      });
-      return { ...updated, auditId: audit.id };
-    });
+    return executeAdminMutation(
+      this.prisma,
+      {
+        action: "CURRENCY_CONFIGURATION_UPDATED",
+        adminId,
+        reason,
+        idempotencyKey,
+        target: String(id),
+        payload: patch,
+      },
+      (tx) => tx.currency.update({ where: { id }, data: patch }),
+      (updated) => String(updated.id),
+      (tx, target) => tx.currency.findUnique({ where: { id: Number(target) } }),
+    );
   }
 
   async addDepositAddress(
@@ -2565,20 +2863,20 @@ export class AdminService {
         reason,
         idempotencyKey,
       });
-    return this.prisma.$transaction(async (tx: any) => {
-      const created = await tx.depositAddress.create({
-        data: { currencyId, network, address, label },
-      });
-      const audit = await tx.adminAuditLog.create({
-        data: {
-          adminId,
-          action: "DEPOSIT_ADDRESS_CREATED",
-          target: created.id,
-          details: { currencyId, network, reason, idempotencyKey },
-        },
-      });
-      return { ...created, auditId: audit.id };
-    });
+    const payload = { currencyId, network, address, label };
+    return executeAdminMutation(
+      this.prisma,
+      {
+        action: "DEPOSIT_ADDRESS_CREATED",
+        adminId,
+        reason,
+        idempotencyKey,
+        payload,
+      },
+      (tx) => tx.depositAddress.create({ data: payload }),
+      (created) => String(created.id),
+      (tx, target) => tx.depositAddress.findUnique({ where: { id: target } }),
+    );
   }
 
   async deleteDepositAddress(
@@ -2594,21 +2892,26 @@ export class AdminService {
         reason,
         idempotencyKey,
       });
-    return this.prisma.$transaction(async (tx: any) => {
-      const updated = await tx.depositAddress.update({
-        where: { id },
-        data: { isActive: false },
-      });
-      const audit = await tx.adminAuditLog.create({
-        data: {
-          adminId,
-          action: "DEPOSIT_ADDRESS_DISABLED",
-          target: id,
-          details: { reason, idempotencyKey },
-        },
-      });
-      return { ...updated, auditId: audit.id };
-    });
+    return executeAdminMutation(
+      this.prisma,
+      {
+        action: "DEPOSIT_ADDRESS_DISABLED",
+        actionAliases: ["DEPOSIT_ADDRESS_ENABLED", "DEPOSIT_ADDRESS_DISABLED"],
+        identityScope: "DEPOSIT_ADDRESS_STATE",
+        adminId,
+        reason,
+        idempotencyKey,
+        target: id,
+        payload: { isActive: false },
+      },
+      (tx) =>
+        tx.depositAddress.update({
+          where: { id },
+          data: { isActive: false },
+        }),
+      (updated) => String(updated.id),
+      (tx, target) => tx.depositAddress.findUnique({ where: { id: target } }),
+    );
   }
 
   // --- Mining Management ---
@@ -3008,9 +3311,9 @@ export class AdminService {
       throw new ServiceUnavailableException(
         "Binary global configuration requires the canonical SQLite gateway",
       );
-    if (!input.reason?.trim())
+    if (!input.reason?.trim() || !input.idempotencyKey?.trim())
       throw new BadRequestException(
-        "A reason is required for Binary configuration changes",
+        "Binary configuration changes require a reason and original request key",
       );
     let minStake: Prisma.Decimal;
     let maxStake: Prisma.Decimal;
@@ -3079,6 +3382,22 @@ export class AdminService {
       input.sourceDurationSeconds ?? input.durationSeconds;
     assertBinaryDurationUnchanged(input.durationSeconds, sourceDurationSeconds);
     const target = `${pair}:${input.durationSeconds}`;
+    const action = "BINARY_CONFIGURATION_UPDATED";
+    const normalizedRequest = {
+      pair,
+      durationSeconds: input.durationSeconds,
+      sourceDurationSeconds,
+      payoutRate: input.payoutRate ?? null,
+      minStake: input.minStake ?? null,
+      maxStake: input.maxStake ?? null,
+      enabled: input.enabled ?? null,
+      reason: input.reason.trim(),
+    };
+    const auditId = this.marketMutationAuditId(
+      action,
+      adminId,
+      input.idempotencyKey,
+    );
     if (this.d1?.isEnabled()) {
       const current = await this.d1.getBinaryConfiguration(
         pair,
@@ -3166,15 +3485,38 @@ export class AdminService {
       );
     return this.prisma.$transaction(
       async (tx) => {
-        const replay = await tx.adminAuditLog.findFirst({
+        const replay = await tx.adminAuditLog.findUnique({
+          where: { id: auditId },
+        }) ?? await tx.adminAuditLog.findFirst({
           where: {
-            action: "BINARY_CONFIGURATION_UPDATED",
-            target,
+            action,
             details: { path: ["idempotencyKey"], equals: input.idempotencyKey },
           },
-          orderBy: { createdAt: "desc" },
+          orderBy: { createdAt: "asc" },
         });
-        if (replay) return { id: replay.id, replayed: true };
+        if (replay) {
+          let details: Record<string, unknown>;
+          try {
+            const parsed = typeof replay.details === "string"
+              ? JSON.parse(replay.details)
+              : replay.details;
+            if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
+              throw new Error("Invalid audit detail shape");
+            details = parsed as Record<string, unknown>;
+          } catch {
+            throw new ConflictException(
+              "Original Binary configuration audit receipt is invalid",
+            );
+          }
+          if (replay.adminId !== adminId || replay.action !== action ||
+              replay.target !== target || details.idempotencyKey !== input.idempotencyKey ||
+              details.reason !== input.reason.trim() ||
+              JSON.stringify(details.request) !== JSON.stringify(normalizedRequest))
+            throw new ConflictException(
+              "Binary configuration key belongs to a different or unreconcilable original request",
+            );
+          return { ok: true, auditId: replay.id, replayed: true };
+        }
         const current = await tx.gate2BinaryConfiguration.findFirst({
           where: {
             pair,
@@ -3220,19 +3562,30 @@ export class AdminService {
             enabled: input.enabled ?? current.enabled,
           },
         });
-        await tx.adminAuditLog.create({
+        const audit = await tx.adminAuditLog.create({
           data: {
+            id: auditId,
             adminId,
-            action: "BINARY_CONFIGURATION_UPDATED",
-            target: `${pair}:${input.durationSeconds}`,
+            action,
+            target,
             details: {
-              reason: input.reason,
+              reason: input.reason.trim(),
               version: next.version,
               idempotencyKey: input.idempotencyKey,
+              request: normalizedRequest,
+              after: {
+                pair: next.pair,
+                durationSeconds: next.durationSeconds,
+                payoutRate: String(next.payoutRate),
+                minStake: String(next.minStake),
+                maxStake: String(next.maxStake),
+                enabled: next.enabled,
+                version: next.version,
+              },
             },
           },
         });
-        return next;
+        return { ...next, auditId: audit.id, replayed: false };
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );

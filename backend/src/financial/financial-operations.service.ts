@@ -93,20 +93,20 @@ export class FinancialOperationsService {
     if (!reason?.trim()) throw new BadRequestException('Review reason is required');
     const withdrawal: any = await this.d1.getWithdrawalById(id);
     if (!withdrawal) throw new NotFoundException('Withdrawal not found');
-    if (withdrawal.state === Gate2WithdrawalState.APPROVED) {
-      return { withdrawal: await this.d1.approveWithdrawal(id, reason, adminId, idempotencyKey), replayed: true, providerLive: false };
-    }
-    if (withdrawal.state !== Gate2WithdrawalState.PENDING_REVIEW) throw new BadRequestException('Withdrawal is not pending review');
-    return { withdrawal: await this.d1.approveWithdrawal(id, reason, adminId, idempotencyKey), replayed: false, providerLive: false };
+    if (![Gate2WithdrawalState.APPROVED, Gate2WithdrawalState.PENDING_REVIEW].includes(withdrawal.state))
+      throw new BadRequestException('Withdrawal is not pending review');
+    const approved = await this.d1.approveWithdrawal(id, reason, adminId, idempotencyKey);
+    return { withdrawal: approved, replayed: approved.replayed === true, auditId: approved.auditId ?? null, providerLive: false };
   }
 
   async rejectWithdrawal(id: string, reason: string, adminId = 'system', idempotencyKey = `reject:${id}`): Promise<any> {
     if (!reason?.trim()) throw new BadRequestException('Rejection reason is required');
     const withdrawal: any = await this.d1.getWithdrawalById(id);
     if (!withdrawal) throw new NotFoundException('Withdrawal not found');
-    if (withdrawal.state === Gate2WithdrawalState.REJECTED) return { withdrawal: await this.d1.releaseWithdrawal(id, reason, adminId, 'REJECTED', idempotencyKey), replayed: true, providerLive: false };
-    if (withdrawal.state !== Gate2WithdrawalState.PENDING_REVIEW) throw new BadRequestException('Withdrawal is not pending review');
-    return { withdrawal: await this.d1.releaseWithdrawal(id, reason, adminId, 'REJECTED', idempotencyKey), replayed: false, providerLive: false };
+    if (![Gate2WithdrawalState.REJECTED, Gate2WithdrawalState.PENDING_REVIEW].includes(withdrawal.state))
+      throw new BadRequestException('Withdrawal is not pending review');
+    const released = await this.d1.releaseWithdrawal(id, reason, adminId, 'REJECTED', idempotencyKey);
+    return { withdrawal: released, replayed: released.replayed === true, auditId: released.auditId ?? null, providerLive: false };
   }
 
   async requestWithdrawalReview(id: string, reason: string, adminId: string, idempotencyKey: string): Promise<any> {
@@ -114,7 +114,8 @@ export class FinancialOperationsService {
     this.assertIdempotencyKey(idempotencyKey);
     const withdrawal: any = await this.d1.getWithdrawalById(id);
     if (!withdrawal) throw new NotFoundException('Withdrawal not found');
-    if (![Gate2WithdrawalState.PENDING_REVIEW, Gate2WithdrawalState.ADDITIONAL_REVIEW].includes(withdrawal.state)) throw new BadRequestException('Withdrawal is not pending review');
+    // Reconcile an original receipt before evaluating current state; the SQLite gateway
+    // rejects a new review command unless the transition is still permitted.
     return { ...(await this.d1.requestWithdrawalReview(id, reason, adminId, idempotencyKey)), providerLive: false };
   }
 
@@ -123,7 +124,8 @@ export class FinancialOperationsService {
     this.assertIdempotencyKey(idempotencyKey);
     const withdrawal: any = await this.d1.getWithdrawalById(id);
     if (!withdrawal) throw new NotFoundException('Withdrawal not found');
-    if (![Gate2WithdrawalState.ADDITIONAL_REVIEW, Gate2WithdrawalState.PENDING_REVIEW].includes(withdrawal.state)) throw new BadRequestException('Withdrawal is not in additional review');
+    // A retry may arrive after a later approval; only the persisted original-key
+    // receipt authorizes replay, never a new state transition from that state.
     return { ...(await this.d1.returnWithdrawalFromReview(id, reason, adminId, idempotencyKey)), providerLive: false };
   }
 
@@ -131,36 +133,40 @@ export class FinancialOperationsService {
     if (!reason?.trim()) throw new BadRequestException('Failure reason is required');
     const withdrawal: any = await this.d1.getWithdrawalById(id);
     if (!withdrawal) throw new NotFoundException('Withdrawal not found');
-    if (withdrawal.state === Gate2WithdrawalState.FAILED) return { withdrawal: await this.d1.releaseWithdrawal(id, reason, adminId, 'FAILED', idempotencyKey), replayed: true, providerLive: false };
     if (withdrawal.state === Gate2WithdrawalState.SETTLED) throw new BadRequestException('Settled withdrawal cannot fail');
-    return { withdrawal: await this.d1.releaseWithdrawal(id, reason, adminId, 'FAILED', idempotencyKey), replayed: false, providerLive: false };
+    const released = await this.d1.releaseWithdrawal(id, reason, adminId, 'FAILED', idempotencyKey);
+    return { withdrawal: released, replayed: released.replayed === true, auditId: released.auditId ?? null, providerLive: false };
   }
 
   async confirmDeposit(id: string, reason: string, adminId: string, idempotencyKey: string): Promise<any> {
     if (!reason?.trim()) throw new BadRequestException('Confirmation reason is required');
     const deposit: any = await this.d1.getDeposit(id);
     if (!deposit) throw new NotFoundException('Deposit not found');
-    if (deposit.state === Gate2DepositState.CREDITED) return { deposit, replayed: true, providerLive: false };
     if (deposit.state === Gate2DepositState.REJECTED) throw new BadRequestException('Rejected deposit cannot be confirmed');
-    return { deposit: await this.d1.creditDepositAtomic(id, reason, adminId, `gate2:deposit:credit:${idempotencyKey}`), replayed: false, providerLive: false };
+    const credited = await this.d1.creditDepositAtomic(id, reason, adminId, `gate2:deposit:credit:${idempotencyKey}`);
+    return { deposit: credited, replayed: credited.replayed === true, auditId: credited.auditId ?? null, providerLive: false };
   }
 
   async creditDeposit(id: string, reason: string, adminId: string, idempotencyKey: string): Promise<any> {
     if (!reason?.trim()) throw new BadRequestException('Credit reason is required');
     const deposit: any = await this.d1.getDeposit(id);
     if (!deposit) throw new NotFoundException('Deposit not found');
-    if (deposit.state === Gate2DepositState.CREDITED) return { deposit, replayed: true, providerLive: false };
-    if (Number(deposit.confirmations) < Number(deposit.requiredConfirmations)) throw new BadRequestException('Deposit confirmation threshold has not been reached');
-    return { deposit: await this.d1.creditDepositAtomic(id, reason, adminId, `gate2:deposit:credit:${idempotencyKey}`), replayed: false, providerLive: false };
+    const credited = await this.d1.creditDepositAtomic(id, reason, adminId, `gate2:deposit:credit:${idempotencyKey}`);
+    return { deposit: credited, replayed: credited.replayed === true, auditId: credited.auditId ?? null, providerLive: false };
   }
 
   async failDeposit(id: string, reason: string, adminId: string, idempotencyKey: string): Promise<any> {
     if (!reason?.trim()) throw new BadRequestException('Failure reason is required');
     const deposit: any = await this.d1.getDeposit(id);
     if (!deposit) throw new NotFoundException('Deposit not found');
-    if (deposit.state === Gate2DepositState.REJECTED) return { deposit, replayed: true, providerLive: false };
     if (deposit.state === Gate2DepositState.CREDITED) throw new BadRequestException('Credited deposit cannot be rejected');
-    return { deposit: await this.d1.rejectDepositAtomic(id, reason, adminId, idempotencyKey), replayed: false, providerLive: false };
+    const rejected: any = await this.d1.rejectDepositAtomic(id, reason, adminId, idempotencyKey);
+    return {
+      deposit: rejected,
+      replayed: rejected.replayed === true,
+      auditId: rejected.auditId,
+      providerLive: false,
+    };
   }
 
   async settleWithdrawal(id: string, providerReceipt?: string, adminId?: string, reason?: string): Promise<any> {

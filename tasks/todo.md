@@ -24,3 +24,43 @@ Last recorded source checkpoint `5b3edd99383e` (2026-11-15; graph built at `0c2c
 - `SOURCE_IMPLEMENTED` = scoped current source and affected consumers inspected; `PROVEN_SOURCE_GAP` = demonstrated violation; `INSUFFICIENT_EVIDENCE` = no verdict.
 - All app tests, lint/types, builds, browser, services, deployment and economic changes `DEFERRED_BY_OWNER_SOURCE_FIRST_RULE`.
 - Keep evidence in the existing matrix; never append historical handovers to this active board.
+
+## 2026-11-16 — Deduplicated active frontier
+Live HEAD: `7a5aa7f2c3a3c46768b3b56bc53b1cc50e02ad76`. The prior “4 unchecked workstreams” count is retired as a defect count; the 113 browser criteria and 5/108 evidence association are not source backlog counts.
+
+- Proven completed contracts are reused per the Nov 1 five-batch receipt, Nov 12 Admin Spot atomic audit fix, Nov 14 Binary receipt identity, and the scoped Nov 16 matrix entries; no duplicate implementation is opened.
+- Proven remaining source gaps: none established by the current reconciliation.
+- `INSUFFICIENT_EVIDENCE` candidates, not defects: Admin mutation fallback idempotency-key collision/legacy compatibility; correction-audit missing-row replay; Binary connected-session revocation and Public/Admin terminal readbacks.
+- Next exact bounded operation: reconcile Admin mutation key derivation with explicit-key semantics and the immediate backend/consumer contract. Continue only if a violated invariant is evidenced.
+- Repository closure remains `SOURCE_OPEN` / exact remaining count undetermined; app verification remains deferred by owner SOURCE-FIRST rule. See matrix addendum and recursive receipt index for provenance.
+
+
+## 2026-11-16 — Latest exact source frontier (supersedes broad workstream count)
+See the latest three-contract disposition in `tasks/evidence/NEXI_SOURCE_CLOSURE_MATRIX_20261109.md`. The 113 browser criteria and four broad board items remain non-defect counts.
+
+- [x] Reuse correction-audit original receipt, atomic write batch and fail-closed missing-row replay source.
+- [x] Repair Admin SystemConfig legacy fallback identity for its provider caller.
+- [x] Repair Admin user-level session revocation across PUBLIC/ADMIN plus connected Binary socket disconnect routing.
+- [ ] Resolve legacy fallback identity compatibility for the remaining non-explicit `requestMutation` callers by matching each affected caller to the backend replay identity and payload guard.
+- Source status remains `SOURCE_OPEN`; no application verification until the final item is closed.
+
+
+## 2026-11-16 — latest bounded Admin idempotency disposition
+- [x] Confirmed historical/current fallback formulas and inventoried current provider call sites in tasks/evidence/ADMIN_MUTATION_IDEMPOTENCY_CROSSWALK_20261116.json.
+- [x] Reused the scoped SystemConfig legacy-key repair; explicit-key callers remain pass-through.
+- [ ] Match remaining fallback callers to backend persisted replay identity and payload-mismatch guard. The broad shared-fallback question is INSUFFICIENT_EVIDENCE, not a proven defect; no global key change is supported.
+- Source stays SOURCE_OPEN; no application verification until this bounded crosswalk is complete.
+
+
+## 2026-11-16 — Fast bounded source-closure checkpoint
+
+See `tasks/evidence/NEXI_FINAL_SOURCE_CLOSURE_20261116.md`. Two of the three exact contract questions are source-implemented/reused: correction-audit replay now verifies the stored audit actor and full correction receipt; Communications socket revocation is wired for session and surface-scoped user events, while Binary settlement/readback proof is reused. The shared Admin mutation helper adds strict full-payload replay for the five Prisma fallback mutations and fails closed on payloadless/duplicate legacy receipts.
+
+- [x] Correction-audit persisted receipt identity and fail-closed replay source boundary.
+- [x] Communications session/user revocation socket wiring; reuse terminal settlement/readback source proof.
+- [ ] Complete legacy key → Backend persisted intent/mismatch mapping for remaining shared fallback callers in `ADMIN_MUTATION_IDEMPOTENCY_CROSSWALK_20261116.json`.
+- Current repo source status remains `SOURCE_OPEN`; application verification and release remain deferred until the remaining route mapping is resolved.
+
+
+## 2026-11-17 — Source-closure checkpoint
+Spot/Binary pair maintenance key collisions are corrected at the Backend writer; see the dated matrix addendum and updated Admin crosswalk. The remaining shared fallback caller contracts are still being reconciled against their Backend persisted identities. Keep app verification and release deferred while source status is SOURCE_OPEN.

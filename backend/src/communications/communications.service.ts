@@ -930,9 +930,10 @@ export class CommunicationsService {
     endsAt?: string;
     reason?: string;
     idempotencyKey?: string;
-  }) {
+  }, adminId: string) {
     const key = data.idempotencyKey ?? randomUUID();
     const id = this.id("announcement", key);
+    const auditId = this.id("announcement-audit:" + adminId, "announcement:" + id);
     const values: Record<string, string | number | null> = {
       title: data.title,
       body: data.body,
@@ -948,10 +949,11 @@ export class CommunicationsService {
       .update(JSON.stringify({ values, reason: data.reason ?? null })).digest("hex");
     await this.d1Communications.mutateAnnouncementAtomic({
       id, key, intentHash, mode: "create", values, published: Boolean(data.published),
+      auditId, adminId, reason: data.reason,
     });
     const announcement = await this.database.announcement.findUnique({ where: { id } });
     if (!announcement) throw new ServiceUnavailableException("Announcement creation not materialized");
-    return announcement;
+    return { ...announcement, auditId };
   }
 
   async updateAnnouncement(
@@ -969,6 +971,7 @@ export class CommunicationsService {
       reason?: string;
       idempotencyKey: string;
     },
+    adminId: string,
   ) {
     const current = await this.database.announcement.findUnique({ where: { id } });
     if (!current) throw new NotFoundException("Announcement not found");
@@ -994,16 +997,18 @@ export class CommunicationsService {
       .update(JSON.stringify({ id, values, reason: data.reason ?? null })).digest("hex");
     // The gateway derives the event type and resulting publication state
     // from the row held by SQLite's BEGIN IMMEDIATE transaction.
+    const auditId = this.id("announcement-audit:" + adminId, "announcement:" + id + ":" + data.idempotencyKey);
     await this.d1Communications.mutateAnnouncementAtomic({
       id, key: data.idempotencyKey, intentHash, mode: "update", values,
+      auditId, adminId, reason: data.reason,
     });
     const announcement = await this.database.announcement.findUnique({ where: { id } });
     if (!announcement) throw new NotFoundException("Announcement not found");
-    return announcement;
+    return { ...announcement, auditId };
   }
 
-  async publishAnnouncement(id: string, idempotencyKey: string) {
-    return this.updateAnnouncement(id, { published: true, idempotencyKey });
+  async publishAnnouncement(id: string, idempotencyKey: string, reason: string | undefined, adminId: string) {
+    return this.updateAnnouncement(id, { published: true, idempotencyKey, reason }, adminId);
   }
   private readonly learnStatuses = new Set([
     "DRAFT",

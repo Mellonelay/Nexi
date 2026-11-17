@@ -9,21 +9,23 @@ describe("announcement original-intent transaction source contract", () => {
     return { gateway, batch };
   };
 
-  it("puts create, outbox, and the conflict guard in the same SQLite batch", async () => {
+  it("puts create, outbox, audit receipt, and conflict guard in the same SQLite batch", async () => {
     const { gateway, batch } = makeGateway();
     await gateway.mutateAnnouncementAtomic({
       mode: "create", id: "announcement-a", key: "create-a",
       intentHash: "hash-a", published: false,
+      auditId: "audit-a", adminId: "admin-a", reason: "Initial announcement",
       values: { title: "Title", body: "Body", published: 0 },
     });
     const statements = batch.mock.calls[0][0] as Array<{ sql: string; params: unknown[] }>;
-    expect(statements).toHaveLength(3);
+    expect(statements).toHaveLength(4);
     expect(statements[0].sql).toContain('INSERT OR IGNORE INTO "Announcement"');
     expect(statements[1].sql).toContain('INSERT OR IGNORE INTO "EventOutbox"');
     expect(statements[1].sql).toContain('WHERE changes()=1');
-    expect(statements[2].sql).toContain('INSERT INTO "Announcement"');
-    expect(statements[2].sql).toContain('NOT EXISTS');
-    expect(statements[2].params).toEqual(expect.arrayContaining([
+    expect(statements[2].sql).toContain('INSERT OR IGNORE INTO "AdminAuditLog"');
+    expect(statements[3].sql).toContain('INSERT INTO "Announcement"');
+    expect(statements[3].sql).toContain('NOT EXISTS');
+    expect(statements[3].params).toEqual(expect.arrayContaining([
       "announcement:announcement-a", "announcement-a",
       "hash-a",
     ]));
@@ -34,15 +36,19 @@ describe("announcement original-intent transaction source contract", () => {
     await gateway.mutateAnnouncementAtomic({
       mode: "update", id: "announcement-a", key: "publish-a",
       intentHash: "hash-b", values: { published: 1 },
+      auditId: "audit-b", adminId: "admin-a", reason: "Publish",
     });
     const statements = batch.mock.calls[0][0] as Array<{ sql: string; params: unknown[] }>;
-    expect(statements).toHaveLength(3);
+    expect(statements).toHaveLength(4);
     expect(statements[0].sql).toContain('FROM "Announcement" WHERE "id"=?');
     expect(statements[0].sql).toContain('CASE WHEN ? IS NOT NULL AND "published"=0');
     expect(statements[0].sql).toContain('ANNOUNCEMENT_PUBLISHED');
     expect(statements[0].sql).toContain("json_object(");
     expect(statements[1].sql).toContain('"id"=? AND EXISTS');
-    expect(statements[2].sql).toContain('NOT EXISTS');
+    expect(statements[1].sql).toContain("json_extract(");
+    expect(statements[1].params).toContain("hash-b");
+    expect(statements[2].sql).toContain('INSERT OR IGNORE INTO "AdminAuditLog"');
+    expect(statements[3].sql).toContain('NOT EXISTS');
     expect(statements[0].params).toContain("hash-b");
     expect(statements[0].params).toContain(1);
   });
@@ -53,6 +59,7 @@ describe("announcement original-intent transaction source contract", () => {
     await expect(gateway.mutateAnnouncementAtomic({
       mode: "create", id: "announcement-a", key: "create-a",
       intentHash: "different", published: false,
+      auditId: "audit-a", adminId: "admin-a", reason: "Changed",
       values: { title: "Changed", body: "Body" },
     })).rejects.toMatchObject({ status: 409 });
   });
@@ -61,6 +68,7 @@ describe("announcement original-intent transaction source contract", () => {
     await expect(gateway.mutateAnnouncementAtomic({
       mode: "update", id: "announcement-a", key: "unsafe-column",
       intentHash: "hash-c", published: true,
+      auditId: "audit-c", adminId: "admin-a", reason: "Unsafe",
       values: { 'published"=1 WHERE "id"!="': 1 },
     })).rejects.toThrow("ANNOUNCEMENT_COLUMN_NOT_ALLOWED");
     expect(batch).not.toHaveBeenCalled();

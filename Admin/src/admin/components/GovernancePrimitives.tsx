@@ -47,6 +47,11 @@ export function ReceiptBanner({
   onDismiss?: () => void;
 }) {
   if (!receipt) return null;
+  const message = !receipt.result.ok
+    ? "Action denied"
+    : receipt.result.replayed
+      ? "Original action already recorded"
+      : "Action recorded";
   return (
     <div
       className={cn(
@@ -58,7 +63,7 @@ export function ReceiptBanner({
       data-testid="action-receipt"
     >
       <div className="flex items-center justify-between gap-3">
-        <strong>{receipt.result.ok ? "Action recorded" : "Action denied"}</strong>
+        <strong>{message}</strong>
         {onDismiss ? (
           <Button variant="ghost" size="sm" onClick={onDismiss}>
             Dismiss

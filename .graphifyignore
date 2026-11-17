@@ -21,3 +21,22 @@ plugins/
 
 # Audit evidence and isolated qualification copies are not application source
 work/
+
+# Source-only graph rebuild: exclude owner recovery artifacts and tooling noise
+*.bak.*
+*.backup.*
+*.tmp
+*.log
+coverage/
+.turbo/
+.pytest_cache/
+tasks/evidence/archive/
+.github/codeql/tests/
+
+# Semantic model scope: source navigation remains in current AGENTS and task evidence,
+# not remotely inferred from long historical agent instructions/acceptance receipts.
+AGENTS.md
+**/AGENTS.md
+tasks/evidence/
+tasks/NEXI_Advanced_Graphify_Full_Framework_Connectivity_Workflow_v1.1_20261113.md
+docs/operations/NEXI_GRAPHIFY_CLOUD_CLI_MCPC_RUNBOOK_20261116.md

@@ -1,0 +1,459 @@
+{
+  "record_type": "source_crosswalk",
+  "created_at": "2026-11-16",
+  "task": "Admin mutation fallback idempotency",
+  "repository_head": "7a5aa7f2c3a3c46768b3b56bc53b1cc50e02ad76",
+  "source": {
+    "path": "Admin/src/admin/data/nexi-api-provider.ts",
+    "current_sha256": "5b3f0cbedd17502162800b99efbea2835ada700e6d85f9d71c8b60e472740802",
+    "baseline_commit": "03480e6",
+    "baseline_sha256": "6fd3e4ddb3db38235a49a1b9783a76b50ac244ed3a2de39200bf5ce51db21d1d"
+  },
+  "observations": {
+    "current_call_sites": 49,
+    "fallback_call_sites": 46,
+    "explicit_key_call_sites": 3,
+    "historical_call_sites": 37,
+    "historical_formula": "boundedIdempotencyKey(admin, [path, actor, reason, ...keyValues])",
+    "current_formula": "boundedIdempotencyKey(admin, [path, actor, reason, ...keyValues, sorted effective payload])",
+    "explicit_callers": [
+      {
+        "line": 609,
+        "route_or_expression": "\"/admin/system-config\""
+      },
+      {
+        "line": 1393,
+        "route_or_expression": "\"/admin/binary/global-config\""
+      },
+      {
+        "line": 2472,
+        "route_or_expression": "\"/admin/messages\""
+      }
+    ],
+    "fallback_callers": [
+      {
+        "line": 926,
+        "route_or_expression": "`/admin/users/${encodeURIComponent(id)}/binary-research-default`"
+      },
+      {
+        "line": 1017,
+        "route_or_expression": "`/admin/sessions/${encodeURIComponent(id)}/revoke`"
+      },
+      {
+        "line": 1020,
+        "route_or_expression": "`/admin/users/${encodeURIComponent(id)}/sessions/revoke`"
+      },
+      {
+        "line": 1057,
+        "route_or_expression": "\"/admin/market/assets/visibility\""
+      },
+      {
+        "line": 1082,
+        "route_or_expression": "\"/admin/currencies\""
+      },
+      {
+        "line": 1105,
+        "route_or_expression": "`/admin/currencies/${id}`"
+      },
+      {
+        "line": 1111,
+        "route_or_expression": "\"/admin/wallet-networks\""
+      },
+      {
+        "line": 1200,
+        "route_or_expression": "`/admin/address/${encodeURIComponent(id)}/disable`"
+      },
+      {
+        "line": 1207,
+        "route_or_expression": "`/admin/wallet-networks/${encodeURIComponent(id)}`"
+      },
+      {
+        "line": 1288,
+        "route_or_expression": "\"/admin/market/feeds/status\""
+      },
+      {
+        "line": 1357,
+        "route_or_expression": "\"/admin/spot/pairs/maintenance\""
+      },
+      {
+        "line": 1363,
+        "route_or_expression": "`/admin/spot/orders/${encodeURIComponent(id)}/cancel`"
+      },
+      {
+        "line": 1374,
+        "route_or_expression": "\"/admin/spot/margin/config\""
+      },
+      {
+        "line": 1486,
+        "route_or_expression": "\"/admin/binary/pairs/maintenance\""
+      },
+      {
+        "line": 1492,
+        "route_or_expression": "`/admin/binary/positions/${encodeURIComponent(id)}/settle`"
+      },
+      {
+        "line": 1500,
+        "route_or_expression": "`/admin/binary/positions/${encodeURIComponent(id)}/research-control`"
+      },
+      {
+        "line": 1564,
+        "route_or_expression": "`/admin/deposits/${encodeURIComponent(id)}/confirm`"
+      },
+      {
+        "line": 1598,
+        "route_or_expression": "`/admin/withdrawals/${encodeURIComponent(id)}/${decision === \"approved\" ? \"approve\" : \"reject\"}`"
+      },
+      {
+        "line": 1721,
+        "route_or_expression": "\"/admin/mining-plans\""
+      },
+      {
+        "line": 1728,
+        "route_or_expression": "`/admin/mining-plans/${encodeURIComponent(id)}`"
+      },
+      {
+        "line": 1752,
+        "route_or_expression": "\"/admin/loan-plans\""
+      },
+      {
+        "line": 1759,
+        "route_or_expression": "`/admin/loan-plans/${encodeURIComponent(id)}`"
+      },
+      {
+        "line": 1802,
+        "route_or_expression": "`/admin/loans/applications/${encodeURIComponent(id)}/approve`"
+      },
+      {
+        "line": 1810,
+        "route_or_expression": "`/admin/loans/applications/${encodeURIComponent(id)}/reject`"
+      },
+      {
+        "line": 1823,
+        "route_or_expression": "\"/admin/feature-flags\""
+      },
+      {
+        "line": 1835,
+        "route_or_expression": "\"/admin/feature-flags\""
+      },
+      {
+        "line": 1873,
+        "route_or_expression": "`/admin/currencies/${network.currencyId}`"
+      },
+      {
+        "line": 1895,
+        "route_or_expression": "\"/admin/spot/pairs/maintenance\""
+      },
+      {
+        "line": 1921,
+        "route_or_expression": "\"/admin/binary/pairs/maintenance\""
+      },
+      {
+        "line": 2179,
+        "route_or_expression": "path"
+      },
+      {
+        "line": 2282,
+        "route_or_expression": "`/admin/deposits/${encodeURIComponent(id)}/credit`"
+      },
+      {
+        "line": 2285,
+        "route_or_expression": "`/admin/deposits/${encodeURIComponent(id)}/fail`"
+      },
+      {
+        "line": 2293,
+        "route_or_expression": "`/admin/withdrawals/${encodeURIComponent(id)}/review`"
+      },
+      {
+        "line": 2303,
+        "route_or_expression": "`/admin/withdrawals/${encodeURIComponent(id)}/fail`"
+      },
+      {
+        "line": 2375,
+        "route_or_expression": "\"/communications/admin/announcements\""
+      },
+      {
+        "line": 2392,
+        "route_or_expression": "`/communications/admin/announcements/${encodeURIComponent(id)}`"
+      },
+      {
+        "line": 2401,
+        "route_or_expression": "`/communications/admin/announcements/${encodeURIComponent(id)}/publish`"
+      },
+      {
+        "line": 2518,
+        "route_or_expression": "`/communications/admin/messages/moderation/${encodeURIComponent(id)}`"
+      },
+      {
+        "line": 2592,
+        "route_or_expression": "\"/communications/admin/notifications\""
+      },
+      {
+        "line": 2650,
+        "route_or_expression": "\"/communications/admin/learn/categories\""
+      },
+      {
+        "line": 2658,
+        "route_or_expression": "`/communications/admin/learn/categories/${encodeURIComponent(id)}`"
+      },
+      {
+        "line": 2681,
+        "route_or_expression": "\"/communications/admin/learn\""
+      },
+      {
+        "line": 2698,
+        "route_or_expression": "`/communications/admin/learn/${encodeURIComponent(id)}`"
+      },
+      {
+        "line": 2707,
+        "route_or_expression": "`/communications/admin/learn/${encodeURIComponent(id)}/publish`"
+      },
+      {
+        "line": 2914,
+        "route_or_expression": "\"/admin/maintenance-windows\""
+      },
+      {
+        "line": 2921,
+        "route_or_expression": "\"/admin/maintenance-windows/\" + encodeURIComponent(id) + \"/cancel\""
+      }
+    ],
+    "system_config": "writeJsonConfig passes exact legacy derivation; backend persists and validates key plus intent and returns persisted receipt.",
+    "cross_route_guard": "Not established for every fallback caller; controller acceptance of a key alone is not proof of persisted operation identity or payload mismatch rejection."
+  },
+  "disposition": {
+    "system_config": "SOURCE_IMPLEMENTED_CURRENT",
+    "explicit_key_passthrough": "SOURCE_IMPLEMENTED_CURRENT",
+    "remaining_fallback_routes": "INSUFFICIENT_EVIDENCE",
+    "repository": "SOURCE_OPEN",
+    "reason": "Historical derivation change is confirmed, but backend persisted replay identities and mismatch guards are not mapped for every route. Restoring the old formula could reintroduce key collisions; retaining the new formula could change retry identity. No global action is supported until the route crosswalk is complete."
+  },
+  "fallow": {
+    "invoked": true,
+    "targets": [
+      "Admin/src/admin/data/nexi-api-provider.ts",
+      "backend/src/admin/admin.service.ts",
+      "backend/src/communications/communications.service.ts"
+    ],
+    "result": "all three inspect commands exited 0; static evidence returned. Diagnostics included missing monorepo-root node_modules and rule packs not configured; advisories are not replay proof."
+  },
+  "graphify": {
+    "invoked": true,
+    "target": "Admin/src/admin/data/nexi-api-provider.ts",
+    "graph_commit": "00be8e97a1317a354e9427a5e37ebe854c4b5e7e",
+    "head": "7a5aa7f2c3a3c46768b3b56bc53b1cc50e02ad76",
+    "result": "stale relative to current HEAD; locator only."
+  },
+  "api_impact_mapper": {
+    "invoked": true,
+    "result": "out_of_scope; no classification/evidence produced."
+  },
+  "sentinelx": {
+    "invoked": true,
+    "interfaces": [
+      "sentinel_exec",
+      "sentinel_script_run",
+      "sentinel_capabilities"
+    ],
+    "result": "read-only source inspection and static analysis completed."
+  },
+  "live_reconciliation_20261116": {
+    "evidence_basis": "Current provider source at repository HEAD 7a5aa7f2c3a3; direct read-only SentinelX and bounded sentinel_script_run inspection.",
+    "provider_sha256": "fd04fa10920b862b0e958c033ae6a437647d361a1eb2d810e941001fe70e681e",
+    "runtime_requestMutation_call_sites": 49,
+    "fallback_generated_keys": 45,
+    "explicit_sixth_argument_keys": 4,
+    "explicit_key_call_sites": [
+      {
+        "line": 609,
+        "route": "POST /admin/system-config",
+        "caller": "writeJsonConfig"
+      },
+      {
+        "line": 1393,
+        "route": "POST /admin/binary/global-config",
+        "caller": "updateBinaryGlobalConfiguration"
+      },
+      {
+        "line": 1931,
+        "route": "POST /admin/binary/pairs/maintenance",
+        "caller": "updateBinaryPair; preserves legacy key"
+      },
+      {
+        "line": 2484,
+        "route": "POST /admin/messages",
+        "caller": "sendAdminMessage"
+      }
+    ],
+    "correction": "The saved 49/46/3 live count is superseded: line 1921 is the binary route string assignment; the actual requestMutation call at line 1931 passes an explicit key. Actual callers remain 49: 45 fallback and 4 explicit. Prior snapshot retained unchanged for provenance.",
+    "continued_entries": [
+      {
+        "entry": 26,
+        "route": "/admin/currencies/{network.currencyId}",
+        "caller": "updateNetwork",
+        "classification": "SOURCE_IMPLEMENTED_CURRENT",
+        "evidence": "PATCH reaches AdminController.updateCurrency -> AdminService.updateCurrency -> D1 updateAdminCurrency or Prisma executeAdminMutation. Both branches validate actor/reason/key and effective payload against persisted audit intent; D1 returns persisted audit receipt. This editor handles network limits/flags; updateDepositAsset uses the same URL for name/logo with a distinct payload contract.",
+        "evidence_locations": [
+          "Admin/src/admin/data/nexi-api-provider.ts:1854-1879",
+          "Admin/src/admin/data/nexi-api-provider.ts:1096-1105",
+          "backend/src/admin/admin.controller.ts:1191-1198",
+          "backend/src/admin/admin.service.ts:2752-2775",
+          "backend/src/d1/d1-financial-command.gateway.ts:5167-5278",
+          "backend/src/admin/admin-mutation-replay.ts:findReplay/executeAdminMutation"
+        ]
+      },
+      {
+        "entry": 27,
+        "route": "/admin/spot/pairs/maintenance",
+        "caller": "updateSpotPair plus active pauseSpotPair route caller",
+        "classification": "PROVEN_SOURCE_GAP",
+        "evidence": "Both active UI paths reach the same POST endpoint with identical semantic body {symbol:id, enabled:value}, but derive different keys: pauseSpotPair uses fallback with no keyValues; updateSpotPair includes [id]. Backend setSpotPairMaintenance deduplicates only by submitted key-derived audit ID. Crossing paths for the same actor/reason/intent can bypass duplicate detection. Both shapes existed at baseline 03480e6; a caller-only formula edit could break an established retry identity, so preserve both while reconciling.",
+        "evidence_locations": [
+          "Admin/src/admin/data/nexi-api-provider.ts:1352-1360",
+          "Admin/src/admin/data/nexi-api-provider.ts:1887-1905",
+          "Admin/src/routes/spot.tsx:421-457",
+          "backend/src/admin/admin.controller.ts:883-898",
+          "backend/src/admin/admin.service.ts:2607-2643",
+          "git show 03480e6:Admin/src/admin/data/nexi-api-provider.ts"
+        ]
+      },
+      {
+        "entry": 28,
+        "route": "/admin/binary/pairs/maintenance",
+        "caller": "pauseBinaryPair and updateBinaryPair",
+        "classification": "INSUFFICIENT_EVIDENCE",
+        "evidence": "Live source shows fallback caller and explicit historical-key caller; current Admin route invokes pauseBinaryPair and no active route consumer of updateBinaryPair was found. Persisted compatibility is not established.",
+        "evidence_locations": [
+          "Admin/src/admin/data/nexi-api-provider.ts:1480-1490",
+          "Admin/src/admin/data/nexi-api-provider.ts:1907-1941",
+          "Admin/src/routes/binary.tsx:322"
+        ]
+      },
+      {
+        "entry": 29,
+        "route": "POST /admin/incidents/{id}/acknowledge",
+        "caller": "setIncidentActive",
+        "classification": "SOURCE_IMPLEMENTED_CURRENT",
+        "evidence": "Reuse prior continuation source receipt for exact persisted audit identity and replay validation; not runtime proof."
+      },
+      {
+        "entry": 30,
+        "route": "POST /admin/deposits/{id}/credit",
+        "caller": "creditDeposit",
+        "classification": "SOURCE_IMPLEMENTED_CURRENT",
+        "evidence": "Covered by prior continuation: D1 replay checks durable posting/operation/Admin receipts against original intent and returns persisted identities; source proof only."
+      },
+      {
+        "entry": 31,
+        "route": "POST /admin/deposits/{id}/fail",
+        "caller": "failDeposit",
+        "classification": "INSUFFICIENT_EVIDENCE",
+        "evidence": "Caller inventoried; persisted replay identity and exact mismatch guard not inspected in this continuation."
+      },
+      {
+        "entry": 32,
+        "route": "POST /admin/withdrawals/{id}/review",
+        "caller": "requestWithdrawalReview",
+        "classification": "INSUFFICIENT_EVIDENCE",
+        "evidence": "Caller inventoried; persisted replay identity and exact mismatch guard not inspected in this continuation."
+      },
+      {
+        "entry": 33,
+        "route": "POST /admin/withdrawals/{id}/fail",
+        "caller": "setWithdrawalProcessing(failed)",
+        "classification": "INSUFFICIENT_EVIDENCE",
+        "evidence": "Caller inventoried; persisted replay identity and exact mismatch guard not inspected in this continuation."
+      },
+      {
+        "entry": 34,
+        "route": "POST /communications/admin/announcements",
+        "caller": "createAnnouncement",
+        "classification": "INSUFFICIENT_EVIDENCE",
+        "evidence": "Caller inventoried; Backend persisted replay identity not crosswalked."
+      },
+      {
+        "entry": 35,
+        "route": "PATCH /communications/admin/announcements/{id}",
+        "caller": "updateAnnouncement",
+        "classification": "INSUFFICIENT_EVIDENCE",
+        "evidence": "Caller inventoried; Backend persisted replay identity not crosswalked."
+      },
+      {
+        "entry": 36,
+        "route": "POST /communications/admin/announcements/{id}/publish",
+        "caller": "publishAnnouncement",
+        "classification": "INSUFFICIENT_EVIDENCE",
+        "evidence": "Caller inventoried; Backend persisted replay identity not crosswalked."
+      },
+      {
+        "entry": 37,
+        "route": "PATCH /communications/admin/messages/moderation/{id}",
+        "caller": "resolveMessageModeration",
+        "classification": "INSUFFICIENT_EVIDENCE",
+        "evidence": "Caller inventoried; Backend persisted replay identity not crosswalked."
+      },
+      {
+        "entry": 38,
+        "route": "POST /communications/admin/notifications",
+        "caller": "sendNotification",
+        "classification": "INSUFFICIENT_EVIDENCE",
+        "evidence": "Caller inventoried; Backend persisted replay identity not crosswalked."
+      },
+      {
+        "entry": 39,
+        "route": "POST /communications/admin/learn/categories",
+        "caller": "createLearnCategory",
+        "classification": "INSUFFICIENT_EVIDENCE",
+        "evidence": "Caller inventoried; Backend persisted replay identity not crosswalked."
+      },
+      {
+        "entry": 40,
+        "route": "PATCH /communications/admin/learn/categories/{id}",
+        "caller": "updateLearnCategoryStatus",
+        "classification": "INSUFFICIENT_EVIDENCE",
+        "evidence": "Caller inventoried; Backend persisted replay identity not crosswalked."
+      },
+      {
+        "entry": 41,
+        "route": "POST /communications/admin/learn",
+        "caller": "createLearnArticle",
+        "classification": "INSUFFICIENT_EVIDENCE",
+        "evidence": "Caller inventoried; Backend persisted replay identity not crosswalked."
+      },
+      {
+        "entry": 42,
+        "route": "PATCH /communications/admin/learn/{id}",
+        "caller": "updateLearnArticle",
+        "classification": "INSUFFICIENT_EVIDENCE",
+        "evidence": "Caller inventoried; Backend persisted replay identity not crosswalked."
+      },
+      {
+        "entry": 43,
+        "route": "POST /communications/admin/learn/{id}/publish",
+        "caller": "publishLearnArticle",
+        "classification": "INSUFFICIENT_EVIDENCE",
+        "evidence": "Caller inventoried; Backend persisted replay identity not crosswalked."
+      },
+      {
+        "entry": 44,
+        "route": "POST /admin/maintenance-windows",
+        "caller": "scheduleMaintenanceWindow",
+        "classification": "INSUFFICIENT_EVIDENCE",
+        "evidence": "Caller inventoried; persisted replay identity not mapped in this continuation."
+      },
+      {
+        "entry": 45,
+        "route": "POST /admin/maintenance-windows/{id}/cancel",
+        "caller": "cancelMaintenanceWindow",
+        "classification": "INSUFFICIENT_EVIDENCE",
+        "evidence": "Caller inventoried; persisted replay identity not mapped in this continuation."
+      }
+    ],
+    "summary": {
+      "SOURCE_IMPLEMENTED_CURRENT": 3,
+      "PROVEN_SOURCE_GAP": 1,
+      "INSUFFICIENT_EVIDENCE": 16,
+      "unclassified": 0,
+      "scope": "Entries 26-45; previous indices are retained. Other pre-26 callers remain under prior crosswalk disposition."
+    },
+    "next_operation": "Resolve the spot-pair cross-caller identity gap without invalidating either legacy key, then map persisted identity for remaining INSUFFICIENT_EVIDENCE entries. No app verification/runtime work under SOURCE-FIRST."
+  }
+}

@@ -254,6 +254,9 @@ export class D1CommunicationsCommandGateway {
     id: string; key: string; intentHash: string; mode: "create" | "update";
     values: Record<string, string | number | null>;
     published?: boolean;
+    auditId: string;
+    adminId: string;
+    reason?: string;
   }): Promise<void> {
     if (!this.isEnabled()) throw new Error("SQLite communications gateway disabled");
     const eventKey = input.mode === "create" ? "announcement:" + input.id
@@ -305,18 +308,34 @@ export class D1CommunicationsCommandGateway {
       statements.push(event, {
         sql: 'UPDATE "Announcement" SET ' +
           columns.map(c => '"' + c + '"=?').concat(['"updatedAt"=CURRENT_TIMESTAMP']).join(",") +
-          ' WHERE "id"=? AND EXISTS (SELECT 1 FROM "EventOutbox" WHERE "id"=? AND "idempotencyKey"=? AND "payload"=?)',
-        params: [...columns.map(c => input.values[c]), input.id, eventId, eventKey, payload],
+          ' WHERE "id"=? AND EXISTS (SELECT 1 FROM "EventOutbox" WHERE "id"=? AND "idempotencyKey"=? AND json_valid("payload") AND json_extract("payload",\'$.intentHash\')=?)',
+        params: [...columns.map(c => input.values[c]), input.id, eventId, eventKey, input.intentHash],
       });
     }
-    // A mismatched original request or missing update target triggers a NOT NULL
-    // constraint *inside* the batch; SQLite rolls back both tables atomically.
+    // Only a newly recorded event may create the corresponding audit receipt.
+    // A legacy event without a matching audit fails closed on replay.
+    const auditAction = input.mode === "create" ? "ANNOUNCEMENT_CREATED" : "ANNOUNCEMENT_MUTATED";
+    const auditDetails = JSON.stringify({
+      reason: input.reason ?? null,
+      idempotencyKey: input.key,
+      intentHash: input.intentHash,
+    });
+    statements.push({
+      sql: 'INSERT OR IGNORE INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") ' +
+        'SELECT ?,?,?,?,?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "EventOutbox" WHERE "id"=? AND "idempotencyKey"=? AND "aggregateId"=?)',
+      params: [input.auditId, input.adminId, auditAction, input.id, auditDetails,
+        eventId, eventKey, input.id],
+    });
+    // A mismatched original request, absent audit receipt or missing target
+    // fails in the same transaction as the outbox and content write.
     statements.push({
       sql: 'INSERT INTO "Announcement" ("id","title","body") SELECT ?,NULL,NULL WHERE NOT EXISTS ' +
         '(SELECT 1 FROM "EventOutbox" WHERE "idempotencyKey"=? AND "aggregateType"=\'ANNOUNCEMENT\' ' +
         'AND "aggregateId"=? AND json_valid("payload") AND json_extract("payload",\'$.intentHash\')=?' +
-        (input.mode === "create" ? ' AND "eventType"=\'ANNOUNCEMENT_CREATED\'' : '') + ')',
-      params: ['announcement-intent-guard:' + eventId, eventKey, input.id, input.intentHash],
+        (input.mode === "create" ? ' AND "eventType"=\'ANNOUNCEMENT_CREATED\'' : '') + ')' +
+        ' OR NOT EXISTS (SELECT 1 FROM "AdminAuditLog" WHERE "id"=? AND "adminId"=? AND "action"=? AND "target"=? AND "details"=?)',
+      params: ['announcement-intent-guard:' + eventId, eventKey, input.id, input.intentHash,
+        input.auditId, input.adminId, auditAction, input.id, auditDetails],
     });
     try {
       await this.bridge.batch(statements);

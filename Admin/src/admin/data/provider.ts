@@ -67,6 +67,8 @@ export interface ConsequentialContext {
 export interface MutationResult {
   ok: boolean;
   auditId: string;
+  /** True when the backend returned the original idempotent operation receipt. */
+  replayed?: boolean;
 }
 
 export interface VipAdminLevel {

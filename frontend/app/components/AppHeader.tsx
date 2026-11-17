@@ -46,7 +46,7 @@ export default function AppHeader() {
           className="nexi-header-icon relative h-[44px] w-[44px] shrink-0 cursor-pointer focus-within:ring-2 focus-within:ring-[#A995FF] focus-within:ring-offset-2 focus-within:ring-offset-[#08060D]"
           title={t("languageSelection")}
         >
-          <Languages className="h-[18px] w-[18px]" aria-hidden="true" />
+          <Languages className="h-6 w-6" aria-hidden="true" />
           <span className="sr-only">{t("languageSelection")}</span>
           <select
             aria-label={t("languageSelection")}
@@ -73,7 +73,7 @@ export default function AppHeader() {
           onClick={() => setNotificationsOpen((open) => !open)}
           className="nexi-header-icon relative h-[44px] w-[44px] shrink-0"
         >
-          <Bell className="h-[18px] w-[18px]" aria-hidden="true" />
+          <Bell className="h-6 w-6" aria-hidden="true" />
           {unreadCount !== null && unreadCount > 0 && (
             <span
               aria-hidden="true"

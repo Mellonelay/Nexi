@@ -7,6 +7,7 @@ import { CommunicationsService } from './communications.service';
 import { RedisService } from '../redis/redis.service';
 import { AuthenticatedUser, JwtPayload } from '../auth/auth.types';
 import { JwtStrategy } from '../auth/jwt.strategy';
+import { AuthSecurityEventsService } from '../auth/auth-security-events.service';
 import { Role } from '../prisma/d1-client';
 import { AdminPermissionGuard } from '../admin/admin-permission.guard';
 import { isCorsOriginAllowed } from '../runtime/runtime.config';
@@ -24,6 +25,7 @@ export class CommunicationsGateway implements OnGatewayInit, OnModuleInit, OnMod
   private subscriberRetryTimer?: NodeJS.Timeout;
   private subscriberRetryAttempt = 0;
   private destroyed = false;
+  private unsubscribeSecurityEvents?: () => void;
 
   constructor(
     private readonly jwt: JwtService,
@@ -31,6 +33,7 @@ export class CommunicationsGateway implements OnGatewayInit, OnModuleInit, OnMod
     private readonly adminPermissions: AdminPermissionGuard,
     private readonly redis: RedisService,
     private readonly service: CommunicationsService,
+    private readonly securityEvents: AuthSecurityEventsService,
   ) {}
 
   afterInit(namespace: Namespace) {
@@ -41,11 +44,25 @@ export class CommunicationsGateway implements OnGatewayInit, OnModuleInit, OnMod
 
   async onModuleInit() {
     this.destroyed = false;
+    this.unsubscribeSecurityEvents = this.securityEvents.on((event) => {
+      if (
+        event.sessionId &&
+        ['LOGOUT', 'REFRESH_REJECTED', 'REFRESH_REUSE_DETECTED'].includes(event.type)
+      ) {
+        this.server?.in(`auth-session:${event.sessionId}`).disconnectSockets(true);
+      } else if (event.type === 'LOGOUT_ALL' && event.userId && event.surface) {
+        this.server
+          ?.in(`auth-user:${event.surface}:${event.userId}`)
+          .disconnectSockets(true);
+      }
+    });
     await this.connectSubscriber();
   }
 
   async onModuleDestroy() {
     this.destroyed = true;
+    this.unsubscribeSecurityEvents?.();
+    this.unsubscribeSecurityEvents = undefined;
     if (this.subscriberRetryTimer) clearTimeout(this.subscriberRetryTimer);
     this.subscriberRetryTimer = undefined;
     if (this.subscriber) await this.redis.releaseSubscriber(this.subscriber);
@@ -90,6 +107,12 @@ export class CommunicationsGateway implements OnGatewayInit, OnModuleInit, OnMod
 
   async handleConnection(client: Socket) {
     const user = client.data.authenticatedUser as AuthenticatedUser;
+    if (user.surface) {
+      await client.join(`auth-user:${user.surface}:${user.userId}`);
+    }
+    if (user.sessionId) {
+      await client.join(`auth-session:${user.sessionId}`);
+    }
     if (user.surface === 'PUBLIC') {
       await client.join(`user:${user.userId}`);
       return;

@@ -1,6 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { D1FinancialCommandGateway } from "../d1/d1-financial-command.gateway";
 import { D1PrismaService } from "../d1/d1-prisma.service";
+import { executeAdminMutation } from "./admin-mutation-replay";
 
 @Injectable()
 export class AdminWalletConfigurationService {
@@ -19,18 +20,19 @@ export class AdminWalletConfigurationService {
         idempotencyKey,
       });
     }
-    return this.prisma.$transaction(async (tx: any) => {
-      const created = await tx.currency.create({ data: currency });
-      const audit = await tx.adminAuditLog.create({
-        data: {
-          adminId,
-          action: "CURRENCY_CREATED",
-          target: String(created.id),
-          details: { reason, idempotencyKey, symbol: created.symbol },
-        },
-      });
-      return { ...created, auditId: audit.id };
-    });
+    return executeAdminMutation(
+      this.prisma,
+      {
+        action: "CURRENCY_CREATED",
+        adminId,
+        reason,
+        idempotencyKey,
+        payload: currency,
+      },
+      (tx) => tx.currency.create({ data: currency }),
+      (created) => String(created.id),
+      (tx, target) => tx.currency.findUnique({ where: { id: Number(target) } }),
+    );
   }
 
   async getWalletNetworks() {
@@ -56,32 +58,34 @@ export class AdminWalletConfigurationService {
     if (this.d1?.isEnabled()) {
       return this.d1.createAdminWalletNetwork({ ...input, adminId });
     }
-    return this.prisma.$transaction(async (tx: any) => {
-      const created = await tx.walletNetwork.create({
-        data: {
-          currencyId: input.currencyId,
-          code: input.code.trim().toUpperCase(),
-          name: input.name.trim(),
-          notice: input.notice,
-          instructions: input.instructions,
-          isActive: false,
-          depositEnabled: false,
-          withdrawEnabled: false,
-        },
-      });
-      const audit = await tx.adminAuditLog.create({
-        data: {
-          adminId,
-          action: "WALLET_NETWORK_CREATED",
-          target: created.id,
-          details: {
-            reason: input.reason,
-            idempotencyKey: input.idempotencyKey,
+    const payload = {
+      currencyId: input.currencyId,
+      code: input.code.trim().toUpperCase(),
+      name: input.name.trim(),
+      notice: input.notice,
+      instructions: input.instructions,
+    };
+    return executeAdminMutation(
+      this.prisma,
+      {
+        action: "WALLET_NETWORK_CREATED",
+        adminId,
+        reason: input.reason,
+        idempotencyKey: input.idempotencyKey,
+        payload,
+      },
+      (tx) =>
+        tx.walletNetwork.create({
+          data: {
+            ...payload,
+            isActive: false,
+            depositEnabled: false,
+            withdrawEnabled: false,
           },
-        },
-      });
-      return { ...created, auditId: audit.id };
-    });
+        }),
+      (created) => String(created.id),
+      (tx, target) => tx.walletNetwork.findUnique({ where: { id: target } }),
+    );
   }
 
   async updateWalletNetwork(
@@ -108,21 +112,20 @@ export class AdminWalletConfigurationService {
         idempotencyKey,
       });
     }
-    return this.prisma.$transaction(async (tx: any) => {
-      const updated = await tx.walletNetwork.update({
-        where: { id },
-        data: patch,
-      });
-      const audit = await tx.adminAuditLog.create({
-        data: {
-          adminId,
-          action: "WALLET_NETWORK_UPDATED",
-          target: id,
-          details: { reason, idempotencyKey, fields: Object.keys(patch) },
-        },
-      });
-      return { ...updated, auditId: audit.id };
-    });
+    return executeAdminMutation(
+      this.prisma,
+      {
+        action: "WALLET_NETWORK_UPDATED",
+        adminId,
+        reason,
+        idempotencyKey,
+        target: id,
+        payload: patch,
+      },
+      (tx) => tx.walletNetwork.update({ where: { id }, data: patch }),
+      (updated) => String(updated.id),
+      (tx, target) => tx.walletNetwork.findUnique({ where: { id: target } }),
+    );
   }
 
   async setDepositAddressState(
@@ -137,22 +140,28 @@ export class AdminWalletConfigurationService {
     if (this.d1?.isEnabled()) {
       return this.d1.updateAdminDepositAddressState({ id, ...input, adminId });
     }
-    return this.prisma.$transaction(async (tx: any) => {
-      const updated = await tx.depositAddress.update({
-        where: { id },
-        data: { isActive: input.isActive },
-      });
-      const audit = await tx.adminAuditLog.create({
-        data: {
-          adminId,
-          action: input.isActive
-            ? "DEPOSIT_ADDRESS_ENABLED"
-            : "DEPOSIT_ADDRESS_DISABLED",
-          target: id,
-          details: { reason: input.reason, idempotencyKey: input.idempotencyKey },
-        },
-      });
-      return { ...updated, auditId: audit.id };
-    });
+    const action = input.isActive
+      ? "DEPOSIT_ADDRESS_ENABLED"
+      : "DEPOSIT_ADDRESS_DISABLED";
+    return executeAdminMutation(
+      this.prisma,
+      {
+        action,
+        actionAliases: ["DEPOSIT_ADDRESS_ENABLED", "DEPOSIT_ADDRESS_DISABLED"],
+        identityScope: "DEPOSIT_ADDRESS_STATE",
+        adminId,
+        reason: input.reason,
+        idempotencyKey: input.idempotencyKey,
+        target: id,
+        payload: { isActive: input.isActive },
+      },
+      (tx) =>
+        tx.depositAddress.update({
+          where: { id },
+          data: { isActive: input.isActive },
+        }),
+      (updated) => String(updated.id),
+      (tx, target) => tx.depositAddress.findUnique({ where: { id: target } }),
+    );
   }
 }

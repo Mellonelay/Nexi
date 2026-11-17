@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { BarChart3, Coins, Home, LineChart, Wallet } from "lucide-react";
 import { useLocale } from "../state/LocaleProvider";
 import { usePublicNavigation } from "../state/public-navigation";
+import { hasAuthSession } from "../lib/auth-session";
 
 const navItems = [
   { key: "dashboard", label: "Dashboard", href: "/dashboard", icon: Home },
@@ -27,6 +28,7 @@ const navTargets = navItems.map((item) => item.href);
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const authenticated = hasAuthSession();
   const { t } = useLocale();
   const configuredTargets = usePublicNavigation("bottom", navTargets);
   const configuredItems = configuredTargets.flatMap((target) =>
@@ -41,7 +43,10 @@ export default function BottomNav() {
       <div className="nexi-bottom-nav mx-auto grid min-h-[64px] max-w-[420px] grid-cols-5 items-center rounded-[18px] border px-1">
         {configuredItems.map((item) => {
           const Icon = item.icon;
-          const disabled = item.state === "maintenance";
+          const disabled =
+            item.state === "maintenance" ||
+            item.state === "hidden" ||
+            (item.state === "authenticated" && !authenticated);
           const active =
             pathname === item.href ||
             (item.href !== "/dashboard" &&
@@ -57,7 +62,7 @@ export default function BottomNav() {
               onClick={(event) => {
                 if (disabled) event.preventDefault();
               }}
-              className={`nexi-interactive relative flex min-h-[44px] flex-col items-center justify-center gap-0.5 rounded-[12px] px-0.5 text-xs leading-tight font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)] ${disabled ? "cursor-not-allowed opacity-55" : ""} ${active ? "text-violet-300" : "text-[var(--nexi-text-secondary)] hover:bg-white/[0.03] hover:text-white"}`}
+              className={`nexi-interactive relative flex min-h-[44px] flex-col items-center justify-center gap-0.5 rounded-[12px] px-0.5 text-[11px] leading-4 font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)] ${disabled ? "cursor-not-allowed opacity-55" : ""} ${active ? "text-violet-300" : "text-[var(--nexi-text-secondary)] hover:bg-white/[0.03] hover:text-white"}`}
             >
               {active && (
                 <span
@@ -66,7 +71,7 @@ export default function BottomNav() {
                 />
               )}
               <Icon
-                className={`relative h-[19px] w-[19px] ${active ? "text-violet-300 drop-shadow-[0_0_7px_rgba(115,83,221,.6)]" : ""}`}
+                className={`relative h-6 w-6 ${active ? "text-violet-300 drop-shadow-[0_0_7px_rgba(115,83,221,.6)]" : ""}`}
                 strokeWidth={1.7}
                 aria-hidden="true"
               />

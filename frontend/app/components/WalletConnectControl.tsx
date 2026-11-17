@@ -271,6 +271,7 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
         disabled={busy}
         className="min-h-11 rounded-xl border border-violet-300/25 bg-[#2A1742] px-3 text-left text-sm text-[#F8F6FF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF]"
         title="Disconnect wallet"
+        aria-label={`Disconnect wallet ${sessionWalletAddress}`}
       >
         {truncateAddress(sessionWalletAddress)}
       </button>
@@ -301,7 +302,7 @@ function WalletConnectControlInner({ compact = false }: { compact?: boolean }) {
               event.preventDefault();
               setOpen(false);
             }}
-            className="fixed inset-x-3 bottom-[calc(8px+env(safe-area-inset-bottom))] m-0 max-h-[calc(min(100dvh,var(--nexi-visible-viewport-height,100dvh))-16px-env(safe-area-inset-bottom))] max-w-none flex-col overflow-hidden rounded-2xl border border-violet-300/25 bg-[#0B0A0E] p-3 shadow-2xl backdrop:bg-black/55 sm:inset-x-auto sm:right-4 sm:top-16 sm:bottom-auto sm:w-80 sm:max-h-[min(70dvh,520px)]"
+            className="fixed inset-x-3 bottom-[calc(8px+env(safe-area-inset-bottom))] m-0 max-h-[calc(min(100dvh,var(--nexi-visible-viewport-height,100dvh))-16px-env(safe-area-inset-bottom))] max-w-none flex flex-col overflow-hidden rounded-2xl border border-violet-300/25 bg-[#0B0A0E] p-3 shadow-2xl backdrop:bg-black/55 sm:inset-x-auto sm:right-4 sm:top-16 sm:bottom-auto sm:w-80 sm:max-h-[min(70dvh,520px)]"
             aria-label="Choose an Ethereum wallet"
           >
             <div className="flex items-start justify-between gap-3 px-1 pb-2">

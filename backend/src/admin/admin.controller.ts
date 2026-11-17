@@ -294,12 +294,20 @@ export class AdminController {
   @Post("incidents/:id/acknowledge")
   @ApiOperation({ summary: "Acknowledge an operational incident" })
   @ApiResponse({
-    status: 200,
-    description: "Incident acknowledgement result",
-    schema: { type: "object", additionalProperties: true },
+    status: 201,
+    description: "Incident acknowledgement result with persisted audit receipt",
+    schema: {
+      type: "object",
+      additionalProperties: true,
+      properties: {
+        auditId: { type: "string", format: "uuid" },
+        replayed: { type: "boolean" },
+      },
+    },
   })
   @ApiBadRequestResponse({ description: "Invalid acknowledgement request" })
   @ApiNotFoundResponse({ description: "Incident not found" })
+  @ApiResponse({ status: 409, description: "Conflicting or unrecoverable acknowledgement replay" })
   @RequireAdminPermission("health.acknowledge")
   acknowledgeIncident(
     @Param("id", ParseUUIDPipe) id: string,
@@ -318,11 +326,19 @@ export class AdminController {
   @Post("maintenance-windows")
   @ApiOperation({ summary: "Schedule a maintenance window" })
   @ApiResponse({
-    status: 200,
-    description: "Maintenance window result",
-    schema: { type: "object", additionalProperties: true },
+    status: 201,
+    description: "Maintenance window result with persisted audit receipt",
+    schema: {
+      type: "object",
+      additionalProperties: true,
+      properties: {
+        auditId: { type: "string", format: "uuid" },
+        replayed: { type: "boolean" },
+      },
+    },
   })
   @ApiBadRequestResponse({ description: "Invalid maintenance window request" })
+  @ApiResponse({ status: 409, description: "Conflicting or unrecoverable maintenance replay" })
   @RequireAdminPermission("maintenance.edit")
   createMaintenanceWindow(
     @Body() body: CreateMaintenanceWindowDto,
@@ -337,14 +353,22 @@ export class AdminController {
   @Post("maintenance-windows/:id/cancel")
   @ApiOperation({ summary: "Cancel a maintenance window" })
   @ApiResponse({
-    status: 200,
-    description: "Maintenance cancellation result",
-    schema: { type: "object", additionalProperties: true },
+    status: 201,
+    description: "Maintenance cancellation result with persisted audit receipt",
+    schema: {
+      type: "object",
+      additionalProperties: true,
+      properties: {
+        auditId: { type: "string", format: "uuid" },
+        replayed: { type: "boolean" },
+      },
+    },
   })
   @ApiBadRequestResponse({
     description: "Invalid maintenance cancellation request",
   })
   @ApiNotFoundResponse({ description: "Maintenance window not found" })
+  @ApiResponse({ status: 409, description: "Conflicting cancellation or unrecoverable replay" })
   @RequireAdminPermission("maintenance.edit")
   cancelMaintenanceWindow(
     @Param("id", ParseUUIDPipe) id: string,
@@ -458,6 +482,19 @@ export class AdminController {
   }
 
   @Post("governance/commands/:id/approve")
+  @ApiResponse({
+    status: 201,
+    description: "Governance decision with persisted audit receipt",
+    schema: {
+      type: "object",
+      additionalProperties: true,
+      properties: { auditId: { type: "string", format: "uuid" } },
+    },
+  })
+  @ApiResponse({ status: 400, description: "Governance command is already in a different state" })
+  @ApiResponse({ status: 403, description: "Requester cannot approve their own command" })
+  @ApiNotFoundResponse({ description: "Governance command not found" })
+  @ApiResponse({ status: 409, description: "Governance decision conflicts with its original request" })
   @RequireAdminPermission("approvals.decide")
   approveGovernanceCommand(
     @Param("id", ParseUUIDPipe) id: string,
@@ -473,6 +510,19 @@ export class AdminController {
   }
 
   @Post("governance/commands/:id/reject")
+  @ApiResponse({
+    status: 201,
+    description: "Governance decision with persisted audit receipt",
+    schema: {
+      type: "object",
+      additionalProperties: true,
+      properties: { auditId: { type: "string", format: "uuid" } },
+    },
+  })
+  @ApiResponse({ status: 400, description: "Governance command is already in a different state" })
+  @ApiResponse({ status: 403, description: "Requester cannot approve their own command" })
+  @ApiNotFoundResponse({ description: "Governance command not found" })
+  @ApiResponse({ status: 409, description: "Governance decision conflicts with its original request" })
   @RequireAdminPermission("approvals.decide")
   rejectGovernanceCommand(
     @Param("id", ParseUUIDPipe) id: string,
@@ -805,15 +855,16 @@ export class AdminController {
   @ApiCreatedResponse({
     schema: {
       type: "object",
-      required: ["ok", "auditId", "state"],
+      required: ["ok", "auditId", "state", "replayed"],
       properties: {
         ok: { type: "boolean" },
         auditId: { type: "string" },
         state: { type: "string" },
+        replayed: { type: "boolean" },
       },
     },
   })
-  @ApiBadRequestResponse({ description: "A cancellation reason is required." })
+  @ApiBadRequestResponse({ description: "The cancellation request is invalid or cannot be reconciled with the order state." })
   @ApiNotFoundResponse({ description: "Spot order not found." })
   @RequireAdminPermission("spot.cancel_order")
   cancelAdminSpotOrder(

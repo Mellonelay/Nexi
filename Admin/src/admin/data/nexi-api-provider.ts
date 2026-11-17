@@ -565,7 +565,11 @@ export class NexiAdminApiProvider implements AdminDataProvider {
           ]),
       }),
     });
-    return { ok: result.ok !== false, auditId: stringValue(result.auditId) };
+    return {
+      ok: result.ok !== false,
+      auditId: stringValue(result.auditId),
+      ...(result.replayed === true ? { replayed: true } : {}),
+    };
   }
 
   private async getSystemConfigMap(): Promise<Record<string, string>> {
@@ -597,8 +601,19 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     description: string,
     ctx: ConsequentialContext,
   ): Promise<MutationResult> {
-    return this.requestMutation("/admin/system-config", ctx,
-      { key, value: JSON.stringify(value), description }, [key]);
+    // Preserve the pre-payload fallback identity so retries from the prior
+    // provider version resolve to the same persisted SystemConfig audit receipt.
+    const idempotencyKey = boundedIdempotencyKey("admin", [
+      "/admin/system-config", ctx.actor, ctx.reason, key,
+    ]);
+    return this.requestMutation(
+      "/admin/system-config",
+      ctx,
+      { key, value: JSON.stringify(value), description },
+      [key],
+      "POST",
+      idempotencyKey,
+    );
   }
 
   async login(email: string, password: string) {
@@ -1339,10 +1354,12 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     paused: boolean,
     ctx: ConsequentialContext,
   ): Promise<MutationResult> {
-    return this.requestMutation("/admin/spot/pairs/maintenance", ctx, {
-      symbol: id,
-      enabled: !paused,
-    });
+    const path = "/admin/spot/pairs/maintenance";
+    return this.requestMutation(
+      path,
+      ctx,
+      { symbol: id, enabled: !paused },
+    );
   }
   async cancelSpotOrder(id: string, ctx: ConsequentialContext): Promise<MutationResult> {
     return this.requestMutation(`/admin/spot/orders/${encodeURIComponent(id)}/cancel`, ctx);
@@ -1468,10 +1485,12 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     ctx: ConsequentialContext,
   ): Promise<MutationResult> {
     const pair = (await this.listBinaryPairs()).find((item) => item.id === id);
-    return this.requestMutation("/admin/binary/pairs/maintenance", ctx, {
-      symbol: pair?.symbol ?? id,
-      enabled: !paused,
-    });
+    const path = "/admin/binary/pairs/maintenance";
+    return this.requestMutation(
+      path,
+      ctx,
+      { symbol: pair?.symbol ?? id, enabled: !paused },
+    );
   }
   async settleBinaryPosition(id: string, ctx: ConsequentialContext): Promise<MutationResult> {
     return this.requestMutation(`/admin/binary/positions/${encodeURIComponent(id)}/settle`, ctx);
@@ -1877,8 +1896,9 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     const keys = Object.keys(patch);
     if (keys.length === 0) return Promise.resolve({ ok: true, auditId: "" });
     if (keys.length === 1 && "enabled" in patch) {
+      const path = "/admin/spot/pairs/maintenance";
       return this.requestMutation(
-        "/admin/spot/pairs/maintenance",
+        path,
         ctx,
         { symbol: id, enabled: patch.enabled },
         [id],
@@ -1903,11 +1923,13 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     const pair = (await this.listBinaryPairs()).find(
       (item) => item.id === id || item.symbol === id,
     );
+    const symbol = pair?.symbol ?? id;
+    const path = "/admin/binary/pairs/maintenance";
     return this.requestMutation(
-      "/admin/binary/pairs/maintenance",
+      path,
       ctx,
-      { symbol: pair?.symbol ?? id, enabled: patch.enabled },
-      [pair?.symbol ?? id, String(patch.enabled)],
+      { symbol, enabled: patch.enabled },
+      [symbol],
     );
   }
   listSettlements(): Promise<SettlementRecord[]> {
@@ -2160,14 +2182,13 @@ export class NexiAdminApiProvider implements AdminDataProvider {
         409,
         "Reopening an incident is not available in the current live contract",
       );
-    await this.request<JsonRecord>(`/admin/incidents/${encodeURIComponent(id)}/acknowledge`, {
-      method: "POST",
-      body: JSON.stringify({ reason: ctx.reason, idempotencyKey: `incident-ack:${id}` }),
-    });
+    const path = `/admin/incidents/${encodeURIComponent(id)}/acknowledge`;
+    const result = await this.requestMutation(path, ctx);
+    if (result.auditId) return result;
     const audit = (await this.listAudit()).find(
       (entry) => entry.action === "INCIDENT_ACKNOWLEDGED" && entry.target === id,
     );
-    return { ok: true, auditId: audit?.id ?? "" };
+    return { ...result, auditId: audit?.id ?? "" };
   }
   listSupportEntryPoints(): Promise<SupportEntryPoint[]> {
     return this.readJsonConfig<SupportEntryPoint[]>("admin.frontend.supportEntryPoints", []);
@@ -2856,15 +2877,14 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       `/admin/governance/commands/${encodeURIComponent(id)}/${decision === "approved" ? "approve" : "reject"}`,
       { method: "POST", body: JSON.stringify({ reason: ctx.reason }) },
     );
-    // The current backend returns the updated command, while its append-only
-    // audit row is exposed by the audit query rather than as an auditId field.
-    // Resolve the receipt link from that authoritative record instead of
-    // inventing a success-shaped identifier in the adapter.
+    const persistedAuditId = stringValue(result.auditId);
+    if (persistedAuditId) return { ok: true, auditId: persistedAuditId };
+    // The retired D1 adapter does not return the persisted audit receipt.
     const action = `GOVERNANCE_COMMAND_${decision === "approved" ? "APPROVED" : "REJECTED"}`;
     const audit = (await this.listAudit()).find(
       (entry) => entry.action === action && entry.target === id,
     );
-    return { ok: true, auditId: audit?.id ?? stringValue(result.auditId) };
+    return { ok: true, auditId: audit?.id ?? "" };
   }
   async listMaintenanceWindows(): Promise<MaintenanceWindow[]> {
     const rows = await this.request<unknown[]>("/admin/maintenance-windows");

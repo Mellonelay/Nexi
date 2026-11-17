@@ -3064,9 +3064,41 @@ export class D1FinancialCommandGateway {
     reason?: string;
   }): Promise<Record<string, unknown>> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    if (!command.idempotencyKey?.trim())
+      throw new BadRequestException("Idempotency key is required");
     const loan: any = await this.getLoanApplication(command.loanId);
     if (!loan) throw new NotFoundException("Loan application not found");
-    if (["ACTIVE", "APPROVED"].includes(String(loan.status))) return loan;
+    const key = `loan-disbursement:${command.loanId}:${command.idempotencyKey}`;
+    if (["ACTIVE", "APPROVED"].includes(String(loan.status))) {
+      const postings = await this.bridge.select<Record<string, unknown>>(
+        `SELECT "id","amount","metadata" FROM "LedgerPosting" WHERE "referenceType"='LOAN_DISBURSEMENT' AND "referenceId"=? AND "idempotencyKey"=? ORDER BY "createdAt" DESC LIMIT 2`,
+        [loan.id, key],
+      );
+      const audits = command.adminId
+        ? await this.bridge.select<Record<string, unknown>>(
+            `SELECT "id","adminId","action","target","details" FROM "AdminAuditLog" WHERE "action"='LOAN_APPLICATION_APPROVED' AND "target"=? AND "adminId"=? AND json_valid("details") AND json_extract("details",'$.idempotencyKey')=? ORDER BY "createdAt" DESC LIMIT 2`,
+            [loan.id, command.adminId, command.idempotencyKey],
+          )
+        : { results: [] as Record<string, unknown>[] };
+      let postingMetadata: Record<string, unknown> | null = null;
+      let auditDetails: Record<string, unknown> | null = null;
+      try {
+        postingMetadata = postings.results[0] ? JSON.parse(String(postings.results[0].metadata ?? "{}")) as Record<string, unknown> : null;
+        auditDetails = audits.results[0] ? JSON.parse(String(audits.results[0].details ?? "{}")) as Record<string, unknown> : null;
+      } catch {
+        throw new ConflictException("Loan approval receipt is unreadable; reconcile before retrying");
+      }
+      if (postings.results.length !== 1 ||
+          this.decimal(String(postings.results[0]?.amount ?? "0")).comparedTo(String(loan.amountDecimal)) !== 0 ||
+          postingMetadata?.reason !== (command.reason ?? null) ||
+          (command.adminId && (audits.results.length !== 1 ||
+            String(audits.results[0].adminId) !== command.adminId ||
+            String(audits.results[0].target) !== loan.id ||
+            auditDetails?.reason !== (command.reason ?? null) ||
+            auditDetails?.idempotencyKey !== command.idempotencyKey)))
+        throw new ConflictException("Loan approval replay does not match its persisted intent; reconcile before retrying");
+      return { ...loan, auditId: audits.results[0]?.id ?? null, replayed: true };
+    }
     if (String(loan.status) !== "PENDING")
       throw new BadRequestException("Loan is not pending review");
     if (!String(loan.collateral ?? "").trim() || !String(loan.collateralImg ?? "").trim())
@@ -3078,9 +3110,9 @@ export class D1FinancialCommandGateway {
     );
     const current = await this.findAccount(account.id);
     const amount = this.decimal(String(loan.amountDecimal));
-    const key = `loan-disbursement:${command.loanId}:${command.idempotencyKey}`;
     const idemId = randomUUID();
     const postingId = randomUUID();
+    const auditId = command.adminId ? randomUUID() : null;
     const due = new Date(
       Date.now() + Number(loan.durationDays) * 86400000,
     ).toISOString();
@@ -3165,7 +3197,7 @@ export class D1FinancialCommandGateway {
       statements.push({
         sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`,
         params: [
-          randomUUID(),
+          auditId,
           command.adminId,
           "LOAN_APPLICATION_APPROVED",
           loan.id,
@@ -3195,9 +3227,37 @@ export class D1FinancialCommandGateway {
     this.requireChanges(result, 3, "D1 loan disbursement posting");
     this.requireChanges(result, 7, "D1 loan activation");
     const row = await this.getLoanApplication(loan.id);
-    if (!row)
+    if (!row || !["ACTIVE", "APPROVED"].includes(String(row.status)))
       throw new BadRequestException("D1 approved loan was not materialized");
-    return row;
+    const posting = await this.bridge.select<Record<string, unknown>>(
+      `SELECT "id","amount","metadata" FROM "LedgerPosting" WHERE "referenceType"='LOAN_DISBURSEMENT' AND "referenceId"=? AND "idempotencyKey"=? LIMIT 2`,
+      [loan.id, key],
+    );
+    const audit = command.adminId
+      ? await this.bridge.select<Record<string, unknown>>(
+          `SELECT "id","adminId","action","target","details" FROM "AdminAuditLog" WHERE "id"=? LIMIT 1`,
+          [auditId],
+        )
+      : { results: [] as Record<string, unknown>[] };
+    let metadata: Record<string, unknown> | null = null;
+    let details: Record<string, unknown> | null = null;
+    try {
+      metadata = posting.results[0] ? JSON.parse(String(posting.results[0].metadata ?? "{}")) as Record<string, unknown> : null;
+      details = audit.results[0] ? JSON.parse(String(audit.results[0].details ?? "{}")) as Record<string, unknown> : null;
+    } catch {
+      throw new ConflictException("Loan approval receipt is unreadable after commit");
+    }
+    if (posting.results.length !== 1 ||
+        this.decimal(String(posting.results[0]?.amount ?? "0")).comparedTo(String(loan.amountDecimal)) !== 0 ||
+        metadata?.reason !== (command.reason ?? null) ||
+        (command.adminId && (!audit.results[0] ||
+          String(audit.results[0].adminId) !== command.adminId ||
+          String(audit.results[0].action) !== "LOAN_APPLICATION_APPROVED" ||
+          String(audit.results[0].target) !== loan.id ||
+          details?.reason !== (command.reason ?? null) ||
+          details?.idempotencyKey !== command.idempotencyKey)))
+      throw new ConflictException("D1 loan approval did not persist its exact ledger and audit receipts");
+    return { ...row, auditId, replayed: false };
   }
 
   async rejectLoan(
@@ -3211,6 +3271,33 @@ export class D1FinancialCommandGateway {
       throw new BadRequestException("Idempotency key is required");
     const loan = await this.getLoanApplication(loanId);
     if (!loan) throw new NotFoundException("Loan application not found");
+    const replay = adminId
+      ? await this.bridge.select<Record<string, unknown>>(
+          `SELECT "id","adminId","action","target","details" FROM "AdminAuditLog" WHERE "action"='LOAN_APPLICATION_REJECTED' AND "target"=? AND "adminId"=? AND json_valid("details") AND json_extract("details",'$.idempotencyKey')=? ORDER BY "createdAt" DESC LIMIT 2`,
+          [loanId, adminId, idempotencyKey],
+        )
+      : { results: [] as Record<string, unknown>[] };
+    if (replay.results.length) {
+      let details: Record<string, unknown> | null = null;
+      try {
+        details = JSON.parse(String(replay.results[0].details ?? "{}")) as Record<string, unknown>;
+      } catch {
+        throw new ConflictException("Loan rejection receipt is unreadable; reconcile before retrying");
+      }
+      if (replay.results.length !== 1 ||
+          String(loan.status) !== "REJECTED" ||
+          String(replay.results[0].adminId) !== String(adminId) ||
+          String(replay.results[0].target) !== loanId ||
+          details?.reason !== (reason ?? null) ||
+          details?.idempotencyKey !== idempotencyKey)
+        throw new ConflictException("Loan rejection replay does not match its persisted intent; reconcile before retrying");
+      return { ...loan, auditId: replay.results[0].id, replayed: true };
+    }
+    if (String(loan.status) === "REJECTED")
+      throw new ConflictException("Loan is already rejected without a matching original audit receipt");
+    if (String(loan.status) !== "PENDING")
+      throw new BadRequestException("Loan is not pending review");
+    const auditId = adminId ? randomUUID() : null;
     const statements: D1BridgeBatchStatement[] = [
       {
         sql: `UPDATE "LoanApplication" SET "status"='REJECTED',"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "status"='PENDING'`,
@@ -3221,11 +3308,11 @@ export class D1FinancialCommandGateway {
       statements.push({
         sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") SELECT ?,?,?,?,?,CURRENT_TIMESTAMP WHERE changes()=1`,
         params: [
-          randomUUID(),
+          auditId,
           adminId,
           "LOAN_APPLICATION_REJECTED",
           loanId,
-          JSON.stringify({ reason: reason ?? null }),
+          JSON.stringify({ reason: reason ?? null, idempotencyKey }),
         ],
       });
     statements.push(
@@ -3246,8 +3333,28 @@ export class D1FinancialCommandGateway {
     const result = await this.bridge.batch(statements);
     this.requireChanges(result, 0, "D1 loan rejection");
     const row = await this.getLoanApplication(loanId);
-    if (!row) throw new NotFoundException("Loan application not found");
-    return row;
+    if (!row || String(row.status) !== "REJECTED")
+      throw new NotFoundException("D1 rejected loan was not materialized");
+    const audit = adminId
+      ? await this.bridge.select<Record<string, unknown>>(
+          `SELECT "id","adminId","action","target","details" FROM "AdminAuditLog" WHERE "id"=? LIMIT 1`,
+          [auditId],
+        )
+      : { results: [] as Record<string, unknown>[] };
+    let details: Record<string, unknown> | null = null;
+    try {
+      details = audit.results[0] ? JSON.parse(String(audit.results[0].details ?? "{}")) as Record<string, unknown> : null;
+    } catch {
+      throw new ConflictException("Loan rejection audit receipt is unreadable after commit");
+    }
+    if (adminId && (!audit.results[0] ||
+        String(audit.results[0].adminId) !== adminId ||
+        String(audit.results[0].action) !== "LOAN_APPLICATION_REJECTED" ||
+        String(audit.results[0].target) !== loanId ||
+        details?.reason !== (reason ?? null) ||
+        details?.idempotencyKey !== idempotencyKey))
+      throw new ConflictException("D1 loan rejection did not persist its exact audit receipt");
+    return { ...row, auditId, replayed: false };
   }
 
   async repayLoan(command: {
@@ -3659,6 +3766,58 @@ export class D1FinancialCommandGateway {
     };
   }
 
+  private adminSessionMutationAuditId(
+    action: string,
+    adminId: string,
+    idempotencyKey: string,
+  ): string {
+    const hex = createHash("sha256")
+      .update(JSON.stringify(["market-admin", action, adminId, idempotencyKey]))
+      .digest("hex");
+    return [
+      hex.slice(0, 8),
+      hex.slice(8, 12),
+      "4" + hex.slice(13, 16),
+      "8" + hex.slice(17, 20),
+      hex.slice(20, 32),
+    ].join("-");
+  }
+
+  private async findAdminSessionMutationReceipt(
+    action: string,
+    adminId: string,
+    idempotencyKey: string,
+  ): Promise<{
+    id: string;
+    target: string | null;
+    details: Record<string, unknown>;
+  } | null> {
+    const result = await this.bridge.select<{
+      id: string;
+      target: string | null;
+      details: string | null;
+    }>(
+      `SELECT "id","target","details" FROM "AdminAuditLog" WHERE "action"=? AND "adminId"=? AND json_valid("details") AND json_extract("details",'$.idempotencyKey')=? ORDER BY "createdAt" DESC LIMIT 2`,
+      [action, adminId, idempotencyKey],
+    );
+    if (result.results.length > 1)
+      throw new ConflictException("Multiple Admin session receipts exist for this idempotency key");
+    const row = result.results[0];
+    if (!row) return null;
+    let details: Record<string, unknown>;
+    try {
+      const parsed = JSON.parse(row.details ?? "");
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
+        throw new Error("invalid receipt details");
+      details = parsed as Record<string, unknown>;
+    } catch {
+      throw new ConflictException("Admin session receipt is unreadable");
+    }
+    if (details.idempotencyKey !== idempotencyKey)
+      throw new ConflictException("Admin session receipt key does not match");
+    return { id: row.id, target: row.target, details };
+  }
+
   async listAdminAuthSessions(): Promise<Record<string, unknown>[]> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const result = await this.bridge.select<Record<string, unknown>>(
@@ -3677,32 +3836,90 @@ export class D1FinancialCommandGateway {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const session = await this.getAuthSessionById(command.sessionId);
     if (!session) throw new NotFoundException("Session not found");
-    const now = new Date().toISOString();
-    const changed = await this.revokeAuthSession(
-      String(session.userId),
-      String(session.surface),
-      command.sessionId,
-      command.reason,
-      now,
+    if (session.surface !== "PUBLIC" && session.surface !== "ADMIN")
+      throw new ConflictException("Session surface is invalid");
+
+    const action = "ADMIN_SESSION_REVOKED";
+    const previous = await this.findAdminSessionMutationReceipt(
+      action,
+      command.adminId,
+      command.idempotencyKey,
     );
-    const auditId = randomUUID();
-    await this.bridge.batch([
+    if (previous) {
+      const details = previous.details;
+      if (previous.target !== command.sessionId ||
+          details.reason !== command.reason ||
+          (details.userId !== undefined && details.userId !== session.userId) ||
+          (details.surface !== undefined && details.surface !== session.surface))
+        throw new ConflictException("Session revocation key belongs to another original request");
+      return {
+        ok: true,
+        auditId: previous.id,
+        changed: details.changed === true || details.changed === 1,
+        replayed: true,
+        userId: String(session.userId),
+        surface: session.surface,
+      };
+    }
+
+    const auditId = this.adminSessionMutationAuditId(
+      action,
+      command.adminId,
+      command.idempotencyKey,
+    );
+    const now = new Date().toISOString();
+    const result = await this.bridge.batch([
       {
-        sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`,
+        sql: `UPDATE "AuthSession" SET "revokedAt"=?,"revokeReason"=? WHERE "id"=? AND "userId"=? AND "surface"=? AND "revokedAt" IS NULL AND NOT EXISTS (SELECT 1 FROM "AdminAuditLog" WHERE "id"=?)`,
+        params: [now, command.reason, command.sessionId, session.userId, session.surface, auditId],
+      },
+      {
+        sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") SELECT ?,?,?,?,json_object('reason',?,'idempotencyKey',?,'changed',changes(),'userId',?,'surface',?),CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "AuthSession" WHERE "id"=? AND "userId"=? AND "surface"=?) ON CONFLICT("id") DO NOTHING`,
         params: [
           auditId,
           command.adminId,
-          "ADMIN_SESSION_REVOKED",
+          action,
           command.sessionId,
-          JSON.stringify({
-            reason: command.reason,
-            idempotencyKey: command.idempotencyKey,
-            changed,
-          }),
+          command.reason,
+          command.idempotencyKey,
+          session.userId,
+          session.surface,
+          command.sessionId,
+          session.userId,
+          session.surface,
         ],
       },
+      {
+        sql: `SELECT "id","target","details" FROM "AdminAuditLog" WHERE "id"=? AND "adminId"=? AND "action"=? LIMIT 1`,
+        params: [auditId, command.adminId, action],
+      },
     ]);
-    return { ok: true, auditId, changed, replayed: !changed };
+    const changes = Number(result.results[1]?.meta?.changes ?? 0);
+    const persisted = result.results[2]?.results?.[0] as
+      | { id: string; target: string; details: string }
+      | undefined;
+    if (!persisted)
+      throw new NotFoundException("Session disappeared before revocation receipt was persisted");
+    let details: Record<string, unknown>;
+    try {
+      details = JSON.parse(persisted.details) as Record<string, unknown>;
+    } catch {
+      throw new ConflictException("Session revocation receipt is unreadable");
+    }
+    if (persisted.target !== command.sessionId ||
+        details.reason !== command.reason ||
+        details.idempotencyKey !== command.idempotencyKey ||
+        details.userId !== session.userId ||
+        details.surface !== session.surface)
+      throw new ConflictException("Session revocation key belongs to another original request");
+    return {
+      ok: true,
+      auditId: persisted.id,
+      changed: details.changed === true || details.changed === 1,
+      replayed: changes === 0,
+      userId: String(session.userId),
+      surface: session.surface,
+    };
   }
 
   async revokeAdminUserSessions(command: {
@@ -3712,29 +3929,64 @@ export class D1FinancialCommandGateway {
     idempotencyKey: string;
   }): Promise<Record<string, unknown>> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
-    const count = await this.revokeAllAuthSessions(
-      command.userId,
-      "ADMIN",
-      new Date().toISOString(),
+    const action = "ADMIN_USER_SESSIONS_REVOKED";
+    const previous = await this.findAdminSessionMutationReceipt(
+      action,
+      command.adminId,
+      command.idempotencyKey,
     );
-    const auditId = randomUUID();
-    await this.bridge.batch([
+    if (previous) {
+      const count = previous.details.count;
+      if (previous.target !== command.userId ||
+          previous.details.reason !== command.reason ||
+          typeof count !== "number" ||
+          !Number.isInteger(count) ||
+          count < 0)
+        throw new ConflictException("Session revocation key belongs to another original request");
+      return { ok: true, auditId: previous.id, count, replayed: true };
+    }
+
+    const auditId = this.adminSessionMutationAuditId(
+      action,
+      command.adminId,
+      command.idempotencyKey,
+    );
+    const revokedAt = new Date().toISOString();
+    const result = await this.bridge.batch([
       {
-        sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`,
-        params: [
-          auditId,
-          command.adminId,
-          "ADMIN_USER_SESSIONS_REVOKED",
-          command.userId,
-          JSON.stringify({
-            reason: command.reason,
-            idempotencyKey: command.idempotencyKey,
-            count,
-          }),
-        ],
+        sql: `UPDATE "AuthSession" SET "revokedAt"=?,"revokeReason"='LOGOUT_ALL' WHERE "userId"=? AND "surface" IN ('PUBLIC','ADMIN') AND "revokedAt" IS NULL AND NOT EXISTS (SELECT 1 FROM "AdminAuditLog" WHERE "id"=?)`,
+        params: [revokedAt, command.userId, auditId],
+      },
+      {
+        sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,json_object('reason',?,'idempotencyKey',?,'count',changes()),CURRENT_TIMESTAMP) ON CONFLICT("id") DO NOTHING`,
+        params: [auditId, command.adminId, action, command.userId, command.reason, command.idempotencyKey],
+      },
+      {
+        sql: `SELECT "id","target","details" FROM "AdminAuditLog" WHERE "id"=? AND "adminId"=? AND "action"=? LIMIT 1`,
+        params: [auditId, command.adminId, action],
       },
     ]);
-    return { ok: true, auditId, count, replayed: count === 0 };
+    const changes = Number(result.results[1]?.meta?.changes ?? 0);
+    const persisted = result.results[2]?.results?.[0] as
+      | { id: string; target: string; details: string }
+      | undefined;
+    if (!persisted)
+      throw new NotFoundException("User session revocation receipt was not persisted");
+    let details: Record<string, unknown>;
+    try {
+      details = JSON.parse(persisted.details) as Record<string, unknown>;
+    } catch {
+      throw new ConflictException("User session revocation receipt is unreadable");
+    }
+    const count = details.count;
+    if (persisted.target !== command.userId ||
+        details.reason !== command.reason ||
+        details.idempotencyKey !== command.idempotencyKey ||
+        typeof count !== "number" ||
+        !Number.isInteger(count) ||
+        count < 0)
+      throw new ConflictException("Session revocation key belongs to another original request");
+    return { ok: true, auditId: persisted.id, count, replayed: changes === 0 };
   }
 
   async listAdminTickets(): Promise<Record<string, unknown>[]> {
@@ -3952,16 +4204,43 @@ export class D1FinancialCommandGateway {
     idempotencyKey: string;
   }): Promise<Record<string, unknown>> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    if (!command.reason?.trim() || !command.idempotencyKey?.trim())
+      throw new BadRequestException("Incident acknowledgement requires a reason and original request key");
     const replay = await this.bridge.select<Record<string, unknown>>(
-      `SELECT * FROM "AdminIncident" WHERE "acknowledgementIdempotencyKey"=? LIMIT 1`,
+      `SELECT * FROM "AdminIncident" WHERE "acknowledgementIdempotencyKey"=? ORDER BY "updatedAt" DESC LIMIT 2`,
       [command.idempotencyKey],
     );
-    if (replay.results[0]) return { ...replay.results[0], replayed: true };
+    if (replay.results.length) {
+      const row = replay.results[0];
+      const audits = await this.bridge.select<Record<string, unknown>>(
+        `SELECT "id","adminId","action","target","details" FROM "AdminAuditLog" WHERE "action"='INCIDENT_ACKNOWLEDGED' AND "target"=? AND "adminId"=? AND json_valid("details") AND json_extract("details",'$.idempotencyKey')=? ORDER BY "createdAt" DESC LIMIT 2`,
+        [command.incidentId, command.adminId, command.idempotencyKey],
+      );
+      let details: Record<string, unknown> | null = null;
+      try {
+        details = audits.results[0] ? JSON.parse(String(audits.results[0].details ?? "{}")) as Record<string, unknown> : null;
+      } catch {
+        throw new ConflictException("Incident acknowledgement receipt is unreadable; reconcile before retrying");
+      }
+      if (replay.results.length !== 1 ||
+          String(row.id) !== command.incidentId ||
+          String(row.acknowledgedBy) !== command.adminId ||
+          String(row.acknowledgementReason) !== command.reason.trim() ||
+          audits.results.length !== 1 ||
+          String(audits.results[0].adminId) !== command.adminId ||
+          String(audits.results[0].target) !== command.incidentId ||
+          details?.reason !== command.reason.trim() ||
+          details?.idempotencyKey !== command.idempotencyKey)
+        throw new ConflictException("Incident acknowledgement key belongs to another original request or its audit receipt is unavailable");
+      return { ...row, auditId: audits.results[0].id, replayed: true };
+    }
     const incident = await this.bridge.select<Record<string, unknown>>(
       `SELECT * FROM "AdminIncident" WHERE "id"=? LIMIT 1`,
       [command.incidentId],
     );
     if (!incident.results[0]) throw new NotFoundException("Incident not found");
+    if (incident.results[0].acknowledgementIdempotencyKey || incident.results[0].acknowledgedAt)
+      throw new ConflictException("Incident was acknowledged by a different command; reconcile before retrying");
     const auditId = randomUUID();
     const correlationId =
       "incident:" + command.incidentId + ":" + command.idempotencyKey;
@@ -4007,7 +4286,29 @@ export class D1FinancialCommandGateway {
       `SELECT * FROM "AdminIncident" WHERE "id"=? LIMIT 1`,
       [command.incidentId],
     );
-    return { ...(row.results[0] ?? {}), replayed: false };
+    const audit = await this.bridge.select<Record<string, unknown>>(
+      `SELECT "id","adminId","action","target","details" FROM "AdminAuditLog" WHERE "id"=? LIMIT 1`,
+      [auditId],
+    );
+    const current = row.results[0];
+    let auditDetails: Record<string, unknown> | null = null;
+    try {
+      auditDetails = audit.results[0] ? JSON.parse(String(audit.results[0].details ?? "{}")) as Record<string, unknown> : null;
+    } catch {
+      throw new ConflictException("Incident acknowledgement audit receipt is unreadable after commit");
+    }
+    if (!current ||
+        String(current.acknowledgementIdempotencyKey) !== command.idempotencyKey ||
+        String(current.acknowledgedBy) !== command.adminId ||
+        String(current.acknowledgementReason) !== command.reason.trim() ||
+        !audit.results[0] ||
+        String(audit.results[0].adminId) !== command.adminId ||
+        String(audit.results[0].action) !== "INCIDENT_ACKNOWLEDGED" ||
+        String(audit.results[0].target) !== command.incidentId ||
+        auditDetails?.reason !== command.reason.trim() ||
+        auditDetails?.idempotencyKey !== command.idempotencyKey)
+      throw new ConflictException("Incident acknowledgement did not persist its exact mutation and audit receipt");
+    return { ...current, auditId, replayed: false };
   }
 
   async createMaintenanceWindow(command: {
@@ -4041,7 +4342,12 @@ export class D1FinancialCommandGateway {
         ["MAINTENANCE_WINDOW_SCHEDULED", prior.id, command.createdBy,
           "$.idempotencyKey", command.idempotencyKey],
       );
-      return { ...prior, auditId: audit.results[0]?.id ?? null, replayed: true };
+      const auditId = audit.results[0]?.id;
+      if (!auditId)
+        throw new ConflictException(
+          "Maintenance mutation receipt is missing; reconcile before retrying",
+        );
+      return { ...prior, auditId, replayed: true };
     }
     const correlationId = "maintenance:" + command.idempotencyKey,
       auditId = randomUUID();
@@ -4117,7 +4423,12 @@ export class D1FinancialCommandGateway {
         ["MAINTENANCE_WINDOW_CANCELLED", prior.id, command.adminId,
           "$.idempotencyKey", command.idempotencyKey],
       );
-      return { ...prior, auditId: audit.results[0]?.id ?? null, replayed: true };
+      const auditId = audit.results[0]?.id;
+      if (!auditId)
+        throw new ConflictException(
+          "Maintenance mutation receipt is missing; reconcile before retrying",
+        );
+      return { ...prior, auditId, replayed: true };
     }
     const existing = await this.bridge.select<Record<string, unknown>>(
       `SELECT * FROM "AdminMaintenanceWindow" WHERE "id"=? LIMIT 1`,
@@ -6086,21 +6397,48 @@ export class D1FinancialCommandGateway {
           "Financial correction idempotency key was reused with different parameters",
         );
       }
-      const originalAudit = await this.bridge.select<{ id: string }>(
-        `SELECT "id" FROM "AdminAuditLog" WHERE "action"=? AND "target"=? AND json_extract("details",'$.idempotencyKey')=? AND json_extract("details",'$.postingId')=? LIMIT 1`,
+      const originalAudit = await this.bridge.select<{
+        id: string;
+        details: string;
+      }>(
+        `SELECT "id","details" FROM "AdminAuditLog" WHERE "action"=? AND "target"=? AND "adminId"=? AND json_extract("details",'$.idempotencyKey')=? AND json_extract("details",'$.postingId')=? LIMIT 1`,
         [
           `ADMIN_BALANCE_ADJUSTMENT_${command.direction}`,
           command.userId,
+          command.adminId,
           command.idempotencyKey,
           existing.debitPostingId,
         ],
       );
-      if (!originalAudit.results[0]?.id)
-        throw new BadRequestException("Original financial correction audit receipt is missing");
+      const auditReceipt = originalAudit.results[0];
+      let auditDetails: Record<string, unknown>;
+      try {
+        auditDetails = JSON.parse(auditReceipt?.details ?? "") as Record<string, unknown>;
+      } catch {
+        throw new BadRequestException(
+          "Original financial correction audit receipt is unreadable",
+        );
+      }
+      if (
+        !auditReceipt?.id ||
+        auditDetails.userId !== command.userId ||
+        auditDetails.asset !== asset ||
+        auditDetails.scope !== command.scope ||
+        auditDetails.amount !== amount.toString() ||
+        auditDetails.direction !== command.direction ||
+        auditDetails.reason !== command.reason ||
+        auditDetails.adminId !== command.adminId ||
+        auditDetails.idempotencyKey !== command.idempotencyKey ||
+        auditDetails.postingId !== existing.debitPostingId
+      ) {
+        throw new BadRequestException(
+          "Original financial correction audit receipt is missing or mismatched",
+        );
+      }
       return {
         posting: { postingId: existing.debitPostingId },
         replayed: true,
-        auditId: originalAudit.results[0].id,
+        auditId: auditReceipt.id,
       };
     }
     const current = await this.findAccount(account.id);
@@ -6964,8 +7302,57 @@ export class D1FinancialCommandGateway {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const deposit: any = await this.getDeposit(depositId);
     if (!deposit) throw new NotFoundException("Deposit not found");
-    if (String(deposit.state) === "CREDITED" && deposit.creditPostingId)
-      return deposit;
+    const priorPosting = await this.bridge.select<Record<string, unknown>>(
+      `SELECT "id","asset","amount","metadata" FROM "LedgerPosting" WHERE "referenceType"='GATE2_DEPOSIT_CREDIT' AND "referenceId"=? AND "idempotencyKey"=? ORDER BY "createdAt" DESC LIMIT 2`,
+      [depositId, idempotencyKey],
+    );
+    const priorOperation = await this.bridge.select<Record<string, unknown>>(
+      `SELECT "id","userId","details" FROM "Gate2OperationAudit" WHERE "operationType"='DEPOSIT' AND "operationId"=? AND "eventType"='DEPOSIT_CREDITED' AND "idempotencyKey"=? ORDER BY "createdAt" DESC LIMIT 2`,
+      [depositId, idempotencyKey],
+    );
+    const priorAdmin = adminId
+      ? await this.bridge.select<Record<string, unknown>>(
+          `SELECT "id","adminId","details" FROM "AdminAuditLog" WHERE "action"='DEPOSIT_CREDITED' AND "target"=? AND "adminId"=? AND json_valid("details") AND json_extract("details",'$.idempotencyKey')=? ORDER BY "createdAt" DESC LIMIT 2`,
+          [depositId, adminId, idempotencyKey],
+        )
+      : { results: [] as Record<string, unknown>[] };
+    if (String(deposit.state) === "CREDITED" || priorPosting.results.length || priorOperation.results.length || priorAdmin.results.length) {
+      const posting = priorPosting.results[0];
+      const operation = priorOperation.results[0];
+      let metadata: Record<string, unknown> | null = null;
+      let operationDetails: Record<string, unknown> | null = null;
+      let adminDetails: Record<string, unknown> | null = null;
+      try {
+        metadata = posting ? JSON.parse(String(posting.metadata ?? "{}")) as Record<string, unknown> : null;
+        operationDetails = operation ? JSON.parse(String(operation.details ?? "{}")) as Record<string, unknown> : null;
+        adminDetails = priorAdmin.results[0] ? JSON.parse(String(priorAdmin.results[0].details ?? "{}")) as Record<string, unknown> : null;
+      } catch {
+        throw new ConflictException("Deposit credit receipt is unreadable; reconcile before retrying");
+      }
+      const valid =
+        String(deposit.state) === "CREDITED" &&
+        Boolean(deposit.creditPostingId) &&
+        priorPosting.results.length === 1 &&
+        priorOperation.results.length === 1 &&
+        String(posting?.id) === String(deposit.creditPostingId) &&
+        String(posting?.asset) === this.normalizeAsset(String(deposit.asset)) &&
+        this.decimal(String(posting?.amount ?? "0")).comparedTo(String(deposit.amount)) === 0 &&
+        String(operation?.userId) === String(deposit.userId) &&
+        metadata?.reason === reason &&
+        (metadata?.adminId ?? null) === (adminId ?? null) &&
+        operationDetails?.reason === reason &&
+        (operationDetails?.adminId ?? null) === (adminId ?? null) &&
+        String(operationDetails?.postingId ?? "") === String(deposit.creditPostingId) &&
+        (!adminId ||
+          (priorAdmin.results.length === 1 &&
+            String(priorAdmin.results[0].adminId) === adminId &&
+            adminDetails?.reason === reason &&
+            adminDetails?.idempotencyKey === idempotencyKey &&
+            String(adminDetails?.postingId ?? "") === String(deposit.creditPostingId)));
+      if (!valid)
+        throw new ConflictException("Deposit credit replay does not match its persisted intent; reconcile before retrying");
+      return { ...deposit, replayed: true, auditId: priorAdmin.results[0]?.id ?? null, operationAuditId: operation?.id ?? null };
+    }
     if (String(deposit.state) === "REJECTED")
       throw new BadRequestException("Rejected deposit cannot be credited");
     if (Number(deposit.confirmations) < Number(deposit.requiredConfirmations))
@@ -6980,6 +7367,8 @@ export class D1FinancialCommandGateway {
     const amount = this.decimal(String(deposit.amount));
     const idemId = randomUUID();
     const postingId = randomUUID();
+    const operationAuditId = randomUUID();
+    const auditId = adminId ? randomUUID() : null;
     const correlationId = depositId;
     const statements: D1BridgeBatchStatement[] = [
       {
@@ -7035,7 +7424,7 @@ export class D1FinancialCommandGateway {
       {
         sql: `INSERT INTO "Gate2OperationAudit" ("id","userId","operationType","operationId","eventType","idempotencyKey","details","createdAt") SELECT ?,?, 'DEPOSIT',?,'DEPOSIT_CREDITED',?,?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "Gate2Deposit" WHERE "id"=? AND "creditPostingId"=?)`,
         params: [
-          randomUUID(),
+          operationAuditId,
           String(deposit.userId),
           depositId,
           idempotencyKey,
@@ -7065,7 +7454,7 @@ export class D1FinancialCommandGateway {
             {
               sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") SELECT ?,?,'DEPOSIT_CREDITED',?,?,CURRENT_TIMESTAMP WHERE EXISTS (SELECT 1 FROM "Gate2Deposit" WHERE "id"=? AND "creditPostingId"=?)`,
               params: [
-                randomUUID(),
+                auditId,
                 adminId,
                 depositId,
                 JSON.stringify({ reason, idempotencyKey, postingId }),
@@ -7097,7 +7486,7 @@ export class D1FinancialCommandGateway {
     const row = await this.getDeposit(depositId);
     if (!row)
       throw new BadRequestException("D1 deposit credit was not materialized");
-    return row;
+    return { ...row, replayed: false, auditId, operationAuditId };
   }
 
   /** Rejects a non-credited deposit with audit and durable publication atomically. */
@@ -7108,11 +7497,57 @@ export class D1FinancialCommandGateway {
     idempotencyKey: string,
   ): Promise<Record<string, unknown>> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
-    const deposit: any = await this.getDeposit(depositId);
+    const deposit = await this.getDeposit(depositId);
     if (!deposit) throw new NotFoundException("Deposit not found");
-    if (String(deposit.state) === "REJECTED") return deposit;
+
+    const adminReceipts = await this.bridge.select<{
+      id: string;
+      adminId: string;
+      details: string | null;
+    }>(
+      `SELECT "id","adminId","details" FROM "AdminAuditLog" WHERE "action"='DEPOSIT_REJECTED' AND "target"=? AND json_valid("details") AND json_extract("details",'$.idempotencyKey')=? ORDER BY "createdAt" DESC LIMIT 2`,
+      [depositId, idempotencyKey],
+    );
+    const operationReceipts = await this.bridge.select<{
+      userId: string;
+      details: string | null;
+    }>(
+      `SELECT "userId","details" FROM "Gate2OperationAudit" WHERE "operationType"='DEPOSIT' AND "operationId"=? AND "eventType"='DEPOSIT_REJECTED' AND "idempotencyKey"=? LIMIT 2`,
+      [depositId, idempotencyKey],
+    );
+    if (adminReceipts.results.length > 1 || operationReceipts.results.length > 1)
+      throw new ConflictException("Multiple deposit rejection receipts exist for this key");
+    if (adminReceipts.results.length || operationReceipts.results.length) {
+      const audit = adminReceipts.results[0];
+      const operation = operationReceipts.results[0];
+      if (!audit || !operation)
+        throw new ConflictException("Deposit rejection receipt is incomplete; reconcile before retrying");
+      let adminDetails: Record<string, unknown>;
+      let operationDetails: Record<string, unknown>;
+      try {
+        adminDetails = JSON.parse(audit.details ?? "") as Record<string, unknown>;
+        operationDetails = JSON.parse(operation.details ?? "") as Record<string, unknown>;
+      } catch {
+        throw new ConflictException("Deposit rejection receipt is unreadable");
+      }
+      if (audit.adminId !== adminId ||
+          adminDetails.reason !== reason ||
+          adminDetails.idempotencyKey !== idempotencyKey ||
+          operation.userId !== String(deposit.userId) ||
+          operationDetails.reason !== reason ||
+          operationDetails.adminId !== adminId)
+        throw new ConflictException("Deposit rejection key belongs to another original request");
+      if (String(deposit.state) !== "REJECTED")
+        throw new ConflictException("Deposit rejection receipt does not match current state");
+      return { ...deposit, auditId: audit.id, replayed: true };
+    }
+
+    if (String(deposit.state) === "REJECTED")
+      throw new ConflictException("Rejected deposit has no matching original receipt; reconcile before retrying");
     if (String(deposit.state) === "CREDITED")
       throw new BadRequestException("Credited deposit cannot be rejected");
+
+    const auditId = randomUUID();
     const statements: D1BridgeBatchStatement[] = [
       {
         sql: `UPDATE "Gate2Deposit" SET "state"='REJECTED',"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "state" NOT IN ('CREDITED','REJECTED')`,
@@ -7133,7 +7568,7 @@ export class D1FinancialCommandGateway {
       {
         sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`,
         params: [
-          randomUUID(),
+          auditId,
           adminId,
           "DEPOSIT_REJECTED",
           depositId,
@@ -7156,7 +7591,7 @@ export class D1FinancialCommandGateway {
       throw new BadRequestException(
         "D1 deposit rejection was not materialized",
       );
-    return row;
+    return { ...row, auditId, replayed: false };
   }
 
   async getDeposit(depositId: string): Promise<Record<string, unknown> | null> {
@@ -7737,7 +8172,19 @@ export class D1FinancialCommandGateway {
         original.state !== terminalState
       )
         throw new BadRequestException("Withdrawal release original intent does not match");
-      return withdrawal;
+      const auditReceipts = await this.bridge.select<{ id: string; adminId: string; details: string }>(
+        `SELECT "id","adminId","details" FROM "AdminAuditLog" WHERE "action"=? AND "target"=? AND json_extract("details",'$.idempotencyKey')=? LIMIT 2`,
+        [`WITHDRAWAL_${terminalState}`, requestId, originalKey],
+      );
+      if (auditReceipts.results.length !== 1)
+        throw new ConflictException("Original withdrawal release audit receipt is missing or ambiguous");
+      const audit = auditReceipts.results[0];
+      let details: Record<string, unknown>;
+      try { details = JSON.parse(audit.details) as Record<string, unknown>; }
+      catch { throw new ConflictException("Original withdrawal release audit receipt is unreadable"); }
+      if (audit.adminId !== actorId || details.reason !== reason || details.idempotencyKey !== originalKey)
+        throw new ConflictException("Original withdrawal release audit receipt does not match");
+      return { ...withdrawal, auditId: audit.id, replayed: true };
     }
     if (!["PENDING_REVIEW", "APPROVED"].includes(String(withdrawal.state)))
       throw new BadRequestException(
@@ -7758,6 +8205,7 @@ export class D1FinancialCommandGateway {
       `gate2:withdrawal:${terminalState.toLowerCase()}:${requestId}`;
     const idemId = randomUUID();
     const postingId = randomUUID();
+    const auditId = randomUUID();
     const result = await this.bridge.batch([
       {
         sql: `INSERT OR IGNORE INTO "LedgerIdempotency" ("id","idempotencyKey","operation","accountId","createdAt","updatedAt") SELECT ?,?,'RELEASE',?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP WHERE NOT EXISTS (SELECT 1 FROM "LedgerIdempotency" WHERE "idempotencyKey"=?) AND EXISTS (SELECT 1 FROM "Gate2Withdrawal" WHERE "id"=? AND "state" IN ('PENDING_REVIEW','APPROVED'))`,
@@ -7836,7 +8284,7 @@ export class D1FinancialCommandGateway {
       {
         sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`,
         params: [
-          randomUUID(),
+          auditId,
           actorId,
           `WITHDRAWAL_${terminalState}`,
           requestId,
@@ -7866,7 +8314,7 @@ export class D1FinancialCommandGateway {
       throw new BadRequestException(
         "D1 withdrawal release was not materialized",
       );
-    return row;
+    return { ...row, auditId, replayed: false };
   }
 
   async updateWithdrawalState(
@@ -8051,12 +8499,14 @@ export class D1FinancialCommandGateway {
     if (!idempotencyKey?.trim())
       throw new BadRequestException("Idempotency key is required");
     const prior = await this.bridge.select<{
+      id: string;
       adminId: string;
       details: string;
     }>(
-      `SELECT "adminId","details" FROM "AdminAuditLog" WHERE "action"='WITHDRAWAL_APPROVED' AND "target"=? AND json_extract("details",'$.idempotencyKey')=? LIMIT 1`,
+      `SELECT "id","adminId","details" FROM "AdminAuditLog" WHERE "action"='WITHDRAWAL_APPROVED' AND "target"=? AND json_extract("details",'$.idempotencyKey')=? LIMIT 2`,
       [requestId, idempotencyKey],
     );
+    if (prior.results.length > 1) throw new ConflictException("Ambiguous original withdrawal approval audit receipts");
     if (prior.results[0]) {
       let details: Record<string, unknown>;
       try {
@@ -8074,10 +8524,11 @@ export class D1FinancialCommandGateway {
         );
       const withdrawal = await this.getWithdrawalById(requestId);
       if (!withdrawal) throw new NotFoundException("Withdrawal not found");
-      return withdrawal;
+      return { ...withdrawal, auditId: prior.results[0].id, replayed: true };
     }
     const withdrawal = await this.getWithdrawalById(requestId);
     if (!withdrawal) throw new NotFoundException("Withdrawal not found");
+    const auditId = randomUUID();
     const result = await this.bridge.batch([
       {
         sql: `UPDATE "Gate2Withdrawal" SET "state"='APPROVED',"reviewReason"=?,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "state"='PENDING_REVIEW'`,
@@ -8086,7 +8537,7 @@ export class D1FinancialCommandGateway {
       {
         sql: `INSERT OR IGNORE INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") SELECT ?,?, 'WITHDRAWAL_APPROVED',?,?,CURRENT_TIMESTAMP WHERE changes()=1`,
         params: [
-          randomUUID(),
+          auditId,
           adminId,
           requestId,
           JSON.stringify({ reason, idempotencyKey }),
@@ -8106,11 +8557,14 @@ export class D1FinancialCommandGateway {
         },
         guard: { sql: "changes()=1", params: [] },
       }),
+      this.rollbackIfNoChanges(idempotencyKey, "WITHDRAWAL_APPROVAL_OUTBOX"),
     ]);
     this.requireChanges(result, 0, "D1 withdrawal approval");
+    this.requireChanges(result, 1, "D1 withdrawal approval audit");
+    this.requireChanges(result, 2, "D1 withdrawal approval outbox");
     const row = await this.getWithdrawalById(requestId);
     if (!row) throw new NotFoundException("Withdrawal not found");
-    return row;
+    return { ...row, auditId, replayed: false };
   }
 
   async requestWithdrawalReview(
@@ -8118,14 +8572,16 @@ export class D1FinancialCommandGateway {
     reason: string,
     adminId: string,
     idempotencyKey: string,
-  ): Promise<{ withdrawal: Record<string, unknown>; replayed: boolean }> {
+  ): Promise<{ withdrawal: Record<string, unknown>; replayed: boolean; auditId: string }> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     if (!idempotencyKey?.trim())
       throw new BadRequestException("Idempotency key is required");
     const existing = await this.bridge.select<Record<string, unknown>>(
-      `SELECT "adminId","details" FROM "AdminAuditLog" WHERE "action"='WITHDRAWAL_REVIEW_REQUESTED' AND "target"=? AND json_extract("details",'$.idempotencyKey')=? LIMIT 1`,
+      `SELECT "id","adminId","details" FROM "AdminAuditLog" WHERE "action"='WITHDRAWAL_REVIEW_REQUESTED' AND "target"=? AND json_extract("details",'$.idempotencyKey')=? LIMIT 2`,
       [requestId, idempotencyKey],
     );
+    if (existing.results.length > 1)
+      throw new ConflictException("Ambiguous original withdrawal review audit receipts");
     const audit = existing.results[0];
     if (audit) {
       let details: Record<string, unknown>;
@@ -8145,8 +8601,10 @@ export class D1FinancialCommandGateway {
         );
       const withdrawal = await this.getWithdrawalById(requestId);
       if (!withdrawal) throw new NotFoundException("Withdrawal not found");
-      return { withdrawal, replayed: true };
+      if (typeof audit.id !== "string") throw new ConflictException("Original withdrawal review receipt ID is unavailable");
+      return { withdrawal, replayed: true, auditId: audit.id };
     }
+    const auditId = randomUUID();
     const result = await this.bridge.batch([
       {
         sql: `UPDATE "Gate2Withdrawal" SET "state"='ADDITIONAL_REVIEW',"reviewReason"=?,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "state"='PENDING_REVIEW'`,
@@ -8155,7 +8613,7 @@ export class D1FinancialCommandGateway {
       {
         sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") SELECT ?,?,'WITHDRAWAL_REVIEW_REQUESTED',?,?,CURRENT_TIMESTAMP WHERE changes()=1`,
         params: [
-          randomUUID(),
+          auditId,
           adminId,
           requestId,
           JSON.stringify({ reason, idempotencyKey }),
@@ -8170,13 +8628,14 @@ export class D1FinancialCommandGateway {
         payload: { adminId, reason },
         guard: { sql: "changes()=1", params: [] },
       }),
+      this.rollbackIfNoChanges(idempotencyKey, "WITHDRAWAL_REVIEW_OUTBOX"),
     ]);
     this.requireChanges(result, 0, "D1 withdrawal review request");
     this.requireChanges(result, 1, "D1 withdrawal review audit");
     this.requireChanges(result, 2, "D1 withdrawal review outbox");
     const withdrawal = await this.getWithdrawalById(requestId);
     if (!withdrawal) throw new NotFoundException("Withdrawal not found");
-    return { withdrawal, replayed: false };
+    return { withdrawal, replayed: false, auditId };
   }
 
   async returnWithdrawalFromReview(
@@ -8184,14 +8643,16 @@ export class D1FinancialCommandGateway {
     reason: string,
     adminId: string,
     idempotencyKey: string,
-  ): Promise<{ withdrawal: Record<string, unknown>; replayed: boolean }> {
+  ): Promise<{ withdrawal: Record<string, unknown>; replayed: boolean; auditId: string }> {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     if (!idempotencyKey?.trim())
       throw new BadRequestException("Idempotency key is required");
     const existing = await this.bridge.select<Record<string, unknown>>(
-      `SELECT "adminId","details" FROM "AdminAuditLog" WHERE "action"='WITHDRAWAL_REVIEW_RETURNED' AND "target"=? AND json_extract("details",'$.idempotencyKey')=? LIMIT 1`,
+      `SELECT "id","adminId","details" FROM "AdminAuditLog" WHERE "action"='WITHDRAWAL_REVIEW_RETURNED' AND "target"=? AND json_extract("details",'$.idempotencyKey')=? LIMIT 2`,
       [requestId, idempotencyKey],
     );
+    if (existing.results.length > 1)
+      throw new ConflictException("Ambiguous original withdrawal review audit receipts");
     const audit = existing.results[0];
     if (audit) {
       let details: Record<string, unknown>;
@@ -8211,8 +8672,10 @@ export class D1FinancialCommandGateway {
         );
       const withdrawal = await this.getWithdrawalById(requestId);
       if (!withdrawal) throw new NotFoundException("Withdrawal not found");
-      return { withdrawal, replayed: true };
+      if (typeof audit.id !== "string") throw new ConflictException("Original withdrawal review receipt ID is unavailable");
+      return { withdrawal, replayed: true, auditId: audit.id };
     }
+    const auditId = randomUUID();
     const result = await this.bridge.batch([
       {
         sql: `UPDATE "Gate2Withdrawal" SET "state"='PENDING_REVIEW',"reviewReason"=?,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "state"='ADDITIONAL_REVIEW'`,
@@ -8221,7 +8684,7 @@ export class D1FinancialCommandGateway {
       {
         sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") SELECT ?,?,'WITHDRAWAL_REVIEW_RETURNED',?,?,CURRENT_TIMESTAMP WHERE changes()=1`,
         params: [
-          randomUUID(),
+          auditId,
           adminId,
           requestId,
           JSON.stringify({ reason, idempotencyKey }),
@@ -8236,13 +8699,14 @@ export class D1FinancialCommandGateway {
         payload: { adminId, reason },
         guard: { sql: "changes()=1", params: [] },
       }),
+      this.rollbackIfNoChanges(idempotencyKey, "WITHDRAWAL_REVIEW_RETURN_OUTBOX"),
     ]);
     this.requireChanges(result, 0, "D1 withdrawal review return");
     this.requireChanges(result, 1, "D1 withdrawal review return audit");
     this.requireChanges(result, 2, "D1 withdrawal review return outbox");
     const withdrawal = await this.getWithdrawalById(requestId);
     if (!withdrawal) throw new NotFoundException("Withdrawal not found");
-    return { withdrawal, replayed: false };
+    return { withdrawal, replayed: false, auditId };
   }
 
   async settleBinaryPosition(

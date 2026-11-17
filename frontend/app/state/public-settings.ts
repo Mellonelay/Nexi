@@ -97,17 +97,69 @@ export function normalizePublicNavigation(
 ): PublicNavigationDestination[] {
   const allowedTargets = new Set(defaults);
   const routeByPath = new Map(routes.map((route) => [route.path, route]));
-  const entries = Array.isArray(value)
-    ? value
-    : defaults.map((target, order) => ({ target, surface, audience: 'public', visible: true, order }));
-  return entries.flatMap((entry) => {
-    if (typeof entry !== 'object' || entry === null) return [];
-    const item = entry as Record<string, unknown>;
-    if (
-      item.surface !== surface || typeof item.target !== 'string' || !allowedTargets.has(item.target) ||
-      !['public', 'authenticated'].includes(String(item.audience)) || item.visible !== true ||
-      typeof item.order !== 'number' || !Number.isSafeInteger(item.order)
-    ) return [];
+  const configured = new Map<string, Record<string, unknown>>();
+  if (Array.isArray(value)) {
+    for (const entry of value) {
+      if (typeof entry !== 'object' || entry === null) continue;
+      const item = entry as Record<string, unknown>;
+      if (
+        item.surface !== surface ||
+        typeof item.target !== 'string' ||
+        !allowedTargets.has(item.target) ||
+        !['public', 'authenticated'].includes(String(item.audience)) ||
+        typeof item.order !== 'number' ||
+        !Number.isSafeInteger(item.order) ||
+        configured.has(item.target)
+      ) continue;
+      configured.set(item.target, item);
+    }
+  }
+
+  if (surface === 'bottom') {
+    return defaults
+      .map((target, index) => {
+        const item = configured.get(target);
+        const route = routeByPath.get(target);
+        const requiresAuthentication =
+          route?.state === 'authenticated' || item?.audience === 'authenticated';
+        const state = route?.state === 'hidden'
+          ? 'hidden'
+          : route?.state === 'maintenance'
+            ? 'maintenance'
+            : requiresAuthentication && !authenticated
+              ? 'authenticated'
+              : route?.state ?? 'public';
+        const unavailableMessage = route?.unavailableMessage ??
+          (state === 'authenticated' && !authenticated
+            ? 'Connect your account to view this page.'
+            : undefined);
+        return {
+          target,
+          state,
+          ...(unavailableMessage ? { unavailableMessage } : {}),
+          order: typeof item?.order === 'number' ? item.order : index + 1,
+        };
+      })
+      .sort((left, right) => left.order - right.order)
+      .map(({ target, state, unavailableMessage }) => ({
+        target,
+        state,
+        ...(unavailableMessage ? { unavailableMessage } : {}),
+      }));
+  }
+
+  const configuredItems = [...configured.values()];
+  const entries = configuredItems.length > 0
+    ? configuredItems
+    : defaults.map((target, order) => ({
+        target,
+        surface,
+        audience: 'public',
+        visible: true,
+        order,
+      }));
+  return entries.flatMap((item) => {
+    if (item.visible !== true || typeof item.target !== 'string') return [];
     const route = routeByPath.get(item.target);
     if (route?.state === 'hidden') return [];
     const audience = route?.state === 'authenticated' ? 'authenticated' : item.audience;
@@ -116,11 +168,15 @@ export function normalizePublicNavigation(
       target: item.target,
       state: route?.state ?? 'public',
       ...(route?.unavailableMessage ? { unavailableMessage: route.unavailableMessage } : {}),
-      order: item.order,
+      order: typeof item.order === 'number' ? item.order : defaults.indexOf(item.target),
     }];
   })
     .sort((left, right) => left.order - right.order)
-    .map(({ target, state, unavailableMessage }) => ({ target, state, ...(unavailableMessage ? { unavailableMessage } : {}) }));
+    .map(({ target, state, unavailableMessage }) => ({
+      target,
+      state,
+      ...(unavailableMessage ? { unavailableMessage } : {}),
+    }));
 }
 
 export function normalizePublicBanners(

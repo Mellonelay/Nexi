@@ -7083,22 +7083,36 @@
           }
         },
         "responses": {
-          "200": {
-            "description": "Incident acknowledgement result",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true
-                }
-              }
-            }
-          },
           "400": {
             "description": "Invalid acknowledgement request"
           },
           "404": {
             "description": "Incident not found"
+          },
+          "201": {
+            "description": "Incident acknowledgement result with persisted audit receipt",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "properties": {
+                    "auditId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "Persisted AdminAuditLog receipt identifier"
+                    },
+                    "replayed": {
+                      "type": "boolean",
+                      "description": "True when returning the original operation result"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicting or unrecoverable acknowledgement replay"
           }
         },
         "security": [
@@ -7179,19 +7193,33 @@
           }
         },
         "responses": {
-          "200": {
-            "description": "Maintenance window result",
+          "400": {
+            "description": "Invalid maintenance window request"
+          },
+          "201": {
+            "description": "Maintenance window result with persisted audit receipt",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "additionalProperties": true
+                  "additionalProperties": true,
+                  "properties": {
+                    "auditId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "Persisted AdminAuditLog receipt identifier"
+                    },
+                    "replayed": {
+                      "type": "boolean",
+                      "description": "True when returning the original operation result"
+                    }
+                  }
                 }
               }
             }
           },
-          "400": {
-            "description": "Invalid maintenance window request"
+          "409": {
+            "description": "Conflicting or unrecoverable maintenance replay"
           }
         },
         "security": [
@@ -7229,22 +7257,36 @@
           }
         },
         "responses": {
-          "200": {
-            "description": "Maintenance cancellation result",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true
-                }
-              }
-            }
-          },
           "400": {
             "description": "Invalid maintenance cancellation request"
           },
           "404": {
             "description": "Maintenance window not found"
+          },
+          "201": {
+            "description": "Maintenance cancellation result with persisted audit receipt",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "properties": {
+                    "auditId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "Persisted AdminAuditLog receipt identifier"
+                    },
+                    "replayed": {
+                      "type": "boolean",
+                      "description": "True when returning the original operation result"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicting cancellation or unrecoverable replay"
           }
         },
         "security": [
@@ -7520,10 +7562,30 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "additionalProperties": true,
+                  "properties": {
+                    "auditId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "Persisted AdminAuditLog receipt identifier"
+                    }
+                  }
                 }
               }
             }
+          },
+          "400": {
+            "description": "Governance command is already in a different state"
+          },
+          "403": {
+            "description": "Requester cannot decide their own command"
+          },
+          "404": {
+            "description": "Governance command not found"
+          },
+          "409": {
+            "description": "Governance decision conflicts with its original request"
           }
         },
         "security": [
@@ -7565,10 +7627,30 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "additionalProperties": true,
+                  "properties": {
+                    "auditId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "Persisted AdminAuditLog receipt identifier"
+                    }
+                  }
                 }
               }
             }
+          },
+          "400": {
+            "description": "Governance command is already in a different state"
+          },
+          "403": {
+            "description": "Requester cannot decide their own command"
+          },
+          "404": {
+            "description": "Governance command not found"
+          },
+          "409": {
+            "description": "Governance decision conflicts with its original request"
           }
         },
         "security": [
@@ -8674,7 +8756,8 @@
                   "required": [
                     "ok",
                     "auditId",
-                    "state"
+                    "state",
+                    "replayed"
                   ],
                   "properties": {
                     "ok": {
@@ -8685,6 +8768,9 @@
                     },
                     "state": {
                       "type": "string"
+                    },
+                    "replayed": {
+                      "type": "boolean"
                     }
                   }
                 }
@@ -8692,7 +8778,7 @@
             }
           },
           "400": {
-            "description": "A cancellation reason is required."
+            "description": "The cancellation request is invalid or cannot be reconciled with the order state."
           },
           "404": {
             "description": "Spot order not found."

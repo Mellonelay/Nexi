@@ -237,23 +237,32 @@ function SurfaceEditor({ surface, items }: { surface: NavSurface; items: NavItem
                 </option>
               ))}
             </select>
-            <Button
-              variant={it.visible ? "outline" : "default"}
-              size="sm"
-              disabled={!canEdit}
-              onClick={() => toggleVisibility(it.id)}
-              data-testid={`nav-visible-${it.id}`}
-            >
-              {it.visible ? (
-                <>
-                  <Eye className="mr-1 h-3.5 w-3.5" /> visible
-                </>
-              ) : (
-                <>
-                  <EyeOff className="mr-1 h-3.5 w-3.5" /> hidden
-                </>
-              )}
-            </Button>
+            {surface === "bottom" ? (
+              <span
+                className="text-xs text-muted-foreground"
+                aria-label="Fixed mobile dock destination"
+              >
+                fixed dock destination
+              </span>
+            ) : (
+              <Button
+                variant={it.visible ? "outline" : "default"}
+                size="sm"
+                disabled={!canEdit}
+                onClick={() => toggleVisibility(it.id)}
+                data-testid={`nav-visible-${it.id}`}
+              >
+                {it.visible ? (
+                  <>
+                    <Eye className="mr-1 h-3.5 w-3.5" /> visible
+                  </>
+                ) : (
+                  <>
+                    <EyeOff className="mr-1 h-3.5 w-3.5" /> hidden
+                  </>
+                )}
+              </Button>
+            )}
             <div className="flex gap-1">
               <Button
                 variant="ghost"
@@ -295,7 +304,9 @@ function SurfaceEditor({ surface, items }: { surface: NavSurface; items: NavItem
           currentState={<span className="text-xs text-muted-foreground">Persisted layout</span>}
           proposedState={
             <span className="text-xs text-primary">
-              {staged.length} items · {staged.filter((i) => i.visible).length} visible
+              {surface === "bottom"
+                ? "5 fixed mobile dock destinations"
+                : `${staged.length} items · ${staged.filter((i) => i.visible).length} visible`}
             </span>
           }
           submitLabel={`Save ${surface}`}

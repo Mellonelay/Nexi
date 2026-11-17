@@ -254,8 +254,8 @@ export class CommunicationsController {
   @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
   @RequireAdminPermission("announcements.publish")
-  createAnnouncement(@Body() dto: CreateAnnouncementDto) {
-    return this.service.createAnnouncement(dto);
+  createAnnouncement(@Body() dto: CreateAnnouncementDto, @Req() req: AuthenticatedRequest) {
+    return this.service.createAnnouncement(dto, req.user.userId);
   }
   @ApiBearerAuth()
   @Patch("admin/announcements/:id")
@@ -263,8 +263,8 @@ export class CommunicationsController {
   @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
   @RequireAdminPermission("announcements.publish")
-  updateAnnouncement(@Param("id") id: string, @Body() dto: UpdateAnnouncementDto) {
-    return this.service.updateAnnouncement(id, dto);
+  updateAnnouncement(@Param("id") id: string, @Body() dto: UpdateAnnouncementDto, @Req() req: AuthenticatedRequest) {
+    return this.service.updateAnnouncement(id, dto, req.user.userId);
   }
   @ApiBearerAuth()
   @Post("admin/announcements/:id/publish")
@@ -272,8 +272,8 @@ export class CommunicationsController {
   @RequireAuthSurface("ADMIN")
   @Roles(Role.ADMIN)
   @RequireAdminPermission("announcements.publish")
-  publishAnnouncement(@Param("id") id: string, @Body() dto: AdminMutationDto) {
-    return this.service.publishAnnouncement(id, dto.idempotencyKey);
+  publishAnnouncement(@Param("id") id: string, @Body() dto: AdminMutationDto, @Req() req: AuthenticatedRequest) {
+    return this.service.publishAnnouncement(id, dto.idempotencyKey, dto.reason, req.user.userId);
   }
   @Get("admin/messages")
   @ApiBearerAuth()
