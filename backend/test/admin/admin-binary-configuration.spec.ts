@@ -15,6 +15,7 @@ describe('Admin Binary configuration authority', () => {
       isEnabled: jest.fn().mockReturnValue(true),
       listBinaryConfigurations: jest.fn().mockResolvedValue([current]),
       getBinaryConfiguration: jest.fn().mockResolvedValue(current),
+      getSystemConfigValue: jest.fn().mockResolvedValue(null),
       updateBinaryConfiguration: jest.fn().mockResolvedValue({ ...current, enabled: 1, version: 3 }),
     };
     const service: any = Object.create(AdminService.prototype);

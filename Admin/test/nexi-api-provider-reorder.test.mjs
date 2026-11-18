@@ -342,6 +342,8 @@ test("Admin wallet and ledger rows preserve canonical balances, scope and owner"
     note: "DEBIT · MARGIN_INTEREST",
     debit: "2.00",
     credit: undefined,
+    availableDelta: undefined,
+    lockedDelta: undefined,
     status: "posted",
   });
   const { userId, scope, ...nestedPosting } = posting;
@@ -403,7 +405,7 @@ test("settling Binary positions are not exposed as open research-control targets
   assert.equal(mapBinaryPositionStatus("settlement_delayed"), "settling");
   assert.equal(mapBinaryPositionStatus("win"), "won");
   assert.equal(mapBinaryPositionStatus("loss"), "lost");
-  assert.equal(mapBinaryPositionStatus("unknown"), "error");
+  assert.equal(mapBinaryPositionStatus("unknown"), "unavailable");
 });
 
 test("announcement publication mapping accepts SQLite integer booleans", () => {
@@ -539,7 +541,7 @@ test("Learn category status actions compare against current status and send the 
 test("Trading Binary opens on positions and separates the two control contexts", async () => {
   const source = await readFile(new URL("../src/routes/binary.tsx", import.meta.url), "utf8");
   const clients = await readFile(new URL("../src/routes/users.tsx", import.meta.url), "utf8");
-  assert.match(source, /view = "positions"/);
+  assert.match(source, /const view = search\.reference \? "positions" : \(search\.view \?\? "positions"\)/);
   assert.match(source, /initialFilterValues=\{\{ status: "ongoing" \}\}/);
   assert.match(
     source,
@@ -633,16 +635,12 @@ test("Overview queues only actionable live records visible to the operator", () 
         status: "confirmed",
       },
     ],
-    health: [
-      { id: "api", name: "API", status: "down", latencyMs: 100, updatedAt: "2026-10-22T00:00:00Z" },
-      { id: "db", name: "SQLite", status: "ok", latencyMs: 1, updatedAt: "2026-10-22T00:00:00Z" },
-    ],
-    access: { kyc: true, withdrawals: false, health: true },
+    access: { kyc: true, withdrawals: false },
   });
 
   assert.deepEqual(
     items.map(({ id }) => id),
-    ["kyc:kyc", "health:api"],
+    ["kyc:kyc"],
   );
 });
 
@@ -654,9 +652,9 @@ test("Admin Messages invalidates protected HTTP data on authenticated Socket.IO 
   const route = await readFile(new URL("../src/routes/messages.tsx", import.meta.url), "utf8");
   assert.match(provider, /subscribeToCommunications\(onChange: \(\) => void\)/);
   assert.match(provider, /auth: \(callback\).*getToken/s);
-  assert.match(provider, /socket\.on\("communications\.changed", onChange\)/);
-  assert.match(provider, /socket\.on\("connect", onChange\)/);
-  assert.match(provider, /return \(\) => socket\.disconnect\(\)/);
+  assert.match(provider, /socket\.on\("communications\.changed", notify\)/);
+  assert.match(provider, /socket\.on\("connect", notify\)/);
+  assert.match(provider, /this\.communicationsSocket\?\.disconnect\(\)/);
   assert.match(
     route,
     /subscribeToCommunications\?\.\(\(\) => \{[\s\S]*refreshMessages\(\);[\s\S]*refreshModeration\(\);/,

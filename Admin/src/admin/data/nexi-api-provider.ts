@@ -1825,7 +1825,7 @@ export class NexiAdminApiProvider implements AdminDataProvider {
     const current = (await this.listFlags()).find((flag) => flag.key === key);
     if (!current) return { ok: false, auditId: "" };
     return this.requestMutation("/admin/feature-flags", ctx,
-      { key, enabled: !current.enabled, environment: current.environment },
+      buildFeatureFlagUpdate(current, { enabled: !current.enabled, env: current.env }, ctx.reason),
       [key, String(current.enabled)]);
   }
   async updateFlag(

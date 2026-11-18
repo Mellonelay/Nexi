@@ -16,6 +16,7 @@ describe('Gate 2 Binary authority', () => {
       getBinaryConfiguration: jest.fn().mockResolvedValue({ pair: 'BTCUSDT', durationSeconds: 30, payoutRate: '0.85', lossRate: '0', minStake: '1', maxStake: '1000', version: 7, enabled: true }),
       getLiveMarketQuote: jest.fn().mockResolvedValue(quote),
       openBinaryPosition: jest.fn().mockResolvedValue(existing ?? position),
+      getBinaryPositionForIntent: jest.fn().mockResolvedValue(null),
     };
     const gateway = { emitPositionUpdate: jest.fn() };
     const service = new BinaryService({} as any, gateway as any, {
