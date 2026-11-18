@@ -1,6 +1,6 @@
 # NEXI — Component, Integration and Product Correctness Verification (2026-11-19)
 
-**Purpose:** Preserve actual validation results at the committed 2026-11-18 market/Admin/document baseline, before any new production build or deployment. Source HEAD immediately preceding this evidence change: `925bf02`. The source release contains market commit `8d32b95`, Admin correction `ed9fbf5`, architecture reconciliation `9b0ef48`, and documentation chronology `925bf02`; it is **not** the deployed November 17 release. This evidence is additive to [the earlier 118-test pre-build proof](NEXI_PREBUILD_ARCHITECTURE_SOURCE_PROOF_20261118.md).
+**Purpose:** Preserve actual validation results at the committed 2026-11-18 market/Admin/document baseline, before any new production build or deployment. Source HEAD immediately preceding this evidence change: `925bf02`. The source release contains market commit `8d32b95`, Admin correction `ed9fbf5`, architecture reconciliation `9b0ef48`, and documentation chronology `925bf02`; it is **not** the deployed November 17 release. The earlier focused 118-test proof is preserved in Git history at ed2496efaa63 (docs/quality/NEXI_PREBUILD_ARCHITECTURE_SOURCE_PROOF_20261118.md).
 
 ## Exact scope and verified outcome
 
@@ -24,6 +24,10 @@ Command shape: `NODE_OPTIONS=--experimental-vm-modules node node_modules/jest/bi
 1. `frontend/app/lib/trading-states.test.mjs`: Normalize supported `unknown` to `UNKNOWN` rather than fabricated `FAILED`. Assert an actually unsupported value falls back to `FAILED`. Current `trading-states.ts` explicitly includes `UNKNOWN` as an order state; that is the approved uncertain-submission contract. Focused **4/4 PASS**.
 2. `backend/src/auth/jwt.strategy.spec.ts`: Updated wallet-native null-email acceptance fixture to include durable `sid`, a mock active session and current user; added rejection of sid-less JWT. Existing `jwt.strategy.ts` correctly rejects tokens without a revocable session; **never weaken this security invariant for old tests**. Focused **3/3 PASS**.
 3. `backend/test/integration/c3-financial-causality.http.spec.ts`: Updated NestJS isolated test module to provide mock `RedisRateLimitService` and `CommunicationsService` required by its current decorators/controller constructor. Full test **1/1 PASS**. No application controller/business logic changed.
+
+## Later global Backend gate (November 19 validation evidence)
+
+After this report's original expansion, a completed broad Backend run recorded **107/127 passing suites, 713/753 passing tests, 20 failing suites and 40 failing tests**. A subsequent rerun **aborted without completed totals** in Node \`RemoveEnvironmentCleanupHook\` / native \`better-sqlite3\` \`Statement::~Statement\`. Read-only inspection confirmed both host logs under \`~/.cache/nexi-archkeel/validation-20261119/\`. Do not report a green broad Backend gate or assume that each failing test proves a production defect. The 74 Backend / 62 Public / 36 Admin focused passes remain narrowly scoped.
 
 ## Expanded-run failure evidence (DO NOT CONCEAL)
 

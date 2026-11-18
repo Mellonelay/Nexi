@@ -1,81 +1,62 @@
-> **Source revision:** Market `8d32b95a71ef`, Admin `ed9fbf5be171`, committed and **not deployed**; [verification proof](../quality/NEXI_PREBUILD_ARCHITECTURE_SOURCE_PROOF_20261118.md).
+# NEXI — maintained three-surface architecture
 
-> **2026-11-18 current-source alignment:** Read this file with the [owner-approved current-source architecture authority](NEXI_CURRENT_SOURCE_ARCHITECTURE_AUTHORITY_20261118.md) and 30-document semantic reconciliation. Current Binary/Admin implementation—including the simulated-candle Public chart path—is authoritative; dated pre-repair market measurements remain historical. Source implementation, deployed runtime and customer/economic acceptance are separate claims.
+**Reconciled 2026-11-19 (Singapore).** Owner decisions and actual source govern; this is a maintained architecture map, **not** a statement that every current source behavior is tested or deployed. Detailed historical maps are recoverable from Git. Before calling an API/SQLite/graph relationship current, check its source SHA and applicable source/contract.
 
-# NEXI system architecture — source-reconciled 2026-11-17
+## Deployment and ownership
+| Surface | Source | Runtime owner | Responsibility |
+|---|---|---|---|
+| Customer | \`frontend/\` Next.js 16/React 19 App Router | \`/srv/nexi/public/current\` / \`nexi-public.service\` | Mobile-first Web3 DApp-browser UI, SIWE, markets/charts, wallet, trading, Finance and messaging |
+| Operator | \`Admin/\` React/TanStack Router/Start, Vite/Nitro | \`/srv/nexi/admin/current\` / \`nexi-admin.service\` | Permission-aware desktop administration and authenticated API consumption |
+| API | \`backend/\` NestJS 12, Prisma 7, native SQLite | \`/srv/nexi/backend/dist\` / \`nexi-api.service\` | Domain authority, transaction policy, Ledger/audit/outbox, REST and realtime |
 
-**Proof boundary:** Original source mapping captured at main HEAD 03cf396788d1897cd700a5edd5de55f065db6562. **2026-11-18 committed-source overlay:** market `8d32b95a71ef` and subsequent Admin correction `ed9fbf5be171`; Graphify still built at older 03cf396.... The November 17 deployed Backend/Public/Admin artifacts have separate SHAs and **do not include this source candidate**. See [current architecture-document reconciliation](NEXI_ARCHITECTURE_DOCUMENT_RECONCILIATION_20261118.md).
+Name.com DNS and VPS Nginx route \`www.nexitrading.app\`, \`admin.nexitrading.app\`, and \`api.nexitrading.app\`. Financial truth is the promoted SQLite database at \`/var/lib/nexi/sqlite/nexi-staging.sqlite\` (historical filename, **not disposable**). \`D1PrismaService\`, \`d1_*\` source identifiers and \`d1_migrations\` preserve compatibility names; Cloudflare Worker/D1 are **not** NEXI's live application/financial runtime.
 
-## Three application surfaces
+Prisma 7 and the native \`better-sqlite3\` gateway address the **same** durable store. \`LedgerAccount\`/\`LedgerPosting\`, business-state tables, user Activity and \`EventOutbox\`/\`EventInbox\` supply authoritative accounting, readback and durable intent. SQLite journals persist workflow/job commands. BullMQ 6 / Aiven Valkey transports work and Socket.IO projects events; neither creates financial truth or guarantees exactly-once delivery. KYC/proof files require private access and verified provenance.
 
-- **Public:** frontend/ — Next.js App Router 16.4.1, React 19.3.0; mobile-first wallet/SIWE, markets and charts, Funding/Spot/Margin/Options/Finance, conversion, deposits/withdrawals, trading, Earn/Mining, loans, notifications, messages, support, profile.
-- **Admin:** Admin/ — TanStack Router/Query, React 19, Vite 8, Nitro; permission-gated desktop operator console. Configuration, reviews, financial corrections, settlements, asset/network controls, messages and audit are requests to Backend. The browser does not write the ledger.
-- **Backend:** backend/src/app.module.ts — NestJS 12 domains for Auth, Wallet, Ledger, FinancialOperations/HTTP, Binary/Settlement, Spot/Margin, Conversion, Mining, Loans, KYC, Market, Admin, Communications, Notifications, Events, Risk, async jobs and workflows. Controllers/DTOs/guards validate; services enforce domain rules; transaction gateways persist authoritative effects.
-
-## Runtime boundaries
-
-Name.com DNS and VPS Nginx route www.nexitrading.app, admin.nexitrading.app and api.nexitrading.app to separate processes. One source checkout is /home/mellonelay1999/workspaces/Nexi. Recorded artifact owners: /srv/nexi/public/current/.next, /srv/nexi/admin/current and /srv/nexi/backend/dist; separate dependency stores exist at /srv/nexi/{public,admin,backend}/shared/node_modules. The October service and Node 24.21.0 reports are dated observations; current deployed SHA and service health have not been checked under this source-first request.
-
-**SQLite is the financial authority.** D1PrismaService uses Prisma 7.10.1 and the better-sqlite3 adapter; the native local SQLite bridge handles atomic batches. Runtime source requires an existing absolute NEXI_LOCAL_SQLITE_PATH and NEXI_SQLITE_LOCAL_ENABLED=true; the previously promoted path was /var/lib/nexi/sqlite/nexi-staging.sqlite. LedgerAccount and LedgerPosting are accounting truth. NestJS policy and the financial command gateway own economic changes; Prisma and the native bridge are interfaces to the SAME durable store, not two financial writers. The historical D1- prefix names do not mean Cloudflare Worker/D1 is active.
-
-**Async transport is subordinate to SQLite.** EventOutbox/EventInbox and local job/workflow journals hold durable intent, publication state and duplicate suppression. LocalAsyncRuntimeService defines BullMQ 6 queues domain-events, notifications and integration-jobs, transported through Aiven Valkey. Code registration is not proof that the configuration-gated runtime is active. Job delivery can be repeated; the original SQLite intent and unique journal/inbox identities must prevent repeated financial effects. Valkey is not a balance/ledger authority.
-
-**Realtime is a projection.** NestJS Socket.IO emits scoped post-commit updates to Public/Admin; client resnapshot from authenticated REST/read models handles missed messages and reconnects. Socket events, cached amounts and success toasts do not prove a posted transaction.
-
-## Canonical producer-to-consumer flow
-
-1. The signed-in Public user or authorized Admin sends a request with its immutable economic intent and idempotency identity.
-2. The NestJS controller authenticates/authorizes the actor and validates DTO/configuration; the domain owner checks balances, limits, settlement policy and the existing request receipt.
-3. One SQLite transaction commits business state, LedgerAccount/LedgerPosting where financial, Admin audit where required, and EventOutbox. Unknown/failed writes must not be turned into client-confirmed success.
-4. The dispatcher observes committed outbox/journal state and schedules BullMQ work; re-delivery verifies durable inbox/original intent before any consequential effect.
-5. Socket.IO and REST/read models let Public and Admin reconcile authoritative state. Retries keep the same key for the same intent; changed payloads must not silently reuse a prior receipt.
-
-```mermaid
+\`\`\`mermaid
 flowchart TD
-  Public[Public Next.js] --> Nginx[VPS Nginx]
-  Admin[Admin TanStack] --> Nginx
-  Nginx --> API[NestJS guards / DTO / domain services]
-  API --> SQL[Prisma 7 + native SQLite gateway]
-  SQL --> DB[(SQLite durable authority)]
-  DB --> Ledger[Ledger postings + domain status]
-  DB --> Audit[Admin audit + Outbox / Inbox]
-  DB --> Journal[Job and workflow journal]
-  Audit --> Worker[Outbox dispatcher + BullMQ consumers]
-  Journal --> Worker
-  Worker --> Valkey[(Aiven Valkey transport)]
-  Worker --> API
-  API --> Socket[Socket.IO realtime]
-  Socket --> Public
-  Socket --> Admin
-  API --> Read[REST history and Activity readbacks]
-  Read --> Public
-  Read --> Admin
-```
+ P[Public Next.js] --> N[VPS Nginx]
+ A[Admin TanStack] --> N
+ N --> API[NestJS auth / DTO / domain policies]
+ API --> TX[Prisma + native SQLite transaction gateway]
+ TX --> DB[(SQLite: business state + Ledger)]
+ TX --> O[Audit / Activity / Outbox / Inbox / journals]
+ O --> Q[BullMQ / Valkey: retries and transport]
+ API --> WS[Socket.IO post-commit projection]
+ WS --> P
+ WS --> A
+ API --> RD[Authenticated REST/readback]
+ RD --> P
+ RD --> A
+\`\`\`
 
-## Domain ownership
+## Canonical producer -> consumer and financial invariant
+1. Public wallet/customer or permissioned Admin submits an immutable intent and explicit original-request identity.
+2. NestJS authenticates, authorizes and validates state/configuration, balances, ownership, asset/precision and replay/mismatch guards.
+3. Coordinated SQLite write commits domain record, balanced Ledger effect, durable audit/Activity/Outbox as applicable; failures are not success-shaped.
+4. Worker delivery is at least once; retry checks durable original intent/Inbox and must not double-post. Socket updates are advisory; clients reconcile persisted REST/readbacks.
+5. Public and Admin present one truthful status for the same command, account, amount, asset, direction and receipt. An HTTP 200, UI toast, structural graph path or single Ledger row does not establish whole-user-flow correctness.
 
-| Capability | Backend authority | Consumers |
+## Source-domain ownership
+| Capability | NestJS owner | Public / Admin consumer |
 |---|---|---|
-| SIWE, sessions, referral/VIP | auth/, users/, profile/, referral-vip/ | Public login/profile; Admin users/sessions |
-| Markets, asset catalog, klines | market/ | Public charts and prices; Admin assets/market-feeds |
-| Wallet, transfers, conversion | wallet/, financial/, conversion/, ledger/ | Public Wallet/Activity; Admin ledger/wallets/audit |
-| Deposits and withdrawals | wallet/, financial/ and SQLite command gateway | Public Wallet; Admin deposits/withdrawals |
-| Binary settlement | binary/, settlement/ and financial gateway | Public Binary; Admin binary/settlements |
-| Spot and isolated Margin | spot/ and financial gateway | Public trading and positions; Admin spot/exposure |
-| Earn/Mining and Loans | mining/, loans/, workflows/ | Public Finance; Admin mining/loans |
-| Notifications, Messages, Learn | communications/, notification/, events/ | Public communications; Admin messaging/content/moderation |
+| SIWE, account/session and permissions | \`auth/\`, \`users/\`, \`profile/\`, \`referral-vip/\` | login/settings; Admin users/sessions |
+| Market catalog, 53 identities, quote/Klines | \`market/\` | Quotes/Asset Detail/Spot/Options; Admin assets/market-feeds |
+| Wallet, deposit, withdrawal, transfer and Convert | \`wallet/\`, \`financial/\`, \`conversion/\`, \`ledger/\`, \`d1/\` | Wallet/Activity; Admin networks/deposits/withdrawals/ledger |
+| Spot and isolated Margin | \`spot/\`, local financial command gateway | Spot/Margin/orders; Admin spot/exposure |
+| Options/Binary and controlled research | \`binary/\`, \`admin/\`, \`sandbox/\`, settlement gateway | Options chart/positions; Admin research/default/override/settlements |
+| Mining, Loans, referral/VIP | \`mining/\`, \`loans/\`, \`referral-vip/\`, \`workflows/\` | Finance; Admin product settings and audit |
+| Messaging, notifications, Learn and support | \`communications/\`, \`events/\` | Customer panels; Admin messages/content/notifications |
 
-## Observability, proof and release phase
+Five customer-facing wallet scopes are Funding/MAIN, Spot, Margin, Options/BINARY and Finance. Options and user-transferable Margin cash are USDT-only, but liabilities and held assets are distinct; Finance commitments are not freely available. The 53 market symbols are **not** 53 custodial/deposit assets.
 
-Sentry, systemd/journald and Jaeger/OTLP appear in the recorded operations architecture. Earlier smoke traces prove collector/storage wiring only; they are not current end-to-end API trace proof. A server returning HTTP 200 or readiness does not prove settlement, precision, wallet account reconciliation, or browser acceptance.
+## Owner-approved Binary research architecture
+Eight logical Admin workspaces and account-level research default + active position-specific override exist in the source. NestJS \`AdminService.persistBinaryResearchControl\` guards eligible research accounts, actor/reason, original request key, audit receipt and position version/expiry. \`BinaryService.buildSandboxSimulation\` generates isolated deterministic candle projection; \`frontend/app/lib/binary-sandbox-chart.ts\` validates the simulation and aggregates a chart. Do not conflate simulation with shared provider prices or create a second settlement/financial writer. Verify the exact current source and real Admin/Public same-release state before making a runtime PASS claim. Original owner design: \`Admin/docs/NEXI Admin — Unified Navigation and Binary Control Architecture-2026-10-21-144002.png\`.
 
-Source navigation: local Graphify graph at graphify-out/graph.json and separate Knowledge v4 at /srv/nexi/engineering-knowledge/20261110/. Graphify query/explain/path/affected show static relationships, which must be checked against current source. During this inspection graph.json contains 8,602 nodes / 20,904 edges; its built_at_commit `03cf396` predates the committed market/Admin changes `8d32b95`/`ed9fbf5`. Use the 2026-11-16 local Graphify CLI/MCPC runbook, not retired hosted Cloud tracing or the missing 2026-11-07 coverage document.
+## Current market architecture and proof limits
+The 2026-11-18 committed market source (\`8d32b95\`) separates bounded provider tick/Kline processing from best-effort trades/depth, revises same-timestamp Klines and Public trade-gap recovery. In-memory ingestion buffers, a five-second shutdown grace and local type/focused tests do **not** imply zero loss or real released runtime improvement. Source queue/stream semantics, production provider freshness, financial interference, and deploy identity are independent checks. Conditional tradeoff decisions live in [market ADR](ADR-2026-11-18-NEXI-MARKET-DATA-RESOURCE-ARCHITECTURE.md).
 
-**2026-11-18 owner override:** The blanket no-tests-until-all-source-closure phase has been retired. Current task-specific validation is permitted; the November 18 market candidate has focused Backend/Public tests and typechecks but has not been built or deployed. Production activation, migrations and financial mutation remain independently authorization-gated. The 113 browser acceptance criteria are a separate future assignment, not proof for this source candidate.
+## Proof and current status
+At audit entry \`main@ed2496efaa63\` had six local commits not on remote and three November 17 services active on earlier artifacts. Current evidence [NEXI_CURRENT_STATE](../../NEXI_CURRENT_STATE.md) includes the failed broad Jest 40/753 tests and later native SQLite cleanup abort. Focused 74 Backend/62 Public/36 Admin checks were historically reported passing and do not erase that gate. The 113-case actual mobile Web3 browser acceptance has not been rerun against the candidate. Source, tests, build, deployment, API behavior, financial correctness and customer acceptance must remain separately labeled.
 
-## Current references and historical boundaries
-
-- [Cross-surface owner map](CROSS_SURFACE_FEATURE_MAP.md); [Admin route map](../../Admin/docs/TANSTACK_ARCHITECTURE_AND_ROUTE_MAP.md).
-- [SQLite/BullMQ operations](../operations/NEXI_VPS_SQLITE_BULLMQ_RUNBOOK.md); [SQLite engine](../operations/NEXI_SQLITE_DATABASE_RUNBOOK.md); [Graphify CLI/MCPC](../operations/NEXI_GRAPHIFY_CLOUD_CLI_MCPC_RUNBOOK_20261116.md).
-- [Current state](../../NEXI_CURRENT_STATE.md); [active taskboard](../../tasks/todo.md); [source proof matrix](../../tasks/evidence/NEXI_SOURCE_CLOSURE_MATRIX_20261109.md); [Admin replay crosswalk](../../tasks/evidence/ADMIN_MUTATION_IDEMPOTENCY_CROSSWALK_20261116.json).
-- [Historical October 20 API source map](NEXI_BACKEND_API_SQLITE_SOURCE_MAP.md) and [historical VPS service observations](NEXI_VPS_BACKEND_RUNTIME.md) remain dated artifacts, not live API/runtime proof.
+Reference owners: [root AGENTS](../../AGENTS.md), [financial invariants](../security/NEXI_FINANCIAL_INTEGRITY_REQUIREMENTS.md), [source OpenAPI](../contracts/openapi.json), [operator guide](../../Admin/docs/NEXI_ADMIN_OPERATOR_USAGE_GUIDE.md), [Public design](../../frontend/DESIGN.md), [operations](../operations/NEXI_VPS_SQLITE_BULLMQ_RUNBOOK.md).

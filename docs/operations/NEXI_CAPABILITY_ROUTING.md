@@ -1,31 +1,18 @@
-# NEXI Capability and Execution Routing
+# NEXI — capability routing (current)
 
-## Authority
+**Use the smallest correct tool for the question.** Latest owner instructions, current source/installed versions and host permissions outrank dated runbooks, historical plugin lists and static graph manifests.
 
-Use current owner instructions and the root [AGENTS.md](../../AGENTS.md), then the relevant surface guidance and live source/runtime evidence. This page is a repository tool-routing guide; it does not establish that a capability is installed, authenticated, callable, authorized, or used. Session-specific controllers and permissions take precedence. Historical routes must not be assumed active.
-
-Current system boundary: NestJS owns business decisions; promoted VPS SQLite and its ledger/outbox/inbox/journals own durable application state; BullMQ/Aiven Valkey carries jobs and Socket.IO/Redis Streams carries realtime/cache traffic. Cloudflare Worker/Container/D1/Queues/Workflows are retired from NEXI runtime.
-
-## Route by evidence responsibility
-
-| Need | Primary capability | Evidence limit |
+| Responsibility | Preferred route | Valid evidence |
 |---|---|---|
-| VM state, files, commands, services | Authorized SentinelX host tools for this VM; use native read/edit/Git operations for their scoped responsibilities. Use `sentinel_capabilities` before commands and inspect current state before mutation. | A command result proves only what it directly observed. Production, financial, service, deployment and destructive actions need explicit current authority. |
-| Existing VM MCP sessions | `/usr/local/bin/nexi-mcpc`; inspect active sessions and tool schema before calling. Reuse the existing Graphify session; do not connect a duplicate session or change its target as a side effect of documentation work. | MCP registration/session presence is not a successful query or proof of application behavior. |
-| Repository source and history | Git/GitHub for branch, commit, review, CI and push. Confirm HEAD, remote and dirty state before edits; stage only task files. | A Git commit or CI run does not establish the deployed release identity. |
-| Source topology and blast radius | Canonical Graphify graph via `@nexi-graphify-live`. | Structural source evidence only. It does not prove runtime HTTP requests, authorization, financial outcomes, or deployed behavior. |
-| Framework/API semantics | Version-matched official documentation or Context7 when a specific contract question requires it. | Retrieved documentation informs the expected contract; current NEXI source and runtime establish implementation and behavior. |
-| Static changed-code risk | Fallow for JavaScript/TypeScript scope; relevant language/framework diagnostics only when source changes warrant them. | Static findings are not runtime proof; report analyzed scope and degraded inputs. |
-| Runtime failures and traces | Sentry, systemd/journald, and Jaeger as available and authorized. Check each data source's freshness and access. | Missing data, denied access, or collector smoke traces do not prove absence of production errors or production trace emission. |
-| Rendered browser behavior | Reuse the existing authenticated browser tab/profile when available; inspect the requested surface and exact deployed identity. | A rendered page is point-in-time evidence, not full route, role, responsive, or financial workflow acceptance. |
+| VM files, Git, CLI and operating state | SentinelX native read/search/project_snapshot/exec/script_run, then scoped edit/move when explicitly authorized | Host result, exit/status, path/revision |
+| Cross-file owners and consumers | Local Graphify source graph / MCPC when revision-compatible | Exact path/symbol/edge/provenance; source read required |
+| TypeScript/JS static complexity/dependencies | Installed Fallow with actual configuration/zone checks | Scoped finding + coverage; no inferred deletion |
+| Code-change risk | CodeScene only for relevant hotspots and changed-source questions | Versioned change-set analysis; not economic runtime proof |
+| Framework/API semantics | Installed manifests, official docs/Context7, current controllers/DTO/OpenAPI | Version-matched source and contract |
+| Data and invariant evidence | Read-only SQLite/API/tests under appropriate authorized conditions | Business state, Ledger, audit, Activity, Outbox and replay |
+| Browser/UI acceptance | Real DApp-browser wallet and current Admin UI, Chrome DevTools or Work browser only when available and authorized | Actual action + outcome + screenshot/release + durable readback |
+| Release/observability | systemd/Nginx/Sentry/Jaeger and release markers | Running artifact identity and observed behavior |
 
-## Execution sequence
+Do not call a plugin/tool 'used' because it was listed. Separate AVAILABLE, INVOKED, RESULT_RECEIVED, RESULT_APPLIED. No routine install, toolchain redesign, Graphify hosted upload, test, financial mutation, build, service operation or deployment without task-specific permission.
 
-1. Recover the task frontier and current authority. Reuse unchanged evidence; refresh volatile source, release, service and auth state.
-2. Identify the exact question and choose one primary tool for each evidence responsibility. Read the relevant tool contract before using it.
-3. Keep read-only inspection separate from authorized mutation. Do not restart services, alter production data, deploy, or perform financial operations as a documentation or graph task.
-4. Make the smallest source or documentation correction. Preserve dated receipts as dated evidence and label superseded/current claims explicitly.
-5. Verify the exact changed files, Git diff, and any claimed runtime facts. Distinguish implemented, tested, deployed, runtime-verified, browser-verified, and owner-accepted evidence.
-6. Commit and push only after confirming the branch/remote and reviewing the scoped diff when requested or authorized.
-
-Do not infer capability use from an @mention, installed package, MCP registration, or old session transcript. Record only tools actually invoked and results actually used.
+Current Graphify locator: [Graphify local quick reference](NEXI_GRAPHIFY_CLOUD_CLI_MCPC_RUNBOOK_20261116.md). Current docs and proof boundary: [docs/README](../README.md). This page does not establish stable session IDs, app passwords or host grants.

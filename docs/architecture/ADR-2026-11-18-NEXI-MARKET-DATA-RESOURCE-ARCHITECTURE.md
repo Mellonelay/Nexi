@@ -1,15 +1,15 @@
-> **Commit chronology:** Original study at `99ba702`, subsequent market source at `8d32b95a71ef`; [newest pre-build proof](../quality/NEXI_PREBUILD_ARCHITECTURE_SOURCE_PROOF_20261118.md).
+> **Commit chronology:** Original study at `99ba702`, subsequent market source at `8d32b95a71ef`; [newest pre-build proof](../quality/NEXI_COMPONENT_INTEGRATION_PRODUCT_CORRECTNESS_REVIEW_20261119.md).
 
 # ADR-2026-11-18: NEXI market-data and backend resource architecture
 
 **Status:** Market queue/Kline/Public recovery source decisions **partially implemented and committed** as `8d32b95a71ef`; further performance/retention/provider recommendations are conditional, and **no production build/deploy** is authorized by this ADR.
 **Decision owner:** NEXI owner.
 **Applies to:** Backend, Public, Admin, SQLite, BullMQ/Valkey, Socket.IO, provider ingestion, monitoring and release operations.
-**Evidence:** Companion research at docs/research/NEXI_BACKEND_ARCHITECTURE_PERFORMANCE_RESOURCE_STUDY_20261118.md.
+**Evidence:** Historical research is preserved at Git commit ed2496efaa63 under docs/research/NEXI_BACKEND_ARCHITECTURE_PERFORMANCE_RESOURCE_STUDY_20261118.md; it is not a current measurement.
 **Observed source revision:** 99ba7024a897181ca479cf37b31a24846019c0a6 (main; origin/main at capture).
 **Scope of this ADR:** measurement, architecture and implementation plan only. No application source or runtime configuration changed in this study.
 
-**2026-11-18 implementation delta (subsequent work):** The source changes now committed as `8d32b95a71ef` (still undeployed) separate bounded quote/Kline processing from best-effort reference events; adds saturation accounting, Kline same-timestamp revision ordering and Public Spot trade-gap recovery; and resolves the NestJS Socket.IO adapter helper collision. Focused tests/typechecks passed. These changes **do not appear in the November 17 live artifacts**. Use the [architecture reconciliation](NEXI_ARCHITECTURE_DOCUMENT_RECONCILIATION_20261118.md) and [current source review receipt](../quality/NEXI_MARKET_SOURCE_REPAIR_WORK_REVIEW_20261118.md), not this original roadmap as if no implementation had started.
+**2026-11-18 implementation delta (subsequent work):** The source changes now committed as `8d32b95a71ef` (still undeployed) separate bounded quote/Kline processing from best-effort reference events; adds saturation accounting, Kline same-timestamp revision ordering and Public Spot trade-gap recovery; and resolves the NestJS Socket.IO adapter helper collision. Focused tests/typechecks passed. These changes **do not appear in the November 17 live artifacts**. Use the [architecture reconciliation](NEXI_SYSTEM_ARCHITECTURE.md) and [current source review receipt](../quality/NEXI_COMPONENT_INTEGRATION_PRODUCT_CORRECTNESS_REVIEW_20261119.md), not this original roadmap as if no implementation had started.
 
 **Current owner precedence:** The blanket source-first prohibition on tests/typechecks was retired. Use proportionate tests during authorized implementation; building to live canonical output paths, restarting, deploying, and economic database modifications still require separate authorization.
 

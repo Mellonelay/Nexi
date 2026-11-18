@@ -1,38 +1,8 @@
-## CURRENT INTERACTIVE EXECUTION OVERLAY — 2026-11-08
+# NEXI Public + Admin — original 113 acceptance requirements
 
-The 113 owner criteria, IDs, 72 P0 / 41 P1 priorities, domain grouping, and historic proof remain unchanged in this canonical document and [CSV](NEXI_113_ACCEPTANCE_TRACKER_20261101.csv). **Use [NEXI Interactive Cloud Browser Acceptance](NEXI_INTERACTIVE_CLOUD_BROWSER_ACCEPTANCE_20261108.md) as the new Phase A execution order**: actual signed-in Public/Admin UI interactions, click/type/submit/wait/cross-surface readback and one append-only run record, not route or snapshot inspection alone. Preserve earlier release-based statuses; assign a current-release PASS only from direct same-release evidence. The current Admin overlay is eight workspaces, 21 direct navigation destinations and 13 route-only page files. Work Cloud Browser has no Chrome DevTools or mobile emulation; an independent actual-phone or VM DevTools viewport lane is needed for Public mobile-first geometry. Do not change the canonical 113 wording to accommodate the new procedure.
+**Canonical owner requirements, originally recorded 2026-11-01.** Exactly 113 IDs across 15 domains (72 P0, 41 P1). The criterion IDs and text are frozen; this document is **not** the current deployed PASS/FAIL ledger. Execute them using [the current mobile Web3 UI-first procedure](NEXI_MOBILE_WEB3_UI_FIRST_BROWSER_ACCEPTANCE_20261117.md). Dated status history remains in [original CSV](NEXI_113_ACCEPTANCE_TRACKER_20261101.csv) and in tasks/evidence; a green source test is not a customer acceptance PASS.
 
-## Current-source evidence addendum — 2026-11-04
-
-The candle-integrity source batch is implemented and final-SHA CI-verified at 188fdba1b9e703f04f1c3fbe32186f7daa6dce22. Focused tests cover reconnect/replay ordering, independent quote and candle freshness, provider precedence/provenance, and the source-labelled non-Binance publication path. Final GitHub Source CI run 41706263277 and CodeQL run 41706263177 succeeded. Details and limitations are in tasks/evidence/nexi-market-candle-source-closure-20261103.md.
-
-This does not change the 113 requirements into runtime passes. In particular, NEXI-11-03's PASS in the dated tracker refers to its cited 2026-11-01 release evidence; it is not proof for un-deployed source SHA 188fdba. NEXI-11-04 and NEXI-11-07 remain without current-release browser proof. Binance orderbook/trades, wallet/Convert, CoinGecko detail, account identity, Options, dock/safe-area and responsive acceptance remain tied to their existing dated receipts; current-source screenshots and interactions have not been captured. Keep Public mobile-first and Admin desktop-first. The four financial OWNER_ACCEPTED_UNTESTED decisions are unchanged.
-
-# NEXI Public + Admin combined acceptance — 113 canonical requirements
-
-**Prepared:** 2026-11-01. **Source revision:** `8ec200b1914d585d6189cf6ea37b5eac2f8158a9` at intake. **Status:** requirement/source-map checklist; **not** 113/113 browser verified.
-
-## Governing distinctions
-
-The 113 original owner requirements are reproduced verbatim from Engineering Reference v4.0 `01_CHECKLIST_TRACEABILITY.md`: **15 domains; 72 P0 + 41 P1**. The original `Check-list.txt` is its normative upstream. No item may be declared passed solely because source exists, a static check ran, or an old version passed.
-
-**Public** testing is mobile-first: widths 320, 360, ~390, 412–430, short-height, bottom dock, safe areas, trading chart and touch interactions, plus tablet/desktop coverage. **Admin** testing is desktop-first. The 2026-11-07 source check found 21 direct `NAV_GROUPS` destinations across eight workspaces and 34 named page route files on both deployed Admin release `45a857de6a4d4101fc3f42738eb7d83f52bd62eb` and `main` `27b78bb6f74a0ddb44e9121b15fdbb7c9f1c3c32`. Disposition all 34 named files; classify compatibility `/support` and hidden `/reconciliation` separately, and treat `/sandbox` as contextual rather than a sidebar item. Preserve the 31 + contextual `/sandbox` count as Nov 1 source history. Test direct URLs, refresh/back/forward, role-aware actions, data states and persisted readback; narrow Admin accessibility is secondary. The Admin route overlay below is supplemental, **not additional items in the canonical 113 count**.
-
-All rows start unchecked for the **new source release**. Existing accepted but untested financial exceptions remain `OWNER_ACCEPTED_UNTESTED` with their prior scope. No production financial, authentication, message-send or browser actions were performed here.
-
-## Verified source and observed release markers
-
-| Surface | Marker observed from VM (2026-11-07) | Current source `main` equals marker? |
-| --- | --- | --- |
-| Backend | `45a857de6a4d4101fc3f42738eb7d83f52bd62eb` | No (`main` is `27b78bb6f74a0ddb44e9121b15fdbb7c9f1c3c32`) |
-| Public | `27b78bb6f74a0ddb44e9121b15fdbb7c9f1c3c32` | Yes |
-| Admin | `45a857de6a4d4101fc3f42738eb7d83f52bd62eb` | No (`main` is `27b78bb6f74a0ddb44e9121b15fdbb7c9f1c3c32`) |
-
-**2026-11-07 source/deployment status:** Graph/source review used Public release `27b78bb6f74a0ddb44e9121b15fdbb7c9f1c3c32` and Backend/Admin release `45a857de6a4d4101fc3f42738eb7d83f52bd62eb`; current GitHub `main` is `27b78bb6f74a0ddb44e9121b15fdbb7c9f1c3c32`. Public matches source; Backend/Admin do not. The Nov 1 32-route Admin browser receipt is for release `111a5010f04a6592c290b0b0bc93240ab0cec69b`; preserve it as dated evidence and do not reuse it as proof for the Nov 7 deployed Admin marker. Running-process, source and browser acceptance remain separate claims.
-
-**Provenance:** October 21 Admin TanStack route map; October 24 ticket retirement/Messages decision in the 377-message MindMap AI chronology; October 31 Codex support compatibility browser receipt; Library/Nexi 314-message successor chronology; 2026-11-01 navigation/route source. Historical conversations are decision evidence, not current runtime proof.
-
-**Proof fields:** `SOURCE_OWNER_LOCATED` is a navigation hint only; `SOURCE_IMPLEMENTED`, `STATIC_TESTED`, `DEPLOYED`, `BROWSER_VERIFIED`, `ECONOMIC_VERIFIED` and `OWNER_ACCEPTED` require their own receipts. Current-release status defaults to `PENDING`.
+**Source-owner pointers updated 2026-11-19:** The former broad \`docs/backend/README.md\` anchors under Spot/Margin/Finance now reference current Backend source candidate owners. This does not change any criterion text, establish implementation for an individual requirement, or upgrade browser status.
 
 ## Canonical 113 acceptance checklist
 
@@ -102,36 +72,36 @@ All rows start unchecked for the **new source release**. Existing accepted but u
 
 | ID | Owner criterion (verbatim) | Source navigation candidates | Current-release proof |
 | --- | --- | --- | --- |
-| [ ] **NEXI-06-01** | Market, limit and supported stop-order behavior follows current Backend contracts | `docs/backend/README.md`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
-| [ ] **NEXI-06-02** | Available base/quote balance and estimated cost are clear | `docs/backend/README.md`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
-| [ ] **NEXI-06-03** | Insufficient funds, invalid quantity, minimum order and stale-price errors are useful | `docs/backend/README.md`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
-| [ ] **NEXI-06-04** | Order review, confirmation, placement and cancellation work coherently | `docs/backend/README.md`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
-| [ ] **NEXI-06-05** | Partial fills, fees, reserves and remaining balances reconcile | `docs/backend/README.md`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
-| [ ] **NEXI-06-06** | Open orders and trade history refresh correctly | `docs/backend/README.md`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
-| [ ] **NEXI-06-07** | Accepted/rejected/filled/cancelled states trigger appropriate Activity and notifications | `docs/backend/README.md`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
-| [ ] **NEXI-06-08** | Spot controls do not request repeated wallet verification from authenticated users | `docs/backend/README.md`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
+| [ ] **NEXI-06-01** | Market, limit and supported stop-order behavior follows current Backend contracts | `backend/src/spot/spot.service.ts`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
+| [ ] **NEXI-06-02** | Available base/quote balance and estimated cost are clear | `backend/src/spot/spot.service.ts`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
+| [ ] **NEXI-06-03** | Insufficient funds, invalid quantity, minimum order and stale-price errors are useful | `backend/src/spot/spot.service.ts`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
+| [ ] **NEXI-06-04** | Order review, confirmation, placement and cancellation work coherently | `backend/src/spot/spot.service.ts`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
+| [ ] **NEXI-06-05** | Partial fills, fees, reserves and remaining balances reconcile | `backend/src/spot/spot.service.ts`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
+| [ ] **NEXI-06-06** | Open orders and trade history refresh correctly | `backend/src/spot/spot.service.ts`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
+| [ ] **NEXI-06-07** | Accepted/rejected/filled/cancelled states trigger appropriate Activity and notifications | `backend/src/spot/spot.service.ts`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
+| [ ] **NEXI-06-08** | Spot controls do not request repeated wallet verification from authenticated users | `backend/src/spot/spot.service.ts`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
 ### Margin trading (P1)
 
 | ID | Owner criterion (verbatim) | Source navigation candidates | Current-release proof |
 | --- | --- | --- | --- |
-| [ ] **NEXI-07-01** | Preserve isolated-margin model, collateral, borrowing and risk controls | `docs/backend/README.md`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
-| [ ] **NEXI-07-02** | Margin account readiness is transparent to the customer | `docs/backend/README.md`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
-| [ ] **NEXI-07-03** | Transferable USDT, collateral, borrowable amount and liabilities remain separate | `docs/backend/README.md`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
-| [ ] **NEXI-07-04** | Position opening, closing, interest, repayment and liquidation show correct states | `docs/backend/README.md`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
-| [ ] **NEXI-07-05** | Insufficient collateral and unsupported operations provide actionable guidance | `docs/backend/README.md`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
-| [ ] **NEXI-07-06** | Risk parameters match current Backend/Admin configuration | `docs/backend/README.md`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
-| [ ] **NEXI-07-07** | Position, repayment and liquidation Activity/notifications are consistent | `docs/backend/README.md`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
+| [ ] **NEXI-07-01** | Preserve isolated-margin model, collateral, borrowing and risk controls | `backend/src/spot/margin.service.ts`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
+| [ ] **NEXI-07-02** | Margin account readiness is transparent to the customer | `backend/src/spot/margin.service.ts`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
+| [ ] **NEXI-07-03** | Transferable USDT, collateral, borrowable amount and liabilities remain separate | `backend/src/spot/margin.service.ts`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
+| [ ] **NEXI-07-04** | Position opening, closing, interest, repayment and liquidation show correct states | `backend/src/spot/margin.service.ts`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
+| [ ] **NEXI-07-05** | Insufficient collateral and unsupported operations provide actionable guidance | `backend/src/spot/margin.service.ts`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
+| [ ] **NEXI-07-06** | Risk parameters match current Backend/Admin configuration | `backend/src/spot/margin.service.ts`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
+| [ ] **NEXI-07-07** | Position, repayment and liquidation Activity/notifications are consistent | `backend/src/spot/margin.service.ts`, `frontend/app/dashboard/spot/page.tsx` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
 ### Finance, Earn / Mining and Loans (P1)
 
 | ID | Owner criterion (verbatim) | Source navigation candidates | Current-release proof |
 | --- | --- | --- | --- |
-| [ ] **NEXI-08-01** | Finance balances and committed funds are distinguished correctly | `docs/backend/README.md`, `backend/src/events/event-outbox.service.ts` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
-| [ ] **NEXI-08-02** | Available products, rates, durations, restrictions and limits come from Backend/Admin | `docs/backend/README.md`, `backend/src/events/event-outbox.service.ts` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
-| [ ] **NEXI-08-03** | Earn allocation, accrual, maturity, redemption and failure states are clear | `docs/backend/README.md`, `backend/src/events/event-outbox.service.ts` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
-| [ ] **NEXI-08-04** | Loan applications, collateral, disbursements, interest, repayment and overdue states are consistent | `docs/backend/README.md`, `backend/src/events/event-outbox.service.ts` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
-| [ ] **NEXI-08-05** | Funds, liabilities and locked commitments never appear as spendable balance | `docs/backend/README.md`, `backend/src/events/event-outbox.service.ts` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
-| [ ] **NEXI-08-06** | Activity and notifications reflect meaningful lifecycle changes | `docs/backend/README.md`, `backend/src/events/event-outbox.service.ts` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
-| [ ] **NEXI-08-07** | Empty product states are distinguished from failures and unconfigured products | `docs/backend/README.md`, `backend/src/events/event-outbox.service.ts` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
+| [ ] **NEXI-08-01** | Finance balances and committed funds are distinguished correctly | `backend/src/financial/financial-operations.service.ts`, `backend/src/events/event-outbox.service.ts` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
+| [ ] **NEXI-08-02** | Available products, rates, durations, restrictions and limits come from Backend/Admin | `backend/src/mining/mining.service.ts`, `backend/src/events/event-outbox.service.ts` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
+| [ ] **NEXI-08-03** | Earn allocation, accrual, maturity, redemption and failure states are clear | `backend/src/mining/mining.service.ts`, `backend/src/events/event-outbox.service.ts` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
+| [ ] **NEXI-08-04** | Loan applications, collateral, disbursements, interest, repayment and overdue states are consistent | `backend/src/loans/loans.service.ts`, `backend/src/events/event-outbox.service.ts` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
+| [ ] **NEXI-08-05** | Funds, liabilities and locked commitments never appear as spendable balance | `backend/src/financial/financial-operations.service.ts`, `backend/src/events/event-outbox.service.ts` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
+| [ ] **NEXI-08-06** | Activity and notifications reflect meaningful lifecycle changes | `backend/src/mining/mining.service.ts`, `backend/src/events/event-outbox.service.ts` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
+| [ ] **NEXI-08-07** | Empty product states are distinguished from failures and unconfigured products | `backend/src/mining/mining.service.ts`, `backend/src/events/event-outbox.service.ts` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
 ### Notifications system (P0)
 
 | ID | Owner criterion (verbatim) | Source navigation candidates | Current-release proof |
@@ -209,93 +179,3 @@ All rows start unchecked for the **new source release**. Existing accepted but u
 | [ ] **NEXI-15-05** | Sentry release/error/notification behavior is verified against the current deployment | `backend/src/ledger/ledger-authority.service.ts`, `backend/src/events/event-outbox.service.ts` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
 | [ ] **NEXI-15-06** | Authenticated customer and Admin browser acceptance is distinct from route-load and HTTP 200 checks | `backend/src/ledger/ledger-authority.service.ts`, `backend/src/events/event-outbox.service.ts` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
 | [ ] **NEXI-15-07** | Only confirmed gaps receive source changes; focused regression tests prove those changes | `backend/src/ledger/ledger-authority.service.ts`, `backend/src/events/event-outbox.service.ts` | **PENDING** — source semantics, deployed/browser evidence scoped separately |
-
-## Admin desktop acceptance overlay (supplementary, not counted among 113)
-
-**2026-11-01 source-count record (historical):** At source revision `99a460a33d51a05a96ae669aee167fc866723021`, `Admin/src/admin/config/navigation.ts` defined 31 role-filtered sidebar destinations; `/sandbox` was a contextual functional destination. The October 21 33-sidebar snapshot had already been superseded by the October 24 owner decision to retire tickets and use Messages for customer–Admin chat. **2026-11-07 source supersession:** deployed Admin release `45a857de6a4d4101fc3f42738eb7d83f52bd62eb` and current `main` `27b78bb6f74a0ddb44e9121b15fdbb7c9f1c3c32` each define 21 direct NAV_GROUPS destinations across eight groups and contain 34 named page route files. `/sandbox` is not a sidebar item; `/support` remains compatibility-only and `/reconciliation` hidden/unsupported. The 24-route count is not established by NAV_GROUPS. Named route files, navigation counts and browser acceptance are separate measures. The 113 criteria remain preserved verbatim.
-
-**Owner supersession details (October 24):** Ticket create/reply/lifecycle is retired. Public Support retains help topics and Admin-controlled Telegram/email contact settings; Messages owns authenticated customer–Admin conversations, history and authorized attachments. The `/support` compatibility URL and hidden `/reconciliation` are separate checks, not active ticket/reconciliation business workflows.
-
-The source-authored operator workspace inventory is drawn from `Admin/docs/OPERATOR_WORKSPACE_IMPLEMENTATION_MAP.md` and `Admin/docs/TANSTACK_ARCHITECTURE_AND_ROUTE_MAP.md`. The October 31 receipt confirms only eight-workspace navigation at 979×715, not 32 functional-route action/readback passes.
-
-### Current Admin source inventory — 2026-11-07 (not browser proof)
-
-| Operator workspace | Current direct `NAV_GROUPS` destinations | Current-release browser status |
-| --- | --- | --- |
-| Overview | `/overview` | PENDING |
-| Clients | `/users`, `/kyc` | PENDING |
-| Trading | `/binary`, `/settlements`, `/spot` | PENDING |
-| Wallet & Finance | `/networks`, `/deposits`, `/withdrawals`, `/ledger` | PENDING |
-| Markets | `/assets`, `/market-feeds` | PENDING |
-| Products | `/mining`, `/loans` | PENDING |
-| Communications | `/messages`, `/notifications`, `/announcements`, `/learn` | PENDING |
-| Administration & Settings | `/frontend-control`, `/admins`, `/maintenance` | PENDING |
-
-This is 21 direct navigation destinations across eight groups. The distinct named-file inventory has 34 page routes; all remain source routes even when absent from `NAV_GROUPS`.
-
-| Route file outside `NAV_GROUPS` | Classification / required disposition | Current-release browser status |
-| --- | --- | --- |
-| `/approvals` | Source route; absent from direct sidebar; verify direct/contextual access and role behavior | PENDING |
-| `/audit` | Source route; absent from direct sidebar; verify direct/contextual access and role behavior | PENDING |
-| `/exposure` | Source route; absent from direct sidebar; verify direct/contextual access and role behavior | PENDING |
-| `/feature-flags` | Source route; absent from direct sidebar; verify direct/contextual access and role behavior | PENDING |
-| `/health` | Source route; absent from direct sidebar; verify direct/contextual access and role behavior | PENDING |
-| `/localization` | Source route; absent from direct sidebar; verify direct/contextual access and role behavior | PENDING |
-| `/navigation` | Source route; absent from direct sidebar; verify direct/contextual access and role behavior | PENDING |
-| `/reconciliation` | Hidden/unsupported; verify its current direct-route disposition; no durable reconciliation authority is established | PENDING |
-| `/roles` | Source route; absent from direct sidebar; verify direct/contextual access and role behavior | PENDING |
-| `/sandbox` | Contextual Binary sandbox, not a sidebar destination | PENDING |
-| `/sessions` | Source route; absent from direct sidebar; verify direct/contextual access and role behavior | PENDING |
-| `/support` | Compatibility-only retired-ticket page linking to `/messages`; no ticket workflow | PENDING |
-| `/wallets` | Source route; absent from direct sidebar; verify direct/contextual access and role behavior | PENDING |
-
-The 2026-11-01 32-destination count is dated source history. It does not change the 113 canonical requirement count or establish current-release browser behavior.
-
-### Common Admin desktop proof
-
-- [ ] Verify all 21 current `NAV_GROUPS` destinations across eight workspaces; disposition all 34 named page route files, including contextual `/sandbox`, compatibility-only `/support`, and hidden/unsupported `/reconciliation`. Test permitted-role direct URL, refresh, back/forward and active contextual tab against the exact Admin release under test.
-- [ ] At ~979×715 and 1365×723 inspect density, tables, filters, selected-client detail, modal controls, desktop overflow and keyboard focus; a narrow viewport requires accessible fallback rather than Public-style mobile-first parity.
-- [ ] Verify authenticated role-sensitive actions against NestJS RBAC including a denied restricted-role request only with an existing authorized restricted identity.
-- [ ] Trace Admin provider → NestJS DTO/endpoint → durable readback → Public presentation for asset/network, Binary, Mining, Loan and notification/content configuration.
-- [ ] For Messages, controlled Admin reply → customer thread, attachment and realtime reconnect requires explicit controlled-conversation authorization; never use an existing synthetic thread as permission to send.
-- [ ] Avoid equating UI visibility or route 200 with business mutation, financial approval, persistence, or browser acceptance.
-
-## Document/source evidence reconciliation
-
-| Source | Current use |
-| --- | --- |
-| `docs/quality/NEXI_BROWSER_ACCEPTANCE_MATRIX.md` | Scoped current contract/receipt; preserve date, SHA and proof class |
-| `tasks/evidence/nexi-final-product-acceptance-20261031.md` | Scoped current contract/receipt; preserve date, SHA and proof class |
-| `tasks/evidence/nexi-five-batch-source-reconciliation-20261101.md` | Scoped current contract/receipt; preserve date, SHA and proof class |
-| `Admin/docs/OPERATOR_WORKSPACE_IMPLEMENTATION_MAP.md` | Scoped current contract/receipt; preserve date, SHA and proof class |
-| `Admin/docs/TANSTACK_ARCHITECTURE_AND_ROUTE_MAP.md` | October 21 route snapshot is historical; the November 7 correction at top governs current `NAV_GROUPS` and named-file counts |
-| `Admin/docs/ADMIN_IMPLEMENTATION_CONTRACT_MAP_A_F_2026-10-21.md` | Historical design/hand-off snapshot; verify against current source |
-| `Admin/docs/ADMIN_VERIFIED_DIAGRAMS_AND_HANDOFF.md` | Scoped current contract/receipt; preserve date, SHA and proof class |
-| `Admin/docs/CURRENT_STATUS.md` | Historical design/hand-off snapshot; verify against current source |
-| `Admin/docs/WORK_SSH_NEXT_EXECUTION_HANDOFF_2026-10-21.md` | Historical design/hand-off snapshot; verify against current source |
-| `NEXI_CURRENT_STATE.md` | Scoped current contract/receipt; preserve date, SHA and proof class |
-| `NEXI_PROOF_REUSE_REGISTER.md` | Scoped current contract/receipt; preserve date, SHA and proof class |
-| `tasks/plan.md` | Scoped current contract/receipt; preserve date, SHA and proof class |
-| `tasks/todo.md` | Scoped current contract/receipt; preserve date, SHA and proof class |
-| `frontend/AGENTS.md` | Scoped current contract/receipt; preserve date, SHA and proof class |
-| `frontend/DESIGN.md` | Scoped current contract/receipt; preserve date, SHA and proof class |
-| `Admin/AGENTS.md` | Scoped current contract/receipt; preserve date, SHA and proof class |
-
-**Source locator correction:** Engineering References v4.0 names `frontend/app/dashboard/margin/page.tsx` for Margin; current source implements Spot/Margin in `frontend/app/dashboard/spot/page.tsx`. Only the locator was corrected; original acceptance criteria remain unchanged.
-
-## Known dependencies and unresolved evidence
-
-1. GitHub `main` is `27b78bb6f74a0ddb44e9121b15fdbb7c9f1c3c32`; the live Public marker matches it, while Backend/Admin markers remain `45a857de6a4d4101fc3f42738eb7d83f52bd62eb`. Current-source authenticated browser acceptance is not established. The Admin route receipt at `111a5010f04a6592c290b0b0bc93240ab0cec69b` is historical and not current-release proof.
-2. Public Binary default internal USDT accounts exist in newer source, but funded BINARY placement/settlement browser and economic proof remains permission- and deployment-dependent.
-3. Older Public Margin browser notes `Market data error`/`Chart updates paused` despite HTTP 200. Verify data freshness, candle/chart status on the actual new release; do not assume old result persists or was fixed.
-4. Admin restricted-role negative authorization proof requires an existing authorized restricted identity. Desktop operator actions are not established by eight-workspace navigation.
-5. Public ↔ Admin controlled Messages read/write/push/reconnect remains unverified for current release; avoid unauthorized sends.
-6. Preserve four explicit `OWNER_ACCEPTED_UNTESTED` financial gates; do not reopen them as mandatory live economic probes without fresh approval.
-7. Sentry release-specific ingestion, minute-scale alert delivery and event symbolication remain independently unproven by a zero-event result.
-
-## Next acceptance procedure
-
-1. Map each requirement to its actual current source owner, verify implementation semantics and classify true gaps separately from runtime proof gaps.
-2. Run one focused, change-invalidated test/static fan-in on confirmed repairs, preserving old verified unchanged evidence.
-3. After distinct owner authorization, one Backend → Public → Admin coordinated build/deploy, with matching SHA markers, service/process health and rollback evidence.
-4. Execute the 113 requirement checks plus Admin desktop overlay against actual current release with authorized identities; record PASS/FAIL/BLOCKED, route, viewport, timestamp, release SHA and sanitized evidence in the CSV tracker. Do not convert a source check to a browser PASS.

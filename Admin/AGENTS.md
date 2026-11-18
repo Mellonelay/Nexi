@@ -1,100 +1,11 @@
-# CURRENT OWNER ENGINEERING OVERRIDE — 2026-11-18
+# Admin engineering contract
 
-The NEXI Normal Chat/Work Kernel and prior **mandatory source-first/no-tests-before-closure** phase are retired by the owner's current NEXI Project Instructions. Current source and specific authorization govern. Apply suitable implementation, test, typecheck and architecture verification in the present task; **production build/deployment, service activation and consequential financial/data mutations still require their own authorization**. Treat older dated restrictions, tool versions, Graphify hashes and source-status statements below as historical where they conflict. Preserve the three independent application dependency stores and canonical Node 24 runtime. For the Nov 18 market candidate and document reconciliation see `docs/architecture/NEXI_ARCHITECTURE_DOCUMENT_RECONCILIATION_20261118.md`; it is not deployed.
+Inherits ../AGENTS.md. Preserve current TanStack/React/Vite/Nitro implementation, registered routes and permission-aware deep links.
 
----
-
-# ACTIVE ADMIN SOURCE-FIRST ADDENDUM — 2026-11-12
-
-Root `../AGENTS.md` 2026-11-12 authority and current `../graphify-out/graph.json` via `@nexi-graphify-live` supersede the dated November 7 merged graph and October browser/test-first routing below. Preserve the existing React/TanStack Router/Start + Vite/Nitro Admin application, live `NexiAdminApiProvider`, generated route tree, deep links, permissions, existing operator controls and existing source fixes. Reconcile only proven mismatches among Admin route/provider/DTO, NestJS guards/service, exact SQLite Ledger/audit status and Public readback; unsupported backend capabilities fail closed. Check factual audit/settlement and Spot/Margin/Mining/Loan customer/provenance contracts before touching code. Do not translate an analyzer's complexity score, route discovery or missing direct import into permission to remove an Admin route or financial control. Use current version-matched TanStack docs, Knowledge v4, exact L0/L1 graph edges, and Fallow/CodeScene only for distinct unresolved questions. All application tests/lint/typechecks/builds/browser/restarts/deployments remain deferred until full authorized source closure and separate owner authorization. Current task/plan and Nov9–12 receipts override older phase/order clauses.
-
----
-
-# Cross-surface Graphify reference
-
-For Public-to-Backend-to-Admin relationships, use the canonical unified graph and MCP route in root `AGENTS.md` under **CANONICAL CROSS-SURFACE GRAPH**. Verified 2026-11-07 graph: `/srv/nexi/graphify-live/20261107/merged-graph.json`, 5,953 nodes / 17,481 edges / 208 communities, SHA-256 `0c18266bab126d924e5e77acde7e940e004534a03a0bf033785fdeecf5f8337d`; MCP alias `@nexi-graphify-live`. See `../docs/architecture/NEXI_GRAPHIFY_COVERAGE_20261107.md`.
-
-Admin-local graph files and CLI outputs are scoped snapshots; do not use the old 1,376-node Admin graph as the current unified graph. A local `graphify update . --no-cluster` updates only its working-tree graph, not the unified multi-root graph. Graphify is topology evidence, not runtime or behavior proof.
-
-# CURRENT OWNER BUILD/TOOLCHAIN OVERRIDE — 2026-10-25
-
-The single Admin output is `/srv/nexi/admin/current`; the only Admin dependencies live at `/srv/nexi/admin/shared/node_modules`, linked from the canonical `Admin/` source. No worktrees, duplicate installs, isolated build roots or second generated `.output`. Build only with the existing pinned `corepack pnpm@12.14.0` and `NEXI_ADMIN_OUTPUT_DIR=/srv/nexi/admin/current` command below. Pin the Admin runtime service to `/opt/nexi/runtime/node-v24.21.0/bin/node` when authorized and check effective ExecStart before claiming alignment. First derive design from installed TanStack Start/Router/Query, Vite/Nitro, current NexiAdminApiProvider and NestJS contracts; only then edit and run focused checks. Reuse unchanged evidence. All three services were intentionally stopped by the owner for maintenance on 2026-10-25.
-
-## External engineering references
-
-For Admin work, choose the exact domain bundle in `/home/mellonelay1999/.codex/reference-libraries/NEXI_Engineering_Reference_Library_v3.1/NEXI_Engineering_Reference_Library_v3.1/`, using its `graphify-out/wiki/index.md` and `graphify-out/GRAPH_REPORT.md` for navigation. Check installed versions, official framework contracts, and current source before applying a reference; CONTRACT/ADAPT/STUDY are dispositions, not approval. Graphify is navigation/reference evidence, not semantic or runtime proof.
-
-# CURRENT OWNER BROWSER OVERRIDE — 2026-10-21
-
-For NEXI Work Local, Admin rendered acceptance uses the existing owner-authorized ChatGPT in-app browser Admin tab, independently of Public. Work Cloud Browser is not required. Use authorized direct SSH alias nexi-vps for Worker-0 source/CLI work, with RDC as fallback. Do not transfer credentials or session material between surfaces.
-
-## CANONICAL ADMIN BUILD — 2026-10-23
-
-Follow the root `AGENTS.md` **Canonical Worker-0 Build and Release Contract** for the shared release sequence. Admin source is the canonical checkout's `Admin/` directory; `Admin/node_modules` must remain a symlink to `/srv/nexi/admin/shared/node_modules`. Dependency authority is `Admin/package.json`, `Admin/pnpm-lock.yaml`, `Admin/pnpm-workspace.yaml`, and the patch files referenced by that workspace. Checked-in npm/Bun lockfiles are not Worker-0 dependency authority. Never merge this store with Public or Backend.
-
-The only Admin output/runtime path is `/srv/nexi/admin/current`, a real directory (never a symlink); Nitro writes `server/index.mjs` and `public/` there. Build from the committed checkout's `Admin/` directory; do not copy source into the output tree. Verify the pinned package manager and existing shared store, then run:
-
-```bash
-NEXI_ADMIN_OUTPUT_DIR=/srv/nexi/admin/current corepack pnpm@12.14.0 --config.verify-deps-before-run=false run build
-```
-
-The `verify-deps-before-run` exception is needed for the current intentional symlinked shared store. Use it only after confirming manifests and `pnpm-lock.yaml` still match the last verified shared-store install. If the dependency set changed or packages are missing, verify recovery of the dedicated store, stage the committed `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, and referenced `patches/` into `/srv/nexi/admin/shared`, then run `corepack pnpm@12.14.0 install --frozen-lockfile` there. Never run `pnpm install` from `Admin/` or replace the source `Admin/node_modules` symlink. The package build script is `vite build`; the repository Vite/TanStack config provides the Nitro Node server target and reads `NEXI_ADMIN_OUTPUT_DIR`. Do not use the default `Admin/.output` as a Worker-0 artifact.
-
-For deployment, verify the running artifact and current owner authorization; no rollback archive is required or retained under the current owner policy. Stop only `nexi-admin.service` and perform the single canonical build. If Sentry upload is configured, invoke it as `NEXI_ADMIN_OUTPUT_DIR=/srv/nexi/admin/current ~/.local/bin/nexi-admin-with-secrets corepack pnpm@12.14.0 --config.verify-deps-before-run=false run build`; the wrapper injects build credentials and the release SHA without exposing secrets. Keep output at `current`, restart only Admin, and verify built SHA, served routes, login/API boundary, service stability and matching Sentry release. If health checks fail, stop and report for owner-directed recovery; no rollback archive is assumed. Never deploy dirty or uncommitted Admin source.
-
----
-# NEXI Admin Control Plane — Current Instructions
-
-## Admin release output handling
-
-The current owner policy does not require creating or retaining rollback/archive copies for Admin releases. Keep the single canonical output at `/srv/nexi/admin/current`; do not create alternate release or archive directories. If post-build health checks fail, stop and report for owner-directed recovery. Source remains `Admin` in the authoritative repository. After an authorized canonical build, restart and verify `nexi-admin.service` and rendered live behavior. The release identifier must describe the source actually built, never a newer commit merely because HEAD advanced.
-
-## Authority
-- GitHub `main` is the durable source authority for Admin and the rest of NEXI.
-- The current synchronized VM/RDC checkout is the execution workspace for this task; historical Windows/Codespace/old-VM trees are evidence only.
-- Preserve unrelated parallel work and reconcile any unique accepted changes before fan-in.
-- Production mutation requires explicit owner approval.
-
-## Current architecture
-Preserve the existing provider boundary:
-`Admin UI -> AdminDataProvider -> NexiAdminApiProvider (live) | LocalMockAdminProvider (explicit local/demo)`.
-
-`NexiAdminApiProvider` is already a substantial live adapter and is no longer a future placeholder. It currently implements many canonical `/admin/*` reads and mutations. Do not rebuild it.
-`LocalMockAdminProvider` remains useful for explicit local/demo workflows only. Live/staging/production mode must never silently fall back to mock data or success-shaped placeholders.
-Methods without canonical backend authority must fail closed and surface the unsupported state until the backend contract exists.
-
-## Parallel Admin lane
-Admin contract work may proceed only from the current acceptance-matrix frontier; reuse proven unchanged work and close only unresolved dependencies.
-Before changing a provider method, inspect the current Admin provider and backend controller/DTO/service or generated OpenAPI evidence from the same synchronized checkout. Do not infer a missing backend route from mock behavior.
-Classify each AdminDataProvider method as `LIVE_COMPLETE`, `LIVE_PARTIAL`, `UNSUPPORTED_BACKEND`, `LOCAL_ONLY`, `CONTRACT_MISMATCH`, or `STALE`.
-Prioritize live parity for auth/identity, sessions, users/KYC, market controls, wallets/ledger, deposits/withdrawals, Mining, Loans, Support, Announcements, governance/audit, feature flags, maintenance, and health before adding new Admin concepts.
-Do not invent persistence for public routes, banners, localization, exposure, reconciliation, user entitlements, role mutations, or other currently unsupported authorities. Record an exact backend dependency instead.
-
-## Current corrections
-- Promoted VPS SQLite is canonical durable application/financial authority; Ledger is accounting truth. Verify `/readyz` against the deployed API.
-- `NexiAdminApiProvider` already fails unsupported methods with HTTP-style 501 errors; preserve fail-closed behavior.
-- Provider mode may remain `mock` or `live`, but production-path work must exercise `live` explicitly.
-
-## Contract tools
-Use the canonical unified Graphify MCP from root `AGENTS.md` for cross-surface provider/route impact. Use an Admin-local graph only for an explicitly Admin-scoped question, and verify its source revision before relying on it. After coherent Admin-only edits, `graphify update . --no-cluster` updates the local working-tree graph; it does not refresh the unified multi-root graph. Use bounded `affected`, `path`, and `explain` queries before broad provider changes.
-Use concrete VM controller/DTO/OpenAPI material with API Documentation Checker and API Impact Mapper. Progress summaries are not contract evidence.
-
-## Validation
-Use the repository's existing package manager/lockfile and scripts; do not change package manifests or framework versions merely for this lane.
-Run focused type/lint/build/browser checks appropriate to changed Admin files. Preserve consequential-action confirmation, reason, actor/role/environment, idempotency, audit linkage, and explicit error states.
-Do not claim live parity until the method is backed by a canonical backend contract and verified against the joined staging runtime.
-
-
-## CURRENT ADMIN TANSTACK ARCHITECTURE + DESIGN MAPPING — 2026-10-21
-
-Read `Admin/docs/TANSTACK_ARCHITECTURE_AND_ROUTE_MAP.md` (relative to repository root) before changes to Admin routing, shell/navigation, Admin API data ownership, or workspace UI. It is a **source-derived architecture/requirements map**, not a claim the new eight-workspace design or Binary simulation controls are already built. The prior historical `Admin/docs/CURRENT_STATUS.md` snapshot is not current acceptance authority.
-
-**Actual framework:** Admin is React 19 + TanStack Start/Router + TanStack Query + Vite/Nitro Node; `Admin/vite.config.ts` uses `@lovable.dev/vite-tanstack-config`, which already provides Start/router Vite plugins. Never add another generic `tanstackRouter()` or `tanstackStart()` plugin without inspecting wrapper behavior. Keep `Admin/src/routeTree.gen.ts` generated, maintain `createFileRoute` file routing and type-safe links. A Start loader is isomorphic; it is not an implicit server-only boundary. Keep backend business authority in NestJS and secrets server-only. Review the actual `useAdminQuery` provider pattern before introducing TanStack Query loaders or invalidation to avoid competing caches.
-
-**Navigation truth:** `Admin/src/admin/config/navigation.ts` contains **33** visible sidebar routes; `Admin/src/routes/reconciliation.tsx` is a **34th named file route** without a sidebar item. `index.tsx` and `__root.tsx` are separate routing infrastructure. Eight compact workspaces (Overview, Clients, Trading, Wallet & Finance, Markets, Products, Communications, Administration & Settings) are an **owner-proposed presentation reorganization**, not permission to remove existing URLs, UI controls, provider functions or backend contracts. Preserve permission-aware deep links and account/position context; do not infer a missing backend command from a demo/reference.
-
-**Intent requiring subsequent owner-scoped implementation:** accessible Client-level Binary simulation defaults and Trading > Binary > Ongoing Positions test-position mode controls, with a single NestJS-authoritative policy/settlement path and isolated, explicitly labeled simulated chart/result projection. Historical DEXI/FAST X/Axue observations explain the design but do not prove an existing NEXI API, price algorithm or deployed behavior. Normal genuine-market settlement, Ledger, canonical provider feeds, Spot/Margin and unrelated accounts remain distinct. Configuration surfaces for 53 assets, Binary durations/payout/stake, Mining, Loans, Wallet/Finance, Messages and Public settings must remain reachable. Do not build a second financial writer or silently alter genuine outcomes.
-
-**Validation for any later implementation:** inventory `navigation.ts`, source routes and generated route tree; map each affected view to canonical provider method + NestJS controller/DTO; use schema-validated URL search state for shareable nonsecret filters, typed links, route pending/error boundaries, and cache invalidation at the actual resource owner. Confirm source/type/build and backend contracts before browser acceptance. Browser UI proof, deployed identity, financial acceptance and owner acceptance are distinct. This instruction update alone authorizes no build, deployment, restart, financial write or live outcome change. Current root `AGENTS.md`, proof-reuse register and direct owner decisions retain precedence for execution permissions.
-
-**Current mapped contract (not implementation authority):** `Admin/docs/ADMIN_IMPLEMENTATION_CONTRACT_MAP_A_F_2026-10-21.md` is the owner-aligned, source-linked A01–A14 map. It supersedes conflicting counts and proposed-vs-built descriptions in earlier Admin notes. The eight NAV_GROUPS headers already exist locally, but contextual tabs, Binary account/open-trade controls, correct session action-context behavior and two-way Messages are not complete. Never treat `WORK_SSH_NEXT_EXECUTION_HANDOFF_2026-10-21.md` as an approved handoff.
+- Source Admin/src; dependency authority Admin/package.json, pnpm-lock.yaml, pnpm-workspace.yaml and patches/. Preserve Admin/node_modules -> /srv/nexi/admin/shared/node_modules, single output /srv/nexi/admin/current, and Node 24.21.0. Do not install or build as documentation maintenance.
+- Eight logical workspaces are the owner-approved operator navigation: Overview, Clients, Trading, Wallet & Finance, Markets, Products, Communications, Administration & Settings. NAV_GROUPS at src/admin/config/navigation.ts and source route files govern exact current route count. Do not remove routes merely because they are contextual/hidden.
+- Admin/src/admin/data/nexi-api-provider.ts is the live backend consumer. Local mock is explicit development/demo only; never silently fall back in a production path. Unsupported backend capability fails closed. Permissions are enforced by NestJS, not hiding UI.
+- Binary research account defaults and active-position overrides are current source implementations, not future proposals. They require research-account scope, actor/reason, idempotency, audit and version/expiry guards. One NestJS settlement/SQLite writer; no second Admin outcome engine.
+- Consequential actions need correct actor, target, approval/reason, confirmation, idempotent command and durable response; protect production data. Admin signed-in UI and Public wallet identity remain distinct.
+- Operator procedure: docs/NEXI_ADMIN_OPERATOR_USAGE_GUIDE.md. Original owner Admin design diagram in docs/ is immutable design evidence; not a deployed-release receipt.
+- Authorized Admin build uses NEXI_ADMIN_OUTPUT_DIR=/srv/nexi/admin/current with the existing pinned corepack pnpm@12.14.0 and project script, only after checking locked dependencies. Sentry/release SHA and verified runtime are separate gates.
