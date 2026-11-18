@@ -1,3 +1,5 @@
+> **2026-11-19 extended verification:** See [Component / Integration / Product Correctness Review](NEXI_COMPONENT_INTEGRATION_PRODUCT_CORRECTNESS_REVIEW_20261119.md) for the explicit 12-suite Backend 74/74 PASS, expanded Public 62/62 and Admin 36/36 PASS, plus the disclosed full Backend verification failures and outstanding product acceptance. This earlier 118-test record remains the historical initial proof.
+
 # NEXI — Committed Source and Pre-build Architecture Proof (2026-11-18)
 
 **Authority:** Current owner-approved NEXI Binary/Admin design, repository source, and latest Project Instructions. Historical design maps and retired source-first kernel restrictions are superseded; retain their provenance.

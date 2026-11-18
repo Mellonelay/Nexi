@@ -13,6 +13,8 @@ import { LoanService } from "../../src/loans/loans.service";
 import { KycService } from "../../src/kyc/kyc.service";
 import { JwtAuthGuard } from "../../src/auth/jwt-auth.guard";
 import { AuthService } from "../../src/auth/auth.service";
+import { RedisRateLimitService } from "../../src/auth/redis-rate-limit.service";
+import { CommunicationsService } from "../../src/communications/communications.service";
 import { AuthSurfaceGuard } from "../../src/auth/auth-surface.guard";
 import { RolesGuard } from "../../src/auth/roles.guard";
 import { AdminPermissionGuard } from "../../src/admin/admin-permission.guard";
@@ -132,6 +134,8 @@ describe("C3 Public ↔ Backend ↔ Admin financial causality", () => {
         { provide: D1FinancialCommandGateway, useValue: state },
         { provide: MarketProviderRouterService, useValue: { currentStatus: jest.fn() } },
         { provide: AuthService, useValue: { verifySensitiveAction: jest.fn().mockResolvedValue(undefined) } },
+        { provide: RedisRateLimitService, useValue: { consume: jest.fn().mockResolvedValue({ allowed: true }) } },
+        { provide: CommunicationsService, useValue: {} },
         { provide: ConfigService, useValue: { get: (name: string) => name === "NODE_ENV" ? "test" : undefined } },
       ],
     })

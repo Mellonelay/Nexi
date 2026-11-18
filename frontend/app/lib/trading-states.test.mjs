@@ -14,7 +14,8 @@ test('spot lifecycle permits only governed transitions', () => {
   assert.equal(canTransitionSpot('OPEN', 'CANCEL_PENDING'), true);
   assert.equal(canTransitionSpot('FILLED', 'OPEN'), false);
   assert.equal(normalizeSpotOrderState('CANCELED'), 'CANCELLED');
-  assert.equal(normalizeSpotOrderState('unknown'), 'FAILED');
+  assert.equal(normalizeSpotOrderState('unknown'), 'UNKNOWN');
+  assert.equal(normalizeSpotOrderState('not-a-supported-order-state'), 'FAILED');
 });
 
 test('binary lifecycle exposes governed result and recovery states', () => {
