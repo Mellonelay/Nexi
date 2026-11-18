@@ -1,6 +1,16 @@
-# NEXI — ACTIVE SOURCE-FIRST BOARD (2026-11-15)
+> **Current source checkpoint:** Market `8d32b95a71ef`, Admin/test fix `ed9fbf5be171`. All 118 focused checks PASS; release not built/deployed. The retired mandatory source-first test prohibition below is historical. [Proof](../docs/quality/NEXI_PREBUILD_ARCHITECTURE_SOURCE_PROOF_20261118.md).
+
+# NEXI — ENGINEERING TASK BOARD (original checkpoint 2026-11-15; updated 2026-11-18)
 
 Last recorded source checkpoint `5b3edd99383e` (2026-11-15; graph built at `0c2ce55f7f56`). Verify live Git HEAD for every new execution., Graphify 0.9.108 source SHA `d89d224547400ca9dccde3b46eef1c15249f8d663c61d238fb6ae85bc873f5ee`. Graph source snapshot predates the committed Communications replay change. Original documents are archived byte-for-byte at `tasks/evidence/archive/source-board-before-20261115/`.
+
+## 2026-11-18 — newer market architecture/documentation checkpoint
+
+- [x] Reuse the Work source-only market repair (Backend ingestion/Kline, Public Spot stream recovery, Nest adapter); preserve 11 existing modified tracked files, focused 33 Backend + 17 Public tests and TypeScript receipts.
+- [x] Verify no production build/restart/deploy occurred; current November 17 live release is not the candidate.
+- [x] Reconcile six documentation trees to current owner phase, source/contract and revision boundaries; review [current architecture-document index](../docs/architecture/NEXI_ARCHITECTURE_DOCUMENT_RECONCILIATION_20261118.md).
+- [ ] Pending separate pre-build acceptance: approved Archkeel target rules/comprehensive architecture scan, measured overload/financial-interference proof, and final source-candidate acceptance. Historical Archkeel external-symlink failure has a scoped analysis-workspace workaround but is not full architecture PASS.
+- [ ] Production canonical build/deploy remains separate authorization. No financial replay, migration, source release, restart or browser acceptance implied.
 
 ## Next application source work
 - [x] Learn create/update original-key replay audit receipt SOURCE_IMPLEMENTED (scoped): `backend/src/communications/communications.service.ts` returns its deterministic auditId on the first write and matching replay; ADMIN `nexi-api-provider.ts` consumes it. Existing outbox verifies aggregate/event/intentHash and rejects legacy or mismatched original intent without fabricating a receipt. Commit `5b3edd9`; application tests and historical-data runtime checks deferred.

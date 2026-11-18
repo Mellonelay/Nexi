@@ -1,3 +1,5 @@
+> **2026-11-18 current-source alignment:** Read this file with the [owner-approved current-source architecture authority](../../docs/architecture/NEXI_CURRENT_SOURCE_ARCHITECTURE_AUTHORITY_20261118.md) and 30-document semantic reconciliation. Current Binary/Admin implementation—including the simulated-candle Public chart path—is authoritative; dated pre-repair market measurements remain historical. Source implementation, deployed runtime and customer/economic acceptance are separate claims.
+
 # NEXI Admin — compact workspaces and implementation map
 
 **Combined acceptance handoff (2026-11-01):** [NEXI 113 canonical requirements + 32-functional-destination Admin desktop overlay](../../docs/quality/NEXI_113_PUBLIC_ADMIN_ACCEPTANCE_20261101.md). Admin is desktop-first; the eight workspaces and role-aware existing routes remain the operator source contract. Historical acceptance statements below retain their dated proof scope.

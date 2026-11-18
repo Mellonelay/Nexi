@@ -1,3 +1,9 @@
+# CURRENT OWNER ENGINEERING OVERRIDE — 2026-11-18
+
+The NEXI Normal Chat/Work Kernel and prior **mandatory source-first/no-tests-before-closure** phase are retired by the owner's current NEXI Project Instructions. Current source and specific authorization govern. Apply suitable implementation, test, typecheck and architecture verification in the present task; **production build/deployment, service activation and consequential financial/data mutations still require their own authorization**. Treat older dated restrictions, tool versions, Graphify hashes and source-status statements below as historical where they conflict. Preserve the three independent application dependency stores and canonical Node 24 runtime. For the Nov 18 market candidate and document reconciliation see `docs/architecture/NEXI_ARCHITECTURE_DOCUMENT_RECONCILIATION_20261118.md`; it is not deployed.
+
+---
+
 # ACTIVE NEXI SOURCE CONTINUITY — 2026-11-15 (supersedes historical fixed versions below)
 
 - **Current owner direction:** Finish only remaining evidence-proven Backend/Public/Admin source contracts and Public mobile-first integration, reusing completed repairs. Do not restart Graphify/Kernel development or treat 113 acceptance criteria, historical FAILs, Graphify unknowns, or missing source receipts as 113 missing features.

@@ -1,6 +1,10 @@
+> **Source revision:** Market `8d32b95a71ef`, Admin `ed9fbf5be171`, committed and **not deployed**; [verification proof](../quality/NEXI_PREBUILD_ARCHITECTURE_SOURCE_PROOF_20261118.md).
+
+> **2026-11-18 current-source alignment:** Read this file with the [owner-approved current-source architecture authority](NEXI_CURRENT_SOURCE_ARCHITECTURE_AUTHORITY_20261118.md) and 30-document semantic reconciliation. Current Binary/Admin implementation—including the simulated-candle Public chart path—is authoritative; dated pre-repair market measurements remain historical. Source implementation, deployed runtime and customer/economic acceptance are separate claims.
+
 # NEXI system architecture — source-reconciled 2026-11-17
 
-**Proof boundary:** Repository source at main HEAD 03cf396788d1897cd700a5edd5de55f065db6562 plus current working-tree changes. This is a SOURCE-ONLY description, not verification of deployed artifacts or running services. Source and owner decisions override historical snapshots.
+**Proof boundary:** Original source mapping captured at main HEAD 03cf396788d1897cd700a5edd5de55f065db6562. **2026-11-18 committed-source overlay:** market `8d32b95a71ef` and subsequent Admin correction `ed9fbf5be171`; Graphify still built at older 03cf396.... The November 17 deployed Backend/Public/Admin artifacts have separate SHAs and **do not include this source candidate**. See [current architecture-document reconciliation](NEXI_ARCHITECTURE_DOCUMENT_RECONCILIATION_20261118.md).
 
 ## Three application surfaces
 
@@ -67,7 +71,7 @@ Sentry, systemd/journald and Jaeger/OTLP appear in the recorded operations archi
 
 Source navigation: local Graphify graph at graphify-out/graph.json and separate Knowledge v4 at /srv/nexi/engineering-knowledge/20261110/. Graphify query/explain/path/affected show static relationships, which must be checked against current dirty source. During this inspection graph.json contains 8,602 nodes / 20,904 edges; its built_at_commit is distinct from current uncommitted changes. Use the 2026-11-16 local Graphify CLI/MCPC runbook, not retired hosted Cloud tracing or the missing 2026-11-07 coverage document.
 
-**Owner SOURCE-FIRST:** Complete evidence-proven Backend/Public/Admin source contracts and integrations before application tests, lint/typechecks, builds, browser acceptance, service restarts, migrations or deployment. The original 113 criteria and the dated 5/108 source association inventory belong to deferred browser acceptance under docs/quality/, not this source closure.
+**2026-11-18 owner override:** The blanket no-tests-until-all-source-closure phase has been retired. Current task-specific validation is permitted; the November 18 market candidate has focused Backend/Public tests and typechecks but has not been built or deployed. Production activation, migrations and financial mutation remain independently authorization-gated. The 113 browser acceptance criteria are a separate future assignment, not proof for this source candidate.
 
 ## Current references and historical boundaries
 

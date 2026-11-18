@@ -1,3 +1,5 @@
+> **2026-11-18 supersession:** This dated design/source/routing snapshot is preserved for chronology, NOT current implementation authority. NEXI owner confirms the **current Binary/Admin source and approved design** as correct, including guarded research controls and the implemented Binary sandbox candle/chart flow. Current code and latest owner decisions supersede historical "missing/proposed" claims, obsolete route counts and retired Kernel/test bans. See [current-source architecture authority](NEXI_CURRENT_SOURCE_ARCHITECTURE_AUTHORITY_20261118.md) and its full 30-document crosswalk.
+
 # NEXI VPS Runtime — historical operational snapshot
 
 **Dated October 2026:** This is an earlier routing/runtime receipt, not a live 2026-11-17 service-status report. For current repository architecture, use [NEXI_SYSTEM_ARCHITECTURE.md](NEXI_SYSTEM_ARCHITECTURE.md). Local SQLite authority and transport boundaries remain the accepted model; do not infer active service, deployed artifact SHA or database health from this dated report.

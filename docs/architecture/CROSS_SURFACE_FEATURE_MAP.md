@@ -1,4 +1,8 @@
+> **2026-11-18 current-source alignment:** Read this file with the [owner-approved current-source architecture authority](NEXI_CURRENT_SOURCE_ARCHITECTURE_AUTHORITY_20261118.md) and 30-document semantic reconciliation. Current Binary/Admin implementation—including the simulated-candle Public chart path—is authoritative; dated pre-repair market measurements remain historical. Source implementation, deployed runtime and customer/economic acceptance are separate claims.
+
 # NEXI Cross-Surface Feature and Authority Map
+
+**2026-11-18 market-candidate overlay:** This owner map remains the navigation contract; the current 11-file uncommitted market repair and revised architecture documents are reconciled [here](NEXI_ARCHITECTURE_DOCUMENT_RECONCILIATION_20261118.md). Market reference streams remain nonfinancial and best-effort, separate from SQLite Ledger settlement authority. Browser acceptance is not implied.
 
 **2026-11-17 current-source addendum:** For live system ownership and revision-specific proof boundaries, read [NEXI system architecture](NEXI_SYSTEM_ARCHITECTURE.md). The prior 2026-11-07 graph snapshot is historical; the source graph is at graphify-out/graph.json and the local Graphify runbook is authoritative for CLI/MCPC. The 113 criteria are deferred browser acceptance, not this source map.
 

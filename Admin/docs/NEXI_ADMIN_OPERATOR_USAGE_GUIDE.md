@@ -1,3 +1,5 @@
+> **2026-11-18 current-source alignment:** Read this file with the [owner-approved current-source architecture authority](../../docs/architecture/NEXI_CURRENT_SOURCE_ARCHITECTURE_AUTHORITY_20261118.md) and 30-document semantic reconciliation. Current Binary/Admin implementation—including the simulated-candle Public chart path—is authoritative; dated pre-repair market measurements remain historical. Source implementation, deployed runtime and customer/economic acceptance are separate claims.
+
 # NEXI Admin Operator Usage Guide
 
 Source reference: Admin source in `main` at `27b78bb6f74a0ddb44e9121b15fdbb7c9f1c3c32` (2026-11-07), with eight workspaces, 21 direct navigation destinations and 34 named route files. Cross-surface topology is in `@nexi-graphify-live` and [the coverage report](../../docs/operations/NEXI_GRAPHIFY_CLOUD_CLI_MCPC_RUNBOOK_20261116.md). This guide reflects source inspection only. It does not claim a deployed release, a passing test campaign, or authenticated browser acceptance.

@@ -1,3 +1,5 @@
+> **2026-11-18 supersession:** This dated design/source/routing snapshot is preserved for chronology, NOT current implementation authority. NEXI owner confirms the **current Binary/Admin source and approved design** as correct, including guarded research controls and the implemented Binary sandbox candle/chart flow. Current code and latest owner decisions supersede historical "missing/proposed" claims, obsolete route counts and retired Kernel/test bans. See [current-source architecture authority](../../docs/architecture/NEXI_CURRENT_SOURCE_ARCHITECTURE_AUTHORITY_20261118.md) and its full 30-document crosswalk.
+
 # NEXI ADMIN — REMOTE CODEX SSH EXECUTION CONTRACT (2026-10-22)
 Status: HISTORICAL DRAFT ONLY (2026-10-22); superseded by later owner paired-Codex/CDP 5858 instructions, subsequent Support/Messages release and current acceptance. No execution authority.
 Source starting point: GitHub `Mellonelay/Nexi` main commit `0e2023b0c93c359ba1f458cd694dee97900aae19` (verified pushed 2026-10-21). Before mutation confirm actual HEAD/origin and dirty tree; this SHA is a checkpoint, not permission to reset new work.

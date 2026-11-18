@@ -1,3 +1,5 @@
+> **2026-11-18 supersession:** This dated design/source/routing snapshot is preserved for chronology, NOT current implementation authority. NEXI owner confirms the **current Binary/Admin source and approved design** as correct, including guarded research controls and the implemented Binary sandbox candle/chart flow. Current code and latest owner decisions supersede historical "missing/proposed" claims, obsolete route counts and retired Kernel/test bans. See [current-source architecture authority](NEXI_CURRENT_SOURCE_ARCHITECTURE_AUTHORITY_20261118.md) and its full 30-document crosswalk.
+
 # NEXI source-only integration assurance — 20 October 2026
 
 **Scope and owner authority.** No backend financial acceptance tests, SQLite operations, queue execution, service restart or deployment were performed. Reuse prior proof from `NEXI_PROOF_REUSE_REGISTER.md` where source and runtime responsibility are unchanged. The four business acceptance workflows remain `CLOSED_BY_OWNER_ACCEPTANCE` (untested outcomes are not marked passed); this is their **source-contract review only**.

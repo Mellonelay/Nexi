@@ -1,3 +1,5 @@
+> **2026-11-18 supersession:** This dated design/source/routing snapshot is preserved for chronology, NOT current implementation authority. NEXI owner confirms the **current Binary/Admin source and approved design** as correct, including guarded research controls and the implemented Binary sandbox candle/chart flow. Current code and latest owner decisions supersede historical "missing/proposed" claims, obsolete route counts and retired Kernel/test bans. See [current-source architecture authority](../../docs/architecture/NEXI_CURRENT_SOURCE_ARCHITECTURE_AUTHORITY_20261118.md) and its full 30-document crosswalk.
+
 # NEXI Admin Control Plane — Current Status
 
 > HISTORICAL SCAFFOLD SNAPSHOT — retained for provenance, not current route counts, live parity, build commands, or production readiness. Current Admin/AGENTS.md, synchronized source, and docs/admin/README.md control continuation; the old ledger is historical. The original source generation below is preserved; no original event date is inferred from this reconciliation on 2026-10-03.

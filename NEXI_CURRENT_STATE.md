@@ -1,6 +1,12 @@
+> **Latest committed-source checkpoint (2026-11-18):** Market `8d32b95a71ef`, Admin correction `ed9fbf5be171`. Both are committed; **2026-11-17 deployed artifacts remain unchanged**. Focused Backend 62/Public 23/Admin 33 tests and TypeScript checks passed. The earlier uncommitted statements below are historical. See [current architecture proof](docs/quality/NEXI_PREBUILD_ARCHITECTURE_SOURCE_PROOF_20261118.md).
+
 # NEXI — LIVE SOURCE STATE (2026-11-15)
 
 Last recorded source checkpoint `5b3edd99383e` (2026-11-15; graph built at `0c2ce55f7f56`). Verify live Git HEAD for every new execution., Graphify 0.9.108 source SHA `d89d224547400ca9dccde3b46eef1c15249f8d663c61d238fb6ae85bc873f5ee`. Graph source snapshot predates the committed Communications replay change. Original documents are archived byte-for-byte at `tasks/evidence/archive/source-board-before-20261115/`.
+
+## 2026-11-18 — Market repair candidate and architecture-document reconciliation (newer checkpoint)
+
+Live `main@99ba7024a897`; the November 17 SOURCE_CLOSED disposition applied to that prior source phase, **not** the later 11-file uncommitted market candidate. Market ingestion/Kline/Public recovery repairs and controller/OpenAPI query metadata have focused Backend/Public tests and typechecks but have **not** been built/deployed. Canonical November 17 artifacts remain distinct (Backend `247a38a4`; Public/Admin `4a478105`). Source graph `graphify-out/graph.json` is built at `03cf396`, behind current HEAD and worktree. For source/architecture authority and all six requested documentation trees, use [architecture reconciliation](docs/architecture/NEXI_ARCHITECTURE_DOCUMENT_RECONCILIATION_20261118.md). The owner's newer Project Instructions retire the blanket source-first no-test prohibition; production build/release and economic writes remain separately gated. Preserve all local changes.
 
 ## Directly verified today
 - Git main: `5b3edd99383e0812cc8f90dff9718db9f7d83dc8`. Learn service and evidence committed at `5b3edd9`; the compact taskboard and preserved archive committed at `686337e`. The tracked checkout was clean at that checkpoint. Preserve existing untracked recovery assets.

@@ -1,5 +1,7 @@
 # NEXI documentation and receipt locator — 2026-11-17
 
+**2026-11-18 newer index:** This document is a November 17 **tracked Markdown snapshot**, not the current inventory. The six-directory 30-file SHA-256/content inventory and current market-candidate architecture reconciliation are at [NEXI Architecture Document Reconciliation](architecture/NEXI_ARCHITECTURE_DOCUMENT_RECONCILIATION_20261118.md). Preserve this original 160-tracked-Markdown/225-receipt historical count; do not interpret it as a present inventory.
+
 **Snapshot only:** Current source repository HEAD at inventory 03cf396788d1897cd700a5edd5de55f065db6562, plus working-tree documentation changes. Paths are indexed from the tracked Markdown catalog. Historical records are not promoted to current verified application state.
 
 **Primary entrypoints:** [Current architecture](architecture/NEXI_SYSTEM_ARCHITECTURE.md), [active source board](../tasks/todo.md), [current state](../NEXI_CURRENT_STATE.md), [source repair receipts](../tasks/evidence/NEXI_SOURCE_CLOSURE_MATRIX_20261109.md), [browser acceptance](quality/NEXI_INTERACTIVE_CLOUD_BROWSER_ACCEPTANCE_20261108.md), [Graphify CLI/MCPC](operations/NEXI_GRAPHIFY_CLOUD_CLI_MCPC_RUNBOOK_20261116.md).
