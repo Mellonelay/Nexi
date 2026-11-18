@@ -54,11 +54,11 @@ export class RedisIoAdapter extends IoAdapter {
   }
 
   async dispose(): Promise<void> {
-    await this.closeClient(this.redisClient);
+    await this.closeRedisClient(this.redisClient);
     this.redisClient = undefined;
   }
 
-  private async closeClient(client?: Redis): Promise<void> {
+  private async closeRedisClient(client?: Redis): Promise<void> {
     if (!client || client.status === 'end') {
       return;
     }

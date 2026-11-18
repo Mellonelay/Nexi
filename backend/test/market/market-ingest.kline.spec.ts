@@ -51,7 +51,7 @@ describe('MarketIngestService Kline publication', () => {
     const candle = {
       symbol: 'BTCUSDT', interval: '1m', time: 1_000, closeTime: '1970-01-01T00:01:00.999Z',
       open: '10', high: '12', low: '9', close: '11', volume: '3', provider: 'fixture',
-      source: 'websocket:kline', observedAt: '1970-01-01T00:01:01.000Z', receivedAt: '1970-01-01T00:01:01.001Z', isFinal: true,
+      source: 'websocket:kline', observedAt: '1970-01-01T00:01:01.000Z', receivedAt: '1970-01-01T00:01:01.001Z', sequence: 61_002, isFinal: true,
     };
     const redis = { isAvailable: jest.fn().mockReturnValue(true), publish: jest.fn().mockResolvedValue(undefined) };
     const marketKlines = { persist: jest.fn().mockResolvedValue(candle), accumulateQuote: jest.fn(), aggregateFromOneMinute: jest.fn().mockResolvedValue([]) };
@@ -71,6 +71,7 @@ describe('MarketIngestService Kline publication', () => {
 
     expect(marketKlines.persist).toHaveBeenCalledTimes(1);
     expect(redis.publish).toHaveBeenCalledWith('market:klines:v1', expect.stringContaining('"isFinal":true'));
+    expect(JSON.parse(redis.publish.mock.calls[0][1]).sequence).toBe(61_002);
     expect(redis.publish.mock.invocationCallOrder[0]).toBeGreaterThan(marketKlines.persist.mock.invocationCallOrder[0]);
   });
 
@@ -126,7 +127,7 @@ describe('MarketIngestService Kline publication', () => {
     expect(JSON.parse(redis.publish.mock.calls[0][1])).toMatchObject({ eventTime: 120_000, tradeTime: 119_999 });
   });
 
-  it('dequeues durable quote events ahead of bursty reference traffic', () => {
+  it('keeps reference traffic out of the durable SQLite work queue', () => {
     const service = new MarketIngestService(
       { ingestQuote: jest.fn() } as never,
       { persist: jest.fn(), accumulateQuote: jest.fn(), aggregateFromOneMinute: jest.fn() } as never,
@@ -136,12 +137,16 @@ describe('MarketIngestService Kline publication', () => {
     );
     const trade = { kind: 'trade', symbol: 'BTCUSDT', provider: 'binance-spot' };
     const ticker = { kind: 'ticker', symbol: 'SUNUSDT', provider: 'binance-spot' };
-    (service as any).eventQueue.push(trade, ticker);
+    (service as any).activeReferenceWorkers = 4;
+    (service as any).activeWorkers = 8;
+    (service as any).enqueue(trade);
+    (service as any).enqueue(ticker);
 
-    expect((service as any).dequeueNextEvent()).toBe(ticker);
+    expect((service as any).eventQueue).toEqual([ticker]);
+    expect((service as any).referenceQueue).toEqual([trade]);
   });
 
-  it('drops queued reference traffic before a durable ticker when the ingest queue saturates', () => {
+  it('does not drop reference events because the durable queue is saturated', () => {
     const service = new MarketIngestService(
       { ingestQuote: jest.fn() } as never,
       { persist: jest.fn(), accumulateQuote: jest.fn(), aggregateFromOneMinute: jest.fn() } as never,
@@ -149,19 +154,104 @@ describe('MarketIngestService Kline publication', () => {
       { start: jest.fn(), stop: jest.fn() } as never,
       { isAvailable: jest.fn(), publish: jest.fn() } as never,
     );
-    const depth = { kind: 'depth', symbol: 'BTCUSDT', provider: 'binance-spot' };
-    const ticker = { kind: 'ticker', symbol: 'SUNUSDT', provider: 'binance-spot' };
+    (service as any).activeReferenceWorkers = 4;
     const queue = (service as any).eventQueue as unknown[];
-    queue.push(depth, ticker, ...Array.from({ length: 254 }, (_, index) => ({
+    queue.push(...Array.from({ length: 256 }, (_, index) => ({
       kind: 'kline', symbol: `K${index}`, provider: 'fixture',
     })));
     (service as any).activeWorkers = 8;
 
-    (service as any).enqueue({ kind: 'kline', symbol: 'ETHUSDT', provider: 'binance-spot' });
+    const trade = { kind: 'trade', symbol: 'BTCUSDT', provider: 'binance-spot' };
+    (service as any).enqueue(trade);
 
-    expect(queue).not.toContain(depth);
-    expect(queue).toContain(ticker);
     expect(queue).toHaveLength(256);
+    expect((service as any).referenceQueue).toEqual([trade]);
+  });
+
+  it('preserves closed candles when the durable queue is saturated', () => {
+    const service = new MarketIngestService(
+      { ingestQuote: jest.fn() } as never,
+      { persist: jest.fn(), accumulateQuote: jest.fn(), aggregateFromOneMinute: jest.fn() } as never,
+      { ensureReconciled: jest.fn() } as never,
+      { start: jest.fn(), stop: jest.fn() } as never,
+      { isAvailable: jest.fn(), publish: jest.fn() } as never,
+    );
+    (service as any).activeWorkers = 8;
+    const queue = (service as any).eventQueue as Array<Record<string, unknown>>;
+    queue.push(...Array.from({ length: 256 }, (_, index) => ({
+      kind: 'kline', symbol: `K${index}`, provider: 'fixture', closed: true,
+    })));
+    const closed = { kind: 'kline', symbol: 'BTCUSDT', provider: 'fixture', closed: true };
+
+    (service as any).enqueue(closed);
+
+    expect(queue).toHaveLength(257);
+    expect(queue).toContain(closed);
+    expect((service as any).droppedDurableClosedKlines).toBe(0);
+  });
+
+  it('keeps the durable queue bounded and counts closed-candle drops at the hard cap', () => {
+    const service = new MarketIngestService(
+      { ingestQuote: jest.fn() } as never,
+      { persist: jest.fn(), accumulateQuote: jest.fn(), aggregateFromOneMinute: jest.fn() } as never,
+      { ensureReconciled: jest.fn() } as never,
+      { start: jest.fn(), stop: jest.fn() } as never,
+      { isAvailable: jest.fn(), publish: jest.fn() } as never,
+    );
+    (service as any).activeWorkers = 8;
+    const queue = (service as any).eventQueue as Array<Record<string, unknown>>;
+    queue.push(...Array.from({ length: 1024 }, (_, index) => ({
+      kind: 'kline', symbol: `K${index}`, provider: 'fixture', closed: true,
+    })));
+    const overflow = { kind: 'kline', symbol: 'BTCUSDT', provider: 'fixture', closed: true };
+
+    (service as any).enqueue(overflow);
+
+    expect(queue).toHaveLength(1024);
+    expect(queue).not.toContain(overflow);
+    expect((service as any).droppedDurableClosedKlines).toBe(1);
+  });
+
+  it('drops replaceable market state before a closed candle at the durable queue limit', () => {
+    const service = new MarketIngestService(
+      { ingestQuote: jest.fn() } as never,
+      { persist: jest.fn(), accumulateQuote: jest.fn(), aggregateFromOneMinute: jest.fn() } as never,
+      { ensureReconciled: jest.fn() } as never,
+      { start: jest.fn(), stop: jest.fn() } as never,
+      { isAvailable: jest.fn(), publish: jest.fn() } as never,
+    );
+    (service as any).activeWorkers = 8;
+    const queue = (service as any).eventQueue as Array<Record<string, unknown>>;
+    const replaceable = { kind: 'ticker', symbol: 'BTCUSDT', provider: 'fixture' };
+    queue.push(replaceable, ...Array.from({ length: 255 }, (_, index) => ({
+      kind: 'kline', symbol: `K${index}`, provider: 'fixture', closed: true,
+    })));
+    const closed = { kind: 'kline', symbol: 'ETHUSDT', provider: 'fixture', closed: true };
+
+    (service as any).enqueue(closed);
+
+    expect(queue).toHaveLength(256);
+    expect(queue).not.toContain(replaceable);
+    expect(queue).toContain(closed);
+    expect((service as any).droppedDurableTickers).toBe(1);
+  });
+
+  it('coalesces queued full depth snapshots by provider and symbol', () => {
+    const service = new MarketIngestService(
+      { ingestQuote: jest.fn() } as never,
+      { persist: jest.fn(), accumulateQuote: jest.fn(), aggregateFromOneMinute: jest.fn() } as never,
+      { ensureReconciled: jest.fn() } as never,
+      { start: jest.fn(), stop: jest.fn() } as never,
+      { isAvailable: jest.fn(), publish: jest.fn() } as never,
+    );
+    (service as any).activeReferenceWorkers = 4;
+    const older = { kind: 'depth', symbol: 'BTCUSDT', provider: 'binance-spot', updateId: 1 };
+    const newer = { ...older, updateId: 2 };
+
+    (service as any).enqueue(older);
+    (service as any).enqueue(newer);
+
+    expect((service as any).referenceQueue).toEqual([newer]);
   });
 
   it('waits for catalog reconciliation before starting providers', async () => {
@@ -186,5 +276,22 @@ describe('MarketIngestService Kline publication', () => {
 
     service.onModuleDestroy();
     expect(providers.stop).toHaveBeenCalledTimes(1);
+  });
+
+  it('drains queued closed candles on provider shutdown instead of clearing them', async () => {
+    const persisted = { symbol: 'BTCUSDT', interval: '1m', time: 1, closeTime: null, open: '1', high: '1', low: '1', close: '1', volume: null, provider: 'binance-spot', source: 'websocket:kline', observedAt: '1970-01-01T00:00:01.000Z', receivedAt: '1970-01-01T00:00:01.001Z', isFinal: true };
+    const persist = jest.fn().mockResolvedValue(persisted);
+    const service = new MarketIngestService(
+      { ingestQuote: jest.fn() } as never,
+      { persist, aggregateFromOneMinute: jest.fn().mockResolvedValue([]) } as never,
+      { ensureReconciled: jest.fn() } as never,
+      { start: jest.fn(), stop: jest.fn().mockResolvedValue(undefined) } as never,
+      { isAvailable: jest.fn().mockReturnValue(false) } as never,
+    );
+    (service as any).activeWorkers = 8;
+    (service as any).enqueue({kind:'kline',symbol:'BTCUSDT',provider:'binance-spot',source:'websocket:kline',interval:'1m',openTime:1000,closeTime:59999,eventTime:59999,open:'1',high:'1',low:'1',close:'1',volume:null,closed:true});
+    (service as any).activeWorkers = 0;
+    await service.onModuleDestroy();
+    expect(persist).toHaveBeenCalledTimes(1);
   });
 });

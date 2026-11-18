@@ -63,6 +63,26 @@ export interface MarketKlineEvent {
   isFinal?: boolean;
 }
 
+export function marketTradeSequence(id: string): bigint | null {
+  const match = new RegExp("(?:^|:)([0-9]+)$").exec(id);
+  return match ? BigInt(match[1]) : null;
+}
+
+export function hasMarketTradeGap(previous: bigint | null, next: bigint): boolean {
+  return previous !== null && next > previous + BigInt(1);
+}
+
+// Recent-trades REST is bounded; never claim a large or missing interval recovered.
+export function isMarketTradeGapRecovered(from: bigint, to: bigint, ids: Set<string>): boolean {
+  if (from > to || to - from >= BigInt(2_000)) return false;
+  const observed = new Set<bigint>();
+  for (const id of ids) {
+    const sequence = marketTradeSequence(id);
+    if (sequence !== null && sequence >= from && sequence <= to) observed.add(sequence);
+  }
+  return BigInt(observed.size) === to - from + BigInt(1);
+}
+
 export interface CandleRevision {
   observedAt: number;
   sequence: number | null;

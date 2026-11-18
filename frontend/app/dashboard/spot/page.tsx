@@ -14,6 +14,7 @@ import { useActivePair } from '../../state/ActivePairProvider';
 import { normalizePair } from '../../state/active-instrument';
 import { findAsset } from '../../lib/asset-registry';
 import { type MarketDataStatus } from '../../lib/market-data';
+import { hasMarketTradeGap, isMarketTradeGapRecovered, marketTradeSequence } from '../../lib/market-stream';
 import { getIntentKey, type PendingIntentKey } from '../../lib/intent-key';
 import { readPendingEconomicIntent, persistPendingEconomicIntent, clearPendingEconomicIntent } from '../../lib/pending-economic-intent';
 import { hasAuthSession } from '../../lib/auth-session';
@@ -216,8 +217,26 @@ function useSpotMarketFeed({
     let tradeRevision = 0;
     let depthRequestSequence = 0;
     let tradeRequestSequence = 0;
+    let lastTradeRecoveryAt = 0;
+    let tradeRecoveryTimer: number | undefined;
+    let lastTradeId: bigint | null = null;
+    let missingTradeFrom: bigint | null = null;
+    let missingTradeTo: bigint | null = null;
     let lastUpdateId = BigInt(0);
     const seenTrades = new Set<string>();
+    const advanceTradeSequence = (rows: MarketTradeRow[]) => {
+      for (const row of rows) {
+        const sequence = marketTradeSequence(row.id);
+        if (sequence !== null && (lastTradeId === null || sequence > lastTradeId)) lastTradeId = sequence;
+      }
+    };
+    const recoverKnownTradeGap = () => {
+      if (missingTradeFrom === null || missingTradeTo === null) return true;
+      if (!isMarketTradeGapRecovered(missingTradeFrom, missingTradeTo, seenTrades)) return false;
+      missingTradeFrom = null;
+      missingTradeTo = null;
+      return true;
+    };
     setBids([]); setAsks([]); setTrades([]);
     if (!backendConfigured || !referenceFeedSupported) {
       setBookStatus('UNAVAILABLE'); setTradeStatus('UNAVAILABLE');
@@ -259,17 +278,30 @@ function useSpotMarketFeed({
             return;
           }
           const ordered = rows.sort(compareTradesNewestFirst);
+          advanceTradeSequence(ordered);
           for (const row of ordered) seenTrades.add(row.id);
+          const gapRecovered = recoverKnownTradeGap();
           setTrades((current) => [...current, ...ordered]
             .filter((item, index, all) => all.findIndex((other) => other.id === item.id) === index)
             .sort(compareTradesNewestFirst).slice(0, 50));
-          if (revision === tradeRevision) {
-            lastTradeAt = latestTradeAt;
-            const fresh = Date.now() - latestTradeAt <= 30_000;
-            setTradeStatus(socket.connected ? fresh ? 'LIVE' : 'STALE' : 'CONNECTION_LOST');
+          if (revision === tradeRevision) lastTradeAt = latestTradeAt;
+          if (revision === tradeRevision || gapRecovered) {
+            const fresh = Date.now() - lastTradeAt <= 30_000;
+            setTradeStatus(socket.connected ? gapRecovered && fresh ? 'LIVE' : 'STALE' : 'CONNECTION_LOST');
           }
         })
         .catch(() => { if (!cancelled && revision === tradeRevision && request === tradeRequestSequence) setTradeStatus('ERROR'); });
+    };
+
+    const scheduleTradeRecovery = () => {
+      if (tradeRecoveryTimer !== undefined) return;
+      const delay = Math.max(0, 5_000 - (Date.now() - lastTradeRecoveryAt));
+      tradeRecoveryTimer = window.setTimeout(() => {
+        tradeRecoveryTimer = undefined;
+        if (cancelled) return;
+        lastTradeRecoveryAt = Date.now();
+        refreshTrades();
+      }, delay);
     };
 
     const refreshBook = () => {
@@ -315,14 +347,25 @@ function useSpotMarketFeed({
       if (!validEvent(event, 'trade')) return;
       const [trade] = finiteTrades([event]);
       if (!trade || seenTrades.has(trade.id)) return;
+      const sequence = marketTradeSequence(trade.id);
+      const gap = sequence !== null && hasMarketTradeGap(lastTradeId, sequence);
+      if (gap && lastTradeId !== null && sequence !== null) {
+        if (missingTradeFrom === null) missingTradeFrom = lastTradeId + BigInt(1);
+        missingTradeTo = sequence - BigInt(1);
+      }
+      if (sequence !== null && (lastTradeId === null || sequence > lastTradeId)) lastTradeId = sequence;
       seenTrades.add(trade.id);
+      const gapRecovered = recoverKnownTradeGap();
       if (seenTrades.size > 2_000) seenTrades.delete(seenTrades.values().next().value as string);
       tradeRevision++;
       const tradeTime = Date.parse(trade.executedAt);
       lastTradeAt = Math.max(lastTradeAt, tradeTime);
       setTrades((current) => [trade, ...current.filter((item) => item.id !== trade.id)]
         .sort(compareTradesNewestFirst).slice(0, 50));
-      setTradeStatus(socket.connected ? Date.now() - lastTradeAt <= 30_000 ? 'LIVE' : 'STALE' : 'CONNECTION_LOST');
+      if (gap) scheduleTradeRecovery();
+      setTradeStatus(socket.connected
+        ? gapRecovered && Date.now() - lastTradeAt <= 30_000 ? 'LIVE' : 'STALE'
+        : 'CONNECTION_LOST');
     };
     const handleConnect = () => { setBookStatus('LOADING'); setTradeStatus('LOADING'); refreshBook(); refreshTrades(); };
     const handleConnectionLoss = () => { setBookStatus('CONNECTION_LOST'); setTradeStatus('CONNECTION_LOST'); };
@@ -338,6 +381,7 @@ function useSpotMarketFeed({
     socket.on('market.reference.trade', handleTrade);
     return () => {
       cancelled = true; window.clearInterval(freshnessTimer);
+      if (tradeRecoveryTimer !== undefined) window.clearTimeout(tradeRecoveryTimer);
       socket.off('disconnect', handleConnectionLoss); socket.off('connect_error', handleConnectionLoss);
       socket.off('connect', handleConnect); socket.off('market.reference.depth', handleDepth);
       socket.off('market.reference.trade', handleTrade); socket.disconnect();

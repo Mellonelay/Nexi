@@ -2,6 +2,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   applyMarketTick,
+  hasMarketTradeGap,
+  isMarketTradeGapRecovered,
+  marketTradeSequence,
   applyMarketKline,
   appendRecoveryEvent,
   sortRecoveryEvents,
@@ -86,6 +89,24 @@ test("deduplicates ticks without altering authoritative candles", () => {
     60,
   );
   assert.deepEqual(next.candles, [candle]);
+});
+
+test("detects numeric provider trade gaps without Number precision loss", () => {
+  const previous = marketTradeSequence("binance:BTCUSDT:9007199254740992");
+  const next = marketTradeSequence("binance:BTCUSDT:9007199254740994");
+  assert.equal(previous, 9007199254740992n);
+  assert.equal(next, 9007199254740994n);
+  assert.equal(hasMarketTradeGap(previous, next), true);
+  assert.equal(hasMarketTradeGap(previous, previous + 1n), false);
+  assert.equal(marketTradeSequence("database-trade-id"), null);
+});
+
+test("keeps an unresolved trade gap stale until every missing ID is present", () => {
+  const observed = new Set(["binance:BTCUSDT:100", "binance:BTCUSDT:102", "binance:BTCUSDT:103"]);
+  assert.equal(isMarketTradeGapRecovered(101n, 101n, observed), false);
+  observed.add("binance:BTCUSDT:101");
+  assert.equal(isMarketTradeGapRecovered(101n, 101n, observed), true);
+  assert.equal(isMarketTradeGapRecovered(101n, 5000n, observed), false);
 });
 
 test("marks quiet live streams stale and parses intervals", () => {
@@ -243,6 +264,44 @@ test("per-candle revision rejects stale REST replay and provider lineage outrank
   assert.equal(stale, current);
   assert.equal(quoteDerived, current);
   assert.equal(current.candles[0].close, 12);
+});
+
+test("accepts a newer persisted revision when provider timestamps are equal", () => {
+  const current = applyMarketKline(EMPTY_STREAM_SNAPSHOT, {
+    symbol: "BTCUSDT",
+    interval: "1m",
+    candle: { time: 60, open: 10, high: 10, low: 9, close: 10 },
+    observedAt: 90_000,
+    sequence: 1_800_000_000_000,
+    provider: "binance-spot",
+    source: "websocket:kline",
+    isFinal: false,
+  });
+  const revised = applyMarketKline(current, {
+    symbol: "BTCUSDT",
+    interval: "1m",
+    candle: { time: 60, open: 10, high: 12, low: 9, close: 12 },
+    observedAt: 90_000,
+    sequence: 1_800_000_000_001,
+    provider: "binance-spot",
+    source: "websocket:kline",
+    isFinal: false,
+  });
+  const duplicate = applyMarketKline(revised, {
+    symbol: "BTCUSDT",
+    interval: "1m",
+    candle: { time: 60, open: 10, high: 12, low: 9, close: 12 },
+    observedAt: 90_000,
+    sequence: 1_800_000_000_001,
+    provider: "binance-spot",
+    source: "websocket:kline",
+    isFinal: false,
+  });
+
+  assert.notEqual(revised, current);
+  assert.equal(revised.candles[0].close, 12);
+  assert.equal(revised.candleRevisions["60"].sequence, 1_800_000_000_001);
+  assert.equal(duplicate, revised);
 });
 
 test("an older bucket cannot refresh a newer candle clock", () => {

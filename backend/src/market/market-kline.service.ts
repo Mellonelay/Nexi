@@ -108,14 +108,14 @@ export class MarketKlineService {
 
   async persist(input: MarketKlineInput) {
     const normalized = normalizeMarketKline(input);
-    const pair = await this.pairFor(normalized.symbol);
-    if (!pair)
-      throw new NotFoundException(
-        `Market pair ${normalized.symbol} is not configured`,
-      );
     return this.serializeCandle(
-      `${pair.id}:${normalized.interval}:${normalized.openTime.toISOString()}`,
+      `${normalized.symbol}:${normalized.interval}:${normalized.openTime.toISOString()}`,
       async () => {
+        const pair = await this.pairFor(normalized.symbol);
+        if (!pair)
+          throw new NotFoundException(
+            `Market pair ${normalized.symbol} is not configured`,
+          );
         const existing = await this.db.marketKline.findUnique({
           where: {
             pairId_interval_openTime: {
@@ -144,11 +144,23 @@ export class MarketKlineService {
             normalized.openTime,
             normalized.closeTime,
           );
+          const sameCandleValues =
+            existing.closeTime?.getTime() === normalized.closeTime?.getTime() &&
+            existing.open.toString() === normalized.open?.toString() &&
+            existing.high.toString() === normalized.high?.toString() &&
+            existing.low.toString() === normalized.low?.toString() &&
+            existing.close.toString() === normalized.close?.toString() &&
+            (existing.volume?.toString() ?? null) === (normalized.volume?.toString() ?? null) &&
+            existing.provider === normalized.provider &&
+            existing.source === normalized.source;
+          const sameObservedAt =
+            existing.observedAt.getTime() === normalized.observedAt.getTime();
           if (
             incomingRank < existingRank ||
             (existingFinal && !incomingFinal) ||
             (incomingRank === existingRank &&
-              existing.observedAt.getTime() >= normalized.observedAt.getTime())
+              (existing.observedAt.getTime() > normalized.observedAt.getTime() ||
+                (sameObservedAt && sameCandleValues)))
           )
             return this.toContract(existing);
         }
@@ -170,6 +182,7 @@ export class MarketKlineService {
             provider: normalized.provider,
             source: normalized.source,
             observedAt: normalized.observedAt,
+            receivedAt: this.nextReceivedAt(existing?.receivedAt),
           },
           create: {
             pairId: pair.id,
@@ -185,6 +198,7 @@ export class MarketKlineService {
             provider: normalized.provider,
             source: normalized.source,
             observedAt: normalized.observedAt,
+            receivedAt: this.nextReceivedAt(),
           },
         });
         return this.toContract(row);
@@ -310,15 +324,14 @@ export class MarketKlineService {
       source: `${source}:quote-aggregation`,
       observedAt: input.observedAt,
     });
-    const pair = await this.pairFor(candidate.symbol);
-    if (!pair)
-      throw new NotFoundException(
-        `Market pair ${candidate.symbol} is not configured`,
-      );
-
     return this.serializeCandle(
-      `${pair.id}:${candidate.interval}:${openTime.toISOString()}`,
+      `${candidate.symbol}:${candidate.interval}:${openTime.toISOString()}`,
       async () => {
+        const pair = await this.pairFor(candidate.symbol);
+        if (!pair)
+          throw new NotFoundException(
+            `Market pair ${candidate.symbol} is not configured`,
+          );
         const existing = await this.db.marketKline.findUnique({
           where: {
             pairId_interval_openTime: {
@@ -344,6 +357,7 @@ export class MarketKlineService {
               provider: candidate.provider,
               source: candidate.source,
               observedAt: candidate.observedAt,
+              receivedAt: this.nextReceivedAt(),
             },
           });
           return this.toContract(created);
@@ -355,8 +369,10 @@ export class MarketKlineService {
           existing.provider !== candidate.provider
         )
           return this.toContract(existing);
-        // Equal-time and delayed samples cannot revise an already accepted quote candle.
-        if (existing.observedAt.getTime() >= candidate.observedAt.getTime())
+        // A later quote at the same provider timestamp may still revise its price.
+        if (existing.observedAt.getTime() > candidate.observedAt.getTime() ||
+          (existing.observedAt.getTime() === candidate.observedAt.getTime() &&
+            existing.close.toString() === candidate.close?.toString()))
           return this.toContract(existing);
         const updated = await this.db.marketKline.update({
           where: { id: existing.id },
@@ -378,6 +394,7 @@ export class MarketKlineService {
             provider: candidate.provider,
             source: candidate.source,
             observedAt: candidate.observedAt,
+            receivedAt: this.nextReceivedAt(existing.receivedAt),
           },
         });
         return this.toContract(updated);
@@ -410,6 +427,10 @@ export class MarketKlineService {
       end.setTime(end.getTime() + amount * unit);
     }
     return closeTime.getTime() >= end.getTime() - 1;
+  }
+
+  private nextReceivedAt(previous?: Date): Date {
+    return new Date(Math.max(Date.now(), (previous?.getTime() ?? 0) + 1));
   }
 
   private storageDecimal(
@@ -447,6 +468,7 @@ export class MarketKlineService {
       source: row.source,
       observedAt: row.observedAt.toISOString(),
       receivedAt: row.receivedAt.toISOString(),
+      sequence: row.receivedAt?.getTime?.() ?? row.observedAt.getTime(),
       isFinal: this.isFinal(row.interval, row.openTime, row.closeTime),
     };
   }

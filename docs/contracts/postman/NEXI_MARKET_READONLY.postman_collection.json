@@ -1,0 +1,100 @@
+{
+  "info": {
+    "name": "NEXI Market API — read-only regression baseline",
+    "description": "Read-only production baseline from NEXI OpenAPI + current controller. A PASS here proves the deployed baseline only, NOT unbuilt candidate. No financial POST requests or secrets.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Market prices",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/market/prices"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', function() { pm.response.to.have.status(200); });",
+              "pm.test('JSON response', function() { pm.response.to.be.json; });",
+              "pm.test('Prices payload present', function() { pm.expect(pm.response.json()).to.exist; });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "BTCUSDT 1m candles",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/market/klines?symbol=BTCUSDT&interval=1m&limit=40"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', function() { pm.response.to.have.status(200); });",
+              "pm.test('JSON response', function() { pm.response.to.be.json; });",
+              "pm.test('Candles JSON array or envelope', function() { var x=pm.response.json(); pm.expect(Array.isArray(x)||typeof x === 'object').to.equal(true); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Recent trades",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/market/trades?symbol=BTCUSDT&limit=50"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', function() { pm.response.to.have.status(200); });",
+              "pm.test('JSON response', function() { pm.response.to.be.json; });",
+              "pm.test('Recent trades array', function() { pm.expect(pm.response.json()).to.be.an('array'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Partial order-book snapshot",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/market/depth?symbol=BTCUSDT&limit=20"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', function() { pm.response.to.have.status(200); });",
+              "pm.test('JSON response', function() { pm.response.to.be.json; });",
+              "pm.test('Orderbook object', function() { var x=pm.response.json(); pm.expect(x).to.be.an('object'); pm.expect(x).to.have.property('bids'); pm.expect(x).to.have.property('asks'); });"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://api.nexitrading.app",
+      "type": "string"
+    }
+  ]
+}

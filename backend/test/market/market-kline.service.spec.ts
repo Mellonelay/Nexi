@@ -403,6 +403,75 @@ describe("MarketKlineService quote aggregation", () => {
     expect(rows.get(key).close.toString()).toBe("2");
   });
 
+  it("persists distinct same-millisecond provider candle revisions with a monotonic sequence", async () => {
+    let row: any = null;
+    const db: any = {
+      isEnabled: () => false,
+      marketPair: { findUnique: jest.fn(async () => ({ id: "pair", symbol: "BTCUSDT" })) },
+      marketKline: {
+        findUnique: jest.fn(async () => row),
+        upsert: jest.fn(async ({ create, update }: any) => {
+          row = {
+            ...(row ?? create),
+            ...(row ? update : {}),
+            id: "kline",
+            receivedAt: row ? update.receivedAt : create.receivedAt,
+          };
+          return row;
+        }),
+      },
+    };
+    const service = new MarketKlineService(db);
+    const observedAt = new Date("2026-11-18T09:00:00.123Z");
+    const candle = (close: string) => ({
+      symbol: "BTCUSDT",
+      interval: "1m",
+      openTime: new Date("2026-11-18T09:00:00.000Z"),
+      closeTime: new Date("2026-11-18T09:00:59.999Z"),
+      open: "10",
+      high: close,
+      low: "9",
+      close,
+      volume: "3",
+      provider: "binance-spot",
+      source: "websocket:kline",
+      observedAt,
+    });
+
+    const first = await service.persist(candle("10"));
+    const revised = await service.persist(candle("11"));
+    const duplicate = await service.persist(candle("11"));
+
+    expect(revised.close).toBe("11");
+    expect(revised.observedAt).toBe(first.observedAt);
+    expect(revised.sequence).toBeGreaterThan(first.sequence);
+    expect(duplicate.sequence).toBe(revised.sequence);
+    expect(db.marketKline.upsert).toHaveBeenCalledTimes(2);
+  });
+
+  it("revises a quote candle when the price changes within the same provider millisecond", async () => {
+    const { service, prisma } = createService();
+    const observedAt = new Date("2026-11-18T09:00:00.123Z");
+    const first = await service.accumulateQuote({
+      symbol: "BTCUSDT",
+      price: "10",
+      provider: "provider-a",
+      source: "websocket",
+      observedAt,
+    });
+    const revised = await service.accumulateQuote({
+      symbol: "BTCUSDT",
+      price: "11",
+      provider: "provider-a",
+      source: "websocket",
+      observedAt,
+    });
+
+    expect(prisma.marketKline.update).toHaveBeenCalledTimes(1);
+    expect(revised.close.toString()).toBe("11");
+    expect(revised.sequence).toBeGreaterThan(first.sequence);
+  });
+
   it("classifies derived higher candles as provisional until the interval close boundary", () => {
     const { service } = createService();
     const open = new Date("2026-09-14T12:30:00.000Z");

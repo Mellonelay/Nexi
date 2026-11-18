@@ -10,14 +10,29 @@ import { MARKET_KLINES_CHANNEL, MARKET_REFERENCE_CHANNEL, MarketKlineRealtimeEve
 @Injectable()
 export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
   private static readonly MAX_CONCURRENT_EVENT_WORKERS = 8;
+  private static readonly MAX_CONCURRENT_REFERENCE_WORKERS = 4;
+  private static readonly MAX_REFERENCE_QUEUE_LENGTH = 256;
+  private static readonly MAX_DURABLE_QUEUE_LENGTH = 1024;
   private readonly logger = new Logger(MarketIngestService.name);
   private readonly eventQueue: MarketProviderEvent[] = [];
+  private readonly referenceQueue: Array<ProviderDepthEvent | ProviderTradeEvent> = [];
   private readonly activeDrains = new Set<Promise<void>>();
+  private readonly activeReferenceDrains = new Set<Promise<void>>();
   private activeWorkers = 0;
+  private activeReferenceWorkers = 0;
   private lastSaturationLogAt = 0;
+  private lastReferenceSaturationLogAt = 0;
+  private droppedDurableTickers = 0;
+  private droppedDurableOpenKlines = 0;
+  private droppedDurableClosedKlines = 0;
+  private droppedReferenceTrades = 0;
+  private droppedReferenceDepth = 0;
+  private failedReferencePublications = 0;
+  private lastReferenceFailureLogAt = 0;
   private providerStartRetryTimer?: NodeJS.Timeout;
   private providerStartAttempt = 0;
   private destroyed = false;
+  private stopping = false;
   constructor(
     private readonly marketAuthority: MarketAuthorityService,
     private readonly marketKlines: MarketKlineService,
@@ -28,6 +43,7 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit(): void {
     this.destroyed = false;
+    this.stopping = false;
     // Catalog/provider reconciliation is intentionally asynchronous so HTTP can
     // become live quickly, but provider routing must never read D1 before that
     // reconciliation finishes. Start ingestion only from the shared promise.
@@ -35,22 +51,43 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleDestroy(): Promise<void> {
-    this.destroyed = true;
+    this.stopping = true;
     if (this.providerStartRetryTimer) clearTimeout(this.providerStartRetryTimer);
     this.providerStartRetryTimer = undefined;
-    this.logger.log('Market shutdown: stopping providers.');
-    await this.providers.stop();
-    this.eventQueue.length = 0;
-    await Promise.allSettled([...this.activeDrains]);
-    this.logger.log('Market shutdown: providers stopped and ingest queue discarded.');
+    this.logger.log('Market shutdown: stopping providers and draining queued events.');
+    try {
+      await this.providers.stop();
+    } finally {
+      // Stop new ingestion, but allow already accepted closed candles to persist.
+      if (this.eventQueue.length) this.drainQueue();
+      if (this.referenceQueue.length) this.drainReferenceQueue();
+      let timeout: NodeJS.Timeout | undefined;
+      try {
+        await Promise.race([
+          Promise.allSettled([...this.activeDrains, ...this.activeReferenceDrains]),
+          new Promise<void>((resolve) => { timeout = setTimeout(resolve, 5_000); }),
+        ]);
+      } finally {
+        if (timeout) clearTimeout(timeout);
+        this.destroyed = true;
+        const closed = this.eventQueue.filter((event) => event.kind === 'kline' && event.closed).length;
+        if (closed) this.droppedDurableClosedKlines += closed;
+        if (this.eventQueue.length || this.referenceQueue.length) {
+          this.logger.warn(`Market shutdown exceeded drain grace; discarded ${this.eventQueue.length} durable and ${this.referenceQueue.length} reference events (${closed} closed Klines).`);
+        }
+        this.eventQueue.length = 0;
+        this.referenceQueue.length = 0;
+      }
+    }
+    this.logger.log('Market shutdown complete.');
   }
 
   private async startProvidersAfterReconciliation(): Promise<void> {
     try {
       await this.marketSeeder.ensureReconciled();
-      if (this.destroyed) return;
+      if (this.destroyed || this.stopping) return;
       const started = await this.providers.start((event) => {
-        if (!this.destroyed) this.enqueue(event);
+        if (!this.destroyed && !this.stopping) this.enqueue(event);
       });
       this.providerStartAttempt = 0;
       if (!started) {
@@ -62,7 +99,7 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
       } catch (stopError) {
         this.logger.error(`Market provider cleanup failed: ${stopError instanceof Error ? stopError.message : 'unknown error'}`);
       }
-      if (this.destroyed) return;
+      if (this.destroyed || this.stopping) return;
       const delay = Math.min(5_000 * (2 ** this.providerStartAttempt), 30_000);
       this.providerStartAttempt += 1;
       this.logger.warn(`Market provider startup waiting for catalog reconciliation; retrying in ${delay}ms: ${error instanceof Error ? error.message : 'unknown error'}`);
@@ -75,10 +112,14 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
   }
 
   private enqueue(event: MarketProviderEvent): void {
-    // Provider callbacks may arrive faster than D1 can durably persist them.
-    // Coalesce queued ticker updates by symbol and bound the queue so a market
-    // burst cannot exhaust the Prisma pool or the Node heap.
-    if (event.kind === 'ticker' || event.kind === 'depth') {
+    if (this.destroyed || this.stopping) return;
+    if (event.kind === 'trade' || event.kind === 'depth') {
+      this.enqueueReferenceEvent(event);
+      return;
+    }
+    // Provider callbacks may arrive faster than SQLite can durably persist.
+    // Coalesce latest ticker state and bound this durable-work queue.
+    if (event.kind === 'ticker') {
       const existing = this.eventQueue.findIndex((queued) => queued.kind === event.kind
         && queued.symbol === event.symbol
         && queued.provider === event.provider);
@@ -88,29 +129,125 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
       }
     }
     if (this.eventQueue.length >= 256) {
-      const referenceIndex = this.eventQueue.findIndex((queued) => queued.kind === 'trade' || queued.kind === 'depth');
-      const discardIndex = referenceIndex >= 0 ? referenceIndex : 0;
-      const [discarded] = this.eventQueue.splice(discardIndex, 1);
-      if (Date.now() - this.lastSaturationLogAt > 60_000) {
-        this.lastSaturationLogAt = Date.now();
-        this.logger.warn(`Market provider queue saturated; dropped ${discarded?.kind ?? 'unknown'} event to preserve bounded ingestion.`);
+      const replaceableIndex = this.eventQueue.findIndex((queued) => queued.kind === 'ticker'
+        || (queued.kind === 'kline' && !queued.closed));
+      if (replaceableIndex >= 0) {
+        const [discarded] = this.eventQueue.splice(replaceableIndex, 1);
+        if (discarded?.kind === 'ticker') this.droppedDurableTickers += 1;
+        else if (discarded?.kind === 'kline') this.droppedDurableOpenKlines += 1;
+      } else if (event.kind === 'kline' && event.closed
+        && this.eventQueue.length < MarketIngestService.MAX_DURABLE_QUEUE_LENGTH) {
+        // Keep closed provider candles through a bounded overload reserve.
+      } else {
+        if (event.kind === 'ticker') this.droppedDurableTickers += 1;
+        else if (event.kind === 'kline' && event.closed) this.droppedDurableClosedKlines += 1;
+        else if (event.kind === 'kline') this.droppedDurableOpenKlines += 1;
+        this.logDurableQueueSaturation();
+        return;
       }
+      this.logDurableQueueSaturation();
     }
     this.eventQueue.push(event);
     this.drainQueue();
   }
 
+  private logDurableQueueSaturation(): void {
+    if (Date.now() - this.lastSaturationLogAt <= 60_000) return;
+    this.lastSaturationLogAt = Date.now();
+    this.logger.warn(
+      `Market durable queue saturated; dropped ${this.droppedDurableTickers} tickers, ${this.droppedDurableOpenKlines} open Klines, and ${this.droppedDurableClosedKlines} closed Klines.`,
+    );
+  }
+
+  private enqueueReferenceEvent(event: ProviderDepthEvent | ProviderTradeEvent): void {
+    if (event.kind === 'depth') {
+      const existing = this.referenceQueue.findIndex((queued) => queued.kind === 'depth'
+        && queued.symbol === event.symbol
+        && queued.provider === event.provider);
+      if (existing >= 0) {
+        this.referenceQueue[existing] = event;
+        return;
+      }
+    }
+    if (this.referenceQueue.length >= MarketIngestService.MAX_REFERENCE_QUEUE_LENGTH) {
+      const depthIndex = this.referenceQueue.findIndex((queued) => queued.kind === 'depth');
+      if (event.kind === 'trade') {
+        const [discarded] = this.referenceQueue.splice(depthIndex >= 0 ? depthIndex : 0, 1);
+        if (discarded?.kind === 'trade') this.droppedReferenceTrades += 1;
+        else if (discarded?.kind === 'depth') this.droppedReferenceDepth += 1;
+      } else if (depthIndex >= 0) {
+        this.referenceQueue.splice(depthIndex, 1);
+        this.droppedReferenceDepth += 1;
+      } else {
+        this.droppedReferenceDepth += 1;
+        this.logReferenceQueueSaturation();
+        return;
+      }
+      this.logReferenceQueueSaturation();
+    }
+    this.referenceQueue.push(event);
+    this.drainReferenceQueue();
+  }
+
+  private logReferenceQueueSaturation(): void {
+    if (Date.now() - this.lastReferenceSaturationLogAt <= 60_000) return;
+    this.lastReferenceSaturationLogAt = Date.now();
+    this.logger.warn(
+      `Market reference queue saturated; dropped ${this.droppedReferenceTrades} trade and ${this.droppedReferenceDepth} depth events since process start.`,
+    );
+  }
+
+  private drainReferenceQueue(): void {
+    if (this.destroyed || this.activeReferenceWorkers >= MarketIngestService.MAX_CONCURRENT_REFERENCE_WORKERS) return;
+    this.activeReferenceWorkers += 1;
+    let drain: Promise<void>;
+    drain = this.drainReferenceEvents().finally(() => {
+      this.activeReferenceWorkers -= 1;
+      this.activeReferenceDrains.delete(drain);
+      if (this.destroyed || this.referenceQueue.length === 0) return;
+      if (this.activeReferenceWorkers < MarketIngestService.MAX_CONCURRENT_REFERENCE_WORKERS) {
+        this.drainReferenceQueue();
+      }
+    });
+    this.activeReferenceDrains.add(drain);
+  }
+
+  private async drainReferenceEvents(): Promise<void> {
+    while (!this.destroyed && this.referenceQueue.length > 0) {
+      const event = this.referenceQueue.shift();
+      if (!event) continue;
+      try {
+        // Reference events only go to Valkey; they never wait behind SQLite work.
+        await this.publishReferenceMarketEvent(event);
+      } catch (error) {
+        this.recordReferencePublicationFailure(
+          error instanceof Error ? error.message : 'unknown error',
+        );
+      }
+    }
+  }
+
+  private recordReferencePublicationFailure(reason: string): void {
+    this.failedReferencePublications += 1;
+    if (Date.now() - this.lastReferenceFailureLogAt <= 60_000) return;
+    this.lastReferenceFailureLogAt = Date.now();
+    this.logger.warn(
+      `Market reference delivery failed; discarded ${this.failedReferencePublications} events since process start. Latest cause: ${reason}.`,
+    );
+  }
+
   private drainQueue(): void {
-    if (this.destroyed || this.activeWorkers >= MarketIngestService.MAX_CONCURRENT_EVENT_WORKERS) return;
+    if (this.destroyed
+      || this.activeWorkers >= MarketIngestService.MAX_CONCURRENT_EVENT_WORKERS) return;
     this.activeWorkers += 1;
     let drain: Promise<void>;
     drain = this.drainEvents().finally(() => {
       this.activeWorkers -= 1;
       this.activeDrains.delete(drain);
       if (this.destroyed) return;
-      if (this.eventQueue.length === 0) return;
-      if (this.activeWorkers >= MarketIngestService.MAX_CONCURRENT_EVENT_WORKERS) return;
-      this.drainQueue();
+      if (this.eventQueue.length > 0) {
+        if (this.activeWorkers < MarketIngestService.MAX_CONCURRENT_EVENT_WORKERS) this.drainQueue();
+      }
     });
     this.activeDrains.add(drain);
   }
@@ -177,7 +314,10 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async publishReferenceMarketEvent(event: ProviderDepthEvent | ProviderTradeEvent): Promise<void> {
-    if (!this.redis.isAvailable()) return;
+    if (!this.redis.isAvailable()) {
+      this.recordReferencePublicationFailure('Valkey unavailable');
+      return;
+    }
     const payload = event.kind === 'depth'
       ? { version: 'v1' as const, event: 'market.reference.depth' as const, ...event }
       : { version: 'v1' as const, event: 'market.reference.trade' as const, ...event };
@@ -187,7 +327,7 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
   private async publishMarketKlineEvent(candle: {
     symbol: string; interval: string; time: number; closeTime: string | null;
     open: string; high: string; low: string; close: string; volume: string | null;
-    provider: string; source: string; observedAt: string; receivedAt: string; isFinal: boolean;
+    provider: string; source: string; observedAt: string; receivedAt: string; sequence?: number; isFinal: boolean;
   }): Promise<void> {
     if (!this.redis.isAvailable()) return;
     const payload: MarketKlineRealtimeEvent = {
@@ -195,7 +335,7 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
       openTime: candle.time * 1000, closeTime: candle.closeTime ? Date.parse(candle.closeTime) : null,
       open: candle.open, high: candle.high, low: candle.low, close: candle.close, volume: candle.volume,
       provider: candle.provider, source: candle.source, observedAt: candle.observedAt,
-      receivedAt: candle.receivedAt, sequence: Date.parse(candle.observedAt), isFinal: candle.isFinal,
+      receivedAt: candle.receivedAt, sequence: candle.sequence ?? Date.parse(candle.receivedAt), isFinal: candle.isFinal,
     };
     await this.redis.publish(MARKET_KLINES_CHANNEL, JSON.stringify(payload));
   }

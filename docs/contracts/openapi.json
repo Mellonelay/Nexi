@@ -5454,24 +5454,27 @@
         "parameters": [
           {
             "name": "symbol",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Instrument symbol; provide either symbol or pair.",
             "schema": {
               "type": "string"
             }
           },
           {
             "name": "pair",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Alternative to symbol.",
             "schema": {
               "type": "string"
             }
           },
           {
             "name": "limit",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Depth levels, 1\u2013100; defaults to 20.",
             "schema": {
               "type": "string"
             }
@@ -5500,24 +5503,27 @@
         "parameters": [
           {
             "name": "symbol",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Instrument symbol; provide either symbol or pair.",
             "schema": {
               "type": "string"
             }
           },
           {
             "name": "pair",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Alternative to symbol.",
             "schema": {
               "type": "string"
             }
           },
           {
             "name": "limit",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Recent trades, 1\u2013100; defaults to 50.",
             "schema": {
               "type": "string"
             }

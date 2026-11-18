@@ -1,5 +1,5 @@
 import { BadRequestException, Controller, Get, NotFoundException, Query, Param, ServiceUnavailableException } from '@nestjs/common';
-import { ApiBadRequestResponse, ApiNotFoundResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiNotFoundResponse, ApiOkResponse, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { MarketAuthorityService } from './market-authority.service';
 import { MarketProviderRouterService } from './market-provider-router.service';
 import { MarketAssetMetadataService } from './market-asset-metadata.service';
@@ -75,6 +75,9 @@ export class MarketPublicController {
   providerState() { return this.providers.currentStatus(); }
 
   @Get('depth')
+  @ApiQuery({ name: 'symbol', required: false, description: 'Instrument symbol; provide either symbol or pair.' })
+  @ApiQuery({ name: 'pair', required: false, description: 'Alternative to symbol.' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Depth levels, 1–100; defaults to 20.' })
   async depth(@Query('symbol') symbol?: string, @Query('pair') pair?: string, @Query('limit') limitInput?: string) {
     const instrument = this.requiredInstrument(symbol ?? pair);
     const limit = this.boundedLimit(limitInput, 20, 100);
@@ -84,6 +87,9 @@ export class MarketPublicController {
   }
 
   @Get('trades')
+  @ApiQuery({ name: 'symbol', required: false, description: 'Instrument symbol; provide either symbol or pair.' })
+  @ApiQuery({ name: 'pair', required: false, description: 'Alternative to symbol.' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Recent trades, 1–100; defaults to 50.' })
   async trades(@Query('symbol') symbol?: string, @Query('pair') pair?: string, @Query('limit') limitInput?: string) {
     const instrument = this.requiredInstrument(symbol ?? pair);
     const limit = this.boundedLimit(limitInput, 50, 100);
