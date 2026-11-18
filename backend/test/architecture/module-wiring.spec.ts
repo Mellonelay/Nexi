@@ -22,10 +22,21 @@ class TestUsersModule {}
 
 describe('NEXI authority boundary modules', () => {
   it('compiles each isolated boundary without cross-module leakage', async () => {
-    for (const moduleType of [LedgerModule, SettlementModule, NotificationModule, AuditModule, RiskModule, SandboxModule]) {
-      const moduleRef = await Test.createTestingModule({ imports: [ConfigModule.forRoot({ isGlobal: true }), moduleType] }).compile();
-      expect(moduleRef).toBeDefined();
-      await moduleRef.close();
+    const directory = mkdtempSync(join(tmpdir(), 'nexi-boundary-module-'));
+    const filename = join(directory, 'fixture.sqlite');
+    new Database(filename).close();
+    const previousPath = process.env.NEXI_LOCAL_SQLITE_PATH;
+    process.env.NEXI_LOCAL_SQLITE_PATH = filename;
+    try {
+      for (const moduleType of [LedgerModule, SettlementModule, NotificationModule, AuditModule, RiskModule, SandboxModule]) {
+        const moduleRef = await Test.createTestingModule({ imports: [ConfigModule.forRoot({ isGlobal: true }), moduleType] }).compile();
+        expect(moduleRef).toBeDefined();
+        await moduleRef.close();
+      }
+    } finally {
+      if (previousPath === undefined) delete process.env.NEXI_LOCAL_SQLITE_PATH;
+      else process.env.NEXI_LOCAL_SQLITE_PATH = previousPath;
+      rmSync(directory, { recursive: true, force: true });
     }
   });
 
