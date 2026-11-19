@@ -67,7 +67,13 @@ describe("Binary global policy initialization", () => {
     gateway = new D1FinancialCommandGateway(bridge as any);
   });
 
-  afterEach(() => db.close());
+  afterEach(() => {
+    db.close();
+    // Release Jest VM references before its environment is torn down; closing
+    // a better-sqlite3 handle alone does not destroy the native wrapper.
+    gateway = undefined as unknown as D1FinancialCommandGateway;
+    db = undefined as unknown as Database.Database;
+  });
 
   function command(key = "global-init-123") {
     return {

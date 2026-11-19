@@ -14,11 +14,28 @@ describe("AdminService market feed contract", () => {
   }
 
   it("replays an already-audited feed mutation without writing provider state again", async () => {
-    const prisma = {
-      adminAuditLog: { findFirst: jest.fn().mockResolvedValue({ id: "audit-1" }) },
-      marketProviderSymbol: { findFirst: jest.fn() },
-      marketProviderConfig: { findUnique: jest.fn(), update: jest.fn() },
+    const original = {
+      id: "provider-1", status: "DISABLED", adminId: "admin-1",
+      reason: "controlled maintenance", idempotencyKey: "feed-status-0001",
     };
+    const prisma: any = {
+      marketProviderSymbol: { findFirst: jest.fn().mockResolvedValue(null) },
+      marketProviderConfig: {
+        findUnique: jest.fn().mockResolvedValue({ id: original.id, key: "binance", status: "DISABLED" }),
+        update: jest.fn(),
+      },
+      adminAuditLog: {
+        findUnique: jest.fn().mockResolvedValue({
+          adminId: original.adminId, action: "MARKET_PROVIDER_STATUS_UPDATED",
+          target: "binance",
+          details: JSON.stringify({
+            status: original.status, providerStatus: "DISABLED",
+            reason: original.reason, idempotencyKey: original.idempotencyKey,
+          }),
+        }),
+      },
+    };
+    prisma.$transaction = jest.fn(async (work: (tx: any) => Promise<unknown>) => work(prisma));
     const result = await service(prisma).setMarketFeedStatus({
       id: "provider-1",
       status: "DISABLED",
@@ -26,7 +43,7 @@ describe("AdminService market feed contract", () => {
       reason: "controlled maintenance",
       idempotencyKey: "feed-status-0001",
     });
-    expect(result).toEqual({ ok: true, auditId: "audit-1", replayed: true });
+    expect(result).toMatchObject({ ok: true, auditId: expect.any(String), replayed: true, status: "DISABLED" });
     expect(prisma.marketProviderConfig.update).not.toHaveBeenCalled();
   });
 

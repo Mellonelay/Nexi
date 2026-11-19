@@ -1,10 +1,34 @@
 import { BadRequestException } from "@nestjs/common";
-import Database from "better-sqlite3";
+import { execFileSync } from "node:child_process";
 import { D1FinancialCommandGateway } from "../../src/d1/d1-financial-command.gateway";
 import {
   D1BridgeBatchStatement,
   D1WorkerBridgeService,
 } from "../../src/d1/d1-worker-bridge.service";
+
+// Node 24 can finalize native statements after Jest's VM teardown.
+// Keep these two SQL syntax probes in a child that closes SQLite before exit.
+function sqliteFixtureSelect(ddl: string, sql: string): Record<string, unknown>[] {
+  const script = `
+    const fs = require('node:fs');
+    const Database = require('better-sqlite3');
+    const { ddl, sql } = JSON.parse(fs.readFileSync(0, 'utf8'));
+    const db = new Database(':memory:');
+    try {
+      db.exec(ddl);
+      process.stdout.write(JSON.stringify(db.prepare(sql).all()));
+    } finally {
+      db.close();
+    }
+  `;
+  return JSON.parse(execFileSync(process.execPath, ['-e', script], {
+    cwd: process.cwd(),
+    encoding: 'utf8',
+    input: JSON.stringify({ ddl, sql }),
+    timeout: 10_000,
+    maxBuffer: 1_048_576,
+  })) as Record<string, unknown>[];
+}
 
 describe("D1FinancialCommandGateway", () => {
   const account = {
@@ -81,27 +105,19 @@ describe("D1FinancialCommandGateway", () => {
   });
 
   it("executes the Admin mining subscription query against SQLite", async () => {
-    const db = new Database(":memory:");
-    db.exec(
-      'CREATE TABLE "MiningSubscription" ("id" TEXT, "planId" TEXT, "userId" TEXT, "createdAt" TEXT); CREATE TABLE "MiningPlan" ("id" TEXT, "name" TEXT, "currency" TEXT, "dailyYieldDecimal" TEXT, "lockupPeriod" INTEGER); CREATE TABLE "User" ("id" TEXT, "email" TEXT);',
-    );
+    const ddl = 'CREATE TABLE "MiningSubscription" ("id" TEXT, "planId" TEXT, "userId" TEXT, "createdAt" TEXT); CREATE TABLE "MiningPlan" ("id" TEXT, "name" TEXT, "currency" TEXT, "dailyYieldDecimal" TEXT, "lockupPeriod" INTEGER); CREATE TABLE "User" ("id" TEXT, "email" TEXT);';
     const bridge = createBridge({
       select: jest.fn(async (sql: string) => ({
-        results: db.prepare(sql).all(),
+        results: sqliteFixtureSelect(ddl, sql),
       })),
     });
-    try {
-      await expect(
-        new D1FinancialCommandGateway(bridge).listAllMiningSubscriptions(),
-      ).resolves.toEqual([]);
-    } finally {
-      db.close();
-    }
+    await expect(
+      new D1FinancialCommandGateway(bridge).listAllMiningSubscriptions(),
+    ).resolves.toEqual([]);
   });
 
   it("returns canonical ledger accounts rather than legacy wallet balances for Admin", async () => {
-    const db = new Database(":memory:");
-    db.exec(`
+    const ddl = `
       CREATE TABLE "Wallet" ("id" TEXT, "userId" TEXT, "balance" TEXT, "updatedAt" TEXT);
       CREATE TABLE "LedgerAccount" ("id" TEXT, "userId" TEXT, "asset" TEXT, "scope" TEXT, "status" TEXT, "available" TEXT, "locked" TEXT, "updatedAt" TEXT);
       CREATE TABLE "LedgerPosting" ("id" TEXT, "accountId" TEXT, "asset" TEXT, "kind" TEXT, "amount" TEXT, "referenceId" TEXT, "createdAt" TEXT);
@@ -110,14 +126,13 @@ describe("D1FinancialCommandGateway", () => {
       INSERT INTO "Wallet" VALUES ('legacy', 'user-1', '999', '2026-01-01');
       INSERT INTO "LedgerAccount" VALUES ('account-1', 'user-1', 'USDT', 'MARGIN', 'ACTIVE', '12.50', '2.00', '2026-01-02');
       INSERT INTO "LedgerPosting" VALUES ('posting-1', 'account-1', 'USDT', 'DEBIT', '2.00', 'ref-1', '2026-01-02');
-    `);
+    `;
     const bridge = createBridge({
       select: jest.fn(async (sql: string) => ({
-        results: db.prepare(sql).all(),
+        results: sqliteFixtureSelect(ddl, sql),
       })),
     });
-    try {
-      await expect(
+    await expect(
         new D1FinancialCommandGateway(bridge).listAdminWallets(),
       ).resolves.toEqual([
         expect.objectContaining({
@@ -140,9 +155,6 @@ describe("D1FinancialCommandGateway", () => {
           amount: "2.00",
         }),
       ]);
-    } finally {
-      db.close();
-    }
   });
 
   describe("financial quote freshness", () => {
@@ -1449,7 +1461,15 @@ describe("D1FinancialCommandGateway", () => {
               },
             ],
           };
-        if (sql.includes('"AdminAuditLog"')) return { results: [{ id: "audit-replay-1" }] };
+        if (sql.includes('"AdminAuditLog"')) return { results: [{
+          id: "audit-replay-1",
+          details: JSON.stringify({
+            userId: "user-1", asset: "USDT", scope: "MAIN",
+            amount: "2", direction: "CREDIT", reason: "reconcile",
+            adminId: "admin-1", idempotencyKey: "corr-replay",
+            postingId: "posting-1",
+          }),
+        }] };
         return { results: [] };
       }),
     });
@@ -1600,6 +1620,8 @@ describe("D1FinancialCommandGateway", () => {
   it("updates canonical D1 currency controls with audit and outbox evidence", async () => {
     const bridge = createBridge({
       select: jest.fn().mockImplementation(async (sql: string) => {
+        if (sql.includes('SELECT "id" FROM "AdminAuditLog"'))
+          return { results: [{ id: "currency-audit-1" }] };
         if (sql.includes('FROM "Currency" WHERE "id"=?')) {
           return {
             results: [
@@ -1901,6 +1923,8 @@ describe("D1FinancialCommandGateway", () => {
   it("creates Wallet networks disabled with atomic Admin audit and outbox", async () => {
     const bridge = createBridge({
       select: jest.fn().mockImplementation(async (sql: string) => {
+        if (sql.includes('SELECT "id" FROM "AdminAuditLog"'))
+          return { results: [{ id: "wallet-network-audit-1" }] };
         if (sql.includes('FROM "AdminAuditLog"')) return { results: [] };
         if (sql.includes('FROM "Currency"')) return { results: [{ id: 3 }] };
         if (sql.includes('FROM "WalletNetwork"'))
@@ -2005,6 +2029,8 @@ describe("D1FinancialCommandGateway", () => {
     };
     const bridge = createBridge({
       select: jest.fn().mockImplementation(async (sql: string) => {
+        if (sql.includes('SELECT "id" FROM "AdminAuditLog"'))
+          return { results: [{ id: "wallet-network-update-audit-1" }] };
         if (sql.includes('FROM "AdminAuditLog"')) return { results: [] };
         if (sql.includes('FROM "WalletNetwork"')) return { results: [network] };
         return { results: [] };
@@ -2042,16 +2068,39 @@ describe("D1FinancialCommandGateway", () => {
       amountDecimal: "5",
       durationDays: 30,
       status: "PENDING",
+      collateral: "BTC held by custodian",
+      collateralImg: "reviewed-document-ref-42",
     };
+    let committed: D1BridgeBatchStatement[] = [];
     const bridge = createBridge({
+      select: jest.fn(async (sql: string) => {
+        if (sql.includes('FROM "LedgerPosting"')) {
+          return { results: [{
+            id: String(committed[3].params![0]),
+            amount: "5",
+            metadata: JSON.stringify({ reason: "Approved after review" }),
+          }] };
+        }
+        if (sql.includes('FROM "AdminAuditLog"')) {
+          return { results: [{
+            id: String(committed[8].params![0]),
+            adminId: "admin-1", action: "LOAN_APPLICATION_APPROVED", target: "loan-42",
+            details: JSON.stringify({ reason: "Approved after review", idempotencyKey: "approve-42" }),
+          }] };
+        }
+        return { results: [] };
+      }),
       batch: jest
         .fn()
-        .mockImplementation(async (statements: D1BridgeBatchStatement[]) => ({
-          results: statements.map((_, index) => ({
-            success: true,
-            meta: { changes: [0, 1, 3, 7].includes(index) ? 1 : 0 },
-          })),
-        })),
+        .mockImplementation(async (statements: D1BridgeBatchStatement[]) => {
+          committed = statements;
+          return {
+            results: statements.map((_, index) => ({
+              success: true,
+              meta: { changes: [0, 1, 3, 7, 8].includes(index) ? 1 : 0 },
+            })),
+          };
+        }),
     });
     const gateway = new D1FinancialCommandGateway(bridge);
     jest

@@ -85,10 +85,10 @@ describe("Admin governance Prisma fallback", () => {
     const tx = {
       adminGovernanceCommand: {
         updateMany: jest.fn().mockResolvedValue({ count: 1 }),
-        findUnique: jest.fn().mockResolvedValue(updated),
+        findUnique: jest.fn().mockResolvedValueOnce(command).mockResolvedValue(updated),
       },
       adminGovernanceApproval: { create: jest.fn() },
-      adminAuditLog: { create: jest.fn() },
+      adminAuditLog: { create: jest.fn().mockResolvedValue({ id: "audit-1" }) },
     };
     const prisma = {
       adminGovernanceCommand: { findUnique: jest.fn().mockResolvedValue(command) },
@@ -103,7 +103,7 @@ describe("Admin governance Prisma fallback", () => {
         "APPROVED",
         "approved",
       ),
-    ).resolves.toEqual(updated);
+    ).resolves.toEqual({ ...updated, auditId: "audit-1" });
     expect(tx.adminGovernanceApproval.create).toHaveBeenCalledTimes(1);
     expect(tx.adminAuditLog.create).toHaveBeenCalledTimes(1);
     expect(prisma.adminAuditLog.create).not.toHaveBeenCalled();

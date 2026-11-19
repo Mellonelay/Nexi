@@ -5,14 +5,15 @@ const account = { id: "account-1", userId: "user-1", asset: "USDT", scope: "MARG
 const withdrawal = { id: "withdrawal-1", userId: "user-1", asset: "USDT", amount: "3", reservedAmount: "3", state: "APPROVED" };
 const position = { id: "position-1", userId: "user-1", accountId: "margin-account-1", status: "OPEN", collateral: "2", accountQuoteAsset: "USDT", debtAsset: "USDT", debtPrincipal: "1", interestAccrued: "0" };
 
-function setup(changes: number[]) {
+function setup(changes: number[], positionOverride: Partial<typeof position> = {}) {
   let statements: D1BridgeBatchStatement[] = [];
+  const positionRow = { ...position, ...positionOverride };
   const bridge = {
     isEnabled: jest.fn(() => true),
     select: jest.fn(async (sql: string) => ({
       results: sql.includes("Gate2Withdrawal") ? [withdrawal]
         : sql.includes('"SpotMarginPositionEvent"') ? []
-        : sql.includes('"SpotMarginPosition"') ? [position]
+        : sql.includes('"SpotMarginPosition"') ? [positionRow]
         : sql.includes("LedgerAccount") ? [account] : [],
     })),
     batch: jest.fn(async (input: D1BridgeBatchStatement[]) => {
@@ -55,7 +56,7 @@ test("projects Margin interest to canonical Activity and EventOutbox atomically"
 });
 
 test("binds Margin close ledger fields in SQL placeholder order", async () => {
-  const test = setup([1, 3, 4, 7, 10]);
+  const test = setup([1, 3, 4, 7, 10], { status: "CLOSING", closeOrderId: "close-1" });
   await test.gateway.settleMarginClose({
     positionId: "position-1", userId: "user-1", closeOrderId: "close-1", state: "CLOSED",
     markPrice: "1", realizedPnl: "0", repayment: "3", debtAsset: "USDT", activityId: "activity-1",

@@ -42,25 +42,41 @@ describe('B1 identity and authorization foundation', () => {
     expect(guard.canActivate(httpContext({ userId: 'admin-1', email: 'a@example.test', role: Role.ADMIN }))).toBe(true);
   });
 
-  it('rejects malformed JWT claims and returns a server-derived principal', async () => {
+  it('rejects malformed JWT claims and returns a durable-session-validated principal', async () => {
     const config = { getOrThrow: jest.fn().mockReturnValue('test-secret') };
-    const strategy = new JwtStrategy(config as never);
+    const d1 = {
+      getAuthSessionById: jest.fn(async (sid: string) => ({
+        userId: sid === 'user-session' ? 'user-1' : 'admin-1',
+        surface: sid === 'user-session' ? 'PUBLIC' : 'ADMIN',
+        revokedAt: null,
+        absoluteExpiresAt: new Date(Date.now() + 60_000),
+        idleExpiresAt: new Date(Date.now() + 60_000),
+      })),
+      getUserById: jest.fn(async (id: string) => ({
+        role: id === 'user-1' ? Role.USER : Role.ADMIN,
+      })),
+    };
+    const strategy = new JwtStrategy(config as never, d1 as never);
 
-    await expect(strategy.validate({ sub: 'user-1', email: 'u@example.test', role: Role.USER })).resolves.toEqual({
-      userId: 'user-1',
-      email: 'u@example.test',
-      role: Role.USER,
-      surface: 'PUBLIC',
+    await expect(strategy.validate({
+      sub: 'user-1', email: 'u@example.test', role: Role.USER,
+      surface: 'PUBLIC', sid: 'user-session',
+    })).resolves.toEqual({
+      userId: 'user-1', email: 'u@example.test', role: Role.USER,
+      surface: 'PUBLIC', sessionId: 'user-session',
     });
-    await expect(strategy.validate({ sub: 'admin-1', email: 'a@example.test', role: Role.ADMIN, surface: 'ADMIN' })).resolves.toEqual({
-      userId: 'admin-1',
-      email: 'a@example.test',
-      role: Role.ADMIN,
-      surface: 'ADMIN',
+    await expect(strategy.validate({
+      sub: 'admin-1', email: 'a@example.test', role: Role.ADMIN,
+      surface: 'ADMIN', sid: 'admin-session',
+    })).resolves.toEqual({
+      userId: 'admin-1', email: 'a@example.test', role: Role.ADMIN,
+      surface: 'ADMIN', sessionId: 'admin-session',
     });
-    await expect(strategy.validate({ sub: '', email: 'u@example.test', role: Role.USER })).rejects.toThrow(UnauthorizedException);
-    await expect(strategy.validate({ sub: 'user-1', email: 'u@example.test', role: 'SUPER_ADMIN' } as never)).rejects.toThrow(UnauthorizedException);
-    await expect(strategy.validate({ sub: 'user-1', email: 'u@example.test', role: Role.USER, surface: 'UNKNOWN' } as never)).rejects.toThrow(UnauthorizedException);
+    expect(d1.getAuthSessionById).toHaveBeenCalledWith('user-session');
+    await expect(strategy.validate({ sub: '', email: 'u@example.test', role: Role.USER, sid: 'user-session' })).rejects.toThrow(UnauthorizedException);
+    await expect(strategy.validate({ sub: 'user-1', email: 'u@example.test', role: 'SUPER_ADMIN', sid: 'user-session' } as never)).rejects.toThrow(UnauthorizedException);
+    await expect(strategy.validate({ sub: 'user-1', email: 'u@example.test', role: Role.USER, surface: 'UNKNOWN', sid: 'user-session' } as never)).rejects.toThrow(UnauthorizedException);
+    await expect(strategy.validate({ sub: 'user-1', email: 'u@example.test', role: Role.USER })).rejects.toThrow('Authentication session identity is missing');
   });
 
   it('requires an explicit Admin authentication surface for Admin routes', () => {
@@ -114,12 +130,23 @@ describe('B1 identity and authorization foundation', () => {
     expect(login).toHaveBeenCalledWith(expect.objectContaining({ id: 'admin-1', role: Role.ADMIN }), 'ADMIN');
   });
 
-  it('adds the authentication surface to signed access-token claims', async () => {
+  it('adds the authentication surface and revocable session to signed access-token claims', async () => {
     const sign = jest.fn().mockReturnValue('signed-admin-token');
-    const service = new AuthService({} as never, { sign } as never);
+    const createSession = jest.fn().mockResolvedValue({
+      sessionId: 'admin-session-1', refreshToken: 'opaque-refresh-token',
+    });
+    const service = new AuthService({} as never, { sign } as never, { createSession } as never);
 
-    await expect(service.login({ id: 'admin-1', email: 'a@example.test', role: Role.ADMIN }, 'ADMIN')).resolves.toEqual(expect.objectContaining({ access_token: 'signed-admin-token' }));
-    expect(sign).toHaveBeenCalledWith(expect.objectContaining({ sub: 'admin-1', role: Role.ADMIN, surface: 'ADMIN' }));
+    await expect(service.login({
+      id: 'admin-1', email: 'a@example.test', role: Role.ADMIN,
+    }, 'ADMIN')).resolves.toEqual(expect.objectContaining({
+      access_token: 'signed-admin-token', refresh_token: 'opaque-refresh-token',
+    }));
+    expect(createSession).toHaveBeenCalledWith('admin-1', 'ADMIN');
+    expect(sign).toHaveBeenCalledWith(expect.objectContaining({
+      sub: 'admin-1', role: Role.ADMIN, surface: 'ADMIN',
+      sid: 'admin-session-1', jti: expect.any(String),
+    }));
   });
 
   it('binds newly issued access tokens to a durable session and returns only the raw refresh response value', async () => {

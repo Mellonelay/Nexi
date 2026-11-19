@@ -18,6 +18,7 @@ This page is the **only maintained documentation index**. It does not supersede 
 | Last historical component/global test evidence | [Component correctness report](quality/NEXI_COMPONENT_INTEGRATION_PRODUCT_CORRECTNESS_REVIEW_20261119.md); live failure artifacts under the VM's validation cache |
 | Production platform/release controls | [VPS/SQLite/BullMQ](operations/NEXI_VPS_SQLITE_BULLMQ_RUNBOOK.md), [SQLite maintenance](operations/NEXI_SQLITE_DATABASE_RUNBOOK.md), [Sentry](operations/NEXI_SENTRY_OBSERVABILITY.md) |
 | Tool route, bounded source traversal | [Capability routing](operations/NEXI_CAPABILITY_ROUTING.md), [Graphify quick reference](operations/NEXI_GRAPHIFY_CLOUD_CLI_MCPC_RUNBOOK_20261116.md) |
+| Mandatory Knowledge MCPC + live source graph | Canonical root and surface AGENTS.md; full verified operating guide on the VM: /srv/nexi/engineering-knowledge/20261110/KNOWLEDGE_MCPC_OPERATING_GUIDE.md (11 Graphify tools; live named sessions; semantic provenance and refresh safety) |
 
 **History without duplicate working-tree authorities:** Older Admin draft maps, previous architecture reconciliations, workflow prompts, browser plans, and bulk CLI/documentation captures were removed from the active documentation tree after provenance/ownership review. Their exact bytes remain recoverable from the commit immediately preceding this documentation cleanup (e.g. \`git show ed2496efaa63:<original-path>\`). Original dated receipts remain under \`tasks/evidence/\`; do not rewrite them as if they were current execution instructions.
 

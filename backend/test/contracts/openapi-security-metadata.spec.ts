@@ -87,8 +87,13 @@ describe('OpenAPI bearer security metadata', () => {
       'type',
       'asset',
       'status',
+      'correlationId',
+      'referenceId',
     ]);
     expect(parameters.every((parameter: { required: boolean }) => !parameter.required)).toBe(true);
+    // Receipt filters are optional and must be applied server-side before pagination.
+    expect(parameters.slice(-2).map((parameter: { schema: { type: string } }) => parameter.schema.type))
+      .toEqual(['string', 'string']);
     expect(parameters[0].schema).toMatchObject({ minimum: 1, maximum: 100 });
     expect(artifact.paths['/wallet/activity'].get.responses['200'].content['application/json'].schema.$ref)
       .toBe('#/components/schemas/WalletActivityResponseDto');
@@ -179,7 +184,7 @@ describe('OpenAPI bearer security metadata', () => {
     });
     expect(responseSchema('/admin/spot/orders/{id}/cancel', 'post', '201')).toMatchObject({
       type: 'object',
-      required: ['ok', 'auditId', 'state'],
+      required: ['ok', 'auditId', 'state', 'replayed'],
     });
     for (const route of ['/admin/spot/pairs/maintenance', '/admin/binary/pairs/maintenance']) {
       expect(responseSchema(route, 'post', '201')).toMatchObject({

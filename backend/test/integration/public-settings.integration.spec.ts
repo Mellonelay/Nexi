@@ -63,6 +63,7 @@ describe("Admin Public settings SQLite readback", () => {
       "Public Quotes categories",
       "operator test",
       "admin-test",
+      "settings-contract-0001",
     );
 
     const controller = new AppController({} as never, {} as never, prisma);
@@ -88,6 +89,7 @@ describe("Admin Public settings SQLite readback", () => {
       "Public Quotes categories",
       "operator test",
       "admin-test",
+      "settings-contract-0002",
     );
 
     await expect(admin.updateSystemConfig(
@@ -96,6 +98,7 @@ describe("Admin Public settings SQLite readback", () => {
       "Public Quotes categories",
       "hide all categories",
       "admin-test",
+      "settings-contract-0003",
     )).rejects.toThrow("At least one Quotes category must remain visible");
     await expect(admin.updateSystemConfig(
       "admin.frontend.quoteCategories",
@@ -103,6 +106,7 @@ describe("Admin Public settings SQLite readback", () => {
       "Public Quotes categories",
       "invalid config test",
       "admin-test",
+      "settings-contract-0004",
     )).rejects.toThrow("Invalid Quotes category configuration");
 
     const controller = new AppController({} as never, {} as never, prisma);
@@ -139,6 +143,7 @@ describe("Admin Public settings SQLite readback", () => {
       "Admin localization catalog",
       "operator test",
       "admin-test",
+      "settings-contract-0005",
     );
 
     const controller = new AppController({} as never, {} as never, prisma);
@@ -179,6 +184,7 @@ describe("Admin Public settings SQLite readback", () => {
       "Public route states",
       "operator test",
       "admin-test",
+      "settings-contract-0006",
     );
     await expect(admin.updateSystemConfig(
       "admin.frontend.routes",
@@ -186,6 +192,7 @@ describe("Admin Public settings SQLite readback", () => {
       "Public route states",
       "invalid route test",
       "admin-test",
+      "settings-contract-0007",
     )).rejects.toThrow();
 
     const banners = [
@@ -199,6 +206,7 @@ describe("Admin Public settings SQLite readback", () => {
       "Public banners",
       "operator test",
       "admin-test",
+      "settings-contract-0008",
     );
     await expect(admin.updateSystemConfig(
       "admin.frontend.banners",
@@ -206,6 +214,7 @@ describe("Admin Public settings SQLite readback", () => {
       "Public banners",
       "reject unsupported banner scope",
       "admin-test",
+      "settings-contract-0009",
     )).rejects.toThrow();
 
     const controller = new AppController({} as never, {} as never, prisma);

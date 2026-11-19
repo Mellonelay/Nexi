@@ -11,6 +11,9 @@ describe('Gate 2 binary settlement correction semantics', () => {
     const quote = { id: 'quote-expiry', price: new Prisma.Decimal('101'), state: MarketQuoteState.LIVE, provider: 'deterministic-test', source: 'quote-feed', observedAt: expiresAt, receivedAt: new Date(), sequence: 5n };
     const d1: any = {
       getBinaryPosition: jest.fn().mockResolvedValue(position),
+      markBinarySettlementDelayed: jest.fn().mockImplementation(async () => ({
+        ...position, state: Gate2BinaryState.SETTLEMENT_DELAYED,
+      })),
       getActiveMarketPair: jest.fn().mockResolvedValue({ id: 'pair-1', symbol: 'BTCUSDT', baseAsset: 'BTC', quoteAsset: 'USDT' }),
       getMarketPairForSettlement: jest.fn().mockResolvedValue({ id: 'pair-1', symbol: 'BTCUSDT', baseAsset: 'BTC', quoteAsset: 'USDT' }),
       getLiveMarketQuote: jest.fn().mockResolvedValue(quote),
@@ -35,6 +38,8 @@ describe('Gate 2 binary settlement correction semantics', () => {
     d1.getLiveMarketQuote.mockResolvedValue(null);
     const result = await service.settlePosition('position-1');
     expect(result.delayed).toBe(true);
+    expect(result.position.state).toBe(Gate2BinaryState.SETTLEMENT_DELAYED);
+    expect(d1.markBinarySettlementDelayed).toHaveBeenCalledWith('position-1', 'user-1', 'quote-unavailable');
     expect(d1.getBinaryConfiguration).toHaveBeenCalledWith('BTCUSDT', 30, 7);
   });
 
@@ -44,7 +49,8 @@ describe('Gate 2 binary settlement correction semantics', () => {
     const result = await service.settlePosition('position-1');
     expect(result.delayed).toBe(true);
     expect(result.reason).toBe('configuration-unavailable');
-    expect(result.position.state).toBe(Gate2BinaryState.ACTIVE);
+    expect(result.position.state).toBe(Gate2BinaryState.SETTLEMENT_DELAYED);
+    expect(d1.markBinarySettlementDelayed).toHaveBeenCalledWith('position-1', 'user-1', 'configuration-unavailable');
     expect(d1.settleBinaryPositionAtomic).not.toHaveBeenCalled();
   });
 

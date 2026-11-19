@@ -7,6 +7,7 @@ describe('Gate 2 Spot authority', () => {
   function createService(existing: any = null) {
     const order = { id: 'order-1', userId: 'user-1', pair: 'BTCUSDT', status: 'OPEN', amount: '2', filled: '0', price: '100' };
     const d1: any = {
+      getSpotOrderByIntent: jest.fn().mockResolvedValue(null),
       getActiveMarketPair: jest.fn().mockResolvedValue(pair),
       getSystemConfigValue: jest.fn().mockResolvedValue(null),
       getLiveMarketQuote: jest.fn().mockResolvedValue({ id: 'quote-1', state: 'LIVE', price: '100', receivedAt: new Date(), observedAt: new Date(), provider: 'deterministic-test', source: 'fixture', sequence: '1' }),
@@ -36,10 +37,32 @@ describe('Gate 2 Spot authority', () => {
   });
 
   it('returns the D1 idempotent order read-back', async () => {
-    const existing = { id: 'existing-order', status: 'OPEN' };
+    const existing = {
+      id: 'existing-order', status: 'OPEN', pair: 'BTCUSDT', side: OrderSide.BUY,
+      type: Gate2SpotOrderType.LIMIT, amount: '2', price: '100', stopPrice: null,
+      reserveScope: LedgerAccountScope.SPOT,
+    };
     const { service, d1 } = createService(existing);
+    d1.getSpotOrderByIntent.mockResolvedValue(existing);
     await expect(service.placeOrder('user-1', { pair: 'BTCUSDT', side: OrderSide.BUY, type: Gate2SpotOrderType.LIMIT, amount: '2', price: '100', idempotencyKey: 'order-key-1' })).resolves.toBe(existing);
-    expect(d1.reserveSpotOrder).toHaveBeenCalledTimes(1);
+    expect(d1.reserveSpotOrder).not.toHaveBeenCalled();
+    expect(d1.getLiveMarketQuote).not.toHaveBeenCalled();
+  });
+
+  it('rejects a replay that changes immutable original order terms', async () => {
+    const existing = {
+      id: 'existing-order', status: 'OPEN', pair: 'BTCUSDT', side: OrderSide.BUY,
+      type: Gate2SpotOrderType.LIMIT, amount: '2', price: '100', stopPrice: null,
+      reserveScope: LedgerAccountScope.SPOT,
+    };
+    const { service, d1 } = createService(existing);
+    d1.getSpotOrderByIntent.mockResolvedValue(existing);
+    await expect(service.placeOrder('user-1', {
+      pair: 'BTCUSDT', side: OrderSide.BUY, type: Gate2SpotOrderType.LIMIT,
+      amount: '3', price: '100', idempotencyKey: 'order-key-1',
+    })).rejects.toThrow('idempotency key was reused with different parameters');
+    expect(d1.reserveSpotOrder).not.toHaveBeenCalled();
+    expect(d1.getLiveMarketQuote).not.toHaveBeenCalled();
   });
 
   it('rejects invalid idempotency before reaching D1', async () => {

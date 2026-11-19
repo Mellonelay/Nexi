@@ -9,6 +9,7 @@ const createdCurrency = {
 };
 
 type CurrencyAuditRecord = {
+  id: string;
   adminId: string;
   target: string;
   reason: string;
@@ -45,6 +46,13 @@ function selectCurrency(
   params: unknown[],
   auditRecord: CurrencyAuditRecord | undefined,
 ) {
+  if (sql.startsWith('SELECT "id" FROM "AdminAuditLog"')) {
+    const exact = auditRecord && params[0] === "CURRENCY_CREATED"
+      && params[1] === auditRecord.target
+      && params[2] === auditRecord.adminId
+      && params[3] === JSON.parse(auditRecord.details).idempotencyKey;
+    return { results: exact ? [{ id: auditRecord.id }] : [] };
+  }
   const auditResult = currencyCreationAuditResult(sql, params, auditRecord);
   if (auditResult) return auditResult;
   if (sql.includes('FROM "Currency"') && sql.includes('WHERE "symbol"=?')) {
@@ -60,14 +68,28 @@ function createCurrencyBridge() {
     select: jest.fn().mockImplementation(async (sql: string, params: unknown[] = []) =>
       selectCurrency(sql, params, auditRecord),
     ),
-    batch: jest.fn().mockImplementation(async (statements: D1BridgeBatchStatement[]) => ({
-      results: statements.map(() => ({ success: true, meta: { changes: 1 } })),
-    })),
+    batch: jest.fn().mockImplementation(async (statements: D1BridgeBatchStatement[]) => {
+      // Simulate a successful atomic commit before subsequent readback queries.
+      const audit = statements[1];
+      if (audit?.sql.includes('"AdminAuditLog"')) {
+        const details = JSON.parse(String(audit.params[3]));
+        auditRecord = {
+          id: String(audit.params[0]),
+          adminId: String(audit.params[1]),
+          target: String(audit.params[2]),
+          reason: details.reason,
+          payload: JSON.stringify(details.payload),
+          details: JSON.stringify(details),
+        };
+      }
+      return { results: statements.map(() => ({ success: true, meta: { changes: 1 } })) };
+    }),
   } as unknown as D1WorkerBridgeService;
   return {
     bridge,
     recordAudit(command: { adminId: string; symbol: string }, details: Record<string, unknown>) {
       auditRecord = {
+        id: auditRecord?.id ?? "test-audit-1",
         adminId: command.adminId,
         target: command.symbol,
         reason: String(details.reason),

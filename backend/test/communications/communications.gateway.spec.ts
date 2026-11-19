@@ -7,7 +7,8 @@ function makeGateway() {
   const adminPermissions = { hasPermission: jest.fn() };
   const redis = { isAvailable: jest.fn(() => false), createSubscriber: jest.fn(), releaseSubscriber: jest.fn() };
   const service = { snapshot: jest.fn() };
-  const gateway = new CommunicationsGateway(jwt as never, jwtStrategy as never, adminPermissions as never, redis as never, service as never);
+  const securityEvents = { on: jest.fn(() => jest.fn()) };
+  const gateway = new CommunicationsGateway(jwt as never, jwtStrategy as never, adminPermissions as never, redis as never, service as never, securityEvents as never);
   const joins: string[] = [];
   const socket = {
     handshake: { auth: { token: 'token' }, headers: {} },
@@ -37,7 +38,8 @@ describe('CommunicationsGateway authenticated rooms', () => {
         createSubscriber: jest.fn().mockResolvedValue(subscriber),
         releaseSubscriber: jest.fn().mockResolvedValue(undefined),
       };
-      const gateway = new CommunicationsGateway({} as never, {} as never, {} as never, redis as never, {} as never);
+      const securityEvents = { on: jest.fn(() => jest.fn()) };
+      const gateway = new CommunicationsGateway({} as never, {} as never, {} as never, redis as never, {} as never, securityEvents as never);
 
       await gateway.onModuleInit();
       expect(redis.createSubscriber).not.toHaveBeenCalled();
@@ -61,7 +63,7 @@ describe('CommunicationsGateway authenticated rooms', () => {
     await new Promise<void>((resolve) => setImmediate(resolve));
     expect(next).toHaveBeenCalledWith();
     await ctx.gateway.handleConnection(ctx.socket as never);
-    expect(ctx.joins).toEqual(['user:customer-1']);
+    expect(ctx.joins).toEqual(['auth-user:PUBLIC:customer-1', 'user:customer-1']);
     expect(ctx.adminPermissions.hasPermission).not.toHaveBeenCalled();
   });
 
@@ -88,7 +90,7 @@ describe('CommunicationsGateway authenticated rooms', () => {
     await new Promise<void>((resolve) => setImmediate(resolve));
     expect(next).toHaveBeenCalledWith();
     await ctx.gateway.handleConnection(ctx.socket as never);
-    expect(ctx.joins).toEqual(['admin:communications:messages']);
+    expect(ctx.joins).toEqual(['auth-user:ADMIN:admin-1', 'admin:communications:messages', 'admin:operator-alerts']);
   });
 
   it('sends support invalidations to Admin without message content and preserves customer events', () => {

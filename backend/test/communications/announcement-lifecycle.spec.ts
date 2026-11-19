@@ -31,12 +31,12 @@ describe('A17 announcement lifecycle closure', () => {
     const commands: any = { mutateAnnouncementAtomic: jest.fn(async () => undefined) };
     const service = new CommunicationsService(d1, outbox, commands, { isAvailable: () => false } as any);
 
-    expect(await service.createAnnouncement({ title: 'Maintenance', body: 'Window', published: false, idempotencyKey: 'announcement-create-1' })).toBe(draft);
+    expect(await service.createAnnouncement({ title: 'Maintenance', body: 'Window', published: false, idempotencyKey: 'announcement-create-1' }, 'admin-1')).toMatchObject({ ...draft, auditId: expect.any(String) });
     expect(commands.mutateAnnouncementAtomic).toHaveBeenCalledWith(expect.objectContaining({
       mode: 'create', values: expect.objectContaining({ title: 'Maintenance', published: 0 }),
     }));
 
-    expect(await service.publishAnnouncement(draft.id, 'announcement-publish-1')).toBe(published);
+    expect(await service.publishAnnouncement(draft.id, 'announcement-publish-1', 'approved publication', 'admin-1')).toMatchObject({ ...published, auditId: expect.any(String) });
     expect(commands.mutateAnnouncementAtomic).toHaveBeenLastCalledWith(expect.objectContaining({
       mode: 'update', values: expect.objectContaining({ published: 1 }),
     }));
@@ -77,12 +77,13 @@ describe('A17 announcement lifecycle closure', () => {
       updateAnnouncement: jest.fn(async () => ({ id: 'announcement-1' })),
       publishAnnouncement: jest.fn(async () => ({ id: 'announcement-1', published: true })),
     };
-    const controller = new CommunicationsController(service);
-    await controller.updateAnnouncement('announcement-1', { title: 'Updated', idempotencyKey: 'announcement-update-1' } as any);
-    await controller.publishAnnouncement('announcement-1', { idempotencyKey: 'announcement-publish-1' } as any);
+    const controller = new CommunicationsController(service, {} as never);
+    const request = { user: { userId: 'admin-1' } } as any;
+    await controller.updateAnnouncement('announcement-1', { title: 'Updated', idempotencyKey: 'announcement-update-1' } as any, request);
+    await controller.publishAnnouncement('announcement-1', { idempotencyKey: 'announcement-publish-1' } as any, request);
 
-    expect(service.updateAnnouncement).toHaveBeenCalledWith('announcement-1', expect.objectContaining({ title: 'Updated' }));
-    expect(service.publishAnnouncement).toHaveBeenCalledWith('announcement-1', 'announcement-publish-1');
+    expect(service.updateAnnouncement).toHaveBeenCalledWith('announcement-1', expect.objectContaining({ title: 'Updated' }), 'admin-1');
+    expect(service.publishAnnouncement).toHaveBeenCalledWith('announcement-1', 'announcement-publish-1', undefined, 'admin-1');
     expect(Reflect.getMetadata(PATH_METADATA, controller.updateAnnouncement)).toBe('admin/announcements/:id');
     expect(Reflect.getMetadata(PATH_METADATA, controller.publishAnnouncement)).toBe('admin/announcements/:id/publish');
     expect(Reflect.getMetadata(GUARDS_METADATA, controller.updateAnnouncement)).toEqual(expect.arrayContaining([JwtAuthGuard, RolesGuard]));

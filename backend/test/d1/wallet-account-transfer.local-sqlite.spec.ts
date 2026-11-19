@@ -142,7 +142,9 @@ describe('financial operations on local SQLite', () => {
   it('records mining principal redemption in unified Activity with its ledger release and outbox event', async () => {
     const db = new Database(join(directory, 'fixture.sqlite'));
     db.prepare(`INSERT INTO MiningPlan (id,name,currency,lockupPeriod,dailyYield,dailyYieldDecimal,minDeposit,minDepositDecimal,maxDeposit,maxDepositDecimal,isActive,updatedAt) VALUES ('plan-1','test','USDT',1,'0.01','0.01','1','1','100','100',1,CURRENT_TIMESTAMP)`).run();
-    db.prepare(`INSERT INTO MiningSubscription (id,userId,planId,amount,amountDecimal,status,planSnapshot,updatedAt) VALUES ('sub-1','user-1','plan-1','5','5','ACTIVE','{}',CURRENT_TIMESTAMP)`).run();
+    db.prepare(`INSERT INTO MiningSubscription (id,userId,planId,amount,amountDecimal,status,planSnapshot,updatedAt) VALUES ('sub-1','user-1','plan-1','5','5','ACTIVE',?,CURRENT_TIMESTAMP)`).run(
+      JSON.stringify({ name: 'test', currency: 'USDT', lockupPeriod: 1, dailyYield: '0.01', minDeposit: '1', maxDeposit: '100' }),
+    );
     db.close();
     await gateway.releaseMiningSubscription('sub-1', 'user-1', 'mining-redeem-key-1', 'COMPLETED');
     await expect(bridge.select<{ available: string; locked: string }>(`SELECT available,locked FROM LedgerAccount WHERE id='finance-1'`)).resolves.toMatchObject({ results: [{ available: '5', locked: '0' }] });
@@ -241,7 +243,7 @@ describe('financial operations on local SQLite', () => {
     await expect(originalSelect<{ count: number }>(`SELECT COUNT(*) AS count FROM EventOutbox WHERE aggregateId='claim-race-1'`)).resolves.toMatchObject({ results: [{ count: 1 }] });
   });
 
-  it('replays Mining subscriptions only when the accepted amount and plan snapshot match', async () => {
+  it('replays accepted Mining principal and locked plan terms without reserving again after catalog drift', async () => {
     const db = new Database(join(directory, 'fixture.sqlite'));
     db.prepare(`UPDATE LedgerAccount SET available='20' WHERE id='finance-1'`).run();
     db.prepare(`INSERT INTO MiningPlan (id,name,currency,lockupPeriod,dailyYield,dailyYieldDecimal,minDeposit,minDepositDecimal,maxDeposit,maxDepositDecimal,isActive,updatedAt) VALUES ('plan-idem','test','USDT',30,'0.01','0.01','1','1','100','100',1,CURRENT_TIMESTAMP)`).run();
@@ -255,7 +257,13 @@ describe('financial operations on local SQLite', () => {
     await gateway.subscribeMining(command);
     await gateway.subscribeMining({ ...command, endDate: '2030-01-02T00:00:00.000Z' });
     await expect(gateway.subscribeMining({ ...command, amount: '6' })).rejects.toThrow('Mining original key belongs to different terms');
-    await expect(gateway.subscribeMining({ ...command, planSnapshot: { ...command.planSnapshot, dailyYield: '0.02' } })).rejects.toThrow('Mining original key belongs to different terms');
+    // The acceptance identity is planId + principal. A refreshed catalog
+    // snapshot on the same retry must not change the *persisted* locked terms.
+    await expect(gateway.subscribeMining({
+      ...command, planSnapshot: { ...command.planSnapshot, dailyYield: '0.02' },
+    })).resolves.toMatchObject({
+      replayed: true, planDailyYieldDecimal: '0.01',
+    });
     await expect(bridge.select<{ available: string; locked: string }>(`SELECT available,locked FROM LedgerAccount WHERE id='finance-1'`)).resolves.toMatchObject({ results: [{ available: '15', locked: '10' }] });
     for (const table of ['LedgerPosting', 'Activity', 'EventOutbox']) {
       await expect(bridge.select<{ count: number }>(`SELECT COUNT(*) AS count FROM "${table}"`)).resolves.toMatchObject({ results: [{ count: 1 }] });
@@ -265,7 +273,9 @@ describe('financial operations on local SQLite', () => {
   it('treats an explicitly configured zero-yield Mining plan as a safe no-op', async () => {
     const db = new Database(join(directory, 'fixture.sqlite'));
     db.prepare(`INSERT INTO MiningPlan (id,name,currency,lockupPeriod,dailyYield,dailyYieldDecimal,minDeposit,minDepositDecimal,maxDeposit,maxDepositDecimal,isActive,updatedAt) VALUES ('zero-plan','zero','USDT',1,'0','0','1','1','100','100',1,CURRENT_TIMESTAMP)`).run();
-    db.prepare(`INSERT INTO MiningSubscription (id,userId,planId,amount,amountDecimal,status,planSnapshot,updatedAt) VALUES ('zero-sub','user-1','zero-plan','5','5','ACTIVE','{}',CURRENT_TIMESTAMP)`).run();
+    db.prepare(`INSERT INTO MiningSubscription (id,userId,planId,amount,amountDecimal,status,planSnapshot,updatedAt) VALUES ('zero-sub','user-1','zero-plan','5','5','ACTIVE',?,CURRENT_TIMESTAMP)`).run(
+      JSON.stringify({ name: 'zero', currency: 'USDT', lockupPeriod: 1, dailyYield: '0', minDeposit: '1', maxDeposit: '100' }),
+    );
     db.close();
     await expect(gateway.accrueMiningReward('zero-sub')).resolves.toMatchObject({ skipped: true, reason: 'zero-yield' });
     await expect(bridge.select<{ count: number }>(`SELECT COUNT(*) AS count FROM LedgerPosting`)).resolves.toMatchObject({ results: [{ count: 0 }] });

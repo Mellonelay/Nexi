@@ -5,6 +5,7 @@ describe("LoanService", () => {
   it("routes configured loan-plan asset and exact Decimal terms through D1", async () => {
     const rows = new Map<string, any>();
     const d1: any = {
+      getLoanApplication: jest.fn().mockImplementation(async (id: string) => rows.get(id) ?? null),
       getLoanPlan: jest.fn().mockResolvedValue({
         id: "plan-1",
         isActive: true,
@@ -20,6 +21,7 @@ describe("LoanService", () => {
             ...command,
             amountDecimal: command.amount,
             totalRepaymentDecimal: command.totalRepayment,
+            productSnapshot: JSON.stringify(command.productSnapshot),
             status: LoanStatus.PENDING,
           });
         return rows.get(command.id);
@@ -44,7 +46,7 @@ describe("LoanService", () => {
       "key-1",
       "plan-1",
     );
-    expect(first).toBe(replay);
+    expect(replay).toMatchObject({ ...first, replayed: true });
     expect(new Prisma.Decimal(first.amountDecimal).toString()).toBe(
       "10.123456789012345678",
     );
@@ -54,11 +56,12 @@ describe("LoanService", () => {
     expect(first.currency).toBe("BTC");
     expect(first.durationDays).toBe(30);
     expect(first.status).toBe(LoanStatus.PENDING);
-    expect(d1.applyLoan).toHaveBeenCalledTimes(2);
+    expect(d1.applyLoan).toHaveBeenCalledTimes(1);
   });
 
   it("rejects a loan application whose duration differs from the selected plan", async () => {
     const d1: any = {
+      getLoanApplication: jest.fn().mockResolvedValue(null),
       getLoanPlan: jest.fn().mockResolvedValue({
         id: "plan-1",
         isActive: true,
@@ -87,6 +90,7 @@ describe("LoanService", () => {
 
   it("rejects applications outside the selected plan limits", async () => {
     const d1: any = {
+      getLoanApplication: jest.fn().mockResolvedValue(null),
       getLoanPlan: jest.fn().mockResolvedValue({
         id: "plan-1",
         isActive: true,

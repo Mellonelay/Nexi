@@ -2236,7 +2236,10 @@ export class AdminService {
           throw new ConflictException("Binary pair maintenance key was reused with different request context");
         if (previousDetails.enabled !== true && previousDetails.enabled !== false)
           throw new ConflictException("Original Binary pair maintenance receipt lacks intent state; reconcile before retrying");
-        if (previousDetails.enabled === enabled) matches.push(candidate);
+        // An original command key must not represent both pause and resume.
+        if (previousDetails.enabled !== enabled)
+          throw new ConflictException("Binary pair maintenance key was reused with different request context");
+        matches.push(candidate);
       }
       if (matches.length > 1)
         throw new ConflictException("Multiple original Binary pair maintenance receipts require reconciliation");

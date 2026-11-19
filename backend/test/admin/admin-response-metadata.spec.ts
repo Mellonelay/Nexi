@@ -104,11 +104,12 @@ describe("Admin identity and configuration response metadata", () => {
   it("documents audited Admin spot and Binary mutation responses", () => {
     expect(responseSchema("cancelAdminSpotOrder", "201")).toMatchObject({
       type: "object",
-      required: ["ok", "auditId", "state"],
+      required: ["ok", "auditId", "state", "replayed"],
       properties: {
         ok: { type: "boolean" },
         auditId: { type: "string" },
         state: { type: "string" },
+        replayed: { type: "boolean" },
       },
     });
     for (const method of ["setSpotPairMaintenance", "setBinaryPairMaintenance"] as const) {

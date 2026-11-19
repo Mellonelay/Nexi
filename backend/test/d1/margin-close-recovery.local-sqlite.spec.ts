@@ -24,7 +24,7 @@ describe('Margin filled-close recovery with disposable SQLite', () => {
         status TEXT, updatedAt TEXT
       );
       CREATE TABLE SpotMarginActivity (
-        id TEXT PRIMARY KEY, positionId TEXT, idempotencyKey TEXT,
+        id TEXT PRIMARY KEY, userId TEXT, positionId TEXT, idempotencyKey TEXT,
         type TEXT, status TEXT, details TEXT
       );
       CREATE TABLE Gate2SpotOrder (
@@ -36,7 +36,7 @@ describe('Margin filled-close recovery with disposable SQLite', () => {
       );
       INSERT INTO SpotMarginAccount VALUES ('margin-account','owner');
       INSERT INTO SpotMarginPosition VALUES ('position','margin-account','close-order','CLOSING','2026-01-01');
-      INSERT INTO SpotMarginActivity VALUES ('request','position','original-close-key','CLOSE','ACCEPTED','{"orderId":"close-order"}');
+      INSERT INTO SpotMarginActivity VALUES ('request','owner','position','original-close-key','CLOSE','ACCEPTED','{"orderId":"close-order"}');
       INSERT INTO Gate2SpotOrder VALUES ('close-order','owner','PARTIALLY_FILLED');
       INSERT INTO Gate2SpotTrade VALUES ('fill-one','close-order','counter-order','100','1','2026-01-01');
       INSERT INTO Gate2SpotTrade VALUES ('fill-two','close-order','counter-order-2','110','2','2026-01-02');
@@ -59,6 +59,17 @@ describe('Margin filled-close recovery with disposable SQLite', () => {
     await expect(gateway.getMarginCloseRequest('position','another-user')).resolves.toBeNull();
     expect(await gateway.getSpotOrderExecutionPrice('close-order')).toBe('106.66666666666666667');
   });
+  it('rejects a close request whose Activity owner differs from its Margin account', async () => {
+    await bridge.batch([{
+      sql: "UPDATE SpotMarginActivity SET userId='other-user' WHERE id='request'",
+    }]);
+    await expect(gateway.getMarginCloseRequest('position', 'owner')).resolves.toBeNull();
+    await bridge.batch([{
+      sql: "UPDATE Gate2SpotOrder SET status='FILLED' WHERE id='close-order'",
+    }]);
+    await expect(gateway.listPendingMarginCloses()).resolves.toEqual([]);
+  });
+
   it('recovers only FILLED positions with their original close idempotency key', async () => {
     await bridge.batch([{sql:"UPDATE Gate2SpotOrder SET status='FILLED' WHERE id='close-order'"}]);
     expect(await gateway.listPendingMarginCloses()).toEqual([

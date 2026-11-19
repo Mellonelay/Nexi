@@ -14,10 +14,10 @@ import { LocalDepositProofController } from '../../src/financial/local-deposit-p
 describe('Seven financial controller HTTP JWT surfaces', () => {
   const controllers = [
     [BinaryController, 4],
-    [SpotController, 5],
-    [MarginController, 9],
+    [SpotController, 7],
+    [MarginController, 10],
     [MiningController, 8],
-    [LoansController, 6],
+    [LoansController, 7],
     [WalletController, 13],
     [LocalDepositProofController, 1],
   ] as const;

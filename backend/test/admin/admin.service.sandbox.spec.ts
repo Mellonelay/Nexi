@@ -209,6 +209,17 @@ describe("AdminService sandbox source contract", () => {
       user: { updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
       adminAuditLog: {
         create: jest.fn().mockResolvedValue({ id: "research-audit-1" }),
+        findUnique: jest.fn().mockResolvedValue({
+          id: "research-audit-1",
+          adminId: "admin-1",
+          action: "BINARY_RESEARCH_DEFAULT_UPDATED",
+          target: "research-user",
+          details: JSON.stringify({
+            scope: "account", mode: "WIN",
+            reason: "research account default",
+            idempotencyKey: "research-default-key-1",
+          }),
+        }),
       },
     };
     const prisma = {

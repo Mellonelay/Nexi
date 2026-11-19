@@ -10248,6 +10248,7 @@ export class D1FinancialCommandGateway {
        JOIN "SpotMarginAccount" m ON m."id"=p."accountId"
        JOIN "SpotMarginActivity" a ON a."positionId"=p."id"
          AND a."type" IN ('CLOSE','LIQUIDATION') AND a."status"='ACCEPTED'
+         AND a."userId"=m."userId"
          AND json_extract(a."details",'$.orderId')=p."closeOrderId"
        WHERE p."id"=? AND m."userId"=? AND p."status"='CLOSING'
        LIMIT 1`,

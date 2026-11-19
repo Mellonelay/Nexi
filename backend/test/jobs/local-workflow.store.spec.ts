@@ -11,7 +11,7 @@ describe('Durable workflow checkpoints and event waits',()=>{
  const initial={id:'loan-synthetic',workflow:'loan',entityId:'synthetic-loan',status:'RUNNING',phase:'loan-start',nextAt:100,context:{}};
  const open=()=>new LocalSqliteBridgeService(new ConfigService({NEXI_LOCAL_SQLITE_PATH:filename}));
  beforeEach(()=>{dir=mkdtempSync(join(tmpdir(),'nexi-workflow-'));filename=join(dir,'fixture.sqlite');const db=new Database(filename);db.exec(readFileSync(new URL('../../src/jobs/local-workflow.schema.sql',import.meta.url),'utf8'));db.close();bridge=open();store=new LocalWorkflowStore(bridge);});
- afterEach(()=>{bridge?.onModuleDestroy();rmSync(dir,{recursive:true,force:true});});
+ afterEach(()=>{bridge?.onModuleDestroy();store=undefined as unknown as LocalWorkflowStore;bridge=undefined as unknown as LocalSqliteBridgeService;rmSync(dir,{recursive:true,force:true});});
  it('preserves instance identity and rejects a changed workflow/entity',async()=>{
   expect((await store.create(initial,100)).replayed).toBe(false);expect((await store.create(initial,101)).replayed).toBe(true);
   await expect(store.create({...initial,entityId:'other'},102)).rejects.toThrow('identity');
@@ -64,7 +64,7 @@ describe('Durable workflow checkpoints and event waits',()=>{
  it('atomically rolls back a valid checkpoint and consumed event on a native step-insert fault',async()=>{
   await store.create(initial,100);await store.signal(initial.id,'decision','native-fault-event',{decision:'APPROVED'},100);expect(await store.claim(initial.id,'lease',100)).not.toBeNull();
   const db=new Database(filename);db.exec("CREATE TRIGGER synthetic_step_fault BEFORE INSERT ON LocalWorkflowStep BEGIN SELECT RAISE(ABORT,'synthetic step insertion fault'); END");db.close();
-  await expect(store.checkpoint(initial.id,'lease',0,{...initial,status:'SLEEPING',phase:'due'},101,{name:'schedule',commandKey:'schedule',result:{}},'native-fault-event')).rejects.toThrow('synthetic step insertion fault');
+  await expect(store.checkpoint(initial.id,'lease',0,{...initial,status:'SLEEPING',phase:'due'},101,{name:'schedule',commandKey:'schedule',result:{}},'native-fault-event')).rejects.toMatchObject({code:'SQLITE_CONSTRAINT_TRIGGER',message:'synthetic step insertion fault'});
   expect(await store.get(initial.id)).toMatchObject({revision:0,phase:'loan-start',leaseToken:'lease'});expect(await store.event(initial.id,'decision')).not.toBeNull();expect(await store.step(initial.id,'schedule')).toBeNull();
  });
 
