@@ -32,6 +32,8 @@ import {
   D1WorkerBridgeService,
 } from "./d1-worker-bridge.service";
 
+const MAX_MINING_PLAN_COUNT = 7;
+
 type D1AdminCurrencyCommand = {
   symbol: string;
   name: string;
@@ -2166,6 +2168,14 @@ export class D1FinancialCommandGateway {
     result: D1BridgeBatchResult,
   ): Promise<Record<string, unknown>> {
     if (Number(result.results[0]?.meta?.changes ?? 0) !== 1) {
+      if (action === "MINING_PLAN_CREATED") {
+        const replay = await this.findAdminMiningPlanReplay(action, command, payload);
+        if (replay) return replay;
+        const count = await this.bridge.select<{ count: number }>(`SELECT COUNT(*) AS "count" FROM "MiningPlan"`);
+        if (Number(count.results[0]?.count ?? 0) >= MAX_MINING_PLAN_COUNT) {
+          throw new ConflictException(`Mining plans are limited to ${MAX_MINING_PLAN_COUNT} total, including disabled plans`);
+        }
+      }
       return this.replayOrThrowMiningPlanMutation(action, command, payload);
     }
     this.requireChanges(
@@ -2196,7 +2206,7 @@ export class D1FinancialCommandGateway {
     const payload = this.miningPlanPayload(command);
     const result = await this.bridge.batch([
       {
-        sql: `INSERT OR IGNORE INTO "MiningPlan" ("id","name","currency","lockupPeriod","dailyYield","dailyYieldDecimal","minDeposit","minDepositDecimal","maxDeposit","maxDepositDecimal","isActive","createdAt","updatedAt") SELECT ?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP WHERE NOT EXISTS (SELECT 1 FROM "AdminAuditLog" WHERE "action"='MINING_PLAN_CREATED' AND json_extract("details",'$.idempotencyKey')=?)`,
+        sql: `INSERT OR IGNORE INTO "MiningPlan" ("id","name","currency","lockupPeriod","dailyYield","dailyYieldDecimal","minDeposit","minDepositDecimal","maxDeposit","maxDepositDecimal","isActive","createdAt","updatedAt") SELECT ?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP WHERE NOT EXISTS (SELECT 1 FROM "AdminAuditLog" WHERE "action"='MINING_PLAN_CREATED' AND json_extract("details",'$.idempotencyKey')=?) AND (SELECT COUNT(*) FROM "MiningPlan") < ${MAX_MINING_PLAN_COUNT}`,
         params: [
           command.id,
           payload.name,
@@ -2419,7 +2429,7 @@ export class D1FinancialCommandGateway {
         !this.nonNegativeDecimal(String(locked.dailyYield)).eq(String(plan.dailyYieldDecimal)) ||
         !this.nonNegativeDecimal(String(locked.minDeposit)).eq(String(plan.minDepositDecimal)) ||
         !this.nonNegativeDecimal(String(locked.maxDeposit)).eq(String(plan.maxDepositDecimal)))
-      throw new BadRequestException("Mining plan terms changed; refresh before subscribing");
+      throw new ConflictException({ code: "MINING_PLAN_TERMS_CHANGED", message: "Mining plan terms changed; refresh before subscribing" });
     const account = await this.getAccountForUser(
       command.userId,
       String(plan.currency),
@@ -2934,6 +2944,15 @@ export class D1FinancialCommandGateway {
     if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
     const result = await this.bridge.select<Record<string, unknown>>(
       `SELECT * FROM "LoanPlan" WHERE "isActive"=1 ORDER BY "durationDays" ASC`,
+      [],
+    );
+    return result.results;
+  }
+
+  async listAdminLoanPlans(): Promise<Record<string, unknown>[]> {
+    if (!this.isEnabled()) throw new Error("D1 runtime is disabled");
+    const result = await this.bridge.select<Record<string, unknown>>(
+      `SELECT * FROM "LoanPlan" ORDER BY "durationDays" ASC`,
       [],
     );
     return result.results;

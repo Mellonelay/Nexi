@@ -51,6 +51,7 @@ function Inner() {
   const [rate, setRate] = useState("0.1");
   const [min, setMin] = useState("100");
   const [max, setMax] = useState("100000");
+  const [isActive, setIsActive] = useState(true);
   const [message, setMessage] = useState("");
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const canEdit = session.can("loans.edit");
@@ -75,6 +76,7 @@ function Inner() {
     setEditing(null);
     setName("");
     setCurrency("");
+    setIsActive(true);
     setMessage("");
   };
   const reviewApplication = async (
@@ -132,7 +134,7 @@ function Inner() {
       interestRate: rate.trim(),
       minAmount: min.trim(),
       maxAmount: max.trim(),
-      isActive: editing?.isActive ?? true,
+      isActive,
     };
     try {
       const result = editing
@@ -184,6 +186,7 @@ function Inner() {
                       setRate(String(plan.interestRate));
                       setMin(String(plan.minAmount));
                       setMax(String(plan.maxAmount));
+                      setIsActive(plan.isActive);
                     }}
                   >
                     Edit
@@ -343,6 +346,10 @@ function Inner() {
             onChange={(event) => setMax(event.target.value)}
             disabled={!canEdit}
           />
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={isActive} onChange={(event) => setIsActive(event.target.checked)} disabled={!canEdit} />
+            Plan enabled
+          </label>
           <div className="flex gap-2">
             <Button
               type="submit"

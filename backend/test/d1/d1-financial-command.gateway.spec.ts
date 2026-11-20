@@ -1805,7 +1805,47 @@ describe("D1FinancialCommandGateway", () => {
     );
     expect(updateStatements[0].sql).toContain('UPDATE "MiningPlan"');
     expect(createStatements[0].params).toContain(0);
+    expect(createStatements[0].sql).toContain('(SELECT COUNT(*) FROM "MiningPlan") < 7');
     expect(updateStatements[0].params).toContain(0);
+  });
+
+  it("rejects an eighth Mining plan at the SQLite write boundary, including disabled plan count", async () => {
+    const bridge = createBridge({
+      select: jest.fn().mockImplementation(async (sql: string) => {
+        if (sql.includes('FROM "AdminAuditLog"')) return { results: [] };
+        if (sql.includes('COUNT(*) AS "count" FROM "MiningPlan"')) return { results: [{ count: 7 }] };
+        return { results: [] };
+      }),
+      batch: jest.fn().mockResolvedValue({
+        results: [
+          { meta: { changes: 0 } },
+          { meta: { changes: 0 } },
+          { meta: { changes: 0 } },
+        ],
+      }),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+    const command = {
+      id: "plan-8",
+      name: "Plan 8",
+      currency: "USDT",
+      lockupPeriod: 7,
+      dailyYield: "0.02",
+      minDeposit: "10",
+      maxDeposit: "100",
+      isActive: false,
+      adminId: "admin-1",
+      reason: "reviewed plan change",
+      idempotencyKey: "mining-plan-key-08",
+    };
+
+    await expect(gateway.createMiningPlan(command)).rejects.toThrow(
+      "Mining plans are limited to 7 total, including disabled plans",
+    );
+    const statements = (bridge.batch as jest.Mock).mock
+      .calls[0][0] as D1BridgeBatchStatement[];
+    expect(statements[0].sql).toContain('(SELECT COUNT(*) FROM "MiningPlan") < 7');
+    expect(statements[0].sql).not.toContain('WHERE "isActive"=1');
   });
 
   it("keeps inactive Mining plans visible to Admin without exposing them in the Public list", async () => {
@@ -1820,6 +1860,20 @@ describe("D1FinancialCommandGateway", () => {
     ]);
     expect(bridge.select).toHaveBeenCalledWith(
       expect.not.stringContaining('WHERE "isActive"=1'),
+    );
+  });
+
+  it("lists disabled loan plans for Admin while retaining the Public active-only query", async () => {
+    const bridge = createBridge({
+      select: jest.fn().mockResolvedValue({ results: [{ id: "disabled-loan", isActive: 0 }] }),
+    });
+    const gateway = new D1FinancialCommandGateway(bridge);
+    await expect(gateway.listAdminLoanPlans()).resolves.toEqual([
+      { id: "disabled-loan", isActive: 0 },
+    ]);
+    expect(bridge.select).toHaveBeenCalledWith(
+      expect.not.stringContaining('WHERE "isActive"=1'),
+      [],
     );
   });
 

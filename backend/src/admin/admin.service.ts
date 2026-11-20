@@ -49,6 +49,8 @@ import {
   updateD1MiningPlan,
 } from "./admin-mining-plan-configuration";
 
+const MAX_MINING_PLAN_COUNT = 7;
+
 const ADMIN_ACCOUNT_SELECT = {
   id: true,
   email: true,
@@ -2971,7 +2973,13 @@ export class AdminService {
       minDepositDecimal: minDeposit.toString(),
       maxDepositDecimal: maxDeposit.toString(),
     };
-    if (!context) return this.prisma.miningPlan.create({ data: values });
+    if (!context) {
+      return this.prisma.$transaction(async (tx) => {
+        const count = await tx.miningPlan.count();
+        if (count >= MAX_MINING_PLAN_COUNT) throw new ConflictException(`Mining plans are limited to ${MAX_MINING_PLAN_COUNT} total, including disabled plans`);
+        return tx.miningPlan.create({ data: values });
+      });
+    }
     return executeAdminMutation(
       this.prisma,
       {
@@ -2981,7 +2989,11 @@ export class AdminService {
         idempotencyKey: context.idempotencyKey,
         payload: values,
       },
-      (tx) => tx.miningPlan.create({ data: values }),
+      async (tx) => {
+        const count = await tx.miningPlan.count();
+        if (count >= MAX_MINING_PLAN_COUNT) throw new ConflictException(`Mining plans are limited to ${MAX_MINING_PLAN_COUNT} total, including disabled plans`);
+        return tx.miningPlan.create({ data: values });
+      },
       (plan) => String(plan.id),
       (tx, target) => tx.miningPlan.findUnique({ where: { id: target } }),
     );
@@ -3025,7 +3037,7 @@ export class AdminService {
   // --- Loan Management ---
 
   async getLoanPlans() {
-    if (this.d1?.isEnabled()) return this.d1.listLoanPlans();
+    if (this.d1?.isEnabled()) return this.d1.listAdminLoanPlans();
     return this.prisma.loanPlan.findMany({ orderBy: { durationDays: "asc" } });
   }
 

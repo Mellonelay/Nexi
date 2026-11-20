@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { MiningPlan } from "@/admin/types";
 
+const MAX_MINING_PLAN_COUNT = 7;
+
 export const Route = createFileRoute("/mining")({ component: Page });
 
 const validPlanDecimal = (value: string) =>
@@ -53,6 +55,7 @@ function Inner() {
   const [isActive, setIsActive] = useState(true);
   const [message, setMessage] = useState("");
   const canEdit = session.can("mining.edit");
+  const planCount = query.data?.length ?? 0;
   useEffect(() => {
     if (!reference) return;
     document.getElementById("mining-" + reference)?.scrollIntoView({ block: "center" });
@@ -75,6 +78,7 @@ function Inner() {
     event.preventDefault();
     if (
       !canEdit ||
+      (!editing && planCount >= MAX_MINING_PLAN_COUNT) ||
       !name.trim() ||
       !Number.isInteger(Number(lockupPeriod)) ||
       Number(lockupPeriod) < 1 ||
@@ -197,6 +201,8 @@ function Inner() {
         </section>
         <form onSubmit={submit} className="space-y-3 rounded-xl border border-border bg-card p-4">
           <h2 className="font-semibold">{editing ? "Edit plan" : "Create plan"}</h2>
+          <p className="text-xs text-muted-foreground">{planCount} of {MAX_MINING_PLAN_COUNT} plans configured. Disabled plans count toward the limit.</p>
+          {!editing && planCount >= MAX_MINING_PLAN_COUNT && <p role="status" className="text-sm text-amber-700">The seven-plan maximum is reached. Edit an existing plan to change its terms or status.</p>}
           <label htmlFor="mining-plan-name" className="text-xs font-medium">
             Plan name
           </label>
@@ -257,7 +263,7 @@ function Inner() {
             Plan enabled
           </label>
           <div className="flex gap-2">
-            <Button type="submit" disabled={!canEdit}>
+            <Button type="submit" disabled={!canEdit || (!editing && planCount >= MAX_MINING_PLAN_COUNT)}>
               {editing ? "Save changes" : "Create plan"}
             </Button>
             {editing && (

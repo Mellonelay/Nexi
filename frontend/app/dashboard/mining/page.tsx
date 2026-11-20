@@ -225,13 +225,25 @@ export default function MiningPage() {
       await recheckUnknownSubscription(submittedKey);
     } catch (error) {
       if (sessionPrincipalId() !== userId) return;
-      const status = (error as { response?: { status?: number } } | null)?.response?.status;
+      const response = (error as { response?: { status?: number; data?: { code?: string } } } | null)?.response;
+      if (response?.status === 409 && response.data?.code === 'MINING_PLAN_TERMS_CHANGED') {
+        const key = pendingSubscription.current?.key;
+        if (key && userId && clearPendingEconomicIntent('mining-subscribe', userId, key)) {
+          pendingSubscription.current = null;
+          setUnknownSubscriptionKey(null);
+          setSelectedPlan(null);
+          setStage('IDLE');
+          setMessage('Plan terms changed before any funds were reserved. Review the latest plan terms and submit again.');
+          void load({ preserveFlow: true });
+          return;
+        }
+      }
       if (pendingSubscription.current) {
         const key = pendingSubscription.current.key;
         setUnknownSubscriptionKey(key);
         setStage('ERROR');
-        setMessage(status
-          ? `Subscription returned HTTP ${status}; the original financial outcome remains unresolved. Recheck account activity before trying another.`
+        setMessage(response?.status
+          ? `Subscription returned HTTP ${response.status}; the original financial outcome remains unresolved. Recheck account activity before trying another.`
           : 'Subscription outcome is unknown. Check account activity before trying another subscription.');
         void recheckUnknownSubscription(key);
       }

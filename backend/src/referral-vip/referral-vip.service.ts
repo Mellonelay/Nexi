@@ -516,6 +516,11 @@ export class ReferralVipService {
       }
     }
 
+    if (decision?.status === 'REWARDED'
+      && (!decision.referrerUserId || !decision.rewardAsset || !decision.rewardAmount || !decision.ledgerPostingId)) {
+      throw new ServiceUnavailableException('Issued referral reward is missing its durable recovery details; deposit invalidation remains pending');
+    }
+
     const principal = await this.financial.applyAdminFinancialCorrection({
       userId: source.userId, asset: source.asset, amount: source.amount, direction: 'DEBIT', scope: 'MAIN',
       idempotencyKey: `deposit-invalidation:principal:${depositRef}`,
@@ -535,30 +540,63 @@ export class ReferralVipService {
       if (!rewardPostingId) throw new ServiceUnavailableException('Referral reward recovery did not return its ledger posting');
     }
 
-    const auditId = randomUUID();
     const now = new Date().toISOString();
-    await this.d1.batch([
-      { sql: `UPDATE "VipDepositQualification" SET "status"='INVALIDATED',"invalidatedAt"=?,"invalidationReason"=?,"updatedAt"=CURRENT_TIMESTAMP WHERE "depositRef"=?`, params: [now, normalizedReason, depositRef] },
-      { sql: `UPDATE "ReferralFirstDepositDecision" SET "status"=?,"decisionReason"=?,"updatedAt"=CURRENT_TIMESTAMP WHERE "depositRef"=? AND "status"='REWARDED'`, params: [rewardPostingId ? 'REWARD_RECOVERED' : 'DEPOSIT_INVALIDATED', normalizedReason, depositRef] },
-      ...(rewardPostingId && decision?.ledgerPostingId ? [{ sql: `UPDATE "ReferralRewardEvent" SET "status"='RECOVERED' WHERE "ledgerPostingId"=? AND "status"='COMPLETED'`, params: [String(decision.ledgerPostingId)] }] : []),
-      { sql: `UPDATE "DepositInvalidationRecovery" SET "status"='RECOVERED',"ledgerPostingId"=?,"updatedAt"=CURRENT_TIMESTAMP WHERE "depositRef"=? AND "status"='PENDING'`, params: [principalPostingId, depositRef] },
-      { sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)`, params: [auditId, adminId, 'EXTERNAL_DEPOSIT_INVALIDATED', depositRef, JSON.stringify({ reason: normalizedReason, principalPostingId, rewardPostingId })] },
-    ]);
+    await this.d1.batch([{
+      sql: `UPDATE "VipDepositQualification" SET "status"='INVALIDATED',"invalidatedAt"=?,"invalidationReason"=?,"updatedAt"=CURRENT_TIMESTAMP WHERE "depositRef"=?`,
+      params: [now, normalizedReason, depositRef],
+    }]);
 
     const vipPolicy = await this.getVipPolicy();
-    if (vipPolicy?.baseAsset) {
-      const totalRows = await this.d1.select<{ baseAmount: string }>(
-        `SELECT "baseAmount" FROM "VipDepositQualification" WHERE "userId"=? AND "baseAsset"=? AND "status"='ACTIVE'`,
-        [source.userId, vipPolicy.baseAsset],
-      );
-      const total = totalRows.results.reduce((sum, row) => sum.plus(new Prisma.Decimal(row.baseAmount)), new Prisma.Decimal(0));
-      // Invalidated deposits reduce qualifying progress, never an already attained VIP level.
-      await this.d1.batch([{
-        sql: `UPDATE "UserVipState" SET "progress"=?,"evaluatedAt"=?,"updatedAt"=CURRENT_TIMESTAMP WHERE "userId"=? AND COALESCE("manualOverride",0)=0`,
-        params: [total.toString(), now, source.userId],
-      }]);
-    }
-    return { auditId, depositRef, status: 'RECOVERED', principalPostingId, rewardPostingId, replayed: false };
+    const automaticState = vipPolicy?.baseAsset
+      ? await this.resolveAutomaticVipState(source.userId, vipPolicy.baseAsset)
+      : null;
+
+    const auditId = randomUUID();
+    const finalize = [
+      ...(automaticState ? [{
+        sql: `UPDATE "UserVipState" SET "vipLevelId"=?,"progress"=?,"evaluatedAt"=?,"qualifiedAt"=CASE WHEN ?>0 THEN COALESCE("qualifiedAt",?) ELSE NULL END,"updatedAt"=CURRENT_TIMESTAMP WHERE "userId"=? AND COALESCE("manualOverride",0)=0`,
+        params: [automaticState.id, automaticState.progress, now, automaticState.level, now, source.userId],
+      }] : []),
+      ...(rewardPostingId && decision?.ledgerPostingId ? [{
+        sql: `UPDATE "ReferralFirstDepositDecision" SET "status"='REWARD_RECOVERED',"decisionReason"=?,"updatedAt"=CURRENT_TIMESTAMP WHERE "depositRef"=? AND "status"='REWARDED'`,
+        params: [normalizedReason, depositRef],
+      }, {
+        sql: `UPDATE "ReferralRewardEvent" SET "status"='RECOVERED' WHERE "ledgerPostingId"=? AND "status"='COMPLETED'`,
+        params: [String(decision.ledgerPostingId)],
+      }] : []),
+      { sql: `UPDATE "DepositInvalidationRecovery" SET "status"='RECOVERED',"ledgerPostingId"=?,"updatedAt"=CURRENT_TIMESTAMP WHERE "depositRef"=? AND "status"='PENDING'`, params: [principalPostingId, depositRef] },
+      { sql: `INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") SELECT ?,?,?,?,?,CURRENT_TIMESTAMP WHERE NOT EXISTS (SELECT 1 FROM "AdminAuditLog" WHERE "action"=? AND "target"=?)`, params: [auditId, adminId, 'EXTERNAL_DEPOSIT_INVALIDATED', depositRef, JSON.stringify({ reason: normalizedReason, principalPostingId, rewardPostingId }), 'EXTERNAL_DEPOSIT_INVALIDATED', depositRef] },
+    ];
+    // One SQLite transaction commits the customer projection and recovery completion together.
+    // If anything before this point fails, PENDING makes retry safe; Ledger corrections use stable
+    // idempotency keys and return the original postings.
+    await this.d1.batch(finalize);
+    const completed = (await this.d1.select<{ status: string }>(
+      `SELECT "status" FROM "DepositInvalidationRecovery" WHERE "depositRef"=? LIMIT 1`, [depositRef],
+    )).results[0];
+    if (completed?.status !== 'RECOVERED') throw new ServiceUnavailableException('Deposit invalidation recovery did not finalize; retry is safe');
+    const audit = (await this.d1.select<{ id: string }>(
+      `SELECT "id" FROM "AdminAuditLog" WHERE "action"=? AND "target"=? ORDER BY "createdAt" ASC LIMIT 1`,
+      ['EXTERNAL_DEPOSIT_INVALIDATED', depositRef],
+    )).results[0];
+    return { auditId: audit?.id ?? auditId, depositRef, status: 'RECOVERED', principalPostingId, rewardPostingId, replayed: false };
+  }
+
+  private async resolveAutomaticVipState(userId: string, baseAsset: string) {
+    const totalRows = await this.d1.select<{ baseAmount: string }>(
+      `SELECT "baseAmount" FROM "VipDepositQualification" WHERE "userId"=? AND "baseAsset"=? AND "status"='ACTIVE'`,
+      [userId, baseAsset],
+    );
+    const total = totalRows.results.reduce((sum, row) => sum.plus(new Prisma.Decimal(row.baseAmount)), new Prisma.Decimal(0));
+    const levels = (await this.d1.select<{ id: string; level: number; threshold: string }>(
+      `SELECT "id","level","threshold" FROM "VipLevel" WHERE "enabled"=1 ORDER BY "level" ASC`,
+    )).results;
+    const eligible = levels.filter((level) => new Prisma.Decimal(level.threshold).lte(total));
+    const target = eligible.at(-1) ?? (await this.d1.select<{ id: string; level: number }>(
+      `SELECT "id","level" FROM "VipLevel" WHERE "level"=0 LIMIT 1`,
+    )).results[0];
+    if (!target) throw new ServiceUnavailableException('Default VIP membership is unavailable; automatic qualification cannot be reconciled');
+    return { id: target.id, level: target.level, progress: total.toString() };
   }
 
   async adminClearVipOverride(adminId: string, userCode: number, reason: string) {
@@ -566,10 +604,20 @@ export class ReferralVipService {
     if (!reason?.trim()) throw new BadRequestException('Override removal reason is required');
     const user = (await this.d1.select<{ id: string }>('SELECT "id" FROM "User" WHERE "userCode"=? LIMIT 1', [userCode])).results[0];
     if (!user) throw new NotFoundException('NEXI user not found');
+    const vipPolicy = await this.getVipPolicy();
+    const baseAsset = typeof vipPolicy?.baseAsset === 'string' ? vipPolicy.baseAsset.trim().toUpperCase() : '';
+    if (!/^[A-Z0-9]{2,20}$/.test(baseAsset)) {
+      throw new ServiceUnavailableException('VIP automatic qualification policy is unavailable; override was not cleared');
+    }
+    const automaticState = await this.resolveAutomaticVipState(user.id, baseAsset);
     const auditId = randomUUID();
+    const now = new Date().toISOString();
     await this.d1.batch([
-      { sql: 'UPDATE "UserVipState" SET "manualOverride"=0,"overrideAdminId"=NULL,"overrideReason"=NULL,"overrideAt"=NULL,"updatedAt"=CURRENT_TIMESTAMP WHERE "userId"=?', params: [user.id] },
-      { sql: 'INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)', params: [auditId, adminId, 'VIP_OVERRIDE_CLEARED', `USER:${userCode}`, JSON.stringify({ reason: reason.trim() })] },
+      {
+        sql: 'UPDATE "UserVipState" SET "vipLevelId"=?,"progress"=?,"evaluatedAt"=?,"qualifiedAt"=CASE WHEN ?>0 THEN ? ELSE NULL END,"manualOverride"=0,"overrideAdminId"=NULL,"overrideReason"=NULL,"overrideAt"=NULL,"updatedAt"=CURRENT_TIMESTAMP WHERE "userId"=?',
+        params: [automaticState.id, automaticState.progress, now, automaticState.level, now, user.id],
+      },
+      { sql: 'INSERT INTO "AdminAuditLog" ("id","adminId","action","target","details","createdAt") VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)', params: [auditId, adminId, 'VIP_OVERRIDE_CLEARED', 'USER:' + String(userCode), JSON.stringify({ reason: reason.trim() })] },
     ]);
     return { auditId, userCode, vip: await this.getVip(user.id) };
   }
