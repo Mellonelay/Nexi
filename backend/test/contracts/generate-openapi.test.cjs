@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { readdirSync } = require("node:fs");
+const { readFileSync, readdirSync } = require("node:fs");
 const { resolve } = require("node:path");
 const { test } = require("node:test");
 const { loadSwaggerMetadata } = require("../../scripts/generate-openapi");
@@ -95,4 +95,41 @@ test("source generator loads configured Swagger metadata without application boo
     await app.close();
   }
   assert.deepEqual(temporaryFiles(), before);
+});
+
+
+test("committed OpenAPI contract exactly reflects registered NestJS controllers and DTOs", async () => {
+  await loadSwaggerMetadata();
+  const { AppModule } = require("../../src/app.module");
+  const { NestFactory } = require("@nestjs/core");
+  const { DocumentBuilder, SwaggerModule } = require("@nestjs/swagger");
+  const app = await NestFactory.create(AppModule, {
+    logger: false,
+    preview: true,
+  });
+  try {
+    const document = SwaggerModule.createDocument(
+      app,
+      new DocumentBuilder()
+        .setTitle("NEXI API")
+        .setDescription("NEXI application and Admin API contract")
+        .setVersion("1.0")
+        .addBearerAuth()
+        .build(),
+    );
+    const artifact = JSON.parse(
+      readFileSync(resolve(__dirname, "../../../docs/contracts/openapi.json"), "utf8"),
+    );
+    assert.deepEqual(document, artifact, "Generated API artifact has drifted from source");
+    const schemas = document.components.schemas;
+    assert.equal(schemas.CreateMiningPlanDto.properties.dailyYield.type, "string");
+    assert.equal(schemas.CreateLoanPlanDto.properties.interestRate.type, "string");
+    assert.ok(schemas.UpdateFeatureFlagDto.required.includes("idempotencyKey"));
+    const revoke = document.paths["/admin/users/{id}/sessions/revoke"].post;
+    assert.deepEqual(revoke.responses["201"].content["application/json"].schema.required, [
+      "ok", "auditId", "count",
+    ]);
+  } finally {
+    await app.close();
+  }
 });

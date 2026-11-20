@@ -300,8 +300,8 @@ export class AdminController {
       type: "object",
       additionalProperties: true,
       properties: {
-        auditId: { type: "string", format: "uuid" },
-        replayed: { type: "boolean" },
+        auditId: { type: "string", format: "uuid", description: "Persisted AdminAuditLog receipt identifier" },
+        replayed: { type: "boolean", description: "True when returning the original operation result" },
       },
     },
   })
@@ -332,8 +332,8 @@ export class AdminController {
       type: "object",
       additionalProperties: true,
       properties: {
-        auditId: { type: "string", format: "uuid" },
-        replayed: { type: "boolean" },
+        auditId: { type: "string", format: "uuid", description: "Persisted AdminAuditLog receipt identifier" },
+        replayed: { type: "boolean", description: "True when returning the original operation result" },
       },
     },
   })
@@ -359,8 +359,8 @@ export class AdminController {
       type: "object",
       additionalProperties: true,
       properties: {
-        auditId: { type: "string", format: "uuid" },
-        replayed: { type: "boolean" },
+        auditId: { type: "string", format: "uuid", description: "Persisted AdminAuditLog receipt identifier" },
+        replayed: { type: "boolean", description: "True when returning the original operation result" },
       },
     },
   })
@@ -488,11 +488,11 @@ export class AdminController {
     schema: {
       type: "object",
       additionalProperties: true,
-      properties: { auditId: { type: "string", format: "uuid" } },
+      properties: { auditId: { type: "string", format: "uuid", description: "Persisted AdminAuditLog receipt identifier" } },
     },
   })
   @ApiResponse({ status: 400, description: "Governance command is already in a different state" })
-  @ApiResponse({ status: 403, description: "Requester cannot approve their own command" })
+  @ApiResponse({ status: 403, description: "Requester cannot decide their own command" })
   @ApiNotFoundResponse({ description: "Governance command not found" })
   @ApiResponse({ status: 409, description: "Governance decision conflicts with its original request" })
   @RequireAdminPermission("approvals.decide")
@@ -516,11 +516,11 @@ export class AdminController {
     schema: {
       type: "object",
       additionalProperties: true,
-      properties: { auditId: { type: "string", format: "uuid" } },
+      properties: { auditId: { type: "string", format: "uuid", description: "Persisted AdminAuditLog receipt identifier" } },
     },
   })
   @ApiResponse({ status: 400, description: "Governance command is already in a different state" })
-  @ApiResponse({ status: 403, description: "Requester cannot approve their own command" })
+  @ApiResponse({ status: 403, description: "Requester cannot decide their own command" })
   @ApiNotFoundResponse({ description: "Governance command not found" })
   @ApiResponse({ status: 409, description: "Governance decision conflicts with its original request" })
   @RequireAdminPermission("approvals.decide")
@@ -699,6 +699,7 @@ export class AdminController {
 
   @Post("sessions/:id/revoke")
   @RequireAdminPermission("sessions.revoke")
+  @ApiCreatedResponse({ description: "Persisted session revocation and audit receipt", schema: { type: "object", required: ["ok", "auditId"], properties: { ok: { type: "boolean" }, auditId: { type: "string", format: "uuid" } } } })
   revokeAuthSession(
     @Param("id", ParseUUIDPipe) id: string,
     @Body() body: AdminIncidentAcknowledgeDto,
@@ -714,6 +715,7 @@ export class AdminController {
 
   @Post("users/:id/sessions/revoke")
   @RequireAdminPermission("sessions.revoke")
+  @ApiCreatedResponse({ description: "Persisted session revocation and audit receipt", schema: { type: "object", required: ["ok", "auditId", "count"], properties: { ok: { type: "boolean" }, auditId: { type: "string", format: "uuid" }, count: { type: "integer" } } } })
   revokeUserSessions(
     @Param("id", ParseUUIDPipe) id: string,
     @Body() body: AdminIncidentAcknowledgeDto,

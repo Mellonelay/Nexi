@@ -5474,7 +5474,7 @@
             "name": "limit",
             "required": false,
             "in": "query",
-            "description": "Depth levels, 1\u2013100; defaults to 20.",
+            "description": "Depth levels, 1–100; defaults to 20.",
             "schema": {
               "type": "string"
             }
@@ -5523,7 +5523,7 @@
             "name": "limit",
             "required": false,
             "in": "query",
-            "description": "Recent trades, 1\u2013100; defaults to 50.",
+            "description": "Recent trades, 1–100; defaults to 50.",
             "schema": {
               "type": "string"
             }
@@ -7089,12 +7089,6 @@
           }
         },
         "responses": {
-          "400": {
-            "description": "Invalid acknowledgement request"
-          },
-          "404": {
-            "description": "Incident not found"
-          },
           "201": {
             "description": "Incident acknowledgement result with persisted audit receipt",
             "content": {
@@ -7116,6 +7110,12 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Invalid acknowledgement request"
+          },
+          "404": {
+            "description": "Incident not found"
           },
           "409": {
             "description": "Conflicting or unrecoverable acknowledgement replay"
@@ -7199,9 +7199,6 @@
           }
         },
         "responses": {
-          "400": {
-            "description": "Invalid maintenance window request"
-          },
           "201": {
             "description": "Maintenance window result with persisted audit receipt",
             "content": {
@@ -7223,6 +7220,9 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Invalid maintenance window request"
           },
           "409": {
             "description": "Conflicting or unrecoverable maintenance replay"
@@ -7263,12 +7263,6 @@
           }
         },
         "responses": {
-          "400": {
-            "description": "Invalid maintenance cancellation request"
-          },
-          "404": {
-            "description": "Maintenance window not found"
-          },
           "201": {
             "description": "Maintenance cancellation result with persisted audit receipt",
             "content": {
@@ -7290,6 +7284,12 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Invalid maintenance cancellation request"
+          },
+          "404": {
+            "description": "Maintenance window not found"
           },
           "409": {
             "description": "Conflicting cancellation or unrecoverable replay"
@@ -7564,7 +7564,7 @@
         },
         "responses": {
           "201": {
-            "description": "",
+            "description": "Governance decision with persisted audit receipt",
             "content": {
               "application/json": {
                 "schema": {
@@ -7629,7 +7629,7 @@
         },
         "responses": {
           "201": {
-            "description": "",
+            "description": "Governance decision with persisted audit receipt",
             "content": {
               "application/json": {
                 "schema": {
@@ -8200,11 +8200,24 @@
         },
         "responses": {
           "201": {
-            "description": "",
+            "description": "Persisted session revocation and audit receipt",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "required": [
+                    "ok",
+                    "auditId"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "auditId": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  }
                 }
               }
             }
@@ -8245,11 +8258,28 @@
         },
         "responses": {
           "201": {
-            "description": "",
+            "description": "Persisted session revocation and audit receipt",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "required": [
+                    "ok",
+                    "auditId",
+                    "count"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "auditId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "count": {
+                      "type": "integer"
+                    }
+                  }
                 }
               }
             }
@@ -13560,6 +13590,12 @@
             "type": "string",
             "format": "date-time"
           },
+          "auditId": {
+            "type": "string"
+          },
+          "replayed": {
+            "type": "boolean"
+          },
           "conversation": {
             "$ref": "#/components/schemas/MessageModerationConversationResponseDto"
           }
@@ -13653,6 +13689,12 @@
           "updatedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "auditId": {
+            "type": "string"
+          },
+          "replayed": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -13734,11 +13776,23 @@
           },
           "status": {
             "type": "string"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128
           }
         },
         "required": [
           "slug",
-          "name"
+          "name",
+          "reason",
+          "idempotencyKey"
         ]
       },
       "UpdateLearnCategoryStatusDto": {
@@ -13867,7 +13921,9 @@
         "required": [
           "slug",
           "title",
-          "body"
+          "body",
+          "reason",
+          "idempotencyKey"
         ]
       },
       "UpdateLearnContentDto": {
@@ -13926,7 +13982,11 @@
               "$ref": "#/components/schemas/LearnMediaAssetDto"
             }
           }
-        }
+        },
+        "required": [
+          "reason",
+          "idempotencyKey"
+        ]
       },
       "WalletChallengeDto": {
         "type": "object",
@@ -14073,7 +14133,21 @@
       },
       "GenerateBackupCodesDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "securityPassword": {
+            "type": "string",
+            "minLength": 1
+          },
+          "token": {
+            "type": "string",
+            "minLength": 6,
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "securityPassword",
+          "token"
+        ]
       },
       "ClaimReferralDto": {
         "type": "object",
@@ -15042,12 +15116,18 @@
             "type": "string",
             "minLength": 3,
             "maxLength": 500
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128
           }
         },
         "required": [
           "key",
           "value",
-          "reason"
+          "reason",
+          "idempotencyKey"
         ]
       },
       "CreateGovernanceCommandDto": {
@@ -15118,12 +15198,18 @@
             "type": "string",
             "minLength": 3,
             "maxLength": 500
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128
           }
         },
         "required": [
           "key",
           "enabled",
-          "reason"
+          "reason",
+          "idempotencyKey"
         ]
       },
       "FinancialCorrectionDto": {
@@ -15531,24 +15617,29 @@
             "minimum": 1
           },
           "minDeposit": {
-            "type": "number",
-            "minimum": 0
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
           },
           "maxDeposit": {
-            "type": "number",
-            "minimum": 0
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
           },
           "minWithdrawal": {
-            "type": "number",
-            "minimum": 0
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
           },
           "maxWithdrawal": {
-            "type": "number",
-            "minimum": 0
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
           },
           "withdrawalFee": {
-            "type": "number",
-            "minimum": 0
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
           },
           "depositEnabled": {
             "type": "boolean"
@@ -15608,24 +15699,29 @@
             "minimum": 1
           },
           "minDeposit": {
-            "type": "number",
-            "minimum": 0
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
           },
           "maxDeposit": {
-            "type": "number",
-            "minimum": 0
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
           },
           "minWithdrawal": {
-            "type": "number",
-            "minimum": 0
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
           },
           "maxWithdrawal": {
-            "type": "number",
-            "minimum": 0
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
           },
           "withdrawalFee": {
-            "type": "number",
-            "minimum": 0
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
           },
           "depositEnabled": {
             "type": "boolean"
@@ -15824,16 +15920,19 @@
             "minimum": 1
           },
           "dailyYield": {
-            "type": "number",
-            "minimum": 0
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
           },
           "minDeposit": {
-            "type": "number",
-            "minimum": 0
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
           },
           "maxDeposit": {
-            "type": "number",
-            "minimum": 0
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
           },
           "isActive": {
             "type": "boolean"
@@ -15878,16 +15977,19 @@
             "minimum": 1
           },
           "dailyYield": {
-            "type": "number",
-            "minimum": 0
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
           },
           "minDeposit": {
-            "type": "number",
-            "minimum": 0
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
           },
           "maxDeposit": {
-            "type": "number",
-            "minimum": 0
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
           },
           "isActive": {
             "type": "boolean"
@@ -15923,16 +16025,22 @@
             "minimum": 1
           },
           "interestRate": {
-            "type": "number",
-            "minimum": 0
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "pattern": "^(?:0|[1-9][0-9]*)(?:[.][0-9]+)?$"
           },
           "minAmount": {
-            "type": "number",
-            "minimum": 0
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "pattern": "^(?:0|[1-9][0-9]*)(?:[.][0-9]+)?$"
           },
           "maxAmount": {
-            "type": "number",
-            "minimum": 0
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "pattern": "^(?:0|[1-9][0-9]*)(?:[.][0-9]+)?$"
           },
           "isActive": {
             "type": "boolean"
@@ -15978,16 +16086,22 @@
             "minimum": 1
           },
           "interestRate": {
-            "type": "number",
-            "minimum": 0
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "pattern": "^(?:0|[1-9][0-9]*)(?:[.][0-9]+)?$"
           },
           "minAmount": {
-            "type": "number",
-            "minimum": 0
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "pattern": "^(?:0|[1-9][0-9]*)(?:[.][0-9]+)?$"
           },
           "maxAmount": {
-            "type": "number",
-            "minimum": 0
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "pattern": "^(?:0|[1-9][0-9]*)(?:[.][0-9]+)?$"
           },
           "isActive": {
             "type": "boolean"
