@@ -1,6 +1,6 @@
 # NEXI documentation — one entry point
 
-This page is the **only maintained documentation index**. It does not supersede the current owner's decisions or the actual source. Dated logs, plans, proposals and test receipts are evidence at their own revision, not simultaneous authority.
+This page is the **only maintained documentation index**. It does not supersede the current owner's decisions or the actual source. The November 19 Architecture & Product Correctness Blueprint is a coverage/design reference, not product-policy authority; its stale questions or proposals cannot reopen approved owner decisions. Dated logs, plans, proposals and test receipts are evidence at their own revision, not simultaneous authority.
 
 | Purpose | Maintained owner |
 |---|---|
@@ -9,11 +9,12 @@ This page is the **only maintained documentation index**. It does not supersede 
 | Active engineering tasks | [tasks/todo.md](../tasks/todo.md) |
 | Three-surface source architecture and ownership | [System architecture](architecture/NEXI_SYSTEM_ARCHITECTURE.md) |
 | Financial security and accounting invariants | [Financial integrity](security/NEXI_FINANCIAL_INTEGRITY_REQUIREMENTS.md) |
-| API contract | [OpenAPI](contracts/openapi.json) (generated artifact; check controller+DTO and generation) |
+| Product behavior, implementation matrix and 18 journeys | [Product operating model and correctness matrix](architecture/NEXI_PRODUCT_OPERATING_MODEL.md#nexi-product-implementation-and-correctness-matrix) |
+| API contract and consumers | [OpenAPI](contracts/openapi.json) and [operation-to-source map](contracts/NEXI_API_OPERATION_MAP.md) |
 | Current market architecture decision | [Market-data ADR](architecture/ADR-2026-11-18-NEXI-MARKET-DATA-RESOURCE-ARCHITECTURE.md) (implemented/conditional parts distinguished) |
 | Public mobile-first design | [frontend/DESIGN.md](../frontend/DESIGN.md) |
 | Admin operator behavior | [Admin operator guide](../Admin/docs/NEXI_ADMIN_OPERATOR_USAGE_GUIDE.md) and the original owner PNG there |
-| Original, immutable 113 acceptance requirement wording | [113 criteria](quality/NEXI_113_PUBLIC_ADMIN_ACCEPTANCE_20261101.md); [dated tracker](quality/NEXI_113_ACCEPTANCE_TRACKER_20261101.csv) |
+| Original, immutable 113 acceptance requirement wording | [113 criteria](quality/NEXI_113_PUBLIC_ADMIN_ACCEPTANCE_20261101.md); [tracker with architecture and proof locators](quality/NEXI_113_ACCEPTANCE_TRACKER_20261101.csv) |
 | Future real mobile DApp-browser acceptance procedure | [Mobile Web3 acceptance](quality/NEXI_MOBILE_WEB3_UI_FIRST_BROWSER_ACCEPTANCE_20261117.md) |
 | Last historical component/global test evidence | [Component correctness report](quality/NEXI_COMPONENT_INTEGRATION_PRODUCT_CORRECTNESS_REVIEW_20261119.md); live failure artifacts under the VM's validation cache |
 | Production platform/release controls | [VPS/SQLite/BullMQ](operations/NEXI_VPS_SQLITE_BULLMQ_RUNBOOK.md), [SQLite maintenance](operations/NEXI_SQLITE_DATABASE_RUNBOOK.md), [Sentry](operations/NEXI_SENTRY_OBSERVABILITY.md) |

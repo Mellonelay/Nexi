@@ -1,6 +1,26 @@
 # NEXI — maintained three-surface architecture
 
-**Reconciled 2026-11-19 (Singapore).** Owner decisions and actual source govern; this is a maintained architecture map, **not** a statement that every current source behavior is tested or deployed. Detailed historical maps are recoverable from Git. Before calling an API/SQLite/graph relationship current, check its source SHA and applicable source/contract.
+**Reconciled 2026-11-20 (Myanmar).** Owner decisions and actual source govern; this is a maintained architecture map, **not** a statement that every current source behavior is tested or deployed. Detailed historical maps are recoverable from Git. Before calling an API/SQLite/graph relationship current, check its source SHA and applicable source/contract.
+
+## Specification navigation
+
+- [Product operating model and 18 journeys](NEXI_PRODUCT_OPERATING_MODEL.md) owns feature behavior, user and operator entry points, expected outcomes, failure paths and recovery; its [implementation and correctness matrix](NEXI_PRODUCT_OPERATING_MODEL.md#nexi-product-implementation-and-correctness-matrix) is the cross-journey evidence index.
+- [API operation and consumer map](../contracts/NEXI_API_OPERATION_MAP.md) owns the current static reconciliation of every documented operation to source wiring, guards, input types, delegate and literal client evidence.
+- [Financial invariants and persisted lifecycles](../security/NEXI_FINANCIAL_INTEGRITY_REQUIREMENTS.md#persisted-lifecycles-and-reconciliation-anchors) owns economic policy, traceable compensation and authoritative persisted state.
+- [Acceptance tracker](../quality/NEXI_113_ACCEPTANCE_TRACKER_20261101.csv) links each original criterion to its domain, journey and API/evidence locator alongside existing evidence and disposition. [The frozen criteria](../quality/NEXI_113_PUBLIC_ADMIN_ACCEPTANCE_20261101.md) control wording.
+
+Fallow 3.42.0 reported zero import-cycle or cross-surface boundary findings with the repository configuration. The checkout intentionally lacks a root node_modules; the Backend/Public/Admin workspaces instead link to separate verified shared stores under `/srv/nexi`. Root-scoped Fallow resolver warnings are tooling context, not evidence of broken dependencies; changed-code findings require independent source impact evidence. The Graphify source shortest path via FinancialHttpModule, FinancialOperationsController and FinancialOperationsService agrees with inspected module/handler source. Graphify reverse impact for MarketKlineQueryService points to the Kline controller and module. These results describe source structure.
+
+### Blueprint requirement coverage
+
+| Blueprint scope | Maintained specification and proof boundary |
+|---|---|
+| Parts I–II, architecture authority and correctness, §§1–8 | This architecture owns context, containers, components, deployment, security boundaries and six correctness layers. Current state owns dated source, test and release identities. |
+| Part III, financial workflow method, §§9–12 | The source-traced sequences and financial invariants explain authenticated intent, atomic transfers, reserve/debit/credit, errors, replay and application versus declared schema relationships. Product domains define UI behavior. |
+| Part IV, 15 product domains, §§13–27 | The product operating model gives each domain an outcome, UI/owner source, command or read boundary, state and recovery. Actual feature availability and deployment are evidence-qualified. |
+| Part V, product contracts, §§28–34 | The API map covers all 279 documented operations and static AppModule ownership. Public design and Admin guide retain their own authority. Financial states, declared FKs, durable job recovery and runtime boundaries are described here and in the financial invariants. |
+| Part VI, requirements, journeys and evidence, §§35–39 | The 18 journeys describe operation and recovery. The 113 tracked IDs have exact requirement wording and separate domain, journey and API/evidence locators. No status advances without the relevant proof. |
+| Appendices A–D | The documentation index lists authority owners. Provenance appears in the graph and API sections. The UI-first guide preserves historical regression seeds and proof ownership. Unresolved decisions and candidate runtime discontinuities stay visible. |
 
 ## Deployment and ownership
 | Surface | Source | Runtime owner | Responsibility |
@@ -11,7 +31,7 @@
 
 Name.com DNS and VPS Nginx route `www.nexitrading.app`, `admin.nexitrading.app`, and `api.nexitrading.app`. Financial truth is the promoted SQLite database at `/var/lib/nexi/sqlite/nexi-staging.sqlite` (historical filename, **not disposable**). `D1PrismaService`, `d1_*` source identifiers and `d1_migrations` preserve compatibility names; Cloudflare Worker/D1 are **not** NEXI's live application/financial runtime.
 
-Prisma 7 and the native `better-sqlite3` gateway address the **same** durable store. `LedgerAccount`/`LedgerPosting`, business-state tables, user Activity and `EventOutbox`/`EventInbox` supply authoritative accounting, readback and durable intent. SQLite journals persist workflow/job commands. BullMQ 6 / Aiven Valkey transports work and Socket.IO projects events; neither creates financial truth or guarantees exactly-once delivery. KYC/proof files require private access and verified provenance.
+Prisma 7 and the native `better-sqlite3` gateway address the **same** durable store. `LedgerAccount`/`LedgerPosting`, business-state tables, user Activity and `EventOutbox`/`EventInbox` supply authoritative accounting, readback and durable intent. `LocalDurableJob*` and `LocalWorkflow*` persist dispatch/recovery state; these are workflow records, not a separate accounting Journal. BullMQ 6 / Aiven Valkey transports work and Socket.IO projects events; neither creates financial truth or guarantees exactly-once delivery. KYC/proof files require private access and verified provenance.
 
 ```mermaid
 flowchart TD
@@ -20,7 +40,7 @@ flowchart TD
  N --> API[NestJS auth / DTO / domain policies]
  API --> TX[Prisma + native SQLite transaction gateway]
  TX --> DB[(SQLite: business state + Ledger)]
- TX --> O[Audit / Activity / Outbox / Inbox / journals]
+ TX --> O[Audit / Activity / Outbox / Inbox / workflow journal]
  O --> Q[BullMQ / Valkey: retries and transport]
  API --> WS[Socket.IO post-commit projection]
  WS --> P
@@ -54,28 +74,30 @@ Five customer-facing wallet scopes are Funding/MAIN, Spot, Margin, Options/BINAR
 Eight logical Admin workspaces and account-level research default + active position-specific override exist in the source. NestJS `AdminService.persistBinaryResearchControl` guards eligible research accounts, actor/reason, original request key, audit receipt and position version/expiry. `BinaryService.buildSandboxSimulation` generates isolated deterministic candle projection; `frontend/app/lib/binary-sandbox-chart.ts` validates the simulation and aggregates a chart. Do not conflate simulation with shared provider prices or create a second settlement/financial writer. Verify the exact current source and real Admin/Public same-release state before making a runtime PASS claim. Original owner design: `Admin/docs/NEXI Admin — Unified Navigation and Binary Control Architecture-2026-10-21-144002.png`.
 
 ## Current market architecture and proof limits
-The 2026-11-18 committed market source (`8d32b95`) separates bounded provider tick/Kline processing from best-effort trades/depth, revises same-timestamp Klines and Public trade-gap recovery. In-memory ingestion buffers, a five-second shutdown grace and local type/focused tests do **not** imply zero loss or real released runtime improvement. Source queue/stream semantics, production provider freshness, financial interference, and deploy identity are independent checks. Conditional tradeoff decisions live in [market ADR](ADR-2026-11-18-NEXI-MARKET-DATA-RESOURCE-ARCHITECTURE.md).
+The market source separates bounded ticker/Kline processing from best-effort trade/depth. [MarketIngestService](../../backend/src/market/market-ingest.service.ts) uses a 256-entry reference queue and a ticker/Kline lane that can grow to 1,024 entries for closed Klines after replaceable data is exhausted. Its saturation counters and shutdown path explicitly allow drops, including closed Klines. MarketKline is unique on (pairId, interval, openTime), and pairId references MarketPair. [BinaryService](../../backend/src/binary/binary.service.ts) separately resolves an eligible expiry source or delays settlement, and persists price provenance. Research simulation has its own scoped path. Runtime saturation, recovery, freshness and financial-resource interference require deployed measurements. See the [market ADR](ADR-2026-11-18-NEXI-MARKET-DATA-RESOURCE-ARCHITECTURE.md).
 
 ## Proof and current status
-At audit entry `main@ed2496efaa63` had six local commits not on remote and three November 17 services active on earlier artifacts. Current evidence [NEXI_CURRENT_STATE](../../NEXI_CURRENT_STATE.md) includes the failed broad Jest 40/753 tests and later native SQLite cleanup abort. Focused 74 Backend/62 Public/36 Admin checks were historically reported passing and do not erase that gate. The 113-case actual mobile Web3 browser acceptance has not been rerun against the candidate. Source, tests, build, deployment, API behavior, financial correctness and customer acceptance must remain separately labeled.
+The [current state](../../NEXI_CURRENT_STATE.md) records the Backend-wide receipt: 136 suites, 819 passed tests and zero skips on test-only Node 24.22.0. It supersedes the earlier broad failure and native cleanup abort for that test environment. All three services were observed active since November 17. Candidate artifact identity and authenticated mobile Web3/Admin acceptance remain open.
 
 Reference owners: [root AGENTS](../../AGENTS.md), [financial invariants](../security/NEXI_FINANCIAL_INTEGRITY_REQUIREMENTS.md), [source OpenAPI](../contracts/openapi.json), [operator guide](../../Admin/docs/NEXI_ADMIN_OPERATOR_USAGE_GUIDE.md), [Public design](../../frontend/DESIGN.md), [operations](../operations/NEXI_VPS_SQLITE_BULLMQ_RUNBOOK.md).
 
 
-## Architecture and product operating specification — source revision 9c1bab8af977
+## Architecture and product operating specification
 
-**Evidence boundary.** The relationships below were inspected in the working checkout at `9c1bab8af977836b5d19d883b97f282250f90ace` on 2026-11-19. The 253-path/279-operation inventory is an OpenAPI *artifact* count, not an independently verified exhaustive controller parity result. Source-grounded entry points establish owners and selected logic, not successful business execution. The existing [113 frozen requirements](../quality/NEXI_113_PUBLIC_ADMIN_ACCEPTANCE_20261101.md) retain their original wording; any identifier-to-owner association below is navigation, **not** a PASS. The dated 2026-11-17 deployed services are not proven to contain this source revision.
+**Evidence boundary.** The original source walkthrough was recorded at 9c1bab8af977. Selected implementation, schema and graph relationships were reconciled at c7f64d8608af9c5a718826bccfa8aecac271a547. The OpenAPI artifact still contains 253 paths and 279 operations. Source and schema establish selected contracts and constraints. The [113 frozen requirements](../quality/NEXI_113_PUBLIC_ADMIN_ACCEPTANCE_20261101.md) retain their original wording. Their ID mapping here serves as navigation. The observed November 17 service artifacts have separate release provenance.
 
 ### Six-layer correctness contract
 
 | Layer | Specification owner | Necessary evidence | Current assessment |
 |---|---|---|---|
 | 1. Component | Controllers/DTO validators, domain helpers, React components | Source rule and focused behavior tests at matching SHA | **PARTIAL**: dated focused Backend 74, Public 62, Admin 36 passing; not comprehensive |
-| 2. Integration | REST/Socket producers and authenticated Public/Admin consumers | Request/response compatibility, role/identity, state propagation, replay | **PARTIAL**: selected source paths traced; 279-operation parity not certified |
+| 2. Integration | REST/Socket producers and authenticated Public/Admin consumers | Request/response compatibility, role/identity, state propagation, replay | **PARTIAL**: 279 operations mapped to static wiring and source contracts. DTO discrepancies and runtime gaps are recorded in the [operation map](../contracts/NEXI_API_OPERATION_MAP.md). |
 | 3. Business/financial | [Financial integrity](../security/NEXI_FINANCIAL_INTEGRITY_REQUIREMENTS.md) and SQLite domain commands | Balanced postings, reserves, idempotency, atomic durable state, cross-account readback | **SOURCE CONFIRMED for selected paths**; broad negative/concurrency verification incomplete |
 | 4. UI/UX | [Public design](../../frontend/DESIGN.md) and [Admin operator guide](../../Admin/docs/NEXI_ADMIN_OPERATOR_USAGE_GUIDE.md) | Rendered mobile Web3 DApp browser and authenticated Admin sessions, keyboard/viewport/error states | **UNKNOWN on candidate release**; static source and emulator are not real-wallet acceptance |
-| 5. End-to-end product | [113 frozen criteria](../quality/NEXI_113_PUBLIC_ADMIN_ACCEPTANCE_20261101.md), [18 journeys](../quality/NEXI_MOBILE_WEB3_UI_FIRST_BROWSER_ACCEPTANCE_20261117.md) | Before → UI action → durable journal/Ledger → Activity/Admin → reload/recovery, same identity | **NOT CUSTOMER ACCEPTED for candidate release** |
-| 6. Operational/release | [Current state](../../NEXI_CURRENT_STATE.md), [VPS runbook](../operations/NEXI_VPS_SQLITE_BULLMQ_RUNBOOK.md) | Broad tests, native SQLite lifecycle, release hashes, Sentry, rollback and runtime reconciliation | **BLOCKED**: recorded 20 broad suites/40 tests failed and later native Jest abort; source not proven deployed |
+| 5. End-to-end product | [113 frozen criteria](../quality/NEXI_113_PUBLIC_ADMIN_ACCEPTANCE_20261101.md), [18 journeys](../quality/NEXI_MOBILE_WEB3_UI_FIRST_BROWSER_ACCEPTANCE_20261117.md) | Before → UI action → durable domain state/Ledger → Activity/Admin → reload/recovery, same identity | **NOT CUSTOMER ACCEPTED for candidate release** |
+| 6. Operational/release | [Current state](../../NEXI_CURRENT_STATE.md), [VPS runbook](../operations/NEXI_VPS_SQLITE_BULLMQ_RUNBOOK.md) | Broad tests, native SQLite lifecycle, release hashes, Sentry, rollback and runtime reconciliation | **PARTIAL**: the Backend-wide receipt passes on test-only Node 24.22.0. Candidate artifact identity and release acceptance remain open. |
+
+Specification correctness asks whether the behavior is owner-approved. Implementation correctness asks what verified source and matching tests establish. Observed correctness asks what the identified deployed release and authenticated customer or operator actually experienced.
 
 A feature is evaluated independently as **SPECIFIED** (owner rule), **SOURCE_CONFIRMED** (verified code at named SHA), **TEST_CONFIRMED** (executed matching test), **RUNTIME_CONFIRMED** (observed deployed identity), or **CUSTOMER_ACCEPTED** (authenticated same-release journey). **CONFLICT**, **PARTIAL**, and **UNKNOWN** remain visible; these architecture labels do not replace the frozen acceptance tracker dispositions.
 
@@ -105,8 +127,8 @@ flowchart TB
   API --> Auth["Guards, DTOs, role/ownership policy"]
   Auth --> Domains["Financial / Binary / Spot / Margin / Loans / Mining / Wallet"]
   Domains --> Gateway["One coordinated Prisma 7 + native SQLite financial gateway"]
-  Gateway --> SQLite[("Durable SQLite: domain records, Ledger, Activity, Audit, Outbox/Inbox, journal")]
-  SQLite --> Dispatch["Outbox dispatcher / durable command journal"]
+  Gateway --> SQLite[("Durable SQLite: domain records, Ledger, Activity, Audit, Outbox/Inbox, workflow state")]
+  SQLite --> Dispatch["Outbox dispatcher / workflow recovery journal"]
   Dispatch --> Queue["BullMQ 6 / Aiven Valkey transport"]
   Queue --> Worker["Idempotent domain workers"]
   Worker --> API
@@ -136,6 +158,26 @@ flowchart LR
 
 Runtime source revision, installed package tree, built artifact, service process command, deployed release/Sentry identifier and acceptance screenshots are **separate identities**. Backend, Public and Admin each retain their own shared dependency store. The historical `/srv/nexi/backend/current` symlink was observed dangling in an earlier read-only audit, while the API service ran from `/srv/nexi/backend/dist/src/main.js`; the symlink alone does not prove downtime. Never infer new source deployment from the Git HEAD.
 
+### C4 — Backend components and trust transitions
+
+```mermaid
+flowchart TD
+  P["Public wallet session"] --> H["Public HTTP guard and DTO boundary"]
+  A["Admin operator session"] --> R["Admin auth surface, role and permission checks"]
+  H --> D["NestJS domain modules"]
+  R --> D
+  D --> F["Financial services and native SQLite command gateway"]
+  D --> M["Market authority, Klines and provider routing"]
+  F --> S[("SQLite domain and Ledger; workflow journal")]
+  F --> E["Committed outbox and durable job handoff"]
+  E --> W["BullMQ workers and Inbox"]
+  W --> N["Scoped Socket.IO or notification projection"]
+  D --> Q["Authenticated REST read models"]
+  S --> Q
+```
+
+Public wallet and Admin requests have independent principals. The [bootstrap](../../backend/src/main.ts) configures credentialed CORS from runtime origins, DTO transformation, field whitelisting and rejection of unknown fields. [Auth surface guard](../../backend/src/auth/auth-surface.guard.ts) and [Admin permission guard](../../backend/src/admin/admin-permission.guard.ts) enforce surface/permission metadata. [Communications gateway](../../backend/src/communications/communications.gateway.ts) joins authenticated user/session rooms and separately permissioned Admin rooms. Private KYC/proof paths are scoped. Worker events never grant authority to submit a monetary command. Shared market ingestion and settlement price authority use separate contracts. The [operation map](../contracts/NEXI_API_OPERATION_MAP.md) identifies registered source handlers and explicit guard metadata.
+
 ### Backend component ownership — real entry points
 
 | Component | Current source entry point | Boundary and selected confirmed behavior |
@@ -153,6 +195,8 @@ Runtime source revision, installed package tree, built artifact, service process
 | Market data | `backend/src/market/market-public.controller.ts`, `market-kline.controller.ts`, `market-ingest.service.ts` | Prices, assets, Klines, depth/trades and reference ingestion; no implied execution or settlement price |
 | Events | `backend/src/events/event-outbox.service.ts:53-112` | Claims committed Outbox rows and attempts publication; stable row identity on retry |
 
+FinancialHttpModule imports AuthModule and FinancialOperationsModule. FinancialOperationsModule imports LedgerModule and D1PrismaModule and exports the policy service. AdminModule imports that policy module for privileged operations. LocalAsyncModule imports EventsModule and WorkflowCommandsModule for event and workflow handling. MarketModule imports BinaryModule. A static walk from AppModule found 30 reachable local module declarations and 103 explicit local module import edges without a cycle. ContractModule was the only local declaration outside that traversal. This check covers explicit module imports. Runtime provider resolution and dynamic dependencies remain separate.
+
 ### Real source-traced financial sequences
 
 **Same-user Funding → Spot account transfer** (source-confirmed command path):
@@ -165,7 +209,8 @@ sequenceDiagram
   participant S as FinancialOperationsService
   participant G as SQLite command gateway
   participant L as Ledger and durable records
-  participant A as Public/Admin readback
+  participant A as Admin operator
+  participant R as Wallet and Admin read APIs
   U->>P: Review same-owner amount, asset, source/destination
   P->>C: POST /financial/account-transfers + idempotencyKey
   C->>S: JWT owner / validated DTO
@@ -175,11 +220,12 @@ sequenceDiagram
   G-->>S: Posting IDs and replay status
   S->>G: Read source/destination balances
   S-->>P: transfer, balances, postings, replayed
-  P->>A: Refresh persisted balances/Activity/ledger
-  Note over P,A: On lost response query original intent; never fabricate a second command
+  P->>R: Refresh wallet and Activity by original intent
+  A->>R: Read ledger independently through the guarded Admin API
+  Note over P,A: On lost response, query the original intent before retrying
 ```
 
-Evidence: `backend/src/financial/financial-operations.controller.ts:95-137` and `financial-operations.service.ts:182-227`. That service enumerates `MAIN, SPOT, MARGIN, BINARY, FINANCE`, checks both asset scopes, resolves same-user accounts and invokes `pairedTransfer`. The returned `total` is computed as available+locked for this response, **not a generic global balance formula including loan or Finance commitments**. Full same-release race/Activity/Admin readback tests remain pending.
+**CONFIRMED.** [FinancialOperationsController](../../backend/src/financial/financial-operations.controller.ts) requires JWT and the Public auth surface, taking the owner from the authenticated request. The [service](../../backend/src/financial/financial-operations.service.ts) checks both scopes and decimal amount and resolves eligible accounts for that owner. [The gateway](../../backend/src/d1/d1-financial-command.gateway.ts) checks the replayed posting identity and immutable terms, fences balance changes, and submits both posting legs, audit, Activity and the transfer outbox event in one [native SQLite immediate transaction](../../backend/src/d1/local-sqlite-bridge.service.ts). The service returns posting IDs and balance strings. Its total is available plus locked for this response. [TransferModal](../../frontend/app/dashboard/wallet/components/TransferModal.tsx) checks the returned terms and receipt and, after an ambiguous response, looks up same-owner completion in Activity by the original key. [Admin Ledger](../../Admin/src/admin/data/nexi-api-provider.ts) is a separate guarded readback. Customer-to-customer transfers additionally persist a Gate2InternalTransfer record and recipient audit.
 
 **Customer-to-customer transfer** is a **different** command: `POST /financial/transfers` → `FinancialOperationsService.transfer:230-249` resolves a recipient user/code, prohibits self-transfer, checks replay ownership/terms and executes `pairedTransfer`. Distinct user identity, recipient visibility and audit require independent negative tests.
 
@@ -195,7 +241,7 @@ Evidence: `backend/src/financial/financial-operations.controller.ts:95-137` and 
 
 **Margin**: `/spot/margin/positions` and `/spot/margin/transfer` → `MarginService`. Track collateral, borrowed liability, position equity and liquidation separately; an accepted Spot reserve is not automatically margin collateral. Current source has pending cancellation and close paths; interest unit, risk configuration and live liquidation evidence must be checked against actual product terms.
 
-**Mining and Loans**: `/mining/subscribe|redeem|cancel` and `/loans/apply|repay` are backend-owned commands with distinct Admin plan/approval endpoints. A subscription entitlement is not unrestricted spendable cash; loan principal is a liability. The rate numbers 0.005/0.010/0.015 and 0.1 must not be assigned a period/percentage by assumption; expose owner-configured units and collateral policy or mark **OPEN DECISION**.
+**Mining and Loans**: `/mining/subscribe|redeem|cancel` and `/loans/apply|repay` are backend-owned commands with distinct Admin plan/approval endpoints. A subscription entitlement is not unrestricted spendable cash; loan principal is a liability. Mining `dailyYield` is an Admin-configured fractional daily rate; historical examples do not define mandatory economics. Inspected LoanService applies its configured `interestRate` once to principal for `durationDays`. Customer-facing Loan rate description and collateral valuation require evidence, not assumptions from blueprint examples.
 
 ### State ownership and recovery — conceptual, not new API enums
 
@@ -206,8 +252,8 @@ Evidence: `backend/src/financial/financial-operations.controller.ts:95-137` and 
 | Internal transfer | Draft → accepted → posted, rejected, or client-unknown | Same key + debit/credit posting IDs; query original after timeout |
 | Convert | Quote OPEN → accepted/expired/rejected → posted conversion | Quote ID, acceptance key, rate/amounts and paired per-asset postings |
 | Spot | OPEN ↔ PARTIALLY_FILLED → FILLED or CANCELED/REJECTED | Order/fill identities, actual price/qty/fees and only residual reserve released |
-| Binary | OPEN → expiry processing/delayed → settled WIN/LOSS or explicit error/refund policy | Immutable entry/expiry source, config, ledger result and Public/Admin state alignment |
-| Margin | Pending/collateralized → open/closing/liquidating → closed/liquidated or recoverable pending | Position, debt, collateral, settlement journal; never erase outstanding liability |
+| Binary | OPEN → expiry processing/delayed → settled WIN/LOSS (equal price LOSS), with distinct retryable delay or technical ERROR and no DRAW/refund outcome | Immutable entry/expiry source, config, ledger result and Public/Admin state alignment |
+| Margin | Pending/collateralized → open/closing/liquidating → closed/liquidated or recoverable pending | Position, debt, collateral, Ledger postings and Activity/workflow evidence; never erase outstanding liability |
 | Mining | Entitlement → subscribe/commit → accrual/maturity/redemption/cancellation | Subscription, principal commitment, earned reward and admin-configured terms |
 | Loan | Application → review/approved/rejected → disbursed → accrual/repay/default | Loan and collateral IDs, principal liability, interest basis and repayment postings |
 | Events/notifications | Outbox persisted → claim/attempt → publish/retry/dead letter → consumer replay | Durable Outbox/Inbox, scoped read model and resnapshot; delivery not finality |
@@ -222,17 +268,17 @@ flowchart LR
   Account --> Posting["LedgerPosting: reference + deltas"]
   Command["Original financial intent / idempotency"] --> Posting
   Command --> Domain["Order / position / transfer / conversion / loan / withdrawal"]
-  Domain --> Journal["Durable journal / Activity"]
+  Domain --> Journal["Workflow/dispatch recovery records / Activity"]
   Domain --> Outbox["EventOutbox"]
   Outbox --> Inbox["EventInbox / at-least-once consumer"]
   Domain --> Audit["AdminAuditLog when privileged"]
 ```
 
-The diagram shows ownership/association; **specific SQL FK/cardinality and unique constraints require checking the current SQLite schema and migrations**. Financial invariant requirements are maintained exclusively in [financial integrity](../security/NEXI_FINANCIAL_INTEGRITY_REQUIREMENTS.md); this section explains the cross-surface system boundary without creating a second policy authority. No separate Admin financial writer, queue-derived money or provider-derived wallet balance is permitted.
+The diagram shows application associations. The [schema-backed relationships](#schema-backed-sqlite-entity-relationships-and-exact-state-vocabulary) below give the SQL foreign-key and unique-key boundaries. Policy remains with [financial integrity](../security/NEXI_FINANCIAL_INTEGRITY_REQUIREMENTS.md).
 
 ### API contract and consumer reconciliation
 
-The parsed `docs/contracts/openapi.json` at this source revision has **253 distinct paths / 279 documented method operations**. A separate read-only static scan of NestJS `@Controller` prefixes and HTTP method decorators matched **279/279 documented method/path pairs** (normalizing `:param` against `{param}`); it also found **5 source-decorated routes absent from the OpenAPI inventory**: `GET /auth/profile`, `POST /lever/deal`, `POST /lever/setstop`, `POST /lever/close`, and `GET /lever/my_trade`. This is **static decorator parity**, not confirmation of module registration, runtime exposure, DTO/guard/error/schema parity, or consumer coverage. The four `/lever/*` routes originate in `backend/src/contract/contract.controller.ts` and require a separate live-support/deprecation decision; do not add them to the documented public contract simply because decorators exist. Sample documented families: `admin` 110, `communications` 37, `spot` 20, `auth` 18, `financial` 18, `wallet` 14, `mining` 9, `market` 8, `loans` 8, `binary` 5. This is a **document count**, not 279 controller/DTO/consumer parity assertions.
+The [operation map](../contracts/NEXI_API_OPERATION_MAP.md) matches the 253-path/279-operation artifact to 279 handlers reachable from AppModule, and records the exact inputs, guard decorations, delegates and literal client candidates. Four decorated legacy /lever routes belong to an unwired ContractModule. The previous GET /auth/profile match came from a comment. The map records the currency, Mining and Loan decimal schema discrepancies and distinguishes 410 compatibility routes from active product endpoints.
 
 | Route contract (documented) | Controller/service source | Consumer / amount and failure policy |
 |---|---|---|
@@ -271,9 +317,11 @@ Primary Admin API consumer: `Admin/src/admin/data/nexi-api-provider.ts` (backend
 | 14 `NEXI-14-01…07` | 320–440px mobile Web3 use, keyboard, safe area, full values, recovery | [DESIGN](../../frontend/DESIGN.md), Public components and five-tab dock; rendered wallet browser |
 | 15 `NEXI-15-01…07` | One customer command reconciled across all surfaces and release | Ledger/Outbox, Public/Admin, Sentry/version; exact receipt, broad gate and owner acceptance |
 
-**Requirement traceability:** Every frozen ID belongs to exactly one family above. The authoritative per-ID **verbatim text** and its existing source navigation candidates are in [the 113-case document](../quality/NEXI_113_PUBLIC_ADMIN_ACCEPTANCE_20261101.md). The architecture is intentionally **not a second 113-row requirements table**. The [dated tracker](../quality/NEXI_113_ACCEPTANCE_TRACKER_20261101.csv) and [18-journey procedure](../quality/NEXI_MOBILE_WEB3_UI_FIRST_BROWSER_ACCEPTANCE_20261117.md) govern real evidence. Current source ownership for an individual ID must be checked against its actual route/callsite; the broad family association is not proof that every criterion has a verified implementation. The Nov 8 16/24/8/65 historical acceptance snapshot must not be merged with later dated tracker states.
+**Requirement traceability.** The [frozen criteria](../quality/NEXI_113_PUBLIC_ADMIN_ACCEPTANCE_20261101.md) own verbatim wording. Each [tracker row](../quality/NEXI_113_ACCEPTANCE_TRACKER_20261101.csv) carries domain and journey navigation, source:line owner/handler anchors, any located Public/Admin consumer link, proof receipt/environment references, and the untouched existing status. These anchors help locate relevant implementation; they do not exhaustively prove the full semantic breadth of a criterion. Missing consumer mappings remain explicit UNKNOWN, and a source location never upgrades status to proof. The historical November 8 16/24/8/65 snapshot is separate from later dated tracker states.
 
 ### Eighteen UI-first acceptance journeys — proof ownership
+
+See the [complete journey contracts](NEXI_PRODUCT_OPERATING_MODEL.md#journey-specifications) and the separate [execution procedure](../quality/NEXI_MOBILE_WEB3_UI_FIRST_BROWSER_ACCEPTANCE_20261117.md). The table below is a short proof navigation index.
 
 | Journey | Expected cross-surface evidence |
 |---|---|
@@ -313,29 +361,29 @@ sequenceDiagram
   participant O as Durable EventOutbox
   participant W as Dispatcher / Valkey worker
   participant C as Public/Admin consumer
-  F->>D: Validate original intent; commit authoritative mutation
+  F->>D: Validate original intent and commit authoritative mutation
   D->>O: Persist event intent as part of coordinated operation
   D-->>F: Stable operation/receipt
-  O->>W: Claim and enqueue with stable event identity
+  O->>W: Record durable job keyed by outbox row ID
   alt Worker or transport fails
-    W-->>O: Retry / retained pending or dead-letter evidence
+    Note over O,W: Outbox retry before handoff, job retry after handoff
   else Transport succeeded
     W-->>C: Advisory event / invalidate read model
-    C->>D: Authorized REST resnapshot
+    Note over C: Refresh persisted state through authenticated REST
   end
   Note over O,W: Duplicate delivery must not replay financial mutation
 ```
 
-`backend/src/events/event-outbox.service.ts:68-112` claims pending rows; local durable journal uses Outbox row ID to survive crash/retry before publish marking. A delivery failure cannot roll back already committed money, and a delivery success cannot create additional money. Observability must monitor Outbox age/attempts, worker backlog, SQLite lock/busy/statement teardown, market freshness and source/build/Sentry IDs. Error traces must not expose wallet signatures, security passwords or customer KYC.
+**CONFIRMED in source.** [EventOutboxService](../../backend/src/events/event-outbox.service.ts) claims persisted rows and, in local async mode, records a local workflow/dispatch journal entry keyed by the outbox row ID before lease-guarded publish marking. The published marker acknowledges the journal handoff in that mode. [LocalAsyncRuntimeService](../../backend/src/jobs/local-async-runtime.service.ts) requires the additive job/workflow tables and canonical Inbox before startup. [LocalQueueConsumer](../../backend/src/jobs/local-queue.consumer.ts) records Inbox ingress before workflow dispatch. SQLite persists recovery state and BullMQ/Valkey handles delivery. [The market hook](../../frontend/app/hooks/useRealtimeMarket.ts) handles reconnect with snapshot and stream recovery.
 
 ### API and architecture open evidence register
 
-- **EXPLICITLY NOT PROVEN:** same-release parity of all 279 OpenAPI operations to controllers/DTOs/guards/consumers; route family counts are documented inventory only.
+- **UNKNOWN:** complete serialization, dynamic consumer and deployed guard/DTO/response parity. Static route wiring covers all 279 documented operations, with three request-schema discrepancies confirmed.
 - **EXPLICITLY NOT PROVEN:** end-to-end financial integrity for every deposit rail, withdrawal provider, Spot fill, Margin liquidation, Binary outcome, Finance yield or Admin adjustment; selected source anchors do not substitute for controlled durable receipts.
-- **KNOWN HISTORICAL FAILURE:** broad Backend Jest 107/127 suites and 713/753 tests passing, with 20 failing suites/40 failed tests; a later run aborted during native `better-sqlite3` Statement cleanup. No green global gate exists for this revision.
-- **KNOWN RELEASE GAP:** November 17 active services are not verified to run the six later source commits or this documentation checkpoint; no candidate mobile DApp acceptance.
-- **SOURCE GRAPH LIMIT:** current Graphify has 8602 nodes but is built from an earlier commit; it helps discover candidates, not certify changed source. The independent NEXI knowledge graph has 8768 nodes and is **reference knowledge**, not application implementation proof.
-- **OPEN OWNER PRODUCT TERMS:** Loan/Mining rate time basis, certain withdrawal rail finality and VIP benefit semantics, explicit tie/refund behavior where not currently encoded, and customer-facing recovery labels must not be inferred from industry defaults.
+- **CONFIRMED TEST RECEIPT:** The later Backend-wide VM receipt records 136 passing suite executions and 819 passing tests on test-only Node 24.22.0, scoped to the recorded source and test environment. The earlier native abort and 40 failed tests remain historical.
+- **UNKNOWN RELEASE PROVENANCE:** The three November 17 service startups and output directories were observed. Candidate source SHA, artifact hashes and Sentry release identity have yet to be reconciled.
+- **GRAPH COVERAGE:** The source Graphify session returns the source graph at c7f64d8. The independently selected merged graph extends navigation into SQLite schema metadata. See [cross-layer provenance](#cross-layer-provenance-and-schema-coverage).
+- **SETTLED VS UNPROVEN:** Binary has WIN/LOSS only with equal price LOSS and no DRAW/refund outcome; Admin Mining `dailyYield` is fractional per day in current source. LoanService applies `interestRate` once per selected plan term; customer-facing rate wording, collateral valuation, unapproved VIP benefit semantics and external rail/finality remain separately identified evidence or policy gaps. Blueprint proposals cannot override approved rules.
 - **CONFLICT MANAGEMENT:** Historical Admin route counts, proposed Binary features, old source-first instructions and Cloudflare runtime notes are superseded where current source/owner rules disagree. Do not reinstate archived docs or rewrite the 113 requirement wording.
 
 **Next proof to upgrade statuses:** record exact source SHA, controller/DTO/guard and consumer callsite, financial table/posting/event IDs, focused/broad test file and result, deployed service artifact/Sentry release, authenticated Public/Admin before/action/after and owner approval for each consequential capability. Until this chain exists, status remains PARTIAL/UNKNOWN as appropriate.
@@ -343,7 +391,7 @@ sequenceDiagram
 
 ### Frozen 113-ID coverage index — navigation candidates, not implementation certification
 
-Each ID below is extracted from the maintained **verbatim** owner-criteria document without copying its wording. The source column is the existing document’s navigation candidate, confirmed here to exist at the inspected checkout; a **file existing is not proof the criterion is implemented**, and the API family is a suggested traversal rather than route-to-ID parity. Present release evidence for **all 113 remains UNVERIFIED**. See the canonical [113 wording and source candidates](../quality/NEXI_113_PUBLIC_ADMIN_ACCEPTANCE_20261101.md) and [dated tracker](../quality/NEXI_113_ACCEPTANCE_TRACKER_20261101.csv).
+Each ID below is extracted from the maintained **verbatim** owner-criteria document without copying its wording. The index provides broad domain navigation. The dated tracker adds source:line owner/handler anchors for 184 route occurrences and any located Public/Admin consumer line, plus explicit UI/evidence source lines for the 13 criteria without API route locators. These are navigation and source-candidate references, not exhaustive criterion-specific proof: one criterion can span multiple pages, mutations, and readbacks. Twenty-six route references lack a mapped Public/Admin consumer and remain consumer-UNKNOWN. No source location proves acceptance. Current tracker row status counts are 5 PASS, 1 BLOCKED, and 107 NOT_TESTED; linked historical receipts/environments were not revalidated in this documentation campaign. See the canonical [113 wording and source candidates](../quality/NEXI_113_PUBLIC_ADMIN_ACCEPTANCE_20261101.md) and [dated tracker](../quality/NEXI_113_ACCEPTANCE_TRACKER_20261101.csv).
 
 | Frozen ID | Existing source navigation candidates (paths verified) | API/UI investigation family | Same-release proof |
 |---|---|---|---|
@@ -464,7 +512,7 @@ Each ID below is extracted from the maintained **verbatim** owner-criteria docum
 
 ### Schema-backed SQLite entity relationships and exact state vocabulary
 
-The active Prisma schema snapshot inspected for this architecture is `backend/prisma/schema.d1.prisma` (98 declared models); `backend/src/prisma/d1-client/schema.prisma` is a second generated/client-side schema view, not evidence of a separate Cloudflare database. The associations and uniqueness below come from the source schema, **not** inferred cardinalities from an architecture drawing.
+The source Prisma schema, [schema.d1.prisma](../../backend/prisma/schema.d1.prisma), declares 98 models. The generated client is another view of that source schema. This diagram is a selected financial/async slice with 20 displayed relationship edges; it is **not a complete ERD**. Read-only live-schema metadata reports 87 declared foreign-key constraints. The full schema tables and each edge must be consulted for complete entity coverage. Application correlations appear below separately.
 
 ```mermaid
 erDiagram
@@ -485,6 +533,9 @@ erDiagram
     MiningPlan ||--o{ MiningSubscription : configures
     User ||--o{ LoanApplication : applies
     User ||--o{ Activity : sees
+    LocalDurableJob ||--o{ LocalDurableJobReplayHistory : journals
+    LocalWorkflowInstance ||--o{ LocalWorkflowEvent : receives
+    LocalWorkflowInstance ||--o{ LocalWorkflowStep : checkpoints
 ```
 
 **Literal schema constraints with financial significance:**
@@ -509,7 +560,21 @@ erDiagram
 | `Activity` | `idempotencyKey @unique`, `ledgerCorrelationId`, optional `ledgerPostingId` | Activity projection must correlate with durable economic state; absent join is not a new Ledger writer |
 | `AdminGovernanceCommand` | `idempotencyKey @unique`, actor/reason, approval/execution timestamps | A privileged action's auditable workflow can outlive HTTP acknowledgement |
 
-The Outbox/Inbox, Activity and governance records are correlated by stored keys, but not every correlation is a Prisma foreign-key relationship; **do not** infer a strict referential FK where the schema stores only IDs/strings.
+**CONFIRMED in live schema metadata.** LedgerAccount.userId and LedgerPosting.accountId are restricted foreign keys. Activity.userId is declared, while Activity.ledgerPostingId and ledgerCorrelationId are application correlations. LedgerIdempotency posting IDs and Gate2InternalTransfer posting IDs are also application correlations. Gate2InternalTransfer has separate sender and recipient FKs to User. EventOutbox and EventInbox have separate unique identities and no declared FK between them.
+
+#### Cross-layer provenance and schema coverage
+
+| Graphify 0.9.112 artifact | Nodes / relationships | SHA-256 |
+|---|---:|---|
+| graphify-out/graph.json (source, c7f64d8) | 7,318 / 20,379 | 5af8994d65ca94ddd14365fc4c3d8791d2197ff4084ad7dd95cc6fa11c03ac2a |
+| graphify-out/sqlite-schema-graph.json (schema) | 1,621 / 2,355 | c0dafa1e93f86540a993aa7d3fa046a953e5384f8791d1b2aa15c36c905b21be |
+| graphify-out/merged-source-sqlite-graph.json (explicit CLI input) | 8,939 / 22,832 | e898bd3598860bc40adae6092a496e2c9464cbf218fd05d48738d86349a99a84 |
+
+The merge receipt is graphify-out/merged-source-sqlite-graph-receipt.json. Read-only SQLite metadata reproduced 104 tables, 1,116 columns, 310 indexes including autoindexes, 87 declared foreign-key constraints and 3 triggers. Table, column and index identity sets matched the schema graph. The merged graph has zero missing edge endpoints and 98 distinct exact migration-to-table name joins. The graph is undirected. Column, DTO and transaction behavior require independent source and schema evidence.
+
+The explicit merged-graph shortest path from the LedgerPosting migration node to the live LedgerPosting table is one EXACT_NAME_MATCH_ONLY edge. Its separate FK node shows accountId referencing LedgerAccount.id, independently confirmed through SQLite. A reverse-impact traversal of FinancialOperationsService identifies FinancialOperationsController, AdminService, LocalDepositProofController, WorkflowCommandsService and ReferralVipService among its consumers. Check actual callsites before inferring command behavior. @nexi-graphify-live queried the source-only artifact. @nexi-knowledge provided separate transaction, idempotency and outbox references.
+
+Five unmatched live tables come from additive SQL outside the migration-name join: [local-durable-job.schema.sql](../../backend/src/jobs/local-durable-job.schema.sql) defines LocalDurableJob and LocalDurableJobReplayHistory, and [local-workflow.schema.sql](../../backend/src/jobs/local-workflow.schema.sql) defines LocalWorkflowInstance, LocalWorkflowStep and LocalWorkflowEvent. Their uniqueness keys bind job identity to (queue, logicalKey), replay history to (journalId, generation), and workflow steps and events to (instanceId, name) and (instanceId, eventKey), respectively. The sixth, d1_migrations, is bookkeeping read by the [SQLite release migration tool](../../backend/scripts/nexi_sqlite_release_migrate.py). Source and schema establish these ownership links independently of graph coverage. The source graph extracted all five standalone definitions. An enriched derivative, graphify-out/merged-source-sqlite-workflow-enriched-20261119.json, retains the 98 original joins and adds five verified DDL correspondence edges for 22,837 relationships. Each added edge compares normalized table DDL, columns, foreign keys and index keys against read-only live metadata. Its sibling receipt records the source locations and original and derived hashes. The migration bookkeeping table remains without a DDL edge.
 
 **Source enum sets** (exact schema members, not all transition edges proven):
 
@@ -581,3 +646,124 @@ The following are **literal same-checkout endpoint callsites** located in the cu
 | Transfer/Finance Activity verification | `TransferModal.tsx:77`, `mining/page.tsx:164,282` | `wallet/activity` consumer and durable event source | Confirm matching source account, asset, original key and receipt ID |
 
 **Source-to-runtime boundary:** Public `/api/market/klines` is a local Next.js route/proxy and should not be assumed identical to direct browser access to NestJS `/market/klines`. Similarly Admin provider endpoints are `/admin/*` policy routes rather than interchangeable with protected customer `/spot/*` or `/binary/*` routes. A correctly spelled path is not sufficient without matching principal, surface guard, amount/status serialization, owner record and error treatment. Frontend environment overrides such as the mining subscribe endpoint require runtime configuration evidence before declaring which URL was actually called.
+
+## Runtime and source authority reconciliation (2026-11-19)
+
+**CONFIRMED — Nest wiring and policy boundary.** The active root imports feature modules explicitly in backend/src/app.module.ts; ContractModule is not reachable from AppModule and its legacy /lever handlers are not part of the registered operation inventory. Backend bootstrap installs a global ValidationPipe with whitelist, forbidNonWhitelisted, transform and implicit conversion. Controllers attach guards and delegate business transitions to services. A representative account transfer passes authenticated user identity from FinancialOperationsController to FinancialOperationsService and then pairedTransfer. These establish source wiring, not runtime admission or financial transaction proof.
+
+**CONFIRMED — error contract limit.** The source registers Sentry and ENOENT filters. The ENOENT filter emits {statusCode:404,message:"Not Found"}; other exceptions are rethrown. No common response serializer/error envelope was found in the reviewed source. Deployed error shape and actual exception behavior remain UNKNOWN; API consumers must not assume a universal envelope from OpenAPI alone.
+
+**CONFLICT — API service unit label.** Current owner architecture and root/backend instructions declare the promoted VPS SQLite system authoritative. deploy/vps/nexi-api.service:1-2 still labels the unit “non-authoritative staging until cutover acceptance,” while its ExecStart points at /srv/nexi/backend/dist/src/main.js. Static source cannot establish which unit/artifact is running or resolve the stale label. Record release/environment identity as UNKNOWN; do not reinterpret this text as proof of an active D1 deployment or as proof that cutover occurred.
+
+**CONFIRMED — source-selected SQLite; runtime identity unknown.** D1WorkerBridgeModule binds the D1WorkerBridgeService token to LocalSqliteBridgeService unconditionally (backend/src/d1/d1-worker-bridge.module.ts:6-14); D1PrismaModule provides the Prisma service/gateway (backend/src/d1/d1-prisma.module.ts:6-10), and both read the configured local SQLite path. Startup validation requires NEXI_SQLITE_LOCAL_ENABLED=true and an absolute NEXI_LOCAL_SQLITE_PATH (backend/src/runtime/runtime.config.ts:53-58). LocalSqliteBridgeService executes each bounded batch in one IMMEDIATE SQLite transaction (backend/src/d1/local-sqlite-bridge.service.ts:91-105); this does not make separate gateway calls or a whole customer journey one transaction. D1-prefixed tokens and stale comments in D1FinancialCommandGateway do not establish remote D1 execution. Deployed environment, artifact identity, active database file and observed runtime behavior remain UNKNOWN.
+
+**CONFIRMED — transport and recovery boundaries.** Local asynchronous runtime is gated by configuration/schema readiness. It records durable job acceptance in SQLite before BullMQ enqueue, uses leases/fencing and retries, while domain idempotency remains the financial writer’s responsibility. EventInbox records ingress before dispatch. BullMQ/Valkey delivery is at least once. Socket.IO market clients receive snapshot-on-connect, monotonic quote/Kline sequence filtering and bounded Redis-stream recovery; exact missed-event replay is deferred by the realtime contract. Socket.IO is a projection and must be reconciled through REST.
+
+**CONFIRMED / ASSESSMENT — market and operational limitations.** Market ingest has bounded queues and coalescing. Closed Klines may be dropped at saturation or bounded shutdown; source does not establish automatic backfill. Best-effort trades/depth can be dropped. These paths can share SQLite write pressure with financial workloads. /ops/ready checks SQLite and Redis only; it does not prove queue backlog, provider freshness, market subscriber health or economic correctness. These are source observations and operational risk assessments, not live service findings. Sentry source configuration is conditional on DSN and release/environment; current deployed release and live traces are UNKNOWN.
+
+**Admin authority reconciliation.** Admin effective permissions are loaded from the backend and enforced by Nest guards. The local Content Manager role omits flags.edit while backend RBAC grants it; the operator guide’s “view only” statement therefore conflicts with live-source role assignment. This is a role documentation/configuration discrepancy, not evidence of a guard bypass. Admin direct audited ledger corrections use their own permission and do not automatically enter the separate governance approval queue; governance self-approval is rejected.
+
+For feature-level UI, API, transaction, state and recovery contracts see the [product operating model](NEXI_PRODUCT_OPERATING_MODEL.md); exact handler and caller evidence remains in the [API map](../contracts/NEXI_API_OPERATION_MAP.md). Runtime acceptance is deliberately not inferred from static graphs or source.
+
+## Read-only live schema inventory
+
+On 2026-11-19, the SQLite file /var/lib/nexi/sqlite/nexi-staging.sqlite was opened with a read-only SQLite connection. The query read sqlite_master and PRAGMA table_info, index_list and foreign_key_list only; it did not select customer or financial rows and did not write the database. The observed schema inventory was 104 non-internal tables, 1,116 columns, 310 indexes including 110 SQLite autoindexes (200 explicit SQL indexes), 87 declared foreign-key constraints and 3 triggers. These counts describe that file at inspection time, not the deployed service’s selected file or runtime state. The graph’s six tables without exact migration-to-live table-name links include five local workflow/durable-job objects now represented by verified DDL correspondences and d1_migrations bookkeeping.
+
+The Python SQLite binding used for this read-only metadata inspection reported SQLite 3.40.1. Financial bridge source declares a minimum SQLite version of 3.51.3. This is **UNKNOWN / potential environment mismatch**, not proof of the Node better-sqlite3 runtime version: Python and Node may link different SQLite libraries. Confirm backend runtime library and active database identity before claiming the configured minimum is met. No financial rows were exported or added to any graph.
+
+
+## Complete declared SQLite foreign-key inventory — schema graph snapshot
+
+Source: `graphify-out/sqlite-schema-graph.json` (SHA-256 `c0dafa1e93f86540a993aa7d3fa046a953e5384f8791d1b2aa15c36c905b21be`); its root node is marked `LIVE_READ_ONLY_SCHEMA`, schema hash `f6d0a913720226eca6b625f2af39b5561d8db25bb95d086911ac8d8371440989`. The artifact represents 104 tables and 87 declared FK constraints. The rows below document declared schema constraints only; they do not establish application-level ownership, runtime adapter selection, transaction atomicity, migration parity, or financial behavior. Composite key columns are listed in ordinal order.
+
+| Declaring table | Column(s) | Referenced table | Column(s) | ON DELETE | ON UPDATE |
+|---|---|---|---|---|---|
+| `Activity` | `userId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `AdminGovernanceApproval` | `commandId` | `AdminGovernanceCommand` | `id` | `CASCADE` | `CASCADE` |
+| `AdminRoleAssignment` | `userId` | `User` | `id` | `CASCADE` | `CASCADE` |
+| `Affiliate` | `userId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `AuthSession` | `userId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `BinaryOptionPosition` | `userId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `BinaryOptionResult` | `positionId` | `BinaryOptionPosition` | `id` | `RESTRICT` | `CASCADE` |
+| `ContractPosition` | `userId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `ConversionTransaction` | `userId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `DepositAddress` | `currencyId` | `Currency` | `id` | `RESTRICT` | `CASCADE` |
+| `DepositAddress` | `walletNetworkId` | `WalletNetwork` | `id` | `RESTRICT` | `CASCADE` |
+| `DepositClaim` | `depositAddressId` | `DepositAddress` | `id` | `SET NULL` | `CASCADE` |
+| `DepositClaim` | `reviewedBy` | `User` | `id` | `SET NULL` | `CASCADE` |
+| `DepositClaim` | `userId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `Gate2BinaryPosition` | `userId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `Gate2ConversionQuote` | `userId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `Gate2Deposit` | `userId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `Gate2InternalTransfer` | `fromUserId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `Gate2InternalTransfer` | `toUserId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `Gate2OperationAudit` | `userId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `Gate2SpotOrder` | `userId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `Gate2SpotTrade` | `buyerOrderId` | `Gate2SpotOrder` | `id` | `RESTRICT` | `CASCADE` |
+| `Gate2SpotTrade` | `sellerOrderId` | `Gate2SpotOrder` | `id` | `RESTRICT` | `CASCADE` |
+| `Gate2Withdrawal` | `userId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `KYC` | `userId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `LearnArticleRevision` | `articleId` | `LearnContent` | `id` | `CASCADE` | `CASCADE` |
+| `LearnArticleTag` | `articleId` | `LearnContent` | `id` | `CASCADE` | `CASCADE` |
+| `LearnArticleTag` | `tagId` | `LearnTag` | `id` | `CASCADE` | `CASCADE` |
+| `LearnContent` | `categoryId` | `LearnCategory` | `id` | `SET NULL` | `CASCADE` |
+| `LearnMediaAsset` | `articleId` | `LearnContent` | `id` | `CASCADE` | `CASCADE` |
+| `LearnMediaAsset` | `revisionId` | `LearnArticleRevision` | `id` | `CASCADE` | `CASCADE` |
+| `Ledger` | `walletId` | `Wallet` | `id` | `RESTRICT` | `CASCADE` |
+| `LedgerAccount` | `userId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `LedgerAuditEvent` | `accountId` | `LedgerAccount` | `id` | `RESTRICT` | `CASCADE` |
+| `LedgerAuditEvent` | `postingId` | `LedgerPosting` | `id` | `SET NULL` | `CASCADE` |
+| `LedgerPosting` | `accountId` | `LedgerAccount` | `id` | `RESTRICT` | `CASCADE` |
+| `LoanApplication` | `userId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `LoanRepayment` | `activityId` | `Activity` | `id` | `SET NULL` | `CASCADE` |
+| `LoanRepayment` | `ledgerPostingId` | `LedgerPosting` | `id` | `SET NULL` | `CASCADE` |
+| `LoanRepayment` | `loanId` | `LoanApplication` | `id` | `RESTRICT` | `CASCADE` |
+| `LocalDurableJobReplayHistory` | `journalId` | `LocalDurableJob` | `id` | `RESTRICT` | `NO ACTION` |
+| `LocalWorkflowEvent` | `instanceId` | `LocalWorkflowInstance` | `id` | `NO ACTION` | `NO ACTION` |
+| `LocalWorkflowStep` | `instanceId` | `LocalWorkflowInstance` | `id` | `NO ACTION` | `NO ACTION` |
+| `MarketAssetCapability` | `assetId` | `MarketAsset` | `id` | `RESTRICT` | `CASCADE` |
+| `MarketAssetCapability` | `networkId` | `MarketNetwork` | `id` | `SET NULL` | `CASCADE` |
+| `MarketDepthLevel` | `snapshotId` | `MarketDepthSnapshot` | `id` | `CASCADE` | `CASCADE` |
+| `MarketDepthSnapshot` | `pairId` | `MarketPair` | `id` | `RESTRICT` | `CASCADE` |
+| `MarketKline` | `pairId` | `MarketPair` | `id` | `RESTRICT` | `CASCADE` |
+| `MarketNetwork` | `assetId` | `MarketAsset` | `id` | `RESTRICT` | `CASCADE` |
+| `MarketPair` | `baseAssetId` | `MarketAsset` | `id` | `RESTRICT` | `CASCADE` |
+| `MarketPair` | `quoteAssetId` | `MarketAsset` | `id` | `RESTRICT` | `CASCADE` |
+| `MarketProviderSymbol` | `pairId` | `MarketPair` | `id` | `RESTRICT` | `CASCADE` |
+| `MarketProviderSymbol` | `providerId` | `MarketProviderConfig` | `id` | `RESTRICT` | `CASCADE` |
+| `MarketQuoteLatest` | `pairId` | `MarketPair` | `id` | `RESTRICT` | `CASCADE` |
+| `MarketQuoteSnapshot` | `pairId` | `MarketPair` | `id` | `RESTRICT` | `CASCADE` |
+| `MarketTrade` | `pairId` | `MarketPair` | `id` | `RESTRICT` | `CASCADE` |
+| `MessageModerationCase` | `conversationId` | `MessageConversation` | `id` | `CASCADE` | `CASCADE` |
+| `MiningRewardAccrual` | `activityId` | `Activity` | `id` | `RESTRICT` | `CASCADE` |
+| `MiningRewardAccrual` | `ledgerPostingId` | `LedgerPosting` | `id` | `RESTRICT` | `CASCADE` |
+| `MiningRewardAccrual` | `subscriptionId` | `MiningSubscription` | `id` | `CASCADE` | `CASCADE` |
+| `MiningRewardAccrual` | `userId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `MiningSubscription` | `planId` | `MiningPlan` | `id` | `RESTRICT` | `CASCADE` |
+| `MiningSubscription` | `userId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `ReferralAttributionEvent` | `referredUserId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `ReferralAttributionEvent` | `referrerUserId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `ReferralRewardEvent` | `ledgerPostingId` | `LedgerPosting` | `id` | `RESTRICT` | `CASCADE` |
+| `ReferralRewardEvent` | `referredUserId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `ReferralRewardEvent` | `referrerUserId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `Reward` | `userId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `SpotMarginAccount` | `userId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `SpotMarginActivity` | `accountId` | `SpotMarginAccount` | `id` | `SET NULL` | `CASCADE` |
+| `SpotMarginActivity` | `positionId` | `SpotMarginPosition` | `id` | `SET NULL` | `CASCADE` |
+| `SpotMarginActivity` | `userId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `SpotMarginPosition` | `accountId` | `SpotMarginAccount` | `id` | `RESTRICT` | `CASCADE` |
+| `SpotMarginPositionEvent` | `positionId` | `SpotMarginPosition` | `id` | `RESTRICT` | `CASCADE` |
+| `SpotOrder` | `userId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `SpotTrade` | `orderId` | `SpotOrder` | `id` | `RESTRICT` | `CASCADE` |
+| `SpotTrade` | `userId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `SupportTicketReply` | `ticketId` | `SupportTicket` | `id` | `CASCADE` | `CASCADE` |
+| `UserMfa` | `userId` | `User` | `id` | `CASCADE` | `CASCADE` |
+| `UserPreference` | `userId` | `User` | `id` | `CASCADE` | `CASCADE` |
+| `UserVipState` | `userId` | `User` | `id` | `CASCADE` | `CASCADE` |
+| `UserVipState` | `vipLevelId` | `VipLevel` | `id` | `RESTRICT` | `CASCADE` |
+| `Wallet` | `userId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+| `WalletIdentity` | `userId` | `User` | `id` | `CASCADE` | `CASCADE` |
+| `WalletNetwork` | `currencyId` | `Currency` | `id` | `RESTRICT` | `CASCADE` |
+| `WithdrawalRequest` | `userId` | `User` | `id` | `RESTRICT` | `CASCADE` |
+
+Inventory row count: 87.
