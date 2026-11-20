@@ -14,8 +14,6 @@ test('Help retains topic discovery and renders only configured Contact Us method
   assert.match(support, /For in-app help, message NEXI Support/);
   assert.ok(support.includes('href="/dashboard/messages"'), "Help links to the dedicated in-app Messages surface");
   assert.doesNotMatch(support, /Help topic detail|Chat with NEXI|Open chat|communications\/tickets/);
-  assert.match(support, /href="\/dashboard\/messages"/);
-  assert.doesNotMatch(support, /Help topic detail|Chat with NEXI|Open chat|communications\/tickets/);
   assert.match(support, /api\.get<unknown>\('\/public\/config\/support'\)/);
   assert.match(support, /telegramUrl: string \| null; email: string \| null/);
   assert.match(support, /contacts\.telegramUrl &&/);

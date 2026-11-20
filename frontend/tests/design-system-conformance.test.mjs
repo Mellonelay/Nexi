@@ -22,7 +22,6 @@ assert.match(chart, /vertTouchDrag:\s*false/);
 assert.match(chart, /pinch:\s*true/);
 assert.match(nav, /min-h-\[64px\]/);
 assert.match(nav, /safe-area-inset-bottom/);
-assert.match(nav, /safe-area-inset-bottom/);
 assert.match(nav, /max-w-\[420px\]/);
 assert.match(nav, /rounded-\[18px\]/);
 console.log('PPTX visual-system source conformance: PASS');
