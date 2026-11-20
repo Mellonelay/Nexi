@@ -94,7 +94,7 @@ test('chart controls follow the plot and Options keeps five config-driven durati
   assert.ok(chart.includes('CONNECTION_LOST: ["Reconnecting", "Showing the last available candles while the connection recovers."]'));
   assert.ok(chart.includes('const blocksChart = candles.length === 0 && stateCopy'));
   assert.doesNotMatch(chart, /<summary[^>]*>\s*Indicators/);
-  assert.match(binary, /grid-cols-5/);
+  assert.ok(binary.includes('repeat(auto-fit, minmax(min(100%, 2.75rem), 1fr))'), 'Options duration choices reflow to fit narrow screens');
   assert.match(binary, /durationOptions\.map/);
   assert.match(binary, /formatDuration\(option\.seconds\)/);
   assert.doesNotMatch(binary, /\[\s*60\s*,\s*300\s*,\s*900\s*,\s*1800\s*,\s*3600\s*\]/);

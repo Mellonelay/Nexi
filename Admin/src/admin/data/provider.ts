@@ -6,6 +6,7 @@ import type {
   Asset,
   Network,
   MarketFeed,
+  MarketNetworkAdmin,
   MarketProviderRuntime,
   SpotPair,
   SpotOrder,
@@ -196,6 +197,12 @@ export interface AdminDataProvider {
 
   /** Markets */
   listAssets(): Promise<Asset[]>;
+  listMarketNetworks(): Promise<MarketNetworkAdmin[]>;
+  setMarketNetworkEnabled(
+    id: string,
+    enabled: boolean,
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult>;
   toggleAssetVisibility(id: string, ctx: ConsequentialContext): Promise<MutationResult>;
   updateAsset(
     id: string,

@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import type { Asset, AssetCategory } from "@/admin/types";
+import type { Asset, AssetCategory, MarketNetworkAdmin } from "@/admin/types";
 import { ArrowUp, ArrowDown, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
@@ -28,9 +28,147 @@ export const Route = createFileRoute("/assets")({ component: Page });
 
 function Page() {
   return (
-    <RouteGuard permission="assets.view">
-      <Inner />
+    <>
+      <RouteGuard permission="assets.view">
+        <Inner />
+      </RouteGuard>
+      <MarketNetworkControls />
+    </>
+  );
+}
+
+function MarketNetworkControls() {
+  return (
+    <RouteGuard permission="networks.view">
+      <MarketNetworkControlsInner />
     </RouteGuard>
+  );
+}
+
+function MarketNetworkControlsInner() {
+  const provider = useAdminData();
+  const session = useAdminSession();
+  const q = useAdminQuery((p) => p.listMarketNetworks());
+  const [pending, setPending] = useState<MarketNetworkAdmin | null>(null);
+  const networks = q.data ?? [];
+  const canEdit =
+    session.can("networks.edit") && provider.supports?.("setMarketNetworkEnabled") !== false;
+  const columns: DataTableColumn<MarketNetworkAdmin>[] = [
+    {
+      key: "asset",
+      header: "Asset",
+      sortValue: (row) => row.assetSymbol,
+      cell: (row) => (
+        <span className="mono text-sm font-medium">{row.assetSymbol || row.assetId}</span>
+      ),
+    },
+    {
+      key: "network",
+      header: "Network",
+      sortValue: (row) => row.code,
+      cell: (row) => (
+        <span className="mono text-sm">
+          {row.name} · {row.code}
+        </span>
+      ),
+    },
+    {
+      key: "capabilities",
+      header: "Capabilities",
+      cell: (row) => (
+        <span className="text-xs text-muted-foreground">
+          {row.capabilities
+            .filter((item) => item.status === "ACTIVE")
+            .map((item) => item.capabilityKey)
+            .join(", ") || "none"}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (row) => (
+        <StatusBadge tone={row.status === "ACTIVE" ? "success" : "neutral"}>
+          {row.status}
+        </StatusBadge>
+      ),
+    },
+  ];
+  if (q.loading) return <LoadingSkeleton rows={3} />;
+  if (q.error)
+    return <ErrorState title="Could not load market networks" description={q.error.message} />;
+
+  return (
+    <section className="flex flex-col gap-3" aria-label="Market network availability">
+      <div>
+        <h2 className="text-lg font-semibold">Market networks</h2>
+        <p className="text-sm text-muted-foreground">
+          Control market-network availability. Wallet deposit and withdrawal networks are managed
+          separately.
+        </p>
+      </div>
+      <DataTable
+        data={networks}
+        columns={columns}
+        searchable={(row) => `${row.assetSymbol} ${row.name} ${row.code}`}
+        searchPlaceholder="Search asset or market network…"
+        rowKey={(row) => row.id}
+        rowActions={(row) => (
+          <Button
+            size="sm"
+            variant={row.status === "ACTIVE" ? "destructive" : "default"}
+            disabled={!canEdit}
+            data-testid={`market-network-toggle-${row.id}`}
+            onClick={() => setPending(row)}
+          >
+            {row.status === "ACTIVE" ? "Disable" : "Enable"}
+          </Button>
+        )}
+      />
+      {pending ? (
+        <ConsequentialActionDialog
+          open
+          onOpenChange={(open) => {
+            if (!open) setPending(null);
+          }}
+          title={pending.status === "ACTIVE" ? "Disable market network" : "Enable market network"}
+          description="This changes market-network availability and records an audited backend decision."
+          target={
+            <span className="mono">
+              {pending.assetSymbol} · {pending.code}
+            </span>
+          }
+          targetId={pending.id}
+          action="market_network.visibility"
+          permission="networks.edit"
+          currentState={
+            <StatusBadge tone={pending.status === "ACTIVE" ? "success" : "neutral"}>
+              {pending.status}
+            </StatusBadge>
+          }
+          proposedState={
+            <StatusBadge tone={pending.status === "ACTIVE" ? "neutral" : "success"}>
+              {pending.status === "ACTIVE" ? "MAINTENANCE" : "ACTIVE"}
+            </StatusBadge>
+          }
+          destructive={pending.status === "ACTIVE"}
+          submitLabel={pending.status === "ACTIVE" ? "Disable" : "Enable"}
+          successMessage="Market network availability updated"
+          onConfirm={(reason) =>
+            provider.setMarketNetworkEnabled(pending.id, pending.status !== "ACTIVE", {
+              actor: session.actorName,
+              role: session.roleId,
+              environment: session.environment,
+              reason,
+            })
+          }
+          onSuccess={() => {
+            setPending(null);
+            q.refresh();
+          }}
+        />
+      ) : null}
+    </section>
   );
 }
 

@@ -9,9 +9,13 @@ test('Help retains topic discovery and renders only configured Contact Us method
   const support = read('./app/dashboard/support/page.tsx');
   assert.match(support, /Wallet operations/);
   assert.match(support, /Contact Us/);
-  assert.match(support, /No support contact methods are configured/);
+  assert.match(support, /No external support contact methods are configured/);
   assert.match(support, /Contact options are unavailable right now/);
-  assert.doesNotMatch(support, /Help topic detail|Chat with NEXI|Open chat|dashboard\/messages/);
+  assert.match(support, /For in-app help, message NEXI Support/);
+  assert.ok(support.includes('href="/dashboard/messages"'), "Help links to the dedicated in-app Messages surface");
+  assert.doesNotMatch(support, /Help topic detail|Chat with NEXI|Open chat|communications\/tickets/);
+  assert.match(support, /href="\/dashboard\/messages"/);
+  assert.doesNotMatch(support, /Help topic detail|Chat with NEXI|Open chat|communications\/tickets/);
   assert.match(support, /api\.get<unknown>\('\/public\/config\/support'\)/);
   assert.match(support, /telegramUrl: string \| null; email: string \| null/);
   assert.match(support, /contacts\.telegramUrl &&/);
@@ -54,11 +58,11 @@ test('messages marks only unread incoming items and reconciles persisted read re
 
 test('messages sends through the support route and reuses an idempotency key on retry', () => {
   const messages = read('./app/dashboard/messages/page.tsx');
-  assert.match(messages, /api\.post\('\/communications\/support\/messages'/);
+  assert.match(messages, /api\.post(?:<[^>]+>)?\('\/communications\/support\/messages'/);
   assert.match(messages, /attachmentIds: requestAttachments\.map\(\(item\) => item\.id\)/);
   assert.match(messages, /const idempotencyKey = pendingMessageKey \?\? globalThis\.crypto\?\.randomUUID/);
   assert.doesNotMatch(messages, /recipientId\s*[:,}]/);
-  assert.match(messages, /Your draft is still here so you can retry/);
+  assert.match(messages, /Retry when storage is available/);
 });
 
 test('messages provides emoji insertion, multipart upload and authorized attachment reads', () => {

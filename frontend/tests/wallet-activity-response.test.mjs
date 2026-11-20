@@ -13,7 +13,7 @@ let get;
 const sandbox = { exports: {}, require: (name) => name === '../../lib/api' ? { default: { get: (...args) => get(...args) } } : {} };
 vm.runInNewContext(compiled, sandbox);
 const { readActivities, loadWalletData } = sandbox.exports;
-const valid = { id: 'activity-1', ledgerPostingId: 'posting-1', asset: 'ETH', amount: '1' };
+const valid = { id: 'activity-1', ledgerCorrelationId: 'correlation-1', ledgerPostingId: 'posting-1', asset: 'ETH', amount: '1' };
 
 test('successful explicit empty collection is empty', () => {
   assert.equal(readActivities([]).length, 0);
@@ -30,7 +30,13 @@ test('nonempty invalid ledger rows never masquerade as an empty collection', () 
   for (const payload of [[{}], [{ id: 'activity-1' }], [{ id: ' ', ledgerId: 'posting-1' }], [null]]) {
     assert.throws(() => readActivities(payload), /Wallet activity/);
   }
-  assert.throws(() => readActivities([valid, {}]), /ledger identity/);
+  assert.throws(() => readActivities([valid, {}]), /Activity identifier/);
+  assert.throws(() => readActivities([{ id: 'activity-2', ledgerPostingId: null }]), /ledger identity/);
+});
+
+test('correlation-backed activity without a direct posting ID remains valid', () => {
+  const result = readActivities([{ id: 'activity-correlation', ledgerCorrelationId: 'correlation-2', ledgerPostingId: null, relatedLedgerPostings: [] }]);
+  assert.equal(result[0].ledgerId, 'correlation-2');
 });
 
 test('ledger-backed activity retains real identity and values', () => {

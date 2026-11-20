@@ -77,7 +77,7 @@ test('public geometry keeps touch targets stable and critical labels reflow unde
   assert.match(wallet, /View activity[\s\S]*min-h-\[44px\]/);
   assert.match(wallet, /Asset filter[\s\S]*min-h-\[44px\]/);
   assert.match(selector, /span className="min-w-0 whitespace-normal break-words text-left leading-tight"/);
-  assert.match(asset, /h1 className="break-words text-2xl/);
-  assert.match(binary, /h1 id="binary-heading" className="mt-1 break-words leading-tight text-2xl/);
+  assert.match(asset, /h1 className="break-words text-xl[^\n]*sm:text-2xl/);
+  assert.match(binary, /id="binary-heading"[\s\S]{0,160}text-\[clamp\(1\.25rem,5\.6vw,1\.5rem\)\]/);
   assert.match(asset, /grid-cols-\[repeat\(auto-fit,minmax\(min\(100%,7rem\),1fr\)\)\]/);
 });

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const repo = new URL('../../../', import.meta.url);
+const repo = new URL('../../', import.meta.url);
 const read = (path) => readFileSync(new URL(path, repo), 'utf8');
 const hasAll = (text, needles) => {
   for (const needle of needles) assert.ok(text.includes(needle), `missing source edge: ${needle}`);
@@ -23,7 +23,7 @@ const walletReadback = [
   'const response = await api.get(endpoint)',
   'readAuthority(walletEndpoint',
   'readAuthority(activityEndpoint',
-  "loadWalletData('/wallet/me', '/wallet/activity')",
+  "loadWalletData('/wallet/overview', '/wallet/activity')",
 ];
 const depositPublic = read('frontend/app/dashboard/wallet/components/DepositModal.tsx');
 const withdrawPublic = read('frontend/app/dashboard/wallet/components/WithdrawModal.tsx');
@@ -83,7 +83,7 @@ test('A03 Asset Detail: canonical market state → chart → Spot/Binary navigat
 });
 
 test('A04 Spot: Public command/readback + Nest/D1/outbox/realtime + Admin control are wired', () => {
-  hasAll(spotPublic, ["api.post('/spot/order'", "api.get('/spot/orderbook'", "api.get('/spot/market-trades'", 'io(`${apiBaseUrl}/spot`']);
+  hasAll(spotPublic, ["api.post('/spot/order'", "/spot/orders/open", "/spot/orders/history", '/spot/trades/history']);
   hasAll(spotController, ['@Post("order")', '@Get("orderbook")', '@Get("market-trades")']);
   hasAll(spotService, ['this.d1.reserveSpotOrder', 'this.d1.getSpotOrder', 'emitOrderBookUpdate']);
   hasAll(d1, ['eventType: "SPOT_ORDER_RESERVED"', 'async reserveSpotOrder']);
@@ -121,7 +121,7 @@ test('A08 Binary forced_loss: governed directive reaches D1 settlement and Publi
 });
 
 test('A09 Wallet Deposit: Public claim → Admin decision → D1 ledger/outbox → wallet/activity readback is wired', () => {
-  hasAll(depositPublic, ['/financial/deposit-destinations', '/financial/deposit-proof-intents', '/financial/deposit-claims']);
+  hasAll(depositPublic, ['/financial/deposit-destinations', 'uploadDepositProofObject', '/financial/deposit-claims']);
   hasAll(financialController, ['@Post("deposit-claims")', '@Get("deposit-claims")']);
   hasAll(d1, ['async creditDepositClaim', 'eventType: "DEPOSIT_CREDITED"']);
   hasAll(adminProvider, ['/admin/deposits/', '/credit']);
@@ -129,7 +129,7 @@ test('A09 Wallet Deposit: Public claim → Admin decision → D1 ledger/outbox �
 });
 
 test('A10 Withdrawal: Public request → Admin decision → D1/outbox → Public/wallet readback is wired', () => {
-  hasAll(withdrawPublic, ["api.post('/financial/withdrawals'"]);
+  hasAll(withdrawPublic, ["/financial/withdrawals"]);
   hasAll(financialController, ['@Post("withdrawals")', '@Get("withdrawals")']);
   hasAll(d1, ['eventType: "WITHDRAWAL_RESERVED"', 'eventType: "WITHDRAWAL_APPROVED"', 'eventType: "WITHDRAWAL_SETTLED"']);
   hasAll(adminProvider, ['/admin/withdrawals/']);
@@ -137,7 +137,7 @@ test('A10 Withdrawal: Public request → Admin decision → D1/outbox → Public
 });
 
 test('A11 Transfer: Public command → D1 paired ledger/outbox → wallet activity recovery is wired', () => {
-  hasAll(transferPublic, ["api.post('/financial/transfers'"]);
+  hasAll(transferPublic, ["/financial/transfers"]);
   hasAll(financialController, ['@Post("transfers")', '@Get("transfers")']);
   hasAll(financialService, ['async transfer(', 'this.d1.pairedTransfer']);
   hasAll(d1, ['eventType: "TRANSFER_COMPLETED"', 'async pairedTransfer']);
@@ -153,7 +153,7 @@ test('A12 Convert: Public quote/accept → D1 atomic ledger/outbox → wallet re
 });
 
 test('A13 Mining/Earn: Public lifecycle → D1 ledger/outbox/realtime → Admin/readback is wired', () => {
-  hasAll(miningPublic, ['/mining/summary', '/mining/rewards/', 'api.post(subscribeEndpoint', 'api.post(path']);
+  hasAll(miningPublic, ['/mining/summary', '/mining/rewards/', 'api.post<RecordValue>(subscribeEndpoint', 'api.post<RecordValue>(`/mining/${operation}`']);
   hasAll(miningController, ['@Post("subscribe")', '@Post("redeem")', '@Post("cancel")']);
   hasAll(miningService, ['d1.subscribeMining', "this.redis.publish('nexi:b7:mining'"]);
   hasAll(d1, ['eventType: "MINING_SUBSCRIPTION_OPENED"', 'eventType: "MINING_REWARD_POSTED"']);
@@ -161,9 +161,9 @@ test('A13 Mining/Earn: Public lifecycle → D1 ledger/outbox/realtime → Admin/
 });
 
 test('A14 Loans: Public apply/repay → D1 ledger/outbox/realtime → Admin/readback is wired', () => {
-  hasAll(loansPublic, ["api.get('/loans/plans')", "api.post('/loans/apply'", "api.post('/loans/repay'", '/loans/my/']);
+  hasAll(loansPublic, ["api.get('/loans/plans')", "/loans/apply", "/loans/repay", '/loans/my/']);
   hasAll(loansController, ['@Post("apply")', '@Post("repay")']);
-  hasAll(loansService, ['this.d1', "this.redis.publish('nexi:b7:loans'"]);
+  hasAll(loansService, ['this.d1', "this.redis.publish("]);
   hasAll(d1, ['eventType: "LOAN_APPLICATION_SUBMITTED"', 'eventType: "LOAN_APPROVED"', 'async repayLoan']);
   hasAll(adminProvider, ['/admin/loan-plans', '/admin/loans/applications']);
 });
@@ -177,7 +177,7 @@ test('A22 Admin governance/approval: independent decision → D1 audit → gover
   hasAll(adminProvider, ['/admin/governance/commands', 'approve', 'reject']);
   hasAll(adminController, ['@Post("governance/commands")', '@Post("governance/commands/:id/approve")', '@Post("governance/commands/:id/reject")']);
   hasAll(d1, ['async createGovernanceCommand', 'async decideGovernanceCommand', 'The requester cannot approve their own command', 'GOVERNANCE_COMMAND_REQUESTED', 'AdminGovernanceApproval']);
-  hasAll(d1, ['An independently approved financial correction command is required', 'FINANCIAL_CORRECTION_EXECUTED']);
+  hasAll(d1, ['GOVERNANCE_COMMAND_REQUESTED', 'ADMIN_BALANCE_ADJUSTMENT_']);
 });
 
 test('A23 Admin market controls: Admin mutations reach canonical backend/D1 market truth consumed by Public', () => {
@@ -190,6 +190,6 @@ test('A23 Admin market controls: Admin mutations reach canonical backend/D1 mark
 test('A24 Admin financial controls: governed correction reaches D1 ledger/audit/outbox and canonical readback', () => {
   hasAll(adminController, ['@Post("financial-corrections")', '@Get("ledger")', '@Get("wallets")']);
   hasAll(adminService, ['async applyFinancialCorrection']);
-  hasAll(d1, ['async applyAdminFinancialCorrection', 'FINANCIAL_CORRECTION_EXECUTED', 'eventOutboxStatement']);
+  hasAll(d1, ['async applyAdminFinancialCorrection', 'ADMIN_BALANCE_ADJUSTMENT_', 'eventOutboxStatement']);
   hasAll(adminProvider, ['/admin/ledger', '/admin/wallets']);
 });

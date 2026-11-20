@@ -302,6 +302,23 @@ export interface Network {
   enabled: boolean;
 }
 
+export interface MarketNetworkAdmin {
+  id: string;
+  assetId: string;
+  assetSymbol: string;
+  code: string;
+  name: string;
+  status: "ACTIVE" | "MAINTENANCE" | "DISABLED" | string;
+  maintenanceNote: string | null;
+  capabilities: Array<{
+    capabilityKey: string;
+    depositEnabled: boolean;
+    withdrawEnabled: boolean;
+    tradingEnabled: boolean;
+    status: string;
+  }>;
+}
+
 export type FeedStatus = "LIVE" | "STALE" | "UNAVAILABLE" | "DISABLED";
 
 export interface MarketFeed {

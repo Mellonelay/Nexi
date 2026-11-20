@@ -188,8 +188,9 @@ function readActivities(payload: unknown): Activity[] {
     const details = readActivityDetails(item.details);
     const postings = Array.isArray(item.relatedLedgerPostings) ? item.relatedLedgerPostings.map(record) : [];
     const id = item.activityId ?? item.id;
-    const ledgerId = item.ledgerTransactionId ?? item.ledgerId ?? item.ledgerCorrelationId ?? item.ledgerPostingId ?? details.debitPostingId ?? postings[0]?.id ?? null;
+    const ledgerId = item.ledgerTransactionId ?? item.ledgerId ?? item.ledgerPostingId ?? details.debitPostingId ?? postings[0]?.id ?? item.ledgerCorrelationId ?? null;
     if (!isActivityIdentifier(id)) return [];
+    if (!isActivityIdentifier(ledgerId)) throw new Error('Wallet activity rows are missing a ledger identity.');
     return [{
       id, ledgerId, type: item.type, asset: item.asset, amount: item.amount, status: item.status, createdAt: item.createdAt,
       source: item.sourceAccount ?? details.sourceScope ?? details.fromScope ?? details.fromUserId,

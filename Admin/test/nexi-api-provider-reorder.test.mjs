@@ -765,3 +765,64 @@ test("deposit configuration writes use canonical wallet API and auditable payloa
     assert.ok(request.body.idempotencyKey);
   }
 });
+
+
+test("market network controls map backend records and send audited visibility intent", async (t) => {
+  const { NexiAdminApiProvider } = await loadLiveProvider();
+  const requests = [];
+  t.mock.method(globalThis, "fetch", async (input, init = {}) => {
+    const url = String(input);
+    requests.push({ url, init });
+    if (url.endsWith("/admin/market/networks")) {
+      return Response.json([
+        {
+          id: "network-1",
+          assetId: "asset-1",
+          code: "ERC20",
+          name: "Ethereum",
+          status: "ACTIVE",
+          maintenanceNote: null,
+          asset: { symbol: "USDT" },
+          capabilities: [
+            {
+              capabilityKey: "USDT:ERC20:trading",
+              depositEnabled: true,
+              withdrawEnabled: true,
+              tradingEnabled: true,
+              status: "ACTIVE",
+            },
+          ],
+        },
+      ]);
+    }
+    return Response.json({ ok: true, auditId: "audit-1", status: "MAINTENANCE" });
+  });
+  const provider = new NexiAdminApiProvider({
+    baseUrl: "https://admin-api.test",
+    getToken: async () => "test-token",
+  });
+  const networks = await provider.listMarketNetworks();
+  assert.equal(networks.length, 1);
+  assert.equal(networks[0].assetSymbol, "USDT");
+  assert.equal(networks[0].capabilities[0].tradingEnabled, true);
+
+  const result = await provider.setMarketNetworkEnabled("network-1", false, {
+    actor: "operator-1",
+    role: "market_operator",
+    environment: "SANDBOX",
+    reason: "Provider maintenance",
+  });
+  assert.equal(result.auditId, "audit-1");
+  assert.ok(
+    requests.some((request) => request.url.endsWith("/admin/market/networks")),
+  );
+  const mutation = requests.find((request) =>
+    request.url.endsWith("/admin/market/networks/visibility"),
+  );
+  assert.ok(mutation);
+  const payload = JSON.parse(mutation.init.body);
+  assert.equal(payload.id, "network-1");
+  assert.equal(payload.enabled, false);
+  assert.equal(payload.reason, "Provider maintenance");
+  assert.ok(payload.idempotencyKey.length >= 8);
+});

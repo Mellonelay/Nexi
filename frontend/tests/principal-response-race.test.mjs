@@ -21,6 +21,11 @@ function callbacks(domain, get) {
     exports: {}, api: { get }, userId: 'user-a', sessionChecked: true,
     plansEndpoint: '/mining/plans', positionsEndpoint: '/mining/my/user-a', backendConfigured: true,
     previousUserId: { current: 'user-a' }, sessionPrincipalId: () => principal,
+    loadRevision: { current: 0 }, loanReadRevision: { current: 0 },
+    pendingSubscription: { current: null }, pendingApplication: { current: null }, pendingRepayment: { current: null },
+    positionSnapshotRequest: { current: 0 }, positionSocketRevision: { current: 0 },
+    latestPositionEventRevision: { current: new Map() }, terminalPositionIds: { current: new Set() },
+    pendingBinaryIntent: { current: null }, readPendingEconomicIntent: () => null,
   };
   for (const setter of `${functions.load} ${functions.sync}`.match(/\bset[A-Z]\w+/g)) {
     context[setter] = (value) => writes.push({ setter, value });
@@ -92,9 +97,12 @@ test('binary clears private snapshots when the wallet principal changes', () => 
   const context = {
     exports: {},
     previousUserId: { current: 'user-a' },
+    positionSnapshotRequest: { current: 0 }, positionSocketRevision: { current: 0 },
+    latestPositionEventRevision: { current: new Map() }, terminalPositionIds: { current: new Set() },
+    pendingBinaryIntent: { current: null }, readPendingEconomicIntent: () => null,
     sessionPrincipalId: () => principal,
   };
-  for (const name of ['setActivePositions', 'setHistory', 'setSelectedResult', 'setSelectedChartTradeId', 'setOptionWalletBalanceResult', 'setConfirmationOpen', 'setFundingOpen', 'setState', 'setUserId']) {
+  for (const name of ['setActivePositions', 'setHistory', 'setSelectedResult', 'setSelectedChartTradeId', 'setOptionWalletBalanceResult', 'setConfirmationOpen', 'setFundingOpen', 'setState', 'setTrackedPositionId', 'setUnknownBinaryIntentKey', 'setUserId']) {
     context[name] = (value) => writes.push({ name, value });
   }
   vm.runInNewContext(ts.transpileModule(`exports.sync = ${sync};`, {

@@ -4,7 +4,7 @@ const page = readFileSync(new URL('../app/dashboard/messages/page.tsx', import.m
 const openapi = JSON.parse(readFileSync(new URL('../../docs/contracts/openapi.json', import.meta.url), 'utf8'));
 assert.match(page, /api\.get<unknown>\('\/communications\/support\/thread'/);
 assert.match(page, /api\.post<unknown>\('\/communications\/support\/attachments'/);
-assert.match(page, /api\.post\('\/communications\/support\/messages'/);
+assert.match(page, /api\.post(?:<[^>]+>)?\('\/communications\/support\/messages'/);
 assert.match(page, /idempotencyKey/);
 const requiredOperations = [
   ['/communications/support/thread', 'get'],

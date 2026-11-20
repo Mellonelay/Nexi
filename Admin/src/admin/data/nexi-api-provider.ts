@@ -20,6 +20,7 @@ import type {
   KycReview,
   LedgerEntry,
   MarketFeed,
+  MarketNetworkAdmin,
   MarketProviderRuntime,
   MaintenanceScope,
   MaintenanceWindow,
@@ -1059,6 +1060,50 @@ export class NexiAdminApiProvider implements AdminDataProvider {
       visible: !asset.visible,
     });
   }
+  async listMarketNetworks(): Promise<MarketNetworkAdmin[]> {
+    const rows = await this.request<unknown[]>("/admin/market/networks");
+    return rows
+      .map((value) => {
+        const row = record(value);
+        const asset = record(row.asset);
+        const capabilities = Array.isArray(row.capabilities) ? row.capabilities : [];
+        return {
+          id: stringValue(row.id),
+          assetId: stringValue(row.assetId),
+          assetSymbol: stringValue(asset.symbol),
+          code: stringValue(row.code),
+          name: stringValue(row.name),
+          status: stringValue(row.status, "DISABLED"),
+          maintenanceNote:
+            typeof row.maintenanceNote === "string" ? row.maintenanceNote : null,
+          capabilities: capabilities.map((item) => {
+            const capability = record(item);
+            return {
+              capabilityKey: stringValue(capability.capabilityKey),
+              depositEnabled: capability.depositEnabled === true,
+              withdrawEnabled: capability.withdrawEnabled === true,
+              tradingEnabled: capability.tradingEnabled === true,
+              status: stringValue(capability.status, "DISABLED"),
+            };
+          }),
+        };
+      })
+      .filter((network) => network.id && network.code);
+  }
+
+  async setMarketNetworkEnabled(
+    id: string,
+    enabled: boolean,
+    ctx: ConsequentialContext,
+  ): Promise<MutationResult> {
+    return this.requestMutation(
+      "/admin/market/networks/visibility",
+      ctx,
+      { id, enabled },
+      [id],
+    );
+  }
+
   async listDepositAssets(): Promise<
     Array<{ id: number; symbol: string; name: string; logo?: string }>
   > {
