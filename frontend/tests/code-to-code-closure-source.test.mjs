@@ -129,7 +129,7 @@ test('A09 Wallet Deposit: Public claim → Admin decision → D1 ledger/outbox �
 });
 
 test('A10 Withdrawal: Public request → Admin decision → D1/outbox → Public/wallet readback is wired', () => {
-  hasAll(withdrawPublic, ["/financial/withdrawals"]);
+  hasAll(withdrawPublic, ["api.post<{ withdrawal?: { requestKey?: string } }>('/financial/withdrawals'"]);
   hasAll(financialController, ['@Post("withdrawals")', '@Get("withdrawals")']);
   hasAll(d1, ['eventType: "WITHDRAWAL_RESERVED"', 'eventType: "WITHDRAWAL_APPROVED"', 'eventType: "WITHDRAWAL_SETTLED"']);
   hasAll(adminProvider, ['/admin/withdrawals/']);
@@ -137,7 +137,7 @@ test('A10 Withdrawal: Public request → Admin decision → D1/outbox → Public
 });
 
 test('A11 Transfer: Public command → D1 paired ledger/outbox → wallet activity recovery is wired', () => {
-  hasAll(transferPublic, ["/financial/transfers"]);
+  hasAll(transferPublic, ["api.post<{ transfer?: { idempotencyKey?: string; fromUserId?: string; asset?: string; amount?: string; debitPostingId?: string; creditPostingId?: string } }>('/financial/transfers'"]);
   hasAll(financialController, ['@Post("transfers")', '@Get("transfers")']);
   hasAll(financialService, ['async transfer(', 'this.d1.pairedTransfer']);
   hasAll(d1, ['eventType: "TRANSFER_COMPLETED"', 'async pairedTransfer']);
@@ -161,9 +161,9 @@ test('A13 Mining/Earn: Public lifecycle → D1 ledger/outbox/realtime → Admin/
 });
 
 test('A14 Loans: Public apply/repay → D1 ledger/outbox/realtime → Admin/readback is wired', () => {
-  hasAll(loansPublic, ["api.get('/loans/plans')", "/loans/apply", "/loans/repay", '/loans/my/']);
+  hasAll(loansPublic, ["api.get('/loans/plans')", "api.post<LoanRecord>('/loans/apply'", "api.post<LoanRecord>('/loans/repay'", '/loans/my/']);
   hasAll(loansController, ['@Post("apply")', '@Post("repay")']);
-  hasAll(loansService, ['this.d1', "this.redis.publish("]);
+  hasAll(loansService, ['this.d1', 'this.redis.publish(', '"nexi:b7:loans"']);
   hasAll(d1, ['eventType: "LOAN_APPLICATION_SUBMITTED"', 'eventType: "LOAN_APPROVED"', 'async repayLoan']);
   hasAll(adminProvider, ['/admin/loan-plans', '/admin/loans/applications']);
 });
@@ -177,7 +177,7 @@ test('A22 Admin governance/approval: independent decision → D1 audit → gover
   hasAll(adminProvider, ['/admin/governance/commands', 'approve', 'reject']);
   hasAll(adminController, ['@Post("governance/commands")', '@Post("governance/commands/:id/approve")', '@Post("governance/commands/:id/reject")']);
   hasAll(d1, ['async createGovernanceCommand', 'async decideGovernanceCommand', 'The requester cannot approve their own command', 'GOVERNANCE_COMMAND_REQUESTED', 'AdminGovernanceApproval']);
-  hasAll(d1, ['GOVERNANCE_COMMAND_REQUESTED', 'ADMIN_BALANCE_ADJUSTMENT_']);
+  hasAll(d1, ['GOVERNANCE_COMMAND_REQUESTED', 'GOVERNANCE_COMMAND_${decision}']);
 });
 
 test('A23 Admin market controls: Admin mutations reach canonical backend/D1 market truth consumed by Public', () => {
