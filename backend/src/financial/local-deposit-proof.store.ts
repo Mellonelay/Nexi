@@ -10,7 +10,7 @@ const objectKey=/^deposit-proofs\/[A-Za-z0-9._:-]{1,160}\/[0-9a-f-]{36}$/;
 @Injectable()
 export class LocalDepositProofStore {
   constructor(@Optional() private readonly config: ConfigService = new ConfigService()) {}
-  private async file(key:string):Promise<string> {
+  private async file(key:string, createParents = true):Promise<string> {
     const root=this.config.get<string>('NEXI_LOCAL_OBJECTS_ROOT');
     if(typeof key !== 'string'||this.config.get<string>('NEXI_LOCAL_OBJECTS_ENABLED')!=='true'||!root||!isAbsolute(root)||
       key.includes('..')||!objectKey.test(key)){
@@ -21,7 +21,7 @@ export class LocalDepositProofStore {
       const actualRoot=await realpath(root);
       const file=join(actualRoot,...key.split('/'));
       if(!file.startsWith(actualRoot+sep))throw Error('Unsafe object key');
-      await mkdir(dirname(file),{recursive:true,mode:0o700});
+      if (createParents) await mkdir(dirname(file),{recursive:true,mode:0o700});
       const parent=await realpath(dirname(file));
       if(!parent.startsWith(actualRoot+sep))throw Error('Unsafe object directory');
       return join(parent,key.split('/').at(-1)!);
@@ -30,14 +30,17 @@ export class LocalDepositProofStore {
     }
   }
 
+  private detectContentType(body:Buffer):string|null {
+    if(body.length>=8&&body.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]))) return 'image/png';
+    if(body.length>=3&&body.subarray(0,3).equals(Buffer.from([255,216,255]))) return 'image/jpeg';
+    if(body.length>=6&&['GIF89a','GIF87a'].includes(body.toString('ascii',0,6))) return 'image/gif';
+    if(body.length>=12&&body.toString('ascii',0,4)==='RIFF'&&body.toString('ascii',8,12)==='WEBP') return 'image/webp';
+    return null;
+  }
+
   private check(body:Buffer,contentType:string):void {
     const type=contentType.split(';',1)[0].trim().toLowerCase();
-    const png=body.length>=8&&body.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]));
-    const jpg=body.length>=3&&body.subarray(0,3).equals(Buffer.from([255,216,255]));
-    const gif=body.length>=6&&['GIF89a','GIF87a'].includes(body.toString('ascii',0,6));
-    const webp=body.length>=12&&body.toString('ascii',0,4)==='RIFF'&&body.toString('ascii',8,12)==='WEBP';
-    if(!body.length||body.length>MAX_BYTES||!((type==='image/png'&&png)||(type==='image/jpeg'&&jpg)||
-      (type==='image/gif'&&gif)||(type==='image/webp'&&webp))) {
+    if(!body.length||body.length>MAX_BYTES||this.detectContentType(body)!==type) {
       throw new BadRequestException('Unsupported or oversized deposit proof');
     }
   }
@@ -80,5 +83,22 @@ export class LocalDepositProofStore {
       if((e as NodeJS.ErrnoException).code==='ENOENT')return false;
       throw new ServiceUnavailableException('Private deposit proof could not be verified');
     }
+  }
+
+  async read(key:string):Promise<{body:Buffer;contentType:string}>{
+    const filename=await this.file(key,false);
+    let handle;
+    try{
+      handle=await open(filename,constants.O_RDONLY|constants.O_NOFOLLOW);
+      const stat=await handle.stat();
+      if(!stat.isFile()||stat.size<=0||stat.size>MAX_BYTES) throw new ServiceUnavailableException('Private deposit proof could not be read');
+      const body=await handle.readFile();
+      const contentType=this.detectContentType(body);
+      if(!contentType||!body.length||body.length>MAX_BYTES) throw new ServiceUnavailableException('Private deposit proof could not be read');
+      return {body,contentType};
+    }catch(error){
+      if(error instanceof ServiceUnavailableException) throw error;
+      throw new ServiceUnavailableException('Private deposit proof could not be read');
+    }finally{await handle?.close();}
   }
 }

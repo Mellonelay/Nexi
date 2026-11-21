@@ -32,6 +32,8 @@ it('executes claim submission, review and credit against migrated schema with du
     const command = {id:'claim',userId:'user',asset:'USDT',network:'ERC20',depositAddressId:'destination',claimedAmount:'100',proofObjectKey:'proof',idempotencyKey:'test-claim'};
     await expect(gateway.submitDepositClaim(command)).resolves.toMatchObject({state:'PENDING_REVIEW'});
     await expect(gateway.submitDepositClaim(command)).resolves.toMatchObject({replayed:true});
+    await expect(gateway.getDepositClaim('claim')).resolves.toMatchObject({id:'claim',proofObjectKey:'proof'});
+    await expect(gateway.getDepositClaim('missing-claim')).rejects.toThrow('Deposit claim not found');
     await expect(gateway.submitDepositClaim({...command,claimedAmount:'101'})).rejects.toThrow('different parameters');
     await expect(gateway.updateDepositClaimState('claim','APPROVED','admin','TEST_ONLY','test-approve')).resolves.toMatchObject({state:'APPROVED'});
     await expect(gateway.updateDepositClaimState('claim','APPROVED','admin','TEST_ONLY','test-approve')).resolves.toMatchObject({replayed:true});

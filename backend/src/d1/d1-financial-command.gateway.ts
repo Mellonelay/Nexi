@@ -7742,6 +7742,17 @@ export class D1FinancialCommandGateway {
     return result.results;
   }
 
+  async getDepositClaim(id: string): Promise<Record<string, unknown>> {
+    if (!this.isEnabled()) throw new ServiceUnavailableException("Deposit claim storage is unavailable");
+    const result = await this.bridge.select<Record<string, unknown>>(
+      'SELECT * FROM "DepositClaim" WHERE "id"=? LIMIT 1',
+      [id],
+    );
+    const claim = result.results[0];
+    if (!claim) throw new NotFoundException("Deposit claim not found");
+    return claim;
+  }
+
   private async assertDepositClaimReplayAudit(
     id: string,
     action: string,

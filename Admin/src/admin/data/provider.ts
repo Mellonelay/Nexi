@@ -421,6 +421,7 @@ export interface AdminDataProvider {
   rejectLoanApplication(id: string, ctx: ConsequentialContext): Promise<MutationResult>;
 
   listDeposits(): Promise<Deposit[]>;
+  getDepositProof?(id: string): Promise<Blob>;
   acceptDeposit?(id: string, ctx: ConsequentialContext): Promise<MutationResult>;
   confirmDeposit(id: string, ctx: ConsequentialContext): Promise<MutationResult>;
   creditDeposit(id: string, ctx: ConsequentialContext): Promise<MutationResult>;

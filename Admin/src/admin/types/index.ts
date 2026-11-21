@@ -623,6 +623,8 @@ export interface Deposit {
   detectedAt?: string;
   creditedAt?: string;
   failureReason?: string;
+  manualClaim?: boolean;
+  hasProof?: boolean;
 }
 
 export type WithdrawalRiskState = "clean" | "review" | "flagged" | "blocked";

@@ -9095,6 +9095,60 @@
         ]
       }
     },
+    "/admin/deposits/{id}/proof": {
+      "get": {
+        "operationId": "AdminController_getAdminDepositProof",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Private customer deposit proof returned to an authorized Admin reviewer.",
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/gif": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Control Plane"
+        ]
+      }
+    },
     "/admin/deposits": {
       "get": {
         "operationId": "AdminController_getAdminDeposits",

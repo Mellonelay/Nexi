@@ -55,6 +55,39 @@ function Inner() {
     () => (selectedId ? (rows.find((r) => r.id === selectedId) ?? null) : null),
     [rows, selectedId],
   );
+  const [proofUrl, setProofUrl] = useState<string | null>(null);
+  const [proofForId, setProofForId] = useState<string | null>(null);
+  const [proofLoading, setProofLoading] = useState(false);
+  const [proofError, setProofError] = useState<string | null>(null);
+  useEffect(() => {
+    setProofUrl(null);
+    setProofForId(null);
+    setProofError(null);
+    if (!selected?.manualClaim || !selected.hasProof || !provider.getDepositProof) {
+      setProofLoading(false);
+      return;
+    }
+    let cancelled = false;
+    let objectUrl: string | null = null;
+    setProofLoading(true);
+    void provider.getDepositProof(selected.id)
+      .then((blob) => {
+        if (cancelled) return;
+        objectUrl = URL.createObjectURL(blob);
+        setProofUrl(objectUrl);
+        setProofForId(selected.id);
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) setProofError(error instanceof Error ? error.message : "Could not load deposit proof");
+      })
+      .finally(() => {
+        if (!cancelled) setProofLoading(false);
+      });
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [provider, selected?.id, selected?.manualClaim, selected?.hasProof]);
 
   if (q.loading)
     return (
@@ -273,8 +306,30 @@ function Inner() {
                       mono: true,
                     },
                     { label: "State", value: selected.status, mono: true },
+                    ...(selected.manualClaim ? [{ label: "Source", value: "Customer claim" }] : []),
                   ],
                 },
+                selected.manualClaim
+                  ? {
+                      id: "proof",
+                      title: "Submitted proof",
+                      content: (
+                        <div className="space-y-2">
+                          {!selected.hasProof ? (
+                            <p className="text-sm text-muted-foreground">No proof attachment is recorded for this claim.</p>
+                          ) : proofLoading ? (
+                            <p role="status" className="text-sm text-muted-foreground">Loading private proof…</p>
+                          ) : proofError ? (
+                            <p role="alert" className="text-sm text-destructive">{proofError}</p>
+                          ) : proofUrl && proofForId === selected.id ? (
+                            <img src={proofUrl} alt="Customer submitted deposit proof" className="max-h-80 max-w-full rounded-md border object-contain" />
+                          ) : !provider.getDepositProof ? (
+                            <p className="text-sm text-muted-foreground">Proof preview is unavailable in this Admin provider.</p>
+                          ) : null}
+                        </div>
+                      ),
+                    }
+                  : null,
                 selected.failureReason
                   ? {
                       id: "failure",

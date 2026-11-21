@@ -31,10 +31,21 @@ describe('VPS local deposit proof and claims',()=>{
     await expect(controller.upload(key,{user:{userId:'user-1'},headers:{'content-length':String(image.length)},[Symbol.asyncIterator]:body} as any,'image/png'))
       .resolves.toEqual({key,status:'UPLOADED'});
     expect(await store.head(key)).toBe(true);
+    await expect(store.read(key)).resolves.toEqual({body:image,contentType:'image/png'});
     await expect(finance.submitDepositClaim('user-1',{
       asset:'USDT',network:'ERC20',depositAddressId:'addr',claimedAmount:'1',
       proofObjectKey:key,idempotencyKey:'deposit-proof-test-1',
     })).resolves.toMatchObject({depositRequestId:'claim-1'});
+  });
+  it('returns the private proof linked to the persisted claim for Admin review',async()=>{
+    const store=new LocalDepositProofStore();
+    await store.put(key,image,'image/png');
+    const gateway={getDepositClaim:async(id:string)=>{
+      expect(id).toBe('claim-1');
+      return {proofObjectKey:key};
+    }} as any;
+    const finance=new FinancialOperationsService(gateway,store);
+    await expect(finance.getAdminDepositProof('claim-1')).resolves.toEqual({body:image,contentType:'image/png'});
   });
   it('blocks missing-proof claims, traversal and malformed image data',async()=>{
     const store=new LocalDepositProofStore();

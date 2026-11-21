@@ -1601,9 +1601,28 @@ export class NexiAdminApiProvider implements AdminDataProvider {
           createdAt: stringValue(row.createdAt, new Date(0).toISOString()),
           detectedAt: stringValue(row.observedAt, new Date(0).toISOString()),
           creditedAt: typeof row.creditedAt === "string" ? row.creditedAt : undefined,
+          manualClaim: row.manualClaim === true,
+          hasProof: row.hasProof === true,
         } as Deposit;
       }),
     );
+  }
+  async getDepositProof(id: string): Promise<Blob> {
+    const response = await this.fetchWithAuth(
+      `/admin/deposits/${encodeURIComponent(id)}/proof`,
+      { headers: { Accept: "application/octet-stream" } },
+    );
+    if (!response.ok) {
+      let message = `Admin API request failed (${response.status})`;
+      try {
+        const payload = record(await response.json());
+        if (typeof payload.message === "string") message = payload.message;
+      } catch {
+        /* retain the status-based error for non-JSON responses */
+      }
+      throw new NexiAdminApiError(response.status, message);
+    }
+    return response.blob();
   }
   async acceptDeposit(id: string, ctx: ConsequentialContext): Promise<MutationResult> {
     await this.confirmDeposit(id, ctx);

@@ -957,6 +957,24 @@ export class AdminController {
     return this.adminService.getAdminLedger();
   }
 
+  @Get("deposits/:id/proof")
+  @RequireAdminPermission("deposits.view")
+  @Header("Cache-Control", "private, no-store")
+  @Header("X-Content-Type-Options", "nosniff")
+  @ApiProduces("image/png", "image/jpeg", "image/gif", "image/webp")
+  @ApiOkResponse({
+    description: "Private customer deposit proof returned to an authorized Admin reviewer.",
+    schema: { type: "string", format: "binary" },
+  })
+  async getAdminDepositProof(@Param("id", ParseUUIDPipe) id: string) {
+    const proof = await this.adminService.getAdminDepositProof(id);
+    return new StreamableFile(proof.body, {
+      type: proof.contentType,
+      disposition: 'inline; filename="deposit-proof"',
+      length: proof.body.length,
+    });
+  }
+
   @Get("deposits")
   @RequireAdminPermission("deposits.view")
   getAdminDeposits() {

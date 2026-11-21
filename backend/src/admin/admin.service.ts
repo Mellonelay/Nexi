@@ -2439,7 +2439,7 @@ export class AdminService {
         state: claim.state,
         observedAt: claim.submittedAt,
         creditedAt: claim.state === "CREDITED" ? claim.reviewedAt : null,
-        proofObjectKey: claim.proofObjectKey,
+        hasProof: typeof claim.proofObjectKey === "string" && claim.proofObjectKey.length > 0,
         manualClaim: true,
       })),
     ];
@@ -2453,6 +2453,9 @@ export class AdminService {
 
   async getAdminDepositClaims() {
     return this.financialOperations.getAdminDepositClaims();
+  }
+  getAdminDepositProof(id: string) {
+    return this.financialOperations.getAdminDepositProof(id);
   }
   async confirmDepositClaim(
     id: string,

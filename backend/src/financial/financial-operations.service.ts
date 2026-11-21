@@ -366,6 +366,14 @@ export class FinancialOperationsService {
 
   getDepositClaims(userId: string, idempotencyKey?: string) { if (idempotencyKey !== undefined) this.assertIdempotencyKey(idempotencyKey); return this.d1.listDepositClaims(userId, idempotencyKey); }
   getAdminDepositClaims() { return this.d1.listDepositClaims(); }
+  async getAdminDepositProof(id: string) {
+    const claim = await this.d1.getDepositClaim(id);
+    if (typeof claim.proofObjectKey !== 'string' || !claim.proofObjectKey) {
+      throw new NotFoundException('Deposit proof not found');
+    }
+    if (!this.localProofs) throw new ServiceUnavailableException('Private deposit proof storage is unavailable');
+    return this.localProofs.read(claim.proofObjectKey);
+  }
   async confirmDepositClaim(id: string, reason: string, adminId: string, idempotencyKey: string) { if (!reason?.trim()) throw new BadRequestException('Confirmation reason is required'); const claim: any = await this.d1.updateDepositClaimState(id, 'APPROVED', adminId, reason, idempotencyKey); return { claim, replayed: Boolean(claim.replayed) }; }
   async creditDepositClaim(id: string, reason: string, adminId: string, idempotencyKey: string) { if (!reason?.trim()) throw new BadRequestException('Credit reason is required'); const claim: any = await this.d1.creditDepositClaim(id, adminId, reason, idempotencyKey); return { claim, replayed: Boolean(claim.replayed) }; }
   async rejectDepositClaim(id: string, reason: string, adminId: string, idempotencyKey: string) { if (!reason?.trim()) throw new BadRequestException('Rejection reason is required'); const claim: any = await this.d1.updateDepositClaimState(id, 'REJECTED', adminId, reason, idempotencyKey); return { claim, replayed: Boolean(claim.replayed) }; }
