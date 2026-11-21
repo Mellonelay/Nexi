@@ -967,3 +967,119 @@ Official sources: https://openrouter.ai/collections/free-models/ ; https://githu
 
 
 **FINAL VERIFIED RESULT 2026-11-16 (supersedes preceding in-progress statements):** Original canonical NEXI graph at /home/mellonelay1999/workspaces/Nexi/graphify-out/graph.json upgraded successfully with upstream Graphify 0.9.111, using the pinned zero-priced OpenRouter model nvidia/nemotron-3.5-super-vl:free and standard semantic extraction. Atomic graph promotion and @nexi-graphify-live MCP restart were performed; graph_stats returned 8,772 nodes, 22,093 edges, 469 communities, and matching HEAD 7a5aa7f2c3a3c46768b3b56bc53b1cc50e02ad76. Semantic-origin nodes: 2,331; documents represented: 46. Every former 6,441 node and every former edge relation endpoint tuple was preserved; one code node and 41 old edges were explicitly restored after clustering dedup. Exact graph SHA-256: 29221a113f166d2be0da6fe0be16932ce777c08a91a0a693ff26e68f67181f85. See graphify-out/NEXI_SEMANTIC_REBUILD_RECEIPT_20261116.json for provenance and build caveats. The generated report and manifests are in graphify-out. This is static semantic/source evidence only, not a claim of application execution; Backend/Public/Admin remain inactive. Some documents outside model scope were safely excluded, with semantic-cache out-of-scope warnings; no sensitive files sent through Graphify's configured safety filter.
+
+
+## Appendix H — Gemini deep semantic refresh (2026-11-21)
+
+**Owner-authorized current result:** The unified graph was refreshed from repository HEAD `6b3d04868caa37d32540bd2fb76dce8f19516ea6` using the NEXI enrichment pipeline. The active graph is `graphify-out/graph.json`; its SHA-256 is `f8d65063d27fd0695aa59eb0ff4fc14a48e7e51da399af1f40d2c12825110ec4`. The existing `@nexi-graphify-live` MCP reports 9,743 nodes, 24,368 edges, 245 communities, 94% EXTRACTED / 6% INFERRED / 0% AMBIGUOUS, and confirms that the graph commit matches HEAD.
+
+**Credential and model selection:** The owner replaced the Gemini API key before this run. The protected configuration remains `/home/mellonelay1999/.config/environment.d/nexi-deepwiki.conf` (mode 0600); the key was never printed or copied into the repository. The new key successfully authenticated a model-list request and a minimal Gemini generation request. `GRAPHIFY_GEMINI_MODEL="gemini-3.5-flash-lite"` is the selected model. This choice followed the owner's AI Studio Free-tier screenshot, where this model showed available capacity (15 RPM / 250,000 input tokens per minute); availability is project- and time-dependent. Google documents rate limits as project-scoped rather than API-key-scoped, so replacing a key does not reset project quota. A Gemini 3.8 Flash request returned HTTP 503 high demand; Gemini 3.6 Flash parallel extraction encountered HTTP 429. These were provider capacity/quota outcomes, not evidence of an invalid replacement key.
+
+**Successful full semantic extraction:** Graphify 0.9.112 processed all 39 chunks with Gemini 3.5 Flash Lite in deep mode, `--token-budget 4000`, `--max-workers 2`, `--max-concurrency 1`, and `--api-timeout 240`. No chunks failed and no rate-limit error occurred. Receipt: `/srv/nexi/graph-enrichment/out/revision-6b3d048/logs/gemini-3.5-flash-lite-deep-extract-4k.log`. Candidate SHA-256: `d9353dec1dfe1ccf37096df971392c2eb9eccc3bc3ab0ec6b6d174d99a507721`; 6,588 nodes / 19,745 edges. It contains 98 semantic-origin nodes and 142 semantic-origin links (135 references, 6 citations, 1 conceptual relationship). In the reconciled graph those LLM-derived links are classified INFERRED. This is a conservative semantic result; the historical graph's larger semantic layer is not a target count and included ambiguous links.
+
+**Reproducible pipeline sequence (VM only):**
+
+~~~bash
+GRAPHIFY=/home/mellonelay1999/.local/share/uv/tools/graphifyy/bin/graphify
+PY=/home/mellonelay1999/.local/share/uv/tools/graphifyy/bin/python
+REFRESH=/srv/nexi/graph-enrichment/refresh.py
+BASE=/srv/nexi/graph-enrichment/out/revision-6b3d048/clustered/graphify-out/graph.json
+SEM=/srv/nexi/graph-enrichment/out/revision-6b3d048/semantic-gemini-35-flash-lite-deep-4k
+STAGE=/srv/nexi/graph-enrichment/out/current-staged-graph.json
+cd /home/mellonelay1999/workspaces/Nexi
+"$GRAPHIFY" extract /srv/nexi/graph-enrichment/out/revision-6b3d048/source   --backend gemini --model gemini-3.5-flash-lite --mode deep   --max-workers 2 --max-concurrency 1 --token-budget 4000 --api-timeout 240   --out "$SEM"
+# Validate and stage first; this command does not activate:
+"$PY" "$REFRESH" --source-baseline "$BASE"   --semantic-candidate "$SEM/graphify-out/graph.json" --with-semantics --with-sqlite
+# After reviewing the validation receipt, activate through this same pipeline:
+"$PY" "$REFRESH" --source-baseline "$BASE"   --semantic-candidate "$SEM/graphify-out/graph.json" --with-semantics --with-sqlite --activate
+~~~
+
+**Validation and integration receipts:** Check-only refresh passed with `PASS_WITH_CLASSIFIED_DYNAMIC_BOUNDARIES`, zero dangling relationships, 284 Nest routes, 98 Prisma models, 117 resolved Admin endpoint callsites plus 3 delegated wrappers, 113 module imports, 4 forward references, BullMQ 3 queues / 3 producers / 3 workers, Socket.IO 13 verified joins, and 8 durable outbox-pipeline links. SQLite schema inspection was read-only and read no database rows: 104 tables, 1,116 columns, 310 indexes, 87 foreign keys, 3 triggers; 98 Prisma/table joins, 7 renamed aliases and 5 standalone DDL joins. Tieline matched 33 client/server relationships; its remaining drift/dead classifications are static candidates, not runtime failures.
+
+**Post-activation proof:** Active SHA-256 equals the staged SHA above. Both live MCP `shortest_path` and Graphify CLI `path` returned the one-hop, EXTRACTED relationship `Prisma:LedgerPosting --PRISMA_MODEL_MAPS_TO_SQLITE_TABLE--> LedgerPosting`. Activation created backup `/srv/nexi/graph-enrichment/backups/graph-before-enrichment-4fd8d9c9b94a9723.json`. Repository HEAD did not change. No NEXI application tests, builds, deployments, service restarts, or financial/database row operations were performed.
+
+**Historical note:** Appendix G's 2026-11-16 OpenRouter owner decision and launcher describe the provider/model state at that time. This Appendix records the owner's later Gemini instruction and verified 2026-11-21 run; it supplements the historical record rather than rewriting it. The source graph remains static evidence and does not establish runtime correctness.
+
+
+### Appendix H.1 — Gemini 3.6 owner-setting correction
+
+This subsection supersedes Appendix H's statement that Gemini 3.5 Flash Lite is the currently selected model.
+
+- The owner's screenshot confirms the replacement key passed a Gemini 3.6 Flash smoke extraction (HTTP 200). The persisted setting is now GRAPHIFY_GEMINI_MODEL=gemini-3.6-flash. The key remains protected in the existing mode-0600 config and was not changed during this correction.
+- A full current-revision Gemini 3.6 Flash deep extraction was then attempted with --force, token budget 4000, max-concurrency 1, max-workers 2, and API timeout 240. The run received HTTP 429 on chunks 1–15 and was stopped before completion. Its log is /srv/nexi/graph-enrichment/out/revision-6b3d048/logs/gemini-3.6-flash-deep-extract-4k-full-20261121.log; the separate partial output directory is /srv/nexi/graph-enrichment/out/revision-6b3d048/semantic-gemini-36-flash-deep-4k-full-20261121. Graphify retained only “Error code: 429”, not Google's specific quota dimension. No 3.6 candidate was validated or activated.
+- The active graph remains the fully staged and activated current-HEAD candidate whose completed semantic extraction used Gemini 3.5 Flash Lite. It is structurally current and passed the refresh coverage gate, but its semantic model does not match the owner's current 3.6 setting. Treat the requested Gemini 3.6 semantic refresh as PARTIAL until project/model capacity allows a complete extraction.
+- Google's supplied rate-limit documentation says quotas are project-scoped, not API-key-scoped. Therefore the 429 does not indicate that the replacement key is invalid; the exact RPM/TPM/RPD cause remains unknown. Do not burn more requests on blind retries. Resume only after capacity/quota state changes or the owner supplies a different solution.
+
+
+## Appendix I — Kilo semantic candidate: complete unified-graph merge procedure (2026-11-21)
+
+### Live state and what is not merged
+
+At the time of this update, repository HEAD is `6b3d04868caa37d32540bd2fb76dce8f19516ea6`. The canonical active graph remains `/home/mellonelay1999/workspaces/Nexi/graphify-out/graph.json`, SHA-256 `f8d65063d27fd0695aa59eb0ff4fc14a48e7e51da399af1f40d2c12825110ec4`, with 9,743 nodes and 24,368 links. Its activation receipt is still `/srv/nexi/graph-enrichment/out/current-run-report.json`; that receipt identifies the Gemini candidate SHA `d9353dec1dfe1ccf37096df971392c2eb9eccc3bc3ab0ec6b6d174d99a507721`, not the Kilo candidate.
+
+The Kilo semantic candidate is `/srv/nexi/graph-enrichment/out/revision-6b3d048/semantic/graphify-out/graph.json`, SHA-256 `e8523bc65686d5ee0d8627e3b89b0b61a13ee847236a555b3f025519cb1c752c`. At this pre-commit checkpoint, its `built_at_commit` matches HEAD `6b3d04868caa37d32540bd2fb76dce8f19516ea6`. It contains 7,532 nodes, 20,712 links and 54 hyperedges. It is a **candidate only**: it has not been reconciled by `refresh.py` and has not been activated into the unified graph. The cache reconciliation sidecar records `nvidia/nemotron-3.5-super-vl:free` for two retry cache entries only; that does not establish that every candidate record used that model.
+
+**Revision guard after this documentation commit:** Committing this runbook advances repository HEAD, while the Kilo candidate, source baseline and active graph remain stamped with `6b3d04868caa37d32540bd2fb76dce8f19516ea6`. The `refresh.py` driver rejects source/semantic inputs whose `built_at_commit` does not equal HEAD. Therefore, after this commit, the command paths below are a checkpoint recipe and must not be run as-is: generate and receipt a source baseline and complete semantic candidate for the new HEAD first. The post-commit freshness marker may also identify the active graph as behind HEAD even though application source did not change; do not report it as HEAD-matched without a fresh `graph_stats` result.
+
+The Kilo candidate is not automatically safe to promote just because extraction completed. Its hyperedges include D1-era statements and other dated document concepts. The semantic reconciler in `adapter/merge_semantics.py` merges candidate `nodes` and `links` (or `edges`); it does not merge the candidate's `hyperedges`. Review these separately. Do not claim hyperedges were integrated. If hyperedge knowledge is required, extend and validate the existing reconciliation pipeline in a separately scoped engineering change before promotion; do not bypass it with direct JSON concatenation.
+
+### Full merge procedure
+
+Run from the NEXI VM as the repository owner. Use the existing revision-aware `refresh.py` pipeline only. Do not use bare `graphify update`, the legacy `--pristine` baseline, or the standalone semantic merger to replace the enriched active graph.
+
+1. **Freeze and record inputs.** Confirm the expected repository, HEAD, clean relevant source paths, active graph hash, candidate hash, and candidate completion receipt/log. Ensure the semantic extraction completed every intended chunk with no partial or failed output, and that the cache reconciliation is complete. Never infer completeness from node counts or cache hits alone. Preserve the current `out/current-run-report.json` before the next check-only run because `refresh.py` replaces that report and `out/current-staged-graph.json`.
+
+   ```bash
+   ROOT=/home/mellonelay1999/workspaces/Nexi
+   BASE=/srv/nexi/graph-enrichment
+   OUT=$BASE/out
+   PY=/home/mellonelay1999/.local/share/uv/tools/graphifyy/bin/python
+   REFRESH=$BASE/refresh.py
+   SOURCE_BASELINE=$OUT/revision-6b3d048/clustered/graphify-out/graph.json
+   SEMANTIC_CANDIDATE=$OUT/revision-6b3d048/semantic/graphify-out/graph.json
+   ACTIVE=$ROOT/graphify-out/graph.json
+   cd "$ROOT"
+
+   git status --short
+   git rev-parse HEAD
+   sha256sum "$ACTIVE" "$SOURCE_BASELINE" "$SEMANTIC_CANDIDATE" "$OUT/current-run-report.json"
+   ```
+
+   Do not proceed if the source tree is dirty in the paths checked by `refresh.py`, if HEAD differs from the input graphs' `built_at_commit`, if the baseline receipt/hash or surface Git-tree identities fail, or if candidate completion is uncertain. The current Kilo input hashes and counts are recorded above as comparison anchors; re-read them live before a future run.
+
+2. **Review candidate semantics before merge.** Inspect metadata, provenance and a bounded sample of candidate nodes, links and hyperedges. Check for stale architecture terms, sensitive material, unresolved/ambiguous concepts, and model output that conflicts with current source or approved architecture. Treat document-derived edges as hypotheses. The merge code relabels model-origin semantic edges as `INFERRED`; it does not make them source-confirmed. Candidate hyperedges remain outside the current merger.
+
+3. **Run check-only validation.** Archive the old report, then run the same revision-matched command that will be used for promotion, without `--activate`. This regenerates deterministic adapters, reconciles semantics, adds the read-only SQLite schema layer, validates Graphify loading, and writes a staged graph and a new run receipt. It does not replace the active graph.
+
+   ```bash
+   mkdir -p "$OUT/logs"
+   cp -p "$OUT/current-run-report.json" "$OUT/logs/current-run-report-before-kilo-$(date -u +%Y%m%dT%H%M%SZ).json"
+
+   "$PY" "$REFRESH" \
+     --source-baseline "$SOURCE_BASELINE" \
+     --semantic-candidate "$SEMANTIC_CANDIDATE" \
+     --with-semantics --with-sqlite
+   ```
+
+4. **Gate the staged result.** Read `$OUT/current-run-report.json` and `$OUT/current-staged-graph.json`. Require: matching HEAD and baseline/candidate hashes; `coverage_gate.status == PASS_WITH_CLASSIFIED_DYNAMIC_BOUNDARIES`; `unresolved` empty; `semantic_merge.dangling == 0`; Graphify loader node/edge counts matching the staged JSON; SQLite schema validation successful; expected source-contract coverage present; and no unexpected identity remaps or source-layer replacements. Confirm that original deterministic nodes and links remain the prefixes of the staged graph. Record staged SHA-256 and before/after layer counts. Stop on any failed or unexplained condition; never promote a partial or stale candidate.
+
+   Kilo-specific extra gate: compare the report's `semantic_candidate_sha256` to the Kilo input hash above, then separately enumerate the 54 source hyperedges and report that the existing refresh merger does not carry them. Review stale D1-era statements before relying on any semantic text. A passing structural gate does not make those hyperedges part of the result or make semantic claims authoritative.
+
+5. **Promote only the exact validated inputs.** After reviewing the receipt, run the same check command with `--activate`. The driver revalidates HEAD, inputs and the active graph, creates a content-addressed backup of the current active graph, then atomically replaces the canonical graph. If source, candidate or active graph changed after check-only, stop and repeat validation.
+
+   ```bash
+   "$PY" "$REFRESH" \
+     --source-baseline "$SOURCE_BASELINE" \
+     --semantic-candidate "$SEMANTIC_CANDIDATE" \
+     --with-semantics --with-sqlite --activate
+   ```
+
+   This changes only the active Graphify artifact; it does not deploy NEXI application code or restart application services. Do not run this step until the candidate has passed the gates above.
+
+6. **Prove activation through existing interfaces.** Require receipt `activated == true`, receipt `staged_sha256` equal to `sha256sum "$ACTIVE"`, and a recorded backup whose hash equals the pre-activation active graph hash. Query `graph_stats` through the existing `@nexi-graphify-live` MCP and confirm its commit and counts correspond to the activated artifact. Recheck a known exact path such as Prisma `LedgerPosting` to SQLite table `LedgerPosting`. If the existing MCP still reports old stats, follow its established session reload procedure and then query again; do not create a duplicate server. Record SHA, receipt, MCP result and any reload as activation evidence.
+
+7. **Close out candidate files.** Keep the promoted candidate, its completion/cache reconciliation evidence, the pre-check receipt, and the pipeline's content-addressed active-graph backup until post-activation proof is complete. Only then remove genuinely redundant temporary files after matching hashes against retained snapshots. Preserve any unique prior extraction snapshot. Never delete the canonical graph, the source baseline plus its receipt, the current run receipt, or the pipeline backup as routine cleanup.
+
+### Current Kilo-specific status
+
+The candidate and its cache/reconciliation evidence are retained. The redundant `graph.json.pre-final-rebuild.bak` copy was removed after its SHA-256 was confirmed identical to the timestamped `2026-11-21/graph.json` candidate snapshot. The distinct earlier `graph.json.pre-kilo-refresh.bak` remains retained. The primary Kilo candidate and its cache/reconciliation evidence remain untouched. No Kilo check-only refresh or activation was run here, so the Kilo merge status remains **NOT VALIDATED / NOT ACTIVATED**. The current unified graph and its prior activation receipt remain unchanged.
