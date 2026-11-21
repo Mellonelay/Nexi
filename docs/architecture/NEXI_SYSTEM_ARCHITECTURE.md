@@ -1,6 +1,6 @@
 # NEXI — maintained three-surface architecture
 
-**Reconciled 2026-11-20 (Myanmar).** Owner decisions and actual source govern; this is a maintained architecture map, **not** a statement that every current source behavior is tested or deployed. Detailed historical maps are recoverable from Git. Before calling an API/SQLite/graph relationship current, check its source SHA and applicable source/contract.
+**Reconciled 2026-11-21 (Myanmar).** Owner decisions and actual source govern; this is a maintained architecture map, not a statement that every current source behavior is tested or deployed. Detailed historical maps are recoverable from Git. Before calling an API/SQLite/graph relationship current, check its source SHA and applicable source/contract.
 
 ## Specification navigation
 
@@ -9,7 +9,7 @@
 - [Financial invariants and persisted lifecycles](../security/NEXI_FINANCIAL_INTEGRITY_REQUIREMENTS.md#persisted-lifecycles-and-reconciliation-anchors) owns economic policy, traceable compensation and authoritative persisted state.
 - [Acceptance tracker](../quality/NEXI_113_ACCEPTANCE_TRACKER_20261101.csv) links each original criterion to its domain, journey and API/evidence locator alongside existing evidence and disposition. [The frozen criteria](../quality/NEXI_113_PUBLIC_ADMIN_ACCEPTANCE_20261101.md) control wording.
 
-Fallow 3.42.0 reported zero import-cycle or cross-surface boundary findings with the repository configuration. The checkout intentionally lacks a root node_modules; the Backend/Public/Admin workspaces instead link to separate verified shared stores under `/srv/nexi`. Root-scoped Fallow resolver warnings are tooling context, not evidence of broken dependencies; changed-code findings require independent source impact evidence. The Graphify source shortest path via FinancialHttpModule, FinancialOperationsController and FinancialOperationsService agrees with inspected module/handler source. Graphify reverse impact for MarketKlineQueryService points to the Kline controller and module. These results describe source structure.
+Historical Fallow 3.42.0 receipt (captured 2026-11-19 on its recorded c7f64d8 checkout) reported zero import-cycle or cross-surface boundary findings with the repository configuration. This is not a current-HEAD result. The checkout intentionally lacks a root node_modules; the Backend/Public/Admin workspaces instead link to separate verified shared stores under `/srv/nexi`. Root-scoped Fallow resolver warnings are tooling context, not evidence of broken dependencies; changed-code findings require independent source impact evidence. Earlier Graphify path and reverse-impact results recorded against the c7f64d8-era source located FinancialHttpModule → FinancialOperationsController → FinancialOperationsService and MarketKlineQueryService → Kline controller/module. They describe that graph/source snapshot only and must be rechecked against a revision-matched graph and current source before use.
 
 ### Blueprint requirement coverage
 
@@ -18,7 +18,7 @@ Fallow 3.42.0 reported zero import-cycle or cross-surface boundary findings with
 | Parts I–II, architecture authority and correctness, §§1–8 | This architecture owns context, containers, components, deployment, security boundaries and six correctness layers. Current state owns dated source, test and release identities. |
 | Part III, financial workflow method, §§9–12 | The source-traced sequences and financial invariants explain authenticated intent, atomic transfers, reserve/debit/credit, errors, replay and application versus declared schema relationships. Product domains define UI behavior. |
 | Part IV, 15 product domains, §§13–27 | The product operating model gives each domain an outcome, UI/owner source, command or read boundary, state and recovery. Actual feature availability and deployment are evidence-qualified. |
-| Part V, product contracts, §§28–34 | The API map covers all 279 documented operations and static AppModule ownership. Public design and Admin guide retain their own authority. Financial states, declared FKs, durable job recovery and runtime boundaries are described here and in the financial invariants. |
+| Part V, product contracts, §§28–34 | The API map covers all 280 documented operations and static AppModule ownership. Public design and Admin guide retain their own authority. Financial states, declared FKs, durable job recovery and runtime boundaries are described here and in the financial invariants. |
 | Part VI, requirements, journeys and evidence, §§35–39 | The 18 journeys describe operation and recovery. The 113 tracked IDs have exact requirement wording and separate domain, journey and API/evidence locators. No status advances without the relevant proof. |
 | Appendices A–D | The documentation index lists authority owners. Provenance appears in the graph and API sections. The UI-first guide preserves historical regression seeds and proof ownership. Unresolved decisions and candidate runtime discontinuities stay visible. |
 
@@ -77,21 +77,21 @@ Eight logical Admin workspaces and account-level research default + active posit
 The market source separates bounded ticker/Kline processing from best-effort trade/depth. [MarketIngestService](../../backend/src/market/market-ingest.service.ts) uses a 256-entry reference queue and a ticker/Kline lane that can grow to 1,024 entries for closed Klines after replaceable data is exhausted. Its saturation counters and shutdown path explicitly allow drops, including closed Klines. MarketKline is unique on (pairId, interval, openTime), and pairId references MarketPair. [BinaryService](../../backend/src/binary/binary.service.ts) separately resolves an eligible expiry source or delays settlement, and persists price provenance. Research simulation has its own scoped path. Runtime saturation, recovery, freshness and financial-resource interference require deployed measurements. See the [market ADR](ADR-2026-11-18-NEXI-MARKET-DATA-RESOURCE-ARCHITECTURE.md).
 
 ## Proof and current status
-The [current state](../../NEXI_CURRENT_STATE.md) records the Backend-wide receipt: 136 suites, 819 passed tests and zero skips on test-only Node 24.22.0. It supersedes the earlier broad failure and native cleanup abort for that test environment. All three services were observed active since November 17. Candidate artifact identity and authenticated mobile Web3/Admin acceptance remain open.
+The [current state](../../NEXI_CURRENT_STATE.md) records revision-specific historical receipts. The 136-suite / 819-test Backend result used test-only Node 24.22.0 and applies only to its recorded source revision. November 17 service observations are historical; current candidate artifact identity and authenticated mobile Web3/Admin acceptance remain open.
 
 Reference owners: [root AGENTS](../../AGENTS.md), [financial invariants](../security/NEXI_FINANCIAL_INTEGRITY_REQUIREMENTS.md), [source OpenAPI](../contracts/openapi.json), [operator guide](../../Admin/docs/NEXI_ADMIN_OPERATOR_USAGE_GUIDE.md), [Public design](../../frontend/DESIGN.md), [operations](../operations/NEXI_VPS_SQLITE_BULLMQ_RUNBOOK.md).
 
 
 ## Architecture and product operating specification
 
-**Evidence boundary.** The original source walkthrough was recorded at 9c1bab8af977. Selected implementation, schema and graph relationships were reconciled at c7f64d8608af9c5a718826bccfa8aecac271a547. The OpenAPI artifact still contains 253 paths and 279 operations. Source and schema establish selected contracts and constraints. The [113 frozen requirements](../quality/NEXI_113_PUBLIC_ADMIN_ACCEPTANCE_20261101.md) retain their original wording. Their ID mapping here serves as navigation. The observed November 17 service artifacts have separate release provenance.
+The original source walkthrough was recorded at 9c1bab8af977. Selected implementation, schema and graph relationships were first reconciled at c7f64d8608af9c5a718826bccfa8aecac271a547. The current OpenAPI artifact contains 254 paths and 280 operations. Source and schema establish selected contracts and constraints. The [113 frozen requirements](../quality/NEXI_113_PUBLIC_ADMIN_ACCEPTANCE_20261101.md) retain their original wording. Their ID mapping here serves as navigation. The observed November 17 service artifacts have separate release provenance.
 
 ### Six-layer correctness contract
 
 | Layer | Specification owner | Necessary evidence | Current assessment |
 |---|---|---|---|
 | 1. Component | Controllers/DTO validators, domain helpers, React components | Source rule and focused behavior tests at matching SHA | **PARTIAL**: dated focused Backend 74, Public 62, Admin 36 passing; not comprehensive |
-| 2. Integration | REST/Socket producers and authenticated Public/Admin consumers | Request/response compatibility, role/identity, state propagation, replay | **PARTIAL**: 279 operations mapped to static wiring and source contracts. DTO discrepancies and runtime gaps are recorded in the [operation map](../contracts/NEXI_API_OPERATION_MAP.md). |
+| 2. Integration | REST/Socket producers and authenticated Public/Admin consumers | Request/response compatibility, role/identity, state propagation, replay | **PARTIAL**: 280 operations mapped to static wiring and source contracts. DTO discrepancies and runtime gaps are recorded in the [operation map](../contracts/NEXI_API_OPERATION_MAP.md). |
 | 3. Business/financial | [Financial integrity](../security/NEXI_FINANCIAL_INTEGRITY_REQUIREMENTS.md) and SQLite domain commands | Balanced postings, reserves, idempotency, atomic durable state, cross-account readback | **SOURCE CONFIRMED for selected paths**; broad negative/concurrency verification incomplete |
 | 4. UI/UX | [Public design](../../frontend/DESIGN.md) and [Admin operator guide](../../Admin/docs/NEXI_ADMIN_OPERATOR_USAGE_GUIDE.md) | Rendered mobile Web3 DApp browser and authenticated Admin sessions, keyboard/viewport/error states | **UNKNOWN on candidate release**; static source and emulator are not real-wallet acceptance |
 | 5. End-to-end product | [113 frozen criteria](../quality/NEXI_113_PUBLIC_ADMIN_ACCEPTANCE_20261101.md), [18 journeys](../quality/NEXI_MOBILE_WEB3_UI_FIRST_BROWSER_ACCEPTANCE_20261117.md) | Before → UI action → durable domain state/Ledger → Activity/Admin → reload/recovery, same identity | **NOT CUSTOMER ACCEPTED for candidate release** |
@@ -278,7 +278,7 @@ The diagram shows application associations. The [schema-backed relationships](#s
 
 ### API contract and consumer reconciliation
 
-The [operation map](../contracts/NEXI_API_OPERATION_MAP.md) matches the 253-path/279-operation artifact to 279 handlers reachable from AppModule, and records the exact inputs, guard decorations, delegates and literal client candidates. Four decorated legacy /lever routes belong to an unwired ContractModule. The previous GET /auth/profile match came from a comment. The map records the currency, Mining and Loan decimal schema discrepancies and distinguishes 410 compatibility routes from active product endpoints.
+The [operation map](../contracts/NEXI_API_OPERATION_MAP.md) matches the 254-path/280-operation current artifact to 280 handlers reachable from AppModule, and records the exact inputs, guard decorations, delegates and literal client candidates. Four decorated legacy /lever routes belong to an unwired ContractModule. The previous GET /auth/profile match came from a comment. The map records the currency, Mining and Loan decimal schema discrepancies and distinguishes 410 compatibility routes from active product endpoints.
 
 | Route contract (documented) | Controller/service source | Consumer / amount and failure policy |
 |---|---|---|
@@ -378,11 +378,11 @@ sequenceDiagram
 
 ### API and architecture open evidence register
 
-- **UNKNOWN:** complete serialization, dynamic consumer and deployed guard/DTO/response parity. Static route wiring covers all 279 documented operations, with three request-schema discrepancies confirmed.
+- **UNKNOWN:** complete serialization, dynamic consumer and deployed guard/DTO/response parity. Static route wiring covers all 280 operations in the current checked-in OpenAPI artifact, with three request-schema discrepancies confirmed.
 - **EXPLICITLY NOT PROVEN:** end-to-end financial integrity for every deposit rail, withdrawal provider, Spot fill, Margin liquidation, Binary outcome, Finance yield or Admin adjustment; selected source anchors do not substitute for controlled durable receipts.
 - **CONFIRMED TEST RECEIPT:** The later Backend-wide VM receipt records 136 passing suite executions and 819 passing tests on test-only Node 24.22.0, scoped to the recorded source and test environment. The earlier native abort and 40 failed tests remain historical.
 - **UNKNOWN RELEASE PROVENANCE:** The three November 17 service startups and output directories were observed. Candidate source SHA, artifact hashes and Sentry release identity have yet to be reconciled.
-- **GRAPH COVERAGE:** The source Graphify session returns the source graph at c7f64d8. The independently selected merged graph extends navigation into SQLite schema metadata. See [cross-layer provenance](#cross-layer-provenance-and-schema-coverage).
+- **GRAPH COVERAGE:** The active unified Graphify graph is revision-dependent; compare the live refresh receipt and MCP statistics with Git HEAD. Historical source and merged SQLite snapshots below are provenance records, not current graph evidence. See [cross-layer provenance](#cross-layer-provenance-and-schema-coverage).
 - **SETTLED VS UNPROVEN:** Binary has WIN/LOSS only with equal price LOSS and no DRAW/refund outcome; Admin Mining `dailyYield` is fractional per day in current source. LoanService applies `interestRate` once per selected plan term; customer-facing rate wording, collateral valuation, unapproved VIP benefit semantics and external rail/finality remain separately identified evidence or policy gaps. Blueprint proposals cannot override approved rules.
 - **CONFLICT MANAGEMENT:** Historical Admin route counts, proposed Binary features, old source-first instructions and Cloudflare runtime notes are superseded where current source/owner rules disagree. Do not reinstate archived docs or rewrite the 113 requirement wording.
 
@@ -562,9 +562,11 @@ erDiagram
 
 **CONFIRMED in live schema metadata.** LedgerAccount.userId and LedgerPosting.accountId are restricted foreign keys. Activity.userId is declared, while Activity.ledgerPostingId and ledgerCorrelationId are application correlations. LedgerIdempotency posting IDs and Gate2InternalTransfer posting IDs are also application correlations. Gate2InternalTransfer has separate sender and recipient FKs to User. EventOutbox and EventInbox have separate unique identities and no declared FK between them.
 
-#### Cross-layer provenance and schema coverage
+#### Historical Graphify snapshots — provenance only
 
-| Graphify 0.9.112 artifact | Nodes / relationships | SHA-256 |
+The rows below are historical artifacts captured at earlier source revisions. They are retained for provenance and must not be read as the current active graph; current revision and coverage remain unverified until a later, separately authorized refresh.
+
+| Historical Graphify 0.9.112 artifact | Nodes / relationships | SHA-256 |
 |---|---:|---|
 | graphify-out/graph.json (source, c7f64d8) | 7,318 / 20,379 | 5af8994d65ca94ddd14365fc4c3d8791d2197ff4084ad7dd95cc6fa11c03ac2a |
 | graphify-out/sqlite-schema-graph.json (schema) | 1,621 / 2,355 | c0dafa1e93f86540a993aa7d3fa046a953e5384f8791d1b2aa15c36c905b21be |

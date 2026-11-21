@@ -1,10 +1,10 @@
 # NEXI — active engineering queue
 
-**Snapshot:** 2026-11-19 Singapore. Current source checkpoint at entry ed2496efaa63; deployment identity is separate. Reassess when source or owner authorization changes.
+**Snapshot:** Reconciled 2026-11-21 (Myanmar). Source/guidance checkpoint was 4aa0ec6e255a3718fdf2425430959a02e4a8b9de; re-read current Git identity before execution. Deployment identity is separate.
 
-- [x] **Backend-wide Jest reliability:** recovered the existing repairs and verified 136 suites / 811 tests with zero skips on test-only Node 24.22.0. The runner rejects the affected Node 24.19–24.21 releases and supports `NEXI_NODE_BIN` for verification. Receipt is linked from `NEXI_CURRENT_STATE.md`.
-- [ ] **Source and contract closure:** using current code, validate high-risk producer/consumer paths across Admin + Public + NestJS + SQLite Ledger/Outbox, OpenAPI and existing contract tests; promote only demonstrated defects. Avoid redoing accepted Binary/Admin implementation.
-- [ ] **Resource and policy proof:** bounded test-only checks of market reference overload, Kline lineage, financial SQLite latency, approval/replay negative cases; no performance PASS without actual measurements.
+- [x] **Backend-wide Jest reliability (historical receipt):** 136 suites / 819 tests passed with zero skips on test-only Node 24.22.0 at the source revision recorded in NEXI_CURRENT_STATE.md. This does not prove the current candidate.
+- [x] **Source/document reconciliation:** committed source integration is preserved; current OpenAPI, Admin deposit-proof consumer and Wallet Activity correlation are reflected in maintained docs. Do not reopen settled functionality without contradictory current evidence.
+- [ ] **Current-candidate verification:** after source closure, run authorized Backend/Public/Admin checks and focused integration proofs at the exact candidate SHA; separate static/unit evidence from runtime/browser evidence.
 - [ ] **Release preparation after owner approval:** align local/remote Git, exact Backend/Public/Admin build artifacts, Sentry release identities, change-scoped verification and operational rollback/recovery criteria.
 - [ ] **Product acceptance after separately authorized deployment:** execute the existing 113-case mobile Web3 DApp browser and Admin UI-first plan with actual before/action/after, ledger/Activity/audit and source/release evidence. Preserve historical statuses without promoting them.
 

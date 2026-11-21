@@ -627,7 +627,7 @@ Unless the owner explicitly changes scope, do not:
 - add a sixth dock tab;
 - redesign backend APIs;
 - move business logic into Next.js;
-- expose direct D1 access;
+- expose direct database access from Public;
 - fabricate consumer state;
 - brand assets with exchange/provider logos;
 - convert the dense product UI into a marketing site;

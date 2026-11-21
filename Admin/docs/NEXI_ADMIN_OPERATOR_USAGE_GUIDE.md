@@ -1,6 +1,6 @@
 # NEXI Admin operator usage guide
 
-**Maintained functional reference, reconciled 2026-11-19.** Current owners: \`Admin/src/admin/config/navigation.ts\`, \`Admin/src/routes/\`, \`Admin/src/admin/data/nexi-api-provider.ts\`, and matching NestJS auth/DTO/service. Eight owner-approved logical workspaces; old route counts are dated observations, not a permanent route contract or real-browser proof. Current Binary research controls/simulation already exist in source. [Maintained system architecture](../../docs/architecture/NEXI_SYSTEM_ARCHITECTURE.md) and [original owner diagram](<NEXI Admin — Unified Navigation and Binary Control Architecture-2026-10-21-144002.png>) distinguish design from operational acceptance.
+**Maintained functional reference, reconciled 2026-11-21.** Current owners: \`Admin/src/admin/config/navigation.ts\`, \`Admin/src/routes/\`, \`Admin/src/admin/data/nexi-api-provider.ts\`, and matching NestJS auth/DTO/service. Eight owner-approved logical workspaces; old route counts are dated observations, not a permanent route contract or real-browser proof. Current Binary research controls/simulation already exist in source. [Maintained system architecture](../../docs/architecture/NEXI_SYSTEM_ARCHITECTURE.md) and [original owner diagram](<NEXI Admin — Unified Navigation and Binary Control Architecture-2026-10-21-144002.png>) distinguish design from operational acceptance.
 
 ## Before acting
 
@@ -58,7 +58,7 @@ Use the dashboard to review operational summaries and follow links to the owning
 
 **Deposit Wallet Settings:** Configure external deposit assets, supported networks, destination addresses, labels, logos, limits, fees/confirmations and activation using the available forms. Verify that the destination is valid and active before making it selectable in Public. These are blockchain destinations, not internal customer Ledger accounts.
 
-**Deposits:** Review the external deposit or customer claim and evidence. Keep confirmation and credit as separate statuses where the workflow exposes them. Accept/credit only after review. The canonical NestJS financial path posts the Ledger credit and records activity/audit/outbox. If the result is uncertain, inspect the claim and Ledger before retrying with the original idempotency key. Rejected claims are not credited. A credited status alone does not prove funds were later withdrawn or that a different customer is online.
+**Deposits:** Review the external deposit or customer claim and evidence. For a selected manual claim with a recorded attachment, the Admin detail panel can display a private image preview through the authorized proof endpoint. A missing attachment is reported separately; a preview load failure does not establish that evidence is absent. Native/non-manual deposits and claims without an attachment do not show this preview. Previewing is evidence review only: it does not observe blockchain confirmations or credit funds. Keep confirmation and credit as separate statuses where the workflow exposes them. Accept/credit only after review. The canonical NestJS financial path posts the Ledger credit and records activity/audit/outbox. If the result is uncertain, inspect the claim and Ledger before retrying with the original idempotency key. Rejected claims are not credited. A credited status alone does not prove funds were later withdrawn or that a different customer is online.
 
 **Withdrawals:** Review customer, asset/network/address, requested amount and risk state. Approve/reject through the authorized review flow; processing/settlement status is not established by approval alone. Do not mark a withdrawal complete without the canonical state transition and evidence.
 
@@ -100,7 +100,7 @@ Use Assets to inspect supported asset metadata and visibility. Use Price Data So
 | Binary · Ongoing | `binary.view` | Binary configuration/position methods | Admin controller/service; Binary owner and `D1FinancialCommandGateway` |
 | History & Settlements | `settlements.view` | Settlement queries and actions | Admin controller/service and settlement authority |
 | Spot & Margin | `spot.view` | Spot pair/order methods | Market/Spot services and financial command owner |
-| Deposit Wallet Settings | `networks.view` | Network/deposit-asset/address methods | Admin wallet configuration service and durable configuration store |
+| Deposit Wallet Settings | UI route: `networks.view`; API reads: `assets.view`; UI edit controls: `networks.edit` + `assets.edit`; API writes: `assets.edit` | Network/deposit-asset/address methods | Admin wallet configuration service and durable configuration store |
 | Deposits | `deposits.view` | Deposit/claim queries and review | Admin/financial controllers and canonical deposit-credit gateway |
 | Withdrawals | `withdrawals.view` | Withdrawal review/lifecycle methods | Financial operations controller/service and Ledger gateway |
 | Ledger | `ledger.view` | Ledger account/posting queries | SQLite Ledger; no manual row editing |
