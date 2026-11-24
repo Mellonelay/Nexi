@@ -1,6 +1,6 @@
 # NEXI — Graphify Cloud_CLI_MCPC: Full Operations, Commands and Advanced Query Combinations
 
-**Operational purpose:** Navigate and explain NEXI's Backend, Public, Admin, infrastructure and engineering reference knowledge using the **standard upstream** Graphify CLI, local MCP over MCPC and separately hosted Graphify Cloud. This is a runnable engineering manual, not a list of marketing features. This document is for Graphify operations; it does not authorize NEXI application builds, tests, starts, deployment, financial mutation, Cloud uploads or indexing.
+**Operational purpose:** Navigate NEXI's enriched source graph using the **local Graphify CLI and existing local Graphify MCPC**. Hosted Graphify Cloud is a separate product reference and is not the NEXI enriched-graph query route. This is a runnable engineering manual, not a list of marketing features. This document does not authorize graph rebuild/promotion, NEXI application builds, tests, starts, deployment, financial mutation, Cloud uploads or indexing.
 
 **Historical installation snapshot captured 2026-11-16:** owner-user Graphify v0.9.111, Python 3.12, local source graph at /home/mellonelay1999/workspaces/Nexi/graphify-out/graph.json, CLI /home/mellonelay1999/.local/bin/graphify, MCPC /usr/local/bin/nexi-mcpc, source session @nexi-graphify-live and separate engineering knowledge session @nexi-knowledge. Verify current versions and connections before use. Graph statistics are recorded in the build-receipt section after a successful refresh; **never infer current coverage from a historical node count**.
 
@@ -28,15 +28,25 @@ This dated section records the verified state on 2026-11-16 only. It is supersed
 
 **Evidence:** graphify-out/NEXI_SEMANTIC_REBUILD_RECEIPT_20261116.json, current graph sha256, Graphify CLI v0.9.111, and both live MCP graph_stats calls. Appendix E/F are historical code-only and initial-credential checkpoints. All dated provider/model statements below are historical snapshots, not current configuration or credential evidence.
 
-## CURRENT VM UNIFIED-GRAPH WORKFLOW — 2026-11-21
+## CURRENT VM UNIFIED-GRAPH WORKFLOW — 2026-11-22
 
-The authoritative source graph is the unified artifact at /home/mellonelay1999/workspaces/Nexi/graphify-out/graph.json served by the existing @nexi-graphify-live MCPC session. The separate @nexi-knowledge graph stores reference material; neither graph substitutes for current source. Read /srv/nexi/graph-enrichment/README.md and /srv/nexi/graph-enrichment/refresh.py before changing the graph.
+**Scope for NEXI enriched-graph investigation:** Use the local Graphify CLI against the unified artifact and the existing local `@nexi-graphify-live` MCPC session. Do not substitute hosted Graphify or another graph. The NEXI graph-enrichment refresh pipeline remains the distinct, revision-aware path for any future authorized rebuild or activation; ordinary discovery must not rebuild the graph.
 
-The old --pristine recipe is revision-pinned and does not apply to a new HEAD. Build a fresh source baseline from the current clean commit with Graphify CLI --code-only into a revision-specific candidate directory; preserve its manifest and graph SHA. If semantic extraction is wanted, build a separate candidate at the same HEAD with an explicitly configured provider. Do not reuse a semantic candidate from another source revision or silently fall back to a paid model. The refresh driver accepts --source-baseline and --semantic-candidate and validates their receipts against HEAD.
+The authoritative local source graph is `/home/mellonelay1999/workspaces/Nexi/graphify-out/graph.json`, served by the existing `@nexi-graphify-live` local MCPC session. `/usr/local/bin/nexi-mcpc` invokes it; its server executable is `/home/mellonelay1999/.local/bin/graphify-mcp`. The separate `@nexi-knowledge` graph stores reference material and is not this enriched source graph.
 
-Run /srv/nexi/graph-enrichment/refresh.py with --source-baseline PATH --semantic-candidate PATH --with-semantics --with-sqlite for check-only validation. Review the coverage and identity report, including the TypeScript AST and HTTP, framework, queue, realtime, outbox and read-only SQLite schema layers. Add --activate only after those checks pass; the driver backs up and atomically replaces the active unified graph. Do not create a duplicate Graphify server.
+**Live verification on 2026-11-22 (read-only):** Graphify CLI and local MCPC both report version `0.9.112`. The local MCPC `graph_stats` returned 9,743 nodes, 24,368 edges, 245 communities, 94% EXTRACTED, 6% INFERRED and 0% AMBIGUOUS. It says the graph was built at `6b3d04868caa37d32540bd2fb76dce8f19516ea6`, while repository HEAD is `f3515cf76d46`; the MCPC explicitly reports that the graph may be stale. The active graph path and counts differ from a separately supplied 2026-11-20 architecture snapshot (12,145 nodes, 27,200 relationships, 446 communities, revision `c7f64d8608af9c5a718826bccfa8aecac271a547`). Do not silently reconcile these snapshots or claim the live graph matches HEAD; compare graph identity, hash and refresh receipts before using it as complete current coverage.
 
-After promotion, verify live graph_stats and the exact built commit, SHA and counts from the refresh receipt. Use bounded queries with exact node IDs when names collide, directed paths for execution flow and neighborhood/reverse-impact queries for consumers. Label EXTRACTED versus INFERRED results. Confirm consequential paths in current source; a missing edge does not prove missing source behavior, and static edges do not prove runtime behavior.
+**Enrichment confirmed in the loaded graph:** a bounded MCPC query surfaced SQLite schema nodes. An unqualified `get_node("LedgerPosting")` was ambiguous between a migration declaration and the SQLite table. Exact lookup by `sqlite:table:LedgerPosting` resolved the table. `get_neighbors` with relation filter `PRISMA_MODEL_MAPS_TO_SQLITE_TABLE` returned `Prisma:LedgerPosting --PRISMA_MODEL_MAPS_TO_SQLITE_TABLE [EXTRACTED]--> LedgerPosting`, sourced at `backend/prisma/schema.d1.prisma:L1249`. The CLI `path` command reproduced that one-hop extracted mapping when given the exact SQLite table ID. This confirms the SQLite enrichment relation is present; it does not prove every layer in the separately reported 12,145-node graph is present.
+
+A read-only `graphify diagnose multigraph --json` on the loaded graph reported 24,368 raw edges, 647 directed and 731 undirected same-endpoint collapse-risk counts, 615 same-endpoint groups and 214 relation-variant groups. Examples include distinct `PRISMA_READS` and `PRISMA_WRITES` relations for the same endpoint pair. Its simulated post-build simple Graph contained 9,571 nodes and 23,632 edges. Treat this as a **potential relation-collapse diagnostic**, not proof that the persisted JSON has already discarded those raw edge records. Preserve relation identity/provenance and inspect consumer behavior before any graph rewrite or export that could collapse edges.
+
+The Graphify runtime inspection changed no graph, server, application source or runtime configuration; this runbook records the read-only evidence and was updated as requested. Verify versions, live graph statistics and revision correspondence before every consequential graph task. A stale graph remains useful only as a qualified navigation candidate; confirm current source before relying on it. Do not rebuild to answer a query.
+
+The former `--pristine` recipe is revision-pinned and does not apply to a new HEAD. If an authorized enriched-graph refresh is later requested, build a fresh source baseline from the exact clean commit with Graphify CLI `--code-only` into a revision-specific candidate directory and preserve its manifest/hash. If semantic extraction is included, build a separate candidate at the same HEAD with an explicitly configured provider; do not reuse another revision or silently fall back to a paid model. The existing refresh driver accepts `--source-baseline` and `--semantic-candidate` and validates receipts against HEAD.
+
+The NEXI refresh driver at `/srv/nexi/graph-enrichment/refresh.py` uses `--source-baseline PATH --semantic-candidate PATH --with-semantics --with-sqlite` for check-only validation. Review its coverage and identity report, including TypeScript AST, HTTP, framework, queue, realtime, outbox and read-only SQLite schema layers. Add `--activate` only after validation and separate authorization. Do not use bare `graphify update` against the active enriched artifact: it may replace custom enrichment layers. Do not create a duplicate Graphify server.
+
+After any authorized promotion, verify local MCPC `graph_stats`, exact built commit, graph SHA and counts against the refresh receipt. Use bounded queries with exact node IDs when names collide, directed paths for execution flow, and neighborhood/reverse-impact queries for consumers. Label EXTRACTED versus INFERRED results. Confirm consequential paths in current source; a missing edge does not prove missing source behavior, and static edges do not prove runtime behavior.
 
 ## 1. Choose the lowest-cost correct graph workflow
 
@@ -45,14 +55,14 @@ After promotion, verify live graph_stats and the exact built commit, SHA and cou
 | Exact error string or known file | rg/search and source read | Inspect caller or DTO only if needed | Do not insert Graphify ceremony |
 | Unknown implementation owner | CLI query with exact code vocabulary **or** MCP query_graph | explain/get_node; nearest neighbors | Read current matching source |
 | Caller/callee chain | query --context call **or** MCP query_graph with context_filter | path/shortest_path; confirm direction and confidence | Trace actual code and dynamic registrations |
-| Change blast radius | affected --relation calls **or** Cloud graphify_impact | get_neighbors; tests_for if Cloud | Check route/consumer code; graph may omit dynamic edges |
+| Change blast radius | CLI affected with an observed relation | Local MCPC get_neighbors + bounded query_graph | Inspect consumers/source; local MCPC has no dedicated tests_for tool; graph may omit dynamic edges |
 | Entire subsystem | god-nodes, report, get_community | Bounded seeded BFS | Inspect selected actual files |
-| Cross-repository | CLI global or merge-graphs **or** hosted combined graph | Scoped query/path | Validate each repo revision and joins |
-| Repeated verified discovery | save-result + reflect **or** Cloud remember | Source-linked recall and revised outcome | Prior result never overrides current code |
-| PR-review or potential test scope | local list_prs/get_pr_impact/triage_prs **or** Cloud review_status/tests_for | Inspect changed-file diff and linked tests | No test execution without separate owner authority |
-| Documentation, prose and diagrams | Separate semantic extraction with configured provider | Inspect provenance/semantic links | Code-only graph does not contain semantic document coverage |
+| Cross-repository | CLI global or merge-graphs (only when the task is actually multi-repository) | Scoped local CLI/MCPC query/path | Validate every input graph revision and identity joins; one NEXI checkout normally uses its single enriched graph |
+| Repeated verified discovery | Local CLI save-result + reflect | Re-query the same source-linked nodes after the graph changes | Prior result never overrides current code; current CLI does not advertise reflect --if-stale |
+| PR-review or potential test scope | Local MCPC list_prs/get_pr_impact/triage_prs | Inspect changed-file diff and graph-linked context | The local MCPC has no tests_for/review_status tool; no test execution without separate owner authority |
+| Documentation, prose and diagrams | Local MCPC get_section or CLI section when the heading is indexed | CLI export wiki/callflow-html for generated navigation artifacts | Exports write files and remain derived views; check graph freshness/provenance; code-only graphs omit semantic document coverage |
 
-**One primary interface per investigation.** Cloud indexed graph, local source graph, and Knowledge v4 are different datasets. Cloud may lag HEAD; MCP may hold an older snapshot; working-tree changes are never certified by a graph built from an older checkout. No path means "no represented path," not independence. A prominent node is not necessarily the causal owner.
+**One primary interface per investigation.** Under the current owner instruction, NEXI enriched-graph queries use only the local Graphify CLI and existing `@nexi-graphify-live` MCPC. Hosted Graphify is a separate product reference; `@nexi-knowledge` is a separate reference corpus. Do not silently switch datasets or assume their IDs match. The local MCP may hold an older snapshot; working-tree changes are never certified by a graph built from an older checkout. No path means "no represented path," not independence. A prominent node is not necessarily the causal owner.
 
 ### Graph concepts: what to inspect
 
@@ -174,9 +184,13 @@ Check that the relationship name actually exists in the graph: CLI affected --re
 
 "section" is only meaningful when the graph contains indexed Markdown sections and the requested heading exists; code-only extraction may not provide it. "diagnose multigraph" identifies same-endpoint relation-collapse risk, not complete static source coverage. "god-nodes" highlights connectivity, not authoritative ownership.
 
+**Live diagnostic, 2026-11-22:** on the active graph, `diagnose multigraph --json` found 24,368 raw edges, 647 directed and 731 undirected same-endpoint collapse-risk counts, 615 same-endpoint groups, and 214 relation-variant groups. It listed `PRISMA_READS` and `PRISMA_WRITES` sharing endpoint pairs. Its simulated simple Graph had 9,571 nodes and 23,632 edges. This is a risk finding, not proof that raw edge records were deleted from graph.json; the diagnostic notes a normal post-build graph cannot recover raw producer edges.
+
 ### E — ambiguity, vocabulary and low-noise graph queries
 
 Upstream Graphify query matches existing labels/IDs; a natural-language sentence can seed irrelevant generic words. Prefer actual class/function names from source or graph results. A third-party Graphify query reference recommends deriving a vocabulary from graph node labels, then selecting only matching terms before traversal. **Cache it per graph SHA** rather than reading a very large graph on every query. The method is optional routing assistance, not a built-in synonym or embedding index. Never invent graph labels, claim "no match" proves absence, or regenerate vocabulary for unchanged graph versions. Large multi-token queries can contaminate traversal with unrelated communities.
+
+On the live CLI v0.9.112, `graphify query --help` advertises `--no-doc-demotion` although the root help omits it. The local MCPC exposes the equivalent `demote_docs` boolean (default true); set it false only for a docs-first query. Check the installed subcommand help before relying on a flag missing from the root reference.
 
 Exit codes for query/path/explain: 0 answer, 3 ambiguous with candidates, 4 no matching node. React to 3 with qualified ID; to 4 with current-source search/alternative real labels; to truncated output with narrower seeds or justified larger budget. Never increase token budget indefinitely.
 
@@ -213,7 +227,57 @@ Merge-graphs combines existing graphs; it cannot manufacture cross-repo relation
 "$GRAPHIFY" prs
 ~~~
 
-Exports write artifacts; Neo4j/FalkorDB --push uses external DB and distinct permission/secrets. Benchmark compares graph retrieval with a naive full-corpus read unless a fair real-task baseline is measured. "save-result" outcomes useful, dead_end, corrected; "reflect" produces lessons with decay/corroboration, not a new authoritative code contract. PR dashboard requires GitHub access.
+Exports write artifacts; Neo4j/FalkorDB --push uses external DB and distinct permission/secrets. Benchmark compares graph retrieval with a naive full-corpus read unless a fair real-task baseline is measured. "save-result" outcomes useful, dead_end, corrected; "reflect" produces lessons with decay/corroboration, not a new authoritative code contract. PR dashboard requires GitHub access. The supplied query-navigation instructions mention `reflect --if-stale`, but live CLI v0.9.112 help does not advertise that option; use only the installed version's supported `reflect` arguments.
+
+### G1 — Enriched-graph debugging: multigraph, wiki, call-flow, and sections
+
+Use this sequence when debugging NEXI from the enriched local graph. Keep the graph as the primary map, but verify consequential paths against source. Do not rebuild or activate a graph just to clear a documentation-only HEAD mismatch.
+
+~~~bash
+cd /home/mellonelay1999/workspaces/Nexi
+GRAPHIFY=/home/mellonelay1999/.local/share/uv/tools/graphifyy/bin/graphify
+GRAPH=$PWD/graphify-out/graph.json
+MCPC=/usr/local/bin/nexi-mcpc
+
+# Establish graph identity/freshness before interpreting any result.
+git status --short
+git rev-parse HEAD
+sha256sum "$GRAPH"
+"$MCPC" @nexi-graphify-live tools-call graph_stats '{}' --json
+
+# Check for edge multiplicity before exporting to simple-graph consumers.
+"$GRAPHIFY" diagnose multigraph --graph "$GRAPH" --json
+
+# Focused source navigation and direction-aware impact.
+"$GRAPHIFY" query "ExactServiceOrQuestion" --graph "$GRAPH" --context call --depth 2 --budget 2000
+"$GRAPHIFY" explain "ExactNodeID" --graph "$GRAPH"
+"$GRAPHIFY" path "ExactSourceID" "ExactTargetID" --graph "$GRAPH"
+"$GRAPHIFY" affected "ExactNodeID" --relation calls --depth 2 --graph "$GRAPH"
+
+# Derived browsing views. Use a fresh output directory/name; wiki export owns/prunes its wiki directory.
+test ! -e "$PWD/graphify-out/wiki" && "$GRAPHIFY" export wiki --graph "$GRAPH"
+STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+test ! -e "$PWD/graphify-out/NEXI_CALLFLOW_$STAMP.html" && "$GRAPHIFY" export callflow-html --graph "$GRAPH" --output "$PWD/graphify-out/NEXI_CALLFLOW_$STAMP.html" --lang en --max-sections 8
+test ! -e "$PWD/graphify-out/NEXI_TREE_$STAMP.html" && "$GRAPHIFY" tree --graph "$GRAPH" --output "$PWD/graphify-out/NEXI_TREE_$STAMP.html"
+
+# Section retrieval: pass an exact indexed heading or source-path::heading.
+"$GRAPHIFY" section "path/to/runbook.md#Exact heading" --graph "$GRAPH" --max-chars 5000
+"$MCPC" @nexi-graphify-live tools-get get_section
+"$MCPC" @nexi-graphify-live tools-call get_section '{"label":"path/to/runbook.md::Exact heading","max_chars":5000}' --json
+~~~
+
+Interpretation and safe-use rules:
+
+- `diagnose multigraph` compares raw edge multiplicity with a simple-graph projection. It reports a consumer-collapse risk; it does not prove the stored JSON or every graph reader has lost edges. Inspect the actual consumer and confirm representative relation variants with local MCPC `get_neighbors` before drawing that conclusion.
+- In the observed Graphify 0.9.112 local server, `graphify/serve.py::_read_graph` detects parallel links and promotes the NetworkX object to a MultiGraph. A live `get_neighbors` call retained repeated `PRISMA_READS` and `PRISMA_WRITES` links for the same endpoints. Treat this as verified for that installed reader/version and sample, not every external consumer.
+- Current sample diagnostic (graph SHA and revision must be rechecked before reuse): 9,743 nodes, 24,368 raw edges, 647 directed same-endpoint collapses, 731 undirected collapses, 214 relation-variant groups, 9 self-loops, 0 exact duplicate edges. This is a shape diagnostic, not an accuracy score.
+- The wiki exporter has no explicit output-path flag in this CLI version; it writes to `graphify-out/wiki/` and manages/prunes that generated directory. Inspect it first and preserve existing user content. Wiki pages and HTML/tree views are derived navigation aids, not independent source truth. They may reflect stale documentation/extraction inputs.
+- Call-flow HTML supports an explicit `--output`, so write to a new, ignored `graphify-out/` filename. Large-graph warnings or community-sidecar staleness should be recorded; do not run `cluster-only` or another writer unless graph maintenance is separately authorized.
+- Use exact node IDs after keyword discovery. A broad `graphify section "Binary"` failed in the observed 0.9.112 environment with a missing-node `KeyError`; local MCP `get_section` also returned no match for a runbook added after the graph baseline. Retry once with an exact indexed path/heading or node ID. If it remains absent, read the current runbook directly and mark the graph lookup unavailable/stale; do not regenerate the graph just to index new documentation.
+- A graph commit older than HEAD is not automatically unusable. Compare changed paths and extraction relevance. Documentation-only changes can leave source relationships applicable while making documentation-section/wiki content stale. Record this distinction explicitly.
+- Never interpret a missing path as proof of independence, an undirected path as execution direction, or a graph relationship as runtime proof. Use Fallow/source/runtime evidence only when the task requires those distinct questions.
+
+**Observed 2026-11-22 on the live local NEXI graph:** Graphify CLI and local `@nexi-graphify-live` were both 0.9.112; graph stats reported 9,743 nodes / 24,368 edges / 245 communities, built at `6b3d04868caa37d32540bd2fb76dce8f19516ea6`, while repository HEAD was `f3515cf76d46` and MCP warned it may be stale. Read-only `export wiki` wrote 255 articles; `export callflow-html` wrote 17 sections, 16 Mermaid diagrams, and 15 call tables to `graphify-out/NEXI_CALLFLOW_20261122.html`; `tree` wrote `graphify-out/NEXI_TREE_20261122.html` (480,224 bytes). Export warned that `.graphify_analysis.json` was stale and communities were reconstructed in memory; no sidecar refresh or graph rebuild was run. The current runbook was not indexed in that graph revision. These are dated observations, not permanent defaults.
 
 **Not enabled by this runbook:** automatic Git hooks, OpenClaw/Codex/Claude integration installers, Cloud indexing, database pushes, or persistent watcher. Follow the actual CLI --help appendix for complete installed command/flag coverage; a CLI option appearing in help is not an instruction to execute it.
 
@@ -235,11 +299,13 @@ export MCPC=/usr/local/bin/nexi-mcpc
 "$MCPC" @nexi-graphify-live tools-call get_neighbors '{"label":"ResolvedNodeID","relation_filter":"calls","token_budget":1200}'
 "$MCPC" @nexi-graphify-live tools-call shortest_path '{"source":"ResolvedSourceID","target":"ResolvedTargetID","max_hops":8,"undirected":false}'
 "$MCPC" @nexi-graphify-live tools-call get_community '{"community_id":0,"token_budget":1500}'
+"$MCPC" @nexi-graphify-live tools-call get_section '{"label":"docs/operations/<file>.md::Heading","max_chars":4000}'
 ~~~
 
-**Local MCP tools and their complete argument sets (v0.9.111 tool-get):**
+**Local MCP tools and their complete argument sets (live Graphify MCP v0.9.112; `tools-list --full` captured 2026-11-22):**
 - query_graph: **question** string; mode bfs|dfs (bfs); depth integer 1–6 (3); token_budget (2000); context_filter array[string]; demote_docs boolean (true); project_path optional absolute project directory. Set demote_docs=false for a genuinely docs-first corpus.
 - get_node: label or node_id; optional project_path. Use the exact graph identifier from query_graph, not a guessed name.
+- get_section: label/node_id heading, node ID, `path/file.md::Heading`, or whole Markdown page; max_chars (8000); project_path. Returns the underlying source text and subsections when resolvable; verify the source location and current file.
 - get_neighbors: label or node_id; relation_filter string; token_budget (2000); project_path. No proof an edge represents real runtime traffic.
 - graph_stats: optional project_path. Counts are not coverage percentage.
 - god_nodes: top_n (10); exclude_hubs_percentile 0–100; project_path. Useful for architecture orientation.
@@ -279,9 +345,9 @@ Graphify-mcp accepts project_path for a different authorized graph. Avoid using 
 6. **Review scope:** list_prs → get_pr_impact → triage_prs; no PR mutation, CI execution or Git checkout implied.
 7. **Quality/failure:** check graph_stats / exact source revision, identify truncation and ambiguous nodes, compare with rg and current source; report missing/unsupported edges as coverage gaps.
 
-## 6. Hosted Graphify Cloud: actual combos, commands and separation
+## 6. Hosted Graphify Cloud: separate product reference (not the NEXI enriched-graph route)
 
-Hosted MCP **https://api.graphify.com/mcp** is Streamable HTTP with OAuth and workspace permission. It is **not** local graphify-mcp or nexi-mcpc. Its "list_repositories" and indexed SHA are the first steps in any Cloud answer. NEXI Cloud indexing and repository sync are not authorized by this runbook. Existing authenticated queries are read-only unless a tool explicitly writes workspace or task state.
+Hosted MCP **https://api.graphify.com/mcp** is Streamable HTTP with OAuth and workspace permission. It is **not** local graphify-mcp or nexi-mcpc, and owner direction for the NEXI enriched graph selects only the local CLI and local MCPC. Keep the material below as a separate product reference; do not substitute a hosted index or repository group for the local unified artifact. NEXI Cloud indexing and repository sync are not authorized by this runbook.
 
 **Core Cloud tool combos:**
 - **Find source:** list_repositories → graph_stats (commit/freshness) → graphify_rank_files or graphify_find → graphify_node → current source.
@@ -461,7 +527,7 @@ Key navigational pages: https://docs.graphify.com/platform/graphs ; https://docs
 
 ## Appendix B — Complete installed upstream CLI reference
 
-The following is the actual output of Graphify graphify 0.9.111. It includes **all installed CLI verbs, flags, agent integrations, and output modes**. This is a reference, not permission to enable installs, hooks or watchers.
+Captured from the live NEXI VM on 2026-11-22. Graphify CLI reports `0.9.112`. This is the installed root `graphify --help` output and enumerates all command families, flags, output formats, and agent-integration subcommands. It is an inventory only: installing, uninstalling, watching, extracting, updating, exporting, pushing to a database, or changing providers/hooks requires a separately scoped task and authorization.
 
 ~~~text
 Usage: graphify <command>
@@ -623,7 +689,7 @@ Commands:
   gemini uninstall        remove GEMINI.md section + BeforeTool hook
   cursor install          write .cursor/rules/graphify.mdc (Cursor)
   cursor uninstall        remove .cursor/rules/graphify.mdc
-  claude install          write graphify section to CLAUDE.md + PreToolUse hook (Claude Code)
+  claude install          write graphify section to CLAUDE.md (or the AGENTS.md Claude Code reads) + PreToolUse hook
   claude uninstall        remove graphify section from CLAUDE.md + PreToolUse hook
   codebuddy install       write graphify section to CODEBUDDY.md + PreToolUse hook (CodeBuddy)
   codebuddy uninstall     remove graphify section from CODEBUDDY.md + PreToolUse hook
@@ -665,12 +731,16 @@ Commands:
 
 Prefer a hosted version? Graphify Cloud has a free plan, no card required:
 https://app.graphify.com/signup?utm_source=cli&utm_medium=terminal&utm_campaign=oss&utm_content=help
+
 ~~~
 
+The installed `graphify query --help` additionally prints:
+`Usage: graphify query "<question>" [--dfs] [--no-doc-demotion] [--context C] [--seed X] [--budget N] [--depth N] [--graph path]`.
+The root help omits `--no-doc-demotion`; use the command-specific help as the stronger flag check. The installed help does not advertise `reflect --if-stale`, so do not use that flag based only on a skill or another version's instructions.
 
 ## Appendix C — All eleven live local MCPC schemas
 
-The following is captured from the locally registered @nexi-graphify-live session. Re-read tools-get after a version or session change. The same ten tool names are also registered for @nexi-knowledge, but use separate graph data.
+The following is captured from the locally registered @nexi-graphify-live session and rechecked with `tools-list --full` on 2026-11-22 against Graphify MCP v0.9.112. Re-read tools-get after a version or session change. The same ten tool names are also registered for @nexi-knowledge, but use separate graph data.
 
 ### C.1 query_graph
 

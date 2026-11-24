@@ -10,12 +10,16 @@ import { MARKET_KLINES_CHANNEL, MARKET_REFERENCE_CHANNEL, MarketKlineRealtimeEve
 @Injectable()
 export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
   private static readonly MAX_CONCURRENT_EVENT_WORKERS = 8;
-  private static readonly MAX_CONCURRENT_REFERENCE_WORKERS = 4;
+  // One ordered drain owns reference publication. Bounded pipelines reduce
+  // Valkey round trips without allowing concurrent batches to reorder events.
+  private static readonly MAX_CONCURRENT_REFERENCE_WORKERS = 1;
   private static readonly MAX_REFERENCE_QUEUE_LENGTH = 256;
+  private static readonly MAX_REFERENCE_BATCH_SIZE = 32;
   private static readonly MAX_DURABLE_QUEUE_LENGTH = 1024;
   private readonly logger = new Logger(MarketIngestService.name);
   private readonly eventQueue: MarketProviderEvent[] = [];
   private readonly referenceQueue: Array<ProviderDepthEvent | ProviderTradeEvent> = [];
+  private readonly latestDepthUpdateIdBySource = new Map<string, number>();
   private readonly activeDrains = new Set<Promise<void>>();
   private readonly activeReferenceDrains = new Set<Promise<void>>();
   private activeWorkers = 0;
@@ -161,12 +165,19 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
 
   private enqueueReferenceEvent(event: ProviderDepthEvent | ProviderTradeEvent): void {
     if (event.kind === 'depth') {
+      if (!Number.isSafeInteger(event.updateId) || event.updateId < 0) return;
+      const sourceKey = `${event.provider}:${event.symbol}`;
+      const latestUpdateId = this.latestDepthUpdateIdBySource.get(sourceKey);
+      if (latestUpdateId !== undefined && event.updateId <= latestUpdateId) return;
+      this.latestDepthUpdateIdBySource.set(sourceKey, event.updateId);
+
       const existing = this.referenceQueue.findIndex((queued) => queued.kind === 'depth'
         && queued.symbol === event.symbol
         && queued.provider === event.provider);
       if (existing >= 0) {
-        this.referenceQueue[existing] = event;
-        return;
+        // Replace the pending snapshot and move it to its true FIFO position.
+        // This keeps newer depth from being emitted ahead of intervening trades.
+        this.referenceQueue.splice(existing, 1);
       }
     }
     if (this.referenceQueue.length >= MarketIngestService.MAX_REFERENCE_QUEUE_LENGTH) {
@@ -214,21 +225,22 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
 
   private async drainReferenceEvents(): Promise<void> {
     while (!this.destroyed && this.referenceQueue.length > 0) {
-      const event = this.referenceQueue.shift();
-      if (!event) continue;
+      const batch = this.referenceQueue.splice(0, MarketIngestService.MAX_REFERENCE_BATCH_SIZE);
+      if (batch.length === 0) continue;
       try {
         // Reference events only go to Valkey; they never wait behind SQLite work.
-        await this.publishReferenceMarketEvent(event);
+        await this.publishReferenceMarketEvents(batch);
       } catch (error) {
         this.recordReferencePublicationFailure(
           error instanceof Error ? error.message : 'unknown error',
+          batch.length,
         );
       }
     }
   }
 
-  private recordReferencePublicationFailure(reason: string): void {
-    this.failedReferencePublications += 1;
+  private recordReferencePublicationFailure(reason: string, count = 1): void {
+    this.failedReferencePublications += count;
     if (Date.now() - this.lastReferenceFailureLogAt <= 60_000) return;
     this.lastReferenceFailureLogAt = Date.now();
     this.logger.warn(
@@ -314,14 +326,36 @@ export class MarketIngestService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async publishReferenceMarketEvent(event: ProviderDepthEvent | ProviderTradeEvent): Promise<void> {
+    await this.publishReferenceMarketEvents([event]);
+  }
+
+  private async publishReferenceMarketEvents(events: readonly (ProviderDepthEvent | ProviderTradeEvent)[]): Promise<void> {
+    if (events.length === 0) return;
     if (!this.redis.isAvailable()) {
-      this.recordReferencePublicationFailure('Valkey unavailable');
+      this.recordReferencePublicationFailure('Valkey unavailable', events.length);
       return;
     }
-    const payload = event.kind === 'depth'
-      ? { version: 'v1' as const, event: 'market.reference.depth' as const, ...event }
-      : { version: 'v1' as const, event: 'market.reference.trade' as const, ...event };
-    await this.redis.publish(MARKET_REFERENCE_CHANNEL, JSON.stringify(payload));
+    const pipeline = this.redis.getClient().pipeline();
+    for (const event of events) {
+      const payload = event.kind === 'depth'
+        ? { version: 'v1' as const, event: 'market.reference.depth' as const, ...event }
+        : { version: 'v1' as const, event: 'market.reference.trade' as const, ...event };
+      pipeline.publish(MARKET_REFERENCE_CHANNEL, JSON.stringify(payload));
+    }
+
+    const results = await pipeline.exec();
+    if (!results) {
+      this.recordReferencePublicationFailure('Valkey pipeline returned no command results', events.length);
+      return;
+    }
+    for (let index = 0; index < events.length; index += 1) {
+      const result = results[index];
+      if (!result) {
+        this.recordReferencePublicationFailure('Valkey pipeline omitted a command result');
+      } else if (result[0]) {
+        this.recordReferencePublicationFailure(result[0].message);
+      }
+    }
   }
 
   private async publishMarketKlineEvent(candle: {
