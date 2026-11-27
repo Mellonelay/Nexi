@@ -23,7 +23,7 @@ export default function SignupPage() {
         <p className="text-center text-sm leading-6 text-[#C3BBD0]">Create your NEXI account by connecting and signing with an Ethereum wallet.</p>
         <WalletConnectControl compact />
         <p className="text-center text-[#8C8299]">
-          Already have an account? <Link href="/login" className="text-[var(--nexi-focus)] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)]">Login</Link>
+          Already have an account? <Link href="/login" className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md px-1 text-[var(--nexi-focus)] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)]">Login</Link>
         </p>
       </div>
     </main>

@@ -72,6 +72,25 @@ const financialDecimal = (value: unknown): string | null => {
 // Options durations are stored as seconds and shown as seconds everywhere.
 const formatDuration = (seconds: number) => `${seconds}s`;
 
+const formatStakeLimit = (value: string | null) => {
+  const parts = /^(\d+)(?:\.(\d+))?(?:e([+-]?\d+))?$/i.exec(value ?? '');
+  if (!parts) return null;
+  const digits = parts[1] + (parts[2] ?? '');
+  const point = parts[1].length + Number(parts[3] ?? 0);
+  if (!Number.isSafeInteger(point) || Math.abs(point) > 100) return value;
+  const wholeValue = point <= 0 ? '0' : digits.slice(0, point).padEnd(point, '0');
+  const fractionValue = point < 0 ? '0'.repeat(-point) + digits : digits.slice(point);
+  const whole = (wholeValue.replace(/^0+(?=\d)/, '') || '0').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  const fraction = fractionValue.replace(/0+$/, '');
+  return fraction ? whole + '.' + fraction : whole;
+};
+
+const formatStakeRange = (minimum: string | null, maximum: string | null) => {
+  const lower = formatStakeLimit(minimum);
+  const upper = formatStakeLimit(maximum);
+  return lower !== null && upper !== null ? `${lower}–${upper} USDT` : null;
+};
+
 const normalizePosition = (value: unknown): BinaryPosition | null => {
   if (!value || typeof value !== 'object') return null;
   const row = value as Record<string, unknown>;
@@ -536,6 +555,9 @@ export default function BinaryPage() {
   const payoutRate = selectedDuration?.rate ?? null;
   const minimumStake = selectedDuration?.minimumAmount ?? null;
   const maximumStake = selectedDuration?.maximumAmount ?? null;
+  const minimumStakeDisplay = formatStakeLimit(minimumStake);
+  const maximumStakeDisplay = formatStakeLimit(maximumStake);
+  const selectedStakeRange = formatStakeRange(minimumStake, maximumStake);
   const stake = toPositive(amount);
   const estimatedReturn = stake !== null && payoutRate !== null ? stake * (1 + payoutRate) : null;
   const potentialReturn = estimatedReturn !== null && Number.isFinite(estimatedReturn) ? estimatedReturn : null;
@@ -795,7 +817,7 @@ export default function BinaryPage() {
           </div>
           <div className="nexi-station-card min-w-0 rounded-2xl p-2">
             <div className="border-b border-white/5 px-2 pb-2"><TimeframeSelector interval={interval} onChange={setInterval} /></div>
-            <div className="nexi-options-chart-frame h-[clamp(16rem,52dvh,24rem)] sm:h-[420px] xl:h-[500px]"><RealtimeTradingChart symbol={normalizedPair} type="binary" interval={interval} marketStatus={market?.sessionState === 'CLOSED' ? 'CLOSED' : undefined} sandboxFeed={sandboxChartFeed} showIndicatorControls /></div>
+            <div className="nexi-options-chart-frame"><RealtimeTradingChart symbol={normalizedPair} type="binary" interval={interval} marketStatus={market?.sessionState === 'CLOSED' ? 'CLOSED' : undefined} sandboxFeed={sandboxChartFeed} showIndicatorControls /></div>
           </div>
 
         </section>
@@ -811,19 +833,19 @@ export default function BinaryPage() {
             <Wallet className="hidden h-5 w-5 shrink-0 text-[#A995FF] sm:mt-1 sm:block" aria-hidden="true" />
           </div>
           <div className="mt-2 grid min-w-0 gap-1 sm:mt-4 sm:gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 2.75rem), 1fr))' }} role="group" aria-label="Expiry duration">
-            {durationOptions.map((option) => <button key={option.seconds} type="button" aria-pressed={duration === option.seconds} aria-label={`${formatDuration(option.seconds)} expiry. ${option.minimumAmount ?? 'Unknown'}–${option.maximumAmount ?? 'unknown'} USDT stake range`} disabled={!option.enabled} onClick={() => setDuration(option.seconds)} className={`nexi-interactive nexi-ripple group min-h-[56px] min-w-0 rounded-lg border px-1.5 py-2 text-center transition sm:min-h-[84px] sm:rounded-xl sm:px-2 sm:py-2.5 ${duration === option.seconds ? 'border-[#8B5CF6] bg-[linear-gradient(145deg,rgba(109,65,255,.22),rgba(26,16,36,.92))] text-white shadow-[0_0_22px_rgba(109,65,255,.14)]' : 'border-violet-300/10 bg-[#0B0711]/70 text-[#8C8299] hover:border-violet-300/25'} disabled:cursor-not-allowed disabled:opacity-55`}><span className="block text-center text-xs font-semibold tabular-nums">{formatDuration(option.seconds)}</span><span className="mt-1 block font-mono text-xs text-[#F5F7FB] sm:mt-2 sm:text-base">{option.rate === null ? '—' : `${(option.rate * 100).toFixed(0)}%`}</span></button>)}
+            {durationOptions.map((option) => <button key={option.seconds} type="button" aria-pressed={duration === option.seconds} aria-label={`${formatDuration(option.seconds)} expiry. Stake range ${formatStakeRange(option.minimumAmount, option.maximumAmount) ?? 'unavailable'}`} disabled={!option.enabled} onClick={() => setDuration(option.seconds)} className={`nexi-interactive nexi-ripple group min-h-[56px] min-w-0 rounded-lg border px-1.5 py-2 text-center transition sm:min-h-[84px] sm:rounded-xl sm:px-2 sm:py-2.5 ${duration === option.seconds ? 'border-[#8B5CF6] bg-[linear-gradient(145deg,rgba(109,65,255,.22),rgba(26,16,36,.92))] text-white shadow-[0_0_22px_rgba(109,65,255,.14)]' : 'border-violet-300/10 bg-[#0B0711]/70 text-[#8C8299] hover:border-violet-300/25'} disabled:cursor-not-allowed disabled:opacity-55`}><span className="block text-center text-xs font-semibold tabular-nums">{formatDuration(option.seconds)}</span><span className="mt-1 block font-mono text-xs text-[#F5F7FB] sm:mt-2 sm:text-base">{option.rate === null ? '—' : `${(option.rate * 100).toFixed(0)}%`}</span></button>)}
           </div>
-          <p className="mt-2 min-w-0 break-words text-xs leading-5 text-[#C3BBD0]">Selected stake range: <span className="break-words font-mono text-white">{minimumStake !== null && maximumStake !== null ? `${minimumStake}–${maximumStake} USDT` : 'Unavailable'}</span></p>
+          <p className="mt-2 min-w-0 break-words text-xs leading-5 text-[#C3BBD0]">Selected stake range: <span className="break-words font-mono tabular-nums text-white">{selectedStakeRange ?? 'Unavailable'}</span></p>
           <div className="mt-2 rounded-xl border border-violet-300/10 bg-[#0B0711]/75 px-3 py-2 text-xs leading-5 text-[#AFA4BC] sm:mt-3 sm:py-2.5">{availabilityCopy}</div>
           <label className="mt-4 block text-xs text-[#C3BBD0]">Stake (USDT)
-            <div className="relative mt-1"><input type="text" inputMode="decimal" autoComplete="off" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder={minimumStake !== null && maximumStake !== null ? `${minimumStake}–${maximumStake}` : '0.00'} aria-describedby="binary-stake-range" className="min-h-12 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 pr-14 text-right font-mono text-base outline-none focus:border-[#8B5CF6]" /><span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#8C8299]">USDT</span></div>
-            <span id="binary-stake-range" className="mt-1 block text-xs text-[#8C8299]">{minimumStake !== null && maximumStake !== null ? `Allowed range: ${minimumStake}–${maximumStake} USDT` : 'Stake range unavailable'}</span>
+            <div className="relative mt-1"><input type="text" inputMode="decimal" autoComplete="off" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder={minimumStakeDisplay !== null && maximumStakeDisplay !== null ? `${minimumStakeDisplay}–${maximumStakeDisplay}` : '0.00'} aria-describedby="binary-stake-range" className="min-h-12 w-full rounded-xl border border-violet-300/15 bg-[#0B0711] px-3 pr-14 text-right font-mono text-base outline-none focus:border-[#8B5CF6]" /><span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#8C8299]">USDT</span></div>
+            <span id="binary-stake-range" className="mt-1 block font-mono tabular-nums text-xs text-[#8C8299]">{selectedStakeRange ? `Allowed range: ${selectedStakeRange}` : 'Stake range unavailable'}</span>
           </label>
-          <dl className="mt-4 grid min-w-0 grid-cols-1 gap-3 rounded-xl border border-violet-300/10 bg-[#0B0711] p-3 text-xs min-[390px]:grid-cols-2">
-            <div className="min-w-0"><dt className="text-[#8C8299]">Options Wallet</dt><dd className="mt-1 break-words font-mono tabular-nums" aria-live="polite">{optionWalletBalanceLabel(optionWalletBalance)}</dd></div>
-            <div><dt className="text-[#8C8299]">Payout rate</dt><dd className="mt-1 font-mono">{payoutRate === null ? '—' : `${(payoutRate * 100).toFixed(0)}%`}</dd></div>
-            <div className="min-w-0"><dt className="text-[#8C8299]">Estimated potential return</dt><dd className="mt-1 break-words font-mono tabular-nums">{potentialReturn === null ? '—' : `${potentialReturn.toFixed(2)} USDT`}</dd></div>
-            <div><dt className="text-[#8C8299]">Duration</dt><dd className="mt-1 font-mono">{selectedDuration ? formatDuration(duration) : '—'}</dd></div>
+          <dl className="mt-3 grid min-w-0 grid-cols-2 gap-x-3 gap-y-2 rounded-xl border border-violet-300/10 bg-[#0B0711] p-3 text-xs">
+            <div className="min-w-0"><dt className="min-h-8 text-[#8C8299]">Options Wallet</dt><dd className="mt-1 break-words font-mono tabular-nums text-[#F5F7FB]" aria-live="polite">{optionWalletBalanceLabel(optionWalletBalance)}</dd></div>
+            <div className="min-w-0"><dt className="min-h-8 text-[#8C8299]">Payout rate</dt><dd className="mt-1 font-mono tabular-nums text-[#F5F7FB]">{payoutRate === null ? '—' : `${(payoutRate * 100).toFixed(0)}%`}</dd></div>
+            <div className="min-w-0"><dt className="min-h-8 text-[#8C8299]">Estimated potential return</dt><dd className="mt-1 break-words font-mono tabular-nums text-[#F5F7FB]">{potentialReturn === null ? '—' : `${potentialReturn.toFixed(2)} USDT`}</dd></div>
+            <div className="min-w-0"><dt className="min-h-8 text-[#8C8299]">Duration</dt><dd className="mt-1 font-mono tabular-nums text-[#F5F7FB]">{selectedDuration ? formatDuration(duration) : '—'}</dd></div>
           </dl>
           {feedback && <p role="status" className="mt-3 text-sm text-[#C3BBD0]">{feedback}</p>}
           {unknownBinaryIntentKey && <button type="button" onClick={() => void reconcileUnknownSubmission(unknownBinaryIntentKey)} className="mt-3 min-h-11 w-full rounded-lg border border-amber-300/30 px-3 text-sm font-semibold text-amber-100">Recheck position status</button>}

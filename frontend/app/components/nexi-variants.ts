@@ -19,7 +19,7 @@ export const surfaceVariants = cva(
       padding: {
         none: '',
         compact: 'p-3',
-        default: 'p-4 sm:p-5',
+        default: 'p-3 sm:p-5',
         spacious: 'p-5 sm:p-6',
       },
     },

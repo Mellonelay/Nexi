@@ -11,3 +11,21 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
+
+/* Keep each phone row scannable: asset and total share the first line. */
+.assetRow {
+  grid-template-areas:
+    "asset total"
+    "available locked";
+  grid-template-columns: minmax(0, 1fr) minmax(5rem, auto);
+}
+.assetIdentity { grid-area: asset; }
+.assetAvailable { grid-area: available; }
+.assetLocked { grid-area: locked; }
+.assetTotal { grid-area: total; }
+@media (min-width: 1024px) {
+  .assetRow {
+    grid-template-areas: "asset available locked total";
+    grid-template-columns: minmax(0, 1fr) repeat(3, minmax(7rem, auto));
+  }
+}

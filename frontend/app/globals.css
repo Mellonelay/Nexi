@@ -1009,6 +1009,25 @@ body {
   }
 }
 
+/* A single responsive owner keeps trading chart frames in sync with viewport overrides. */
+.nexi-trading-page {
+  --nexi-trading-chart-height: clamp(13rem, 36dvh, 18rem);
+}
+.nexi-trading-page .nexi-trading-plot-shell,
+.nexi-trading-page .nexi-options-chart-frame {
+  height: var(--nexi-trading-chart-height);
+}
+@media (min-width: 640px) {
+  .nexi-trading-page {
+    --nexi-trading-chart-height: 420px;
+  }
+}
+@media (min-width: 1280px) {
+  .nexi-trading-page {
+    --nexi-trading-chart-height: 500px;
+  }
+}
+
 /* Short mobile viewports keep the trading task ahead of repeated chrome. */
 @media (max-width: 1023px) and (max-height: 700px) {
   .nexi-trading-page .nexi-trading-chart .nexi-chart-indicators {
@@ -1067,24 +1086,24 @@ body {
     min-height: 44px;
     min-width: 44px;
   }
-  .nexi-trading-page .nexi-options-chart-frame {
-    height: 220px !important;
+  .nexi-trading-page {
+    --nexi-trading-chart-height: 220px;
   }
   .nexi-trading-page .nexi-options-chart-frame .nexi-trading-chart,
   .nexi-trading-page .nexi-options-chart-frame .nexi-trading-plot-shell {
-    height: 220px;
-    min-height: 220px;
+    height: var(--nexi-trading-chart-height);
+    min-height: var(--nexi-trading-chart-height);
   }
   .nexi-trading-page .nexi-chart-rail {
     padding-block: 4px;
   }
   .nexi-trading-page .nexi-trading-chart {
-    height: 220px;
+    height: var(--nexi-trading-chart-height);
     min-height: 0;
   }
   .nexi-trading-page .nexi-trading-plot-shell {
-    height: 220px;
-    min-height: 220px;
+    height: var(--nexi-trading-chart-height);
+    min-height: var(--nexi-trading-chart-height);
   }
 }
 
@@ -1102,11 +1121,10 @@ body {
 
 /* Wallet-browser chrome can leave little vertical room in portrait mode. */
 @media (max-width: 767px) and (max-height: 650px) and (orientation: portrait) {
+  .nexi-trading-page {
+    --nexi-trading-chart-height: clamp(180px, 38dvh, 220px);
+  }
   .nexi-trading-page .nexi-trading-chart-card {
     min-height: 0;
-  }
-  .nexi-trading-page .nexi-trading-plot-shell,
-  .nexi-trading-page .nexi-options-chart-frame {
-    height: clamp(180px, 38dvh, 220px);
   }
 }

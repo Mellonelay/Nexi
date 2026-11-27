@@ -16,7 +16,7 @@ export default function LoginPage() {
   }, [router]);
 
   return (
-    <div className="nexi-safe-area-page nexi-page-shell flex min-h-[var(--nexi-visible-viewport-height,100dvh)] min-w-0 items-center justify-center py-4 text-[#F5F7FB]">
+    <main className="nexi-safe-area-page nexi-page-shell flex min-h-[var(--nexi-visible-viewport-height,100dvh)] min-w-0 items-center justify-center py-4 text-[#F5F7FB]">
       <div className="nexi-raised-panel min-w-0 w-full max-w-md space-y-4 rounded-2xl border border-violet-300/20 p-4 shadow-2xl sm:space-y-6 sm:p-8">
         <h1 className="gradient-text text-center text-2xl font-bold sm:text-3xl">
           Login to NEXI
@@ -25,11 +25,11 @@ export default function LoginPage() {
         <WalletConnectControl compact />
         <p className="text-center text-[#8C8299]">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-[var(--nexi-focus)] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)]">
+          <Link href="/signup" className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md px-1 text-[var(--nexi-focus)] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)]">
             Sign up
           </Link>
         </p>
       </div>
-    </div>
+    </main>
   );
 }

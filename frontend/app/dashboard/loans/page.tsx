@@ -422,7 +422,7 @@ export default function LoansPage() {
       {unknownRepaymentKey && <div role="alert" className="mx-auto mb-4 max-w-7xl rounded-xl border border-amber-300/30 p-4 text-sm text-amber-100">An earlier loan repayment outcome is unresolved. New repayments are blocked until Ledger activity confirms the original key. <button type="button" onClick={() => void recheckLoanRepayment(unknownRepaymentKey)} className="ml-2 min-h-11 rounded-lg border border-amber-300/30 px-3 font-semibold">Recheck original repayment</button></div>}
       {unknownApplicationKey && <div role="alert" className="mx-auto mb-4 max-w-7xl rounded-xl border border-amber-300/30 p-4 text-sm text-amber-100">An earlier loan application outcome is unresolved. New applications are blocked until its original request is confirmed. <button type="button" onClick={() => void recheckLoanApplication(unknownApplicationKey)} className="ml-2 min-h-11 rounded-lg border border-amber-300/30 px-3 font-semibold">Recheck original loan application</button></div>}
       <main className="mx-auto min-w-0 max-w-7xl space-y-3 sm:space-y-4">
-        <section className="grid min-w-0 gap-2 sm:gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 13rem), 1fr))" }} aria-label="Loan summary">
+        <section className="grid min-w-0 grid-cols-1 gap-2 min-[360px]:grid-cols-2 sm:gap-3 lg:grid-cols-4" aria-label="Loan summary">
           <Metric label="Eligibility" value="Not assessed" hint="Applications require Backend review and approval" />
           <Metric label="Products" value={plansState === 'LIVE' ? authoritativeValue(plans.length) : '—'} hint="Available products" />
           <Metric label="Active loans" value={state === 'LIVE' ? authoritativeValue(activeLoans.length) : '—'} hint="Includes overdue records" />
@@ -492,7 +492,7 @@ function LoanProductsPanel({ plans, plansState }: { plans: LoanPlan[]; plansStat
         <div className="grid min-w-0 gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 16rem), 1fr))" }}>
           {plans.map((plan) => (
             <article key={String(plan.id)} className="rounded-xl border border-[#2B2037] bg-[#171022] p-3 sm:p-4">
-              <div className="flex items-center justify-between gap-3"><h3 className="font-semibold">{authoritativeValue(plan.name)}</h3><StatusBadge state="AVAILABLE" /></div>
+              <div className="flex items-center justify-between gap-3"><h3 className="min-w-0 break-words font-semibold leading-5">{authoritativeValue(plan.name)}</h3><StatusBadge state="AVAILABLE" /></div>
               <dl className="mt-3 grid grid-cols-1 gap-3 text-sm min-[430px]:grid-cols-2">
                 <ReviewRow label="Asset" value={authoritativeValue(plan.currency)} stacked />
                 <ReviewRow label="Term" value={`${authoritativeValue(plan.durationDays)} days`} stacked />

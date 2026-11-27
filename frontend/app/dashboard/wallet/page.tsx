@@ -329,12 +329,13 @@ function WalletPerformance({ root, state }: { root: Record<string, unknown>; sta
     </dl>
   );
 }
-function WalletSummary({ root, state, valuation }: { root: Record<string, unknown>; state: ReadState; valuation: PortfolioValuation }) {
+function WalletSummary({ root, state, valuation, authenticated, action, onSelect }: { root: Record<string, unknown>; state: ReadState; valuation: PortfolioValuation; authenticated: boolean; action: Action | null; onSelect: (action: Action) => void }) {
   const total = state === 'LIVE' ? valuation.total : 'UNAVAILABLE';
   const available = state === 'LIVE' ? valuation.available : 'UNAVAILABLE';
   const locked = state === 'LIVE' ? valuation.locked : 'UNAVAILABLE';
+  const actionsEnabled = authenticated && state === 'LIVE';
   return (
-    <section aria-label="Total assets and portfolio summary">
+    <section aria-label="Wallet balance and actions">
       <Panel className="min-w-0 p-3 sm:p-4">
         <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
           <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.10em] text-[#C3BBD0]">
@@ -347,17 +348,20 @@ function WalletSummary({ root, state, valuation }: { root: Record<string, unknow
           <p className="text-xs font-medium text-[#C3BBD0]">Total</p>
           <p className="mt-1 min-w-0 break-words [overflow-wrap:anywhere] font-mono text-[clamp(1.25rem,4.8vw,1.75rem)] font-semibold leading-snug tabular-nums text-[#48C0CC]">{total}</p>
           <dl className="mt-3 grid min-w-0 gap-x-4 gap-y-2 border-t border-violet-300/10 pt-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 11rem), 1fr))" }}>
-            <div className="min-w-0">
-              <dt className="text-xs text-[#C3BBD0]">Available</dt>
-              <dd className="mt-0.5 min-w-0 break-words [overflow-wrap:anywhere] font-mono text-base leading-snug tabular-nums text-[#48C0CC]">{available}</dd>
-            </div>
-            <div className="min-w-0">
-              <dt className="text-xs text-[#C3BBD0]">Locked</dt>
-              <dd className="mt-0.5 min-w-0 break-words [overflow-wrap:anywhere] font-mono text-base leading-snug tabular-nums text-[#48C0CC]">{locked}</dd>
-            </div>
+            <div className="min-w-0"><dt className="text-xs text-[#C3BBD0]">Available</dt><dd className="mt-0.5 min-w-0 break-words [overflow-wrap:anywhere] font-mono text-base leading-snug tabular-nums text-[#48C0CC]">{available}</dd></div>
+            <div className="min-w-0"><dt className="text-xs text-[#C3BBD0]">Locked</dt><dd className="mt-0.5 min-w-0 break-words [overflow-wrap:anywhere] font-mono text-base leading-snug tabular-nums text-[#48C0CC]">{locked}</dd></div>
           </dl>
         </div>
         <WalletPerformance root={root} state={state} />
+        <div className={`mt-4 border-t border-violet-300/10 pt-3 ${walletAdaptive.actionContainer}`}>
+          <h3 className="mb-2 text-sm font-semibold text-[#F2ECFA]">Quick actions</h3>
+          <div className={`grid min-w-0 gap-2 ${walletAdaptive.actionGrid}`}>
+            {(['Deposit', 'Withdraw', 'Transfer', 'Convert'] as Action[]).map((item) => <WalletActionButton key={item} item={item} action={action} enabled={actionsEnabled} onSelect={onSelect} />)}
+          </div>
+          <button type="button" onClick={() => document.getElementById('wallet-activity')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' })} className="mt-1 inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-xs font-semibold text-[#C3BBD0] hover:bg-[#2A1742] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#A78BFA]">
+            <Clock3 size={16} className="shrink-0" /> View activity
+          </button>
+        </div>
       </Panel>
     </section>
   );
@@ -378,12 +382,12 @@ function WalletAssetRow({ item, tab }: { item: WalletAsset; tab: Tab }) {
   };
 
   return (
-    <div key={item.name} className="grid min-w-0 grid-cols-2 items-center gap-x-3 gap-y-3 bg-[#171022] px-3 py-3 lg:grid-cols-[minmax(0,1fr)_repeat(3,minmax(7rem,auto))] lg:gap-3 lg:px-4 lg:py-2">
-      <div className="col-span-2 flex min-w-0 items-center gap-2 lg:col-span-1">
+    <div key={item.name} className={`grid min-w-0 items-center gap-x-3 gap-y-2 bg-[#171022] px-3 py-2.5 sm:px-4 lg:gap-3 lg:py-2 ${walletAdaptive.assetRow}`}>
+      <div className={`flex min-w-0 items-center gap-2 ${walletAdaptive.assetIdentity}`}>
         <AssetIcon item={iconItem} />
         <span className="min-w-0">
-          <span className="block break-words text-sm font-semibold">{item.displayName}</span>
-          <span className="block break-words text-xs text-[#8C8299]">
+          <span className="block break-words text-sm font-semibold leading-5">{item.displayName}</span>
+          <span className="block break-words text-[11px] leading-4 text-[#8C8299]">
             {assetLabel(asset, 'displaySymbol', item.name)}
             {item.depositSupported && (
               <span className="ml-1 text-cyan-200">
@@ -394,16 +398,16 @@ function WalletAssetRow({ item, tab }: { item: WalletAsset; tab: Tab }) {
           </span>
         </span>
       </div>
-      <span className="min-w-0 break-words [overflow-wrap:anywhere] text-right font-mono text-sm tabular-nums lg:whitespace-normal">
+      <span className={`min-w-0 break-words [overflow-wrap:anywhere] text-right font-mono text-sm tabular-nums lg:whitespace-normal ${walletAdaptive.assetAvailable}`}>
         <span className="mb-1 block text-xs text-[#8C8299] lg:hidden">Available</span>
         {item.accountExists ? text(item.available) : '—'}
       </span>
-      <span className="min-w-0 break-words [overflow-wrap:anywhere] text-right font-mono text-sm tabular-nums lg:whitespace-normal">
+      <span className={`min-w-0 break-words [overflow-wrap:anywhere] text-right font-mono text-sm tabular-nums lg:whitespace-normal ${walletAdaptive.assetLocked}`}>
         <span className="mb-1 block text-xs text-[#8C8299] lg:hidden">{tab === "Finance" ? "Committed" : "Locked"}</span>
         {item.accountExists ? text(item.locked) : '—'}
       </span>
-      <span className="col-span-2 min-w-0 break-words [overflow-wrap:anywhere] text-right font-mono text-base font-semibold tabular-nums lg:col-span-1 lg:whitespace-normal">
-        <span className="mb-1 block text-xs text-[#8C8299] lg:hidden">Total</span>
+      <span className={`min-w-0 break-words [overflow-wrap:anywhere] text-right font-mono text-sm font-semibold leading-5 tabular-nums lg:text-right lg:whitespace-normal ${walletAdaptive.assetTotal}`}>
+        <span className="mb-0.5 block text-[11px] leading-4 text-[#8C8299] lg:hidden">Total</span>
         {item.accountExists ? text(item.total) : '—'}
       </span>
     </div>
@@ -426,28 +430,6 @@ function WalletActionButton({ item, action, enabled, onSelect }: { item: Action;
   );
 }
 
-function WalletActions({ authenticated, state, action, onSelect }: { authenticated: boolean; state: ReadState; action: Action | null; onSelect: (action: Action) => void }) {
-  const enabled = authenticated && state === 'LIVE';
-  return (
-    <section aria-label="Wallet actions" className={walletAdaptive.actionContainer}>
-      <Panel className="p-2.5 sm:p-3">
-        <h2 className="mb-2 text-base font-semibold text-[#F2ECFA]">Quick actions</h2>
-        <div className={`grid min-w-0 gap-2 ${walletAdaptive.actionGrid}`}>
-          {(['Deposit', 'Withdraw', 'Transfer', 'Convert'] as Action[]).map((item) => (
-            <WalletActionButton key={item} item={item} action={action} enabled={enabled} onSelect={onSelect} />
-          ))}
-        </div>
-        <button
-          type="button"
-          onClick={() => document.getElementById('wallet-activity')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' })}
-          className="mt-1 inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-xs font-semibold text-[#C3BBD0] hover:bg-[#2A1742] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#A78BFA]"
-        >
-          <Clock3 size={16} className="shrink-0" /> View activity
-        </button>
-      </Panel>
-    </section>
-  );
-}
 
 function WalletAccountTabs({ tab, onTabChange }: { tab: Tab; onTabChange: (tab: Tab) => void }) {
   const railRef = useRef<HTMLDivElement>(null);
@@ -648,8 +630,7 @@ export default function WalletPage() {
       <div className="flex shrink-0 items-center gap-2">{optionsReturn && <Link href={optionsReturn} className="inline-flex min-h-11 items-center rounded-lg border border-violet-300/20 px-3 text-xs font-semibold text-[#CFC4FF]">Return to Options</Link>}<SecondaryButton onClick={() => void loadWallet()}><RefreshCw size={15} className="sm:mr-2" /><span className="sr-only sm:not-sr-only">Refresh</span></SecondaryButton></div>
     </header>
     <WalletDashboardLayout>
-      <WalletSummary root={root} state={state} valuation={valuation} />
-      <WalletActions authenticated={authenticated} state={state} action={action} onSelect={selectAction} />
+      <WalletSummary root={root} state={state} valuation={valuation} authenticated={authenticated} action={action} onSelect={selectAction} />
       <WalletAccountTabs tab={tab} onTabChange={setTab} />
       <section className="min-w-0"><div className="min-w-0 space-y-3">
         <WalletAccountPanel tab={tab} />

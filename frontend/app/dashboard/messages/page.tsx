@@ -501,8 +501,8 @@ function AttachmentLink({ attachment }: { attachment: SupportAttachment }) {
   };
   return <div className="mt-2">
     <div className="flex flex-wrap items-center gap-2">
-      {isImage && <button type="button" aria-expanded={previewOpen} onClick={() => { setError(false); setPreviewUrl(null); setPreviewOpen((open) => !open); }} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-white/10 bg-black/10 px-3 text-xs text-[var(--nexi-text)] hover:bg-black/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)]">{previewOpen ? 'Hide preview' : 'Preview image'}</button>}
-      <button type="button" onClick={() => void download()} disabled={downloading} className="inline-flex min-h-10 max-w-full items-center gap-2 rounded-lg border border-white/10 bg-black/10 px-3 text-xs text-[#E9E2F5] hover:bg-black/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF] disabled:opacity-50">
+      {isImage && <button type="button" aria-expanded={previewOpen} onClick={() => { setError(false); setPreviewUrl(null); setPreviewOpen((open) => !open); }} className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-white/10 bg-black/10 px-3 text-xs text-[var(--nexi-text)] hover:bg-black/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--nexi-focus)]">{previewOpen ? 'Hide preview' : 'Preview image'}</button>}
+      <button type="button" onClick={() => void download()} disabled={downloading} className="inline-flex min-h-11 max-w-full items-center gap-2 rounded-lg border border-white/10 bg-black/10 px-3 text-xs text-[#E9E2F5] hover:bg-black/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A995FF] disabled:opacity-50">
         {isImage ? <ImageIcon size={15} /> : <FileText size={15} />}<span className="truncate">{downloading ? 'Opening…' : attachment.name}</span>
       </button>
     </div>

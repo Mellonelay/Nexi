@@ -435,7 +435,7 @@ function MarginWorkspace({
               ))}
             </div>
           </div>
-          <div className="nexi-trading-plot-shell h-[clamp(16rem,52dvh,24rem)] sm:h-[420px] xl:h-[500px]">
+          <div className="nexi-trading-plot-shell">
             <SpotRealtimeTradingChart symbol={normalizedSymbol} interval={chartInterval} marketStatus={sessionClosed ? 'CLOSED' : undefined} />
           </div>
         </div>
@@ -520,7 +520,7 @@ function SpotChartArea({displayPair, normalizedSymbol, chartInterval, setChartIn
                 ))}
               </div>
             </div>
-            <div className="nexi-trading-plot-shell h-[clamp(16rem,52dvh,24rem)] sm:h-[420px] xl:h-[500px]">
+            <div className="nexi-trading-plot-shell">
               <SpotRealtimeTradingChart symbol={normalizedSymbol} interval={chartInterval} marketStatus={sessionClosed ? 'CLOSED' : undefined} />
             </div>
           </div>
@@ -548,11 +548,11 @@ function SpotOrderBook({mobileMarketPanel, bids, asks, bookStatus, setPrice, bas
               <div className="grid min-w-0 grid-cols-1 text-xs min-[430px]:grid-cols-2">
                 <div className="min-w-0 border-b border-white/5 p-3 min-[430px]:border-b-0 min-[430px]:border-r">
                   <div className="mb-2 flex flex-wrap justify-between gap-x-2 gap-y-1 text-xs text-[#8C8299]"><span>Bid · {quoteSymbol}</span><span>Quantity {baseSymbol}</span></div>
-                  {bids.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(row.price)} className="nexi-interactive flex min-h-11 min-w-0 w-full flex-col justify-center rounded px-1 text-left font-mono tabular-nums hover:bg-emerald-400/5"><span className="min-w-0 break-words text-sm text-[#22D3A6]">{row.price}</span><span className="min-w-0 break-words text-xs text-[#C3BBD0]">{row.amount} {baseSymbol}</span></button>)}
+                  {bids.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(row.price)} className="nexi-interactive flex min-h-11 min-w-0 w-full flex-col justify-center rounded px-1 text-left font-mono tabular-nums hover:bg-emerald-400/5"><span className="min-w-0 break-words text-sm text-[#22D3A6]">{formatMarketDecimal(row.price)}</span><span className="min-w-0 break-words text-xs text-[#C3BBD0]">{formatMarketDecimal(row.amount)} {baseSymbol}</span></button>)}
                 </div>
                 <div className="min-w-0 p-3">
                   <div className="mb-2 flex flex-wrap justify-between gap-x-2 gap-y-1 text-xs text-[#8C8299]"><span>Ask · {quoteSymbol}</span><span>Quantity {baseSymbol}</span></div>
-                  {asks.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(row.price)} className="nexi-interactive flex min-h-11 min-w-0 w-full flex-col items-end justify-center rounded px-1 text-right font-mono tabular-nums hover:bg-rose-400/5"><span className="min-w-0 break-words text-sm text-[#FF5C7C]">{row.price}</span><span className="min-w-0 break-words text-xs text-[#C3BBD0]">{row.amount} {baseSymbol}</span></button>)}
+                  {asks.slice(0, 12).map((row) => <button key={orderBookRowKey(row)} type="button" onClick={() => setPrice(row.price)} className="nexi-interactive flex min-h-11 min-w-0 w-full flex-col items-end justify-center rounded px-1 text-right font-mono tabular-nums hover:bg-rose-400/5"><span className="min-w-0 break-words text-sm text-[#FF5C7C]">{formatMarketDecimal(row.price)}</span><span className="min-w-0 break-words text-xs text-[#C3BBD0]">{formatMarketDecimal(row.amount)} {baseSymbol}</span></button>)}
                 </div>
               </div>
               {bids.length === 0 && asks.length === 0 && (
@@ -1277,37 +1277,38 @@ function SpotHeader({
   currentPrice,
   marketChange,
   priceStatus,
+  high,
+  low,
+  volume,
 }: {
   displayPair: string;
   onSelectSymbol: (symbol: string) => void;
   currentPrice: number | null;
   marketChange: number | null;
   priceStatus: MarketDataStatus;
+  high: number | null;
+  low: number | null;
+  volume: number | null;
 }) {
   const changeClass = marketChange !== null && marketChange >= 0 ? 'text-[#22D3A6]' : 'text-[#FF5C7C]';
   return (
-    <header className="nexi-station-header sticky top-0 z-20 flex min-w-0 items-center justify-between gap-2 border-b px-3 py-3 sm:gap-3 sm:px-4">
-      <SafeBackButton fallback="/dashboard" label="Back to Quotes Hub" />
-      <div className="min-w-0 flex-1">
-        <SymbolSelector currentSymbol={displayPair} onSelect={onSelectSymbol} />
+    <header className="nexi-station-header sticky top-0 z-20 min-w-0 border-b px-3 py-2 sm:px-4">
+      <div className="flex min-w-0 items-center justify-between gap-2 sm:gap-3">
+        <SafeBackButton fallback="/dashboard" label="Back to Quotes Hub" />
+        <div className="min-w-0 flex-1"><SymbolSelector currentSymbol={displayPair} onSelect={onSelectSymbol} /></div>
+        {currentPrice !== null && <div className="shrink-0 text-right" aria-label="Current market price">
+          <p className="font-mono text-sm font-semibold tabular-nums text-[#F5F7FB]">{numberFormatter.format(currentPrice)}</p>
+          {marketChange !== null && <p className={`mt-0.5 font-mono text-xs tabular-nums ${changeClass}`}>{marketChange > 0 ? '+' : ''}{marketChange.toFixed(2)}% 24h</p>}
+        </div>}
+        {priceStatus !== 'LIVE' && priceStatus !== 'LOADING' && <div className="max-w-24 shrink-0 text-right" role="status" aria-label="Market data status">
+          <p className={`text-xs font-semibold uppercase tracking-[0.08em] ${priceStatus === 'ERROR' ? 'text-[#FF9CB0]' : 'text-amber-200'}`}>{priceStatus === 'CLOSED' ? 'Market closed' : priceStatus === 'STALE' ? 'Price stale' : priceStatus === 'ERROR' ? 'Market error' : 'Price unavailable'}</p>
+        </div>}
       </div>
-      {currentPrice !== null && (
-        <div className="shrink-0 text-right" aria-label="Current market price">
-          <p className="font-mono text-sm text-[#C3BBD0]">{numberFormatter.format(currentPrice)}</p>
-          {marketChange !== null && (
-            <p className={`mt-0.5 font-mono text-xs ${changeClass}`}>
-              {marketChange > 0 ? '+' : ''}{marketChange.toFixed(2)}% 24h
-            </p>
-          )}
-        </div>
-      )}
-      {priceStatus !== 'LIVE' && priceStatus !== 'LOADING' && (
-        <div className="max-w-24 shrink-0 text-right" role="status" aria-label="Market data status">
-          <p className={`text-xs font-semibold uppercase tracking-[0.08em] ${priceStatus === 'ERROR' ? 'text-[#FF9CB0]' : 'text-amber-200'}`}>
-            {priceStatus === 'CLOSED' ? 'Market closed' : priceStatus === 'STALE' ? 'Price stale' : priceStatus === 'ERROR' ? 'Market error' : 'Price unavailable'}
-          </p>
-        </div>
-      )}
+      {priceStatus === 'LIVE' && (high !== null || low !== null || volume !== null) && <dl className="mt-2 grid grid-cols-3 gap-2 border-t border-white/5 pt-2 text-xs leading-4">
+        <div className="min-w-0"><dt className="text-[10px] text-[#8C8299]">24h high</dt><dd className="break-words font-mono tabular-nums text-[#C3BBD0]">{high === null ? '—' : numberFormatter.format(high)}</dd></div>
+        <div className="min-w-0"><dt className="text-[10px] text-[#8C8299]">24h low</dt><dd className="break-words font-mono tabular-nums text-[#C3BBD0]">{low === null ? '—' : numberFormatter.format(low)}</dd></div>
+        <div className="min-w-0 text-right"><dt className="text-[10px] text-[#8C8299]">24h volume</dt><dd className="break-words font-mono tabular-nums text-[#C3BBD0]">{volume === null ? '—' : numberFormatter.format(volume)}</dd></div>
+      </dl>}
     </header>
   );
 }
@@ -1488,6 +1489,9 @@ function SpotPageBody({
         currentPrice={currentPrice}
         marketChange={marketChange}
         priceStatus={priceStatus}
+        high={market?.dataState === 'LIVE' ? market.high ?? null : null}
+        low={market?.dataState === 'LIVE' ? market.low ?? null : null}
+        volume={market?.dataState === 'LIVE' ? market.vol ?? null : null}
       />
       <SpotProductTabs activeSurface={activeSurface} setActiveSurface={setActiveSurface} />
 
