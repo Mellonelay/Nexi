@@ -9,6 +9,7 @@ import { useMarketData } from '../../hooks/useMarketData';
 import { authoritativeValue } from '../../lib/product-states';
 import { ASSET_REGISTRY, findAsset, type AssetCategory } from '../../lib/asset-registry';
 import AssetIcon from '../../components/AssetIcon';
+import LocalDateTime from '../../components/LocalDateTime';
 import WalletConnectControl from '../../components/WalletConnectControl';
 import DepositModal from './components/DepositModal';
 import TransferModal from './components/TransferModal';
@@ -281,11 +282,11 @@ function activityStatus(value: unknown): string | null {
   return known.has(status) ? status : status ? 'STATUS_UPDATE' : null;
 }
 
-function activityTime(value: unknown): string {
+function activityTimestamp(value: unknown): string | null {
   const raw = text(value);
   const date = new Date(raw);
-  if (!raw || raw === '—' || Number.isNaN(date.getTime())) return '—';
-  return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(date);
+  if (!raw || raw === '—' || Number.isNaN(date.getTime())) return null;
+  return date.toISOString();
 }
 
 function WalletActivityHistory({ state, activities }: { state: ReadState; activities: Activity[] }) {
@@ -302,6 +303,7 @@ function WalletActivityHistory({ state, activities }: { state: ReadState; activi
             {activities.map((item) => {
               const Icon = activityTypeIcon(item.type);
               const status = activityStatus(item.status);
+              const timestamp = activityTimestamp(item.createdAt);
               return (
                 <article key={item.id} className="grid min-w-0 grid-cols-[2.5rem_minmax(0,1fr)] items-center gap-3 py-3 first:pt-1 last:pb-1">
                   <span aria-hidden="true" className="flex h-10 w-10 items-center justify-center rounded-full border border-violet-300/15 bg-[#211535] text-[#A78BFA]"><Icon size={18} /></span>
@@ -311,7 +313,9 @@ function WalletActivityHistory({ state, activities }: { state: ReadState; activi
                         <h3 className="min-w-0 text-sm font-semibold text-[#F2ECFA]">{activityTypeLabel(item.type)} · {text(item.asset)}</h3>
                         {status ? <StatusBadge state={status} /> : <span className="rounded-full border border-slate-300/20 px-2 py-1 text-xs text-[#C3BBD0]">Status unavailable</span>}
                       </div>
-                      <time className="mt-1 block text-xs text-[#8C8299]">{activityTime(item.createdAt)}</time>
+                      <time dateTime={timestamp ?? undefined} className="mt-1 block text-xs text-[#8C8299]">
+                        <LocalDateTime value={timestamp} format="activity" />
+                      </time>
                     </div>
                     <WalletQuantity value={item.amount} unit={text(item.asset) === '—' ? undefined : text(item.asset)} className="break-normal text-sm font-semibold text-[#F2ECFA] sm:justify-self-end sm:text-right" />
                   </div>
@@ -325,25 +329,18 @@ function WalletActivityHistory({ state, activities }: { state: ReadState; activi
   );
 }
 
-function useWalletSession(onPrincipalChange: (next: string | null) => void) {
+function useWalletSession() {
   const [userId, setUserId] = useState<string | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
-  const previousUserId = useRef<string | null | undefined>(undefined);
-
   useEffect(() => {
     const sync = () => {
-      const next = sessionPrincipalId();
-      if (previousUserId.current !== next) {
-        onPrincipalChange(next);
-        previousUserId.current = next;
-      }
-      setUserId(next);
+      setUserId(sessionPrincipalId());
       setSessionChecked(true);
     };
     sync();
     window.addEventListener('nexi:wallet-session', sync);
     return () => window.removeEventListener('nexi:wallet-session', sync);
-  }, [onPrincipalChange]);
+  }, []);
 
   return { userId, sessionChecked };
 }
@@ -364,7 +361,14 @@ function useWalletAuthority() {
     setActivityState(next ? 'LOADING' : 'UNAVAILABLE');
     setError(next ? '' : 'Connect and verify a wallet to load private wallet data.');
   }, []);
-  const { userId, sessionChecked } = useWalletSession(reset);
+  const { userId, sessionChecked } = useWalletSession();
+  const previousUserId = useRef<string | null | undefined>(undefined);
+
+  useEffect(() => {
+    if (!sessionChecked || previousUserId.current === userId) return;
+    previousUserId.current = userId;
+    reset(userId);
+  }, [reset, sessionChecked, userId]);
 
   const loadWallet = useCallback(async () => {
     if (!sessionChecked || !userId) return;
