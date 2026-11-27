@@ -643,7 +643,7 @@ function LoanApplicationPanel({
             <ProductFact label="Estimated total repayment" value={totalPreview === null || !selectedPlan ? '—' : `${totalPreview.toFixed(4)} ${authoritativeValue(selectedPlan.currency)}`} compact />
           </dl>
         </div>
-        <p className="text-xs text-[#8C8299]">Illustrative plan-term estimate only; the recorded loan agreement and Ledger amounts are authoritative.</p>
+        <p className="text-xs text-[#8C8299]">Estimate only. Your approved loan agreement contains the final repayment terms.</p>
         {message && (
           <div className="rounded-xl border border-[#F2C94C]/30 bg-[#3D3110]/40 p-4 text-sm leading-6 text-[#FDE68A]" role="status">
             <AlertTriangle size={16} className="mr-2 inline" />{message}

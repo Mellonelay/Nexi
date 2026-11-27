@@ -443,10 +443,10 @@ export function marketCandleLineageLabel(
 ): string | null {
   if (!source || isFinal !== false) return null;
   if (source.endsWith(":quote-aggregation"))
-    return "Quote-sampled candle · provisional";
+    return "Estimated candle · updating";
   if (source.startsWith("derived:"))
-    return "Aggregated from provider candles · provisional";
-  return "Provider candle · still open";
+    return "Aggregated price · updating";
+  return "Current candle · updating";
 }
 
 export function streamStatusAt(

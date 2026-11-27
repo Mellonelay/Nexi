@@ -6,17 +6,16 @@
 .actionGrid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
-@container wallet-actions (min-width: 22rem) {
+@container wallet-actions (min-width: 19.5rem) {
   .actionGrid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
-/* Keep each phone row scannable: asset and total share the first line. */
+/* Keep the identity and native total on one line, with the available/locked detail beneath. */
 .assetRow {
   grid-template-areas:
-    "asset total"
-    "available locked";
+    "asset total";
   grid-template-columns: minmax(0, 1fr) minmax(5rem, auto);
 }
 .assetIdentity { grid-area: asset; }

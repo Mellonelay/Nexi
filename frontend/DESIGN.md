@@ -18,17 +18,18 @@ When this document conflicts with a newer explicit owner correction, the newer o
 
 Use this order for frontend design decisions:
 
-1. Current explicit owner corrections.
-2. The five recent owner-approved mobile reference screens:
-   - Quotes Hub / market discovery;
-   - Options / Binary;
-   - wallet-provider chooser bottom sheet;
-   - Spot/Margin trading;
-   - Wallet overview.
-3. Later NEXI-specific implementation decisions that adapt those references.
-4. Current rendered source when it represents a verified intentional adaptation.
-5. The Sep-16 frontend implementation specification for requirements that remain current.
+1. Current explicit owner corrections and the owner's latest selected Stitch visual references.
+2. The current Deep Liquid Violet design system in Stitch (project `4500708190782074176`, asset `7322610ef87d497293dc4f41092335a8`, version 9), including selected screen HTML/CSS and screenshots.
+3. Current NEXI-specific implementation decisions that adapt those references while preserving supported behavior.
+4. Current rendered source only when visual review confirms an intentional, usable adaptation.
+5. The Sep-16 frontend implementation specification for requirements that remain current and do not conflict with newer owner decisions.
 6. Older visual lineage only when it does not conflict with newer decisions.
+
+Current Stitch references provide reusable patterns for Wallet, wallet operations and connection, Quotes Hub, Asset Detail, Spot/Margin, Options/Binary, Earn, Loans, Messages, Learn and Settings. They guide layout, hierarchy, spacing, typography and component composition. Sample data, placeholder copy, prototype links and handlers are not production behavior.
+
+Mandatory product invariants are financial accuracy, security, backend authority, supported functionality, wallet authentication, brand identity, the five primary destinations and existing architectural contracts. Component anatomy, layout, geometry, spacing, typography, grouping, responsive behavior and information arrangement are adaptable when needed to realize the current references.
+
+Preserve Deep Liquid Violet and original NEXI identity. Deliberately reconcile production color calibration with the current Stitch system; neither the older repository palette nor raw exported CSS automatically overrides the current owner-selected result.
 
 Explicitly rejected:
 - `nexi_deep_liquid_violet_trading_concept.png`;
@@ -36,7 +37,7 @@ Explicitly rejected:
 
 Older Sep-12/Sep-13 V2/V3 designs are historical lineage, not the current visual target.
 
-The five reference screens express design intent. They are not a demand for pixel-for-pixel reproduction where later NEXI decisions improved behavior, semantics, responsiveness, or backend truthfulness.
+The reference screens express design intent. They are not a demand for pixel-for-pixel reproduction where later NEXI decisions improve behavior, semantics, responsiveness or backend truthfulness.
 
 ## 3. Product character
 
@@ -616,7 +617,7 @@ For Spot/Margin, verify at minimum:
 - 320/360/~390/430 widths;
 - desktop composition.
 
-For Quotes/Options/Wallet/sheets, verify the same shell language and route-specific information hierarchy.
+For Quotes, Asset Detail, Wallet/operations, connection, Spot/Margin, Options/Binary, Earn, Loans, Messages, Learn, Settings and sheets, verify the same shell language and route-specific information hierarchy.
 
 ## 22. Non-goals
 
@@ -653,3 +654,5 @@ Visual completion requires:
 - accessibility evidence appropriate to the changed path;
 - no material reference-intent drift unless intentionally documented;
 - current owner acceptance at the final gate.
+
+Track source completion, build, deployment, rendered Cloud Browser verification and owner acceptance as separate states. Every authorized Public frontend deployment requires a follow-up render in the authenticated Cloud Browser and MobileViewer. Build/deployment success or source inspection alone is not visual completion.

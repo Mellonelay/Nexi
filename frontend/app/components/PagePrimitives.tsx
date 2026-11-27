@@ -82,11 +82,11 @@ export function StatusBadge({ state }: { state: string }) {
   return <span className={`inline-flex min-h-7 items-center rounded-full border px-2.5 text-xs font-semibold tracking-[0.04em] ${stateTone[state] ?? stateTone.UNAVAILABLE}`}>{label}</span>;
 }
 
-export function DataStatePanel({ state, title = 'Data is not available right now', message = 'Try again shortly.' }: { state: string; title?: string; message?: string }) {
+export function DataStatePanel({ state, title = 'Data is not available right now', message }: { state: string; title?: string; message?: string }) {
   return (
     <div className="rounded-xl border border-dashed border-[#49335E] bg-[#0B0711] p-5" role="status" aria-live="polite">
       <div className="flex flex-wrap items-center gap-3"><StatusBadge state={state} /><h3 className="text-sm font-semibold text-[#F2ECFA]">{title}</h3></div>
-      <p className="mt-3 text-base leading-6 text-[#8C8299]">{message}</p>
+      {message && <p className="mt-3 text-base leading-6 text-[#8C8299]">{message}</p>}
     </div>
   );
 }

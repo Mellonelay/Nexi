@@ -379,14 +379,14 @@ export default function TradingChart({
     <div
       className={`nexi-trading-chart relative flex h-full w-full flex-col overflow-hidden rounded-lg ${responsiveHeight}`}
     >
-      {sandboxed && <div role="status" className="border-b border-amber-300/20 bg-amber-300/5 px-3 py-2 text-center text-xs font-semibold text-amber-100">Sandbox simulation · test data</div>}
+      {sandboxed && <div role="status" className="border-b border-amber-300/20 bg-amber-300/5 px-3 py-2 text-center text-xs font-semibold text-amber-100">Simulated price data</div>}
       {!sandboxed && candleLineageLabel && <div className="border-b border-sky-300/15 bg-sky-300/5 px-3 py-1 text-center text-xs font-medium text-sky-100" aria-label={candleLineageLabel}>{candleLineageLabel}</div>}
       <ChartMetricsRail latest={latest} rsi={metrics.rsi} macdHistogram={macdHistogram} activeIndicators={activeIndicators} overlays={overlays} />
       <div
         ref={chartContainerRef}
         className="min-h-0 w-full flex-1"
         role="img"
-        aria-label={`${sandboxed ? "Sandbox simulation of " : ""}${symbol} ${interval} candlestick chart with volume and technical overlays`}
+        aria-label={`${sandboxed ? "Simulated " : ""}${symbol} ${interval} candlestick chart with volume and technical overlays`}
       />
       {showIndicatorControls && <ChartIndicatorRail activeIndicators={activeIndicators} onToggle={toggleIndicator} />}
       <ChartStatusOverlay blocksChart={blocksChart} stateCopy={stateCopy} />

@@ -543,7 +543,7 @@ function SpotOrderBook({mobileMarketPanel, bids, asks, bookStatus, setPrice, bas
             <section className={`nexi-station-card min-w-0 overflow-hidden rounded-2xl xl:block ${mobileMarketPanel === 'BOOK' ? 'block' : 'hidden'}`} aria-labelledby="order-book-heading">
               <div className="flex items-center justify-between border-b border-white/5 px-4 py-3">
                 <div><h2 id="order-book-heading" className="font-semibold">Market depth</h2><p className="text-xs leading-4 text-[#8C8299]">Binance Spot reference data · not executable NEXI liquidity</p></div>
-                {bookStatus === 'LIVE' ? <span className="text-xs text-[#8C8299]">Live</span> : bookStatus === 'CONNECTION_LOST' ? <span className="text-xs text-amber-200">Updates paused · last received depth</span> : bookStatus === 'LOADING' ? <span className="text-xs text-[#8C8299]">Loading</span> : bookStatus === 'ERROR' ? <span className="text-xs text-[#8C8299]">Request error</span> : bookStatus === 'UNAVAILABLE' ? <span className="text-xs text-amber-200">Unavailable</span> : null}
+                {bookStatus === 'LIVE' ? <span className="text-xs text-[#8C8299]">Live</span> : bookStatus === 'CONNECTION_LOST' ? <span className="text-xs text-amber-200">Updates paused · last received depth</span> : bookStatus === 'LOADING' ? <span className="text-xs text-[#8C8299]">Loading</span> : bookStatus === 'ERROR' ? <span className="text-xs text-[#8C8299]">Market depth unavailable</span> : bookStatus === 'UNAVAILABLE' ? <span className="text-xs text-amber-200">Unavailable</span> : null}
               </div>
               <div className="grid min-w-0 grid-cols-1 text-xs min-[430px]:grid-cols-2">
                 <div className="min-w-0 border-b border-white/5 p-3 min-[430px]:border-b-0 min-[430px]:border-r">
@@ -570,10 +570,10 @@ function SpotOrderBook({mobileMarketPanel, bids, asks, bookStatus, setPrice, bas
 
 function streamStatusText(status: MarketConnectionStatus, liveLabel: string, lostLabel: string) {
   if (status === 'LIVE') return liveLabel;
-  if (status === 'STALE') return 'Stale reference data · waiting for a fresh trade';
+  if (status === 'STALE') return 'Recent trade data is delayed while the market updates.';
   if (status === 'CONNECTION_LOST') return lostLabel;
   if (status === 'LOADING') return 'Loading';
-  if (status === 'ERROR') return 'Request error';
+  if (status === 'ERROR') return 'Recent trades unavailable';
   return null;
 }
 
@@ -588,7 +588,7 @@ function recentTradesEmptyText(status: MarketConnectionStatus) {
 }
 
 function SpotRecentTrades({mobileMarketPanel, marketTrades, tradeStatus, baseSymbol, quoteSymbol}: SpotWorkspaceProps) {
-  const statusText = streamStatusText(tradeStatus, 'Live reference trades', 'Connection lost · showing last received trades');
+  const statusText = streamStatusText(tradeStatus, 'Live market trades', 'Connection lost · showing last received trades');
   const statusClass = tradeStatus === 'CONNECTION_LOST' || tradeStatus === 'STALE' ? 'text-xs text-amber-200' : 'text-xs text-[#8C8299]';
   return (
             <section className={`nexi-station-card min-w-0 overflow-hidden rounded-2xl xl:block ${mobileMarketPanel === 'TRADES' ? 'block' : 'hidden'}`} aria-labelledby="recent-trades-heading">
