@@ -1,4 +1,4 @@
-/* Wallet Quick Actions use their actual available width, not the device width. */
+/* Quick actions adapt to their own available width. */
 .actionContainer {
   container-type: inline-size;
   container-name: wallet-actions;
@@ -12,19 +12,51 @@
   }
 }
 
-/* Keep the identity and native total on one line, with the available/locked detail beneath. */
+/* Mobile rows follow identity + total, then available/locked. */
 .assetRow {
   grid-template-areas:
-    "asset total";
-  grid-template-columns: minmax(0, 1fr) minmax(5rem, auto);
+    "asset total"
+    "available locked";
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 .assetIdentity { grid-area: asset; }
 .assetAvailable { grid-area: available; }
 .assetLocked { grid-area: locked; }
-.assetTotal { grid-area: total; }
+.assetTotal { grid-area: total; text-align: right; }
+.assetAvailable,
+.assetLocked,
+.assetTotal {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.walletExact > summary {
+  display: inline-flex;
+  min-height: 2.25rem;
+  align-items: center;
+  cursor: pointer;
+  color: #b9a6ff;
+  font-size: 0.6875rem;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.walletExactValue {
+  display: block;
+  max-width: 100%;
+  margin-top: 0.25rem;
+  overflow-x: auto;
+  color: #c3bbd0;
+  font-size: 0.6875rem;
+  white-space: nowrap;
+}
 @media (min-width: 1024px) {
   .assetRow {
     grid-template-areas: "asset available locked total";
     grid-template-columns: minmax(0, 1fr) repeat(3, minmax(7rem, auto));
+    align-items: center;
+  }
+  .assetAvailable,
+  .assetLocked,
+  .assetTotal {
+    text-align: right;
   }
 }

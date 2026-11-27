@@ -8,6 +8,8 @@ const stateTone: Record<string, string> = {
   LIVE: 'border-[#48C0CC]/35 bg-[#48C0CC]/10 text-[#48C0CC]',
   CONNECTED: 'border-[#48C0CC]/35 bg-[#48C0CC]/10 text-[#48C0CC]',
   AVAILABLE: 'border-emerald-400/35 bg-emerald-400/10 text-emerald-200',
+  COMPLETED: 'border-emerald-400/35 bg-emerald-400/10 text-emerald-200',
+  SETTLED: 'border-emerald-400/35 bg-emerald-400/10 text-emerald-200',
   ACTIVE: 'border-[#98FCE4]/35 bg-[#98FCE4]/10 text-[#98FCE4]',
   PENDING: 'border-amber-300/35 bg-amber-300/10 text-amber-100',
   APPROVED: 'border-emerald-400/35 bg-emerald-400/10 text-emerald-200',

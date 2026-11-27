@@ -632,26 +632,27 @@ function SpotActivityArea({historyTab, setHistoryTab, historyRows, historyStatus
             </div>
             <div className="p-4">
               {cancelFeedback && <p role="status" className="mb-3 text-xs text-amber-200">{cancelFeedback}</p>}
-              {unknownSpotCancelOrderId && <button type="button" onClick={() => void recheckSpotCancel()} className="mb-3 min-h-11 w-full rounded-lg border border-amber-300/30 px-3 text-sm font-semibold text-amber-100">Recheck cancellation of order {unknownSpotCancelOrderId}</button>}
+              {unknownSpotCancelOrderId && <button type="button" onClick={() => void recheckSpotCancel()} className="mb-3 min-h-11 w-full rounded-lg border border-amber-300/30 px-3 text-sm font-semibold text-amber-100">Check cancellation status</button>}
               {historyRows.length > 0 ? (
                 <div className="space-y-2">{historyRows.slice(0, 30).map((row) => {
                   const id = String(row.id ?? row.orderId ?? [historyTab, row.pair, row.side, row.amount ?? row.quantity, row.price, row.createdAt ?? row.executedAt].map((value) => String(value ?? '')).join(':'));
                   const pair = String(row.pair ?? displayPair);
-                  const status = String(row.status ?? row.state ?? 'UNKNOWN').replaceAll('_', ' ');
+                  const statusCode = String(row.status ?? row.state ?? '').toUpperCase();
+                  const status = ({ OPEN: 'Open', PARTIALLY_FILLED: 'Partially filled', FILLED: 'Filled', CANCELED: 'Canceled', CANCELLED: 'Canceled', REJECTED: 'Rejected', PENDING: 'Processing', PENDING_REVIEW: 'In review', SUBMITTING: 'Processing' } as Record<string, string>)[statusCode] ?? 'Status unavailable';
                   const rowSide = row.side ? String(row.side) : '';
                   const rowAmount = String(row.amount ?? row.quantity ?? row.filled ?? '—');
                   const rowPrice = String(row.price ?? row.entryPrice ?? '—');
                   const when = row.createdAt ?? row.executedAt ?? row.updatedAt;
                   const isOrder = historyTab !== 'TRADES';
-                  const canCancel = historyTab === 'OPEN' && typeof row.id === 'string' && ['OPEN', 'PARTIALLY FILLED'].includes(status);
+                  const canCancel = historyTab === 'OPEN' && typeof row.id === 'string' && ['OPEN', 'PARTIALLY_FILLED'].includes(statusCode);
                   const filled = row.filled === undefined ? null : String(row.filled);
                   const remaining = row.remaining === undefined ? null : String(row.remaining);
                   const reserved = row.reservedAmount === undefined ? null : String(row.reservedAmount);
                   const reserveAsset = String(row.reserveAsset ?? '');
-                  return <article key={id} className="rounded-xl border border-violet-300/10 bg-[#0B0711] p-3 text-xs"><div className="flex flex-wrap items-center justify-between gap-2"><span className="font-semibold">{pair}{rowSide ? ` · ${rowSide}` : ''}</span><span className="rounded-full border border-violet-300/20 px-2 py-1 uppercase text-[#C3BBD0]">{status}</span></div><div className="mt-2 grid grid-cols-2 gap-2 font-mono sm:grid-cols-4"><span>{isOrder ? 'Ordered base qty' : 'Filled base qty'} {rowAmount}</span><span>{isOrder ? String(row.type ?? '').toUpperCase() === 'MARKET' ? 'Protection price' : 'Order limit price' : 'Execution price'} {rowPrice}</span><span className="break-all">ID {id}</span><span><LocalDateTime value={when == null ? null : String(when)} dateStyle="short" timeStyle="short" /></span></div>{isOrder && <div className="mt-2 flex flex-wrap gap-3 text-xs text-[#A99DB8]">{filled !== null && <span>Filled {filled}</span>}{remaining !== null && <span>Remaining {remaining}</span>}{reserved !== null && <span>Initial reserve {reserved} {reserveAsset}</span>}</div>}{historyTab === 'ORDERS' && row.executedBase !== undefined && <p className="mt-2 min-w-0 break-all font-mono text-xs text-[#C3BBD0]">Executed base: {String(row.executedBase)} · Executed quote before fees: {String(row.executedQuote ?? '—')} {String(row.quoteAsset ?? '')}{row.averageExecutionPrice != null ? ` · Average execution price: ${String(row.averageExecutionPrice)} ${String(row.quoteAsset ?? '')} per base asset` : ''}. Order price and initial reserve are not actual execution totals.</p>}{canCancel && <button type="button" aria-label={`Cancel Spot order ${id}`} disabled={cancellingOrderId !== null || unknownSpotCancelOrderId !== null} onClick={() => onCancelOrder(id)} className="mt-3 min-h-11 rounded-lg border border-amber-300/30 px-3 text-xs font-semibold text-amber-100 disabled:opacity-50">{cancellingOrderId === id ? 'Cancelling…' : 'Cancel remaining order'}</button>}</article>;
+                  return <article key={id} className="rounded-xl border border-violet-300/10 bg-[#0B0711] p-3 text-sm"><div className="flex flex-wrap items-center justify-between gap-2"><span className="font-semibold">{pair}{rowSide ? ` · ${rowSide}` : ''}</span><span className="rounded-full border border-violet-300/20 px-2 py-1 text-xs text-[#C3BBD0]">{status}</span></div><dl className="mt-2 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4"><div className="min-w-0"><dt className="text-xs text-[#8C8299]">{isOrder ? 'Order amount' : 'Executed amount'}</dt><dd className="break-words font-mono tabular-nums">{formatMarketDecimal(rowAmount)}</dd></div><div className="min-w-0"><dt className="text-xs text-[#8C8299]">{isOrder ? String(row.type ?? '').toUpperCase() === 'MARKET' ? 'Price limit' : 'Limit price' : 'Fill price'}</dt><dd className="break-words font-mono tabular-nums">{formatMarketDecimal(rowPrice)}</dd></div><div className="min-w-0"><dt className="text-xs text-[#8C8299]">Time</dt><dd className="text-xs text-[#C3BBD0]"><LocalDateTime value={when == null ? null : String(when)} dateStyle="short" timeStyle="short" /></dd></div></dl>{isOrder && <div className="mt-2 flex flex-wrap gap-3 text-xs text-[#A99DB8]">{filled !== null && <span>Filled {formatMarketDecimal(filled)}</span>}{remaining !== null && <span>Remaining {formatMarketDecimal(remaining)}</span>}{reserved !== null && <span>Held for order {formatMarketDecimal(reserved)} {reserveAsset}</span>}</div>}{historyTab === 'ORDERS' && row.executedBase !== undefined && <p className="mt-2 min-w-0 text-xs leading-5 text-[#C3BBD0]">Executed: {formatMarketDecimal(String(row.executedBase))} {String(row.baseAsset ?? pair.split('/')[0])} · Quote total before fees: {formatMarketDecimal(String(row.executedQuote ?? '—'))} {String(row.quoteAsset ?? '')}{row.averageExecutionPrice != null ? ` · Average fill: ${formatMarketDecimal(String(row.averageExecutionPrice))} ${String(row.quoteAsset ?? '')} per ${String(row.baseAsset ?? pair.split('/')[0])}` : ''}. Order price and held funds are not fill totals.</p>}{canCancel && <button type="button" aria-label="Cancel remaining order" disabled={cancellingOrderId !== null || unknownSpotCancelOrderId !== null} onClick={() => onCancelOrder(id)} className="mt-3 min-h-11 rounded-lg border border-amber-300/30 px-3 text-xs font-semibold text-amber-100 disabled:opacity-50">{cancellingOrderId === id ? 'Cancelling…' : 'Cancel remaining order'}</button>}</article>;
                 })}</div>
               ) : (
-                <div className="flex min-h-32 items-center justify-center text-center text-sm text-[#8C8299]">{historyStatus === 'LOADING' ? 'Loading activity…' : historyStatus === 'ERROR' ? 'Activity request failed.' : historyTab === 'OPEN' ? 'No open orders.' : historyTab === 'ORDERS' ? 'No order history.' : 'No trade history.'}</div>
+                <div className="flex min-h-32 items-center justify-center text-center text-sm text-[#8C8299]">{historyStatus === 'LOADING' ? 'Loading activity…' : historyStatus === 'ERROR' ? 'Activity could not be loaded. Refresh to try again.' : historyTab === 'OPEN' ? 'No open orders.' : historyTab === 'ORDERS' ? 'No order history.' : 'No trade history.'}</div>
               )}
             </div>
           </section>
@@ -707,7 +708,7 @@ function SpotOrderTicket({side, setSide, orderType, setOrderType, price, setPric
           </div>
 
           <dl className="mt-1.5 grid min-w-0 grid-cols-1 gap-2 rounded-xl border border-violet-300/10 bg-[#0B0711] p-3 text-xs min-[430px]:grid-cols-2 lg:grid-cols-4">
-            <div className="min-w-0"><dt className="text-[#8C8299]">Estimated total</dt><dd className="mt-0.5 min-w-0 break-words font-mono tabular-nums">{total === null ? '—' : `${total.toString()} USDT`}</dd></div>
+            <div className="min-w-0"><dt className="text-[#8C8299]">Estimated total</dt><dd className="mt-0.5 min-w-0 break-words font-mono tabular-nums">{total === null ? '—' : `${formatMarketDecimal(String(total))} USDT`}</dd></div>
             <div className="min-w-0"><dt className="text-[#8C8299]">Fee</dt><dd className="mt-0.5 break-words font-mono">—</dd></div>
             <div className="min-w-0"><dt className="text-[#8C8299]">Available</dt><dd className="mt-0.5 break-words font-mono">{availableBalance}</dd></div>
             <div className="min-w-0"><dt className="text-[#8C8299]">State</dt><dd className="mt-0.5 break-words font-mono">{productStateLabel(orderState)}</dd></div>
@@ -871,7 +872,7 @@ function useSpotOrderState({
       }
       if (!clearPendingEconomicIntent('spot-order', userId, key)) {
         setUnknownSpotIntentKey(key);
-        setFeedback('Order confirmed, but recovery storage could not be cleared. Do not submit another order.');
+        setFeedback('Your order is confirmed. Check its status before submitting another order.');
         return;
       }
       pendingSpotIntent.current = null;
@@ -880,7 +881,7 @@ function useSpotOrderState({
       setFeedback('The original Spot order was recovered from account records.');
       onOrderChanged();
     } catch {
-      if (sessionPrincipalId() === userId) setFeedback('Spot order readback failed. The original submission remains unresolved.');
+      if (sessionPrincipalId() === userId) setFeedback('We couldn’t confirm your Spot order. Check Order History before submitting another order.');
     }
   };
 
@@ -897,7 +898,7 @@ function useSpotOrderState({
         pendingSpotIntent.current = existing?.intent ?? null;
         setUnknownSpotIntentKey(existing?.intent.key ?? 'unresolved');
         setOrderState('UNKNOWN');
-        setFeedback('A previous Spot order may be unresolved or recovery storage is unavailable. No new order was submitted.');
+        setFeedback('A previous Spot order may still be processing. No new order was submitted; recheck before trying again.');
         return;
       }
       const submittedKey = pendingSpotIntent.current.key;
@@ -923,7 +924,7 @@ function useSpotOrderState({
       if (!clearPendingEconomicIntent('spot-order', userId, submittedKey)) {
         setOrderState('UNKNOWN');
         setUnknownSpotIntentKey(submittedKey);
-        setFeedback('Spot order accepted, but recovery storage could not be cleared. Do not submit another.');
+        setFeedback('Your Spot order was accepted. Check its status before submitting another order.');
         return;
       }
       pendingSpotIntent.current = null;
@@ -951,7 +952,7 @@ function useSpotOrderState({
       if (rejected && pendingSpotIntent.current) {
         if (!clearPendingEconomicIntent('spot-order', userId, pendingSpotIntent.current.key)) {
           setUnknownSpotIntentKey(pendingSpotIntent.current.key);
-          setFeedback('Spot request rejected, but recovery storage could not be cleared. Do not submit another order.');
+          setFeedback('Your Spot order was rejected, but its status needs confirmation. Recheck before trying again.');
           return;
         }
         pendingSpotIntent.current = null;
@@ -1076,7 +1077,7 @@ function useMarginTradingState({
       if (positions.some((position) => position.openIdempotencyKey === key)) {
         if (!clearPendingEconomicIntent('margin-open', userId, key)) {
           setMarginUnknownIntentKey(key);
-          setMarginFeedback('Position confirmed, but recovery storage could not be cleared. Do not open another.');
+          setMarginFeedback('Your Margin position is confirmed. Check its status before opening another position.');
           return;
         }
         pendingMarginIntent.current = null;
@@ -1109,7 +1110,7 @@ function useMarginTradingState({
         const previous = readPendingEconomicIntent('margin-open', userId);
         pendingMarginIntent.current = previous?.intent ?? null;
         setMarginUnknownIntentKey(previous?.intent.key ?? 'unresolved');
-        setMarginFeedback('A previous Margin opening may be unresolved or recovery storage is unavailable. No new opening was submitted.');
+        setMarginFeedback('A previous Margin opening may still be processing. No new position was opened; recheck before trying again.');
         return;
       }
       const submittedMarginKey = pendingMarginIntent.current.key;
@@ -1129,7 +1130,7 @@ function useMarginTradingState({
       }
       if (!clearPendingEconomicIntent('margin-open', userId, submittedMarginKey)) {
         setMarginUnknownIntentKey(submittedMarginKey);
-        setMarginFeedback('Margin opening accepted, but recovery storage could not be cleared. Do not submit another.');
+        setMarginFeedback('Your Margin position was opened. Check its status before opening another position.');
         return;
       }
       pendingMarginIntent.current = null;
@@ -1143,7 +1144,7 @@ function useMarginTradingState({
       if ([400, 401, 403, 404, 422].includes(status ?? -1)) {
         if (pendingMarginIntent.current && !clearPendingEconomicIntent('margin-open', userId, pendingMarginIntent.current.key)) {
           setMarginUnknownIntentKey(pendingMarginIntent.current.key);
-          setMarginFeedback('Margin opening rejected, but recovery storage could not be cleared. Do not open another position.');
+          setMarginFeedback('Your Margin request was rejected, but its status needs confirmation. Recheck before trying again.');
           return;
         }
         pendingMarginIntent.current = null;
@@ -1174,7 +1175,7 @@ function useMarginTradingState({
         return;
       }
       if (!clearPendingEconomicIntent('margin-exit', userId, pending.key)) {
-        setMarginFeedback('Margin exit confirmed, but recovery storage could not be cleared. Do not send another exit.');
+        setMarginFeedback('Your Margin exit is confirmed. Check its status before submitting another exit.');
         return;
       }
       setUnknownMarginExit(null);
@@ -1186,7 +1187,7 @@ function useMarginTradingState({
       await refreshMarginPositions(userId);
     } catch {
       if (sessionPrincipalId() === userId) {
-        setMarginFeedback('Margin exit records are unavailable. The original request stays locked.');
+        setMarginFeedback('We couldn’t confirm your Margin exit. Check Positions before trying again.');
       }
     }
   };
@@ -1204,7 +1205,7 @@ function useMarginTradingState({
       if (previous && (previousOperation === 'close' || previousOperation === 'cancel-pending') && previous.context.positionId) {
         setUnknownMarginExit({ key: previous.intent.key, positionId: previous.context.positionId, operation: previousOperation });
       }
-      setMarginFeedback('An earlier Margin exit may be unresolved or recovery storage is unavailable. No new exit was submitted.');
+      setMarginFeedback('A previous Margin exit may still be processing. No new exit was submitted; recheck before trying again.');
       return;
     }
     setUnknownMarginExit({ positionId, operation, key: intent.key });
@@ -1219,11 +1220,11 @@ function useMarginTradingState({
       if (result.positionId !== positionId ||
           !(['CLOSING', 'CLOSED', 'LIQUIDATED'].includes(result.state)) ||
           (operation === 'cancel-pending' && result.state !== 'CLOSED')) {
-        setMarginFeedback('Margin exit response was not confirmed. Recheck the original request before proceeding.');
+        setMarginFeedback('We couldn’t confirm your Margin exit. Check Positions before proceeding.');
         return;
       }
       if (!clearPendingEconomicIntent('margin-exit', userId, intent.key)) {
-        setMarginFeedback('Margin exit was confirmed, but recovery storage could not be cleared. Keep the original exit locked.');
+        setMarginFeedback('Your Margin exit is confirmed. Check its status before submitting another exit.');
         return;
       }
       setUnknownMarginExit(null);
@@ -1301,7 +1302,7 @@ function SpotHeader({
           {marketChange !== null && <p className={`mt-0.5 font-mono text-xs tabular-nums ${changeClass}`}>{marketChange > 0 ? '+' : ''}{marketChange.toFixed(2)}% 24h</p>}
         </div>}
         {priceStatus !== 'LIVE' && priceStatus !== 'LOADING' && <div className="max-w-24 shrink-0 text-right" role="status" aria-label="Market data status">
-          <p className={`text-xs font-semibold uppercase tracking-[0.08em] ${priceStatus === 'ERROR' ? 'text-[#FF9CB0]' : 'text-amber-200'}`}>{priceStatus === 'CLOSED' ? 'Market closed' : priceStatus === 'STALE' ? 'Price stale' : priceStatus === 'ERROR' ? 'Market error' : 'Price unavailable'}</p>
+          <p className={`text-xs font-semibold uppercase tracking-[0.08em] ${priceStatus === 'ERROR' ? 'text-[#FF9CB0]' : 'text-amber-200'}`}>{priceStatus === 'CLOSED' ? 'Market closed' : priceStatus === 'STALE' ? 'Price delayed' : priceStatus === 'ERROR' ? 'Market data unavailable' : 'Price unavailable'}</p>
         </div>}
       </div>
       {priceStatus === 'LIVE' && (high !== null || low !== null || volume !== null) && <dl className="mt-2 grid grid-cols-3 gap-2 border-t border-white/5 pt-2 text-xs leading-4">
@@ -1430,16 +1431,16 @@ function SpotPageBody({
         return;
       }
       if (!clearPendingEconomicIntent('spot-cancel', userId, orderId)) {
-        setCancelFeedback('Order reached a terminal state, but recovery storage could not be cleared. Keep the original cancellation locked.');
+        setCancelFeedback('The order status is confirmed. Check it before submitting another cancellation.');
         return;
       }
       setUnknownSpotCancelOrderId(null);
       setCancelFeedback(order.status === 'CANCELED'
-        ? 'Original cancellation confirmed by the persisted order.'
+        ? 'Your order cancellation is confirmed.'
         : 'Order reached a terminal state before cancellation could be confirmed.');
       setHistoryRevision((value) => value + 1);
     } catch {
-      if (sessionPrincipalId() === userId) setCancelFeedback('Order readback unavailable. Original cancellation remains unresolved.');
+      if (sessionPrincipalId() === userId) setCancelFeedback('We couldn’t confirm your cancellation. Check Order History before trying again.');
     }
   };
 
@@ -1450,7 +1451,7 @@ function SpotPageBody({
       principal: userId, intent: { key: orderId, fingerprint: 'order' }, context: { orderId },
     })) {
       setUnknownSpotCancelOrderId(readPendingEconomicIntent('spot-cancel', userId)?.context.orderId ?? null);
-      setCancelFeedback('An unresolved cancellation exists or recovery storage is unavailable. No new cancellation was submitted.');
+      setCancelFeedback('A previous cancellation may still be processing. No new cancellation was submitted; recheck before trying again.');
       return;
     }
     cancelInFlight.current = true;
@@ -1465,7 +1466,7 @@ function SpotPageBody({
         return;
       }
       if (!clearPendingEconomicIntent('spot-cancel', userId, orderId)) {
-        setCancelFeedback('Order reached a terminal state, but recovery storage could not be cleared. Keep the original cancellation locked.');
+        setCancelFeedback('The order status is confirmed. Check it before submitting another cancellation.');
         return;
       }
       setUnknownSpotCancelOrderId(null);

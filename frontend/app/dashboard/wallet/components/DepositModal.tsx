@@ -160,7 +160,7 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
       }
       if (!clearPendingEconomicIntent('deposit-claim', principal, key)) {
         setUnknownClaimKey(key);
-        toast.warning('Claim found, but recovery storage could not be cleared. Do not submit another claim.');
+        toast.warning('Your deposit claim is confirmed. Check its status before submitting another claim.');
         return;
       }
       pendingClaim.current = null;
@@ -194,7 +194,7 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
       claimPrincipal = principal;
       if (!persistPendingEconomicIntent('deposit-claim', { principal, intent: { key: claim.intent.key, fingerprint: 'redacted' }, context: {} })) {
         setUnknownClaimKey(readPendingEconomicIntent('deposit-claim', principal)?.intent.key ?? 'unresolved');
-        toast.error('An earlier deposit claim may be unresolved or recovery storage is unavailable. New claims are blocked.');
+        toast.error('An earlier deposit claim may still be processing. Recheck it before submitting another claim.');
         return;
       }
       claimPostAttempted = true;
@@ -214,13 +214,13 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
       if (!accepted.data?.depositRequestId || accepted.data.claim?.id !== accepted.data.depositRequestId
         || accepted.data.claim?.userId !== principal || accepted.data.claim?.idempotencyKey !== claim.intent.key) {
         setUnknownClaimKey(claim.intent.key);
-        toast.warning('Claim response did not confirm the original request. Recheck deposit history before another claim.');
+        toast.warning('We couldn’t confirm your deposit claim. Check Deposit History before submitting another claim.');
         void recheckUnknownClaim(claim.intent.key);
         return;
       }
       if (!clearPendingEconomicIntent('deposit-claim', principal, claim.intent.key)) {
         setUnknownClaimKey(claim.intent.key);
-        toast.warning('Claim accepted, but recovery storage could not be cleared. Do not submit another claim.');
+        toast.warning('Your deposit claim was accepted. Check its status before submitting another claim.');
         return;
       }
       pendingClaim.current = null;

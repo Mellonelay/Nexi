@@ -135,7 +135,7 @@ export default function ConvertModal({ isOpen, onClose, eligiblePairs, fundingBa
       }
       if (!clearPendingEconomicIntent('conversion', principal, key)) {
         setUnknownAcceptKey(key);
-        setFeedback('Conversion confirmed, but recovery storage could not be cleared. Do not accept another quote.');
+        setFeedback('Your conversion is confirmed. Check its status before accepting another quote.');
         return;
       }
       pendingAcceptIntent.current = null;
@@ -144,7 +144,7 @@ export default function ConvertModal({ isOpen, onClose, eligiblePairs, fundingBa
       pendingQuoteIntent.current = null;
       setUnknownAcceptKey(null);
       setQuote(null);
-      setFeedback('Conversion confirmed in account activity.');
+      setFeedback('Your conversion is confirmed.');
       try { await onCompleted?.(); } catch { toast.warning('Conversion confirmed, but Wallet refresh failed.'); }
     } catch {
       if (sessionPrincipalId() === principal && pendingAcceptIntent.current?.key === key)
@@ -199,7 +199,7 @@ export default function ConvertModal({ isOpen, onClose, eligiblePairs, fundingBa
     const intent = getIntentKey(pendingAcceptIntent.current, `${principal}:${quote.id}`, 'conversion-accept');
     if (!persistPendingEconomicIntent('conversion', { principal, intent, context: { quoteId: quote.id } })) {
       setUnknownAcceptKey(readPendingEconomicIntent('conversion', principal)?.intent.key ?? 'unresolved');
-      setFeedback('A previous conversion may be unresolved or recovery storage is unavailable. New acceptance is blocked until the original outcome is reconciled.');
+      setFeedback('A previous conversion may still be processing. Recheck it before accepting another quote.');
       return;
     }
     pendingAcceptIntent.current = intent;
@@ -219,7 +219,7 @@ export default function ConvertModal({ isOpen, onClose, eligiblePairs, fundingBa
       }
       if (!clearPendingEconomicIntent('conversion', principal, intent.key)) {
         setUnknownAcceptKey(intent.key);
-        setFeedback('Conversion accepted, but recovery storage could not be cleared. Do not accept another quote.');
+        setFeedback('Your conversion was accepted. Check its status before accepting another quote.');
         return;
       }
       pendingAcceptIntent.current = null;
@@ -240,7 +240,7 @@ export default function ConvertModal({ isOpen, onClose, eligiblePairs, fundingBa
       if ([400, 401, 403, 404, 422].includes(status ?? -1)) {
         if (!clearPendingEconomicIntent('conversion', principal, intent.key)) {
           setUnknownAcceptKey(intent.key);
-          setFeedback('Conversion request rejected, but recovery storage could not be cleared. Do not accept another quote.');
+          setFeedback('Your conversion was rejected, but its status needs confirmation. Recheck before trying again.');
           return;
         }
         pendingAcceptIntent.current = null;

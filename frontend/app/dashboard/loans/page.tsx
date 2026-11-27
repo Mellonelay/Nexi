@@ -5,7 +5,6 @@ import LocalDateTime, { useLocalDateTime } from '../../components/LocalDateTime'
 import {
   AlertTriangle,
   CalendarClock,
-  CheckCircle2,
   FileText,
   History,
   RefreshCw,
@@ -226,16 +225,16 @@ export default function LoansPage() {
         return;
       }
       if (!clearPendingEconomicIntent('loan-application', principal, key)) {
-        setMessage('Loan application confirmed, but recovery storage could not be cleared. Do not submit another application.');
+        setMessage('Your loan application is confirmed. Check its status before applying again.');
         return;
       }
       pendingApplication.current = null;
       setUnknownApplicationKey(null);
-      setMessage('Original loan application confirmed in your account records.');
+      setMessage('Your loan application is confirmed.');
       await load();
     } catch {
       if (sessionPrincipalId() === principal && pendingApplication.current?.key === key)
-        setMessage('Loan application readback unavailable. Original request remains unresolved.');
+        setMessage('We couldn’t confirm your loan application status. Check its status before applying again.');
     }
   };
 
@@ -263,7 +262,7 @@ export default function LoansPage() {
       return;
     }
     if (!collateral.trim() || !collateralImg.trim()) {
-      setMessage('Provide collateral details and a document reference for Admin review.');
+      setMessage('Provide collateral details and a supporting document reference.');
       return;
     }
     setSubmitting(true);
@@ -277,7 +276,7 @@ export default function LoansPage() {
         const saved = readPendingEconomicIntent('loan-application', userId);
         pendingApplication.current = saved?.intent ?? null;
         setUnknownApplicationKey(saved?.intent.key ?? 'unresolved');
-        setMessage('Previous loan application or recovery storage is unresolved. Do not submit another.');
+        setMessage('A previous loan application may still be processing. Recheck it before applying again.');
         return;
       }
       setUnknownApplicationKey(idempotencyKey);
@@ -291,7 +290,7 @@ export default function LoansPage() {
       });
       if (sessionPrincipalId() !== userId) return;
       if (typeof response.data?.id !== 'string' || !response.data.id || String(response.data.userId) !== userId) {
-        setMessage('Loan application acknowledgement was incomplete. Recheck the original request.');
+        setMessage('We couldn’t confirm your application details. Check Loan History before applying again.');
         return;
       }
       await recheckLoanApplication(idempotencyKey);
@@ -308,14 +307,14 @@ export default function LoansPage() {
       if ([400, 401, 403, 404, 422].includes(status ?? -1) && pendingApplication.current) {
         if (!clearPendingEconomicIntent('loan-application', userId, pendingApplication.current.key)) {
           setUnknownApplicationKey(pendingApplication.current.key);
-          setMessage('Application rejected, but recovery storage could not be cleared. Do not submit another until reconciled.');
+          setMessage('Your application was rejected, but its status needs confirmation. Recheck it before applying again.');
           return;
         }
         pendingApplication.current = null;
         setUnknownApplicationKey(null);
         setMessage('Loan application was rejected. Review eligibility before retrying.');
       } else {
-        setMessage('Loan application outcome unknown. Recheck the original request before retrying.');
+        setMessage('We couldn’t confirm your application status. Check Loan History before applying again.');
       }
     } finally {
       setSubmitting(false);
@@ -345,23 +344,23 @@ export default function LoansPage() {
         && Array.isArray(row.relatedLedgerPostings) && row.relatedLedgerPostings.some((posting) =>
           posting.id === row.ledgerPostingId && posting.kind === 'DEBIT'
           && posting.referenceId === loanId && posting.correlationId === key))) {
-        setMessage('Original repayment is not confirmed in the Ledger activity. Do not submit it again.');
+        setMessage('Your repayment is not yet confirmed. Do not submit it again; recheck its status.');
         return;
       }
       if (!clearPendingEconomicIntent('loan-repayment', principal, key)) {
         setUnknownRepaymentKey(key);
-        setMessage('Repayment confirmed, but recovery storage could not be cleared. Do not submit another repayment.');
+        setMessage('Your repayment is confirmed. Check its status before making another payment.');
         return;
       }
       pendingRepayment.current = null;
       setUnknownRepaymentKey(null);
       setRepaymentAmount('');
       setRepaymentLoanId(null);
-      setMessage('Original loan repayment confirmed in account activity.');
+      setMessage('Your loan repayment is confirmed.');
       await load();
     } catch {
       if (sessionPrincipalId() === principal && pendingRepayment.current?.key === key)
-        setMessage('Repayment activity unavailable. The original request remains unresolved.');
+        setMessage('We couldn’t confirm your repayment status. Check Loan History before paying again.');
     }
   };
 
@@ -378,7 +377,7 @@ export default function LoansPage() {
         const saved = readPendingEconomicIntent('loan-repayment', userId);
         pendingRepayment.current = saved?.intent ?? null;
         setUnknownRepaymentKey(saved?.intent.key ?? 'unresolved');
-        setMessage('A previous repayment or recovery storage is unresolved. Do not retry.');
+        setMessage('A previous repayment may still be processing. Recheck it before trying again.');
         return;
       }
       setUnknownRepaymentKey(intentKey);
@@ -389,7 +388,7 @@ export default function LoansPage() {
       });
       if (sessionPrincipalId() !== userId) return;
       if (String(response.data?.id ?? '') !== repaymentLoanId || String(response.data?.userId ?? '') !== userId) {
-        setMessage('Repayment acknowledgement was incomplete. Recheck original Ledger activity.');
+        setMessage('The repayment response is incomplete. Recheck the original payment.');
         return;
       }
       await recheckLoanRepayment(intentKey);
@@ -399,13 +398,13 @@ export default function LoansPage() {
       if ([400, 401, 403, 404, 422].includes(status ?? -1) && pendingRepayment.current) {
         if (!clearPendingEconomicIntent('loan-repayment', userId, pendingRepayment.current.key)) {
           setUnknownRepaymentKey(pendingRepayment.current.key);
-          setMessage('Repayment request rejected, but recovery storage could not be cleared. Keep the original action locked.');
+          setMessage('The repayment was rejected, but its status needs confirmation. Recheck it before trying again.');
           return;
         }
         pendingRepayment.current = null;
         setUnknownRepaymentKey(null);
         setMessage('Repayment request was rejected. Review amount and loan status.');
-      } else setMessage('Repayment outcome is unknown. Recheck the original Ledger activity before retrying.');
+      } else setMessage('Repayment status is not confirmed. Recheck the original payment before retrying.');
     } finally {
       setRepaying(false);
     }
@@ -419,11 +418,11 @@ export default function LoansPage() {
         action={<SecondaryButton onClick={() => void load()}><RefreshCw size={16} className="mr-2 inline" />Refresh</SecondaryButton>}
       />
 
-      {unknownRepaymentKey && <div role="alert" className="mx-auto mb-4 max-w-7xl rounded-xl border border-amber-300/30 p-4 text-sm text-amber-100">An earlier loan repayment outcome is unresolved. New repayments are blocked until Ledger activity confirms the original key. <button type="button" onClick={() => void recheckLoanRepayment(unknownRepaymentKey)} className="ml-2 min-h-11 rounded-lg border border-amber-300/30 px-3 font-semibold">Recheck original repayment</button></div>}
-      {unknownApplicationKey && <div role="alert" className="mx-auto mb-4 max-w-7xl rounded-xl border border-amber-300/30 p-4 text-sm text-amber-100">An earlier loan application outcome is unresolved. New applications are blocked until its original request is confirmed. <button type="button" onClick={() => void recheckLoanApplication(unknownApplicationKey)} className="ml-2 min-h-11 rounded-lg border border-amber-300/30 px-3 font-semibold">Recheck original loan application</button></div>}
+      {unknownRepaymentKey && <div role="alert" className="mx-auto mb-4 max-w-7xl rounded-xl border border-amber-300/30 p-4 text-sm text-amber-100">An earlier loan repayment outcome is unresolved. New repayments are paused while we confirm the original payment. <button type="button" onClick={() => void recheckLoanRepayment(unknownRepaymentKey)} className="ml-2 min-h-11 rounded-lg border border-amber-300/30 px-3 font-semibold">Recheck original repayment</button></div>}
+      {unknownApplicationKey && <div role="alert" className="mx-auto mb-4 max-w-7xl rounded-xl border border-amber-300/30 p-4 text-sm text-amber-100">A previous loan application may still be processing. New applications are paused until its status is confirmed. <button type="button" onClick={() => void recheckLoanApplication(unknownApplicationKey)} className="ml-2 min-h-11 rounded-lg border border-amber-300/30 px-3 font-semibold">Check application status</button></div>}
       <main className="mx-auto min-w-0 max-w-7xl space-y-3 sm:space-y-4">
         <section className="grid min-w-0 grid-cols-1 gap-2 min-[360px]:grid-cols-2 sm:gap-3 lg:grid-cols-4" aria-label="Loan summary">
-          <Metric label="Eligibility" value="Not assessed" hint="Applications require Backend review and approval" />
+          <Metric label="Eligibility" value="Not assessed" hint="Applications are reviewed before approval" />
           <Metric label="Products" value={plansState === 'LIVE' ? authoritativeValue(plans.length) : '—'} hint="Available products" />
           <Metric label="Active loans" value={state === 'LIVE' ? authoritativeValue(activeLoans.length) : '—'} hint="Includes overdue records" />
           <Metric label="Next repayment" value={nextDue} hint="Available due date" />
@@ -432,7 +431,6 @@ export default function LoansPage() {
         <div className="grid min-w-0 gap-3 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)] lg:items-start lg:gap-5">
           <div className="min-w-0 space-y-3 sm:space-y-4">
             <LoanProductsPanel plans={plans} plansState={plansState} />
-            <LoanLifecyclePanel />
             <LoanHistoryPanel state={state} loans={loans} backendConfigured={backendConfigured} />
           </div>
 
@@ -503,31 +501,6 @@ function LoanProductsPanel({ plans, plansState }: { plans: LoanPlan[]; plansStat
           ))}
         </div>
       )}
-      <div className="mt-3 grid gap-2 sm:grid-cols-3">
-        <ProductFact label="Principal and currency" value="—" />
-        <ProductFact label="Rate, fee, repayment" value="—" />
-        <ProductFact label="Term and collateral" value="—" />
-      </div>
-    </Panel>
-  );
-}
-
-function LoanLifecyclePanel() {
-  return (
-    <Panel>
-      <PanelHeading
-        title="Application lifecycle"
-        description="Review, approval, activation, repayment, and history are shown when available."
-        action={<CheckCircle2 size={18} className="text-[#A995FF]" />}
-      />
-      <ol className="grid gap-2 sm:grid-cols-3">
-        {['REVIEW', 'PENDING', 'APPROVED', 'ACTIVE', 'OVERDUE', 'PAID'].map((stage, index) => (
-          <li key={stage} className="rounded-xl border border-[#2B2037] bg-[#171022] p-3">
-            <p className="font-mono text-xs text-[#8C8299]">0{index + 1}</p>
-            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.08em] text-[#F2ECFA]">{stage.replaceAll('_', ' ')}</p>
-          </li>
-        ))}
-      </ol>
     </Panel>
   );
 }
@@ -608,7 +581,7 @@ function LoanApplicationPanel({
     <Panel>
       <PanelHeading
         title="Application review"
-        description="Submit collateral details and a document reference for Admin review."
+        description="Submit collateral details and a supporting document reference."
         action={<FileText size={18} className="text-[#48C0CC]" />}
       />
       <form onSubmit={onSubmit} className="space-y-4">
@@ -628,8 +601,8 @@ function LoanApplicationPanel({
           <input aria-label="Duration in days" className={`${inputClass} text-right font-mono`} value={duration} onChange={(event) => onDurationChange(event.target.value)} inputMode="numeric" placeholder="—" />
         </Field>
         <Field label="Collateral document">
-          <input aria-label="Collateral document reference" className={inputClass} value={collateralImg} onChange={(event) => onCollateralImgChange(event.target.value)} aria-describedby="collateral-help" placeholder="Document reference or storage key" />
-          <span id="collateral-help" className="mt-2 block text-xs leading-5 text-[#8C8299]">Provide a document reference for Admin to review; this form does not upload files.</span>
+          <input aria-label="Collateral document reference" className={inputClass} value={collateralImg} onChange={(event) => onCollateralImgChange(event.target.value)} aria-describedby="collateral-help" placeholder="Supporting document link or reference" />
+          <span id="collateral-help" className="mt-2 block text-xs leading-5 text-[#8C8299]">Enter a document link or reference; files cannot be uploaded here.</span>
         </Field>
         <Field label="Collateral details">
           <textarea aria-label="Collateral details" className={`${inputClass} min-h-24 resize-y`} value={collateral} onChange={(event) => onCollateralChange(event.target.value)} placeholder="Describe the collateral supporting this application." />
@@ -653,7 +626,7 @@ function LoanApplicationPanel({
           Enter a principal from {authoritativeValue(selectedPlan.minAmount)} to {authoritativeValue(selectedPlan.maxAmount)} {authoritativeValue(selectedPlan.currency)}.
         </p>}
         {selectedPlan && !matchesDuration && <p role="status" className="text-xs text-amber-200">Use the selected plan’s {authoritativeValue(selectedPlan.durationDays)}-day term.</p>}
-        <p className="text-xs text-[#8C8299]">Applications require collateral details and a document reference. An Admin must review the application before disbursement.</p>
+        <p className="text-xs text-[#8C8299]">Provide collateral details and a document link or reference. Applications are reviewed before funds are disbursed.</p>
         <PrimaryButton type="submit" disabled={submitting || blocked || !canApply}>
           {blocked ? 'Recheck original application' : submitting ? 'Submitting…' : plans.length === 0 ? 'No active products' : 'Submit application'}
         </PrimaryButton>
@@ -690,7 +663,7 @@ function LoanRepaymentCenter({
         <div className="space-y-3">
           {activeLoans.map((loan) => (
             <div key={loanKey(loan)} className="rounded-xl border border-[#2B2037] bg-[#171022] p-3 sm:p-4">
-              <div className="flex items-center justify-between gap-3"><p className="font-semibold">Loan {authoritativeValue(loan.id)}</p><StatusBadge state={normalizeLoanState(loan.status)} /></div>
+              <div className="flex items-center justify-between gap-3"><p className="font-semibold">Loan repayment</p><StatusBadge state={normalizeLoanState(loan.status)} /></div>
               <dl className="mt-3 space-y-2 text-sm"><ReviewRow label="Total repayment" value={authoritativeValue(loan.totalRepaymentDecimal ?? loan.totalRepayment)} /><ReviewRow label="Due date" value={<LocalDateTime value={typeof loan.dueDate === 'string' ? loan.dueDate : null} dateStyle="medium" />} /></dl>
               <div className="mt-3 flex flex-col gap-2 min-[430px]:flex-row">
                 <input aria-label="Repayment amount" className={`${inputClass} min-w-0`} value={repaymentLoanId === String(loan.id) ? repaymentAmount : ''} onChange={(event) => { onRepaymentLoanIdChange(String(loan.id)); onRepaymentAmountChange(event.target.value); }} inputMode="decimal" placeholder="Payment amount" />
@@ -712,7 +685,7 @@ function LoanRecordCard({ loan }: { loan: LoanRecord }) {
   return (
     <article className="rounded-xl border border-[#2B2037] bg-[#171022] p-3 sm:p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div><h3 className="font-semibold">Loan {authoritativeValue(loan.id)}</h3><p className="mt-1 text-xs leading-5 text-[#8C8299]">{loanStatusCopy(status)}</p></div>
+        <div><h3 className="font-semibold">Loan application</h3><p className="mt-1 text-xs leading-5 text-[#8C8299]">{loanStatusCopy(status)}</p></div>
         <StatusBadge state={status} />
       </div>
       <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2 xl:grid-cols-4">

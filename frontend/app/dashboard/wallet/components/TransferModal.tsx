@@ -101,7 +101,7 @@ export default function TransferModal({ isOpen, onClose, currencies, selectedCur
       }
       if (!clearPendingEconomicIntent('transfer', principal, key)) {
         setUnknownIntentKey(key);
-        toast.warning('Transfer confirmed, but recovery storage could not be cleared. Do not submit another request.');
+        toast.warning('Your transfer is confirmed. Check its status before submitting another transfer.');
         return;
       }
       pendingIntent.current = null;
@@ -115,7 +115,7 @@ export default function TransferModal({ isOpen, onClose, currencies, selectedCur
       onClose();
     } catch {
       if (sessionPrincipalId() === principal && pendingIntent.current?.key === key)
-        toast.error('Transfer records could not be checked. The original request remains unresolved.');
+        toast.error('We couldn’t confirm your transfer status. Check Wallet activity before transferring again.');
     }
   };
 
@@ -154,7 +154,7 @@ export default function TransferModal({ isOpen, onClose, currencies, selectedCur
     const intent = getIntentKey(pendingIntent.current, JSON.stringify([principal, mode, sourceScope, destinationScope, asset, mode === 'USER' ? Number(recipientCode) : null, amount]), mode === 'WALLETS' ? 'wallet-account-transfer' : 'transfer');
     if (!persistPendingEconomicIntent('transfer', { principal, intent: { key: intent.key, fingerprint: 'redacted' }, context: { mode } })) {
       setUnknownIntentKey(readPendingEconomicIntent('transfer', principal)?.intent.key ?? 'unresolved');
-      toast.error('A previous transfer may be unresolved or secure recovery storage is unavailable. Do not submit another transfer in this session.');
+      toast.error('A previous transfer may still be processing. Recheck it before submitting another transfer.');
       return;
     }
     pendingIntent.current = intent;
@@ -197,7 +197,7 @@ export default function TransferModal({ isOpen, onClose, currencies, selectedCur
       if (sessionPrincipalId() !== principal) return;
       if (!clearPendingEconomicIntent('transfer', principal, intent.key)) {
         setUnknownIntentKey(intent.key);
-        toast.warning('Transfer accepted, but recovery storage could not be cleared. Do not send another.');
+        toast.warning('Your transfer was accepted. Check its status before submitting another transfer.');
         return;
       }
       pendingIntent.current = null;
@@ -220,17 +220,16 @@ export default function TransferModal({ isOpen, onClose, currencies, selectedCur
       if ([400, 401, 403, 404, 422].includes(status ?? -1)) {
         if (!clearPendingEconomicIntent('transfer', principal, intent.key)) {
           setUnknownIntentKey(intent.key);
-          toast.warning('Transfer rejected, but recovery storage could not be cleared. Keep the original transfer locked.');
+          toast.warning('Your transfer was rejected, but its status needs confirmation. Recheck before trying again.');
           return;
         }
         pendingIntent.current = null;
         pendingMode.current = null;
         pendingPrincipal.current = null;
-        toast.error(typeof response === 'string' ? response : Array.isArray(response)
-          ? response.join(', ') : 'Transfer request was rejected. Review the details.');
+        toast.error('Transfer request was rejected. Review the transfer details.');
       } else {
         setUnknownIntentKey(intent.key);
-        toast.warning('Transfer outcome is unknown. Recheck account records before any other transfer.');
+        toast.warning('We couldn’t confirm your transfer. Check Wallet activity before trying again.');
         void recheckUnknownTransfer(intent.key);
       }
     } finally {
@@ -255,7 +254,7 @@ export default function TransferModal({ isOpen, onClose, currencies, selectedCur
       <label className="block text-xs text-[#C3BBD0]">Amount<input className="nexi-input mt-1 w-full" inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="0.00" required /></label>
     </> : <>
       <div className="flex gap-2 overflow-x-auto">{currencies.map((currency) => <button key={currency.symbol} type="button" onClick={() => onSelectCurrency(currency.symbol)} className={`min-h-11 shrink-0 rounded-lg border px-4 text-sm font-semibold ${selectedCurrency === currency.symbol ? 'border-[#A995FF] bg-[#2A1742] text-white' : 'border-violet-300/15 bg-[#171022] text-[#C3BBD0]'}`}>{currency.symbol}</button>)}</div>
-      <label className="block text-xs text-[#C3BBD0]">Recipient NEXI User ID<input className="nexi-input mt-1 w-full font-mono" inputMode="numeric" pattern="[0-9]{6}" value={recipientCode} onChange={(event) => setRecipientCode(event.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="123456" required /></label>
+      <label className="block text-xs text-[#C3BBD0]">Recipient code<input className="nexi-input mt-1 w-full font-mono" inputMode="numeric" pattern="[0-9]{6}" value={recipientCode} onChange={(event) => setRecipientCode(event.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="123456" required /></label>
       <label className="block text-xs text-[#C3BBD0]">Amount<input className="nexi-input mt-1 w-full" inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="0.00" required /></label>
     </>}
     {unknownIntentKey && <div role="alert" className="rounded-lg border border-amber-300/25 p-3 text-sm text-amber-100">

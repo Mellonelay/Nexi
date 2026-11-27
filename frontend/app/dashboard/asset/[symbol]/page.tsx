@@ -73,10 +73,10 @@ function assetDetailModel(item: MarketItem, details: AssetDetails | null, detail
   const metadataSource = detailText(details?.sourceProvider)
     ?? (details?.provenance?.map((entry) => entry.provider).filter(Boolean).join(', ') || placeholder);
   const technicalFacts: Array<[string, string]> = [
-    ['Metadata status', details?.status ?? (detailState === 'UNAVAILABLE' ? 'UNAVAILABLE' : placeholder)],
-    ['Metadata source', metadataSource],
+    ['Profile availability', details?.status === 'FRESH' ? 'Current' : details?.status === 'STALE' ? 'Updating' : detailState === 'UNAVAILABLE' ? 'Unavailable' : placeholder],
+    ['Data source', metadataSource],
     ['Last refreshed', detailText(details?.refreshedAt) ?? placeholder],
-    ['Metadata expires', detailText(details?.expiresAt) ?? placeholder],
+
   ];
   const aboutFacts: Array<[string, string]> = [];
   if (instrument.category === 'Crypto') {
@@ -108,7 +108,7 @@ function assetDetailModel(item: MarketItem, details: AssetDetails | null, detail
       ['Market session', detailText(details?.marketSessionState) ?? placeholder],
       ['Contract unit', detailValue(specification.unit) ?? placeholder],
       ['Contract size', detailValue(specification.contractSize) ?? placeholder],
-      ['Price precision', detailValue(specification.pricePrecision) ?? placeholder],
+
     );
   } else if (instrument.category === 'Forex') {
     aboutFacts.push(
@@ -118,7 +118,7 @@ function assetDetailModel(item: MarketItem, details: AssetDetails | null, detail
       ['Market session', detailText(details?.marketSessionState) ?? placeholder],
       ['Provider description source', detailText(details?.providerDescriptionSource) ?? placeholder],
       ['Provider timestamp', detailText(details?.providerTimestamp) ?? placeholder],
-      ['Price precision', detailValue(details?.pricePrecision) ?? placeholder],
+
       ['Contract size', detailValue(details?.contractSize) ?? placeholder],
     );
   }
@@ -269,12 +269,11 @@ function AssetDetailView({
 
         <section className="mb-5 grid gap-4 md:grid-cols-2">
           <div className="min-w-0 rounded-xl border border-violet-300/15 bg-[#100A18] p-4">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-2"><h2 className="font-semibold">Market data</h2>{instrument.category === 'Crypto' && <span className={`text-xs ${details?.status === 'STALE' ? 'text-amber-200' : 'text-[#8C8299]'}`}>{details?.status === 'STALE' ? 'CoinGecko metrics may be stale' : details?.status === 'FRESH' ? 'CoinGecko profile metrics · USD' : 'CoinGecko profile metrics partial or unavailable'}</span>}</div>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2"><h2 className="font-semibold">Market data</h2>{instrument.category === 'Crypto' && <span className={`text-xs ${details?.status === 'STALE' ? 'text-amber-200' : 'text-[#8C8299]'}`}>{details?.status === 'STALE' ? 'Crypto profile data may be delayed' : details?.status === 'FRESH' ? 'Crypto profile data · USD' : 'Additional crypto market data unavailable'}</span>}</div>
             <dl className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,7rem),1fr))] gap-x-4 gap-y-4 text-sm">
               <div><dt className="text-[#8C8299]">Last price</dt><dd className="mt-1 font-mono">{formatNumber(instrument.price, instrument.precision ?? 8)}</dd></div>
               <div><dt className="text-[#8C8299]">24h change</dt><dd className="mt-1 font-mono">{formatChange(instrument.change24h)}</dd></div>
               <div><dt className="text-[#8C8299]">Volume (24h)</dt><dd className="mt-1 font-mono">{formatNumber(instrument.volume24h)}</dd></div>
-              <div><dt className="text-[#8C8299]">Precision</dt><dd className="mt-1 font-mono">{instrument.precision ?? placeholder}</dd></div>
               <div><dt className="text-[#8C8299]">Source</dt><dd className="mt-1 font-mono">{provider ?? placeholder}</dd></div>
               <div><dt className="text-[#8C8299]">Updated</dt><dd className="mt-1 font-mono"><LocalDateTime value={item.observedAt} timeStyle="short" /></dd></div>
               {availableCryptoMarketFacts.map(([label, value]) => <div key={label}><dt className="text-[#8C8299]">{label}</dt><dd className="mt-1 break-words font-mono">{value}</dd></div>)}

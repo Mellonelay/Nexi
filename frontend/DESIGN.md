@@ -617,7 +617,7 @@ For Spot/Margin, verify at minimum:
 - 320/360/~390/430 widths;
 - desktop composition.
 
-For Quotes, Asset Detail, Wallet/operations, connection, Spot/Margin, Options/Binary, Earn, Loans, Messages, Learn, Settings and sheets, verify the same shell language and route-specific information hierarchy.
+Independently review Quotes, Asset Detail, Wallet/operations, connection, Spot/Margin, Options/Binary, Earn, Loans, Messages, Learn, Settings and sheets for recurring defects across routes, not only examples supplied by the owner. Include long asset names, large and fractional values, zero/unavailable states, status clarity, overflow, touch reachability and customer-facing terminology. Verify the same shell language and route-specific information hierarchy.
 
 ## 22. Non-goals
 
@@ -648,6 +648,9 @@ A frontend surface is not visually complete because:
 - a single screenshot looks close.
 
 Visual completion requires:
+- independent review for recurring layout, financial-display and customer-copy defects across Public routes;
+- exact financial values retained in state and actions, with compact display precision clearly marked and an accessible exact-value affordance;
+- no ordinary customer view of opaque Activity, Ledger, correlation identifiers or storage/recovery implementation details;
 - correct current backend data path;
 - correct interaction behavior;
 - responsive rendered evidence;

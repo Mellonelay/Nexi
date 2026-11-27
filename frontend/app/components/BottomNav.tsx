@@ -57,7 +57,7 @@ export default function BottomNav() {
               href={item.href}
               aria-disabled={disabled || undefined}
               aria-current={active ? "page" : undefined}
-              aria-label={disabled ? `${item.label ?? t(item.key as Parameters<typeof t>[0])} — ${item.unavailableMessage}` : undefined}
+              aria-label={disabled ? `${item.label ?? t(item.key as Parameters<typeof t>[0])} — ${item.unavailableMessage}` : item.key === "spot" ? item.label : undefined}
               title={disabled ? item.unavailableMessage : undefined}
               onClick={(event) => {
                 if (disabled) event.preventDefault();
@@ -77,7 +77,7 @@ export default function BottomNav() {
               />
               <span className="relative max-w-full break-words text-center">
                 {item.key === "spot"
-                  ? item.label
+                  ? <><span className="sm:hidden">Spot</span><span className="hidden sm:inline">{item.label}</span></>
                   : t(item.key as Parameters<typeof t>[0])}
               </span>
             </Link>

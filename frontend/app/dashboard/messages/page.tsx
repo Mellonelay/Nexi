@@ -265,11 +265,11 @@ export default function MessagesPage() {
       const confirmed = response.data;
       if (!confirmed || typeof confirmed.id !== 'string' || confirmed.senderId !== principal
         || confirmed.conversationId !== conversationIdRef.current) {
-        setFeedback('The original message is not yet confirmed. Keep the original request locked and contact Support if it remains unresolved.');
+        setFeedback('We couldn’t confirm your message yet. Check your conversation before sending another.');
         return;
       }
       if (!clearPendingEconomicIntent('support-message', principal, key)) {
-        setFeedback('Message confirmed, but recovery storage could not be cleared. Keep the original request locked.');
+        setFeedback('Your message is confirmed. Check your conversation before sending another.');
         return;
       }
       setUnknownMessageKey(null);
@@ -279,11 +279,11 @@ export default function MessagesPage() {
         setDraft('');
         setAttachments([]);
       }
-      setFeedback('The original message is confirmed in your support conversation.');
+      setFeedback('Your message is confirmed in your conversation.');
       await load();
     } catch {
       if (principal === userIdRef.current && unknownMessageKey === key)
-        setFeedback('Support message readback is unavailable. Do not submit another message until the original is reconciled.');
+        setFeedback('We couldn’t confirm your message status. Check your conversation before sending another.');
     }
   };
 
@@ -306,7 +306,7 @@ export default function MessagesPage() {
         setUnknownMessageKey(previous.intent.key);
         setFeedback('An original support message remains unresolved. Recheck it before sending.');
       } else {
-        setFeedback('Message was not sent because recovery storage is unavailable. Retry when storage is available.');
+        setFeedback('Your message was not sent. You can try again.');
       }
       return;
     }
@@ -323,12 +323,12 @@ export default function MessagesPage() {
       if (!accepted.data || typeof accepted.data.id !== 'string' || accepted.data.senderId !== requestUserId
         || accepted.data.conversationId !== requestConversationId || accepted.data.body !== body) {
         setUnknownMessageKey(idempotencyKey);
-        setFeedback('Message acknowledgement did not match the original request. Recheck its persisted status.');
+        setFeedback('We couldn’t confirm that your message was sent. Check your conversation before sending another.');
         return;
       }
       if (!clearPendingEconomicIntent('support-message', requestUserId, idempotencyKey)) {
         setUnknownMessageKey(idempotencyKey);
-        setFeedback('Message accepted, but recovery storage could not be cleared. Recheck before sending another.');
+        setFeedback('Your message was sent. Check your conversation before sending another.');
         return;
       }
       setUnknownMessageKey(null);
@@ -390,7 +390,7 @@ export default function MessagesPage() {
         {state === 'ERROR' && <p className="py-8 text-center text-sm text-rose-200" role="alert">Conversation could not be loaded. Retry to reconnect.</p>}
         {state === 'SIGNED_OUT' && <p className="py-8 text-center text-sm text-[#C3BBD0]" role="status">Sign in to view and send support messages.</p>}
         {state === 'READY' && messages.length === 0 && <div className="mx-auto max-w-sm rounded-2xl border border-[#49335E] bg-[#171022] px-5 py-4 text-center">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#A995FF]">Local welcome · not sent by support</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#A995FF]">Start a conversation</p>
           <p className="mt-2 text-sm leading-6 text-[#C3BBD0]">Write a message below to start a conversation with NEXI Support.</p>
         </div>}
         {messages.map((message) => <MessageBubble key={messageKey(message)} message={message} own={message.senderId === userId} />)}

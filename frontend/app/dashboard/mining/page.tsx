@@ -174,13 +174,13 @@ export default function MiningPage() {
         return;
       }
       if (!clearPendingEconomicIntent('mining-subscribe', userId, key)) {
-        setMessage('Subscription reserve is confirmed, but local recovery state could not be cleared. Keep this original request blocked until recovery storage is available.');
+        setMessage('Your subscription reserve is confirmed. Check its status before submitting another request.');
         return;
       }
       pendingSubscription.current = null;
       setUnknownSubscriptionKey(null);
       setStage('IDLE');
-      setMessage('Subscription reserve confirmed in your account activity. See My subscriptions for its current activation and reward status.');
+      setMessage('Your subscription is confirmed. See My subscriptions for its status and rewards.');
       await load({ preserveFlow: true });
     } catch {
       if (sessionPrincipalId() === userId && pendingSubscription.current?.key === key)
@@ -205,7 +205,7 @@ export default function MiningPage() {
         pendingSubscription.current = stored?.intent ?? null;
         setUnknownSubscriptionKey(stored?.intent.key ?? 'unresolved');
         setStage('ERROR');
-        setMessage('A prior subscription may be unresolved or recovery storage is unavailable. Do not submit another subscription until the original outcome is reconciled.');
+        setMessage('A previous subscription may still be processing. Recheck its status before submitting another.');
         return;
       }
       const response = await api.post<RecordValue>(subscribeEndpoint, {
@@ -218,9 +218,9 @@ export default function MiningPage() {
       if (!submittedKey) return;
       setUnknownSubscriptionKey(submittedKey);
       setStage('ERROR');
-      setMessage('Subscription request returned. Confirming the original Ledger activity before allowing another request.');
+      setMessage('Your subscription is being confirmed. Do not submit another request until its status is clear.');
       if (typeof response.data?.id !== 'string' || String(response.data.userId) !== userId) {
-        setMessage('Subscription response was incomplete. Recheck the original request before trying again.');
+        setMessage('We couldn’t confirm your subscription status. Check My subscriptions before trying again.');
       }
       await recheckUnknownSubscription(submittedKey);
     } catch (error) {
@@ -243,8 +243,8 @@ export default function MiningPage() {
         setUnknownSubscriptionKey(key);
         setStage('ERROR');
         setMessage(response?.status
-          ? `Subscription returned HTTP ${response.status}; the original financial outcome remains unresolved. Recheck account activity before trying another.`
-          : 'Subscription outcome is unknown. Check account activity before trying another subscription.');
+          ? 'We couldn’t confirm your subscription status. Check My subscriptions before trying again.'
+          : 'We couldn’t confirm your subscription status. Check My subscriptions before trying again.');
         void recheckUnknownSubscription(key);
       }
     }
@@ -307,11 +307,11 @@ function MiningPosition({ position, onChanged }: { position: RecordValue; onChan
             && posting.referenceId === subscriptionId && posting.correlationId === key);
       });
       if (!confirmed) {
-        setError('Original action is not confirmed in durable account activity. Do not submit it again.');
+        setError('We couldn’t confirm this action. Check Mining History before trying again.');
         return;
       }
       if (!clearPendingEconomicIntent(kind, principal, key)) {
-        setError('Mining release is confirmed, but local recovery state could not be cleared. Keep the original action blocked and retry readback.');
+        setError('Your Mining release is confirmed. Check its status before making another request.');
         return;
       }
       original.current = null;
@@ -320,7 +320,7 @@ function MiningPosition({ position, onChanged }: { position: RecordValue; onChan
       onChanged();
     } catch {
       if (sessionPrincipalId() === principal && original.current?.key === key)
-        setError('Mining activity is unavailable. The original request remains unresolved.');
+        setError('We couldn’t confirm your Mining action. Check Mining History before trying again.');
     }
   };
 
@@ -334,7 +334,7 @@ function MiningPosition({ position, onChanged }: { position: RecordValue; onChan
       setUnknown(saved ? { key: saved.intent.key,
         operation: saved.context.operation === 'redeem' || saved.context.operation === 'cancel' ? saved.context.operation : null
       } : { key: 'unresolved', operation: null });
-      setError('Previous action or recovery storage is unresolved. Do not send another request.');
+      setError('A previous action may still be processing. Recheck its status before trying again.');
       return;
     }
     original.current = intent;
@@ -345,7 +345,7 @@ function MiningPosition({ position, onChanged }: { position: RecordValue; onChan
       const response = await api.post<RecordValue>(`/mining/${operation}`, { subscriptionId, idempotencyKey: intent.key });
       if (sessionPrincipalId() !== principal) return;
       if (String(response.data?.status) !== (operation === 'redeem' ? 'COMPLETED' : 'CANCELLED'))
-        setError('The server returned a different terminal state. Check the original request.');
+        setError('Your Mining action has a different status than expected. Check Mining History.');
       await recheck(intent.key, operation);
     } catch (cause) {
       if (sessionPrincipalId() !== principal) return;
@@ -353,8 +353,8 @@ function MiningPosition({ position, onChanged }: { position: RecordValue; onChan
       // A rejected replay can follow an earlier committed reserve/release.
       // Only the owner-scoped durable activity can resolve this original key.
       setError(status
-        ? `Mining action returned HTTP ${status}; its original outcome remains unresolved. Recheck account activity before another request.`
-        : 'Mining outcome is unknown. Recheck the original action before submitting another.');
+        ? `We couldn’t confirm your Mining action. Check Mining History before trying again.`
+        : 'We couldn’t confirm your Mining action. Check Mining History before trying again.');
     } finally {
       setBusy(null);
     }
@@ -372,9 +372,9 @@ function MiningPosition({ position, onChanged }: { position: RecordValue; onChan
     </div>
     {error && <p role="alert" className="mt-3 break-words text-sm text-[#FFB8C5]">{error}</p>}
     {unknown && <div role="alert" className="mt-3 rounded-lg border border-amber-300/30 p-3 text-sm text-amber-100">
-      Earlier mining action unresolved. New actions are blocked, including after reload.
+      A previous Mining action may still be processing. Check its status before trying again.
       <button type="button" onClick={() => void recheck(unknown.key, unknown.operation)}
-        className="mt-2 block min-h-11 rounded-lg border border-amber-300/40 px-3 font-semibold">Recheck original mining action</button>
+        className="mt-2 block min-h-11 rounded-lg border border-amber-300/40 px-3 font-semibold">Check action status</button>
     </div>}
     {active && <div className="mt-3 flex flex-wrap gap-2">
       <SecondaryButton onClick={() => void act('redeem')} disabled={busy !== null || Boolean(unknown)}>{busy === 'redeem' ? 'Redeeming…' : 'Redeem'}</SecondaryButton>

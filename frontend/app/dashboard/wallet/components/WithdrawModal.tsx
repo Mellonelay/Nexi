@@ -118,17 +118,17 @@ export default function WithdrawModal({ isOpen, onClose, currencies, selectedCur
       }
       if (!clearPendingEconomicIntent('withdrawal', principal, key)) {
         setUnknownIntentKey(key);
-        toast.warning('Withdrawal found, but recovery storage could not be cleared. Do not submit another request.');
+        toast.warning('Your withdrawal is confirmed. Check its status before submitting another withdrawal.');
         return;
       }
       pendingIntent.current = null;
       setUnknownIntentKey(null);
       setReviewOpen(false);
-      toast.success('The withdrawal request was found in your account history.');
+      toast.success('Your withdrawal request is confirmed.');
       try { await onCompleted?.(); }
-      catch { toast.warning('Withdrawal was found, but Wallet refresh failed.'); }
+      catch { toast.warning('Your withdrawal is confirmed, but Wallet could not refresh.'); }
     } catch {
-      if (sessionPrincipalId() === principal) toast.error('Withdrawal history could not be checked. The original request remains unresolved.');
+      if (sessionPrincipalId() === principal) toast.error('We couldn’t confirm your withdrawal status. Check Wallet activity before submitting another request.');
     }
   };
 
@@ -144,7 +144,7 @@ export default function WithdrawModal({ isOpen, onClose, currencies, selectedCur
     // No password, MFA token or destination address is persisted in recovery storage.
     if (!persistPendingEconomicIntent('withdrawal', { principal, intent: { key: intent.key, fingerprint: 'redacted' }, context: {} })) {
       setUnknownIntentKey(readPendingEconomicIntent('withdrawal', principal)?.intent.key ?? 'unresolved');
-      toast.error('An earlier withdrawal may be unresolved or recovery storage is unavailable. New withdrawal requests are blocked.');
+      toast.error('A previous withdrawal may still be processing. Recheck it before submitting another.');
       return;
     }
     pendingIntent.current = intent;
@@ -163,13 +163,13 @@ export default function WithdrawModal({ isOpen, onClose, currencies, selectedCur
       if (sessionPrincipalId() !== principal) return;
       if (accepted.data?.withdrawal?.requestKey !== intent.key) {
         setUnknownIntentKey(intent.key);
-        toast.warning('Withdrawal response did not confirm the original request. Recheck account history before another request.');
+        toast.warning('We couldn’t confirm your withdrawal status. Check Wallet activity before submitting another request.');
         void recheckUnknownWithdrawal(intent.key);
         return;
       }
       if (!clearPendingEconomicIntent('withdrawal', principal, intent.key)) {
         setUnknownIntentKey(intent.key);
-        toast.warning('Withdrawal accepted, but recovery storage could not be cleared. Do not submit another.');
+        toast.warning('Your withdrawal was accepted. Check its status before submitting another withdrawal.');
         return;
       }
       pendingIntent.current = null;
@@ -188,7 +188,7 @@ export default function WithdrawModal({ isOpen, onClose, currencies, selectedCur
       if ([400, 401, 403, 404, 422].includes(status ?? -1)) {
         if (!clearPendingEconomicIntent('withdrawal', principal, intent.key)) {
           setUnknownIntentKey(intent.key);
-          toast.warning('Withdrawal rejected, but recovery storage could not be cleared. Do not submit another withdrawal.');
+          toast.warning('Your withdrawal was rejected, but its status needs confirmation. Recheck before trying again.');
           return;
         }
         pendingIntent.current = null;
@@ -255,7 +255,7 @@ export default function WithdrawModal({ isOpen, onClose, currencies, selectedCur
           <button type="button" className="mt-2 min-h-11 rounded-lg border border-violet-300/20 px-3" onClick={() => setReviewOpen(false)}>Edit request</button>
         </section>}
         {unknownIntentKey && <div role="alert" className="rounded-lg border border-amber-300/25 p-3 text-sm text-amber-100">
-          Withdrawal outcome is unresolved. New submission is disabled until account history confirms the original request.
+          We couldn’t confirm your withdrawal status. Check Wallet activity before submitting another request.
           <button type="button" onClick={() => void recheckUnknownWithdrawal(unknownIntentKey)} className="mt-2 block min-h-11 rounded-lg border border-amber-300/30 px-3 font-semibold">Recheck withdrawal</button>
         </div>}
         <button type="submit" disabled={Boolean(unknownIntentKey) || busy || !security || !selectedCapability || capabilitiesLoading || capabilitiesError ||
