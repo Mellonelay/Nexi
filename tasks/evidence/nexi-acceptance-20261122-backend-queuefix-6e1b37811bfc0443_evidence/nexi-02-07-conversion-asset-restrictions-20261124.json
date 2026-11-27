@@ -1,0 +1,13 @@
+{
+  "criterion_id": "NEXI-02-07",
+  "observed_date": "2026-11-24",
+  "precondition": "Public wallet session hydrated to profile 757621 (Account status: Current); mobile viewport 390\u00d7667 CSS px at inspection.",
+  "user_action": [
+    "Opened Convert from the Wallet quick actions; inspected source and destination options and action state; closed the dialog without requesting a quote or submitting a conversion."
+  ],
+  "ui_result": "Convert dialog exposed From options BTC, ETH, SOL, TRX, USDT; To offered USDT only. The visible instruction said conversion spends Funding (MAIN), not Spot, and Spot holdings must be moved to Funding first. Get quote remained disabled with the amount blank.",
+  "network_or_state_evidence": "GET /wallet/currencies/list returned 200 with five currencies matching the From options. Unauthenticated direct GET /financial/conversion/pairs returned 401, so no response body is claimed for that protected route. UI state showed Funding available for BTC. No quote or financial mutation occurred.",
+  "status": "PASS",
+  "evidence_location": "tasks/evidence/nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443_evidence/nexi-02-07-conversion-asset-restrictions-20261124.json",
+  "limitation": "UI and currency catalog support restriction are confirmed; protected conversion-pairs response was not captured."
+}

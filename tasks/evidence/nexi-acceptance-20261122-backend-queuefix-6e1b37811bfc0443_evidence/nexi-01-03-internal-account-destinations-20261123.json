@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "campaign": "nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443",
+  "criterion_id": "NEXI-01-03",
+  "result": "PASS",
+  "recorded_at_utc": "2026-11-23T10:05:25.714930+00:00",
+  "recorded_at_yangon": "2026-11-23T16:35:25.714930+06:30",
+  "repository_head": "f3515cf76d46ff9814eb6402db41de5b5eafb7c7",
+  "source_campaign_event_id": "J02-wallet-account-balance-crosscheck-20261122",
+  "source_criterion": "NEXI-02-03",
+  "account_destinations": [
+    "Funding",
+    "Spot",
+    "Margin",
+    "Options",
+    "Finance"
+  ],
+  "observed_state": {
+    "all_five_Public_account_tabs_present": true,
+    "native_account_balances_readable": true,
+    "all_accounts_active": true,
+    "manual_account_creation": null,
+    "financial_mutation": "none"
+  },
+  "evidence_files": {
+    "nexi-wallet-funding-account-full.png": "df5ec4657b76537adc0327b5afb056de938266784a74da48f67febb9b60fcead",
+    "nexi-wallet-spot-account-full.png": "492b0fdc6a1403ddac4a724084b8fa7303beb9bf72dec0da8618b57bbf1a86e8",
+    "nexi-wallet-margin-account-full.png": "9b0836b1c8cbbf591fa826f1d7fcd94a7e5a25d93ed08b7e3b3d0a84799446e3",
+    "nexi-wallet-options-account-full.png": "f2af7676c1335c0c0152ce596696248f89ef52d4ea3166e7409d8327ae48749b",
+    "nexi-wallet-finance-account-full.png": "9badcc087344a25e3d05e767918d5a4849b9c16b307f165ecf991d2aa18193c9"
+  },
+  "assessment": "The prior authenticated Public UI inspection opened all five supported account views and read account balances for the same customer, demonstrating these internal account destinations were provisioned and usable without a manual account-creation step. Existing images and hashes were re-verified in this continuation.",
+  "evidence_boundary": "The UI readback demonstrates pre-provisioned account usability. It does not claim each transfer destination was independently exercised."
+}

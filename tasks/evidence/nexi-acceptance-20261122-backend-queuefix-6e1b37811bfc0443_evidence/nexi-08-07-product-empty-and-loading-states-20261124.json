@@ -1,0 +1,14 @@
+{
+  "criterion_id": "NEXI-08-07",
+  "observed_date": "2026-11-24",
+  "precondition": "Authenticated Public session for profile 757621; mobile viewport 390\u00d7667 CSS px.",
+  "user_action": [
+    "Opened Earn/Mining read-only; observed initial loading statuses; used the page Refresh control once.",
+    "Opened Loans read-only; observed initial loading status; used Refresh once; inspected product, pending application and repayment availability."
+  ],
+  "ui_result": "Mining loading cleared to available plans, reward history and a subscription history entry. Loans showed an available product with a term rate explicitly labeled \u201c10% per plan term,\u201d a pending application labeled \u201cApplication is awaiting review,\u201d no active repayment with explicit \u201cNo active or overdue loan is available for repayment,\u201d and Submit application disabled while required fields were empty. Product availability, pending review and no active repayment were distinct states, not a generic empty/failure screen.",
+  "network_or_state_evidence": "DOM state from Public at /dashboard/mining and /dashboard/loans. Refresh removed Loading loan history (0 remaining) and Mining loading states; 1 available loan product and 1 pending review item were displayed. No application, subscription, repayment or other financial action was submitted. Ledger state was not queried.",
+  "status": "PASS",
+  "evidence_location": "tasks/evidence/nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443_evidence/nexi-08-07-product-empty-and-loading-states-20261124.json",
+  "limitation": "This proves visible empty/loading/product state distinctions only; no financial outcome or Ledger state is claimed."
+}

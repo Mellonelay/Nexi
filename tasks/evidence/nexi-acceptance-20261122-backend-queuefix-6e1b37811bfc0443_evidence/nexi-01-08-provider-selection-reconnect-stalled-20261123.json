@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "campaign": "nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443",
+  "criterion_id": "NEXI-01-08",
+  "result": "FAIL",
+  "observed_at_utc": "2026-11-23T11:11:36.090827+00:00",
+  "observed_at_yangon": "2026-11-23T17:41:36.090827+06:30",
+  "repository_head": "f3515cf76d46ff9814eb6402db41de5b5eafb7c7",
+  "public_url": "https://www.nexitrading.app/dashboard",
+  "wallet": "0x339a73c5fb21a2ecf2377826dfa120f128d38b33",
+  "provider_ui": {
+    "choices": [
+      "MetaMask Connected",
+      "Coinbase Wallet"
+    ],
+    "selected": "MetaMask Connected",
+    "result": "The Connect button remained Connecting… and the provider buttons became disabled after the bounded wait.",
+    "geometry": "Provider buttons were outside the current viewport (MetaMask y=-66; Coinbase y=-14), while the main page and public market list were visible."
+  },
+  "unverified_branches": [
+    "Wrong-network recovery was not exercised; dedicated account was on chain 1.",
+    "Rejected-signature recovery was not exercised because no signature prompt was shown."
+  ],
+  "evidence_boundary": "Provider selection and normal reconnect were attempted through UI; no NEXI auth session returned in bounded wait. The UI behavior is a failure; root cause between page layout, browser transport, wallet extension or app auth is unknown.",
+  "evidence_files": [
+    "nexi-01-08-provider-selection-reconnect-stalled-20261123.json",
+    "nexi-01-06-session-expiry-reconnect-stalled-20261123.jpg",
+    "nexi-01-06-session-expiry-reconnect-stalled-20261123.json"
+  ],
+  "evidence_hashes": {
+    "nexi-01-06-session-expiry-reconnect-stalled-20261123.jpg": "c446d5668cd2ed15e4e436bcae1ac922c0ca4b20e03eb081df048c899c4e06c2"
+  }
+}

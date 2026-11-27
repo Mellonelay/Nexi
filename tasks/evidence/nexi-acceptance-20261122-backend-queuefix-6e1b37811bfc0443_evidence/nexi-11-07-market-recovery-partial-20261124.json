@@ -1,0 +1,13 @@
+{
+  "criterion_id": "NEXI-11-07",
+  "observed_date": "2026-11-24",
+  "precondition": "Authenticated NEXI Public session, profile 757621 / Account status Current; existing mobile viewport measured 390 CSS px wide.",
+  "user_action": [
+    "After an earlier observed Forex UI Error state for USD/HKD and USD/CHF (prior evidence/API read showed provider data available), opened the application menu from Loans, selected Dashboard, then selected Forex."
+  ],
+  "ui_result": "On return to Forex, the current DOM rendered USD/HKD Live at 7.84209 and USD/CHF Live at 0.841305. Dashboard remained at 390 CSS px body width and showed the five-item mobile Primary navigation. This is evidence of recovery after route re-entry only.",
+  "network_or_state_evidence": "Prior read-only GET /market/prices evidence recorded USD/HKD LIVE and USD/CHF STALE with prices at the time; this execution did not repeat network diagnostics. No API claim is made for the current prices.",
+  "status": "NOT_TESTED",
+  "evidence_location": "tasks/evidence/nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443_evidence/nexi-11-07-market-recovery-partial-20261124.json",
+  "limitation": "The full loading/empty/error/reconnect contract and explicit reconnect transition were not exercised. Preserve as partial evidence; no criterion status promotion."
+}

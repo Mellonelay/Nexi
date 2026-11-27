@@ -1,0 +1,15 @@
+{
+  "criterion_id": "NEXI-14-05",
+  "observed_date": "2026-11-24",
+  "precondition": "Authenticated Public Loans screen at measured mobile viewport 390\u00d7667 CSS px.",
+  "user_action": [
+    "Queried accessible textbox labels for Requested principal, Duration in days, Collateral document reference, and Collateral details.",
+    "Focused Requested principal and pressed Tab once.",
+    "Measured Refresh button target geometry; confirmed Submit application remained disabled with required fields blank."
+  ],
+  "ui_result": "All four input controls resolved by semantic accessible name. Tab advanced focus from Requested principal to Duration in days. Refresh target measured about 110.7\u00d744 CSS px; mobile primary navigation targets measured about 71\u00d744 CSS px. No form values were entered and no application was submitted.",
+  "network_or_state_evidence": "DOM accessibility and geometry only. CSS viewport 390\u00d7667; document width matched 390. Submit application disabled.",
+  "status": "PASS",
+  "evidence_location": "tasks/evidence/nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443_evidence/nexi-14-05-accessibility-mobile-20261124.json",
+  "limitation": "Checks the observed Loans form and primary navigation; does not claim a complete screen-reader or physical-device audit."
+}

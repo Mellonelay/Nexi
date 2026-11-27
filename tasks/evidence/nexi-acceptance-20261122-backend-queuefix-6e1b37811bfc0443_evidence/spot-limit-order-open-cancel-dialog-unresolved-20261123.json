@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "campaign_id": "nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443",
+  "recorded_at_utc": "2026-11-22T23:27:24+00:00",
+  "recorded_at_yangon": "2026-11-23T05:57:24+06:30",
+  "criterion_id": "NEXI-06-04",
+  "journey": "J10",
+  "classification": "ATTEMPTED_UNCONFIRMED",
+  "test_identity": {
+    "profile_id": "757621",
+    "user_uuid": "3ecc85a9-c243-4da3-bde0-a24bdf532e8f",
+    "wallet": "0x339a73c5fb21a2ecf2377826dfa120f128d38b33"
+  },
+  "operation": {
+    "ui": "Public Spot",
+    "symbol": "BTC/USDT",
+    "side": "BUY",
+    "type": "LIMIT",
+    "quantity_btc": "0.0001",
+    "limit_price_usdt": "55000",
+    "estimated_notional_usdt": "5.5",
+    "created_at_utc": "2026-11-22T22:32:15Z",
+    "created_at_yangon": "2026-11-23T05:02:15+06:30",
+    "order_id": "765ce9ab-e24c-435a-b446-b3b58fb186ca",
+    "post": "POST /spot/order -> 201",
+    "initial_open_read": "GET /spot/orders/open -> 200 at 22:32:16Z"
+  },
+  "durable_readbacks": {
+    "public_order": "OPEN, filled 0, remaining 0.0001 BTC, reserve 5.5055 USDT on latest rendered/read log evidence",
+    "activity_id": "16fc692f-1f4b-44a9-8578-3c018a7c38ce",
+    "activity_status": "Completed",
+    "ledger_id": "ed2814a7-bc94-4ec2-8550-c191476e9d31",
+    "ledger_postings": 1,
+    "public_spot_available_usdt_before": "989.3810554638",
+    "public_spot_available_usdt_after": "983.8755554638",
+    "public_spot_locked_usdt_after": "25.525499999999935697",
+    "admin_post_spot_readback": "not captured"
+  },
+  "cancel_attempt": {
+    "status": "ATTEMPTED_UNCONFIRMED",
+    "target_inferred_from_exact_order_id_selector": "765ce9ab-e24c-435a-b446-b3b58fb186ca",
+    "prompt": "Cancel the remaining unfilled quantity for this Spot order?",
+    "prompt_is_generic": true,
+    "last_known_order_status": "OPEN",
+    "final_status_after_prompt": "UNKNOWN",
+    "cancel_request_observed": false,
+    "cancel_endpoint": "POST /spot/cancel not present in observed access log",
+    "confirmation_action_taken": false,
+    "evidence": "Recorded browser audit scripts selected the DOM article containing the exact test order ID and activated its Cancel remaining order control; later attempts timed out. A subsequent CDP dialog accept attempt returned No dialog is showing; latest Chrome MCP list_pages at 2026-11-22T23:13:14Z reported this confirm dialog open. No confirm/dismiss action was taken after owner pause."
+  },
+  "protected_order": {
+    "id": "1a95a4af-f902-46aa-8da7-6defa9cf8634",
+    "last_known_status": "OPEN",
+    "filled_btc": "0",
+    "remaining_btc": "0.000264065306519085",
+    "reserve_usdt": "20.019999999999935697",
+    "touched": false
+  },
+  "evidence_limits": [
+    "No screenshot was captured for this Spot test order.",
+    "The Admin balance was not reread after the order.",
+    "The current browser dialog text contains no order ID; target attribution is inferred strongly from the exact-ID selector in the action script, not from the dialog itself.",
+    "Do not classify the order canceled; its last known state is OPEN, terminal state after the dialog is unknown."
+  ],
+  "source_records": [
+    "Chrome CDP/Nginx log summaries reviewed during this Work session; no application data was changed during reconciliation.",
+    "Earlier campaign events and tracker preserved; this record adds the uncheckpointed Spot transaction only."
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "campaign": "nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443",
+  "criterion_id": "NEXI-01-01",
+  "result": "PASS",
+  "observed_at_utc": "2026-11-23T09:56:16.752167+00:00",
+  "observed_at_yangon": "2026-11-23T16:26:16.752167+06:30",
+  "repository_head": "f3515cf76d46ff9814eb6402db41de5b5eafb7c7",
+  "backend_release": "nexi-backend-queuefix-6e1b37811bfc0443",
+  "identity": {
+    "wallet": "0x339a73c5fb21a2ecf2377826dfa120f128d38b33",
+    "chain_id": 1,
+    "admin_profile_id": "757621"
+  },
+  "live_public_readback": {
+    "url": "https://www.nexitrading.app/dashboard/loans",
+    "title": "NEXI",
+    "wallet_button_accessible_name": "Disconnect wallet 0x339a73c5fb21a2ecf2377826dfa120f128d38b33",
+    "wallet_button_text": "0x339a…8b33",
+    "application_menu_visible": true,
+    "profile_id": "757621",
+    "account_status": "Current",
+    "interaction": "read-only Playwright MCP DOM inspection of existing VM Chrome tab; no sign-in/out or transaction initiated"
+  },
+  "prior_campaign_proof": {
+    "siwe_event_id": "J01-siwe-session-recovery-product-navigation-20261122",
+    "siwe_event_result": "PASS NEXI-01-05; partial recovery evidence for NEXI-01-06, which remains NOT_TESTED as a compound criterion.",
+    "siwe_action_summary": [
+      "Observed the protected Finance page after the existing NEXI session expired; MetaMask provider remained connected.",
+      "Used the app's normal Verify Wallet flow. MetaMask presented an off-chain sign-in request from www.nexitrading.app on Ethereum chain 1, message 'Sign in to NEXI.', with 'No changes'; approved via focused keyboard interaction."
+    ],
+    "siwe_screenshot": {
+      "file": "nexi-public-finance-after-siwe-recovery-390x844.png",
+      "sha256": "2db11659f876e202eb7021628f7fc46dc619a1d1a5cb0fbaa6548ab13125517e"
+    },
+    "admin_public_identity_event_id": "J15-admin-public-kyc-identity-crosscheck-20261122",
+    "admin_public_identity_result": "PARTIAL; same authenticated test identity matched in Admin and Public; NEXI-12-03 remains NOT_TESTED because no KYC lifecycle was exercised.",
+    "admin_identity_screenshot": {
+      "file": "nexi-admin-test-wallet-kyc-readonly-1365x723.png",
+      "sha256": "4834e92cabea37db4f21a4b03936bebd1bbc6a2fa71afa5e958a599dbe048538"
+    }
+  },
+  "assessment": "The campaign already recorded a successful off-chain SIWE re-entry on Ethereum mainnet for this dedicated wallet; the Public Finance page returned authenticated. The same wallet maps to Admin Profile 757621. Current Public DOM independently shows that exact wallet and Profile 757621 with Account status Current. This proves the tested sign-in retrieved the correct NEXI user; no new financial or authentication action was needed.",
+  "financial_action": "none"
+}

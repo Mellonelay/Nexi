@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "campaign": "nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443",
+  "criterion_id": "NEXI-02-05",
+  "result": "PASS",
+  "observed_at_utc": "2026-11-23T18:57:47.962825+00:00",
+  "repository_head": "f3515cf76d46ff9814eb6402db41de5b5eafb7c7",
+  "public_url": "https://www.nexitrading.app/dashboard/wallet",
+  "admin_url": "https://admin.nexitrading.app/ledger",
+  "precondition": "Existing authenticated Public and Admin sessions; Public wallet profile 757621; read-only inspection.",
+  "user_action": [
+    "Opened Public Activity History and expanded the two Spot reserve/release entries.",
+    "Located each matching ledger identifier in the authenticated Admin Ledger UI."
+  ],
+  "ui_result": {
+    "public_activity": [
+      {
+        "activity_id": "c6c746c2-9abe-4cc4-b4c6-447f091047f5",
+        "ledger_id": "2ad439ab-b720-414c-af42-69c017d5fb6f",
+        "type": "Spot order reserve or release",
+        "asset": "USDT",
+        "amount": "10.054527939456",
+        "status": "Completed",
+        "timestamp": "2026-11-23 07:53:22"
+      },
+      {
+        "activity_id": "f8c0ec90-b2d8-4a0b-9ff5-ffb8d3ca748d",
+        "ledger_id": "7024aa64-9e56-44ef-b571-4a9985e88e65",
+        "type": "Spot order reserve or release",
+        "asset": "USDT",
+        "amount": "10.054527939456",
+        "status": "Completed",
+        "timestamp": "2026-11-23 07:53:22"
+      }
+    ]
+  },
+  "admin_ledger_readback": [
+    {
+      "ledger_id": "2ad439ab-b720-414c-af42-69c017d5fb6f",
+      "profile_uuid": "3ecc85a9-c243-4da3-bde0-a24bdf532e8f",
+      "account": "SPOT",
+      "asset": "USDT",
+      "posting": "RESERVE",
+      "reference": "GATE2_SPOT_ORDER_RESERVE",
+      "available_delta": "-10.054527939456",
+      "locked_delta": "10.054527939456",
+      "state": "POSTED",
+      "order_reference": "spot:adfadc80-b77e-4a39-8c2c-7aecd6607f7f"
+    },
+    {
+      "ledger_id": "7024aa64-9e56-44ef-b571-4a9985e88e65",
+      "profile_uuid": "3ecc85a9-c243-4da3-bde0-a24bdf532e8f",
+      "account": "SPOT",
+      "asset": "USDT",
+      "posting": "RELEASE",
+      "reference": "GATE2_SPOT_ORDER_CANCEL_RELEASE",
+      "available_delta": "10.054527939456",
+      "locked_delta": "-10.054527939456",
+      "state": "POSTED",
+      "order_reference": "ca9363b7-e5c1-4427-a5ba-7ef9d969d15d"
+    }
+  ],
+  "assessment": "Both Public activity rows expose type, amount, asset, status, time and ledger reference. Their exact ledger IDs resolve in Admin to posted reserve/release rows for the same profile and amount; postings are consistent with the activity labels.",
+  "evidence_files": [
+    "nexi-public-activity-20261123.png",
+    "nexi-admin-ledger-20261123.png"
+  ],
+  "evidence_hashes": {
+    "nexi-public-activity-20261123.png": "91c7212203dbd4d4954e146ca65c3d2822eb488ef5bca2d6af529763cdc39f75",
+    "nexi-admin-ledger-20261123.png": "9bc95a030dbd6085a4921a2db1f70311dc08eb801e9ac22ebacf9769aa29090f"
+  },
+  "evidence_limits": [
+    "No request/response payload was captured; Admin Ledger UI is the observed backend readback.",
+    "Activity Completed and ledger POSTED describe recorded activity/posting; this is not a claim about any trade fill.",
+    "No financial action was initiated during this criterion; historical ledger rows were inspected."
+  ],
+  "status": "PASS"
+}

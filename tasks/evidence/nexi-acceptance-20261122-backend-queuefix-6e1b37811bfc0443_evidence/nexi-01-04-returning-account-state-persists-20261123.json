@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "campaign": "nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443",
+  "criterion_id": "NEXI-01-04",
+  "result": "PASS",
+  "observed_at_utc": "2026-11-23T10:15:02.543335+00:00",
+  "observed_at_yangon": "2026-11-23T16:45:02.543335+06:30",
+  "repository_head": "f3515cf76d46ff9814eb6402db41de5b5eafb7c7",
+  "public_url": "https://www.nexitrading.app/dashboard/settings?tab=profile",
+  "wallet_identity": {
+    "address": "0x339a73c5fb21a2ecf2377826dfa120f128d38b33",
+    "profile_id": "757621",
+    "chain_id": 1
+  },
+  "post_return_profile": {
+    "referral_code": "NEXI757621",
+    "referred_by": "None",
+    "referred_accounts": 0,
+    "referral_earnings": 0,
+    "vip": "Level 0 · Member",
+    "language": "English",
+    "appearance": "Dark",
+    "kyc": "NOT_SUBMITTED"
+  },
+  "post_return_wallet": {
+    "url": "https://www.nexitrading.app/dashboard/wallet",
+    "portfolio_total_estimate_usdt": "5005.39",
+    "portfolio_available_estimate_usdt": "4985.37",
+    "portfolio_locked_estimate_usdt": "20.02",
+    "usdt_available": "4966.7110554638000643",
+    "usdt_locked": "20.019999999999935697",
+    "usdt_total": "4986.731055463799999997",
+    "btc_available": "0.00030396275684355",
+    "wallet_button": "Disconnect wallet 0x339a73c5fb21a2ecf2377826dfa120f128d38b33"
+  },
+  "actions": [
+    "Reloaded the existing Public Wallet route in the persistent VM Chrome and waited for the same designated wallet button and loaded balance UI.",
+    "Navigated to Public Settings > Profile and confirmed the same wallet, profile 757621, chain 1, referral code and default referral/VIP values, English language, Dark appearance, and KYC state.",
+    "No wallet connect/signature, profile edit, financial action, or Admin mutation occurred."
+  ],
+  "readback_gap": "Referral history subsection displayed Loading referral history…; the account identity, referral code, totals, attribution and settings were visible. Admin UUID/tier cross-check is preserved in NEXI-01-02 evidence.",
+  "assessment": "After browser return/reload, the existing test identity, native wallet balances, referral state and preferences remained available. Estimated portfolio value fluctuated with the BTC quote; native balances remained stable during this read.",
+  "evidence_boundary": "UI readback only; no API response body was captured in this slice. Does not claim first-use account creation or account-switch coverage."
+}

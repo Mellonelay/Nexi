@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "campaign": "nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443",
+  "criterion_id": "NEXI-06-01",
+  "journey": "J10",
+  "execution_classification": {
+    "CONFIRMED_EXECUTED": "A real Public UI market buy was submitted once via the normal review and Confirm flow; order ID and durable order history exist.",
+    "CONFIRMED_VERIFIED": "Public Spot Orders shows CANCELED, filled=0, remaining=0.00016 BTC, reserve=0. Public Activity and Ledger show reserve and release; Admin Profile 757621 shows unchanged Spot balances.",
+    "ATTEMPTED_UNCONFIRMED": "The HTTP response status/body was not captured by the listener filter; no explanation for zero-fill cancellation was established. No retry was made.",
+    "RECORDED_ONLY": "No screenshot was captured for this attempt."
+  },
+  "recorded_at_utc": "2026-11-23T08:01:39+00:00",
+  "recorded_at_yangon": "2026-11-23T14:31:39+06:30",
+  "source_revision": "f3515cf76d46ff9814eb6402db41de5b5eafb7c7",
+  "runtime_release_identity": "Campaign manifest reports Public/Admin release f3515cf76d46ff9814eb6402db41de5b5eafb7c7; live release identity was not independently queried during this scenario.",
+  "test_identity": {
+    "admin_profile_id": "757621",
+    "public_wallet": "0x339a73c5fb21a2ecf2377826dfa120f128d38b33"
+  },
+  "pre_state": {
+    "public_spot_available_usdt": "989.3810554638",
+    "source": "Spot order form immediately before submission",
+    "amount_btc": "0.00016",
+    "estimated_total_usdt": "9.8460832"
+  },
+  "ui_action": {
+    "instrument": "BTCUSDT",
+    "side": "BUY",
+    "type": "MARKET",
+    "amount_btc": "0.00016",
+    "flow": "Market selected; amount entered; Review buy order; review dialog confirmed through keyboard Enter; no direct API call."
+  },
+  "outcome": {
+    "order_id": "ca9363b7-e5c1-4427-a5ba-7ef9d969d15d",
+    "correlation_id": "spot:adfadc80-b77e-4a39-8c2c-7aecd6607f7f",
+    "order_status": "CANCELED",
+    "filled_btc": "0",
+    "remaining_btc": "0.00016",
+    "protection_price_usdt": "62778.0216",
+    "reserve_usdt": "0",
+    "trade_history": "No trade for this order ID; only historical trade was shown."
+  },
+  "activity_and_ledger": [
+    {
+      "activity_id": "c6c746c2-9abe-4cc4-b4c6-447f091047f5",
+      "ledger_id": "2ad439ab-b720-414c-af42-69c017d5fb6f",
+      "reference": "GATE2_SPOT_ORDER_RESERVE",
+      "amount_usdt": "10.054527939456",
+      "postings": [
+        {
+          "account": "SPOT",
+          "type": "RESERVE",
+          "available_delta": "-10.054527939456",
+          "locked_delta": "10.054527939456"
+        },
+        {
+          "account": "SPOT",
+          "type": "RELEASE",
+          "available_delta": "10.054527939456",
+          "locked_delta": "-10.054527939456"
+        }
+      ]
+    },
+    {
+      "activity_id": "f8c0ec90-b2d8-4a0b-9ff5-ffb8d3ca748d",
+      "ledger_id": "7024aa64-9e56-44ef-b571-4a9985e88e65",
+      "reference": "GATE2_SPOT_ORDER_CANCEL_RELEASE",
+      "amount_usdt": "10.054527939456",
+      "postings_reference_reserve_id": "2ad439ab-b720-414c-af42-69c017d5fb6f",
+      "order_id": "ca9363b7-e5c1-4427-a5ba-7ef9d969d15d",
+      "correlation_id": "spot:adfadc80-b77e-4a39-8c2c-7aecd6607f7f"
+    }
+  ],
+  "post_state": {
+    "admin_spot_usdt_available": "989.3810554638",
+    "admin_spot_usdt_locked": "0",
+    "admin_spot_btc_available": "0.00014",
+    "public_wallet_activity": "Two Completed reserve/release activities; both expanded with the same order/correlation; no order trade entry observed.",
+    "balance_reconciliation": "USDT available returned to pre-submit value and locked returned to zero; no BTC fill."
+  },
+  "acceptance_status": "NEXI-06-01 remains NOT_TESTED: this criterion aggregates market, limit, and supported stop-order behavior against current Backend contracts. This market attempt ended canceled/unfilled; the expected cancellation policy was not established, and limit/stop coverage is incomplete.",
+  "evidence_limits": [
+    "HTTP response was not captured by the Playwright listener because its URL filter did not match the request path.",
+    "Admin account/balance readback was inspected; an Admin order-list readback for this specific order ID was not established.",
+    "No screenshot captured; UI DOM and Activity/Ledger details were read from the authenticated browser.",
+    "The campaign knowledge source supplies proposed checks, not a runtime contract for this specific market cancellation."
+  ],
+  "do_not_retry_note": "This order outcome is known as CANCELED and financially released. Do not repeat solely to recreate evidence; any future market-fill scenario should be a distinct planned test after reconciliation."
+}

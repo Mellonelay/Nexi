@@ -1,0 +1,187 @@
+{
+  "schema_version": "1.0",
+  "workflow_id": "NEXI-113-single-browser-acceptance-v1",
+  "title": "NEXI consolidated browser acceptance workflow",
+  "created_utc": "2026-11-24",
+  "campaign_id": "nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443",
+  "tracker": "tasks/evidence/nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443.csv",
+  "evidence_directory": "tasks/evidence/nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443_evidence",
+  "controller": {
+    "primary": "Browser by OpenAI extension native JavaScript runtime",
+    "interaction": "extension-native Playwright semantic locators; DOM grounded CUA only when needed",
+    "preserve_session": true,
+    "current_tabs_observed": [
+      {
+        "label": "NEXI Public",
+        "tab_id": "1693106637",
+        "url": "https://www.nexitrading.app/dashboard/wallet",
+        "state": "claimed existing tab; authenticated UI observed"
+      },
+      {
+        "label": "NEXI Admin Control Plane",
+        "tab_id": "1693106582",
+        "url": "https://admin.nexitrading.app/ledger",
+        "state": "claimed existing tab; server-confirmed identity/permissions observed; Super Admin UI"
+      }
+    ],
+    "current_identity_evidence": {
+      "public_profile_id": "757621",
+      "public_account_status": "Current",
+      "public_wallet_connected": true,
+      "admin_role_displayed": "Super Admin",
+      "chain_id": "NOT_VERIFIED",
+      "siwe_signature_state": "NOT_REVERIFIED_IN_THIS_SETUP"
+    }
+  },
+  "execution_order": [
+    "Reconcile tracker statuses and revision-compatible evidence; preserve all prior PASS results absent contradictory evidence.",
+    "Select the next NOT_TESTED read-only criterion by journey priority and existing dependencies; do not reopen unchanged PASS criteria.",
+    "Record precondition and exact criterion; perform UI actions only in the existing claimed tab(s), using semantic locators.",
+    "Capture the smallest sufficient UI/state evidence; use screenshots for visual/responsive/failure evidence and network diagnostics only when criterion needs them.",
+    "For financial criteria, use existing read-only Admin/Backend/Ledger/Events evidence; never infer durable success from a button, HTTP success, or toast.",
+    "Update only the existing CSV row and linked evidence after observation; keep ID, precondition, action, UI result, network/state evidence, status, and evidence location.",
+    "After one focused safe retry, record persistent blockers and continue independent authorized criteria.",
+    "Recount the 113-row tracker, verify evidence references, and save a compact continuation checkpoint."
+  ],
+  "journey_scope": [
+    "Wallet authentication and recovery",
+    "Profile and session identity",
+    "Public navigation and responsive behavior",
+    "Admin permissions and UI behavior",
+    "Market prices and charts",
+    "Spot, Margin, Binary/Options, Convert, Mining, and Loans",
+    "Activity, notifications, and history",
+    "Accessibility, visual quality, errors, and reconnection"
+  ],
+  "authorization": {
+    "allowed": [
+      "existing evidence recovery",
+      "nonfinancial read-only browser verification",
+      "read-only ledger and backend evidence"
+    ],
+    "requires_specific_still_valid_owner_approval": [
+      "funding changes",
+      "trades",
+      "transfers",
+      "withdrawals",
+      "loan disbursements",
+      "wallet signatures",
+      "service changes",
+      "deployment"
+    ],
+    "never": [
+      "extract keys/seeds/credentials/tokens",
+      "simulate signatures",
+      "fabricate authenticated sessions",
+      "retry uncertain financial submission before reconciliation"
+    ]
+  },
+  "status_rules": {
+    "PASS": "Observed expected behavior with criterion-sufficient evidence.",
+    "FAIL": "Observed behavior contradicts the criterion with evidence.",
+    "BLOCKED": "Execution is prevented by a concrete prerequisite or authorization boundary.",
+    "NOT_TESTED": "No current execution evidence; documentation or old procedure alone is insufficient."
+  },
+  "evidence_contract": [
+    "criterion_id",
+    "precondition",
+    "user_action",
+    "ui_result",
+    "network_or_state_evidence",
+    "status",
+    "evidence_location"
+  ],
+  "method_map": {
+    "qa_release": [
+      "critical journey coverage",
+      "risk/dependency regression ordering",
+      "API/data-to-UI reconciliation",
+      "visual/responsive review",
+      "evidence-based defect triage"
+    ],
+    "web_mobile_builder": [
+      "real browser interaction quality",
+      "responsive/reflow and mobile interaction review"
+    ],
+    "ui_ux": [
+      "rendered hierarchy, control state, readability, focus/target geometry, visual consistency"
+    ],
+    "engineering_suite": [
+      "semantic DOM-first browser testing",
+      "one-layer-at-a-time failure diagnosis",
+      "one focused retry then classify"
+    ],
+    "selective_intelligence": [
+      "resume first unproven transition",
+      "preserve state",
+      "avoid duplicated discovery and unsupported completion claims"
+    ],
+    "annotations_extensibility": [
+      "apply only if annotation controls or feedback surface is part of an acceptance criterion; otherwise not applicable"
+    ],
+    "exa": [
+      "official primary-source lookup only for uncertain standards or API behavior; avoid repeated unchanged research"
+    ]
+  },
+  "responsive_reference": [
+    "https://www.w3.org/WAI/WCAG22/Understanding/reflow",
+    "https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum"
+  ],
+  "current_frontier": {
+    "checkpoint_status_counts": {
+      "total": 113,
+      "PASS": 42,
+      "FAIL": 11,
+      "NOT_TESTED": 59,
+      "BLOCKED": 1
+    },
+    "next": "Continue the next authorized read-only NOT_TESTED criterion from the existing 18-journey tracker. NEXI-11-07 has partial recovery evidence only (Forex UI returned from earlier Error to Live after route re-entry); keep NOT_TESTED until explicit loading/empty/error/reconnect coverage is sufficient. NEXI-14-04 remains partial; safe-area/device emulation outstanding.",
+    "execution_this_setup": "Extension-native browser control resumed on mobile-sized Public. At 390×667 CSS px, authenticated profile 757621 was observed; Loans and Dashboard/Forex navigation worked; USD/HKD and USD/CHF rendered Live on return. No financial actions, signatures, or source changes.",
+    "latest_completed": [
+      {
+        "criterion": "NEXI-02-02",
+        "status": "PASS",
+        "evidence": "tasks/evidence/nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443_evidence/nexi-02-02-zero-balance-wording-20261124.json",
+        "basis": "52 zero-balance rows label market-only/no wallet balance; mobile 390 px recheck"
+      },
+      {
+        "criterion": "NEXI-02-07",
+        "status": "PASS",
+        "evidence": "tasks/evidence/nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443_evidence/nexi-02-07-conversion-asset-restrictions-20261124.json",
+        "basis": "UI source/destination restrictions and currency catalog match"
+      },
+      {
+        "criterion": "NEXI-11-02",
+        "status": "PASS",
+        "evidence": "tasks/evidence/nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443_evidence/nexi-11-02-market-symbol-reconciliation-20261124.json",
+        "basis": "53 normalized UI symbols equal live GET /market/prices set"
+      },
+      {
+        "criterion": "NEXI-08-07",
+        "status": "PASS",
+        "evidence": "tasks/evidence/nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443_evidence/nexi-08-07-product-empty-and-loading-states-20261124.json",
+        "basis": "Mining/Loan loading cleared; available, pending-review and no-active-repayment states distinct"
+      },
+      {
+        "criterion": "NEXI-14-05",
+        "status": "PASS",
+        "evidence": "tasks/evidence/nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443_evidence/nexi-14-05-accessibility-mobile-20261124.json",
+        "basis": "Four semantic labels, Tab focus order, and 44 px mobile target geometry verified"
+      }
+    ],
+    "partial_observations": [
+      {
+        "criterion": "NEXI-11-07",
+        "status": "NOT_TESTED",
+        "evidence": "tasks/evidence/nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443_evidence/nexi-11-07-market-recovery-partial-20261124.json",
+        "basis": "Earlier Forex Error rows rendered Live after returning via app menu; explicit reconnect and all loading/empty/error paths not exercised."
+      },
+      {
+        "criterion": "NEXI-14-04",
+        "status": "NOT_TESTED",
+        "evidence": "tasks/evidence/nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443_evidence/nexi-14-04-mobile-responsive-partial-20261124.json",
+        "basis": "Mobile layout/navigation inspected at 390×843 and 390×667; safe-area/physical device emulation remains untested."
+      }
+    ]
+  }
+}

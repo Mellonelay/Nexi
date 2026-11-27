@@ -1,0 +1,308 @@
+{
+  "run_id": "nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443",
+  "created_at_utc": "2026-11-22T11:26:29.818137+00:00",
+  "canonical_tracker": "/home/mellonelay1999/workspaces/Nexi/docs/quality/NEXI_113_ACCEPTANCE_TRACKER_20261101.csv",
+  "current_tracker": "/home/mellonelay1999/workspaces/Nexi/tasks/evidence/nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443.csv",
+  "current_tracker_actual_path": "/home/mellonelay1999/workspaces/Nexi/tasks/evidence/nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443.csv",
+  "tracker_sha256": "cf1b67e653f4028444ee8dc52a7fc5dec6fd33ae8f9dc370c9d8ce65372dabd6",
+  "criterion_count": 113,
+  "status_counts": {
+    "PASS": 37,
+    "FAIL": 11,
+    "NOT_TESTED": 64,
+    "BLOCKED": 1
+  },
+  "baseline_git_head": "f3515cf76d46ff9814eb6402db41de5b5eafb7c7",
+  "backend_release_reported": "nexi-backend-queuefix-6e1b37811bfc0443",
+  "admin_release": {
+    "RELEASE_SHA": "f3515cf76d46ff9814eb6402db41de5b5eafb7c7",
+    "NEXI_RELEASE_SHA": "111a5010f04a6592c290b0b0bc93240ab0cec69b"
+  },
+  "public_release": "f3515cf76d46ff9814eb6402db41de5b5eafb7c7",
+  "admin_account": "authenticated Admin; profile_id 757621",
+  "public_wallet": "dedicated test wallet 0x339a73c5fb21a2ecf2377826dfa120f128d38b33; authenticated during observations",
+  "acceptance_status": "IN_PROGRESS",
+  "history_policy": "All 113 fresh-campaign criteria start NOT_TESTED; no prior result inherited.",
+  "backend_release": "nexi-backend-queuefix-6e1b37811bfc0443",
+  "evidence_folder": "/home/mellonelay1999/workspaces/Nexi/tasks/evidence/nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443_evidence",
+  "event_log": "/home/mellonelay1999/workspaces/Nexi/tasks/evidence/nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443_evidence/events.jsonl",
+  "journey_coverage": {
+    "J01": "PARTIAL; same dedicated wallet authenticated on Ethereum mainnet; current expired NEXI session recovered through the normal off-chain SIWE flow (MetaMask displayed www.nexitrading.app, chain 1, Sign in to NEXI, no changes); authenticated Finance returned with the same wallet; Spot/Margin, Options and Finance navigation caused no additional signing prompt. Account switching/disconnect and remaining onboarding fields untested. First unfinished criterion NEXI-01-01 now PASS: successful SIWE recovery retrieved the same Public wallet and Admin Profile 757621; remaining J01 onboarding/account-switch criteria remain incomplete. NEXI-01-02 PASS from current Public profile and Admin UUID/T0 readback; Admin VIP/referral detail remained loading, and first-use account creation was not replayed. NEXI-01-03 PASS via reused evidence showing all five provisioned Public account views; transfer execution is not claimed. NEXI-01-04 PASS: after reload and Public route navigation, the same wallet/profile retained native balances, referral attribution/code/totals, VIP level and English/Dark settings; Admin identity match reused from NEXI-01-02. Referral history list loading remains a gap. NEXI-01-06 FAIL: active session was revoked through Security UI; protected settings then required reauthentication. Existing MetaMask-connected wallet selected from normal Connect UI, but Connecting… remained through a bounded wait. Provider option bounds were outside viewport. Account switching and explicit wallet disconnect remain untested; extension warnings observed are not proof of cause. NEXI-01-07 PASS: public Quotes Hub/market cards remained accessible after NEXI auth was revoked; protected Settings required an authenticated session. Provider connection was not conflated with app auth. NEXI-01-08 FAIL: existing MetaMask provider selection remained at Connecting… and provider controls were clipped outside viewport; wrong-network and rejected-signature branches remain untested.",
+    "J02": "PARTIAL; authenticated Public routes, Quotes Hub search/categories/asset navigation and actual Admin sidebar navigation through Clients, Trading/Binary Settings, Products/Mining and Loans were exercised; financial actions and remaining workspaces remain untested.",
+    "J03": "BLOCKED; no campaign-scoped credit amount",
+    "J04": "PARTIAL; account balances were reconciled across Funding, Spot, Margin, Options and Finance. After the new Spot cancellation, Public Spot refresh and Admin full-page reload/profile reopen both showed Spot USDT 989.3810554638 available / 0 locked. Broader wallet/account coverage remains incomplete. NEXI-02-05 PASS: Public reserve/release Activity entries matched exact Admin posted Ledger IDs, asset/amount and profile; no new financial action.",
+    "J05": "PARTIAL; Public deposit assets/networks match Admin-enabled entries; current address is TEST_ONLY/PRE-LIVE and NEXI-03-02 remains FAIL; no claim submitted",
+    "J06": "PARTIAL; Public network, fee, limits and requested-amount debit semantics inspected for BTC/USDT; below-min validation observed; no withdrawal request/review/approval/broadcast was submitted",
+    "J07": "PARTIAL; account transfer UI inspected; overbalance draft leaves Confirm enabled without client message, but the transfer request was not submitted; insufficient-funds server response and readback remain blocked by lack of approved transaction scope Insufficient-balance attempt submitted once via Public Transfer (Funding→Spot, USDT 1000.01); Nginx recorded POST /financial/account-transfers 401 at 2026-11-22 20:54:09 UTC. Public UI stayed Sending, then showed an unresolved-outcome guard. Recheck transfer invoked the UI readback (GET /wallet/activity 200, activities=[]); app still says do not send again and contact Support. Fresh Admin balances and Public USDT/locked balances remained unchanged; a valid business-level insufficient-balance rejection was not demonstrated. NEXI-04-03 FAIL; no second transfer sent.",
+    "J08": "PASS for conversion acceptance: expired quote c01010d4... was not accepted; quote fa21c480... was accepted through Public UI (201, replayed=false); Activity d1c2062f... Completed and Ledger ede566ae... expanded to exact 10 USDT debit plus 0.00016396275684355 BTC credit; refreshed Public totals and Admin Profile 757621 account readback reconcile. effective quote rate equals output/input.",
+    "J09": "PARTIAL; new 1 USDT BTCUSDT LONG (30s, CALL) and SHORT (30s, PUT) each submitted once via Public UI with replayed=false. LONG position 601f6f7f-e6cb-4e29-b4d3-42af9e6cc074 settled LOSS (60994.21→60991.1); SHORT 4aab72d7-02c7-40a7-903d-bc1d2feb4f34 settled LOSS (61000.06→61008.23). Public History, Activity with reserve/release Ledger postings, Notifications and Admin History & Settlements reconcile both to Profile 3ecc85a9-c243-4da3-bde0-a24bdf532e8f; Admin Option balance after both is 997 USDT available/0 locked. PASS: NEXI-05-02, 05-05, 05-07, 05-08. FAIL NEXI-05-06: live Active-trades state stayed Settling/Result pending until route revisit after backend settlement.",
+    "J10": "PARTIAL; BUY LIMIT BTCUSDT 0.0001 @ 55000 order 765ce9ab-e24c-435a-b446-b3b58fb186ca was submitted through Public UI (201), then canceled through the normal UI (POST /spot/cancel 201, CANCELED, replayed=false). Public Orders history, Activity 0d3d8ac9-561d-4b79-82f7-cc977e286381, reserve/release Ledger de3d4ac7-dfe4-44d1-a15a-2e3a1cd6de6e, refreshed Public Spot balances and reloaded Admin Profile 757621 all reconcile. Protected order 1a95a4af-f902-46aa-8da7-6defa9cf8634 remains OPEN and untouched. Market-order and fill scenarios remain untested. Market BUY 0.00016 BTC via Public UI created order ca9363b7-e5c1-4427-a5ba-7ef9d969d15d; Orders shows CANCELED/0 fill, Activity+Ledger show 10.054527939456 USDT reserve then full release, Admin balance unchanged. HTTP response not captured; no retry. J10 remains PARTIAL and NEXI-06-01 remains NOT_TESTED pending current-contract and limit/stop coverage.",
+    "J11": "PARTIAL; retained pre-existing LONG 2x PENDING (10 USDT collateral/10 USDT liability). New 1 USDT LONG 2x position 6472e64a-b3c0-41cc-9ef5-ea4c84e7f59d remained PENDING; Public UI Cancel pending entry returned 201 CLOSED, repayment posting 839702c8-b3ab-4186-9087-533a53eb60f4, replayed=false. Public Activity shows cancellation and repayment Completed; refreshed Admin Profile 757621 now reconciles Margin 989.9800000000000643 available / 20.019999999999935697 locked. Older 10 USDT pending position unchanged. FAIL NEXI-07-04: active close, accrued interest and liquidation were unavailable because new position remained pending.",
+    "J12": "PARTIAL; Admin/Public plan terms align. Public Mining readback shows locked principal 0, one lifecycle subscription (completed 10 USDT, reward 0.35), reward history and three available products; purchase/redemption and Admin customer-specific lifecycle reconciliation not exercised.",
+    "J13": "PARTIAL; loan plan terms match Admin/Public; current authenticated Admin Loans view displays synthetic and test-only application fixtures with review controls. No approval/rejection clicked; Public application/eligibility and lifecycle not tested.",
+    "J14": "PARTIAL; one notification marked read via UI, read endpoint 201, unread count remained 17 after reload, Wallet/Trading filters exercised; producer coverage/Admin reconciliation remain untested",
+    "J15": "PARTIAL; identity/mainnet/KYC states visible; Admin lookup matched wallet/Profile ID and showed UNVERIFIED vs Public NOT_SUBMITTED (same broad unverified state; lifecycle and exact label mapping untested); current/revoked sessions inspected; Public language preference was changed to Español, persisted after reload, then restored to English and persisted; timezone/currency/notification preferences untested.",
+    "J16": "PARTIAL; Admin network catalog read-only compared to Public USDT deposit networks; no configuration edits; other Admin governance controls untested",
+    "J17": "PARTIAL; prior campaign evidence records Public offline→online recovery. During this continuation, a direct route transition briefly rendered Connect/chooser/loading, then the same original wallet, authenticated notifications and current Mining data returned without a new signature. Full duplicate-submission/reconnect matrix remains incomplete.",
+    "J18": "PARTIAL — component release identity and active process state verified; no settlement/economic proof NEXI-15-06 PASS: existing authenticated Public and server-authorized Admin sessions rendered account-scoped data for the same profile; no route-load-only or HTTP-only claim."
+  },
+  "findings": [
+    {
+      "id": "NEXI-03-02",
+      "severity": "HIGH",
+      "status": "CONFIRMED_UI_FAIL",
+      "summary": "Public deposit destination is marked TEST_ONLY/PRE-LIVE; warning says never send real funds."
+    },
+    {
+      "id": "NEXI-12-01",
+      "severity": "MEDIUM",
+      "status": "CONFIRMED_UI_FAIL",
+      "summary": "Admin profile Last Login shows 1/1/1970 despite a current non-revoked session created and used on 2026-11-22."
+    },
+    {
+      "id": "NEXI-14-02",
+      "severity": "LOW",
+      "status": "CONFIRMED_UI_FAIL",
+      "summary": "Transfer confirmation remains disabled at amount 0 with no visible reason."
+    },
+    {
+      "id": "NEXI-06-07",
+      "status": "FAIL",
+      "summary": "Public Spot trade history shows UNKNOWN for an actual filled BTCUSDT trade while Wallet Activity shows the related settlement Completed; saved as UI contract failure, source root cause not yet investigated."
+    },
+    {
+      "id": "NEXI-06-03",
+      "severity": "MEDIUM",
+      "status": "CONFIRMED_UI_FAIL",
+      "summary": "Public Spot allows a Sell Limit quantity far above available BTC into a Review dialog with Confirm enabled and no visible insufficient-balance warning. Confirm was not activated; backend rejection is untested."
+    },
+    {
+      "id": "NEXI-05-01",
+      "severity": "HIGH",
+      "status": "CONFIRMED_UI_FAIL",
+      "summary": "Admin says no global Binary policy is saved and exposes blank payout/stake controls while Public Options renders active 85% payout, 1–1000 USDT limits and all five durations. Admin pair Inspect states the shared global settings control these values. No setting was changed; backend source of effective values remains unverified."
+    },
+    {
+      "id": "NEXI-04-03",
+      "severity": "MEDIUM",
+      "status": "CONFIRMED_UI_FAIL",
+      "summary": "The insufficient-balance transfer UI did not show an actionable insufficient-balance rejection. The submitted request received HTTP 401; the UI remained unresolved after Recheck and blocks repeat. Public activity returned empty and refreshed Admin/Public balances were unchanged; the specific business validation path remains unproven."
+    },
+    {
+      "id": "NEXI-05-06",
+      "severity": "MEDIUM",
+      "status": "CONFIRMED_UI_FAIL",
+      "summary": "A 30-second SHORT position settled LOSS in Admin/Public Activity at 21:42:50 UTC, but the Public live Active-trades view kept showing Settling/Result pending through 21:46:50. It showed the terminal Loss only after navigating away and returning. Same position/profile was reconciled; no retry or correction was made."
+    },
+    {
+      "id": "NEXI-07-04",
+      "severity": "HIGH",
+      "status": "CONFIRMED_UI_FAIL",
+      "summary": "A newly submitted 1 USDT isolated LONG 2x remained PENDING rather than reaching an active state with close/interest controls. Public UI pending-cancel returned CLOSED and repayment posting 839702c8-b3ab-4186-9087-533a53eb60f4; Public Activity and refreshed Admin Profile 757621 balances reconcile (989.9800000000000643 available / 20.019999999999935697 locked). Existing 10 USDT PENDING position preserved. Active close, interest and liquidation remain untested."
+    }
+  ],
+  "updated_at_utc": "2026-11-23T11:11:36.090827+00:00",
+  "mobile_viewport_matrix": {
+    "status": "EMULATED_PARTIAL",
+    "viewports": [
+      "320x480",
+      "320x568",
+      "360x640",
+      "390x844",
+      "412x932",
+      "430x932",
+      "440x956"
+    ],
+    "horizontal_page_overflow_observed": false,
+    "real_wallet_dapp_browser": "REAL_DAPP_BROWSER_NOT_TESTED",
+    "screenshot": "tasks/evidence/nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443_evidence/public-spot-320x480-mobile.png",
+    "visual_followup": "BTC/USDT pair label wraps in compact header at 320x480; not yet classified as a canonical criterion failure"
+  },
+  "ux_overlay_coverage": {
+    "UX-01": "PARTIAL — seven prescribed CSS viewports emulated; no document-wide horizontal overflow observed; 320x480 screenshot captured; pair label wrapping noted; real Android wallet DApp browser and keyboard/safe-area behavior remain untested.",
+    "UX-02": "PARTIAL — Spot review and actual limit-order confirmation/placement observed; cancellation confirmation remains unresolved in an open browser dialog. No screenshot captured for this order; other product workflows remain incomplete.",
+    "UX-03": "NOT_TESTED — research Force WIN/LOSS and simulated chart workflow not exercised.",
+    "UX-04": "PARTIAL — deposit destination and validation preflight inspected; no claim or proof submitted.",
+    "UX-05": "PARTIAL — Admin Loans and Public Mining views inspected; three active catalog products and a completed 10 USDT subscription are visible with locked principal 0. Application, purchase, decision/readback workflows remain incomplete.",
+    "UX-06": "PARTIAL — notifications/history and Offline→online recovery inspected; unread/read mutation and SIWE account changes not exercised.",
+    "UX-07": "PARTIAL — Admin workspaces and selected user/KYC/network views inspected; table filter/sort and authorized review actions remain incomplete."
+  },
+  "last_updated_at_utc": "2026-11-23T11:11:36.090827+00:00",
+  "counts": {
+    "PASS": 35,
+    "FAIL": 11,
+    "NOT_TESTED": 66,
+    "BLOCKED": 1
+  },
+  "last_updated_utc": "2026-11-23T11:11:36.090827+00:00",
+  "updated_criteria": [
+    "NEXI-09-02",
+    "NEXI-05-01",
+    "NEXI-04-03",
+    "NEXI-04-08",
+    "NEXI-05-02",
+    "NEXI-05-05",
+    "NEXI-05-06",
+    "NEXI-05-07",
+    "NEXI-05-08",
+    "NEXI-07-04",
+    "NEXI-01-01",
+    "NEXI-01-02",
+    "NEXI-01-03",
+    "NEXI-01-04",
+    "NEXI-01-06",
+    "NEXI-01-07",
+    "NEXI-01-08"
+  ],
+  "reconciliation_checkpoint": {
+    "cutoff_utc": "2026-11-22T23:27:24+00:00",
+    "cutoff_yangon": "2026-11-23T05:57:24+06:30",
+    "tracker_rows": 113,
+    "unique_criterion_ids": 113,
+    "status_counts": {
+      "PASS": 29,
+      "FAIL": 9,
+      "BLOCKED": 2,
+      "NOT_TESTED": 73
+    },
+    "event_count": 53,
+    "screenshots_preserved_at_checkpoint": 98,
+    "appended_event_id": "J10-spot-limit-order-open-cancel-dialog-unresolved-20261123",
+    "spot_evidence_file": "tasks/evidence/nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443_evidence/spot-limit-order-open-cancel-dialog-unresolved-20261123.json",
+    "spot_evidence_sha256": "9ebff32d3a679c21d2dbf66772524f8eff8e5ac27ae6fccd676042a9d0046d76",
+    "status_changed_by_reconciliation": false
+  },
+  "event_count": 62,
+  "last_execution_blocker": {
+    "id": "browser-extension-runtime-unavailable-20261124",
+    "recorded_at_utc": "2026-11-24T01:59:05.891423+00:00",
+    "path": "tasks/evidence/nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443_evidence/browser-extension-runtime-unavailable-20261124.json",
+    "status": "RESOLVED",
+    "resolved_at_utc": "2026-11-24T02:11:58.534530+00:00",
+    "resolution": "Browser extension native JS became callable again; existing exact Public/Admin tab handles were verified by openTabs() and read-only DOM snapshots."
+  },
+  "automation_workflow": {
+    "workflow_id": "NEXI-113-single-browser-acceptance-v1",
+    "status": "ACTIVE",
+    "activated_at_utc": "2026-11-24T02:11:58.534530+00:00",
+    "campaign_id": "nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443",
+    "criterion_source": "tasks/evidence/nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443.csv",
+    "evidence_source": "tasks/evidence/nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443_evidence",
+    "primary_controller": {
+      "plugin": "Browser by OpenAI — control-browser",
+      "runtime": "native JavaScript browser extension",
+      "session_name": "🔎 NEXI Acceptance Recovery",
+      "methods": [
+        "browser.user.openTabs()",
+        "reuse exact claimed tab objects",
+        "tab.playwright.domSnapshot()",
+        "semantic Playwright locators",
+        "tab.cua only for visual-only interaction",
+        "tab.screenshot() only where visual evidence is required"
+      ]
+    },
+    "bound_tabs": [
+      {
+        "name": "NEXI Public",
+        "tab_id": "1693106637",
+        "url": "https://www.nexitrading.app/dashboard/wallet",
+        "state": "existing authenticated wallet/profile data rendered"
+      },
+      {
+        "name": "NEXI Admin Control Plane",
+        "tab_id": "1693106582",
+        "url": "https://admin.nexitrading.app/ledger",
+        "state": "authenticated; Admin API reports identity and permissions confirmed by server"
+      }
+    ],
+    "workflow_steps": [
+      {
+        "step": 1,
+        "name": "Resume and reconcile",
+        "method": "Read the current tracker/manifest and compatible evidence; preserve existing outcomes and exact browser session."
+      },
+      {
+        "step": 2,
+        "name": "Map and prioritize",
+        "method": "Use the existing 113 criterion IDs and 18 journey definitions; prioritize authenticated read-only P0/P1 coverage, then responsive/accessibility and remaining nonfinancial criteria."
+      },
+      {
+        "step": 3,
+        "name": "Execute criterion",
+        "method": "Capture precondition, perform one semantic UI action sequence, assert the observable result, and collect the cheapest sufficient evidence. Serialize state-changing interactions; batch only independent reads."
+      },
+      {
+        "step": 4,
+        "name": "Reconcile data",
+        "method": "For API/data criteria, correlate Public projection with Admin/Backend durable readback where applicable. HTTP 200/toast/activity status alone is not economic finality."
+      },
+      {
+        "step": 5,
+        "name": "Review visual/mobile",
+        "method": "For responsive criteria inspect reflow, overflow, short-height usability, focus, labels, touch targets and safe-area styling; capture one screenshot per useful state and record device emulation facts."
+      },
+      {
+        "step": 6,
+        "name": "Triage failures",
+        "method": "Identify exact layer and operation, preserve evidence, make at most one safe supported retry, then record blocker/failure and continue unrelated authorized work."
+      },
+      {
+        "step": 7,
+        "name": "Record and reconcile",
+        "method": "Append criterion JSON and JSONL event using ID/precondition/action/UI result/network or state evidence/status/evidence path; atomically update only changed tracker rows, counts and tracker hash."
+      },
+      {
+        "step": 8,
+        "name": "Close frontier",
+        "method": "Report CONFIRMED, EXECUTED, PASS, FAIL, BLOCKED and NOT_TESTED separately; retain smallest remaining authorized frontier."
+      }
+    ],
+    "evidence_contract": [
+      "criterion_id",
+      "precondition",
+      "user_action",
+      "ui_result",
+      "network_or_state_evidence",
+      "status",
+      "evidence_location"
+    ],
+    "status_rules": {
+      "PASS": "all required observable outcomes for that criterion are evidenced",
+      "FAIL": "a required outcome is contradicted by observed evidence",
+      "BLOCKED": "required evidence/action is unavailable or outside authorization",
+      "NOT_TESTED": "criterion has not been executed to its acceptance contract"
+    },
+    "scope": {
+      "authorized": "existing-evidence recovery and nonfinancial/read-only acceptance",
+      "financial_operations": "require a specific current owner approval before action",
+      "wallet_signature": "owner handles through MetaMask; never simulate or request secrets",
+      "source_changes": "not part of this workflow setup",
+      "deployment_or_service_change": "not authorized by this workflow"
+    },
+    "failure_recovery": {
+      "retry_limit": 1,
+      "after_unknown_submission": "reconcile state before any retry",
+      "browser_failure": "preserve browser profile/session; no competing browser; inspect supported recovery and continue independent read-only work"
+    },
+    "skill_methods": {
+      "qa_release": "journey mapping, risk-based regression selection, UI/API/ledger reconciliation, responsive review and evidence-based failure triage integrated from the user-provided acceptance brief",
+      "web_mobile": "real browser interaction and responsive/short-height review integrated into the same criteria queue",
+      "ui_ux": "visible hierarchy, control labels, focus, touch-target, value readability and state feedback assessed only against rendered evidence",
+      "engineering_suite": "native browser testing and bounded debugging/recovery methods applied",
+      "selective_intelligence": "preserve resumed state, avoid duplicate work and separate proof from inference",
+      "annotations_extensibility": "available only for a specific annotation-control integration or requested annotation feedback; no product annotation changes in this acceptance run",
+      "exa": "official W3C WCAG 2.2 Reflow and Target Size guidance located for responsive/accessibility acceptance"
+    },
+    "references": [
+      {
+        "source": "W3C WCAG 2.2 Understanding SC 1.4.10 Reflow",
+        "url": "https://www.w3.org/WAI/WCAG22/Understanding/reflow"
+      },
+      {
+        "source": "W3C WCAG 2.2 Understanding SC 2.5.8 Target Size (Minimum)",
+        "url": "https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum"
+      }
+    ],
+    "safety_note": "No new transaction, wallet reconnect, signature, source edit, build, deployment or service action was run to activate this workflow."
+  }
+}

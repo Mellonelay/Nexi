@@ -1,0 +1,23 @@
+{
+  "criterion_id": "NEXI-11-02",
+  "observed_date": "2026-11-24",
+  "precondition": "Authenticated Public session; market categories inspected at mobile viewport 390\u00d7667 CSS px.",
+  "user_action": [
+    "Opened Dashboard / Quotes Hub and selected Crypto, Metals, Forex, and Stocks in sequence.",
+    "Collected each visible instrument pair from the DOM and normalized separators.",
+    "Read the public GET /market/prices endpoint from the authorized VM route and compared the symbol sets."
+  ],
+  "ui_result": "Public listed 53 instruments by category: Crypto 17, Metals 7, Forex 9, Stocks 20. Every normalized UI pair matched the live API symbol set; no missing or extra symbols. Icon labels, displayed pair, and name were present in the DOM for the inspected rows.",
+  "network_or_state_evidence": "GET https://api.nexitrading.app/market/prices returned HTTP 200 JSON with 53 symbols. UI/API set difference was empty in both directions. Two Forex rows (USD/HKD, USD/CHF) displayed Error; 16 stock rows displayed Closed. Those states are not treated as symbol-mapping failures and are carried forward for NEXI-11-07 recovery verification.",
+  "status": "PASS",
+  "evidence_location": "tasks/evidence/nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443_evidence/nexi-11-02-market-symbol-reconciliation-20261124.json",
+  "api_symbols_count": 53,
+  "ui_counts": {
+    "Crypto": 17,
+    "Metals": 7,
+    "Forex": 9,
+    "Stocks": 20
+  },
+  "api_missing_from_ui": [],
+  "ui_not_in_api": []
+}

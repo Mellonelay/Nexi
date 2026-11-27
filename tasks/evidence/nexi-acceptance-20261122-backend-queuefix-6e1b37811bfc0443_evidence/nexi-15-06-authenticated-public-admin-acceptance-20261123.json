@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "campaign": "nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443",
+  "criterion_id": "NEXI-15-06",
+  "result": "PASS",
+  "observed_at_utc": "2026-11-23T18:57:47.962825+00:00",
+  "repository_head": "f3515cf76d46ff9814eb6402db41de5b5eafb7c7",
+  "public_url": "https://www.nexitrading.app/dashboard/wallet",
+  "admin_url": "https://admin.nexitrading.app/ledger",
+  "precondition": "Reused the existing signed-in Chrome profile and exact claimed Public/Admin tabs; no wallet reconnection or signature requested.",
+  "user_action": [
+    "Read the Public wallet page after account data had loaded.",
+    "Read the authenticated Admin Ledger page and previously opened read-only profile identity dialog."
+  ],
+  "identity_evidence": {
+    "public_profile_id": "757621",
+    "admin_profile_id": "757621",
+    "admin_internal_uuid": "3ecc85a9-c243-4da3-bde0-a24bdf532e8f",
+    "admin_wallet": "0x339a73c5fb21a2ecf2377826dfa120f128d38b33",
+    "admin_permission_state": "Admin UI states identity and permissions are confirmed by server",
+    "public_session_state": "Existing connected wallet and account-backed wallet data rendered; no new SIWE signature performed"
+  },
+  "ui_result": "Authenticated customer data was rendered in Public and an authorized, data-bearing Admin ledger view was rendered for the matching profile. This is browser acceptance evidence beyond a route load or HTTP 200.",
+  "evidence_files": [
+    "nexi-01-02-profile-initialization-readback-20261123.json",
+    "nexi-public-activity-20261123.png",
+    "nexi-admin-ledger-20261123.png"
+  ],
+  "evidence_limits": [
+    "This read-only observation does not repeat wallet provider selection, SIWE signing, account switching or session revocation recovery.",
+    "Backend authorization is evidenced by the Admin UI server-confirmed identity/permissions message and account-scoped ledger data; no auth token or credential was inspected."
+  ],
+  "status": "PASS"
+}

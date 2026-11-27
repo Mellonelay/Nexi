@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "campaign": "nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443",
+  "criterion_id": "NEXI-01-06",
+  "result": "FAIL",
+  "observed_at_utc": "2026-11-23T11:09:14.513732+00:00",
+  "observed_at_yangon": "2026-11-23T17:39:14.513732+06:30",
+  "repository_head": "f3515cf76d46ff9814eb6402db41de5b5eafb7c7",
+  "browser_route": "ChatGPT Browser extension claimed the exact user NEXI tab; Chrome family; existing VM profile. Tab left at https://www.nexitrading.app/dashboard.",
+  "identity": {
+    "wallet": "0x339a73c5fb21a2ecf2377826dfa120f128d38b33",
+    "profile_id": "757621",
+    "chain_id": 1
+  },
+  "session_expiration": {
+    "ui_action": "Security > Sessions > first and only enabled Revoke, associated with session 332d32b6-ad9c-4ddf-9f36-5c169387a618",
+    "result": "Authenticated settings content changed to Protected account / Verify your Ethereum wallet; header wallet remained provider-connected."
+  },
+  "reconnect": {
+    "method": "Public dashboard normal wallet chooser; selected the existing MetaMask Connected provider by keyboard activation; waited up to 15 seconds for Connecting state to resolve.",
+    "observed": "UI remained Connecting… with provider choices disabled; no authenticated NEXI session returned during the bounded wait.",
+    "layout": "Provider button bounds were above the viewport (MetaMask button y=-66, Coinbase button y=-14); screenshot preserves the current page state."
+  },
+  "uncovered": "Account switching and explicit wallet disconnect were not attempted in this slice.",
+  "console_observation": "MetaMask content-script emitted MaxListenersExceededWarning and ObjectMultiplex orphaned-data warnings during this period. This is correlation only; root cause is not established.",
+  "evidence_boundary": "FAIL is limited to the observed normal reconnect path remaining at Connecting and not restoring authenticated NEXI state. It does not establish whether the delay is in the wallet extension, browser transport, or application auth. No financial transaction or profile edit occurred.",
+  "evidence_files": [
+    "nexi-01-06-session-expiry-reconnect-stalled-20261123.json",
+    "nexi-01-06-session-expiry-reconnect-stalled-20261123.jpg"
+  ]
+}

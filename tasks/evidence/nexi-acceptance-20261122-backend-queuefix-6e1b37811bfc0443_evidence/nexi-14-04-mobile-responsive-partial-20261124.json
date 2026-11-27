@@ -1,0 +1,15 @@
+{
+  "criterion_id": "NEXI-14-04",
+  "observed_date": "2026-11-24",
+  "precondition": "Public Wallet and Quotes Hub displayed in mobile-sized Chrome extension viewport.",
+  "user_action": [
+    "Set measured viewport to 390\u00d7843 CSS px and inspected page/body width and primary navigation.",
+    "Set measured viewport to 390\u00d7667 CSS px and rechecked page/body width and primary navigation.",
+    "Selected offscreen Finance wallet tab via semantic locator; it scrolled into view and became selected."
+  ],
+  "ui_result": "At 390 px width, document/body width remained 390 px (no page-level horizontal overflow). At 667 px height, the five-item bottom navigation remained visible at bottom, with targets approximately 71\u00d744 CSS px. Wallet account tablist had a 344 px viewport and 447 px scroll width; Finance was reachable and selected by semantic interaction.",
+  "network_or_state_evidence": "DOM geometry only. Safe-area insets were not emulated; browser viewport override is not a physical mobile device emulation.",
+  "status": "NOT_TESTED",
+  "evidence_location": "tasks/evidence/nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443_evidence/nexi-14-04-mobile-responsive-partial-20261124.json",
+  "limitation": "Partial responsive evidence only; safe-area inset and real device-emulation checks remain outstanding."
+}

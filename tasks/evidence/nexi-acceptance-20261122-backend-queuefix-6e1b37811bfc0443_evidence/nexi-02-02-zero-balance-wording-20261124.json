@@ -1,0 +1,58 @@
+{
+  "criterion_id": "NEXI-02-02",
+  "observed_date": "2026-11-24",
+  "source_revision": "production UI; release hash not captured in this browser-only run",
+  "precondition": "The existing Public site session hydrated to profile 757621 with Account status: Current and an already connected wallet. No wallet reconnection or signature was initiated.",
+  "user_action": [
+    "Opened the existing NEXI Public wallet URL in a temporary tab in the same Chrome extension instance after the supplied tab reference failed exact provider identity matching.",
+    "After initial account-unavailable shell, used the visible Dashboard navigation and then Wallet navigation to allow the existing session state to hydrate.",
+    "Inspected the Wallet asset list using the visible DOM."
+  ],
+  "ui_result": "Wallet page displayed profile 757621 as Current. 52 asset rows rendered the exact label \u201cMarket quote only \u00b7 no wallet balance\u201d with dash values instead of describing these rows as unsupported or unverified wallets. BTC and USDT rows showed balances. No financial action was taken.",
+  "network_or_state_evidence": "Browser DOM state only: Account status: Current; 52 exact matches for \u201cMarket quote only \u00b7 no wallet balance\u201d; wallet URL https://www.nexitrading.app/dashboard/wallet; extension tab 1693106646. API request/response payloads were not captured.",
+  "status": "PASS",
+  "evidence_location": "tasks/evidence/nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443_evidence/nexi-02-02-zero-balance-wording-20261124.json",
+  "limitations": "This proves the rendered wallet wording for the visible asset list in this session. It does not independently verify GET /wallet/me or GET /wallet/currencies/list response bodies.",
+  "mobile_retest": {
+    "viewport_requested_css_px": {
+      "width": 390,
+      "height": 844
+    },
+    "measured_document_viewport_css_px": {
+      "width": 390,
+      "height": 843
+    },
+    "document_scroll_width_css_px": 390,
+    "body_client_width_css_px": 390,
+    "mobile_primary_navigation_targets": [
+      {
+        "label": "Dashboard",
+        "width_css_px": 71.1,
+        "height_css_px": 44.0
+      },
+      {
+        "label": "Spot/Margin",
+        "width_css_px": 71.1,
+        "height_css_px": 44.0
+      },
+      {
+        "label": "Options",
+        "width_css_px": 71.1,
+        "height_css_px": 44.0
+      },
+      {
+        "label": "Wallet",
+        "width_css_px": 71.1,
+        "height_css_px": 44.0
+      },
+      {
+        "label": "Earn",
+        "width_css_px": 71.1,
+        "height_css_px": 44.0
+      }
+    ],
+    "zero_balance_label_matches": 52,
+    "screenshot": "tasks/evidence/nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443_evidence/nexi-02-02-wallet-mobile-390x843-20261124.jpg",
+    "screenshot_sha256": "8934dc51acfb1607a985cf3e1f7363535dbde3a22b8ed3fb95b750dcaaa137fc"
+  }
+}

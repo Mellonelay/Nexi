@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "campaign": "nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443",
+  "criterion_id": "NEXI-01-02",
+  "result": "PASS",
+  "observed_at_utc": "2026-11-23T10:04:30.625805+00:00",
+  "observed_at_yangon": "2026-11-23T16:34:30.625805+06:30",
+  "repository_head": "f3515cf76d46ff9814eb6402db41de5b5eafb7c7",
+  "public_url": "https://www.nexitrading.app/dashboard/settings?tab=profile",
+  "admin_url": "https://admin.nexitrading.app/users",
+  "identity": {
+    "wallet": "0x339a73c5fb21a2ecf2377826dfa120f128d38b33",
+    "profile_id": "757621",
+    "uuid": "3ecc85a9-c243-4da3-bde0-a24bdf532e8f",
+    "chain_id": 1
+  },
+  "public_readback": {
+    "nexi_user_id": "757621",
+    "referral_code": "NEXI757621",
+    "referred_by": "None",
+    "referred_accounts": 0,
+    "referral_earnings": 0,
+    "vip_level": "Level 0 · Member",
+    "vip_default_benefit": "Default NEXI membership",
+    "language": "English",
+    "appearance": "Dark",
+    "kyc": "NOT_SUBMITTED"
+  },
+  "admin_readback": {
+    "profile_id": "757621",
+    "internal_uuid": "3ecc85a9-c243-4da3-bde0-a24bdf532e8f",
+    "connected_wallet": "0x339a73c5fb21a2ecf2377826dfa120f128d38b33",
+    "tier": "T0",
+    "kyc": "UNVERIFIED"
+  },
+  "observed_gap": "Admin profile's VIP/referral subsection still showed Loading VIP and referral profile… during this read. Public profile independently displayed Level 0 Member, referral code, no referrer and zero referral totals.",
+  "assessment": "The live Public and Admin profile readbacks agree on the dedicated wallet, public profile ID and UUID. Public profile code, no-referrer attribution, default VIP membership and preferences were visible and internally consistent.",
+  "evidence_boundary": "This verifies the initialized state of the existing dedicated test account. It does not replay first-use account creation. No profile field was edited; no financial action was performed."
+}

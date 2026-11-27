@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "campaign_id": "nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443",
+  "recorded_at_utc": "2026-11-23T06:50:15+00:00",
+  "recorded_at_yangon": "2026-11-23T13:20:15+06:30",
+  "criterion_id": "NEXI-06-04",
+  "journey": "J10",
+  "classification": "CONFIRMED_VERIFIED",
+  "result": "PASS",
+  "test_identity": {
+    "profile_id": "757621",
+    "user_uuid": "3ecc85a9-c243-4da3-bde0-a24bdf532e8f",
+    "wallet": "0x339a73c5fb21a2ecf2377826dfa120f128d38b33"
+  },
+  "source_revision": "f3515cf76d46ff9814eb6402db41de5b5eafb7c7",
+  "release_identity": "f3515cf76d46ff9814eb6402db41de5b5eafb7c7",
+  "browser": {
+    "method": "Playwright MCP over CDP, attached to existing persistent Chrome profile",
+    "public_tab": "https://www.nexitrading.app/dashboard/spot",
+    "admin_tab": "https://admin.nexitrading.app/users",
+    "interaction": "Exact test-order row was targeted; keyboard Enter triggered its normal UI cancel handler and native confirmation was accepted by the registered Playwright dialog handler. No API was invoked directly for the action.",
+    "performance": "The pointer click on the visible Orders tab timed out at 180 seconds. A fresh DOM snapshot followed by semantic locator focus + Enter succeeded; subsequent Playwright reads took roughly 1–10 seconds each. No blind transaction retry."
+  },
+  "operation": {
+    "order_id": "765ce9ab-e24c-435a-b446-b3b58fb186ca",
+    "symbol": "BTCUSDT",
+    "side": "BUY",
+    "type": "LIMIT",
+    "quantity_btc": "0.0001",
+    "limit_price_usdt": "55000",
+    "initial_reserve_usdt": "5.5055",
+    "request": "POST /spot/cancel",
+    "http_status": 201,
+    "response": {
+      "id": "765ce9ab-e24c-435a-b446-b3b58fb186ca",
+      "pair": "BTCUSDT",
+      "side": "BUY",
+      "type": "LIMIT",
+      "status": "CANCELED",
+      "amount": "0.0001",
+      "filled": "0",
+      "remaining": "0.0001",
+      "price": "55000",
+      "reserveAsset": "USDT",
+      "reserveScope": "SPOT",
+      "reservedAmount": "0",
+      "correlationId": "spot:b8cbf4aa-4691-45a2-bac6-5287d2626b24",
+      "replayed": false,
+      "updatedAt": "2026-11-23 05:31:55 (application timestamp; timezone not specified)"
+    },
+    "retry_count": 0
+  },
+  "durable_state": {
+    "public_order_history": "CANCELED; filled 0; remaining 0.0001 BTC; initial reserve 0 USDT; executed base 0; executed quote 0 USDT",
+    "public_activity": {
+      "activity_id": "0d3d8ac9-561d-4b79-82f7-cc977e286381",
+      "status": "Completed",
+      "recorded_ui_time": "2026-11-23 05:31:55",
+      "ledger_id": "de3d4ac7-dfe4-44d1-a15a-2e3a1cd6de6e"
+    },
+    "ledger_postings": [
+      {
+        "posting_id": "ed2814a7-bc94-4ec2-8550-c191476e9d31",
+        "account": "SPOT",
+        "type": "RESERVE",
+        "asset": "USDT",
+        "amount": "5.5055",
+        "available_delta": "-5.5055",
+        "locked_delta": "5.5055"
+      },
+      {
+        "posting_id": "de3d4ac7-dfe4-44d1-a15a-2e3a1cd6de6e",
+        "account": "SPOT",
+        "type": "RELEASE",
+        "asset": "USDT",
+        "amount": "5.5055",
+        "available_delta": "5.5055",
+        "locked_delta": "-5.5055"
+      }
+    ],
+    "correlation_id": "spot:b8cbf4aa-4691-45a2-bac6-5287d2626b24",
+    "idempotent_replay": false
+  },
+  "balance_reconciliation": {
+    "spot_usdt_available_before_order": "989.3810554638",
+    "spot_usdt_available_after_order": "983.8755554638",
+    "spot_usdt_locked_after_order": "5.5055",
+    "spot_usdt_available_after_cancel": "989.3810554638",
+    "spot_usdt_locked_after_cancel": "0",
+    "public_after_refresh": {
+      "available": "989.3810554638",
+      "locked": "0"
+    },
+    "admin_after_full_page_reload_and_profile_reopen": {
+      "available": "989.3810554638",
+      "locked": "0"
+    },
+    "result": "Public and Admin account-level readbacks agree after refresh/reload; reserve was returned once."
+  },
+  "protected_order": {
+    "id": "1a95a4af-f902-46aa-8da7-6defa9cf8634",
+    "public_order_history_status": "OPEN",
+    "filled": "0",
+    "remaining_btc": "0.000264065306519085",
+    "touched": false
+  },
+  "evidence_limits": [
+    "No order-specific screenshot was captured; evidence is the recorded Playwright DOM/UI readback, HTTP response, completed Activity record, both Ledger postings, and refreshed Public/Admin balances.",
+    "The older unresolved JSON/event are retained as historical evidence and superseded by this verified event."
+  ]
+}

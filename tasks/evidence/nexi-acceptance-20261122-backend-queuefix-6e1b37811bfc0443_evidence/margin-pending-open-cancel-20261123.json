@@ -1,0 +1,102 @@
+{
+  "campaign": "nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443",
+  "criterion": "NEXI-07-04",
+  "journey": "J11",
+  "recorded_at_utc": "2026-11-22T22:22:48+00:00",
+  "test_identity": {
+    "wallet": "0x339a73c5fb21a2ecf2377826dfa120f128d38b33",
+    "profile_id": "757621",
+    "user_id": "3ecc85a9-c243-4da3-bde0-a24bdf532e8f"
+  },
+  "existing_position_preserved": {
+    "side": "LONG 2x",
+    "state": "PENDING",
+    "isolated_collateral": "10 USDT",
+    "borrowed_liability": "10 USDT",
+    "accrued_interest": "0 USDT",
+    "entry_mark": "75738.84 / 75738.84"
+  },
+  "new_position": {
+    "id": "6472e64a-b3c0-41cc-9ef5-ea4c84e7f59d",
+    "side": "LONG 2x",
+    "state_before_cancel": "PENDING",
+    "isolated_collateral": "1 USDT",
+    "borrowed_liability": "1 USDT",
+    "accrued_interest": "0 USDT",
+    "entry_mark": "60950.01 / 60950.01",
+    "source": "Public UI Open LONG 2x control; Admin same Profile 757621 readback after acceptance"
+  },
+  "request_evidence": {
+    "POST_path": "/spot/margin/positions",
+    "nginx_responses": [
+      {
+        "time_utc": "2026-11-22T21:59:38Z",
+        "status": 401
+      },
+      {
+        "time_utc": "2026-11-22T21:59:41Z",
+        "status": 201
+      }
+    ],
+    "count_of_new_positions_reconciled": 1
+  },
+  "admin_balance_before_cancel": {
+    "Margin_USDT_available": "988.97800000000010179",
+    "Margin_USDT_locked": "22.021999999999898206"
+  },
+  "cancellation": {
+    "performed_through": "Public UI Cancel pending entry button on the 1 USDT/entry 60950.01 card, keyboard Enter after pointer timeouts",
+    "response_status": 201,
+    "endpoint": "/spot/margin/positions/6472e64a-b3c0-41cc-9ef5-ea4c84e7f59d/cancel-pending",
+    "state": "CLOSED",
+    "replayed": false,
+    "repayment_posting_id": "839702c8-b3ab-4186-9087-533a53eb60f4",
+    "account_id": "4dd983ed-6d39-4034-bb1a-077bedfa695c",
+    "response_available": "989.9800000000000643",
+    "response_locked": "20.019999999999935697",
+    "repayment_replayed": false
+  },
+  "public_after_cancel": {
+    "new_position_state": "CLOSED",
+    "old_position": "still PENDING; unchanged",
+    "toast": "Original Margin exit confirmed."
+  },
+  "classification": "FAIL: a newly submitted 1 USDT position remained PENDING instead of reaching a position state that exposes close/interest operations; user-authorized pending-cancel succeeded and returned the account balance. No liquidation or active-position close/interest journey was attempted. Existing 10 USDT pending position remains untouched.",
+  "verification_limit": "Admin post-cancel refreshed UI now reconciles exact available/locked Margin balance with the Public cancellation response. Active-position close, interest accrual and liquidation remain untested.",
+  "admin_after_cancel": {
+    "refreshed_through": "Admin Clients UI, reopened Profile 757621 after full page refresh",
+    "profile_id": "757621",
+    "user_id": "3ecc85a9-c243-4da3-bde0-a24bdf532e8f",
+    "Margin_USDT_available": "989.9800000000000643",
+    "Margin_USDT_locked": "20.019999999999935697",
+    "reconciles_with_cancel_response": true,
+    "older_10_USDT_pending_position_preserved": true
+  },
+  "public_activity_after_cancel": [
+    {
+      "type": "Margin Position Canceled",
+      "status": "Completed",
+      "activity_id": "69d7efb3-a741-4d0d-ad79-eb9166404379",
+      "ledger_id": "839702c8-b3ab-4186-9087-533a53eb60f4",
+      "amount": "0",
+      "posting_count": 1
+    },
+    {
+      "type": "Spot Margin Pending Cancel Repayment",
+      "status": "Completed",
+      "activity_id": "452f9769-c644-493e-84a8-87f86058e230",
+      "ledger_id": "839702c8-b3ab-4186-9087-533a53eb60f4",
+      "amount": "1",
+      "posting_count": 1
+    },
+    {
+      "type": "Spot Margin Borrow",
+      "status": "Completed",
+      "activity_id": "f3531d6a-8c1c-4818-b13d-a7bd77ddbc4f",
+      "ledger_id": "78c2b770-a3a1-488a-a218-d212fc490407",
+      "amount": "1",
+      "posting_count": 3
+    }
+  ],
+  "screenshot_attempt": "CDP Page.captureScreenshot timed out; no screenshot claimed. UI text was read from refreshed Admin Profile 757621 and Public Wallet Activity."
+}

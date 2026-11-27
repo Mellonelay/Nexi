@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "campaign": "nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443",
+  "event_id": "browser-extension-runtime-unavailable-20261124",
+  "recorded_at_utc": "2026-11-24T01:59:05.891423+00:00",
+  "status": "BLOCKED",
+  "layer": "ChatGPT Work tool availability",
+  "requested_controller": "Browser by OpenAI control-browser native js, connected local Chrome extension",
+  "observed_result": "No Browser native js tool is present in the current callable tool registry. Rechecked after the selected execution environment became ready; it remained unavailable. SentinelX host remains operational.",
+  "recovery_attempts": [
+    "Read the complete available control-browser skill instructions and confirmed Work mode requires its associated js tool.",
+    "Inspected available/deferred tool registry; no Browser extension js controller was exposed.",
+    "Waited for the selected environment to become ready and rechecked the available tool registry."
+  ],
+  "scope_effect": "No browser action, reauthentication, wallet signature, or acceptance criterion was run in this turn. No criterion status changed. The requested campaign depends on the existing authenticated local Chrome profile, so an isolated cloud browser or another controller would not preserve the required state.",
+  "next_action": "Restore/expose the Browser by OpenAI control-browser js capability for this Work session; resume against the existing session and exact already-claimed tabs.",
+  "status_counts_unchanged": {
+    "PASS": 37,
+    "FAIL": 11,
+    "NOT_TESTED": 64,
+    "BLOCKED": 1
+  },
+  "tracker_path": "tasks/evidence/nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443.csv",
+  "tracker_sha256": "cf1b67e653f4028444ee8dc52a7fc5dec6fd33ae8f9dc370c9d8ce65372dabd6"
+}

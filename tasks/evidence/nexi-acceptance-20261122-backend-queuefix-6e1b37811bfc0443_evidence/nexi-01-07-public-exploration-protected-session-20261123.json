@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "campaign": "nexi-acceptance-20261122-backend-queuefix-6e1b37811bfc0443",
+  "criterion_id": "NEXI-01-07",
+  "result": "PASS",
+  "observed_at_utc": "2026-11-23T11:10:52.725239+00:00",
+  "observed_at_yangon": "2026-11-23T17:40:52.725239+06:30",
+  "repository_head": "f3515cf76d46ff9814eb6402db41de5b5eafb7c7",
+  "public_route": "https://www.nexitrading.app/dashboard",
+  "protected_route": "https://www.nexitrading.app/dashboard/settings?tab=profile",
+  "observations": [
+    "After the NEXI app session was revoked, Quotes Hub and live public market cards loaded on the Public dashboard.",
+    "Opening the protected settings route showed Protected account / Verify your Ethereum wallet and explained that profile, KYC, security, sessions and preferences require an authenticated NEXI wallet session."
+  ],
+  "auth_boundary": "The wallet provider remained connected, but the NEXI application session was revoked; provider connection was not treated as authenticated NEXI access.",
+  "evidence_files": [
+    "nexi-01-07-public-exploration-protected-session-20261123.json",
+    "nexi-01-06-session-expiry-reconnect-stalled-20261123.jpg",
+    "nexi-01-06-session-expiry-reconnect-stalled-20261123.json"
+  ],
+  "evidence_hashes": {
+    "nexi-01-06-session-expiry-reconnect-stalled-20261123.jpg": "c446d5668cd2ed15e4e436bcae1ac922c0ca4b20e03eb081df048c899c4e06c2"
+  },
+  "evidence_boundary": "No financial action, profile mutation, account switch, or new wallet signature was performed. Evidence reuses the contemporaneous session-expiry capture and its protected-state readback."
+}
