@@ -377,7 +377,7 @@ export default function WalletConnectControl(props: { compact?: boolean }) {
   if (!wagmiConfig)
     return (
       <span className="text-xs text-[#8C8299]" role="status">
-        Wallet connection is not configured.
+        Wallet sign-in is temporarily unavailable.
       </span>
     );
   return <WalletConnectControlInner {...props} />;

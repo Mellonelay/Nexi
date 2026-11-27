@@ -258,7 +258,7 @@ export default function LoansPage() {
       return;
     }
     if (!principalWithinPlan || !durationMatchesPlan) {
-      setMessage('Enter an amount within the selected plan limits and use its configured duration.');
+      setMessage('Enter an amount within the plan limits and choose an available term.');
       return;
     }
     if (!collateral.trim() || !collateralImg.trim()) {
@@ -484,7 +484,7 @@ function LoanProductsPanel({ plans, plansState }: { plans: LoanPlan[]; plansStat
         action={<ShieldCheck size={18} className="text-[#48C0CC]" />}
       />
       {plansState === 'LOADING' && <DataStatePanel state="LOADING" title="Loading loan products" />}
-      {plansState === 'ERROR' && <DataStatePanel state="ERROR" title="Loan product catalog unavailable" message="Loan products could not be loaded." />}
+      {plansState === 'ERROR' && <DataStatePanel state="ERROR" title="Loan plans are unavailable" message="Loan products could not be loaded." />}
       {plansState === 'LIVE' && plans.length === 0 && <DataStatePanel state="UNAVAILABLE" title="No active loan products" message="No active loan products are available." />}
       {plansState === 'LIVE' && plans.length > 0 && (
         <div className="grid min-w-0 gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 16rem), 1fr))" }}>
@@ -518,7 +518,7 @@ function LoanHistoryPanel({ state, loans, backendConfigured }: { state: LoadStat
         />
       )}
       {state === 'ERROR' && <DataStatePanel state="ERROR" title="Loan history unavailable" />}
-      {state === 'LIVE' && loans.length === 0 && <DataStatePanel state="UNAVAILABLE" title="No loan records returned" message="There are no pending, active, repayment, or historical records to show." />}
+      {state === 'LIVE' && loans.length === 0 && <DataStatePanel state="UNAVAILABLE" title="No loan history yet" message="Loan activity will appear here when available." />}
       {state === 'LIVE' && loans.length > 0 && <div className="space-y-3">{loans.map((loan) => <LoanRecordCard key={loanKey(loan)} loan={loan} />)}</div>}
     </Panel>
   );

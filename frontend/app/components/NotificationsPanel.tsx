@@ -13,7 +13,6 @@ import {
 import ModalSurface from "./ModalSurface";
 import { cn } from "../lib/cn";
 import { io } from "socket.io-client";
-import axios from "axios";
 import api, { apiBaseUrl } from "../lib/api";
 import { getAccessToken, getAccessTokenPrincipalId } from "../lib/auth-session";
 
@@ -38,16 +37,8 @@ const CATEGORIES: NotificationCategory[] = [
   "System",
 ];
 
-function axiosErrorMessage(error: unknown) {
-  if (!axios.isAxiosError(error)) return "Notifications could not be loaded.";
-  const data = error.response?.data;
-  const message =
-    data && typeof data === "object" && "message" in data
-      ? (data as { message?: unknown }).message
-      : undefined;
-  return typeof message === "string" && message.trim()
-    ? message
-    : `Notifications unavailable${error.response?.status ? ` (${error.response.status})` : ""}.`;
+function notificationErrorMessage(_error: unknown) {
+  return "Notifications are unavailable. Try again.";
 }
 
 function categoryForType(type: string): Exclude<NotificationCategory, "All"> {
@@ -200,7 +191,7 @@ export function NotificationsPanel({
         return;
       setNotifications([]);
       setFailed(true);
-      setFailureMessage(axiosErrorMessage(error));
+      setFailureMessage(notificationErrorMessage(error));
     } finally {
       if (requestId === loadRequestRef.current) setLoading(false);
     }

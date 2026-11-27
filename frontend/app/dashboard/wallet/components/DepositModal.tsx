@@ -283,7 +283,7 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
             </div>}
             {step === 'asset' ? (
               <div className="space-y-3">
-                {loading && <p className="rounded-2xl border border-[#2B2037] bg-[#171022] p-4 text-sm text-[#8C8299]">Loading configured deposit assets…</p>}
+                {loading && <p className="rounded-2xl border border-[#2B2037] bg-[#171022] p-4 text-sm text-[#8C8299]">Loading deposit options…</p>}
                 {!loading && loadFailed && (
                   <div className="rounded-2xl border border-[#2B2037] bg-[#171022] p-4 text-sm text-[#A99DB8]">
                     <p>Deposit assets are unavailable right now.</p>
@@ -356,7 +356,7 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
                   <label className="block text-xs font-medium text-[#C3BBD0]">Recharge amount
                     <input className="nexi-input mt-1 w-full" inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder={`Amount in ${destination.asset}`} required />
                   </label>
-                  {amount.trim() && !withinClaimLimits && <p role="alert" className="text-xs text-amber-200">Enter an amount within the configured deposit limits.</p>}
+                  {amount.trim() && !withinClaimLimits && <p role="alert" className="text-xs text-amber-200">Enter an amount within the available deposit limits.</p>}
                   <label className="block text-xs font-medium text-[#C3BBD0]">Transaction hash <span className="font-normal text-[#8C8299]">(optional)</span>
                     <input className="nexi-input mt-1 w-full font-mono" value={txHash} onChange={(event) => setTxHash(event.target.value)} placeholder="TXID / transaction hash" />
                   </label>
@@ -372,7 +372,7 @@ export default function DepositModal({ isOpen, onClose, selectedCurrency, onSele
               </form>
             ) : (
               <div className="rounded-2xl border border-[#2B2037] bg-[#171022] p-4 text-sm text-[#C3BBD0]">
-                <p>No active deposit destination is configured for this asset.</p>
+                <p>Deposits are not available for this asset right now.</p>
                 <button type="button" onClick={() => setStep('asset')} className="mt-3 min-h-11 font-semibold text-[#A995FF]">Choose another asset</button>
               </div>
             )}

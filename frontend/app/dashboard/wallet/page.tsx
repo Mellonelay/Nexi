@@ -60,7 +60,8 @@ function WalletQuantity({ value, unit, className = '' }: { value: unknown; unit?
   const hasExactDetail = display !== exact && exact !== '—';
   return (
     <span className={'inline-flex min-w-0 flex-wrap items-baseline gap-x-1 ' + className}>
-      <span className="min-w-0 font-mono tabular-nums">{display}{unit ? ' ' + unit : ''}</span>
+      <span className="min-w-0 font-mono tabular-nums">{display}</span>
+      {unit && <span className="shrink-0 font-mono tabular-nums">{unit}</span>}
       {hasExactDetail && (
         <details className={walletAdaptive.walletExact + " min-w-0"}>
           <summary aria-label={'View exact ' + (unit || 'asset') + ' amount'}>Exact</summary>
@@ -411,7 +412,7 @@ function WalletPerformance({ root, state }: { root: Record<string, unknown>; sta
   ].filter((item) => item.value !== undefined);
   if (!metrics.length) return null;
   return (
-    <dl className="mt-2 grid min-w-0 gap-x-4 gap-y-2 border-t border-violet-300/10 pt-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 11rem), 1fr))" }} aria-label="Portfolio performance">
+    <dl className="mt-2 grid min-w-0 gap-x-4 gap-y-2 border-t border-violet-300/10 pt-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 8rem), 1fr))" }} aria-label="Portfolio performance">
       {metrics.map((item) => (
         <div key={item.label} className="min-w-0">
           <dt className="text-xs text-[#C3BBD0]">{item.label}</dt>
@@ -435,7 +436,7 @@ function WalletSummary({ root, state, valuation, authenticated, action, onSelect
           </h2>
           {valuation.state !== 'LIVE' && <StatusBadge state={valuation.state} />}
         </div>
-        <p className="mt-1 text-xs leading-5 text-[#8C8299]">Market-value estimate; wallet balances are unchanged.</p>
+        <p className="mt-1 text-xs leading-5 text-[#8C8299]">Estimated value · USDT.</p>
         {valuation.unpriced > 0 && <p className="text-xs leading-5 text-[#8C8299]">Excludes {valuation.unpriced} asset{valuation.unpriced === 1 ? '' : 's'} without a current price.</p>}
         <div className="mt-2 min-w-0" aria-label="Estimated wallet portfolio value in USDT">
           <p className="text-xs font-medium text-[#C3BBD0]">Total</p>
@@ -572,12 +573,12 @@ function WalletAssets({ tab, category, onCategoryChange, state, userId, error, v
           <input type="search" value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder="Name or symbol" className="nexi-input mt-1 min-h-[44px] w-full px-3 text-base sm:text-sm" />
         </label>
       </div>
-      {includesMarketOnly && <p className="mt-2 text-xs leading-5 text-[#8C8299]">Market listings are for discovery; a dash means no wallet balance is available.</p>}
+      {includesMarketOnly && <p className="mt-2 text-xs leading-5 text-[#8C8299]">A dash means no balance is available.</p>}
       {tab === 'Overview' && marketCatalogUnavailable && (
-        <p role="status" className="mt-2 text-xs text-amber-200">Market listings are unavailable; showing recorded wallet balances only.</p>
+        <p role="status" className="mt-2 text-xs text-amber-200">Market prices are unavailable; wallet balances are still shown.</p>
       )}
       {tab === 'Funding' && depositCatalogUnavailable && (
-        <p role="status" className="mt-2 text-xs text-amber-200">Deposit availability could not be loaded; showing recorded Funding balances only.</p>
+        <p role="status" className="mt-2 text-xs text-amber-200">Deposit options are unavailable right now.</p>
       )}
       {state !== 'LIVE' ? (
         <DataStatePanel state={state} title={userId ? 'Wallet data unavailable' : 'Wallet is locked'} message={error || 'No authenticated wallet session is available.'} />
@@ -712,7 +713,7 @@ export default function WalletPage() {
 
 
   if (sessionChecked && !authenticated) {
-    return <PageShell><div className="mx-auto max-w-xl pt-8 sm:pt-14"><Panel className="p-5 text-center sm:p-7"><div className="mx-auto max-w-sm"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#48C0CC]">Protected wallet</p><h1 className="mt-2 text-xl font-semibold text-white">Verify your Ethereum wallet</h1><p className="mt-2 text-sm leading-6 text-[#8C8299]">Market surfaces remain available without a NEXI session. Wallet balances and financial actions require wallet verification.</p><div className="mx-auto mt-5 max-w-xs"><WalletConnectControl compact /></div></div></Panel></div></PageShell>;
+    return <PageShell><div className="mx-auto max-w-xl pt-8 sm:pt-14"><Panel className="p-5 text-center sm:p-7"><div className="mx-auto max-w-sm"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#48C0CC]">Protected wallet</p><h1 className="mt-2 text-xl font-semibold text-white">Verify your Ethereum wallet</h1><p className="mt-2 text-sm leading-6 text-[#8C8299]">Explore markets without signing in. Connect and verify your wallet to view balances and use wallet services.</p><div className="mx-auto mt-5 max-w-xs"><WalletConnectControl compact /></div></div></Panel></div></PageShell>;
   }
 
   return <PageShell>

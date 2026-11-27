@@ -11,9 +11,9 @@ type SupportContacts = { telegramUrl: string | null; email: string | null };
 const categories = ['All topics', 'Wallet', 'Account', 'Trading', 'Security'];
 const helpTopics = [
   { title: 'Wallet operations', category: 'Wallet', copy: 'Deposit, withdraw, transfer, and convert actions require account confirmation.' },
-  { title: 'Account verification', category: 'Account', copy: 'KYC state and document requirements are displayed only from the account authority.' },
-  { title: 'Trading support', category: 'Trading', copy: 'Order and position issues need a request identifier for support to investigate.' },
-  { title: 'Security events', category: 'Security', copy: 'Session, wallet signature, and sign-in issues can be reviewed when activity details are available.' },
+  { title: 'Account verification', category: 'Account', copy: 'Check your verification status and document requirements in Account settings.' },
+  { title: 'Trading support', category: 'Trading', copy: 'Include your order or position details when contacting support.' },
+  { title: 'Security events', category: 'Security', copy: 'Get help with sessions, wallet connections, or signing in.' },
 ];
 
 function configuredTelegramUrl(value: unknown): string | null {
@@ -98,13 +98,13 @@ export default function SupportPage() {
         </Panel>
 
         <Panel>
-          <PanelHeading title="Contact Us" description="Contact options configured by NEXI support." />
+          <PanelHeading title="Contact Us" description="Contact NEXI Support." />
           {contactsState === 'loading' ? (
             <p className="text-sm text-[#8C8299]" role="status">Loading contact options…</p>
           ) : contactsState === 'unavailable' ? (
             <p className="text-sm text-[#8C8299]" role="status">Contact options are unavailable right now.</p>
           ) : !contacts.telegramUrl && !contacts.email ? (
-            <div className="text-sm text-[#8C8299]" role="status"><p>No external support contact methods are configured.</p><p className="mt-2 text-[#C3BBD0]">For in-app help, message NEXI Support.</p><Link href="/dashboard/messages" className="mt-2 inline-flex min-h-11 items-center font-semibold text-[#A995FF] underline-offset-4 hover:underline">Open Messages</Link></div>
+            <div className="text-sm text-[#8C8299]" role="status"><p>External contact options are unavailable here.</p><p className="mt-2 text-[#C3BBD0]">For in-app help, message NEXI Support.</p><Link href="/dashboard/messages" className="mt-2 inline-flex min-h-11 items-center font-semibold text-[#A995FF] underline-offset-4 hover:underline">Open Messages</Link></div>
           ) : (
             <div className="grid min-w-0 gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 15rem), 1fr))" }}>
               {contacts.telegramUrl && (

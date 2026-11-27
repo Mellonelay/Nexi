@@ -110,7 +110,7 @@ export default function TransferModal({ isOpen, onClose, currencies, selectedCur
       setUnknownIntentKey(null);
       setAmount('');
       setRecipientCode('');
-      toast.success('The transfer was confirmed in account records.');
+      toast.success('Transfer confirmed.');
       try { await onCompleted?.(); } catch { toast.warning('Transfer confirmed, but Wallet refresh failed.'); }
       onClose();
     } catch {

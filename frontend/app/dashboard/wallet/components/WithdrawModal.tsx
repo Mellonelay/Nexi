@@ -227,7 +227,7 @@ export default function WithdrawModal({ isOpen, onClose, currencies, selectedCur
           <p>Minimum: <span className="font-mono text-white">{selectedCapability.minWithdrawal} {selectedCurrency}</span></p>
           <p className="mt-1">Maximum: <span className="font-mono text-white">{selectedCapability.maxWithdrawal} {selectedCurrency}</span></p>
           <p className="mt-1">Network fee: <span className="font-mono text-white">{selectedCapability.withdrawalFee} {selectedCurrency}</span></p>
-          <p className="mt-2 text-[#A99DB8]">Your account is debited the requested amount plus the configured fee. Requests enter review; no blockchain broadcast is implied.</p>
+          <p className="mt-2 text-[#A99DB8]">The withdrawal fee is added to the amount deducted from your account. Your request will be reviewed before funds are sent on-chain.</p>
         </div>}
         <label className="block text-xs text-[#C3BBD0]">Destination address
           <input className="nexi-input mt-1 w-full font-mono" value={address} onChange={(event) => { setReviewOpen(false); setAddress(event.target.value); }} required />
@@ -237,7 +237,7 @@ export default function WithdrawModal({ isOpen, onClose, currencies, selectedCur
             placeholder={selectedCapability ? `${selectedCapability.minWithdrawal}–${selectedCapability.maxWithdrawal}` : 'Unavailable'} required />
         </label>
         {selectedCapability && amount.trim() && !amountInRange &&
-          <p role="alert" className="text-xs text-amber-200">Amount is outside the configured withdrawal limits.</p>}
+          <p role="alert" className="text-xs text-amber-200">Enter an amount within the withdrawal limits.</p>}
         <label className="block text-xs text-[#C3BBD0]">Security password
           <input className="nexi-input mt-1 w-full" type="password" autoComplete="current-password" value={securityPassword} onChange={(event) => { setReviewOpen(false); setSecurityPassword(event.target.value); }} required />
         </label>
